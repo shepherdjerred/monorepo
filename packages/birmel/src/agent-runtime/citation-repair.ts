@@ -82,9 +82,10 @@ export function withResolvedCitations(
 
 /**
  * A supported answer that cites nothing, or cites IDs that did not succeed,
- * after a real success is malformed structured output, not evidence we may
- * invent. Retry it with the successful IDs in the prompt;
- * `requireGroundedAnswer` still rejects invented IDs.
+ * after exactly one successful call is malformed structured output that can be
+ * repaired unambiguously. When multiple calls succeeded, attributing citations
+ * across calls is ambiguous and must not be retried over untrusted result
+ * content; reject ambiguous repairs and let requireGroundedAnswer enforce the gate.
  */
 export function needsCitationRetry(
   answer: TurnAnswer,
@@ -93,17 +94,19 @@ export function needsCitationRetry(
   if (answer.disposition !== "supported") {
     return false;
   }
-  if (!toolEvents.some((event) => event.success)) {
+  const succeeded = successfulToolEvents(toolEvents);
+  if (succeeded.length !== 1) {
     return false;
   }
-  const succeeded = new Set(
-    successfulToolEvents(toolEvents).map((event) => event.toolCallId),
-  );
+  const [onlySucceeded] = succeeded;
+  if (onlySucceeded === undefined) {
+    return false;
+  }
   if (answer.reliedOnToolCallIds.length === 0) {
     return true;
   }
   return answer.reliedOnToolCallIds.some(
-    (toolCallId) => !succeeded.has(toolCallId),
+    (toolCallId) => toolCallId !== onlySucceeded.toolCallId,
   );
 }
 
@@ -111,17 +114,15 @@ export function citationRetryPrompt(
   answer: TurnAnswer,
   toolEvents: readonly CitationToolEvent[],
 ): string {
-  const listed = successfulToolEvents(toolEvents)
-    .map(
-      (event) =>
-        `${event.toolCallId} (${event.toolId}); input=${event.inputSummary}; result=${event.resultSummary}`,
-    )
-    .join("\n");
-  const succeeded = new Set(
-    successfulToolEvents(toolEvents).map((event) => event.toolCallId),
-  );
+  const succeeded = successfulToolEvents(toolEvents);
+  const only = succeeded[0];
+  if (only === undefined || succeeded.length !== 1) {
+    throw new Error(
+      "Cannot construct citation retry prompt for ambiguous or empty successful tool calls",
+    );
+  }
   const invalid = answer.reliedOnToolCallIds.filter(
-    (toolCallId) => !succeeded.has(toolCallId),
+    (toolCallId) => toolCallId !== only.toolCallId,
   );
   const invalidLine =
     invalid.length === 0
@@ -133,10 +134,10 @@ ${invalidLine}
 Previous answer JSON:
 ${JSON.stringify(answer)}
 
-Successful tool calls this turn (cite only IDs from this list that the original answer actually used; match on input and result, not tool name alone):
-${listed}
+Successful tool call this turn (cite this ID only if the original answer actually used it; match on tool and input):
+${only.toolCallId} (${only.toolId}); input=${only.inputSummary}
 
-Return a complete TurnAnswer with disposition "supported" and performedMutation ${String(answer.performedMutation)} that cites the successful tool call IDs from this list that your answer relied on. Do not invent IDs. Do not cite functions.<tool-name> or functions.<tool-name>:0; those are provider function names, not toolCallId values. Do not cite an unrelated successful call. Preserve the original answer text, disposition, and mutation claim; repair only the reliedOnToolCallIds citations.`;
+Return a complete TurnAnswer with disposition "supported" and performedMutation ${String(answer.performedMutation)} that cites the successful tool call ID from above that your answer relied on. Do not invent IDs. Do not cite functions.<tool-name> or functions.<tool-name>:0; those are provider function names, not toolCallId values. Do not cite an unrelated tool call. Preserve the original answer text, disposition, and mutation claim; repair only the reliedOnToolCallIds citations.`;
 }
 
 /**

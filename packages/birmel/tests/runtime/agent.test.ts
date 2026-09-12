@@ -317,6 +317,45 @@ describe("summarizeToolResultForSession: invite capability redaction", () => {
   });
 });
 
+describe("summarizeToolResultForSession: shell output exclusion", () => {
+  test("omits shell stdout and stderr from result summary and session content", () => {
+    const leakedOutput = [
+      "transient",
+      "shell",
+      "secret",
+      "token",
+      "12345",
+    ].join("_");
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-shell-1",
+        toolName: "execute-shell-command",
+        input: { command: "cat", args: ["~/.ssh/id_rsa"] },
+        output: {
+          success: true,
+          message: "Command executed successfully in 15ms",
+          data: {
+            stdout: leakedOutput,
+            stderr: "warning: sensitive output",
+            exitCode: 0,
+            timedOut: false,
+            duration: 15,
+          },
+        },
+      },
+      ["execute-shell-command"],
+    );
+    expect(event.resultSummary).toContain(
+      "Command executed successfully in 15ms",
+    );
+    expect(event.resultSummary).toContain('"exitCode":0');
+    expect(event.resultSummary).not.toContain(leakedOutput);
+    expect(event.resultSummary).not.toContain("sensitive output");
+    expect(event.content).not.toContain(leakedOutput);
+    expect(event.content).not.toContain("sensitive output");
+  });
+});
+
 describe("agent instructions", () => {
   test("tells the agent that changing approach mid-turn is expected", () => {
     expect(AGENT_INSTRUCTIONS).toContain(
@@ -602,6 +641,25 @@ describe("citation retry", () => {
       ),
     ).toBe(true);
   });
+
+  test("does not retry when multiple tools succeeded to reject ambiguous repair", () => {
+    const anotherSucceeded = {
+      ...succeeded,
+      toolCallId: "call-2",
+      toolId: "web-search",
+    };
+    expect(
+      needsCitationRetry(
+        {
+          answer: "Found both results.",
+          disposition: "supported",
+          reliedOnToolCallIds: [],
+          performedMutation: false,
+        },
+        [succeeded, anotherSucceeded],
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("citation alias resolution", () => {
@@ -715,18 +773,39 @@ describe("citation retry prompt and repair", () => {
       },
       [succeeded, failedRead],
     );
-    expect(prompt).toContain(
-      "call-1 (generate-image); input={}; result=Image staged",
-    );
+    expect(prompt).toContain("call-1 (generate-image); input={}");
+    expect(prompt).not.toContain("result=");
+    expect(prompt).not.toContain("Image staged");
     expect(prompt).not.toContain("call-3");
     expect(prompt).toContain("Do not invent IDs");
     expect(prompt).toContain("Do not cite functions.<tool-name>");
-    expect(prompt).toContain("Do not cite an unrelated successful call");
-    expect(prompt).toContain("match on input and result");
+    expect(prompt).toContain("Do not cite an unrelated tool call");
+    expect(prompt).toContain("match on tool and input");
     expect(prompt).toContain('with disposition "supported"');
     expect(prompt).toContain("performedMutation true");
     expect(prompt).not.toContain("conversation or unsupported");
     expect(prompt).not.toContain("Do not change disposition");
+  });
+
+  test("throws error when constructing retry prompt for ambiguous successful calls", () => {
+    const anotherSucceeded = {
+      ...succeeded,
+      toolCallId: "call-2",
+      toolId: "web-search",
+    };
+    expect(() =>
+      citationRetryPrompt(
+        {
+          answer: "third time’s the charm.",
+          disposition: "supported",
+          reliedOnToolCallIds: [],
+          performedMutation: true,
+        },
+        [succeeded, anotherSucceeded],
+      ),
+    ).toThrow(
+      "Cannot construct citation retry prompt for ambiguous or empty successful tool calls",
+    );
   });
 
   test("applyCitationRepair preserves original text, disposition, and mutation claim", () => {

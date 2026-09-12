@@ -154,6 +154,7 @@ function redactInviteFields(entry: object): Record<string, unknown> {
 type SanitizeToolOutputOptions = {
   isCookiesCall: boolean;
   isInviteCall: boolean;
+  isShellCall: boolean;
 };
 
 function sanitizeArrayEntry(
@@ -220,6 +221,9 @@ function sanitizeToolOutputData(
     if (key === "raw" && options.isCookiesCall) {
       continue;
     }
+    if ((key === "stdout" || key === "stderr") && options.isShellCall) {
+      continue;
+    }
     sanitized[key] = sanitizeObjectEntry(key, value, options);
   }
   return sanitized;
@@ -242,6 +246,7 @@ export function summarizeToolResultForSession(
   const action = ActionInputSchema.safeParse(toolResult.input);
   const isCookiesCall = action.success && action.data.action === "cookies";
   const isInviteCall = toolResult.toolName === "manage-invite";
+  const isShellCall = toolResult.toolName === "execute-shell-command";
   const inputSummary = boundedSummary(toolResult.input);
   const resultSummary = toolResult.output.success
     ? boundedSummary(
@@ -252,6 +257,7 @@ export function summarizeToolResultForSession(
               data: sanitizeToolOutputData(toolResult.output.data, {
                 isCookiesCall,
                 isInviteCall,
+                isShellCall,
               }),
             },
       )
