@@ -1,5 +1,57 @@
 export type DevAuthMode = "dev-login" | "oauth";
 
+/**
+ * `FEATURE_FLAGS_MODE=static` fails loudly (`FlagNotFoundError`) on any flag
+ * key missing from `FEATURE_FLAGS_STATIC_OVERRIDES` — that is by design (see
+ * `packages/feature-flags/CLAUDE.md`), so every key the backend can read
+ * locally must be listed here or the read site throws. Values mirror each
+ * flag's own registered default in
+ * `packages/backend/src/configuration/flags.ts` (`FLAG_REGISTRY`), so a local
+ * static-mode run behaves like a production Flipt outage rather than
+ * inventing new local-only behavior. `scout-consumer-player-profiles-enabled`
+ * is the one exception, flipped on to exercise the consumer preview this
+ * script boots by default.
+ */
+const DEFAULT_STATIC_FLAG_OVERRIDES: Record<string, boolean | string | number> =
+  {
+    ai_reports_enabled: false,
+    ai_reports_unlimited: false,
+    ai_reviews_enabled: false,
+    betting_enabled: false,
+    betting_player_bet_outcome_dm_enabled: false,
+    betting_settlement_dm_enabled: false,
+    bucks_dares_enabled: false,
+    bucks_transfers_enabled: false,
+    challenge_runs_enabled: false,
+    competition_builder_v2_enabled: false,
+    custom_nights_enabled: false,
+    dare_extended_contracts_enabled: false,
+    dare_notifications_enabled: false,
+    dare_v2: false,
+    debug: false,
+    duels_enabled: false,
+    explore_creation_enabled: false,
+    hall_of_fame_enabled: false,
+    initial_match_history_import_enabled: false,
+    scoutql_relational_enabled: false,
+    "scout-consumer-player-profiles-enabled": true,
+    "scout-temporal-call-graph-tracing": false,
+    tournament_lobbies_enabled: false,
+    voice_assistant_enabled: false,
+    weekly_parlays_enabled: false,
+    // Variant flags: same defaults as the `DEFINITION` snapshot in
+    // packages/backend/src/config/dynamic.ts, which already falls back to them
+    // gracefully on a refresh failure — listing them here just stops the noisy
+    // "no static override" warning on every poll.
+    "scout-betting-parlay-ai-model": "gpt-5.6-sol",
+    "scout-explore-model": "gpt-5.6-luna",
+    "scout-report-ai-model": "gpt-5.6-sol",
+    "scout-tournament-api-mode": "stub",
+    "scout-tournament-max-open-lobbies": 10,
+    "llm-hourly-token-budget": 2_000_000,
+    "llm-daily-token-budget": 20_000_000,
+  };
+
 export type DevWebOptions = {
   readonly backendPort: number;
   readonly webPort: number;
@@ -91,7 +143,7 @@ export function buildDevEnvironment(
   const featureFlagsOverrides =
     baseEnvironment["FEATURE_FLAGS_STATIC_OVERRIDES"] ??
     (options.consumerPreview
-      ? '{"scout-consumer-player-profiles-enabled":true}'
+      ? JSON.stringify(DEFAULT_STATIC_FLAG_OVERRIDES)
       : "{}");
 
   return {
