@@ -136,6 +136,48 @@ describe("createBotRestReader caching", () => {
     await expect(harness.rest.guildMember(GUILD, USER)).resolves.not.toBeNull();
   });
 
+  test("an absent guild is never retained, while a present one is", async () => {
+    // The install check is the one read whose negative a user action
+    // invalidates on the spot: adding Scout to a server cannot evict a cache
+    // it does not touch, so holding "not installed" for the TTL blanks a
+    // dashboard the user just earned.
+    let present = false;
+    const clock = { value: 0 };
+    const harness = reader(
+      () =>
+        present
+          ? Promise.resolve({ id: GUILD, name: "guild", owner_id: USER })
+          : Promise.reject(new ApiError(10_004, 404)),
+      clock,
+    );
+
+    await expect(harness.rest.guildExists(GUILD)).resolves.toBe(false);
+    await expect(harness.rest.guildExists(GUILD)).resolves.toBe(false);
+    expect(harness.routes).toHaveLength(2);
+
+    present = true;
+    await expect(harness.rest.guildExists(GUILD)).resolves.toBe(true);
+    await expect(harness.rest.guildExists(GUILD)).resolves.toBe(true);
+    expect(harness.routes).toHaveLength(3);
+  });
+
+  test("concurrent install checks still collapse into one request", async () => {
+    // Declining to cache the negative must not cost the request collapsing the
+    // cache also provides.
+    const arrived = Promise.withResolvers<undefined>();
+    const harness = reader(async () => {
+      await arrived.promise;
+      throw new ApiError(10_004, 404);
+    });
+
+    const first = harness.rest.guildExists(GUILD);
+    const second = harness.rest.guildExists(GUILD);
+    arrived.resolve(undefined);
+    await expect(first).resolves.toBe(false);
+    await expect(second).resolves.toBe(false);
+    expect(harness.routes).toHaveLength(1);
+  });
+
   test("caches per guild, not globally", async () => {
     const harness = reader(() => Promise.resolve(ROLES));
     await harness.rest.guildRoles(GUILD);

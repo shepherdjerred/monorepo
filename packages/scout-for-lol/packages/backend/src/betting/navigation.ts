@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import {
-  BucksLedgerContextSchema,
+  StoredBucksLedgerContextSchema,
   BucksPoolRosterSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -97,7 +97,12 @@ function formatGameLabel(aliases: readonly string[]): string | undefined {
 
 function parsedContext(entry: LedgerPageEntry) {
   try {
-    return BucksLedgerContextSchema.safeParse(JSON.parse(entry.context)).data;
+    // The STORED union, not the write one: a settlement row written before the
+    // money brands narrowed its domain is history, not corruption, and losing
+    // its explanation to a bare match ID is exactly the silent degradation
+    // this page is here to avoid.
+    return StoredBucksLedgerContextSchema.safeParse(JSON.parse(entry.context))
+      .data;
   } catch {
     // Historical rows predate some context shapes; an unreadable one simply
     // falls back to the match ID.

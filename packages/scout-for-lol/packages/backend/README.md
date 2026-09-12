@@ -209,7 +209,7 @@ unrecognised value throws at startup rather than falling back.
 | ------------------------------------------------ | ------------------------------------------------------------------------------ | --------------------------- | ------------------ | -------------------- |
 | Champion asset verification                      | yes                                                                            | yes                         | yes                | yes                  |
 | Voice assistant (Hey Scout)                      | yes                                                                            | —                           | yes                | —                    |
-| Report lake mounted (reads + staging writes)     | yes                                                                            | yes                         | —                  | yes                  |
+| Report lake mounted (reads + staging writes)     | yes                                                                            | yes                         | yes                | yes                  |
 | Report-lake fold / publish at boot               | yes                                                                            | yes                         | —                  | —                    |
 | Temporal workers                                 | workflow, interactive, lake (+ realtime, background once the gateway is ready) | workflow, interactive, lake | none (client only) | realtime, background |
 | Discord gateway login, commands, guild lifecycle | yes                                                                            | —                           | yes                | —                    |
@@ -227,6 +227,19 @@ Notes that are easy to get wrong:
 - **Voice is gateway-coupled by design.** It reads an active voice connection's
   audio, so it cannot be moved off the shard. That makes `gateway` an explicitly
   stateful role.
+- **`gateway` needs the lake even though it runs no Temporal worker.** `/scout
+ask` and the Dare commands execute the Explore agent in the process that
+  received the interaction, which is a synchronous DuckDB read. It declared no
+  lake access while doing exactly that, and because the boot gate only runs for
+  roles that declare access, the pod that needed the check was the one that
+  skipped it — DuckDB scans zero parquet files rather than failing, so every
+  question came back "no games found", successfully. Wave 6 settles this either
+  by routing Discord-surface Explore turns through the `interactive` queue (the
+  same mechanism this role already owes customs voice) or by giving the gateway
+  Deployment the lake volume. Independently of the table, every in-process lake
+  read now asserts the capability at the read site in
+  `reports/duckdb/lake.ts`: a capability whose `false` skips a safety check
+  cannot protect the role that sets it false.
 - **`application` publishes the report lake**, and owns the collectors that
   sweep the database on every `/metrics` scrape. Every role serves `/metrics`,
   but running those four collectors on all of them would turn one Prometheus
@@ -273,6 +286,13 @@ are used automatically. For a full local backend + web app, use
 `--no-background-jobs` now sets only `SCOUT_DEV_SKIP_REPORT_LAKE_FOLD`, a
 dev-only switch for the one boot step a laptop with no published lake build and
 no S3 bucket cannot complete; it is rejected outside `ENVIRONMENT=dev`.
+
+That flag skips the fold and nothing else. The separate check that the lake
+holds a published build still runs while it is set, downgraded from a refusal
+to a warning: a lake-reading pod pointed at an empty directory does not fail —
+DuckDB scans zero files and the run is recorded as a success — so the one thing
+this check must never be is silent. Outside dev it always refuses. See
+`src/runtime/report-lake-gate.ts`.
 
 See the [report-lake explanation](../../../docs/wiki/src/content/docs/explanation/scout-report-lake.md)
 and the parent [README](../../README.md) for architecture. The parent

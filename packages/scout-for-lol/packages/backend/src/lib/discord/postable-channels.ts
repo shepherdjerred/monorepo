@@ -16,6 +16,7 @@
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { botRest, type BotRestReader } from "#src/lib/discord/bot-rest.ts";
+import type { DiscordGuildChannel } from "#src/lib/discord/bot-rest-schemas.ts";
 import {
   computeChannelPermissions,
   hasPermission,
@@ -49,17 +50,38 @@ const POSTABLE_CHANNEL_TYPES = new Set<number>([
 ]);
 
 /**
- * Text channels in `guildId` that the bot can post to, sorted by name.
+ * One guild's channels plus the verdict that decides which are offerable.
  *
- * Returns `[]` when Discord says Scout is not in the guild — callers have
- * already proved installation, so that is a narrowing, not a decision. A
- * failure to reach Discord throws {@link DiscordUpstreamError} instead, so an
+ * `null` when Discord says Scout is not in the guild.
+ */
+export type GuildChannelPostability = {
+  readonly channels: readonly DiscordGuildChannel[];
+  /** Whether Scout can actually post in this channel, right now. */
+  readonly isPostable: (channel: DiscordGuildChannel) => boolean;
+};
+
+/**
+ * Read a guild's channels and build the postability predicate over them.
+ *
+ * Exported because the picker is not the only surface that must apply it: the
+ * tRPC channel guard has to accept exactly the channels the picker offers, and
+ * a second implementation of "can Scout post here" drifts. When it did, the
+ * guard checked only the channel's *type* — so every mutation accepted a
+ * channel the picker had refused on permissions, and the subscription was
+ * created against a channel Scout can never post in, failing silently at
+ * delivery time instead of visibly at creation time.
+ *
+ * The permission answer needs Scout's *effective* permissions, which the
+ * gateway used to compute: over REST that is three TTL-cached reads combined
+ * by `channel-permissions.ts`.
+ *
+ * Throws {@link DiscordUpstreamError} when Discord cannot be reached, so an
  * outage is never presented as "this server has no channels".
  */
-export async function listPostableChannels(
+export async function readGuildChannelPostability(
   guildId: DiscordGuildId,
   dependencies: PostableChannelDependencies = defaultDependencies(),
-): Promise<PostableChannel[]> {
+): Promise<GuildChannelPostability | null> {
   const { rest } = dependencies;
   const [channels, roles, me] = await Promise.all([
     rest.guildChannels(guildId),
@@ -68,14 +90,15 @@ export async function listPostableChannels(
   ]);
   if (channels === null || roles === null || me === null) {
     logger.warn("Discord reports Scout is not in the guild", { guildId });
-    return [];
+    return null;
   }
 
   const rolePermissions = new Map(
     roles.map((role) => [role.id, role.permissions]),
   );
-  const postable = channels
-    .filter((channel) => {
+  return {
+    channels,
+    isPostable: (channel) => {
       if (!POSTABLE_CHANNEL_TYPES.has(channel.type)) return false;
       // Only offer channels the bot can actually post in. Without this we'd
       // show channels Scout could read but never message.
@@ -92,7 +115,27 @@ export async function listPostableChannels(
         hasPermission(permissions, PermissionFlagsBits.ViewChannel) &&
         hasPermission(permissions, PermissionFlagsBits.SendMessages)
       );
-    })
+    },
+  };
+}
+
+/**
+ * Text channels in `guildId` that the bot can post to, sorted by name.
+ *
+ * Returns `[]` when Discord says Scout is not in the guild — callers have
+ * already proved installation, so that is a narrowing, not a decision. A
+ * failure to reach Discord throws {@link DiscordUpstreamError} instead, so an
+ * outage is never presented as "this server has no channels".
+ */
+export async function listPostableChannels(
+  guildId: DiscordGuildId,
+  dependencies: PostableChannelDependencies = defaultDependencies(),
+): Promise<PostableChannel[]> {
+  const guild = await readGuildChannelPostability(guildId, dependencies);
+  if (guild === null) return [];
+
+  const postable = guild.channels
+    .filter((channel) => guild.isPostable(channel))
     .map((channel) => ({
       id: channel.id,
       name: channel.name,

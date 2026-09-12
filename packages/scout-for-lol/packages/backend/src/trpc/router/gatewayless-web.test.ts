@@ -13,6 +13,7 @@ import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   permissionKey,
   type Permission,
@@ -37,6 +38,36 @@ const ACTOR = DiscordAccountIdSchema.parse("900000000000009001");
 const PEER = DiscordAccountIdSchema.parse("900000000000009002");
 const BOT = "900000000000000000";
 const BOT_ROLE = "100000000000009901";
+const TRACKED_ALIAS = "virmel";
+const POSTABLE_CHANNEL = DiscordChannelIdSchema.parse("100000000000009201");
+const MUTED_CHANNEL = DiscordChannelIdSchema.parse("100000000000009202");
+const FOREIGN_CHANNEL = DiscordChannelIdSchema.parse("100000000000009203");
+
+function postableChannel(id: string, name: string): DiscordGuildChannel {
+  return { id, name, type: ChannelType.GuildText, permission_overwrites: [] };
+}
+
+/**
+ * A text channel Scout can see but not speak in.
+ *
+ * The picker has always filtered these out; the shape of the failure is that
+ * the mutation guard did not, so the two disagreed about the same channel.
+ */
+function mutedChannel(): DiscordGuildChannel {
+  return {
+    id: MUTED_CHANNEL,
+    name: "announcements-only",
+    type: ChannelType.GuildText,
+    permission_overwrites: [
+      {
+        id: BOT_ROLE,
+        type: 0,
+        allow: "0",
+        deny: PermissionFlagsBits.SendMessages.toString(),
+      },
+    ],
+  };
+}
 
 type RestState = {
   guildsOnDiscord: Set<string>;
@@ -248,6 +279,20 @@ async function seedInstall(
   });
 }
 
+async function seedTrackedPlayer(): Promise<void> {
+  const now = new Date();
+  await prisma.player.create({
+    data: {
+      alias: TRACKED_ALIAS,
+      discordId: ACTOR,
+      serverId: INSTALLED,
+      creatorDiscordId: ACTOR,
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+}
+
 async function seedGrants(
   discordUserId: string,
   permissions: readonly Permission[],
@@ -270,6 +315,8 @@ const MANAGER: Permission[] = [
 
 beforeEach(async () => {
   await prisma.auditLog.deleteMany({});
+  await prisma.subscription.deleteMany({});
+  await prisma.player.deleteMany({});
   await prisma.serverPermission.deleteMany({});
   await prisma.guildInstall.deleteMany({});
   state.guildsOnDiscord = new Set([INSTALLED, UNROWED]);
@@ -406,6 +453,76 @@ describe("channel picker without a gateway", () => {
     await expect(
       caller().guild.listChannels({ guildId: INSTALLED }),
     ).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
+  });
+
+  test("does not offer a channel whose overwrite denies Send Messages", async () => {
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    state.channels = [postableChannel("1", "general"), mutedChannel()];
+
+    await expect(
+      caller().guild.listChannels({ guildId: INSTALLED }),
+    ).resolves.toEqual([{ id: "1", name: "general", parentId: null }]);
+  });
+});
+
+/**
+ * The mutation guard must refuse exactly what the picker refuses.
+ *
+ * It claimed to mirror `listChannels` but checked only the channel's *type*,
+ * so a channel the picker had filtered out on permissions was still accepted
+ * by every subscription mutation. The subscription was then created
+ * successfully and simply never posted — a failure the user discovers by
+ * noticing that nothing happens, long after anything points back at the
+ * channel they chose.
+ */
+describe("the channel guard mirrors the picker", () => {
+  test("a mutation into a Send-Messages-denied channel is rejected", async () => {
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    await seedTrackedPlayer();
+    state.channels = [mutedChannel()];
+
+    await expect(
+      caller().subscription.addChannel({
+        guildId: INSTALLED,
+        alias: TRACKED_ALIAS,
+        channelId: MUTED_CHANNEL,
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    // Nothing was written on the way to the refusal.
+    expect(await prisma.subscription.count()).toBe(0);
+  });
+
+  test("the same mutation into a postable channel still succeeds", async () => {
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    await seedTrackedPlayer();
+    state.channels = [postableChannel(POSTABLE_CHANNEL, "general")];
+
+    await expect(
+      caller().subscription.addChannel({
+        guildId: INSTALLED,
+        alias: TRACKED_ALIAS,
+        channelId: POSTABLE_CHANNEL,
+      }),
+    ).resolves.toMatchObject({ kind: "added" });
+    expect(await prisma.subscription.count()).toBe(1);
+  });
+
+  test("a channel from another guild is still rejected", async () => {
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    await seedTrackedPlayer();
+    state.channels = [postableChannel(POSTABLE_CHANNEL, "general")];
+
+    await expect(
+      caller().subscription.addChannel({
+        guildId: INSTALLED,
+        alias: TRACKED_ALIAS,
+        channelId: FOREIGN_CHANNEL,
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 });
 

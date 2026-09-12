@@ -204,7 +204,10 @@ function auditHouseExposure(
       houseBet.predictedTeamId !== summary.houseTeamId ||
       houseBet.stake !== summary.houseFill ||
       houseBet.matchedStake !== summary.houseFill ||
-      houseDebit !== -summary.houseFill);
+      // The debit is the negative side of the same movement, so its magnitude
+      // is what must equal the fill. Negating the ledger figure rather than
+      // the summary's leaves the branded pool total unmodified.
+      -houseDebit !== summary.houseFill);
   if (
     emptyHouseInvalid ||
     fundedHouseInvalid ||

@@ -27,6 +27,7 @@ import {
   BucksLedgerContextSchema,
   BucksLedgerKindSchema,
   RawMatchSchema,
+  StoredBucksLedgerContextSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { settleDaresV2ForMatch } from "#src/betting/dares/settlement/dare-settle-v2.ts";
@@ -225,7 +226,13 @@ async function settlementEntriesForDare(dareId: number, since: Date | null) {
     orderBy: { id: "asc" },
   });
   return candidates.filter((entry) => {
-    const context = BucksLedgerContextSchema.parse(JSON.parse(entry.context));
+    // The STORED union: this scans every settlement-kind row in the window,
+    // most of which belong to other dares and to ordinary pool settlements.
+    // Parsing those through the write schema made an old-domain settlement row
+    // abort the whole repair before it could even be skipped.
+    const context = StoredBucksLedgerContextSchema.parse(
+      JSON.parse(entry.context),
+    );
     return context.type === "dare" && context.dareId === dareId;
   });
 }
@@ -376,7 +383,10 @@ async function reverseSettlement(target: PendingResettlement): Promise<void> {
         // joins to the settlement it is correcting.
         matchId: entry.matchId ?? undefined,
         // Reuse the original entry's context verbatim so the reversal is
-        // traceable to exactly the movement it undoes.
+        // traceable to exactly the movement it undoes. The WRITE schema here,
+        // unlike the scan above: this parse guards a new row, and every entry
+        // that reaches it is already a `dare` context, whose domain the money
+        // brands never widened.
         context: BucksLedgerContextSchema.parse(JSON.parse(entry.context)),
       });
     }

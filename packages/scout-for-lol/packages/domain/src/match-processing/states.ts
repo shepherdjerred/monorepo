@@ -94,9 +94,17 @@ export const MatchProcessingReceiptSchema = z.strictObject({
 /**
  * Full identity of a receipt: `(kind, version, scope)`. Two receipts sharing
  * this key are the same receipt — a state holds at most one, and
- * `recordReceipt` is idempotent over it. `recordedAt` is evidence, not
- * identity. The encoding is injective: kinds cannot contain `:`, the version
- * is an integer, and the scope key is itself injective.
+ * `recordReceipt` is idempotent over it.
+ *
+ * `recordedAt` is neither identity nor evidence: it is observational metadata
+ * of the first attestation, recording when the fact was noticed rather than
+ * what the fact is. Receipt writers are Temporal Activities, so a retry of an
+ * already-committed write carries the same identity and a fresh wall clock by
+ * construction; `recordReceipt` therefore ignores it and keeps the first
+ * value.
+ *
+ * The encoding is injective: kinds cannot contain `:`, the version is an
+ * integer, and the scope key is itself injective.
  */
 export function matchProcessingReceiptIdentityKey(args: {
   kind: ReceiptKind;

@@ -81,11 +81,25 @@ export function promoteArchiveOnlyToFull(args: {
 
 /**
  * Record a processing receipt. Idempotent by the full receipt identity
- * `(kind, version, scope)`: an exact replay — same identity, same evidence —
- * is `already-applied`, while a receipt that shares an identity but carries
- * different evidence (`recordedAt`) is a conflict: something recorded the
- * same fact twice with disagreeing observations, and the state keeps the
- * first.
+ * `(kind, version, scope)`: a receipt whose identity the state already holds
+ * is `already-applied`, and the state keeps the one it has — including that
+ * first receipt's `recordedAt`.
+ *
+ * `recordedAt` is deliberately outside the comparison, though it used to BE
+ * the comparison. It is observational metadata about the first attestation —
+ * when the fact was noticed, not what the fact is — and treating it as
+ * evidence predates the operational reality that receipt writers are Temporal
+ * Activities: a retry of an already-committed write arrives with the same
+ * identity and a fresh wall clock by construction, so comparing clocks turned
+ * every benign retry into a conflict.
+ *
+ * That leaves this transition nothing left to disagree about, because a domain
+ * receipt carries its identity and `recordedAt` and nothing else: an identity
+ * match here is always a replay. `receipt-evidence-mismatch` stays in the
+ * vocabulary for the layer that does hold evidence — the persistence
+ * repository compares the stored evidence blob, which is a claim about the
+ * fact rather than about when it was seen. Both layers discriminate on
+ * evidence alone, so they cannot answer the same replay differently.
  */
 export function recordReceipt(args: {
   state: MatchProcessingState;
@@ -93,13 +107,11 @@ export function recordReceipt(args: {
 }): TransitionResult<MatchProcessingState> {
   const { state, receipt } = args;
   const identityKey = matchProcessingReceiptIdentityKey(receipt);
-  const existing = state.receipts.find(
+  const alreadyHeld = state.receipts.some(
     (candidate) => matchProcessingReceiptIdentityKey(candidate) === identityKey,
   );
-  if (existing !== undefined) {
-    return existing.recordedAt === receipt.recordedAt
-      ? { outcome: "already-applied" }
-      : { outcome: "conflict", reason: "receipt-evidence-mismatch" };
+  if (alreadyHeld) {
+    return { outcome: "already-applied" };
   }
   return {
     outcome: "applied",

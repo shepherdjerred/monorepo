@@ -85,9 +85,25 @@ export type InstalledGuildLookup = (
  * shared across callers, so a busy server costs one REST read a minute rather
  * than one per request.
  *
+ * ## Concurrently, and with a boundary per guild
+ *
+ * The confirmations are independent, so they run together rather than in
+ * sequence. Every one of them needs an answer — the result is also the scope
+ * Explore resolves aliases in, so there is nothing to short-circuit on — and
+ * serially they were N cold reads each bounded by the REST client's 5-second
+ * timeout, which put a signed-in member's first page load behind a stall
+ * growing with the number of Scout servers they are in. The port's own
+ * `MAX_CONCURRENT_READS` bounds the fan-out, so this does not trade latency
+ * for a saturated REST pool.
+ *
  * Every candidate here has a live row by construction, so an unreachable
  * Discord takes the port's documented asymmetry: the row is trusted and a
  * warning is logged, rather than locking a real member out during an outage.
+ * A candidate that throws anyway is therefore something unexpected rather than
+ * an outage, and it is contained to that guild — one broken server must not
+ * turn the caller's entire consumer surface into `unavailable`, which is what
+ * a single rejection escaping this function does. Only an all-candidates
+ * failure propagates, because only then is there no partial truth to serve.
  */
 export async function confirmedInstalledAmong(
   guildIds: string[],
@@ -95,14 +111,40 @@ export async function confirmedInstalledAmong(
 ): Promise<Iterable<string>> {
   const { installedGuildIdsAmong, isScoutInstalledInGuild } =
     await import("#src/lib/discord/installed-guilds.ts");
-  const candidates = await installedGuildIdsAmong(guildIds, dependencies);
-  const confirmed: string[] = [];
-  for (const guildId of candidates) {
-    if (await isScoutInstalledInGuild(guildId, dependencies)) {
-      confirmed.push(guildId);
-    }
+  const candidates = [
+    ...(await installedGuildIdsAmong(guildIds, dependencies)),
+  ];
+  const confirmations = await Promise.all(
+    candidates.map(async (guildId) => {
+      try {
+        const installed = await isScoutInstalledInGuild(guildId, dependencies);
+        return { guildId, installed, error: undefined };
+      } catch (error: unknown) {
+        return { guildId, installed: undefined, error };
+      }
+    }),
+  );
+
+  const failures = confirmations.filter(
+    (confirmation) => confirmation.installed === undefined,
+  );
+  const total = confirmations.length;
+  if (failures.length > 0 && failures.length === total) {
+    // Nothing answered, so there is no partial truth to serve. Rethrowing the
+    // first failure keeps its type: `installedGuildIdsOrUnavailable` logs it
+    // and turns it into `unavailable`, never into a denial.
+    throw failures[0]?.error;
   }
-  return confirmed;
+  for (const failure of failures) {
+    logger.warn("Skipping a guild whose installation could not be confirmed", {
+      guildId: failure.guildId,
+      error: failure.error,
+    });
+  }
+
+  return confirmations.flatMap((confirmation) =>
+    confirmation.installed === true ? [confirmation.guildId] : [],
+  );
 }
 
 /**
