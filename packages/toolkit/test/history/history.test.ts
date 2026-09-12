@@ -175,6 +175,37 @@ describe("history source adapters", () => {
     expect(cursor?.dialogueText).toContain("cursor-tail-search-marker");
   });
 
+  test("rejects a Grok turn_completed record with a malformed model-usage entry", async () => {
+    const grokHome = path.join(fixtureRoot, "grok-malformed");
+    const sessionDir = path.join(
+      grokHome,
+      "sessions",
+      "%2Ftest%2Fmalformed",
+      "grok-malformed-session",
+    );
+    await mkdir(sessionDir, { recursive: true });
+    await Bun.write(
+      path.join(sessionDir, "updates.jsonl"),
+      `${JSON.stringify({
+        timestamp: 1_788_721_616,
+        params: {
+          sessionId: "grok-malformed-session",
+          update: {
+            sessionUpdate: "turn_completed",
+            usage: { modelUsage: { "grok-4.5-build": "not-an-object" } },
+          },
+        },
+      })}\n`,
+    );
+    const source = createHistorySources().find(
+      (entry) => entry.name === "grok",
+    );
+    expect(source).toBeDefined();
+    const result = await source?.scan({ ...paths, grokHome });
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("Malformed Grok model usage entry");
+  });
+
   test("indexes middle messages and later oversized Conductor blocks", async () => {
     const conductor = createHistorySources().find(
       (source) => source.name === "conductor",
@@ -343,21 +374,19 @@ describe("history source usage and redaction", () => {
     expect(event?.outputTokens).toBe(90);
   });
 
-  test("merges mixed-format Codex usage without dropping old-only turns or double-counting", async () => {
+  test("prefers current-format Codex events wholesale when a file has both formats", async () => {
     const results = await Promise.all(
       createHistorySources().map((source) => source.scan(paths)),
     );
     const documents = results.flatMap((result) => result.documents);
-    const mixedFormat = documents.find(
+    const bothFormats = documents.find(
       (document) =>
-        document.source === "codex" && document.runtimeId === "t-mixed-format",
+        document.source === "codex" &&
+        document.runtimeId === "t-both-formats-present",
     );
-    expect(mixedFormat).toBeDefined();
-    expect(mixedFormat?.usageEvents).toHaveLength(2);
-    const inputTokens = (mixedFormat?.usageEvents ?? [])
-      .map((event) => event.inputTokens)
-      .sort((a, b) => a - b);
-    expect(inputTokens).toEqual([111, 222]);
+    expect(bothFormats).toBeDefined();
+    expect(bothFormats?.usageEvents).toHaveLength(1);
+    expect(bothFormats?.usageEvents[0]?.inputTokens).toBe(999);
   });
 
   test("keeps two distinct Codex turns that coincidentally report identical token counts", async () => {

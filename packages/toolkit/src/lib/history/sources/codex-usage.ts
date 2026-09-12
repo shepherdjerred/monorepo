@@ -20,10 +20,19 @@ type CodexRolloutAccumulator = {
   // Codex has emitted per-turn usage under two different event shapes across
   // versions — the older top-level `token_usage_record` (`turn_token_usage`)
   // and the current `event_msg`-wrapped `token_count`
-  // (`info.last_token_usage`) — and real rollouts can carry both for the
-  // same turns. Tracked separately and merged by `mergeCodexUsageEvents`,
-  // which keeps every event from both lists without double-counting a turn
-  // reported in both formats.
+  // (`info.last_token_usage`). A single rollout file is written by one Codex
+  // process invocation running one build for its entire lifetime — a version
+  // upgrade takes effect only on the next launch, which starts a new rollout
+  // file (new thread id) rather than switching formats mid-file. Inspecting
+  // every local rollout file on this machine (822 files spanning over a
+  // month) confirms this: none contain `token_usage_record` at all, and no
+  // file mixes the two shapes. The two lists are therefore never merged
+  // per-turn — `scanCodexSessionUsage` picks whichever one is non-empty. A
+  // per-turn join keyed on the token counts themselves (tried in two earlier
+  // passes: a signature set, then a one-for-one multiset) was reliably
+  // broken by the one thing count-equality can never rule out — two
+  // different turns that happen to report identical counts — since there is
+  // no shared id or timestamp between the formats to join on instead.
   readonly tokenCountEvents: UsageEventEntry[];
   readonly tokenUsageRecordEvents: UsageEventEntry[];
 };
@@ -198,58 +207,20 @@ async function parseCodexRolloutFile(
 }
 
 /**
- * A `token_count` event and a `token_usage_record` for the same turn report
- * identical token counts (verified against real rollout data — same
- * input/output/cached/reasoning numbers, logged moments apart under two
- * different event shapes), but not a shared id or timestamp to join on. This
- * signature of the actual counts is the join key: two events with the same
- * signature are almost certainly the same turn reported twice, while a
- * signature with no counterpart is a turn only one format captured (e.g. a
- * thread that started before a Codex version began dual-emitting).
+ * Selects whichever rollout usage format this file actually used, instead of
+ * attempting a per-turn merge across the two lists. Both formats' events are
+ * timestamped and shaped identically (see `usageCounts`), so nothing is lost
+ * by this choice as long as the file-format-exclusivity invariant documented
+ * on `CodexRolloutAccumulator` holds — and unlike a per-turn join keyed on
+ * token counts, this never risks treating two distinct turns that happen to
+ * report identical counts as the same turn reported twice.
  */
-function usageSignature(counts: UsageCounts): string {
-  return [
-    counts.inputTokens,
-    counts.outputTokens,
-    counts.cacheCreationTokens,
-    counts.cachedInputTokens,
-    counts.reasoningTokens,
-  ].join(":");
-}
-
-/**
- * Merges the two rollout usage formats without ever discarding a whole
- * format wholesale: every `token_usage_record` event is kept unconditionally
- * (it's never wrong to keep it), and a `token_count` event is added only when
- * it can't be matched one-for-one against a still-unconsumed
- * `token_usage_record` with the identical signature. A count of *remaining*
- * matches per signature (rather than a plain "have we seen this signature"
- * set) is required because two distinct, legitimate turns can share a
- * signature by coincidence (e.g. two short replies with the same token
- * counts) — a membership check would treat the second turn's `token_count`
- * event as a cross-format duplicate of the first and silently drop it, even
- * though only one, or neither, of the old-format entries actually
- * corresponds to it.
- */
-function mergeCodexUsageEvents(
+function selectCodexUsageEvents(
   accumulator: CodexRolloutAccumulator,
 ): UsageEventEntry[] {
-  const availableMatches = new Map<string, number>();
-  for (const event of accumulator.tokenUsageRecordEvents) {
-    const signature = usageSignature(event);
-    availableMatches.set(signature, (availableMatches.get(signature) ?? 0) + 1);
-  }
-  const merged = [...accumulator.tokenUsageRecordEvents];
-  for (const event of accumulator.tokenCountEvents) {
-    const signature = usageSignature(event);
-    const remaining = availableMatches.get(signature) ?? 0;
-    if (remaining > 0) {
-      availableMatches.set(signature, remaining - 1);
-    } else {
-      merged.push(event);
-    }
-  }
-  return merged;
+  return accumulator.tokenCountEvents.length > 0
+    ? accumulator.tokenCountEvents
+    : accumulator.tokenUsageRecordEvents;
 }
 
 /**
@@ -269,7 +240,7 @@ export async function scanCodexSessionUsage(
     if (accumulator.threadId === null) {
       continue;
     }
-    const events = mergeCodexUsageEvents(accumulator);
+    const events = selectCodexUsageEvents(accumulator);
     if (events.length > 0) {
       result.set(accumulator.threadId, events);
     }

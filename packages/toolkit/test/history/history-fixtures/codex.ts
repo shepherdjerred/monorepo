@@ -253,17 +253,22 @@ export async function writeCodexRolloutFormatFixtures(
     `${currentFormatLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
 
-  // t-mixed-format has an old-format-only turn (input_tokens: 111, before a
-  // hypothetical mid-session Codex upgrade) followed by a turn reported in
-  // BOTH formats with identical counts (input_tokens: 222, after the
-  // upgrade) — proves the merge keeps the old-only turn instead of
-  // discarding it wholesale, while still counting the duplicated turn once.
-  const mixedFormatLines = [
+  // t-both-formats-present has an old-format turn (input_tokens: 111) and an
+  // unrelated new-format turn (input_tokens: 999) in the same file — a
+  // combination real rollouts never actually produce (a single Codex process
+  // invocation writes one format for its whole lifetime; see the comment on
+  // `CodexRolloutAccumulator`), but proves the defensive fallback picks the
+  // current format wholesale rather than attempting a per-turn merge that a
+  // count-based join can never safely resolve.
+  const bothFormatsPresentLines = [
     {
       timestamp: "2026-08-12T00:00:00.000Z",
       ordinal: 0,
       type: "session_meta",
-      payload: { session_id: "t-mixed-format", id: "t-mixed-format" },
+      payload: {
+        session_id: "t-both-formats-present",
+        id: "t-both-formats-present",
+      },
     },
     {
       timestamp: "2026-08-12T00:00:01.000Z",
@@ -292,40 +297,25 @@ export async function writeCodexRolloutFormatFixtures(
     {
       timestamp: "2026-08-12T00:00:03.000Z",
       ordinal: 3,
-      type: "token_usage_record",
-      payload: {
-        turn_token_usage: {
-          input_tokens: 222,
-          cached_input_tokens: 0,
-          cache_write_input_tokens: 0,
-          output_tokens: 22,
-          reasoning_output_tokens: 0,
-          total_tokens: 244,
-        },
-      },
-    },
-    {
-      timestamp: "2026-08-12T00:00:03.150Z",
-      ordinal: 4,
       type: "event_msg",
       payload: {
         type: "token_count",
         info: {
           last_token_usage: {
-            input_tokens: 222,
+            input_tokens: 999,
             cached_input_tokens: 0,
             cache_write_input_tokens: 0,
-            output_tokens: 22,
+            output_tokens: 99,
             reasoning_output_tokens: 0,
-            total_tokens: 244,
+            total_tokens: 1098,
           },
         },
       },
     },
   ];
   await Bun.write(
-    path.join(sessionsDir, "rollout-mixed-format.jsonl"),
-    `${mixedFormatLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
+    path.join(sessionsDir, "rollout-both-formats-present.jsonl"),
+    `${bothFormatsPresentLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
 
   // t-repeated-format has two distinct current-format turns that happen to
