@@ -755,6 +755,7 @@
         "database contract: postgresql sha256:c98f6cb89c2c572c8eca60765dd13ce1ac1e3d09e6bf22815e088e58387f3492",
         "database contract: postgresql sha256:5e007f95b32be2025cb0869f4dc8740428b54e8b530ae55ad9fdec0cff7a3bdb",
         "database contract: postgresql sha256:9484e4dc8553f5b01b34c9da95863b362e7e7c75c6d543a99cb912d8f02d7e1e",
+        "database contract: postgresql sha256:666edeb9704ae8668741077f793792ca274d8e9d2af3631b8ae0d2e1f62d90b6",
         "database contract: postgresql sha256:666edeb9704ae8668741077f793792ca274d8e9d2af3631b8ae0d2e1f62d90b6"
       ]
     },
@@ -912,7 +913,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:a684a2883963ab5fce758c39e6a590d87b3b2472a12e70e6c5f3a6074f8836d1",
+      "value": "2.0.0-15287@sha256:a3277444ab5385d30b4f11db73dc107e434c74430f3ef7f12863404fc3ab10b6",
       "notes": ["not managed by renovate"]
     },
     {
@@ -922,7 +923,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:5559de45ba188435ccccdf16325df1a00a89025fd85cbef92f031259fd31320e",
+      "value": "2.0.0-15287@sha256:033502e8376026e423170efecfb4d998d9549df116c814445d52f941bbd20a57",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
