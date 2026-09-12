@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "Orianna": {
       "id": "Orianna",
@@ -284,6 +284,26 @@
           "name": "T1 Orianna (Elite)",
           "chromas": false,
           "parentSkin": 38
+        },
+        {
+          "id": "61040",
+          "num": 40,
+          "name": "Risen Legend Orianna",
+          "chromas": true
+        },
+        {
+          "id": "61041",
+          "num": 41,
+          "name": "Risen Legend Orianna (Paragon)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "61042",
+          "num": 42,
+          "name": "Risen Legend Orianna (Mythclimber)",
+          "chromas": false,
+          "parentSkin": 40
         }
       ],
       "lore": "Once a curious girl of flesh and blood, Orianna is now a technological marvel comprised entirely of clockwork. She became gravely ill after an accident in the lower districts of Zaun, and her failing body had to be replaced with exquisite artifice, piece by piece. Accompanied by an extraordinary brass sphere she built for companionship and protection, Orianna is now free to explore the wonders of Piltover, and beyond.",

@@ -1,0 +1,996 @@
+{
+  "data": {
+    "Jade_Galio": {
+      "id": "Galio",
+      "key": "3",
+      "name": "Galio",
+      "title": "the Colossus",
+      "image": {
+        "full": "Galio.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 288,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "3000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "3001",
+          "num": 1,
+          "name": "Enchanted Galio",
+          "chromas": false
+        },
+        {
+          "id": "3002",
+          "num": 2,
+          "name": "Hextech Galio",
+          "chromas": false
+        },
+        {
+          "id": "3003",
+          "num": 3,
+          "name": "Commando Galio",
+          "chromas": false
+        },
+        {
+          "id": "3004",
+          "num": 4,
+          "name": "Gatekeeper Galio",
+          "chromas": false
+        },
+        {
+          "id": "3005",
+          "num": 5,
+          "name": "Debonair Galio",
+          "chromas": false
+        },
+        {
+          "id": "3006",
+          "num": 6,
+          "name": "Birdio",
+          "chromas": true
+        },
+        {
+          "id": "3007",
+          "num": 7,
+          "name": "Birdio (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "3008",
+          "num": 8,
+          "name": "Birdio (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "3009",
+          "num": 9,
+          "name": "Birdio (Catseye)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "3010",
+          "num": 10,
+          "name": "Birdio (Citrine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "3011",
+          "num": 11,
+          "name": "Birdio (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "3012",
+          "num": 12,
+          "name": "Birdio (Meteorite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "3013",
+          "num": 13,
+          "name": "Infernal Galio",
+          "chromas": true
+        },
+        {
+          "id": "3014",
+          "num": 14,
+          "name": "Infernal Galio (Peridot)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "3015",
+          "num": 15,
+          "name": "Infernal Galio (Catseye)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "3016",
+          "num": 16,
+          "name": "Infernal Galio (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "3017",
+          "num": 17,
+          "name": "Infernal Galio (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "3018",
+          "num": 18,
+          "name": "Infernal Galio (Pearl)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "3019",
+          "num": 19,
+          "name": "Dragon Guardian Galio",
+          "chromas": true
+        },
+        {
+          "id": "3020",
+          "num": 20,
+          "name": "Dragon Guardian Galio (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3021",
+          "num": 21,
+          "name": "Dragon Guardian Galio (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3022",
+          "num": 22,
+          "name": "Dragon Guardian Galio (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3023",
+          "num": 23,
+          "name": "Dragon Guardian Galio (Citrine)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3024",
+          "num": 24,
+          "name": "Dragon Guardian Galio (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3025",
+          "num": 25,
+          "name": "Dragon Guardian Galio (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3026",
+          "num": 26,
+          "name": "Dragon Guardian Galio (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3027",
+          "num": 27,
+          "name": "Dragon Guardian Galio (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "3028",
+          "num": 28,
+          "name": "Mythmaker Galio",
+          "chromas": true
+        },
+        {
+          "id": "3029",
+          "num": 29,
+          "name": "Birdio (Worlds Early Bird)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "3030",
+          "num": 30,
+          "name": "Mythmaker Galio (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3031",
+          "num": 31,
+          "name": "Mythmaker Galio (Turquoise)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3032",
+          "num": 32,
+          "name": "Mythmaker Galio (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3033",
+          "num": 33,
+          "name": "Mythmaker Galio (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3034",
+          "num": 34,
+          "name": "Mythmaker Galio (Citrine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3035",
+          "num": 35,
+          "name": "Mythmaker Galio (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3036",
+          "num": 36,
+          "name": "Mythmaker Galio (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3037",
+          "num": 37,
+          "name": "Mythmaker Galio (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3038",
+          "num": 38,
+          "name": "Mythmaker Galio (Gilded)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3039",
+          "num": 39,
+          "name": "Mythmaker Galio (Paragon)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "3040",
+          "num": 40,
+          "name": "Aegis Frame Galio",
+          "chromas": true
+        },
+        {
+          "id": "3041",
+          "num": 41,
+          "name": "Aegis Frame Galio (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "3042",
+          "num": 42,
+          "name": "Aegis Frame Galio (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "3043",
+          "num": 43,
+          "name": "Aegis Frame Galio (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "3044",
+          "num": 44,
+          "name": "Aegis Frame Galio (Amethyst)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "3045",
+          "num": 45,
+          "name": "Aegis Frame Galio (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "3046",
+          "num": 46,
+          "name": "Aegis Frame Galio (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "3047",
+          "num": 47,
+          "name": "T1 Galio",
+          "chromas": true
+        },
+        {
+          "id": "3048",
+          "num": 48,
+          "name": "T1 Galio (Elite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3049",
+          "num": 49,
+          "name": "T1 Galio (Pearl)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3050",
+          "num": 50,
+          "name": "T1 Galio (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3051",
+          "num": 51,
+          "name": "T1 Galio (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3052",
+          "num": 52,
+          "name": "T1 Galio (Catseye)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3053",
+          "num": 53,
+          "name": "T1 Galio (Sapphire)",
+          "chromas": false,
+          "parentSkin": 47
+        }
+      ],
+      "lore": "Outside the gleaming city of Demacia, the stone colossus Galio keeps vigilant watch. Built as a bulwark against enemy mages, he often stands motionless for decades until the presence of powerful magic stirs him to life. Once activated, Galio makes the most of his time, savoring the thrill of a fight and the rare honor of defending his countrymen. But his triumphs are always bittersweet, for the magic he destroys is also his source of reanimation, and each victory leaves him dormant once again.",
+      "blurb": "Outside the gleaming city of Demacia, the stone colossus Galio keeps vigilant watch. Built as a bulwark against enemy mages, he often stands motionless for decades until the presence of powerful magic stirs him to life. Once activated, Galio makes the...",
+      "allytips": [
+        "You can release Shield of Durand even while crowd controlled.",
+        "You can use the minimap ally icons to cast Hero's Entrance.",
+        "You can use the step back from Justice Punch to dodge enemy spells."
+      ],
+      "enemytips": [
+        "Galio moves slower when he is charging Shield of Durand.",
+        "Hero's Entrance can be interrupted before Galio jumps into the air.",
+        "Galio cannot traverse walls with Justice Punch."
+      ],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 1,
+        "defense": 10,
+        "magic": 6,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 600,
+        "hpperlevel": 126,
+        "mp": 410,
+        "mpperlevel": 40,
+        "movespeed": 340,
+        "armor": 24,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 8,
+        "hpregenperlevel": 0.8,
+        "mpregen": 9.5,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.5,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "GalioQ",
+          "name": "Winds of War",
+          "description": "Galio fires two windblasts that converge into a large tornado that deals damage over time.",
+          "tooltip": "Galio fires two windblasts that deal <magicDamage>{{ qmissiledamage }} magic damage</magicDamage> each. When the windblasts meet, they combine into a tornado that deals <magicDamage>{{ percentsuperqdamagett }}% max Health magic damage</magicDamage> over {{ superqduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Windblast Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
+          "rangeBurn": "825",
+          "image": {
+            "full": "GalioQ.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GalioW",
+          "name": "Shield of Durand",
+          "description": "Galio charges a defensive stance, moving slowly. Upon releasing the charge, Galio will taunt and damage nearby enemies.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Galio gains a <shield>{{ totalpassiveshield }} Magic Shield</shield> after not taking damage for {{ passiveshieldooctimer }} seconds.<br /><br /><charge>Begin Charging:</charge> Galio reduces incoming magic damage by {{ magicdamagereduction }} and incoming physical damage by {{ physicaldamagereduction }} and <status>Slows</status> himself by {{ selfslowpercent }}%.<br /><br /><release>Release:</release> Galio <status>Taunts</status> enemy champions for between {{ ccdurationmin }} to {{ ccdurationmax }} seconds, deals between <magicDamage>{{ mintotaldamage }}</magicDamage> and <magicDamage>{{ maxtotaldamage }} magic damage</magicDamage>, and refreshes the damage reduction for {{ drlingerduration }} seconds. Taunt duration, damage, and range increase with charge time.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Shield Health Ratio",
+              "Magic Damage Reduction",
+              "Physical Damage Reduction",
+              "Maximum Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ passiveshieldhealthratio*100.000000 }}% -> {{ passiveshieldhealthrationl*100.000000 }}%",
+              "{{ damagereductionbase*100.000000 }}% -> {{ damagereductionbasenl*100.000000 }}%",
+              "{{ damagereductionbase*50.000000 }}% -> {{ damagereductionbasenl*50.000000 }}%",
+              "{{ maximumwbasedamage }} -> {{ maximumwbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
+          "cooldownBurn": "18/17/16/15/14",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            275,
+            275,
+            275,
+            275,
+            275
+          ],
+          "rangeBurn": "275",
+          "image": {
+            "full": "GalioW.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GalioE",
+          "name": "Justice Punch",
+          "description": "Galio will briefly step back and charge, knocking up the first enemy champion he encounters.",
+          "tooltip": "Galio lunges forward with a mighty blow, <status>Knocking Up</status> for {{ knockupduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first champion hit. Other enemies in the way take <magicDamage>{{ pvedamage }} magic damage</magicDamage>.<br /><br />Galio's dash stops on hitting terrain.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "GalioE.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "GalioR",
+          "name": "Hero's Entrance",
+          "description": "Galio designates an ally's position as his landing spot, granting all allies in the area a magic shield. After a delay Galio smashes down location, knocking up nearby enemies.",
+          "tooltip": "Galio designates an allied champion's position as his landing spot, granting all allied champions in the area <spellName>Shield of Durand's</spellName> passive <shield>Shield</shield> for {{ temporarywshieldduration }} seconds. Galio then flies to his landing zone.<br /><br />When Galio lands, he <status>Knocks Up</status> for {{ stundurationouter }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Range",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            180,
+            160,
+            140
+          ],
+          "cooldownBurn": "180/160/140",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            4000,
+            4750,
+            5500
+          ],
+          "rangeBurn": "4000/4750/5500",
+          "image": {
+            "full": "GalioR.png",
+            "sprite": "spell4.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Colossal Smash",
+        "description": "Every few seconds, Galio's next basic attack deals bonus magic damage in an area.",
+        "image": {
+          "full": "Galio_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 288,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

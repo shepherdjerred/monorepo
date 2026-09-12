@@ -1,6 +1,6 @@
 {
   "type": "summoner",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "SummonerBarrier": {
       "id": "SummonerBarrier",
@@ -792,16 +792,16 @@
     "SummonerMana_Jade": {
       "id": "SummonerMana_Jade",
       "name": "Clarity",
-      "description": "Restores all nearby allied champions' mana. Summoner's Insight: Restores 25% more mana.",
-      "tooltip": "Restores <scaleMana>{{ selfmanaactual }}% maximum Mana</scaleMana> to your Champion and <scaleMana>{{ allymanaactual }}%</scaleMana> to nearby allies.<br /><br />",
+      "description": "Restores your and ally champions' Mana. Summoner's Insight: Restores more mana.",
+      "tooltip": "Restores <scaleMana>{{ selfmanaactual }} Mana</scaleMana> to your Champion and <scaleMana>{{ allymanaactual }} max Mana</scaleMana> to nearby allies.<br /><br />",
       "maxrank": 1,
       "cooldown": [135],
       "cooldownBurn": "135",
       "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [null, [40], [40], [0], [0], [0], [0], [0], [0], [0], [0]],
-      "effectBurn": [null, "40", "40", "0", "0", "0", "0", "0", "0", "0", "0"],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "713",
       "summonerLevel": 1,

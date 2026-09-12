@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "Ekko": {
       "id": "Ekko",
@@ -486,8 +486,8 @@
           "maxrank": 5,
           "cooldown": [9, 8.5, 8, 7.5, 7],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [50, 60, 70, 80, 90],
-          "costBurn": "50/60/70/80/90",
+          "cost": [40, 50, 60, 70, 80],
+          "costBurn": "40/50/60/70/80",
           "datavalues": {},
           "effect": [
             null,

@@ -1830,14 +1830,14 @@ exports[`should be able to get champion data 1`] = `
       "costBurn": "0",
       "costType": "No Cost",
       "datavalues": {},
-      "description": "Restores all nearby allied champions' mana. Summoner's Insight: Restores 25% more mana.",
+      "description": "Restores your and ally champions' Mana. Summoner's Insight: Restores more mana.",
       "effect": [
         null,
         [
-          40,
+          0,
         ],
         [
-          40,
+          0,
         ],
         [
           0,
@@ -1866,8 +1866,8 @@ exports[`should be able to get champion data 1`] = `
       ],
       "effectBurn": [
         null,
-        "40",
-        "40",
+        "0",
+        "0",
         "0",
         "0",
         "0",
@@ -1900,7 +1900,7 @@ exports[`should be able to get champion data 1`] = `
       "rangeBurn": "600",
       "resource": "No Cost",
       "summonerLevel": 1,
-      "tooltip": "Restores <scaleMana>{{ selfmanaactual }}% maximum Mana</scaleMana> to your Champion and <scaleMana>{{ allymanaactual }}%</scaleMana> to nearby allies.<br /><br />",
+      "tooltip": "Restores <scaleMana>{{ selfmanaactual }} Mana</scaleMana> to your Champion and <scaleMana>{{ allymanaactual }} max Mana</scaleMana> to nearby allies.<br /><br />",
       "vars": [],
     },
     "SummonerPoroRecall": {
@@ -3021,6 +3021,6 @@ exports[`should be able to get champion data 1`] = `
     },
   },
   "type": "summoner",
-  "version": "16.17.1",
+  "version": "16.18.1",
 }
 `;
