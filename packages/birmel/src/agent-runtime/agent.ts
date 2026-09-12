@@ -175,6 +175,7 @@ const WEB_CONTENT_OMITTED_KEYS = new Set([
   "html",
   "raw",
   "snippet",
+  "title",
 ]);
 
 function shouldOmitOutputKey(

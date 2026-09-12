@@ -416,7 +416,7 @@ describe("summarizeToolResultForSession: shell output exclusion", () => {
     );
     expect(event.resultSummary).toContain("Successfully fetched URL");
     expect(event.resultSummary).toContain("https://attacker.example.com");
-    expect(event.resultSummary).toContain("Attacker Site");
+    expect(event.resultSummary).not.toContain("Attacker Site");
     expect(event.resultSummary).not.toContain(injectedPrompt);
     expect(event.content).not.toContain(injectedPrompt);
   });
