@@ -7,7 +7,10 @@ import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import configuration from "#src/configuration.ts";
 import { client } from "#src/discord/client.ts";
-import { asTextChannel } from "#src/discord/utils/channel.ts";
+import {
+  asTextChannel,
+  fetchChannelForDelivery,
+} from "#src/discord/utils/channel.ts";
 import {
   checkSendMessagePermission,
   hasReadMessageHistoryPermission,
@@ -149,9 +152,12 @@ async function diagnoseSendFailure(channelId: DiscordChannelId): Promise<{
   kind: DeliveryFailureKind | "other";
   permissionReason: string | undefined;
 }> {
-  let refetched: Awaited<ReturnType<typeof client.channels.fetch>>;
+  let refetched: Awaited<ReturnType<typeof fetchChannelForDelivery>>;
   try {
-    refetched = await client.channels.fetch(channelId);
+    // Same cache-independent resolution the send itself used. A default fetch
+    // here would resolve `null` for every live channel on a gatewayless role
+    // and report "your channel was deleted" to the owner.
+    refetched = await fetchChannelForDelivery(channelId);
   } catch (refetchError) {
     return {
       kind: isMissingChannelError(refetchError) ? "channel_missing" : "other",
@@ -172,10 +178,18 @@ async function diagnoseSendFailure(channelId: DiscordChannelId): Promise<{
     refetched,
     configuration.applicationId,
   );
-  if (permissionCheck.hasPermission) {
-    return { kind: "other", permissionReason: undefined };
+  if (permissionCheck.status === "denied") {
+    return { kind: "permission", permissionReason: permissionCheck.reason };
   }
-  return { kind: "permission", permissionReason: permissionCheck.reason };
+  // "allowed" — the bot can still post, so the original failure was transient.
+  // "unknown" — the channel came back without its guild, so there is no local
+  // permission state to read at all. Both are the operator's domain: this
+  // branch only ever runs for a failure Discord did NOT label 50013/50001, and
+  // those labels are classified from the error itself before diagnosis, so a
+  // real permission revocation is still escalated on a gatewayless role. What
+  // is not available is the *guess*, and guessing "permission" here is what
+  // sends an owner a DM about a permission they never changed.
+  return { kind: "other", permissionReason: undefined };
 }
 
 /**
@@ -224,8 +238,11 @@ export async function send(
   serverId?: DiscordGuildId,
 ): Promise<Message> {
   try {
-    // Fetch the channel
-    const fetchedChannel = await client.channels.fetch(channelId);
+    // Fetch the channel. Cache-independent on purpose: this is the shared
+    // sender for every Scout delivery, most of which run as Temporal
+    // Activities on a role that holds no gateway and therefore no guild cache.
+    // See `fetchChannelForDelivery` for what a default fetch does there.
+    const fetchedChannel = await fetchChannelForDelivery(channelId);
     if (!fetchedChannel) {
       throw failChannelMissing(
         "Channel not found or bot cannot access it",

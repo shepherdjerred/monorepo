@@ -75,19 +75,63 @@ export function isUnknownGuildError(error: unknown): boolean {
  */
 
 /**
+ * A channel object that carries the guild it belongs to.
+ *
+ * discord.js types `GuildChannel.guild` as always present, and for a channel
+ * built from the gateway cache it is. A channel fetched with
+ * `allowUnknownGuild` — how `fetchChannelForDelivery` resolves every delivery,
+ * because a gatewayless role has no guild cache to build from — carries no
+ * guild at all. So this is a runtime question the types cannot answer, and it
+ * is asked with Zod rather than trusted.
+ */
+const GuildBoundChannelSchema = z.object({
+  guild: z.object({ id: z.string() }),
+});
+
+/**
+ * Whether this channel object can answer permission questions at all.
+ *
+ * Every permission computation goes through the guild: `permissionsFor`
+ * resolves the member and the roles against `guild.members` / `guild.roles`,
+ * and `ThreadChannel` reaches its overwrites through `guild.channels`. Without
+ * a guild those THROW rather than deny, so "unknown" and "denied" are different
+ * answers here and must not be collapsed — a denial is DMed to the guild owner
+ * as a permission they revoked.
+ */
+export function hasResolvedGuild(channel: Channel): boolean {
+  return GuildBoundChannelSchema.safeParse(channel).success;
+}
+
+/**
+ * Whether the bot may post in a channel — including the answer that cannot be
+ * computed.
+ *
+ * `unknown` exists because the two ways of not being allowed have opposite
+ * consequences: `denied` is a delivery problem the guild owner can fix and is
+ * escalated to them, while `unknown` is an absence of local information (no
+ * guild on the channel) that says nothing about the guild's configuration.
+ * Reporting the second as the first is how an empty cache turns into a DM
+ * accusing an owner of revoking a permission they still grant.
+ */
+export type SendMessagePermission =
+  | { status: "allowed" }
+  | { status: "denied"; reason: string }
+  | { status: "unknown"; reason: string };
+
+/**
  * Check if the bot has permission to send messages in a channel
  *
  * @param channel - The channel to check permissions for
  * @param botUserId - The bot's own user id, which for a bot is its application id
- * @returns Promise with hasPermission flag and optional error message
+ * @returns Promise with the allowed / denied / unknown verdict
  */
 export async function checkSendMessagePermission(
   channel: Channel,
   botUserId: string,
-): Promise<{ hasPermission: boolean; reason?: string }> {
+): Promise<SendMessagePermission> {
   // DM channels don't need permission checks
   if (channel.isDMBased()) {
-    return { hasPermission: true };
+    return { status: "allowed" };
   }
 
   // Check if this is a guild-based text channel
@@ -99,8 +143,16 @@ export async function checkSendMessagePermission(
     channel.type !== ChannelType.GuildForum
   ) {
     return {
-      hasPermission: false,
+      status: "denied",
       reason: "Cannot check permissions for this channel type",
+    };
+  }
+
+  if (!hasResolvedGuild(channel)) {
+    return {
+      status: "unknown",
+      reason:
+        "Channel was resolved without its guild (no gateway on this process), so its permissions cannot be read locally",
     };
   }
 
@@ -129,7 +181,7 @@ export async function checkSendMessagePermission(
 
     if (!permissions) {
       return {
-        hasPermission: false,
+        status: "denied",
         reason:
           "Cannot access channel - bot may not be in the server or channel may be deleted",
       };
@@ -139,7 +191,7 @@ export async function checkSendMessagePermission(
     const canSend = permissions.has(PermissionFlagsBits.SendMessages);
     if (!canSend) {
       return {
-        hasPermission: false,
+        status: "denied",
         reason: "Bot does not have 'Send Messages' permission in this channel",
       };
     }
@@ -148,15 +200,15 @@ export async function checkSendMessagePermission(
     const canView = permissions.has(PermissionFlagsBits.ViewChannel);
     if (!canView) {
       return {
-        hasPermission: false,
+        status: "denied",
         reason: "Bot cannot view this channel",
       };
     }
 
-    return { hasPermission: true };
+    return { status: "allowed" };
   } catch (error) {
     return {
-      hasPermission: false,
+      status: "denied",
       reason: `Error checking permissions: ${String(error)}`,
     };
   }
@@ -169,12 +221,17 @@ export async function checkSendMessagePermission(
  * which is treated as "unknown, allow" — the same permissive answer this gave
  * for an unready client before. A reply that Discord then rejects is retried as
  * a standalone message by the caller.
+ *
+ * A channel resolved without its guild is the same "unknown" with a harder
+ * edge: `permissionsFor` does not return null there, it throws, and a throw out
+ * of a pre-send check is a delivery that never happens. Allow, and let Discord
+ * be the one to refuse the reply.
  */
 export function hasReadMessageHistoryPermission(
   channel: Channel,
   botUserId: string,
 ): boolean {
-  if (channel.isDMBased()) {
+  if (channel.isDMBased() || !hasResolvedGuild(channel)) {
     return true;
   }
 

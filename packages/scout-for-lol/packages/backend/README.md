@@ -170,6 +170,33 @@ work), and the `GuildInstall` table cannot safely replace it — that table is
 documented as possibly missing rows for Scout's earliest guilds, and filtering
 by an incomplete set would stop polling those guilds entirely.
 
+## How Scout posts to Discord
+
+Delivering is REST — `POST`/`PATCH`/`DELETE` on a channel id — but _resolving_
+the channel is where the gateway sneaks back in. `client.channels.fetch(id)`
+makes the REST call either way and then builds the channel by looking its guild
+up in the gateway's guild cache, and at the default `allowUnknownGuild: false`
+it returns `null` when the guild is not cached. On a role with no shard that
+cache is permanently empty, so every live channel would come back
+indistinguishable from a deleted one: scheduled reports and the weekly
+leaderboard would deliver nothing and report success, and the owner would be
+DMed that a channel they still have was deleted.
+
+So every delivery resolves its channel through
+`discord/utils/channel.ts#fetchChannelForDelivery`, never `client.channels.fetch`
+directly. Two rules come with it:
+
+- The channel it returns on a gatewayless role has **no `guild`**, and discord.js
+  permission helpers (`permissionsFor`, `ThreadChannel.parent`) throw on it
+  rather than denying. Ask `permissions.ts#hasResolvedGuild` first.
+  `checkSendMessagePermission` reports `unknown` there, which is deliberately
+  not `denied`: a denial is escalated to the guild owner as a permission they
+  revoked. Real revocations still escalate — Discord labels them 50013/50001 on
+  the send itself, which is classified without any local permission state.
+- The exception is voice. `voice/voice-manager.ts` needs
+  `channel.guild.voiceAdapterCreator`, so it keeps the guild-bound fetch; the
+  capability table already restricts voice to roles that own a shard.
+
 ## Runtime roles
 
 The image boots into one of four shapes, selected by `SCOUT_RUNTIME_ROLE`
