@@ -7,6 +7,8 @@ import {
 } from "@scout-for-lol/data";
 import {
   DETACHED_WORK_MAX_ATTEMPTS,
+  SCOUT_WORKFLOW_NAMES,
+  scoutDetachedWorkWorkflowId,
   type ScoutDetachedWorkInput,
 } from "@scout-for-lol/temporal";
 import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";
@@ -14,6 +16,8 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import type { StartParlayGenerationInput } from "#src/betting/parlays/parlay-generation-types.ts";
+import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
+import { withRecordedWorkflowStart } from "#src/durable/match/workflow-start-facts.ts";
 import { currentScoutTemporalSupervisor } from "./runtime.ts";
 import { startScoutDetachedWork } from "./starts.ts";
 
@@ -59,7 +63,25 @@ async function requestStart(input: ScoutDetachedWorkInput): Promise<void> {
     return;
   }
   try {
-    await startScoutDetachedWork(supervisor.client(), input);
+    // The durable request row is written before the start call, so a crash
+    // between the two still leaves evidence that a start was intended.
+    await withRecordedWorkflowStart({
+      facts: liveDurableFacts(),
+      request: {
+        requestedWorkflowId: scoutDetachedWorkWorkflowId(
+          input.stage,
+          input.kind,
+          input.workId,
+        ),
+        workflowType: SCOUT_WORKFLOW_NAMES.detachedWork,
+        requestSource: `detached-work:${input.kind}`,
+        requestedBy: null,
+        input,
+      },
+      start: async () =>
+        await startScoutDetachedWork(supervisor.client(), input),
+      runIdOf: (handle) => handle.firstExecutionRunId,
+    });
   } catch (error) {
     logger.warn(
       "Temporal work persisted but its immediate start was not accepted",

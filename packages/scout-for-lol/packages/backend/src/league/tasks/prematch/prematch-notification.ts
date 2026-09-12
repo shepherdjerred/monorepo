@@ -41,6 +41,14 @@ import {
 } from "#src/betting/markets/prematch-hook.ts";
 import { PrematchNotificationPostDeliveryError } from "#src/league/tasks/prematch/prematch-notification-errors.ts";
 import { recordPrematchOutputs } from "#src/league/tasks/prematch/prematch-output-recording.ts";
+import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
+import {
+  deliveredMessagesByGuild,
+  recordDeliveryReceipts,
+  tryCreateChannelDeliveryRecorder,
+  type ChannelDeliveryRecorder,
+} from "#src/durable/match/delivery-intents.ts";
+import { ACTIVE_GAME_TTL_MS } from "#src/league/tasks/prematch/active-game-queries.ts";
 import type { MessageCreateOptions } from "discord.js";
 import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 
@@ -179,6 +187,14 @@ type PrematchDeliveryChannel = Awaited<
   ReturnType<typeof getChannelsSubscribedToPlayers>
 >[number];
 
+/**
+ * Deliver the pre-match message to each subscribed channel.
+ *
+ * `recordDelivery` writes the durable notification intent for each send. There
+ * is no effect claim on this path — the ActiveGame row is what stops a second
+ * detection from re-notifying — so the intent is purely a record here, exactly
+ * as it is on the post-match path.
+ */
 async function deliverPrematchMessages(input: {
   channels: PrematchDeliveryChannel[];
   gameInfo: RawCurrentGameInfo;
@@ -188,6 +204,7 @@ async function deliverPrematchMessages(input: {
   prematchMessageContent: string;
   loadingScreenAttachment: AttachmentBuilder | undefined;
   loadingScreenEmbed: EmbedBuilder | undefined;
+  recordDelivery: ChannelDeliveryRecorder | undefined;
 }): Promise<{
   sentMessageIds: Map<string, string>;
   deliveredGuildIds: Set<DiscordGuildId>;
@@ -213,7 +230,17 @@ async function deliverPrematchMessages(input: {
         fallbackEmbed: () =>
           buildFallbackPrematchEmbed(input.gameInfo, input.trackedPlayers),
       });
+      await input.recordDelivery?.({ kind: "prepared", channelId: channel });
+      await input.recordDelivery?.({
+        kind: "send-started",
+        channelId: channel,
+      });
       const sentMessage = await send(message, channel, guildId);
+      await input.recordDelivery?.({
+        kind: "delivered",
+        channelId: channel,
+        messageId: sentMessage.id,
+      });
       sentMessageIds.set(channel, sentMessage.id);
       deliveredGuildIds.add(guildId);
       if (betsOpen) {
@@ -223,6 +250,12 @@ async function deliverPrematchMessages(input: {
         ]);
       }
     } catch (error) {
+      await input.recordDelivery?.({
+        kind: "failed",
+        channelId: channel,
+        permissionError:
+          error instanceof ChannelSendError && error.permissionError,
+      });
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
           `[sendPrematchNotification] ⚠️  Permission error for channel ${channel}: ${error.message}`,
@@ -437,6 +470,10 @@ export async function sendPrematchNotification(
       ? prematchMessageContent
       : "";
 
+  // The platform-qualified match id the completed game will carry, so a
+  // pre-match intent and the post-match facts describe the same match.
+  const prematchMatchId = `${gameInfo.platformId}_${gameInfo.gameId.toString()}`;
+  const facts = liveDurableFacts();
   const delivery = await deliverPrematchMessages({
     channels: deliverChannels,
     gameInfo,
@@ -446,6 +483,24 @@ export async function sendPrematchNotification(
     prematchMessageContent,
     loadingScreenAttachment,
     loadingScreenEmbed,
+    recordDelivery:
+      tryCreateChannelDeliveryRecorder({
+        facts,
+        matchId: prematchMatchId,
+        keyPrefix: `prematch-discord:${prematchMatchId}`,
+        // The ActiveGame row's own lifetime: past it the game is no longer
+        // tracked, so a pre-match send would be about a game already over.
+        freshnessDeadline: new Date(detectedAt.getTime() + ACTIVE_GAME_TTL_MS),
+      }) ?? undefined,
+  });
+  await recordDeliveryReceipts({
+    facts,
+    kind: "prematchDelivery",
+    matchId: prematchMatchId,
+    messagesByGuild: deliveredMessagesByGuild(
+      deliverChannels,
+      delivery.sentMessageIds,
+    ),
   });
 
   try {

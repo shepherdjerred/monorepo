@@ -3,6 +3,7 @@ import {
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
   type WorkflowHandle,
+  type WorkflowHandleWithFirstExecutionRunId,
   type WorkflowStartOptions,
 } from "@temporalio/client";
 import type { Client } from "@temporalio/client";
@@ -136,10 +137,15 @@ export async function startScoutInitialHistory(
   );
 }
 
+/**
+ * Returns the narrower handle the client actually produces: `start` carries
+ * the first execution's run id, which the durable workflow-start record stores
+ * as its acceptance evidence.
+ */
 export async function startScoutDetachedWork(
   client: Client,
   input: ScoutDetachedWorkInput,
-): Promise<WorkflowHandle> {
+): Promise<WorkflowHandleWithFirstExecutionRunId> {
   return await client.workflow.start(SCOUT_WORKFLOW_NAMES.detachedWork, {
     ...IDEMPOTENT_START_POLICIES,
     workflowId: scoutDetachedWorkWorkflowId(
