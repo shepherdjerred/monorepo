@@ -13,6 +13,7 @@ detail below; the rest of the directory is indexed here.
 | `check-suppressions.ts`   | Fails when new lint- or type-error-suppression comments are added                               |
 | `contract-hash.ts`        | Deterministic hash of the sources defining the frontend ↔ backend tRPC contract                 |
 | `create-minimal-png.ts`   | Writes minimal placeholder Tauri icon PNGs                                                      |
+| `dev-db-pull.ts`          | Copies a beta or prod Scout Postgres database into a local dev database (`dev:db-pull`)         |
 | `dev-web.ts`              | Local backend + web SPA dev environment (`--no-backend-watch` for stable browser testing)       |
 | `find-dependent-tests.ts` | Finds test files affected by changed source files (see below)                                   |
 | `install-pkgs.ts`         | Workspace install helper: `bun install` plus Prisma client regeneration when the schema drifted |

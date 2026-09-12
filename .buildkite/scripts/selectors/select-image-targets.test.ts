@@ -111,7 +111,10 @@ describe("selectImageTargets", () => {
   });
 
   test("selects explicit Docker inputs outside workspace dependencies", async () => {
+    // scout-evals depends on the toolkit for the shared Postgres pod helper
+    // its sync-beta script uses, and the selector walks devDependencies too.
     expect(await select(["packages/toolkit/src/commands/pr.ts"])).toEqual([
+      "scout-evals",
       "temporal-worker",
     ]);
   });

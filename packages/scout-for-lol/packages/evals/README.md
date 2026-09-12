@@ -23,10 +23,12 @@ Never expose it publicly (no Funnel).
 ## Discover Candidates
 
 First sync the sanitized tracked-player profile snapshot from Beta Postgres.
-The command kubectl-execs one read-only `psql` `json_agg` query against
-`scout-beta-postgresql-0` (database `scout`) covering only `Player` and
+The command kubectl-execs one read-only `psql` `json_agg` query against the
+`scout-beta-postgresql` master pod (database `scout`) covering only `Player` and
 `Account`; it does not copy tokens, audit data, or the rest of the live
-database.
+database. The pod is resolved by Spilo's `spilo-role=master` label through the
+shared helper in `@shepherdjerred/toolkit/lib/postgres/pod.ts`, so a replica can
+never be read by mistake.
 
 ```bash
 bun run --filter=@scout-for-lol/evals sync-beta

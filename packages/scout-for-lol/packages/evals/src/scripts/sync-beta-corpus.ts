@@ -3,6 +3,11 @@ import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
+import {
+  execInPod,
+  findReadyMasterPod,
+} from "@shepherdjerred/toolkit/lib/postgres/pod.ts";
+
 import { argumentValue } from "#lib/cli.ts";
 import {
   BetaProfileRowSchema,
@@ -10,17 +15,11 @@ import {
   writeBetaCorpusSnapshot,
 } from "#materialization/beta-corpus.ts";
 
-const PodListSchema = z.object({
-  items: z.array(
-    z.object({
-      metadata: z.object({ name: z.string(), uid: z.string() }),
-      status: z.object({
-        conditions: z.array(z.object({ status: z.string(), type: z.string() })),
-        phase: z.string(),
-      }),
-    }),
-  ),
-});
+const BETA_CLUSTER = {
+  namespace: "scout-beta",
+  cluster: "scout-beta-postgresql",
+  container: "postgres",
+} as const;
 
 // Runs inside the scout-beta Postgres pod via the local trust socket
 // (pgHba "local all all trust" exists for exactly these exec runbooks).
@@ -41,70 +40,25 @@ const REMOTE_QUERY = `
   ) t
 `;
 
-async function run(command: string[]): Promise<string> {
-  const executable = command[0];
-  if (executable === undefined) throw new Error("Cannot run an empty command");
-  const process = Bun.spawn(command, { stderr: "pipe", stdout: "pipe" });
-  const [exitCode, stdout, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
-  ]);
-  if (exitCode !== 0) {
-    throw new Error(`${executable} exited with ${String(exitCode)}: ${stderr}`);
-  }
-  return stdout;
-}
-
-async function betaPod(): Promise<{ name: string; uid: string }> {
-  const output = await run([
-    "kubectl",
-    "get",
-    "pods",
-    "-n",
-    "scout-beta",
-    "-o",
-    "json",
-  ]);
-  const pods = PodListSchema.parse(JSON.parse(output)).items.filter(
-    (pod) =>
-      pod.metadata.name.startsWith("scout-beta-postgresql-") &&
-      pod.status.phase === "Running" &&
-      pod.status.conditions.some(
-        (condition) =>
-          condition.type === "Ready" && condition.status === "True",
-      ),
-  );
-  if (pods.length !== 1) {
-    throw new Error(
-      `Expected one ready Scout beta Postgres pod, found ${String(pods.length)}`,
-    );
-  }
-  const pod = pods[0];
-  if (pod === undefined) throw new Error("Scout beta pod selection failed");
-  return pod.metadata;
-}
-
 const destination = argumentValue("--output") ?? defaultBetaCorpusPath();
-const pod = await betaPod();
-const output = await run([
-  "kubectl",
-  "exec",
-  "-n",
-  "scout-beta",
-  pod.name,
-  "--",
-  "psql",
-  "-U",
-  "postgres",
-  "-d",
-  "scout",
-  "-At",
-  "-v",
-  "ON_ERROR_STOP=1",
-  "-c",
-  REMOTE_QUERY,
-]);
+const pod = await findReadyMasterPod(BETA_CLUSTER);
+const output = await execInPod({
+  namespace: BETA_CLUSTER.namespace,
+  pod: pod.name,
+  container: BETA_CLUSTER.container,
+  command: [
+    "psql",
+    "-U",
+    "postgres",
+    "-d",
+    "scout",
+    "-At",
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-c",
+    REMOTE_QUERY,
+  ],
+});
 const parsed: unknown = JSON.parse(output);
 const profiles = z.array(BetaProfileRowSchema).min(1).parse(parsed);
 await mkdir(path.dirname(destination), { recursive: true });
