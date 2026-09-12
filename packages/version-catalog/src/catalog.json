@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:1c88da78d10b60c5894318543e0ddd3d454dfd7370909db00cff48b49bf9fcca",
+      "value": "2.0.0-15321@sha256:9b1be0024936976106b077f2c12cd6cbc46d430e455fb99db36680da45f20912",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15316@sha256:8722f2fcb68f79bb92e44773cd8de2c7f3db8e69cb8ad34f49d763383d9b9808",
+      "value": "2.0.0-15339@sha256:6683d636bbe606afe6c8289c90d51d90509fd0a61a78108bd987ede15c2ee33c",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
         "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
@@ -757,7 +757,8 @@
         "database contract: postgresql sha256:9484e4dc8553f5b01b34c9da95863b362e7e7c75c6d543a99cb912d8f02d7e1e",
         "database contract: postgresql sha256:666edeb9704ae8668741077f793792ca274d8e9d2af3631b8ae0d2e1f62d90b6",
         "database contract: postgresql sha256:666edeb9704ae8668741077f793792ca274d8e9d2af3631b8ae0d2e1f62d90b6",
-        "database contract: postgresql sha256:8722f2fcb68f79bb92e44773cd8de2c7f3db8e69cb8ad34f49d763383d9b9808"
+        "database contract: postgresql sha256:8722f2fcb68f79bb92e44773cd8de2c7f3db8e69cb8ad34f49d763383d9b9808",
+        "database contract: postgresql sha256:6683d636bbe606afe6c8289c90d51d90509fd0a61a78108bd987ede15c2ee33c"
       ]
     },
     {
@@ -841,7 +842,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:010c08b65904be27867360334bd04e61e27c8fd4bcebd7f6d0a13f2af8a135fb",
+      "value": "2.0.0-15321@sha256:9d837b7902aaf9932b00bcb49e0152b3b35cce43afc4471e73c3917166de8cb3",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -864,7 +865,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:9bc96405a2a82e325f8db1a679a67a75c0fe0400a54cad7d208ca86058b76fcd",
+      "value": "2.0.0-15321@sha256:58d02ca6fa4b92437f6172a35fa76db8304ca2449dac49cf2f9e7c9c96649b53",
       "notes": ["not managed by renovate"]
     },
     {
@@ -887,7 +888,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:bb47ca4a1f9433c6346913e4a00a1809a7c574649aed7151d55838952c3358be",
+      "value": "2.0.0-15321@sha256:cb9f86dac66fd0fd45965fafbc176bc844491f7f28417b7eeaf258dae3931c92",
       "notes": [
         "not managed by renovate — pre-first-publish placeholder. The main image",
         "release injects the built digest into chart synthesis and version",
@@ -901,7 +902,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:94092b35bd05e6502c55121be97f86aec406fed9609778be8ccf187ef521817a",
+      "value": "2.0.0-15321@sha256:77c2e5c4dd0724aea1560d3159285d0109ccaf7675c14fb3bc00922c801e727e",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
@@ -914,7 +915,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15287@sha256:a3277444ab5385d30b4f11db73dc107e434c74430f3ef7f12863404fc3ab10b6",
+      "value": "2.0.0-15321@sha256:3103bf8e67e58f548be8b929ba937ff52284386213c7ad4f8dfaaa8e660726a4",
       "notes": ["not managed by renovate"]
     },
     {
@@ -1502,7 +1503,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15273@sha256:0baa91badabb973d439fa2f1bea23c54ff3dfb64ea5e83017b3dc98840507156",
+      "value": "2.0.0-15339@sha256:c3c70e28d97edf31b9f622deb0796787eed7646806c3b608c9686b0044b03934",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1541,7 +1542,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-15258@sha256:360cafd6e48556dd964280af89d6e6e1225ab3093c4a2a651b9f7897577e978e",
+      "value": "2.0.0-15321@sha256:bdab4cefc453cd538fe7e22de1d21c1b2ac73c89bbf27863a46bb976471df6b9",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"
