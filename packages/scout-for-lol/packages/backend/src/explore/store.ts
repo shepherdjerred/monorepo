@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   EXPLORE_TITLE_MAX_LENGTH,
   ExploreConversationSchema,
+  ExploreMatchCardSchema,
   ExploreMessageSchema,
   ExploreTraceEntrySchema,
   ReportAiPreviewSummarySchema,
@@ -11,6 +12,7 @@ import {
   type ExploreAttachPoint,
   type ExploreConversation,
   type ExploreMessage,
+  type ExploreMatchCard,
   type ExploreTraceEntry,
   type ExploreTranscript,
   type ReportAiPreviewSummary,
@@ -45,6 +47,7 @@ import {
 
 const StringArraySchema = z.array(z.string());
 const TraceArraySchema = z.array(ExploreTraceEntrySchema);
+const MatchCardsSchema = z.array(ExploreMatchCardSchema).max(5);
 
 /**
  * The conversation or message a turn refers to does not exist, or is not the
@@ -86,6 +89,7 @@ export type MessageRow = {
   followUps: string;
   preview: string | null;
   visualization: string | null;
+  matchCards: string | null;
   trace: string | null;
   createdAt: Date;
 };
@@ -134,6 +138,8 @@ export function toMessage(
       VisualizationSnapshotSchema,
       "visualization",
     ),
+    matchCards:
+      parseJsonColumn(row.matchCards, MatchCardsSchema, "matchCards") ?? [],
     trace: parseJsonColumn(row.trace, TraceArraySchema, "trace") ?? [],
     createdAt: row.createdAt.toISOString(),
   });
@@ -441,6 +447,7 @@ export async function appendExploreAnswer(
     answer: ExploreAnswer;
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
+    matchCards?: ExploreMatchCard[] | undefined;
     trace: ExploreTraceEntry[];
     /**
      * Move the visible branch only if it still names the leaf this run began
@@ -469,6 +476,10 @@ export async function appendExploreAnswer(
         input.answer.includeVisualization && input.visualization !== null
           ? JSON.stringify(input.visualization)
           : null,
+      matchCards:
+        input.matchCards === undefined || input.matchCards.length === 0
+          ? null
+          : JSON.stringify(input.matchCards),
       trace: JSON.stringify(input.trace),
     },
   });

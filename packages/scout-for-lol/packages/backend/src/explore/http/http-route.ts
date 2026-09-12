@@ -186,7 +186,17 @@ async function handleSharedTranscript(
   if (transcript === null) {
     return jsonError("Not found.", 404, corsHeaders);
   }
-  return Response.json(redactSharedExploreTranscript(transcript), {
+  const shared = redactSharedExploreTranscript(transcript);
+  const payload =
+    url.searchParams.get("cards") === "1"
+      ? shared
+      : {
+          ...shared,
+          messages: shared.messages.map(
+            ({ matchCards: _, ...message }) => message,
+          ),
+        };
+  return Response.json(payload, {
     status: 200,
     headers: { "Cache-Control": "no-store", ...corsHeaders },
   });

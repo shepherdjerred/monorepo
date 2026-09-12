@@ -14,18 +14,14 @@ import {
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-  fetchTimelineFramePage,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import {
+  fetchMatchTimelineEvents,
+  fetchMatchTimelineFrames,
+  MATCH_KEY_EVENT_TYPES,
+} from "#src/trpc/router/match-timeline.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
-
-const PAGE_SIZE = 100;
-const KEY_EVENT_TYPES = [
-  "CHAMPION_KILL",
-  "ELITE_MONSTER_KILL",
-  "BUILDING_KILL",
-  "GAME_END",
-];
 
 const MatchInput = z.object({
   playerId: PlayerIdSchema,
@@ -202,18 +198,6 @@ function matchView(match: AuthorizedMatch) {
   };
 }
 
-function pageResult<T>(rows: T[], offset: number) {
-  const page = rows.slice(0, PAGE_SIZE);
-  return {
-    rows: page,
-    nextCursor: rows.length > PAGE_SIZE ? { offset: offset + PAGE_SIZE } : null,
-  };
-}
-
-function participantFilter(participantIds: number[] | undefined) {
-  return participantIds === undefined ? {} : { participantIds };
-}
-
 export const consumerMatchRouter = router({
   detail: protectedProcedure.input(MatchInput).query(async ({ ctx, input }) => {
     const authorized = await authorizeMatch(ctx.user, input);
@@ -223,7 +207,7 @@ export const consumerMatchRouter = router({
         matchId: input.matchId,
         offset: 0,
         limit: 40,
-        eventTypes: KEY_EVENT_TYPES,
+        eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
     ]);
     return { match: matchView(authorized), timeline: { coverage, keyEvents } };
@@ -233,31 +217,14 @@ export const consumerMatchRouter = router({
     .input(TimelineEventPageInput)
     .query(async ({ ctx, input }) => {
       await authorizeMatch(ctx.user, input);
-      const offset = input.cursor?.offset ?? 0;
-      const rows = await fetchTimelineEventPage({
-        matchId: input.matchId,
-        offset,
-        limit: PAGE_SIZE + 1,
-        ...(input.eventTypes === undefined
-          ? {}
-          : { eventTypes: input.eventTypes }),
-        ...participantFilter(input.participantIds),
-      });
-      return pageResult(rows, offset);
+      return await fetchMatchTimelineEvents(input);
     }),
 
   frames: protectedProcedure
     .input(TimelinePageInput)
     .query(async ({ ctx, input }) => {
       await authorizeMatch(ctx.user, input);
-      const offset = input.cursor?.offset ?? 0;
-      const rows = await fetchTimelineFramePage({
-        matchId: input.matchId,
-        offset,
-        limit: PAGE_SIZE + 1,
-        ...participantFilter(input.participantIds),
-      });
-      return pageResult(rows, offset);
+      return await fetchMatchTimelineFrames(input);
     }),
 
   chartSeries: protectedProcedure

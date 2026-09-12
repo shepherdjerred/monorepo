@@ -26,6 +26,7 @@ import { consumerPlayerRouter } from "#src/trpc/router/consumer/consumer-player.
 import { consumerChampionRouter } from "#src/trpc/router/consumer/consumer-champion.router.ts";
 import { consumerMatchRouter } from "#src/trpc/router/consumer/consumer-match.router.ts";
 import { bucksRouter } from "#src/trpc/router/bucks/bucks.router.ts";
+import { exploreMatchRouter } from "#src/trpc/router/explore/explore-match.router.ts";
 import { customsRouter } from "#src/trpc/router/customs.router.ts";
 import { customsHistoryRouter } from "#src/trpc/router/customs-history.router.ts";
 import { hallRouter } from "#src/trpc/router/hall.router.ts";
@@ -52,6 +53,7 @@ export const appRouter = router({
   consumerPlayer: consumerPlayerRouter,
   consumerChampion: consumerChampionRouter,
   consumerMatch: consumerMatchRouter,
+  exploreMatch: exploreMatchRouter,
   bucks: bucksRouter,
   customs: customsRouter,
   customsHistory: customsHistoryRouter,

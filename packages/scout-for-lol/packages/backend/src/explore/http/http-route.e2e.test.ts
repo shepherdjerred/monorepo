@@ -327,6 +327,7 @@ async function appendCompleteAnswer(input: {
       title: null,
       queryText: null,
       includeVisualization: false,
+      matchCards: [],
       caveats: [],
       followUps: [],
     },

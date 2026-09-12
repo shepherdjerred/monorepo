@@ -51,6 +51,19 @@ describe("exploreAgentInstructions", () => {
     expect(withBucks).toContain("## ScoutQL reference");
   });
 
+  test("keeps Discord answers self-contained instead of selecting web cards", () => {
+    const instructions = exploreAgentInstructions({
+      bucks: null,
+      surface: "discord",
+    });
+
+    expect(instructions).toContain("Set matchCards to []");
+    expect(instructions).toContain("fully self-contained");
+    expect(instructions).not.toContain(
+      "Choose S for a compact score reference",
+    );
+  });
+
   test("appends the creation section only when the creation tools exist", () => {
     const plain = exploreAgentInstructions({ bucks: null });
     const withCreation = exploreAgentInstructions({

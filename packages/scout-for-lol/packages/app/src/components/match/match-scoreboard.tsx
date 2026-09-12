@@ -16,17 +16,18 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
+import { MatchObjectivesSummary } from "#src/components/match/match-objectives-summary.tsx";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 
 type MatchParticipant = {
   participantId: number;
-  teamId: number;
-  selectedPlayer: boolean;
+  teamId?: number | undefined;
+  selectedPlayer?: boolean | undefined;
   riotId: { gameName: string | null; tagLine: string | null };
   championId: number;
   championName: string;
   position: string;
-  win: boolean;
+  win?: boolean | undefined;
   kills: number;
   deaths: number;
   assists: number;
@@ -42,7 +43,8 @@ type MatchParticipant = {
     barons: number;
     dragons: number;
   };
-  scoutAliases: { playerId: number; alias: string; guildName: string }[];
+  scoutAliases?:
+    { playerId: number; alias: string; guildName: string }[] | undefined;
 };
 
 type MatchTeam = {
@@ -83,10 +85,7 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                 </Badge>
               </CardTitle>
               <p className="text-xs text-scout-subtle">
-                {team.objectives.turrets.toString()} turrets ·{" "}
-                {team.objectives.inhibitors.toString()} inhibitors ·{" "}
-                {team.objectives.dragons.toString()} dragons ·{" "}
-                {team.objectives.barons.toString()} barons
+                <MatchObjectivesSummary objectives={team.objectives} />
               </p>
             </div>
           </CardHeader>
@@ -111,7 +110,9 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                   <TableRow
                     key={participant.participantId}
                     className={
-                      participant.selectedPlayer ? "bg-primary/10" : undefined
+                      participant.selectedPlayer === true
+                        ? "bg-primary/10"
+                        : undefined
                     }
                   >
                     <TableCell>
@@ -123,7 +124,7 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                               participant.riotId,
                               "Unknown Riot ID",
                             )}
-                            {participant.selectedPlayer && (
+                            {participant.selectedPlayer === true && (
                               <span className="ml-2 text-xs text-primary">
                                 Selected
                               </span>
@@ -134,9 +135,9 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                               participant.championName,
                             )}
                           </p>
-                          {participant.scoutAliases.length > 0 && (
+                          {(participant.scoutAliases?.length ?? 0) > 0 && (
                             <p className="text-xs text-scout-subtle">
-                              {participant.scoutAliases.map((alias, index) => (
+                              {participant.scoutAliases?.map((alias, index) => (
                                 <span
                                   key={`${alias.guildName}:${alias.playerId.toString()}`}
                                 >

@@ -37,6 +37,10 @@ export const ConsumerMatchParamsSchema = z.object({
   matchId: MatchIdSchema,
 });
 
+export const ExploreMatchParamsSchema = z.object({
+  matchId: MatchIdSchema,
+});
+
 export const CompetitionParamsSchema = z.object({
   guildId: z.string().min(1),
   competitionId: z.coerce.number().pipe(CompetitionIdSchema),
@@ -115,6 +119,12 @@ export function useConsumerMatchParams(): z.infer<
   typeof ConsumerMatchParamsSchema
 > {
   return parseRouteParams(ConsumerMatchParamsSchema, useParams());
+}
+
+export function useExploreMatchParams(): z.infer<
+  typeof ExploreMatchParamsSchema
+> {
+  return parseRouteParams(ExploreMatchParamsSchema, useParams());
 }
 
 export function useCompetitionParams(): z.infer<

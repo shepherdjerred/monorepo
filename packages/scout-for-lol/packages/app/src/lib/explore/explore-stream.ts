@@ -38,7 +38,7 @@ export async function fetchSharedTranscript(
   signal?: AbortSignal,
 ): Promise<ExploreTranscript> {
   const response = await fetch(
-    `/api/explore/shared/${encodeURIComponent(shareToken)}`,
+    `/api/explore/shared/${encodeURIComponent(shareToken)}?cards=1`,
     { credentials: "omit", ...(signal === undefined ? {} : { signal }) },
   );
   if (!response.ok) {
