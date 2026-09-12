@@ -341,7 +341,7 @@ export function Explore() {
 
       {/* Pinned to the bottom of the viewport with a translucent gradient fade:
           allows chat text to remain visible below the composer through the fade effect. */}
-      <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 bg-gradient-to-t from-scout-canvas/80 via-scout-canvas/30 via-40% to-transparent dark:from-black/75 dark:via-black/30 dark:via-40% dark:to-transparent">
+      <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 bg-gradient-to-t from-scout-canvas/80 via-scout-canvas/30 via-40% to-scout-canvas/0 dark:from-black/75 dark:via-black/30 dark:via-40% dark:to-black/0">
         <ExploreJumpToLatest pinned={pinned} onClick={scrollToBottom} />
         <div className="pointer-events-auto">
           <ExploreComposer
