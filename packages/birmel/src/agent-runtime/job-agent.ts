@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TaskPacketSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { executeIsolatedAgent } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
-import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/jobs/scheduled-tasks.ts";
+import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
 import { getSessionContext } from "@shepherdjerred/birmel/sessions/service.ts";
 import type { IsolatedAgentOptions } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";

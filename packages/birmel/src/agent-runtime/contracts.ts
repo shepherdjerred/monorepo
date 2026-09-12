@@ -148,6 +148,80 @@ export const TurnAnswerSchema = z.strictObject({
 });
 export type TurnAnswer = z.infer<typeof TurnAnswerSchema>;
 
+export const ToolIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+export const EffectDispositionSchema = z.enum([
+  "not_applied",
+  "applied",
+  "unknown",
+]);
+export const ToolDomainResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string().min(1),
+  effectDisposition: EffectDispositionSchema.optional(),
+  data: z.unknown().optional(),
+});
+export const ToolResultForSessionSchema = z.object({
+  toolCallId: z.string().min(1).max(200),
+  toolName: ToolIdSchema,
+  input: z.unknown(),
+  output: ToolDomainResultSchema,
+});
+export const SessionToolEventSchema = z.strictObject({
+  toolCallId: z.string().min(1).max(200),
+  toolId: ToolIdSchema,
+  inputSummary: z.string().min(1).max(384),
+  resultSummary: z.string().min(1).max(384),
+  content: z.string().min(1).max(1024),
+  success: z.boolean(),
+  effectDisposition: EffectDispositionSchema.optional(),
+  inputKey: z.string(),
+  readOnly: z.boolean(),
+});
+export type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
+
+export const CREDENTIAL_KEY_PATTERN =
+  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?|invite[_-]?code)$/i;
+
+export const DISCORD_SENSITIVE_URL_PATTERN =
+  /(?:https?:\/\/)?(?:(?:canary\.|ptb\.)?discord(?:app)?\.com\/(?:api\/webhooks\/\d+|invite)|discord\.gg)\/[\w-]+/gi;
+
+export const CookieEntrySchema = z
+  .object({ name: z.string(), value: z.unknown() })
+  .and(
+    z.union([
+      z.object({ domain: z.unknown() }),
+      z.object({ path: z.unknown() }),
+      z.object({ httpOnly: z.unknown() }),
+      z.object({ secure: z.unknown() }),
+      z.object({ sameSite: z.unknown() }),
+      z.object({ expires: z.unknown() }),
+    ]),
+  );
+
+export const InviteEntrySchema = z
+  .object({ code: z.string().nullable().optional() })
+  .and(
+    z.union([
+      z.object({ url: z.string() }),
+      z.object({ channelId: z.unknown() }),
+      z.object({ inviterId: z.unknown() }),
+      z.object({ uses: z.unknown() }),
+    ]),
+  );
+
+export function redactInviteFields(entry: object): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(entry)) {
+    result[key] =
+      val != null && (key === "code" || key === "url") ? "[REDACTED]" : val;
+  }
+  return result;
+}
+
 export const ToolRiskClassSchema = z.enum([
   "read",
   "write",
@@ -199,7 +273,23 @@ export const MemoryClaimStatusSchema = z.enum([
 ]);
 export type MemoryClaimStatus = z.infer<typeof MemoryClaimStatusSchema>;
 
-export const MemoryCandidateSchema = z.object({
+export const RELATIONSHIP_MEMORY_MIN_RELATED_USERS = 2;
+export const USER_MEMORY_MAX_RELATED_USERS = 1;
+
+// Persistence normalizes related IDs through a Set before it counts them
+// (see normalizeDiscordIds), so ["1","1"] is one user, not two. Counting raw
+// array length here would accept exactly the shape that then throws.
+function distinctRelatedUserCount(relatedUserIds: readonly string[]): number {
+  return new Set(relatedUserIds).size;
+}
+
+// The scope/relatedUserIds pairing is a cross-field rule, so the plain object
+// shape cannot express it and every extraction that got it wrong reached
+// buildIncomingStoredClaim and threw. Stating it here instead means
+// generateValidatedObject feeds the issue back to the model as a corrective
+// prompt and the model fixes its own output. Refinements do not appear in the
+// generated JSON Schema, so structured-output compatibility is unchanged.
+const MemoryCandidateBaseSchema = z.object({
   scope: MemoryScopeSchema,
   subject: z.string().min(1).max(500),
   predicate: z.string().min(1).max(200),
@@ -212,9 +302,36 @@ export const MemoryCandidateSchema = z.object({
   relatedUserIds: z.array(DiscordIdSchema),
   sourceDiscordMessageIds: z.array(DiscordIdSchema).min(1),
 });
+
+export const MemoryCandidateSchema = MemoryCandidateBaseSchema.refine(
+  (candidate) =>
+    candidate.scope !== "relationship" ||
+    distinctRelatedUserCount(candidate.relatedUserIds) >=
+      RELATIONSHIP_MEMORY_MIN_RELATED_USERS,
+  {
+    message:
+      'A "relationship" memory must list at least two distinct related user IDs. Use scope "user" for a claim about one person, and never repeat the same ID twice.',
+    path: ["relatedUserIds"],
+  },
+).refine(
+  (candidate) =>
+    candidate.scope !== "user" ||
+    distinctRelatedUserCount(candidate.relatedUserIds) <=
+      USER_MEMORY_MAX_RELATED_USERS,
+  {
+    message:
+      'A "user" memory accepts at most one related user ID. Use scope "relationship" for a claim about two or more people.',
+    path: ["relatedUserIds"],
+  },
+);
 export type MemoryCandidate = z.infer<typeof MemoryCandidateSchema>;
 
-export const MemoryClaimSchema = MemoryCandidateSchema.extend({
+// Built from the unrefined base, not from MemoryCandidateSchema: this schema
+// retypes validFrom and validUntil from ISO strings to Date, which Zod cannot
+// do on a schema carrying refinements. That costs nothing here — a claim only
+// exists because buildIncomingStoredClaim already enforced the
+// scope/relatedUserIds rule on the way in.
+export const MemoryClaimSchema = MemoryCandidateBaseSchema.extend({
   id: z.uuid(),
   guildId: DiscordIdSchema,
   channelId: DiscordIdSchema.nullable(),

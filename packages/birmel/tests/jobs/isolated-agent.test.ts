@@ -4,7 +4,7 @@ import {
   executeIsolatedAgentJob,
   type IsolatedJobAgentDependencies,
 } from "@shepherdjerred/birmel/agent-runtime/job-agent.ts";
-import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/jobs/scheduled-tasks.ts";
+import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
 
 const execution: AgentJobExecution = {
   jobId: "job-1",

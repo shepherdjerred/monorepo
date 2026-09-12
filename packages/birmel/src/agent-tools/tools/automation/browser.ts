@@ -247,9 +247,13 @@ async function handleNavigate(
     const title = await page.title();
     signal.throwIfAborted();
     logger.info("Navigated to URL", { url, title });
+    // The title is written by the page, so it is remote-authored text. It stays
+    // in `data` for the model to read during the turn, but the message is fixed
+    // because the message is always kept in the persisted tool summary that
+    // memory extraction later reads.
     return {
       success: true,
-      message: `Navigated to: ${title}`,
+      message: "Navigated to the requested URL",
       data: { url: page.url(), title },
     };
   });

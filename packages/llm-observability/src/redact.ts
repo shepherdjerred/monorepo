@@ -1,7 +1,9 @@
 const SECRET_KEY_PATTERN =
-  /^(?:authorization|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token)$/i;
+  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?|invite[_-]?code)$/i;
 
 const BEARER_PATTERN = /Bearer\s+[\w.\-+/=]+/g;
+const DISCORD_SENSITIVE_URL_PATTERN =
+  /(?:https?:\/\/)?(?:(?:canary\.|ptb\.)?discord(?:app)?\.com\/(?:api\/webhooks\/\d+|invite)|discord\.gg)\/[\w-]+/gi;
 
 /**
  * Walk an arbitrary JSON-serializable value and redact known secret patterns.
@@ -97,6 +99,7 @@ export function redactText(
     SECRET_JSON_PATTERN,
     (_match, prefix: string) => `${prefix}"[REDACTED]"`,
   );
+  out = out.replaceAll(DISCORD_SENSITIVE_URL_PATTERN, "[REDACTED]");
   return out.replaceAll(BEARER_PATTERN, "Bearer [REDACTED]");
 }
 

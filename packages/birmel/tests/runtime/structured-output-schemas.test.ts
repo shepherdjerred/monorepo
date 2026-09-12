@@ -61,6 +61,39 @@ function openRouterResponse(content: string): Response {
   });
 }
 
+/**
+ * A runtime whose transport replays canned responses and records each raw
+ * request body, so a test can assert on either the serialized schema or the
+ * prompt that was sent.
+ */
+function recordingRuntime(
+  responses: string[],
+  recordRequestBody: (body: string) => void,
+) {
+  return createOpenRouterRuntime({
+    apiKey: "test-key",
+    service: "birmel-schema-test",
+    appName: "birmel-schema-test",
+    fetch: Object.assign(
+      async (
+        _input: Parameters<typeof fetch>[0],
+        init?: Parameters<typeof fetch>[1],
+      ) => {
+        if (typeof init?.body !== "string") {
+          throw new TypeError("expected JSON request body");
+        }
+        recordRequestBody(init.body);
+        const response = responses.shift();
+        if (response === undefined) {
+          throw new Error("unexpected structured-output request");
+        }
+        return openRouterResponse(response);
+      },
+      { preconnect: (url: string | URL) => void url },
+    ),
+  });
+}
+
 describe("Birmel provider structured-output schemas", () => {
   test("serializes every production object with all properties required", async () => {
     const bodies: unknown[] = [];
@@ -74,27 +107,8 @@ describe("Birmel provider structured-output schemas", () => {
       }),
       JSON.stringify({ humanClaims: [], selfMemories: [] }),
     ];
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "birmel-schema-test",
-      appName: "birmel-schema-test",
-      fetch: Object.assign(
-        async (
-          _input: Parameters<typeof fetch>[0],
-          init?: Parameters<typeof fetch>[1],
-        ) => {
-          if (typeof init?.body !== "string") {
-            throw new TypeError("expected JSON request body");
-          }
-          bodies.push(JSON.parse(init.body));
-          const response = responses.shift();
-          if (response === undefined) {
-            throw new Error("unexpected structured-output request");
-          }
-          return openRouterResponse(response);
-        },
-        { preconnect: (url: string | URL) => void url },
-      ),
+    const runtime = recordingRuntime(responses, (body) => {
+      bodies.push(JSON.parse(body));
     });
 
     await generateValidatedObject(runtime, {
@@ -125,5 +139,57 @@ describe("Birmel provider structured-output schemas", () => {
         RequestBodySchema.parse(body).response_format.json_schema.schema;
       expectCompleteRequiredArrays(schema);
     }
+  });
+
+  // Production kept emitting relationship claims naming a single user, which
+  // passed extraction and then threw during persistence, losing every claim in
+  // the turn. The rule now lives in the schema, so the extractor is told what
+  // it got wrong and corrects itself instead.
+  test("re-prompts the extractor when a relationship claim names one user", async () => {
+    const prompts: string[] = [];
+    const claim = {
+      subject: "Jerred and Alice",
+      predicate: "relationship",
+      value: "close friends",
+      confidence: 0.8,
+      salience: 0.7,
+      origin: "inferred",
+      validFrom: null,
+      validUntil: null,
+      sourceDiscordMessageIds: ["600"],
+    };
+    const responses = [
+      JSON.stringify({
+        humanClaims: [
+          { ...claim, scope: "relationship", relatedUserIds: ["400"] },
+        ],
+        selfMemories: [],
+      }),
+      JSON.stringify({
+        humanClaims: [
+          { ...claim, scope: "relationship", relatedUserIds: ["400", "500"] },
+        ],
+        selfMemories: [],
+      }),
+    ];
+    const runtime = recordingRuntime(responses, (body) => {
+      prompts.push(body);
+    });
+
+    const result = await generateValidatedObject(runtime, {
+      model: "gpt-5.6-luna",
+      schema: ExtractionSchema,
+      schemaName: "birmel_memory_candidates",
+      prompt: "Extract.",
+      workload: "schema-test.memory",
+    });
+
+    expect(prompts).toHaveLength(2);
+    expect(prompts[1]).toContain("relatedUserIds");
+    expect(prompts[1]).toContain("at least two distinct related user IDs");
+    expect(result.object.humanClaims[0]?.relatedUserIds).toEqual([
+      "400",
+      "500",
+    ]);
   });
 });

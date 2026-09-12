@@ -332,7 +332,7 @@ describe("claim memory evidence updates", () => {
           embedding: null,
         },
       ]),
-    ).rejects.toThrow("at least two related users");
+    ).rejects.toThrow("at least two distinct related user IDs");
 
     expect(await client().memoryClaim.count()).toBe(0);
     expect(await client().memoryRevision.count()).toBe(0);

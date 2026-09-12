@@ -2,13 +2,22 @@ import { Output, stepCountIs, ToolLoopAgent } from "ai";
 import { redactSecrets } from "@shepherdjerred/llm-observability";
 import { z } from "zod";
 import {
-  TaskPacketSchema,
-  TurnAnswerSchema,
+  CookieEntrySchema,
+  CREDENTIAL_KEY_PATTERN,
+  DISCORD_SENSITIVE_URL_PATTERN,
+  InviteEntrySchema,
+  redactInviteFields,
+  type SessionToolEvent,
+  SessionToolEventSchema,
   type TaskPacket,
-  type TurnAnswer,
+  TaskPacketSchema,
+  ToolDomainResultSchema,
+  ToolIdSchema,
+  ToolResultForSessionSchema,
+  TurnAnswerSchema,
   type TurnDisposition,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import { allTools } from "@shepherdjerred/birmel/agent-tools/tools/index.ts";
+import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
@@ -17,53 +26,10 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
-
-const logger = loggers.agent.child("execution");
-
-const ToolIdSchema = z
-  .string()
-  .min(1)
-  .max(64)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-const EffectDispositionSchema = z.enum(["not_applied", "applied", "unknown"]);
-const ToolDomainResultSchema = z.object({
-  success: z.boolean(),
-  message: z.string().min(1),
-  effectDisposition: EffectDispositionSchema.optional(),
-});
-const ToolResultForSessionSchema = z.object({
-  toolCallId: z.string().min(1).max(200),
-  toolName: ToolIdSchema,
-  input: z.unknown(),
-  output: ToolDomainResultSchema,
-});
-const SessionToolEventSchema = z.strictObject({
-  toolCallId: z.string().min(1).max(200),
-  toolId: ToolIdSchema,
-  inputSummary: z.string().min(1).max(384),
-  resultSummary: z.string().min(1).max(384),
-  content: z.string().min(1).max(1024),
-  success: z.boolean(),
-  effectDisposition: EffectDispositionSchema.optional(),
-  // A structural hash of the raw, unredacted input. Matching on the action
-  // field alone (an earlier version of this check) was not enough: composite
-  // tools like manage-role take a "create" action for many different roles,
-  // so an unrelated later create could still "correct" an earlier one that
-  // targeted something else entirely. Bun.hash is key-order independent and
-  // varies with any field's value, so two calls hash equal only when their
-  // full input does - the only generic, per-tool-agnostic way to tell "this
-  // exact operation was retried" from "a similar-shaped one happened to run."
-  inputKey: z.string(),
-  // Whether this specific call was inherently non-mutating, independent of
-  // the tool's own overall riskClass. A composite tool like manage-role
-  // exposes read actions (list, get) alongside destructive ones (create,
-  // delete) under one tool-level risk class; treating a failed list as an
-  // uncorrected write would reject a turn over a harmless read failure that
-  // says nothing about whether the actual requested mutation succeeded.
-  readOnly: z.boolean(),
-});
-
-type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
+import {
+  requireGroundedAnswer,
+  withResolvedCitations,
+} from "./citation-repair.ts";
 
 export type AgentExecutionResult = {
   text: string;
@@ -76,10 +42,6 @@ export type AgentExecutionResult = {
 };
 
 export type TurnOptions = {
-  /**
-   * Live progress sink. Absent for scheduled jobs, which own no Discord
-   * message to narrate into.
-   */
   progress?: ProgressReporter | undefined;
 };
 
@@ -89,6 +51,8 @@ export type IsolatedAgentOptions = {
   textVerbosity?: "low" | "medium" | "high";
   timeoutMs?: number;
 };
+
+const logger = loggers.agent.child("execution");
 
 function boundedText(value: string, maxLength: number): string {
   return value.length <= maxLength
@@ -149,6 +113,176 @@ function isReadOnlyCall(toolId: string, input: unknown): boolean {
   );
 }
 
+type SanitizeToolOutputOptions = {
+  isCookiesCall: boolean;
+  isInviteCall: boolean;
+  /** Absent for a tool whose output the agent itself authored. */
+  retainedDataKeys?: ReadonlySet<string> | undefined;
+};
+
+function sanitizeArrayEntry(
+  entry: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  const cookie = CookieEntrySchema.safeParse(entry);
+  if (cookie.success) {
+    return sanitizeToolOutputData(
+      { ...cookie.data, value: "[REDACTED]" },
+      options,
+    );
+  }
+  if (
+    entry !== null &&
+    typeof entry === "object" &&
+    (options.isInviteCall || InviteEntrySchema.safeParse(entry).success)
+  ) {
+    return sanitizeToolOutputData(redactInviteFields(entry), options);
+  }
+  return sanitizeToolOutputData(entry, options);
+}
+
+function sanitizeObjectEntry(
+  key: string,
+  value: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  if (CREDENTIAL_KEY_PATTERN.test(key)) {
+    return "[REDACTED]";
+  }
+  if (options.isInviteCall && (key === "code" || key === "url")) {
+    return value == null ? value : "[REDACTED]";
+  }
+  const cookie = CookieEntrySchema.safeParse(value);
+  if (cookie.success) {
+    return sanitizeToolOutputData(
+      { ...cookie.data, value: "[REDACTED]" },
+      options,
+    );
+  }
+  const invite = InviteEntrySchema.safeParse(value);
+  if (invite.success) {
+    return sanitizeToolOutputData(redactInviteFields(invite.data), options);
+  }
+  return sanitizeToolOutputData(value, options);
+}
+
+// A persisted tool summary is interpolated into the memory-extraction prompt,
+// so any third-party text it keeps can steer durable memory. Denying known-bad
+// keys lost this argument repeatedly, and so did naming only the untrusted
+// tools: a tool absent from the list kept everything, so each new one was a
+// leak waiting to be reported.
+//
+// The default is therefore to keep NO data. A tool appears here only to name
+// the keys it keeps, and those must be values the agent or our own
+// infrastructure wrote - not a Discord name, title, or body someone else
+// chose. Every tool still keeps its own result message, which is the summary
+// its author wrote for exactly this purpose.
+const RETAINED_DATA_KEYS_BY_TOOL: ReadonlyMap<
+  string,
+  ReadonlySet<string>
+> = new Map([
+  // No url or title: a hostile page controls both, and a redirect controls
+  // the final url even when the agent chose the first one.
+  ["browser-automation", new Set(["provider", "tabId", "filename", "path"])],
+  ["web-research", new Set<string>()],
+  ["external-service", new Set<string>()],
+  ["manage-message", new Set(["messageId", "messageCount"])],
+  [
+    "manage-thread",
+    new Set(["threadId", "messageId", "messageCount", "participantCount"]),
+  ],
+  // Not `question` or `answers`: both carry text another member wrote.
+  [
+    "manage-poll",
+    new Set(["messageId", "pollId", "totalVotes", "isFinalized", "expiresAt"]),
+  ],
+  ["manage-agent-session", new Set(["sessionId", "eventCount"])],
+  // stdout and stderr carry whatever the command printed; the rest is our
+  // own measurement of the run.
+  ["execute-shell-command", new Set(["exitCode", "timedOut", "duration"])],
+  // The agent wrote the schedule it asked for, so reading it back is safe.
+  [
+    "manage-job",
+    new Set([
+      "jobId",
+      "runId",
+      "status",
+      "nextRunAt",
+      "scheduleKind",
+      "scheduleValue",
+      "timezone",
+    ]),
+  ],
+  // Counts we computed, not text anyone typed.
+  [
+    "manage-memory",
+    new Set([
+      "claimId",
+      "createdCount",
+      "confirmedCount",
+      "supersededCount",
+      "uncertainCount",
+    ]),
+  ],
+  [
+    "get-activity-stats",
+    new Set(["messageCount", "reactionCount", "userCount", "rank"]),
+  ],
+  [
+    "get-candidate-stats",
+    new Set(["messageCount", "reactionCount", "userCount", "rank"]),
+  ],
+  ["record-activity", new Set(["recorded", "messageCount"])],
+  ["generate-image", new Set(["name", "mediaType", "aspectRatio"])],
+  // Never code or url: an invite code is a credential. What is left is
+  // structural and is what an operator actually wants to see later.
+  [
+    "manage-invite",
+    new Set([
+      "uses",
+      "maxUses",
+      "channelId",
+      "inviterId",
+      "expiresAt",
+      "temporary",
+    ]),
+  ],
+]);
+
+function shouldOmitOutputKey(
+  key: string,
+  options: SanitizeToolOutputOptions,
+): boolean {
+  if (key === "raw" && options.isCookiesCall) {
+    return true;
+  }
+  // Unlisted tool: keep nothing. A tool added later is private by default.
+  return !(options.retainedDataKeys?.has(key) ?? false);
+}
+
+function sanitizeToolOutputData(
+  data: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  if (typeof data === "string") {
+    return data.replaceAll(DISCORD_SENSITIVE_URL_PATTERN, "[REDACTED]");
+  }
+  if (data === null || typeof data !== "object") {
+    return data;
+  }
+  if (Array.isArray(data)) {
+    return data.map((entry) => sanitizeArrayEntry(entry, options));
+  }
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (shouldOmitOutputKey(key, options)) {
+      continue;
+    }
+    sanitized[key] = sanitizeObjectEntry(key, value, options);
+  }
+  return sanitized;
+}
+
 export function summarizeToolResultForSession(
   rawToolResult: unknown,
   registeredToolIds: readonly string[],
@@ -163,9 +297,35 @@ export function summarizeToolResultForSession(
     );
   }
   const status = toolResult.output.success ? "succeeded" : "failed";
+  const action = ActionInputSchema.safeParse(toolResult.input);
+  const isCookiesCall = action.success && action.data.action === "cookies";
+  const isInviteCall = toolResult.toolName === "manage-invite";
+  const retainedDataKeys = RETAINED_DATA_KEYS_BY_TOOL.get(toolResult.toolName);
   const inputSummary = boundedSummary(toolResult.input);
+  const sanitizedData =
+    toolResult.output.data === undefined
+      ? undefined
+      : sanitizeToolOutputData(toolResult.output.data, {
+          isCookiesCall,
+          isInviteCall,
+          retainedDataKeys,
+        });
+  const hasData =
+    sanitizedData !== undefined &&
+    sanitizedData !== null &&
+    (typeof sanitizedData !== "object" ||
+      (Array.isArray(sanitizedData)
+        ? sanitizedData.length > 0
+        : Object.keys(sanitizedData).length > 0));
   const resultSummary = toolResult.output.success
-    ? boundedSummary(toolResult.output.message)
+    ? boundedSummary(
+        hasData
+          ? {
+              message: toolResult.output.message,
+              data: sanitizedData,
+            }
+          : toolResult.output.message,
+      )
     : "Tool reported failure";
   const content = boundedText(
     `Tool ${toolResult.toolName} call ${toolResult.toolCallId} ${status}; input=${inputSummary}; result=${resultSummary}`,
@@ -212,125 +372,6 @@ function taskMessages(packet: TaskPacket) {
   ];
 }
 
-/**
- * The anti-hallucination gate.
- *
- * The old runtime named one tool before the turn began and threw unless that
- * exact tool succeeded. That fixed the plan before any evidence existed, so an
- * ordinary "this actually needs a different tool" became a hard failure.
- *
- * This checks the same property from the other end: whatever the reply says it
- * relied on must correspond to a tool call that really succeeded this turn. It
- * covers every claim rather than one pre-named tool, and it lets the agent
- * change its mind freely along the way.
- */
-export function requireGroundedAnswer(
-  answer: TurnAnswer,
-  toolEvents: SessionToolEvent[],
-): void {
-  const succeeded = new Set(
-    toolEvents
-      .filter(({ success }) => success)
-      .map(({ toolCallId }) => toolCallId),
-  );
-  const ungrounded = answer.reliedOnToolCallIds.filter(
-    (toolCallId) => !succeeded.has(toolCallId),
-  );
-  if (ungrounded.length > 0) {
-    throw new Error(
-      `Answer cited tool calls that did not succeed this turn: ${ungrounded.join(", ")}`,
-    );
-  }
-  // Runs regardless of disposition, not only "supported": disposition is
-  // itself model-generated, so a failed mutation mislabeled "conversation" or
-  // "unsupported" - with nothing cited - would otherwise skip straight past
-  // every other check here. Membership in the success set is not enough
-  // either: a harmless lookup can succeed while the requested mutation never
-  // runs, or the model can point at an unrelated success - a harmless read,
-  // or a different attempt of the same tool - while the operation that
-  // actually mattered failed and was never fixed. Checking only what
-  // happened after a citation is not enough: the failure can come first and
-  // the unrelated success get cited afterward, which reads as "grounded"
-  // under a citation-relative check but is exactly the same lie. So this
-  // ignores citation order and citation entirely: any write, destructive, or
-  // code-execution call that fails, with no LATER call succeeding anywhere in
-  // the turn, leaves that attempt uncorrected regardless of what the answer
-  // claims or cites. A failed read is exempt - re-checking something
-  // incidental and having that check fail says nothing about whether the
-  // claimed outcome holds. That exemption is per-call, not per-tool: a
-  // composite tool like manage-role exposes read actions (list, get)
-  // alongside destructive ones (create, delete) under one tool-level risk
-  // class, so a failed list must not be treated as an uncorrected write just
-  // because the tool it belongs to can also destroy things.
-  //
-  // "Later call" means the same tool AND the same input: matching on the
-  // action field alone is not enough, because a composite tool's action still
-  // covers many different targets - a failed manage-role create for one role
-  // is not corrected by a later create for a different one. Requiring the
-  // full input to match is the only generic, per-tool-agnostic way to tell
-  // "this exact operation was retried" from "a similarly-shaped one ran."
-  // The cost is real: a retry that adjusts its input to fix what the first
-  // attempt got wrong no longer counts as correcting it, so that turn is
-  // rejected rather than credited. That is the intended trade - an honest
-  // failure over a claim this check cannot actually verify - not an
-  // oversight; loosening it is what created every earlier version of this
-  // gap.
-  const uncorrectedFailure = toolEvents.find(
-    (event, index) =>
-      !event.success &&
-      !event.readOnly &&
-      !toolEvents
-        .slice(index + 1)
-        .some(
-          (later) =>
-            later.success &&
-            later.toolId === event.toolId &&
-            later.inputKey === event.inputKey,
-        ),
-  );
-  if (uncorrectedFailure !== undefined) {
-    throw new Error(
-      `Turn reported completion, but ${uncorrectedFailure.toolId} failed and was never retried successfully this turn`,
-    );
-  }
-  // Checking the global success set is not enough: a harmless lookup can
-  // succeed while the requested mutation never runs, and an answer citing
-  // nothing would still pass. Only "supported" work must cite at least one
-  // call - conversation and unsupported outcomes are allowed to cite
-  // nothing, and every cited call is already known to have succeeded by the
-  // check above.
-  if (answer.disposition !== "supported") {
-    return;
-  }
-  if (answer.reliedOnToolCallIds.length === 0) {
-    throw new Error(
-      "Answer claims supported work without citing a successful tool call",
-    );
-  }
-  // Citing a successful call proves only that SOME call succeeded, not that
-  // it is the one the answer's claim actually describes: a model could cite
-  // a harmless, unrelated read while claiming an unrelated mutation
-  // happened, and every check above would still pass. performedMutation is a
-  // second, independent self-report that must agree with the citations - a
-  // true mutation claim has to be backed by an actually non-read cited call.
-  // A model dishonest enough to misreport performedMutation itself is not
-  // caught by this, but that is a narrower, less likely failure than citing
-  // any convenient success: it requires contradicting the answer's own text.
-  if (
-    answer.performedMutation &&
-    !toolEvents.some(
-      (event) =>
-        event.success &&
-        !event.readOnly &&
-        answer.reliedOnToolCallIds.includes(event.toolCallId),
-    )
-  ) {
-    throw new Error(
-      "Answer claims a mutation happened, but cites no successful non-read tool call",
-    );
-  }
-}
-
 export async function executeTurn(
   rawPacket: TaskPacket,
   options: IsolatedAgentOptions & TurnOptions = {},
@@ -338,7 +379,8 @@ export async function executeTurn(
   const packet = TaskPacketSchema.parse(rawPacket);
   const config = getConfig();
   const runtime = getLlmRuntime();
-  const registeredToolIds = Object.keys(allTools);
+  const tools = toolsForTurn();
+  const registeredToolIds = Object.keys(tools);
   return await withSpan(
     "birmel.agent.turn",
     {
@@ -351,13 +393,16 @@ export async function executeTurn(
     async (span) => {
       const startedAt = performance.now();
       const maxSteps = config.agent.maxSteps;
+      const abortSignal = AbortSignal.timeout(
+        options.timeoutMs ?? config.agent.responseTimeoutMs,
+      );
       const agent = new ToolLoopAgent({
         id: "birmel-agent",
         model: runtime.languageModel(options.model ?? config.openRouter.model, [
           "tools",
         ]),
         instructions: `${AGENT_INSTRUCTIONS}\n\n${packet.persona}`,
-        tools: allTools,
+        tools,
         stopWhen: stepCountIs(maxSteps),
         // Spend the last step answering rather than starting work that cannot
         // finish. Without this the run can end mid-tool-call, and `output`
@@ -373,9 +418,7 @@ export async function executeTurn(
       const progress = options.progress;
       const result = await agent.generate({
         messages: taskMessages(packet),
-        abortSignal: AbortSignal.timeout(
-          options.timeoutMs ?? config.agent.responseTimeoutMs,
-        ),
+        abortSignal,
         ...(progress === undefined
           ? {}
           : {
@@ -434,25 +477,24 @@ export async function executeTurn(
           summarizeToolResultForSession(toolResult, registeredToolIds),
         ),
       );
-      const answer = TurnAnswerSchema.parse(result.output);
+      const inputTokens = result.usage.inputTokens ?? 0;
+      const outputTokens = result.usage.outputTokens ?? 0;
+      const answer = withResolvedCitations(
+        TurnAnswerSchema.parse(result.output),
+        toolEvents,
+      );
       requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
-      span.setAttribute(
-        "gen_ai.usage.input_tokens",
-        result.usage.inputTokens ?? 0,
-      );
-      span.setAttribute(
-        "gen_ai.usage.output_tokens",
-        result.usage.outputTokens ?? 0,
-      );
+      span.setAttribute("gen_ai.usage.input_tokens", inputTokens);
+      span.setAttribute("gen_ai.usage.output_tokens", outputTokens);
       span.setAttribute("birmel.agent_steps", result.steps.length);
       span.setAttribute("birmel.turn_disposition", answer.disposition);
       logger.info("Agent turn completed", {
         disposition: answer.disposition,
         personaId: packet.personaId,
         finishReason: result.finishReason,
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
+        inputTokens,
+        outputTokens,
         stepCount: result.steps.length,
         toolCallCount: toolEvents.length,
         durationMs: performance.now() - startedAt,
@@ -461,8 +503,8 @@ export async function executeTurn(
         text: answer.answer,
         disposition: answer.disposition,
         finishReason: result.finishReason,
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
+        inputTokens,
+        outputTokens,
         stepCount: result.steps.length,
         toolEvents,
       };

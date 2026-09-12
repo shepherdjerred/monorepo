@@ -21,10 +21,10 @@ import {
   AGENT_JOB_LEASE_GRACE_MS,
   waitForTimedOutExecution,
 } from "@shepherdjerred/birmel/scheduler/agent-job-timeout-fence.ts";
+import type { AgentJobRuntimeDependencies } from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
 import {
   configureAgentJobRuntime,
   executeDurableAgentJob,
-  type AgentJobRuntimeDependencies,
 } from "@shepherdjerred/birmel/scheduler/jobs/scheduled-tasks.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";

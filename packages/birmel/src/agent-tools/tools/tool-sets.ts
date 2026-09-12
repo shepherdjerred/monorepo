@@ -144,6 +144,20 @@ export function getCapabilityCatalog(): CapabilityCatalogEntry[] {
 }
 
 /**
+ * Tools the live agent may call this turn. generate-image stays registered
+ * for metadata/startup inventory, but a disabled flag must not advertise it
+ * to the model: the tool returns immediately, and the grounded-answer gate
+ * then fails the whole turn.
+ */
+export function toolsForTurn(): ToolSet {
+  const config = getConfig();
+  const tools = config.imageGeneration.enabled
+    ? registeredTools
+    : registeredTools.filter((tool) => tool.id !== "generate-image");
+  return toolsToRecord(tools);
+}
+
+/**
  * Convert a tool array to a record keyed by tool id.
  *
  * Tool schemas differ across the set, so validate their shared AI SDK shape

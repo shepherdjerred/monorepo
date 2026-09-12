@@ -208,3 +208,65 @@ test("redactText masks Bearer tokens", () => {
     "curl -H 'Authorization: Bearer [REDACTED]'",
   );
 });
+
+test("redactSecrets masks webhookUrl keys and Discord webhook URLs", () => {
+  const token = ["tok", "discord", "123456"].join("_");
+  const webhookUrl = `https://discord.com/api/webhooks/1234567890/${token}`;
+  const input = {
+    webhookUrl,
+    list: [
+      {
+        id: "1234567890",
+        url: webhookUrl,
+      },
+    ],
+    nested: {
+      webhook_token: "secret-token",
+    },
+  };
+  const WebhookSecretsSchema = z.object({
+    webhookUrl: z.string(),
+    list: z.array(z.object({ id: z.string(), url: z.string() })),
+    nested: z.object({ webhook_token: z.string() }),
+  });
+  const redacted = WebhookSecretsSchema.parse(redactSecrets(input));
+  expect(redacted.webhookUrl).toBe("[REDACTED]");
+  expect(redacted.list[0]?.url).toBe("[REDACTED]");
+  expect(redacted.nested.webhook_token).toBe("[REDACTED]");
+  expect(JSON.stringify(redacted)).not.toContain(token);
+});
+
+test("redactSecrets masks inviteCode keys and Discord invite URLs", () => {
+  const inviteCode = "abcXYZ123";
+  const inviteUrl = `https://discord.gg/${inviteCode}`;
+  const vanityUrl = `discord.gg/${inviteCode}`;
+  const appInviteUrl = `https://discord.com/invite/${inviteCode}`;
+  const input = {
+    inviteCode,
+    invite_code: inviteCode,
+    inviteUrl,
+    vanityUrl,
+    appInviteUrl,
+    list: [
+      {
+        code: "keep-plain-if-not-invite-key",
+        url: inviteUrl,
+      },
+    ],
+  };
+  const InviteSecretsSchema = z.object({
+    inviteCode: z.string(),
+    invite_code: z.string(),
+    inviteUrl: z.string(),
+    vanityUrl: z.string(),
+    appInviteUrl: z.string(),
+    list: z.array(z.object({ code: z.string(), url: z.string() })),
+  });
+  const redacted = InviteSecretsSchema.parse(redactSecrets(input));
+  expect(redacted.inviteCode).toBe("[REDACTED]");
+  expect(redacted.invite_code).toBe("[REDACTED]");
+  expect(redacted.inviteUrl).toBe("[REDACTED]");
+  expect(redacted.vanityUrl).toBe("[REDACTED]");
+  expect(redacted.appInviteUrl).toBe("[REDACTED]");
+  expect(redacted.list[0]?.url).toBe("[REDACTED]");
+});

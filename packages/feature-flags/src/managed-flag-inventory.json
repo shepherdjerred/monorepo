@@ -1350,7 +1350,22 @@
     },
     {
       "key": "prod",
-      "overrides": []
+      "overrides": [
+        {
+          "key": "birmel-image-generation-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": [
+            {
+              "rank": 1,
+              "percentage": 100,
+              "result": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }

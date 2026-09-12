@@ -13,7 +13,10 @@ import {
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { manageMessageTool } from "@shepherdjerred/birmel/agent-tools/tools/discord/messages.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
-import { getCapabilityCatalog } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
+import {
+  getCapabilityCatalog,
+  toolsForTurn,
+} from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 
 const trustedUserId = "186665676134547461";
 
@@ -405,6 +408,14 @@ describe("tool metadata contracts", () => {
     expect(getCapabilityCatalog().map(({ id }) => id)).toContain(
       "generate-image",
     );
+  });
+
+  test("omits generate-image from the live tool set when image generation is disabled", () => {
+    getConfig().imageGeneration.enabled = false;
+    expect(Object.keys(toolsForTurn())).not.toContain("generate-image");
+
+    getConfig().imageGeneration.enabled = true;
+    expect(Object.keys(toolsForTurn())).toContain("generate-image");
   });
 });
 
