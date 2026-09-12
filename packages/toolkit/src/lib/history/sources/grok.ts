@@ -75,28 +75,35 @@ function grokUsageCounts(usage: Record<string, unknown>): UsageCounts {
  * tagged with the turn's own timestamp rather than combined into one
  * whole-session total, so `--since` can filter to activity within a window
  * instead of attributing the whole session to wherever its last turn falls.
+ *
+ * A `modelUsage` entry that isn't an object is malformed data, not a
+ * legitimate empty case — propagated as a scan failure (matching how a
+ * corrupt JSONL line is handled elsewhere in this source) rather than
+ * silently skipped, since a silent skip here would let the next successful
+ * scan overwrite the last good index with an understated total that never
+ * self-corrects.
  */
 function grokUsageEntries(
   usage: Record<string, unknown>,
   defaultModel: string,
   occurredAt: string,
+  location: { readonly filePath: string; readonly lineNumber: number },
 ): UsageEventEntry[] {
   const modelUsage = parseRecord(usage["modelUsage"]);
   if (modelUsage !== null && Object.keys(modelUsage).length > 0) {
-    return Object.entries(modelUsage).flatMap(([model, value]) => {
+    return Object.entries(modelUsage).map(([model, value]) => {
       const modelRecord = parseRecord(value);
       if (modelRecord === null) {
-        return [];
+        throw new Error(
+          `Malformed Grok model usage entry for model "${model}" on line ${String(location.lineNumber)} in ${location.filePath}`,
+        );
       }
-      const counts = grokUsageCounts(modelRecord);
-      return [
-        usageEventEntry(
-          occurredAt,
-          model,
-          counts,
-          grokReportedCost(modelRecord["costUsdTicks"]),
-        ),
-      ];
+      return usageEventEntry(
+        occurredAt,
+        model,
+        grokUsageCounts(modelRecord),
+        grokReportedCost(modelRecord["costUsdTicks"]),
+      );
     });
   }
   return [
@@ -240,7 +247,15 @@ async function readGrokSession(
         const occurredAt =
           parsed.timestamp ?? updatedAt ?? new Date(0).toISOString();
         usageEvents.push(
-          ...grokUsageEntries(usage, defaultModelHint ?? "unknown", occurredAt),
+          ...grokUsageEntries(
+            usage,
+            defaultModelHint ?? "unknown",
+            occurredAt,
+            {
+              filePath,
+              lineNumber: index + 1,
+            },
+          ),
         );
       }
       continue;
