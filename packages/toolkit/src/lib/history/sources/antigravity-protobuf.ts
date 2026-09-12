@@ -53,6 +53,9 @@ export function decodeFields(blob: Uint8Array): ProtoField[] {
         break;
       }
       case 1: {
+        if (8 > blob.length - offset) {
+          throw new Error("Truncated protobuf fixed64 field");
+        }
         offset += 8;
         break;
       }
@@ -71,6 +74,9 @@ export function decodeFields(blob: Uint8Array): ProtoField[] {
         break;
       }
       case 5: {
+        if (4 > blob.length - offset) {
+          throw new Error("Truncated protobuf fixed32 field");
+        }
         offset += 4;
         break;
       }

@@ -22,6 +22,10 @@ import type {
 let fixtureRoot = "";
 let paths: HistoryPaths;
 
+function compareStrings(a: string | null, b: string | null): number {
+  return (a ?? "").localeCompare(b ?? "");
+}
+
 function writeDatabase(
   filePath: string,
   schema: string,
@@ -174,7 +178,17 @@ function writeConductorFixture(conductorDir: string): string {
 
 async function writeClaudeFixture(claudeDir: string): Promise<void> {
   const claudeFile = path.join(claudeDir, "session.jsonl");
-  const usage = {
+  // Claude Code can log one API response's content blocks as separate
+  // records sharing one message.id, each repeating that response's usage
+  // snapshot as of that point — a growing cumulative total, not a fixed
+  // repeat. The LAST record's (larger) usage is the authoritative total.
+  const partialUsage = {
+    input_tokens: 1000,
+    output_tokens: 50,
+    cache_read_input_tokens: 0,
+    cache_creation_input_tokens: 0,
+  };
+  const finalUsage = {
     input_tokens: 1000,
     output_tokens: 200,
     cache_read_input_tokens: 0,
@@ -191,7 +205,7 @@ async function writeClaudeFixture(claudeDir: string): Promise<void> {
           id: "msg_claude-usage-dedup-marker",
           role: "assistant",
           model: "claude-sonnet-5",
-          usage,
+          usage: partialUsage,
           content: [
             { type: "text", text: "Migration is complete" },
             { type: "thinking", thinking: "omit-claude-reasoning" },
@@ -200,9 +214,9 @@ async function writeClaudeFixture(claudeDir: string): Promise<void> {
       },
     )}\n${JSON.stringify(
       // Same API response as the record above (shared message.id), split
-      // into a second JSONL line carrying the tool_use block — Claude Code
-      // repeats the whole response's cumulative usage on both records, so
-      // this must NOT be counted a second time.
+      // into a second JSONL line carrying the tool_use block plus the
+      // final, larger usage snapshot — this must replace the partial
+      // snapshot above rather than being summed with it or dropped.
       {
         type: "assistant",
         sessionId: "claude-session",
@@ -211,7 +225,7 @@ async function writeClaudeFixture(claudeDir: string): Promise<void> {
           id: "msg_claude-usage-dedup-marker",
           role: "assistant",
           model: "claude-sonnet-5",
-          usage,
+          usage: finalUsage,
           content: [
             {
               type: "tool_use",
@@ -251,7 +265,22 @@ async function writeCodexFixture(codexDir: string): Promise<CodexFixture> {
   const codexHistory = path.join(codexDir, "history.jsonl");
   await Bun.write(
     codexHistory,
-    `${JSON.stringify({ session_id: "history-session", timestamp: "2026-08-13T00:00:00Z", prompt: "Review deployment status" })}\nnot-json\n"scalar prompt"\n${JSON.stringify({ session_id: "metadata-only" })}\n`,
+    `${JSON.stringify({ session_id: "history-session", timestamp: "2026-08-13T00:00:00Z", prompt: "Review deployment status" })}\nnot-json\n"scalar prompt"\n${JSON.stringify({ session_id: "metadata-only" })}\n${JSON.stringify(
+      {
+        session_id: "t-multi-prompt",
+        timestamp: "2026-08-13T00:01:00Z",
+        prompt: "First prompt in a multi-prompt session",
+      },
+    )}\n${JSON.stringify(
+      // Same session as above (multi-prompt session, no thread-history row
+      // or catalog entry) — its usage must be attached to only one of these
+      // two prompt documents, not both.
+      {
+        session_id: "t-multi-prompt",
+        timestamp: "2026-08-13T00:02:00Z",
+        prompt: "Second prompt in the same session",
+      },
+    )}\n`,
   );
   const codexCatalog = path.join(codexDir, "codex-dev.db");
   writeDatabase(
@@ -521,15 +550,16 @@ async function writeCodexSessionUsageFixture(
     `${lines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
 
-  // t-orphan-usage has no thread_history row and no catalog entry — proves
-  // usage isn't silently dropped for a rollout the other Codex trees don't
-  // otherwise represent (e.g. a CLI-only install with no local history db).
+  // t-truly-orphan has no thread_history row, no catalog entry, and no
+  // history.jsonl prompt — proves usage isn't silently dropped for a
+  // rollout the other Codex trees don't represent at all (e.g. a CLI-only
+  // install with no local history db).
   const orphanLines = [
     {
       timestamp: "2026-08-09T00:00:00.000Z",
       ordinal: 0,
       type: "session_meta",
-      payload: { session_id: "t-orphan-usage", id: "t-orphan-usage" },
+      payload: { session_id: "t-truly-orphan", id: "t-truly-orphan" },
     },
     {
       timestamp: "2026-08-09T00:00:01.000Z",
@@ -559,6 +589,46 @@ async function writeCodexSessionUsageFixture(
   await Bun.write(
     path.join(sessionsDir, "rollout-orphan.jsonl"),
     `${orphanLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
+  );
+
+  // t-multi-prompt has two history.jsonl prompts (no thread-history row or
+  // catalog entry) — proves its usage is attached to exactly one of those
+  // documents, not summed once per prompt.
+  const multiPromptLines = [
+    {
+      timestamp: "2026-08-10T00:00:00.000Z",
+      ordinal: 0,
+      type: "session_meta",
+      payload: { session_id: "t-multi-prompt", id: "t-multi-prompt" },
+    },
+    {
+      timestamp: "2026-08-10T00:00:01.000Z",
+      ordinal: 1,
+      type: "event_msg",
+      payload: {
+        type: "thread_settings_applied",
+        thread_settings: { model: "gpt-5.6-sol" },
+      },
+    },
+    {
+      timestamp: "2026-08-10T00:00:02.000Z",
+      ordinal: 2,
+      type: "token_usage_record",
+      payload: {
+        turn_token_usage: {
+          input_tokens: 500,
+          cached_input_tokens: 0,
+          cache_write_input_tokens: 0,
+          output_tokens: 60,
+          reasoning_output_tokens: 0,
+          total_tokens: 560,
+        },
+      },
+    },
+  ];
+  await Bun.write(
+    path.join(sessionsDir, "rollout-multi-prompt.jsonl"),
+    `${multiPromptLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
 }
 
@@ -686,8 +756,17 @@ describe("history source adapters", () => {
     );
     const cursor = documents.find((document) => document.source === "cursor");
 
-    expect(codexPrompts).toHaveLength(1);
-    expect(codexPrompts[0]?.runtimeId).toBe("history-session");
+    // "not-json" and the scalar-string line are malformed/unusable and must
+    // not become documents; "history-session" and the two "t-multi-prompt"
+    // prompts are the only valid, indexable entries in the fixture.
+    expect(codexPrompts).toHaveLength(3);
+    expect(
+      codexPrompts.map((document) => document.runtimeId).sort(compareStrings),
+    ).toEqual(
+      ["history-session", "t-multi-prompt", "t-multi-prompt"].sort(
+        compareStrings,
+      ),
+    );
     expect(cursor?.dialogueText).toContain("cursor-tail-search-marker");
   });
 
@@ -816,11 +895,28 @@ describe("history source usage and redaction", () => {
     const documents = results.flatMap((result) => result.documents);
     const orphan = documents.find(
       (document) =>
-        document.source === "codex" && document.runtimeId === "t-orphan-usage",
+        document.source === "codex" && document.runtimeId === "t-truly-orphan",
     );
     expect(orphan).toBeDefined();
     expect(orphan?.usageEvents).toHaveLength(1);
     expect(orphan?.usageEvents[0]?.inputTokens).toBe(300);
+  });
+
+  test("attaches a multi-prompt Codex session's usage to only one document", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const multiPrompt = documents.filter(
+      (document) =>
+        document.source === "codex" && document.runtimeId === "t-multi-prompt",
+    );
+    expect(multiPrompt).toHaveLength(2);
+    const withUsage = multiPrompt.filter(
+      (document) => document.usageEvents.length > 0,
+    );
+    expect(withUsage).toHaveLength(1);
+    expect(withUsage[0]?.usageEvents[0]?.inputTokens).toBe(500);
   });
 
   test("redacts secrets out of Grok tool call raw input before indexing", async () => {
