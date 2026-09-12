@@ -120,6 +120,7 @@ type SanitizeToolOutputOptions = {
   isBrowserCall: boolean;
   isWebContentCall: boolean;
   isDiscordMessageCall: boolean;
+  isAgentSessionCall: boolean;
 };
 
 function sanitizeArrayEntry(
@@ -176,6 +177,7 @@ const WEB_CONTENT_OMITTED_KEYS = new Set([
   "raw",
   "snippet",
   "title",
+  "url",
 ]);
 
 function shouldOmitOutputKey(
@@ -192,6 +194,9 @@ function shouldOmitOutputKey(
     return true;
   }
   if (key === "content" && options.isDiscordMessageCall) {
+    return true;
+  }
+  if (options.isAgentSessionCall && (key === "summary" || key === "content")) {
     return true;
   }
   return options.isWebContentCall && WEB_CONTENT_OMITTED_KEYS.has(key);
@@ -245,6 +250,7 @@ export function summarizeToolResultForSession(
   const isDiscordMessageCall =
     toolResult.toolName === "manage-message" ||
     toolResult.toolName === "manage-thread";
+  const isAgentSessionCall = toolResult.toolName === "manage-agent-session";
   const inputSummary = boundedSummary(toolResult.input);
   const sanitizedData =
     toolResult.output.data === undefined
@@ -256,6 +262,7 @@ export function summarizeToolResultForSession(
           isBrowserCall,
           isWebContentCall,
           isDiscordMessageCall,
+          isAgentSessionCall,
         });
   const hasData =
     sanitizedData !== undefined &&

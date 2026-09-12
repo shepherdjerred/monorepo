@@ -415,7 +415,7 @@ describe("summarizeToolResultForSession: shell output exclusion", () => {
       ["web-research"],
     );
     expect(event.resultSummary).toContain("Successfully fetched URL");
-    expect(event.resultSummary).toContain("https://attacker.example.com");
+    expect(event.resultSummary).not.toContain("https://attacker.example.com");
     expect(event.resultSummary).not.toContain("Attacker Site");
     expect(event.resultSummary).not.toContain(injectedPrompt);
     expect(event.content).not.toContain(injectedPrompt);
@@ -456,6 +456,72 @@ describe("summarizeToolResultForSession: shell output exclusion", () => {
     expect(event.resultSummary).toContain("987654321098765432");
     expect(event.resultSummary).not.toContain(leakedMessageContent);
     expect(event.content).not.toContain(leakedMessageContent);
+  });
+});
+
+describe("summarizeToolResultForSession: untrusted history and URLs", () => {
+  test("omits remote URLs and labels from web research summaries", () => {
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-research-links-1",
+        toolName: "web-research",
+        input: { action: "search", query: "cats" },
+        output: {
+          success: true,
+          message: "Found 1 result",
+          data: {
+            results: [
+              {
+                title: "Cat results",
+                url: "https://attacker.example.com/ignore-instructions",
+                snippet: "A result",
+              },
+            ],
+          },
+        },
+      },
+      ["web-research"],
+    );
+    expect(event.resultSummary).toContain("Found 1 result");
+    expect(event.resultSummary).not.toContain("Cat results");
+    expect(event.resultSummary).not.toContain("https://attacker.example.com");
+    expect(event.resultSummary).not.toContain("A result");
+    expect(event.content).not.toContain("attacker.example.com");
+  });
+
+  test("omits agent-session summaries and event bodies", () => {
+    const leakedSummary = "private session summary";
+    const leakedEvent = "prior user message with a secret";
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-session-history-1",
+        toolName: "manage-agent-session",
+        input: { action: "history", sessionId: "session-1" },
+        output: {
+          success: true,
+          message: "Fetched session history",
+          data: {
+            sessionId: "session-1",
+            summary: leakedSummary,
+            events: [
+              {
+                id: "event-1",
+                role: "user",
+                content: leakedEvent,
+                createdAt: "2026-09-12T12:00:00.000Z",
+              },
+            ],
+          },
+        },
+      },
+      ["manage-agent-session"],
+    );
+    expect(event.resultSummary).toContain("Fetched session history");
+    expect(event.resultSummary).toContain("session-1");
+    expect(event.resultSummary).not.toContain(leakedSummary);
+    expect(event.resultSummary).not.toContain(leakedEvent);
+    expect(event.content).not.toContain(leakedSummary);
+    expect(event.content).not.toContain(leakedEvent);
   });
 });
 
