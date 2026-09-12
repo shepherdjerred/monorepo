@@ -94,6 +94,7 @@ Reach it with `kubectl exec -n postal -it postal-mariadb-0 -- mariadb -u postal 
 
 ## Related
 
+- [Pull a Scout database into local dev](/how-to/pull-a-scout-database-into-local-dev/)
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
 - [Pause or debug a schedule](/how-to/pause-or-debug-a-schedule/)
 - [Temporal PostgreSQL's TLS identity](/explanation/temporal/postgresql-tls-identity/)

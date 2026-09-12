@@ -393,6 +393,7 @@
           "runner": "vitest",
           "args": [
             "scripts/create-minimal-png.test.ts",
+            "scripts/dev/dev-db-pull.test.ts",
             "scripts/dev/dev-web.test.ts",
             "scripts/install-pkgs.test.ts",
             "scripts/migration-smoke.test.ts"

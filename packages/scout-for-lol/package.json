@@ -15,6 +15,7 @@
     "dev:discord": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev/dev-discord.ts",
     "test:discord:smoke": "op run --env-file=./dev-web.env.tpl -- bun scripts/discord-smoke/discord-smoke.ts",
     "dev:design-audit": "bun scripts/dev/dev-web.ts",
+    "dev:db-pull": "bun scripts/dev/dev-db-pull.ts",
     "dev:seed": "bun scripts/dev/dev-seed.ts",
     "dev:login": "bun scripts/dev/dev-login.ts",
     "check:assets": "bun run scripts/check-asset-sizes.ts",

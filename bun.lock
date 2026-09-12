@@ -1299,7 +1299,6 @@
         "@shepherdjerred/llm-runtime": "workspace:*",
         "@shepherdjerred/temporal-observability": "workspace:*",
         "@shepherdjerred/voice-assistant": "workspace:*",
-        "@snazzah/davey": "^0.1.12",
         "@temporalio/activity": "1.22.0",
         "@temporalio/client": "1.22.0",
         "@temporalio/common": "1.22.0",
@@ -1548,6 +1547,7 @@
       "devDependencies": {
         "@playwright/test": "^1.61.1",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/toolkit": "workspace:*",
         "@tailwindcss/vite": "^4.2.4",
         "@types/bun": "1.4.0",
         "@types/react": "^19.2.18",

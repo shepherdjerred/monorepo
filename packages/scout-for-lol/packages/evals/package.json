@@ -58,6 +58,7 @@
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/toolkit": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@types/bun": "1.4.0",
     "@types/react": "^19.2.18",
