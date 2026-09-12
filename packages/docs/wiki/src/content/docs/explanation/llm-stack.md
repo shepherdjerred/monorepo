@@ -69,7 +69,8 @@ project. That exclusion is the byte-budget control for Braintrust's metered
 ingest, so there is deliberately no catch-all branch; OpenRouter Broadcast
 payloads in particular stay out. The kill switch for a runaway budget is
 removing a branch from the sampler's output list, which the config reloader
-applies without recreating the pod. The sampler's decision cache forwards
+applies without recreating the pod; see
+[Route a service to Braintrust](/how-to/route-a-service-to-braintrust/). The sampler's decision cache forwards
 late spans of already-kept traces, but spans that completed more than the
 decision window before a trace's first LLM span are gone for Braintrust.
 That loss is bounded to the pre-LLM bootstrap of long agent traces and is
@@ -81,7 +82,13 @@ service archives the complete redacted OTLP JSON payload and forwards that
 same redacted payload to Tempo. Its digest receipt makes webhook redelivery
 idempotent, including retries across UTC date partitions. A `204` means both
 archive and forward completed; a failure intentionally asks OpenRouter to
-redeliver.
+redeliver. That receipt is why this service deliberately bypasses
+`alloy-gateway` and forwards straight to Tempo: the gateway acknowledges a
+request before Tempo delivery is durable, which would let a gateway crash
+turn an already-issued receipt into a lie. Every other producer's telemetry
+is fire-and-forget, so the gateway's weaker acknowledgment costs them
+nothing. Broadcast payloads reach no Braintrust project either way — no
+allowlist branch matches them.
 
 Prometheus uses bounded service, workload, provider, model, outcome, token-type,
 and cost-type labels. Trace, generation, session, and user IDs are never

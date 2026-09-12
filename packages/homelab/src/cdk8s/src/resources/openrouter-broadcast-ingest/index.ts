@@ -81,6 +81,13 @@ export function createOpenRouterBroadcastIngestDeployment(chart: Chart) {
           key: "OPENROUTER_BROADCAST_BEARER_TOKEN",
         }),
         OPENROUTER_BROADCAST_MAX_BODY_BYTES: EnvValue.fromValue("5242880"),
+        // Deliberately NOT the alloy-gateway: the service's 204 receipt means
+        // "archived AND forwarded", and OpenRouter dedupes redeliveries on it
+        // permanently. The gateway's batch processor acks before Tempo
+        // delivery, which would turn that receipt into a lie during a gateway
+        // crash or exporter retry exhaustion. Tempo's own response is the
+        // delivery signal this contract needs. (Nothing here targets
+        // Braintrust either — no allowlist branch matches this service.)
         TEMPO_OTLP_HTTP_URL: EnvValue.fromValue(
           "http://tempo.tempo.svc.cluster.local:4318/v1/traces",
         ),
