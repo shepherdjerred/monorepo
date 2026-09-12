@@ -41,8 +41,9 @@ export async function ingestMatch(
 export async function ingestTimeline(
   timeline: RawTimeline,
   trackedPlayerAliases: string[],
+  gameCreatedAt: Date,
 ): Promise<boolean> {
-  await saveTimelineToS3(timeline, trackedPlayerAliases);
+  await saveTimelineToS3(timeline, trackedPlayerAliases, gameCreatedAt);
   return writeTimelineStagingFiles(resolveLakeDir(), timeline, new Date());
 }
 

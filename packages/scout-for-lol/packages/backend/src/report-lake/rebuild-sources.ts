@@ -140,6 +140,23 @@ function timelineWriterRows(writers: TimelineRebuildWriters): number {
   );
 }
 
+/**
+ * TIMELINE PARTITION CUTOVER (2026-09-12). Timeline objects written before this
+ * date are keyed by their UPLOAD day; those written after are keyed by the
+ * match's `gameCreation` day, so that every asset for a game shares one prefix
+ * (see `storage/s3.ts`). Both layouts sit under `games/yyyy/MM/dd/{matchId}/`
+ * and this rebuild enumerates that whole prefix, classifying by the
+ * `/timeline.json` suffix and taking match identity from the parsed payload —
+ * never from the key. Reading both layouts therefore needed no listing change.
+ * What it DID need is deduplication, because a match can have a surviving
+ * object in each layout; see {@link dedupeTimelineCandidates}.
+ *
+ * `lastModified` is the accurate observation time and is preferred whenever S3
+ * supplies it. The key-derived fallback is the day the object was filed, which
+ * means the upload day under the old layout and the game day under the new one.
+ * Both are day-resolution approximations of when the timeline was seen, which
+ * is all this value is used for.
+ */
 function timelineObservedAt(key: string, lastModified: Date | undefined): Date {
   if (lastModified !== undefined) return lastModified;
   const keyDate = /games\/(\d{4})\/(\d{2})\/(\d{2})\//.exec(key);
@@ -150,6 +167,55 @@ function timelineObservedAt(key: string, lastModified: Date | undefined): Date {
     throw new Error(`Timeline object key has no stable date: ${key}`);
   }
   return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+}
+
+/**
+ * The match id segment of `games/yyyy/MM/dd/{matchId}/timeline.json`.
+ *
+ * Used only to GROUP candidate objects before fetching them, never to decide
+ * what a payload is; the winning object's identity still comes from its parsed
+ * `metadata.matchId`.
+ */
+function timelineKeyMatchId(key: string): string {
+  return key.split("/").at(-2) ?? key;
+}
+
+/**
+ * Pick one object per match from the cutover's two layouts.
+ *
+ * The partition cutover means a match whose timeline was written before it and
+ * retried after it has TWO surviving objects — one under the upload day, one
+ * under the game day — and both are valid, parseable timelines for the same
+ * match. Replaying both would emit two sets of rows for one match, and which
+ * set a query saw would depend on file order. Newest wins: a retry exists
+ * because something about the first attempt was unsatisfactory.
+ *
+ * Ranking uses the same instant as {@link timelineObservedAt}, so an object S3
+ * gives no `LastModified` for is ranked by the day its key files it under
+ * rather than being dropped. Ties break on the key so the result is a total
+ * order and the rebuild is reproducible.
+ */
+function dedupeTimelineCandidates(
+  candidates: readonly { key: string; observedAt: Date }[],
+): { key: string; observedAt: Date }[] {
+  const newestByMatch = new Map<string, { key: string; observedAt: Date }>();
+  for (const candidate of candidates) {
+    const matchId = timelineKeyMatchId(candidate.key);
+    const existing = newestByMatch.get(matchId);
+    if (
+      existing === undefined ||
+      candidate.observedAt.getTime() > existing.observedAt.getTime() ||
+      (candidate.observedAt.getTime() === existing.observedAt.getTime() &&
+        candidate.key > existing.key)
+    ) {
+      newestByMatch.set(matchId, candidate);
+    }
+  }
+  return [...newestByMatch.values()].toSorted(
+    (left, right) =>
+      right.observedAt.getTime() - left.observedAt.getTime() ||
+      left.key.localeCompare(right.key),
+  );
 }
 
 /** Replay only already-retained timeline objects into the normalized lake. */
@@ -166,6 +232,7 @@ export async function populateTimelinesFromS3(options: {
   }) => void;
 }): Promise<number> {
   let skipped = 0;
+  const emitted = new Set<string>();
   const batch: { key: string; observedAt: Date }[] = [];
   const flush = async (): Promise<void> => {
     const timelines = await Promise.all(
@@ -196,6 +263,11 @@ export async function populateTimelinesFromS3(options: {
         reportLakeCompactionSkippedTotal.inc({ table: "timeline_coverage" });
         continue;
       }
+      // Second line of defence behind the key-level dedupe: two objects under
+      // different key match ids can still parse to the same payload match id.
+      // Candidates arrive newest-first, so the first one seen is the winner.
+      if (emitted.has(result.timeline.metadata.matchId)) continue;
+      emitted.add(result.timeline.metadata.matchId);
       const flattened = flattenTimeline(result.timeline, result.observedAt);
       for (const row of flattened.events) options.writers.events.write(row);
       for (const row of flattened.eventParticipants) {
@@ -216,6 +288,10 @@ export async function populateTimelinesFromS3(options: {
     });
   };
 
+  // Enumerate the whole prefix before fetching anything. Deduping needs to see
+  // every candidate for a match, and the listing is metadata-only — it is the
+  // GETs that cost, and this is what stops us paying for a loser twice.
+  const candidates: { key: string; observedAt: Date }[] = [];
   for await (const ref of enumerateRawObjects(
     options.client,
     options.bucket,
@@ -223,10 +299,14 @@ export async function populateTimelinesFromS3(options: {
     options,
   )) {
     if (classifyRawObjectKey(ref.key) !== "timeline") continue;
-    batch.push({
+    candidates.push({
       key: ref.key,
       observedAt: timelineObservedAt(ref.key, ref.lastModified),
     });
+  }
+
+  for (const candidate of dedupeTimelineCandidates(candidates)) {
+    batch.push(candidate);
     if (batch.length >= REBUILD_S3_CONCURRENCY) await flush();
   }
   if (batch.length > 0) await flush();

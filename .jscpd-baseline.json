@@ -1168,10 +1168,6 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/scout-for-lol/packages/backend/src/storage/s3-helpers.ts|packages/scout-for-lol/packages/backend/src/storage/s3-prematch.ts": {
-      "clones": 2,
-      "tokens": 161
-    },
     "packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard-image.ts|packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.ts": {
       "clones": 1,
       "tokens": 79
@@ -1190,7 +1186,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.no-bucket.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.test.ts": {
       "clones": 1,
-      "tokens": 143
+      "tokens": 86
     },
     "packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts": {
       "clones": 2,

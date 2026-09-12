@@ -1,12 +1,12 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "#src/storage/s3-client.ts";
-import { z } from "zod";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { format } from "date-fns";
 import { createLogger } from "#src/logger.ts";
-import { sendPutWithRetry } from "#src/storage/s3-put-retry.ts";
-import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
+import {
+  putContentAddressedObject,
+  type StoredObject,
+} from "#src/storage/object-integrity.ts";
 
 const logger = createLogger("storage-s3-prematch");
 
@@ -34,7 +34,6 @@ type SavePrematchToS3Config = {
   logEmoji: string;
   logMessage: string;
   errorContext: string;
-  returnUrl?: boolean;
   /** Stable source timestamp for idempotent match-keyed assets. */
   keyDate?: Date;
   /** Full natural identity when a numeric game ID is not globally unique. */
@@ -43,10 +42,13 @@ type SavePrematchToS3Config = {
 
 /**
  * Save prematch content to S3 storage.
+ *
+ * Resolves to `undefined` only when no bucket is configured. Real uploads are
+ * content-addressed on the same terms as `saveToS3`; see `object-integrity.ts`.
  */
 export async function savePrematchToS3(
   config: SavePrematchToS3Config,
-): Promise<string | undefined> {
+): Promise<StoredObject | undefined> {
   const {
     gameId,
     assetType,
@@ -57,7 +59,6 @@ export async function savePrematchToS3(
     logEmoji,
     logMessage,
     errorContext,
-    returnUrl,
     keyDate,
     resourceId,
   } = config;
@@ -73,55 +74,31 @@ export async function savePrematchToS3(
 
   logger.info(`[S3Storage] ${logEmoji} ${logMessage}: game ${gameIdStr}`);
 
+  const startTime = Date.now();
+  const key = generatePrematchS3Key(
+    resourceId ?? gameIdStr,
+    assetType,
+    extension,
+    keyDate ?? new Date(),
+  );
+
   try {
-    const client = createS3Client();
-    const key = generatePrematchS3Key(
-      resourceId ?? gameIdStr,
-      assetType,
-      extension,
-      keyDate ?? new Date(),
-    );
-    const StringSchema = z.string();
-    const BytesSchema = z.instanceof(Uint8Array);
-
-    const stringResult = StringSchema.safeParse(body);
-    const bodyBuffer: Uint8Array = stringResult.success
-      ? new TextEncoder().encode(stringResult.data)
-      : BytesSchema.parse(body);
-    const sizeBytes = bodyBuffer.length;
-
-    logger.info(`[S3Storage] 📝 Upload details:`, {
+    const stored = await putContentAddressedObject({
+      client: createS3Client(),
       bucket,
       key,
-      sizeBytes,
+      body,
+      contentType,
+      metadata,
+      errorContext,
+      retryContext: `${errorContext} game ${gameIdStr}`,
     });
-
-    const startTime = Date.now();
-
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: bodyBuffer,
-      ContentType: contentType,
-      Metadata: validateS3Metadata({
-        ...metadata,
-        uploadedAt: new Date().toISOString(),
-      }),
-    });
-
-    await sendPutWithRetry(
-      client,
-      command,
-      `${errorContext} game ${gameIdStr}`,
-    );
 
     const uploadTime = Date.now() - startTime;
-    const s3Url = `s3://${bucket}/${key}`;
     logger.info(
       `[S3Storage] ✅ Saved ${errorContext} game ${gameIdStr} to S3 in ${uploadTime.toString()}ms`,
     );
-
-    return returnUrl === true ? s3Url : undefined;
+    return stored;
   } catch (error) {
     logger.error(
       `[S3Storage] ❌ Failed to save ${errorContext} game ${gameIdStr} to S3:`,
