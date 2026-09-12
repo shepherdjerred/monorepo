@@ -180,23 +180,32 @@ const WEB_CONTENT_OMITTED_KEYS = new Set([
   "url",
 ]);
 
+// Keys whose values are written by someone other than the agent. A persisted
+// tool summary is interpolated into the memory-extraction prompt, so anything
+// listed here would otherwise let a remote page or another user's message steer
+// durable memory.
+const BROWSER_OMITTED_KEYS = new Set(["raw", "text", "title"]);
+const SHELL_OMITTED_KEYS = new Set(["stdout", "stderr"]);
+const DISCORD_MESSAGE_OMITTED_KEYS = new Set(["content", "summary"]);
+const AGENT_SESSION_OMITTED_KEYS = new Set(["summary", "content"]);
+
 function shouldOmitOutputKey(
   key: string,
   options: SanitizeToolOutputOptions,
 ): boolean {
-  if (key === "raw" && (options.isCookiesCall || options.isBrowserCall)) {
+  if (key === "raw" && options.isCookiesCall) {
     return true;
   }
-  if (key === "text" && options.isBrowserCall) {
+  if (options.isBrowserCall && BROWSER_OMITTED_KEYS.has(key)) {
     return true;
   }
-  if ((key === "stdout" || key === "stderr") && options.isShellCall) {
+  if (options.isShellCall && SHELL_OMITTED_KEYS.has(key)) {
     return true;
   }
-  if (key === "content" && options.isDiscordMessageCall) {
+  if (options.isDiscordMessageCall && DISCORD_MESSAGE_OMITTED_KEYS.has(key)) {
     return true;
   }
-  if (options.isAgentSessionCall && (key === "summary" || key === "content")) {
+  if (options.isAgentSessionCall && AGENT_SESSION_OMITTED_KEYS.has(key)) {
     return true;
   }
   return options.isWebContentCall && WEB_CONTENT_OMITTED_KEYS.has(key);
