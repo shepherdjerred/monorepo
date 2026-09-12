@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/dropdown-menu";
+} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 import {
   Table,
   TableBody,

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   COMPETITIVE_PROGRESSION_CATALOG,
   COMPETITIVE_PROGRESSION_CATALOG_VERSION,
@@ -48,6 +49,18 @@ export function defaultHallSettings(guildId: string): HallSettings {
 }
 
 export function hallSettingsFromRow(row: HallSettingsRow): HallSettings {
+  const rawRecords = parseProgressionJson(
+    row.enabledRecords,
+    z.array(z.string()),
+  );
+  // A record id retired from the catalog (e.g. the "largest_multikill" ->
+  // "pentakills" rename) measures something different from its replacement,
+  // so a persisted legacy id is dropped rather than relabeled to the new id.
+  // The record simply falls out of the guild's enabled set until baselined
+  // again under a current id, instead of surfacing a stale or wrong value.
+  const enabledRecords = RecordArraySchema.parse(
+    rawRecords.filter((id) => HallRecordIdSchema.safeParse(id).success),
+  );
   return HallSettingsSchema.parse({
     guildId: row.guildId,
     catalogVersion: row.catalogVersion,
@@ -56,7 +69,7 @@ export function hallSettingsFromRow(row: HallSettingsRow): HallSettings {
       row.enabledQueueFamilies,
       QueueFamilyArraySchema,
     ),
-    enabledRecords: parseProgressionJson(row.enabledRecords, RecordArraySchema),
+    enabledRecords,
   });
 }
 

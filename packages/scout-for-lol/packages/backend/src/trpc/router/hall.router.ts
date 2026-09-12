@@ -22,8 +22,8 @@ import {
 } from "#src/trpc/guild-permission.ts";
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
-import { client as discordClient } from "#src/discord/client.ts";
 import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
+import { installedGuildIdsAmong } from "#src/lib/discord/installed-guilds.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 
 const GuildInputSchema = z.strictObject({ guildId: DiscordGuildIdSchema });
@@ -43,9 +43,11 @@ async function assertHallEnabled(guildId: DiscordGuildId): Promise<void> {
 export const hallRouter = router({
   status: webProcedure.query(async ({ ctx }) => {
     const userGuilds = await fetchUserGuildsForRequest(ctx.user);
-    const botGuildIds = new Set(discordClient.guilds.cache.map((g) => g.id));
+    const installedGuildIds = await installedGuildIdsAmong(
+      userGuilds.map((g) => g.id),
+    );
     const present = userGuilds.filter(
-      (g) => botGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
+      (g) => installedGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
     );
     if (present.length === 0) {
       return { state: "no_shared_guild", guilds: [] } as const;
