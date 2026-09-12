@@ -66,6 +66,7 @@ export async function processCompetitiveProgressionMatch(input: {
         timeline,
         input.trackedPlayers,
         matchId,
+        input.match,
       );
     }
     timelinePersisted = required || timeline !== undefined;

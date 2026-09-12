@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-import { RawCurrentGameInfoSchema } from "@scout-for-lol/data";
+import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
 import {
   getMetrics,
   prematchSpectatorPayloadSaveDurationSeconds,
@@ -11,33 +11,6 @@ import { savePrematchDataToS3 } from "#src/storage/s3.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const s3Mock = mockClient(S3Client);
-
-function makeGameInfo() {
-  return RawCurrentGameInfoSchema.parse({
-    gameId: 5_500_000_001,
-    gameStartTime: Date.now(),
-    gameMode: "CLASSIC",
-    mapId: 11,
-    gameType: "MATCHED_GAME",
-    gameQueueConfigId: 420,
-    gameLength: -30,
-    platformId: "NA1",
-    bannedChampions: [],
-    participants: [
-      {
-        championId: 157,
-        puuid: "test-puuid",
-        teamId: 100,
-        riotId: "Player#NA1",
-        spell1Id: 4,
-        spell2Id: 14,
-        lastSelectedSkinIndex: 0,
-        bot: false,
-        profileIconId: 1,
-      },
-    ],
-  });
-}
 
 function getCounterValue(
   metrics: string,
@@ -85,7 +58,7 @@ afterEach(() => {
 
 describe("savePrematchDataToS3", () => {
   test("returns saved and records metrics on successful upload", async () => {
-    const gameInfo = makeGameInfo();
+    const gameInfo = rawCurrentGameInfoFixture();
     const metricsBefore = await getMetrics();
     const savedBefore = getCounterValue(
       metricsBefore,
@@ -137,7 +110,7 @@ describe("savePrematchDataToS3", () => {
   });
 
   test("throws after retries when upload fails", async () => {
-    const gameInfo = makeGameInfo();
+    const gameInfo = rawCurrentGameInfoFixture();
     const metricsBefore = await getMetrics();
     const errorBefore = getCounterValue(
       metricsBefore,

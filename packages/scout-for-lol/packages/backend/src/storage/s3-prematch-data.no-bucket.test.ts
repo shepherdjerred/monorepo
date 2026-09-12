@@ -1,35 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { getMetrics } from "#src/metrics/index.ts";
 import { savePrematchDataToS3 } from "#src/storage/s3.ts";
-import { RawCurrentGameInfoSchema } from "@scout-for-lol/data";
+import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
-
-function makeGameInfo() {
-  return RawCurrentGameInfoSchema.parse({
-    gameId: 5_500_000_002,
-    gameStartTime: Date.now(),
-    gameMode: "CLASSIC",
-    mapId: 11,
-    gameType: "MATCHED_GAME",
-    gameQueueConfigId: 420,
-    gameLength: -15,
-    platformId: "NA1",
-    bannedChampions: [],
-    participants: [
-      {
-        championId: 157,
-        puuid: "test-puuid",
-        teamId: 100,
-        riotId: "Player#NA1",
-        spell1Id: 4,
-        spell2Id: 14,
-        lastSelectedSkinIndex: 0,
-        bot: false,
-        profileIconId: 1,
-      },
-    ],
-  });
-}
 
 function getCounterValue(
   metrics: string,
@@ -66,7 +39,7 @@ describe("savePrematchDataToS3 without S3 bucket", () => {
   });
 
   test("returns skipped_no_bucket and records skip metric", async () => {
-    const gameInfo = makeGameInfo();
+    const gameInfo = rawCurrentGameInfoFixture();
     const metricsBefore = await getMetrics();
     const skippedBefore = getCounterValue(
       metricsBefore,

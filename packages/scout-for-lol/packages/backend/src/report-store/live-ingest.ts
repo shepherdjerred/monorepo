@@ -26,6 +26,12 @@ type TimelineIngestOptions = {
   timeline: RawTimeline;
   source: string;
   trackedPlayerAliases: string[];
+  /**
+   * The match's `info.gameCreation`. It partitions the timeline's S3 key onto
+   * the same day as the match payload, so the caller must supply the match's
+   * own timestamp rather than letting the upload time stand in for it.
+   */
+  gameCreatedAt: Date;
 };
 
 type PrematchIngestOptions = {
@@ -98,6 +104,7 @@ export async function recordTimelineForReportStore(
     const staged = await ingestTimeline(
       options.timeline,
       options.trackedPlayerAliases,
+      options.gameCreatedAt,
     );
     recordSuccess("timeline", options.source);
     logger.info(

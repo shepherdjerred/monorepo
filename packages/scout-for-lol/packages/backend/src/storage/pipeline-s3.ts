@@ -79,7 +79,6 @@ async function saveStageTrace(params: {
     logEmoji: "🔬",
     logMessage: `Saving pipeline trace ${stageNumber}-${stageName}`,
     errorContext: `pipeline trace ${stageName}`,
-    returnUrl: false,
     additionalLogDetails: {
       queueType,
       model: trace.model.model,
@@ -127,7 +126,6 @@ async function saveImageGenerationTrace(params: {
     logEmoji: "🖼️",
     logMessage: "Saving pipeline image generation trace",
     errorContext: "pipeline image generation trace",
-    returnUrl: false,
     additionalLogDetails: {
       queueType,
       model: trace.model,
@@ -166,7 +164,6 @@ async function saveFinalReview(params: {
     logEmoji: "📝",
     logMessage: "Saving final review text",
     errorContext: "final review text",
-    returnUrl: false,
     additionalLogDetails: {
       queueType,
       reviewerName: context.reviewerName,
@@ -194,7 +191,7 @@ async function saveFinalImage(params: {
     bytes[i] = binaryString.codePointAt(i) ?? 0;
   }
 
-  return saveToS3({
+  const stored = await saveToS3({
     matchId,
     assetType: "ai-pipeline/final-image",
     extension: "png",
@@ -210,12 +207,12 @@ async function saveFinalImage(params: {
     logEmoji: "✨",
     logMessage: "Saving final review image",
     errorContext: "final review image",
-    returnUrl: true,
     additionalLogDetails: {
       queueType,
       imageSizeBytes: bytes.length,
     },
   });
+  return stored?.url;
 }
 
 /**
@@ -440,7 +437,7 @@ export async function savePipelineDebugToS3(params: {
 
   const body = JSON.stringify(debugData, null, 2);
 
-  return saveToS3({
+  const stored = await saveToS3({
     matchId,
     assetType: "ai-pipeline/debug",
     extension: "json",
@@ -455,11 +452,11 @@ export async function savePipelineDebugToS3(params: {
     logEmoji: "🔍",
     logMessage: "Saving pipeline debug data",
     errorContext: "pipeline debug data",
-    returnUrl: true,
     additionalLogDetails: {
       queueType,
       reviewerName: output.context.reviewerName,
       playerName: output.context.playerName,
     },
   });
+  return stored?.url;
 }

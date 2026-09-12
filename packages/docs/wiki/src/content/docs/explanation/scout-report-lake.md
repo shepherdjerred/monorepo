@@ -88,6 +88,97 @@ state, settle Bryan Bucks, award earnings, or fabricate per-match rank deltas.
 The live poller resumes only after the fixed snapshot is stored and its newest
 ID becomes the cursor, so a game completed during import is notified once.
 
+### Every archived capture is content-addressed
+
+Each raw match, timeline, and prematch payload is hashed with SHA-256 before it
+is uploaded, in
+[object-integrity.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/object-integrity.ts). The digest is stored on the object as user metadata and returned to
+the caller as an artifact descriptor: the key that was written, the digest, the
+byte count, the content type, and the capture instant. Because a descriptor
+carries the key the put actually used rather than one recomputed afterwards, it
+cannot describe an object that is not there.
+
+The write path verifies less than it may appear to. The AWS SDK sends a request
+checksum the server recomputes and rejects on mismatch, so transit corruption
+fails the put itself; Scout additionally compares the returned ETag against its
+own MD5 of the body, which independently confirms that the bytes the server
+acknowledged are the bytes it sent (`assertPutIntegrity`, same module). Nothing re-reads the object. Durable
+replication, later overwrites, and read-time integrity are all outside what a
+write can establish — the recorded digest is what makes them checkable later,
+which is the reason for recording it.
+
+### The timeline partition cutover
+
+Every asset for a game belongs under one `games/yyyy/MM/dd/{matchId}/` prefix,
+and since 2026-09-12 timelines are keyed by the match's `gameCreation` so they
+land beside the match payload, per
+[archiveTimelineToS3](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/s3.ts). Before that they were keyed by the moment they
+were uploaded, which was usually — but not reliably — the day the game was
+played, so a game's own assets could end up split across two prefixes.
+
+Nothing rewrites the objects already filed under the old layout, and nothing
+needs to. Both the fold and the rebuild enumerate the whole `games/` prefix and
+take a match's identity from the parsed payload, never from its key, so a reader
+cannot tell which layout it is looking at. What it does need is deduplication —
+a match retried across the cutover has a surviving object in each layout, and
+[rebuild-sources.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/rebuild-sources.ts) keeps the newest so the
+rebuild is reproducible.
+
+### Receipted ingest is a second door, not a replacement
+
+The durable architecture adds a receipted entry point alongside the boolean one:
+the same staging and archival primitives underneath, the opposite failure
+contract on top. A caller that asks for a receipted write is asking for a
+durable claim that the projection happened, so a staging failure throws and
+records nothing rather than returning `false`
+([receipted-staging.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/receipted-staging.ts),
+[receipted-archive.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/receipted-archive.ts)). A receipt that might not
+correspond to a real staging file would be worse than no receipt, because the
+value of the table is that a row in it can be trusted without re-deriving the
+fact it attests to.
+
+The receipt write itself is the one fail-open step. Refusing an archive because
+its bookkeeping row could not be inserted would trade a bookkeeping problem for a
+data-loss one, so a broken receipt write is logged and metered while the v1 write
+stands.
+
+Two counters record that, and keeping them apart is what makes either usable
+(defined in [metrics/durable.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/durable.ts), applied in
+[durable-receipts.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/durable-receipts.ts)).
+`scout_durable_dualwrite_failures_total` counts only writes that THREW: the
+recorder is broken and the stored state is unknown, which is worth paging on.
+`scout_durable_dualwrite_records_total` counts every write that completed,
+labelled by the repository's answer, so a conflict — a definite result where the
+row exists, the first writer's evidence was kept, and two producers disagree — is
+visible as drift without contaminating the alert. Collapsing a conflict into the
+failures counter would make it fire on benign retries and stop meaning "the
+recorder is broken". Both are recorded inline by whichever role performed the
+write, so they arrive from the ingest worker roles rather than from
+`application`; neither is one of the database-sweeping collectors only
+`application` serves ([sweep-policy.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/sweep-policy.ts)), so a
+dashboard over the pair joins across roles.
+
+### A receipt identifies content, never a location
+
+Receipt evidence names artifacts by content digest and by the S3 object they
+derive from, shaped by
+[durable-receipts.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/durable-receipts.ts). It never names a local path or a build id, and that rule is what
+lets any role read a receipt another role wrote.
+
+The reason is the split topology. Staging files live on one role's
+read-write-once volume, so a receipt naming `matches-recent/NA1_1.jsonl` would be
+a claim no other role could evaluate, and it would quietly become false the day
+the lake moved to a shared store. A lake-staging receipt therefore records the
+source object key, the digest of the bytes the rows were derived from, and how
+many staging relations the capture writes. All three are true from anywhere, and
+together they let a reader re-derive the projection and check it rather than take
+the receipt's word for it. A staging run cannot be receipted at all without
+knowing the object it projected, which is why the source descriptor is a required
+argument rather than an optional one. Each artifact kind also gets its own
+receipt kind, because all three share one match id and a receipt's identity is
+`(kind, version, scope)` within a match — one kind per family would make a
+game's match and timeline the same receipt.
+
 ```mermaid
 sequenceDiagram
   accTitle: Ingest write contract
