@@ -7,8 +7,7 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
-import { parseProgressionJson } from "#src/progression/json.ts";
-import { HallBreakOutboxPayloadSchema } from "#src/progression/hall/evaluate-match.ts";
+import { parseHallBreakOutboxPayload } from "#src/progression/hall/evaluate-match.ts";
 import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
 import { loadProgressionOutboxRows } from "#src/progression/outbox.ts";
 import {
@@ -42,14 +41,17 @@ function truncateToLength(text: string, maxLength: number): string {
   return `${text.slice(0, maxLength - 3)}...`;
 }
 
+/**
+ * Builds the record-break embed, or `null` when every queued record referenced
+ * a Hall record id since retired by a catalog rename (see
+ * {@link parseHallBreakOutboxPayload}) — nothing left worth notifying about.
+ */
 export function hallBreakEmbed(
   payloadJson: string,
   matchId: string,
-): EmbedBuilder {
-  const records = parseProgressionJson(
-    payloadJson,
-    HallBreakOutboxPayloadSchema,
-  );
+): EmbedBuilder | null {
+  const records = parseHallBreakOutboxPayload(payloadJson);
+  if (records.length === 0) return null;
   const description = `Match ${escapeMarkdown(matchId)} set new guild records.`;
   const rawFields = records.map((record) => ({
     name: `${queueLabel(record.queueFamilyId)} · ${recordLabel(record.recordId)}`,
@@ -141,9 +143,23 @@ export async function deliverHallRecordBreakOutbox(): Promise<void> {
           lastError: null,
         },
       });
+      const embed = hallBreakEmbed(row.payloadJson, row.matchId);
+      if (embed === null) {
+        await completeScoutEffect(effectKey);
+        await prisma.hallRecordBreakOutbox.update({
+          where: { id: row.id },
+          data: {
+            deliveryStatus: "suppressed",
+            lastError:
+              "Every queued record referenced a Hall record id retired by a catalog rename",
+          },
+        });
+        hallRecordBreakDeliveries.inc({ status: "suppressed" });
+        continue;
+      }
       await sendChannelMessage(
         {
-          embeds: [hallBreakEmbed(row.payloadJson, row.matchId)],
+          embeds: [embed],
           allowedMentions: { parse: [] },
           nonce: discordNonce(row.id),
           enforceNonce: true,

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   HallQueueFamilyIdSchema,
   HallRecordEvidenceSchema,
@@ -16,6 +17,7 @@ import { prisma, type Db } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
 import { lockHallRecords } from "#src/progression/hall/baseline.ts";
+import { RETIRED_HALL_RECORD_IDS } from "#src/progression/hall/legacy-record-ids.ts";
 import { hallSettingsFromRow } from "#src/progression/hall/settings.ts";
 import {
   fetchProgressionMatches,
@@ -37,6 +39,38 @@ const HallBreakPayloadSchema = HallRecordEvidenceSchema.extend({
   holders: HallRecordHolderSchema.array(),
 });
 export const HallBreakOutboxPayloadSchema = HallBreakPayloadSchema.array();
+export type HallBreakOutboxPayload = z.infer<
+  typeof HallBreakOutboxPayloadSchema
+>;
+
+const RecordIdFieldSchema = z.object({ recordId: z.unknown() }).partial();
+
+function dropRetiredRecordIds(raw: unknown): unknown {
+  if (!Array.isArray(raw)) return raw;
+  return raw.filter((entry) => {
+    const parsed = RecordIdFieldSchema.safeParse(entry);
+    if (!parsed.success) return true;
+    const recordId = parsed.data.recordId;
+    return (
+      typeof recordId !== "string" || !RETIRED_HALL_RECORD_IDS.has(recordId)
+    );
+  });
+}
+
+/**
+ * Parse a queued Hall break-outbox payload, dropping any entry for a record
+ * id retired by a catalog rename (see {@link RETIRED_HALL_RECORD_IDS}) instead
+ * of failing on it. A pending/failed row queued before such a rename would
+ * otherwise be rejected by the narrowed enum forever. Any other unrecognized
+ * id still fails loudly through the schema below.
+ */
+export function parseHallBreakOutboxPayload(
+  payloadJson: string,
+): HallBreakOutboxPayload {
+  return HallBreakOutboxPayloadSchema.parse(
+    dropRetiredRecordIds(JSON.parse(payloadJson)),
+  );
+}
 
 function holderFor(account: TrackedAccount): HallRecordHolder {
   return HallRecordHolderSchema.parse({
