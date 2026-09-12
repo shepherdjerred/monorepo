@@ -17,14 +17,14 @@
       "buildNumber": 13290
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "buildNumber": 15287,
       "version": "2.0.0-15287",
-      "digest": "sha256:033502e8376026e423170efecfb4d998d9549df116c814445d52f941bbd20a57"
+      "digest": "sha256:033502e8376026e423170efecfb4d998d9549df116c814445d52f941bbd20a57",
+      "buildNumber": 15287
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "buildNumber": 15287,
       "version": "2.0.0-15287",
-      "digest": "sha256:a3277444ab5385d30b4f11db73dc107e434c74430f3ef7f12863404fc3ab10b6"
+      "digest": "sha256:a3277444ab5385d30b4f11db73dc107e434c74430f3ef7f12863404fc3ab10b6",
+      "buildNumber": 15287
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-10760",
@@ -47,9 +47,9 @@
       "buildNumber": 15258
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-15273",
-      "digest": "sha256:666edeb9704ae8668741077f793792ca274d8e9d2af3631b8ae0d2e1f62d90b6",
-      "buildNumber": 15273
+      "buildNumber": 15316,
+      "version": "2.0.0-15316",
+      "digest": "sha256:8722f2fcb68f79bb92e44773cd8de2c7f3db8e69cb8ad34f49d763383d9b9808"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
