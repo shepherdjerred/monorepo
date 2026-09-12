@@ -327,6 +327,47 @@ describe("RateLimiter retries", () => {
     expect(error.status).toBe(429);
     expect(error.body).toEqual({ message: "still limited" });
   });
+
+  test("does not retry an upstream outage when retryUpstreamErrors is false", async () => {
+    const { runtime, sleeps } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 2 }, runtime);
+    let calls = 0;
+
+    const error = await captureRiotError(
+      limiter.execute(
+        "https://example.test/non-idempotent",
+        async () => {
+          calls += 1;
+          return new Response("bad gateway", { status: 502 });
+        },
+        { retryUpstreamErrors: false },
+      ),
+    );
+
+    expect(calls).toBe(1);
+    expect(sleeps).toEqual([]);
+    expect(error.status).toBe(502);
+  });
+
+  test("still retries 429 when retryUpstreamErrors is false", async () => {
+    const { runtime } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 1 }, runtime);
+    let calls = 0;
+
+    const response = await limiter.execute(
+      "https://example.test/non-idempotent-429",
+      async () => {
+        calls += 1;
+        return calls === 1
+          ? new Response("limited", { status: 429 })
+          : new Response("ok");
+      },
+      { retryUpstreamErrors: false },
+    );
+
+    expect(calls).toBe(2);
+    expect(response.ok).toBe(true);
+  });
 });
 
 describe("RateLimiter app rate-limit gauges", () => {

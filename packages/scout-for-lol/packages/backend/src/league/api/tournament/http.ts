@@ -46,20 +46,27 @@ export async function tournamentFetch(
   }
   const href = url.toString();
 
-  const response = await rateLimiter.execute(href, () =>
-    fetch(href, {
-      method: request.method,
-      headers: {
-        "X-Riot-Token": configuration.riotApiToken,
-        Accept: "application/json",
+  const response = await rateLimiter.execute(
+    href,
+    () =>
+      fetch(href, {
+        method: request.method,
+        headers: {
+          "X-Riot-Token": configuration.riotApiToken,
+          Accept: "application/json",
+          ...(request.body === undefined
+            ? {}
+            : { "Content-Type": "application/json" }),
+        },
         ...(request.body === undefined
           ? {}
-          : { "Content-Type": "application/json" }),
-      },
-      ...(request.body === undefined
-        ? {}
-        : { body: JSON.stringify(request.body) }),
-    }),
+          : { body: JSON.stringify(request.body) }),
+      }),
+    // POST/PUT tournament calls mint or mutate resources (e.g. minting
+    // tournament codes) and are not safe to retry on an ambiguous upstream
+    // outage — Riot may have already processed the request even though its
+    // response was lost. Only GET is idempotent enough to retry blindly.
+    { retryUpstreamErrors: request.method === "GET" },
   );
 
   // 204 and an empty body are legal for the code-update endpoint.

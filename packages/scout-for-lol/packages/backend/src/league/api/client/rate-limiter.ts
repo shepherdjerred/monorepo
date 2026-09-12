@@ -23,6 +23,16 @@ export type RateLimiterOptions = {
 export type RateLimitedRequestOptions = {
   /** Override automatic retries for one request without bypassing the limiter. */
   maxRetries?: number | undefined;
+  /**
+   * Whether to retry expected upstream outages (502/503/504/520/522/524).
+   * Default: true. Set to false for non-idempotent requests (e.g. a POST
+   * that mints a resource): Riot may have already processed the request
+   * even though its response was lost, so retrying could duplicate the
+   * side effect. 429 retries are unaffected by this option — Riot's rate
+   * limiter rejects those before the request reaches any handler, so
+   * retrying a 429 is always safe regardless of method.
+   */
+  retryUpstreamErrors?: boolean | undefined;
 };
 
 type RateLimiterRuntime = {
@@ -183,11 +193,14 @@ export class RateLimiter {
       }
 
       const status = response.status;
+      const retryUpstreamErrors = options.retryUpstreamErrors ?? true;
 
       // 429 (Rate Limit Exceeded) and expected upstream outages
-      // (502/503/504/520/522/524) are retried with backoff.
+      // (502/503/504/520/522/524) are retried with backoff. Upstream-outage
+      // retries can be disabled per request for non-idempotent calls.
       const isRetryableStatus =
-        status === 429 || isExpectedUpstreamError(status);
+        status === 429 ||
+        (retryUpstreamErrors && isExpectedUpstreamError(status));
       if (isRetryableStatus && attempts <= maxRetries) {
         if (status === 429) {
           logger.info(
