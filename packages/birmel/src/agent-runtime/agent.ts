@@ -193,7 +193,9 @@ const RETAINED_DATA_KEYS_BY_TOOL: ReadonlyMap<
     new Set(["messageId", "pollId", "totalVotes", "isFinalized", "expiresAt"]),
   ],
   ["manage-agent-session", new Set(["sessionId", "eventCount"])],
-  ["execute-shell-command", new Set(["exitCode"])],
+  // stdout and stderr carry whatever the command printed; the rest is our
+  // own measurement of the run.
+  ["execute-shell-command", new Set(["exitCode", "timedOut", "duration"])],
 ]);
 
 function shouldOmitOutputKey(
