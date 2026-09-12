@@ -116,11 +116,8 @@ function isReadOnlyCall(toolId: string, input: unknown): boolean {
 type SanitizeToolOutputOptions = {
   isCookiesCall: boolean;
   isInviteCall: boolean;
-  isShellCall: boolean;
-  isBrowserCall: boolean;
-  isWebContentCall: boolean;
-  isDiscordMessageCall: boolean;
-  isAgentSessionCall: boolean;
+  /** Absent for a tool whose output the agent itself authored. */
+  retainedDataKeys?: ReadonlySet<string> | undefined;
 };
 
 function sanitizeArrayEntry(
@@ -169,25 +166,35 @@ function sanitizeObjectEntry(
   return sanitizeToolOutputData(value, options);
 }
 
-const WEB_CONTENT_OMITTED_KEYS = new Set([
-  "content",
-  "summary",
-  "text",
-  "html",
-  "raw",
-  "snippet",
-  "title",
-  "url",
+// A persisted tool summary is interpolated into the memory-extraction prompt,
+// so any third-party text it keeps can steer durable memory. Denying known-bad
+// keys lost this argument repeatedly - every new field on one of these tools
+// was retained by default and had to be discovered. These tools instead declare
+// what they KEEP: structural values the agent or our own infrastructure wrote.
+// Anything else, at any depth, is dropped, so a field added later is private
+// until someone deliberately lists it.
+const RETAINED_DATA_KEYS_BY_TOOL: ReadonlyMap<
+  string,
+  ReadonlySet<string>
+> = new Map([
+  // No url or title: a hostile page controls both, and a redirect controls
+  // the final url even when the agent chose the first one.
+  ["browser-automation", new Set(["provider", "tabId", "filename", "path"])],
+  ["web-research", new Set<string>()],
+  ["external-service", new Set<string>()],
+  ["manage-message", new Set(["messageId", "messageCount"])],
+  [
+    "manage-thread",
+    new Set(["threadId", "messageId", "messageCount", "participantCount"]),
+  ],
+  // Not `question` or `answers`: both carry text another member wrote.
+  [
+    "manage-poll",
+    new Set(["messageId", "pollId", "totalVotes", "isFinalized", "expiresAt"]),
+  ],
+  ["manage-agent-session", new Set(["sessionId", "eventCount"])],
+  ["execute-shell-command", new Set(["exitCode"])],
 ]);
-
-// Keys whose values are written by someone other than the agent. A persisted
-// tool summary is interpolated into the memory-extraction prompt, so anything
-// listed here would otherwise let a remote page or another user's message steer
-// durable memory.
-const BROWSER_OMITTED_KEYS = new Set(["raw", "text", "title"]);
-const SHELL_OMITTED_KEYS = new Set(["stdout", "stderr"]);
-const DISCORD_MESSAGE_OMITTED_KEYS = new Set(["content", "summary"]);
-const AGENT_SESSION_OMITTED_KEYS = new Set(["summary", "content"]);
 
 function shouldOmitOutputKey(
   key: string,
@@ -196,19 +203,10 @@ function shouldOmitOutputKey(
   if (key === "raw" && options.isCookiesCall) {
     return true;
   }
-  if (options.isBrowserCall && BROWSER_OMITTED_KEYS.has(key)) {
-    return true;
+  if (options.retainedDataKeys !== undefined) {
+    return !options.retainedDataKeys.has(key);
   }
-  if (options.isShellCall && SHELL_OMITTED_KEYS.has(key)) {
-    return true;
-  }
-  if (options.isDiscordMessageCall && DISCORD_MESSAGE_OMITTED_KEYS.has(key)) {
-    return true;
-  }
-  if (options.isAgentSessionCall && AGENT_SESSION_OMITTED_KEYS.has(key)) {
-    return true;
-  }
-  return options.isWebContentCall && WEB_CONTENT_OMITTED_KEYS.has(key);
+  return false;
 }
 
 function sanitizeToolOutputData(
@@ -251,15 +249,7 @@ export function summarizeToolResultForSession(
   const action = ActionInputSchema.safeParse(toolResult.input);
   const isCookiesCall = action.success && action.data.action === "cookies";
   const isInviteCall = toolResult.toolName === "manage-invite";
-  const isShellCall = toolResult.toolName === "execute-shell-command";
-  const isBrowserCall = toolResult.toolName === "browser-automation";
-  const isWebContentCall =
-    toolResult.toolName === "web-research" ||
-    toolResult.toolName === "external-service";
-  const isDiscordMessageCall =
-    toolResult.toolName === "manage-message" ||
-    toolResult.toolName === "manage-thread";
-  const isAgentSessionCall = toolResult.toolName === "manage-agent-session";
+  const retainedDataKeys = RETAINED_DATA_KEYS_BY_TOOL.get(toolResult.toolName);
   const inputSummary = boundedSummary(toolResult.input);
   const sanitizedData =
     toolResult.output.data === undefined
@@ -267,11 +257,7 @@ export function summarizeToolResultForSession(
       : sanitizeToolOutputData(toolResult.output.data, {
           isCookiesCall,
           isInviteCall,
-          isShellCall,
-          isBrowserCall,
-          isWebContentCall,
-          isDiscordMessageCall,
-          isAgentSessionCall,
+          retainedDataKeys,
         });
   const hasData =
     sanitizedData !== undefined &&
