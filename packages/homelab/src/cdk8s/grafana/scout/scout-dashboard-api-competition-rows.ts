@@ -171,11 +171,41 @@ export function addApiAndCompetitionRows(
       .gridPos({ x: 0, y: 89, w: 24, h: 8 }),
   );
 
+  // Riot API App Rate Limit Usage
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Riot API App Rate Limit Usage")
+      .description(
+        "Fraction of Riot's app-wide rate limit consumed, per window (X-App-Rate-Limit-Count / X-App-Rate-Limit)",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `riot_api_app_rate_limit_count{${buildFilter()}} / riot_api_app_rate_limit_limit{${buildFilter()}}`,
+          )
+          .legendFormat("{{environment}} - {{window_seconds}}s"),
+      )
+      .unit("percentunit")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 0.7, color: "yellow" },
+            { value: 0.9, color: "red" },
+          ]),
+      )
+      .gridPos({ x: 0, y: 97, w: 24, h: 8 }),
+  );
+
   // Row 6: Competition leaderboard chart
   builder.withRow(
     new dashboard.RowBuilder("Competition leaderboard chart").gridPos({
       x: 0,
-      y: 97,
+      y: 105,
       w: 24,
       h: 1,
     }),
@@ -206,7 +236,7 @@ export function addApiAndCompetitionRows(
       .unit("s")
       .lineWidth(2)
       .fillOpacity(5)
-      .gridPos({ x: 0, y: 98, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 106, w: 12, h: 8 }),
   );
 
   // Render outcome rate (success / error / skipped)
@@ -236,7 +266,7 @@ export function addApiAndCompetitionRows(
             { value: 0.1, color: "red" },
           ]),
       )
-      .gridPos({ x: 12, y: 98, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 106, w: 12, h: 8 }),
   );
 
   // PNG size distribution — catches blank-render regressions and pathological growth
@@ -264,7 +294,7 @@ export function addApiAndCompetitionRows(
       .unit("bytes")
       .lineWidth(2)
       .fillOpacity(5)
-      .gridPos({ x: 0, y: 106, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 114, w: 12, h: 8 }),
   );
 
   // S3 snapshot fetch latency
@@ -285,6 +315,6 @@ export function addApiAndCompetitionRows(
       .unit("s")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 106, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 114, w: 12, h: 8 }),
   );
 }

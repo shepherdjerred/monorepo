@@ -1,4 +1,8 @@
 import { describe, expect, test, vi } from "vitest";
+import {
+  riotApiAppRateLimitCount,
+  riotApiAppRateLimitLimit,
+} from "#src/metrics/riot-rate-limit.ts";
 import { RiotHttpError } from "./errors.ts";
 import { RateLimiter } from "./rate-limiter.ts";
 
@@ -271,20 +275,40 @@ describe("RateLimiter retries", () => {
     },
   );
 
-  test("retains exponential 503 backoff without a global cooldown", async () => {
+  test.each([502, 503, 504, 520, 522, 524])(
+    "retains exponential %i backoff without a global cooldown",
+    async (status) => {
+      const { runtime, sleeps } = createAdvancingRuntime();
+      const limiter = new RateLimiter({ maxRetries: 2 }, runtime);
+      let calls = 0;
+
+      await limiter.execute("https://example.test/unavailable", async () => {
+        calls += 1;
+        return calls <= 2
+          ? new Response("unavailable", { status })
+          : new Response("ok");
+      });
+
+      expect(calls).toBe(3);
+      expect(sleeps).toEqual([1000, 2000]);
+    },
+  );
+
+  test("does not retry a genuinely non-retryable status", async () => {
     const { runtime, sleeps } = createAdvancingRuntime();
     const limiter = new RateLimiter({ maxRetries: 2 }, runtime);
     let calls = 0;
 
-    await limiter.execute("https://example.test/unavailable", async () => {
-      calls += 1;
-      return calls <= 2
-        ? new Response("unavailable", { status: 503 })
-        : new Response("ok");
-    });
+    const error = await captureRiotError(
+      limiter.execute("https://example.test/not-found", async () => {
+        calls += 1;
+        return new Response("not found", { status: 404 });
+      }),
+    );
 
-    expect(calls).toBe(3);
-    expect(sleeps).toEqual([1000, 2000]);
+    expect(calls).toBe(1);
+    expect(sleeps).toEqual([]);
+    expect(error.status).toBe(404);
   });
 
   test("throws the final 429 with its diagnostic body after retries", async () => {
@@ -302,5 +326,119 @@ describe("RateLimiter retries", () => {
     expect(sleeps).toEqual([1000]);
     expect(error.status).toBe(429);
     expect(error.body).toEqual({ message: "still limited" });
+  });
+
+  test("does not retry an upstream outage when retryUpstreamErrors is false", async () => {
+    const { runtime, sleeps } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 2 }, runtime);
+    let calls = 0;
+
+    const error = await captureRiotError(
+      limiter.execute(
+        "https://example.test/non-idempotent",
+        async () => {
+          calls += 1;
+          return new Response("bad gateway", { status: 502 });
+        },
+        { retryUpstreamErrors: false },
+      ),
+    );
+
+    expect(calls).toBe(1);
+    expect(sleeps).toEqual([]);
+    expect(error.status).toBe(502);
+  });
+
+  test("still retries 429 when retryUpstreamErrors is false", async () => {
+    const { runtime } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 1 }, runtime);
+    let calls = 0;
+
+    const response = await limiter.execute(
+      "https://example.test/non-idempotent-429",
+      async () => {
+        calls += 1;
+        return calls === 1
+          ? new Response("limited", { status: 429 })
+          : new Response("ok");
+      },
+      { retryUpstreamErrors: false },
+    );
+
+    expect(calls).toBe(2);
+    expect(response.ok).toBe(true);
+  });
+});
+
+describe("RateLimiter app rate-limit gauges", () => {
+  test("updates gauges from response headers on a successful response", async () => {
+    const { runtime } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 0 }, runtime);
+
+    await limiter.execute(
+      "https://example.test/gauges-success",
+      async () =>
+        new Response("ok", {
+          status: 200,
+          headers: {
+            "X-App-Rate-Limit": "20:1,100:120",
+            "X-App-Rate-Limit-Count": "7:1,42:120",
+          },
+        }),
+    );
+
+    const countMetric = await riotApiAppRateLimitCount.get();
+    const limitMetric = await riotApiAppRateLimitLimit.get();
+
+    expect(
+      countMetric.values.find((value) => value.labels.window_seconds === "1")
+        ?.value,
+    ).toBe(7);
+    expect(
+      limitMetric.values.find((value) => value.labels.window_seconds === "1")
+        ?.value,
+    ).toBe(20);
+    expect(
+      countMetric.values.find((value) => value.labels.window_seconds === "120")
+        ?.value,
+    ).toBe(42);
+    expect(
+      limitMetric.values.find((value) => value.labels.window_seconds === "120")
+        ?.value,
+    ).toBe(100);
+  });
+
+  test("records headers from every attempt, so a retried request's gauges reflect the final response", async () => {
+    const { runtime } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 1 }, runtime);
+    let calls = 0;
+
+    await limiter.execute("https://example.test/gauges-retry", async () => {
+      calls += 1;
+      if (calls === 1) {
+        return new Response("unavailable", {
+          status: 503,
+          headers: {
+            "X-App-Rate-Limit": "20:1",
+            "X-App-Rate-Limit-Count": "19:1",
+          },
+        });
+      }
+      return new Response("ok", {
+        status: 200,
+        headers: {
+          "X-App-Rate-Limit": "20:1",
+          "X-App-Rate-Limit-Count": "3:1",
+        },
+      });
+    });
+
+    expect(calls).toBe(2);
+
+    const countMetric = await riotApiAppRateLimitCount.get();
+    expect(
+      countMetric.values.find((value) => value.labels.window_seconds === "1")
+        ?.value,
+    ).toBe(3);
   });
 });

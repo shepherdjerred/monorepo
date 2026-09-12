@@ -48,6 +48,27 @@ describe("Scout Temporal alert rules", () => {
   });
 });
 
+describe("Scout Riot API alert rules", () => {
+  const riotApi = getScoutRuleGroups().find(
+    (group) => group.name === "scout-riot-api",
+  );
+
+  test("covers error rate and app rate limit usage", () => {
+    if (riotApi?.rules === undefined) {
+      throw new Error("Missing scout-riot-api rule group");
+    }
+    const alerts = new Set(riotApi.rules.map((rule) => rule.alert));
+    expect(alerts).toEqual(
+      new Set([
+        "ScoutRiotApiErrorRateHigh",
+        "ScoutRiotApiErrorRateCritical",
+        "ScoutRiotApiAppRateLimitHigh",
+        "ScoutRiotApiAppRateLimitCritical",
+      ]),
+    );
+  });
+});
+
 describe("Scout bot-health alert rules", () => {
   const botHealth = getScoutRuleGroups().find(
     (group) => group.name === "scout-bot-health",
