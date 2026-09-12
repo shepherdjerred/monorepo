@@ -1,3 +1,4 @@
+import { redactText } from "@shepherdjerred/llm-observability/redact";
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -117,18 +118,20 @@ function grokContentText(update: Record<string, unknown>): string | null {
 }
 
 /**
- * A tool call's `rawInput` is an arbitrary, tool-defined object — it can
- * legitimately carry an env map, an Authorization header, or a token as one
- * of its fields. `extractText` already omits every key in its
- * `SENSITIVE_KEYS` set (env, credentials, headers, password, token, ...)
- * while walking nested objects — the same policy every other source's tool
- * blocks go through — instead of serializing the raw structure verbatim
- * into the local FTS index.
+ * A tool call's `rawInput` is an arbitrary, tool-defined object. Two layers
+ * of redaction, since each catches a different shape of leak: `extractText`
+ * omits every key in its `SENSITIVE_KEYS` set (env, credentials, headers,
+ * password, token, ...) while walking nested objects — the same policy
+ * every other source's tool blocks go through — but a field it treats as
+ * plain indexable text (like `command`) can itself embed a credential, e.g.
+ * `curl -H 'Authorization: Bearer …'`. `redactText` scrubs exactly that:
+ * `NAME=value`/`"name": "value"` assignments with secret-shaped names and
+ * `Bearer <token>` substrings, regardless of which field they're inside.
  */
 function grokToolText(update: Record<string, unknown>): string {
   const title = stringValue(update["title"]) ?? "";
   const status = stringValue(update["status"]) ?? "";
-  const rawInputText = cleanText(extractText(update["rawInput"]));
+  const rawInputText = redactText(cleanText(extractText(update["rawInput"])));
   return [title, status, rawInputText]
     .filter((part) => part.length > 0)
     .join(" ");
@@ -178,16 +181,23 @@ type ParsedGrokLine = {
  * rather than skipped, so a partially-written update doesn't quietly shrink
  * this session's usage on the next scan. A line that parses fine but doesn't
  * match the expected envelope shape is a legitimate message type this
- * adapter doesn't index (skipped, not an error).
+ * adapter doesn't index (skipped, not an error). The error reports only the
+ * file and line number, never the line's own content, since a corrupt
+ * update can carry arbitrary tool/session data.
  */
-function parseGrokLine(line: string): ParsedGrokLine | null {
+function parseGrokLine(
+  line: string,
+  filePath: string,
+  lineNumber: number,
+): ParsedGrokLine | null {
   let value: unknown;
   try {
     value = JSON.parse(line) as unknown;
   } catch (error) {
-    throw new Error(`Malformed Grok update line: ${line.slice(0, 200)}`, {
-      cause: error,
-    });
+    throw new Error(
+      `Malformed Grok update line ${String(lineNumber)} in ${filePath}`,
+      { cause: error },
+    );
   }
   const record = parseRecord(value);
   if (record === null) {
@@ -218,11 +228,12 @@ async function readGrokSession(
   const usageEvents: UsageEventEntry[] = [];
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
-  for (const line of raw.split("\n")) {
+  const lines = raw.split("\n");
+  for (const [index, line] of lines.entries()) {
     if (line.trim().length === 0) {
       continue;
     }
-    const parsed = parseGrokLine(line);
+    const parsed = parseGrokLine(line, filePath, index + 1);
     if (parsed === null) {
       continue;
     }

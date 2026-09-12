@@ -17,7 +17,14 @@ function numberValue(value: unknown): number {
 type CodexRolloutAccumulator = {
   threadId: string | null;
   currentModel: string | null;
-  readonly events: UsageEventEntry[];
+  // Codex has emitted per-turn usage under two different event shapes across
+  // versions — the older top-level `token_usage_record` (`turn_token_usage`)
+  // and the current `event_msg`-wrapped `token_count`
+  // (`info.last_token_usage`) — and real rollouts can carry both for the
+  // same turns. Tracked separately so the file's own real, populated list is
+  // used exactly once rather than summing both and double-counting.
+  readonly tokenCountEvents: UsageEventEntry[];
+  readonly tokenUsageRecordEvents: UsageEventEntry[];
 };
 
 function applySessionMeta(
@@ -37,6 +44,28 @@ function applyThreadSettings(
   if (model !== null) {
     accumulator.currentModel = model;
   }
+}
+
+/** `turn_context` (the current format) carries the active model directly. */
+function applyTurnContext(
+  accumulator: CodexRolloutAccumulator,
+  payload: Record<string, unknown>,
+): void {
+  const model = stringValue(payload["model"]);
+  if (model !== null) {
+    accumulator.currentModel = model;
+  }
+}
+
+function usageCounts(usage: Record<string, unknown>): UsageCounts {
+  return {
+    inputTokens: numberValue(usage["input_tokens"]),
+    outputTokens: numberValue(usage["output_tokens"]),
+    cacheReadTokens: 0,
+    cacheCreationTokens: numberValue(usage["cache_write_input_tokens"]),
+    cachedInputTokens: numberValue(usage["cached_input_tokens"]),
+    reasoningTokens: numberValue(usage["reasoning_output_tokens"]),
+  };
 }
 
 /**
@@ -61,16 +90,36 @@ function applyTokenUsageRecord(
   if (usage === null) {
     return;
   }
-  const counts: UsageCounts = {
-    inputTokens: numberValue(usage["input_tokens"]),
-    outputTokens: numberValue(usage["output_tokens"]),
-    cacheReadTokens: 0,
-    cacheCreationTokens: numberValue(usage["cache_write_input_tokens"]),
-    cachedInputTokens: numberValue(usage["cached_input_tokens"]),
-    reasoningTokens: numberValue(usage["reasoning_output_tokens"]),
-  };
+  const counts = usageCounts(usage);
   const model = accumulator.currentModel ?? "unknown";
-  accumulator.events.push(
+  accumulator.tokenUsageRecordEvents.push(
+    usageEventEntry(timestamp, model, counts, catalogCost([model], counts)),
+  );
+}
+
+/**
+ * The current rollout format's per-turn usage: an `event_msg` whose payload
+ * type is `token_count`, with the turn's delta at `info.last_token_usage`
+ * (the same shape as `turn_token_usage` above; `info.total_token_usage` is
+ * the cumulative thread total, analogous to `thread_token_usage`, and isn't
+ * used here for the same reason `thread_token_usage` isn't).
+ */
+function applyTokenCount(
+  accumulator: CodexRolloutAccumulator,
+  payload: Record<string, unknown>,
+  timestamp: string | null,
+): void {
+  if (timestamp === null) {
+    return;
+  }
+  const info = parseRecord(payload["info"]);
+  const usage = info === null ? null : parseRecord(info["last_token_usage"]);
+  if (usage === null) {
+    return;
+  }
+  const counts = usageCounts(usage);
+  const model = accumulator.currentModel ?? "unknown";
+  accumulator.tokenCountEvents.push(
     usageEventEntry(timestamp, model, counts, catalogCost([model], counts)),
   );
 }
@@ -80,11 +129,15 @@ function applyTokenUsageRecord(
  * rather than skipped, so a partially-written rollout record doesn't
  * silently shrink this thread's usage on the next scan (the cumulative
  * `token_usage_record` this file is scanned for is exactly the kind of
- * record most likely to be mid-write when read).
+ * record most likely to be mid-write when read). The error reports only the
+ * file and line number, never the line's own content, since a corrupt
+ * record can carry arbitrary session/tool data.
  */
 function applyCodexRolloutLine(
   accumulator: CodexRolloutAccumulator,
   line: string,
+  filePath: string,
+  lineNumber: number,
 ): void {
   if (line.trim().length === 0) {
     return;
@@ -93,9 +146,10 @@ function applyCodexRolloutLine(
   try {
     value = JSON.parse(line) as unknown;
   } catch (error) {
-    throw new Error(`Malformed Codex rollout line: ${line.slice(0, 200)}`, {
-      cause: error,
-    });
+    throw new Error(
+      `Malformed Codex rollout line ${String(lineNumber)} in ${filePath}`,
+      { cause: error },
+    );
   }
   const record = parseRecord(value);
   if (record === null) {
@@ -109,11 +163,18 @@ function applyCodexRolloutLine(
   const timestamp = stringValue(record["timestamp"]);
   if (type === "session_meta") {
     applySessionMeta(accumulator, payload);
+  } else if (type === "turn_context") {
+    applyTurnContext(accumulator, payload);
   } else if (
     type === "event_msg" &&
     stringValue(payload["type"]) === "thread_settings_applied"
   ) {
     applyThreadSettings(accumulator, payload);
+  } else if (
+    type === "event_msg" &&
+    stringValue(payload["type"]) === "token_count"
+  ) {
+    applyTokenCount(accumulator, payload, timestamp);
   } else if (type === "token_usage_record") {
     applyTokenUsageRecord(accumulator, payload, timestamp);
   }
@@ -126,11 +187,12 @@ async function parseCodexRolloutFile(
   const accumulator: CodexRolloutAccumulator = {
     threadId: null,
     currentModel: null,
-    events: [],
+    tokenCountEvents: [],
+    tokenUsageRecordEvents: [],
   };
-  for (const line of raw.split("\n")) {
-    applyCodexRolloutLine(accumulator, line);
-  }
+  raw.split("\n").forEach((line, index) => {
+    applyCodexRolloutLine(accumulator, line, filePath, index + 1);
+  });
   return accumulator;
 }
 
@@ -148,10 +210,16 @@ export async function scanCodexSessionUsage(
   const result = new Map<string, readonly UsageEventEntry[]>();
   for (const file of files) {
     const accumulator = await parseCodexRolloutFile(file);
-    if (accumulator.threadId === null || accumulator.events.length === 0) {
+    if (accumulator.threadId === null) {
       continue;
     }
-    result.set(accumulator.threadId, accumulator.events);
+    const events =
+      accumulator.tokenCountEvents.length > 0
+        ? accumulator.tokenCountEvents
+        : accumulator.tokenUsageRecordEvents;
+    if (events.length > 0) {
+      result.set(accumulator.threadId, events);
+    }
   }
   return result;
 }

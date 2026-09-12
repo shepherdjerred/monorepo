@@ -403,7 +403,9 @@ async function writeGrokFixture(grokHome: string): Promise<void> {
           title: "run shell command",
           status: "completed",
           rawInput: {
-            command: "curl grok-tool-command-marker",
+            // Fixture proving redactText scrubs an inline Bearer credential
+            // embedded in a tool command string — not a real credential.
+            command: `curl grok-tool-command-marker -H 'Authorization: Bearer test-bearer-token-fixture-marker'`, // gitleaks:allow
             env: { API_KEY: "sk-should-not-appear-in-index" },
             password: "sk-should-not-appear-in-index",
           },
@@ -629,6 +631,55 @@ async function writeCodexSessionUsageFixture(
   await Bun.write(
     path.join(sessionsDir, "rollout-multi-prompt.jsonl"),
     `${multiPromptLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
+  );
+
+  // t-current-format uses only the current rollout event shapes
+  // (turn_context for the model, event_msg/token_count for per-turn usage)
+  // with no token_usage_record/thread_settings_applied at all — proves usage
+  // is still captured for Codex versions that only emit the newer format.
+  const currentFormatLines = [
+    {
+      timestamp: "2026-08-11T00:00:00.000Z",
+      ordinal: 0,
+      type: "session_meta",
+      payload: { session_id: "t-current-format", id: "t-current-format" },
+    },
+    {
+      timestamp: "2026-08-11T00:00:01.000Z",
+      ordinal: 1,
+      type: "turn_context",
+      payload: { turn_id: "turn-1", model: "gpt-5.6-terra" },
+    },
+    {
+      timestamp: "2026-08-11T00:00:02.000Z",
+      ordinal: 2,
+      type: "event_msg",
+      payload: {
+        type: "token_count",
+        info: {
+          last_token_usage: {
+            input_tokens: 700,
+            cached_input_tokens: 100,
+            cache_write_input_tokens: 0,
+            output_tokens: 90,
+            reasoning_output_tokens: 15,
+            total_tokens: 790,
+          },
+          total_token_usage: {
+            input_tokens: 700,
+            cached_input_tokens: 100,
+            cache_write_input_tokens: 0,
+            output_tokens: 90,
+            reasoning_output_tokens: 15,
+            total_tokens: 790,
+          },
+        },
+      },
+    },
+  ];
+  await Bun.write(
+    path.join(sessionsDir, "rollout-current-format.jsonl"),
+    `${currentFormatLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
 }
 
@@ -919,6 +970,25 @@ describe("history source usage and redaction", () => {
     expect(withUsage[0]?.usageEvents[0]?.inputTokens).toBe(500);
   });
 
+  test("captures Codex usage from the current token_count/turn_context event shapes", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const currentFormat = documents.find(
+      (document) =>
+        document.source === "codex" &&
+        document.runtimeId === "t-current-format",
+    );
+    expect(currentFormat).toBeDefined();
+    expect(currentFormat?.usageEvents).toHaveLength(1);
+    const event = currentFormat?.usageEvents[0];
+    expect(event?.model).toBe("gpt-5.6-terra");
+    expect(event?.inputTokens).toBe(700);
+    expect(event?.cachedInputTokens).toBe(100);
+    expect(event?.outputTokens).toBe(90);
+  });
+
   test("redacts secrets out of Grok tool call raw input before indexing", async () => {
     const results = await Promise.all(
       createHistorySources().map((source) => source.scan(paths)),
@@ -927,6 +997,9 @@ describe("history source usage and redaction", () => {
     const grok = documents.find((document) => document.source === "grok");
     expect(grok?.toolOutputText).toContain("grok-tool-command-marker");
     expect(grok?.toolOutputText).not.toContain("sk-should-not-appear-in-index");
+    expect(grok?.toolOutputText).not.toContain(
+      "test-bearer-token-fixture-marker",
+    );
   });
 
   test("bills Antigravity reasoning tokens as part of output, not dropped", async () => {
