@@ -211,13 +211,18 @@ async function branchAfterShare(shareToken: string): Promise<void> {
 }
 
 describe("explore http route", () => {
-  test("production fails closed when connected bot guilds are unavailable", async () => {
+  test("production denies a caller whose servers have no live install", async () => {
     setEnvironment("prod");
 
+    // Production eligibility now comes from the `GuildInstall` port rather than
+    // the bot's live gateway cache, so a pod with no shard answers the same way
+    // a fully connected one does. This caller shares no installed server with
+    // Scout, which is an authoritative denial — not the SERVICE_UNAVAILABLE the
+    // unready cache used to produce for the first seconds of every restart.
+    // "Could not ask" is still distinct and still 503; see
+    // `consumer/access.test.ts`.
     const response = await postObserver(await authedHeaders());
-    expect(response.status).toBe(503);
-    const body = ErrorBody.parse(await response.json());
-    expect(body.error).toMatch(/could not verify/i);
+    expect(response.status).toBe(404);
   });
 
   test("an observer without a session is rejected", async () => {

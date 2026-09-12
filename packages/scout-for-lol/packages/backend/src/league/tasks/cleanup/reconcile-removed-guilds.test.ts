@@ -60,24 +60,49 @@ function unknownGuildError(): DiscordAPIError {
   );
 }
 
-function clientWithMembers(
-  memberIds: string[],
+/**
+ * A client used only for the REST confirmation step.
+ *
+ * Membership no longer comes from this object at all — it comes from
+ * `GuildInstall` rows, seeded with {@link installGuild} — because the cache is
+ * permanently empty on any role without a gateway, and this sweep runs as a
+ * background Temporal Activity. `guilds.fetch` is a plain REST read and works
+ * with or without a shard, so it stays the confirmation source. The cache is
+ * left empty on purpose: nothing here may depend on it again.
+ */
+function discordClient(
   options: {
-    ready?: boolean;
-    // Guilds the API confirms membership for even though they're missing
-    // from the cache (simulates a stale-cache false positive).
+    // Guilds the API confirms membership for even though they have no live
+    // install row (simulates a stale/missing row).
     verifiableIds?: string[];
   } = {},
 ) {
-  const { ready = true, verifiableIds = [] } = options;
+  const { verifiableIds = [] } = options;
   return mockClient({
-    isReady: () => ready,
+    isReady: () => false,
     guilds: {
-      cache: new Map(memberIds.map((id) => [id, { id }])),
+      cache: new Map(),
       fetch: (serverId: string) =>
         verifiableIds.includes(serverId)
           ? Promise.resolve(mockGuild({ id: serverId }))
           : Promise.reject(unknownGuildError()),
+    },
+  });
+}
+
+async function installGuild(
+  db: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+): Promise<void> {
+  await db.guildInstall.create({
+    data: {
+      serverId,
+      serverName: `guild-${serverId}`,
+      ownerDiscordId: testAccountId("804"),
+      addedByDiscordId: testAccountId("804"),
+      memberCount: 10,
+      installedAt: new Date("2026-01-01T00:00:00.000Z"),
+      removedAt: null,
     },
   });
 }
@@ -95,6 +120,9 @@ beforeEach(async () => {
   await prisma.guildPermissionError.deleteMany();
   await prisma.bucksNotificationPreference.deleteMany();
   await prisma.guildRemovalCandidate.deleteMany();
+  await prisma.guildInstall.deleteMany();
+  // `memberGuild` is a guild Scout is still installed in.
+  await installGuild(prisma, memberGuild);
 });
 
 afterAll(async () => {
@@ -110,7 +138,7 @@ describe("reconcileRemovedGuilds", () => {
       },
     });
 
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: day1,
     });
     expect(
@@ -119,7 +147,7 @@ describe("reconcileRemovedGuilds", () => {
       }),
     ).toBe(1);
 
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: day2,
     });
     expect(
@@ -132,7 +160,7 @@ describe("reconcileRemovedGuilds", () => {
   test("does not clean up on the first day a guild is seen missing - only records a candidate", async () => {
     await seedGuild(prisma, removedGuild);
 
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: day1,
     });
 
@@ -149,10 +177,10 @@ describe("reconcileRemovedGuilds", () => {
   test("does not clean up on a second same-day run - only a later day confirms", async () => {
     await seedGuild(prisma, removedGuild);
 
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: day1,
     });
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: sameDayLater,
     });
 
@@ -166,10 +194,10 @@ describe("reconcileRemovedGuilds", () => {
     await seedGuild(prisma, removedGuild);
 
     // Bot is only in memberGuild both days.
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: day1,
     });
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: day2,
     });
 
@@ -197,33 +225,44 @@ describe("reconcileRemovedGuilds", () => {
     ).toBe(1);
   });
 
-  test("is a no-op when the client is not ready (avoids wiping during startup)", async () => {
+  test("still runs on a process that never connects a gateway", async () => {
+    // The regression this replaces: candidacy came from `client.guilds.cache`
+    // behind an `isReady()` early-return, so on a role with no gateway — which
+    // is where this Activity actually runs — the sweep returned immediately and
+    // removed guilds accumulated residual data forever. The client here is
+    // never ready and has an empty cache, exactly like that role.
     await seedGuild(prisma, removedGuild);
 
-    await reconcileRemovedGuilds(
-      clientWithMembers([], { ready: false }),
-      prisma,
-    );
+    await reconcileRemovedGuilds(discordClient(), prisma, { now: day1 });
+    await reconcileRemovedGuilds(discordClient(), prisma, { now: day2 });
 
-    // Nothing removed — we couldn't trust the (empty) membership snapshot.
     expect(
       await prisma.player.count({ where: { serverId: removedGuild } }),
-    ).toBe(1);
-    expect(
-      await prisma.bucksNotificationPreference.count({
-        where: { serverId: removedGuild },
-      }),
-    ).toBe(1);
+    ).toBe(0);
   });
 
-  test("is a no-op when the guild cache is empty", async () => {
-    await seedGuild(prisma, removedGuild);
+  test("an empty install table nominates but never deletes on its own", async () => {
+    // Nominating too eagerly is safe in a way an empty cache was not: a
+    // nomination only records a sighting, and deletion still needs two
+    // Discord-confirmed 10004s a day apart. A guild Discord vouches for is
+    // cleared on the first run.
+    await prisma.guildInstall.deleteMany();
+    await seedGuild(prisma, memberGuild);
 
-    await reconcileRemovedGuilds(clientWithMembers([]), prisma);
+    await reconcileRemovedGuilds(
+      discordClient({ verifiableIds: [memberGuild] }),
+      prisma,
+      { now: day1 },
+    );
 
     expect(
-      await prisma.player.count({ where: { serverId: removedGuild } }),
+      await prisma.player.count({ where: { serverId: memberGuild } }),
     ).toBe(1);
+    expect(
+      await prisma.guildRemovalCandidate.count({
+        where: { serverId: memberGuild },
+      }),
+    ).toBe(0);
   });
 
   test("keeps data for a guild missing from cache but confirmed still a member via fetch (stale cache)", async () => {
@@ -232,7 +271,7 @@ describe("reconcileRemovedGuilds", () => {
     // removedGuild isn't in the cache, but a live fetch confirms it's still
     // a real member — this is the exact scenario that caused the 2026-07
     // ScoutScheduledReportMissedWeekly incident.
-    const client = clientWithMembers([memberGuild], {
+    const client = discordClient({
       verifiableIds: [removedGuild],
     });
     await reconcileRemovedGuilds(client, prisma);
@@ -245,10 +284,10 @@ describe("reconcileRemovedGuilds", () => {
   test("does not clean up when a repeat sighting crosses a UTC date boundary but less than a full day has elapsed", async () => {
     await seedGuild(prisma, removedGuild);
 
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: justBeforeMidnight,
     });
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: justAfterMidnight,
     });
 
@@ -265,11 +304,11 @@ describe("reconcileRemovedGuilds", () => {
   test("keeps data for a guild that recovers on a later day after an earlier sighting (transient outage)", async () => {
     await seedGuild(prisma, removedGuild);
 
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+    await reconcileRemovedGuilds(discordClient(), prisma, {
       now: day1,
     });
     // Day 2: the guild is reachable again - the outage resolved.
-    const client = clientWithMembers([memberGuild], {
+    const client = discordClient({
       verifiableIds: [removedGuild],
     });
     await reconcileRemovedGuilds(client, prisma, { now: day2 });

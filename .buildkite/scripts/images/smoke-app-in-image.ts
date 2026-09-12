@@ -376,8 +376,12 @@ const commands: Record<
       FEATURE_FLAGS_MODE: "disabled",
       DATABASE_URL: "postgres://postgres@localhost/postgres?host=/tmp",
       LEGACY_SQLITE_PATH: "/tmp/no-legacy-sqlite.db",
-      ENABLE_DISCORD_GATEWAY: "false",
-      ENABLE_BACKGROUND_JOBS: "false",
+      // The gatewayless runtime role: the image must reach HTTP startup with a
+      // dummy Discord token, which it can only do without a shard. The lake
+      // fold is skipped for the same reason — there is no published build and
+      // no S3 bucket in the smoke container to rebuild one from.
+      SCOUT_RUNTIME_ROLE: "application",
+      SCOUT_DEV_SKIP_REPORT_LAKE_FOLD: "true",
       REPORT_LAKE_DIR: "/tmp/report-lake",
       // Keep an explicit contract port for CI migration validation; the
       // command above overrides it with a per-invocation ephemeral port.

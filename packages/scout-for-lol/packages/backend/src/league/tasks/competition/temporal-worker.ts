@@ -30,10 +30,10 @@ export function scoutCompetitionTaskQueue(
 export async function startScoutCompetitionActivityWorker(): Promise<
   ScoutCompetitionActivityWorker | undefined
 > {
-  if (
-    !configuration.enableBackgroundJobs ||
-    configuration.environment === "dev"
-  ) {
+  // Whether this process runs the worker at all is the runtime role's decision
+  // (see `configuration/runtime-role.ts`); this gate is only the local-dev one,
+  // which has no stage task queue to poll.
+  if (configuration.environment === "dev") {
     logger.info(
       "⏭️  Scout competition Temporal activity worker disabled locally",
     );

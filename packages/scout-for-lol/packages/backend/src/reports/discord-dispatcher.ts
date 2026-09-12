@@ -1,6 +1,9 @@
 import { AttachmentBuilder } from "discord.js";
 import * as Sentry from "@sentry/bun";
-import { client } from "#src/discord/client.ts";
+import {
+  defaultInstalledGuildsDependencies,
+  isScoutInstalledInGuild,
+} from "#src/lib/discord/installed-guilds.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   send as sendChannelMessage,
@@ -13,6 +16,7 @@ import {
   DiscordGuildIdSchema,
   ReportIdSchema,
   ReportRunIdSchema,
+  type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 import type {
@@ -172,17 +176,44 @@ export async function deliverStoredScheduledReport(
   return true;
 }
 
+/**
+ * "Is Scout still installed in this guild?"
+ *
+ * Injectable because delivery is otherwise untestable without Discord: the real
+ * check confirms a missing install row against the Discord REST API, which is
+ * exactly the property that makes it safe — and exactly what a test must not
+ * do.
+ */
+export type GuildInstallCheck = (serverId: DiscordGuildId) => Promise<boolean>;
+
+export function guildInstallCheck(
+  database: ExtendedPrismaClient,
+): GuildInstallCheck {
+  return async (serverId) =>
+    await isScoutInstalledInGuild(serverId, {
+      ...defaultInstalledGuildsDependencies(),
+      db: database,
+    });
+}
+
 export async function deliverReportDispatch(
   dispatch: ScheduledReportDispatch,
   outputKind: "report_manual" | "report_scheduled",
   failureMode: "isolate" | "propagate" = "isolate",
+  isInstalled: GuildInstallCheck = guildInstallCheck(prisma),
 ): Promise<boolean> {
   const { id: reportId, channelId, serverId } = dispatch.report;
 
   // Skip guilds the bot is no longer a member of: delivery is impossible and
   // would error every cycle. Orphaned reports are removed by the guildDelete
   // handler / abandoned-guild sweep, but this guards the window before that.
-  if (!client.guilds.cache.has(serverId)) {
+  //
+  // Asked through the install port rather than `client.guilds.cache`: report
+  // delivery runs as a Temporal Activity, which on a split deployment holds no
+  // gateway connection, and an empty cache would silently drop every scheduled
+  // report as "not a member". The port confirms a negative against Discord
+  // before believing it.
+  if (!(await isInstalled(serverId))) {
     const error = new Error(
       `Cannot deliver report ${reportId.toString()} because the bot is not a member of guild ${serverId}`,
     );
@@ -233,6 +264,7 @@ export async function deliverPendingReportDispatches(
     trigger: "MANUAL" | "SCHEDULED";
     runId?: number;
     failureMode?: "isolate" | "propagate";
+    isInstalled?: GuildInstallCheck;
   },
   database: ExtendedPrismaClient = prisma,
 ): Promise<void> {
@@ -260,6 +292,7 @@ export async function deliverPendingReportDispatches(
       run,
       trigger: input.trigger,
       failureMode: input.failureMode,
+      isInstalled: input.isInstalled ?? guildInstallCheck(database),
       database,
     });
   }
@@ -272,6 +305,7 @@ async function deliverPendingReportRun(input: {
   >[number];
   trigger: "MANUAL" | "SCHEDULED";
   failureMode: "isolate" | "propagate" | undefined;
+  isInstalled: GuildInstallCheck;
   database: ExtendedPrismaClient;
 }): Promise<void> {
   if (input.run.renderedContent === null) {
@@ -321,6 +355,7 @@ async function deliverPendingReportRun(input: {
       },
       input.trigger === "SCHEDULED" ? "report_scheduled" : "report_manual",
       "propagate",
+      input.isInstalled,
     );
     await input.database.reportRun.updateMany({
       where: { id: input.run.id, deliveryState: "PENDING" },

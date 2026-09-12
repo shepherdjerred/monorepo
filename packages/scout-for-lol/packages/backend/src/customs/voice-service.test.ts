@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   captureCustomVoiceArrangement,
   retryCustomVoiceOperation,
-} from "#src/customs/voice-service.ts";
+} from "#src/customs/voice-arrangement.ts";
 
 describe("Customs voice recovery", () => {
   test("retries a failed Discord operation with bounded backoff", async () => {

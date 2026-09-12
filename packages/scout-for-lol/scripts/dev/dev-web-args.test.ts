@@ -188,8 +188,8 @@ test("defaults a local boot to the consumer preview and dev login", () => {
     FEATURE_FLAGS_STATIC_OVERRIDES:
       '{"scout-consumer-player-profiles-enabled":true}',
     WEB_APP_ORIGIN: "http://localhost:5180",
-    ENABLE_DISCORD_GATEWAY: "false",
-    ENABLE_BACKGROUND_JOBS: "false",
+    SCOUT_RUNTIME_ROLE: "application",
+    SCOUT_DEV_SKIP_REPORT_LAKE_FOLD: "true",
   });
 });
 
@@ -269,8 +269,11 @@ test("supports a gateway-only runtime without jobs, lake preparation, or Vite", 
   expect(
     buildDevEnvironment({}, parsed.options, "/unused/report-lake", false),
   ).toMatchObject({
-    ENABLE_DISCORD_GATEWAY: "true",
-    ENABLE_BACKGROUND_JOBS: "false",
+    // Owning the gateway is the `combined` role; `--no-background-jobs` now
+    // narrows to the one step a laptop cannot complete rather than removing
+    // the realtime, background and competition workers with it.
+    SCOUT_RUNTIME_ROLE: "combined",
+    SCOUT_DEV_SKIP_REPORT_LAKE_FOLD: "true",
   });
 });
 

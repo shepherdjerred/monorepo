@@ -2,7 +2,7 @@ import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import type { CustomNightSnapshot } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { client as discordClient } from "#src/discord/client.ts";
+import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { commitCustomMutation } from "#src/customs/repository.ts";
 
@@ -43,7 +43,7 @@ export function customRecruitmentMessage(snapshot: CustomNightSnapshot): {
 }
 
 async function recruitmentChannel(channelId: string) {
-  const channel = await discordClient.channels.fetch(channelId);
+  const channel = await fetchChannelForDelivery(channelId);
   if (channel === null || !channel.isTextBased() || channel.isDMBased()) {
     throw new Error("Custom night launch channel is not a guild text channel");
   }

@@ -24,13 +24,13 @@ import {
   recordBucksDeliverySkip,
 } from "#src/betting/notify/delivery-observability.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { client } from "#src/discord/client.ts";
+import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-parlay-refresh");
 
 const defaultEditMessage: BucksMessageEdit = async (input) => {
-  const channel = await client.channels.fetch(input.channelId);
+  const channel = await fetchChannelForDelivery(input.channelId);
   if (channel?.isTextBased() !== true) {
     throw new Error(
       `Bryan Bucks parlay channel ${input.channelId} is unavailable or not text based`,

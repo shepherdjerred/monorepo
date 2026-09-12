@@ -3,6 +3,10 @@ import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
+import {
+  parseScoutRuntimeRole,
+  scoutRuntimeCapabilities,
+} from "#src/configuration/runtime-role.ts";
 import { ScoutStageSchema } from "@scout-for-lol/temporal";
 
 const logger = createLogger("config");
@@ -160,25 +164,25 @@ export function parseProductAnalyticsConfiguration(
  */
 function computeConfiguration() {
   const environment = resolveEnvironment();
-  const enableDiscordGateway = env
-    .get("ENABLE_DISCORD_GATEWAY")
-    .default("true")
+  // Which shape of the one backend image this process is. Bootstrap config by
+  // definition: it decides what starts, so it cannot come from a flag service
+  // the process has not connected to yet.
+  const runtimeRole = parseScoutRuntimeRole(
+    env.get("SCOUT_RUNTIME_ROLE").asString(),
+  );
+  // Local-only escape hatch for the boot-time report-lake fold, which is the
+  // one startup step a developer routinely cannot satisfy: with no published
+  // build and no S3 bucket the fold falls back to a rebuild and throws. It is
+  // deliberately narrower than the ENABLE_BACKGROUND_JOBS flag it replaces —
+  // that one also silently removed the realtime, background and competition
+  // workers, which is a capability decision and now belongs to the role.
+  const skipReportLakeFold = env
+    .get("SCOUT_DEV_SKIP_REPORT_LAKE_FOLD")
+    .default("false")
     .asBool();
-  const enableBackgroundJobs = env
-    .get("ENABLE_BACKGROUND_JOBS")
-    .default("true")
-    .asBool();
-  if (
-    environment !== "dev" &&
-    (!enableDiscordGateway || !enableBackgroundJobs)
-  ) {
+  if (environment !== "dev" && skipReportLakeFold) {
     throw new Error(
-      "ENABLE_DISCORD_GATEWAY and ENABLE_BACKGROUND_JOBS may only be disabled in environment=dev",
-    );
-  }
-  if (enableBackgroundJobs && !enableDiscordGateway) {
-    throw new Error(
-      "ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY: background jobs use the Discord client and guild filtering",
+      "SCOUT_DEV_SKIP_REPORT_LAKE_FOLD may only be set in environment=dev: a beta/prod pod that owns the report lake must publish a build before it serves from it",
     );
   }
   const temporalNamespace = ScoutStageSchema.parse(
@@ -233,10 +237,14 @@ function computeConfiguration() {
     // same pair that already binds the server to loopback. Unset means "no
     // override", so an omitted config fails closed exactly like dev-login.
     devUserGuilds: env.get("DEV_USER_GUILDS").default("").asArray(","),
-    // A secondary local web instance can opt out of the single BETA Discord
-    // gateway and background jobs. These remain enabled by default everywhere.
-    enableDiscordGateway,
-    enableBackgroundJobs,
+    // A secondary local web instance opts out of the single BETA Discord
+    // gateway by running the `application` role instead of `combined`.
+    runtimeRole,
+    // Derived, not read from the environment: the role decides the subsystems,
+    // so a consumer asking "may this process do X" asks the table rather than
+    // re-deriving X from a role name at the call site.
+    runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole),
+    skipReportLakeFold,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
     temporalNamespace,
     temporalScheduleReconciliation,
@@ -368,11 +376,14 @@ const configuration: Configuration = {
   get devUserGuilds() {
     return getConfiguration().devUserGuilds;
   },
-  get enableDiscordGateway() {
-    return getConfiguration().enableDiscordGateway;
+  get runtimeRole() {
+    return getConfiguration().runtimeRole;
   },
-  get enableBackgroundJobs() {
-    return getConfiguration().enableBackgroundJobs;
+  get runtimeCapabilities() {
+    return getConfiguration().runtimeCapabilities;
+  },
+  get skipReportLakeFold() {
+    return getConfiguration().skipReportLakeFold;
   },
   get temporalAddress() {
     return getConfiguration().temporalAddress;

@@ -1,12 +1,14 @@
 # Scout Backend
 
-The Scout for LoL backend service. A single Bun process that runs:
+The Scout for LoL backend service. One Bun image that runs:
 
 - The Discord bot (Discord.js): slash commands, match notifications, report delivery
 - Match polling cron jobs through Scout's native Riot API client, with raw match JSON archived to S3
 - The tRPC/HTTP server that the web app SPA (`@scout-for-lol/app`) and desktop client call
 - The DuckDB "report lake" (Parquet, derived from S3) that executes ScoutQL report queries
 - Server-side product analytics (PostHog) and metrics (Prometheus) / error tracking (Sentry)
+
+One image, but not necessarily one process: see [Runtime roles](#runtime-roles).
 
 Application state (subscriptions, competitions, guilds) is PostgreSQL 16
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
@@ -16,7 +18,10 @@ managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 
 ```bash
 bun run dev              # Start with hot reload
-bun run start            # Start once
+bun run start            # Start once (the `combined` role)
+bun run start:application    # Web surface, interactive + lake workers, report lake
+bun run start:gateway        # Discord gateway, commands, voice
+bun run start:activity-worker  # Realtime + background activity workers
 bun run build            # Bundle to dist/
 
 bun run test             # bun test; each test clones a hash-scoped template database
@@ -151,10 +156,111 @@ Three outcomes stay distinct on every path: Discord unreachable
 reach Discord must never be reported as either of the other two;
 `trpc/discord-upstream.ts` and `customs/activity-auth.ts` enforce that.
 
-Gateway events still _write_ installation state, and background jobs (outreach,
-cleanup, reconciliation, weekly leaderboards, report dispatch, the voice
-assistant) still read the gateway cache — they run only in a process that has
-one.
+Gateway events still _write_ installation state. Two background paths that used
+to _read_ the gateway cache now use the same install port, because they run as
+Temporal Activities that a split deployment executes with no shard at all:
+weekly leaderboard delivery (`betting/weekly/weekly-leaderboard.ts`) and
+scheduled report dispatch (`reports/discord-dispatcher.ts`). The consumer and
+Explore eligibility check (`consumer/access.ts`) uses it too.
+
+One gateway-cache read is deliberately left: `discord/utils/guild-membership.ts`
+`getActiveServerIds()`, which narrows player polling to live guilds. It fails
+open (an absent cache means "no filter", so polling widens rather than skipping
+work), and the `GuildInstall` table cannot safely replace it — that table is
+documented as possibly missing rows for Scout's earliest guilds, and filtering
+by an incomplete set would stop polling those guilds entirely.
+
+## How Scout posts to Discord
+
+Delivering is REST — `POST`/`PATCH`/`DELETE` on a channel id — but _resolving_
+the channel is where the gateway sneaks back in. `client.channels.fetch(id)`
+makes the REST call either way and then builds the channel by looking its guild
+up in the gateway's guild cache, and at the default `allowUnknownGuild: false`
+it returns `null` when the guild is not cached. On a role with no shard that
+cache is permanently empty, so every live channel would come back
+indistinguishable from a deleted one: scheduled reports and the weekly
+leaderboard would deliver nothing and report success, and the owner would be
+DMed that a channel they still have was deleted.
+
+So every delivery resolves its channel through
+`discord/utils/channel.ts#fetchChannelForDelivery`, never `client.channels.fetch`
+directly. Two rules come with it:
+
+- The channel it returns on a gatewayless role has **no `guild`**, and discord.js
+  permission helpers (`permissionsFor`, `ThreadChannel.parent`) throw on it
+  rather than denying. Ask `permissions.ts#hasResolvedGuild` first.
+  `checkSendMessagePermission` reports `unknown` there, which is deliberately
+  not `denied`: a denial is escalated to the guild owner as a permission they
+  revoked. Real revocations still escalate — Discord labels them 50013/50001 on
+  the send itself, which is classified without any local permission state.
+- The exception is voice. `voice/voice-manager.ts` needs
+  `channel.guild.voiceAdapterCreator`, so it keeps the guild-bound fetch; the
+  capability table already restricts voice to roles that own a shard.
+
+## Runtime roles
+
+The image boots into one of four shapes, selected by `SCOUT_RUNTIME_ROLE`
+(default `combined`). The vocabulary and the exact subsystem set per role are
+one table in `configuration/runtime-role.ts`; `runtime/plan.ts` derives the boot
+and shutdown order from it, and `runtime/subsystems.ts` performs the steps. An
+unrecognised value throws at startup rather than falling back.
+
+| Subsystem                                        | `combined`                                                                     | `application`               | `gateway`          | `activity-worker`    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------ | --------------------------- | ------------------ | -------------------- |
+| Champion asset verification                      | yes                                                                            | yes                         | yes                | yes                  |
+| Voice assistant (Hey Scout)                      | yes                                                                            | —                           | yes                | —                    |
+| Report lake mounted (reads + staging writes)     | yes                                                                            | yes                         | —                  | yes                  |
+| Report-lake fold / publish at boot               | yes                                                                            | yes                         | —                  | —                    |
+| Temporal workers                                 | workflow, interactive, lake (+ realtime, background once the gateway is ready) | workflow, interactive, lake | none (client only) | realtime, background |
+| Discord gateway login, commands, guild lifecycle | yes                                                                            | —                           | yes                | —                    |
+| Discord REST                                     | yes                                                                            | yes                         | yes                | yes                  |
+| HTTP surface                                     | full                                                                           | full                        | health + metrics   | health + metrics     |
+| Competition activity worker                      | yes                                                                            | —                           | —                  | yes                  |
+| Database-sweeping metric collectors              | yes                                                                            | yes                         | —                  | —                    |
+| Season / freshness-gauge seeding                 | yes                                                                            | yes                         | —                  | —                    |
+
+Notes that are easy to get wrong:
+
+- **`combined` is what Kubernetes runs.** The other three exist so the
+  deployment can be split; splitting it is a separate change. `combined` boots
+  and drains in exactly the order it always has, and the role tests assert that.
+- **Voice is gateway-coupled by design.** It reads an active voice connection's
+  audio, so it cannot be moved off the shard. That makes `gateway` an explicitly
+  stateful role.
+- **`application` publishes the report lake**, and owns the collectors that
+  sweep the database on every `/metrics` scrape. Every role serves `/metrics`,
+  but running those four collectors on all of them would turn one Prometheus
+  scrape interval into N full sweeps of the same tables.
+- **Reading the lake is wider than publishing it, and it is why
+  `activity-worker` is not deployable yet.** Every embedded Temporal activity
+  queue reads the lake somewhere: `realtime` settles SQL dares and evaluates
+  hall progression, `interactive` answers Explore queries, `background` runs
+  reports, parlay generation, the weekly parlay and the summoner-index
+  backfill, and `lake` is the compactor. Several of them also write its staging
+  directories. So `activity-worker` needs the same volume `application` owns,
+  and the cluster PVC is ReadWriteOnce — the two roles cannot both mount it as
+  things stand. Splitting them needs the lake to become shareable (a remote
+  store, or every reader moved behind the `lake` queue) first.
+- **A lake-reading role that does not publish verifies instead.** An empty or
+  unmounted lake is not an error for DuckDB — it scans zero parquet files and
+  returns zero rows — so a worker would record every report run and dare
+  settlement as a _successful_ run that found nothing. Roles with
+  `reportLakeAccess` and no fold assert a published build at boot and refuse to
+  start without one.
+- **`application` does not wait for a shard.** The old Discord-before-HTTP
+  ordering existed because web code read the guild cache; it goes through the
+  ports above now, and this role has no gateway to wait for.
+- **A gatewayless role marks its gateway `disabled` at boot.** The health
+  singleton starts at `connecting`, and `/livez` fails a pod whose shard never
+  acknowledged a heartbeat once the five-minute startup grace period ends — so
+  skipping the login without saying so is a crash loop, not a missing feature.
+- **`gateway` runs a Temporal client with no workers.** Commands start Workflows
+  they do not execute.
+- **`scout_temporal_workers`** reports 0 rather than going absent for a queue
+  class this role does not run, and `/healthz` reports the running queue classes
+  by name.
+- The externally deployed stable/candidate Workflow Workers
+  (`temporal/workflow-worker.ts`) are unaffected by any of this.
 
 ## Configuration
 
@@ -163,7 +269,10 @@ Riot API tokens are required; in test mode (`NODE_ENV=test`) placeholder values
 are used automatically. For a full local backend + web app, use
 `bun run dev:web` from the Scout package root (secrets via 1Password). Local
 `dev:web` does not own the BETA Discord gateway unless you pass
-`--discord-gateway`.
+`--discord-gateway`: without it the backend runs the `application` role.
+`--no-background-jobs` now sets only `SCOUT_DEV_SKIP_REPORT_LAKE_FOLD`, a
+dev-only switch for the one boot step a laptop with no published lake build and
+no S3 bucket cannot complete; it is rejected outside `ENVIRONMENT=dev`.
 
 See the [report-lake explanation](../../../docs/wiki/src/content/docs/explanation/scout-report-lake.md)
 and the parent [README](../../README.md) for architecture. The parent

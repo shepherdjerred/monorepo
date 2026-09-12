@@ -36,9 +36,13 @@ Options:
                          the shared local dev server, port 5471 / SCOUT_PG_PORT)
   --temporal-port <port> Temporal gRPC port (default: backend port + 4233)
   --temporal-ui-port <port> Temporal UI port (default: backend port + 5233)
-  --discord-gateway      Own the BETA Discord gateway (default: off)
+  --discord-gateway      Own the BETA Discord gateway (default: off). Runs the
+                         backend's combined runtime role; without it the backend
+                         runs the application role: web surface, interactive and
+                         lake workers, report lake, no gateway.
   --no-discord-gateway   Leave the BETA Discord gateway off (default)
-  --no-background-jobs   Skip scheduled workers and report-lake preparation
+  --no-background-jobs   Skip the boot report-lake fold and this script's lake
+                         seeding
   --no-web               Skip the Vite SPA
   --no-backend-watch     Keep the backend stable until this command is restarted
   --marketing-origin <url>  Marketing site origin for cross-surface links
@@ -285,8 +289,9 @@ if (import.meta.main) {
         `Backend entrypoint: ${backendEntrypoint}`,
         `Temporal UI: http://127.0.0.1:${options.temporalUiPort.toString()}/`,
         `Database: ${options.databaseUrl}`,
+        `Runtime role: ${options.discordGatewayEnabled ? "combined" : "application"}`,
         `Discord gateway: ${options.discordGatewayEnabled ? "enabled" : "disabled"}`,
-        `Background jobs: ${options.backgroundJobsEnabled ? "enabled" : "disabled"}`,
+        `Boot report-lake fold: ${options.discordGatewayEnabled && options.backgroundJobsEnabled ? "enabled" : "skipped"}`,
         `Report lake preparation: ${shouldPrepareReportLake(options, isDesignAuditBoot) ? "enabled" : "skipped"}`,
         `Vite: ${options.webEnabled ? webOrigin : "disabled"}`,
         `Backend watch: ${options.backendWatchEnabled ? "enabled" : "disabled"}`,

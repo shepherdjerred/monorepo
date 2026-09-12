@@ -31,6 +31,19 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * only test files should use, but dependency-cruiser cruises a `.test.ts` like
  * any other module, so a rule forbidding it would forbid the tests that are
  * supposed to use it.
+ *
+ * `runtime/` has no rule of its own, and that is the decision rather than an
+ * omission. It is the composition root: it selects the process's runtime role
+ * and starts the subsystems that role declares, so it necessarily reaches into
+ * nearly every layer, and a `from: "runtime"` rule could only list layers it
+ * happens not to touch today. What matters is the other direction — nothing may
+ * depend on the composition root, because a module that can ask which role it
+ * is running under can grow behaviour the capability table does not describe.
+ * Listing it in `layers` is what enforces that: every rule below is written as
+ * `everythingExcept(...)`, so a new layer is forbidden by each of them the
+ * moment it is named here. The role *vocabulary* lives in `configuration/`
+ * instead, where the leaf rule already keeps it importable by anyone and
+ * dependent on nothing.
  */
 
 /** Every directory directly under `src/`. Adding one here covers every rule below. */
@@ -51,6 +64,7 @@ const layers = [
   "report-lake",
   "report-store",
   "reports",
+  "runtime",
   "showcase",
   "sound-engine",
   "storage",

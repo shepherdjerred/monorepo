@@ -296,11 +296,6 @@
       "count": 1
     }
   },
-  "src/league/tasks/cleanup/reconcile-removed-guilds.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/league/tasks/cleanup/validate-data.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

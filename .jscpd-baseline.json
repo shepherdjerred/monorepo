@@ -1016,10 +1016,6 @@
       "clones": 2,
       "tokens": 158
     },
-    "packages/scout-for-lol/packages/backend/src/discord/utils/permissions.test.ts|packages/scout-for-lol/packages/backend/src/discord/utils/permissions.test.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
     "packages/scout-for-lol/packages/backend/src/explore/http/http-auth.ts|packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts": {
       "clones": 1,
       "tokens": 203

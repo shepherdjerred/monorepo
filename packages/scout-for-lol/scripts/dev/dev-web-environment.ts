@@ -109,14 +109,24 @@ export function buildDevEnvironment(
     SCOUT_DEV_WEB_ORIGIN: `http://localhost:${options.webPort.toString()}`,
     VITE_MARKETING_ORIGIN: options.marketingOrigin,
     VITE_DOCS_ORIGIN: options.docsOrigin,
-    ENABLE_BACKGROUND_JOBS:
+    // The backend picks its shape from one role rather than two booleans. A
+    // local instance that does not own the single BETA gateway runs the same
+    // `application` role the split deployment will: web surface, interactive
+    // and lake workers, report lake, no shard.
+    SCOUT_RUNTIME_ROLE:
+      isDesignAuditBoot || !options.discordGatewayEnabled
+        ? "application"
+        : "combined",
+    // Narrower than the ENABLE_BACKGROUND_JOBS flag this replaces: it skips only
+    // the boot-time lake fold, which is the step a laptop with no published
+    // build and no S3 bucket cannot complete. Which workers run is the role's
+    // decision now, not this flag's.
+    SCOUT_DEV_SKIP_REPORT_LAKE_FOLD:
       isDesignAuditBoot ||
       !options.discordGatewayEnabled ||
       !options.backgroundJobsEnabled
-        ? "false"
-        : "true",
-    ENABLE_DISCORD_GATEWAY:
-      isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
+        ? "true"
+        : "false",
     WEB_APP_ORIGIN: `http://localhost:${options.webPort.toString()}`,
     REPORT_LAKE_DIR: lakeDir,
     ...(isDesignAuditBoot

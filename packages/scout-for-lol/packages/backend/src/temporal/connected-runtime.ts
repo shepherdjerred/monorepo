@@ -8,6 +8,7 @@ import {
 } from "@temporalio/worker";
 import type { ScoutStage } from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
+import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
 import { createLogger } from "#src/logger.ts";
 import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
@@ -153,6 +154,18 @@ export type ScoutTemporalSupervisorOptions = {
   readonly stage: ScoutStage;
   readonly activities: ScoutTemporalActivityGroups;
   readonly callGraphTracing: boolean;
+  /**
+   * The workers this process polls with, from its runtime role's capability
+   * table. An empty set is legitimate: the `gateway` role needs the Temporal
+   * *client* (commands start Workflows) and runs none of their Activities.
+   */
+  readonly workers: readonly ScoutTemporalQueueClass[];
+  /**
+   * Workers added later, by {@link ScoutTemporalSupervisor.enableDeferredWorkers}.
+   * Only `combined` uses this, to hold the gateway-cache-reading Activities
+   * back until its own Discord shard is ready.
+   */
+  readonly deferredWorkers: readonly ScoutTemporalQueueClass[];
 };
 
 /**
@@ -212,7 +225,7 @@ function createScoutTemporalTracing(
 
 export async function createConnectedRuntime(
   options: ScoutTemporalSupervisorOptions,
-  discordWorkersEnabled: boolean,
+  queueClasses: ReadonlySet<ScoutTemporalQueueClass>,
 ): Promise<ConnectedRuntime> {
   installTemporalRuntime();
   const nativeConnection =
@@ -248,31 +261,37 @@ export async function createConnectedRuntime(
       },
       ...(tracing === undefined ? {} : { sinks: tracing.sinks }),
     };
-    workers.push(
-      await Worker.create({
-        ...commonOptions,
-        taskQueue: queues.workflow,
-        workflowsPath: workflowsPath(),
-        maxConcurrentWorkflowTaskExecutions: 4,
-      }),
-    );
-    workers.push(
-      await Worker.create({
-        ...commonOptions,
-        taskQueue: queues.interactive,
-        activities: options.activities.interactive,
-        maxConcurrentActivityTaskExecutions: 2,
-      }),
-    );
-    workers.push(
-      await Worker.create({
-        ...commonOptions,
-        taskQueue: queues.lake,
-        activities: options.activities.lake,
-        maxConcurrentActivityTaskExecutions: 1,
-      }),
-    );
-    if (discordWorkersEnabled) {
+    if (queueClasses.has("workflow")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.workflow,
+          workflowsPath: workflowsPath(),
+          maxConcurrentWorkflowTaskExecutions: 4,
+        }),
+      );
+    }
+    if (queueClasses.has("interactive")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.interactive,
+          activities: options.activities.interactive,
+          maxConcurrentActivityTaskExecutions: 2,
+        }),
+      );
+    }
+    if (queueClasses.has("lake")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.lake,
+          activities: options.activities.lake,
+          maxConcurrentActivityTaskExecutions: 1,
+        }),
+      );
+    }
+    if (queueClasses.has("realtime")) {
       workers.push(
         await Worker.create({
           ...commonOptions,
@@ -281,6 +300,8 @@ export async function createConnectedRuntime(
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );
+    }
+    if (queueClasses.has("background")) {
       workers.push(
         await Worker.create({
           ...commonOptions,

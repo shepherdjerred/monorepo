@@ -18,6 +18,15 @@ import {
 
 const { prisma } = createTestDatabase("scheduler-test");
 
+/**
+ * Scout is not installed in the report's guild.
+ *
+ * Injected rather than left to the real port, which confirms a missing install
+ * row against the Discord REST API — the property that makes it safe in
+ * production and exactly the reason a test must not reach it.
+ */
+const notInstalled = () => Promise.resolve(false);
+
 beforeEach(async () => {
   await cleanup();
 });
@@ -224,7 +233,7 @@ test("keeps an undeliverable intent pending and isolates backlog repair", async 
 
   await expect(
     deliverPendingReportDispatches(
-      { reportId: report.id, trigger: "SCHEDULED" },
+      { reportId: report.id, trigger: "SCHEDULED", isInstalled: notInstalled },
       prisma,
     ),
   ).rejects.toThrow("bot is not a member");
@@ -241,6 +250,7 @@ test("keeps an undeliverable intent pending and isolates backlog repair", async 
         reportId: report.id,
         trigger: "SCHEDULED",
         failureMode: "isolate",
+        isInstalled: notInstalled,
       },
       prisma,
     ),

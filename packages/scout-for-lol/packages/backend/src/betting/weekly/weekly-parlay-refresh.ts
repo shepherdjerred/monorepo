@@ -16,7 +16,7 @@ import { weeklyParlayMessageOptions } from "#src/betting/weekly/weekly-parlay-di
 import type { WeeklyParlayDiscordSender } from "#src/betting/weekly/weekly-parlay-discord.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { client } from "#src/discord/client.ts";
+import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
@@ -66,7 +66,7 @@ async function deleteDiscordMessage(
   channelId: string,
   messageId: string,
 ): Promise<void> {
-  const channel = await client.channels.fetch(channelId);
+  const channel = await fetchChannelForDelivery(channelId);
   if (channel?.isTextBased() !== true) {
     throw new Error(
       `Weekly parlay channel ${channelId} is unavailable or not text based`,
@@ -80,7 +80,7 @@ async function editDiscordMessage(
   messageId: string,
   options: MessageEditOptions,
 ): Promise<void> {
-  const channel = await client.channels.fetch(channelId);
+  const channel = await fetchChannelForDelivery(channelId);
   if (channel?.isTextBased() !== true) {
     throw new Error(
       `Weekly parlay channel ${channelId} is unavailable or not text based`,

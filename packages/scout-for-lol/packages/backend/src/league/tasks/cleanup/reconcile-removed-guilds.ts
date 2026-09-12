@@ -8,6 +8,10 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { isUnknownGuildError } from "#src/discord/utils/permissions.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import {
+  defaultInstalledGuildsDependencies,
+  installedGuildIdsAmong,
+} from "#src/lib/discord/installed-guilds.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-reconcile-removed-guilds");
@@ -30,12 +34,21 @@ const CONFIRMATION_DELAY_MS = 24 * 60 * 60 * 1000;
  * longer a member of gets the full removed-guild cleanup. The bot never leaves a
  * guild on its own — it only reconciles guilds it has already been removed from.
  *
- * A guild missing from `client.guilds.cache` is only a *candidate* for cleanup,
- * not proof of removal — the cache can lag behind actual membership (a
- * reconnect, or the `runOnInit` run racing Discord's guild backfill). Each
+ * A guild without a live `GuildInstall` row is only a *candidate* for cleanup,
+ * not proof of removal — rows predate the `removedAt` column for Scout's
+ * earliest guilds and the `guildCreate` writer swallows its own failures. Each
  * candidate is confirmed with a live `guilds.fetch` before anything is
  * deleted: only a Discord-confirmed "Unknown Guild" (10004) response counts as
- * a real removal. Any other outcome (fetch succeeds, or fails for an
+ * a real removal.
+ *
+ * Candidacy used to come from `client.guilds.cache`, guarded by an
+ * `isReady()` early-return so a cold cache could not nominate every guild at
+ * once. That guard made this sweep a no-op on any role without a gateway — it
+ * runs as a background Temporal Activity — so both the source and the guard
+ * moved to the install table, which every role can read. Nominating too
+ * eagerly is safe here in a way it was not before: a nomination only records a
+ * sighting, and deletion still needs two Discord-confirmed 10004s
+ * `CONFIRMATION_DELAY_MS` apart. Any other outcome (fetch succeeds, or fails for an
  * unrelated reason) skips cleanup for that guild rather than risk wiping live
  * data on a stale cache read. (Incident 2026-07: this reconciler treated its
  * own home guild as removed on a cache miss and repeatedly deleted + re-seeded
@@ -64,17 +77,6 @@ export async function reconcileRemovedGuilds(
   const now = options.now ?? new Date();
   logger.info("[ReconcileGuilds] Reconciling DB guilds against membership...");
 
-  // Guard: without a ready client and a populated cache we cannot trust the
-  // membership snapshot (startup / Discord outage) — skip rather than risk
-  // wiping data for guilds we simply can't see yet.
-  if (!client.isReady() || client.guilds.cache.size === 0) {
-    logger.info(
-      "[ReconcileGuilds] Client not ready or guild cache empty - skipping",
-    );
-    return;
-  }
-
-  const memberGuildIds = new Set(client.guilds.cache.keys());
   const nowMs = now.getTime();
 
   try {
@@ -120,8 +122,14 @@ export async function reconcileRemovedGuilds(
       ].map((row) => row.serverId),
     );
 
+    // The install table is the membership source: a live row means Scout is
+    // still there and the guild is not nominated at all.
+    const installedServerIds = await installedGuildIdsAmong([...dbServerIds], {
+      ...defaultInstalledGuildsDependencies(),
+      db,
+    });
     const candidateServerIds = [...dbServerIds].filter(
-      (serverId) => !memberGuildIds.has(serverId),
+      (serverId) => !installedServerIds.has(serverId),
     );
 
     const removedGuildIds: DiscordGuildId[] = [];
@@ -136,7 +144,7 @@ export async function reconcileRemovedGuilds(
           where: { serverId: guildId },
         });
         logger.warn(
-          `[ReconcileGuilds] Guild ${serverId} missing from cache but confirmed still a member via API - skipping (stale cache)`,
+          `[ReconcileGuilds] Guild ${serverId} has no live install row but is confirmed still a member via API - skipping (stale row)`,
         );
         continue;
       } catch (error) {

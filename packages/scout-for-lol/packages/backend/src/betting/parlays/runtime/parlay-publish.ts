@@ -14,7 +14,7 @@ import { buildParlayContent } from "#src/betting/parlays/parlay-line.ts";
 import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { client } from "#src/discord/client.ts";
+import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 import {
@@ -65,7 +65,7 @@ export async function disableParlayPreparationReferences(
           channelId: ref.channelId,
         },
         async () => {
-          const channel = await client.channels.fetch(
+          const channel = await fetchChannelForDelivery(
             DiscordChannelIdSchema.parse(ref.channelId),
           );
           if (channel?.isTextBased() !== true) {
@@ -105,7 +105,7 @@ async function activateMessageReference(input: {
         channelId: input.ref.channelId,
       },
       async () => {
-        const channel = await client.channels.fetch(
+        const channel = await fetchChannelForDelivery(
           DiscordChannelIdSchema.parse(input.ref.channelId),
         );
         if (channel?.isTextBased() !== true) {
