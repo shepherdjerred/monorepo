@@ -252,6 +252,29 @@ async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
           .join("\n"),
       } satisfies HistoryDocument;
     });
+    // Usage is attached to exactly one document per thread id: the primary
+    // thread-history document when one exists (already carries it via
+    // `scanCodexThreadDatabase`), otherwise a standalone catalog document,
+    // otherwise the first `history.jsonl` prompt for that thread, otherwise a
+    // usage-only placeholder. A thread can have several catalog rows or
+    // several history.jsonl prompts, and `queryUsage` sums by document (not
+    // by thread), so attaching the same events to more than one document
+    // would multiply that session's reported tokens and cost.
+    const usageAttributed = new Set(indexedThreadIds);
+    const claimUsage = (document: HistoryDocument): HistoryDocument => {
+      if (
+        document.runtimeId === null ||
+        usageAttributed.has(document.runtimeId)
+      ) {
+        return document;
+      }
+      const events = usageByThread.get(document.runtimeId);
+      if (events === undefined) {
+        return document;
+      }
+      usageAttributed.add(document.runtimeId);
+      return { ...document, usageEvents: events } satisfies HistoryDocument;
+    };
     if (await pathExists(paths.codexCatalogDb)) {
       documents.push(
         ...catalogDocuments
@@ -260,14 +283,7 @@ async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
               document.runtimeId === null ||
               !indexedThreadIds.has(document.runtimeId),
           )
-          .map((document) =>
-            document.runtimeId !== null && usageByThread.has(document.runtimeId)
-              ? ({
-                  ...document,
-                  usageEvents: usageByThread.get(document.runtimeId) ?? [],
-                } satisfies HistoryDocument)
-              : document,
-          ),
+          .map((document) => claimUsage(document)),
       );
     }
     if (await pathExists(paths.codexHistoryJsonl)) {
@@ -275,26 +291,13 @@ async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
         paths.codexHistoryJsonl,
       );
       documents.push(
-        ...historyDocuments.map((document) =>
-          document.runtimeId !== null && usageByThread.has(document.runtimeId)
-            ? ({
-                ...document,
-                usageEvents: usageByThread.get(document.runtimeId) ?? [],
-              } satisfies HistoryDocument)
-            : document,
-        ),
+        ...historyDocuments.map((document) => claimUsage(document)),
       );
     }
-    // Usage that matched neither a thread-history row nor a catalog entry
-    // still needs a place to live — otherwise `history usage` silently
-    // omits that session's tokens and cost.
-    const attributedThreadIds = new Set(
-      documents.flatMap((document) =>
-        document.runtimeId === null ? [] : [document.runtimeId],
-      ),
-    );
+    // Usage that matched none of the above still needs a place to live —
+    // otherwise `history usage` silently omits that session's tokens and cost.
     for (const [threadId, events] of usageByThread) {
-      if (!attributedThreadIds.has(threadId)) {
+      if (!usageAttributed.has(threadId)) {
         documents.push(
           usageOnlyCodexDocument(paths.codexSessionsDir, threadId, events),
         );

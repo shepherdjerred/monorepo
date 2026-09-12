@@ -20,12 +20,7 @@ import {
   sourceReadResult,
   sourceResult,
 } from "./sources-shared.ts";
-import {
-  parseJsonLine,
-  parseRecord,
-  parseTimestamp,
-  stringValue,
-} from "./query/text.ts";
+import { parseRecord, parseTimestamp, stringValue } from "./query/text.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
@@ -96,14 +91,30 @@ function claudeUsageEntry(
   };
 }
 
+/**
+ * A line that fails to parse as JSON is truncated or corrupt — propagated
+ * rather than skipped, so a partially-written transcript record (especially
+ * an assistant record carrying `message.usage`) doesn't quietly shrink this
+ * session's usage on the next scan while the scan still reports success.
+ */
+function parseClaudeLine(line: string): unknown {
+  try {
+    return JSON.parse(line) as unknown;
+  } catch (error) {
+    throw new Error(`Malformed Claude transcript line: ${line.slice(0, 200)}`, {
+      cause: error,
+    });
+  }
+}
+
 async function readClaudeTranscript(
   file: string,
   maxCharacters = Number.POSITIVE_INFINITY,
 ): Promise<ClaudeTranscript> {
   const raw = await Bun.file(file).text();
   const messages: HistoryMessage[] = [];
-  const usageEntries: ClaudeUsageEntry[] = [];
-  const seenMessageIds = new Set<string>();
+  const usageEntriesById = new Map<string, ClaudeUsageEntry>();
+  const usageEntriesWithoutId: ClaudeUsageEntry[] = [];
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
   let runtimeId: string | null = null;
@@ -111,7 +122,7 @@ async function readClaudeTranscript(
     if (line.trim().length === 0) {
       continue;
     }
-    const value = parseJsonLine(line);
+    const value = parseClaudeLine(line);
     const record = parseRecord(value);
     if (record === null) {
       continue;
@@ -127,11 +138,15 @@ async function readClaudeTranscript(
     }
     const usageEntry = claudeUsageEntry(record, parsedTimestamp);
     if (usageEntry !== null) {
+      // Claude Code repeats a growing cumulative snapshot across every
+      // record sharing one response's `message.id` as its content blocks
+      // stream in — the LAST one seen is the final, authoritative total, so
+      // a later record for the same id replaces an earlier one rather than
+      // being dropped.
       if (usageEntry.messageId === null) {
-        usageEntries.push(usageEntry);
-      } else if (!seenMessageIds.has(usageEntry.messageId)) {
-        seenMessageIds.add(usageEntry.messageId);
-        usageEntries.push(usageEntry);
+        usageEntriesWithoutId.push(usageEntry);
+      } else {
+        usageEntriesById.set(usageEntry.messageId, usageEntry);
       }
     }
     messages.push(
@@ -143,6 +158,7 @@ async function readClaudeTranscript(
       ),
     );
   }
+  const usageEntries = [...usageEntriesWithoutId, ...usageEntriesById.values()];
   return { messages, createdAt, updatedAt, runtimeId, usageEntries };
 }
 
