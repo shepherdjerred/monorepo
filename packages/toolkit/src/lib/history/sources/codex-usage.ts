@@ -6,6 +6,7 @@ import {
 import type { UsageEventEntry } from "@shepherdjerred/toolkit/lib/history/types.ts";
 import {
   catalogCost,
+  optionalUsageNumber,
   requiredUsageNumber,
   usageEventEntry,
   type UsageCounts,
@@ -78,19 +79,19 @@ function usageCounts(
       location,
     ),
     cacheReadTokens: 0,
-    cacheCreationTokens: requiredUsageNumber(
+    cacheCreationTokens: optionalUsageNumber(
       "Codex",
       usage,
       "cache_write_input_tokens",
       location,
     ),
-    cachedInputTokens: requiredUsageNumber(
+    cachedInputTokens: optionalUsageNumber(
       "Codex",
       usage,
       "cached_input_tokens",
       location,
     ),
-    reasoningTokens: requiredUsageNumber(
+    reasoningTokens: optionalUsageNumber(
       "Codex",
       usage,
       "reasoning_output_tokens",
@@ -115,12 +116,14 @@ function applyTokenUsageRecord(
   timestamp: string | null,
   location: UsageFieldLocation,
 ): void {
-  if (timestamp === null) {
-    return;
-  }
   const usage = parseRecord(payload["turn_token_usage"]);
   if (usage === null) {
     return;
+  }
+  if (timestamp === null) {
+    throw new Error(
+      `Codex token_usage_record missing its timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
   }
   const counts = usageCounts(usage, location);
   const model = accumulator.currentModel ?? "unknown";
@@ -142,13 +145,15 @@ function applyTokenCount(
   timestamp: string | null,
   location: UsageFieldLocation,
 ): void {
-  if (timestamp === null) {
-    return;
-  }
   const info = parseRecord(payload["info"]);
   const usage = info === null ? null : parseRecord(info["last_token_usage"]);
   if (usage === null) {
     return;
+  }
+  if (timestamp === null) {
+    throw new Error(
+      `Codex token_count event missing its timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
   }
   const counts = usageCounts(usage, location);
   const model = accumulator.currentModel ?? "unknown";

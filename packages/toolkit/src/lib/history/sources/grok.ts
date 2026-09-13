@@ -25,6 +25,7 @@ import type {
   UsageEventEntry,
 } from "#lib/history/types.ts";
 import {
+  optionalUsageNumber,
   reportedCost,
   requiredUsageNumber,
   usageEventEntry,
@@ -50,19 +51,13 @@ type GrokSessionMeta = {
 
 type GrokLineLocation = UsageFieldLocation;
 
-function grokNumberField(
-  usage: Record<string, unknown>,
-  key: string,
-  location: GrokLineLocation,
-): number {
-  return requiredUsageNumber("Grok", usage, key, location);
-}
-
 function grokReportedCost(
   usage: Record<string, unknown>,
   location: GrokLineLocation,
 ): UsageCost {
-  const ticks = grokNumberField(usage, "costUsdTicks", location);
+  // costUsdTicks is genuinely optional — a turn with no priced cost data
+  // omits it entirely, distinct from a turn that failed to report tokens.
+  const ticks = optionalUsageNumber("Grok", usage, "costUsdTicks", location);
   return reportedCost(ticks > 0 ? ticks / TICKS_PER_USD : null);
 }
 
@@ -71,16 +66,27 @@ function grokUsageCounts(
   location: GrokLineLocation,
 ): UsageCounts {
   return {
-    inputTokens: grokNumberField(usage, "inputTokens", location),
-    outputTokens: grokNumberField(usage, "outputTokens", location),
-    cacheReadTokens: grokNumberField(usage, "cachedReadTokens", location),
-    cacheCreationTokens: grokNumberField(
+    inputTokens: requiredUsageNumber("Grok", usage, "inputTokens", location),
+    outputTokens: requiredUsageNumber("Grok", usage, "outputTokens", location),
+    cacheReadTokens: optionalUsageNumber(
+      "Grok",
+      usage,
+      "cachedReadTokens",
+      location,
+    ),
+    cacheCreationTokens: optionalUsageNumber(
+      "Grok",
       usage,
       "cacheCreationTokens",
       location,
     ),
     cachedInputTokens: 0,
-    reasoningTokens: grokNumberField(usage, "reasoningTokens", location),
+    reasoningTokens: optionalUsageNumber(
+      "Grok",
+      usage,
+      "reasoningTokens",
+      location,
+    ),
   };
 }
 

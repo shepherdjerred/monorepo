@@ -32,6 +32,7 @@ import type {
 } from "./types.ts";
 import {
   catalogCost,
+  optionalUsageNumber,
   requiredUsageNumber,
   usageEventEntry,
   type UsageCounts,
@@ -61,6 +62,13 @@ type ClaudeTranscript = {
  * dedup key — without it, summing every record's usage would count the same
  * response's tokens once per content block instead of once per response.
  */
+/**
+ * `message.usage` being entirely absent is normal (e.g. a user-role record
+ * never carries usage); `message.usage` being *present* but not an object,
+ * or present with a missing/non-string model, is malformed — treating it
+ * the same as "no usage" would silently drop that response's tokens/cost
+ * while the scan reports success.
+ */
 function claudeUsageEntry(
   record: Record<string, unknown>,
   occurredAt: string | null,
@@ -70,10 +78,16 @@ function claudeUsageEntry(
   if (message === null) {
     return null;
   }
-  const usage = parseRecord(message["usage"]);
+  const usageValue = message["usage"];
+  if (usageValue === undefined) {
+    return null;
+  }
+  const usage = parseRecord(usageValue);
   const model = stringValue(message["model"]);
   if (usage === null || model === null) {
-    return null;
+    throw new Error(
+      `Malformed Claude usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
   }
   return {
     occurredAt,
@@ -91,13 +105,13 @@ function claudeUsageEntry(
         "output_tokens",
         location,
       ),
-      cacheReadTokens: requiredUsageNumber(
+      cacheReadTokens: optionalUsageNumber(
         "Claude",
         usage,
         "cache_read_input_tokens",
         location,
       ),
-      cacheCreationTokens: requiredUsageNumber(
+      cacheCreationTokens: optionalUsageNumber(
         "Claude",
         usage,
         "cache_creation_input_tokens",
