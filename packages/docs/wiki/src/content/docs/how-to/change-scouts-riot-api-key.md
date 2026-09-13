@@ -88,7 +88,10 @@ a short-lived pod mounting `scout-storage-claim` to hold the volume, and delete
 it before scaling back up so the backend can remount.
 :::
 
-Re-run `harvest` and `resolve` to catch anything written since step 2.
+Re-run all three of `collect`, `harvest`, and `resolve` to catch anything
+written since step 2. `harvest` and `resolve` only work on identities already in
+the map, so skipping `collect` leaves an account registered in between invisible
+until `apply` refuses it mid-window.
 
 ## 4. Apply and verify
 
