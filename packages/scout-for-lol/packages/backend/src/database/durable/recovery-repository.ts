@@ -139,3 +139,27 @@ export async function advanceRecoveryCursor(
       }),
   });
 }
+
+/**
+ * A transition's answer in the vocabulary a caller REPORTS, as opposed to the
+ * one it composes with.
+ *
+ * The pure machine hands the next batch back alongside `applied` because an
+ * in-memory caller chaining transitions needs it. Nothing that records the
+ * answer does: every durable-commit contract in the V2 pipeline is a strict
+ * closed union, so the extra key is rejected outright rather than ignored, and
+ * each reporting call site would otherwise take the outcome apart by hand.
+ * Dropping it here keeps that step in the layer that already owns the
+ * translation between the machine and the row, and the non-applied outcomes
+ * pass through untouched because they carry the conflict reason the reporter
+ * needs.
+ */
+export type RecoveryCommitResult =
+  | { outcome: "applied" }
+  | Exclude<RecoveryTransitionResult, { outcome: "applied" }>;
+
+export function recoveryCommitResult(
+  result: RecoveryTransitionResult,
+): RecoveryCommitResult {
+  return result.outcome === "applied" ? { outcome: "applied" } : result;
+}

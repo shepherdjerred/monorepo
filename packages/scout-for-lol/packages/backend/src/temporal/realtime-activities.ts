@@ -3,15 +3,21 @@ import type { ScoutTemporalActivityGroups } from "#src/temporal/connected-runtim
 import { heartbeatWhile, probeQueue } from "#src/temporal/activity-runtime.ts";
 import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 import { createScoutV2MatchActivities } from "#src/temporal/v2/match-activities.ts";
+import { createScoutV2NotificationActivities } from "#src/temporal/v2/notification-activities.ts";
 
 /**
  * The realtime queue's Activities, for both pipelines.
  *
  * This group lives apart from the other three because it is the one that now
  * carries two pipelines: v1's poll, discovery, maintenance and ingest, plus
- * the nine Activities of the V2 per-match core, which
- * `SCOUT_V2_ACTIVITY_QUEUE_CLASSES` assigns to this same queue so one worker
- * registration serves an open v1 execution and a V2 one alike.
+ * the nine Activities of the V2 per-match core and the five that drive one
+ * notification intent to Discord. `SCOUT_V2_ACTIVITY_QUEUE_CLASSES` assigns
+ * every one of them to this same queue so one worker registration serves an
+ * open v1 execution and a V2 one alike.
+ *
+ * The notification lane's sixth Activity, the render, is absent on purpose: it
+ * belongs to `background`, so a Satori pass can never queue ahead of a live
+ * match.
  *
  * Implementations stay dynamically imported: building the activity groups
  * happens during startup for every role that polls a queue, and a static
@@ -22,6 +28,7 @@ import { createScoutV2MatchActivities } from "#src/temporal/v2/match-activities.
 export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
   return {
     ...createScoutV2MatchActivities(),
+    ...createScoutV2NotificationActivities(),
     probeQueue,
     pollRealtime: async (input) => {
       if (temporalWorkHardDisabled(input.kind)) return;

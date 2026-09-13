@@ -55,6 +55,11 @@ export const DmKindSchema = z.enum([
   "betting_settlement_receipt",
   "betting_player_bet_outcome",
   "dare_notification",
+  // The V2 durable pipeline's DM target. A notification intent whose target is
+  // an account rather than a channel delivers through here, so it gets the same
+  // audit row and the same budget rules as every other DM instead of a second
+  // send path of its own.
+  "match_notification",
 ]);
 export type DmKind = z.infer<typeof DmKindSchema>;
 
@@ -106,6 +111,9 @@ const CORE_DM_KINDS: ReadonlySet<string> = new Set([
   "betting_settlement_receipt",
   "betting_player_bet_outcome",
   "dare_notification",
+  // A match notification is what the recipient subscribed to, so it is product
+  // output and carries neither the budget nor its footer.
+  "match_notification",
 ]);
 
 export type SendDmOptions = {

@@ -101,13 +101,13 @@ const registrations = [
     name: SCOUT_WORKFLOW_NAMES.notificationV2,
     workflowId: scoutNotificationV2WorkflowId(stage, intentKey),
     input: scoutNotificationV2InputCodec.serialize({ stage, intentKey }),
-    implemented: false,
+    implemented: true,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
     workflowId: scoutLakeProjectionV2WorkflowId(stage, riotMatchId),
     input: scoutLakeProjectionV2InputCodec.serialize({ stage, riotMatchId }),
-    implemented: false,
+    implemented: true,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.recoveryBatchV2,
@@ -116,7 +116,7 @@ const registrations = [
       stage,
       recoveryBatchId,
     }),
-    implemented: false,
+    implemented: true,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
@@ -125,7 +125,7 @@ const registrations = [
       stage,
       trigger: "operator",
     }),
-    implemented: false,
+    implemented: true,
   },
 ] as const;
 

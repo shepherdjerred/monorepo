@@ -11,6 +11,9 @@ import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
 import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
+import type { ScoutV2NotificationActivities } from "#src/temporal/v2/notification-activities.ts";
+import type { ScoutV2BackgroundActivities } from "#src/temporal/v2/background-activities.ts";
+import type { ScoutV2LakeActivities } from "#src/temporal/v2/lake-activities.ts";
 import { createLogger } from "#src/logger.ts";
 import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
 import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
@@ -101,11 +104,17 @@ function installConfiguredRuntime(): void {
 }
 
 /**
- * The realtime queue serves both pipelines. v1's Activities and the V2
- * per-match core are declared `realtime` in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`
- * alike, so one worker registration carries both and an open v1 execution and
- * a V2 one dispatch to the same place — which is what makes the V2 rollout a
- * matter of starting Workflows rather than of moving workers.
+ * Every queue serves both pipelines. v1's Activities and their V2 counterparts
+ * are declared on the same queue classes in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`,
+ * so one worker registration carries both and an open v1 execution and a V2 one
+ * dispatch to the same place — which is what makes the V2 rollout a matter of
+ * starting Workflows rather than of moving workers.
+ *
+ * The V2 groups are split by queue rather than by domain because the queue is
+ * the promise being made. The notification lane spans two of them: its four
+ * short domain commits and its Discord send are `realtime`, where latency is
+ * the product, while its render is `background`, where a slow Satori pass
+ * cannot sit in front of a live match.
  */
 type RealtimeActivities = Pick<
   ScoutTemporalActivities,
@@ -115,7 +124,8 @@ type RealtimeActivities = Pick<
   | "ingestMatch"
   | "probeQueue"
 > &
-  ScoutV2MatchActivities;
+  ScoutV2MatchActivities &
+  ScoutV2NotificationActivities;
 type InteractiveActivities = Pick<
   ScoutTemporalActivities,
   "runInteractive" | "persistInteractiveOutcome" | "probeQueue"
@@ -131,15 +141,16 @@ type BackgroundActivities = Pick<
   | "refreshDuelSeries"
   | "markDuelSeriesOverdue"
   | "probeQueue"
-> & {
-  invokeScoutWeeklyParlayAction: (
-    action: WeeklyParlayControlAction,
-  ) => Promise<WeeklyParlayControlResult>;
-  syncScoutBryanBucksAnalytics: () => Promise<{
-    status: "reconciled" | "skipped";
-    detail: string;
-  }>;
-};
+> &
+  ScoutV2BackgroundActivities & {
+    invokeScoutWeeklyParlayAction: (
+      action: WeeklyParlayControlAction,
+    ) => Promise<WeeklyParlayControlResult>;
+    syncScoutBryanBucksAnalytics: () => Promise<{
+      status: "reconciled" | "skipped";
+      detail: string;
+    }>;
+  };
 type LakeActivities = Pick<
   ScoutTemporalActivities,
   | "runReportLakeJob"
@@ -148,7 +159,8 @@ type LakeActivities = Pick<
   | "recomputeChallengeRunPage"
   | "markChallengeRunRecomputeFailure"
   | "probeQueue"
->;
+> &
+  ScoutV2LakeActivities;
 
 export type ScoutTemporalActivityGroups = {
   readonly realtime: RealtimeActivities;
