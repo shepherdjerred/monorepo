@@ -37,11 +37,16 @@ export const SCOUT_V2_MATCH_RECEIPT_KINDS = {
   observation: ReceiptKindSchema.parse("v2-match-observation"),
   settlement: ReceiptKindSchema.parse("v2-match-settlement"),
   progression: ReceiptKindSchema.parse("v2-match-progression"),
+  tournament: ReceiptKindSchema.parse("v2-match-tournament"),
 } as const;
 
 /**
  * The phases of the per-match serial core that leave a durable effect behind,
  * in the order the Workflow runs them.
+ *
+ * `tournament` is the tournament-code finalization stage, which runs last
+ * because it publishes a Custom Night projection and must not do so before the
+ * domain effects it describes have committed.
  *
  * The cursor advance is deliberately absent. It has no stage receipt because
  * it already has a better durable signal: `MatchTrackedAccount.cursorAdvancedAt`
@@ -54,6 +59,7 @@ export const SCOUT_V2_MATCH_PHASES = [
   "observation",
   "settlement",
   "progression",
+  "tournament",
 ] as const;
 export type ScoutV2MatchPhase = (typeof SCOUT_V2_MATCH_PHASES)[number];
 

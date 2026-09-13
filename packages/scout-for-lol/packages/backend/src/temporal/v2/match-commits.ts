@@ -18,7 +18,10 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { advanceAccountCursor } from "#src/database/durable/account-cursor-repository.ts";
 import { getObservation } from "#src/database/durable/observation-repository.ts";
-import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
+import {
+  listReceipts,
+  recordReceipt,
+} from "#src/database/durable/receipt-repository.ts";
 import {
   listTrackedAccounts,
   markTrackedAccountCursorAdvanced,
@@ -70,6 +73,29 @@ export async function recordMatchReceiptV2(args: {
       }),
     ),
   );
+}
+
+/**
+ * The evidence a receipt of this kind already carries for this match, or
+ * `null` when no such receipt stands. Typed `unknown` because the evidence is
+ * opaque JSON here — the caller owns the codec that gives it a shape.
+ *
+ * The read a TAKEOVER needs. A worker that committed its durable fact and died
+ * before completing its claim leaves a standing receipt and a CLAIMED row; the
+ * next attempt has to see that receipt before it decides to re-execute, or it
+ * re-runs a state-gated effect that now finds nothing to do, records empty
+ * evidence against the standing claim, and conflicts with it.
+ */
+export async function readMatchReceiptEvidenceV2(
+  matchId: RiotMatchId,
+  kind: ReceiptKind,
+): Promise<unknown> {
+  const receipts = await listReceipts(prisma, { matchId });
+  const standing = receipts.find((record) => record.receipt.kind === kind);
+  if (standing?.evidence == null) {
+    return null;
+  }
+  return JSON.parse(standing.evidence);
 }
 
 /**

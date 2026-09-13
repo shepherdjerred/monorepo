@@ -76,6 +76,15 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
           return await applyMatchProgressionV2(input);
         },
       ),
+    finalizeTournamentResultV2: async (input) =>
+      await heartbeatWhile(
+        { riotMatchId: input.riotMatchId, phase: "finalizing-tournament-v2" },
+        async () => {
+          const { finalizeTournamentResultV2 } =
+            await import("#src/temporal/v2/match-tournament.ts");
+          return await finalizeTournamentResultV2(input);
+        },
+      ),
     recordMatchReceiptsV2: async (input) =>
       await heartbeatWhile(
         { riotMatchId: input.riotMatchId, phase: "receipting-match-v2" },

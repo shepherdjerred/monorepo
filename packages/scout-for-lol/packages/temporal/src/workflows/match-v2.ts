@@ -128,8 +128,9 @@ async function attestPhases(
  * The per-match core, V2.
  *
  * Phases, in order: archive the raw artifacts, commit the observation, settle
- * markets, apply progression, record receipts, advance tracked-account
- * cursors, and only then fan out notification and lake-projection children.
+ * markets, apply progression, finalize any tournament result, record receipts,
+ * advance tracked-account cursors, and only then fan out notification and
+ * lake-projection children.
  *
  * Fan-out happens after the domain commit because a notification is a promise
  * about a fact: a child started before the commit could deliver a claim the
@@ -212,6 +213,18 @@ export async function scoutMatchProcessingV2Workflow(
       await activities.applyMatchProgressionV2(ref);
       receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.progression);
     }
+  }
+
+  // Tournament-code custom games project their result into a Custom Night
+  // before the cursor can advance. v1 finalizes them at exactly this point and
+  // is the only caller repo-wide, so a V2 core that skipped it would leave the
+  // result unfinalized and the snapshot unpublished — with the cursor moved
+  // past the match, so nothing would ever rediscover it. The stage answers
+  // `not-a-tournament-match` cheaply for an ordinary match.
+  if (!attested.has(SCOUT_V2_MATCH_RECEIPT_KINDS.tournament)) {
+    setWorkflowPhase("**Phase:** finalizing any tournament result");
+    await activities.finalizeTournamentResultV2(ref);
+    receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.tournament);
   }
 
   await attestPhases(activities, ref, receiptKinds);

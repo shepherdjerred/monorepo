@@ -28,6 +28,7 @@ export type ScoutV2MatchActivities = Pick<
   | "commitMatchObservationV2"
   | "settleMatchMarketsV2"
   | "applyMatchProgressionV2"
+  | "finalizeTournamentResultV2"
   | "recordMatchReceiptsV2"
   | "advanceMatchCursorV2"
   | "planMatchFanOutV2"

@@ -307,6 +307,7 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   commitMatchObservationV2: "realtime",
   settleMatchMarketsV2: "realtime",
   applyMatchProgressionV2: "realtime",
+  finalizeTournamentResultV2: "realtime",
   recordMatchReceiptsV2: "realtime",
   advanceMatchCursorV2: "realtime",
   planMatchFanOutV2: "realtime",

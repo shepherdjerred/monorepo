@@ -110,6 +110,23 @@ export type GuardedEffect = {
   readonly effects: number;
 };
 
+/**
+ * What one guarded effect is, from the fence's point of view.
+ *
+ * `alreadyApplied` is the TAKEOVER reconcile, and it is supplied by the caller
+ * rather than built into the fence because only the caller knows what its
+ * durable fact looks like: settlement's receipt kind is not progression's, and
+ * the fence must stay generic over both. It answers "this effect's fact
+ * already stands, and here is what it says" — or `null` when there is nothing
+ * recorded yet.
+ */
+export type ScoutGuardedEffectV2 = {
+  readonly key: string;
+  readonly kind: string;
+  readonly apply: () => Promise<GuardedEffect>;
+  readonly alreadyApplied?: () => Promise<GuardedEffect | null>;
+};
+
 export type ScoutEffectFenceOptions = {
   readonly database?: ExtendedPrismaClient;
   readonly budget?: ScoutEffectFenceBudget;
@@ -202,6 +219,11 @@ async function assertFenceStillHeld(tx: Db, key: string): Promise<void> {
  * `CLAIMED` row means the holder cannot still be running — a live holder would
  * still own the lock.
  *
+ * A takeover — a claim row that exists but is not COMPLETED — first asks the
+ * caller's `alreadyApplied` probe whether the durable fact already stands, and
+ * completes the claim from that standing evidence rather than re-running the
+ * effect. See the call site for why re-running is not merely wasteful.
+ *
  * A `conflict` fact FAILS the Activity and deliberately does not complete the
  * claim. The fact is the durable receipt this effect is attested by, and
  * `conflict` means a receipt for this identity already exists carrying
@@ -213,11 +235,7 @@ async function assertFenceStillHeld(tx: Db, key: string): Promise<void> {
  * loudly.
  */
 export async function runGuardedEffectV2(
-  args: {
-    key: string;
-    kind: string;
-    apply: () => Promise<GuardedEffect>;
-  },
+  args: ScoutGuardedEffectV2,
   options: ScoutEffectFenceOptions = {},
 ): Promise<ScoutGuardedEffectV2Result> {
   const database = options.database ?? prisma;
@@ -237,11 +255,7 @@ export async function runGuardedEffectV2(
 }
 
 async function applyUnderFence(
-  args: {
-    key: string;
-    kind: string;
-    apply: () => Promise<GuardedEffect>;
-  },
+  args: ScoutGuardedEffectV2,
   tx: Db,
   database: ExtendedPrismaClient,
   budget: ScoutEffectFenceBudget,
@@ -267,6 +281,22 @@ async function applyUnderFence(
     // COMPLETED row — but the claim is still the authority on its own state,
     // so its answer wins over the read's rather than being asserted away.
     return skipped;
+  }
+
+  // A TAKEOVER, not a first claim: some earlier attempt got far enough to
+  // create this row. It may also have got far enough to commit its durable
+  // fact and die before completing the claim, and re-executing on top of that
+  // is how two correct rules build a permanent wedge — the state-gated effect
+  // finds nothing left to do, records empty evidence, and conflicts with the
+  // standing receipt, which the conflict rule then turns into a non-retryable
+  // failure forever. Reconciling from the fact that already stands is what
+  // makes the takeover finish the dead attempt instead of fighting it.
+  if (prior !== null && args.alreadyApplied !== undefined) {
+    const standing = await args.alreadyApplied();
+    if (standing !== null) {
+      await completeScoutEffect(args.key, database);
+      return { guard, fact: standing.fact, effects: standing.effects };
+    }
   }
 
   let applied: GuardedEffect;

@@ -12,7 +12,10 @@ import { settlementEvidenceOf } from "#src/league/tasks/postmatch/settlement-evi
 import { withChallengeProgressionLock } from "#src/progression/challenges/locking.ts";
 import { processCompetitiveProgressionMatch } from "#src/progression/postmatch.ts";
 import { runGuardedEffectV2 } from "#src/temporal/v2/effect-fence.ts";
-import { recordMatchReceiptV2 } from "#src/temporal/v2/match-commits.ts";
+import {
+  readMatchReceiptEvidenceV2,
+  recordMatchReceiptV2,
+} from "#src/temporal/v2/match-commits.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 
 /**
@@ -69,6 +72,21 @@ export async function settleMatchMarketsV2(input: {
   return await runGuardedEffectV2({
     key: `v2-match-settlement:${input.riotMatchId}`,
     kind: "v2-match-settlement",
+    // The settlement receipt IS this effect's durable fact, and its evidence
+    // names every ledger row the commit moved — so a takeover can report what
+    // the dead attempt did instead of re-settling a match whose bets are all
+    // already resolved.
+    alreadyApplied: async () => {
+      const standing = await readMatchReceiptEvidenceV2(
+        input.riotMatchId,
+        MATCH_RECEIPT_KINDS.settlement,
+      );
+      if (standing === null) return null;
+      return {
+        fact: { outcome: "already-applied" },
+        effects: settledRecordCount(settlementEvidenceCodec.parse(standing)),
+      };
+    },
     apply: async () => {
       // Resolved inside the guard so a replay whose claim is already complete
       // costs no Riot read at all.
@@ -113,6 +131,17 @@ export async function applyMatchProgressionV2(input: {
   return await runGuardedEffectV2({
     key: `v2-match-progression:${input.riotMatchId}`,
     kind: "v2-match-progression",
+    alreadyApplied: async () => {
+      const standing = await readMatchReceiptEvidenceV2(
+        input.riotMatchId,
+        MATCH_RECEIPT_KINDS.progression,
+      );
+      if (standing === null) return null;
+      return {
+        fact: { outcome: "already-applied" },
+        effects: progressionEvidenceCodec.parse(standing).trackedAccountCount,
+      };
+    },
     apply: async () => {
       const context = await resolveScoutV2MatchContext(input.riotMatchId);
       const evidence = {

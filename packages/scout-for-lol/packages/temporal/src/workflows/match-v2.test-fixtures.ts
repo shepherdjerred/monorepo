@@ -17,6 +17,7 @@ import type {
   ScoutMatchPipelineStateV2Result,
   ScoutMatchReceiptsV2Input,
   ScoutReceiptsV2Result,
+  ScoutTournamentResultV2Result,
 } from "#src/activity-contracts-v2.ts";
 import {
   ScoutNotificationIntentKeySchema,
@@ -56,6 +57,8 @@ export type ScoutV2MatchStore = {
   applied: string[];
   calls: string[];
   completedClaims: Set<string>;
+  /** Whether this match belongs to a tournament-code custom game. */
+  tournamentMatch: boolean;
   /**
    * The call the worker dies ON, which models a crash right AFTER the
    * preceding phase committed. Mutable so one worker can serve both the run
@@ -79,6 +82,7 @@ export function createScoutV2MatchStore(
     applied: [],
     calls: [],
     completedClaims: new Set<string>(),
+    tournamentMatch: false,
     failAt: null,
     ...overrides,
   };
@@ -213,6 +217,16 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
           };
         }),
       };
+    },
+    finalizeTournamentResultV2: (): ScoutTournamentResultV2Result => {
+      record("finalizeTournamentResultV2");
+      if (!store.tournamentMatch) return { outcome: "not-a-tournament-match" };
+      const already = store.completedClaims.has("tournament");
+      store.completedClaims.add("tournament");
+      if (!already) store.applied.push("tournament");
+      return already
+        ? { outcome: "already-finalized", publishedNight: true }
+        : { outcome: "finalized", publishedNight: true };
     },
     advanceMatchCursorV2: (): ScoutMatchCursorV2Result => {
       record("advanceMatchCursorV2");

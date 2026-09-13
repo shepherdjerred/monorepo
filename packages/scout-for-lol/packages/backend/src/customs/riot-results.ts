@@ -8,7 +8,16 @@ import {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
-function tournamentLobbyIdentity(
+/**
+ * Which tournament lobby, if any, a Match-V5 payload belongs to.
+ *
+ * Exported because the V2 per-match core needs the SAME rule to decide whether
+ * a match has a tournament result to finalize at all. A second copy of "a
+ * lobby is matched by its code, or by the match id once one was recorded"
+ * could drift, and then V2 would gate on one rule while
+ * {@link finalizeTournamentResult} finalized on another.
+ */
+export function tournamentLobbyIdentity(
   matchId: string,
   tournamentCode: string | undefined,
 ) {

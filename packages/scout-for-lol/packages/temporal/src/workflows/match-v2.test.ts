@@ -35,6 +35,7 @@ const SERIAL_CORE = [
   "commitMatchObservationV2",
   "settleMatchMarketsV2",
   "applyMatchProgressionV2",
+  "finalizeTournamentResultV2",
   "recordMatchReceiptsV2",
   "advanceMatchCursorV2",
   "planMatchFanOutV2",
@@ -125,6 +126,7 @@ describe("the V2 per-match core", () => {
           SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
           SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
           SCOUT_V2_MATCH_RECEIPT_KINDS.progression,
+          SCOUT_V2_MATCH_RECEIPT_KINDS.tournament,
         ],
         // The notification and lake children are registered contracts with no
         // implementation yet, so this run plans them and starts none. The
@@ -179,12 +181,19 @@ describe("the V2 per-match core", () => {
     {
       name: "every phase",
       store: () =>
-        attested("archive", "observation", "settlement", "progression"),
+        attested(
+          "archive",
+          "observation",
+          "settlement",
+          "progression",
+          "tournament",
+        ),
       skipped: [
         "archiveMatchArtifactsV2",
         "commitMatchObservationV2",
         "settleMatchMarketsV2",
         "applyMatchProgressionV2",
+        "finalizeTournamentResultV2",
         // Nothing new was attested, so there is nothing to record.
         "recordMatchReceiptsV2",
       ],
@@ -240,6 +249,64 @@ describe("the V2 per-match core", () => {
     expect(store.calls).not.toContain("applyMatchProgressionV2");
     expect(store.applied).toEqual(["cursor"]);
   }, 60_000);
+});
+
+describe("the V2 tournament finalization stage", () => {
+  test("finalizes a tournament-code custom game before the cursor advances", async () => {
+    // v1 finalizes at exactly this point and is the only caller repo-wide.
+    // Advancing the cursor first would leave the result unreported and the
+    // Custom Night snapshot unpublished, with nothing left to rediscover the
+    // match and fix it.
+    const store = createScoutV2MatchStore({ tournamentMatch: true });
+    await startWorkers(scoutV2MatchActivityStubs(store));
+
+    await processMatch("match-tournament-finalized");
+
+    expect(store.calls.indexOf("finalizeTournamentResultV2")).toBeLessThan(
+      store.calls.indexOf("advanceMatchCursorV2"),
+    );
+    expect(store.applied).toEqual([
+      "settlement",
+      "progression",
+      "tournament",
+      "cursor",
+    ]);
+  }, 60_000);
+
+  test("runs the stage for an ordinary match and finalizes nothing", async () => {
+    const store = createScoutV2MatchStore();
+    await startWorkers(scoutV2MatchActivityStubs(store));
+
+    await processMatch("match-tournament-ordinary");
+
+    // The stage still runs — nothing else can know whether a lobby exists —
+    // but it applies no effect.
+    expect(store.calls).toContain("finalizeTournamentResultV2");
+    expect(store.applied).toEqual(["settlement", "progression", "cursor"]);
+  }, 60_000);
+
+  test("resumes after a crash between finalization and the cursor without finalizing twice", async () => {
+    const store = createScoutV2MatchStore({
+      tournamentMatch: true,
+      failAt: "recordMatchReceiptsV2",
+    });
+    await startWorkers(scoutV2MatchActivityStubs(store));
+
+    await expect(processMatch("match-tournament-crash")).rejects.toThrow();
+    store.failAt = null;
+    await processMatch("match-tournament-replay");
+
+    // The replacement run re-enters the stage — the crash lost the receipt
+    // that would have skipped it — and the stage's own idempotency is what
+    // keeps the finalization from happening twice.
+    expect(store.applied).toEqual([
+      "settlement",
+      "progression",
+      "tournament",
+      "cursor",
+    ]);
+    expect(new Set(store.applied).size).toBe(store.applied.length);
+  }, 90_000);
 });
 
 describe("a V2 per-match run killed mid-pipeline", () => {
@@ -313,6 +380,7 @@ describe("V2 post-match discovery", () => {
           "observation",
           "settlement",
           "progression",
+          "tournament",
         );
       },
       advanceMatchCursorV2: async (input: { riotMatchId: string }) => {

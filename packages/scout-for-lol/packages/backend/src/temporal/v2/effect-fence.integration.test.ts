@@ -1,7 +1,10 @@
 import { afterAll, describe, expect, test } from "vitest";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { getScoutEffectClaim } from "#src/temporal/effect-claims.ts";
+import {
+  claimScoutEffect,
+  getScoutEffectClaim,
+} from "#src/temporal/effect-claims.ts";
 import {
   runGuardedEffectV2,
   type ScoutEffectFenceBudget,
@@ -219,6 +222,102 @@ describe("the V2 effect fence", () => {
     expect(claim).not.toBeNull();
     expect(claim?.state).not.toBe("COMPLETED");
     expect(claim?.state).toBe("AMBIGUOUS_OR_FAILED");
+  });
+});
+
+describe("a fence taking over a dead attempt", () => {
+  test("completes from the fact that already stands instead of re-applying", async () => {
+    // The exact state a worker leaves when it commits its durable fact and
+    // dies before completing its claim: a CLAIMED row with a standing
+    // receipt. Re-executing there is how two correct rules build a permanent
+    // wedge — the state-gated effect finds nothing left to do, records empty
+    // evidence, and conflicts with the standing receipt, which the conflict
+    // rule then turns into a non-retryable failure forever. The `apply` below
+    // returns exactly that conflict, so a fence that re-applied would fail
+    // this test the way the pipeline would fail in production.
+    const key = "fence:takeover-reconcile";
+    let applyRuns = 0;
+    await claimScoutEffect({ key, kind: "v2-test" }, prisma);
+
+    const result = await runGuardedEffectV2(
+      {
+        key,
+        kind: "v2-test",
+        alreadyApplied: () =>
+          Promise.resolve({
+            fact: { outcome: "already-applied" as const },
+            effects: 7,
+          }),
+        apply: () => {
+          applyRuns += 1;
+          return Promise.resolve({
+            fact: {
+              outcome: "conflict" as const,
+              reason: "receipt-evidence-mismatch" as const,
+            },
+            effects: 0,
+          });
+        },
+      },
+      { database: prisma },
+    );
+
+    expect(applyRuns).toBe(0);
+    expect(result).toEqual({
+      guard: { outcome: "already-applied" },
+      fact: { outcome: "already-applied" },
+      effects: 7,
+    });
+    const claim = await getScoutEffectClaim(key, prisma);
+    expect(claim?.state).toBe("COMPLETED");
+  });
+
+  test("still applies when the dead attempt left no durable fact", async () => {
+    // The probe must not suppress a legitimate takeover: a holder that died
+    // BEFORE committing its fact leaves nothing standing, and the effect has
+    // to run.
+    const key = "fence:takeover-unfinished";
+    let applyRuns = 0;
+    await claimScoutEffect({ key, kind: "v2-test" }, prisma);
+
+    const result = await runGuardedEffectV2(
+      {
+        key,
+        kind: "v2-test",
+        alreadyApplied: () => Promise.resolve(null),
+        apply: () => {
+          applyRuns += 1;
+          return Promise.resolve(applied);
+        },
+      },
+      { database: prisma },
+    );
+
+    expect(applyRuns).toBe(1);
+    expect(result).toEqual({
+      guard: { outcome: "already-applied" },
+      fact: { outcome: "applied" },
+      effects: 3,
+    });
+  });
+
+  test("does not probe on a first claim", async () => {
+    // Nothing has run yet, so there is nothing to reconcile with and the probe
+    // would be a wasted read on the happy path.
+    let probes = 0;
+    await runGuardedEffectV2(
+      {
+        key: "fence:first-claim-no-probe",
+        kind: "v2-test",
+        alreadyApplied: () => {
+          probes += 1;
+          return Promise.resolve(null);
+        },
+        apply: () => Promise.resolve(applied),
+      },
+      { database: prisma },
+    );
+    expect(probes).toBe(0);
   });
 });
 

@@ -60,6 +60,7 @@ import type {
   ScoutRecoveryProcessV2Result,
   ScoutRecoveryScanV2Result,
   ScoutRecoveryTransitionV2Result,
+  ScoutTournamentResultV2Result,
 } from "./activity-contracts-v2.ts";
 
 export type ScoutTemporalActivities = {
@@ -153,6 +154,9 @@ export type ScoutTemporalV2Activities = {
   applyMatchProgressionV2: (
     input: ScoutMatchRefV2,
   ) => Promise<ScoutGuardedEffectV2Result>;
+  finalizeTournamentResultV2: (
+    input: ScoutMatchRefV2,
+  ) => Promise<ScoutTournamentResultV2Result>;
   recordMatchReceiptsV2: (
     input: ScoutMatchReceiptsV2Input,
   ) => Promise<ScoutReceiptsV2Result>;
