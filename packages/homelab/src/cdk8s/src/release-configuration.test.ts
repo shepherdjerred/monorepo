@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
   applyCurrentBuildImageOverrides,
+  catalogScoutDesktopRetirementPreflightImageDigests,
   catalogScoutPostgresImageDigests,
   releaseChartRevisions,
+  scoutImageRunsDesktopRetirementPreflight,
   scoutImageUsesPostgres,
 } from "./release-configuration.ts";
 
@@ -177,4 +179,36 @@ test("preserves Scout PostgreSQL provenance from the catalog", () => {
       "sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
     ]),
   );
+});
+
+test("enables the desktop retirement preflight only for a marked image", () => {
+  const digest =
+    "sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347";
+  const preflightDigests = catalogScoutDesktopRetirementPreflightImageDigests({
+    $schema: "test",
+    schemaVersion: 1,
+    entries: [
+      {
+        name: "shepherdjerred/scout-for-lol/beta",
+        value: `2.0.0-10861@${digest}`,
+        category: "internal-image",
+        artifactType: "image",
+        management: { managed: false },
+        notes: ["desktop retirement preflight"],
+      },
+    ],
+  });
+  expect(preflightDigests).toEqual(new Set([digest]));
+  expect(
+    scoutImageRunsDesktopRetirementPreflight(
+      `2.0.0-10861@${digest}`,
+      preflightDigests,
+    ),
+  ).toBe(true);
+  expect(
+    scoutImageRunsDesktopRetirementPreflight(
+      "2.0.0-10860@sha256:c79be8f789dc48b8add32d5c633be88a881899cef91beb8efd450fba483474ff",
+      preflightDigests,
+    ),
+  ).toBe(false);
 });

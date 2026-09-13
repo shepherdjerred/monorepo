@@ -136,7 +136,7 @@ function sqliteDigestRow(row: unknown): string {
   );
 }
 
-function sqliteSourceDigest(sqlitePath: string): string {
+export function legacySqliteSourceDigest(sqlitePath: string): string {
   // Read through SQLite instead of hashing only db.sqlite. SQLite exposes
   // committed WAL pages through this connection, so the digest represents the
   // state the importer will actually read after an unclean rollback shutdown.
@@ -363,7 +363,7 @@ export async function runImport(
   await ensureMarkerTable(prisma);
   const sqliteFile = Bun.file(sqlitePath);
   const sourceDigest =
-    sqliteFile.size === 0 ? null : sqliteSourceDigest(sqlitePath);
+    sqliteFile.size === 0 ? null : legacySqliteSourceDigest(sqlitePath);
 
   const marker = await getImportMarker(prisma);
   if (marker !== null) {
