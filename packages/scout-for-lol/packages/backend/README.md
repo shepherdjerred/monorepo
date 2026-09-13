@@ -203,6 +203,20 @@ a timer and fatal for one whose conclusion is durable. The V2 capture throws on
 treat it as a skipped tick, which is stated explicitly at each call site rather
 than inherited from a value that could not tell the difference.
 
+It shapes the STORAGE boundary the resume path reads through too, where the
+same collapse is available and just as costly. `ArchivedObjectUnusableError`
+names the three ways an archived object cannot serve as the snapshot its
+receipt attests — gone, digest-mismatched, or unparseable — each a fact about
+what is stored that no retry changes, so each terminates the run. Every other
+read failure is transport: a SeaweedFS timeout, a 5xx, a dropped connection,
+none of which establish anything about whether the object is there. Those
+propagate untouched and stay retryable, because terminating on one would
+permanently strand an archived snapshot without its projection or its
+notifications — once the game has ended, discovery cannot start another
+execution to try again. The classification lives in `s3-raw-source.ts`, the
+only layer that sees the SDK's error taxonomy, and the Activity translates it
+into Temporal's retry vocabulary.
+
 The capture stages the lake rows inline rather than deferring to
 `stageLakeProjectionV2`, which is the one place this path diverges from the
 per-match core's separation of archive from projection. It has nowhere to defer

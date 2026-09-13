@@ -68,6 +68,17 @@ function mockArchivedObject(text: string): void {
   }));
 }
 
+/** Settle a resume into its value or its error, without throwing. */
+async function settleResume(matchId: string): Promise<unknown> {
+  return await resumeArchivedPrematchContext(
+    RiotMatchIdSchema.parse(matchId),
+    prisma,
+  ).then(
+    (value) => value,
+    (error: unknown) => error,
+  );
+}
+
 async function standingArchiveReceipt(args: {
   matchId: string;
   key: string;
@@ -128,6 +139,82 @@ describe("resumeArchivedPrematchContext", () => {
       archived.participants.length,
     );
   });
+
+  test.each([
+    {
+      name: "a missing object",
+      error: Object.assign(new Error("NoSuchKey"), {
+        name: "NoSuchKey",
+        $metadata: { httpStatusCode: 404 },
+      }),
+    },
+  ])("gives up terminally on $name", async ({ error }) => {
+    const matchId = "NA1_5500000203";
+    await standingArchiveReceipt({
+      matchId,
+      key: ARCHIVED_KEY,
+      digest: computeSha256Digest(new TextEncoder().encode("gone")),
+    });
+    s3Mock.on(GetObjectCommand).callsFake(() => {
+      throw error;
+    });
+
+    // Riot's storage looked and the object is not there. No retry brings it
+    // back, and the run must not carry on from something else.
+    const settled = await settleResume(matchId);
+    expect(settled).toBeInstanceOf(ApplicationFailure);
+    if (!(settled instanceof ApplicationFailure)) return;
+    expect(settled.type).toBe("MissingArchivedSnapshot");
+    expect(settled.nonRetryable).toBe(true);
+  });
+
+  test.each([
+    {
+      name: "a storage timeout",
+      error: new Error("socket hang up"),
+    },
+    {
+      name: "a storage 5xx",
+      error: Object.assign(new Error("InternalError"), {
+        name: "InternalError",
+        $metadata: { httpStatusCode: 503 },
+      }),
+    },
+  ])(
+    "stays retryable on $name, and a later attempt succeeds",
+    async ({ name, error }) => {
+      const matchId = `NA1_55000002${name.length.toString()}0`;
+      const archived = {
+        ...rawCurrentGameInfoFixture(),
+        gameId: 5_500_000_210,
+      };
+      const text = JSON.stringify(archived, null, 2);
+      await standingArchiveReceipt({
+        matchId,
+        key: ARCHIVED_KEY,
+        digest: computeSha256Digest(new TextEncoder().encode(text)),
+      });
+      s3Mock.on(GetObjectCommand).callsFake(() => {
+        throw error;
+      });
+
+      // A transport failure establishes NOTHING about whether the object is
+      // there. Terminating here would strand the archived snapshot without its
+      // projection or its notifications forever, because once the game ended
+      // discovery cannot start another execution to try again.
+      const settled = await settleResume(matchId);
+      expect(settled).toBeInstanceOf(Error);
+      expect(settled).not.toBeInstanceOf(ApplicationFailure);
+
+      // The retry is the wait loop: the same store, now answering.
+      mockArchivedObject(text);
+      const resumed = await resumeArchivedPrematchContext(
+        RiotMatchIdSchema.parse(matchId),
+        prisma,
+      );
+      expect(resumed?.gameInfo.gameId).toBe(5_500_000_210);
+    },
+  );
 
   test("refuses bytes that do not match the digest the receipt attested", async () => {
     const matchId = "NA1_5500000202";

@@ -26,7 +26,10 @@ import {
   archiveTimelineToS3,
   savePrematchDataToS3,
 } from "#src/storage/s3.ts";
-import { readVerifiedRawObjectText } from "#src/report-store/s3-raw-source.ts";
+import {
+  ArchivedObjectUnusableError,
+  readVerifiedRawObjectText,
+} from "#src/report-store/s3-raw-source.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 
 /**
@@ -216,13 +219,25 @@ const PREMATCH_ARCHIVE_PUT_DEADLINE_MS = 25_000;
  * claim about themselves. Failing loudly is the only safe answer: a caller
  * about to stage lake rows from this payload would otherwise project content
  * nothing vouches for.
+ *
+ * Two failure classes leave here, and callers must keep them apart.
+ * {@link ArchivedObjectUnusableError} is a fact about what is stored — gone,
+ * digest-mismatched, or unparseable — and is terminal. Anything else is a
+ * transport failure that establishes nothing, and propagates untouched so the
+ * caller's own retry can be the wait loop.
+ *
+ * Shared with the resume path rather than duplicated, so the two readers of one
+ * archived snapshot cannot disagree about when it is usable.
  */
-async function readCanonicalPrematch(
+export async function readArchivedPrematchSnapshot(
   descriptor: ArtifactDescriptor,
   matchId: string,
 ): Promise<RawCurrentGameInfo> {
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
+    // A receipt stands but this process cannot reach the store it names. That
+    // is a misconfiguration, not a fact about the object, so it is not an
+    // `ArchivedObjectUnusableError`.
     throw new Error(
       `A raw-archive receipt stands for ${matchId} but no S3 bucket is configured, so the snapshot it attests to cannot be read back`,
     );
@@ -233,7 +248,17 @@ async function readCanonicalPrematch(
     key: descriptor.key,
     expectedDigest: descriptor.digest,
   });
-  return RawCurrentGameInfoSchema.parse(JSON.parse(text));
+  const parsed = RawCurrentGameInfoSchema.safeParse(JSON.parse(text));
+  if (!parsed.success) {
+    // The bytes matched their digest and still are not a spectator payload, so
+    // they are exactly what was archived and what was archived is wrong.
+    throw new ArchivedObjectUnusableError({
+      key: descriptor.key,
+      reason: "unparseable",
+      detail: "the stored bytes are not a spectator payload",
+    });
+  }
+  return parsed.data;
 }
 
 async function putWithinDeadline<T>(
@@ -325,7 +350,7 @@ export async function archivePrematchReceipted(
         return {
           status: "already_archived",
           artifact: stored,
-          canonical: await readCanonicalPrematch(stored, matchId),
+          canonical: await readArchivedPrematchSnapshot(stored, matchId),
         };
       }
       const result = await putWithinDeadline(

@@ -126,6 +126,35 @@ export async function readRawObjectText(
 }
 
 /**
+ * The archived object cannot serve as the snapshot its receipt attests, and no
+ * retry will change that.
+ *
+ * Exactly three ways to earn this: the object is gone, its bytes do not match
+ * the digest that was recorded for them, or they do not parse as the payload
+ * they claim to be. Every one is a fact about what is stored. A transport
+ * failure is deliberately NOT one of them — it is the absence of an answer —
+ * and callers distinguish the two by this type rather than by inspecting
+ * errors themselves.
+ */
+export class ArchivedObjectUnusableError extends Error {
+  readonly reason: "missing" | "digest-mismatch" | "unparseable";
+  readonly key: string;
+
+  constructor(args: {
+    key: string;
+    reason: "missing" | "digest-mismatch" | "unparseable";
+    detail: string;
+  }) {
+    super(
+      `Archived object ${args.key} is unusable (${args.reason}): ${args.detail}`,
+    );
+    this.name = "ArchivedObjectUnusableError";
+    this.reason = args.reason;
+    this.key = args.key;
+  }
+}
+
+/**
  * Read an archived object back and prove it is the one the caller means.
  *
  * The write path records a SHA-256 content address precisely so a later reader
@@ -146,17 +175,36 @@ export async function readVerifiedRawObjectText(args: {
   expectedDigest: string;
   options?: S3ReadOptions;
 }): Promise<string> {
-  const text = await readRawObjectText(
-    args.client,
-    args.bucket,
-    args.key,
-    args.options ?? {},
-  );
+  let text: string;
+  try {
+    text = await readRawObjectText(
+      args.client,
+      args.bucket,
+      args.key,
+      args.options ?? {},
+    );
+  } catch (error) {
+    // The same distinction the spectator boundary draws, on the read side. A
+    // missing object is a fact about storage that no retry can change; a
+    // timeout, a 5xx or a dropped connection establishes nothing at all about
+    // whether the object is there, so it propagates untouched and stays
+    // retryable for whoever owns the retry.
+    if (isNotFoundError(error)) {
+      throw new ArchivedObjectUnusableError({
+        key: args.key,
+        reason: "missing",
+        detail: "no object exists at that key",
+      });
+    }
+    throw error;
+  }
   const digest = computeSha256Digest(new TextEncoder().encode(text));
   if (digest !== args.expectedDigest) {
-    throw new Error(
-      `Archived object ${args.key} does not match the digest recorded for it: expected ${args.expectedDigest}, read ${digest}`,
-    );
+    throw new ArchivedObjectUnusableError({
+      key: args.key,
+      reason: "digest-mismatch",
+      detail: `expected ${args.expectedDigest}, read ${digest}`,
+    });
   }
   return text;
 }
