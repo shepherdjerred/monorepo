@@ -278,6 +278,21 @@ export async function resolve(db: Db): Promise<void> {
       );
       continue;
     }
+    if (account.puuid === oldPuuid) {
+      // Riot returned the same identifier, which means both keys belong to one
+      // holder — almost certainly the same key passed twice. Accepting it would
+      // mark the identity resolved, make `apply` a no-op, write the cutover
+      // marker, and let `verify` report success; activating the real production
+      // key afterwards would then leave every stored identity unusable, with the
+      // marker now asserting the migration already happened. Across the real
+      // prod and beta runs not one of 223 identities resolved unchanged, so this
+      // is a configuration fault rather than a rare-but-valid answer.
+      throw new Error(
+        `Riot returned the same PUUID under both keys for ${oldPuuid.slice(0, 16)}….\n` +
+          `OLD_RIOT_API_KEY and NEW_RIOT_API_KEY appear to belong to the same key holder, ` +
+          `so this run would rewrite nothing while reporting success.`,
+      );
+    }
     await db.exec(
       `UPDATE "PuuidKeyMap" SET "newPuuid" = ${db.param(2)}, "status" = 'resolved', "resolvedAt" = ${db.now()} WHERE "oldPuuid" = ${db.param(1)}`,
       [oldPuuid, account.puuid],
