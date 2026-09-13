@@ -12,9 +12,10 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import {
   createDesktopRetirementManifest,
+  desktopRetirementIdentityDigest,
   readLegacyDesktopRetirementCounts,
 } from "#src/retirement/desktop-data.ts";
-import { legacySqliteSourceDigest } from "#src/database/legacy-import/run-import.ts";
+import { legacySqlitePreflightDigest } from "#src/database/legacy-import/sqlite-source-digest.ts";
 
 const ArgumentsSchema = z.object({ preflight: z.literal(true) }).strict();
 const EnvironmentSchema = z
@@ -45,37 +46,59 @@ const prisma = new PrismaClient({
 });
 
 try {
-  const [
-    apiTokenCount,
-    desktopClientCount,
-    soundPackCount,
-    storedSoundCount,
-    gameEventLogCount,
-    storedSounds,
-  ] = await Promise.all([
-    prisma.apiToken.count(),
-    prisma.desktopClient.count(),
-    prisma.soundPack.count(),
-    prisma.storedSound.count(),
-    prisma.gameEventLog.count(),
-    prisma.storedSound.findMany({
-      select: { s3Key: true },
-      orderBy: { s3Key: "asc" },
-    }),
-  ]);
+  const [apiTokens, desktopClients, soundPacks, storedSounds, gameEventLogs] =
+    await Promise.all([
+      prisma.apiToken.findMany({
+        select: { id: true },
+        orderBy: { id: "asc" },
+      }),
+      prisma.desktopClient.findMany({
+        select: { id: true },
+        orderBy: { id: "asc" },
+      }),
+      prisma.soundPack.findMany({
+        select: { id: true },
+        orderBy: { id: "asc" },
+      }),
+      prisma.storedSound.findMany({
+        select: { id: true, s3Key: true },
+        orderBy: { id: "asc" },
+      }),
+      prisma.gameEventLog.findMany({
+        select: { id: true },
+        orderBy: { id: "asc" },
+      }),
+    ]);
 
   const manifest = createDesktopRetirementManifest({
     postgres: {
-      ApiToken: apiTokenCount,
-      DesktopClient: desktopClientCount,
-      SoundPack: soundPackCount,
-      StoredSound: storedSoundCount,
-      GameEventLog: gameEventLogCount,
+      ApiToken: apiTokens.length,
+      DesktopClient: desktopClients.length,
+      SoundPack: soundPacks.length,
+      StoredSound: storedSounds.length,
+      GameEventLog: gameEventLogs.length,
+    },
+    postgresIdentityDigests: {
+      ApiToken: desktopRetirementIdentityDigest(
+        apiTokens.map((apiToken) => apiToken.id),
+      ),
+      DesktopClient: desktopRetirementIdentityDigest(
+        desktopClients.map((desktopClient) => desktopClient.id),
+      ),
+      SoundPack: desktopRetirementIdentityDigest(
+        soundPacks.map((soundPack) => soundPack.id),
+      ),
+      StoredSound: desktopRetirementIdentityDigest(
+        storedSounds.map((storedSound) => storedSound.id),
+      ),
+      GameEventLog: desktopRetirementIdentityDigest(
+        gameEventLogs.map((gameEventLog) => gameEventLog.id),
+      ),
     },
     legacySqlite: readLegacyDesktopRetirementCounts(
       environment.LEGACY_SQLITE_PATH,
     ),
-    legacySqliteSourceDigest: legacySqliteSourceDigest(
+    legacySqlitePreflightDigest: legacySqlitePreflightDigest(
       environment.LEGACY_SQLITE_PATH,
     ),
     storedSoundKeys: storedSounds.map((storedSound) => storedSound.s3Key),

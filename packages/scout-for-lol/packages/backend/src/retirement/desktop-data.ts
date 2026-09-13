@@ -15,8 +15,9 @@ export type DesktopRetirementCounts = Record<DesktopRetirementTable, number>;
 export type DesktopRetirementManifest = {
   manifestVersion: 1;
   postgres: DesktopRetirementCounts;
+  postgresIdentityDigests: DesktopRetirementIdentityDigests;
   legacySqlite: DesktopRetirementCounts;
-  legacySqliteSourceDigest: string;
+  legacySqlitePreflightDigest: string;
   storedSoundObjects: {
     count: number;
     keyDigest: string;
@@ -24,10 +25,16 @@ export type DesktopRetirementManifest = {
   manifestDigest: string;
 };
 
+export type DesktopRetirementIdentityDigests = Record<
+  DesktopRetirementTable,
+  string
+>;
+
 type ManifestInput = {
   postgres: DesktopRetirementCounts;
+  postgresIdentityDigests: DesktopRetirementIdentityDigests;
   legacySqlite: DesktopRetirementCounts;
-  legacySqliteSourceDigest: string;
+  legacySqlitePreflightDigest: string;
 };
 
 function sha256(value: string): string {
@@ -91,6 +98,25 @@ export function storedSoundKeyDigest(keys: readonly string[]): string {
 }
 
 /**
+ * Hash the complete primary-key candidate set without emitting record
+ * identities. Counts alone cannot detect a record being replaced between the
+ * review preflight and the separately approved destructive release.
+ */
+export function desktopRetirementIdentityDigest(
+  ids: readonly number[],
+): string {
+  const sorted = [...ids].sort((left, right) => left - right);
+  const hasher = new Bun.CryptoHasher("sha256");
+  for (const id of sorted) {
+    if (!Number.isSafeInteger(id) || id < 1) {
+      throw new RangeError("Invalid PostgreSQL desktop retirement record ID");
+    }
+    hasher.update(`${String(id)}\u{0}`);
+  }
+  return hasher.digest("hex");
+}
+
+/**
  * Produce the approval artifact consumed by the later destructive release.
  * Its digest includes both database inventories and the object-key set, but
  * no API token values, token hashes, or object keys are printed or persisted.
@@ -112,8 +138,9 @@ export function createDesktopRetirementManifest(
   const manifest: Omit<DesktopRetirementManifest, "manifestDigest"> = {
     manifestVersion: 1,
     postgres: input.postgres,
+    postgresIdentityDigests: input.postgresIdentityDigests,
     legacySqlite: input.legacySqlite,
-    legacySqliteSourceDigest: input.legacySqliteSourceDigest,
+    legacySqlitePreflightDigest: input.legacySqlitePreflightDigest,
     storedSoundObjects,
   };
   return {

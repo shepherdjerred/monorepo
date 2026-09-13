@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
   createDesktopRetirementManifest,
+  desktopRetirementIdentityDigest,
   readLegacyDesktopRetirementCounts,
   storedSoundKeyDigest,
 } from "#src/retirement/desktop-data.ts";
+import { legacySqlitePreflightDigest } from "#src/database/legacy-import/sqlite-source-digest.ts";
 import { Database } from "bun:sqlite";
 import { tmpdir } from "node:os";
 
@@ -22,11 +24,27 @@ describe("Scout desktop retirement preflight", () => {
     );
   });
 
+  test("hashes the complete PostgreSQL candidate set independent of query order", () => {
+    expect(desktopRetirementIdentityDigest([3, 1, 2])).toBe(
+      desktopRetirementIdentityDigest([1, 2, 3]),
+    );
+    expect(desktopRetirementIdentityDigest([1, 2, 3])).not.toBe(
+      desktopRetirementIdentityDigest([1, 2, 4]),
+    );
+  });
+
   test("creates a deterministic manifest without exposing object keys", () => {
     const input = {
       postgres: COUNTS,
+      postgresIdentityDigests: {
+        ApiToken: desktopRetirementIdentityDigest([1]),
+        DesktopClient: desktopRetirementIdentityDigest([1, 2]),
+        SoundPack: desktopRetirementIdentityDigest([1, 2, 3]),
+        StoredSound: desktopRetirementIdentityDigest([1, 2]),
+        GameEventLog: desktopRetirementIdentityDigest([1, 2, 3, 4, 5]),
+      },
       legacySqlite: COUNTS,
-      legacySqliteSourceDigest: "a".repeat(64),
+      legacySqlitePreflightDigest: "a".repeat(64),
       storedSoundKeys: ["sounds/b", "sounds/a"],
     };
 
@@ -58,6 +76,7 @@ describe("Scout desktop retirement preflight", () => {
     try {
       const before = Bun.file(sqlitePath).size;
       expect(readLegacyDesktopRetirementCounts(sqlitePath)).toEqual(COUNTS);
+      expect(legacySqlitePreflightDigest(sqlitePath)).toMatch(/^[a-f\d]{64}$/);
       expect(Bun.file(sqlitePath).size).toBe(before);
     } finally {
       await Bun.file(sqlitePath).delete();
