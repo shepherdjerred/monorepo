@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import {
   DiscordMessageIdSchema,
   NotificationIntentKeySchema,
+  type IsoInstant,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
@@ -12,12 +13,14 @@ import {
   NotificationAttemptNonceSchema,
   type NotificationAttemptNonce,
   type NotificationFailure,
+  type NotificationIntent,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   beginSend,
   confirmDelivered,
   markReady,
   recordFailure,
+  type NotificationTransitionResult,
 } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import {
@@ -119,6 +122,47 @@ function attemptNonceFor(
   );
 }
 
+/**
+ * Confirm a delivery, tolerating one that is already recorded under the same
+ * message id.
+ *
+ * The domain compares the delivery instant as well as the id, which is right
+ * for the transition itself: two confirmations naming different moments are
+ * genuinely different claims. But a pass that finds the send already completed
+ * knows the message id and NOT the instant the earlier pass stamped, and an
+ * intent already delivered under that same id is exactly the fact being
+ * recorded — so it is `already-applied` rather than drift. Without this, every
+ * ordinary reprocess of a delivered match would report a conflict on the
+ * counter the parity alerting watches. Every other state still goes through
+ * the domain unchanged.
+ *
+ * The message id is parsed INSIDE the returned transition, which is what runs
+ * inside {@link recordDurableWrite}. v1 hands over whatever Discord (or a test
+ * double) answered with, and a value that cannot be a durable identity must be
+ * counted as this recorder's failure rather than thrown at a send that already
+ * succeeded.
+ */
+function confirmDelivery(args: {
+  attemptNonce: NotificationAttemptNonce;
+  messageId: string;
+  deliveredAt: () => IsoInstant;
+}): (intent: NotificationIntent) => NotificationTransitionResult {
+  return (intent) => {
+    const messageId = DiscordMessageIdSchema.parse(args.messageId);
+    if (
+      intent.state.kind === "delivered" &&
+      intent.state.messageId === messageId
+    ) {
+      return { outcome: "already-applied" };
+    }
+    return confirmDelivered(intent, {
+      attemptNonce: args.attemptNonce,
+      messageId,
+      deliveredAt: args.deliveredAt(),
+    });
+  };
+}
+
 async function createIntent(
   config: RecorderConfig,
   channelId: string,
@@ -197,17 +241,15 @@ export function createChannelDeliveryRecorder(
         return;
       }
       case "delivered": {
-        const nonce = attemptNonceFor(config, event.channelId);
         await applyIntentTransition(
           config,
           event.channelId,
           "intent-delivered",
-          (intent) =>
-            confirmDelivered(intent, {
-              attemptNonce: nonce,
-              messageId: DiscordMessageIdSchema.parse(event.messageId),
-              deliveredAt: toIsoInstant(config.facts.now()),
-            }),
+          confirmDelivery({
+            attemptNonce: attemptNonceFor(config, event.channelId),
+            messageId: event.messageId,
+            deliveredAt: () => toIsoInstant(config.facts.now()),
+          }),
         );
         return;
       }

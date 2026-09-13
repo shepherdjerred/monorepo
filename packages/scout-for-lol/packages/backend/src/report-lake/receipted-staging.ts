@@ -30,11 +30,13 @@ import {
  * The receipted entry point into lake staging.
  *
  * This is a SECOND door onto the same `write*StagingFile` functions, not a
- * replacement for the first. The legacy boolean callers keep their exact
- * semantics — best-effort for timeline, prematch and rank history; a `false`
- * match staging result still blocks cursor advancement — because the contract
- * that staging must never fail ingest is what makes the nightly rebuild the
- * safety net rather than a second source of truth.
+ * replacement for the first. Rank history and the dev/test no-bucket path still
+ * go through the boolean one, and v1's own semantics are unchanged everywhere —
+ * best-effort for timeline and prematch; a `false` match staging result still
+ * blocks cursor advancement — because the contract that staging must never fail
+ * ingest is what makes the nightly rebuild the safety net rather than a second
+ * source of truth. Live ingest reaches this door through `report-store/store.ts`,
+ * which is where the throw below is turned back into that boolean.
  *
  * What changes on this path is who is allowed to be vague. A caller that asked
  * for a RECEIPTED write is asking for a durable claim that the projection

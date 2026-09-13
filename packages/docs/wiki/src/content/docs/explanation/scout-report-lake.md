@@ -69,8 +69,10 @@ raw JSON, so the new column simply appears the next morning.
 Ingest makes two writes with deliberately different contracts, spelled out in
 [store.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-store/store.ts).
 The S3 put throws on failure, because raw data is unrecoverable. Match and
-timeline lake staging writes never throw, because a lost staging row is
-re-derived from S3 that night anyway.
+timeline lake staging writes never throw at the ingest caller, because a lost
+staging row is re-derived from S3 that night anyway. Both steps run through the
+receipted doors described below, and `store.ts` is where the receipted contract
+is translated back into the boolean one ingest has always had.
 
 The quiet first-run import tightens that contract. It snapshots exactly 20
 Match-V5 IDs once, imports newest first, and checkpoints a match only when the
@@ -126,9 +128,9 @@ rebuild is reproducible.
 
 ### Receipted ingest is a second door, not a replacement
 
-The durable architecture adds a receipted entry point alongside the boolean one:
-the same staging and archival primitives underneath, the opposite failure
-contract on top. A caller that asks for a receipted write is asking for a
+The durable architecture adds a receipted entry point over the same staging and
+archival primitives, with the opposite failure contract on top. A caller that
+asks for a receipted write is asking for a
 durable claim that the projection happened, so a staging failure throws and
 records nothing rather than returning `false`
 ([receipted-staging.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/receipted-staging.ts),
@@ -136,6 +138,28 @@ records nothing rather than returning `false`
 correspond to a real staging file would be worse than no receipt, because the
 value of the table is that a row in it can be trusted without re-deriving the
 fact it attests to.
+
+Live ingest goes through this door, which is how a raw archive and a lake
+projection become facts anyone can check rather than events only the logs
+remember.
+
+On the archival side there is no longer a second door at all. Two status-only
+wrappers used to sit over the archive functions and returned `"saved"` instead
+of the descriptor; every caller that went through them threw the artifact's
+identity away, which is precisely why the observation's artifact columns were
+NULL for every live match. They are gone, and a caller that wants only the
+status reads it off the result.
+
+The boolean STAGING door does remain, with two callers: competition rank-history
+staging, which has no receipted counterpart, and the dev/test path where no
+bucket is configured — there nothing was archived, so there is no source object
+a staging receipt could name and no archive to attest to.
+
+The translation between the two contracts lives in one place, `store.ts`, and
+only one failure crosses it: a staging failure becomes the `false` that has
+always blocked cursor advancement. A source descriptor that does not describe
+what was staged is a broken internal contract rather than a failed projection,
+and stays fatal.
 
 The receipt write itself is the one fail-open step. Refusing an archive because
 its bookkeeping row could not be inserted would trade a bookkeeping problem for a
@@ -157,6 +181,16 @@ write, so they arrive from the ingest worker roles rather than from
 `application`; neither is one of the database-sweeping collectors only
 `application` serves ([sweep-policy.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/sweep-policy.ts)), so a
 dashboard over the pair joins across roles.
+
+Both producers count through the same place, and that is what keeps the pair
+readable. The `write_kind` label comes from one closed set shared with the
+per-match durable services
+([durable-facts.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/durable/match/durable-facts.ts)),
+so neither producer can grow the label on its own, and the repository's answer is
+parsed before it becomes an `outcome`, so a repository that learns a new answer
+surfaces as a loud failure rather than a quietly widened axis. The two fail-open
+wrappers also refuse to nest: both count a completed write, so recording a
+receipt from inside a durable write would report one fact as two.
 
 ### A receipt identifies content, never a location
 

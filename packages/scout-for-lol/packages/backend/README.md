@@ -80,7 +80,16 @@ a reader can go find what the receipt attests to. No evidence carries a money
 amount; the identities locate the ledger rows and the amounts live there under
 the storable Bucks brands. The `raw-archive` and `lake-staging` receipt kinds
 belong to the receipted lake projection in `report-lake/`, which records them
-from the writer that knows the artifact's key and digest.
+from the writer that knows the artifact's key and digest; the two vocabularies
+are disjoint, so no receipt identity carries two evidence shapes.
+
+`MatchObservation`'s artifact columns are stamped from that same archive.
+`report-store/store.ts` runs live ingest through the receipted doors and passes
+the descriptor back up through `recordMatchForReportStore` to
+`requestMatchArchive`, so the stored key and digest are what the put actually
+wrote rather than a key rebuilt from the layout convention. They stay NULL when
+no object was written (no bucket configured) or when an earlier run had already
+archived the match, which is exactly what NULL means there.
 
 Two metrics carry the parity signal, both defined once in
 `src/metrics/durable.ts` — prom-client throws at import time on a duplicate
@@ -100,6 +109,15 @@ Both are per-write counters incremented by whichever runtime role executed the
 write, so a parity dashboard joins across roles rather than reading one
 process. Neither is derived from a database sweep, so neither belongs in
 `getMetrics()`'s `databaseMetricSweepsEnabled()` block.
+
+`write_kind` comes from the single closed set in
+`src/durable/match/durable-facts.ts`, which covers the receipted lake
+projection's kinds as well as the per-match services'; a new dual-write site
+adds a member there rather than passing a free-form string. `outcome` is parsed
+from the repository's own answer before it becomes a label. The two fail-open
+wrappers — `recordDurableWrite` and `recordReceiptFailOpen` — refuse to nest,
+because both count a completed write and nesting them would report one fact
+twice.
 
 ## Beta Customs operations
 

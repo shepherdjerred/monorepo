@@ -2673,6 +2673,10 @@ model DuelStatusOutbox {
 /// riotMatchId is the claim key, `pipelineOwner` NULL is the domain's
 /// `unowned` variant, and promotion mirrors promoteArchiveOnlyToFull — a FULL
 /// row with NULL promotedAt was born FULL and can never have been promoted.
+/// observeMatch is idempotent over what an observation ASSERTS, which is not
+/// the whole row: `observedAt` is excluded from the replay comparison exactly
+/// as `recordedAt` is excluded from a receipt's identity, so an ordinary
+/// replay is `already-applied` and not a conflict.
 model MatchObservation {
   riotMatchId      String    @id
   platformRoute    String
@@ -2680,10 +2684,13 @@ model MatchObservation {
   pipelineOwner    String? // LEGACY_V1 | TEMPORAL_V2; NULL = unowned
   promotedAt       DateTime?
   gameCreatedAt    DateTime
-  observedAt       DateTime
+  observedAt       DateTime // when someone first looked; never replay identity
 
   // Raw capture artifact references (S3 object key + SHA-256 digest, always
-  // paired). NULL means the artifact has not been stored yet.
+  // paired). NULL means no writer has reported one yet — silence, not a claim
+  // that none exists, so an observation carrying none leaves a stored identity
+  // standing. A first identity fills the pair in; a DIFFERENT one is two
+  // producers disagreeing about the canonical bytes, and conflicts.
   matchObjectKey    String?
   matchDigest       String?
   timelineObjectKey String?

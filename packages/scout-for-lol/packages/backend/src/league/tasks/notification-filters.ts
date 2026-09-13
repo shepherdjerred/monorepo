@@ -144,12 +144,22 @@ export async function deliverToChannels(params: {
           kind: "discord-channel-message",
         });
         if (claim === "completed") {
-          // An earlier run already sent this message and already recorded its
-          // intent; replaying the lifecycle here would only conflict with the
-          // delivered row that run wrote.
+          // An earlier run already sent this message, but its intent writes are
+          // fail-open, so that run may have ended between the send and the
+          // confirmation and left the intent in `ready` or `sending`. No later
+          // pass reaches the lifecycle below, so this is the only place that
+          // can still close it out: confirm the delivery the claim proves,
+          // naming the message it recorded. A row already delivered under that
+          // id is answered `already-applied`, so the ordinary replay stays
+          // quiet.
           const messageId = await requireCompletedScoutEffectResult(effectKey);
           deliveredGuildIds.add(DiscordGuildIdSchema.parse(serverId));
           messageIdsByChannel.set(channel, messageId);
+          await recordDelivery({
+            kind: "delivered",
+            channelId: channel,
+            messageId,
+          });
           continue;
         }
         effectClaimed = true;
