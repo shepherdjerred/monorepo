@@ -9,6 +9,7 @@ import {
   ArtifactKindSchema,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { matchProcessingReceiptIdentityKey } from "@scout-for-lol/domain/match-processing/states.ts";
+import { MATCH_RECEIPT_KINDS } from "#src/durable/match/receipt-evidence.ts";
 import {
   MatchProcessingReceiptRecordSchema,
   type MatchProcessingReceiptRecord,
@@ -215,5 +216,14 @@ describe("a full ingest receipts every one of its artifacts", () => {
     expect(new Set(RECEIPTED_LAKE_RECEIPT_KINDS).size).toBe(
       ARTIFACT_KINDS.length * 2,
     );
+  });
+
+  test("no receipt kind is owned by both the lake projection and the match bridge", () => {
+    // A shared kind would put two evidence shapes behind one receipt identity,
+    // and whichever producer wrote second would lose to an evidence mismatch.
+    const matchKinds: readonly string[] = Object.values(MATCH_RECEIPT_KINDS);
+    expect(
+      RECEIPTED_LAKE_RECEIPT_KINDS.filter((kind) => matchKinds.includes(kind)),
+    ).toEqual([]);
   });
 });

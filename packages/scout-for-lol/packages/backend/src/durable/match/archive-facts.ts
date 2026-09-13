@@ -50,10 +50,13 @@ import {
  * What the v1 archive step reports back about one match.
  *
  * `artifact` is the raw payload's durable identity — object key plus content
- * digest. Today's v1 writer returns neither, so it is absent and the
- * observation's artifact columns stay NULL, which is exactly what NULL means
- * there. A writer that does return a descriptor passes it through and the
- * observation carries the identity instead.
+ * digest — as v1's archive writer reported it. It is absent when no object was
+ * written at all (the dev/test no-bucket path), and then the observation's
+ * artifact columns stay NULL, which is exactly what NULL means there.
+ *
+ * The shape is structural rather than the object store's own descriptor
+ * because this service must stay importable without `report-lake/`, which is
+ * where the archive, the staging files and the receipts are composed.
  */
 export type MatchArchiveOutcome = {
   readonly staged: boolean;

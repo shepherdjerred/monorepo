@@ -18,6 +18,11 @@ import {
   scoutDurableDualwriteFailuresTotal,
   scoutDurableDualwriteRecordsTotal,
 } from "#src/metrics/durable.ts";
+import { prisma } from "#src/database/index.ts";
+import {
+  recordDurableWrite,
+  type DurableFacts,
+} from "#src/durable/match/durable-facts.ts";
 
 const mocks = vi.hoisted(() => ({
   recordReceipt: vi.fn(),
@@ -295,6 +300,33 @@ describe("receipted timeline staging", () => {
       fileCount: 4,
     });
     expect(recordedReceipt().matchId).toBe("NA1_5370969615");
+  });
+});
+
+describe("the receipt wrapper and the durable bridge", () => {
+  test("refuse to record one fact from inside the other", async () => {
+    const match = await loadRawMatchFixture();
+    const before = await recordsFor("lake-staging", "applied");
+    const facts: DurableFacts = { db: prisma, now: () => new Date() };
+    let refusal: unknown;
+
+    await recordDurableWrite(facts, "observation", async () => {
+      try {
+        await stageMatchReceipted(lakeDir, match, {
+          source: artifactDescriptorFixture("match"),
+        });
+      } catch (error) {
+        refusal = error;
+      }
+      return { outcome: "applied" };
+    });
+
+    // Both wrappers increment scout_durable_dualwrite_records_total, so a
+    // receipt recorded inside a durable write would report one projection as
+    // two recorded facts. The connector keeps them sequential; this is what
+    // makes a future nesting fail instead of silently inflating the counter.
+    expect(String(refusal)).toContain("double-count");
+    expect(await recordsFor("lake-staging", "applied")).toBe(before);
   });
 });
 

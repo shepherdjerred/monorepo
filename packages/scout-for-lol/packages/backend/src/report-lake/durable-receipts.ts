@@ -5,9 +5,11 @@ import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt-row.ts";
 import { createLogger } from "#src/logger.ts";
 import {
-  scoutDurableDualwriteFailuresTotal,
-  scoutDurableDualwriteRecordsTotal,
-} from "#src/metrics/durable.ts";
+  countDurableWrite,
+  countDurableWriteFailure,
+  insideDurableWrite,
+  type DurableWriteKind,
+} from "#src/durable/match/durable-facts.ts";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
 import {
   ArtifactDescriptorSchema,
@@ -177,32 +179,42 @@ export type ReceiptRecordOutcome = "recorded" | "conflict" | "failed";
  * and metered and nothing else.
  *
  * The two counters answer different questions, and keeping them apart is what
- * makes either usable. {@link scoutDurableDualwriteFailuresTotal} counts only
- * THROWN writes — the recorder itself is broken and the stored state is unknown,
- * which is worth paging on. {@link scoutDurableDualwriteRecordsTotal} counts
- * every completed write by its repository outcome, so a `conflict` stays visible
- * as drift without contaminating the alert.
+ * makes either usable. The failures counter counts only THROWN writes — the
+ * recorder itself is broken and the stored state is unknown, which is worth
+ * paging on. The records counter counts every completed write by its repository
+ * outcome, so a `conflict` stays visible as drift without contaminating the
+ * alert.
  *
  * Conflicts are a permanent feature of this table, not a transitional one: a
  * producer whose v1 operation is one-shot genuinely observes different evidence
  * on a replay, and reporting that honestly is better than fabricating agreement.
  * So a `conflict` must never reach the failures counter, whatever the
  * repository's replay equality happens to compare at the time.
+ *
+ * Both counters are reached through `durable-facts.ts` rather than incremented
+ * here: `write_kind` comes from the one closed set, and the repository's answer
+ * is parsed before it becomes a label, so this producer cannot widen either
+ * axis of a metric the other producer shares.
  */
 export async function recordReceiptFailOpen(args: {
   record: MatchProcessingReceiptRecord;
-  writeKind: string;
+  writeKind: DurableWriteKind;
   db?: Db;
 }): Promise<ReceiptRecordOutcome> {
+  if (insideDurableWrite()) {
+    // Both wrappers count a completed write, so nesting them would record one
+    // fact twice. The receipted doors run alongside the durable services, never
+    // inside them; a caller that nests them is a bug, not a degraded mode.
+    throw new Error(
+      `Refusing to record the ${args.record.receipt.kind} receipt for ${args.record.matchId} from inside a durable write: it would double-count scout_durable_dualwrite_records_total`,
+    );
+  }
   try {
-    const outcome = await recordReceipt(args.db ?? prisma, args.record);
-    scoutDurableDualwriteRecordsTotal.inc({
-      write_kind: args.writeKind,
-      outcome: outcome.outcome,
-    });
-    if (outcome.outcome === "conflict") {
+    const result = await recordReceipt(args.db ?? prisma, args.record);
+    countDurableWrite(args.writeKind, result.outcome);
+    if (result.outcome === "conflict") {
       logger.warn(
-        `Receipt ${args.record.receipt.kind} for ${args.record.matchId} disagrees with the recorded one (${outcome.reason}); the first writer's evidence stands`,
+        `Receipt ${args.record.receipt.kind} for ${args.record.matchId} disagrees with the recorded one (${result.reason}); the first writer's evidence stands`,
       );
       return "conflict";
     }
@@ -212,7 +224,7 @@ export async function recordReceiptFailOpen(args: {
       `Failed to record ${args.record.receipt.kind} receipt for ${args.record.matchId}; the v1 write stands`,
       error,
     );
-    scoutDurableDualwriteFailuresTotal.inc({ write_kind: args.writeKind });
+    countDurableWriteFailure(args.writeKind);
     return "failed";
   }
 }

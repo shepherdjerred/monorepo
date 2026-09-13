@@ -25,6 +25,7 @@ import {
   deliverToChannels,
 } from "#src/league/tasks/notification-filters.ts";
 import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
+import { recoverCompletedPostmatchDeliveries } from "#src/league/tasks/postmatch/postmatch-delivery-recovery.ts";
 import {
   deliveredMessagesByGuild,
   recordDeliveryReceipts,
@@ -32,7 +33,33 @@ import {
 } from "#src/durable/match/delivery-intents.ts";
 
 const logger = createLogger("postmatch-report-delivery");
-const MAX_DISCORD_ALERT_AGE_MS = 3 * 60 * 60 * 1000;
+export const MAX_DISCORD_ALERT_AGE_MS = 3 * 60 * 60 * 1000;
+
+/**
+ * The instant after which this match's report is stale.
+ *
+ * This is v1's own staleness rule and the notification intent's freshness
+ * deadline — ONE derivation, consumed by both, because the two must be the
+ * same instant. The delivery gate below refuses to send past it, and the
+ * intent's `beginSend` refuses to record a send started past it, so a pass
+ * that clears the gate is always inside the deadline. That is what lets the
+ * completed-claim recovery in `delivery-intents.ts` adopt a proven delivery
+ * through `beginSend` without tripping the freshness guard; two expressions of
+ * "3 hours" that could drift apart would quietly break it.
+ */
+export function postmatchReportFreshnessDeadline(gameCreation: number): Date {
+  return new Date(gameCreation + MAX_DISCORD_ALERT_AGE_MS);
+}
+
+/** Both this and `beginSend` compare STRICTLY after, so the deadline itself still delivers. */
+export function isPostmatchReportStale(
+  gameCreation: number,
+  now: Date,
+): boolean {
+  return (
+    now.getTime() > postmatchReportFreshnessDeadline(gameCreation).getTime()
+  );
+}
 
 /** Generate and deliver one non-silent post-match report. */
 export async function deliverPostmatchReport(input: {
@@ -43,6 +70,34 @@ export async function deliverPostmatchReport(input: {
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
 }): Promise<Map<DiscordChannelId, string>> {
   const matchId = MatchIdSchema.parse(input.matchData.metadata.matchId);
+  const effectKeyPrefix = `postmatch-discord:${matchId}`;
+  // FIRST, and unconditionally. Every exit below is decided by whether a report
+  // may still be SENT — the match's age, which players are tracked, which
+  // channels are subscribed now, whether any survive their queue filter — and
+  // none of that bears on whether a send this pipeline ALREADY made still needs
+  // recording. A channel unsubscribed since its report went out is reachable
+  // from no other point in this function, and once the match is three hours old
+  // it is reachable from no later pass either. So recovery runs before the
+  // first of those exits rather than behind any of them.
+  //
+  // It cannot cause a resend: it only reads claims that are already COMPLETED,
+  // and `deliverToChannels` still takes its own claim before sending.
+  await recoverCompletedPostmatchDeliveries({
+    matchId,
+    effectKeyPrefix,
+    gameCreation: input.matchData.info.gameCreation,
+    freshnessDeadline: postmatchReportFreshnessDeadline(
+      input.matchData.info.gameCreation,
+    ),
+  });
+  if (isPostmatchReportStale(input.matchData.info.gameCreation, new Date())) {
+    const matchAgeMs = Date.now() - input.matchData.info.gameCreation;
+    const ageHours = (matchAgeMs / (60 * 60 * 1000)).toFixed(1);
+    logger.info(
+      `[processMatch] ⏰ Skipping match ${matchId} — ${ageHours}h old (cutoff ${(MAX_DISCORD_ALERT_AGE_MS / (60 * 60 * 1000)).toString()}h)`,
+    );
+    return new Map();
+  }
   const playersInMatch = input.trackedPlayers.filter((player) =>
     input.matchData.metadata.participants.includes(
       player.league.leagueAccount.puuid,
@@ -70,14 +125,6 @@ export async function deliverPostmatchReport(input: {
     ),
     (id) => id,
   );
-  const matchAgeMs = Date.now() - input.matchData.info.gameCreation;
-  if (matchAgeMs > MAX_DISCORD_ALERT_AGE_MS) {
-    const ageHours = (matchAgeMs / (60 * 60 * 1000)).toFixed(1);
-    logger.info(
-      `[processMatch] ⏰ Skipping match ${matchId} — ${ageHours}h old (cutoff ${(MAX_DISCORD_ALERT_AGE_MS / (60 * 60 * 1000)).toString()}h)`,
-    );
-    return new Map();
-  }
   const message = await generateMatchReport(
     input.matchData,
     input.trackedPlayers,
@@ -99,7 +146,6 @@ export async function deliverPostmatchReport(input: {
     return new Map();
   }
   const facts = liveDurableFacts();
-  const effectKeyPrefix = `postmatch-discord:${matchId}`;
   const delivery = await deliverToChannels({
     message,
     channels: deliverChannels,
@@ -112,10 +158,11 @@ export async function deliverPostmatchReport(input: {
         facts,
         matchId,
         keyPrefix: effectKeyPrefix,
-        // v1's own staleness rule: a report older than this is never sent, so
-        // it is exactly the instant after which the intent is stale.
-        freshnessDeadline: new Date(
-          input.matchData.info.gameCreation + MAX_DISCORD_ALERT_AGE_MS,
+        // The same derivation the gate above used, so the instant a report
+        // stops being sendable and the instant its intent goes stale cannot
+        // drift apart.
+        freshnessDeadline: postmatchReportFreshnessDeadline(
+          input.matchData.info.gameCreation,
         ),
       }) ?? undefined,
   });

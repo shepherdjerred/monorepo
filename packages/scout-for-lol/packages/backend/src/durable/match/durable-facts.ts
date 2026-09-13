@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { z } from "zod";
 import type { Db } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -28,12 +29,21 @@ const logger = createLogger("durable-dualwrite");
  * Every durable write the bridge performs, spelled out so the metric's
  * `write_kind` label can never grow unbounded. A new dual-write site adds a
  * member here rather than passing a free-form string.
+ *
+ * `raw-archive` and `lake-staging` are recorded by the receipted lake
+ * projection in `report-lake/` rather than by a service in this directory,
+ * but they share this list on purpose: one closed vocabulary is what keeps
+ * the label bounded and a parity dashboard's `write_kind` axis readable. A
+ * second enumeration next to the other producer would be two vocabularies for
+ * one metric.
  */
 export const DURABLE_WRITE_KINDS = [
   "match-identity",
   "observation",
   "tracked-accounts",
   "cursor-advanced",
+  "raw-archive",
+  "lake-staging",
   "receipt-settlement",
   "receipt-report-delivery",
   "receipt-prematch-delivery",
@@ -54,7 +64,8 @@ export type DurableWriteKind = (typeof DURABLE_WRITE_KINDS)[number];
  * repository that grows a new outcome shows up as a loud dual-write failure
  * instead of quietly widening a Prometheus label.
  */
-const DurableWriteOutcomeSchema = z.enum([
+export type DurableWriteOutcome = z.infer<typeof DurableWriteOutcomeSchema>;
+export const DurableWriteOutcomeSchema = z.enum([
   "applied",
   "already-applied",
   "adopted",
@@ -79,16 +90,65 @@ export type DurableFacts = {
  * event per write per channel per match, drowning the errors that actually
  * stop work. `scout_durable_dualwrite_failures_total` is the signal an alert
  * watches, and it stays legible under exactly the outage that produces it.
+ *
+ * Exported for the reads a recorder has to make before it can decide what to
+ * write: those sit behind the same boundary as the writes they serve, and a
+ * broken one has to be reported the same way rather than thrown at the caller.
  */
-function reportDurableWriteFailure(
+export function reportDurableWriteFailure(
   kind: DurableWriteKind,
   error: unknown,
 ): void {
-  scoutDurableDualwriteFailuresTotal.inc({ write_kind: kind });
+  countDurableWriteFailure(kind);
   logger.error(
     `❌ Durable dual-write ${kind} failed; the authoritative v1 pipeline continues unaffected`,
     error,
   );
+}
+
+/**
+ * Count one THROWN durable write. Separated from the log so a producer with
+ * more context to report — the receipted lake projection names the receipt and
+ * the match it belongs to — meters through this module rather than reaching
+ * for the counter itself.
+ */
+export function countDurableWriteFailure(kind: DurableWriteKind): void {
+  scoutDurableDualwriteFailuresTotal.inc({ write_kind: kind });
+}
+
+/**
+ * Count one COMPLETED durable write by the repository's own answer, which is
+ * parsed here so no producer can widen the `outcome` label by passing a string
+ * the bridge does not recognise. A repository that grows a new outcome throws
+ * out of here and is counted as that write's failure instead.
+ */
+export function countDurableWrite(
+  kind: DurableWriteKind,
+  outcome: string,
+): DurableWriteOutcome {
+  const parsed = DurableWriteOutcomeSchema.parse(outcome);
+  scoutDurableDualwriteRecordsTotal.inc({ write_kind: kind, outcome: parsed });
+  return parsed;
+}
+
+/**
+ * Whether the code running right now is inside a {@link recordDurableWrite}
+ * callback.
+ *
+ * Both this wrapper and the receipted lake projection's own fail-open wrapper
+ * increment `scout_durable_dualwrite_records_total`, so a receipt recorded
+ * from inside a durable write would count one fact twice and silently inflate
+ * the parity signal. The two are sequential everywhere today; this is what
+ * makes a future nesting fail instead of drifting the metric.
+ *
+ * Tracked per async context rather than with a module-level flag because one
+ * process handles several matches at once: a shared flag would let one flow's
+ * durable write make an unrelated flow's receipt look nested.
+ */
+const durableWriteScope = new AsyncLocalStorage<true>();
+
+export function insideDurableWrite(): boolean {
+  return durableWriteScope.getStore() === true;
 }
 
 /**
@@ -105,9 +165,8 @@ export async function recordDurableWrite(
   write: (db: Db) => Promise<{ outcome: string }>,
 ): Promise<void> {
   try {
-    const result = await write(facts.db);
-    const outcome = DurableWriteOutcomeSchema.parse(result.outcome);
-    scoutDurableDualwriteRecordsTotal.inc({ write_kind: kind, outcome });
+    const result = await durableWriteScope.run(true, () => write(facts.db));
+    countDurableWrite(kind, result.outcome);
   } catch (error) {
     reportDurableWriteFailure(kind, error);
   }

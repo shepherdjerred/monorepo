@@ -8,6 +8,7 @@ import type {
   SubscribedChannel,
   SubscribedChannelSubscription,
 } from "#src/database/index.ts";
+import type { ChannelDeliveryEvent } from "#src/durable/match/delivery-intents.ts";
 
 const sentMessages: MessageCreateOptions[] = [];
 let failReplyOnce = false;
@@ -41,6 +42,25 @@ await vi.doMock("#src/league/discord/channel.ts", () => ({
       id: `sent-message-${sentMessages.length.toString()}`,
     });
   },
+}));
+
+const ALREADY_SENT_MESSAGE_ID = "300000000000000007";
+const CLAIMED_AT = new Date("2026-09-12T09:30:00.000Z");
+const COMPLETED_AT = new Date("2026-09-12T09:30:02.000Z");
+let claimResult: "execute" | "completed" = "execute";
+
+await vi.doMock("#src/temporal/effect-claims.ts", () => ({
+  DISCORD_CHANNEL_MESSAGE_EFFECT_KIND: "discord-channel-message",
+  claimScoutEffect: () => Promise.resolve(claimResult),
+  completeScoutEffectWithResult: () => Promise.resolve(),
+  recordScoutEffectFailure: () => Promise.resolve(),
+  requireCompletedScoutEffectResult: (key: string) =>
+    Promise.resolve({
+      key,
+      resultId: ALREADY_SENT_MESSAGE_ID,
+      claimedAt: CLAIMED_AT,
+      completedAt: COMPLETED_AT,
+    }),
 }));
 
 const { channelsPassingQueueFilter, deliverToChannels } =
@@ -124,6 +144,41 @@ describe("deliverToChannels", () => {
     sentMessages.length = 0;
     failReplyOnce = false;
     failAll = false;
+    claimResult = "execute";
+  });
+
+  test("confirms the intent for a send an earlier run already completed", async () => {
+    claimResult = "completed";
+    const channelId = DiscordChannelIdSchema.parse("123456789012345678");
+    const recorded: ChannelDeliveryEvent[] = [];
+
+    const delivery = await deliverToChannels({
+      message: { content: "Game finished" },
+      channels: [{ channel: channelId, serverId: "123456789012345680" }],
+      logPrefix: "[test]",
+      sentryTags: {},
+      effectKeyPrefix: "postmatch-discord:NA1_1",
+      recordDelivery: (event) => {
+        recorded.push(event);
+        return Promise.resolve();
+      },
+    });
+
+    // The claim is the at-most-once guard, so nothing is sent again — but the
+    // intent that earlier run left behind is closed out rather than stranded.
+    expect(sentMessages).toEqual([]);
+    expect(recorded).toEqual([
+      {
+        kind: "already-delivered",
+        channelId,
+        messageId: ALREADY_SENT_MESSAGE_ID,
+        // The claim's own bracket around the send, not this pass's clock.
+        send: { startedAt: CLAIMED_AT, deliveredAt: COMPLETED_AT },
+      },
+    ]);
+    expect(delivery.messageIdsByChannel).toEqual(
+      new Map([[channelId, ALREADY_SENT_MESSAGE_ID]]),
+    );
   });
 
   test("replies to the matching prematch message per channel", async () => {

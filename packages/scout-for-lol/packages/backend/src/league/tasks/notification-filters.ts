@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/bun";
 import {
   claimScoutEffect,
+  DISCORD_CHANNEL_MESSAGE_EFFECT_KIND,
   completeScoutEffectWithResult,
   recordScoutEffectFailure,
   requireCompletedScoutEffectResult,
@@ -141,15 +142,32 @@ export async function deliverToChannels(params: {
       if (effectKey !== undefined) {
         const claim = await claimScoutEffect({
           key: effectKey,
-          kind: "discord-channel-message",
+          kind: DISCORD_CHANNEL_MESSAGE_EFFECT_KIND,
         });
         if (claim === "completed") {
-          // An earlier run already sent this message and already recorded its
-          // intent; replaying the lifecycle here would only conflict with the
-          // delivered row that run wrote.
-          const messageId = await requireCompletedScoutEffectResult(effectKey);
+          // An earlier run already sent this message, but its intent writes are
+          // fail-open, so that run may have ended anywhere between minting the
+          // intent and confirming it — leaving the row missing, `pending`,
+          // `ready`, or `sending`. No later pass reaches the lifecycle below,
+          // so this is the only place that can still close it out. The recorder
+          // adopts the delivery from wherever the intent stopped; a row already
+          // delivered under this message id answers `already-applied`, so the
+          // ordinary replay stays quiet.
+          const completed = await requireCompletedScoutEffectResult(effectKey);
           deliveredGuildIds.add(DiscordGuildIdSchema.parse(serverId));
-          messageIdsByChannel.set(channel, messageId);
+          messageIdsByChannel.set(channel, completed.resultId);
+          await recordDelivery({
+            kind: "already-delivered",
+            channelId: channel,
+            messageId: completed.resultId,
+            // The claim brackets the send it proves — taken immediately before
+            // it ran, completed immediately after it returned — so those are
+            // the instants to record, not this pass's clock.
+            send: {
+              startedAt: completed.claimedAt,
+              deliveredAt: completed.completedAt,
+            },
+          });
           continue;
         }
         effectClaimed = true;

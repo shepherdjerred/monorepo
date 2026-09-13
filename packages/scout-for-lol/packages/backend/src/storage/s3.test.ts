@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
-import { saveMatchToS3 } from "#src/storage/s3.ts";
+import { archiveMatchToS3 } from "#src/storage/s3.ts";
 import {
   getValidatedPutCommand,
   mockFailedPut,
@@ -160,7 +160,7 @@ describe("S3 match storage", () => {
     const match = await loadMatchFixture();
     mockSuccessfulPut();
 
-    await saveMatchToS3(match, ["Lord ARKΞV", "H6 Hadès"]);
+    await archiveMatchToS3(match, ["Lord ARKΞV", "H6 Hadès"]);
 
     expect(s3Mock.calls()).toHaveLength(1);
     const command = getValidatedPutCommand();
@@ -190,7 +190,9 @@ describe("S3 match storage", () => {
     setS3TestBucket(undefined);
     mockSuccessfulPut();
 
-    await expect(saveMatchToS3(match, [])).resolves.toBe("skipped_no_bucket");
+    await expect(archiveMatchToS3(match, [])).resolves.toEqual({
+      status: "skipped_no_bucket",
+    });
     expect(s3Mock.calls()).toHaveLength(0);
   });
 
@@ -198,7 +200,7 @@ describe("S3 match storage", () => {
     const match = await loadMatchFixture();
     mockFailedPut("S3 upload failed");
 
-    await expect(saveMatchToS3(match, [])).rejects.toThrow(
+    await expect(archiveMatchToS3(match, [])).rejects.toThrow(
       `Failed to save match ${match.metadata.matchId} to S3`,
     );
     expect(s3Mock.calls()).toHaveLength(3);

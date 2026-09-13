@@ -30,12 +30,26 @@ const AT = new Date("2026-09-07T10:00:00.000Z");
 const LATER = new Date("2026-09-07T11:00:00.000Z");
 const PROMOTED_AT = IsoInstantSchema.parse("2026-09-07T12:00:00.000Z");
 
+/** One archived match payload's identity, in the shape the row stores it. */
+function matchArtifact(
+  gameId: number,
+  digestChar: string,
+): { matchObjectKey: string; matchDigest: string } {
+  return {
+    matchObjectKey: `games/2026/09/07/NA1_${String(gameId)}/match.json`,
+    matchDigest: digestChar.repeat(64),
+  };
+}
+
 function observation(
   gameId: number,
   overrides: Partial<{
     processingPolicy: string;
     pipelineOwner: string | null;
     promotedAt: Date | null;
+    observedAt: Date;
+    matchObjectKey: string | null;
+    matchDigest: string | null;
   }> = {},
 ): MatchObservationRecord {
   return matchObservationRowToRecord({
@@ -145,6 +159,85 @@ describe("observeMatch", () => {
   });
 });
 
+describe("what an observation asserts, and what it merely records", () => {
+  test("a replay differing only in its wall clock is already-applied", async () => {
+    // `observedAt` is wall-clock at write time, so an ordinary reprocess of a
+    // match differs in exactly that column and in nothing else. Counting those
+    // as conflicts inflated the very dual-write signal the parity alerting
+    // watches, with events that are the system working correctly — the same
+    // reasoning that keeps `recordedAt` out of a receipt's identity.
+    const first = observation(130);
+    expect(await observeMatch(prisma, first)).toEqual({ outcome: "applied" });
+
+    const lookedAgainLater = observation(130, {
+      observedAt: new Date("2026-09-07T18:00:00.000Z"),
+    });
+    expect(lookedAgainLater.observedAt).not.toBe(first.observedAt);
+    expect(await observeMatch(prisma, lookedAgainLater)).toEqual({
+      outcome: "already-applied",
+    });
+
+    // The first observer's instant stands; a later look does not restamp it.
+    const stored = await getObservation(prisma, { matchId: first.matchId });
+    expect(stored?.observedAt).toBe(first.observedAt);
+  });
+
+  test("an observation carrying no artifact leaves a stored one standing", async () => {
+    const artifact = matchArtifact(131, "a");
+    const archived = observation(131, artifact);
+    expect(await observeMatch(prisma, archived)).toEqual({
+      outcome: "applied",
+    });
+
+    // A pass whose archive an earlier run already completed has no descriptor
+    // to offer. Its silence is not a claim that there is no artifact, so it
+    // must not read as disagreement — nor erase what is recorded.
+    expect(await observeMatch(prisma, observation(131))).toEqual({
+      outcome: "already-applied",
+    });
+    const stored = await getObservation(prisma, { matchId: archived.matchId });
+    expect(stored?.artifacts.match).toEqual({
+      key: artifact.matchObjectKey,
+      digest: artifact.matchDigest,
+    });
+  });
+
+  test("a first artifact identity fills the columns in and applies", async () => {
+    const silent = observation(132);
+    expect(await observeMatch(prisma, silent)).toEqual({ outcome: "applied" });
+    const beforeArchive = await getObservation(prisma, {
+      matchId: silent.matchId,
+    });
+    expect(beforeArchive?.artifacts.match).toBeNull();
+
+    // The archive-less observation becoming archived. This happens at most
+    // once, because the columns are never cleared.
+    const artifact = matchArtifact(132, "a");
+    expect(await observeMatch(prisma, observation(132, artifact))).toEqual({
+      outcome: "applied",
+    });
+    const stored = await getObservation(prisma, { matchId: silent.matchId });
+    expect(stored?.artifacts.match).toEqual({
+      key: artifact.matchObjectKey,
+      digest: artifact.matchDigest,
+    });
+  });
+
+  test("two producers naming different bytes for one match conflict", async () => {
+    const first = observation(133, matchArtifact(133, "a"));
+    expect(await observeMatch(prisma, first)).toEqual({ outcome: "applied" });
+
+    // Never softened: this is genuine disagreement about which object is the
+    // canonical capture of this match, and the first writer's identity keeps
+    // the columns.
+    expect(
+      await observeMatch(prisma, observation(133, matchArtifact(133, "b"))),
+    ).toEqual({ outcome: "conflict", reason: "observation-differs" });
+    const stored = await getObservation(prisma, { matchId: first.matchId });
+    expect(stored?.artifacts.match?.digest).toBe("a".repeat(64));
+  });
+});
+
 describe("promoteObservation", () => {
   test("promotes at most once and conflicts on a born-FULL match", async () => {
     const record = observation(110);
@@ -232,14 +325,17 @@ describe("promoteObservation", () => {
       promotedAt: PROMOTED_AT,
     });
 
+    // A different game-creation instant is genuine divergence: two producers
+    // disagree about when this match was played. A different `observedAt`
+    // would NOT be — that records when someone looked, not what they claim.
     const divergent = matchObservationRowToRecord({
       riotMatchId: "NA1_115",
       platformRoute: "NA1",
       processingPolicy: "ARCHIVE_ONLY",
       pipelineOwner: null,
       promotedAt: null,
-      gameCreatedAt: AT,
-      observedAt: new Date("2026-09-07T14:00:00.000Z"),
+      gameCreatedAt: new Date("2026-09-07T09:00:00.000Z"),
+      observedAt: LATER,
       matchObjectKey: null,
       matchDigest: null,
       timelineObjectKey: null,
