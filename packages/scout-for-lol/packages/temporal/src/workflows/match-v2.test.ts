@@ -223,7 +223,7 @@ describe("a contested archive attestation", () => {
     // and then advance the cursor past the match, so nothing would look at it
     // again.
     const store = createScoutV2MatchStore({ archiveConflictsOnce: true });
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     await expect(processMatch("match-archive-conflict")).rejects.toThrow();
 
@@ -245,7 +245,7 @@ describe("a contested archive attestation", () => {
     // disagree. The first fails loudly; the next reads the standing receipt,
     // reports the match as already archived, and the pipeline proceeds.
     const store = createScoutV2MatchStore({ archiveConflictsOnce: true });
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     await expect(processMatch("match-archive-race")).rejects.toThrow();
     const result = await processMatch("match-archive-race-retry");
@@ -262,7 +262,7 @@ describe("the V2 tournament finalization stage", () => {
     // Custom Night snapshot unpublished, with nothing left to rediscover the
     // match and fix it.
     const store = createScoutV2MatchStore({ tournamentMatch: true });
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     await processMatch("match-tournament-finalized");
 
@@ -279,7 +279,7 @@ describe("the V2 tournament finalization stage", () => {
 
   test("runs the stage for an ordinary match and finalizes nothing", async () => {
     const store = createScoutV2MatchStore();
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     await processMatch("match-tournament-ordinary");
 
@@ -294,7 +294,7 @@ describe("the V2 tournament finalization stage", () => {
       tournamentMatch: true,
       failAt: "recordMatchReceiptsV2",
     });
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     await expect(processMatch("match-tournament-crash")).rejects.toThrow();
     store.failAt = null;
