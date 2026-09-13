@@ -21,10 +21,7 @@ import {
 } from "#src/identifiers.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 import { realtimeV2Activities } from "./activity-options.ts";
-import {
-  planMatchFanOutChildrenV2,
-  startableMatchFanOutCountsV2,
-} from "./match-fan-out-v2.ts";
+import { planMatchFanOutChildrenV2 } from "./match-fan-out-v2.ts";
 
 /**
  * Prematch discovery, V2.
@@ -172,21 +169,25 @@ export async function scoutPrematchGameV2Workflow(
     riotMatchId,
     plan,
   });
-  const startable = startableMatchFanOutCountsV2(children);
-
   // Nothing captured AND nothing to announce means the game was already over
   // when this run reached the spectator endpoint. Saying "completed" would
   // claim a snapshot exists.
   const observedSomething =
     archive.artifacts.length > 0 || plan.notificationIntentKeys.length > 0;
   setWorkflowPhase(
-    `**Phase:** planned ${String(children.length)} notification children, started ${String(startable.notifications)}`,
+    `**Phase:** planned ${String(children.length)} notification children, started 0`,
   );
 
   return scoutPrematchGameV2ResultCodec.serialize({
     status: observedSomething ? "completed" : "no-op",
     riotMatchId,
     receiptKinds: archive.artifacts.map((artifact) => artifact.receipt.kind),
-    childrenStarted: { notifications: startable.notifications },
+    // Zero by fact, not by allowlist: this workflow plans notification
+    // children and starts none — the prematch start loop is the seam SJ-205
+    // tracks, and the reconciliation sweep drives these intents meanwhile.
+    // Counting startable-but-unstarted children here would claim a durable
+    // effect that never happened, which is the one thing a result envelope
+    // must never do.
+    childrenStarted: { notifications: 0 },
   });
 }
