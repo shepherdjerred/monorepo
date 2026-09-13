@@ -71,28 +71,31 @@ export async function deliverPostmatchReport(input: {
 }): Promise<Map<DiscordChannelId, string>> {
   const matchId = MatchIdSchema.parse(input.matchData.metadata.matchId);
   const effectKeyPrefix = `postmatch-discord:${matchId}`;
-  // Staleness is decided before anything is looked up, for two reasons: an old
-  // match should not pay for a channel query it cannot use, and recovery must
-  // not sit behind a return that depends on CURRENT subscriptions. A match
-  // whose channels were all removed after its report went out still has
-  // deliveries to finish recording, and the claim keys that prove them do not
-  // depend on who is subscribed now.
+  // FIRST, and unconditionally. Every exit below is decided by whether a report
+  // may still be SENT — the match's age, which players are tracked, which
+  // channels are subscribed now, whether any survive their queue filter — and
+  // none of that bears on whether a send this pipeline ALREADY made still needs
+  // recording. A channel unsubscribed since its report went out is reachable
+  // from no other point in this function, and once the match is three hours old
+  // it is reachable from no later pass either. So recovery runs before the
+  // first of those exits rather than behind any of them.
+  //
+  // It cannot cause a resend: it only reads claims that are already COMPLETED,
+  // and `deliverToChannels` still takes its own claim before sending.
+  await recoverCompletedPostmatchDeliveries({
+    matchId,
+    effectKeyPrefix,
+    gameCreation: input.matchData.info.gameCreation,
+    freshnessDeadline: postmatchReportFreshnessDeadline(
+      input.matchData.info.gameCreation,
+    ),
+  });
   if (isPostmatchReportStale(input.matchData.info.gameCreation, new Date())) {
     const matchAgeMs = Date.now() - input.matchData.info.gameCreation;
     const ageHours = (matchAgeMs / (60 * 60 * 1000)).toFixed(1);
     logger.info(
       `[processMatch] ⏰ Skipping match ${matchId} — ${ageHours}h old (cutoff ${(MAX_DISCORD_ALERT_AGE_MS / (60 * 60 * 1000)).toString()}h)`,
     );
-    // Too old to SEND is not too old to RECORD. The completed-claim branch in
-    // `deliverToChannels` never runs for a stale match, so this is the only
-    // pass that can still finish an intent an earlier send left unwritten.
-    await recoverCompletedPostmatchDeliveries({
-      matchId,
-      effectKeyPrefix,
-      freshnessDeadline: postmatchReportFreshnessDeadline(
-        input.matchData.info.gameCreation,
-      ),
-    });
     return new Map();
   }
   const playersInMatch = input.trackedPlayers.filter((player) =>

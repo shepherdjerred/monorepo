@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/bun";
 import {
   claimScoutEffect,
+  DISCORD_CHANNEL_MESSAGE_EFFECT_KIND,
   completeScoutEffectWithResult,
   recordScoutEffectFailure,
   requireCompletedScoutEffectResult,
@@ -141,7 +142,7 @@ export async function deliverToChannels(params: {
       if (effectKey !== undefined) {
         const claim = await claimScoutEffect({
           key: effectKey,
-          kind: "discord-channel-message",
+          kind: DISCORD_CHANNEL_MESSAGE_EFFECT_KIND,
         });
         if (claim === "completed") {
           // An earlier run already sent this message, but its intent writes are

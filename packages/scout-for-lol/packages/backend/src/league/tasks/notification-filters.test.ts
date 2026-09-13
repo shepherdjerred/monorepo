@@ -50,6 +50,7 @@ const COMPLETED_AT = new Date("2026-09-12T09:30:02.000Z");
 let claimResult: "execute" | "completed" = "execute";
 
 await vi.doMock("#src/temporal/effect-claims.ts", () => ({
+  DISCORD_CHANNEL_MESSAGE_EFFECT_KIND: "discord-channel-message",
   claimScoutEffect: () => Promise.resolve(claimResult),
   completeScoutEffectWithResult: () => Promise.resolve(),
   recordScoutEffectFailure: () => Promise.resolve(),

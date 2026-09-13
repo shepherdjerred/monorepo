@@ -4,6 +4,12 @@ import { scoutTemporalDuplicateEffectClaims } from "#src/metrics/platform/tempor
 
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
+/**
+ * The effect kind every per-channel Discord send is claimed under. Named here
+ * so the claim site and the queries that look those claims up cannot drift.
+ */
+export const DISCORD_CHANNEL_MESSAGE_EFFECT_KIND = "discord-channel-message";
+
 export async function claimScoutEffect(
   input: {
     key: string;
@@ -120,24 +126,37 @@ export async function requireCompletedScoutEffectResult(
 }
 
 /**
- * Every completed effect under one key prefix.
+ * Completed effects of one kind, claimed within a window, under one key prefix.
  *
- * Scoped to a prefix rather than scanning, because the caller is a recovery
- * path that runs on ordinary polls: it asks only about the keys one match
- * could own, and a match with nothing to recover costs one indexed lookup that
- * returns no rows.
+ * The query is shaped for `ScoutEffectClaim`'s `[kind, state, claimedAt]`
+ * index, which carries all three of those as an index condition and leaves the
+ * key prefix as a cheap residual filter. The obvious formulation — a prefix
+ * match on the primary key alone — is NOT usable here: Postgres can only serve
+ * `LIKE 'prefix%'` from a btree under the C collation or a `text_pattern_ops`
+ * index, and these databases are initdb'd `en_US.utf8`, so it would degrade to
+ * a sequential scan on every call. The window is what keeps this bounded; the
+ * caller derives it and owns its correctness.
  *
- * Rows are parsed, not filtered. A COMPLETED claim under a prefix whose
- * completions all carry a result is expected to carry one, so a row that does
- * not is a broken contract and says so here, exactly as the single-key read
- * above does.
+ * Rows are parsed, not filtered. A COMPLETED claim of a kind whose completions
+ * all carry a result is expected to carry one, so a row that does not is a
+ * broken contract and says so here, exactly as the single-key read above does.
  */
 export async function listCompletedScoutEffects(
-  keyPrefix: string,
+  args: {
+    kind: string;
+    keyPrefix: string;
+    claimedFrom: Date;
+    claimedUntil: Date;
+  },
   database: ExtendedPrismaClient = prisma,
 ): Promise<CompletedScoutEffect[]> {
   const rows = await database.scoutEffectClaim.findMany({
-    where: { key: { startsWith: keyPrefix }, state: "COMPLETED" },
+    where: {
+      kind: args.kind,
+      state: "COMPLETED",
+      claimedAt: { gte: args.claimedFrom, lte: args.claimedUntil },
+      key: { startsWith: args.keyPrefix },
+    },
     select: {
       key: true,
       resultId: true,

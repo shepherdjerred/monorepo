@@ -5,13 +5,20 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import { loadRawMatchFixture } from "#src/testing/raw-capture-fixtures.ts";
 import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
 import { getIntent } from "#src/database/durable/intent-repository.ts";
+import { z } from "zod";
+
+/** What `deliverToChannels` was actually asked to deliver to. */
+const DeliveryCallSchema = z.object({
+  channels: z.array(z.object({ channel: z.string() })),
+});
 
 /**
- * The hole this closes: a report too old to send is not too old to finish
- * recording. The delivery gate returns before `deliverToChannels`, so the
- * completed-claim branch that adopts an unfinished intent is unreachable once
- * a match goes stale — and an intent left behind by a send whose durable
- * writes were lost would strand forever.
+ * The hole these close: whether a report may still be SENT and whether a send
+ * already made still needs RECORDING are different questions, and every exit in
+ * `deliverPostmatchReport` answers only the first. An intent left unfinished by
+ * a send whose durable writes were lost is reachable from the delivery pass
+ * only while its channel is still eligible, and from no pass at all once the
+ * match is three hours old — so recovery runs before all of it.
  */
 
 const { prisma } = createTestDatabase("postmatch-delivery-recovery");
@@ -21,6 +28,7 @@ const GUILD = testGuildId("7701");
 const MESSAGE_ID = "300000000000000011";
 
 const deliverToChannels = vi.fn();
+const generateMatchReport = vi.fn();
 
 /** The channels subscribed RIGHT NOW, which a test can empty out. */
 const SUBSCRIBED = [
@@ -51,6 +59,15 @@ vi.doMock(
   }),
 );
 
+// Only so a FRESH match can reach the delivery step without rendering a report.
+vi.doMock(
+  "#src/league/tasks/postmatch/match-report-generator.ts",
+  async (importOriginal) => ({
+    ...(await importOriginal()),
+    generateMatchReport,
+  }),
+);
+
 const { deliverPostmatchReport } =
   await import("#src/league/tasks/postmatch/match-report-delivery.ts");
 
@@ -61,6 +78,32 @@ function staleMatch(gameId: number): RawMatch {
   return RawMatchSchema.parse({
     ...fixture,
     metadata: { ...fixture.metadata, matchId: `NA1_${String(gameId)}` },
+  });
+}
+
+/** The same, played an hour ago — well inside the three-hour send window. */
+function freshMatch(gameId: number): RawMatch {
+  return RawMatchSchema.parse({
+    ...fixture,
+    metadata: { ...fixture.metadata, matchId: `NA1_${String(gameId)}` },
+    info: { ...fixture.info, gameCreation: Date.now() - 60 * 60 * 1000 },
+  });
+}
+
+async function seedCompletedSend(
+  key: string,
+  sentAt: Date,
+  completedAt: Date,
+): Promise<void> {
+  await prisma.scoutEffectClaim.create({
+    data: {
+      key,
+      kind: "discord-channel-message",
+      state: "COMPLETED",
+      resultId: MESSAGE_ID,
+      claimedAt: sentAt,
+      completedAt,
+    },
   });
 }
 
@@ -79,6 +122,12 @@ async function deliver(match: RawMatch): Promise<number> {
 beforeEach(async () => {
   fixture = await loadRawMatchFixture();
   deliverToChannels.mockClear();
+  deliverToChannels.mockResolvedValue({
+    deliveredGuildIds: new Set(),
+    messageIdsByChannel: new Map(),
+  });
+  generateMatchReport.mockClear();
+  generateMatchReport.mockResolvedValue({ content: "report" });
   subscribedChannels = SUBSCRIBED;
 });
 
@@ -169,5 +218,40 @@ describe("a report that went stale before its intent was finished", () => {
         intentKey: NotificationIntentKeySchema.parse(effectKeyFor(match)),
       }),
     ).toBeNull();
+  });
+});
+
+describe("a still-sendable report whose earlier delivery is unfinished", () => {
+  test("adopts a claim for a channel that is no longer subscribed", async () => {
+    // On a FRESH replay the delivery pass visits only currently eligible
+    // channels, so a channel unsubscribed since its report went out is never
+    // revisited — and once the match is three hours old no pass reaches
+    // delivery at all. Recovery is the only thing that can still finish it.
+    const match = freshMatch(7704);
+    const departed = testChannelId("7799");
+    const departedKey = `postmatch-discord:${match.metadata.matchId}:${departed}`;
+    const sentAt = new Date(Date.now() - 50 * 60 * 1000);
+    const completedAt = new Date(sentAt.getTime() + 700);
+    await seedCompletedSend(departedKey, sentAt, completedAt);
+
+    await deliverPostmatchReport({ matchData: match, trackedPlayers: [] });
+
+    // Finished from its claim, at the instants that send really happened.
+    const stored = await getIntent(prisma, {
+      intentKey: NotificationIntentKeySchema.parse(departedKey),
+    });
+    expect(stored?.intent.state).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: completedAt.toISOString(),
+    });
+
+    // Nothing was sent to it: the delivery pass only ever saw the channel that
+    // is still subscribed, which is otherwise unaffected.
+    expect(deliverToChannels).toHaveBeenCalledTimes(1);
+    const sentTo = DeliveryCallSchema.parse(
+      deliverToChannels.mock.calls[0]?.[0],
+    );
+    expect(sentTo.channels.map((entry) => entry.channel)).toEqual([CHANNEL]);
   });
 });
