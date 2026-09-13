@@ -4,7 +4,10 @@ import {
   resolveBackendEntrypoint,
   shouldPrepareReportLake,
 } from "./dev-web.ts";
-import { buildDevEnvironment } from "./dev-web-environment.ts";
+import {
+  buildDevEnvironment,
+  DEFAULT_STATIC_FLAG_OVERRIDES,
+} from "./dev-web-environment.ts";
 
 test("parses isolated ports and database URL", () => {
   expect(
@@ -185,8 +188,9 @@ test("defaults a local boot to the consumer preview and dev login", () => {
     DEV_USER_GUILDS: "1337623164146155593",
     EXPLORE_GUILD_ALLOWLIST: "1337623164146155593",
     FEATURE_FLAGS_MODE: "static",
-    FEATURE_FLAGS_STATIC_OVERRIDES:
-      '{"scout-consumer-player-profiles-enabled":true}',
+    FEATURE_FLAGS_STATIC_OVERRIDES: JSON.stringify(
+      DEFAULT_STATIC_FLAG_OVERRIDES,
+    ),
     WEB_APP_ORIGIN: "http://localhost:5180",
     SCOUT_RUNTIME_ROLE: "application",
     SCOUT_DEV_SKIP_REPORT_LAKE_FOLD: "true",
