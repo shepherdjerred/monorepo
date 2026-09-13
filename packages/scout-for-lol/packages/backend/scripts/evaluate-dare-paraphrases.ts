@@ -18,7 +18,7 @@ import {
   dareModelEvalSha256,
   resolveDareModelEvalTargets,
 } from "#src/explore/tools/dare-model-eval-v2.ts";
-import { dareExplorePromptSection } from "#src/explore/prompt.ts";
+import { dareSkillBody } from "#src/explore/skills/registry.ts";
 
 const CORPUS_URL = new URL(
   "../../data/src/model/bucks/dare-v2-paraphrase-corpus.json",
@@ -74,7 +74,7 @@ async function evaluateParaphrase(
   try {
     const result = await generateText({
       model: runtime.languageModel(DARE_V2_EVAL_MODEL),
-      system: dareExplorePromptSection(),
+      system: dareSkillBody(),
       prompt: evalPrompt({
         paraphrase,
         targetAliases: entry.targetAliases,
@@ -175,7 +175,7 @@ async function main(): Promise<void> {
     corpusVersion: corpus.version,
     promptVersion: corpus.promptVersion,
     promptSha256: dareModelEvalSha256(
-      `${dareExplorePromptSection()}\n${EVAL_PROMPT_TEMPLATE}`,
+      `${dareSkillBody()}\n${EVAL_PROMPT_TEMPLATE}`,
     ),
     corpusSha256: dareModelEvalSha256(raw),
     model: DARE_V2_EVAL_MODEL,

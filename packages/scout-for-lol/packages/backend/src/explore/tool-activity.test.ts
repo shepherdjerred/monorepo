@@ -15,6 +15,7 @@ import type { ExploreToolResultInspection } from "#src/explore/tool-inspection.t
  * reader's browser rather than by raising anything visible.
  */
 const TOOL_NAMES = [
+  "load_skill",
   "get_report_language",
   "validate_report_query",
   "format_report_query",
@@ -86,6 +87,23 @@ describe("explore tool activity", () => {
     );
     expect(text.length).toBeLessThanOrEqual(EXPLORE_ACTIVITY_MAX_LENGTH);
     expect(text.endsWith("…")).toBe(true);
+  });
+
+  test("names a known skill from the registry, never from model text", () => {
+    const known = toolCallActivity(
+      "load_skill",
+      { skill: "scoutql" },
+      "Reading skill instructions.",
+    );
+    expect(known).toBe("Reading the scoutql skill");
+
+    const unknown = toolCallActivity(
+      "load_skill",
+      { skill: "totally-made-up" },
+      "Reading skill instructions.",
+    );
+    expect(unknown).toBe("Reading skill instructions.");
+    expect(unknown).not.toContain("totally-made-up");
   });
 
   test("falls back rather than echoing an unknown source name", () => {

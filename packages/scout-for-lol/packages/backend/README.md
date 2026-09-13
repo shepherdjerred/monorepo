@@ -59,6 +59,30 @@ bun run temporal:requeue-work -- \
 `db:generate` must run after schema changes and before typecheck/test; from the
 Scout root, `mise run generate` does the same thing.
 
+## Explore agent skills
+
+The Explore agent's system prompt is a lean core — corpus honesty, answer
+shape, limits — plus an index of skills. Everything domain-specific (ScoutQL
+itself, visualization kinds, match cards, dares, challenges, creation, Bryan
+Bucks) is a Markdown file under `src/explore/skills/content/` that the model
+loads on demand with the `load_skill` tool, mirroring the Agent Skills
+pattern. Adding a skill is adding one `.md` file: the loader discovers files
+by directory listing, and frontmatter (`name`, `description`, `capability`,
+`surfaces`, `tripwires`) controls when it appears in the index.
+
+Two invariants worth knowing before editing a skill:
+
+- `{{placeholder}}` tokens keep generated content unforked. The ScoutQL field
+  guide and language reference render from the same catalogs the report
+  editor and docs read (`skills/registry.ts` owns the provider map), and
+  `{{currentTime}}` injects the turn timestamp — which is also why the system
+  prompt itself stays byte-stable for provider prompt caching.
+- Tripwires are the rules that must hold even when a body is never loaded
+  ("a prepared confirmation is a proposal, not an entity"); they render in
+  the core prompt for every turn where the skill is enabled. Skill body text
+  deliberately never enters persisted traces: `tool-inspection.ts` has no
+  `load_skill` branch, so share-link holders see only the tool name.
+
 ## Durable match facts
 
 `src/durable/match/` holds the typed services the per-match pipeline calls.

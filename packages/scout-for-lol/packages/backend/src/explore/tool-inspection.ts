@@ -177,6 +177,10 @@ export type ExploreToolResultInspection = {
 };
 
 /** Validate and project a tool input before it can enter the browser trace. */
+// `load_skill` deliberately has no branch here or in the result inspector:
+// the unknown-name fallthrough (details: null, raw: null) is what keeps the
+// skill instruction text out of persisted traces, which are served
+// unauthenticated to share-link holders.
 export function inspectExploreToolCall(
   toolName: string,
   input: unknown,

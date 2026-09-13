@@ -313,8 +313,8 @@ const DARE_TOOL_CALL_MESSAGES = new Map([
 const DARE_RESULT_TOOL_NAMES = new Set(DARE_TOOL_CALL_MESSAGES.keys());
 
 function toolCallMessage(toolName: string): string {
-  if (toolName === "get_report_language") {
-    return "Reading the ScoutQL reference.";
+  if (toolName === "load_skill") {
+    return "Reading skill instructions.";
   }
   if (toolName === "validate_report_query") {
     return "Checking the query.";
@@ -346,6 +346,9 @@ function toolCallMessage(toolName: string): string {
 function toolResultMessage(toolName: string, ok: boolean): string {
   if (!ok) {
     return `${toolName} returned an error.`;
+  }
+  if (toolName === "load_skill") {
+    return "Skill instructions loaded.";
   }
   if (toolName === "run_report_query") {
     return "Got results.";

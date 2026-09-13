@@ -19,7 +19,7 @@ export function createDareExploreTools(input: DareExploreToolsInput) {
   return {
     get_dare_language: tool({
       description:
-        "Load the active Dare authoring version, frozen T1-T5 targets, standard-SQL relation catalog, defaults, and hard limits. Call this first.",
+        "Load the active Dare authoring version, frozen T1-T5 targets, standard-SQL relation catalog, defaults, and hard limits. Call this first. Load the dares skill first if you have not this turn.",
       inputSchema: z.strictObject({}),
       outputSchema: DareToolResultSchema,
       execute: () => executors.language(),

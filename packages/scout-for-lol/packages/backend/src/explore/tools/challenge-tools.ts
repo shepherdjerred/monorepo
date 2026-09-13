@@ -40,7 +40,7 @@ export function createChallengeExploreTools(options: {
   return {
     list_challenge_accounts: tool({
       description:
-        "List the requester's linked Riot accounts and stable account IDs before previewing a challenge.",
+        "List the requester's linked Riot accounts and stable account IDs before previewing a challenge. Load the challenges skill first if you have not this turn.",
       inputSchema: z.strictObject({}),
       outputSchema: ChallengeToolResultSchema,
       execute: () =>
@@ -70,7 +70,7 @@ export function createChallengeExploreTools(options: {
     }),
     draft_challenge_contract: tool({
       description:
-        "Validate and save a private typed challenge draft. New challenges are drafted from scratch without any source template. The frozen contract is the only evaluator; subjective or unobservable rules are invalid.",
+        "Validate and save a private typed challenge draft. New challenges are drafted from scratch without any source template. The frozen contract is the only evaluator; subjective or unobservable rules are invalid. Load the challenges skill first if you have not this turn.",
       inputSchema: z.strictObject({
         contract: ChallengeContractV1Schema,
         sourceTemplateId: z

@@ -23,6 +23,13 @@ export const scoutExploreToolCallsTotal = new Counter({
   registers: [registry],
 });
 
+export const scoutExploreSkillLoadsTotal = new Counter({
+  name: "scout_explore_skill_loads_total",
+  help: "Explore load_skill calls by skill name and status.",
+  labelNames: ["skill", "status"] as const,
+  registers: [registry],
+});
+
 export const scoutExploreTokensUsedTotal = new Counter({
   name: "scout_explore_tokens_used_total",
   help: "Total explore agent tokens used by model and token kind.",
