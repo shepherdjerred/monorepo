@@ -47,9 +47,9 @@
       "buildNumber": 15346
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 15410,
-      "version": "2.0.0-15410",
-      "digest": "sha256:7020be20a6bbebbe8bdfef2462c0264d1c8602b3cc546c9d4c3cfeb3a41c6553"
+      "buildNumber": 15427,
+      "version": "2.0.0-15427",
+      "digest": "sha256:fda354773714796f2fcf1ea42025dee331b652daa5ffa0884020e5889973d183"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -63,9 +63,9 @@
       "buildNumber": 15321
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 15410,
       "version": "2.0.0-15410",
-      "digest": "sha256:a143510017eda97cda7b9cb1c88a92150d8d89c5882396cc7ca7d6b62a1963cd"
+      "digest": "sha256:a143510017eda97cda7b9cb1c88a92150d8d89c5882396cc7ca7d6b62a1963cd",
+      "buildNumber": 15410
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-15258",
