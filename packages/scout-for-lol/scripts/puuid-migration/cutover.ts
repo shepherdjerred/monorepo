@@ -10,7 +10,7 @@
 
 import type { Db } from "./db.ts";
 import { readTrackedPuuids } from "./discovery.ts";
-import { collectFromJson, parseJson } from "./json-walk.ts";
+import { collectFromJson, parseJson, selectSubtree } from "./json-walk.ts";
 import {
   asOptionalString,
   asString,
@@ -132,9 +132,18 @@ async function sightingsFrom(
       sightings.push({ puuid: value, at });
       continue;
     }
-    // One row timestamps every identity it names.
+    // One row timestamps every identity it names, within the part of the
+    // document that actually drives behaviour.
+    const parsed = parseJson(value);
+    const scope =
+      source.jsonPath === undefined
+        ? parsed
+        : selectSubtree(parsed, source.jsonPath);
+    if (scope === undefined) {
+      continue;
+    }
     const named: string[] = [];
-    collectFromJson(parseJson(value), source.bareArray, named);
+    collectFromJson(scope, source.bareArray, named);
     for (const puuid of named) {
       sightings.push({ puuid, at });
     }

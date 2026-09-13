@@ -10,7 +10,7 @@
  */
 
 import type { Db } from "./db.ts";
-import { collectFromJson, parseJson } from "./json-walk.ts";
+import { collectFromJson, parseJson, selectSubtree } from "./json-walk.ts";
 import {
   asOptionalString,
   EXCLUDED_TABLES,
@@ -162,6 +162,7 @@ export async function readPuuids(
   db: Db,
   col: PuuidColumn,
   where?: string,
+  jsonPath?: string,
 ): Promise<string[]> {
   const rows = await db.query(
     `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL${where === undefined ? "" : ` AND ${where}`}`,
@@ -176,7 +177,13 @@ export async function readPuuids(
       out.push(value);
       continue;
     }
-    collectFromJson(parseJson(value), col.bareArrayIsPuuids, out);
+    const parsed = parseJson(value);
+    const scope =
+      jsonPath === undefined ? parsed : selectSubtree(parsed, jsonPath);
+    if (scope === undefined) {
+      continue;
+    }
+    collectFromJson(scope, col.bareArrayIsPuuids, out);
   }
   return out;
 }
@@ -206,6 +213,7 @@ export async function readTrackedPuuids(db: Db): Promise<Set<string>> {
         bareArrayIsPuuids: source.bareArray,
       },
       source.where,
+      source.jsonPath,
     );
     for (const v of values) {
       tracked.add(v);

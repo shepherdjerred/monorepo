@@ -93,3 +93,19 @@ export function translateJsonValue(
     ]),
   );
 }
+
+/**
+ * Narrow a payload to one named subtree before collecting from it.
+ *
+ * Some stored documents mix identities that matter with identities that merely
+ * appeared. A queued Temporal job carries the tracked players it will act on
+ * AND the full participant lists of the game it describes; collecting the whole
+ * payload pulls in every opponent, which both inflates the migration and lets an
+ * unrelated stranger who no longer resolves block the rewrite entirely.
+ */
+export function selectSubtree(value: Json, key: string): Json | undefined {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  return Object.hasOwn(value, key) ? value[key] : undefined;
+}

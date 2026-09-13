@@ -385,10 +385,24 @@ test("collect refuses a PUUID column nobody classified", async () => {
 });
 
 /** The payload shape Temporal work carries for a tracked player. */
-const workPayload = (puuid: string): string =>
+const workPayload = (puuid: string, opponent?: string): string =>
   JSON.stringify({
     trackedPlayers: [{ league: { leagueAccount: { puuid } } }],
+    ...(opponent === undefined
+      ? {}
+      : { gameInfo: { participants: [{ puuid: opponent }] } }),
   });
+
+/** Queue one Temporal work row in a given state. */
+async function queueWork(
+  db: Awaited<ReturnType<typeof openDatabase>>,
+  work: { id: string; state: string; puuid: string; opponent?: string },
+): Promise<void> {
+  await db.exec(
+    `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
+    [work.id, workPayload(work.puuid, work.opponent), work.state, Date.now()],
+  );
+}
 
 test("collect takes identities from requeueable work but not completed work", async () => {
   // A failed row is requeueable, so its payload is an instruction that will
@@ -396,14 +410,27 @@ test("collect takes identities from requeueable work but not completed work", as
   // completed row is only a record — and those payloads are whole match
   // documents, so collecting them would drag the entire corpus back in.
   const db = await seed({ accounts: [] });
-  await db.exec(
-    `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
-    ["w1", workPayload(OLD_A), "failed", Date.now()],
-  );
-  await db.exec(
-    `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
-    ["w2", workPayload(OLD_B), "completed", Date.now()],
-  );
+  await queueWork(db, { id: "w1", state: "failed", puuid: OLD_A });
+  await queueWork(db, { id: "w2", state: "completed", puuid: OLD_B });
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
+  expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A]);
+  await db.close();
+});
+
+test("collect takes only the actionable identities from a work payload", async () => {
+  // A queued job carries both the players it will act on and the full
+  // participant list of the game it describes. Collecting the document whole
+  // swept in every opponent — on beta, 245 identities instead of 16 — and any
+  // stranger who no longer resolves would then block the rewrite.
+  const db = await seed({ accounts: [] });
+  await queueWork(db, {
+    id: "w1",
+    state: "failed",
+    puuid: OLD_A,
+    opponent: OLD_B,
+  });
   const { collect } = await import("./phases.ts");
   await collect(db);
   const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);

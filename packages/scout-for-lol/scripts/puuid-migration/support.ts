@@ -80,6 +80,12 @@ type TrackedSource = {
    * will be acted on, while completed work is only a record of what happened.
    */
   where?: string;
+  /**
+   * Restricts which part of a JSON document counts. Needed where one payload
+   * mixes identities that will be acted on with identities that were merely
+   * observed, so that collecting the document whole would sweep in strangers.
+   */
+  jsonPath?: string;
 };
 
 const scalar = (
@@ -194,6 +200,11 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   {
     ...objectJson("ScoutTemporalWork", "payload", "createdAt"),
     where: `"state" <> 'completed'`,
+    // Only the players the job will act on. The rest of the payload is the game
+    // it describes — full participant lists, overwhelmingly strangers. On beta
+    // that is the difference between 16 identities and 245, and any one of those
+    // strangers failing to resolve would block the rewrite.
+    jsonPath: "trackedPlayers",
   },
 ];
 
