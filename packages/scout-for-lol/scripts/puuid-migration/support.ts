@@ -64,6 +64,7 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "BucksWeeklyParlayDefinition", column: "historySample" },
   { table: "ChallengeRunRevision", column: "selectedAccountsJson" },
   { table: "ConfirmationIntent", column: "payload" },
+  { table: "DuelGame", column: "evidenceJson" },
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
   { table: "HallRecordBreakOutbox", column: "payloadJson" },
@@ -155,6 +156,10 @@ export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // A pending record-break announcement. Its holders are copied from the Hall
   // cells that produced it, and those are tracked sources.
   { table: "HallRecordBreakOutbox", column: "payloadJson" },
+  // A duel game's evidence carries the match's whole participant list, so it is
+  // the same ten-strangers shape as a match pool roster. The competitors that
+  // matter are tracked through DuelCompetitorMember.
+  { table: "DuelGame", column: "evidenceJson" },
   // Ledger and settlement records, written once and read for history.
   { table: "BucksLedgerEntry", column: "context" },
   { table: "BucksMatchEarning", column: "targetSnapshotJson" },
