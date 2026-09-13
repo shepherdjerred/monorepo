@@ -31,7 +31,6 @@ export async function updateBettingMetrics(
       oldestUnresolved,
       pendingStake,
       pendingParlayStake,
-      pendingWeeklyStake,
       pendingDareStake,
       houseAccounts,
     ] = await Promise.all([
@@ -52,12 +51,8 @@ export async function updateBettingMetrics(
         where: { betOutcome: "pending" },
         _sum: { stake: true },
       }),
-      prisma.bucksWeeklyParlayBet.aggregate({
-        where: { betOutcome: "pending" },
-        _sum: { stake: true },
-      }),
       // A dare's pot is contributor money at risk until the dare resolves —
-      // the same "pending stake" the outcome/parlay/weekly sources measure.
+      // the same "pending stake" the outcome and parlay sources measure.
       prisma.bucksDareContribution.aggregate({
         where: { dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } } },
         _sum: { amount: true },
@@ -92,7 +87,6 @@ export async function updateBettingMetrics(
         0,
       ) +
       (pendingParlayStake._sum.stake ?? 0) +
-      (pendingWeeklyStake._sum.stake ?? 0) +
       (pendingDareStake._sum.amount ?? 0);
     bettingPendingStakeBucks.set(pendingStakeBucks);
 

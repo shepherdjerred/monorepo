@@ -27,7 +27,7 @@ describe("classifyRoute", () => {
     "/api/dev/login",
     "/api/summoner-icon",
     "/api/reports/query-agent/stream",
-    "/api/internal/weekly-parlays/actions",
+    "/api/internal/bryan-bucks/analytics-sync",
   ])("maps the known route %s to itself", (path) => {
     expect(classifyRoute(path)).toBe(path);
   });

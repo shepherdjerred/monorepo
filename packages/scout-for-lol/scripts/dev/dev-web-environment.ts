@@ -41,7 +41,6 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   "scout-temporal-call-graph-tracing": false,
   tournament_lobbies_enabled: false,
   voice_assistant_enabled: false,
-  weekly_parlays_enabled: false,
   // Variant flags: same defaults as the `DEFINITION` snapshot in
   // packages/backend/src/config/dynamic.ts, which already falls back to them
   // gracefully on a refresh failure — listing them here just stops the noisy

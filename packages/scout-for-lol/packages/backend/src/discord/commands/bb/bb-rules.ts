@@ -21,25 +21,6 @@ import {
 import { EARNED_REWARDS } from "#src/betting/accounts/earnings.ts";
 import { HOUSE_CUT_PERCENT } from "#src/betting/eligibility/house-cut.ts";
 import { DARE_V2_INTENT_TTL_MS } from "#src/betting/constants.ts";
-import {
-  WEEKLY_PARLAY_ELIGIBLE_QUEUES,
-  WEEKLY_PARLAY_MAX_LEGS,
-  WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS,
-  WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS,
-  WEEKLY_PARLAY_MIN_LEGS,
-  WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS,
-  WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS,
-  WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
-} from "#src/betting/weekly/weekly-parlay-criteria.ts";
-import {
-  WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
-  WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS,
-  WEEKLY_PARLAY_FINAL_HOUR,
-  WEEKLY_PARLAY_INGESTION_GRACE_MINUTES,
-  WEEKLY_PARLAY_OPEN_HOUR,
-  WEEKLY_PARLAY_TIMEZONE,
-  weeklyParlayWallClockLabel,
-} from "#src/betting/weekly/weekly-parlay-period.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 
@@ -139,19 +120,6 @@ export function buildBbRulesEmbed(dareVersion: 1 | 2 | 3 = 1): EmbedBuilder {
           "Odds are fixed when you bet, and the house reserves your full payout at that price.",
           "It is a live in-play market — it opens after the game starts, so early events may already be decided.",
           "Cancelling a parlay is free and returns the whole stake.",
-        ].join("\n"),
-      },
-      {
-        name: "Weekly parlays",
-        value: [
-          `One YES/NO market across the whole week, with ${WEEKLY_PARLAY_MIN_LEGS.toString()}-${WEEKLY_PARLAY_MAX_LEGS.toString()} legs about one or more tracked players.`,
-          `Opens Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_OPEN_HOUR)}; betting closes Monday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_BETTING_CLOSE_HOUR)} (${WEEKLY_PARLAY_TIMEZONE}).`,
-          `Only completed ${WEEKLY_PARLAY_ELIGIBLE_QUEUES.join(", ")} games finished by Sunday at ${weeklyParlayWallClockLabel(WEEKLY_PARLAY_FINAL_HOUR)} count, and Scout waits **${WEEKLY_PARLAY_INGESTION_GRACE_MINUTES.toString()} minutes** past that cutoff for late games to ingest.`,
-          `Activity is not a leg: every featured player must complete **${WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES.toString()} eligible games**, or everyone is refunded.`,
-          "Every proposal includes a one-game peak on a named champion.",
-          `Each leg must historically land at **${(WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS / 100).toString()}-${(WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS / 100).toString()}%**, and the full parlay at **${(WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS / 100).toString()}-${(WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS / 100).toString()}%**.`,
-          `If the Sunday opening is missed, a catch-up market may open midweek with at least **${WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS.toString()} hours** to bet. Its message shows the exact clocks, and games finished before betting closes never count.`,
-          "YES can settle early once every leg is impossible to undo; NO always waits for the end. Cancelling before betting closes is free.",
         ].join("\n"),
       },
       {

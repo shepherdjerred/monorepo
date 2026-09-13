@@ -41,8 +41,7 @@ export function settlementEvidenceOf(
     resolvedDareIds: canonicalIdentities(
       bucks.dareSettlements.map((summary) => summary.dareId),
     ),
-    // A weekly parlay settlement carries no per-bet row id out of the settle
-    // call, so the guild whose parlay settled is its durable identity.
+    // The guild whose parlay settled is the settlement's durable identity.
     settledParlayGuildIds: canonicalIdentities(
       bucks.parlaySettlements.map((summary) =>
         DiscordGuildIdSchema.parse(summary.serverId),

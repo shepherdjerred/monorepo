@@ -32,7 +32,6 @@ import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
 import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
-import { captureWeeklyParlayContributions } from "#src/betting/weekly/weekly-parlay-contribution.ts";
 import { createLogger } from "#src/logger.ts";
 import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 
@@ -115,10 +114,6 @@ export async function settleAndAwardBucks(
     matchData,
     prismaClient,
   );
-  // The canonical match has already been persisted by the caller. Weekly
-  // progress is append-only and may settle only an irreversible YES here;
-  // Sunday finalization remains the only path to an early-false result.
-  await captureWeeklyParlayContributions(matchData, prismaClient);
   const earnings = await awardBucksForMatch(matchData, prismaClient);
   // Discord cleanup runs after the committed local operations and regardless
   // of whether the caller suppresses an old match's post-match notification.
@@ -133,8 +128,8 @@ export async function settleAndAwardBucks(
   );
   // Dares run LAST, and unlike everything above, settleDaresForMatch CAN
   // throw (after its own short bounded retry exhausts — see its doc
-  // comment). Everything above it (parlay settlement, weekly capture,
-  // earnings) already committed its own idempotent, state-gated writes, so
+  // comment). Everything above it (parlay settlement, earnings) already
+  // committed its own idempotent, state-gated writes, so
   // a throw here — and the caller not advancing the cursor — simply retries
   // the whole match later; those writes safely no-op on replay. Running
   // dares last also means an ordinary (non-retry-exhausting) throw anywhere

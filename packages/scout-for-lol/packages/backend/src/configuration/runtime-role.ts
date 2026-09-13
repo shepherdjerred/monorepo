@@ -244,8 +244,8 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     championAssets: true,
     voiceAssistant: false,
     voiceStateAccess: false,
-    // Reads the lake (report runs, parlay generation, the weekly parlay,
-    // summoner-index backfill) and writes its staging directories (match,
+    // Reads the lake (report runs, parlay generation, summoner-index
+    // backfill) and writes its staging directories (match,
     // prematch and timeline ingest). It does NOT publish builds — see the
     // README for why that makes this role undeployable beside `application` on
     // the current ReadWriteOnce volume.

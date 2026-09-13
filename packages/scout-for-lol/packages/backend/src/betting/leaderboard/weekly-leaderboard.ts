@@ -10,7 +10,7 @@ import {
   getFullLeaderboard,
   type FullLeaderboardRow,
 } from "#src/betting/accounts.ts";
-import { saveWeeklyLeaderboardSnapshot } from "#src/betting/weekly/leaderboard/weekly-leaderboard-snapshot.ts";
+import { saveWeeklyLeaderboardSnapshot } from "#src/betting/leaderboard/weekly-leaderboard-snapshot.ts";
 import { isPolicyEnabled, MY_SERVER } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
@@ -136,8 +136,6 @@ export async function loadWeeklyBucksStats(
     betsWon.map((row) => [row.bucksAccountId, row._count._all]),
   );
 
-  // Match and weekly parlays live in two tables with no combined view; the
-  // union happens here.
   const parlayWon = await prismaClient.bucksParlayBet.groupBy({
     by: ["bucksAccountId"],
     where: {
@@ -147,22 +145,9 @@ export async function loadWeeklyBucksStats(
     },
     _count: { _all: true },
   });
-  const weeklyParlayWon = await prismaClient.bucksWeeklyParlayBet.groupBy({
-    by: ["bucksAccountId"],
-    where: {
-      bucksAccountId: { in: accountIds },
-      betOutcome: "won",
-      settledAt: { gte: input.windowStart },
-    },
-    _count: { _all: true },
-  });
-  const parlayWins = new Map<number, number>();
-  for (const row of [...parlayWon, ...weeklyParlayWon]) {
-    parlayWins.set(
-      row.bucksAccountId,
-      (parlayWins.get(row.bucksAccountId) ?? 0) + row._count._all,
-    );
-  }
+  const parlayWins = new Map(
+    parlayWon.map((row) => [row.bucksAccountId, row._count._all]),
+  );
 
   return {
     mostGained: pickSuperlative(gains, discordIdByAccountId, "max"),

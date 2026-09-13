@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { loadWeeklyBucksStats } from "#src/betting/weekly/leaderboard/weekly-leaderboard.ts";
+import { loadWeeklyBucksStats } from "#src/betting/leaderboard/weekly-leaderboard.ts";
 import {
   bucksTestDiscordId,
   bucksTestPuuid,
@@ -16,9 +16,6 @@ const BEFORE_WINDOW = new Date("2030-01-01T00:00:00Z");
 
 async function clearAll(): Promise<void> {
   await db.bucksLedgerEntry.deleteMany();
-  await db.bucksWeeklyParlayBet.deleteMany();
-  await db.bucksWeeklyParlayMarket.deleteMany();
-  await db.bucksWeeklyParlayDefinition.deleteMany();
   await db.bucksParlayBet.deleteMany();
   await db.bucksParlayMarket.deleteMany();
   await db.bucksParlayDefinition.deleteMany();
@@ -94,53 +91,51 @@ async function wonBet(accountId: number, settledAt: Date): Promise<void> {
   });
 }
 
-async function wonWeeklyParlay(
-  accountId: number,
-  settledAt: Date,
-  slot: number,
-): Promise<void> {
-  const definition = await db.bucksWeeklyParlayDefinition.create({
+async function wonParlay(accountId: number, settledAt: Date): Promise<void> {
+  poolCounter += 1;
+  const matchId = `NA1_parlay_${poolCounter.toString()}`;
+  const pool = await db.bucksMatchPool.create({
     data: {
+      matchId,
       serverId: SERVER_ID,
-      periodKey: "2030-01-06",
-      slot,
-      openAt: BEFORE_WINDOW,
-      bettingClosesAt: BEFORE_WINDOW,
-      scoringStartsAt: BEFORE_WINDOW,
-      scoringEndsAt: IN_WINDOW,
+      detectedAt: BEFORE_WINDOW,
+      closesAt: BEFORE_WINDOW,
+      roster: JSON.stringify({ participants: bucksTestRoster() }),
+      poolState: "settled",
+    },
+  });
+  const definition = await db.bucksParlayDefinition.create({
+    data: {
+      matchId,
+      queueType: "solo",
+      selectedTeamId: 100,
       subjects: "[]",
-      eligibleQueues: "[]",
-      proposal: "{}",
       criteria: "{}",
-      historySample: "{}",
-      pricing: "{}",
       yesProbabilityBps: 2500,
       promptVersion: "test",
       catalogVersion: "test",
       schemaVersion: 2,
       evaluatorVersion: "2",
-      pricingVersion: "2",
       generationContext: "{}",
       requestedModel: "test",
       usage: "{}",
       durationMs: 1,
     },
   });
-  const market = await db.bucksWeeklyParlayMarket.create({
+  const market = await db.bucksParlayMarket.create({
     data: {
       definitionId: definition.id,
+      outcomePoolId: pool.id,
+      matchId,
       serverId: SERVER_ID,
-      periodKey: "2030-01-06",
-      slot,
       publishedAt: BEFORE_WINDOW,
-      bettingClosesAt: BEFORE_WINDOW,
-      scoringEndsAt: IN_WINDOW,
+      closesAt: BEFORE_WINDOW,
       marketState: "settled",
       yesResult: true,
       settledAt,
     },
   });
-  await db.bucksWeeklyParlayBet.create({
+  await db.bucksParlayBet.create({
     data: {
       marketId: market.id,
       bucksAccountId: accountId,
@@ -174,7 +169,7 @@ describe("loadWeeklyBucksStats", () => {
     // A win settled before the window is last week's news.
     await wonBet(loser, BEFORE_WINDOW);
 
-    await wonWeeklyParlay(loser, IN_WINDOW, 0);
+    await wonParlay(loser, IN_WINDOW);
 
     const stats = await loadWeeklyBucksStats(
       { serverId: SERVER_ID, windowStart: WINDOW_START },

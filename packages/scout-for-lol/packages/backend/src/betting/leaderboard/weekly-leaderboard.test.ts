@@ -13,7 +13,7 @@ import {
   WEEKLY_BUCKS_CRON,
   type WeeklyBucksLeaderboardDependencies,
   type WeeklyBucksStats,
-} from "#src/betting/weekly/leaderboard/weekly-leaderboard.ts";
+} from "#src/betting/leaderboard/weekly-leaderboard.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 

@@ -5,7 +5,7 @@ import {
   type BucksDareHorizonKind,
   type BucksDareState,
 } from "@scout-for-lol/data";
-import { withRulesHint } from "#src/betting/copy.ts";
+import { countLabel, withRulesHint } from "#src/betting/copy.ts";
 import {
   DARE_RATE_LABELS,
   formatDareRateThreshold,
@@ -20,12 +20,11 @@ import {
   PARTICIPANT_BOOLEAN_CATALOG,
   PARTICIPANT_NUMERIC_CATALOG,
 } from "#src/betting/parlays/model/parlay-catalog.ts";
-import { countLabel } from "#src/betting/weekly/weekly-parlay-discord-copy.ts";
 
 /**
  * Pure copy builders for every dare Discord surface.
  *
- * No Discord imports and no I/O (weekly-parlay-discord-copy precedent): every
+ * No Discord imports and no I/O: every
  * function turns frozen facts into a string, so the exact user-visible text is
  * pinned by plain unit tests. The condition text is ALWAYS the code-rendered
  * `conditionSummary` — model prose never reaches a message. Numbers, not

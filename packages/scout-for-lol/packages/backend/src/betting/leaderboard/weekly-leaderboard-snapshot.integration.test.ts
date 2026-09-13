@@ -3,7 +3,7 @@ import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   getLatestWeeklyLeaderboardSnapshot,
   saveWeeklyLeaderboardSnapshot,
-} from "#src/betting/weekly/leaderboard/weekly-leaderboard-snapshot.ts";
+} from "#src/betting/leaderboard/weekly-leaderboard-snapshot.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 

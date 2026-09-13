@@ -18,11 +18,6 @@ import {
 } from "#src/betting/parlays/parlay-custom-id.ts";
 import { handleParlayBetButton } from "#src/betting/parlays/runtime/parlay-bet-button.ts";
 import {
-  isWeeklyParlayCustomId,
-  parseWeeklyParlayCustomId,
-} from "#src/betting/weekly/weekly-parlay-custom-id.ts";
-import { handleWeeklyParlayBetButton } from "#src/betting/weekly/weekly-parlay-bet-button.ts";
-import {
   isDareCustomId,
   parseDareCustomId,
 } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
@@ -50,8 +45,7 @@ const logger = createLogger("discord-interactions");
 
 async function captureButtonActivity(
   interaction: RoutableButtonInteraction,
-  activityKind:
-    "outcome_bet" | "parlay_bet" | "weekly_parlay_bet" | "navigation" | "dare",
+  activityKind: "outcome_bet" | "parlay_bet" | "navigation" | "dare",
   status: "success" | "error",
 ): Promise<void> {
   await captureBucksMemberActivity({
@@ -110,31 +104,6 @@ export type RoutableButtonInteraction = BetButtonInteraction &
     deferred: boolean;
     replied: boolean;
   };
-
-async function routeWeeklyParlayButton(
-  interaction: RoutableButtonInteraction,
-): Promise<void> {
-  try {
-    if (parseWeeklyParlayCustomId(interaction.customId) === undefined) {
-      discordComponentsTotal.inc({ namespace: "bbw", status: "malformed" });
-      await interaction.deferUpdate();
-      return;
-    }
-    await handleWeeklyParlayBetButton(interaction);
-    await captureButtonActivity(interaction, "weekly_parlay_bet", "success");
-    discordComponentsTotal.inc({ namespace: "bbw", status: "success" });
-  } catch (error) {
-    await captureButtonActivity(interaction, "weekly_parlay_bet", "error");
-    logger.error("❌ Error handling a weekly Bryan Bucks button:", error);
-    discordComponentsTotal.inc({ namespace: "bbw", status: "error" });
-    if (interaction.deferred && !interaction.replied) {
-      await interaction.editReply({
-        content:
-          "😵 Something went wrong placing that weekly parlay bet. Try again shortly.",
-      });
-    }
-  }
-}
 
 async function routeDareButton(
   interaction: RoutableButtonInteraction,
@@ -233,10 +202,6 @@ export async function routeButton(
         });
       }
     }
-    return;
-  }
-  if (isWeeklyParlayCustomId(interaction.customId)) {
-    await routeWeeklyParlayButton(interaction);
     return;
   }
   if (isBucksNavigationId(interaction.customId)) {

@@ -9,7 +9,6 @@ import {
   recordProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
-import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
 import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
 import { createScoutV2BackgroundActivities } from "#src/temporal/v2/background-activities.ts";
 import { createScoutV2LakeActivities } from "#src/temporal/v2/lake-activities.ts";
@@ -201,7 +200,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "weekly-bucks-leaderboard": {
             const { runWeeklyBucksLeaderboard } =
-              await import("#src/betting/weekly/leaderboard/weekly-leaderboard.ts");
+              await import("#src/betting/leaderboard/weekly-leaderboard.ts");
             await runWeeklyBucksLeaderboard();
             break;
           }
@@ -271,7 +270,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },
-    invokeScoutWeeklyParlayAction: invokeWeeklyParlayAction,
     syncScoutBryanBucksAnalytics: async () => {
       const result = await heartbeatWhile(
         { kind: "bryan-bucks-analytics", phase: "running" },

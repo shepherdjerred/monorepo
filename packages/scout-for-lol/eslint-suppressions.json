@@ -241,21 +241,6 @@
       "count": 1
     }
   },
-  "packages/backend/src/betting/weekly/weekly-parlay-contribution.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/backend/src/betting/weekly/weekly-parlay-open.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/backend/src/betting/weekly/weekly-parlay-settle.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/backend/src/database/legacy-import/run-import.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

@@ -377,16 +377,12 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
   // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.
   // Activity time and retries are covered by SLACK_MS below.
   runVacuumIfNotHome: 7 * ONE_MINUTE,
-  // Sunday noon through the next Sunday 11:00 PT. The fall DST transition
-  // makes the maximum elapsed duration 168 hours.
-  runScoutWeeklyParlayWorkflow: 168 * ONE_HOUR,
 };
 
-// Weekly finalization continues as new without a chain-wide execution timeout;
-// this is deliberate so a prolonged Scout outage cannot strand bets.
-const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set([
-  "runScoutWeeklyParlayWorkflow",
-]);
+// Escape hatch for a long-sleeping workflow that deliberately runs without a
+// chain-wide execution timeout. Empty since the weekly parlay lifecycle — its
+// only member — was retired; a new entry needs that same explicit rationale.
+const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
@@ -555,23 +551,6 @@ describe("Scout lane-prior schedule config", () => {
     expect(findScheduleById("scout-data-dragon-weekly-refresh").args).toEqual(
       [],
     );
-  });
-});
-
-describe("Scout weekly parlay schedule config", () => {
-  test("starts one Pacific lifecycle at Sunday noon", () => {
-    const schedule = findScheduleById("scout-weekly-parlay");
-    expect(schedule).toMatchObject({
-      workflowType: "runScoutWeeklyParlayWorkflow",
-      args: [{}],
-      timing: {
-        kind: "cron",
-        expression: "0 12 * * 0",
-        timezone: "America/Los_Angeles",
-      },
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-    });
   });
 });
 
@@ -782,13 +761,6 @@ describe("catchup window policy", () => {
     );
   });
 
-  test("weekly Scout publication preserves the Sunday betting window", () => {
-    expect(
-      buildSchedulePolicies(findScheduleById("scout-weekly-parlay"))
-        .catchupWindow,
-    ).toBe("12 hours");
-  });
-
   test("tight window is strictly shorter than the relaxed default", () => {
     const tight = buildSchedulePolicies(
       findScheduleById("vacuum-9am"),
@@ -816,6 +788,13 @@ describe("orphan schedule detection", () => {
     expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
     expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
       "review-signals-collect",
+    );
+  });
+
+  test("the retired weekly parlay schedule is queued for deletion", () => {
+    expect(DELETED_SCHEDULE_IDS).toContain("scout-weekly-parlay");
+    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
+      "scout-weekly-parlay",
     );
   });
 

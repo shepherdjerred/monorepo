@@ -77,6 +77,11 @@ export const DELETED_SCHEDULE_IDS = [
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
+  // The weekly parlay feature was retired: its workflow types
+  // (`runScoutWeeklyParlayWorkflow`, `runScoutWeeklyParlayCatchupWorkflow`)
+  // are no longer in the bundle, so the live schedule must be deleted on
+  // startup rather than left firing a missing workflow.
+  "scout-weekly-parlay",
 ] as const;
 
 // Schedule deletion prevents future starts but does not stop an execution that

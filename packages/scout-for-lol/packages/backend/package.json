@@ -46,7 +46,6 @@
     "test:review": "bun run src/league/review/test-reviews.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
     "test:parlay:live": "bun run scripts/smoke/test-parlay-live.ts",
-    "test:weekly-parlay:live": "bun run scripts/smoke/test-weekly-parlay-live.ts",
     "test:dare-v2:model-eval": "bun run scripts/evaluate-dare-paraphrases.ts",
     "analytics:backfill-bryan-bucks": "bun run scripts/backfill/backfill-bryan-bucks-analytics.ts",
     "customs:anonymize": "bun run scripts/anonymize-customs-participant.ts"

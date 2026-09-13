@@ -17,8 +17,6 @@ import type {
   ScoutV2NotificationActivities,
 } from "#src/temporal/v2/durable-activity-surface.ts";
 import { createLogger } from "#src/logger.ts";
-import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
-import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import {
   createTemporalClientTracingInterceptor,
   createTemporalWorkerTracing,
@@ -145,9 +143,6 @@ type BackgroundActivities = Pick<
   | "probeQueue"
 > &
   ScoutV2BackgroundActivities & {
-    invokeScoutWeeklyParlayAction: (
-      action: WeeklyParlayControlAction,
-    ) => Promise<WeeklyParlayControlResult>;
     syncScoutBryanBucksAnalytics: () => Promise<{
       status: "reconciled" | "skipped";
       detail: string;

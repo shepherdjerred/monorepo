@@ -64,12 +64,7 @@ export type DiscordCommandSubcommand =
   | "cancel";
 export type DiscordCommandStatus = "success" | "error";
 export type BucksMemberActivityKind =
-  | "command"
-  | "outcome_bet"
-  | "parlay_bet"
-  | "weekly_parlay_bet"
-  | "navigation"
-  | "dare";
+  "command" | "outcome_bet" | "parlay_bet" | "navigation" | "dare";
 export type BucksActivitySurface = "command" | "button" | "web" | "unknown";
 /** Hey Scout turn outcomes; the closed set is the whole analytics vocabulary. */
 export type VoiceQuestionOutcome =

@@ -64,18 +64,20 @@ export function createTemporalWorkerDeployment(
     "temporal-starlight-bot-secret",
     starlightBotItem.name,
   );
-  const scoutWeeklyParlayItem = new OnePasswordItem(
+  // The vault item keeps its original name; only the Kubernetes secret and the
+  // environment variable follow the feature that still uses the credential.
+  const scoutBryanBucksControlItem = new OnePasswordItem(
     chart,
-    "temporal-scout-weekly-parlay-control-1p",
+    "temporal-scout-bryan-bucks-control-1p",
     {
-      metadata: { name: "temporal-scout-weekly-parlay-control" },
+      metadata: { name: "temporal-scout-bryan-bucks-control" },
       spec: { itemPath: vaultItemPath("scout-weekly-parlay-control") },
     },
   );
-  const scoutWeeklyParlaySecret = Secret.fromSecretName(
+  const scoutBryanBucksControlSecret = Secret.fromSecretName(
     chart,
-    "temporal-scout-weekly-parlay-control-secret",
-    scoutWeeklyParlayItem.name,
+    "temporal-scout-bryan-bucks-control-secret",
+    scoutBryanBucksControlItem.name,
   );
   const freshRssCredentialItem = new OnePasswordItem(
     chart,
@@ -281,7 +283,7 @@ export function createTemporalWorkerDeployment(
   } = createTemporalOperationsWorkers(chart, {
     serverServiceName: props.serverServiceName,
     secret,
-    scoutWeeklyParlaySecret,
+    scoutBryanBucksControlSecret,
     infraServiceAccount,
     homelabAuditEnvironment: homelabAuditEnv(secret),
     talosConfigVolume,

@@ -160,7 +160,6 @@ export type FlagName =
   | "dare_extended_contracts_enabled"
   | "dare_notifications_enabled"
   | "bucks_transfers_enabled"
-  | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
   | "competition_builder_v2_enabled"
@@ -204,7 +203,6 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "betting_player_bet_outcome_dm_enabled",
     "betting_settlement_dm_enabled",
     "bucks_transfers_enabled",
-    "weekly_parlays_enabled",
     "bucks_dares_enabled",
     "dare_v2",
     "dare_extended_contracts_enabled",
@@ -358,13 +356,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // betting economy itself, so the domain requires both flags. Production's
   // hard-disable policy remains authoritative over local and Flipt values.
   bucks_transfers_enabled: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
-  },
-  // Week-spanning Bryan Bucks markets remain a narrower private-beta rollout
-  // than the betting economy itself. New positions require both flags;
-  // settlement and refunds deliberately do not.
-  weekly_parlays_enabled: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },

@@ -35,7 +35,6 @@ export type BucksMessageSurface =
   | "parlay_market"
   | "settlement"
   | "transfer_receipt"
-  | "weekly_parlay"
   | "weekly_leaderboard"
   | "dare_callout"
   | "dare_update"

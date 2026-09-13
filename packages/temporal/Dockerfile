@@ -67,9 +67,6 @@ RUN cd packages/home-assistant && bun run build
 # catalog is compiled first. (home-assistant and llm-observability export their
 # `src/` directly and need no build.)
 RUN cd packages/llm-models && bun run build
-# The weekly parlay lifecycle is exported as a bundled module so the runtime
-# image never depends on source JSON loading or a gitignored developer dist.
-RUN cd packages/scout-for-lol/packages/data && bun run build
 # Glitter context also exports gitignored dist files. Its build validates and
 # bundles the language-neutral JSON before Temporal imports it at startup.
 RUN cd packages/glitter-context && bun run build

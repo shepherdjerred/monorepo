@@ -27,7 +27,7 @@ import {
   httpRequestDuration,
   httpRequestsTotal,
 } from "#src/metrics/platform/web.ts";
-import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
+import { handleBryanBucksControl } from "#src/http/bryan-bucks-control.ts";
 import { handleCustomAuthRoutes } from "#src/customs/activity/activity-auth-http.ts";
 import {
   CUSTOMS_SOCKET_PATH,
@@ -243,11 +243,11 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
     return handleTournamentCallback(request);
   }
 
-  // Retained only for Workflow histories that predate the embedded-Activity
-  // patch. The route is absent unless its private bootstrap token is present.
-  const weeklyParlayResponse = await handleWeeklyParlayControl(request, url);
-  if (weeklyParlayResponse !== null) {
-    return weeklyParlayResponse;
+  // Internal Bryan Bucks analytics reconciliation, driven by the Temporal
+  // analytics Schedule. Absent unless its private bootstrap token is present.
+  const bryanBucksResponse = await handleBryanBucksControl(request, url);
+  if (bryanBucksResponse !== null) {
+    return bryanBucksResponse;
   }
 
   // Metrics endpoint for Prometheus

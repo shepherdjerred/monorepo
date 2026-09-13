@@ -60,11 +60,6 @@ export const BucksLedgerKindSchema = z.enum([
   "parlay_payout",
   "parlay_refund",
   "parlay_release",
-  "weekly_parlay_stake",
-  "weekly_parlay_reserve",
-  "weekly_parlay_payout",
-  "weekly_parlay_refund",
-  "weekly_parlay_release",
   "peek_pass",
   "transfer_sent",
   "transfer_received",
@@ -115,30 +110,6 @@ export const BucksParlayVoidReasonSchema = z.enum([
   "missing_data",
   "unknown_evaluator",
   "invalid_definition",
-  "storage_overflow",
-]);
-
-export type BucksWeeklyParlayMarketState = z.infer<
-  typeof BucksWeeklyParlayMarketStateSchema
->;
-export const BucksWeeklyParlayMarketStateSchema = z.enum([
-  "publishing",
-  "open",
-  "active",
-  "settled",
-  "voided",
-]);
-
-export type BucksWeeklyParlayVoidReason = z.infer<
-  typeof BucksWeeklyParlayVoidReasonSchema
->;
-export const BucksWeeklyParlayVoidReasonSchema = z.enum([
-  "infrastructure_failure",
-  "insufficient_activity",
-  "operator_cancelled",
-  "unknown_evaluator",
-  "invalid_definition",
-  "missing_data",
   "storage_overflow",
 ]);
 
@@ -305,14 +276,6 @@ export type BucksLedgerContext = z.infer<typeof BucksLedgerContextSchema>;
 export type StoredBucksLedgerContext = z.infer<
   typeof StoredBucksLedgerContextSchema
 >;
-// Weekly v2 pricing uses a challenging 20–30% YES range. Keep the original
-// 40–60% range readable for v1 ledger entries because ledger history is
-// append-only and the context does not carry the weekly schema version.
-export const BucksWeeklyParlayYesProbabilityBpsSchema = z.union([
-  z.number().int().min(2000).max(3000),
-  z.number().int().min(4000).max(6000),
-]);
-
 /** Everything a settlement row records that both domains agree on. */
 const SettlementContextCommonFields = {
   type: z.literal("settlement"),
@@ -467,43 +430,6 @@ const SHARED_LEDGER_CONTEXT_VARIANTS = [
     grossPayout: BucksStakeSchema,
     credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
     voidReason: BucksParlayVoidReasonSchema.optional(),
-  }),
-  z.strictObject({
-    type: z.literal("weekly_parlay_stake"),
-    version: z.literal(1),
-    definitionId: z.number().int().positive(),
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative(),
-    side: BucksParlaySideSchema,
-    yesProbabilityBps: BucksWeeklyParlayYesProbabilityBpsSchema,
-    totalStake: BucksStakeSchema,
-    quotedGrossPayout: BucksStakeSchema,
-  }),
-  z.strictObject({
-    type: z.literal("weekly_parlay_reserve"),
-    version: z.literal(1),
-    definitionId: z.number().int().positive(),
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative(),
-    side: BucksParlaySideSchema,
-    yesProbabilityBps: BucksWeeklyParlayYesProbabilityBpsSchema,
-    totalStake: BucksStakeSchema,
-    totalReserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
-    quotedGrossPayout: BucksStakeSchema,
-  }),
-  z.strictObject({
-    type: z.literal("weekly_parlay_settlement"),
-    version: z.literal(1),
-    definitionId: z.number().int().positive(),
-    periodKey: z.iso.date(),
-    slot: z.number().int().nonnegative(),
-    side: BucksParlaySideSchema,
-    yesResult: z.boolean().optional(),
-    stake: BucksStakeSchema,
-    reserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
-    grossPayout: BucksStakeSchema,
-    credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
-    voidReason: BucksWeeklyParlayVoidReasonSchema.optional(),
   }),
   // Retired peek feature; the shape survives so historical rows still parse.
   z.strictObject({

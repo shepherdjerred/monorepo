@@ -98,36 +98,22 @@ changing model identity.
 
 ## Scout
 
-| Workflow                   | Trigger                              | Brain                  | Output                           |
-| -------------------------- | ------------------------------------ | ---------------------- | -------------------------------- |
-| data-dragon version check  | 06:00 Sun–Fri                        | deterministic          | heartbeat + **auto-merge PR**    |
-| data-dragon weekly refresh | Sat 06:00                            | deterministic          | heartbeat + **auto-merge PR**    |
-| season-refresh             | Mon 07:00                            | agent research + gates | heartbeat + PR                   |
-| showcase-refresh           | Mon 10:00                            | deterministic          | PR                               |
-| queue-windows              | daily 06:45                          | deterministic          | heartbeat + gated PR             |
-| image-gc                   | daily 04:00                          | deterministic          | S3 deletions                     |
-| competition updates        | every minute                         | deterministic          | due Discord standings            |
-| weekly parlay lifecycle    | Sun, source-defined Pacific timeline | deterministic          | beta Scout market reconciliation |
-| weekly parlay catch-up     | operator, stable period/slot ID      | deterministic          | shortened beta Scout market      |
-| realtime and post-match    | fixed Schedules                      | deterministic          | match child Workflows            |
-| initial history            | reconciliation                       | deterministic          | paged S3/lake ingestion          |
-| report Schedule reconcile  | Signal + every minute                | deterministic          | per-report Schedules             |
-| report run                 | report Schedule or manual request    | deterministic          | persisted and Discord output     |
-| Explore turn               | one user turn                        | LLM with durable guard | persisted answer and SSE         |
-| report-AI edit             | one user edit                        | LLM with durable guard | persisted report revision        |
-| queue canary               | operator before/after rollout        | deterministic          | four queue-routing results       |
-
-The weekly parlay workflow uses the Pacific timeline defined by its source
-constants and reconciles each period through finalization. Its schedule remains
-initially paused until the private-beta Discord fixture cycle is approved; see
-the [workflow-family explanation](/explanation/temporal/workflow-families/#weekly-parlay-lifecycle)
-for the durability rationale.
-
-The operator-started workflow type is
-`runScoutWeeklyParlayCatchupWorkflow`. Its input is `{ periodKey, slot }`, and
-its workflow ID is `scout-weekly-parlay-catchup-<periodKey>-<slot>`. Temporal
-rejects a duplicate live ID. The workflow does not create or modify the
-recurring schedule.
+| Workflow                   | Trigger                           | Brain                  | Output                        |
+| -------------------------- | --------------------------------- | ---------------------- | ----------------------------- |
+| data-dragon version check  | 06:00 Sun–Fri                     | deterministic          | heartbeat + **auto-merge PR** |
+| data-dragon weekly refresh | Sat 06:00                         | deterministic          | heartbeat + **auto-merge PR** |
+| season-refresh             | Mon 07:00                         | agent research + gates | heartbeat + PR                |
+| showcase-refresh           | Mon 10:00                         | deterministic          | PR                            |
+| queue-windows              | daily 06:45                       | deterministic          | heartbeat + gated PR          |
+| image-gc                   | daily 04:00                       | deterministic          | S3 deletions                  |
+| competition updates        | every minute                      | deterministic          | due Discord standings         |
+| realtime and post-match    | fixed Schedules                   | deterministic          | match child Workflows         |
+| initial history            | reconciliation                    | deterministic          | paged S3/lake ingestion       |
+| report Schedule reconcile  | Signal + every minute             | deterministic          | per-report Schedules          |
+| report run                 | report Schedule or manual request | deterministic          | persisted and Discord output  |
+| Explore turn               | one user turn                     | LLM with durable guard | persisted answer and SSE      |
+| report-AI edit             | one user edit                     | LLM with durable guard | persisted report revision     |
+| queue canary               | operator before/after rollout     | deterministic          | four queue-routing results    |
 
 ## Glitter
 

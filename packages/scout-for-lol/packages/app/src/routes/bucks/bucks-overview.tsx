@@ -235,11 +235,6 @@ export function BucksOverview() {
       meta: analyticsMeta("bucks_parlay_bet_placed"),
     }),
   );
-  const placeWeeklyMutation = useMutation(
-    trpc.bucks.placeWeeklyParlayBet.mutationOptions({
-      meta: analyticsMeta("bucks_weekly_parlay_bet_placed"),
-    }),
-  );
 
   const placeOutcome = (matchId: string, submission: BucksBetSubmission) => {
     const key = `outcome:${matchId}`;
@@ -279,26 +274,6 @@ export function BucksOverview() {
       },
     );
   };
-  const placeWeekly = (marketId: number, submission: BucksBetSubmission) => {
-    const key = `weekly:${marketId.toString()}`;
-    placeWeeklyMutation.mutate(
-      {
-        guildId,
-        marketId,
-        side: submission.side === "NO" ? "NO" : "YES",
-        stake: submission.stake,
-      },
-      {
-        onSuccess: (result) => {
-          sink.settleResult(key, result);
-        },
-        onError: (error) => {
-          sink.fail(key, error);
-        },
-      },
-    );
-  };
-
   const balance = walletQuery.data?.wallet?.balance ?? null;
   // `eligible: false` means bucks.wallet answers `{ wallet: null }` forever
   // for this member — every submission would return `not_eligible`, so the
@@ -314,9 +289,7 @@ export function BucksOverview() {
     markets?.outcome.find((market) => market.matchId === cancelTarget)
       ?.yourPosition ?? null;
   const noMarkets =
-    markets?.outcome.length === 0 &&
-    markets.parlays.length === 0 &&
-    markets.weeklyParlays.length === 0;
+    markets?.outcome.length === 0 && markets.parlays.length === 0;
 
   return (
     <div className="space-y-4">
@@ -346,8 +319,6 @@ export function BucksOverview() {
         placeOutcomePending={placeOutcomeMutation.isPending}
         placeParlay={placeParlay}
         placeParlayPending={placeParlayMutation.isPending}
-        placeWeekly={placeWeekly}
-        placeWeeklyPending={placeWeeklyMutation.isPending}
         onCancelRequest={requestCancel}
       />
       <BucksCancelDialog

@@ -892,13 +892,13 @@
       "clones": 1,
       "tokens": 113
     },
+    "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/leaderboard/weekly-leaderboard.integration.test.ts": {
+      "clones": 1,
+      "tokens": 106
+    },
     "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/parlay.integration.test.ts": {
       "clones": 1,
       "tokens": 74
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/leaderboard/weekly-leaderboard.integration.test.ts": {
-      "clones": 1,
-      "tokens": 89
     },
     "packages/scout-for-lol/packages/backend/src/betting/accounts/earnings.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/accounts/earnings.integration.test.ts": {
       "clones": 1,
@@ -911,10 +911,6 @@
     "packages/scout-for-lol/packages/backend/src/betting/concurrent-race.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/markets/place-bet.integration.test.ts": {
       "clones": 1,
       "tokens": 156
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/markets/place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-bet.ts": {
-      "clones": 1,
-      "tokens": 86
     },
     "packages/scout-for-lol/packages/backend/src/betting/notify/announce.test.ts|packages/scout-for-lol/packages/backend/src/betting/notify/announce.test.ts": {
       "clones": 2,
@@ -940,10 +936,6 @@
       "clones": 1,
       "tokens": 72
     },
-    "packages/scout-for-lol/packages/backend/src/betting/parlays/runtime/parlay-place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-bet.ts": {
-      "clones": 3,
-      "tokens": 253
-    },
     "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
       "clones": 3,
       "tokens": 230
@@ -955,18 +947,6 @@
     "packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts": {
       "clones": 1,
       "tokens": 70
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly/leaderboard/weekly-leaderboard.integration.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/bucks/bucks.router.test.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-settle.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-period.ts|packages/temporal/src/activities/scout/scout-weekly-parlay.ts": {
-      "clones": 3,
-      "tokens": 329
     },
     "packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts": {
       "clones": 4,
@@ -1207,10 +1187,6 @@
     "packages/scout-for-lol/packages/data/src/league/raw-missions.schema.ts|packages/scout-for-lol/packages/data/src/model/arena/arena.ts": {
       "clones": 1,
       "tokens": 81
-    },
-    "packages/scout-for-lol/packages/data/src/model/bucks/bryan-bucks.ts|packages/scout-for-lol/packages/data/src/model/bucks/bryan-bucks.ts": {
-      "clones": 1,
-      "tokens": 70
     },
     "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/tokens.ts": {
       "clones": 1,
