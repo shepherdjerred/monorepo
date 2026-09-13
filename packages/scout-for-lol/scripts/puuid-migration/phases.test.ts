@@ -37,8 +37,9 @@ async function seed(options: {
     oldPuuid: string;
     newPuuid: string | null;
     status: string;
-    applied?: boolean;
   }[];
+  /** Marks the database as already rewritten to the new domain. */
+  applied?: boolean;
 }): Promise<Awaited<ReturnType<typeof openDatabase>>> {
   const db = await openDatabase();
   await db.exec(
@@ -59,8 +60,13 @@ async function seed(options: {
   await ensureMapTable(db);
   for (const row of options.map ?? []) {
     await db.exec(
-      `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "gameName", "tagLine", "appliedAt") VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, 'Name', 'TAG', ${row.applied === true ? db.now() : "NULL"})`,
+      `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "gameName", "tagLine") VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, 'Name', 'TAG')`,
       [row.oldPuuid, row.newPuuid, row.status],
+    );
+  }
+  if (options.applied === true) {
+    await db.exec(
+      `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})`,
     );
   }
   return db;
@@ -120,9 +126,8 @@ test("collect refuses once the cutover is done and a new account has appeared", 
   // retired key and block every later apply and verify on a healthy account.
   const db = await seed({
     accounts: [NEW_A, POST_CUTOVER],
-    map: [
-      { oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved", applied: true },
-    ],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
   });
   await expectCollectRefusesAndRecordsNothing(db, 1);
 });
@@ -194,9 +199,8 @@ test("collect still refuses after every migrated account was untracked", async (
   // tracked value matches a mapping any more, yet the database is new-domain.
   const db = await seed({
     accounts: [POST_CUTOVER],
-    map: [
-      { oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved", applied: true },
-    ],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
   });
   await expectCollectRefusesAndRecordsNothing(db, 1);
 });
@@ -209,8 +213,26 @@ test("apply records the cutover marker once the rewrite lands", async () => {
   const { apply } = await import("./phases.ts");
   await apply(db, false);
   const rows = await db.query(
-    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "appliedAt" IS NOT NULL`,
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMigration" WHERE "appliedAt" IS NOT NULL`,
   );
   expect(Number(rows[0]?.["n"])).toBe(1);
   await db.close();
+});
+
+test("apply records the cutover even when no identities were tracked", async () => {
+  // The empty cutover: the database still moves domain, and a marker written by
+  // updating mapping rows would have recorded nothing here.
+  const db = await seed({ accounts: [] });
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+  const rows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMigration" WHERE "appliedAt" IS NOT NULL`,
+  );
+  expect(Number(rows[0]?.["n"])).toBe(1);
+  await db.close();
+});
+
+test("collect refuses after an empty cutover once a first account appears", async () => {
+  const db = await seed({ accounts: [POST_CUTOVER], applied: true });
+  await expectCollectRefusesAndRecordsNothing(db, 0);
 });

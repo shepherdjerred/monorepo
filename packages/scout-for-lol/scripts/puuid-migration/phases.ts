@@ -36,14 +36,24 @@ export async function ensureMapTable(db: Db): Promise<void> {
   await db.exec(
     `CREATE INDEX IF NOT EXISTS "PuuidKeyMap_status_idx" ON "PuuidKeyMap" ("status")`,
   );
-  // Tables created by an earlier version of this script predate the column.
-  // SQLite has no ADD COLUMN IF NOT EXISTS, so ask before adding.
-  const columns = await db.listTextColumns("PuuidKeyMap");
-  if (!columns.includes("appliedAt")) {
-    await db.exec(
-      `ALTER TABLE "PuuidKeyMap" ADD COLUMN "appliedAt" ${db.timestampType()}`,
-    );
-  }
+  // A separate single-row table, not a column on the map. CREATE TABLE IF NOT
+  // EXISTS is idempotent on both dialects, where ADD COLUMN is not — SQLite has
+  // no IF NOT EXISTS for it, and probing the column list is unreliable because
+  // a timestamp column does not appear among the text columns.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS "PuuidKeyMigration" (
+      "id"        INTEGER PRIMARY KEY,
+      "appliedAt" ${db.timestampType()}
+    )
+  `);
+}
+
+/** Whether `apply` has finished rewriting this database to the new domain. */
+async function cutoverApplied(db: Db): Promise<boolean> {
+  const rows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMigration" WHERE "appliedAt" IS NOT NULL`,
+  );
+  return countOf(rows, "cutover marker") > 0;
 }
 
 export async function collect(db: Db): Promise<void> {
@@ -106,10 +116,7 @@ export async function collect(db: Db): Promise<void> {
   // read as unmigrated while being entirely new-domain. Recording an identity
   // then sends resolve to the retired key and blocks every later apply and
   // verify on a healthy account.
-  const appliedRows = await db.query(
-    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "appliedAt" IS NOT NULL`,
-  );
-  const cutoverDone = countOf(appliedRows, "applied marker") > 0;
+  const cutoverDone = await cutoverApplied(db);
   if (cutoverDone && unknown.length > 0) {
     throw new Error(
       `This database has already been rewritten to the new key domain, but ` +
@@ -452,9 +459,13 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
     }
   });
   // Written after the rewrite, so an interrupted run leaves it unset and the
-  // database still reads as mid-migration rather than finished.
+  // database still reads as mid-migration. Written unconditionally, so a cutover
+  // performed while tracking no accounts is still recorded — updating mapping
+  // rows would touch nothing there and lose exactly the case this marker exists
+  // to cover.
   await db.exec(
-    `UPDATE "PuuidKeyMap" SET "appliedAt" = ${db.now()} WHERE "newPuuid" IS NOT NULL`,
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})
+     ON CONFLICT ("id") DO UPDATE SET "appliedAt" = ${db.now()}`,
   );
   console.log("apply: complete");
 }

@@ -10,6 +10,7 @@ export const LEGACY_OPTIONAL_TABLES = new Set([
   // Only present once the Riot PUUID key migration has run. An environment that
   // never crossed key domains has no mapping to carry.
   "PuuidKeyMap",
+  "PuuidKeyMigration",
   // The promoted image predates the parlay migration. An absent
   // BucksOpenPosition is reconstructed from pending bets in open pools; the
   // attribution and parlay tables are empty historical models.

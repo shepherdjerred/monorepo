@@ -437,8 +437,6 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       status: PuuidKeyMapStatusSchema.parse(toStr(row, "status")),
       harvestedAt: toDateOrNull(row, "harvestedAt"),
       resolvedAt: toDateOrNull(row, "resolvedAt"),
-      // Absent in snapshots taken before the column existed.
-      appliedAt: toDateOrNullIfMissing(row, "appliedAt"),
     }),
     createMany: async (tx, data) => {
       const result = await tx.puuidKeyMap.createMany({ data });
@@ -447,5 +445,23 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     count: (tx) => tx.puuidKeyMap.count(),
     findAll: (tx) =>
       tx.puuidKeyMap.findMany({ orderBy: [{ oldPuuid: "asc" }] }),
+  }),
+  defineImportModel({
+    // Carried for the same reason as the map: an unmanaged marker would be lost
+    // at promotion, and the database would then read as never migrated.
+    model: "PuuidKeyMigration",
+    idColumns: ["id"],
+    resetIdSequence: false,
+    transform: (row): Prisma.PuuidKeyMigrationCreateManyInput => ({
+      id: toInt(row, "id"),
+      appliedAt: toDateOrNull(row, "appliedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.puuidKeyMigration.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.puuidKeyMigration.count(),
+    findAll: (tx) =>
+      tx.puuidKeyMigration.findMany({ orderBy: [{ id: "asc" }] }),
   }),
 ];

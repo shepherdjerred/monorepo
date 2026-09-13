@@ -34,6 +34,20 @@ const logger = createLogger("report-lake.puuid-remap");
 export async function loadPuuidRemap(
   prisma: ExtendedPrismaClient,
 ): Promise<ReadonlyMap<string, string>> {
+  // Nothing is translated until the database itself has been rewritten.
+  // `resolve` fills in `newPuuid` one identity at a time and can run for a long
+  // while before `apply` touches anything, so reading the map early would
+  // translate historical payloads to new-domain identifiers while the account
+  // rows they join against are still old-domain — hiding exactly the migrated
+  // players it is meant to preserve, and churning rebuilds as the map grows.
+  const applied = await prisma.puuidKeyMigration.findFirst({
+    where: { appliedAt: { not: null } },
+    select: { id: true },
+  });
+  if (applied === null) {
+    return new Map();
+  }
+
   const rows = await prisma.puuidKeyMap.findMany({
     where: { newPuuid: { not: null } },
     select: { oldPuuid: true, newPuuid: true },

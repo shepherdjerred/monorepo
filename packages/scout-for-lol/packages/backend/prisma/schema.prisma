@@ -2862,12 +2862,19 @@ model PuuidKeyMap {
   status      String    @default("pending")
   harvestedAt DateTime? @db.Timestamptz()
   resolvedAt  DateTime? @db.Timestamptz()
-  /// Set when `apply` finished rewriting this database. It records the domain
-  /// of the database itself, which cannot be inferred from the tracked rows:
-  /// once every account present at migration is untracked, no tracked value
-  /// matches a mapping any more, and the database would read as unmigrated
-  /// while being fully new-domain.
-  appliedAt   DateTime? @db.Timestamptz()
 
   @@index([status])
+}
+
+/// Whether this database has been rewritten to a new Riot key domain.
+///
+/// A single row, deliberately separate from the mapping itself. It has to exist
+/// even when the map is empty — a cutover performed while tracking no accounts
+/// still moves the database to the new domain — and it has to survive every
+/// account present at migration being untracked later. Neither is true of state
+/// derived from the tracked rows or carried on the mapping rows.
+model PuuidKeyMigration {
+  /// Always 1. One row describes one database.
+  id        Int       @id @default(1)
+  appliedAt DateTime? @db.Timestamptz()
 }
