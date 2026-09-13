@@ -60,6 +60,7 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "BucksWeeklyParlayDefinition", column: "subjects" },
   { table: "BucksWeeklyParlayDefinition", column: "historySample" },
   { table: "ChallengeRunRevision", column: "selectedAccountsJson" },
+  { table: "ConfirmationIntent", column: "payload" },
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
   { table: "HallRecordCell", column: "holdersJson" },
@@ -185,6 +186,19 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   objectJson("BucksDareV2Revision", "targetsJson", "createdAt"),
   objectJson("BucksDareV2", "contractJson", "createdAt"),
   objectJson("ChallengeRunRevision", "selectedAccountsJson", "createdAt"),
+  // An unconsumed intent is an instruction that has not run yet, and its
+  // identity is frozen at prepare time and deliberately never re-resolved at
+  // confirm — see the note on `puuid` in
+  // `@scout-for-lol/data`'s confirmation-intent model. Confirming one after the
+  // cutover would replay a stale identifier straight into a new account the new
+  // key cannot use. Expired-but-unconsumed rows are included rather than
+  // excluded by a time predicate: they cost a handful of extra lookups, and a
+  // row that expires between collect and apply would otherwise change category
+  // mid-run.
+  {
+    ...objectJson("ConfirmationIntent", "payload", "createdAt"),
+    where: `"consumedAt" IS NULL`,
+  },
   objectJson("BucksParlayDefinition", "subjects", "createdAt"),
   objectJson("BucksWeeklyParlayDefinition", "subjects", "openAt"),
   objectJson("BucksWeeklyParlayDefinition", "historySample", "openAt"),

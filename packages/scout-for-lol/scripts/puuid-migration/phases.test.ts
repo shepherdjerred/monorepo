@@ -422,6 +422,34 @@ test("collect maps an identity frozen in a Dare after its account is removed", a
   await db.close();
 });
 
+test("collect maps the identity in an intent that has not been confirmed", async () => {
+  // A subscription intent freezes its PUUID at prepare time and never
+  // re-resolves it at confirm. Confirming one after the cutover would replay a
+  // stale identifier into a new account the new key cannot use.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `CREATE TABLE "ConfirmationIntent" ("id" TEXT PRIMARY KEY, "payload" TEXT, "consumedAt" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `INSERT INTO "ConfirmationIntent" VALUES ('pending', ${db.param(1)}, NULL, ${db.param(2)})`,
+    [JSON.stringify({ kind: "subscription", puuid: OLD_A }), Date.now()],
+  );
+  await db.exec(
+    `INSERT INTO "ConfirmationIntent" VALUES ('done', ${db.param(1)}, '2026-01-01', ${db.param(2)})`,
+    [JSON.stringify({ kind: "subscription", puuid: OLD_B }), Date.now()],
+  );
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid" FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+  );
+  // Only the unconfirmed one is a reason to migrate an identity; the consumed
+  // row is a record of work already done, and its account is tracked in its
+  // own right.
+  expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A]);
+  await db.close();
+});
+
 test("collect refuses a PUUID column nobody classified", async () => {
   // The guard against the failure this migration hit twice: a column holding
   // identities that nothing migrates, failing silently later because an
