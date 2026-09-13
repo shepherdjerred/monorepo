@@ -42,7 +42,7 @@
         },
         "openai_project_users": { "$ref": "#/$defs/openAiProjectUserMap" },
         "openai_project_spend_alerts": {
-          "$ref": "#/$defs/spendAlertMap"
+          "$ref": "#/$defs/openAiProjectSpendAlertMap"
         },
         "openai_groups": { "$ref": "#/$defs/openAiGroupMap" },
         "openai_group_users": { "$ref": "#/$defs/openAiGroupUserMap" },
@@ -454,6 +454,40 @@
           "threshold_amount": { "type": "number" },
           "currency": { "type": "string", "minLength": 1 },
           "interval": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "openAiProjectSpendAlertMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project_key",
+          "threshold_amount",
+          "currency",
+          "interval",
+          "notification_channel_type",
+          "notification_channel_recipients"
+        ],
+        "properties": {
+          "project_key": { "type": "string", "minLength": 1 },
+          "threshold_amount": { "type": "number" },
+          "currency": { "type": "string", "minLength": 1 },
+          "interval": { "type": "string", "minLength": 1 },
+          "notification_channel_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "notification_channel_recipients": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "notification_channel_subject_prefix": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },

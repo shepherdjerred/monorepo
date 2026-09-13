@@ -216,10 +216,20 @@ Two independent gates:
   When enabled, SHA-pinned model verification is fatal at boot — this gate can
   never live in Flipt, because unauthenticated Flipt must not control audio
   capture. Asset filenames are the manifest in
-  `src/voice-assistant/constants.ts`.
+  `src/voice-assistant/constants.ts`. Beta sets this gate; production leaves it
+  unset (`packages/homelab/.../resources/scout/index.ts`).
 - **Guild (flag)**: `voice_assistant_enabled` — beta-only
   (production-hard-disabled); it also decides where the `/scout join`/`leave`
   subcommands register.
+
+The models are baked into every image at `/opt/scout/voice` by the Dockerfile's
+`voice-models` stage, whose downloads are SHA-256 pinned, and a `voice-smoke`
+stage loads them as the deploy uid under both keyword runtimes before the image
+can be published. Baking unconditionally keeps the published digest identical
+whether or not voice is switched on, so enabling it is purely a Deployment
+change. Because bootstrap is fatal, the credential and the image must be in
+place _before_ `VOICE_ASSISTANT_ENABLED` is set — otherwise the pod crash-loops
+rather than starting without voice.
 
 The guild `/scout` command is a per-guild merge: `ask` follows the Explore
 allowlist, `join`/`leave` follow the voice flag
