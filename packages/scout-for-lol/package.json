@@ -23,6 +23,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "devDependencies": {
+    "@prisma/adapter-pg": "7.9.1",
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",

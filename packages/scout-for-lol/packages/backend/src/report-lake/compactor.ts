@@ -13,6 +13,7 @@ type CompactionSummary = PublishedCompactionSummary;
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import configuration from "#src/configuration.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { loadPuuidRemap } from "#src/report-lake/puuid-remap.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
@@ -337,6 +338,10 @@ async function rebuildLocked(
     );
   }
   const client = createS3Client();
+  // The S3 corpus is canonical and untouched, so payloads captured before the
+  // Riot production-key cutover still carry old-domain PUUIDs. Translate them
+  // on the way in or a rebuild silently splits one player into two identities.
+  const puuidRemap = await loadPuuidRemap(prisma);
   const skippedMatches = await populateMatchesFromS3({
     client,
     bucket,
@@ -344,6 +349,7 @@ async function rebuildLocked(
     teamWriter: matchTeamWriter,
     teamBanWriter: matchTeamBanWriter,
     foldedIds: foldedMatchIds,
+    puuidRemap,
     abortSignal: deadline,
     onProgress: (progress) => {
       onProgress?.({ phase: "reading-s3", table: "matches", ...progress });
@@ -354,6 +360,7 @@ async function rebuildLocked(
     bucket,
     writer: prematchWriter,
     foldedIds: foldedPrematchIds,
+    puuidRemap,
     abortSignal: deadline,
     onProgress: (progress) => {
       onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
@@ -363,6 +370,7 @@ async function rebuildLocked(
     client,
     bucket,
     buildDir,
+    puuidRemap,
     abortSignal: deadline,
     timeoutMs: remainingTimeoutMs(),
     onProgress: (progress) => {
