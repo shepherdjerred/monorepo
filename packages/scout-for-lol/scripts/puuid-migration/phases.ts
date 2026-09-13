@@ -74,14 +74,26 @@ export async function collect(db: Db): Promise<void> {
   await auditForUnregistered(db, columns, tracked);
   console.log("  audit clean");
 
+  // Skip identities the map already knows on EITHER side. After a completed
+  // apply the tracked columns hold new-domain values, so inserting them blindly
+  // would create a second, bogus `pending` row per migrated player — which
+  // harvest would then 404 against the old key and apply would refuse. Re-running
+  // collect is advertised as safe, so it has to be.
+  const known = await knownIdentities(db);
+  let recorded = 0;
   for (const puuid of tracked) {
+    if (known.has(puuid)) {
+      continue;
+    }
     await db.exec(
       `INSERT INTO "PuuidKeyMap" ("oldPuuid") VALUES (${db.param(1)}) ON CONFLICT DO NOTHING`,
       [puuid],
     );
+    recorded++;
   }
   console.log(
-    `\ncollect: ${tracked.size.toString()} tracked PUUIDs recorded for migration`,
+    `\ncollect: ${recorded.toString()} new tracked PUUIDs recorded ` +
+      `(${(tracked.size - recorded).toString()} already mapped)`,
   );
 }
 
@@ -330,8 +342,7 @@ async function loadMap(db: Db): Promise<Map<string, string>> {
  * `collect`, which has no map row at all and would otherwise be rewritten to
  * nothing and stranded.
  */
-async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
-  const tracked = await readTrackedPuuids(db);
+async function knownIdentities(db: Db): Promise<Set<string>> {
   const rows = await db.query(
     `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
   );
@@ -343,6 +354,12 @@ async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
       known.add(mapped);
     }
   }
+  return known;
+}
+
+async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
+  const tracked = await readTrackedPuuids(db);
+  const known = await knownIdentities(db);
   return [...tracked].filter((puuid) => !known.has(puuid));
 }
 
