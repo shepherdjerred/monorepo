@@ -116,13 +116,13 @@ cwd = "."
 enabled = false
 
 [features]
-memories = true
+memories = false
 js_repl = false
 
 hooks = true
 [memories]
-generate_memories = true
-use_memories = true
+generate_memories = false
+use_memories = false
 
 [desktop]
 appearanceTheme = "system"
