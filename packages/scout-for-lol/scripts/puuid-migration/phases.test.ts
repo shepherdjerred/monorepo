@@ -33,7 +33,12 @@ async function remove(): Promise<void> {
  */
 async function seed(options: {
   accounts: string[];
-  map?: { oldPuuid: string; newPuuid: string | null; status: string }[];
+  map?: {
+    oldPuuid: string;
+    newPuuid: string | null;
+    status: string;
+    applied?: boolean;
+  }[];
 }): Promise<Awaited<ReturnType<typeof openDatabase>>> {
   const db = await openDatabase();
   await db.exec(
@@ -54,7 +59,7 @@ async function seed(options: {
   await ensureMapTable(db);
   for (const row of options.map ?? []) {
     await db.exec(
-      `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "gameName", "tagLine") VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, 'Name', 'TAG')`,
+      `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "gameName", "tagLine", "appliedAt") VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, 'Name', 'TAG', ${row.applied === true ? db.now() : "NULL"})`,
       [row.oldPuuid, row.newPuuid, row.status],
     );
   }
@@ -72,6 +77,21 @@ async function openDatabase() {
 
 beforeEach(remove);
 afterAll(remove);
+
+/**
+ * Both post-cutover cases assert the same contract: collect refuses and leaves
+ * the map exactly as it found it, having recorded nothing.
+ */
+async function expectCollectRefusesAndRecordsNothing(
+  db: Awaited<ReturnType<typeof openDatabase>>,
+  mappedRows: number,
+): Promise<void> {
+  const { collect } = await import("./phases.ts");
+  await expect(collect(db)).rejects.toThrow(/already been rewritten/);
+  const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
+  expect(rows.length).toBe(mappedRows);
+  await db.close();
+}
 
 test("collect records every identity on an unmigrated database", async () => {
   const db = await seed({ accounts: [OLD_A, OLD_B] });
@@ -100,13 +120,11 @@ test("collect refuses once the cutover is done and a new account has appeared", 
   // retired key and block every later apply and verify on a healthy account.
   const db = await seed({
     accounts: [NEW_A, POST_CUTOVER],
-    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    map: [
+      { oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved", applied: true },
+    ],
   });
-  const { collect } = await import("./phases.ts");
-  await expect(collect(db)).rejects.toThrow(/already been rewritten/);
-  const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
-  expect(rows.length).toBe(1);
-  await db.close();
+  await expectCollectRefusesAndRecordsNothing(db, 1);
 });
 
 test("apply refuses while any tracked identity is unresolved", async () => {
@@ -168,5 +186,31 @@ test("apply rejects a map that sends two identities to the same person", async (
   });
   const { apply } = await import("./phases.ts");
   await expect(apply(db, false)).rejects.toThrow(/claimed by multiple/);
+  await db.close();
+});
+
+test("collect still refuses after every migrated account was untracked", async () => {
+  // The regression that killed inferring cutover state from tracked rows: no
+  // tracked value matches a mapping any more, yet the database is new-domain.
+  const db = await seed({
+    accounts: [POST_CUTOVER],
+    map: [
+      { oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved", applied: true },
+    ],
+  });
+  await expectCollectRefusesAndRecordsNothing(db, 1);
+});
+
+test("apply records the cutover marker once the rewrite lands", async () => {
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+  });
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+  const rows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "appliedAt" IS NOT NULL`,
+  );
+  expect(Number(rows[0]?.["n"])).toBe(1);
   await db.close();
 });

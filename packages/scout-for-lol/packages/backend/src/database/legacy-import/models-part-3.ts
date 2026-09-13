@@ -437,6 +437,8 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       status: PuuidKeyMapStatusSchema.parse(toStr(row, "status")),
       harvestedAt: toDateOrNull(row, "harvestedAt"),
       resolvedAt: toDateOrNull(row, "resolvedAt"),
+      // Absent in snapshots taken before the column existed.
+      appliedAt: toDateOrNullIfMissing(row, "appliedAt"),
     }),
     createMany: async (tx, data) => {
       const result = await tx.puuidKeyMap.createMany({ data });

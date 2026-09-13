@@ -2862,6 +2862,12 @@ model PuuidKeyMap {
   status      String    @default("pending")
   harvestedAt DateTime? @db.Timestamptz()
   resolvedAt  DateTime? @db.Timestamptz()
+  /// Set when `apply` finished rewriting this database. It records the domain
+  /// of the database itself, which cannot be inferred from the tracked rows:
+  /// once every account present at migration is untracked, no tracked value
+  /// matches a mapping any more, and the database would read as unmigrated
+  /// while being fully new-domain.
+  appliedAt   DateTime? @db.Timestamptz()
 
   @@index([status])
 }

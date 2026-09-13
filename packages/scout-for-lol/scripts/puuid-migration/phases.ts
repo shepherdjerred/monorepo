@@ -36,6 +36,14 @@ export async function ensureMapTable(db: Db): Promise<void> {
   await db.exec(
     `CREATE INDEX IF NOT EXISTS "PuuidKeyMap_status_idx" ON "PuuidKeyMap" ("status")`,
   );
+  // Tables created by an earlier version of this script predate the column.
+  // SQLite has no ADD COLUMN IF NOT EXISTS, so ask before adding.
+  const columns = await db.listTextColumns("PuuidKeyMap");
+  if (!columns.includes("appliedAt")) {
+    await db.exec(
+      `ALTER TABLE "PuuidKeyMap" ADD COLUMN "appliedAt" ${db.timestampType()}`,
+    );
+  }
 }
 
 export async function collect(db: Db): Promise<void> {
@@ -81,25 +89,27 @@ export async function collect(db: Db): Promise<void> {
     `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
   );
   const known = new Set<string>();
-  const rewritten = new Set<string>();
   for (const row of mapRows) {
     known.add(asString(row["oldPuuid"], "oldPuuid"));
     const mapped = asOptionalString(row["newPuuid"]);
     if (mapped !== null) {
       known.add(mapped);
-      rewritten.add(mapped);
     }
   }
 
   const unknown = [...tracked].filter((puuid) => !known.has(puuid));
 
-  // Evidence that the rewrite already ran against THIS database: a tracked
-  // column holds a value the map lists as new-domain. Once that is true, an
-  // unknown tracked identity is a normal account registered since the cutover —
-  // it is already in the new domain. Recording it as an `oldPuuid` would send
-  // resolve to the retired key, earn a 404, and block every later apply and
-  // verify on a perfectly healthy account.
-  const cutoverDone = [...tracked].some((puuid) => rewritten.has(puuid));
+  // Whether the rewrite already ran against THIS database, read from the map
+  // rather than inferred from the tracked rows. Inference was wrong: it asked
+  // whether a tracked value matched a mapping, so a database whose migrated
+  // accounts were all later untracked — or one migrated while tracking nobody —
+  // read as unmigrated while being entirely new-domain. Recording an identity
+  // then sends resolve to the retired key and blocks every later apply and
+  // verify on a healthy account.
+  const appliedRows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "appliedAt" IS NOT NULL`,
+  );
+  const cutoverDone = countOf(appliedRows, "applied marker") > 0;
   if (cutoverDone && unknown.length > 0) {
     throw new Error(
       `This database has already been rewritten to the new key domain, but ` +
@@ -441,6 +451,11 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
       }
     }
   });
+  // Written after the rewrite, so an interrupted run leaves it unset and the
+  // database still reads as mid-migration rather than finished.
+  await db.exec(
+    `UPDATE "PuuidKeyMap" SET "appliedAt" = ${db.now()} WHERE "newPuuid" IS NOT NULL`,
+  );
   console.log("apply: complete");
 }
 
