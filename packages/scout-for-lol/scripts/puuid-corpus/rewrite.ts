@@ -132,9 +132,13 @@ export async function rewriteCorpus(
     },
   );
 
+  // "untouched" rather than "already new-domain": an object is skipped either
+  // because a previous run rewrote it or because it never named anybody in the
+  // map, and from here those are indistinguishable. Claiming the first would be
+  // a guess, and on a partial map it would usually be the wrong one.
   console.log(
     `rewrite: ${rewritten.toString()} rewritten, ` +
-      `${report.skipped.toString()} already new-domain, ` +
+      `${report.skipped.toString()} untouched (named nobody in the map), ` +
       `${report.failed.toString()} failed`,
   );
   return { rewritten, skipped: report.skipped, failed: report.failed };

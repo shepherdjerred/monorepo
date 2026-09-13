@@ -7,11 +7,12 @@ sidebar:
 
 Riot encrypts PUUIDs per API-key holder, so moving Scout to a different key
 invalidates every identifier it has stored. Refreshing a key in place does not;
-only crossing between holders does. This guide re-domains the stored identities,
-swaps the credential, and verifies the result.
+only crossing between holders does. This guide re-domains the stored identities
+across both databases and the raw archive, swaps the credential, and verifies
+the result.
 
-Budget a maintenance window. `scout-backend` is down in both environments for
-the middle of it.
+Budget a short maintenance window for the database rewrite, and days of
+unattended running before it for the Riot lookups.
 
 :::danger[The first hop is a one-way door]
 Only the **old** key can say who an old PUUID belongs to. Once it is retired,
@@ -27,23 +28,40 @@ domains:
 old PUUID --(old key)--> Riot ID --(new key)--> new PUUID
 ```
 
-[`migrate-puuid-key.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/migrate-puuid-key.ts) runs
-that in five resumable phases. Each is safe to re-run.
+Two scripts run it, one per store. Every phase is resumable and safe to re-run.
 
-| Phase     | Does                                                                   | Key used |
-| --------- | ---------------------------------------------------------------------- | -------- |
-| `collect` | Finds every PUUID-bearing column, then every distinct tracked identity | none     |
-| `harvest` | old PUUID → Riot ID                                                    | old      |
-| `resolve` | Riot ID → new PUUID                                                    | new      |
-| `apply`   | Rewrites every stored reference                                        | none     |
-| `verify`  | Asserts no old-domain identity survives                                | none     |
+[`migrate-puuid-key.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/migrate-puuid-key.ts)
+owns the databases:
 
-Only **tracked** players are re-domained. Scout stores a PUUID for every match
-participant, but those are opaque strings it never resolves or displays. They
-keep their old values, and `collect` reports the count. What counts as tracked
-is the declared source list in
-[`support.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/puuid-migration/support.ts), which names
-the few columns that are records of who was _seen_ rather than who is _watched_.
+| Phase     | Does                                                    | Key used |
+| --------- | ------------------------------------------------------- | -------- |
+| `collect` | Finds every PUUID-bearing column, then every identity   | none     |
+| `seed`    | Adds identities from a corpus inventory                 | none     |
+| `resolve` | old PUUID → Riot ID → new PUUID, both hops per identity | both     |
+| `apply`   | Rewrites every stored reference                         | none     |
+| `strand`  | Accepts identities Riot can no longer resolve           | none     |
+| `verify`  | Asserts no old-domain identity survives                 | none     |
+
+[`puuid-corpus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/puuid-corpus.ts) owns S3:
+
+| Phase       | Does                                                   |
+| ----------- | ------------------------------------------------------ |
+| `inventory` | Lists every distinct identity the archive has recorded |
+| `rewrite`   | Re-domains every object, in place                      |
+
+### Scope is a decision, and it is expensive to get wrong
+
+Re-domaining only the players Scout _watches_ is far cheaper, and it is what the
+first migration did. The consequence, measured afterwards: of 174,573 distinct
+participant PUUIDs in prod's archive, 167 were mapped. The corpus stayed 99.9
+percent old-domain by identity.
+
+That is not cosmetic. A player who becomes tracked later carries a new-domain
+identifier while their appearances in games already archived carry an old one,
+so their history before they were subscribed is invisible, permanently.
+
+Covering everyone means resolving every participant ever seen. Budget days, not
+hours.
 
 ## 1. Back up both databases
 
@@ -57,19 +75,64 @@ VACUUM INTO '/data/backups/pre-puuid-migration.sqlite';
 Beta is Postgres. Use `pg_dump -Fc`, and restore-verify it with the **server's**
 `pg_restore`, not your local one.
 
-## 2. Dry-run against both, live
+## 2. Inventory the archive
 
-Run `collect`, `harvest`, then `resolve` with the app still running. Nothing is
-rewritten, so this is safe hot.
+From inside the cluster, or through a port-forward to SeaweedFS. This is the
+only step that needs S3, and it needs no Riot key at all.
 
 ```bash
-export OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=… DATABASE_URL=…
-bun scripts/migrate-puuid-key.ts collect
+S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts inventory --out prod.jsonl
+S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory --out beta.jsonl
 ```
 
-Export them rather than prefixing one command. Every phase reads all three at
-import, including the ones that never call Riot, so a later `apply` in a fresh
-shell stops on a validation error before it does anything.
+It runs once. Every object written since the key swap already carries
+new-domain identifiers, so the set of old-domain identities is closed and cannot
+grow while the next step runs for days. Nothing needs re-scanning afterwards.
+
+`--prefix games/2026/01/` narrows a run, which is how a failed slice is retried
+without re-reading 61 GiB.
+
+## 3. Resolve every identity
+
+Both hops, one identity at a time, gated by the old key's 0.67 requests per
+second. At ~240k identities that is **three to four days**.
+
+Seed a local SQLite file and work from that. The long run then needs only a Riot
+key and an internet connection — no tunnel to hold open, nothing to lose when a
+laptop sleeps or roams.
+
+```bash
+export DATABASE_URL="file:$HOME/puuid-harvest.sqlite"
+export OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=…
+bun scripts/migrate-puuid-key.ts seed --from prod.jsonl
+bun scripts/migrate-puuid-key.ts seed --from beta.jsonl
+bun scripts/migrate-puuid-key.ts resolve
+```
+
+One map serves both environments: they ran on the same old key, so an old PUUID
+means the same player in either.
+
+:::caution[The archived Riot ID is not the answer]
+Every payload carries the handle each player had at game time, which makes it
+tempting to skip the old-key hop. Sampled against the old key, **4 of 25
+identities from 8-month-old games had renamed since**. A stale handle either
+404s or resolves to whoever claimed it — a 200, for the wrong person. `resolve`
+always re-derives from the old key.
+:::
+
+### Surviving a multi-day run
+
+Supervise it with a launchd agent — `RunAtLoad` plus `KeepAlive`, wrapped in
+`caffeinate -ims` — and let it restart through sleeps, network changes and
+reboots. Keep the plist out of chezmoi and remove it when the run finishes.
+
+`resolve` waits out a full rate-limit window before its first request, because a
+restarted process cannot know how much of the window its predecessor spent.
+That is what makes `KeepAlive` safe: a crash loop cannot become a burst. Pass
+`--no-wait-window` only for short interactive runs.
+
+Take the key from 1Password with `op run` so it never lands on disk or in the
+plist.
 
 Gate on three things: zero collisions, zero unresolved, and every new identifier
 differing from its old one. The script enforces all three
@@ -84,7 +147,7 @@ half its two-minute budget so ingestion is not starved.
 
 Run the two environments sequentially for the same reason.
 
-## 3. Scale down and re-run the delta
+## 4. Scale down and catch the delta
 
 Scaling `scout-backend` to zero is the only thing that stops Riot writes; there
 is no maintenance flag for core ingestion. It is a routine operation — the
@@ -103,23 +166,64 @@ a short-lived pod mounting `scout-storage-claim` to hold the volume, and delete
 it before scaling back up so the backend can remount.
 :::
 
-Re-run all three of `collect`, `harvest`, and `resolve` to catch anything
-written since step 2. `harvest` and `resolve` only work on identities already in
-the map, so skipping `collect` leaves an account registered in between invisible
-until `apply` refuses it mid-window.
+Run `collect` and then `resolve` to catch anything registered since step 3.
+`resolve` only works on identities already in the map, so skipping `collect`
+leaves a new account invisible until `apply` refuses it mid-window.
 
-## 4. Apply and verify
+## 5. Load the map and rewrite the databases
 
 ```bash
+# on the laptop
+bun scripts/migrate-puuid-key.ts export --out map.jsonl
+
+# against each database
+bun scripts/migrate-puuid-key.ts import --from map.jsonl
+bun scripts/migrate-puuid-key.ts strand --accept-stranded
 bun scripts/migrate-puuid-key.ts apply --apply
 bun scripts/migrate-puuid-key.ts verify
 ```
 
-`apply` refuses unless every tracked identity resolved. `verify` must report
-zero old-domain rows. Record the pre-apply count first so you have something to
-compare against.
+`strand` writes off identities Riot can no longer resolve. It is separate and
+flag-gated because it is permanent: those keep old-domain values, and once the
+old key is retired nothing can revisit the decision. Read the count before
+accepting it.
 
-## 5. Swap the credential
+`apply` refuses while any identity is unresolved and undecided. `verify` must
+report zero old-domain rows and a recorded cutover. Record the pre-apply count
+first so there is something to compare against.
+
+:::danger[Databases before S3]
+Do the databases first. While the archive is part-rewritten, the report lake
+still translates the objects that have not moved yet — so the lake stays
+consistent at every moment. Rewriting S3 first inverts that.
+:::
+
+## 6. Rewrite the archive
+
+```bash
+S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite            # dry run
+S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite --apply
+```
+
+No downtime. Live ingest keeps writing new-domain objects, which the pass skips,
+and a rewritten object no longer names an old identity — so the run is
+idempotent and resumable with no cursor to lose. Re-run it until it reports zero
+failures.
+
+It refuses to touch anything until the database `apply` has landed. Translating
+the archive to an identifier the database does not hold would hide the players
+it names.
+
+`--cutover 2026-09-13T05:07:05Z` skips objects written after the key swap
+without reading them. An optimization only: the body check is the authority.
+
+## 7. Rebuild the report lakes
+
+Both lakes are derived, so they pick the change up from the rewritten archive.
+The remap fingerprint changes when the map grows, which already forces a full
+rebuild rather than a fold.
+
+## 8. Swap the credential
 
 Update `RIOT_API_KEY` in both 1Password items. Beta's item also feeds local dev
 through `dev-web.env.tpl`.
@@ -136,23 +240,31 @@ confirmed.
 Check the tier landed by reading `X-App-Rate-Limit` off any response. Production
 reports `500:10,30000:600`.
 
-## 6. Scale back up and watch
+## 9. Scale back up and watch
 
 Confirm ingestion resumes with no Riot errors, and that a tracked player's
 prematch and postmatch reports both fire.
 
 ## What stays in the old domain
 
-Raw S3 payloads are the record and are never rewritten. The lake translates them
-at rebuild instead
-([`puuid-remap.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/puuid-remap.ts)),
-so an environment gets continuous history only once that code is deployed there.
-See
-[Scout's report lake](/explanation/scout-report-lake/).
+**Identities Riot can no longer resolve.** A deleted or transferred account has
+no Riot ID to bridge with, so it keeps its old identifier forever. `verify`
+reports the count.
 
-Untracked participants, historical backups, and observability tags also keep
-their old values. A restore from a backup taken before the cutover reintroduces
-old-domain identifiers.
+**Backups, for their retention window** — 30 daily, 8 weekly, 12 monthly. A
+restore from before the rewrite reintroduces old-domain identifiers, which is
+why the read-time remap
+([`puuid-remap.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/puuid-remap.ts))
+stays in place. Once the archive holds no old identifiers it is a no-op, and it
+is still correct for a restore and for stranded identities.
+
+**Observability tags, logs and traces.** Sentry, Bugsink, Loki and Tempo keep
+whatever they recorded, and age out on their own retention.
+
+Rewriting the archive costs something real: it is no longer a byte-faithful copy
+of what Riot returned, and re-serialization normalizes formatting on every
+object that changes. That is the trade for a corpus whose identifiers still mean
+something. See [Scout's report lake](/explanation/scout-report-lake/).
 
 ## Related
 
