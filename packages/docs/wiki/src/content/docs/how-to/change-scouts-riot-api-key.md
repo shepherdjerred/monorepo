@@ -63,9 +63,13 @@ Run `collect`, `harvest`, then `resolve` with the app still running. Nothing is
 rewritten, so this is safe hot.
 
 ```bash
-OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=… DATABASE_URL=… \
-  bun scripts/migrate-puuid-key.ts collect
+export OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=… DATABASE_URL=…
+bun scripts/migrate-puuid-key.ts collect
 ```
+
+Export them rather than prefixing one command. Every phase reads all three at
+import, including the ones that never call Riot, so a later `apply` in a fresh
+shell stops on a validation error before it does anything.
 
 Gate on three things: zero collisions, zero unresolved, and every new identifier
 differing from its old one. The script enforces all three
