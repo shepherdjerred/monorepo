@@ -44,9 +44,14 @@ bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session
   `dev:login` URL with PinchTab.
 - It copies the machine-wide lake seed in automatically. `dev:seed` only builds
   or refreshes that seed, and Explore reads the lake rather than the database.
-- The default boot **takes over the beta Discord gateway**, disconnecting the
-  deployed beta bot until you stop it. A secondary copy needs
-  `--no-discord-gateway` plus distinct `--backend-port` and `--web-port`.
+- The default boot leaves the BETA Discord gateway alone and runs the
+  application role: web surface, interactive and lake workers, report lake.
+  `--discord-gateway` opts into owning that gateway, which disconnects the
+  deployed beta bot for the duration — one owner per token — and is what
+  guild-picker and channel-picker flows need. A secondary copy only needs
+  distinct `--backend-port` and `--web-port`.
+  (`packages/scout-for-lol/scripts/dev/dev-web.ts`; the warning in
+  `dev-web.env.tpl` predates the opt-in default and is stale.)
 - `Failed to start server. Is port 3000 in use?` means something else already
   holds the default backend port (OrbStack and other container runtimes commonly
   do). Pass `--backend-port`/`--web-port` rather than killing the holder.

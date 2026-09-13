@@ -39,10 +39,11 @@ Verbs that matter for UI work:
 | `screenshot --selector <ref>` | One element instead of the page |
 | `screenshot --scale 0.5` | Smaller file for a PR attachment |
 
-For a scripted harness rather than one-off commands, reuse the working example
-in `packages/discord-plays-mario-kart/packages/backend/scripts/lib/`, which has
-a `captureScreenshot` primitive and drives PinchTab tabs over REST with the
-token read from `PINCHTAB_CONFIG`.
+For a scripted harness rather than one-off commands, drive the REST API
+directly: read the token from the config `PINCHTAB_CONFIG` selects, find the
+running headed instance via `GET /instances`, and drive its tab with
+`POST /tabs/{tabId}/action` and `GET /tabs/{tabId}/screenshot`. Wrap the capture
+in one helper and reuse it per scenario.
 
 ## Installation
 
