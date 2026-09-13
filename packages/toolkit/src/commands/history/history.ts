@@ -30,7 +30,10 @@ import {
 import { currentHistoryRuntimes } from "#lib/history/runtime.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
 import { addExcerpts, targetedMessages } from "#lib/history/targeted.ts";
-import type { HistorySourceName } from "#lib/history/types.ts";
+import {
+  HistorySourceNameSchema,
+  type HistorySourceName,
+} from "#lib/history/types.ts";
 
 const USAGE = `
 toolkit history — search local agent conversation history
@@ -40,30 +43,28 @@ Search and browse the existing local index:
   toolkit history recent [--since 7d] [--source <name>] [--limit 20] [--include-current] [--include-duplicates] [--json]
   toolkit history show <id> [--query <text>] [--messages 8] [--include-tools] [--json]
   toolkit history sources [--json]
+  toolkit history usage [--since 7d] [--source <name>] [--json]
+
+--since accepts 7d, 24h, 1w, an ISO date, or "all" (no lower bound); omitting
+it defaults to 7d.
 
 Manage background ingestion:
   toolkit history daemon install
   toolkit history daemon start|stop|uninstall|status|reindex
 
-Sources: conductor, claude, codex, cursor, opencode-conductor, opencode-standalone
+Sources: conductor, claude, codex, cursor, opencode-conductor, opencode-standalone, antigravity, grok
 `;
 function parseSource(value: string | undefined): HistorySourceName | null {
   if (value === undefined) {
     return null;
   }
-  switch (value) {
-    case "conductor":
-    case "claude":
-    case "codex":
-    case "cursor":
-    case "opencode-conductor":
-    case "opencode-standalone":
-      return value;
-    default:
-      throw new Error(
-        `Unknown history source "${value}"; run 'toolkit history sources' for valid names`,
-      );
+  const parsed = HistorySourceNameSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new Error(
+      `Unknown history source "${value}"; run 'toolkit history sources' for valid names`,
+    );
   }
+  return parsed.data;
 }
 
 function parseCommon(args: string[]) {
@@ -314,6 +315,52 @@ async function sourcesCommand(args: string[]): Promise<void> {
   console.log(lines.join("\n"));
 }
 
+function formatTokens(value: number): string {
+  return value.toLocaleString("en-US");
+}
+
+function formatCost(costUsd: number, costComplete: boolean): string {
+  const amount = `$${costUsd.toFixed(2)}`;
+  return costComplete
+    ? amount
+    : `${amount} (partial — some sessions have no pricing data)`;
+}
+
+async function usageCommand(args: string[]): Promise<void> {
+  const { values } = parseCommon(args);
+  const source = parseSource(values.source);
+  const since = parseSince(values.since);
+  const report = await withReadOnlyIndex((index) =>
+    index.usage({ since, source }),
+  );
+  if (values.json) {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+  const labels = sourceLabels();
+  const lines = ["## Token usage", ""];
+  for (const group of report.bySource) {
+    const label = labels.get(group.source) ?? group.source;
+    const cachedNote =
+      group.cachedInputTokens > 0
+        ? `, ${formatTokens(group.cachedInputTokens)} of that input cached`
+        : "";
+    lines.push(
+      `- **${label}** — ${String(group.documentCount)} sessions, ` +
+        `${formatTokens(group.inputTokens)} in / ${formatTokens(group.outputTokens)} out ` +
+        `(+${formatTokens(group.cacheReadTokens)} cache read, ${formatTokens(group.cacheCreationTokens)} cache write${cachedNote}) — ` +
+        formatCost(group.costUsd, group.costComplete),
+    );
+  }
+  lines.push("");
+  lines.push(
+    `**Total** — ${String(report.total.documentCount)} sessions, ` +
+      `${formatTokens(report.total.inputTokens)} in / ${formatTokens(report.total.outputTokens)} out — ` +
+      formatCost(report.total.costUsd, report.total.costComplete),
+  );
+  console.log(lines.join("\n"));
+}
+
 async function daemonStatusCommand(json: boolean): Promise<void> {
   const runtimePaths = defaultHistoryRuntimePaths();
   const launchAgent = await launchAgentStatus(runtimePaths);
@@ -411,6 +458,9 @@ export async function handleHistoryCommand(
         break;
       case "sources":
         await sourcesCommand(args);
+        break;
+      case "usage":
+        await usageCommand(args);
         break;
       case "daemon":
         await daemonCommand(args);

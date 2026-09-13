@@ -106,9 +106,9 @@ is already occupied rather than capturing an unrelated process.
 #### History search
 
 `history` maintains a private local index of Conductor, Claude Code, Codex,
-Cursor, bundled OpenCode, and standalone OpenCode conversations. Install the
-macOS LaunchAgent once; search itself only reads the index and never performs
-live service checks.
+Cursor, bundled OpenCode, standalone OpenCode, Antigravity, and Grok CLI
+conversations. Install the macOS LaunchAgent once; search itself only reads
+the index and never performs live service checks.
 
 | Command                                                                      | Description                                   |
 | ---------------------------------------------------------------------------- | --------------------------------------------- |
@@ -117,6 +117,7 @@ live service checks.
 | `history recent [--since 7d] [--limit N]`                                    | List recent indexed sessions                  |
 | `history show <ID> [--query TEXT] [--messages 8] [--include-tools] [--json]` | Read bounded, role-aware conversation context |
 | `history sources [--json]`                                                   | Show source availability and scan errors      |
+| `history usage [--since 7d] [--source NAME] [--json]`                        | Token counts and estimated cost by source     |
 | `history daemon install`                                                     | Install and start the macOS LaunchAgent       |
 | `history daemon status\|reindex`                                             | Inspect or refresh ingestion                  |
 | `history daemon stop\|start\|uninstall`                                      | Manage the LaunchAgent lifecycle              |
@@ -127,7 +128,12 @@ toolkit history recent --since 7d
 toolkit history search "argocd prune" --since 90d
 toolkit history show <ID_FROM_SEARCH> --query "argocd prune"
 toolkit history sources
+toolkit history usage --since 30d
+toolkit history usage --since all
 ```
+
+`--since` accepts `7d`/`24h`/`1w`, an ISO date, or `all` for no lower bound;
+omitting it defaults to the last 7 days on every `history` subcommand.
 
 Search ranks title, dialogue, and tool text separately and uses recency only to
 break relevance ties. Unquoted terms keep AND-prefix behavior; pass literal
@@ -151,6 +157,33 @@ compaction records. Standalone OpenCode's
 `~/.local/share/opencode/auth.json` is never read or indexed. Use `deployed`,
 `pr health`, or the relevant live client to verify current status after using
 history for context.
+
+Antigravity's local conversation databases carry no reconstructible transcript
+text (only usage telemetry), so its indexed dialogue is minimal by design —
+its value here is the token/cost data, not search.
+
+##### Token and cost tracking
+
+`history usage` reports token counts and an estimated USD cost per source,
+populated for the sources whose local data actually carries usage
+(Claude Code, Codex, Antigravity, Grok — Cursor, Conductor, and OpenCode
+don't appear in the report at all today, since their local data doesn't
+reliably carry usage). Cost comes from whichever source is authoritative:
+Grok CLI self-reports its own per-turn cost (`costUsdTicks`), which is used
+directly; every other source is priced against the shared
+`@shepherdjerred/llm-models` catalog. A session using a model the catalog
+doesn't price reports its real token counts with `cost_complete: false` and
+a null cost — never a fabricated `$0`. These are local estimates for
+personal visibility, not authoritative billing.
+
+Usage is tracked per turn/generation, each tagged with when it actually
+happened, not as one lifetime total per session — so `--since` filters to
+activity within the requested window even for a session that spans the
+window boundary, instead of attributing its entire history to whichever
+window its most recent message falls in. Codex's `cached_input_tokens` is
+priced as a subset already included in its input tokens (OpenAI's cache
+discount), distinct from the additive cache-read/cache-write tokens Claude
+Code and Antigravity's Claude-backed sessions report.
 
 Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
 

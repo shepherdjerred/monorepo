@@ -7,8 +7,10 @@ import {
 } from "#lib/history/query/messages.ts";
 import type { HistoryPaths } from "#lib/history/paths.ts";
 import {
+  batches,
   firstText,
   pathExists,
+  placeholders,
   readDatabase,
   requireTables,
   rowValue,
@@ -29,18 +31,6 @@ import type {
   HistorySourceReadResult,
   HistorySourceResult,
 } from "#lib/history/types.ts";
-
-function placeholders(count: number): string {
-  return Array.from({ length: count }, () => "?").join(", ");
-}
-
-function batches<T>(values: readonly T[], size = 8): T[][] {
-  const result: T[][] = [];
-  for (let offset = 0; offset < values.length; offset += size) {
-    result.push(values.slice(offset, offset + size));
-  }
-  return result;
-}
 
 function conductorMessages(
   database: Database,
@@ -223,6 +213,7 @@ async function scanConductor(
             createdAt,
             updatedAt: parseTimestamp(rowValue(row, "updated_at"), new Date(0)),
             runtimeId: sourceId,
+            usageEvents: [],
           },
           messages.get(sourceId) ?? [],
         );

@@ -118,6 +118,7 @@ async function cursorDocuments(
           openingPromptHash: openingPromptHash(openingPrompt(messages)),
           dialogueText: dialogueText(messages),
           toolOutputText: toolOutputText(messages),
+          usageEvents: [],
         } satisfies HistoryDocument,
       ];
     });
