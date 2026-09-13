@@ -306,6 +306,70 @@ async function negativeSoak(
   return activations;
 }
 
+export type SoakActivation = {
+  /** Simulated milliseconds into the fed audio when this false wake fired. */
+  readonly elapsedMs: number;
+};
+
+/**
+ * Feed one flat sequence of pre-encoded Opus packets through a single, never-reset
+ * `VoiceAudioLifecycle` for a target simulated duration, recording every activation's timestamp.
+ *
+ * Generalizes `negativeSoak`'s continuous-session mechanism (same verification-barrier and
+ * silence-ticker wiring, same "hold the feed for in-flight verification or the soak under-drives
+ * the verifier it exists to measure" correctness requirement) to an arbitrary packet source —
+ * real recorded audio, not just the synthetic corpus's cycled fixtures. If `packets` is shorter
+ * than the target duration, it loops from the start; source it long enough that looping isn't
+ * load-bearing for the result if that matters to the caller.
+ */
+export async function runContinuousActivationSoak(
+  models: LocalVoiceModels,
+  packets: readonly Uint8Array[],
+  lifecycleDeps: VoiceLifecycleDeps,
+  targetMs: number,
+): Promise<readonly SoakActivation[]> {
+  if (packets.length === 0) {
+    throw new Error("No packets supplied for continuous soak");
+  }
+  const activations: SoakActivation[] = [];
+  let elapsedMs = 0;
+  const verification = verificationBarrier();
+  const lifecycle = new VoiceAudioLifecycle({
+    ...lifecycleDeps,
+    models,
+    preRollMs: VOICE_WAKE_WINDOW_MS,
+    maxUtteranceMs: 15_000,
+    createSilenceTicker: inertSilenceTicker,
+    onLocalVerificationScheduled: verification.onScheduled,
+    onWake: () => {
+      activations.push({ elapsedMs });
+    },
+    onTurn: (turn) => {
+      turn.pcm16k.fill(0);
+      return Promise.resolve();
+    },
+  });
+  let packetIndex = 0;
+  try {
+    while (elapsedMs < targetMs) {
+      const packet = packets[packetIndex % packets.length];
+      if (packet === undefined) {
+        throw new Error("Packet selection failed");
+      }
+      lifecycle.accept(audio(packet, packetIndex));
+      await verification.settle();
+      elapsedMs += 20;
+      packetIndex += 1;
+    }
+    lifecycle.finishInput();
+    await verification.settle();
+    await Bun.sleep(0);
+  } finally {
+    lifecycle.close();
+  }
+  return activations;
+}
+
 type RuntimeEvaluationInputs = {
   readonly corpusDir: string;
   readonly manifest: VoiceCorpusManifest;

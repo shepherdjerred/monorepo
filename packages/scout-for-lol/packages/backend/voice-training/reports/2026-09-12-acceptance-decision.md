@@ -51,3 +51,28 @@ attempts above.
 The formal human holdout (3 speakers × 10 clips, `voice:human:evaluate
 --phrase hey-scout`) was explicitly not run — Jerred reviewed the live probe
 result and confirmed it as sufficient acceptance evidence on its own.
+
+## Addendum: real-audio false-accept validation (2026-09-12)
+
+Codex's follow-up review correctly flagged that the above acceptance never
+independently re-checked the soak's failing false-accept numbers against
+anything but the synthetic corpus. `2026-09-12-real-audio-soak.md` closes that
+gap: ~2.5 hours of real public LoL Esports broadcast commentary (two leagues,
+different casting teams), fed through the same continuous-session mechanism as
+the synthetic soak, produced **0 false wakes over the full 2-hour comparison
+window on both native and wasm runtimes** — versus 28 (native) / 46 (wasm) on
+the synthetic near-match corpus over the same window.
+
+This is direct measured evidence, not a hypothesis: the synthetic near-match
+corpus's adversarial "scout"-adjacent TTS/procedural phrasings do not reflect
+how the word is actually said in natural broadcast speech, even in a domain
+that says "scout" constantly. The bare-"scout" false-trigger risk this PR was
+blocked on is not corroborated by real audio at the tested scale.
+
+**Decision (Jerred, operator): the acceptance stands, now on real-audio
+evidence for the previously-unaddressed side of the review.** Existing
+mitigations (cloud-verification rate limiting, per-key spend ceiling) continue
+to bound residual risk from the synthetic-corpus-measured rate. The
+corpus/soak harness's external-validity gap (synthetic-only audio) remains a
+known limitation worth tracking if this methodology is reused for future
+phrase acceptance, but it no longer blocks this PR.
