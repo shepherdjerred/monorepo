@@ -1,6 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker } from "@temporalio/worker";
+import { describe, expect, test } from "vitest";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "#src/match-receipts-v2.ts";
 import {
@@ -22,10 +20,9 @@ import {
   MATCH_ID,
   type ScoutV2MatchStore,
 } from "./match-v2.test-fixtures.ts";
-import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
+import { useScoutV2WorkflowHarness } from "./workflow-harness.test-fixtures.ts";
 
-let environment: TestWorkflowEnvironment;
-const workers = createScoutWorkerPool();
+const harness = useScoutV2WorkflowHarness();
 
 const stage = "dev" as const;
 const SECOND_MATCH_ID = RiotMatchIdSchema.parse("NA1_9002");
@@ -41,60 +38,25 @@ const SERIAL_CORE = [
   "planMatchFanOutV2",
 ];
 
-beforeEach(async () => {
-  environment = await TestWorkflowEnvironment.createTimeSkipping();
-}, 60_000);
-
-afterEach(async () => {
-  await workers.drain();
-  await environment.teardown();
-});
-
-/**
- * One Workflow worker and one Activity worker. The SDK refuses a second worker
- * on a task queue already served in this process, so every scenario — including
- * a crash and its replay — runs against a single Activity registration whose
- * behaviour comes from the store it closes over.
- */
-async function startWorkers(activities: object): Promise<void> {
-  await workers.start(
-    await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: "scout-dev",
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      maxConcurrentWorkflowTaskExecutions: 4,
-    }),
-  );
-  await workers.start(
-    await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: "scout-dev-realtime",
-      activities,
-      maxConcurrentActivityTaskExecutions: 4,
-    }),
-  );
-}
-
 async function processMatch(
   workflowId: string,
   riotMatchId = MATCH_ID,
 ): Promise<unknown> {
-  return await environment.client.workflow.execute(
-    scoutMatchProcessingV2Workflow,
-    {
+  return await harness
+    .client()
+    .workflow.execute(scoutMatchProcessingV2Workflow, {
       taskQueue: "scout-dev",
       workflowId,
       args: [
         scoutMatchProcessingV2InputCodec.serialize({ stage, riotMatchId }),
       ],
-    },
-  );
+    });
 }
 
 async function discover(workflowId: string): Promise<unknown> {
-  return await environment.client.workflow.execute(
-    scoutPostMatchDiscoveryV2Workflow,
-    {
+  return await harness
+    .client()
+    .workflow.execute(scoutPostMatchDiscoveryV2Workflow, {
       taskQueue: "scout-dev",
       workflowId,
       args: [
@@ -103,14 +65,13 @@ async function discover(workflowId: string): Promise<unknown> {
           trigger: "schedule",
         }),
       ],
-    },
-  );
+    });
 }
 
 describe("the V2 per-match core", () => {
   test("runs the serial core in order and attests to every phase", async () => {
     const store = createScoutV2MatchStore();
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     const result = await processMatch("match-core-happy");
 
@@ -142,7 +103,7 @@ describe("the V2 per-match core", () => {
 
   test("fans out only after the domain commit and the cursor advance", async () => {
     const store = createScoutV2MatchStore();
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
     await processMatch("match-core-ordering");
 
     // A notification is a promise about a fact. Planning it before the
@@ -206,7 +167,7 @@ describe("the V2 per-match core", () => {
     "resumes past $name once its receipt stands",
     async (scenario) => {
       const store = scenario.store();
-      await startWorkers(scoutV2MatchActivityStubs(store));
+      await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
       const result = await processMatch(
         `match-core-resume-${String(store.receiptKinds.length)}`,
@@ -226,7 +187,7 @@ describe("the V2 per-match core", () => {
 
   test("stops before the effects when another pipeline owns the match", async () => {
     const store = createScoutV2MatchStore({ owner: { kind: "legacy-v1" } });
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     const result = await processMatch("match-core-foreign-owner");
 
@@ -244,7 +205,7 @@ describe("the V2 per-match core", () => {
 
   test("skips the downstream effects for an ARCHIVE_ONLY match", async () => {
     const store = createScoutV2MatchStore({ policy: "ARCHIVE_ONLY" });
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     await processMatch("match-core-archive-only");
 
@@ -361,7 +322,7 @@ describe("a V2 per-match run killed mid-pipeline", () => {
     "applies each effect exactly once across $name",
     async (scenario) => {
       const store = createScoutV2MatchStore({ failAt: scenario.failAt });
-      await startWorkers(scoutV2MatchActivityStubs(store));
+      await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
       await expect(
         processMatch(`match-crash-${scenario.failAt}`),
@@ -408,7 +369,7 @@ describe("V2 post-match discovery", () => {
         log.push(`${input.riotMatchId}:${phase}`);
         if (delayMs > 0) await new Promise((done) => setTimeout(done, delayMs));
       };
-    await startWorkers({
+    await harness.startWorkers({
       discoverPostMatchIdsV2: () => ({
         riotMatchIds: [MATCH_ID, SECOND_MATCH_ID],
         complete: true,
@@ -460,7 +421,7 @@ describe("V2 post-match discovery", () => {
 
   test("stops at a match another execution already owns", async () => {
     const store: ScoutV2MatchStore = createScoutV2MatchStore();
-    await startWorkers({
+    await harness.startWorkers({
       ...scoutV2MatchActivityStubs(store),
       discoverPostMatchIdsV2: () => ({
         riotMatchIds: [MATCH_ID],

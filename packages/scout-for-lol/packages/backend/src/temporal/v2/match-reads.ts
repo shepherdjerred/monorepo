@@ -41,7 +41,7 @@ import { discoverPostMatchIntents } from "#src/league/tasks/postmatch/match-hist
  * and starting a child on it is precisely how a user gets told the same thing
  * twice.
  */
-const DRIVABLE_INTENT_STATES: ReadonlySet<string> = new Set([
+export const DRIVABLE_INTENT_STATES: ReadonlySet<string> = new Set([
   "pending",
   "ready",
   "sending",

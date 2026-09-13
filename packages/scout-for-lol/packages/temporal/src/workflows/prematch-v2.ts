@@ -1,11 +1,30 @@
-import type {
-  ScoutPrematchDiscoveryV2InputEnvelope,
-  ScoutPrematchDiscoveryV2ResultEnvelope,
-  ScoutPrematchGameV2InputEnvelope,
-  ScoutPrematchGameV2ResultEnvelope,
+import { startChild } from "@temporalio/workflow";
+import {
+  ApplicationFailure,
+  WorkflowExecutionAlreadyStartedError,
+} from "@temporalio/common";
+import type { ScoutStage } from "#src/contracts.ts";
+import type { ScoutPrematchGameRef } from "#src/contracts-v2.ts";
+import {
+  scoutPrematchDiscoveryV2InputCodec,
+  scoutPrematchDiscoveryV2ResultCodec,
+  scoutPrematchGameV2InputCodec,
+  scoutPrematchGameV2ResultCodec,
+  type ScoutPrematchDiscoveryV2InputEnvelope,
+  type ScoutPrematchDiscoveryV2ResultEnvelope,
+  type ScoutPrematchGameV2InputEnvelope,
+  type ScoutPrematchGameV2ResultEnvelope,
 } from "#src/workflow-contracts-v2.ts";
-import { SCOUT_WORKFLOW_NAMES } from "#src/identifiers.ts";
-import { unimplementedV2Workflow } from "./unimplemented-v2.ts";
+import {
+  scoutPrematchGameV2WorkflowId,
+  scoutTaskQueues,
+} from "#src/identifiers.ts";
+import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
+import { realtimeV2Activities } from "./activity-options.ts";
+import {
+  planMatchFanOutChildrenV2,
+  startableMatchFanOutCountsV2,
+} from "./match-fan-out-v2.ts";
 
 /**
  * Prematch discovery, V2.
@@ -15,14 +34,81 @@ import { unimplementedV2Workflow } from "./unimplemented-v2.ts";
  * REFERENCE, never the spectator payload: the payload is large, is already
  * destined for the object store, and would otherwise be copied into a
  * Workflow history that keeps it forever.
+ *
+ * ## Why this one does not wait for its children
+ *
+ * Post-match discovery awaits each child in turn because bounded Dare plans
+ * are ordered by match end time, so a later match must not settle while an
+ * earlier one is still being processed. Live games have no such chronology —
+ * two games starting a second apart are independent — and this poller is a
+ * SINGLETON: `scoutPrematchDiscoveryV2WorkflowId` takes only the stage, so one
+ * execution exists per stage at a time. Waiting would make the next poll wait
+ * on the slowest game, and a game-start notification that arrives after the
+ * game is worth nothing. Children are therefore started and abandoned.
+ *
+ * That singleton ID is also why this Workflow's Schedule needs an explicit
+ * overlap policy when it is created: without one, a poll that outlives its
+ * interval and the poll behind it are the same Workflow ID, and Temporal's
+ * default would buffer rather than skip.
  */
-export function scoutPrematchDiscoveryV2Workflow(
-  input: ScoutPrematchDiscoveryV2InputEnvelope,
+export async function scoutPrematchDiscoveryV2Workflow(
+  rawInput: ScoutPrematchDiscoveryV2InputEnvelope,
 ): Promise<ScoutPrematchDiscoveryV2ResultEnvelope> {
-  return unimplementedV2Workflow(
-    SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
-    input.kind,
+  const input = scoutPrematchDiscoveryV2InputCodec.parse(rawInput);
+  setWorkflowPhase("**Phase:** discovering live games");
+  const scan = await realtimeV2Activities(input.stage).discoverPrematchGamesV2(
+    input,
   );
+
+  let childrenStarted = 0;
+  for (const gameRef of scan.games) {
+    setWorkflowPhase(
+      `**Phase:** starting prematch game \`${gameRef.platform}_${gameRef.gameId}\``,
+    );
+    if (await startPrematchGameChild(input.stage, gameRef)) {
+      childrenStarted += 1;
+    }
+  }
+
+  return scoutPrematchDiscoveryV2ResultCodec.serialize({
+    status: "completed",
+    discovered: scan.games.length,
+    childrenStarted,
+    complete: scan.complete,
+  });
+}
+
+/**
+ * Start one live game's child, or report that its ID is already taken.
+ *
+ * A taken ID is the ORDINARY answer here, not a fault. The same game surfaces
+ * on every poll for as long as it is live, and `scoutPrematchGameV2WorkflowId`
+ * deliberately drops the puuid so every tracked account in one game computes
+ * one ID. `ALLOW_DUPLICATE_FAILED_ONLY` then does the whole dedup: a running
+ * or completed child refuses the start, while a FAILED one is replaced, so a
+ * game whose capture died is retried by the next poll without a sweep.
+ *
+ * Unlike post-match discovery, a refused start does not stop the run. There is
+ * no ordering to protect, and stopping would strand every game discovered
+ * after the one that happens to already be in flight.
+ */
+async function startPrematchGameChild(
+  stage: ScoutStage,
+  gameRef: ScoutPrematchGameRef,
+): Promise<boolean> {
+  try {
+    await startChild(scoutPrematchGameV2Workflow, {
+      workflowId: scoutPrematchGameV2WorkflowId(stage, gameRef),
+      workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
+      taskQueue: scoutTaskQueues(stage).workflow,
+      parentClosePolicy: "ABANDON",
+      args: [scoutPrematchGameV2InputCodec.serialize({ stage, gameRef })],
+    });
+    return true;
+  } catch (error) {
+    if (error instanceof WorkflowExecutionAlreadyStartedError) return false;
+    throw error;
+  }
 }
 
 /**
@@ -37,12 +123,70 @@ export function scoutPrematchDiscoveryV2Workflow(
  * Several tracked accounts can be in the same game, and they are the same
  * snapshot. The Workflow ID drops the puuid for exactly that reason, so the
  * duplicates collapse instead of racing.
+ *
+ * ## Why there is no resume read
+ *
+ * The per-match core opens with `readMatchPipelineStateV2` because it has four
+ * phases with separate durable effects to skip past. This has one: capture.
+ * There is also nothing for such a read to answer — the pipeline-state
+ * aggregate hangs off `MatchObservation`, and a live game has not been
+ * observed yet by definition. The replay gate therefore lives inside
+ * `archivePrematchSnapshotV2`, which reads its own `raw-archive-prematch` and
+ * `lake-staging-prematch` receipts before writing either, exactly as
+ * `archiveMatchArtifactsV2` does. A run killed anywhere re-enters one
+ * idempotent Activity.
+ *
+ * The fan-out is planned after the capture for the same reason the per-match
+ * core plans after its commit: a notification is a promise about a fact, and a
+ * child started before the snapshot was durable could announce a game whose
+ * record the pipeline then failed to keep.
  */
-export function scoutPrematchGameV2Workflow(
-  input: ScoutPrematchGameV2InputEnvelope,
+export async function scoutPrematchGameV2Workflow(
+  rawInput: ScoutPrematchGameV2InputEnvelope,
 ): Promise<ScoutPrematchGameV2ResultEnvelope> {
-  return unimplementedV2Workflow(
-    SCOUT_WORKFLOW_NAMES.prematchGameV2,
-    input.kind,
+  const input = scoutPrematchGameV2InputCodec.parse(rawInput);
+  const activities = realtimeV2Activities(input.stage);
+
+  setWorkflowPhase("**Phase:** archiving the prematch snapshot");
+  const archive = await activities.archivePrematchSnapshotV2(input);
+  const riotMatchId = archive.riotMatchId;
+
+  setWorkflowPhase("**Phase:** planning the prematch fan-out");
+  const plan = await activities.planPrematchFanOutV2({
+    stage: input.stage,
+    riotMatchId,
+  });
+  if (plan.lakeProjection) {
+    // A prematch run has no lake child to start and no field to report one in:
+    // the snapshot's lake rows are staged by `archivePrematchSnapshotV2`
+    // itself, and `scoutLakeProjectionV2Workflow` projects the MatchV5 payload,
+    // which does not exist while the game is still being played. A plan that
+    // asked for one is a broken contract, not something to drop silently.
+    throw ApplicationFailure.nonRetryable(
+      `Prematch fan-out for ${riotMatchId} asked for a lake projection, which the prematch path does not own`,
+      "BrokenFanOutPlan",
+    );
+  }
+  const children = planMatchFanOutChildrenV2({
+    stage: input.stage,
+    riotMatchId,
+    plan,
+  });
+  const startable = startableMatchFanOutCountsV2(children);
+
+  // Nothing captured AND nothing to announce means the game was already over
+  // when this run reached the spectator endpoint. Saying "completed" would
+  // claim a snapshot exists.
+  const observedSomething =
+    archive.artifacts.length > 0 || plan.notificationIntentKeys.length > 0;
+  setWorkflowPhase(
+    `**Phase:** planned ${String(children.length)} notification children, started ${String(startable.notifications)}`,
   );
+
+  return scoutPrematchGameV2ResultCodec.serialize({
+    status: observedSomething ? "completed" : "no-op",
+    riotMatchId,
+    receiptKinds: archive.artifacts.map((artifact) => artifact.receipt.kind),
+    childrenStarted: { notifications: startable.notifications },
+  });
 }

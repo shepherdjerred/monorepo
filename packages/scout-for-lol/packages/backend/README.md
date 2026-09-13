@@ -161,6 +161,77 @@ read-back could not run inside one. The guard and the fact are therefore two
 commits by construction, which is why every V2 guarded-effect result reports
 them as separate outcomes and names the reconcile.
 
+## The V2 prematch path
+
+The `prematch-*` modules beside them serve `scoutPrematchDiscoveryV2Workflow`
+and `scoutPrematchGameV2Workflow`, and they are shaped differently from the
+per-match core on purpose.
+
+There is no resume-point read, because there is nothing for one to answer: the
+pipeline-state aggregate hangs off `MatchObservation`, and a live game has not
+been observed yet by definition. The per-game Workflow has one phase instead of
+four, so its replay gate lives inside `archivePrematchSnapshotV2`, which reads
+its own `raw-archive-prematch` and `lake-staging-prematch` receipts before
+writing either. There are also no V2 stage receipts here — those exist so a
+resumed run can gate a phase whose evidence it cannot reconstruct, and the two
+evidence-bearing receipts this path writes already answer exactly the question
+it asks.
+
+The capture stages the lake rows inline rather than deferring to
+`stageLakeProjectionV2`, which is the one place this path diverges from the
+per-match core's separation of archive from projection. It has nowhere to defer
+to: `scoutLakeProjectionV2Workflow` is keyed by a match id and projects the
+MatchV5 payload, which does not exist while the game is still being played.
+
+A receipt conflict is never returned as a commit. Both writes are gated on a
+receipt read, so `receipt-evidence-mismatch` can only mean another writer
+recorded different evidence for the same identity in between — two producers
+disagreeing about the snapshot's canonical bytes. Reporting it as a commit
+would put that receipt's kind in the Workflow's `receiptKinds`, so the run
+would claim an attestation it does not hold and then complete, leaving the
+drift inside one Activity result no later poll re-examines. It throws
+non-retryably instead, because a retry would read the standing receipt and
+converge quietly on the other writer's descriptor, burying exactly the signal
+worth seeing. A receipt that could not be written at all is the opposite case
+and throws retryably.
+
+The capture also mints the prematch delivery intents, and that is likewise
+forced rather than chosen. `planPrematchFanOutV2` READS intents — the frozen
+contract's discipline — and receives only a match reference, while the channels
+owed an announcement are derived from the tracked accounts in the game, which
+only the spectator roster names. The capture is the one Activity holding that
+roster. It mints them `pending`; `markNotificationReadyV2` is the notification
+Workflow's own phase.
+
+Both pipelines mint against the same channel while the rollout runs, so the
+prematch intent key format lives in `durable/match/delivery-intents.ts`
+(`prematchDeliveryKeyPrefix` + `deliveryIntentKey`) and both callers build it
+there. Two spellings would mean two rows and one channel told twice. The V2
+write is strict where v1's recorder is fail-open, for the reason the section
+above gives, and it reads before it writes: `upsertIntent` compares the whole
+stored row, so a retry on a later clock would otherwise be answered
+`intent-differs`.
+
+An `intent-differs` conflict that survives that read is reported rather than
+thrown — the opposite call from the receipt conflict above, because the two
+mean different things. A receipt mismatch is two producers disagreeing about a
+fact, where only one answer can be true. `intent-differs` is two producers
+minting the same INSTRUCTION during the window where both pipelines are live,
+differing only in the clock each stamped it with; the stored row is a valid,
+drivable instruction whoever wrote it. Failing would turn a benign dual-run
+race into a flapping child. It stays a distinct outcome rather than folding
+into "already existed", so a rate that climbs after v1 is retired — when the
+race should be impossible — is visible.
+
+Dedup is the per-game Workflow ID rather than the `ActiveGame` row.
+`scoutPrematchGameV2WorkflowId` drops the puuid, so one game surfaced through
+every tracked account in it computes one ID, and
+`ALLOW_DUPLICATE_FAILED_ONLY` replaces a run that failed while refusing one
+that is running or done. Unlike post-match discovery, the poller does not wait
+for its children and does not stop at a taken ID: live games have no chronology
+to protect, and the discovery Workflow ID is a per-stage singleton, so waiting
+would put the next poll behind the slowest game.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client
