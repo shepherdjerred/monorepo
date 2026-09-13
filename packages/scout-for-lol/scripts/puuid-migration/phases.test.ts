@@ -43,7 +43,7 @@ async function seed(options: {
 }): Promise<Awaited<ReturnType<typeof openDatabase>>> {
   const db = await openDatabase();
   await db.exec(
-    `CREATE TABLE "Account" ("id" INTEGER PRIMARY KEY, "puuid" TEXT, "riotGameName" TEXT, "riotTagLine" TEXT)`,
+    `CREATE TABLE "Account" ("id" INTEGER PRIMARY KEY, "puuid" TEXT, "riotGameName" TEXT, "riotTagLine" TEXT, "createdTime" TEXT)`,
   );
   await db.exec(
     `CREATE TABLE "MatchRankHistory" ("id" INTEGER PRIMARY KEY, "puuid" TEXT)`,
@@ -52,7 +52,7 @@ async function seed(options: {
   for (const puuid of options.accounts) {
     id++;
     await db.exec(
-      `INSERT INTO "Account" VALUES (${db.param(1)}, ${db.param(2)}, 'Name', 'TAG')`,
+      `INSERT INTO "Account" VALUES (${db.param(1)}, ${db.param(2)}, 'Name', 'TAG', ${db.now()})`,
       [id, puuid],
     );
   }
@@ -65,8 +65,10 @@ async function seed(options: {
     );
   }
   if (options.applied === true) {
+    // Dated before the seeded accounts so they read as registered since the
+    // cutover, which is the case the stray check must not fault.
     await db.exec(
-      `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})`,
+      `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, datetime('now', '-1 day'))`,
     );
   }
   return db;
@@ -172,12 +174,27 @@ test("verify fails when a translated identity survives the rewrite", async () =>
 });
 
 test("verify fails when a tracked identity was never mapped", async () => {
+  // No cutover marker: the migration is still in flight, so anything unmapped
+  // is missed work.
   const db = await seed({
     accounts: [NEW_A, POST_CUTOVER],
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
   });
   const { verify } = await import("./phases.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
+  await db.close();
+});
+
+test("verify accepts accounts registered after the cutover", async () => {
+  // Both accounts postdate the marker written by seed(), so neither is a stray;
+  // treating them as such would fail verify forever on healthy accounts.
+  const db = await seed({
+    accounts: [NEW_A, POST_CUTOVER],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  const { verify } = await import("./phases.ts");
+  await verify(db);
   await db.close();
 });
 

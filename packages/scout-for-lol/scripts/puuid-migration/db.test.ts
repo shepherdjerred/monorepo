@@ -30,9 +30,16 @@ afterAll(removeDatabase);
  * WHERE matched nothing, and the run reported success having written zero rows.
  * Postgres's `$1` is numbered, so beta never surfaced it.
  */
-test("bound parameters are positional by number, not by appearance", async () => {
+/** The migration refuses to create its target, so a fixture must exist first. */
+async function openFixture() {
+  const { Database } = await import("bun:sqlite");
+  new Database(dbPath, { create: true }).close();
   const { openDb } = await import("./db.ts");
-  const db = await openDb();
+  return openDb();
+}
+
+test("bound parameters are positional by number, not by appearance", async () => {
+  const db = await openFixture();
 
   await db.exec(`CREATE TABLE "T" ("key" TEXT PRIMARY KEY, "value" TEXT)`);
   await db.exec(
@@ -53,9 +60,8 @@ test("bound parameters are positional by number, not by appearance", async () =>
 });
 
 test("discovery classifies scalar and JSON PUUID columns", async () => {
-  const { openDb } = await import("./db.ts");
   const { discoverColumns } = await import("./discovery.ts");
-  const db = await openDb();
+  const db = await openFixture();
 
   await db.exec(
     `CREATE TABLE "Account" ("id" INTEGER PRIMARY KEY, "puuid" TEXT)`,

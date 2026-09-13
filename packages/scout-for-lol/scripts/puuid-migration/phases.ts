@@ -56,6 +56,34 @@ async function cutoverApplied(db: Db): Promise<boolean> {
   return countOf(rows, "cutover marker") > 0;
 }
 
+/**
+ * Tracked identities that should have been migrated and were not.
+ *
+ * Before the cutover, any unmapped tracked identity is missed work. After it,
+ * most are not: an account registered since is already new-domain and is
+ * deliberately absent from the map, which is why `collect` refuses to record
+ * one. Only an account that predates the cutover and is still unmapped was
+ * actually skipped — so the marker's timestamp, not its mere presence, is what
+ * separates the two. Without that distinction a re-run of the advertised
+ * resumable `verify` would fail permanently on healthy accounts.
+ */
+async function strayIdentities(db: Db): Promise<string[]> {
+  const unmapped = await unmappedTrackedIdentities(db);
+  if (unmapped.length === 0 || !(await cutoverApplied(db))) {
+    return unmapped;
+  }
+  const rows = await db.query(`
+    SELECT a."puuid" AS v FROM "Account" a
+     WHERE a."createdTime" < (
+       SELECT m."appliedAt" FROM "PuuidKeyMigration" m WHERE m."id" = 1
+     )
+  `);
+  const predatingCutover = new Set(
+    rows.map((r) => asString(r["v"], "account puuid")),
+  );
+  return unmapped.filter((puuid) => predatingCutover.has(puuid));
+}
+
 export async function collect(db: Db): Promise<void> {
   const columns = await discoverColumns(db);
   console.log(
@@ -539,10 +567,10 @@ export async function verify(db: Db): Promise<void> {
   // path holds no lock across it, so an account registered during the cutover
   // could still slip in behind it. Re-checking here turns that race from
   // undetectable into a failed verification.
-  const strays = await unmappedTrackedIdentities(db);
+  const strays = await strayIdentities(db);
   if (strays.length > 0) {
     console.error(
-      `  ${strays.length.toString()} tracked identities have no map row; they were registered after collect and are unmigrated`,
+      `  ${strays.length.toString()} tracked identities predate the cutover and have no map row; they were never migrated`,
     );
   }
 
