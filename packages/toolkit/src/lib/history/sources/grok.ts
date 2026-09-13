@@ -26,9 +26,11 @@ import type {
 } from "#lib/history/types.ts";
 import {
   reportedCost,
+  requiredUsageNumber,
   usageEventEntry,
   type UsageCost,
   type UsageCounts,
+  type UsageFieldLocation,
 } from "#lib/history/usage-cost.ts";
 
 const TICKS_PER_USD = 1e10;
@@ -46,34 +48,14 @@ type GrokSessionMeta = {
   readonly defaultModel: string | null;
 };
 
-type GrokLineLocation = {
-  readonly filePath: string;
-  readonly lineNumber: number;
-};
+type GrokLineLocation = UsageFieldLocation;
 
-/**
- * A usage field that's absent is a legitimate "not reported" case (e.g. a
- * model with no extended reasoning omits `reasoningTokens` entirely) and
- * defaults to zero. A field that's *present* but not a finite number is
- * malformed data, not a legitimate zero — silently coercing it (as a bare
- * `typeof value === "number"` check would) understates tokens and cost the
- * same way an unvalidated `modelUsage` entry did, so it's rejected instead.
- */
 function grokNumberField(
   usage: Record<string, unknown>,
   key: string,
   location: GrokLineLocation,
 ): number {
-  const value = usage[key];
-  if (value === undefined || value === null) {
-    return 0;
-  }
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new TypeError(
-      `Malformed Grok usage field "${key}" on line ${String(location.lineNumber)} in ${location.filePath}`,
-    );
-  }
-  return value;
+  return requiredUsageNumber("Grok", usage, key, location);
 }
 
 function grokReportedCost(

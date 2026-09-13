@@ -71,6 +71,40 @@ export function reportedCost(costUsd: number | null): UsageCost {
   return { costUsd, costComplete: costUsd !== null };
 }
 
+export type UsageFieldLocation = {
+  readonly filePath: string;
+  readonly lineNumber: number;
+};
+
+/**
+ * A usage count field that's absent (`undefined`) is a legitimate
+ * "not reported" case and defaults to zero — but a field that's *present*,
+ * including an explicit JSON `null`, and isn't a finite number is malformed
+ * data, not a legitimate zero. Silently coercing it (as a bare
+ * `typeof value === "number"` check would) understates tokens and cost the
+ * same way an unvalidated container field would: the scan reports success
+ * and ingestion replaces the last good index with a permanently-partial
+ * total. Shared across Claude, Codex, and Grok, whose usage parsers all hit
+ * this same gap independently.
+ */
+export function requiredUsageNumber(
+  source: string,
+  usage: Record<string, unknown>,
+  key: string,
+  location: UsageFieldLocation,
+): number {
+  const value = usage[key];
+  if (value === undefined) {
+    return 0;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError(
+      `Malformed ${source} usage field "${key}" on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  return value;
+}
+
 /** One priced usage event, tagged with when it actually happened. */
 export function usageEventEntry(
   occurredAt: string,

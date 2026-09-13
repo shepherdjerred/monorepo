@@ -6,13 +6,11 @@ import {
 import type { UsageEventEntry } from "@shepherdjerred/toolkit/lib/history/types.ts";
 import {
   catalogCost,
+  requiredUsageNumber,
   usageEventEntry,
   type UsageCounts,
+  type UsageFieldLocation,
 } from "@shepherdjerred/toolkit/lib/history/usage-cost.ts";
-
-function numberValue(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
 
 type CodexRolloutAccumulator = {
   threadId: string | null;
@@ -67,14 +65,37 @@ function applyTurnContext(
   }
 }
 
-function usageCounts(usage: Record<string, unknown>): UsageCounts {
+function usageCounts(
+  usage: Record<string, unknown>,
+  location: UsageFieldLocation,
+): UsageCounts {
   return {
-    inputTokens: numberValue(usage["input_tokens"]),
-    outputTokens: numberValue(usage["output_tokens"]),
+    inputTokens: requiredUsageNumber("Codex", usage, "input_tokens", location),
+    outputTokens: requiredUsageNumber(
+      "Codex",
+      usage,
+      "output_tokens",
+      location,
+    ),
     cacheReadTokens: 0,
-    cacheCreationTokens: numberValue(usage["cache_write_input_tokens"]),
-    cachedInputTokens: numberValue(usage["cached_input_tokens"]),
-    reasoningTokens: numberValue(usage["reasoning_output_tokens"]),
+    cacheCreationTokens: requiredUsageNumber(
+      "Codex",
+      usage,
+      "cache_write_input_tokens",
+      location,
+    ),
+    cachedInputTokens: requiredUsageNumber(
+      "Codex",
+      usage,
+      "cached_input_tokens",
+      location,
+    ),
+    reasoningTokens: requiredUsageNumber(
+      "Codex",
+      usage,
+      "reasoning_output_tokens",
+      location,
+    ),
   };
 }
 
@@ -92,6 +113,7 @@ function applyTokenUsageRecord(
   accumulator: CodexRolloutAccumulator,
   payload: Record<string, unknown>,
   timestamp: string | null,
+  location: UsageFieldLocation,
 ): void {
   if (timestamp === null) {
     return;
@@ -100,7 +122,7 @@ function applyTokenUsageRecord(
   if (usage === null) {
     return;
   }
-  const counts = usageCounts(usage);
+  const counts = usageCounts(usage, location);
   const model = accumulator.currentModel ?? "unknown";
   accumulator.tokenUsageRecordEvents.push(
     usageEventEntry(timestamp, model, counts, catalogCost([model], counts)),
@@ -118,6 +140,7 @@ function applyTokenCount(
   accumulator: CodexRolloutAccumulator,
   payload: Record<string, unknown>,
   timestamp: string | null,
+  location: UsageFieldLocation,
 ): void {
   if (timestamp === null) {
     return;
@@ -127,7 +150,7 @@ function applyTokenCount(
   if (usage === null) {
     return;
   }
-  const counts = usageCounts(usage);
+  const counts = usageCounts(usage, location);
   const model = accumulator.currentModel ?? "unknown";
   accumulator.tokenCountEvents.push(
     usageEventEntry(timestamp, model, counts, catalogCost([model], counts)),
@@ -171,6 +194,7 @@ function applyCodexRolloutLine(
   }
   const type = stringValue(record["type"]);
   const timestamp = stringValue(record["timestamp"]);
+  const location: UsageFieldLocation = { filePath, lineNumber };
   if (type === "session_meta") {
     applySessionMeta(accumulator, payload);
   } else if (type === "turn_context") {
@@ -184,9 +208,9 @@ function applyCodexRolloutLine(
     type === "event_msg" &&
     stringValue(payload["type"]) === "token_count"
   ) {
-    applyTokenCount(accumulator, payload, timestamp);
+    applyTokenCount(accumulator, payload, timestamp, location);
   } else if (type === "token_usage_record") {
-    applyTokenUsageRecord(accumulator, payload, timestamp);
+    applyTokenUsageRecord(accumulator, payload, timestamp, location);
   }
 }
 
