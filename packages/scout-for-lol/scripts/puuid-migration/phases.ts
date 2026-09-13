@@ -581,14 +581,41 @@ export async function verify(db: Db): Promise<void> {
     );
   }
 
-  if (survivors > 0 || unresolved > 0 || strays.length > 0 || unpublished > 0) {
+  // And the cutover itself has to be on record. `apply` stamps mappings before
+  // writing this, so an interruption between the two leaves a database that is
+  // fully rewritten and silent about it: nothing survives, nothing is
+  // unpublished, and every check above passes. The report lake reads the absent
+  // marker as "never migrated" and translates nothing, so the next rebuild
+  // re-derives old-domain identifiers against accounts that have moved — and
+  // the operator, having seen a green verify, has by then retired the only key
+  // that could have rebuilt the mapping.
+  //
+  // A database that never migrated fails here too, which is correct: this is
+  // the gate that proves a cutover completed, and it did not.
+  const cutoverRecorded = await cutoverApplied(db);
+  if (!cutoverRecorded) {
+    console.error(
+      `  the cutover is not recorded; the report lake would translate nothing`,
+    );
+  }
+
+  // Every operand is an already-computed value, so the order is presentation
+  // only; the counts are all gathered above regardless.
+  if (
+    !cutoverRecorded ||
+    survivors > 0 ||
+    unresolved > 0 ||
+    strays.length > 0 ||
+    unpublished > 0
+  ) {
     // Throwing, not logging: this is the gate, and a gate that exits 0 on
     // failure is not a gate.
     throw new Error(
       `verify FAILED — ${survivors.toString()} rows hold translated old-domain PUUIDs, ` +
         `${unresolved.toString()} identities unresolved, ` +
         `${strays.length.toString()} tracked identities unmapped, ` +
-        `${unpublished.toString()} mappings unpublished`,
+        `${unpublished.toString()} mappings unpublished, ` +
+        `cutover ${cutoverRecorded ? "recorded" : "NOT RECORDED"}`,
     );
   }
   console.log(

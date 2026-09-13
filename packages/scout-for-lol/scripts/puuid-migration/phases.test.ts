@@ -559,6 +559,22 @@ test("verify fails when a rewritten mapping was never marked applied", async () 
   await db.close();
 });
 
+test("verify fails when the rewrite landed but the cutover was never recorded", async () => {
+  // The other side of apply's ordering. Stamping mappings before the marker
+  // keeps the report lake from publishing early, but it leaves a database that
+  // is fully rewritten and silent about it — every other check passes, and the
+  // lake reads the absent marker as "never migrated".
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  await db.exec(`DELETE FROM "PuuidKeyMigration"`);
+  const { verify } = await import("./phases.ts");
+  await expect(verify(db)).rejects.toThrow(/NOT RECORDED/);
+  await db.close();
+});
+
 test("collect maps an identity frozen in a Dare after its account is removed", async () => {
   // A Dare pins its targets at creation and keeps matching them against live
   // games. Once the account row is gone the PUUID survives only here — and it
