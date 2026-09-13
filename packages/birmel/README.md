@@ -5,8 +5,7 @@ follows one pipeline: a Discord event is admitted (trusted users only),
 assembled into a context bundle, and handed to one agent that works the request
 to a conclusion. The agent sees every registered tool and decides as it goes,
 so investigating and then changing approach is normal rather than an error.
-It finishes with a structured answer whose cited tool calls must match calls
-that actually succeeded.
+It finishes with a structured answer carrying the turn's disposition.
 
 While it works, the turn narrates into the single Discord reply it owns: a
 throttled timeline of what ran, with the agent's own one-line description of

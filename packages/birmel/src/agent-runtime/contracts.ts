@@ -123,28 +123,17 @@ export type TurnDisposition = z.infer<typeof TurnDispositionSchema>;
 /**
  * The agent's structured final answer.
  *
- * `reliedOnToolCallIds` is the anti-hallucination gate. Every id must match a
- * tool call that actually succeeded this turn, checked in
- * `requireGroundedAnswer`. It replaces the old "the pre-named primary tool must
- * succeed" rule and is strictly stronger: it verifies everything the reply
- * leans on, rather than one tool named before anyone looked.
+ * This carried two extra self-reports - `reliedOnToolCallIds` and
+ * `performedMutation` - that a gate then checked. The runtime already records
+ * every call it made and whether it succeeded, so asking the model to restate
+ * that made a forgotten field indistinguishable from a lie: a turn whose work
+ * demonstrably succeeded still failed. The self-reports are gone; `disposition`
+ * stays because it is an outcome label the runtime cannot infer, and it feeds
+ * the AgentRun record and scheduled-job effect handling.
  */
 export const TurnAnswerSchema = z.strictObject({
   answer: z.string().min(1),
   disposition: TurnDispositionSchema,
-  reliedOnToolCallIds: z.array(z.string().min(1).max(200)).max(64),
-  /**
-   * Whether the answer claims a write/destructive/code-execution outcome
-   * happened, as opposed to reporting information a read already covers.
-   * Citing a successful call proves that SOME call succeeded, not that it
-   * was the one the answer actually describes - a model could cite a
-   * harmless read while claiming an unrelated mutation. Self-reporting this
-   * separately from disposition and reliedOnToolCallIds gives
-   * requireGroundedAnswer a second, independent claim that must agree with
-   * the citations: a true mutation claim has to be backed by an actually
-   * non-read cited call, not just any successful one.
-   */
-  performedMutation: z.boolean(),
 });
 export type TurnAnswer = z.infer<typeof TurnAnswerSchema>;
 
@@ -178,8 +167,6 @@ export const SessionToolEventSchema = z.strictObject({
   content: z.string().min(1).max(1024),
   success: z.boolean(),
   effectDisposition: EffectDispositionSchema.optional(),
-  inputKey: z.string(),
-  readOnly: z.boolean(),
 });
 export type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
 

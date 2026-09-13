@@ -17,16 +17,14 @@ context, memory, sessions, jobs, and orchestration**.
 ```mermaid
 flowchart LR
   accTitle: Birmel turn lifecycle
-  accDescr: An admitted and deduplicated Discord event receives one bounded context bundle and is handed to a single agent holding every registered tool. The agent loops over tool calls, letting each result inform the next choice, then emits a structured answer whose cited tool calls are checked against calls that actually succeeded. That produces one Discord reply, and then human claims and curated self-memory are extracted. An AgentRun record audits the lifecycle without storing prompt contents.
+  accDescr: An admitted and deduplicated Discord event receives one bounded context bundle and is handed to a single agent holding every registered tool. The agent loops over tool calls, letting each result inform the next choice, then emits a structured answer carrying the turn's disposition. That produces one Discord reply, and then human claims and curated self-memory are extracted. An AgentRun record audits the lifecycle without storing prompt contents.
 
   D[Discord event] --> A[Admission and deduplication]
   A --> C[One bounded<br/>ContextBundle]
   C --> G[One agent,<br/>every registered tool]
   G -->|call a tool| T[Tool result]
   T -->|informs the next choice| G
-  G --> V{Cited calls<br/>actually succeeded?}
-  V -->|no| F[Turn fails,<br/>incident reference]
-  V -->|yes| O[One Discord reply]
+  G --> O[One Discord reply]
   O --> M[Human claims and<br/>curated self-memory]
   A -. status .-> U[(AgentRun audit)]
   O -. disposition, tool count,<br/>response ID .-> U
@@ -73,9 +71,16 @@ memory instead of checked.
 
 The turn ends with a structured answer carrying its own disposition —
 conversation, supported, or unsupported — which is the first moment that is
-actually known. Every tool call the answer cites must correspond to a call that
-really succeeded, so the bot cannot claim an action it did not take. That check
-covers the whole reply, where the old rule only proved one pre-named tool ran.
+actually known.
+
+A gate used to sit here too: the answer had to list the tool calls it relied on,
+and a turn was failed if any of them had not succeeded. It was removed. The
+runtime already records every call it made and whether it worked, so requiring
+the model to restate that made a forgotten field look identical to a lie — in
+practice it failed turns whose work had plainly succeeded and threw the results
+away, including generated images. Honest reporting of tool outcomes is now a
+prompt rule rather than an enforced one, which is a deliberate trade: the bot
+can overstate an outcome, and nothing in the runtime will catch it.
 
 The registry is generated from
 [executable tool registration](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-tools/tools/tool-sets.ts),
