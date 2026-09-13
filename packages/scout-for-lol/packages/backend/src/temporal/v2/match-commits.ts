@@ -12,7 +12,9 @@ import {
   type ScoutReceiptOutcomeV2,
 } from "@scout-for-lol/temporal/contracts-v2";
 import {
+  SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
   scoutV2MatchPhaseOf,
+  scoutV2MatchStageConflictEvidenceCodec,
   scoutV2MatchStageEvidenceCodec,
 } from "@scout-for-lol/temporal/match-receipts-v2";
 import { prisma } from "#src/database/index.ts";
@@ -108,6 +110,16 @@ export async function readMatchReceiptEvidenceV2(
  * replay `already-applied` rather than a drift conflict; see
  * `match-receipts-v2.ts` for why the stage receipts are separate claims from
  * the evidence-bearing ones.
+ *
+ * A `conflict` is made DURABLE here, before it is reported. The Workflow
+ * fails the run on it, but a failed run leaves no trace at the resume point:
+ * the next execution would read the standing kind without the outcome that
+ * contested it, skip the phase, and advance the cursor over the same drift.
+ * So the Activity that met the conflict records
+ * `SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND`, which the resume read
+ * surfaces and the Workflow refuses to proceed past. Recorded strictly: a
+ * marker that could not be written is an Activity failure to retry, not a
+ * drift that quietly stopped being visible.
  */
 export async function recordMatchReceiptsV2(
   input: ScoutMatchReceiptsV2Input,
@@ -124,7 +136,30 @@ export async function recordMatchReceiptsV2(
     });
     receipts.push({ kind, commit });
   }
+  if (receipts.some((receipt) => receipt.commit.outcome === "conflict")) {
+    await markStageReceiptsContested(input.riotMatchId);
+  }
   return { receipts };
+}
+
+/**
+ * Record that a stage receipt for this match is contested. The evidence names
+ * the match alone, so a second contested phase on the same match is
+ * `already-applied` rather than a conflict about a conflict.
+ */
+async function markStageReceiptsContested(matchId: RiotMatchId): Promise<void> {
+  const marker = await recordMatchReceiptV2({
+    matchId,
+    kind: SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+    evidence: scoutV2MatchStageConflictEvidenceCodec.serialize({
+      riotMatchId: matchId,
+    }),
+  });
+  if (marker.outcome === "conflict") {
+    throw new Error(
+      `The stage-conflict marker for ${matchId} itself conflicts (${marker.reason}); its evidence names only the match, so this is a broken contract`,
+    );
+  }
 }
 
 /**

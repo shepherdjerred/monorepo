@@ -214,6 +214,19 @@ A resumed run cannot reconstruct settled bet ids, so it could never re-assert
 an evidence-bearing receipt without either inventing evidence or recording a
 conflict against the first writer's.
 
+A contested stage receipt is made durable before it fails anything. The
+Workflow fails the run that meets one, but a failed execution is not durable:
+under `ALLOW_DUPLICATE_FAILED_ONLY` the next discovery starts a fresh execution
+whose resume read sees the standing kind without the outcome that contested
+it, and would skip the phase and advance the cursor over the same drift one
+poll later. So `recordMatchReceiptsV2` records `v2-match-stage-conflict` — the
+same shape as the recovery tail's `v2-recovery-conflict`, evidence naming the
+match alone — and every later execution refuses at its resume point until an
+operator has looked and removed the marker. The reconciliation sweep leaves
+such a match alone (it would start a failing child per tick); the operator
+listing and the backlog gauge still show it, because it is exactly what a
+person needs to see.
+
 Ownership, not the effect claims, is what keeps the two pipelines off one
 match. `commitMatchObservationV2` claims `temporal-v2`; a match v1 already owns
 answers `ownership-held-by-another-owner`, and the Workflow reports the stored

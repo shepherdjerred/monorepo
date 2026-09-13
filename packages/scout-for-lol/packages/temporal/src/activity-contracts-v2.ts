@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import {
   DiscordMessageIdSchema,
+  IsoInstantSchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
@@ -41,11 +42,42 @@ import {
  * histories already recorded.
  */
 
-export const ScoutPostMatchScanV2ResultSchema = z.strictObject({
-  riotMatchIds: z.array(RiotMatchIdSchema).max(SCOUT_V2_PAGE_MAX).readonly(),
-  /** False when the scan hit its page budget before the tail was exhausted. */
-  complete: z.boolean(),
-});
+/**
+ * What a post-match discovery pass did, and it is a closed union on purpose.
+ *
+ * `skipped` is v1's discovery refusing to run because another poll on the
+ * same worker is still in progress. It opened NO poll: `BotState.pollStatus`
+ * still belongs to the other execution, and nothing this run does may close
+ * it. It is not an empty scan — an empty scan opened a poll, saw nothing, and
+ * owes the maintenance that closes it — and a boolean could not keep the two
+ * apart at the call site that has to.
+ */
+export const ScoutPostMatchScanV2ResultSchema = z.discriminatedUnion(
+  "outcome",
+  [
+    z.strictObject({ outcome: z.literal("skipped") }),
+    z.strictObject({
+      outcome: z.literal("scanned"),
+      riotMatchIds: z
+        .array(RiotMatchIdSchema)
+        .max(SCOUT_V2_PAGE_MAX)
+        .readonly(),
+      /** False when the scan hit its page budget before the tail was exhausted. */
+      complete: z.boolean(),
+      /**
+       * How far Dare evidence is known-complete, when the scan could
+       * establish it.
+       *
+       * Carried so post-match maintenance can settle Dare deadlines against
+       * the same watermark v1 settles against — the value is the discovery
+       * pass's to compute and nothing downstream can recover it. Optional
+       * because a scan that could not see the whole tail has no watermark to
+       * offer, which is a different statement from a watermark of zero.
+       */
+      evidenceWatermark: IsoInstantSchema.optional(),
+    }),
+  ],
+);
 export type ScoutPostMatchScanV2Result = z.infer<
   typeof ScoutPostMatchScanV2ResultSchema
 >;

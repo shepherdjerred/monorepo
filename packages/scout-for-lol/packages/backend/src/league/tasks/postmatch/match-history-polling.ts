@@ -398,13 +398,26 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
   };
 }
 
+/**
+ * Whether a discovery pass ran at all.
+ *
+ * `skipped` means another poll on this worker was still in progress and this
+ * call refused to open a second one: it called `markPostMatchPollStarted` for
+ * nothing and owns no `BotState.pollStatus` to close. A caller that runs
+ * post-match maintenance on that answer marks the OTHER poll complete under
+ * it. `polled` covers every pass that opened a poll, complete or not — an
+ * incomplete pass still owes the maintenance that closes what it opened.
+ */
+export type PostMatchDiscoveryOutcome = "polled" | "skipped";
+
 export async function discoverPostMatchIntents(): Promise<{
+  outcome: PostMatchDiscoveryOutcome;
   matches: DiscoveredMatchIntent[];
   evidenceComplete: boolean;
   evidenceWatermark?: string;
 }> {
   if (shouldSkipPollingRun()) {
-    return { matches: [], evidenceComplete: false };
+    return { outcome: "skipped", matches: [], evidenceComplete: false };
   }
   isPollingInProgress = true;
   pollingStartTime = Date.now();
@@ -415,9 +428,10 @@ export async function discoverPostMatchIntents(): Promise<{
       logger.warn(
         "Match discovery evidence is incomplete; maintenance may proceed without advancing ingestion cursors",
       );
-      return { matches: [], evidenceComplete: false };
+      return { outcome: "polled", matches: [], evidenceComplete: false };
     }
     return {
+      outcome: "polled",
       matches: discovery.intents,
       evidenceComplete: true,
       evidenceWatermark: discovery.evidenceWatermark.toISOString(),

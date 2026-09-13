@@ -20,6 +20,8 @@ import { ScoutStageSchema } from "@scout-for-lol/temporal/contracts";
 import { SCOUT_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
 import {
   SCOUT_V2_MATCH_RECEIPT_KINDS,
+  SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+  scoutV2MatchStageConflictEvidenceCodec,
   scoutV2MatchStageEvidenceCodec,
 } from "@scout-for-lol/temporal/match-receipts-v2";
 import type { ScoutReconciliationScanV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
@@ -103,6 +105,7 @@ const SENDING_DEADLINE = "2099-01-01T02:00:00.000Z";
 const PASSED_DEADLINE = "2020-01-01T00:00:00.000Z";
 
 const STALLED_MATCH = RiotMatchIdSchema.parse("NA1_850001");
+const CONTESTED_MATCH = RiotMatchIdSchema.parse("NA1_850009");
 const FINISHED_MATCH = RiotMatchIdSchema.parse("NA1_850002");
 const LEGACY_MATCH = RiotMatchIdSchema.parse("NA1_850003");
 const ARCHIVE_ONLY_MATCH = RiotMatchIdSchema.parse("NA1_850004");
@@ -164,6 +167,24 @@ async function seedObservationReceipt(matchId: RiotMatchId): Promise<void> {
         evidence: scoutV2MatchStageEvidenceCodec.serialize({
           riotMatchId: matchId,
           phase: "observation",
+        }),
+      }),
+    ),
+  ).toEqual({ outcome: "applied" });
+}
+
+/** The marker the receipts Activity leaves when a stage receipt is contested. */
+async function seedStageConflictMarker(matchId: RiotMatchId): Promise<void> {
+  expect(
+    await recordReceipt(
+      prisma,
+      buildMatchReceipt({
+        matchId,
+        kind: SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+        scope: { kind: "global" },
+        recordedAt: OBSERVED_AT,
+        evidence: scoutV2MatchStageConflictEvidenceCodec.serialize({
+          riotMatchId: matchId,
         }),
       }),
     ),
@@ -347,6 +368,14 @@ async function seedMatchProcessingFamily(): Promise<void> {
     owner: { kind: "temporal-v2" },
   });
   await seedAdvancedCursor(STALLED_MATCH);
+  // Stalled in exactly the same way, but contested: an operator's, not the
+  // sweep's.
+  await seedObservation({
+    matchId: CONTESTED_MATCH,
+    policy: "FULL",
+    owner: { kind: "temporal-v2" },
+  });
+  await seedStageConflictMarker(CONTESTED_MATCH);
 
   // Finished: both halves of "this match is done" are recorded. They are
   // checked separately because they fail separately — a run that committed the
@@ -538,6 +567,14 @@ describe("the match-processing family", () => {
     ]);
     // The cursor phase is only finished when EVERY association has moved.
     expect(page.pending.matchProcessing).not.toContain(WHOLE_CURSOR_MATCH);
+  });
+
+  test("leaves a contested match to the operator rather than driving it", () => {
+    // Its observation phase never attested either, so by every other measure
+    // it is stalled. A child started on it refuses at its resume point until
+    // the marker is removed, so driving it each sweep would be a failing child
+    // per tick reporting the same fact.
+    expect(page.pending.matchProcessing).not.toContain(CONTESTED_MATCH);
   });
 
   test("counts a re-requested start and a stalled row as one piece of work", () => {

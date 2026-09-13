@@ -30,6 +30,7 @@ import {
 } from "#src/contracts-v2.ts";
 import {
   SCOUT_V2_MATCH_RECEIPT_KINDS,
+  SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
   type ScoutV2MatchPhase,
 } from "#src/match-receipts-v2.ts";
 
@@ -82,6 +83,15 @@ export type ScoutV2MatchStore = {
    */
   archiveConflictsOnce: boolean;
   archiveConflicted: boolean;
+  /** Every post-match maintenance call, with the flags v1 gives it. */
+  maintenance: {
+    settleDareV2Deadlines: boolean;
+    evidenceWatermark?: string;
+  }[];
+  /** Whether stage receipts come back contested by a standing receipt. */
+  receiptsConflict: boolean;
+  /** How many maintenance attempts should fail before one succeeds. */
+  maintenanceFailures: number;
   /**
    * The call the worker dies ON, which models a crash right AFTER the
    * preceding phase committed. Mutable so one worker can serve both the run
@@ -108,6 +118,9 @@ export function createScoutV2MatchStore(
     tournamentMatch: false,
     archiveConflictsOnce: false,
     archiveConflicted: false,
+    maintenance: [],
+    maintenanceFailures: 0,
+    receiptsConflict: false,
     failAt: null,
     ...overrides,
   };
@@ -266,6 +279,32 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
       input: ScoutMatchReceiptsV2Input,
     ): ScoutReceiptsV2Result => {
       record("recordMatchReceiptsV2");
+      if (store.receiptsConflict) {
+        // What a conflict IS: a receipt of that kind already stands carrying
+        // different evidence — so the kind is in the resume state whether or
+        // not this run agreed with it. The real Activity also records the
+        // durable marker; a store that forgot either half would let the
+        // replay tests pass for the wrong reason.
+        for (const kind of input.kinds) {
+          if (!store.receiptKinds.includes(kind)) store.receiptKinds.push(kind);
+        }
+        if (
+          !store.receiptKinds.includes(
+            SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+          )
+        ) {
+          store.receiptKinds.push(SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND);
+        }
+        return {
+          receipts: input.kinds.map((kind) => ({
+            kind,
+            commit: {
+              outcome: "conflict",
+              reason: "receipt-evidence-mismatch",
+            },
+          })),
+        };
+      }
       return {
         receipts: input.kinds.map((kind) => {
           const stored = store.receiptKinds.includes(kind);
@@ -294,6 +333,19 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
       const alreadyAdvanced = store.cursorAdvanced;
       store.cursorAdvanced = store.trackedAccounts;
       return { advanced, alreadyAdvanced };
+    },
+    runPostMatchMaintenance: (input: {
+      settleDareV2Deadlines: boolean;
+      evidenceWatermark?: string;
+    }): void => {
+      record("runPostMatchMaintenance");
+      store.maintenance.push(input);
+      if (store.maintenanceFailures > 0) {
+        store.maintenanceFailures -= 1;
+        // A plain Error is retryable, so Temporal retries the ACTIVITY and the
+        // Workflow resumes from history without re-running discovery.
+        throw new Error("maintenance attempt failed");
+      }
     },
     planMatchFanOutV2: (): ScoutFanOutV2Result => {
       record("planMatchFanOutV2");

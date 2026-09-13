@@ -13,7 +13,10 @@ import {
   SCOUT_WORKFLOW_NAMES,
   type ScoutV2WorkflowName,
 } from "@scout-for-lol/temporal/identifiers";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
+import {
+  SCOUT_V2_MATCH_RECEIPT_KINDS,
+  SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+} from "@scout-for-lol/temporal/match-receipts-v2";
 import {
   scoutLakeProjectionV2InputCodec,
   scoutMatchProcessingV2InputCodec,
@@ -262,6 +265,12 @@ export async function scanPipelineReconciliationPageV2(
   ] = await Promise.all([
     listStalledV2MatchProcessing(prisma, {
       observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+      // Contested matches refuse at their resume point until an operator
+      // acts; the sweep would start a failing child per tick for each.
+      contested: {
+        kind: "exclude",
+        stageConflictReceiptKind: SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+      },
       limit: SCOUT_V2_PAGE_MAX,
     }),
     listStalledNotificationIntents(prisma, {

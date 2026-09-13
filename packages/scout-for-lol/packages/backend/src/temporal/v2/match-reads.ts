@@ -60,16 +60,30 @@ export const DRIVABLE_INTENT_STATES: ReadonlySet<string> = new Set([
  * the caller does the same thing with both: discovery could not see the whole
  * tail (v1's `evidenceComplete`), or this page hit the contract's budget. In
  * either case the next run rediscovers what is left.
+ *
+ * `skipped` is NOT a third incompleteness and is kept apart from both. It is
+ * v1's discovery refusing to run because a poll is already in progress on
+ * this worker — it opened nothing, so the Workflow closes nothing — whereas an
+ * incomplete scan opened a poll and owes the maintenance that closes it.
  */
 export async function discoverPostMatchIdsV2(): Promise<ScoutPostMatchScanV2Result> {
   const discovery = await discoverPostMatchIntents();
+  if (discovery.outcome === "skipped") {
+    return ScoutPostMatchScanV2ResultSchema.parse({ outcome: "skipped" });
+  }
   const riotMatchIds = discovery.matches.map((intent) =>
     RiotMatchIdSchema.parse(intent.matchId),
   );
   return ScoutPostMatchScanV2ResultSchema.parse({
+    outcome: "scanned",
     riotMatchIds: riotMatchIds.slice(0, SCOUT_V2_PAGE_MAX),
     complete:
       discovery.evidenceComplete && riotMatchIds.length <= SCOUT_V2_PAGE_MAX,
+    // v1's own watermark, passed through unchanged: post-match maintenance
+    // settles Dare deadlines against it, and only this pass can compute it.
+    ...(discovery.evidenceWatermark === undefined
+      ? {}
+      : { evidenceWatermark: discovery.evidenceWatermark }),
   });
 }
 

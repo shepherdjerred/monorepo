@@ -10,10 +10,12 @@ import type { ScoutDurableCommitV2 } from "@scout-for-lol/temporal/contracts-v2"
 import { prisma } from "#src/database/index.ts";
 import {
   getObservation,
+  observationAgreesExceptPolicy,
   observeMatch,
   promoteObservation,
 } from "#src/database/durable/observation-repository.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
+import type { MatchObservationRecord } from "#src/database/durable/observation-row.ts";
 import { recordTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import { trackedAccountRecords } from "#src/durable/match/archive-facts.ts";
 import {
@@ -173,15 +175,20 @@ function observationDrift(matchId: RiotMatchId, detail: string): never {
  * answers `promotion-target-born-full`, meaning the disagreement is about the
  * facts rather than the policy.
  *
- * That last case and a row this pipeline does not own both fail the Activity.
+ * A stored row whose FACTS differ — not merely its policy — fails too, which
+ * is what {@link observationAgreesExceptPolicy} decides using the repository's
+ * own claim discipline rather than a second opinion about which columns count.
+ *
+ * That case and a row this pipeline does not own both fail the Activity.
  * Continuing from the stored row would let the Workflow attest to a phase and
  * advance the cursor on facts it never checked, suppressing the disagreement
  * permanently instead of surfacing it.
  */
 export async function reconcileObservationConflictV2(
-  matchId: RiotMatchId,
+  record: MatchObservationRecord,
   reason: string,
 ): Promise<ScoutDurableCommitV2> {
+  const matchId = record.matchId;
   if (reason !== "observation-differs") {
     // Ownership conflicts are expected and are the Workflow's to act on: it
     // reads the stored owner and stops before any effect.
@@ -195,6 +202,17 @@ export async function reconcileObservationConflictV2(
     observationDrift(
       matchId,
       `the stored observation belongs to ${stored.owner.kind}, so its policy is not this pipeline's to promote`,
+    );
+  }
+  // A promotion changes the POLICY and nothing else, so it is the right
+  // answer only when the policy is the only thing in dispute. Promoting on any
+  // `observation-differs` would launder real drift — a differing
+  // `gameCreatedAt`, say — into a FULL row that settlement, the receipts and
+  // the cursor then proceed over.
+  if (!(await observationAgreesExceptPolicy(prisma, record))) {
+    observationDrift(
+      matchId,
+      "this run disagrees with the stored observation about the match's own facts, not merely its policy",
     );
   }
   const promoted = durableCommitV2(
@@ -234,27 +252,26 @@ export async function commitMatchObservationV2(input: {
 }): Promise<ScoutMatchObservationV2Result> {
   const context = await resolveScoutV2MatchContext(input.riotMatchId);
   const archived = await readArchivedMatchArtifactV2(input.riotMatchId);
-  const observed = durableCommitV2(
-    await observeMatch(prisma, {
-      matchId: input.riotMatchId,
-      platformRoute: platformRouteOf(input.riotMatchId),
-      policy: "FULL",
-      owner: { kind: "temporal-v2" },
-      promotion: null,
-      gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),
-      observedAt: toIsoInstant(new Date()),
-      artifacts: {
-        match:
-          archived === null
-            ? null
-            : { key: archived.key, digest: archived.digest },
-        timeline: null,
-      },
-    }),
-  );
+  const record: MatchObservationRecord = {
+    matchId: input.riotMatchId,
+    platformRoute: platformRouteOf(input.riotMatchId),
+    policy: "FULL",
+    owner: { kind: "temporal-v2" },
+    promotion: null,
+    gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),
+    observedAt: toIsoInstant(new Date()),
+    artifacts: {
+      match:
+        archived === null
+          ? null
+          : { key: archived.key, digest: archived.digest },
+      timeline: null,
+    },
+  };
+  const observed = durableCommitV2(await observeMatch(prisma, record));
   const commit =
     observed.outcome === "conflict"
-      ? await reconcileObservationConflictV2(input.riotMatchId, observed.reason)
+      ? await reconcileObservationConflictV2(record, observed.reason)
       : observed;
 
   await recordTrackedAccounts(

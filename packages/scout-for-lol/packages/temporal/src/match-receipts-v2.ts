@@ -77,6 +77,41 @@ export const scoutV2MatchStageEvidenceCodec = defineVersionedCodec({
   schema: ScoutV2MatchStageEvidenceSchema,
 });
 
+/**
+ * The receipt that says a stage receipt for this match is CONTESTED.
+ *
+ * A contested stage receipt fails the run that met it — but a failed run is
+ * not durable. Under `ALLOW_DUPLICATE_FAILED_ONLY` the next discovery starts
+ * a fresh execution, and that execution's resume read sees the standing kind
+ * WITHOUT the outcome that contested it: it skips the phase, skips the
+ * attestation, and advances the cursor over the same disagreement one poll
+ * later. The drift has to live where the resume point reads, so the Activity
+ * that met the conflict records this marker and every later execution fails
+ * before its first phase until an operator has looked and removed it.
+ *
+ * Same shape as `v2-recovery-conflict` (the durable tail's marker), and for
+ * the same reason the evidence names the match alone: receipt identity is
+ * `(kind, version, scope)` within one match, so a second contested phase on
+ * the same match writes the same identity, and evidence naming the phase
+ * would make that write a conflict about a conflict. Which phase was
+ * contested is in the failed run's error and in the receipts themselves.
+ */
+export const SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND: ReceiptKind =
+  ReceiptKindSchema.parse("v2-match-stage-conflict");
+
+export type ScoutV2MatchStageConflictEvidence = z.infer<
+  typeof ScoutV2MatchStageConflictEvidenceSchema
+>;
+export const ScoutV2MatchStageConflictEvidenceSchema = z.strictObject({
+  riotMatchId: RiotMatchIdSchema,
+});
+
+export const scoutV2MatchStageConflictEvidenceCodec = defineVersionedCodec({
+  kind: "scout-v2-match-stage-conflict-evidence",
+  version: SCOUT_V2_CONTRACT_VERSION,
+  schema: ScoutV2MatchStageConflictEvidenceSchema,
+});
+
 const PHASE_BY_RECEIPT_KIND = new Map<ReceiptKind, ScoutV2MatchPhase>(
   SCOUT_V2_MATCH_PHASES.map((phase) => [
     SCOUT_V2_MATCH_RECEIPT_KINDS[phase],

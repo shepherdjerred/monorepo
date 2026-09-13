@@ -235,6 +235,15 @@ export type LiveRecoveryBatchRow = {
  * driving a V2 child onto a v1-owned match is how the same match gets processed
  * twice.
  *
+ * `contested` is a per-caller choice, and a required one. A match carrying a
+ * stage-conflict marker is stalled — its phases stopped short — but it stopped
+ * because a stage receipt is contested, and every execution the sweep started
+ * would refuse at its resume point until an operator removes the marker. The
+ * sweep therefore EXCLUDES such matches: driving one each tick is a failing
+ * child per sweep reporting the same fact. Operator surfaces and the backlog
+ * gauge INCLUDE them, because they are exactly what a person needs to see and
+ * exactly what is still unfinished.
+ *
  * Ordered oldest-observation first, so the longest-stranded match is driven
  * first, with the id breaking ties so two sweeps over one backlog agree on
  * which page they are looking at. The outer scan rides
@@ -243,14 +252,33 @@ export type LiveRecoveryBatchRow = {
  * leading key: the receipt unique index on `(riotMatchId, kind, version,
  * scopeKey)` and the tracked-account primary key on `(riotMatchId, puuid)`.
  */
+/**
+ * Whether a stalled-match listing carries matches whose stage receipts are
+ * contested. See {@link listStalledV2MatchProcessing}.
+ */
+export type ContestedMatchListing =
+  | { readonly kind: "include" }
+  | {
+      readonly kind: "exclude";
+      readonly stageConflictReceiptKind: ReceiptKind;
+    };
+
 export async function listStalledV2MatchProcessing(
   db: Db,
   args: {
     observationReceiptKind: ReceiptKind;
+    contested: ContestedMatchListing;
     limit: number;
     after?: ScanPosition | undefined;
   },
 ): Promise<StalledMatchProcessingRow[]> {
+  const contested =
+    args.contested.kind === "include"
+      ? Prisma.empty
+      : Prisma.sql`AND NOT EXISTS (SELECT 1
+                         FROM "MatchProcessingReceipt" AS c
+                        WHERE c."riotMatchId" = o."riotMatchId"
+                          AND c."kind" = ${args.contested.stageConflictReceiptKind})`;
   const keyset =
     args.after === undefined
       ? Prisma.empty
@@ -260,6 +288,7 @@ export async function listStalledV2MatchProcessing(
       FROM "MatchObservation" AS o
      WHERE o."processingPolicy" = ${FULL_POLICY_COLUMN}
        AND o."pipelineOwner" = ${TEMPORAL_V2_OWNER_COLUMN}
+       ${contested}
        AND (NOT EXISTS (SELECT 1
                           FROM "MatchProcessingReceipt" AS r
                          WHERE r."riotMatchId" = o."riotMatchId"
