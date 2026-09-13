@@ -408,7 +408,14 @@ test("effect claims retain a provider result for retry projection", async () => 
     "discord-message-99",
     prisma,
   );
-  await expect(
-    requireCompletedScoutEffectResult("postmatch:42:channel:7", prisma),
-  ).resolves.toBe("discord-message-99");
+  const completed = await requireCompletedScoutEffectResult(
+    "postmatch:42:channel:7",
+    prisma,
+  );
+  expect(completed.resultId).toBe("discord-message-99");
+  // The claim also brackets the effect it proves, which is what a later pass
+  // recovering that effect records instead of its own clock.
+  expect(completed.claimedAt.getTime()).toBeLessThanOrEqual(
+    completed.completedAt.getTime(),
+  );
 });

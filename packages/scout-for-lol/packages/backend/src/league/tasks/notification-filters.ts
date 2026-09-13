@@ -152,13 +152,20 @@ export async function deliverToChannels(params: {
           // adopts the delivery from wherever the intent stopped; a row already
           // delivered under this message id answers `already-applied`, so the
           // ordinary replay stays quiet.
-          const messageId = await requireCompletedScoutEffectResult(effectKey);
+          const completed = await requireCompletedScoutEffectResult(effectKey);
           deliveredGuildIds.add(DiscordGuildIdSchema.parse(serverId));
-          messageIdsByChannel.set(channel, messageId);
+          messageIdsByChannel.set(channel, completed.resultId);
           await recordDelivery({
             kind: "already-delivered",
             channelId: channel,
-            messageId,
+            messageId: completed.resultId,
+            // The claim brackets the send it proves — taken immediately before
+            // it ran, completed immediately after it returned — so those are
+            // the instants to record, not this pass's clock.
+            send: {
+              startedAt: completed.claimedAt,
+              deliveredAt: completed.completedAt,
+            },
           });
           continue;
         }

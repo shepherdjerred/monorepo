@@ -76,6 +76,14 @@ export function deliveryAttemptNonce(effectKey: string): string {
     .slice(0, 25);
 }
 
+/**
+ * When a send that already happened began, and when it was observed to have
+ * happened. Both are historical: a pass recovering the send can be running
+ * hours later, and the intent's freshness guard would rightly reject a send
+ * claiming to have started then.
+ */
+export type ProvenSend = { startedAt: Date; deliveredAt: Date };
+
 export type ChannelDeliveryEvent =
   | { kind: "prepared"; channelId: string }
   | { kind: "send-started"; channelId: string }
@@ -85,7 +93,12 @@ export type ChannelDeliveryEvent =
    * lifecycle above never runs for it, so its intent has to be adopted from
    * wherever that pass left it. See {@link adoptCompletedDelivery}.
    */
-  | { kind: "already-delivered"; channelId: string; messageId: string }
+  | {
+      kind: "already-delivered";
+      channelId: string;
+      messageId: string;
+      send: ProvenSend;
+    }
   | { kind: "failed"; channelId: string; permissionError: boolean };
 
 export type ChannelDeliveryRecorder = (
@@ -220,9 +233,16 @@ async function createIntent(
   await markIntentReady(config, channelId);
 }
 
+/**
+ * `startedAt` is passed rather than read from the clock because a recovery
+ * adopts a send that began earlier, and `beginSend`'s freshness guard compares
+ * against it. The guard stays exactly as the domain wrote it; what changes is
+ * that it is given the true instant instead of the recovering pass's own.
+ */
 async function beginIntentSend(
   config: RecorderConfig,
   channelId: string,
+  startedAt: Date,
 ): Promise<void> {
   const nonce = attemptNonceFor(config, channelId);
   await applyIntentTransition(
@@ -232,7 +252,7 @@ async function beginIntentSend(
     (intent) =>
       beginSend(intent, {
         attemptNonce: nonce,
-        startedAt: toIsoInstant(config.facts.now()),
+        startedAt: toIsoInstant(startedAt),
       }),
   );
 }
@@ -241,6 +261,7 @@ async function confirmIntentDelivered(
   config: RecorderConfig,
   channelId: string,
   messageId: string,
+  deliveredAt: Date,
 ): Promise<void> {
   await applyIntentTransition(
     config,
@@ -249,7 +270,7 @@ async function confirmIntentDelivered(
     confirmDelivery({
       attemptNonce: attemptNonceFor(config, channelId),
       messageId,
-      deliveredAt: () => toIsoInstant(config.facts.now()),
+      deliveredAt: () => toIsoInstant(deliveredAt),
     }),
   );
 }
@@ -314,11 +335,11 @@ function stepsOwedTo(stored: NotificationIntent | null): AdoptionStep[] {
  * the lifecycle, so this is the only place those rows can still be finished —
  * and finishing them is the whole point of keeping the record.
  *
- * `beginSend` enforces the freshness deadline, which cannot fail on this path:
- * the delivery gate and the deadline both come from
- * `postmatchReportFreshnessDeadline`, so a pass that was allowed to deliver is
- * by construction inside the deadline its intent carries. The prematch path
- * does not use `deliverToChannels` at all.
+ * `beginSend` enforces the freshness deadline, and that guard stays exactly as
+ * the domain wrote it. It passes because the adopted send is given the instant
+ * it REALLY began — the claim row's own `claimedAt`, written immediately before
+ * the send ran — rather than the recovering pass's clock. A recovery can run
+ * hours after the deadline; the send it is adopting did not.
  *
  * Every step is separately guarded and separately fail-open, so a step that
  * cannot be applied is counted and the rest still run.
@@ -327,6 +348,7 @@ async function adoptCompletedDelivery(
   config: RecorderConfig,
   channelId: string,
   messageId: string,
+  send: ProvenSend,
 ): Promise<void> {
   const stored = await readIntent(config, channelId);
   if (stored === "unreadable") return;
@@ -339,10 +361,15 @@ async function adoptCompletedDelivery(
         await markIntentReady(config, channelId);
         break;
       case "send-started":
-        await beginIntentSend(config, channelId);
+        await beginIntentSend(config, channelId, send.startedAt);
         break;
       case "delivered":
-        await confirmIntentDelivered(config, channelId, messageId);
+        await confirmIntentDelivered(
+          config,
+          channelId,
+          messageId,
+          send.deliveredAt,
+        );
         break;
     }
   }
@@ -389,13 +416,23 @@ export function createChannelDeliveryRecorder(
         return;
       case "send-started":
         started.add(event.channelId);
-        await beginIntentSend(config, event.channelId);
+        await beginIntentSend(config, event.channelId, config.facts.now());
         return;
       case "delivered":
-        await confirmIntentDelivered(config, event.channelId, event.messageId);
+        await confirmIntentDelivered(
+          config,
+          event.channelId,
+          event.messageId,
+          config.facts.now(),
+        );
         return;
       case "already-delivered":
-        await adoptCompletedDelivery(config, event.channelId, event.messageId);
+        await adoptCompletedDelivery(
+          config,
+          event.channelId,
+          event.messageId,
+          event.send,
+        );
         return;
       case "failed": {
         if (!started.has(event.channelId)) return;

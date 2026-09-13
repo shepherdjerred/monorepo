@@ -74,6 +74,16 @@ const CHANNEL_TWO = testChannelId("9002");
 const MESSAGE_ID = "300000000000000001";
 const SECOND_MESSAGE_ID = "300000000000000002";
 
+/**
+ * A send an earlier pass made, bracketed by its claim row. Both instants are
+ * BEFORE the freshness deadline, which is what lets `beginSend` accept an
+ * adoption that runs after it.
+ */
+const PROVEN_SEND = {
+  startedAt: new Date("2026-09-12T09:30:00.000Z"),
+  deliveredAt: new Date("2026-09-12T09:30:05.000Z"),
+};
+
 const facts: DurableFacts = { db: prisma, now: () => NOW };
 
 function matchId(gameId: number): string {
@@ -578,12 +588,13 @@ describe("adopting a delivery an earlier pass proved", () => {
       kind: "already-delivered",
       channelId: CHANNEL_ONE,
       messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
     });
 
     expect(await storedIntentState(keyPrefix)).toEqual({
       kind: "delivered",
       messageId: MESSAGE_ID,
-      deliveredAt: NOW.toISOString(),
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
     });
   });
 
@@ -610,12 +621,13 @@ describe("adopting a delivery an earlier pass proved", () => {
       kind: "already-delivered",
       channelId: CHANNEL_ONE,
       messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
     });
 
     expect(await storedIntentState(keyPrefix)).toEqual({
       kind: "delivered",
       messageId: MESSAGE_ID,
-      deliveredAt: NOW.toISOString(),
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
     });
   });
 
@@ -631,12 +643,13 @@ describe("adopting a delivery an earlier pass proved", () => {
       kind: "already-delivered",
       channelId: CHANNEL_ONE,
       messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
     });
 
     expect(await storedIntentState(keyPrefix)).toEqual({
       kind: "delivered",
       messageId: MESSAGE_ID,
-      deliveredAt: NOW.toISOString(),
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
     });
   });
 
@@ -651,12 +664,13 @@ describe("adopting a delivery an earlier pass proved", () => {
       kind: "already-delivered",
       channelId: CHANNEL_ONE,
       messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
     });
 
     expect(await storedIntentState(keyPrefix)).toEqual({
       kind: "delivered",
       messageId: MESSAGE_ID,
-      deliveredAt: NOW.toISOString(),
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
     });
   });
 
@@ -678,8 +692,11 @@ describe("adopting a delivery an earlier pass proved", () => {
       kind: "already-delivered",
       channelId: CHANNEL_ONE,
       messageId: SECOND_MESSAGE_ID,
+      send: PROVEN_SEND,
     });
 
+    // Still the message and the instant the ORIGINAL delivery recorded — the
+    // rejected adoption moved neither.
     expect(await storedIntentState(keyPrefix)).toEqual({
       kind: "delivered",
       messageId: MESSAGE_ID,
@@ -749,7 +766,12 @@ async function runMatchPass(
     }
     // The reprocess takes the completed-claim branch, which adopts the
     // delivery rather than replaying the lifecycle.
-    await record({ kind: "already-delivered", channelId: channel, messageId });
+    await record({
+      kind: "already-delivered",
+      channelId: channel,
+      messageId,
+      send: PROVEN_SEND,
+    });
   }
   await recordDeliveryReceipts({
     facts,

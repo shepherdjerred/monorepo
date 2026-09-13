@@ -45,14 +45,21 @@ await vi.doMock("#src/league/discord/channel.ts", () => ({
 }));
 
 const ALREADY_SENT_MESSAGE_ID = "300000000000000007";
+const CLAIMED_AT = new Date("2026-09-12T09:30:00.000Z");
+const COMPLETED_AT = new Date("2026-09-12T09:30:02.000Z");
 let claimResult: "execute" | "completed" = "execute";
 
 await vi.doMock("#src/temporal/effect-claims.ts", () => ({
   claimScoutEffect: () => Promise.resolve(claimResult),
   completeScoutEffectWithResult: () => Promise.resolve(),
   recordScoutEffectFailure: () => Promise.resolve(),
-  requireCompletedScoutEffectResult: () =>
-    Promise.resolve(ALREADY_SENT_MESSAGE_ID),
+  requireCompletedScoutEffectResult: (key: string) =>
+    Promise.resolve({
+      key,
+      resultId: ALREADY_SENT_MESSAGE_ID,
+      claimedAt: CLAIMED_AT,
+      completedAt: COMPLETED_AT,
+    }),
 }));
 
 const { channelsPassingQueueFilter, deliverToChannels } =
@@ -164,6 +171,8 @@ describe("deliverToChannels", () => {
         kind: "already-delivered",
         channelId,
         messageId: ALREADY_SENT_MESSAGE_ID,
+        // The claim's own bracket around the send, not this pass's clock.
+        send: { startedAt: CLAIMED_AT, deliveredAt: COMPLETED_AT },
       },
     ]);
     expect(delivery.messageIdsByChannel).toEqual(
