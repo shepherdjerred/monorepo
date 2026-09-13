@@ -79,12 +79,15 @@ export type UsageFieldLocation = {
 /**
  * A usage count field that's absent (`undefined`) is a legitimate
  * "not reported" case and defaults to zero — but a field that's *present*,
- * including an explicit JSON `null`, and isn't a finite number is malformed
- * data, not a legitimate zero. Silently coercing it (as a bare
+ * including an explicit JSON `null`, and isn't a nonnegative safe integer is
+ * malformed data, not a legitimate zero. Silently coercing it (as a bare
  * `typeof value === "number"` check would) understates tokens and cost the
  * same way an unvalidated container field would: the scan reports success
  * and ingestion replaces the last good index with a permanently-partial
- * total. Shared across Claude, Codex, and Grok, whose usage parsers all hit
+ * total. A negative count is rejected rather than merely non-finite ones,
+ * since `Number.isFinite` alone accepts it and a negative token count would
+ * silently subtract from `catalogCost`'s totals rather than corrupting them
+ * loudly. Shared across Claude, Codex, and Grok, whose usage parsers all hit
  * this same gap independently.
  */
 export function requiredUsageNumber(
@@ -97,7 +100,7 @@ export function requiredUsageNumber(
   if (value === undefined) {
     return 0;
   }
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
     throw new TypeError(
       `Malformed ${source} usage field "${key}" on line ${String(location.lineNumber)} in ${location.filePath}`,
     );

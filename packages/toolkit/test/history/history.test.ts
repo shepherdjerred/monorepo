@@ -469,6 +469,16 @@ describe("rejects malformed usage data instead of understating it", () => {
     expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
   });
 
+  test("rejects a negative Grok usage count instead of subtracting it from totals", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-negative-usage",
+      "grok-negative-session",
+      { inputTokens: -5, outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
+  });
+
   test("rejects a malformed Claude usage count instead of silently zeroing it", async () => {
     const claudeProjects = path.join(fixtureRoot, "claude-malformed-usage");
     await mkdir(claudeProjects, { recursive: true });
