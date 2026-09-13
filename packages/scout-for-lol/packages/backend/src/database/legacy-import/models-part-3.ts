@@ -9,6 +9,7 @@
 import type { Prisma } from "#generated/prisma/client/index.js";
 import {
   DesktopClientIdSchema,
+  PuuidKeyMapStatusSchema,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -420,5 +421,52 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     },
     count: (tx) => tx.tournamentLobby.count(),
     findAll: (tx) => tx.tournamentLobby.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    // Carried across promotion because nothing can rebuild it: only the retired
+    // API key could map an old-domain PUUID back to a Riot ID. Losing it here
+    // would silently degrade every later lake rebuild to old-domain identifiers.
+    model: "PuuidKeyMap",
+    idColumns: ["oldPuuid"],
+    resetIdSequence: false,
+    transform: (row): Prisma.PuuidKeyMapCreateManyInput => ({
+      oldPuuid: toStr(row, "oldPuuid"),
+      gameName: toStrOrNull(row, "gameName"),
+      tagLine: toStrOrNull(row, "tagLine"),
+      newPuuid: toStrOrNull(row, "newPuuid"),
+      status: PuuidKeyMapStatusSchema.parse(toStr(row, "status")),
+      harvestedAt: toDateOrNull(row, "harvestedAt"),
+      resolvedAt: toDateOrNull(row, "resolvedAt"),
+      // Carried, not recomputed. A mapping is usable only once its rewrite
+      // landed, and dropping this on the way across would leave every imported
+      // mapping inactive — so the lake would re-derive old-domain identifiers
+      // against accounts that had already moved.
+      appliedAt: toDateOrNull(row, "appliedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.puuidKeyMap.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.puuidKeyMap.count(),
+    findAll: (tx) =>
+      tx.puuidKeyMap.findMany({ orderBy: [{ oldPuuid: "asc" }] }),
+  }),
+  defineImportModel({
+    // Carried for the same reason as the map: an unmanaged marker would be lost
+    // at promotion, and the database would then read as never migrated.
+    model: "PuuidKeyMigration",
+    idColumns: ["id"],
+    resetIdSequence: false,
+    transform: (row): Prisma.PuuidKeyMigrationCreateManyInput => ({
+      id: toInt(row, "id"),
+      appliedAt: toDateOrNull(row, "appliedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.puuidKeyMigration.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.puuidKeyMigration.count(),
+    findAll: (tx) =>
+      tx.puuidKeyMigration.findMany({ orderBy: [{ id: "asc" }] }),
   }),
 ];

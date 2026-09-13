@@ -15,6 +15,7 @@ import {
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
+import { remapRawJson } from "#src/report-lake/puuid-remap.ts";
 import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
   stagingIdForCompetitionRankHistory,
@@ -44,6 +45,11 @@ type RebuildSourceOptions = {
   bucket: string;
   writer: NdjsonFileWriter;
   foldedIds: Set<string>;
+  /**
+   * Old→new PUUIDs for payloads captured under a previous API key. Applied
+   * before validation, so flattening never sees an old-domain identifier.
+   */
+  puuidRemap: ReadonlyMap<string, string>;
   abortSignal?: AbortSignal;
   onProgress?: (progress: {
     files: number;
@@ -66,8 +72,9 @@ export async function populateMatchesFromS3(
   const flush = async (): Promise<void> => {
     const parsedMatches = await Promise.all(
       batch.map(async (key) => {
-        const rawParsed: unknown = JSON.parse(
-          await readRawObjectText(client, bucket, key, options),
+        const rawParsed: unknown = remapRawJson(
+          JSON.parse(await readRawObjectText(client, bucket, key, options)),
+          options.puuidRemap,
         );
         const parsed = RawMatchSchema.safeParse(rawParsed);
         if (!parsed.success) {
@@ -224,6 +231,8 @@ export async function populateTimelinesFromS3(options: {
   bucket: string;
   writers: TimelineRebuildWriters;
   foldedIds: Set<string>;
+  /** Old→new PUUIDs for payloads captured under a previous API key. */
+  puuidRemap: ReadonlyMap<string, string>;
   abortSignal?: AbortSignal;
   onProgress?: (progress: {
     files: number;
@@ -237,13 +246,16 @@ export async function populateTimelinesFromS3(options: {
   const flush = async (): Promise<void> => {
     const timelines = await Promise.all(
       batch.map(async (item) => {
-        const rawParsed: unknown = JSON.parse(
-          await readRawObjectText(
-            options.client,
-            options.bucket,
-            item.key,
-            options,
+        const rawParsed: unknown = remapRawJson(
+          JSON.parse(
+            await readRawObjectText(
+              options.client,
+              options.bucket,
+              item.key,
+              options,
+            ),
           ),
+          options.puuidRemap,
         );
         const parsed = RawTimelineSchema.safeParse(rawParsed);
         if (!parsed.success) {
@@ -324,8 +336,11 @@ export async function populatePrematchFromS3(
   const flush = async (): Promise<void> => {
     const parsedPrematches = await Promise.all(
       batch.map(async (item) => {
-        const rawParsed: unknown = JSON.parse(
-          await readRawObjectText(client, bucket, item.key, options),
+        const rawParsed: unknown = remapRawJson(
+          JSON.parse(
+            await readRawObjectText(client, bucket, item.key, options),
+          ),
+          options.puuidRemap,
         );
         const parsed = RawCurrentGameInfoSchema.safeParse(rawParsed);
         if (!parsed.success) {
@@ -424,6 +439,8 @@ export async function populateCompetitionRankHistoryFromS3(options: {
       const chunk = keys.slice(offset, offset + REBUILD_S3_CONCURRENCY);
       const snapshots = await Promise.all(
         chunk.map(async (key) => {
+          // No remap here: leaderboard caches key on playerId/playerName and
+          // carry no PUUIDs, verified against the stored objects themselves.
           const rawParsed: unknown = JSON.parse(
             await readRawObjectText(
               client,

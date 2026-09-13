@@ -20,6 +20,7 @@ import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { queryMatchById } from "#src/storage/s3-query.ts";
+import { loadPuuidRemap } from "#src/report-lake/puuid-remap.ts";
 
 const logger = createLogger("betting-earnings-retry");
 
@@ -34,6 +35,7 @@ const EarnTargetSnapshotSchema = z.array(
 type PendingEarningMatchLoader = (
   matchId: string,
   matchCreatedAt: Date,
+  puuidRemap: ReadonlyMap<string, string>,
 ) => Promise<RawMatch | undefined>;
 
 type PendingEarningMarker = {
@@ -93,6 +95,9 @@ export async function retryPendingBucksEarnings(
   prismaClient: ExtendedPrismaClient = prisma,
   loadMatch: PendingEarningMatchLoader = queryMatchById,
 ): Promise<void> {
+  // Stored match payloads carry the PUUIDs of whichever key captured them,
+  // while the earning rows below hold current ones.
+  const puuidRemap = await loadPuuidRemap(prismaClient);
   const pending = await prismaClient.bucksMatchEarning.findMany({
     where: {
       phase: "postmatch",
@@ -125,7 +130,7 @@ export async function retryPendingBucksEarnings(
 
     let match: RawMatch | undefined;
     try {
-      match = await loadMatch(matchId, matchCreatedAt);
+      match = await loadMatch(matchId, matchCreatedAt, puuidRemap);
     } catch (error) {
       logger.error(`❌ Could not reload Bryan Bucks match ${matchId}:`, error);
       Sentry.captureException(error, {

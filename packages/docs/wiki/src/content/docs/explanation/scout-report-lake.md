@@ -64,6 +64,31 @@ This split is why schema changes are cheap. Adding a lake column needs no
 migration and no backfill: the nightly rebuild re-derives every row from the
 raw JSON, so the new column simply appears the next morning.
 
+### The record is permanently in an older identity domain
+
+Riot encrypts PUUIDs per API-key holder, so the same player has a different
+PUUID under each key. Scout moved from a personal-tier key to the production
+key, and every identifier Riot had already written into S3 stayed in the old
+domain. Those objects are the record. Rewriting them would destroy the only
+evidence of what Riot actually returned.
+
+The database moved instead, and the lake translates on the way past. A map of
+old identifier to new one is loaded once per build and applied where a raw
+payload is parsed, before validation, in
+[puuid-remap.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/puuid-remap.ts).
+No flattener knows about it. The same map is applied to the direct S3 readers —
+the leaderboard, pairing stats, pending-earning recovery — because they compare
+stored participants against database identifiers
+([s3-query.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/s3-query.ts)).
+
+Getting this wrong is silent. An untranslated build splits one player into two
+identities at the cutover date: no error, just wrong aggregates. So a build
+records the map it was derived under, and a build whose fingerprint no longer
+matches falls back to a full rebuild — the same path an added column takes.
+
+The map therefore outlives the migration that produced it. Only the retired key
+could have built it, so it is a managed model rather than a scratch table.
+
 ## Writes: live ingest can recover staging; initial import cannot
 
 Ingest makes two writes with deliberately different contracts, spelled out in

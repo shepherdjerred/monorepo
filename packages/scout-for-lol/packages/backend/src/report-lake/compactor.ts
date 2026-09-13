@@ -2,7 +2,10 @@ import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { prisma as defaultPrisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
+import {
+  readBuildFingerprint,
+  readBuildPuuidRemapFingerprint,
+} from "#src/report-lake/build-manifest.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   publishCompactionMetrics,
@@ -13,6 +16,10 @@ type CompactionSummary = PublishedCompactionSummary;
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import configuration from "#src/configuration.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import {
+  loadPuuidRemap,
+  puuidRemapFingerprint,
+} from "#src/report-lake/puuid-remap.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
@@ -106,6 +113,24 @@ export async function runReportLakeFold(
     if (publishedFingerprint !== lakeSchemaFingerprint()) {
       logger.info(
         `Lake column set changed since the published build (${publishedFingerprint ?? "unrecorded"} -> ${lakeSchemaFingerprint()}); folding via full rebuild`,
+      );
+      return await rebuildLocked(
+        prisma,
+        lakeDir,
+        startedAt,
+        options.onProgress,
+      );
+    }
+
+    // A fold cannot retranslate history: it hardlinks the published parquet and
+    // only appends. If the PUUID domain moved since that build, match rows would
+    // keep old identifiers while accounts — read from the re-domained database —
+    // moved on, hiding historical results. Rebuild instead.
+    const publishedRemap = await readBuildPuuidRemapFingerprint(currentDir);
+    const currentRemap = puuidRemapFingerprint(await loadPuuidRemap(prisma));
+    if (publishedRemap !== currentRemap) {
+      logger.info(
+        `PUUID remap changed since the published build (${publishedRemap ?? "unrecorded"} -> ${currentRemap}); folding via full rebuild`,
       );
       return await rebuildLocked(
         prisma,
@@ -234,7 +259,9 @@ export async function runReportLakeFold(
         stagedTimelineParticipantFrames.skipped +
         stagedTimelineCoverage.skipped,
     };
-    await writeCompactionManifest(buildDir, summary);
+    // The fold only reaches here when the published build already matches the
+    // current remap, so carrying it forward keeps the manifest truthful.
+    await writeCompactionManifest(buildDir, summary, currentRemap);
     await publishBuild(lakeDir, buildId);
     publishCompactionMetrics(summary);
     await removeFoldedStagingFiles(lakeDir, "matches", stagedMatches.foldedIds);
@@ -337,6 +364,10 @@ async function rebuildLocked(
     );
   }
   const client = createS3Client();
+  // The S3 corpus is canonical and untouched, so payloads captured before the
+  // Riot production-key cutover still carry old-domain PUUIDs. Translate them
+  // on the way in or a rebuild silently splits one player into two identities.
+  const puuidRemap = await loadPuuidRemap(prisma);
   const skippedMatches = await populateMatchesFromS3({
     client,
     bucket,
@@ -344,6 +375,7 @@ async function rebuildLocked(
     teamWriter: matchTeamWriter,
     teamBanWriter: matchTeamBanWriter,
     foldedIds: foldedMatchIds,
+    puuidRemap,
     abortSignal: deadline,
     onProgress: (progress) => {
       onProgress?.({ phase: "reading-s3", table: "matches", ...progress });
@@ -354,6 +386,7 @@ async function rebuildLocked(
     bucket,
     writer: prematchWriter,
     foldedIds: foldedPrematchIds,
+    puuidRemap,
     abortSignal: deadline,
     onProgress: (progress) => {
       onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
@@ -363,6 +396,7 @@ async function rebuildLocked(
     client,
     bucket,
     buildDir,
+    puuidRemap,
     abortSignal: deadline,
     timeoutMs: remainingTimeoutMs(),
     onProgress: (progress) => {
@@ -460,7 +494,11 @@ async function rebuildLocked(
     skippedCompetitionRankHistory: rankHistory.skipped,
     skippedTimelines: timelines.skipped,
   };
-  await writeCompactionManifest(buildDir, summary);
+  await writeCompactionManifest(
+    buildDir,
+    summary,
+    puuidRemapFingerprint(puuidRemap),
+  );
   await publishBuild(lakeDir, buildId);
   publishCompactionMetrics(summary);
   await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);

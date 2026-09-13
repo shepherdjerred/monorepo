@@ -2839,3 +2839,46 @@ model ScoutOperatorAuditEvent {
   @@index([subjectKind, subjectId, createdAt])
   @@index([actorDiscordId, createdAt])
 }
+
+/// Permanent old→new PUUID map from a Riot API-key domain change.
+///
+/// Riot encrypts identifiers per API-key holder, so moving between keys
+/// invalidates every stored PUUID. `scripts/migrate-puuid-key.ts` rewrites the
+/// database, but the S3 corpus is canonical and deliberately left untouched —
+/// it holds old-domain PUUIDs permanently, and the report lake is re-derived
+/// from it. This table is what lets that re-derivation stay correct.
+///
+/// It is NOT scratch state. Once the old key is retired, nothing can rebuild
+/// it: only that key could map an old PUUID back to a Riot ID. It is a managed
+/// model, and carried by the legacy SQLite→Postgres import, so the mapping
+/// survives promotion rather than silently degrading rebuilds to old-domain
+/// identifiers.
+model PuuidKeyMap {
+  oldPuuid    String    @id
+  gameName    String?
+  tagLine     String?
+  newPuuid    String?
+  /// pending | harvested | resolved | unresolved
+  status      String    @default("pending")
+  harvestedAt DateTime? @db.Timestamptz()
+  resolvedAt  DateTime? @db.Timestamptz()
+  /// When this mapping's stored references were actually rewritten. A resolved
+  /// row is not usable until then: translating historical payloads to an
+  /// identifier the database does not yet hold would hide the player it names.
+  appliedAt   DateTime? @db.Timestamptz()
+
+  @@index([status])
+}
+
+/// Whether this database has been rewritten to a new Riot key domain.
+///
+/// A single row, deliberately separate from the mapping itself. It has to exist
+/// even when the map is empty — a cutover performed while tracking no accounts
+/// still moves the database to the new domain — and it has to survive every
+/// account present at migration being untracked later. Neither is true of state
+/// derived from the tracked rows or carried on the mapping rows.
+model PuuidKeyMigration {
+  /// Always 1. One row describes one database.
+  id        Int       @id @default(1)
+  appliedAt DateTime? @db.Timestamptz()
+}

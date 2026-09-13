@@ -95,6 +95,7 @@ async function runRebuild(): Promise<{
     bucket: "test-bucket",
     writers,
     foldedIds,
+    puuidRemap: new Map(),
   });
   const coverageRows = writers.coverage.rows;
   await Promise.all([

@@ -28,6 +28,7 @@ export type CompactionSummary = {
 export async function writeCompactionManifest(
   buildDir: string,
   summary: Omit<CompactionSummary, "durationMs">,
+  puuidRemapFingerprint: string,
 ): Promise<void> {
   await Bun.write(
     path.join(buildDir, "manifest.json"),
@@ -35,6 +36,7 @@ export async function writeCompactionManifest(
       {
         ...summary,
         schemaFingerprint: lakeSchemaFingerprint(),
+        puuidRemapFingerprint,
         builtAt: new Date().toISOString(),
       },
       null,

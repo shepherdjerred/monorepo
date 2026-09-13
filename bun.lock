@@ -1164,6 +1164,7 @@
       "devDependencies": {
         "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
         "@eslint/js": "^10.0.1",
+        "@prisma/adapter-pg": "7.9.1",
         "@scout-for-lol/backend": "workspace:*",
         "@scout-for-lol/data": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",

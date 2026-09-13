@@ -12,6 +12,7 @@ const logger = createLogger("report-lake-build-manifest");
  */
 const BuildManifestSchema = z.looseObject({
   schemaFingerprint: z.string().min(1).optional(),
+  puuidRemapFingerprint: z.string().min(1).optional(),
 });
 
 /**
@@ -45,4 +46,27 @@ export async function readBuildFingerprint(
   }
   const parsed = BuildManifestSchema.safeParse(raw);
   return parsed.success ? parsed.data.schemaFingerprint : undefined;
+}
+
+/**
+ * The PUUID remap domain a published build was written at, or undefined when
+ * that cannot be established. Undefined means the same thing as an unreadable
+ * schema fingerprint — we cannot prove the published parquet matches the
+ * current identity domain — and the caller's response is the same: rebuild.
+ */
+export async function readBuildPuuidRemapFingerprint(
+  buildDir: string,
+): Promise<string | undefined> {
+  const file = Bun.file(path.join(buildDir, "manifest.json"));
+  if (!(await file.exists())) {
+    return undefined;
+  }
+  let raw: unknown;
+  try {
+    raw = await file.json();
+  } catch {
+    return undefined;
+  }
+  const parsed = BuildManifestSchema.safeParse(raw);
+  return parsed.success ? parsed.data.puuidRemapFingerprint : undefined;
 }

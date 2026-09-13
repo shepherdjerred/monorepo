@@ -25,6 +25,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { queryMatchesByDateRange } from "#src/storage/s3-query.ts";
+import { loadPuuidRemap } from "#src/report-lake/puuid-remap.ts";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -444,7 +445,12 @@ export async function calculateLeaderboard(
     // Query matches from S3
     // If no start date (shouldn't happen for non-DRAFT), use empty results
     matches = startDate
-      ? await queryMatchesByDateRange(startDate, endDate, puuids)
+      ? await queryMatchesByDateRange(
+          startDate,
+          endDate,
+          puuids,
+          await loadPuuidRemap(prisma),
+        )
       : [];
 
     logger.info(

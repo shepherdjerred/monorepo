@@ -422,6 +422,11 @@ const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string>> = {
     trigger: "ReportRunTrigger",
     status: "ReportRunStatus",
   },
+  // Without this the global `status` mapping would brand the PUUID migration's
+  // lifecycle as ParticipantStatus.
+  PuuidKeyMap: {
+    status: "PuuidKeyMapStatus",
+  },
 };
 
 function getBrandedType(
