@@ -40,20 +40,26 @@ async function seed(options: {
   }[];
   /** Marks the database as already rewritten to the new domain. */
   applied?: boolean;
+  /** Epoch millis for the seeded accounts; defaults to now. */
+  accountsCreatedAt?: number;
 }): Promise<Awaited<ReturnType<typeof openDatabase>>> {
   const db = await openDatabase();
   await db.exec(
-    `CREATE TABLE "Account" ("id" INTEGER PRIMARY KEY, "puuid" TEXT, "riotGameName" TEXT, "riotTagLine" TEXT, "createdTime" TEXT)`,
+    `CREATE TABLE "Account" ("id" INTEGER PRIMARY KEY, "puuid" TEXT, "riotGameName" TEXT, "riotTagLine" TEXT, "createdTime" INTEGER)`,
   );
   await db.exec(
     `CREATE TABLE "MatchRankHistory" ("id" INTEGER PRIMARY KEY, "puuid" TEXT)`,
   );
+  // Defaults to well after the seeded cutover marker, so accounts read as
+  // registered since it.
+  const accountCreatedAt = options.accountsCreatedAt ?? Date.now();
   let id = 0;
   for (const puuid of options.accounts) {
     id++;
     await db.exec(
-      `INSERT INTO "Account" VALUES (${db.param(1)}, ${db.param(2)}, 'Name', 'TAG', ${db.now()})`,
-      [id, puuid],
+      // Epoch milliseconds, matching how the promoted SQLite image stores it.
+      `INSERT INTO "Account" VALUES (${db.param(1)}, ${db.param(2)}, 'Name', 'TAG', ${db.param(3)})`,
+      [id, puuid, accountCreatedAt],
     );
   }
   const { ensureMapTable } = await import("./phases.ts");
@@ -252,4 +258,19 @@ test("apply records the cutover even when no identities were tracked", async () 
 test("collect refuses after an empty cutover once a first account appears", async () => {
   const db = await seed({ accounts: [POST_CUTOVER], applied: true });
   await expectCollectRefusesAndRecordsNothing(db, 0);
+});
+
+test("verify still faults an account that predates the cutover", async () => {
+  // The other direction of the same comparison: this account existed before the
+  // rewrite and was never mapped, so it was genuinely skipped. A fix that simply
+  // stopped flagging everything would let this through silently.
+  const db = await seed({
+    accounts: [NEW_A, POST_CUTOVER],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+    accountsCreatedAt: Date.parse("2020-01-01T00:00:00Z"),
+  });
+  const { verify } = await import("./phases.ts");
+  await expect(verify(db)).rejects.toThrow(/unmapped/);
+  await db.close();
 });

@@ -92,3 +92,16 @@ test("discovery classifies scalar and JSON PUUID columns", async () => {
 
   await db.close();
 });
+
+test("timestamps normalise across every shape they are stored in", async () => {
+  const { toEpochMillis } = await import("./support.ts");
+  const instant = Date.parse("2026-09-13T11:34:41Z");
+  // Epoch millis, as the promoted SQLite image stores Account.createdTime.
+  expect(toEpochMillis(instant, "int")).toBe(instant);
+  // A Date, as the Postgres driver returns.
+  expect(toEpochMillis(new Date(instant), "date")).toBe(instant);
+  // SQLite's datetime() text, which carries no zone marker but means UTC.
+  expect(toEpochMillis("2026-09-13 11:34:41", "sqlite text")).toBe(instant);
+  expect(toEpochMillis("2026-09-13T11:34:41.000Z", "iso")).toBe(instant);
+  expect(() => toEpochMillis({}, "junk")).toThrow(/timestamp/);
+});

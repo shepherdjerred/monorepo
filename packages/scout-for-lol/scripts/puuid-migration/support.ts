@@ -162,3 +162,38 @@ export function countOf(rows: readonly Row[], what: string): number {
   const first = rows[0];
   return first === undefined ? 0 : asCount(first["n"], what);
 }
+
+/**
+ * Normalise a stored timestamp to epoch milliseconds.
+ *
+ * The same logical instant reaches us in three shapes: an integer of epoch
+ * milliseconds (how the promoted SQLite image stores `createdTime`), a `Date`
+ * (what the Postgres driver returns), and text (what SQLite's `datetime()`
+ * writes). Comparing those in SQL is not just imprecise, it is wrong — SQLite
+ * orders every integer before every text value, so an integer timestamp
+ * compares as smaller than ANY text timestamp regardless of the dates. Any
+ * ordering has to happen here, after both sides are the same kind of number.
+ */
+export function toEpochMillis(value: unknown, what: string): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "bigint") {
+    return Number(value);
+  }
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  if (typeof value === "string") {
+    // SQLite's datetime() yields "YYYY-MM-DD HH:MM:SS" in UTC with no zone
+    // marker, which Date.parse would otherwise read as local time.
+    const normalised = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
+      ? `${value.replace(" ", "T")}Z`
+      : value;
+    const parsed = Date.parse(normalised);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  throw new TypeError(`Cannot read ${what} as a timestamp`);
+}

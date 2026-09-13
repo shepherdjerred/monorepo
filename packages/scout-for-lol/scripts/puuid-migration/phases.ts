@@ -12,6 +12,11 @@ import {
   readTrackedPuuids,
 } from "./discovery.ts";
 import { parseJson, translateJsonValue } from "./json-walk.ts";
+import {
+  cutoverApplied,
+  strayIdentities,
+  unmappedTrackedIdentities,
+} from "./cutover.ts";
 import { byPuuid, byRiotId, type RiotAccount } from "./riot.ts";
 import {
   asOptionalString,
@@ -46,42 +51,6 @@ export async function ensureMapTable(db: Db): Promise<void> {
       "appliedAt" ${db.timestampType()}
     )
   `);
-}
-
-/** Whether `apply` has finished rewriting this database to the new domain. */
-async function cutoverApplied(db: Db): Promise<boolean> {
-  const rows = await db.query(
-    `SELECT COUNT(*) AS n FROM "PuuidKeyMigration" WHERE "appliedAt" IS NOT NULL`,
-  );
-  return countOf(rows, "cutover marker") > 0;
-}
-
-/**
- * Tracked identities that should have been migrated and were not.
- *
- * Before the cutover, any unmapped tracked identity is missed work. After it,
- * most are not: an account registered since is already new-domain and is
- * deliberately absent from the map, which is why `collect` refuses to record
- * one. Only an account that predates the cutover and is still unmapped was
- * actually skipped — so the marker's timestamp, not its mere presence, is what
- * separates the two. Without that distinction a re-run of the advertised
- * resumable `verify` would fail permanently on healthy accounts.
- */
-async function strayIdentities(db: Db): Promise<string[]> {
-  const unmapped = await unmappedTrackedIdentities(db);
-  if (unmapped.length === 0 || !(await cutoverApplied(db))) {
-    return unmapped;
-  }
-  const rows = await db.query(`
-    SELECT a."puuid" AS v FROM "Account" a
-     WHERE a."createdTime" < (
-       SELECT m."appliedAt" FROM "PuuidKeyMigration" m WHERE m."id" = 1
-     )
-  `);
-  const predatingCutover = new Set(
-    rows.map((r) => asString(r["v"], "account puuid")),
-  );
-  return unmapped.filter((puuid) => predatingCutover.has(puuid));
 }
 
 export async function collect(db: Db): Promise<void> {
@@ -370,40 +339,6 @@ async function loadMap(db: Db): Promise<Map<string, string>> {
       asString(r["newPuuid"], "newPuuid"),
     ]),
   );
-}
-
-/**
- * Tracked identities the map has never seen, in either domain.
- *
- * Both sides count as known. A rerun after an interrupted apply finds rows that
- * earlier statements already rewrote — the Postgres path has no enclosing
- * transaction, by design, so a partial apply is expected and resumable. Judging
- * only by `oldPuuid` would classify those already-migrated rows as strangers and
- * abort exactly where resumability is supposed to work.
- *
- * What this still catches is the real hazard: an account registered after
- * `collect`, which has no map row at all and would otherwise be rewritten to
- * nothing and stranded.
- */
-async function knownIdentities(db: Db): Promise<Set<string>> {
-  const rows = await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
-  );
-  const known = new Set<string>();
-  for (const row of rows) {
-    known.add(asString(row["oldPuuid"], "oldPuuid"));
-    const mapped = asOptionalString(row["newPuuid"]);
-    if (mapped !== null) {
-      known.add(mapped);
-    }
-  }
-  return known;
-}
-
-async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
-  const tracked = await readTrackedPuuids(db);
-  const known = await knownIdentities(db);
-  return [...tracked].filter((puuid) => !known.has(puuid));
 }
 
 /**
