@@ -437,6 +437,11 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       status: PuuidKeyMapStatusSchema.parse(toStr(row, "status")),
       harvestedAt: toDateOrNull(row, "harvestedAt"),
       resolvedAt: toDateOrNull(row, "resolvedAt"),
+      // Carried, not recomputed. A mapping is usable only once its rewrite
+      // landed, and dropping this on the way across would leave every imported
+      // mapping inactive — so the lake would re-derive old-domain identifiers
+      // against accounts that had already moved.
+      appliedAt: toDateOrNull(row, "appliedAt"),
     }),
     createMany: async (tx, data) => {
       const result = await tx.puuidKeyMap.createMany({ data });

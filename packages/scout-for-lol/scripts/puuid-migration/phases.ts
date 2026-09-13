@@ -455,19 +455,24 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
   // wrong side of it and be reported as work this migration skipped. COALESCE
   // rather than DO NOTHING, because the column is nullable and a row left there
   // by an interrupted run still needs filling in.
-  await db.exec(
-    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})
-     ON CONFLICT ("id") DO UPDATE
-        SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()})`,
-  );
-  // Per mapping, as well. The database-wide marker says a cutover happened; it
+  // Per mapping first. The database-wide marker says a cutover happened; it
   // cannot say whether THIS mapping was part of it. An identity that a previous
   // run left unresolved and a later `resolve` recovered has a replacement the
   // stored columns do not hold yet, and publishing that to the report lake
   // would translate historical payloads to an identifier nothing joins against.
+  //
+  // Before the marker, not after, because the Postgres path holds no
+  // transaction across these two statements. Stopping between them has to leave
+  // the database reading as mid-migration — the marker absent — rather than
+  // fully cut over with mappings the lake will not publish.
   await db.exec(
     `UPDATE "PuuidKeyMap" SET "appliedAt" = ${db.now()}
       WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL`,
+  );
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})
+     ON CONFLICT ("id") DO UPDATE
+        SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()})`,
   );
   console.log("apply: complete");
 }
@@ -561,13 +566,29 @@ export async function verify(db: Db): Promise<void> {
     );
   }
 
-  if (survivors > 0 || unresolved > 0 || strays.length > 0) {
+  // A resolved mapping the lake will not publish. The rewrite can land and the
+  // cutover be recorded while these go unstamped, and the survivor scan above
+  // sees nothing wrong — no old value is left in the database. It is the lake
+  // that would be wrong, months later, once the old key can no longer rebuild
+  // the mapping.
+  const unpublishedRows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL`,
+  );
+  const unpublished = countOf(unpublishedRows, "unpublished count");
+  if (unpublished > 0) {
+    console.error(
+      `  ${unpublished.toString()} resolved mappings are not marked applied; the report lake will not use them`,
+    );
+  }
+
+  if (survivors > 0 || unresolved > 0 || strays.length > 0 || unpublished > 0) {
     // Throwing, not logging: this is the gate, and a gate that exits 0 on
     // failure is not a gate.
     throw new Error(
       `verify FAILED — ${survivors.toString()} rows hold translated old-domain PUUIDs, ` +
         `${unresolved.toString()} identities unresolved, ` +
-        `${strays.length.toString()} tracked identities unmapped`,
+        `${strays.length.toString()} tracked identities unmapped, ` +
+        `${unpublished.toString()} mappings unpublished`,
     );
   }
   console.log(

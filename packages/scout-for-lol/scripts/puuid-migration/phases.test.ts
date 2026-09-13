@@ -113,6 +113,25 @@ beforeEach(remove);
 afterAll(remove);
 
 /**
+ * Record a cutover the way a real one leaves the database: the database-wide
+ * marker AND every mapping it rewrote. A fixture that sets only the marker
+ * describes a state `apply` cannot produce.
+ */
+async function markCutover(
+  db: Awaited<ReturnType<typeof openDatabase>>,
+  at: string,
+): Promise<void> {
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.param(1)})`,
+    [at],
+  );
+  await db.exec(
+    `UPDATE "PuuidKeyMap" SET "appliedAt" = ${db.param(1)} WHERE "newPuuid" IS NOT NULL`,
+    [at],
+  );
+}
+
+/**
  * Both post-cutover cases assert the same contract: collect refuses and leaves
  * the map exactly as it found it, having recorded nothing.
  */
@@ -306,9 +325,7 @@ test("verify faults an account created in the cutover's own second", async () =>
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
     accountsCreatedAt: cutover + 400,
   });
-  await db.exec(
-    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.900Z')`,
-  );
+  await markCutover(db, "2026-09-13T11:34:41.900Z");
   const { verify } = await import("./phases.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();
@@ -330,9 +347,7 @@ async function seedTrackedOnlySighting(
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
     accountsCreatedAt: CUTOVER_AT - 60_000,
   });
-  await db.exec(
-    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.000Z')`,
-  );
+  await markCutover(db, "2026-09-13T11:34:41.000Z");
   await db.exec(
     `INSERT INTO "MatchTrackedAccount" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)})`,
     ["NA1_1", POST_CUTOVER, seenAt],
@@ -363,9 +378,7 @@ test("verify faults an identity only MatchRankHistory saw, before the cutover", 
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
     accountsCreatedAt: CUTOVER_AT - 60_000,
   });
-  await db.exec(
-    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.000Z')`,
-  );
+  await markCutover(db, "2026-09-13T11:34:41.000Z");
   await db.exec(
     `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
     [POST_CUTOVER, CUTOVER_AT - 60_000],
@@ -415,9 +428,7 @@ test("a second apply keeps the timestamp the first one recorded", async () => {
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
     accountsCreatedAt: CUTOVER_AT + 60_000,
   });
-  await db.exec(
-    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.000Z')`,
-  );
+  await markCutover(db, "2026-09-13T11:34:41.000Z");
   const { apply, verify } = await import("./phases.ts");
   await apply(db, false);
   const rows = await db.query(
@@ -529,6 +540,22 @@ test("an unmigrated map predating appliedAt gains an empty column", async () => 
   await ensureMapTable(db);
   const rows = await db.query(`SELECT "appliedAt" AS v FROM "PuuidKeyMap"`);
   expect(rows[0]?.["v"]).toBeNull();
+  await db.close();
+});
+
+test("verify fails when a rewritten mapping was never marked applied", async () => {
+  // The interrupted-apply shape on Postgres, which holds no transaction across
+  // the final statements. Nothing old survives in the database, so the survivor
+  // scan is clean — but the report lake excludes the mapping, and that only
+  // becomes visible once the old key can no longer rebuild it.
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  await db.exec(`UPDATE "PuuidKeyMap" SET "appliedAt" = NULL`);
+  const { verify } = await import("./phases.ts");
+  await expect(verify(db)).rejects.toThrow(/unpublished/);
   await db.close();
 });
 
