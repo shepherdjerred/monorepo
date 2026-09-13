@@ -197,7 +197,7 @@ export async function readTrackedPuuids(db: Db): Promise<Set<string>> {
       table: source.table,
       column: source.column,
       kind: source.json ? "json" : "scalar",
-      bareArrayIsPuuids: source.json,
+      bareArrayIsPuuids: source.bareArray,
     });
     for (const v of values) {
       tracked.add(v);

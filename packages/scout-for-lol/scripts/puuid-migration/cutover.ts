@@ -142,7 +142,7 @@ async function earliestSighting(db: Db): Promise<Map<string, number>> {
       if (source.json) {
         // One row timestamps every identity it names.
         const inRow: string[] = [];
-        collectFromJson(parseJson(value), true, inRow);
+        collectFromJson(parseJson(value), source.bareArray, inRow);
         for (const puuid of inRow) {
           record(puuid, at);
         }

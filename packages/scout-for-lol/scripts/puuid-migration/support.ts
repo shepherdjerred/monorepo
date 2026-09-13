@@ -89,31 +89,85 @@ export const TRACKED_SOURCES: readonly {
   table: string;
   column: string;
   json: boolean;
+  /** True only where a JSON array holds bare PUUID strings rather than objects. */
+  bareArray: boolean;
   /**
-   * When this row first recorded the identity. Needed to tell an account that
-   * predates the cutover from one registered since, and every source needs one:
-   * an identity datable from no source at all cannot be judged, so it is held
-   * as suspect and fails verification.
+   * When this row first recorded the identity. Every source needs one: an
+   * identity datable from no source at all cannot be judged against the cutover,
+   * so it is held as suspect and fails verification.
    */
   createdColumn: string;
 }[] = [
+  // Registration: who Scout is watching right now.
   {
     table: "Account",
     column: "puuid",
     json: false,
+    bareArray: false,
     createdColumn: "createdTime",
   },
   {
     table: "MatchTrackedAccount",
     column: "puuid",
     json: false,
+    bareArray: false,
     createdColumn: "createdAt",
   },
   {
     table: "ActiveGame",
     column: "trackedPuuids",
     json: true,
+    bareArray: true,
     createdColumn: "detectedAt",
+  },
+  // Frozen rosters that still drive evaluation. A Dare, challenge, or parlay
+  // pins its subjects at creation and keeps matching them against live games
+  // afterwards, so those PUUIDs stay load-bearing even once the account row is
+  // gone. Leaving one un-migrated does not fail loudly: `evaluateDareGame`
+  // simply never matches a new-domain participant, and the Dare quietly never
+  // resolves. Archives — match rosters, ledgers, settled snapshots, workflow
+  // payloads — are deliberately absent; they are rewritten, never compared.
+  {
+    table: "BucksDareTarget",
+    column: "accounts",
+    json: true,
+    bareArray: false,
+    createdColumn: "createdAt",
+  },
+  {
+    table: "BucksDareV2Target",
+    column: "accounts",
+    json: true,
+    bareArray: false,
+    createdColumn: "createdAt",
+  },
+  {
+    table: "BucksDareV2Revision",
+    column: "targetsJson",
+    json: true,
+    bareArray: false,
+    createdColumn: "createdAt",
+  },
+  {
+    table: "ChallengeRunRevision",
+    column: "selectedAccountsJson",
+    json: true,
+    bareArray: false,
+    createdColumn: "createdAt",
+  },
+  {
+    table: "BucksParlayDefinition",
+    column: "subjects",
+    json: true,
+    bareArray: false,
+    createdColumn: "createdAt",
+  },
+  {
+    table: "BucksWeeklyParlayDefinition",
+    column: "subjects",
+    json: true,
+    bareArray: false,
+    createdColumn: "openAt",
   },
 ];
 

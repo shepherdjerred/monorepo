@@ -53,6 +53,9 @@ async function seed(options: {
   await db.exec(
     `CREATE TABLE "MatchTrackedAccount" ("riotMatchId" TEXT, "puuid" TEXT, "createdAt" INTEGER, PRIMARY KEY ("riotMatchId", "puuid"))`,
   );
+  await db.exec(
+    `CREATE TABLE "BucksDareTarget" ("id" INTEGER PRIMARY KEY, "accounts" TEXT, "createdAt" INTEGER)`,
+  );
   // Defaults to well after the seeded cutover marker, so accounts read as
   // registered since it.
   const accountCreatedAt = options.accountsCreatedAt ?? Date.now();
@@ -333,5 +336,29 @@ test("verify still faults an identity MatchTrackedAccount saw before the cutover
   const db = await seedTrackedOnlySighting(CUTOVER_AT - 60_000);
   const { verify } = await import("./phases.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
+  await db.close();
+});
+
+test("collect maps an identity frozen in a Dare after its account is removed", async () => {
+  // A Dare pins its targets at creation and keeps matching them against live
+  // games. Once the account row is gone the PUUID survives only here — and it
+  // is still load-bearing, because evaluation compares it to match
+  // participants. Leaving it un-migrated fails silently: the Dare simply never
+  // resolves again.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `INSERT INTO "BucksDareTarget" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [
+      JSON.stringify([{ puuid: OLD_B, trackingStartedAt: "2026-01-01" }]),
+      Date.now(),
+    ],
+  );
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "oldPuuid" = ${db.param(1)}`,
+    [OLD_B],
+  );
+  expect(rows.length).toBe(1);
   await db.close();
 });
