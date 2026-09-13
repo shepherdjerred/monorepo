@@ -1,6 +1,10 @@
 ---
 name: buildkite-helper
-description: "Use this skill for Design, inspect, and troubleshoot Buildkite pipelines, steps, agents, plugins, retries, artifact…"
+description: |
+  BuildKite CI/CD pipeline configuration, YAML syntax, dynamic pipelines, and agent management
+  When user works with BuildKite, mentions CI pipelines, .buildkite/ directory, buildkite-agent commands,
+  pipeline YAML, build steps, BuildKite API, or asks about CI configuration, pipeline generation,
+  step dependencies, retry configuration, agent queues, or Kubernetes CI agents
 ---
 
 # Buildkite helper

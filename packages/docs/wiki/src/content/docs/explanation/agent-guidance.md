@@ -76,8 +76,24 @@ two agents receive different rules for the same checkout.
 
 ## Budgets are architecture checks
 
-The size guard protects the layering decision. A file that exceeds its budget
-is usually mixing always-on constraints with reference or procedure.
+The per-file size guard protects the layering decision. A file that exceeds its
+budget is usually mixing always-on constraints with reference or procedure, and
+the remedy improves the architecture: move the reference detail down a layer
+into a README, a skill reference, or this wiki.
+
+The shared skill-catalog budget in
+[`check-agent-guidance.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/check-agent-guidance.ts)
+is a different kind of control and is deliberately loose. `CATALOG_MAX_BYTES`
+sums every skill's name and description per catalog root, so exceeding it
+signals only that the tree holds many skills — no single file mixed layers, and
+there is no lower layer to move a description into, because a description _is_
+the routing key an agent matches before it loads anything. Tightening it can
+only delete routing signal, and a truncated trigger clause removes a skill from
+discovery silently: nothing fails, the skill simply stops being selected. So the
+ceiling sits well above expected usage and catches runaway growth without ever
+forcing a trade between two legitimate skills, while the per-skill
+`description` cap is the guard that does real work. Prune unused skills rather
+than shortening the descriptions of the ones that route.
 
 The guard also verifies skill identity, discovery metadata, compatibility
 symlinks, and the absence of repository Cursor rule copies. It does not judge

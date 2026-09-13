@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: "Use this skill for Audit agent behavior and configuration when the user asks to reflect on a conversation, improve …"
+description: This skill should be used when the user asks to "reflect on this conversation", "optimize my agent setup", "improve agent instructions", "analyze chat patterns", "audit AGENTS.md", "suggest agent improvements", "fix agent misunderstandings", or mentions "prompt optimization", "instruction tuning", or "agent configuration audit". Analyzes chat history and configuration to identify improvements for AGENTS.md files, skills, MCPs, hooks, and permissions.
 ---
 
 # Reflect on agent configuration
