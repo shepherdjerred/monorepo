@@ -130,6 +130,37 @@ export const ScoutReceiptsV2ResultSchema = z.strictObject({
 });
 export type ScoutReceiptsV2Result = z.infer<typeof ScoutReceiptsV2ResultSchema>;
 
+/**
+ * What the tournament-code finalization stage found and did.
+ *
+ * Tournament custom games and ordinary Riot match ingestion keep distinct
+ * provenance, so this is its own stage with its own answer rather than a flag
+ * on the observation: `not-a-tournament-match` is the ordinary case and says
+ * so out loud, instead of being indistinguishable from a finalization that
+ * happened to publish nothing.
+ *
+ * `publishedNight` reports the Custom Night snapshot broadcast, which is a
+ * projection of current state rather than an event, so a resumed run that
+ * republishes it changes nothing a client can observe twice.
+ */
+export const ScoutTournamentResultV2ResultSchema = z.discriminatedUnion(
+  "outcome",
+  [
+    z.strictObject({ outcome: z.literal("not-a-tournament-match") }),
+    z.strictObject({
+      outcome: z.literal("finalized"),
+      publishedNight: z.boolean(),
+    }),
+    z.strictObject({
+      outcome: z.literal("already-finalized"),
+      publishedNight: z.boolean(),
+    }),
+  ],
+);
+export type ScoutTournamentResultV2Result = z.infer<
+  typeof ScoutTournamentResultV2ResultSchema
+>;
+
 export const ScoutMatchCursorV2ResultSchema = z.strictObject({
   advanced: z.int().nonnegative(),
   alreadyAdvanced: z.int().nonnegative(),

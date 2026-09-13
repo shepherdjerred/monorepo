@@ -62,6 +62,12 @@ const gameRef = ScoutPrematchGameRefSchema.parse({
  * as a string rather than importing the function is the point — that is what
  * a Schedule, an operator and a reconciliation sweep all do, and it is the
  * only way the test can tell registration from a local import.
+ *
+ * `implemented` marks the types whose lane has landed a body. They stay in
+ * this list because the list is also the registry cross-check below — every
+ * V2 type must appear exactly once — but they are not started here: a type
+ * with a body schedules Activities, and asserting how it behaves belongs to
+ * the tests that stand up its Activity worker.
  */
 const registrations = [
   {
@@ -71,31 +77,37 @@ const registrations = [
       stage,
       trigger: "schedule",
     }),
+    implemented: true,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.matchProcessingV2,
     workflowId: scoutMatchProcessingV2WorkflowId(stage, riotMatchId),
     input: scoutMatchProcessingV2InputCodec.serialize({ stage, riotMatchId }),
+    implemented: true,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
     workflowId: scoutPrematchDiscoveryV2WorkflowId(stage),
     input: scoutPrematchDiscoveryV2InputCodec.serialize({ stage }),
+    implemented: false,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.prematchGameV2,
     workflowId: scoutPrematchGameV2WorkflowId(stage, gameRef),
     input: scoutPrematchGameV2InputCodec.serialize({ stage, gameRef }),
+    implemented: false,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.notificationV2,
     workflowId: scoutNotificationV2WorkflowId(stage, intentKey),
     input: scoutNotificationV2InputCodec.serialize({ stage, intentKey }),
+    implemented: false,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
     workflowId: scoutLakeProjectionV2WorkflowId(stage, riotMatchId),
     input: scoutLakeProjectionV2InputCodec.serialize({ stage, riotMatchId }),
+    implemented: false,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.recoveryBatchV2,
@@ -104,6 +116,7 @@ const registrations = [
       stage,
       recoveryBatchId,
     }),
+    implemented: false,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
@@ -112,13 +125,15 @@ const registrations = [
       stage,
       trigger: "operator",
     }),
+    implemented: false,
   },
 ] as const;
 
-test("registers all eight V2 types, and each refuses to run unimplemented", async () => {
+test("registers all eight V2 types, and every unimplemented one refuses to run", async () => {
   expect(registrations.map((entry) => entry.name)).toEqual([
     ...SCOUT_V2_WORKFLOW_NAMES,
   ]);
+  const unimplemented = registrations.filter((entry) => !entry.implemented);
 
   const worker = await Worker.create({
     connection: environment.nativeConnection,
@@ -128,7 +143,7 @@ test("registers all eight V2 types, and each refuses to run unimplemented", asyn
   });
 
   await worker.runUntil(async () => {
-    for (const entry of registrations) {
+    for (const entry of unimplemented) {
       // A type missing from the bundle fails its workflow task and retries
       // forever, so this settling at all is the registration proof; the
       // assertions are that it stopped, terminally, and said why.

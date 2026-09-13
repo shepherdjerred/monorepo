@@ -8,12 +8,10 @@ import {
   classifyLlmProviderIssue,
   recordProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
-import {
-  isFeatureHardDisabled,
-  type FlagName,
-} from "#src/configuration/flags.ts";
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
 import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
+import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
+import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
@@ -65,84 +63,6 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
   });
 }
 
-export function hardDisabledFeatureForTemporalWork(
-  kind: string,
-): FlagName | null {
-  switch (kind) {
-    case "tournament-lobbies":
-      return "tournament_lobbies_enabled";
-    case "custom-nights-expiry":
-      return "custom_nights_enabled";
-    case "bucks-reconciliation":
-    case "weekly-bucks-leaderboard":
-      return "betting_enabled";
-    default:
-      return null;
-  }
-}
-
-function temporalWorkHardDisabled(kind: string): boolean {
-  const feature = hardDisabledFeatureForTemporalWork(kind);
-  return feature !== null && isFeatureHardDisabled(feature);
-}
-
-function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
-  return {
-    probeQueue,
-    pollRealtime: async (input) => {
-      if (temporalWorkHardDisabled(input.kind)) return;
-      await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
-        if (input.kind === "prematch") {
-          const { checkPreMatch } =
-            await import("#src/league/tasks/prematch/index.ts");
-          await checkPreMatch();
-        } else {
-          const { checkTournamentLobbies } =
-            await import("#src/league/tournament/poller.ts");
-          await checkTournamentLobbies();
-        }
-      });
-      Context.current().heartbeat({ kind: input.kind, phase: "complete" });
-    },
-    discoverPostMatchIds: async () =>
-      await heartbeatWhile(
-        { phase: "discovering-postmatch-intents" },
-        async () => {
-          const { discoverPostMatchIntents } =
-            await import("#src/league/tasks/postmatch/match-history-polling.ts");
-          return await discoverPostMatchIntents();
-        },
-      ),
-    runPostMatchMaintenance: async (input) => {
-      await heartbeatWhile({ phase: "postmatch-maintenance" }, async () => {
-        const { runPostMatchMaintenance } =
-          await import("#src/league/tasks/postmatch/index.ts");
-        await runPostMatchMaintenance({
-          settleDareV2Deadlines: input.settleDareV2Deadlines,
-          dareEvidenceWatermark:
-            input.evidenceWatermark === undefined
-              ? undefined
-              : new Date(input.evidenceWatermark),
-        });
-      });
-      Context.current().heartbeat({ phase: "complete" });
-    },
-    ingestMatch: async (input) => {
-      await heartbeatWhile(
-        { matchId: input.matchId, phase: "ingesting" },
-        async () => {
-          const { ingestDiscoveredMatch } =
-            await import("#src/league/tasks/postmatch/temporal-match-ingestion.ts");
-          await ingestDiscoveredMatch(input);
-        },
-      );
-      Context.current().heartbeat({
-        matchId: input.matchId,
-        phase: "complete",
-      });
-    },
-  };
-}
 function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive"] {
   return {
     probeQueue,

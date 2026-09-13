@@ -1,5 +1,8 @@
 import type { Db } from "#src/database/index.ts";
-import type { NotificationIntentKey } from "@scout-for-lol/domain/identity/brands.ts";
+import type {
+  NotificationIntentKey,
+  RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import type { NotificationIntent } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { NotificationTransitionResult } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import {
@@ -68,6 +71,29 @@ export async function getIntent(
     where: { intentKey: args.intentKey },
   });
   return row === null ? null : matchNotificationIntentRowToRecord(row);
+}
+
+/**
+ * Every intent minted for one match, in a stable order.
+ *
+ * This is the read a fan-out needs and `getIntent` cannot serve: a caller that
+ * had to name the keys before it could look them up would miss any intent
+ * another producer minted, and would re-mint keys for intents that already
+ * exist. The `riotMatchId` index is what makes it a lookup rather than a scan.
+ *
+ * Ordered by `intentKey` rather than by insertion: the order becomes the order
+ * notification children are started in, so it must be a property of the data
+ * and not of which producer happened to write first.
+ */
+export async function listIntentsForMatch(
+  db: Db,
+  args: { matchId: RiotMatchId },
+): Promise<MatchNotificationIntentRecord[]> {
+  const rows = await db.matchNotificationIntent.findMany({
+    where: { riotMatchId: args.matchId },
+    orderBy: { intentKey: "asc" },
+  });
+  return rows.map((row) => matchNotificationIntentRowToRecord(row));
 }
 
 function observedAttemptNonce(intent: NotificationIntent): string | null {

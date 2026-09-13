@@ -119,6 +119,48 @@ wrappers — `recordDurableWrite` and `recordReceiptFailOpen` — refuse to nest
 because both count a completed write and nesting them would report one fact
 twice.
 
+## The V2 per-match core
+
+`src/temporal/v2/` holds the nine Activities `scoutMatchProcessingV2Workflow`
+calls. They are thin orchestration over the same services the v1 pipeline uses
+— the receipted archive door, the Bucks settlement hook, the challenge advisory
+lock, the durable repositories — with one deliberate inversion: **V2's durable
+writes are strict, not fail-open.**
+
+That is not a disagreement with the section above, it is the consequence of who
+depends on the record. A v1 dual-write is a parity record beside an
+authoritative pipeline, so a recorder outage must never stall ingestion. In V2
+the durable record IS the pipeline's memory: a resumed Workflow decides which
+phases already happened by reading it back. A write that quietly failed there
+would send the next run to re-apply an effect it cannot see. So the V2
+Activities go to the repositories directly and report the repository's own
+answer, and an unwritable record fails the Activity for Temporal to retry.
+
+Two vocabularies live alongside each other for the same reason. The
+evidence-bearing receipts (`settlement`, `progression`, `raw-archive-match`)
+say WHAT happened and are written by the phase that has the evidence. The V2
+stage receipts (`v2-match-*`, declared in `@scout-for-lol/temporal`'s
+`match-receipts-v2.ts`) say WHICH PHASE this owner completed, carry evidence
+derived from the match reference alone, and are what the resume point reads.
+A resumed run cannot reconstruct settled bet ids, so it could never re-assert
+an evidence-bearing receipt without either inventing evidence or recording a
+conflict against the first writer's.
+
+Ownership, not the effect claims, is what keeps the two pipelines off one
+match. `commitMatchObservationV2` claims `temporal-v2`; a match v1 already owns
+answers `ownership-held-by-another-owner`, and the Workflow reports the stored
+owner and stops before settlement rather than re-applying v1's effects. The V2
+guards are separate keys from v1's precisely so a shared key can never make one
+pipeline's completion suppress the other's work.
+
+`ScoutEffectClaim` keeps taking the top-level Prisma client, and
+`src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
+insert that expects to fail and then READS the existing row back, and in
+Postgres a constraint violation aborts the surrounding transaction, so the
+read-back could not run inside one. The guard and the fact are therefore two
+commits by construction, which is why every V2 guarded-effect result reports
+them as separate outcomes and names the reconcile.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client

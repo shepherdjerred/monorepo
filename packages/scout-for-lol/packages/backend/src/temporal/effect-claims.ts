@@ -2,6 +2,37 @@ import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { scoutTemporalDuplicateEffectClaims } from "#src/metrics/platform/temporal.ts";
 
+/**
+ * At-most-once guards for effects whose second application would be visible.
+ *
+ * ## Why these take the top-level client, and will keep taking it
+ *
+ * Every function here accepts an {@link ExtendedPrismaClient}, not the
+ * transaction-scoped `Db` the durable repositories take, so a claim can never
+ * commit atomically with the durable fact it guards. That looks like a gap
+ * worth closing — widen the parameter to `Db` and a caller inside a
+ * `$transaction` could enlist the guard — and it is not one, for a reason
+ * that is about Postgres rather than about typing.
+ *
+ * {@link claimScoutEffect} is an insert that EXPECTS to fail. Its whole
+ * protocol is: create the row; on a unique violation, read the existing row
+ * back and decide from its `kind` and `state` whether this caller may execute.
+ * In Postgres a constraint violation aborts the surrounding transaction, and
+ * every subsequent statement in it fails with `current transaction is aborted`
+ * until a rollback. Inside a transaction the read-back — the step that
+ * separates "already completed" from "a previous attempt claimed and did not
+ * finish" — could not run at all. The idiom is only correct against a client
+ * that is not already inside a transaction.
+ *
+ * So the V2 Activity contracts do not treat two commits as a limitation to
+ * design around: `ScoutGuardedEffectV2Result` reports `guard` and `fact` as
+ * separate outcomes precisely because they ARE separate commits, and a run
+ * that claimed the guard and died before the fact is expected to come back and
+ * find `guard: already-applied` with `fact: applied`. That reconcile is
+ * observable and correct; an atomic guard built on an aborted transaction
+ * would be neither.
+ */
+
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
 /**
@@ -9,6 +40,65 @@ const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
  * so the claim site and the queries that look those claims up cannot drift.
  */
 export const DISCORD_CHANNEL_MESSAGE_EFFECT_KIND = "discord-channel-message";
+
+/**
+ * The `state` column's vocabulary. Parsed rather than trusted: the column is a
+ * plain string, so a value outside this set is malformed persisted data and
+ * must fail loudly instead of being read as some other state.
+ */
+export const ScoutEffectClaimStateSchema = z.enum([
+  "CLAIMED",
+  "COMPLETED",
+  "AMBIGUOUS_OR_FAILED",
+]);
+export type ScoutEffectClaimState = z.infer<typeof ScoutEffectClaimStateSchema>;
+
+export type ScoutEffectClaimRecord = z.infer<
+  typeof ScoutEffectClaimRecordSchema
+>;
+const ScoutEffectClaimRecordSchema = z.object({
+  key: z.string(),
+  kind: z.string(),
+  state: ScoutEffectClaimStateSchema,
+  resultId: z.string().nullable(),
+});
+
+/**
+ * What is recorded against an effect key right now, or `null` for none.
+ *
+ * This is the third read in this module and the only one that answers about a
+ * claim in ANY state, which is what separates it from the two below.
+ * `requireCompletedScoutEffectResult` and `listCompletedScoutEffects` are
+ * about effects that finished and left a result to recover — a Discord message
+ * id — so both require a `resultId` and treat its absence as a broken
+ * contract. A V2 guarded effect has no such result: `completeScoutEffect`
+ * records that settlement or progression happened, not what it produced. It
+ * also has to see the states those reads exclude, because CLAIMED and
+ * AMBIGUOUS_OR_FAILED are precisely the histories it reports on.
+ *
+ * That is the reason this read exists at all. {@link claimScoutEffect} answers
+ * what a caller may DO, which deliberately collapses two histories: a first
+ * claim and a retry of a claim a previous attempt left unfinished both answer
+ * `execute`. A guarded V2 Activity has to report those apart — the first is
+ * its guard being `applied`, the second is `already-applied` and names the
+ * reconcile the contracts model — so it reads the claim before making one.
+ *
+ * The read and the claim are two statements, so two racing first attempts can
+ * both observe `null`. That race is bounded and benign: the CLAIM is still
+ * decided by the unique constraint, so only one of them executes the effect,
+ * and it is the `fact` outcome rather than the `guard` one that says whether
+ * the effect was applied twice.
+ */
+export async function getScoutEffectClaim(
+  key: string,
+  database: ExtendedPrismaClient = prisma,
+): Promise<ScoutEffectClaimRecord | null> {
+  const claim = await database.scoutEffectClaim.findUnique({
+    where: { key },
+    select: { key: true, kind: true, state: true, resultId: true },
+  });
+  return claim === null ? null : ScoutEffectClaimRecordSchema.parse(claim);
+}
 
 export async function claimScoutEffect(
   input: {

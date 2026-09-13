@@ -15,10 +15,10 @@ import {
   scoutQueueCanaryWorkflow,
   scoutRealtimePollWorkflow,
 } from "./index.ts";
+import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 let environment: TestWorkflowEnvironment;
-const runningWorkers: Worker[] = [];
-const workerRuns: Promise<void>[] = [];
+const workers = createScoutWorkerPool();
 
 function workflowWorker(): Promise<Worker> {
   return Worker.create({
@@ -29,21 +29,12 @@ function workflowWorker(): Promise<Worker> {
   });
 }
 
-async function startWorker(worker: Worker): Promise<void> {
-  runningWorkers.push(worker);
-  workerRuns.push(worker.run());
-  while (worker.getState() === "INITIALIZED") await new Promise(setImmediate);
-}
-
 beforeEach(async () => {
   environment = await TestWorkflowEnvironment.createTimeSkipping();
 }, 60_000);
 
 afterEach(async () => {
-  for (const worker of runningWorkers.splice(0)) {
-    if (worker.getState() === "RUNNING") worker.shutdown();
-  }
-  await Promise.allSettled(workerRuns.splice(0));
+  await workers.drain();
   await environment.teardown();
 });
 
@@ -72,9 +63,9 @@ test("routes the queue canary through every workload queue", async () => {
         }),
     ),
   );
-  await startWorker(workflow);
+  await workers.start(workflow);
   for (const activityWorker of activityWorkers) {
-    await startWorker(activityWorker);
+    await workers.start(activityWorker);
   }
   const result = await environment.client.workflow.execute(
     scoutQueueCanaryWorkflow,
@@ -145,8 +136,8 @@ describe("realtime workflows", () => {
       },
       maxConcurrentActivityTaskExecutions: 4,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
     const result = await environment.client.workflow.execute(
       scoutPostMatchDiscoveryWorkflow,
       {
@@ -195,8 +186,8 @@ describe("realtime workflows", () => {
       },
       maxConcurrentActivityTaskExecutions: 1,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
 
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
@@ -259,8 +250,8 @@ describe("realtime workflows", () => {
       },
       maxConcurrentActivityTaskExecutions: 1,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
 
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
@@ -335,8 +326,8 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
     },
     maxConcurrentActivityTaskExecutions: 1,
   });
-  await startWorker(workflow);
-  await startWorker(activities);
+  await workers.start(workflow);
+  await workers.start(activities);
   const handle = await environment.client.workflow.start(
     scoutInitialHistoryWorkflow,
     {
@@ -425,9 +416,9 @@ test("ingestion reconciliation recovers detached and pending interactive work", 
     },
     maxConcurrentActivityTaskExecutions: 1,
   });
-  await startWorker(workflow);
-  await startWorker(background);
-  await startWorker(interactiveWorker);
+  await workers.start(workflow);
+  await workers.start(background);
+  await workers.start(interactiveWorker);
 
   await expect(
     environment.client.workflow.execute(scoutIngestionReconciliationWorkflow, {
@@ -471,8 +462,8 @@ test(
       },
       maxConcurrentActivityTaskExecutions: 2,
     });
-    await startWorker(workflow);
-    await startWorker(activities);
+    await workers.start(workflow);
+    await workers.start(activities);
     const handle = await environment.client.workflow.start(
       scoutInteractiveRunWorkflow,
       {
