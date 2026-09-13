@@ -23,6 +23,7 @@
  *   harvest  old PUUID -> Riot ID, using the OLD key
  *   resolve  Riot ID -> new PUUID, using the NEW key
  *   apply    rewrite every stored reference (requires --apply)
+ *   strand   accept unresolvable identities as permanently lost
  *   verify   assert no old-domain PUUID survives
  *
  * Targets both live shapes: prod's SQLite and beta's Postgres, selected from
@@ -40,17 +41,13 @@
 import { openDb } from "./puuid-migration/db.ts";
 import { assertTrackedSourcesMatchSchema } from "./puuid-migration/discovery.ts";
 import { ensureMapTable } from "./puuid-migration/map-table.ts";
-import {
-  apply,
-  collect,
-  harvest,
-  resolve,
-  verify,
-} from "./puuid-migration/phases.ts";
+import { apply, collect, harvest, resolve } from "./puuid-migration/phases.ts";
+import { strand, verify } from "./puuid-migration/verify.ts";
 
 const phase = Bun.argv[2];
 const confirmed = Bun.argv.includes("--apply");
 const allowUnresolved = Bun.argv.includes("--allow-unresolved");
+const acceptStranded = Bun.argv.includes("--accept-stranded");
 
 const db = await openDb();
 console.log(`target: ${db.kind}\n`);
@@ -79,13 +76,17 @@ try {
       }
       await apply(db, allowUnresolved);
       break;
+    case "strand":
+      await strand(db, acceptStranded);
+      break;
     case "verify":
       await verify(db);
       break;
     case undefined:
     default:
       throw new Error(
-        "usage: migrate-puuid-key.ts <collect|harvest|resolve|apply|verify> [--apply] [--allow-unresolved]",
+        "usage: migrate-puuid-key.ts <collect|harvest|resolve|apply|strand|verify> " +
+          "[--apply] [--allow-unresolved] [--accept-stranded]",
       );
   }
 } finally {

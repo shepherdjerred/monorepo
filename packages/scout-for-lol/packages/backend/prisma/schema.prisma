@@ -2621,7 +2621,7 @@ model PuuidKeyMap {
   gameName    String?
   tagLine     String?
   newPuuid    String?
-  /// pending | harvested | resolved | unresolved
+  /// pending | harvested | resolved | unresolved | stranded
   status      String    @default("pending")
   harvestedAt DateTime? @db.Timestamptz()
   resolvedAt  DateTime? @db.Timestamptz()
