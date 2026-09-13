@@ -1,6 +1,5 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutGuardedEffectV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
-import type { ScoutDurableCommitV2 } from "@scout-for-lol/temporal/contracts-v2";
 import { settleBucksWithDareTimelineV2 } from "#src/betting/dares/evaluation/dare-postmatch-timeline-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import {
@@ -12,25 +11,25 @@ import {
 import { settlementEvidenceOf } from "#src/league/tasks/postmatch/settlement-evidence.ts";
 import { withChallengeProgressionLock } from "#src/progression/challenges/locking.ts";
 import { processCompetitiveProgressionMatch } from "#src/progression/postmatch.ts";
-import {
-  claimScoutEffect,
-  completeScoutEffect,
-  getScoutEffectClaim,
-  recordScoutEffectFailure,
-} from "#src/temporal/effect-claims.ts";
+import { runGuardedEffectV2 } from "#src/temporal/v2/effect-fence.ts";
 import { recordMatchReceiptV2 } from "#src/temporal/v2/match-commits.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 
 /**
  * The two at-most-once effects of the per-match core.
  *
- * Both are guarded by a `ScoutEffectClaim` and both report the guard and the
- * durable fact as SEPARATE outcomes, because they are separate commits: the
- * claim cannot enlist in the transaction that writes the fact (see
- * `effect-claims.ts` for why that is a property of the claim's protocol rather
- * than of its type). A run that claimed and died before the fact comes back to
- * `guard: already-applied` with `fact: applied`, and that reconcile has to be
- * reportable rather than indistinguishable from a double application.
+ * Both run behind the fence in `effect-fence.ts`, which is what makes them
+ * at-most-once under Temporal: the claim row alone lets a retry enter while
+ * the original attempt is still running, and an advisory lock held across the
+ * effect is what stops two live attempts.
+ *
+ * Both report the guard and the durable fact as SEPARATE outcomes, because
+ * they are separate commits: the claim cannot enlist in the transaction that
+ * writes the fact (see `effect-claims.ts` for why that is a property of the
+ * claim's protocol rather than of its type). A run that claimed and died
+ * before the fact comes back to `guard: already-applied` with
+ * `fact: applied`, and that reconcile has to be reportable rather than
+ * indistinguishable from a double application.
  *
  * The claim keys are V2's own. Sharing v1's would be wrong in both directions:
  * v1 does not claim settlement or progression at all, and a shared key would
@@ -38,47 +37,6 @@ import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
  * — not the claim — is what keeps the two pipelines off the same match, and
  * `commitMatchObservationV2` is where that is decided.
  */
-
-type GuardedEffect = {
-  readonly fact: ScoutDurableCommitV2;
-  readonly effects: number;
-};
-
-/**
- * Run one guarded effect and report the guard and the fact apart.
- *
- * The claim is READ before it is made. `claimScoutEffect` answers what the
- * caller may do, which collapses a first claim and a retry of an unfinished
- * one into `execute`; the prior read is what separates `applied` from
- * `already-applied` on the guard.
- *
- * `completeScoutEffect` runs after the fact commits, so a crash between them
- * leaves the claim unfinished and the next attempt re-applies. Both effects
- * below are state-gated in their own tables — settlement reads pending bets
- * and unresolved Dares, progression re-prepares from current runs — so the
- * repeat finds nothing left to do and the fact comes back `already-applied`.
- */
-async function runGuardedEffectV2(args: {
-  key: string;
-  kind: string;
-  apply: () => Promise<GuardedEffect>;
-}): Promise<ScoutGuardedEffectV2Result> {
-  const prior = await getScoutEffectClaim(args.key);
-  const claim = await claimScoutEffect({ key: args.key, kind: args.kind });
-  const guard: ScoutDurableCommitV2 =
-    prior === null ? { outcome: "applied" } : { outcome: "already-applied" };
-  if (claim === "completed") {
-    return { guard, fact: { outcome: "already-applied" }, effects: 0 };
-  }
-  try {
-    const applied = await args.apply();
-    await completeScoutEffect(args.key);
-    return { guard, fact: applied.fact, effects: applied.effects };
-  } catch (error) {
-    await recordScoutEffectFailure(args.key, error);
-    throw error;
-  }
-}
 
 /** How many ledger rows one settlement moved, by the identities it names. */
 function settledRecordCount(evidence: SettlementEvidence): number {

@@ -270,6 +270,23 @@ describe("a V2 per-match run killed mid-pipeline", () => {
     },
     90_000,
   );
+
+  test("a failed guarded effect stops the run before the receipts and the cursor", async () => {
+    // What a `conflict` fact does at the Activity boundary: the fence refuses
+    // to complete the claim and fails the Activity, so the run must not go on
+    // to attest to the phase or move the cursor — either would bury the drift
+    // behind a resume point that says the work is done.
+    const store = createScoutV2MatchStore({ failAt: "settleMatchMarketsV2" });
+    await startWorkers(scoutV2MatchActivityStubs(store));
+
+    await expect(processMatch("match-settle-conflict")).rejects.toThrow();
+
+    expect(store.calls).not.toContain("recordMatchReceiptsV2");
+    expect(store.calls).not.toContain("advanceMatchCursorV2");
+    expect(store.calls).not.toContain("planMatchFanOutV2");
+    expect(store.applied).toEqual([]);
+    expect(store.receiptKinds).toEqual([]);
+  }, 60_000);
 });
 
 describe("V2 post-match discovery", () => {

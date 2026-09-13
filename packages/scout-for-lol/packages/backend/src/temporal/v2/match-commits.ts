@@ -15,7 +15,8 @@ import {
   scoutV2MatchPhaseOf,
   scoutV2MatchStageEvidenceCodec,
 } from "@scout-for-lol/temporal/match-receipts-v2";
-import { prisma, updateLastProcessedMatch } from "#src/database/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { advanceAccountCursor } from "#src/database/durable/account-cursor-repository.ts";
 import { getObservation } from "#src/database/durable/observation-repository.ts";
 import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import {
@@ -103,12 +104,26 @@ export async function recordMatchReceiptsV2(
 /**
  * Advance every tracked account's processing cursor off this match.
  *
- * Two writes per account, in v1's order and with v1's meaning: `Account`
- * carries the authoritative cursor the next poll reads, and
- * `MatchTrackedAccount.cursorAdvancedAt` records that this match is what moved
- * it. The durable guard is monotonic, so a delayed retry cannot rewind an
- * advance that already moved past this match — which would re-open the match
- * for re-ingestion and re-announcement.
+ * Two writes per account, both monotonic and each guarding a different thing.
+ * `Account` carries the authoritative cursor the next poll reads, and
+ * `advanceAccountCursor` refuses to move it backwards — a V2 retry of an
+ * OLDER match can be scheduled after a newer match already advanced the same
+ * account, and an unconditional write would rewind the cursor and re-open
+ * matches for re-ingestion and re-announcement.
+ * `MatchTrackedAccount.cursorAdvancedAt` records separately that THIS match
+ * reached its cursor stage.
+ *
+ * The association is marked even when the account cursor refuses, and that is
+ * deliberate: the two answer different questions. The refusal means a newer
+ * match already carried the account past this one, which does not make this
+ * match's cursor step unfinished — and leaving the association unmarked would
+ * make every resumed run retry a step that can never apply again.
+ *
+ * The counts follow the ACCOUNT cursor, because that is the cursor whose
+ * rewind the guard exists to prevent and the one an operator reading
+ * `advanced` is asking about. A match whose accounts have all moved on
+ * reports `alreadyAdvanced`, which is the honest answer rather than a
+ * conflict: a newer cursor is progress, not two producers disagreeing.
  *
  * The association rows are the unit, not the registered accounts. A row whose
  * `accountId` is NULL is a PUUID that was tracked but unregistered when the
@@ -137,18 +152,17 @@ export async function advanceMatchCursorV2(input: {
   let advanced = 0;
   let alreadyAdvanced = 0;
   for (const association of tracked) {
-    await updateLastProcessedMatch(
-      association.puuid,
+    const cursor = await advanceAccountCursor(prisma, {
+      puuid: association.puuid,
       matchId,
-      prisma,
       matchTime,
-    );
-    const result = await markTrackedAccountCursorAdvanced(prisma, {
+    });
+    await markTrackedAccountCursorAdvanced(prisma, {
       matchId: input.riotMatchId,
       puuid: association.puuid,
       advancedAt,
     });
-    if (result.outcome === "applied") advanced += 1;
+    if (cursor.outcome === "applied") advanced += 1;
     else alreadyAdvanced += 1;
   }
   return { advanced, alreadyAdvanced };
