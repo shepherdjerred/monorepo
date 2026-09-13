@@ -1,6 +1,6 @@
 ---
 name: typescript-helper
-description: "Use this skill for Current TypeScript configuration, migration, module, runtime, typing, and tooling guidance. Use …"
+description: Current TypeScript configuration, migration, module, runtime, typing, and tooling guidance. Use when writing or reviewing TypeScript, selecting tsconfig settings, migrating TypeScript versions, resolving module/runtime mismatches, or designing safe typed boundaries.
 ---
 
 # TypeScript Helper

@@ -37,6 +37,11 @@ project `AGENTS.md` or skill.
   calculation.
 - Browse when facts are current, uncertain, high stakes, or the user asks for
   sources. Prefer primary documentation and cite the page supporting the claim.
+- PinchTab is the browser for development and UI verification; lightpanda is for
+  curl-like scraping and extraction. Reach for another browser tool only when
+  neither fits.
+- A frontend, UI, or interactive change is not done until it has been rendered
+  and looked at in a browser, not only reasoned about from source.
 - Render PDFs, Typst, documents, slides, spreadsheets, and visual assets with
   their matching skill and inspect the output, not only the source.
 - Use foreground polling or the product's monitoring facility for waits. Never
@@ -46,8 +51,9 @@ project `AGENTS.md` or skill.
 
 - Follow the repository's branch and PR workflow. Do not create or merge a PR
   unless the task authorizes it.
-- For visual changes, provide the smallest artifact that proves the behavior:
-  a screenshot for a state, a short recording for a flow, or a rendered asset.
+- Visual and interactive changes ship with the smallest artifact that proves the
+  behavior, attached to the PR: a screenshot for a state, a short recording for
+  a flow, or a rendered asset. Capture it while verifying, not after review.
 - Keep commit and PR narratives about outcomes and verification, not agent
   activity.
 

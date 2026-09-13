@@ -1,9 +1,48 @@
 ---
 name: pinchtab-helper
-description: "Use this skill for PinchTab browser automation - profiles, instances, multi-instance routing, tabs, actions, and an…"
+description: |
+  PinchTab browser automation - the default browser for local development, UI verification, and visual proof; also profiles, instances, multi-instance routing, tabs, actions, and anti-detection
+  When building or changing any frontend/UI, verifying a change against a local dev server, capturing a screenshot or recording for a PR, or when the user mentions PinchTab, browser automation, headed/headless browser, or web scraping with Chrome
 ---
 
 # PinchTab Browser Automation
+
+PinchTab is the browser for development. Use it to look at frontend and UI work
+instead of reasoning about it from source, and to produce the visual proof a PR
+needs. Use `lightpanda-browser` instead for curl-like scraping and extraction.
+
+## Verify a local UI change
+
+Start the app's dev server, then drive it:
+
+```bash
+pinchtab nav http://localhost:5180/app/
+pinchtab snap --interactive          # what is actually on the page
+pinchtab screenshot -o /tmp/foo.png  # -o saves to a file
+```
+
+Attach the captured file to the pull request:
+
+```bash
+toolkit pr asset <PR> /tmp/foo.png --markdown --profile seaweedfs
+```
+
+Verbs that matter for UI work:
+
+| Command | Use |
+| --- | --- |
+| `capture` | Paired screenshot + accessibility snapshot from one DOM epoch |
+| `compare` | Before/after visual diff of two versions |
+| `record` | Video of a multi-step flow, for a demo of an interaction |
+| `console` / `errors` | Console output and uncaught errors |
+| `screenshot --beyond-viewport` | Whole scrollable document, not just the viewport |
+| `screenshot --selector <ref>` | One element instead of the page |
+| `screenshot --scale 0.5` | Smaller file for a PR attachment |
+
+For a scripted harness rather than one-off commands, reuse the working example
+in `packages/discord-plays-mario-kart/packages/backend/scripts/lib/`, which has
+a `captureScreenshot` primitive and drives PinchTab tabs over REST with the
+token read from `PINCHTAB_CONFIG`.
 
 ## Installation
 

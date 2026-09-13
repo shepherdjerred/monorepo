@@ -1,6 +1,8 @@
 ---
 name: helm-helper
-description: "Use this skill for Helm chart management for Kubernetes deployments When user mentions Helm, charts, helm commands,…"
+description: |
+  Helm chart management for Kubernetes deployments
+  When user mentions Helm, charts, helm commands, values, releases, or Kubernetes packaging
 ---
 
 # Helm Helper Agent

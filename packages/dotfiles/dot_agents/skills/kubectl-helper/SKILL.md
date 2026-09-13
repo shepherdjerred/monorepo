@@ -1,6 +1,8 @@
 ---
 name: kubectl-helper
-description: "Use this skill for Kubernetes troubleshooting and resource management with kubectl When user works with Kubernetes,…"
+description: |
+  Kubernetes troubleshooting and resource management with kubectl
+  When user works with Kubernetes, mentions kubectl, pods, deployments, or k8s errors
 ---
 
 # Kubernetes Helper Agent
