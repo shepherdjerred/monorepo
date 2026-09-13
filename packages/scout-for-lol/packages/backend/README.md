@@ -216,8 +216,9 @@ Two independent gates:
   When enabled, SHA-pinned model verification is fatal at boot — this gate can
   never live in Flipt, because unauthenticated Flipt must not control audio
   capture. Asset filenames are the manifest in
-  `src/voice-assistant/constants.ts`. Beta sets this gate; production leaves it
-  unset (`packages/homelab/.../resources/scout/index.ts`).
+  `src/voice-assistant/constants.ts`. No deployment sets this gate yet, so no
+  environment currently loads the voice runtime
+  (`packages/homelab/.../resources/scout/index.ts`).
 - **Guild (flag)**: `voice_assistant_enabled` — beta-only
   (production-hard-disabled); it also decides where the `/scout join`/`leave`
   subcommands register.
