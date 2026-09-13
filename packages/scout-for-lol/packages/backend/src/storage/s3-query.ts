@@ -14,6 +14,7 @@ import {
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "#src/logger.ts";
 import { generateS3Key } from "#src/storage/s3-helpers.ts";
+import { remapRawJson } from "#src/report-lake/puuid-remap.ts";
 
 // Timeout for individual S3 operations (30 seconds)
 const S3_REQUEST_TIMEOUT_MS = 30_000;
@@ -162,6 +163,7 @@ async function getMatchFromS3(
   client: S3Client,
   bucket: string,
   key: string,
+  puuidRemap: ReadonlyMap<string, string>,
 ): Promise<RawMatch | null> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const abortController = new AbortController();
@@ -211,8 +213,15 @@ async function getMatchFromS3(
         `[S3Query] ✅ Downloaded match ${key} in ${elapsed.toString()}ms`,
       );
 
-      // Parse and validate the match data with Zod schema for runtime type safety
-      const matchData = JSON.parse(bodyString);
+      // Parse and validate the match data with Zod schema for runtime type
+      // safety. The remap runs first: stored payloads keep the PUUIDs of
+      // whichever Riot key captured them, while every caller compares against
+      // current database identifiers, so an untranslated payload silently fails
+      // to match its own participants.
+      const matchData: unknown = remapRawJson(
+        JSON.parse(bodyString),
+        puuidRemap,
+      );
       const match = RawMatchSchema.parse(matchData);
 
       return match;
@@ -292,6 +301,7 @@ async function listMatchJsonKeysForPrefix(
 export async function queryMatchById(
   matchId: string,
   matchCreatedAt: Date,
+  puuidRemap: ReadonlyMap<string, string>,
 ): Promise<RawMatch | undefined> {
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
@@ -309,7 +319,7 @@ export async function queryMatchById(
 
   for (const date of generateMatchDates(startDate, endDate)) {
     const key = generateS3Key(parsedMatchId, "match", "json", date);
-    const match = await getMatchFromS3(client, bucket, key);
+    const match = await getMatchFromS3(client, bucket, key, puuidRemap);
     if (match?.metadata.matchId === matchId) {
       return match;
     }
@@ -330,6 +340,7 @@ export async function queryMatchesByDateRange(
   startDate: Date,
   endDate: Date,
   puuids: string[],
+  puuidRemap: ReadonlyMap<string, string>,
 ): Promise<RawMatch[]> {
   const bucket = configuration.s3BucketName;
 
@@ -402,7 +413,12 @@ export async function queryMatchesByDateRange(
 
           const matchPromises = keyBatch.map(async (key) => {
             try {
-              const match = await getMatchFromS3(client, bucket, key);
+              const match = await getMatchFromS3(
+                client,
+                bucket,
+                key,
+                puuidRemap,
+              );
               return { key, match };
             } catch (error) {
               logger.warn(

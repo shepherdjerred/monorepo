@@ -131,7 +131,12 @@ describe("queryMatchesByDateRange - single day", () => {
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query for matches with puuid1 or puuid2
-    const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid1, puuid2],
+      new Map(),
+    );
 
     expect(results.length).toBe(3);
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -169,6 +174,7 @@ describe("queryMatchesByDateRange - single day", () => {
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
       [puuid],
+      new Map(),
     );
 
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -209,6 +215,7 @@ describe("queryMatchesByDateRange - single day", () => {
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
       [puuid],
+      new Map(),
     );
 
     expect(results.map((m) => m.metadata.matchId)).toEqual(["TEST_2011"]);
@@ -259,7 +266,12 @@ describe("queryMatchesByDateRange - single day", () => {
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query for matches with targetPuuid only
-    const results = await queryMatchesByDateRange(date, date, [targetPuuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [targetPuuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(2);
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -279,7 +291,12 @@ describe("queryMatchesByDateRange - single day", () => {
       Contents: [],
     });
 
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results).toEqual([]);
   });
@@ -324,7 +341,12 @@ describe("queryMatchesByDateRange - date range", () => {
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query the entire range
-    const results = await queryMatchesByDateRange(date1, date3, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date1,
+      date3,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(3);
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -362,7 +384,12 @@ describe("queryMatchesByDateRange - date range", () => {
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query only middle 2 days
-    const results = await queryMatchesByDateRange(date2, date3, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date2,
+      date3,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(2);
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -406,7 +433,12 @@ describe("queryMatchesByDateRange - date range", () => {
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_5003", date3) })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
-    const results = await queryMatchesByDateRange(date1, date3, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date1,
+      date3,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(3);
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -421,7 +453,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
   test("returns empty array when PUUIDs array is empty", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
 
-    const results = await queryMatchesByDateRange(date, date, []);
+    const results = await queryMatchesByDateRange(date, date, [], new Map());
 
     expect(results).toEqual([]);
   });
@@ -455,7 +487,12 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .callsFake(() => createMockGetObjectResponse("{ invalid json content"));
 
     // Query should skip invalid JSON and return valid match
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(1);
     expect(results[0]?.metadata.matchId).toBe("TEST_6001");
@@ -510,7 +547,12 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match3)));
 
     // Query for puuid1 and puuid2
-    const results = await queryMatchesByDateRange(date, date, [puuid1, puuid2]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid1, puuid2],
+      new Map(),
+    );
 
     expect(results.length).toBe(3); // All matches contain at least one of the PUUIDs
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -546,7 +588,12 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .rejects(new Error("S3 GetObject failed"));
 
     // Query should handle error and return valid match
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(1);
     expect(results[0]?.metadata.matchId).toBe("TEST_8001");
@@ -558,7 +605,7 @@ describe("queryMatchesByDateRange - S3 configuration", () => {
     // This tests the early return for empty PUUIDs
     const date = new Date("2025-01-15T12:00:00Z");
 
-    const results = await queryMatchesByDateRange(date, date, []);
+    const results = await queryMatchesByDateRange(date, date, [], new Map());
 
     expect(results).toEqual([]);
   });
@@ -581,7 +628,12 @@ describe("queryMatchesByDateRange - data verification", () => {
       .on(GetObjectCommand, { Key: generateMatchKey("TEST_9001", date) })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match)));
 
-    const results = await queryMatchesByDateRange(date, date, [puuid]);
+    const results = await queryMatchesByDateRange(
+      date,
+      date,
+      [puuid],
+      new Map(),
+    );
 
     expect(results.length).toBe(1);
     const retrieved = results[0];

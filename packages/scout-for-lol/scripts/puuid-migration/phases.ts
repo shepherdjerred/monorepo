@@ -331,6 +331,28 @@ async function assertEveryIdentityResolved(
   db: Db,
   allowUnresolved: boolean,
 ): Promise<void> {
+  // Checking only the map would miss an account registered AFTER collect ran —
+  // the old key keeps serving traffic through harvest and resolve, so new
+  // tracked accounts can appear mid-cutover with no map row at all. Comparing
+  // against the live tracked set catches those; they are unmigrated, not merely
+  // unresolved.
+  const tracked = await readTrackedPuuids(db);
+  const mapRows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
+  const mapped = new Set(
+    mapRows.map((r) => asString(r["oldPuuid"], "oldPuuid")),
+  );
+  const unmapped = [...tracked].filter((p) => !mapped.has(p));
+  if (unmapped.length > 0) {
+    throw new Error(
+      `${unmapped.length.toString()} tracked identities appeared after collect and have no map row; ` +
+        `re-run collect, harvest, and resolve before applying:\n` +
+        unmapped
+          .slice(0, 10)
+          .map((p) => `  ${p.slice(0, 16)}…`)
+          .join("\n"),
+    );
+  }
+
   const rows = await db.query(
     `SELECT "oldPuuid", "status", "gameName", "tagLine" FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
   );
