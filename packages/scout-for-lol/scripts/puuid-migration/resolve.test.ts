@@ -18,6 +18,10 @@ const byRiotId = vi.fn();
 vi.mock("./riot.ts", () => ({
   byPuuid: (...args: unknown[]) => byPuuid(...args),
   byRiotId: (...args: unknown[]) => byRiotId(...args),
+  // Progress estimates come from the limiter's own windows; the arithmetic is
+  // covered in rate-limit.test.ts and is not what this file is about.
+  estimateOldKeyMinutes: () => 1,
+  estimateNewKeyMinutes: () => 1,
 }));
 
 async function removeDatabase(): Promise<void> {

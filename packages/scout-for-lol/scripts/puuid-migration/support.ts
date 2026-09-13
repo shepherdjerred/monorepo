@@ -17,16 +17,35 @@ const EnvSchema = z.object({
 export const env = EnvSchema.parse(Bun.env);
 
 /**
- * The old key is personal-tier: 20 requests/second and 100 per 120 seconds.
+ * What each key publishes, measured from its own response headers.
  *
- * That budget is SHARED with live prod and beta traffic — both environments run
- * on this same key right now — so harvest deliberately claims only half of the
- * 2-minute window. Starving Scout's own prematch and postmatch polling to
- * finish a migration a few minutes sooner is a bad trade, and the tracked sets
- * are small enough (173 prod, 50 beta) that the slower pace costs little.
+ * These are the BOOTSTRAP budget only: the limiter replaces them with whatever
+ * the first live response reports, so a tier change corrects itself instead of
+ * running for days at a silently wrong rate. They are recorded here so a run
+ * starts at a sane rate before it has seen a header, and so the numbers below
+ * are checkable against a real observation rather than folklore.
+ *
+ * Both were confirmed on 2026-09-13 against `account-v1`:
+ *
+ *   old key   app `100:120,20:1`     method `1000:60`   -> app binds at 0.83/s
+ *   new key   app `500:10,30000:600` method `1000:60`   -> METHOD binds at 16.7/s
+ *
+ * The new key's method ceiling is the one that matters and is easy to miss: its
+ * app limit would allow 50/s, and account-v1 will not.
+ *
+ * The old key no longer carries live traffic — both environments moved to the
+ * production key — so the migration gets its whole budget. The production key
+ * does still serve live polling, which is why the budget is a fraction of
+ * published rather than all of it.
  */
-export const OLD_KEY_LIMITS = { perSecond: 8, perTwoMinutes: 50 } as const;
-export const NEW_KEY_LIMITS = { perSecond: 45, perTwoMinutes: 5000 } as const;
+export const OLD_KEY_PUBLISHED = {
+  app: "100:120,20:1",
+  method: "1000:60",
+} as const;
+export const NEW_KEY_PUBLISHED = {
+  app: "500:10,30000:600",
+  method: "1000:60",
+} as const;
 
 /** Tables the migration owns or must never rewrite. */
 export const EXCLUDED_TABLES = new Set([

@@ -13,13 +13,17 @@ import {
 } from "./discovery.ts";
 import { parseJson, translateJsonValue } from "./json-walk.ts";
 import { cutoverApplied, strayIdentities } from "./cutover.ts";
-import { byPuuid, byRiotId, type RiotAccount } from "./riot.ts";
+import {
+  byPuuid,
+  byRiotId,
+  estimateOldKeyMinutes,
+  type RiotAccount,
+} from "./riot.ts";
 import {
   asOptionalString,
   asString,
   countOf,
   ARCHIVE_COLUMNS,
-  OLD_KEY_LIMITS,
   toSqlParam,
   TRACKED_SOURCES,
 } from "./support.ts";
@@ -227,12 +231,12 @@ export async function resolve(db: Db): Promise<void> {
   const rows = await db.query(
     `SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
   );
-  // One old-key call per identity, so this is the phase the personal-tier
-  // budget gates — and that budget is shared with live traffic.
-  const minutes = Math.ceil(rows.length / OLD_KEY_LIMITS.perTwoMinutes) * 2;
+  // One old-key call per identity, so the personal-tier budget gates this
+  // phase. The estimate comes from the limiter's own windows rather than a
+  // second copy of the numbers, so it cannot drift from what is enforced.
   console.log(
     `  ${rows.length.toString()} to resolve, each re-derived from the old key first ` +
-      `(~${minutes.toString()} min at personal-key limits)`,
+      `(~${estimateOldKeyMinutes(rows.length).toString()} min at the old key's budget)`,
   );
 
   for (const row of rows) {
