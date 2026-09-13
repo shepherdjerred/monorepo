@@ -573,5 +573,67 @@
         "endpoint": "image"
       }
     }
+  },
+  "gemini-3.7-flash": {
+    "id": "gemini-3.7-flash",
+    "provider": "google",
+    "displayName": "Gemini 3.7 Flash",
+    "description": "Fast multimodal text model, standard tier, introductory pricing (in effect through 2026-12-31; steps up to $1.50/$7.50/$0.15 on 2027-01-01). `cacheRead` is Gemini's per-token context-caching reuse rate; cache-creation tokens fall back to the plain input rate since Gemini bills creating a cache at the normal input price, not a separate write rate. Gemini also charges a per-token-per-hour cache *storage* fee this schema has no field for, so any cache-heavy caller's total is a slight underestimate.",
+    "pricing": {
+      "modality": "text",
+      "input": 0.75,
+      "output": 3.75,
+      "cacheRead": 0.075
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": true,
+      "supportsTopP": true,
+      "maxTokens": 65536
+    },
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "google/gemini-3.7-flash",
+        "endpoint": "language"
+      }
+    }
+  },
+  "gemini-3.8-flash": {
+    "id": "gemini-3.8-flash",
+    "provider": "google",
+    "displayName": "Gemini 3.8 Flash",
+    "description": "Fast multimodal text model, standard tier, introductory pricing (in effect through 2026-12-31; steps up to $1.50/$7.50/$0.15 on 2027-01-01). `cacheRead` is Gemini's per-token context-caching reuse rate; cache-creation tokens fall back to the plain input rate since Gemini bills creating a cache at the normal input price, not a separate write rate. Gemini also charges a per-token-per-hour cache *storage* fee this schema has no field for, so any cache-heavy caller's total is a slight underestimate.",
+    "pricing": {
+      "modality": "text",
+      "input": 0.75,
+      "output": 3.75,
+      "cacheRead": 0.075
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": true,
+      "supportsTopP": true,
+      "maxTokens": 65536
+    },
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "google/gemini-3.8-flash",
+        "endpoint": "language"
+      }
+    }
   }
 }

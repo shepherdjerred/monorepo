@@ -46,6 +46,7 @@ function document(
     openingPromptHash: values.promptHash ?? null,
     dialogueText: values.dialogue ?? "",
     toolOutputText: values.tool ?? "",
+    usageEvents: [],
   };
 }
 

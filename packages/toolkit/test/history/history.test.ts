@@ -1,4 +1,3 @@
-import { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
@@ -13,41 +12,127 @@ import {
 import { createHistorySources } from "#lib/history/sources.ts";
 import { scanHistorySources } from "#lib/history/serve.ts";
 import { readCursorDatabase } from "#lib/history/sources-shared.ts";
-import type { HistoryDocument, HistoryRecord } from "#lib/history/types.ts";
+import type {
+  HistoryDocument,
+  HistoryRecord,
+  UsageEventEntry,
+} from "#lib/history/types.ts";
+import { writeAntigravityFixture } from "./history-fixtures/antigravity.ts";
+import { writeClaudeFixture } from "./history-fixtures/claude.ts";
+import {
+  writeCodexFixture,
+  writeCodexRolloutFormatFixtures,
+  writeCodexSessionUsageFixture,
+} from "./history-fixtures/codex.ts";
+import { writeConductorFixture } from "./history-fixtures/conductor.ts";
+import { writeCursorFixture } from "./history-fixtures/cursor.ts";
+import { writeDatabase } from "./history-fixtures/database.ts";
+import { writeGrokFixture } from "./history-fixtures/grok.ts";
+import { writeOpencodeFixture } from "./history-fixtures/opencode.ts";
 
 let fixtureRoot = "";
 let paths: HistoryPaths;
 
-function writeDatabase(
-  filePath: string,
-  schema: string,
-  seed: (database: Database) => void,
-): void {
-  const database = new Database(filePath);
-  database.run(schema);
-  seed(database);
-  database.close();
+function compareStrings(a: string | null, b: string | null): number {
+  return (a ?? "").localeCompare(b ?? "");
 }
 
-function seedLongConductorSession(database: Database): void {
-  database.run(
-    "INSERT INTO sessions VALUES ('s-long', 'Long session', '2026-08-10T00:00:00Z', '2026-08-11T00:00:00Z', 'model', 'agent', 'workspace')",
+async function scanGrokTurnCompletedFixture(
+  homeSuffix: string,
+  sessionId: string,
+  usage: unknown,
+) {
+  const grokHome = path.join(fixtureRoot, homeSuffix);
+  const sessionDir = path.join(
+    grokHome,
+    "sessions",
+    "%2Ftest%2Ffixture",
+    sessionId,
   );
-  const insertMessage = database.prepare(
-    "INSERT INTO session_messages VALUES (?, 's-long', 'assistant', ?, NULL, ?)",
+  await mkdir(sessionDir, { recursive: true });
+  await Bun.write(
+    path.join(sessionDir, "updates.jsonl"),
+    `${JSON.stringify({
+      timestamp: 1_788_721_616,
+      params: {
+        sessionId,
+        update: { sessionUpdate: "turn_completed", usage },
+      },
+    })}\n`,
   );
-  const insertMessages = database.transaction(() => {
-    for (let index = 0; index < 1100; index += 1) {
-      insertMessage.run(
-        `long-${String(index).padStart(4, "0")}`,
-        index === 400
-          ? "middle-search-marker substantive dialogue"
-          : `routine dialogue ${String(index)}`,
-        new Date(Date.UTC(2026, 7, 10, 0, 0, index)).toISOString(),
-      );
-    }
-  });
-  insertMessages();
+  const source = createHistorySources().find((entry) => entry.name === "grok");
+  expect(source).toBeDefined();
+  return source?.scan({ ...paths, grokHome });
+}
+
+async function scanClaudeUsageFixture(
+  homeSuffix: string,
+  sessionId: string,
+  usage: unknown,
+  options: {
+    readonly messageId?: string | null;
+    readonly timestamp?: string | null;
+  } = {},
+) {
+  const claudeProjects = path.join(fixtureRoot, homeSuffix);
+  await mkdir(claudeProjects, { recursive: true });
+  const messageId =
+    options.messageId === undefined ? `msg_${sessionId}` : options.messageId;
+  const timestamp =
+    options.timestamp === undefined
+      ? "2026-08-12T00:00:00Z"
+      : options.timestamp;
+  const message: Record<string, unknown> = {
+    role: "assistant",
+    model: "claude-sonnet-5",
+    usage,
+    content: [{ type: "text", text: "reply" }],
+  };
+  if (messageId !== null) {
+    message["id"] = messageId;
+  }
+  const record: Record<string, unknown> = {
+    type: "assistant",
+    sessionId,
+    message,
+  };
+  if (timestamp !== null) {
+    record["timestamp"] = timestamp;
+  }
+  await Bun.write(
+    path.join(claudeProjects, "session.jsonl"),
+    `${JSON.stringify(record)}\n`,
+  );
+  const source = createHistorySources().find(
+    (entry) => entry.name === "claude",
+  );
+  expect(source).toBeDefined();
+  return source?.scan({ ...paths, claudeProjects });
+}
+
+async function scanCodexRolloutUsageFixture(
+  homeSuffix: string,
+  threadId: string,
+  usageLine: Record<string, unknown>,
+) {
+  const codexSessionsDir = path.join(fixtureRoot, homeSuffix);
+  await mkdir(codexSessionsDir, { recursive: true });
+  await Bun.write(
+    path.join(codexSessionsDir, "rollout.jsonl"),
+    `${[
+      {
+        timestamp: "2026-08-08T00:00:00.000Z",
+        type: "session_meta",
+        payload: { session_id: threadId, id: threadId },
+      },
+      usageLine,
+    ]
+      .map((line) => JSON.stringify(line))
+      .join("\n")}\n`,
+  );
+  const source = createHistorySources().find((entry) => entry.name === "codex");
+  expect(source).toBeDefined();
+  return source?.scan({ ...paths, codexSessionsDir });
 }
 
 beforeAll(async () => {
@@ -55,191 +140,29 @@ beforeAll(async () => {
   const conductorDir = path.join(fixtureRoot, "conductor");
   const claudeDir = path.join(fixtureRoot, "claude/projects/project");
   const codexDir = path.join(fixtureRoot, "codex");
+  const codexSessionsDir = path.join(fixtureRoot, "codex-sessions");
   const cursorDir = path.join(fixtureRoot, "Cursor data with spaces");
   const opencodeDir = path.join(fixtureRoot, "opencode");
+  const grokHome = path.join(fixtureRoot, "grok");
+  const antigravityRoot = path.join(fixtureRoot, "antigravity");
   await Promise.all([
     mkdir(conductorDir, { recursive: true }),
     mkdir(claudeDir, { recursive: true }),
     mkdir(codexDir, { recursive: true }),
+    mkdir(codexSessionsDir, { recursive: true }),
     mkdir(cursorDir, { recursive: true }),
     mkdir(opencodeDir, { recursive: true }),
   ]);
 
-  const conductorDb = path.join(conductorDir, "conductor.db");
-  writeDatabase(
-    conductorDb,
-    `
-      CREATE TABLE sessions (id TEXT PRIMARY KEY, title TEXT, created_at TEXT, updated_at TEXT,
-        model TEXT, agent_type TEXT, workspace_id TEXT);
-      CREATE TABLE session_messages (id TEXT PRIMARY KEY, session_id TEXT, role TEXT, content TEXT,
-        full_message TEXT, created_at TEXT);
-    `,
-    (database) => {
-      database.run(
-        "INSERT INTO sessions VALUES ('s1', 'Ingress repair', '2026-08-10T00:00:00Z', '2026-08-11T00:00:00Z', 'model', 'agent', 'workspace')",
-      );
-      database.run(
-        "INSERT INTO sessions VALUES ('s-empty', 'Empty session', '2026-08-09T00:00:00Z', '2026-08-09T00:00:00Z', 'model', 'agent', 'workspace')",
-      );
-      database.run(
-        "INSERT INTO session_messages VALUES ('m1', 's1', 'user', 'Fix kubernetes ingress', NULL, '2026-08-10T00:00:00Z')",
-      );
-      database.run(
-        `INSERT INTO session_messages VALUES ('m2', 's1', 'assistant', '${JSON.stringify(
-          {
-            type: "assistant",
-            message: {
-              role: "assistant",
-              content: [
-                { type: "text", text: "Substantive ingress dialogue" },
-                { type: "thinking", thinking: "omit-conductor-reasoning" },
-                {
-                  type: "tool_use",
-                  name: "shell",
-                  input: { command: "kubectl get ingress" },
-                },
-              ],
-            },
-          },
-        ).replaceAll("'", "''")}', NULL, '2026-08-10T00:01:00Z')`,
-      );
-      database.run(
-        `INSERT INTO session_messages VALUES ('m3', 's1', 'assistant', '${JSON.stringify({ type: "user", message: { role: "user", content: "<system_instruction>omit-conductor-system</system_instruction>" } }).replaceAll("'", "''")}', NULL, '2026-08-10T00:02:00Z')`,
-      );
-      database.run(
-        `INSERT INTO session_messages VALUES ('m4', 's1', 'assistant', '${JSON.stringify(
-          {
-            type: "assistant",
-            message: {
-              role: "assistant",
-              content: [
-                { type: "text", text: "x".repeat(40_000) },
-                { type: "text", text: "later-content-block-marker" },
-              ],
-            },
-          },
-        ).replaceAll("'", "''")}', NULL, '2026-08-10T00:03:00Z')`,
-      );
-      seedLongConductorSession(database);
-    },
-  );
-
-  const claudeFile = path.join(claudeDir, "session.jsonl");
-  await Bun.write(
-    claudeFile,
-    `${JSON.stringify({ type: "user", sessionId: "claude-session", timestamp: "2026-08-12T00:00:00Z", message: { role: "user", content: "Investigate database migration" } })}\n${JSON.stringify(
-      {
-        type: "assistant",
-        sessionId: "claude-session",
-        timestamp: "2026-08-12T00:01:00Z",
-        message: {
-          role: "assistant",
-          content: [
-            { type: "text", text: "Migration is complete" },
-            { type: "thinking", thinking: "omit-claude-reasoning" },
-            {
-              type: "tool_use",
-              name: "shell",
-              input: { command: "bun test migration" },
-            },
-          ],
-        },
-      },
-    )}\n${JSON.stringify({ type: "system", timestamp: "2026-08-12T00:02:00Z", content: "omit-claude-system" })}\n`,
-  );
-
-  const codexThread = path.join(codexDir, "thread_history_1.sqlite");
-  writeDatabase(
-    codexThread,
-    "CREATE TABLE thread_items (thread_id TEXT, turn_id TEXT, item_id TEXT, rollout_ordinal INTEGER, created_at_ms INTEGER, item_json TEXT, item_type TEXT, updated_at_ordinal INTEGER, PRIMARY KEY (thread_id, turn_id, item_id));",
-    (database) => {
-      database.run(
-        "INSERT INTO thread_items VALUES ('t1', 'turn', 'item', 1, 1786406400000, '{\"type\":\"userMessage\",\"text\":\"Repair Buildkite pipeline\"}', 'userMessage', 0)",
-      );
-      database.run(
-        "INSERT INTO thread_items VALUES ('t1', 'turn', 'reasoning', 2, 1786406401000, '{\"text\":\"omit-codex-reasoning\"}', 'reasoning', 0)",
-      );
-      database.run(
-        "INSERT INTO thread_items VALUES ('t1', 'turn', 'tool', 3, 1786406402000, '{\"command\":\"bk build view\"}', 'commandExecution', 0)",
-      );
-    },
-  );
-  const codexHistory = path.join(codexDir, "history.jsonl");
-  await Bun.write(
-    codexHistory,
-    `${JSON.stringify({ session_id: "history-session", timestamp: "2026-08-13T00:00:00Z", prompt: "Review deployment status" })}\nnot-json\n"scalar prompt"\n${JSON.stringify({ session_id: "metadata-only" })}\n`,
-  );
-  const codexCatalog = path.join(codexDir, "codex-dev.db");
-  writeDatabase(
-    codexCatalog,
-    "CREATE TABLE local_thread_catalog (host_id TEXT, thread_id TEXT, display_title TEXT, source_created_at REAL, source_updated_at REAL, cwd TEXT, model_provider TEXT, git_branch TEXT, missing_candidate INTEGER);",
-    (database) => {
-      database.run(
-        "INSERT INTO local_thread_catalog VALUES ('host', 't1', 'Cataloged work', 1786406400, 1786406400, '/workspace', 'openai', 'main', 0)",
-      );
-      database.run(
-        "INSERT INTO local_thread_catalog VALUES ('host', 't2', 'Catalog only', 1786406400, 1786406400, '/catalog', 'openai', 'feature', 0)",
-      );
-    },
-  );
-
-  const cursorDb = path.join(cursorDir, "conversation-search.db");
-  writeDatabase(
-    cursorDb,
-    `
-      CREATE TABLE conversations (fts_rowid INTEGER PRIMARY KEY, source TEXT, scope TEXT, id TEXT,
-        title TEXT, updated_at INTEGER, is_archived INTEGER, root_fingerprint TEXT, cache_fingerprint TEXT);
-      CREATE VIRTUAL TABLE conversation_fts USING fts5(title, body);
-    `,
-    (database) => {
-      database.run(
-        "INSERT INTO conversations VALUES (1, 'local', '', 'c1', 'Cursor fix', 1786406400000, 0, 'root', NULL)",
-      );
-      database
-        .prepare(
-          "INSERT INTO conversation_fts(rowid, title, body) VALUES (1, ?, ?)",
-        )
-        .run(
-          "Cursor fix",
-          `Resolve TypeScript typecheck ${"routine cursor context ".repeat(1000)}cursor-tail-search-marker`,
-        );
-    },
-  );
-
-  const opencodeDb = path.join(opencodeDir, "opencode.db");
-  writeDatabase(
-    opencodeDb,
-    `
-      CREATE TABLE session (id TEXT PRIMARY KEY, title TEXT, directory TEXT, agent TEXT, model TEXT,
-        time_created INTEGER, time_updated INTEGER);
-      CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT, data TEXT, time_created INTEGER, time_updated INTEGER);
-      CREATE TABLE part (id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, time_created INTEGER, time_updated INTEGER, data TEXT);
-    `,
-    (database) => {
-      database.run(
-        "INSERT INTO session VALUES ('o1', 'OpenCode work', '/workspace', 'build', 'model', 1786406400000, 1786406400000)",
-      );
-      database.run(
-        "INSERT INTO message VALUES ('om1', 'o1', '{\"role\":\"user\"}', 1786406400000, 1786406400000)",
-      );
-      database.run(
-        'INSERT INTO message VALUES (\'om2\', \'o1\', \'{"role":"assistant","text":"Later direct message"}\', 1786406405000, 1786406405000)',
-      );
-      database.run(
-        "INSERT INTO part VALUES ('op1', 'om1', 'o1', 1786406400000, 1786406400000, '{\"type\":\"text\",\"text\":\"Improve launchd ingestion\"}')",
-      );
-      database.run(
-        "INSERT INTO part VALUES ('op2', 'om1', 'o1', 1786406400001, 1786406400001, '{\"type\":\"reasoning\",\"text\":\"omit-opencode-reasoning\"}')",
-      );
-      database.run(
-        "INSERT INTO part VALUES ('op3', 'om1', 'o1', 1786406400002, 1786406400002, '{\"type\":\"tool\",\"command\":\"launchctl print fixture\"}')",
-      );
-    },
-  );
-  await Bun.write(
-    path.join(opencodeDir, "auth.json"),
-    JSON.stringify({ token: "must-not-be-indexed" }),
-  );
+  const conductorDb = writeConductorFixture(conductorDir);
+  await writeClaudeFixture(claudeDir);
+  const { codexHistory, codexCatalog } = await writeCodexFixture(codexDir);
+  await writeCodexSessionUsageFixture(codexSessionsDir);
+  await writeCodexRolloutFormatFixtures(codexSessionsDir);
+  const cursorDb = writeCursorFixture(cursorDir);
+  const opencodeDb = await writeOpencodeFixture(opencodeDir);
+  await writeGrokFixture(grokHome);
+  await writeAntigravityFixture(antigravityRoot);
 
   paths = {
     home: fixtureRoot,
@@ -252,6 +175,9 @@ beforeAll(async () => {
     cursorConversationDb: cursorDb,
     standaloneOpenCodeDb: opencodeDb,
     standaloneOpenCodeAuth: path.join(opencodeDir, "auth.json"),
+    antigravityRoots: [antigravityRoot],
+    grokHome,
+    codexSessionsDir,
   };
 });
 
@@ -334,8 +260,17 @@ describe("history source adapters", () => {
     );
     const cursor = documents.find((document) => document.source === "cursor");
 
-    expect(codexPrompts).toHaveLength(1);
-    expect(codexPrompts[0]?.runtimeId).toBe("history-session");
+    // "not-json" and the scalar-string line are malformed/unusable and must
+    // not become documents; "history-session" and the two "t-multi-prompt"
+    // prompts are the only valid, indexable entries in the fixture.
+    expect(codexPrompts).toHaveLength(3);
+    expect(
+      codexPrompts.map((document) => document.runtimeId).sort(compareStrings),
+    ).toEqual(
+      ["history-session", "t-multi-prompt", "t-multi-prompt"].sort(
+        compareStrings,
+      ),
+    );
     expect(cursor?.dialogueText).toContain("cursor-tail-search-marker");
   });
 
@@ -423,6 +358,310 @@ describe("history source adapters", () => {
 
     expect(results).toHaveLength(5);
     expect(maximumActive).toBe(2);
+  });
+});
+
+describe("history source usage and redaction", () => {
+  test("dedupes Claude usage records that share one response's message id", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const claude = documents.find((document) => document.source === "claude");
+    expect(claude?.usageEvents).toHaveLength(1);
+    expect(claude?.usageEvents[0]?.inputTokens).toBe(1000);
+    expect(claude?.usageEvents[0]?.outputTokens).toBe(200);
+  });
+
+  test("attributes Codex usage per turn, keeping cached input a subset of input", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const codexThread = documents.find(
+      (document) => document.source === "codex" && document.runtimeId === "t1",
+    );
+    expect(codexThread?.usageEvents).toHaveLength(2);
+    const [firstTurn, secondTurn] = codexThread?.usageEvents ?? [];
+    expect(firstTurn?.occurredAt).toBe("2026-08-08T00:00:02.000Z");
+    expect(firstTurn?.model).toBe("gpt-5.6-sol");
+    expect(firstTurn?.inputTokens).toBe(1000);
+    expect(firstTurn?.cachedInputTokens).toBe(400);
+    expect(firstTurn?.cacheReadTokens).toBe(0);
+    expect(secondTurn?.occurredAt).toBe("2026-08-14T00:00:00.000Z");
+    expect(secondTurn?.inputTokens).toBe(50);
+  });
+
+  test("retains Codex usage for a rollout with no thread-history or catalog row", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const orphan = documents.find(
+      (document) =>
+        document.source === "codex" && document.runtimeId === "t-truly-orphan",
+    );
+    expect(orphan).toBeDefined();
+    expect(orphan?.usageEvents).toHaveLength(1);
+    expect(orphan?.usageEvents[0]?.inputTokens).toBe(300);
+  });
+
+  test("attaches a multi-prompt Codex session's usage to only one document", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const multiPrompt = documents.filter(
+      (document) =>
+        document.source === "codex" && document.runtimeId === "t-multi-prompt",
+    );
+    expect(multiPrompt).toHaveLength(2);
+    const withUsage = multiPrompt.filter(
+      (document) => document.usageEvents.length > 0,
+    );
+    expect(withUsage).toHaveLength(1);
+    expect(withUsage[0]?.usageEvents[0]?.inputTokens).toBe(500);
+  });
+
+  test("captures Codex usage from the current token_count/turn_context event shapes", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const currentFormat = documents.find(
+      (document) =>
+        document.source === "codex" &&
+        document.runtimeId === "t-current-format",
+    );
+    expect(currentFormat).toBeDefined();
+    expect(currentFormat?.usageEvents).toHaveLength(1);
+    const event = currentFormat?.usageEvents[0];
+    expect(event?.model).toBe("gpt-5.6-terra");
+    expect(event?.inputTokens).toBe(700);
+    expect(event?.cachedInputTokens).toBe(100);
+    expect(event?.outputTokens).toBe(90);
+  });
+
+  test("prefers current-format Codex events wholesale when a file has both formats", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const bothFormats = documents.find(
+      (document) =>
+        document.source === "codex" &&
+        document.runtimeId === "t-both-formats-present",
+    );
+    expect(bothFormats).toBeDefined();
+    expect(bothFormats?.usageEvents).toHaveLength(1);
+    expect(bothFormats?.usageEvents[0]?.inputTokens).toBe(999);
+  });
+
+  test("keeps two distinct Codex turns that coincidentally report identical token counts", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const repeatedFormat = documents.find(
+      (document) =>
+        document.source === "codex" &&
+        document.runtimeId === "t-repeated-format",
+    );
+    expect(repeatedFormat).toBeDefined();
+    expect(repeatedFormat?.usageEvents).toHaveLength(2);
+    expect(
+      repeatedFormat?.usageEvents.every((event) => event.inputTokens === 333),
+    ).toBe(true);
+  });
+
+  test("never indexes Grok tool call raw input, only its fixed title/status", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const grok = documents.find((document) => document.source === "grok");
+    expect(grok?.toolOutputText).toContain("run shell command");
+    expect(grok?.toolOutputText).toContain("completed");
+    expect(grok?.toolOutputText).not.toContain("grok-tool-command-marker");
+    expect(grok?.toolOutputText).not.toContain("sk-should-not-appear-in-index");
+    expect(grok?.toolOutputText).not.toContain(
+      "test-bearer-token-fixture-marker",
+    );
+  });
+
+  test("bills Antigravity reasoning tokens as part of output, not dropped", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const antigravity = documents.find(
+      (document) => document.source === "antigravity",
+    );
+    const reasoningEvent = antigravity?.usageEvents.find(
+      (event) => event.reasoningTokens > 0,
+    );
+    // Gemini reported this generation as 30 visible + 50 reasoning output
+    // tokens, separately — the billable outputTokens must be their sum (80),
+    // with reasoningTokens (50) reported only as an informational subset.
+    expect(reasoningEvent?.outputTokens).toBe(80);
+    expect(reasoningEvent?.reasoningTokens).toBe(50);
+  });
+});
+
+describe("rejects malformed usage data instead of understating it", () => {
+  test("rejects a Grok turn_completed record with a malformed model-usage entry", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-malformed",
+      "grok-malformed-session",
+      { modelUsage: { "grok-4.5-build": "not-an-object" } },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("Malformed Grok model usage entry");
+  });
+
+  test("rejects a nonnumeric Grok usage field instead of silently zeroing it", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-nonnumeric-usage",
+      "grok-nonnumeric-session",
+      { inputTokens: "100", outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
+  });
+
+  test("rejects an explicit null Grok usage field the same as a nonnumeric one", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-null-usage",
+      "grok-null-session",
+      { inputTokens: null, outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
+  });
+
+  test("rejects a negative Grok usage count instead of subtracting it from totals", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-negative-usage",
+      "grok-negative-session",
+      { inputTokens: -5, outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
+  });
+
+  test("rejects an absent required Grok usage field instead of defaulting it to zero", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-missing-required",
+      "grok-missing-required-session",
+      { outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      'Missing required Grok usage field "inputTokens"',
+    );
+  });
+
+  test("rejects a malformed Claude usage count instead of silently zeroing it", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-malformed-usage",
+      "claude-malformed-session",
+      { input_tokens: "1000", output_tokens: 50 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      'Malformed Claude usage field "input_tokens"',
+    );
+  });
+
+  test("rejects a malformed Claude usage container instead of treating it as absent", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-malformed-usage-container",
+      "claude-malformed-container-session",
+      "not-an-object",
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("Malformed Claude usage container");
+  });
+
+  test("rejects a Claude usage record missing its response id instead of double-counting it", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-missing-id",
+      "claude-missing-id-session",
+      { input_tokens: 100, output_tokens: 20 },
+      { messageId: null },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing its response id");
+  });
+
+  test("rejects a Claude usage record missing a valid timestamp", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-missing-timestamp",
+      "claude-missing-timestamp-session",
+      { input_tokens: 100, output_tokens: 20 },
+      { timestamp: null },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing a valid timestamp");
+  });
+
+  test("rejects a malformed Codex usage count instead of silently zeroing it", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-malformed-usage-sessions",
+      "t-malformed",
+      {
+        timestamp: "2026-08-08T00:00:01.000Z",
+        type: "token_usage_record",
+        payload: { turn_token_usage: { input_tokens: "1000" } },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      'Malformed Codex usage field "input_tokens"',
+    );
+  });
+
+  test("rejects a Codex token_usage_record missing its timestamp instead of dropping it", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-missing-timestamp-sessions",
+      "t-missing-ts",
+      {
+        type: "token_usage_record",
+        payload: {
+          turn_token_usage: { input_tokens: 100, output_tokens: 10 },
+        },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing its timestamp");
+  });
+
+  test("rejects a malformed Codex turn_token_usage container instead of dropping the turn", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-malformed-container-sessions",
+      "t-malformed-container",
+      {
+        timestamp: "2026-08-08T00:00:01.000Z",
+        type: "token_usage_record",
+        payload: { turn_token_usage: "not-an-object" },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      "Malformed Codex turn_token_usage container",
+    );
+  });
+
+  test("rejects a malformed Grok turn_completed usage container instead of dropping the turn", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-malformed-usage-container",
+      "grok-malformed-usage-container-session",
+      "not-an-object",
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      "Malformed Grok turn_completed usage container",
+    );
   });
 });
 
@@ -596,6 +835,158 @@ describe("history index", () => {
     expect(parseSince("7d", now)).toBe("2026-08-09T00:00:00.000Z");
     expect(parseSince("24h", now)).toBe("2026-08-15T00:00:00.000Z");
     expect(parseSince("2026-08-01", now)).toBe("2026-08-01T00:00:00.000Z");
+    expect(parseSince("all", now)).toBeNull();
+    expect(parseSince("ALL", now)).toBeNull();
+  });
+
+  test("aggregates token usage and cost, flagging unpriced models as incomplete", async () => {
+    const runtimePaths = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "usage-home"),
+    );
+    const index = await HistoryIndex.open(runtimePaths);
+    const pricedEvent: UsageEventEntry = {
+      occurredAt: "2026-08-10T00:00:00.000Z",
+      model: "claude-sonnet-5",
+      inputTokens: 1000,
+      outputTokens: 200,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: 1.23,
+      costComplete: true,
+    };
+    const pricedDocument: HistoryDocument = {
+      source: "claude",
+      sourceId: "priced-1",
+      title: "Priced session",
+      path: "/fixture/priced-1",
+      workspace: "/fixture",
+      agent: "Claude Code",
+      createdAt: "2026-08-10T00:00:00.000Z",
+      updatedAt: "2026-08-10T00:00:00.000Z",
+      runtimeId: "priced-1",
+      openingPromptHash: null,
+      dialogueText: "priced",
+      toolOutputText: "",
+      usageEvents: [pricedEvent],
+    };
+    const unpricedEvent: UsageEventEntry = {
+      occurredAt: "2026-08-10T00:00:00.000Z",
+      model: "some-unpriced-model",
+      inputTokens: 500,
+      outputTokens: 50,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: null,
+      costComplete: false,
+    };
+    const unpricedDocument: HistoryDocument = {
+      ...pricedDocument,
+      sourceId: "unpriced-1",
+      title: "Unpriced session",
+      path: "/fixture/unpriced-1",
+      runtimeId: "unpriced-1",
+      dialogueText: "unpriced",
+      usageEvents: [unpricedEvent],
+    };
+    await index.ingest([
+      {
+        source: "claude",
+        available: true,
+        documents: [pricedDocument, unpricedDocument],
+        fingerprint: "usage-fixture",
+        error: null,
+      },
+    ]);
+
+    const report = index.usage({ since: null, source: null });
+    expect(report.total.documentCount).toBe(2);
+    expect(report.total.inputTokens).toBe(1500);
+    expect(report.total.outputTokens).toBe(250);
+    expect(report.total.costUsd).toBeCloseTo(1.23);
+    expect(report.total.costComplete).toBe(false);
+    expect(report.bySource).toHaveLength(1);
+    expect(report.bySource[0]?.source).toBe("claude");
+    expect(report.bySource[0]?.documentCount).toBe(2);
+
+    const scoped = index.usage({ since: null, source: "codex" });
+    expect(scoped.total.documentCount).toBe(0);
+    expect(scoped.bySource).toHaveLength(0);
+    index.close();
+  });
+
+  test("filters usage by event time, not by the document's last update", async () => {
+    const runtimePaths = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "usage-window-home"),
+    );
+    const index = await HistoryIndex.open(runtimePaths);
+    const oldEvent: UsageEventEntry = {
+      occurredAt: "2026-01-01T00:00:00.000Z",
+      model: "claude-sonnet-5",
+      inputTokens: 100_000,
+      outputTokens: 20_000,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: 100,
+      costComplete: true,
+    };
+    const recentEvent: UsageEventEntry = {
+      occurredAt: "2026-08-15T00:00:00.000Z",
+      model: "claude-sonnet-5",
+      inputTokens: 100,
+      outputTokens: 20,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: 0.1,
+      costComplete: true,
+    };
+    const longLivedDocument: HistoryDocument = {
+      source: "claude",
+      sourceId: "long-lived-1",
+      title: "Months-long session",
+      path: "/fixture/long-lived-1",
+      workspace: "/fixture",
+      agent: "Claude Code",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-08-15T00:00:00.000Z",
+      runtimeId: "long-lived-1",
+      openingPromptHash: null,
+      dialogueText: "long-lived",
+      toolOutputText: "",
+      usageEvents: [oldEvent, recentEvent],
+    };
+    await index.ingest([
+      {
+        source: "claude",
+        available: true,
+        documents: [longLivedDocument],
+        fingerprint: "usage-window-fixture",
+        error: null,
+      },
+    ]);
+
+    // The document's updated_at (2026-08-15) falls inside a `--since 2026-08-01`
+    // window, but only the recent event's tokens/cost should count — not the
+    // whole document's lifetime total, which also includes January's event.
+    const allTime = index.usage({ since: null, source: null });
+    expect(allTime.total.costUsd).toBeCloseTo(100.1);
+    expect(allTime.total.documentCount).toBe(1);
+
+    const recentOnly = index.usage({
+      since: "2026-08-01T00:00:00.000Z",
+      source: null,
+    });
+    expect(recentOnly.total.costUsd).toBeCloseTo(0.1);
+    expect(recentOnly.total.inputTokens).toBe(100);
+    expect(recentOnly.total.documentCount).toBe(1);
+    index.close();
   });
 });
 

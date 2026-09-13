@@ -29,17 +29,12 @@
       "count": 1
     }
   },
-  "src/lib/history/index.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/lib/history/query/results.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/lib/history/sources.ts": {
+  "src/lib/history/sources/codex.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

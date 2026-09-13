@@ -1,19 +1,15 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod";
-import { scanCodexCatalog } from "./sources/codex-catalog.ts";
-import {
-  readCodexHistoryJsonl,
-  scanCodexHistoryJsonl,
-} from "./sources/codex-history.ts";
+import { createAntigravitySource } from "./sources/antigravity.ts";
+import { createCodexSource } from "./sources/codex.ts";
 import { createConductorSource } from "./sources/conductor.ts";
 import { createCursorSource } from "./sources/cursor.ts";
+import { createGrokSource } from "./sources/grok.ts";
 import {
   historyMessageRole,
   INDEXED_MESSAGE_PARSE_LIMIT,
   makeHistoryDocument,
   openingPrompt,
-  parseCodexItem,
   parseConversationEnvelope,
 } from "./query/messages.ts";
 import { createOpenCodeSources } from "./sources/opencode.ts";
@@ -21,19 +17,10 @@ import type { HistoryPaths } from "./paths.ts";
 import {
   filesUnder,
   firstText,
-  pathExists,
-  readDatabase,
-  requireTables,
-  rows,
   sourceReadResult,
   sourceResult,
 } from "./sources-shared.ts";
-import {
-  parseJsonLine,
-  parseRecord,
-  parseTimestamp,
-  stringValue,
-} from "./query/text.ts";
+import { parseRecord, parseTimestamp, stringValue } from "./query/text.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
@@ -41,26 +28,143 @@ import type {
   HistorySource,
   HistorySourceReadResult,
   HistorySourceResult,
+  UsageEventEntry,
 } from "./types.ts";
+import {
+  catalogCost,
+  optionalUsageNumber,
+  requiredUsageNumber,
+  usageEventEntry,
+  type UsageCounts,
+  type UsageFieldLocation,
+} from "./usage-cost.ts";
 
-function placeholders(count: number): string {
-  return Array.from({ length: count }, () => "?").join(", ");
-}
-
-function batches<T>(values: readonly T[], size = 8): T[][] {
-  const result: T[][] = [];
-  for (let offset = 0; offset < values.length; offset += size) {
-    result.push(values.slice(offset, offset + size));
-  }
-  return result;
-}
+type ClaudeUsageEntry = {
+  readonly occurredAt: string;
+  readonly model: string;
+  readonly usage: UsageCounts;
+  readonly messageId: string;
+};
 
 type ClaudeTranscript = {
   readonly messages: readonly HistoryMessage[];
   readonly createdAt: string | null;
   readonly updatedAt: string | null;
   readonly runtimeId: string | null;
+  readonly usageEntries: readonly ClaudeUsageEntry[];
 };
+
+/**
+ * When one API response has multiple content blocks (text, thinking,
+ * tool_use), Claude Code can log them as separate JSONL records that each
+ * repeat that response's full `message.usage` snapshot. `message.id` (the
+ * Anthropic API response id) is shared by every such record, so it's the
+ * dedup key — without it, summing every record's usage would count the same
+ * response's tokens once per content block instead of once per response,
+ * which is why a usage-bearing record without one is rejected rather than
+ * accumulated as if it were unique.
+ *
+ * `message.usage` being entirely absent is normal (e.g. a user-role record
+ * never carries usage); `message.usage` being *present* but not an object,
+ * or present with a missing/non-string model, is malformed — treating it
+ * the same as "no usage" would silently drop that response's tokens/cost
+ * while the scan reports success. The record's own `timestamp` is likewise
+ * validated strictly here (never falling back to an epoch or file-mtime
+ * default the way message indexing does), since a `--since` filter is only
+ * as trustworthy as the timestamps stored on each usage event.
+ */
+function claudeUsageEntry(
+  record: Record<string, unknown>,
+  location: UsageFieldLocation,
+): ClaudeUsageEntry | null {
+  const message = parseRecord(record["message"]);
+  if (message === null) {
+    return null;
+  }
+  const usageValue = message["usage"];
+  if (usageValue === undefined) {
+    return null;
+  }
+  const usage = parseRecord(usageValue);
+  const model = stringValue(message["model"]);
+  if (usage === null || model === null) {
+    throw new Error(
+      `Malformed Claude usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const messageId = stringValue(message["id"]);
+  if (messageId === null) {
+    throw new Error(
+      `Claude usage record missing its response id on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const timestampValue = record["timestamp"];
+  const parsedTimestamp =
+    typeof timestampValue === "string"
+      ? Date.parse(timestampValue)
+      : Number.NaN;
+  if (Number.isNaN(parsedTimestamp)) {
+    throw new TypeError(
+      `Claude usage record missing a valid timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  return {
+    occurredAt: new Date(parsedTimestamp).toISOString(),
+    model,
+    messageId,
+    usage: {
+      inputTokens: requiredUsageNumber(
+        "Claude",
+        usage,
+        "input_tokens",
+        location,
+      ),
+      outputTokens: requiredUsageNumber(
+        "Claude",
+        usage,
+        "output_tokens",
+        location,
+      ),
+      cacheReadTokens: optionalUsageNumber(
+        "Claude",
+        usage,
+        "cache_read_input_tokens",
+        location,
+      ),
+      cacheCreationTokens: optionalUsageNumber(
+        "Claude",
+        usage,
+        "cache_creation_input_tokens",
+        location,
+      ),
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+    },
+  };
+}
+
+/**
+ * A line that fails to parse as JSON is truncated or corrupt — propagated
+ * rather than skipped, so a partially-written transcript record (especially
+ * an assistant record carrying `message.usage`) doesn't quietly shrink this
+ * session's usage on the next scan while the scan still reports success. The
+ * error reports only the file and line number, never the line's own
+ * content, since a corrupt record can carry arbitrary conversation data.
+ */
+function parseClaudeLine(
+  line: string,
+  filePath: string,
+  lineNumber: number,
+): unknown {
+  try {
+    return JSON.parse(line) as unknown;
+  } catch (error) {
+    throw new Error(
+      `Malformed Claude transcript line ${String(lineNumber)} in ${filePath}`,
+      { cause: error },
+    );
+  }
+}
 
 async function readClaudeTranscript(
   file: string,
@@ -68,14 +172,16 @@ async function readClaudeTranscript(
 ): Promise<ClaudeTranscript> {
   const raw = await Bun.file(file).text();
   const messages: HistoryMessage[] = [];
+  const usageEntriesById = new Map<string, ClaudeUsageEntry>();
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
   let runtimeId: string | null = null;
-  for (const line of raw.split("\n")) {
+  const lines = raw.split("\n");
+  for (const [index, line] of lines.entries()) {
     if (line.trim().length === 0) {
       continue;
     }
-    const value = parseJsonLine(line);
+    const value = parseClaudeLine(line, file, index + 1);
     const record = parseRecord(value);
     if (record === null) {
       continue;
@@ -83,21 +189,48 @@ async function readClaudeTranscript(
     runtimeId ??=
       stringValue(record["sessionId"]) ?? stringValue(record["session_id"]);
     const timestamp = stringValue(record["timestamp"]);
-    if (timestamp !== null) {
-      const parsedTimestamp = parseTimestamp(timestamp, new Date(0));
+    const parsedTimestamp =
+      timestamp === null ? null : parseTimestamp(timestamp, new Date(0));
+    if (parsedTimestamp !== null) {
       createdAt ??= parsedTimestamp;
       updatedAt = parsedTimestamp;
+    }
+    const usageEntry = claudeUsageEntry(record, {
+      filePath: file,
+      lineNumber: index + 1,
+    });
+    if (usageEntry !== null) {
+      // Claude Code repeats a growing cumulative snapshot across every
+      // record sharing one response's `message.id` as its content blocks
+      // stream in — the LAST one seen is the final, authoritative total, so
+      // a later record for the same id replaces an earlier one rather than
+      // being dropped.
+      usageEntriesById.set(usageEntry.messageId, usageEntry);
     }
     messages.push(
       ...parseConversationEnvelope(
         value,
         historyMessageRole(record["type"]),
-        timestamp === null ? null : parseTimestamp(timestamp, new Date(0)),
+        parsedTimestamp,
         maxCharacters,
       ),
     );
   }
-  return { messages, createdAt, updatedAt, runtimeId };
+  const usageEntries = [...usageEntriesById.values()];
+  return { messages, createdAt, updatedAt, runtimeId, usageEntries };
+}
+
+function claudeUsageEvents(
+  entries: readonly ClaudeUsageEntry[],
+): UsageEventEntry[] {
+  return entries.map((entry) =>
+    usageEventEntry(
+      entry.occurredAt,
+      entry.model,
+      entry.usage,
+      catalogCost([entry.model], entry.usage),
+    ),
+  );
 }
 
 async function scanClaude(paths: HistoryPaths): Promise<HistorySourceResult> {
@@ -127,6 +260,7 @@ async function scanClaude(paths: HistoryPaths): Promise<HistorySourceResult> {
             createdAt: transcript.createdAt ?? fallback,
             updatedAt: transcript.updatedAt ?? fallback,
             runtimeId: transcript.runtimeId,
+            usageEvents: claudeUsageEvents(transcript.usageEntries),
           },
           transcript.messages,
         ),
@@ -154,270 +288,6 @@ async function readClaude(
   );
 }
 
-type CodexItem = {
-  readonly threadId: string;
-  readonly createdAtMs: number;
-  readonly updatedAtMs: number;
-};
-
-function codexThreadMessages(
-  filePath: string,
-  threadIds: readonly string[] | null = null,
-  maxCharacters = Number.POSITIVE_INFINITY,
-): ReadonlyMap<string, readonly HistoryMessage[]> {
-  const database = readDatabase(filePath);
-  try {
-    requireTables(database, "Codex thread history", ["thread_items"]);
-    const selectedThreadIds =
-      threadIds ??
-      rows(
-        database,
-        "SELECT DISTINCT thread_id FROM thread_items ORDER BY thread_id",
-        z.object({ thread_id: z.string() }),
-      ).map((row) => row.thread_id);
-    const messages = new Map<string, HistoryMessage[]>();
-    for (const batch of batches(selectedThreadIds)) {
-      const itemRows = rows(
-        database,
-        `SELECT rowid AS history_rowid, thread_id
-           FROM thread_items
-          WHERE thread_id IN (${placeholders(batch.length)})
-          ORDER BY thread_id, rollout_ordinal`,
-        z.object({ history_rowid: z.number(), thread_id: z.string() }),
-        batch,
-      );
-      const readItem = database.prepare(
-        `SELECT item_json, item_type, created_at_ms
-           FROM thread_items WHERE rowid = ?`,
-      );
-      for (const metadata of itemRows) {
-        const row = z
-          .object({
-            item_json: z.string(),
-            item_type: z.string(),
-            created_at_ms: z.number(),
-          })
-          .parse(readItem.get(metadata.history_rowid));
-        const createdAt = new Date(row.created_at_ms).toISOString();
-        const entries = parseCodexItem(
-          row.item_type,
-          parseJsonLine(row.item_json),
-          createdAt,
-          maxCharacters,
-        );
-        const existing = messages.get(metadata.thread_id) ?? [];
-        existing.push(...entries);
-        messages.set(metadata.thread_id, existing);
-      }
-    }
-    return messages;
-  } finally {
-    database.close();
-  }
-}
-
-function scanCodexThreadDatabase(filePath: string): HistoryDocument[] {
-  const database = readDatabase(filePath);
-  let items: readonly CodexItem[];
-  try {
-    requireTables(database, "Codex thread history", ["thread_items"]);
-    items = rows(
-      database,
-      `SELECT thread_id, min(created_at_ms) AS created_at_ms,
-              max(created_at_ms) AS updated_at_ms
-         FROM thread_items
-        GROUP BY thread_id
-        ORDER BY thread_id`,
-      z
-        .object({
-          thread_id: z.string(),
-          created_at_ms: z.number(),
-          updated_at_ms: z.number(),
-        })
-        .transform((row) => ({
-          threadId: row.thread_id,
-          createdAtMs: row.created_at_ms,
-          updatedAtMs: row.updated_at_ms,
-        })),
-    );
-  } finally {
-    database.close();
-  }
-  const messages = codexThreadMessages(
-    filePath,
-    null,
-    INDEXED_MESSAGE_PARSE_LIMIT,
-  );
-  return items.map((item) => {
-    const threadMessages = messages.get(item.threadId) ?? [];
-    return makeHistoryDocument(
-      {
-        source: "codex",
-        sourceId: `${filePath}:${item.threadId}`,
-        title: firstText(
-          openingPrompt(threadMessages) ?? item.threadId,
-          item.threadId,
-        ),
-        path: filePath,
-        workspace: null,
-        agent: "Codex",
-        createdAt: new Date(item.createdAtMs).toISOString(),
-        updatedAt: new Date(item.updatedAtMs).toISOString(),
-        runtimeId: item.threadId,
-      },
-      threadMessages,
-    );
-  });
-}
-
-async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
-  const historyFiles = await filesUnder(paths.codexDir);
-  const threadFiles = historyFiles.filter((file) =>
-    /thread_history_.*\.sqlite$/u.test(file),
-  );
-  const files = [
-    ...threadFiles,
-    paths.codexCatalogDb,
-    paths.codexHistoryJsonl,
-  ].filter((file, index, all) => all.indexOf(file) === index);
-  const existingFiles: string[] = [];
-  for (const file of files) {
-    if (await pathExists(file)) {
-      existingFiles.push(file);
-    }
-  }
-  return sourceResult("codex", existingFiles, async () => {
-    const threadDocuments: HistoryDocument[] = [];
-    for (const file of threadFiles) {
-      if (await pathExists(file)) {
-        threadDocuments.push(...scanCodexThreadDatabase(file));
-      }
-    }
-    const catalogDocuments = (await pathExists(paths.codexCatalogDb))
-      ? scanCodexCatalog(paths.codexCatalogDb)
-      : [];
-    const catalogByThread = new Map(
-      catalogDocuments.flatMap((document) =>
-        document.runtimeId === null
-          ? []
-          : [[document.runtimeId, document] as const],
-      ),
-    );
-    const indexedThreadIds = new Set(
-      threadDocuments.flatMap((document) =>
-        document.runtimeId === null ? [] : [document.runtimeId],
-      ),
-    );
-    const documents = threadDocuments.map((document) => {
-      const catalog =
-        document.runtimeId === null
-          ? undefined
-          : catalogByThread.get(document.runtimeId);
-      if (catalog === undefined) {
-        return document;
-      }
-      return {
-        ...document,
-        title: catalog.title,
-        workspace: catalog.workspace,
-        agent: catalog.agent,
-        toolOutputText: [document.toolOutputText, catalog.toolOutputText]
-          .filter((text) => text.length > 0)
-          .join("\n"),
-      } satisfies HistoryDocument;
-    });
-    if (await pathExists(paths.codexCatalogDb)) {
-      documents.push(
-        ...catalogDocuments.filter(
-          (document) =>
-            document.runtimeId === null ||
-            !indexedThreadIds.has(document.runtimeId),
-        ),
-      );
-    }
-    if (await pathExists(paths.codexHistoryJsonl)) {
-      documents.push(...(await scanCodexHistoryJsonl(paths.codexHistoryJsonl)));
-    }
-    return documents;
-  });
-}
-
-async function readCodex(
-  paths: HistoryPaths,
-  records: readonly HistoryRecord[],
-): Promise<HistorySourceReadResult> {
-  return sourceReadResult(
-    "codex",
-    records.map((record) => record.sourceId),
-    async () => {
-      const result = new Map<string, readonly HistoryMessage[]>();
-      const catalogDocuments = (await pathExists(paths.codexCatalogDb))
-        ? scanCodexCatalog(paths.codexCatalogDb)
-        : [];
-      const catalogByThread = new Map(
-        catalogDocuments.flatMap((document) =>
-          document.runtimeId === null
-            ? []
-            : [[document.runtimeId, document] as const],
-        ),
-      );
-      const catalogBySourceId = new Map(
-        catalogDocuments.map((document) => [document.sourceId, document]),
-      );
-      const catalogMessages = (
-        document: HistoryDocument | undefined,
-      ): readonly HistoryMessage[] => {
-        if (document === undefined) {
-          return [];
-        }
-        const text = [document.title, document.toolOutputText]
-          .filter((part) => part.length > 0)
-          .join("\n");
-        return [{ role: "tool", text, createdAt: document.updatedAt }];
-      };
-      const byPath = Map.groupBy(records, (record) => record.path);
-      for (const [filePath, fileRecords] of byPath) {
-        if (/thread_history_.*\.sqlite$/u.test(filePath)) {
-          const threadIds = fileRecords.map((record) =>
-            record.sourceId.slice(filePath.length + 1),
-          );
-          const messages = codexThreadMessages(filePath, threadIds);
-          for (const record of fileRecords) {
-            const threadId = record.sourceId.slice(filePath.length + 1);
-            const threadMessages = messages.get(threadId);
-            if (threadMessages === undefined) {
-              continue;
-            }
-            result.set(record.sourceId, [
-              ...threadMessages,
-              ...catalogMessages(catalogByThread.get(threadId)),
-            ]);
-          }
-        } else if (filePath === paths.codexHistoryJsonl) {
-          const selected = new Set(
-            fileRecords.map((record) => record.sourceId),
-          );
-          const messages = await readCodexHistoryJsonl(filePath, selected);
-          for (const record of fileRecords) {
-            const recordMessages = messages.get(record.sourceId);
-            if (recordMessages !== undefined) {
-              result.set(record.sourceId, recordMessages);
-            }
-          }
-        } else {
-          for (const record of fileRecords) {
-            const document = catalogBySourceId.get(record.sourceId);
-            if (document !== undefined) {
-              result.set(record.sourceId, catalogMessages(document));
-            }
-          }
-        }
-      }
-      return result;
-    },
-  );
-}
-
 export function createHistorySources(): readonly HistorySource[] {
   return [
     createConductorSource(),
@@ -427,8 +297,10 @@ export function createHistorySources(): readonly HistorySource[] {
       scan: scanClaude,
       read: readClaude,
     },
-    { name: "codex", label: "Codex", scan: scanCodex, read: readCodex },
+    createCodexSource(),
     createCursorSource(),
     ...createOpenCodeSources(),
+    createAntigravitySource(),
+    createGrokSource(),
   ];
 }
