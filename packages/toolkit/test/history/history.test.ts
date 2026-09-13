@@ -65,6 +65,60 @@ async function scanGrokTurnCompletedFixture(
   return source?.scan({ ...paths, grokHome });
 }
 
+async function scanClaudeUsageFixture(
+  homeSuffix: string,
+  sessionId: string,
+  usage: unknown,
+) {
+  const claudeProjects = path.join(fixtureRoot, homeSuffix);
+  await mkdir(claudeProjects, { recursive: true });
+  await Bun.write(
+    path.join(claudeProjects, "session.jsonl"),
+    `${JSON.stringify({
+      type: "assistant",
+      sessionId,
+      timestamp: "2026-08-12T00:00:00Z",
+      message: {
+        id: `msg_${sessionId}`,
+        role: "assistant",
+        model: "claude-sonnet-5",
+        usage,
+        content: [{ type: "text", text: "reply" }],
+      },
+    })}\n`,
+  );
+  const source = createHistorySources().find(
+    (entry) => entry.name === "claude",
+  );
+  expect(source).toBeDefined();
+  return source?.scan({ ...paths, claudeProjects });
+}
+
+async function scanCodexRolloutUsageFixture(
+  homeSuffix: string,
+  threadId: string,
+  usageLine: Record<string, unknown>,
+) {
+  const codexSessionsDir = path.join(fixtureRoot, homeSuffix);
+  await mkdir(codexSessionsDir, { recursive: true });
+  await Bun.write(
+    path.join(codexSessionsDir, "rollout.jsonl"),
+    `${[
+      {
+        timestamp: "2026-08-08T00:00:00.000Z",
+        type: "session_meta",
+        payload: { session_id: threadId, id: threadId },
+      },
+      usageLine,
+    ]
+      .map((line) => JSON.stringify(line))
+      .join("\n")}\n`,
+  );
+  const source = createHistorySources().find((entry) => entry.name === "codex");
+  expect(source).toBeDefined();
+  return source?.scan({ ...paths, codexSessionsDir });
+}
+
 beforeAll(async () => {
   fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "toolkit-history-"));
   const conductorDir = path.join(fixtureRoot, "conductor");
@@ -479,67 +533,69 @@ describe("rejects malformed usage data instead of understating it", () => {
     expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
   });
 
+  test("rejects an absent required Grok usage field instead of defaulting it to zero", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-missing-required",
+      "grok-missing-required-session",
+      { outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      'Missing required Grok usage field "inputTokens"',
+    );
+  });
+
   test("rejects a malformed Claude usage count instead of silently zeroing it", async () => {
-    const claudeProjects = path.join(fixtureRoot, "claude-malformed-usage");
-    await mkdir(claudeProjects, { recursive: true });
-    await Bun.write(
-      path.join(claudeProjects, "session.jsonl"),
-      `${JSON.stringify({
-        type: "assistant",
-        sessionId: "claude-malformed-session",
-        timestamp: "2026-08-12T00:00:00Z",
-        message: {
-          id: "msg_malformed",
-          role: "assistant",
-          model: "claude-sonnet-5",
-          usage: { input_tokens: "1000", output_tokens: 50 },
-          content: [{ type: "text", text: "reply" }],
-        },
-      })}\n`,
+    const result = await scanClaudeUsageFixture(
+      "claude-malformed-usage",
+      "claude-malformed-session",
+      { input_tokens: "1000", output_tokens: 50 },
     );
-    const source = createHistorySources().find(
-      (entry) => entry.name === "claude",
-    );
-    expect(source).toBeDefined();
-    const result = await source?.scan({ ...paths, claudeProjects });
     expect(result?.available).toBe(false);
     expect(result?.error).toContain(
       'Malformed Claude usage field "input_tokens"',
     );
   });
 
+  test("rejects a malformed Claude usage container instead of treating it as absent", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-malformed-usage-container",
+      "claude-malformed-container-session",
+      "not-an-object",
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("Malformed Claude usage container");
+  });
+
   test("rejects a malformed Codex usage count instead of silently zeroing it", async () => {
-    const codexSessionsDir = path.join(
-      fixtureRoot,
+    const result = await scanCodexRolloutUsageFixture(
       "codex-malformed-usage-sessions",
+      "t-malformed",
+      {
+        timestamp: "2026-08-08T00:00:01.000Z",
+        type: "token_usage_record",
+        payload: { turn_token_usage: { input_tokens: "1000" } },
+      },
     );
-    await mkdir(codexSessionsDir, { recursive: true });
-    await Bun.write(
-      path.join(codexSessionsDir, "rollout-malformed.jsonl"),
-      `${[
-        {
-          timestamp: "2026-08-08T00:00:00.000Z",
-          type: "session_meta",
-          payload: { session_id: "t-malformed", id: "t-malformed" },
-        },
-        {
-          timestamp: "2026-08-08T00:00:01.000Z",
-          type: "token_usage_record",
-          payload: { turn_token_usage: { input_tokens: "1000" } },
-        },
-      ]
-        .map((line) => JSON.stringify(line))
-        .join("\n")}\n`,
-    );
-    const source = createHistorySources().find(
-      (entry) => entry.name === "codex",
-    );
-    expect(source).toBeDefined();
-    const result = await source?.scan({ ...paths, codexSessionsDir });
     expect(result?.available).toBe(false);
     expect(result?.error).toContain(
       'Malformed Codex usage field "input_tokens"',
     );
+  });
+
+  test("rejects a Codex token_usage_record missing its timestamp instead of dropping it", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-missing-timestamp-sessions",
+      "t-missing-ts",
+      {
+        type: "token_usage_record",
+        payload: {
+          turn_token_usage: { input_tokens: 100, output_tokens: 10 },
+        },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing its timestamp");
   });
 });
 

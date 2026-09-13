@@ -77,18 +77,37 @@ export type UsageFieldLocation = {
 };
 
 /**
- * A usage count field that's absent (`undefined`) is a legitimate
- * "not reported" case and defaults to zero — but a field that's *present*,
- * including an explicit JSON `null`, and isn't a nonnegative safe integer is
- * malformed data, not a legitimate zero. Silently coercing it (as a bare
- * `typeof value === "number"` check would) understates tokens and cost the
- * same way an unvalidated container field would: the scan reports success
- * and ingestion replaces the last good index with a permanently-partial
- * total. A negative count is rejected rather than merely non-finite ones,
- * since `Number.isFinite` alone accepts it and a negative token count would
- * silently subtract from `catalogCost`'s totals rather than corrupting them
- * loudly. Shared across Claude, Codex, and Grok, whose usage parsers all hit
- * this same gap independently.
+ * A field that's *present*, including an explicit JSON `null`, and isn't a
+ * nonnegative safe integer is malformed data, not a legitimate zero.
+ * Silently coercing it (as a bare `typeof value === "number"` check would)
+ * understates tokens and cost the same way an unvalidated container field
+ * would: the scan reports success and ingestion replaces the last good
+ * index with a permanently-partial total. A negative count is rejected
+ * rather than merely non-finite ones, since `Number.isFinite` alone accepts
+ * it and a negative token count would silently subtract from
+ * `catalogCost`'s totals rather than corrupting them loudly.
+ */
+function validatedUsageNumber(
+  source: string,
+  value: unknown,
+  key: string,
+  location: UsageFieldLocation,
+): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+    throw new TypeError(
+      `Malformed ${source} usage field "${key}" on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  return value;
+}
+
+/**
+ * A required count (input/output tokens — every real usage record reports
+ * both) that's absent isn't a legitimate zero-usage turn; it's a sign the
+ * usage object itself is truncated or the field was renamed upstream. Absent
+ * throws exactly like malformed, unlike `optionalUsageNumber`. Shared across
+ * Claude, Codex, and Grok, whose usage parsers all hit this same gap
+ * independently.
  */
 export function requiredUsageNumber(
   source: string,
@@ -98,14 +117,30 @@ export function requiredUsageNumber(
 ): number {
   const value = usage[key];
   if (value === undefined) {
-    return 0;
-  }
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
     throw new TypeError(
-      `Malformed ${source} usage field "${key}" on line ${String(location.lineNumber)} in ${location.filePath}`,
+      `Missing required ${source} usage field "${key}" on line ${String(location.lineNumber)} in ${location.filePath}`,
     );
   }
-  return value;
+  return validatedUsageNumber(source, value, key, location);
+}
+
+/**
+ * A genuinely optional count (a cache or reasoning breakdown a given model
+ * or turn may not report at all) defaults to zero when absent, but is
+ * validated the same as a required field whenever it IS present — see
+ * `validatedUsageNumber`.
+ */
+export function optionalUsageNumber(
+  source: string,
+  usage: Record<string, unknown>,
+  key: string,
+  location: UsageFieldLocation,
+): number {
+  const value = usage[key];
+  if (value === undefined) {
+    return 0;
+  }
+  return validatedUsageNumber(source, value, key, location);
 }
 
 /** One priced usage event, tagged with when it actually happened. */
