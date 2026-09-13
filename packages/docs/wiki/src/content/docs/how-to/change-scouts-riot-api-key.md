@@ -27,8 +27,8 @@ domains:
 old PUUID --(old key)--> Riot ID --(new key)--> new PUUID
 ```
 
-`scripts/migrate-puuid-key.ts` runs that in five resumable phases. Each is safe
-to re-run.
+[`migrate-puuid-key.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/migrate-puuid-key.ts) runs
+that in five resumable phases. Each is safe to re-run.
 
 | Phase     | Does                                                                   | Key used |
 | --------- | ---------------------------------------------------------------------- | -------- |
@@ -40,7 +40,10 @@ to re-run.
 
 Only **tracked** players are re-domained. Scout stores a PUUID for every match
 participant, but those are opaque strings it never resolves or displays. They
-keep their old values, and `collect` reports the count.
+keep their old values, and `collect` reports the count. What counts as tracked
+is the declared source list in
+[`support.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/puuid-migration/support.ts), which names
+the few columns that are records of who was _seen_ rather than who is _watched_.
 
 ## 1. Back up both databases
 
@@ -65,8 +68,10 @@ OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=… DATABASE_URL=… \
 ```
 
 Gate on three things: zero collisions, zero unresolved, and every new identifier
-differing from its old one. An identifier that comes back unchanged means both
-keys belong to one holder, and the run stops.
+differing from its old one. The script enforces all three
+([`phases.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/puuid-migration/phases.ts)); an
+identifier that comes back unchanged means both keys belong to one holder, and
+the run stops.
 
 :::caution[The old key's quota is shared with live traffic]
 Both environments poll Riot on that same key. Harvest deliberately claims only
@@ -78,11 +83,17 @@ Run the two environments sequentially for the same reason.
 ## 3. Scale down and re-run the delta
 
 Scaling `scout-backend` to zero is the only thing that stops Riot writes; there
-is no maintenance flag for core ingestion. Leave `scout-workflow-worker` up —
-the realtime poll workflow's staleness guard prevents a catch-up dogpile.
+is no maintenance flag for core ingestion. It is a routine operation — the
+deployment already replaces rather than rolls
+([`scout/index.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/scout/index.ts)). Leave
+`scout-workflow-worker` up: the realtime poll workflow skips a stale poll rather
+than queueing it
+([`realtime.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/temporal/src/workflows/realtime.ts)),
+so there is no catch-up dogpile on restart.
 
 :::caution[Prod's database leaves with the pod]
-Prod's SQLite lives on a ReadWriteOnce volume mounted by the backend pod, so
+Prod's SQLite lives on a ReadWriteOnce volume mounted by the backend pod
+([`scout/index.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/scout/index.ts)), so
 scaling that pod to zero also removes the only way to run the migration. Create
 a short-lived pod mounting `scout-storage-claim` to hold the volume, and delete
 it before scaling back up so the backend can remount.
@@ -129,8 +140,10 @@ prematch and postmatch reports both fire.
 ## What stays in the old domain
 
 Raw S3 payloads are the record and are never rewritten. The lake translates them
-at rebuild instead, so an environment gets continuous history only once that
-code is deployed there. See
+at rebuild instead
+([`puuid-remap.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/puuid-remap.ts)),
+so an environment gets continuous history only once that code is deployed there.
+See
 [Scout's report lake](/explanation/scout-report-lake/).
 
 Untracked participants, historical backups, and observability tags also keep
