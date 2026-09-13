@@ -101,6 +101,32 @@ function usageCounts(
 }
 
 /**
+ * A usage-bearing record's `timestamp` isn't just "present" — it must parse
+ * as a real date, since `history usage --since` compares stored
+ * `occurred_at` values lexicographically. A nonempty but unparseable string
+ * (e.g. a truncated or corrupted value) would otherwise be stored verbatim
+ * and silently move the event into or out of arbitrary date windows.
+ */
+function validatedCodexTimestamp(
+  timestamp: string | null,
+  eventLabel: string,
+  location: UsageFieldLocation,
+): string {
+  if (timestamp === null) {
+    throw new TypeError(
+      `Codex ${eventLabel} missing its timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const parsed = Date.parse(timestamp);
+  if (Number.isNaN(parsed)) {
+    throw new TypeError(
+      `Codex ${eventLabel} has an invalid timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  return new Date(parsed).toISOString();
+}
+
+/**
  * `turn_token_usage` (unlike `thread_token_usage`, a running cumulative
  * total for the whole thread) is the delta for just this turn, so each
  * record becomes its own timestamped event rather than one whole-thread
@@ -126,15 +152,15 @@ function applyTokenUsageRecord(
       `Malformed Codex turn_token_usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
     );
   }
-  if (timestamp === null) {
-    throw new Error(
-      `Codex token_usage_record missing its timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
-    );
-  }
+  const occurredAt = validatedCodexTimestamp(
+    timestamp,
+    "token_usage_record",
+    location,
+  );
   const counts = usageCounts(usage, location);
   const model = accumulator.currentModel ?? "unknown";
   accumulator.tokenUsageRecordEvents.push(
-    usageEventEntry(timestamp, model, counts, catalogCost([model], counts)),
+    usageEventEntry(occurredAt, model, counts, catalogCost([model], counts)),
   );
 }
 
@@ -171,15 +197,15 @@ function applyTokenCount(
       `Malformed Codex last_token_usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
     );
   }
-  if (timestamp === null) {
-    throw new Error(
-      `Codex token_count event missing its timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
-    );
-  }
+  const occurredAt = validatedCodexTimestamp(
+    timestamp,
+    "token_count",
+    location,
+  );
   const counts = usageCounts(usage, location);
   const model = accumulator.currentModel ?? "unknown";
   accumulator.tokenCountEvents.push(
-    usageEventEntry(timestamp, model, counts, catalogCost([model], counts)),
+    usageEventEntry(occurredAt, model, counts, catalogCost([model], counts)),
   );
 }
 
@@ -214,13 +240,27 @@ function applyCodexRolloutLine(
   if (record === null) {
     return;
   }
+  const type = stringValue(record["type"]);
+  const timestamp = stringValue(record["timestamp"]);
+  const location: UsageFieldLocation = { filePath, lineNumber };
+  // `token_usage_record` is a known usage-bearing type, so a malformed
+  // payload here is corrupt data, not an unrelated record we can skip —
+  // unlike the other branches below, whose payload shape only matters once
+  // we already know they're worth inspecting.
+  if (type === "token_usage_record") {
+    const payload = parseRecord(record["payload"]);
+    if (payload === null) {
+      throw new Error(
+        `Malformed Codex token_usage_record payload on line ${String(lineNumber)} in ${filePath}`,
+      );
+    }
+    applyTokenUsageRecord(accumulator, payload, timestamp, location);
+    return;
+  }
   const payload = parseRecord(record["payload"]);
   if (payload === null) {
     return;
   }
-  const type = stringValue(record["type"]);
-  const timestamp = stringValue(record["timestamp"]);
-  const location: UsageFieldLocation = { filePath, lineNumber };
   if (type === "session_meta") {
     applySessionMeta(accumulator, payload);
   } else if (type === "turn_context") {
@@ -235,8 +275,6 @@ function applyCodexRolloutLine(
     stringValue(payload["type"]) === "token_count"
   ) {
     applyTokenCount(accumulator, payload, timestamp, location);
-  } else if (type === "token_usage_record") {
-    applyTokenUsageRecord(accumulator, payload, timestamp, location);
   }
 }
 
@@ -288,6 +326,19 @@ export async function scanCodexSessionUsage(
   for (const file of files) {
     const accumulator = await parseCodexRolloutFile(file);
     if (accumulator.threadId === null) {
+      // A rollout with no thread id AND no usage is just a session Codex
+      // never assigned an id to (or one this parser doesn't yet recognize)
+      // — safe to skip. One that DOES carry usage events can't be silently
+      // dropped: there would be no key to file them under, but discarding
+      // them entirely understates every affected thread's tokens and cost.
+      if (
+        accumulator.tokenCountEvents.length > 0 ||
+        accumulator.tokenUsageRecordEvents.length > 0
+      ) {
+        throw new Error(
+          `Codex rollout has usage events but no thread id: ${file}`,
+        );
+      }
       continue;
     }
     const events = selectCodexUsageEvents(accumulator);

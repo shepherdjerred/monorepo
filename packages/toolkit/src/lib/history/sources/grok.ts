@@ -247,7 +247,12 @@ function parseGrokLine(
  * A `turn_completed` update's `usage` field being entirely absent is
  * unexpected but harmless (no usage to record for this turn); being
  * *present* but not an object is malformed and must fail the scan rather
- * than silently drop the turn's tokens/cost.
+ * than silently drop the turn's tokens/cost. `occurredAtFallback` (this
+ * line's own timestamp, or the last one seen earlier in the file) covers
+ * the case where a `turn_completed` record doesn't carry its own — but if
+ * neither is available, manufacturing an epoch timestamp would silently
+ * push real usage out of every ordinary `--since` window, so that case
+ * fails the scan too.
  */
 function grokTurnCompletedUsage(
   update: Record<string, unknown>,
@@ -265,11 +270,15 @@ function grokTurnCompletedUsage(
       `Malformed Grok turn_completed usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
     );
   }
-  const occurredAt = occurredAtFallback ?? new Date(0).toISOString();
+  if (occurredAtFallback === null) {
+    throw new Error(
+      `Grok turn_completed usage record missing a timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
   return grokUsageEntries(
     usage,
     defaultModelHint ?? "unknown",
-    occurredAt,
+    occurredAtFallback,
     location,
   );
 }

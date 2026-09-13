@@ -41,6 +41,7 @@ async function scanGrokTurnCompletedFixture(
   homeSuffix: string,
   sessionId: string,
   usage: unknown,
+  timestamp: number | null = 1_788_721_616,
 ) {
   const grokHome = path.join(fixtureRoot, homeSuffix);
   const sessionDir = path.join(
@@ -50,15 +51,18 @@ async function scanGrokTurnCompletedFixture(
     sessionId,
   );
   await mkdir(sessionDir, { recursive: true });
+  const record: Record<string, unknown> = {
+    params: {
+      sessionId,
+      update: { sessionUpdate: "turn_completed", usage },
+    },
+  };
+  if (timestamp !== null) {
+    record["timestamp"] = timestamp;
+  }
   await Bun.write(
     path.join(sessionDir, "updates.jsonl"),
-    `${JSON.stringify({
-      timestamp: 1_788_721_616,
-      params: {
-        sessionId,
-        update: { sessionUpdate: "turn_completed", usage },
-      },
-    })}\n`,
+    `${JSON.stringify(record)}\n`,
   );
   const source = createHistorySources().find((entry) => entry.name === "grok");
   expect(source).toBeDefined();
@@ -112,23 +116,25 @@ async function scanClaudeUsageFixture(
 
 async function scanCodexRolloutUsageFixture(
   homeSuffix: string,
-  threadId: string,
+  threadId: string | null,
   usageLine: Record<string, unknown>,
 ) {
   const codexSessionsDir = path.join(fixtureRoot, homeSuffix);
   await mkdir(codexSessionsDir, { recursive: true });
+  const lines =
+    threadId === null
+      ? [usageLine]
+      : [
+          {
+            timestamp: "2026-08-08T00:00:00.000Z",
+            type: "session_meta",
+            payload: { session_id: threadId, id: threadId },
+          },
+          usageLine,
+        ];
   await Bun.write(
     path.join(codexSessionsDir, "rollout.jsonl"),
-    `${[
-      {
-        timestamp: "2026-08-08T00:00:00.000Z",
-        type: "session_meta",
-        payload: { session_id: threadId, id: threadId },
-      },
-      usageLine,
-    ]
-      .map((line) => JSON.stringify(line))
-      .join("\n")}\n`,
+    `${lines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
   const source = createHistorySources().find((entry) => entry.name === "codex");
   expect(source).toBeDefined();
@@ -583,28 +589,6 @@ describe("rejects malformed usage data instead of understating it", () => {
     expect(result?.error).toContain("Malformed Claude usage container");
   });
 
-  test("rejects a Claude usage record missing its response id instead of double-counting it", async () => {
-    const result = await scanClaudeUsageFixture(
-      "claude-missing-id",
-      "claude-missing-id-session",
-      { input_tokens: 100, output_tokens: 20 },
-      { messageId: null },
-    );
-    expect(result?.available).toBe(false);
-    expect(result?.error).toContain("missing its response id");
-  });
-
-  test("rejects a Claude usage record missing a valid timestamp", async () => {
-    const result = await scanClaudeUsageFixture(
-      "claude-missing-timestamp",
-      "claude-missing-timestamp-session",
-      { input_tokens: 100, output_tokens: 20 },
-      { timestamp: null },
-    );
-    expect(result?.available).toBe(false);
-    expect(result?.error).toContain("missing a valid timestamp");
-  });
-
   test("rejects a malformed Codex usage count instead of silently zeroing it", async () => {
     const result = await scanCodexRolloutUsageFixture(
       "codex-malformed-usage-sessions",
@@ -619,21 +603,6 @@ describe("rejects malformed usage data instead of understating it", () => {
     expect(result?.error).toContain(
       'Malformed Codex usage field "input_tokens"',
     );
-  });
-
-  test("rejects a Codex token_usage_record missing its timestamp instead of dropping it", async () => {
-    const result = await scanCodexRolloutUsageFixture(
-      "codex-missing-timestamp-sessions",
-      "t-missing-ts",
-      {
-        type: "token_usage_record",
-        payload: {
-          turn_token_usage: { input_tokens: 100, output_tokens: 10 },
-        },
-      },
-    );
-    expect(result?.available).toBe(false);
-    expect(result?.error).toContain("missing its timestamp");
   });
 
   test("rejects a malformed Codex turn_token_usage container instead of dropping the turn", async () => {
@@ -662,6 +631,104 @@ describe("rejects malformed usage data instead of understating it", () => {
     expect(result?.error).toContain(
       "Malformed Grok turn_completed usage container",
     );
+  });
+});
+
+describe("rejects usage records with unreliable timestamps or identity", () => {
+  test("rejects a Claude usage record missing its response id instead of double-counting it", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-missing-id",
+      "claude-missing-id-session",
+      { input_tokens: 100, output_tokens: 20 },
+      { messageId: null },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing its response id");
+  });
+
+  test("rejects a Claude usage record missing a valid timestamp", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-missing-timestamp",
+      "claude-missing-timestamp-session",
+      { input_tokens: 100, output_tokens: 20 },
+      { timestamp: null },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing a valid timestamp");
+  });
+
+  test("rejects a Codex token_usage_record missing its timestamp instead of dropping it", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-missing-timestamp-sessions",
+      "t-missing-ts",
+      {
+        type: "token_usage_record",
+        payload: {
+          turn_token_usage: { input_tokens: 100, output_tokens: 10 },
+        },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing its timestamp");
+  });
+
+  test("rejects an unparseable Codex usage timestamp instead of storing it verbatim", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-invalid-timestamp-sessions",
+      "t-invalid-ts",
+      {
+        timestamp: "not-a-date",
+        type: "token_usage_record",
+        payload: {
+          turn_token_usage: { input_tokens: 100, output_tokens: 10 },
+        },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("invalid timestamp");
+  });
+
+  test("rejects a malformed Codex token_usage_record payload instead of dropping the turn", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-malformed-payload-sessions",
+      "t-malformed-payload",
+      {
+        timestamp: "2026-08-08T00:00:01.000Z",
+        type: "token_usage_record",
+        payload: "not-an-object",
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      "Malformed Codex token_usage_record payload",
+    );
+  });
+
+  test("rejects a Codex rollout with usage events but no thread id", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-missing-thread-id-sessions",
+      null,
+      {
+        timestamp: "2026-08-08T00:00:01.000Z",
+        type: "token_usage_record",
+        payload: {
+          turn_token_usage: { input_tokens: 100, output_tokens: 10 },
+        },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("usage events but no thread id");
+  });
+
+  test("rejects a Grok turn_completed usage record with no timestamp available at all", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-missing-timestamp",
+      "grok-missing-timestamp-session",
+      { inputTokens: 100, outputTokens: 20 },
+      null,
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing a timestamp");
   });
 });
 
