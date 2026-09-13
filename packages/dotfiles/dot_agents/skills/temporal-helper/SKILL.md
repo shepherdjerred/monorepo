@@ -1,6 +1,6 @@
 ---
 name: temporal-helper
-description: "Use this skill for Design, test, deploy, debug, and operate Temporal Workflows, Activities, Workers, task queues, S…"
+description: Safely design, implement, test, deploy, debug, and operate Temporal durable applications, with current TypeScript SDK, Workflow, Activity, Worker, Task Queue, Schedule, CLI, Cloud/server, replay, versioning, observability, and repository-specific Node/Bun guidance. Use for Temporal code or architecture, nondeterminism, retries/timeouts/heartbeats/cancellation, Signals/Queries/Updates, schedules, worker performance, production incidents, SDK upgrades, or live inspection and operations.
 ---
 
 # Temporal helper

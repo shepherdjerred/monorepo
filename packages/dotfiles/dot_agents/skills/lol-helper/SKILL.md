@@ -1,6 +1,10 @@
 ---
 name: lol-helper
-description: "Use this skill for League of Legends domain knowledge, terminology, and Riot Games API reference. Use when working …"
+description: |
+  League of Legends domain knowledge, terminology, and Riot Games API reference.
+  Use when working with match data, champion info, ranked systems, game objectives,
+  items, runes, player statistics, Riot API client, API endpoints, rate limiting,
+  PUUID lookups, summoner info, or regional routing.
 ---
 
 # League of Legends Helper

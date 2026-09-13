@@ -31,12 +31,17 @@ Retain purpose, ownership, dangerous traps, focused commands, and acceptance
 requirements. Move conditional detail behind a reference or into durable human
 documentation.
 
+The catalog ceiling is the exception: it is a runaway-growth alarm, not a
+rationing device. Never shorten a `description` to fit it — that deletes the
+trigger clause an agent matches on and drops the skill out of discovery with
+nothing failing. Prune unused skills instead.
+
 | Entrypoint                           | Maximum lines | Maximum size |
 | ------------------------------------ | ------------: | -----------: |
 | global or root `AGENTS.md`           |           200 |       16 KiB |
 | nested maintained `AGENTS.md`        |           120 |        8 KiB |
 | repository or runtime `SKILL.md`     |           160 |       12 KiB |
-| skill catalog names and descriptions |             — |        8 KiB |
+| skill catalog names and descriptions |             — |       24 KiB |
 
 Delete an `AGENTS.md` when the package has no invariant beyond root guidance.
 If it remains, keep its adjacent `CLAUDE.md` symlink pointed at `AGENTS.md`.

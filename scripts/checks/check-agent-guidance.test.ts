@@ -178,7 +178,7 @@ describe("agent guidance guard", () => {
 
   test("rejects a catalog whose discovery metadata exceeds its budget", () => {
     const entries = validFixture();
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 25; index += 1) {
       entries.push(
         skill(
           `.agents/skills/skill-${index.toString()}/SKILL.md`,
@@ -262,7 +262,7 @@ describe("agent guidance guard", () => {
 
   test("rejects an oversized personal skill catalog", () => {
     const entries = validFixture();
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 25; index += 1) {
       entries.push(
         skill(
           `packages/dotfiles/dot_agents/skills/personal-${index.toString()}/SKILL.md`,

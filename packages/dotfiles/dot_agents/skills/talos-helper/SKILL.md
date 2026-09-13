@@ -1,6 +1,8 @@
 ---
 name: talos-helper
-description: "Use this skill for Talos Linux cluster administration using talosctl When user mentions Talos, talosctl, or Talos c…"
+description: |
+  Talos Linux cluster administration using talosctl
+  When user mentions Talos, talosctl, or Talos cluster operations
 ---
 
 # Talos Helper Agent

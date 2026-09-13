@@ -14,10 +14,14 @@ rebase, or create a feature PR with `gh pr create`.
 1. Inspect the current branch, worktree, and complete base diff. Preserve
    unrelated edits.
 2. Run focused package tasks with Turbo while iterating.
-3. Stage exact paths and run `bunx lefthook run pre-commit`.
-4. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
+3. For a browser-visible change, render it with PinchTab and capture the proof
+   now, not after review: `pinchtab screenshot -o <file>` for a state,
+   `pinchtab record` for a flow. Other user-visible surfaces use their own tool
+   — a rendered asset, a Discord acceptance message, terminal output.
+4. Stage exact paths and run `bunx lefthook run pre-commit`.
+5. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
    and `Verification`.
-5. Inspect the complete branch diff before submission.
+6. Inspect the complete branch diff before submission.
 
 Create or update the PR explicitly:
 
@@ -43,9 +47,11 @@ based on the whole branch, not the latest commit.
 - Never change a real gate, skip a test, or suppress an error merely to make a
   PR green.
 
-For a visual change, attach the lightest proof that communicates the behavior.
-Upload with `toolkit pr asset <PR> <path> --profile seaweedfs --markdown`.
-State unperformed live or production checks in the PR body.
+Attach the proof captured in step 3 with
+`toolkit pr asset <PR> <path> --profile seaweedfs --markdown`. A change with a
+visual or interactive surface reaches review with that artifact; "the diff is
+small" is not a reason to omit it. Pure logic and internal refactors give exact
+commands instead. State unperformed live or production checks in the PR body.
 
 Complex work may use several commits inside this one branch. Use multiple
 stacked PRs only when each branch is independently landable and the requested

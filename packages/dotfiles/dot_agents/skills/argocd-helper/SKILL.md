@@ -1,6 +1,8 @@
 ---
 name: argocd-helper
-description: "Use this skill for Inspect, configure, and troubleshoot Argo CD Applications, syncs, health, diffs, projects, repos…"
+description: |
+  ArgoCD GitOps deployment management and troubleshooting
+  When user mentions ArgoCD, GitOps, application sync, or argocd commands
 ---
 
 # Argo CD helper
