@@ -7,9 +7,9 @@
       "buildNumber": 15258
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-15321",
-      "digest": "sha256:58d02ca6fa4b92437f6172a35fa76db8304ca2449dac49cf2f9e7c9c96649b53",
-      "buildNumber": 15321
+      "buildNumber": 15393,
+      "version": "2.0.0-15393",
+      "digest": "sha256:5162ef61aa39f9320370bd1268c8b3110f972e50ac3a36269abe680ac4fa8df5"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-13290",
@@ -42,14 +42,14 @@
       "buildNumber": 11934
     },
     "shepherdjerred/scout-evals": {
-      "buildNumber": 15346,
       "version": "2.0.0-15346",
-      "digest": "sha256:ea0437db45d0626716fddf35be451a7a536538d8f2a4c9797d52c7150a31cf59"
+      "digest": "sha256:ea0437db45d0626716fddf35be451a7a536538d8f2a4c9797d52c7150a31cf59",
+      "buildNumber": 15346
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 15353,
-      "version": "2.0.0-15353",
-      "digest": "sha256:9c297e3db92cbc190db42000da5c3d87f9f21357a82e91137e620f372bd8c8b3"
+      "buildNumber": 15389,
+      "version": "2.0.0-15389",
+      "digest": "sha256:95e9476c20197ec5802ba60310b365fa5896479c385acb6221c0972b4fc3f52a"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -73,9 +73,9 @@
       "buildNumber": 15258
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 15351,
-      "version": "2.0.0-15351",
-      "digest": "sha256:3c0553250133f2edd1dea05c9d125290d11148141f7e50a7f2c9681003c8b4ba"
+      "buildNumber": 15389,
+      "version": "2.0.0-15389",
+      "digest": "sha256:dca4883777c1d454012db543b80b074847ae65b38dee0b298051d131ebfb9a03"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
