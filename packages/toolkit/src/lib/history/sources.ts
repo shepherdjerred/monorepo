@@ -32,13 +32,11 @@ import type {
 } from "./types.ts";
 import {
   catalogCost,
+  requiredUsageNumber,
   usageEventEntry,
   type UsageCounts,
+  type UsageFieldLocation,
 } from "./usage-cost.ts";
-
-function numberValue(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
 
 type ClaudeUsageEntry = {
   readonly occurredAt: string | null;
@@ -66,6 +64,7 @@ type ClaudeTranscript = {
 function claudeUsageEntry(
   record: Record<string, unknown>,
   occurredAt: string | null,
+  location: UsageFieldLocation,
 ): ClaudeUsageEntry | null {
   const message = parseRecord(record["message"]);
   if (message === null) {
@@ -80,10 +79,30 @@ function claudeUsageEntry(
     occurredAt,
     model,
     usage: {
-      inputTokens: numberValue(usage["input_tokens"]),
-      outputTokens: numberValue(usage["output_tokens"]),
-      cacheReadTokens: numberValue(usage["cache_read_input_tokens"]),
-      cacheCreationTokens: numberValue(usage["cache_creation_input_tokens"]),
+      inputTokens: requiredUsageNumber(
+        "Claude",
+        usage,
+        "input_tokens",
+        location,
+      ),
+      outputTokens: requiredUsageNumber(
+        "Claude",
+        usage,
+        "output_tokens",
+        location,
+      ),
+      cacheReadTokens: requiredUsageNumber(
+        "Claude",
+        usage,
+        "cache_read_input_tokens",
+        location,
+      ),
+      cacheCreationTokens: requiredUsageNumber(
+        "Claude",
+        usage,
+        "cache_creation_input_tokens",
+        location,
+      ),
       cachedInputTokens: 0,
       reasoningTokens: 0,
     },
@@ -144,7 +163,10 @@ async function readClaudeTranscript(
       createdAt ??= parsedTimestamp;
       updatedAt = parsedTimestamp;
     }
-    const usageEntry = claudeUsageEntry(record, parsedTimestamp);
+    const usageEntry = claudeUsageEntry(record, parsedTimestamp, {
+      filePath: file,
+      lineNumber: index + 1,
+    });
     if (usageEntry !== null) {
       // Claude Code repeats a growing cumulative snapshot across every
       // record sharing one response's `message.id` as its content blocks

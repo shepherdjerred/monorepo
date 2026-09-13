@@ -436,7 +436,9 @@ describe("history source usage and redaction", () => {
     expect(reasoningEvent?.outputTokens).toBe(80);
     expect(reasoningEvent?.reasoningTokens).toBe(50);
   });
+});
 
+describe("rejects malformed usage data instead of understating it", () => {
   test("rejects a Grok turn_completed record with a malformed model-usage entry", async () => {
     const result = await scanGrokTurnCompletedFixture(
       "grok-malformed",
@@ -455,6 +457,79 @@ describe("history source usage and redaction", () => {
     );
     expect(result?.available).toBe(false);
     expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
+  });
+
+  test("rejects an explicit null Grok usage field the same as a nonnumeric one", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-null-usage",
+      "grok-null-session",
+      { inputTokens: null, outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
+  });
+
+  test("rejects a malformed Claude usage count instead of silently zeroing it", async () => {
+    const claudeProjects = path.join(fixtureRoot, "claude-malformed-usage");
+    await mkdir(claudeProjects, { recursive: true });
+    await Bun.write(
+      path.join(claudeProjects, "session.jsonl"),
+      `${JSON.stringify({
+        type: "assistant",
+        sessionId: "claude-malformed-session",
+        timestamp: "2026-08-12T00:00:00Z",
+        message: {
+          id: "msg_malformed",
+          role: "assistant",
+          model: "claude-sonnet-5",
+          usage: { input_tokens: "1000", output_tokens: 50 },
+          content: [{ type: "text", text: "reply" }],
+        },
+      })}\n`,
+    );
+    const source = createHistorySources().find(
+      (entry) => entry.name === "claude",
+    );
+    expect(source).toBeDefined();
+    const result = await source?.scan({ ...paths, claudeProjects });
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      'Malformed Claude usage field "input_tokens"',
+    );
+  });
+
+  test("rejects a malformed Codex usage count instead of silently zeroing it", async () => {
+    const codexSessionsDir = path.join(
+      fixtureRoot,
+      "codex-malformed-usage-sessions",
+    );
+    await mkdir(codexSessionsDir, { recursive: true });
+    await Bun.write(
+      path.join(codexSessionsDir, "rollout-malformed.jsonl"),
+      `${[
+        {
+          timestamp: "2026-08-08T00:00:00.000Z",
+          type: "session_meta",
+          payload: { session_id: "t-malformed", id: "t-malformed" },
+        },
+        {
+          timestamp: "2026-08-08T00:00:01.000Z",
+          type: "token_usage_record",
+          payload: { turn_token_usage: { input_tokens: "1000" } },
+        },
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n")}\n`,
+    );
+    const source = createHistorySources().find(
+      (entry) => entry.name === "codex",
+    );
+    expect(source).toBeDefined();
+    const result = await source?.scan({ ...paths, codexSessionsDir });
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      'Malformed Codex usage field "input_tokens"',
+    );
   });
 });
 
