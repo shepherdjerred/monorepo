@@ -47,6 +47,18 @@ One-time onboarding (interactive):
 Teardown: `docker compose down` (state survives in volumes); add `-v` to erase
 all state including OAuth creds and the browser profile.
 
+## Known issue on the pinned tag
+
+`hermes photon setup` on `v2026.9.11` installs an incomplete sidecar bundle
+into `/opt/data/photon/sidecar` (missing `send-format.mjs` and
+`stream-staleness.mjs`), so the sidecar exits 1 before becoming ready — same
+family as upstream [#48659](https://github.com/NousResearch/hermes-agent/issues/48659).
+Repair (the gateway's reconnection watcher then picks Photon back up):
+
+```bash
+docker compose exec gateway sh -c 'cp -p /opt/hermes/plugins/platforms/photon/sidecar/{send-format,stream-staleness}.mjs /opt/data/photon/sidecar/'
+```
+
 ## Notes
 
 - The `chromium-config` volume holds a logged-in browser profile — treat it as
