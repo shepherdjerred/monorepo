@@ -243,6 +243,37 @@ function parseGrokLine(
   return { update, timestamp };
 }
 
+/**
+ * A `turn_completed` update's `usage` field being entirely absent is
+ * unexpected but harmless (no usage to record for this turn); being
+ * *present* but not an object is malformed and must fail the scan rather
+ * than silently drop the turn's tokens/cost.
+ */
+function grokTurnCompletedUsage(
+  update: Record<string, unknown>,
+  defaultModelHint: string | null,
+  occurredAtFallback: string | null,
+  location: GrokLineLocation,
+): UsageEventEntry[] {
+  const usageValue = update["usage"];
+  if (usageValue === undefined) {
+    return [];
+  }
+  const usage = parseRecord(usageValue);
+  if (usage === null) {
+    throw new Error(
+      `Malformed Grok turn_completed usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const occurredAt = occurredAtFallback ?? new Date(0).toISOString();
+  return grokUsageEntries(
+    usage,
+    defaultModelHint ?? "unknown",
+    occurredAt,
+    location,
+  );
+}
+
 async function readGrokSession(
   filePath: string,
   defaultModelHint: string | null,
@@ -266,22 +297,14 @@ async function readGrokSession(
       updatedAt = parsed.timestamp;
     }
     if (stringValue(parsed.update["sessionUpdate"]) === "turn_completed") {
-      const usage = parseRecord(parsed.update["usage"]);
-      if (usage !== null) {
-        const occurredAt =
-          parsed.timestamp ?? updatedAt ?? new Date(0).toISOString();
-        usageEvents.push(
-          ...grokUsageEntries(
-            usage,
-            defaultModelHint ?? "unknown",
-            occurredAt,
-            {
-              filePath,
-              lineNumber: index + 1,
-            },
-          ),
-        );
-      }
+      usageEvents.push(
+        ...grokTurnCompletedUsage(
+          parsed.update,
+          defaultModelHint,
+          parsed.timestamp ?? updatedAt,
+          { filePath, lineNumber: index + 1 },
+        ),
+      );
       continue;
     }
     const message = grokMessage(parsed.update, parsed.timestamp);

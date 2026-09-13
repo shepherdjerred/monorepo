@@ -40,7 +40,7 @@ function compareStrings(a: string | null, b: string | null): number {
 async function scanGrokTurnCompletedFixture(
   homeSuffix: string,
   sessionId: string,
-  usage: Record<string, unknown>,
+  usage: unknown,
 ) {
   const grokHome = path.join(fixtureRoot, homeSuffix);
   const sessionDir = path.join(
@@ -69,23 +69,39 @@ async function scanClaudeUsageFixture(
   homeSuffix: string,
   sessionId: string,
   usage: unknown,
+  options: {
+    readonly messageId?: string | null;
+    readonly timestamp?: string | null;
+  } = {},
 ) {
   const claudeProjects = path.join(fixtureRoot, homeSuffix);
   await mkdir(claudeProjects, { recursive: true });
+  const messageId =
+    options.messageId === undefined ? `msg_${sessionId}` : options.messageId;
+  const timestamp =
+    options.timestamp === undefined
+      ? "2026-08-12T00:00:00Z"
+      : options.timestamp;
+  const message: Record<string, unknown> = {
+    role: "assistant",
+    model: "claude-sonnet-5",
+    usage,
+    content: [{ type: "text", text: "reply" }],
+  };
+  if (messageId !== null) {
+    message["id"] = messageId;
+  }
+  const record: Record<string, unknown> = {
+    type: "assistant",
+    sessionId,
+    message,
+  };
+  if (timestamp !== null) {
+    record["timestamp"] = timestamp;
+  }
   await Bun.write(
     path.join(claudeProjects, "session.jsonl"),
-    `${JSON.stringify({
-      type: "assistant",
-      sessionId,
-      timestamp: "2026-08-12T00:00:00Z",
-      message: {
-        id: `msg_${sessionId}`,
-        role: "assistant",
-        model: "claude-sonnet-5",
-        usage,
-        content: [{ type: "text", text: "reply" }],
-      },
-    })}\n`,
+    `${JSON.stringify(record)}\n`,
   );
   const source = createHistorySources().find(
     (entry) => entry.name === "claude",
@@ -567,6 +583,28 @@ describe("rejects malformed usage data instead of understating it", () => {
     expect(result?.error).toContain("Malformed Claude usage container");
   });
 
+  test("rejects a Claude usage record missing its response id instead of double-counting it", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-missing-id",
+      "claude-missing-id-session",
+      { input_tokens: 100, output_tokens: 20 },
+      { messageId: null },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing its response id");
+  });
+
+  test("rejects a Claude usage record missing a valid timestamp", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-missing-timestamp",
+      "claude-missing-timestamp-session",
+      { input_tokens: 100, output_tokens: 20 },
+      { timestamp: null },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing a valid timestamp");
+  });
+
   test("rejects a malformed Codex usage count instead of silently zeroing it", async () => {
     const result = await scanCodexRolloutUsageFixture(
       "codex-malformed-usage-sessions",
@@ -596,6 +634,34 @@ describe("rejects malformed usage data instead of understating it", () => {
     );
     expect(result?.available).toBe(false);
     expect(result?.error).toContain("missing its timestamp");
+  });
+
+  test("rejects a malformed Codex turn_token_usage container instead of dropping the turn", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-malformed-container-sessions",
+      "t-malformed-container",
+      {
+        timestamp: "2026-08-08T00:00:01.000Z",
+        type: "token_usage_record",
+        payload: { turn_token_usage: "not-an-object" },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      "Malformed Codex turn_token_usage container",
+    );
+  });
+
+  test("rejects a malformed Grok turn_completed usage container instead of dropping the turn", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-malformed-usage-container",
+      "grok-malformed-usage-container-session",
+      "not-an-object",
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      "Malformed Grok turn_completed usage container",
+    );
   });
 });
 

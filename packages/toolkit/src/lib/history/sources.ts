@@ -40,10 +40,10 @@ import {
 } from "./usage-cost.ts";
 
 type ClaudeUsageEntry = {
-  readonly occurredAt: string | null;
+  readonly occurredAt: string;
   readonly model: string;
   readonly usage: UsageCounts;
-  readonly messageId: string | null;
+  readonly messageId: string;
 };
 
 type ClaudeTranscript = {
@@ -60,18 +60,21 @@ type ClaudeTranscript = {
  * repeat that response's full `message.usage` snapshot. `message.id` (the
  * Anthropic API response id) is shared by every such record, so it's the
  * dedup key — without it, summing every record's usage would count the same
- * response's tokens once per content block instead of once per response.
- */
-/**
+ * response's tokens once per content block instead of once per response,
+ * which is why a usage-bearing record without one is rejected rather than
+ * accumulated as if it were unique.
+ *
  * `message.usage` being entirely absent is normal (e.g. a user-role record
  * never carries usage); `message.usage` being *present* but not an object,
  * or present with a missing/non-string model, is malformed — treating it
  * the same as "no usage" would silently drop that response's tokens/cost
- * while the scan reports success.
+ * while the scan reports success. The record's own `timestamp` is likewise
+ * validated strictly here (never falling back to an epoch or file-mtime
+ * default the way message indexing does), since a `--since` filter is only
+ * as trustworthy as the timestamps stored on each usage event.
  */
 function claudeUsageEntry(
   record: Record<string, unknown>,
-  occurredAt: string | null,
   location: UsageFieldLocation,
 ): ClaudeUsageEntry | null {
   const message = parseRecord(record["message"]);
@@ -89,9 +92,26 @@ function claudeUsageEntry(
       `Malformed Claude usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
     );
   }
+  const messageId = stringValue(message["id"]);
+  if (messageId === null) {
+    throw new Error(
+      `Claude usage record missing its response id on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const timestampValue = record["timestamp"];
+  const parsedTimestamp =
+    typeof timestampValue === "string"
+      ? Date.parse(timestampValue)
+      : Number.NaN;
+  if (Number.isNaN(parsedTimestamp)) {
+    throw new TypeError(
+      `Claude usage record missing a valid timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
   return {
-    occurredAt,
+    occurredAt: new Date(parsedTimestamp).toISOString(),
     model,
+    messageId,
     usage: {
       inputTokens: requiredUsageNumber(
         "Claude",
@@ -120,7 +140,6 @@ function claudeUsageEntry(
       cachedInputTokens: 0,
       reasoningTokens: 0,
     },
-    messageId: stringValue(message["id"]),
   };
 }
 
@@ -154,7 +173,6 @@ async function readClaudeTranscript(
   const raw = await Bun.file(file).text();
   const messages: HistoryMessage[] = [];
   const usageEntriesById = new Map<string, ClaudeUsageEntry>();
-  const usageEntriesWithoutId: ClaudeUsageEntry[] = [];
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
   let runtimeId: string | null = null;
@@ -177,7 +195,7 @@ async function readClaudeTranscript(
       createdAt ??= parsedTimestamp;
       updatedAt = parsedTimestamp;
     }
-    const usageEntry = claudeUsageEntry(record, parsedTimestamp, {
+    const usageEntry = claudeUsageEntry(record, {
       filePath: file,
       lineNumber: index + 1,
     });
@@ -187,11 +205,7 @@ async function readClaudeTranscript(
       // stream in — the LAST one seen is the final, authoritative total, so
       // a later record for the same id replaces an earlier one rather than
       // being dropped.
-      if (usageEntry.messageId === null) {
-        usageEntriesWithoutId.push(usageEntry);
-      } else {
-        usageEntriesById.set(usageEntry.messageId, usageEntry);
-      }
+      usageEntriesById.set(usageEntry.messageId, usageEntry);
     }
     messages.push(
       ...parseConversationEnvelope(
@@ -202,17 +216,16 @@ async function readClaudeTranscript(
       ),
     );
   }
-  const usageEntries = [...usageEntriesWithoutId, ...usageEntriesById.values()];
+  const usageEntries = [...usageEntriesById.values()];
   return { messages, createdAt, updatedAt, runtimeId, usageEntries };
 }
 
 function claudeUsageEvents(
   entries: readonly ClaudeUsageEntry[],
-  fallbackOccurredAt: string,
 ): UsageEventEntry[] {
   return entries.map((entry) =>
     usageEventEntry(
-      entry.occurredAt ?? fallbackOccurredAt,
+      entry.occurredAt,
       entry.model,
       entry.usage,
       catalogCost([entry.model], entry.usage),
@@ -247,7 +260,7 @@ async function scanClaude(paths: HistoryPaths): Promise<HistorySourceResult> {
             createdAt: transcript.createdAt ?? fallback,
             updatedAt: transcript.updatedAt ?? fallback,
             runtimeId: transcript.runtimeId,
-            usageEvents: claudeUsageEvents(transcript.usageEntries, fallback),
+            usageEvents: claudeUsageEvents(transcript.usageEntries),
           },
           transcript.messages,
         ),
