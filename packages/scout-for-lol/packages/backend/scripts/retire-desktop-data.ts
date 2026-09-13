@@ -12,7 +12,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import {
   createDesktopRetirementManifest,
-  desktopRetirementIdentityDigest,
+  createDesktopRetirementIdentityDigest,
+  createStoredSoundKeyDigest,
   readLegacyDesktopRetirementCounts,
 } from "#src/retirement/desktop-data.ts";
 import { legacySqlitePreflightDigest } from "#src/database/legacy-import/sqlite-source-digest.ts";
@@ -24,6 +25,17 @@ const EnvironmentSchema = z
     LEGACY_SQLITE_PATH: z.string().min(1),
   })
   .strict();
+const PAGE_SIZE = 1000;
+
+type PostgresRetirementInventory = {
+  count: number;
+  identityDigest: string;
+};
+
+type StoredSoundObjectInventory = {
+  count: number;
+  keyDigest: string;
+};
 
 function parseArguments(argv: string[]): z.infer<typeof ArgumentsSchema> {
   if (argv.length !== 1 || argv[0] !== "--preflight") {
@@ -39,6 +51,56 @@ function parseEnvironment(): z.infer<typeof EnvironmentSchema> {
   });
 }
 
+async function scanPostgresRetirementIds(
+  findPage: (cursor: number | undefined) => Promise<readonly { id: number }[]>,
+): Promise<PostgresRetirementInventory> {
+  const digest = createDesktopRetirementIdentityDigest();
+  let count = 0;
+  let cursor: number | undefined;
+  for (;;) {
+    const page = await findPage(cursor);
+    if (page.length === 0) {
+      return { count, identityDigest: digest.digest() };
+    }
+    for (const record of page) {
+      digest.update(record.id);
+      count += 1;
+    }
+    const last = page.at(-1);
+    if (last === undefined) {
+      throw new Error(
+        "PostgreSQL retirement page unexpectedly had no last row",
+      );
+    }
+    cursor = last.id;
+  }
+}
+
+async function scanStoredSoundObjectKeys(
+  findPage: (
+    cursor: string | undefined,
+  ) => Promise<readonly { s3Key: string }[]>,
+): Promise<StoredSoundObjectInventory> {
+  const digest = createStoredSoundKeyDigest();
+  let count = 0;
+  let cursor: string | undefined;
+  for (;;) {
+    const page = await findPage(cursor);
+    if (page.length === 0) {
+      return { count, keyDigest: digest.digest() };
+    }
+    for (const record of page) {
+      digest.update(record.s3Key);
+      count += 1;
+    }
+    const last = page.at(-1);
+    if (last === undefined) {
+      throw new Error("StoredSound page unexpectedly had no last row");
+    }
+    cursor = last.s3Key;
+  }
+}
+
 parseArguments(Bun.argv.slice(2));
 const environment = parseEnvironment();
 const prisma = new PrismaClient({
@@ -46,54 +108,78 @@ const prisma = new PrismaClient({
 });
 
 try {
-  const [apiTokens, desktopClients, soundPacks, storedSounds, gameEventLogs] =
-    await Promise.all([
+  const [
+    apiTokens,
+    desktopClients,
+    soundPacks,
+    storedSounds,
+    gameEventLogs,
+    storedSoundObjects,
+  ] = await Promise.all([
+    scanPostgresRetirementIds((cursor) =>
       prisma.apiToken.findMany({
         select: { id: true },
         orderBy: { id: "asc" },
+        take: PAGE_SIZE,
+        ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
       }),
+    ),
+    scanPostgresRetirementIds((cursor) =>
       prisma.desktopClient.findMany({
         select: { id: true },
         orderBy: { id: "asc" },
+        take: PAGE_SIZE,
+        ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
       }),
+    ),
+    scanPostgresRetirementIds((cursor) =>
       prisma.soundPack.findMany({
         select: { id: true },
         orderBy: { id: "asc" },
+        take: PAGE_SIZE,
+        ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
       }),
+    ),
+    scanPostgresRetirementIds((cursor) =>
       prisma.storedSound.findMany({
-        select: { id: true, s3Key: true },
+        select: { id: true },
         orderBy: { id: "asc" },
+        take: PAGE_SIZE,
+        ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
       }),
+    ),
+    scanPostgresRetirementIds((cursor) =>
       prisma.gameEventLog.findMany({
         select: { id: true },
         orderBy: { id: "asc" },
+        take: PAGE_SIZE,
+        ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
       }),
-    ]);
+    ),
+    scanStoredSoundObjectKeys((cursor) =>
+      prisma.storedSound.findMany({
+        select: { s3Key: true },
+        orderBy: { s3Key: "asc" },
+        take: PAGE_SIZE,
+        ...(cursor === undefined ? {} : { cursor: { s3Key: cursor }, skip: 1 }),
+      }),
+    ),
+  ]);
 
   const manifest = createDesktopRetirementManifest({
     postgres: {
-      ApiToken: apiTokens.length,
-      DesktopClient: desktopClients.length,
-      SoundPack: soundPacks.length,
-      StoredSound: storedSounds.length,
-      GameEventLog: gameEventLogs.length,
+      ApiToken: apiTokens.count,
+      DesktopClient: desktopClients.count,
+      SoundPack: soundPacks.count,
+      StoredSound: storedSounds.count,
+      GameEventLog: gameEventLogs.count,
     },
     postgresIdentityDigests: {
-      ApiToken: desktopRetirementIdentityDigest(
-        apiTokens.map((apiToken) => apiToken.id),
-      ),
-      DesktopClient: desktopRetirementIdentityDigest(
-        desktopClients.map((desktopClient) => desktopClient.id),
-      ),
-      SoundPack: desktopRetirementIdentityDigest(
-        soundPacks.map((soundPack) => soundPack.id),
-      ),
-      StoredSound: desktopRetirementIdentityDigest(
-        storedSounds.map((storedSound) => storedSound.id),
-      ),
-      GameEventLog: desktopRetirementIdentityDigest(
-        gameEventLogs.map((gameEventLog) => gameEventLog.id),
-      ),
+      ApiToken: apiTokens.identityDigest,
+      DesktopClient: desktopClients.identityDigest,
+      SoundPack: soundPacks.identityDigest,
+      StoredSound: storedSounds.identityDigest,
+      GameEventLog: gameEventLogs.identityDigest,
     },
     legacySqlite: readLegacyDesktopRetirementCounts(
       environment.LEGACY_SQLITE_PATH,
@@ -101,7 +187,7 @@ try {
     legacySqlitePreflightDigest: legacySqlitePreflightDigest(
       environment.LEGACY_SQLITE_PATH,
     ),
-    storedSoundKeys: storedSounds.map((storedSound) => storedSound.s3Key),
+    storedSoundObjects,
   });
   process.stdout.write(`${JSON.stringify(manifest)}\n`);
 } finally {

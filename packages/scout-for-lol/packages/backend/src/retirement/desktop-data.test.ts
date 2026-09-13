@@ -45,13 +45,19 @@ describe("Scout desktop retirement preflight", () => {
       },
       legacySqlite: COUNTS,
       legacySqlitePreflightDigest: "a".repeat(64),
-      storedSoundKeys: ["sounds/b", "sounds/a"],
+      storedSoundObjects: {
+        count: 2,
+        keyDigest: storedSoundKeyDigest(["sounds/b", "sounds/a"]),
+      },
     };
 
     const first = createDesktopRetirementManifest(input);
     const second = createDesktopRetirementManifest({
       ...input,
-      storedSoundKeys: [...input.storedSoundKeys].reverse(),
+      storedSoundObjects: {
+        count: 2,
+        keyDigest: storedSoundKeyDigest(["sounds/a", "sounds/b"]),
+      },
     });
 
     expect(first).toEqual(second);

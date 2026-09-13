@@ -37,6 +37,11 @@ type ManifestInput = {
   legacySqlitePreflightDigest: string;
 };
 
+export type RetirementDigest = {
+  update: (value: string | number) => void;
+  digest: () => string;
+};
+
 function sha256(value: string): string {
   return new Bun.CryptoHasher("sha256").update(value).digest("hex");
 }
@@ -90,11 +95,33 @@ export function readLegacyDesktopRetirementCounts(
  */
 export function storedSoundKeyDigest(keys: readonly string[]): string {
   const sorted = [...keys].sort();
-  const hasher = new Bun.CryptoHasher("sha256");
+  const hasher = createStoredSoundKeyDigest();
   for (const key of sorted) {
-    hasher.update(`${key}\u{0}`);
+    hasher.update(key);
   }
-  return hasher.digest("hex");
+  return hasher.digest();
+}
+
+export function createStoredSoundKeyDigest(): RetirementDigest {
+  const hasher = new Bun.CryptoHasher("sha256");
+  let previous: string | undefined;
+  return {
+    update(key) {
+      if (typeof key !== "string") {
+        throw new TypeError("StoredSound key digest requires string keys");
+      }
+      if (previous !== undefined && key <= previous) {
+        throw new RangeError(
+          "StoredSound keys must be supplied in ascending order",
+        );
+      }
+      previous = key;
+      hasher.update(`${key}\u{0}`);
+    },
+    digest() {
+      return hasher.digest("hex");
+    },
+  };
 }
 
 /**
@@ -106,14 +133,38 @@ export function desktopRetirementIdentityDigest(
   ids: readonly number[],
 ): string {
   const sorted = [...ids].sort((left, right) => left - right);
-  const hasher = new Bun.CryptoHasher("sha256");
+  const hasher = createDesktopRetirementIdentityDigest();
   for (const id of sorted) {
-    if (!Number.isSafeInteger(id) || id < 1) {
-      throw new RangeError("Invalid PostgreSQL desktop retirement record ID");
-    }
-    hasher.update(`${String(id)}\u{0}`);
+    hasher.update(id);
   }
-  return hasher.digest("hex");
+  return hasher.digest();
+}
+
+export function createDesktopRetirementIdentityDigest(): RetirementDigest {
+  const hasher = new Bun.CryptoHasher("sha256");
+  let previous = 0;
+  return {
+    update(id) {
+      if (typeof id !== "number") {
+        throw new TypeError(
+          "PostgreSQL desktop retirement record ID must be a number",
+        );
+      }
+      if (!Number.isSafeInteger(id) || id < 1) {
+        throw new RangeError("Invalid PostgreSQL desktop retirement record ID");
+      }
+      if (id <= previous) {
+        throw new RangeError(
+          "PostgreSQL desktop retirement record IDs must be supplied in ascending order",
+        );
+      }
+      previous = id;
+      hasher.update(`${String(id)}\u{0}`);
+    },
+    digest() {
+      return hasher.digest("hex");
+    },
+  };
 }
 
 /**
@@ -123,14 +174,13 @@ export function desktopRetirementIdentityDigest(
  */
 export function createDesktopRetirementManifest(
   input: ManifestInput & {
-    storedSoundKeys: readonly string[];
+    storedSoundObjects: {
+      count: number;
+      keyDigest: string;
+    };
   },
 ): DesktopRetirementManifest {
-  const storedSoundObjects = {
-    count: input.storedSoundKeys.length,
-    keyDigest: storedSoundKeyDigest(input.storedSoundKeys),
-  };
-  if (storedSoundObjects.count !== input.postgres.StoredSound) {
+  if (input.storedSoundObjects.count !== input.postgres.StoredSound) {
     throw new Error(
       "StoredSound key inventory does not match the PostgreSQL StoredSound count",
     );
@@ -141,7 +191,7 @@ export function createDesktopRetirementManifest(
     postgresIdentityDigests: input.postgresIdentityDigests,
     legacySqlite: input.legacySqlite,
     legacySqlitePreflightDigest: input.legacySqlitePreflightDigest,
-    storedSoundObjects,
+    storedSoundObjects: input.storedSoundObjects,
   };
   return {
     ...manifest,
