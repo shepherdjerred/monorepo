@@ -36,6 +36,35 @@ let paths: HistoryPaths;
 function compareStrings(a: string | null, b: string | null): number {
   return (a ?? "").localeCompare(b ?? "");
 }
+
+async function scanGrokTurnCompletedFixture(
+  homeSuffix: string,
+  sessionId: string,
+  usage: Record<string, unknown>,
+) {
+  const grokHome = path.join(fixtureRoot, homeSuffix);
+  const sessionDir = path.join(
+    grokHome,
+    "sessions",
+    "%2Ftest%2Ffixture",
+    sessionId,
+  );
+  await mkdir(sessionDir, { recursive: true });
+  await Bun.write(
+    path.join(sessionDir, "updates.jsonl"),
+    `${JSON.stringify({
+      timestamp: 1_788_721_616,
+      params: {
+        sessionId,
+        update: { sessionUpdate: "turn_completed", usage },
+      },
+    })}\n`,
+  );
+  const source = createHistorySources().find((entry) => entry.name === "grok");
+  expect(source).toBeDefined();
+  return source?.scan({ ...paths, grokHome });
+}
+
 beforeAll(async () => {
   fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "toolkit-history-"));
   const conductorDir = path.join(fixtureRoot, "conductor");
@@ -173,37 +202,6 @@ describe("history source adapters", () => {
       ),
     );
     expect(cursor?.dialogueText).toContain("cursor-tail-search-marker");
-  });
-
-  test("rejects a Grok turn_completed record with a malformed model-usage entry", async () => {
-    const grokHome = path.join(fixtureRoot, "grok-malformed");
-    const sessionDir = path.join(
-      grokHome,
-      "sessions",
-      "%2Ftest%2Fmalformed",
-      "grok-malformed-session",
-    );
-    await mkdir(sessionDir, { recursive: true });
-    await Bun.write(
-      path.join(sessionDir, "updates.jsonl"),
-      `${JSON.stringify({
-        timestamp: 1_788_721_616,
-        params: {
-          sessionId: "grok-malformed-session",
-          update: {
-            sessionUpdate: "turn_completed",
-            usage: { modelUsage: { "grok-4.5-build": "not-an-object" } },
-          },
-        },
-      })}\n`,
-    );
-    const source = createHistorySources().find(
-      (entry) => entry.name === "grok",
-    );
-    expect(source).toBeDefined();
-    const result = await source?.scan({ ...paths, grokHome });
-    expect(result?.available).toBe(false);
-    expect(result?.error).toContain("Malformed Grok model usage entry");
   });
 
   test("indexes middle messages and later oversized Conductor blocks", async () => {
@@ -437,6 +435,26 @@ describe("history source usage and redaction", () => {
     // with reasoningTokens (50) reported only as an informational subset.
     expect(reasoningEvent?.outputTokens).toBe(80);
     expect(reasoningEvent?.reasoningTokens).toBe(50);
+  });
+
+  test("rejects a Grok turn_completed record with a malformed model-usage entry", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-malformed",
+      "grok-malformed-session",
+      { modelUsage: { "grok-4.5-build": "not-an-object" } },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("Malformed Grok model usage entry");
+  });
+
+  test("rejects a nonnumeric Grok usage field instead of silently zeroing it", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-nonnumeric-usage",
+      "grok-nonnumeric-session",
+      { inputTokens: "100", outputTokens: 20 },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain('Malformed Grok usage field "inputTokens"');
   });
 });
 

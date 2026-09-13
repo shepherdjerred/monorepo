@@ -46,23 +46,59 @@ type GrokSessionMeta = {
   readonly defaultModel: string | null;
 };
 
-function numberValue(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+type GrokLineLocation = {
+  readonly filePath: string;
+  readonly lineNumber: number;
+};
+
+/**
+ * A usage field that's absent is a legitimate "not reported" case (e.g. a
+ * model with no extended reasoning omits `reasoningTokens` entirely) and
+ * defaults to zero. A field that's *present* but not a finite number is
+ * malformed data, not a legitimate zero — silently coercing it (as a bare
+ * `typeof value === "number"` check would) understates tokens and cost the
+ * same way an unvalidated `modelUsage` entry did, so it's rejected instead.
+ */
+function grokNumberField(
+  usage: Record<string, unknown>,
+  key: string,
+  location: GrokLineLocation,
+): number {
+  const value = usage[key];
+  if (value === undefined || value === null) {
+    return 0;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError(
+      `Malformed Grok usage field "${key}" on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  return value;
 }
 
-function grokReportedCost(ticksValue: unknown): UsageCost {
-  const ticks = numberValue(ticksValue);
+function grokReportedCost(
+  usage: Record<string, unknown>,
+  location: GrokLineLocation,
+): UsageCost {
+  const ticks = grokNumberField(usage, "costUsdTicks", location);
   return reportedCost(ticks > 0 ? ticks / TICKS_PER_USD : null);
 }
 
-function grokUsageCounts(usage: Record<string, unknown>): UsageCounts {
+function grokUsageCounts(
+  usage: Record<string, unknown>,
+  location: GrokLineLocation,
+): UsageCounts {
   return {
-    inputTokens: numberValue(usage["inputTokens"]),
-    outputTokens: numberValue(usage["outputTokens"]),
-    cacheReadTokens: numberValue(usage["cachedReadTokens"]),
-    cacheCreationTokens: numberValue(usage["cacheCreationTokens"]),
+    inputTokens: grokNumberField(usage, "inputTokens", location),
+    outputTokens: grokNumberField(usage, "outputTokens", location),
+    cacheReadTokens: grokNumberField(usage, "cachedReadTokens", location),
+    cacheCreationTokens: grokNumberField(
+      usage,
+      "cacheCreationTokens",
+      location,
+    ),
     cachedInputTokens: 0,
-    reasoningTokens: numberValue(usage["reasoningTokens"]),
+    reasoningTokens: grokNumberField(usage, "reasoningTokens", location),
   };
 }
 
@@ -87,7 +123,7 @@ function grokUsageEntries(
   usage: Record<string, unknown>,
   defaultModel: string,
   occurredAt: string,
-  location: { readonly filePath: string; readonly lineNumber: number },
+  location: GrokLineLocation,
 ): UsageEventEntry[] {
   const modelUsage = parseRecord(usage["modelUsage"]);
   if (modelUsage !== null && Object.keys(modelUsage).length > 0) {
@@ -101,8 +137,8 @@ function grokUsageEntries(
       return usageEventEntry(
         occurredAt,
         model,
-        grokUsageCounts(modelRecord),
-        grokReportedCost(modelRecord["costUsdTicks"]),
+        grokUsageCounts(modelRecord, location),
+        grokReportedCost(modelRecord, location),
       );
     });
   }
@@ -110,8 +146,8 @@ function grokUsageEntries(
     usageEventEntry(
       occurredAt,
       defaultModel,
-      grokUsageCounts(usage),
-      grokReportedCost(usage["costUsdTicks"]),
+      grokUsageCounts(usage, location),
+      grokReportedCost(usage, location),
     ),
   ];
 }
