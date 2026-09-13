@@ -165,10 +165,19 @@ async function buildAntigravityDocument(
       : (trajectoryFallbackMs ?? fallbackMs);
 
   const runtimeId = path.basename(filePath, ".db");
+  // Falling back to the database file's mtime here (rather than failing)
+  // would move that generation's usage into whatever `--since` window
+  // happens to contain the last time the file was touched — e.g. every
+  // historical event in a database opened once for an unrelated read.
   const usageEvents = timedEvents.map((timed) => {
+    if (timed.timestampMs === null) {
+      throw new Error(
+        `Antigravity usage event missing a timestamp: ${filePath}`,
+      );
+    }
     const model = timed.event.modelCandidates[0] ?? "unknown";
     return usageEventEntry(
-      new Date(timed.timestampMs ?? fallbackMs).toISOString(),
+      new Date(timed.timestampMs).toISOString(),
       model,
       timed.event.usage,
       catalogCost(timed.event.modelCandidates, timed.event.usage),

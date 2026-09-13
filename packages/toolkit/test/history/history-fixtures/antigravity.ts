@@ -32,6 +32,14 @@ function encodeVarintField(
   encodeVarint(value, out);
 }
 
+// A protobuf well-known Timestamp: field 1 is whole seconds since the Unix
+// epoch, matching what decodeTimestamp() in antigravity-usage.ts expects.
+function encodeTimestamp(seconds: number): number[] {
+  const out: number[] = [];
+  encodeVarintField(1, seconds, out);
+  return out;
+}
+
 function encodeModelUsage(usage: {
   readonly inputTokens: number;
   readonly totalOutputTokens: number;
@@ -82,6 +90,7 @@ export async function writeAntigravityFixture(
       const metadata: number[] = [];
       encodeBytesField(9, usage, metadata);
       encodeBytesField(24, modelInfo, metadata);
+      encodeBytesField(8, encodeTimestamp(1_786_406_400), metadata);
       database
         .prepare("INSERT INTO steps VALUES (1, ?)")
         .run(new Uint8Array(metadata));
@@ -104,9 +113,45 @@ export async function writeAntigravityFixture(
       const reasoningMetadata: number[] = [];
       encodeBytesField(9, reasoningUsage, reasoningMetadata);
       encodeBytesField(24, reasoningModelInfo, reasoningMetadata);
+      encodeBytesField(8, encodeTimestamp(1_786_406_500), reasoningMetadata);
       database
         .prepare("INSERT INTO steps VALUES (2, ?)")
         .run(new Uint8Array(reasoningMetadata));
+    },
+  );
+}
+
+/**
+ * A step with usage but no timestamp field (8) and no trajectory_metadata_blob
+ * table to fall back to — proves usage extraction fails the scan rather than
+ * manufacturing an event time from the database file's mtime.
+ */
+export async function writeAntigravityMissingTimestampFixture(
+  antigravityRoot: string,
+): Promise<void> {
+  const conversationsDir = path.join(antigravityRoot, "conversations");
+  await mkdir(conversationsDir, { recursive: true });
+  const dbFile = path.join(conversationsDir, "antigravity-no-timestamp.db");
+  writeDatabase(
+    dbFile,
+    "CREATE TABLE steps (idx INTEGER, metadata BLOB);",
+    (database) => {
+      const usage = encodeModelUsage({
+        inputTokens: 50,
+        totalOutputTokens: 5,
+      });
+      const modelInfo: number[] = [];
+      encodeBytesField(
+        12,
+        [...new TextEncoder().encode("claude-sonnet-5")],
+        modelInfo,
+      );
+      const metadata: number[] = [];
+      encodeBytesField(9, usage, metadata);
+      encodeBytesField(24, modelInfo, metadata);
+      database
+        .prepare("INSERT INTO steps VALUES (1, ?)")
+        .run(new Uint8Array(metadata));
     },
   );
 }

@@ -33,6 +33,7 @@ import type {
 import {
   catalogCost,
   optionalUsageNumber,
+  requiredAbsoluteTimestamp,
   requiredUsageNumber,
   usageEventEntry,
   type UsageCounts,
@@ -64,22 +65,29 @@ type ClaudeTranscript = {
  * which is why a usage-bearing record without one is rejected rather than
  * accumulated as if it were unique.
  *
- * `message.usage` being entirely absent is normal (e.g. a user-role record
- * never carries usage); `message.usage` being *present* but not an object,
- * or present with a missing/non-string model, is malformed — treating it
- * the same as "no usage" would silently drop that response's tokens/cost
- * while the scan reports success. The record's own `timestamp` is likewise
- * validated strictly here (never falling back to an epoch or file-mtime
- * default the way message indexing does), since a `--since` filter is only
- * as trustworthy as the timestamps stored on each usage event.
+ * `record.message` and `message.usage` being entirely absent is normal
+ * (many record types, and non-assistant messages, never carry either);
+ * either being *present* but not an object — or `message.usage` present
+ * with a missing/non-string model — is malformed. Treating it the same as
+ * "no usage" would silently drop that response's tokens/cost while the
+ * scan reports success. The record's own `timestamp` is likewise validated
+ * strictly here (never falling back to an epoch or file-mtime default the
+ * way message indexing does), since a `--since` filter is only as
+ * trustworthy as the timestamps stored on each usage event.
  */
 function claudeUsageEntry(
   record: Record<string, unknown>,
   location: UsageFieldLocation,
 ): ClaudeUsageEntry | null {
-  const message = parseRecord(record["message"]);
-  if (message === null) {
+  const messageValue = record["message"];
+  if (messageValue === undefined) {
     return null;
+  }
+  const message = parseRecord(messageValue);
+  if (message === null) {
+    throw new Error(
+      `Malformed Claude message container on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
   }
   const usageValue = message["usage"];
   if (usageValue === undefined) {
@@ -99,17 +107,14 @@ function claudeUsageEntry(
     );
   }
   const timestampValue = record["timestamp"];
-  const parsedTimestamp =
-    typeof timestampValue === "string"
-      ? Date.parse(timestampValue)
-      : Number.NaN;
-  if (Number.isNaN(parsedTimestamp)) {
-    throw new TypeError(
-      `Claude usage record missing a valid timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
-    );
-  }
+  const occurredAt = requiredAbsoluteTimestamp(
+    "Claude",
+    typeof timestampValue === "string" ? timestampValue : null,
+    "usage record",
+    location,
+  );
   return {
-    occurredAt: new Date(parsedTimestamp).toISOString(),
+    occurredAt,
     model,
     messageId,
     usage: {

@@ -17,7 +17,10 @@ import type {
   HistoryRecord,
   UsageEventEntry,
 } from "#lib/history/types.ts";
-import { writeAntigravityFixture } from "./history-fixtures/antigravity.ts";
+import {
+  writeAntigravityFixture,
+  writeAntigravityMissingTimestampFixture,
+} from "./history-fixtures/antigravity.ts";
 import { writeClaudeFixture } from "./history-fixtures/claude.ts";
 import {
   writeCodexFixture,
@@ -632,6 +635,38 @@ describe("rejects malformed usage data instead of understating it", () => {
       "Malformed Grok turn_completed usage container",
     );
   });
+
+  test("rejects a Codex turn_context missing its model instead of reusing the stale one", async () => {
+    const codexSessionsDir = path.join(
+      fixtureRoot,
+      "codex-missing-turn-context-model-sessions",
+    );
+    await mkdir(codexSessionsDir, { recursive: true });
+    await Bun.write(
+      path.join(codexSessionsDir, "rollout.jsonl"),
+      `${[
+        {
+          timestamp: "2026-08-08T00:00:00.000Z",
+          type: "session_meta",
+          payload: { session_id: "t-missing-model", id: "t-missing-model" },
+        },
+        {
+          timestamp: "2026-08-08T00:00:01.000Z",
+          type: "turn_context",
+          payload: { turn_id: "turn-1" },
+        },
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n")}\n`,
+    );
+    const source = createHistorySources().find(
+      (entry) => entry.name === "codex",
+    );
+    expect(source).toBeDefined();
+    const result = await source?.scan({ ...paths, codexSessionsDir });
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("Codex turn_context missing its model");
+  });
 });
 
 describe("rejects usage records with unreliable timestamps or identity", () => {
@@ -646,7 +681,7 @@ describe("rejects usage records with unreliable timestamps or identity", () => {
     expect(result?.error).toContain("missing its response id");
   });
 
-  test("rejects a Claude usage record missing a valid timestamp", async () => {
+  test("rejects a Claude usage record missing its timestamp", async () => {
     const result = await scanClaudeUsageFixture(
       "claude-missing-timestamp",
       "claude-missing-timestamp-session",
@@ -654,7 +689,42 @@ describe("rejects usage records with unreliable timestamps or identity", () => {
       { timestamp: null },
     );
     expect(result?.available).toBe(false);
-    expect(result?.error).toContain("missing a valid timestamp");
+    expect(result?.error).toContain("missing its timestamp");
+  });
+
+  test("rejects a Claude timestamp that parses but isn't an absolute instant", async () => {
+    const result = await scanClaudeUsageFixture(
+      "claude-non-absolute-timestamp",
+      "claude-non-absolute-timestamp-session",
+      { input_tokens: 100, output_tokens: 20 },
+      { timestamp: "2026-08-12T00:00:00" },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("invalid timestamp");
+  });
+
+  test("rejects a malformed Claude message container instead of treating it as absent", async () => {
+    const claudeProjects = path.join(
+      fixtureRoot,
+      "claude-malformed-message-container",
+    );
+    await mkdir(claudeProjects, { recursive: true });
+    await Bun.write(
+      path.join(claudeProjects, "session.jsonl"),
+      `${JSON.stringify({
+        type: "assistant",
+        sessionId: "claude-malformed-message-session",
+        timestamp: "2026-08-12T00:00:00Z",
+        message: "not-an-object",
+      })}\n`,
+    );
+    const source = createHistorySources().find(
+      (entry) => entry.name === "claude",
+    );
+    expect(source).toBeDefined();
+    const result = await source?.scan({ ...paths, claudeProjects });
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("Malformed Claude message container");
   });
 
   test("rejects a Codex token_usage_record missing its timestamp instead of dropping it", async () => {
@@ -756,6 +826,26 @@ describe("rejects usage records with unreliable timestamps or identity", () => {
     );
     expect(result?.available).toBe(false);
     expect(result?.error).toContain("missing a timestamp");
+  });
+
+  test("rejects an Antigravity usage event missing a timestamp", async () => {
+    const antigravityRoot = path.join(
+      fixtureRoot,
+      "antigravity-missing-timestamp",
+    );
+    await writeAntigravityMissingTimestampFixture(antigravityRoot);
+    const source = createHistorySources().find(
+      (entry) => entry.name === "antigravity",
+    );
+    expect(source).toBeDefined();
+    const result = await source?.scan({
+      ...paths,
+      antigravityRoots: [antigravityRoot],
+    });
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain(
+      "Antigravity usage event missing a timestamp",
+    );
   });
 });
 

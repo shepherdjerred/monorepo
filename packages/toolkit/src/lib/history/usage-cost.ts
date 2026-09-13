@@ -143,6 +143,48 @@ export function optionalUsageNumber(
   return validatedUsageNumber(source, value, key, location);
 }
 
+// Requires an absolute RFC 3339 instant (explicit "Z" or numeric offset),
+// matching the shape real usage timestamps use (e.g.
+// "2026-09-10T02:53:22.232Z"). `Date.parse` alone isn't a sufficient gate:
+// it also accepts an offset-less datetime (interpreted as local time — not
+// a stable absolute instant across machines) and numeric-looking strings
+// like "0", neither of which is a real usage timestamp.
+const RFC3339_TIMESTAMP =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+
+/**
+ * A usage-bearing record's timestamp isn't just "present" — it must be a
+ * real, absolute instant, since `history usage --since` compares stored
+ * `occurred_at` values lexicographically. A nonempty but malformed or
+ * non-absolute string would otherwise be stored verbatim and silently move
+ * the event into or out of arbitrary date windows. Shared across Claude and
+ * Codex, whose usage parsers both store a raw timestamp string.
+ */
+export function requiredAbsoluteTimestamp(
+  source: string,
+  timestamp: string | null,
+  eventLabel: string,
+  location: UsageFieldLocation,
+): string {
+  if (timestamp === null) {
+    throw new TypeError(
+      `${source} ${eventLabel} missing its timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  if (!RFC3339_TIMESTAMP.test(timestamp)) {
+    throw new TypeError(
+      `${source} ${eventLabel} has an invalid timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const parsedMs = Date.parse(timestamp);
+  if (Number.isNaN(parsedMs)) {
+    throw new TypeError(
+      `${source} ${eventLabel} has an invalid timestamp on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  return new Date(parsedMs).toISOString();
+}
+
 /** One priced usage event, tagged with when it actually happened. */
 export function usageEventEntry(
   occurredAt: string,
