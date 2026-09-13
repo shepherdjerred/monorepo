@@ -68,22 +68,91 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "ScoutTemporalWork", column: "payload" },
 ];
 
+type TrackedSource = {
+  table: string;
+  column: string;
+  json: boolean;
+  bareArray: boolean;
+  createdColumn: string;
+};
+
+const scalar = (
+  table: string,
+  column: string,
+  createdColumn: string,
+): TrackedSource => ({
+  table,
+  column,
+  json: false,
+  bareArray: false,
+  createdColumn,
+});
+
+const bareArrayJson = (
+  table: string,
+  column: string,
+  createdColumn: string,
+): TrackedSource => ({
+  table,
+  column,
+  json: true,
+  bareArray: true,
+  createdColumn,
+});
+
+const objectJson = (
+  table: string,
+  column: string,
+  createdColumn: string,
+): TrackedSource => ({
+  table,
+  column,
+  json: true,
+  bareArray: false,
+  createdColumn,
+});
+
 /**
- * Where a TRACKED identity is registered.
+ * Columns whose identities are NOT migrated.
  *
- * Only tracked players need re-domaining. Scout stores PUUIDs for every match
- * participant — opponents, premades, and people merely seen in a game — but
- * those are opaque strings we never resolve, join on, or show. Translating
- * them would mean thousands of extra Riot lookups against a 0.83 req/s budget
- * to repair identities nobody reads.
+ * Everything else that holds a PUUID is a tracked source. That default is
+ * deliberate and was learned the hard way: a column left out of collection is
+ * left in the old domain, and nothing fails loudly — an unmigrated Dare target
+ * simply never matches a participant again, an unmigrated duel member silently
+ * breaks lobby provisioning. Omissions are silent, so the list that has to be
+ * right is the short one, and each entry here states why it is safe.
  *
- * `Account` is the authority: it is the registration table, and every
- * `ActiveGame.trackedPuuids` entry in prod is already a subset of it. The
- * other two are named for tracking and included as a safety net in case a
- * future schema registers a tracked account somewhere else first.
+ * What these share is that they record who was *seen*, not who is *watched*:
+ * they carry every participant of a game, including opponents Scout never
+ * tracked, and nothing compares them against live match data afterwards. They
+ * are still rewritten — a mapped identity is translated wherever it appears —
+ * they are just not a reason to migrate an identity in the first place.
+ */
+export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
+  // Full match rosters: ten participants per game, mostly strangers.
+  { table: "BucksMatchPool", column: "roster" },
+  // Workflow payloads carrying whole match documents.
+  { table: "ScoutTemporalWork", column: "payload" },
+  // Ledger and settlement records, written once and read for history.
+  { table: "BucksLedgerEntry", column: "context" },
+  { table: "BucksMatchEarning", column: "targetSnapshotJson" },
+  // Stored query results, which can name any participant a query returned.
+  { table: "ExploreMessage", column: "preview" },
+  { table: "ExploreMessage", column: "trace" },
+  { table: "ScoutInteractiveRun", column: "trace" },
+];
+
+/**
+ * Where a tracked identity can live, and how to read and date it.
  *
- * Everything outside this set keeps its old-domain value. `collect` reports
- * how many that is rather than leaving it implicit.
+ * Two kinds of source sit here together. Registration says who Scout watches
+ * now. Frozen rosters — Dares, challenges, parlays, duels — pin their subjects
+ * at creation and keep matching them against live games long afterwards, so
+ * those PUUIDs stay load-bearing even once the account row is gone.
+ *
+ * Every entry needs a timestamp: an identity datable from no source at all
+ * cannot be judged against the cutover, so it is held as suspect and fails
+ * verification rather than being quietly excused.
  */
 export const TRACKED_SOURCES: readonly {
   table: string;
@@ -91,84 +160,34 @@ export const TRACKED_SOURCES: readonly {
   json: boolean;
   /** True only where a JSON array holds bare PUUID strings rather than objects. */
   bareArray: boolean;
-  /**
-   * When this row first recorded the identity. Every source needs one: an
-   * identity datable from no source at all cannot be judged against the cutover,
-   * so it is held as suspect and fails verification.
-   */
   createdColumn: string;
 }[] = [
-  // Registration: who Scout is watching right now.
-  {
-    table: "Account",
-    column: "puuid",
-    json: false,
-    bareArray: false,
-    createdColumn: "createdTime",
-  },
-  {
-    table: "MatchTrackedAccount",
-    column: "puuid",
-    json: false,
-    bareArray: false,
-    createdColumn: "createdAt",
-  },
-  {
-    table: "ActiveGame",
-    column: "trackedPuuids",
-    json: true,
-    bareArray: true,
-    createdColumn: "detectedAt",
-  },
-  // Frozen rosters that still drive evaluation. A Dare, challenge, or parlay
-  // pins its subjects at creation and keeps matching them against live games
-  // afterwards, so those PUUIDs stay load-bearing even once the account row is
-  // gone. Leaving one un-migrated does not fail loudly: `evaluateDareGame`
-  // simply never matches a new-domain participant, and the Dare quietly never
-  // resolves. Archives — match rosters, ledgers, settled snapshots, workflow
-  // payloads — are deliberately absent; they are rewritten, never compared.
-  {
-    table: "BucksDareTarget",
-    column: "accounts",
-    json: true,
-    bareArray: false,
-    createdColumn: "createdAt",
-  },
-  {
-    table: "BucksDareV2Target",
-    column: "accounts",
-    json: true,
-    bareArray: false,
-    createdColumn: "createdAt",
-  },
-  {
-    table: "BucksDareV2Revision",
-    column: "targetsJson",
-    json: true,
-    bareArray: false,
-    createdColumn: "createdAt",
-  },
-  {
-    table: "ChallengeRunRevision",
-    column: "selectedAccountsJson",
-    json: true,
-    bareArray: false,
-    createdColumn: "createdAt",
-  },
-  {
-    table: "BucksParlayDefinition",
-    column: "subjects",
-    json: true,
-    bareArray: false,
-    createdColumn: "createdAt",
-  },
-  {
-    table: "BucksWeeklyParlayDefinition",
-    column: "subjects",
-    json: true,
-    bareArray: false,
-    createdColumn: "openAt",
-  },
+  scalar("Account", "puuid", "createdTime"),
+  scalar("MatchTrackedAccount", "puuid", "createdAt"),
+  scalar("MatchRankHistory", "puuid", "capturedAt"),
+  scalar("CurrentRankSnapshot", "puuid", "createdAt"),
+  scalar("BucksBet", "subjectPuuid", "createdAt"),
+  scalar("ChallengeRunEvidence", "puuid", "createdAt"),
+  scalar("ChallengeRunCursor", "puuid", "updatedAt"),
+  scalar("DuelCompetitorMember", "puuid", "createdAt"),
+  scalar("CustomGameParticipant", "puuid", "createdAt"),
+  scalar("SummonerIndex", "puuid", "createdTime"),
+  scalar("InitialMatchHistoryImport", "puuid", "createdAt"),
+  bareArrayJson("ActiveGame", "trackedPuuids", "detectedAt"),
+  bareArrayJson("TournamentLobby", "bluePuuids", "createdAt"),
+  bareArrayJson("TournamentLobby", "redPuuids", "createdAt"),
+  bareArrayJson("TournamentLobby", "joinedPuuids", "createdAt"),
+  objectJson("BucksDareTarget", "accounts", "createdAt"),
+  objectJson("BucksDareV2Target", "accounts", "createdAt"),
+  objectJson("BucksDareV2Revision", "targetsJson", "createdAt"),
+  objectJson("BucksDareV2", "contractJson", "createdAt"),
+  objectJson("ChallengeRunRevision", "selectedAccountsJson", "createdAt"),
+  objectJson("BucksParlayDefinition", "subjects", "createdAt"),
+  objectJson("BucksWeeklyParlayDefinition", "subjects", "openAt"),
+  objectJson("BucksWeeklyParlayDefinition", "historySample", "openAt"),
+  objectJson("BucksWeeklyParlayContribution", "snapshot", "createdAt"),
+  objectJson("HallRecordCell", "holdersJson", "createdAt"),
+  objectJson("HallRecordCell", "evidenceJson", "createdAt"),
 ];
 
 /** Anything a driver will accept as a bound parameter. */

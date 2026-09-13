@@ -22,8 +22,10 @@ import {
   asOptionalString,
   asString,
   countOf,
+  ARCHIVE_COLUMNS,
   OLD_KEY_LIMITS,
   toSqlParam,
+  TRACKED_SOURCES,
 } from "./support.ts";
 
 export async function ensureMapTable(db: Db): Promise<void> {
@@ -53,6 +55,30 @@ export async function ensureMapTable(db: Db): Promise<void> {
   `);
 }
 
+/**
+ * Fail on any PUUID column that is neither a tracked source nor a declared
+ * archive. Omission is the dangerous direction — an unmigrated identity does
+ * not raise an error, it just stops matching — so the classification has to be
+ * explicit rather than assumed.
+ */
+function assertEveryColumnClassified(columns: readonly PuuidColumn[]): void {
+  const classified = new Set([
+    ...TRACKED_SOURCES.map((s) => `${s.table}.${s.column}`),
+    ...ARCHIVE_COLUMNS.map((a) => `${a.table}.${a.column}`),
+  ]);
+  const unclassified = columns
+    .map((c) => `${c.table}.${c.column}`)
+    .filter((key) => !classified.has(key));
+  if (unclassified.length > 0) {
+    throw new Error(
+      `These columns hold PUUIDs but are neither a tracked source nor a declared archive:\n` +
+        unclassified.map((k) => `  ${k}`).join("\n") +
+        `\nAdd each to TRACKED_SOURCES if anything compares its identities against live ` +
+        `match data, or to ARCHIVE_COLUMNS if it is only ever read as history.`,
+    );
+  }
+}
+
 export async function collect(db: Db): Promise<void> {
   const columns = await discoverColumns(db);
   console.log(
@@ -61,6 +87,14 @@ export async function collect(db: Db): Promise<void> {
   for (const c of columns) {
     console.log(`    ${c.table}.${c.column} (${c.kind})`);
   }
+
+  // Every PUUID-bearing column must be deliberately classified: a source whose
+  // identities get migrated, or an archive that is rewritten but never drives a
+  // comparison. An unclassified column is the silent failure this migration has
+  // hit twice — a Dare target and a duel member, both left in the old domain,
+  // both failing by simply never matching again. So a new one stops the run
+  // instead of being quietly skipped.
+  assertEveryColumnClassified(columns);
 
   console.log("");
   const tracked = await readTrackedPuuids(db);

@@ -362,3 +362,21 @@ test("collect maps an identity frozen in a Dare after its account is removed", a
   expect(rows.length).toBe(1);
   await db.close();
 });
+
+test("collect refuses a PUUID column nobody classified", async () => {
+  // The guard against the failure this migration hit twice: a column holding
+  // identities that nothing migrates, failing silently later because an
+  // unmigrated PUUID does not error, it just stops matching.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `CREATE TABLE "SomeNewFeature" ("id" INTEGER PRIMARY KEY, "puuid" TEXT)`,
+  );
+  await db.exec(`INSERT INTO "SomeNewFeature" VALUES (1, ${db.param(1)})`, [
+    OLD_A,
+  ]);
+  const { collect } = await import("./phases.ts");
+  await expect(collect(db)).rejects.toThrow(
+    /neither a tracked source nor a declared archive/,
+  );
+  await db.close();
+});
