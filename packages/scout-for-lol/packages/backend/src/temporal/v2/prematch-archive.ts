@@ -9,13 +9,13 @@ import type {
   ScoutGameRefV2,
 } from "@scout-for-lol/temporal/contracts-v2";
 import { scoutPrematchGameV2MatchId } from "@scout-for-lol/temporal/identifiers";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
 import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt-row.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   lakeStagingReceiptKind,
-  rawArchiveEvidenceCodec,
   rawArchiveReceiptKind,
   type ReceiptRecordOutcome,
 } from "#src/report-lake/durable-receipts.ts";
@@ -97,17 +97,15 @@ export function receiptedCommitV2(
   }
 }
 
-function storedDescriptor(
-  receipts: readonly MatchProcessingReceiptRecord[],
-): ArtifactDescriptor | null {
-  const kind = rawArchiveReceiptKind("prematch");
-  const archived = receipts.find((record) => record.receipt.kind === kind);
-  if (archived?.evidence == null) return null;
-  return rawArchiveEvidenceCodec.parse(JSON.parse(archived.evidence));
-}
-
 /**
- * Put the spectator payload in S3 unless a previous attempt already did.
+ * Put the spectator payload in S3 unless it is already there.
+ *
+ * The gate is the DOOR's, not this Activity's. `archivePrematchReceipted` reads
+ * the standing receipt, puts and attests inside one advisory-locked
+ * transaction, so it — and only it — can answer that question without racing
+ * the other pipeline, which enters through the same door. This translates its
+ * three answers into the V2 contract's vocabulary and adds nothing to the
+ * decision.
  *
  * `null` is the dev/test no-bucket path: nothing was archived, so there is no
  * descriptor to name and no honest claim to record — and without a descriptor
@@ -116,22 +114,20 @@ function storedDescriptor(
  */
 async function archiveSnapshotV2(
   context: ScoutV2PrematchContext,
-  receipts: readonly MatchProcessingReceiptRecord[],
 ): Promise<ScoutArchivedArtifactV2 | null> {
   const kind = rawArchiveReceiptKind("prematch");
-  const stored = storedDescriptor(receipts);
-  if (stored !== null) {
-    return {
-      descriptor: stored,
-      outcome: "already-stored",
-      receipt: { kind, commit: { outcome: "already-applied" } },
-    };
-  }
   const result = await archivePrematchReceipted(
     context.gameInfo,
     context.trackedPlayers.map((player) => player.alias),
   );
   if (result.status === "skipped_no_bucket") return null;
+  if (result.status === "already_archived") {
+    return {
+      descriptor: result.artifact,
+      outcome: "already-stored",
+      receipt: { kind, commit: { outcome: "already-applied" } },
+    };
+  }
   return {
     descriptor: result.artifact,
     outcome: "stored",
@@ -187,6 +183,28 @@ async function stageSnapshotV2(
 }
 
 /**
+ * The archive and its lake projection, each skipped if it already stands.
+ *
+ * The staging receipts are read AFTER the door returns rather than alongside
+ * it. The door commits its own transaction before answering, so a read taken
+ * beforehand could not see a receipt a rival capture wrote while this one
+ * waited on the fence.
+ */
+async function captureArtifactsV2(
+  context: ScoutV2PrematchContext,
+  observedAt: Date,
+  riotMatchId: RiotMatchId,
+): Promise<ScoutArchivedArtifactV2[]> {
+  const archived = await archiveSnapshotV2(context);
+  if (archived === null) return [];
+  const receipts = await listReceipts(prisma, { matchId: riotMatchId });
+  return [
+    archived,
+    await stageSnapshotV2(context, observedAt, receipts, archived.descriptor),
+  ];
+}
+
+/**
  * Capture one live game, at most once, and record who is owed a notification.
  *
  * A game that is no longer live comes back with no artifacts: the snapshot was
@@ -208,21 +226,7 @@ export async function archivePrematchSnapshotV2(
   if (context === null) return { artifacts: [], riotMatchId };
 
   const observedAt = new Date();
-  const receipts = await listReceipts(prisma, { matchId: riotMatchId });
-  const archived = await archiveSnapshotV2(context, receipts);
-  const artifacts: ScoutArchivedArtifactV2[] =
-    archived === null
-      ? []
-      : [
-          archived,
-          await stageSnapshotV2(
-            context,
-            observedAt,
-            receipts,
-            archived.descriptor,
-          ),
-        ];
-
+  const artifacts = await captureArtifactsV2(context, observedAt, riotMatchId);
   await recordPrematchDeliveryIntentsV2(context, observedAt);
   return { artifacts, riotMatchId };
 }

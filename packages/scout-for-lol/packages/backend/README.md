@@ -170,12 +170,11 @@ per-match core on purpose.
 There is no resume-point read, because there is nothing for one to answer: the
 pipeline-state aggregate hangs off `MatchObservation`, and a live game has not
 been observed yet by definition. The per-game Workflow has one phase instead of
-four, so its replay gate lives inside `archivePrematchSnapshotV2`, which reads
-its own `raw-archive-prematch` and `lake-staging-prematch` receipts before
-writing either. There are also no V2 stage receipts here — those exist so a
-resumed run can gate a phase whose evidence it cannot reconstruct, and the two
-evidence-bearing receipts this path writes already answer exactly the question
-it asks.
+four, so its replay gate is the receipts themselves — the archive's inside the
+door (below), the lake projection's inside `archivePrematchSnapshotV2`. There
+are also no V2 stage receipts here: those exist so a resumed run can gate a
+phase whose evidence it cannot reconstruct, and the two evidence-bearing
+receipts this path writes already answer exactly the question it asks.
 
 The capture stages the lake rows inline rather than deferring to
 `stageLakeProjectionV2`, which is the one place this path diverges from the
@@ -183,10 +182,45 @@ per-match core's separation of archive from projection. It has nowhere to defer
 to: `scoutLakeProjectionV2Workflow` is keyed by a match id and projects the
 MatchV5 payload, which does not exist while the game is still being played.
 
-A receipt conflict is never returned as a commit. Both writes are gated on a
-receipt read, so `receipt-evidence-mismatch` can only mean another writer
-recorded different evidence for the same identity in between — two producers
-disagreeing about the snapshot's canonical bytes. Reporting it as a commit
+### The prematch archive door is fenced
+
+`archivePrematchReceipted` is the only one of the three archive doors that
+takes an advisory lock, and the asymmetry is in the data rather than in the
+pipeline. A prematch S3 key is deterministic but the spectator PAYLOAD is not —
+`gameLength` advances between fetches — so two captures of one game write
+different bytes to the same key. A match or timeline payload is immutable once
+the game is over, so a repeat put writes byte-identical content and only the
+descriptor's `capturedAt` differs; the key and digest an attestation names stay
+true of the object either way.
+
+Unfenced, the prematch race is not merely a duplicated put. The second attempt
+overwrites the object and only THEN discovers the receipt mismatch, so S3 ends
+up holding the second capture's bytes under the first's attested digest — the
+object and its attestation permanently disagree, which is precisely what the
+receipt table exists to rule out.
+
+Serializing alone would not fix that: an attempt that waited its turn and then
+put anyway would still overwrite, just in an orderly fashion. So the lock wraps
+the read-gate, the put and the attestation as one critical section, and a
+snapshot already archived is answered from its standing receipt with no put at
+all. The fence lives in the DOOR rather than in either caller because both
+pipelines enter through it — v1 via `ingestPrematch`, V2 via
+`archivePrematchSnapshotV2` — and a fence at one call site would serialize that
+caller against itself while leaving the cross-pipeline race open.
+
+The attestation is written through the fencing transaction so the arrangement
+fails closed: an advisory xact lock dies with its transaction, and Prisma ends
+one on its own timer as well as on its callback, so a put that outran the lock
+lifetime would be running unfenced — and an aborted transaction cannot record a
+receipt. No attestation is ever written for a put the fence could not vouch
+for. `prematch-archive-fence.integration.test.ts` proves the serialization
+against a real Postgres rather than a double, since a double would serialize by
+construction and prove nothing.
+
+A receipt conflict is still never returned as a commit, and the fence does not
+make that redundant: it serializes captures that go through the door, so the
+throw remains the answer for any disagreement the lock does not cover.
+Reporting a conflict as a commit
 would put that receipt's kind in the Workflow's `receiptKinds`, so the run
 would claim an attestation it does not hold and then complete, leaving the
 drift inside one Activity result no later poll re-examines. It throws

@@ -1,7 +1,10 @@
 import { z } from "zod";
 import type { Db } from "#src/database/index.ts";
 import { prisma } from "#src/database/index.ts";
-import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
+import {
+  listReceipts,
+  recordReceipt,
+} from "#src/database/durable/receipt-repository.ts";
 import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt-row.ts";
 import { createLogger } from "#src/logger.ts";
 import {
@@ -13,6 +16,7 @@ import {
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
 import {
   ArtifactDescriptorSchema,
+  type ArtifactDescriptor,
   type ArtifactKind,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import {
@@ -139,6 +143,32 @@ export function prematchReceiptMatchId(
 
 export function receiptMatchId(matchId: string): RiotMatchId {
   return RiotMatchIdSchema.parse(matchId);
+}
+
+/**
+ * The descriptor of an artifact this pipeline already archived, read back from
+ * its own raw-archive receipt.
+ *
+ * The receipt is the hand-off between writers that cannot share memory: a
+ * raw-archive receipt's evidence IS the `ArtifactDescriptor`, so a later pass
+ * reports the identity the pass that archived it recorded, rather than
+ * reconstructing a key from the layout convention — which would be evidence of
+ * nothing.
+ *
+ * It lives here, beside the receipt kind and the evidence codec it is built
+ * from, because two callers need the same answer: the archive door gates its
+ * put on it, and the V2 capture reports it.
+ */
+export async function storedRawArchiveDescriptor(
+  db: Db,
+  matchId: RiotMatchId,
+  artifact: ArtifactKind,
+): Promise<ArtifactDescriptor | null> {
+  const kind = rawArchiveReceiptKind(artifact);
+  const receipts = await listReceipts(db, { matchId });
+  const archived = receipts.find((record) => record.receipt.kind === kind);
+  if (archived?.evidence == null) return null;
+  return rawArchiveEvidenceCodec.parse(JSON.parse(archived.evidence));
 }
 
 export function buildReceipt(args: {

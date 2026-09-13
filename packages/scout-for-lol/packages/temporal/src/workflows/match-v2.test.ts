@@ -348,7 +348,7 @@ describe("a V2 per-match run killed mid-pipeline", () => {
     // to attest to the phase or move the cursor — either would bury the drift
     // behind a resume point that says the work is done.
     const store = createScoutV2MatchStore({ failAt: "settleMatchMarketsV2" });
-    await startWorkers(scoutV2MatchActivityStubs(store));
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     await expect(processMatch("match-settle-conflict")).rejects.toThrow();
 

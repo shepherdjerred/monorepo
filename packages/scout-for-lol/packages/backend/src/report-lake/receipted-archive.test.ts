@@ -28,11 +28,26 @@ import {
 
 const mocks = vi.hoisted(() => ({
   recordReceipt: vi.fn(),
+  /** No receipt stands, so the prematch door's gate falls through to its put. */
+  listReceipts: vi.fn(() => []),
 }));
 
-vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
+/**
+ * The prematch door opens an advisory-locked transaction around its
+ * read-gate/put/attest sequence, so the double has to be able to run one. The
+ * callback is invoked directly: these tests are about which receipts each
+ * artifact produces, and the fence's own serialization is proved against a real
+ * Postgres in `prematch-archive-fence.integration.test.ts`.
+ */
+vi.mock("#src/database/index.ts", () => ({
+  prisma: {
+    $transaction: (run: (tx: unknown) => unknown) =>
+      run({ $executeRaw: () => Promise.resolve(0) }),
+  },
+}));
 vi.mock("#src/database/durable/receipt-repository.ts", () => ({
   recordReceipt: mocks.recordReceipt,
+  listReceipts: mocks.listReceipts,
 }));
 
 const ARTIFACT_KINDS = ArtifactKindSchema.options;
