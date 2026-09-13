@@ -81,19 +81,13 @@ export function catalogScoutDesktopRetirementPreflightImageDigests(
     if (!entry.name.startsWith("shepherdjerred/scout-for-lol/")) {
       continue;
     }
-    if (
-      entry.notes?.includes(SCOUT_DESKTOP_RETIREMENT_PREFLIGHT_IMAGE_NOTE) !==
-      true
-    ) {
-      continue;
+    for (const note of entry.notes ?? []) {
+      const prefix = `${SCOUT_DESKTOP_RETIREMENT_PREFLIGHT_IMAGE_NOTE} `;
+      if (!note.startsWith(prefix)) {
+        continue;
+      }
+      digests.add(ScoutImageDigestSchema.parse(note.slice(prefix.length)));
     }
-    const digest = entry.value.split("@")[1];
-    if (digest === undefined) {
-      throw new Error(
-        `${entry.name} has a desktop retirement preflight but no digest`,
-      );
-    }
-    digests.add(ScoutImageDigestSchema.parse(digest));
   }
   return digests;
 }
