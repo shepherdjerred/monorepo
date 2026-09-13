@@ -79,4 +79,17 @@ export {
   scoutHallBaselineWorkflowId,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
+  SCOUT_V2_ACTIVITY_QUEUE_CLASSES,
+  SCOUT_V2_WORKFLOW_NAMES,
+  scoutLakeProjectionV2WorkflowId,
+  scoutMatchProcessingV2WorkflowId,
+  scoutNotificationAttemptNonce,
+  scoutNotificationV2WorkflowId,
+  scoutPipelineReconciliationV2WorkflowId,
+  scoutPostMatchDiscoveryV2WorkflowId,
+  scoutPrematchDiscoveryV2WorkflowId,
+  scoutPrematchGameV2MatchId,
+  scoutPrematchGameV2WorkflowId,
+  scoutRecoveryBatchV2WorkflowId,
 } from "./identifiers.ts";
+export type { ScoutV2WorkflowName } from "./identifiers.ts";
