@@ -90,11 +90,16 @@ function freshMatch(gameId: number): RawMatch {
   });
 }
 
-async function seedCompletedSend(
-  key: string,
-  sentAt: Date,
-  completedAt: Date,
-): Promise<void> {
+/**
+ * A send this match made an hour into its delivery window, already claimed
+ * complete — the shape every case here starts from: the Discord message went
+ * out and the claim proves it, while the intent writes of that run did not
+ * land. Returns the instant the claim records as the delivery, which is what
+ * an adoption has to reproduce.
+ */
+async function seedCompletedSend(match: RawMatch, key: string): Promise<Date> {
+  const sentAt = new Date(match.info.gameCreation + 60 * 60 * 1000);
+  const completedAt = new Date(sentAt.getTime() + 700);
   await prisma.scoutEffectClaim.create({
     data: {
       key,
@@ -104,6 +109,22 @@ async function seedCompletedSend(
       claimedAt: sentAt,
       completedAt,
     },
+  });
+  return completedAt;
+}
+
+/** The intent for `key` was finished from its claim, at the claim's instant. */
+async function expectAdoptedAsDelivered(
+  key: string,
+  deliveredAt: Date,
+): Promise<void> {
+  const stored = await getIntent(prisma, {
+    intentKey: NotificationIntentKeySchema.parse(key),
+  });
+  expect(stored?.intent.state).toEqual({
+    kind: "delivered",
+    messageId: MESSAGE_ID,
+    deliveredAt: deliveredAt.toISOString(),
   });
 }
 
@@ -141,36 +162,18 @@ describe("a report that went stale before its intent was finished", () => {
     // three-hour deadline — exactly the case where no later pass could ever
     // reach the completed-claim branch.
     const match = staleMatch(7701);
-    const sentAt = new Date(match.info.gameCreation + 60 * 60 * 1000);
-    const completedAt = new Date(sentAt.getTime() + 1500);
-    // The send succeeded and its claim was completed; every durable intent
-    // write of that run was lost, so there is no intent row at all.
-    await prisma.scoutEffectClaim.create({
-      data: {
-        key: effectKeyFor(match),
-        kind: "discord-channel-message",
-        state: "COMPLETED",
-        resultId: MESSAGE_ID,
-        claimedAt: sentAt,
-        completedAt,
-      },
-    });
+    const completedAt = await seedCompletedSend(match, effectKeyFor(match));
 
     expect(await deliver(match)).toBe(0);
 
     // Nothing new went out: the report is still too old to send.
     expect(deliverToChannels).not.toHaveBeenCalled();
-
-    const stored = await getIntent(prisma, {
-      intentKey: NotificationIntentKeySchema.parse(effectKeyFor(match)),
-    });
     // Delivered, carrying the instant the send was actually observed rather
     // than this pass's clock — which is also what lets `beginSend`'s freshness
     // guard accept an adoption running hours past the deadline.
-    expect(stored?.intent.state).toEqual({
-      kind: "delivered",
-      messageId: MESSAGE_ID,
-      deliveredAt: completedAt.toISOString(),
+    await expectAdoptedAsDelivered(effectKeyFor(match), completedAt);
+    const stored = await getIntent(prisma, {
+      intentKey: NotificationIntentKeySchema.parse(effectKeyFor(match)),
     });
     expect(stored?.intent.attemptCount).toBe(1);
   });
@@ -180,31 +183,13 @@ describe("a report that went stale before its intent was finished", () => {
     // subscriptions: the send happened when the channel was subscribed, and
     // the claim that proves it does not care who is subscribed now.
     const match = staleMatch(7703);
-    const sentAt = new Date(match.info.gameCreation + 60 * 60 * 1000);
-    const completedAt = new Date(sentAt.getTime() + 900);
-    await prisma.scoutEffectClaim.create({
-      data: {
-        key: effectKeyFor(match),
-        kind: "discord-channel-message",
-        state: "COMPLETED",
-        resultId: MESSAGE_ID,
-        claimedAt: sentAt,
-        completedAt,
-      },
-    });
+    const completedAt = await seedCompletedSend(match, effectKeyFor(match));
     subscribedChannels = [];
 
     expect(await deliver(match)).toBe(0);
 
     expect(deliverToChannels).not.toHaveBeenCalled();
-    const stored = await getIntent(prisma, {
-      intentKey: NotificationIntentKeySchema.parse(effectKeyFor(match)),
-    });
-    expect(stored?.intent.state).toEqual({
-      kind: "delivered",
-      messageId: MESSAGE_ID,
-      deliveredAt: completedAt.toISOString(),
-    });
+    await expectAdoptedAsDelivered(effectKeyFor(match), completedAt);
   });
 
   test("a stale match with no completed claim records nothing and sends nothing", async () => {
@@ -230,21 +215,12 @@ describe("a still-sendable report whose earlier delivery is unfinished", () => {
     const match = freshMatch(7704);
     const departed = testChannelId("7799");
     const departedKey = `postmatch-discord:${match.metadata.matchId}:${departed}`;
-    const sentAt = new Date(Date.now() - 50 * 60 * 1000);
-    const completedAt = new Date(sentAt.getTime() + 700);
-    await seedCompletedSend(departedKey, sentAt, completedAt);
+    const completedAt = await seedCompletedSend(match, departedKey);
 
     await deliverPostmatchReport({ matchData: match, trackedPlayers: [] });
 
-    // Finished from its claim, at the instants that send really happened.
-    const stored = await getIntent(prisma, {
-      intentKey: NotificationIntentKeySchema.parse(departedKey),
-    });
-    expect(stored?.intent.state).toEqual({
-      kind: "delivered",
-      messageId: MESSAGE_ID,
-      deliveredAt: completedAt.toISOString(),
-    });
+    // Finished from its claim, at the instant that send really happened.
+    await expectAdoptedAsDelivered(departedKey, completedAt);
 
     // Nothing was sent to it: the delivery pass only ever saw the channel that
     // is still subscribed, which is otherwise unaffected.
