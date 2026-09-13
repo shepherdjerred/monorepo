@@ -1,8 +1,10 @@
-import type {
-  RawCurrentGameInfo,
-  RawMatch,
-  RawTimeline,
+import {
+  RawCurrentGameInfoSchema,
+  type RawCurrentGameInfo,
+  type RawMatch,
+  type RawTimeline,
 } from "@scout-for-lol/data";
+import configuration from "#src/configuration.ts";
 import {
   prisma,
   type Db,
@@ -24,6 +26,8 @@ import {
   archiveTimelineToS3,
   savePrematchDataToS3,
 } from "#src/storage/s3.ts";
+import { readVerifiedRawObjectText } from "#src/report-store/s3-raw-source.ts";
+import { createS3Client } from "#src/storage/s3-client.ts";
 
 /**
  * The receipted entry point into raw S3 archival.
@@ -65,6 +69,11 @@ type ReceiptOptions = {
   db?: Db;
   /** Injectable so tests need no wall clock; defaults to now. */
   now?: Date;
+  /**
+   * Shrinks the put deadline so a test can drive the expiry path in
+   * milliseconds; nothing in production passes it.
+   */
+  putDeadlineMs?: number;
   /**
    * The client the prematch door opens its fencing transaction on. Injectable
    * so a test can drive two genuinely concurrent captures against one
@@ -132,10 +141,16 @@ export async function archiveTimelineReceipted(
  * What the prematch door did, which needs one more answer than the others.
  *
  * `already_archived` exists because the prematch door GATES its put — see
- * {@link archivePrematchReceipted} — so "this snapshot is already stored, here
- * is its identity" is a distinct outcome from "I stored it just now". Both
- * carry the artifact, because a caller staging the lake rows needs the source
- * descriptor either way.
+ * {@link archivePrematchReceipted} — so "this snapshot is already stored" is a
+ * distinct outcome from "I stored it just now".
+ *
+ * It carries the CANONICAL payload as well as the descriptor, and that pairing
+ * is the point. A caller holding a fresher spectator payload would otherwise
+ * stage rows derived from ITS bytes while the staging receipt named the
+ * archived object they did not come from, leaving the lake disagreeing with
+ * both its own receipt and canonical S3. Handing back the bytes the descriptor
+ * actually describes makes staging the wrong ones unrepresentable rather than
+ * merely discouraged.
  */
 export type ReceiptedPrematchArchiveResult =
   | {
@@ -143,18 +158,107 @@ export type ReceiptedPrematchArchiveResult =
       artifact: ArtifactDescriptor;
       receipt: ReceiptRecordOutcome;
     }
-  | { status: "already_archived"; artifact: ArtifactDescriptor }
+  | {
+      status: "already_archived";
+      artifact: ArtifactDescriptor;
+      /** The archived object's own contents, verified against the receipt. */
+      canonical: RawCurrentGameInfo;
+    }
   | { status: "skipped_no_bucket" };
 
 const PREMATCH_ARCHIVE_LOCK_NAMESPACE = "scout-prematch-archive";
 /** Pool wait for the fencing transaction's own connection. */
 const PREMATCH_ARCHIVE_LOCK_MAX_WAIT_MS = 10_000;
 /**
- * How long the fence may hold. It must cover the advisory-lock wait, one S3
- * put and one receipt insert, and still leave room inside the 90-second
+ * The fence's budget, and why the two numbers differ.
+ *
+ * `LIFETIME` is how long the advisory lock may be held: it must cover the lock
+ * wait, one S3 put and one receipt insert, and still fit inside the 90-second
  * start-to-close budget of the realtime Activity that calls it.
+ *
+ * `PUT_DEADLINE` bounds the put STRICTLY INSIDE that lifetime, and the margin
+ * between them is the whole reason it exists. An S3 put is not one request: the
+ * SDK's own request timeout multiplied by `MAX_PUT_ATTEMPTS` plus backoff can
+ * exceed the transaction's lifetime on its own. When a Prisma transaction hits
+ * its timer it rolls back and releases the lock WITHOUT cancelling anything
+ * still in flight, so an unbounded put becomes a zombie: a rival acquires the
+ * freed lock, writes and attests its own bytes, and the zombie put then lands
+ * the older body over them — leaving the object disagreeing with the receipt
+ * that vouches for it.
+ *
+ * So the put is both raced and CANCELLED at the deadline, with 20 seconds of
+ * margin left for the attestation to commit under a lock that is provably still
+ * held. This mirrors the 600/900 split `temporal/v2/effect-fence.ts` documents
+ * for the same class of hazard.
  */
 const PREMATCH_ARCHIVE_LOCK_LIFETIME_MS = 45_000;
+const PREMATCH_ARCHIVE_PUT_DEADLINE_MS = 25_000;
+
+/**
+ * Run the put, and refuse to let it outlive the lock fencing it.
+ *
+ * Two mechanisms, doing different jobs. The race guarantees this function
+ * SETTLES at the deadline even if the transport ignores cancellation, so the
+ * caller never blocks past the lock's lifetime. The abort actually STOPS the
+ * request, which is what keeps a cancelled put from landing later — a race
+ * alone would abandon the put, not cancel it, and an abandoned put is exactly
+ * the zombie this exists to prevent.
+ *
+ * Both fail closed: the put throws, no receipt is written, and the Activity's
+ * retry re-enters the fence cleanly.
+ */
+/**
+ * The archived snapshot's own contents, verified against the receipt that
+ * attests them.
+ *
+ * The digest comes from the receipt rather than from the object's metadata, so
+ * this checks the bytes against what was ATTESTED rather than against what they
+ * claim about themselves. Failing loudly is the only safe answer: a caller
+ * about to stage lake rows from this payload would otherwise project content
+ * nothing vouches for.
+ */
+async function readCanonicalPrematch(
+  descriptor: ArtifactDescriptor,
+  matchId: string,
+): Promise<RawCurrentGameInfo> {
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) {
+    throw new Error(
+      `A raw-archive receipt stands for ${matchId} but no S3 bucket is configured, so the snapshot it attests to cannot be read back`,
+    );
+  }
+  const text = await readVerifiedRawObjectText({
+    client: createS3Client(),
+    bucket,
+    key: descriptor.key,
+    expectedDigest: descriptor.digest,
+  });
+  return RawCurrentGameInfoSchema.parse(JSON.parse(text));
+}
+
+async function putWithinDeadline<T>(
+  deadlineMs: number,
+  key: string,
+  run: (abortSignal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(
+        new Error(
+          `Archiving ${key} exceeded its ${deadlineMs.toString()}ms fence deadline; the upload was cancelled rather than left to land after the lock is released`,
+        ),
+      );
+    }, deadlineMs);
+  });
+  try {
+    return await Promise.race([run(controller.signal), deadline]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
 
 /**
  * Archive one prematch snapshot, at most once, under a fence.
@@ -218,12 +322,22 @@ export async function archivePrematchReceipted(
       `;
       const stored = await storedRawArchiveDescriptor(tx, matchId, "prematch");
       if (stored !== null) {
-        return { status: "already_archived", artifact: stored };
+        return {
+          status: "already_archived",
+          artifact: stored,
+          canonical: await readCanonicalPrematch(stored, matchId),
+        };
       }
-      const result = await savePrematchDataToS3(
-        gameInfo.gameId,
-        gameInfo,
-        trackedPlayerAliases,
+      const result = await putWithinDeadline(
+        options.putDeadlineMs ?? PREMATCH_ARCHIVE_PUT_DEADLINE_MS,
+        matchId,
+        async (abortSignal) =>
+          await savePrematchDataToS3(
+            gameInfo.gameId,
+            gameInfo,
+            trackedPlayerAliases,
+            abortSignal,
+          ),
       );
       if (
         result.status === "skipped_no_bucket" ||

@@ -1,5 +1,5 @@
 import { ApplicationFailure } from "@temporalio/common";
-import type { ArtifactDescriptor } from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import type {
   ScoutArchivedArtifactV2,
   ScoutPrematchArchiveV2Result,
@@ -113,9 +113,19 @@ export function receiptedCommitV2(
  * there is no source for a staging receipt either, exactly as v1 falls back to
  * the unreceipted staging door there.
  */
+type CapturedSnapshotV2 = {
+  readonly artifact: ScoutArchivedArtifactV2;
+  /**
+   * The bytes the descriptor actually describes, which the lake projection has
+   * to be derived from. They are this run's payload when it did the archiving,
+   * and the earlier capture's when the door found one already stored.
+   */
+  readonly canonical: RawCurrentGameInfo;
+};
+
 async function archiveSnapshotV2(
   context: ScoutV2PrematchContext,
-): Promise<ScoutArchivedArtifactV2 | null> {
+): Promise<CapturedSnapshotV2 | null> {
   const kind = rawArchiveReceiptKind("prematch");
   const result = await archivePrematchReceipted(
     context.gameInfo,
@@ -124,20 +134,26 @@ async function archiveSnapshotV2(
   if (result.status === "skipped_no_bucket") return null;
   if (result.status === "already_archived") {
     return {
-      descriptor: result.artifact,
-      outcome: "already-stored",
-      receipt: { kind, commit: { outcome: "already-applied" } },
+      canonical: result.canonical,
+      artifact: {
+        descriptor: result.artifact,
+        outcome: "already-stored",
+        receipt: { kind, commit: { outcome: "already-applied" } },
+      },
     };
   }
   return {
-    descriptor: result.artifact,
-    outcome: "stored",
-    receipt: {
-      kind,
-      commit: receiptedCommitV2(
-        result.receipt,
-        `Archived the ${context.riotMatchId} spectator snapshot`,
-      ),
+    canonical: context.gameInfo,
+    artifact: {
+      descriptor: result.artifact,
+      outcome: "stored",
+      receipt: {
+        kind,
+        commit: receiptedCommitV2(
+          result.receipt,
+          `Archived the ${context.riotMatchId} spectator snapshot`,
+        ),
+      },
     },
   };
 }
@@ -149,14 +165,21 @@ async function archiveSnapshotV2(
  * The staging receipt's evidence is derived from the source descriptor and the
  * file list alone, so a retry that did re-stage would serialize byte-identical
  * evidence; the read is what keeps the file write itself from repeating.
+ *
+ * The rows come from `captured.canonical` rather than from the capture
+ * context's own payload, because those are not always the same bytes: when the
+ * door reports the snapshot already archived, its descriptor describes an
+ * earlier capture of this game. Projecting the fresher payload under that
+ * descriptor would make the lake disagree with its own receipt.
  */
 async function stageSnapshotV2(
-  context: ScoutV2PrematchContext,
+  captured: CapturedSnapshotV2,
+  riotMatchId: RiotMatchId,
   observedAt: Date,
   receipts: readonly MatchProcessingReceiptRecord[],
-  descriptor: ArtifactDescriptor,
 ): Promise<ScoutArchivedArtifactV2> {
   const kind = lakeStagingReceiptKind("prematch");
+  const descriptor = captured.artifact.descriptor;
   if (receipts.some((record) => record.receipt.kind === kind)) {
     return {
       descriptor,
@@ -166,7 +189,7 @@ async function stageSnapshotV2(
   }
   const staged = await stagePrematchReceipted(
     resolveLakeDir(),
-    context.gameInfo,
+    captured.canonical,
     observedAt,
     { source: descriptor },
   );
@@ -177,7 +200,7 @@ async function stageSnapshotV2(
       kind,
       commit: receiptedCommitV2(
         staged.receipt,
-        `Staged the ${context.riotMatchId} spectator snapshot into the report lake`,
+        `Staged the ${riotMatchId} spectator snapshot into the report lake`,
       ),
     },
   };
@@ -196,12 +219,12 @@ async function captureArtifactsV2(
   observedAt: Date,
   riotMatchId: RiotMatchId,
 ): Promise<ScoutArchivedArtifactV2[]> {
-  const archived = await archiveSnapshotV2(context);
-  if (archived === null) return [];
+  const captured = await archiveSnapshotV2(context);
+  if (captured === null) return [];
   const receipts = await listReceipts(prisma, { matchId: riotMatchId });
   return [
-    archived,
-    await stageSnapshotV2(context, observedAt, receipts, archived.descriptor),
+    captured.artifact,
+    await stageSnapshotV2(captured, riotMatchId, observedAt, receipts),
   ];
 }
 

@@ -195,6 +195,7 @@ export async function savePrematchDataToS3(
   gameId: number,
   gameInfo: RawCurrentGameInfo,
   trackedPlayerAliases: string[],
+  abortSignal?: AbortSignal,
 ): Promise<PrematchPayloadSaveResult> {
   const body = JSON.stringify(gameInfo, null, 2);
   const startTime = Date.now();
@@ -206,6 +207,7 @@ export async function savePrematchDataToS3(
       extension: "json",
       body,
       contentType: "application/json",
+      ...(abortSignal === undefined ? {} : { abortSignal }),
       metadata: {
         gameId: gameId.toString(),
         gameMode: gameInfo.gameMode,

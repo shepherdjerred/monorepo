@@ -244,6 +244,27 @@ for. `prematch-archive-fence.integration.test.ts` proves the serialization
 against a real Postgres rather than a double, since a double would serialize by
 construction and prove nothing.
 
+The put is also bounded strictly INSIDE the lock's lifetime, at 25 seconds
+against the lock's 45. The margin is not decoration: an S3 put is not one
+request, and the SDK's request timeout multiplied by the retry budget plus
+backoff can outlast the transaction on its own. Prisma releases the lock on
+rollback without cancelling anything in flight, so an unbounded put becomes a
+zombie — a rival takes the freed lock, writes and attests its own bytes, and the
+zombie then lands the older body over them. The deadline therefore both RACES
+the put (so the caller always settles inside the lifetime) and ABORTS it through
+an `AbortSignal` the SDK honours (so the request actually stops rather than
+being abandoned). A race alone would leave the zombie running. This mirrors the
+600/900 split `temporal/v2/effect-fence.ts` documents for the same hazard.
+
+Because the door gates its put, it also hands back the CANONICAL payload with
+`already_archived`, not just a descriptor. A caller holding a fresher spectator
+payload — the two pipelines poll independently, and `gameLength` advances
+between polls — would otherwise stage lake rows derived from its own bytes
+while the staging receipt named the archived object they did not come from,
+leaving the lake disagreeing with both its receipt and canonical S3. Returning
+the verified archived contents makes staging the wrong bytes unrepresentable
+rather than merely discouraged, and both callers stage what they are given.
+
 A receipt conflict is still never returned as a commit, and the fence does not
 make that redundant: it serializes captures that go through the door, so the
 throw remains the answer for any disagreement the lock does not cover.

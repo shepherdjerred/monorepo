@@ -146,8 +146,16 @@ export async function ingestPrematch(
     await writePrematchStagingFile(lakeDir, gameInfo, observedAt);
     return;
   }
+  // Stage the bytes the receipt will NAME, which are not always the ones this
+  // caller is holding. When the door reports the snapshot already archived, its
+  // descriptor describes an earlier capture of the same game — a spectator
+  // payload advances between polls — and projecting this run's fresher payload
+  // under that descriptor would leave the lake disagreeing with both its
+  // staging receipt and canonical S3.
+  const canonical =
+    archived.status === "already_archived" ? archived.canonical : gameInfo;
   await stagedForV1(() =>
-    stagePrematchReceipted(lakeDir, gameInfo, observedAt, {
+    stagePrematchReceipted(lakeDir, canonical, observedAt, {
       source: archived.artifact,
     }),
   );

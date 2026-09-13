@@ -7,6 +7,7 @@ import {
   test,
 } from "vitest";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { z } from "zod";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import {
@@ -17,9 +18,11 @@ import {
 import { archivePrematchReceipted } from "#src/report-lake/receipted-archive.ts";
 import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
 import {
+  mockS3ObjectStore,
   resetS3TestState,
   s3Mock,
   setS3TestBucket,
+  type S3ObjectStore,
 } from "#src/storage/s3-test-helpers.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
@@ -31,6 +34,11 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
  * mock, because the hazard is about ORDER rather than about storage.
  */
 
+/** The second argument to `client.send`, where the abort signal travels. */
+const SendOptionsSchema = z.object({
+  abortSignal: z.instanceof(AbortSignal).optional(),
+});
+
 const { prisma } = createTestDatabase("scout-prematch-archive-fence");
 
 afterAll(async () => {
@@ -40,17 +48,16 @@ afterAll(async () => {
 /** How long a put takes, so a second unfenced attempt would start inside it. */
 const SLOW_PUT_MS = 250;
 
-let puts = 0;
+/**
+ * The door reads an already-archived object back to hand callers its canonical
+ * contents, so this suite needs a store that returns what was actually put.
+ */
+let s3: S3ObjectStore;
 
 beforeEach(() => {
-  puts = 0;
   resetS3TestState();
   setS3TestBucket("scout-prematch-fence-test");
-  s3Mock.on(PutObjectCommand).callsFake(async () => {
-    puts += 1;
-    await new Promise((done) => setTimeout(done, SLOW_PUT_MS));
-    return { $metadata: { httpStatusCode: 200 } };
-  });
+  s3 = mockS3ObjectStore({ putDelayMs: SLOW_PUT_MS });
 });
 
 afterEach(() => {
@@ -86,7 +93,7 @@ describe("two overlapping prematch captures", () => {
     // during the first's — overwriting the object — and only then discover the
     // receipt mismatch, leaving S3 holding the second's bytes under the first's
     // attested digest.
-    expect(puts).toBe(1);
+    expect(s3.putCount()).toBe(1);
 
     const outcomes = [a.status, b.status].toSorted();
     expect(outcomes).toEqual(["already_archived", "archived"]);
@@ -112,6 +119,68 @@ describe("two overlapping prematch captures", () => {
     }
   }, 30_000);
 
+  test("hands a later caller the ARCHIVED bytes, not its own fresher ones", async () => {
+    // The divergence this prevents: v1 archives the game at gameLength -30,
+    // then a second capture arrives holding the same game at 600. If the door
+    // answered with only a descriptor, that caller would stage rows derived
+    // from ITS payload while the staging receipt named the archived object
+    // they did not come from — the lake disagreeing with both its own receipt
+    // and canonical S3.
+    const archivedAt = gameSeenAt(5_500_000_103, -30);
+    const first = await archivePrematchReceipted(archivedAt, [], {
+      database: prisma,
+    });
+    expect(first.status).toBe("archived");
+
+    const laterCapture = gameSeenAt(5_500_000_103, 600);
+    const second = await archivePrematchReceipted(laterCapture, [], {
+      database: prisma,
+    });
+
+    expect(second.status).toBe("already_archived");
+    if (second.status !== "already_archived") return;
+    // What a caller will stage from: the snapshot that is actually in S3.
+    expect(second.canonical.gameLength).toBe(-30);
+    expect(second.canonical.gameLength).not.toBe(laterCapture.gameLength);
+    // And it is the object the descriptor names, digest included.
+    const storedText = s3.objects.get(second.artifact.key);
+    expect(storedText).toBeDefined();
+    expect(JSON.parse(storedText ?? "{}")).toMatchObject({ gameLength: -30 });
+    expect(s3.putCount()).toBe(1);
+  }, 30_000);
+
+  test("cancels a put that stalls past its fence deadline, recording nothing", async () => {
+    // The zombie the deadline exists to prevent: a put still in flight when the
+    // transaction times out is not cancelled by Prisma, so it can land AFTER a
+    // rival has written and attested different bytes.
+    const stalled = gameSeenAt(5_500_000_104, -30);
+    // Never settles on its own: only the fence can end this.
+    const stallForever = new Promise<never>(() => {
+      // Deliberately never resolved or rejected.
+    });
+    s3Mock.on(PutObjectCommand).callsFake(() => stallForever);
+
+    await expect(
+      archivePrematchReceipted(stalled, [], {
+        database: prisma,
+        putDeadlineMs: 300,
+      }),
+    ).rejects.toThrow(/fence deadline/);
+
+    // Two distinct guarantees. The call SETTLED, so the caller never blocks
+    // past the lock's lifetime...
+    const matchId = prematchReceiptMatchId(stalled);
+    const receipts = await listReceipts(prisma, { matchId });
+    expect(receipts).toHaveLength(0);
+    // ...and the request was actually CANCELLED rather than merely abandoned,
+    // which is what stops it landing later. A race alone would leave it
+    // running, so this reads the signal the SDK was actually handed.
+    const sendArgs = z.array(z.unknown()).parse(s3Mock.call(0).args);
+    const sendOptions = SendOptionsSchema.safeParse(sendArgs[1]);
+    expect(sendOptions.data?.abortSignal).toBeInstanceOf(AbortSignal);
+    expect(sendOptions.data?.abortSignal?.aborted).toBe(true);
+  }, 30_000);
+
   test("a later capture of a game already archived never puts again", async () => {
     const game = gameSeenAt(5_500_000_102, -30);
 
@@ -119,7 +188,7 @@ describe("two overlapping prematch captures", () => {
       database: prisma,
     });
     expect(first.status).toBe("archived");
-    expect(puts).toBe(1);
+    expect(s3.putCount()).toBe(1);
 
     // The gate is inside the lock, so it is answered from the standing receipt
     // rather than from anything the caller remembered.
@@ -129,6 +198,6 @@ describe("two overlapping prematch captures", () => {
       { database: prisma },
     );
     expect(again.status).toBe("already_archived");
-    expect(puts).toBe(1);
+    expect(s3.putCount()).toBe(1);
   }, 30_000);
 });

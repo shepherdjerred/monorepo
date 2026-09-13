@@ -38,6 +38,8 @@ type SavePrematchToS3Config = {
   keyDate?: Date;
   /** Full natural identity when a numeric game ID is not globally unique. */
   resourceId?: string;
+  /** Cancels the upload and any retry still to come; see putContentAddressedObject. */
+  abortSignal?: AbortSignal;
 };
 
 /**
@@ -61,6 +63,7 @@ export async function savePrematchToS3(
     errorContext,
     keyDate,
     resourceId,
+    abortSignal,
   } = config;
   const bucket = configuration.s3BucketName;
   const gameIdStr = gameId.toString();
@@ -92,6 +95,7 @@ export async function savePrematchToS3(
       metadata,
       errorContext,
       retryContext: `${errorContext} game ${gameIdStr}`,
+      ...(abortSignal === undefined ? {} : { abortSignal }),
     });
 
     const uploadTime = Date.now() - startTime;

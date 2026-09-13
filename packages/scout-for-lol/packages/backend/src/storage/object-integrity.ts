@@ -158,6 +158,15 @@ export async function putContentAddressedObject(args: {
   errorContext: string;
   retryContext: string;
   logDetails?: Record<string, unknown>;
+  /**
+   * Cancels the upload, including any retry still to come.
+   *
+   * A caller holding a lock over this put needs the request to STOP when its
+   * deadline passes, not merely to be abandoned: an in-flight PutObject that
+   * outlives the lock can land after a rival has already written and attested
+   * different bytes, silently reverting the object under a standing receipt.
+   */
+  abortSignal?: AbortSignal;
 }): Promise<StoredObject> {
   const StringSchema = z.string();
   const BytesSchema = z.instanceof(Uint8Array);
@@ -195,6 +204,7 @@ export async function putContentAddressedObject(args: {
     args.client,
     command,
     args.retryContext,
+    args.abortSignal,
   );
   assertPutIntegrity({
     body: bodyBuffer,
