@@ -31,6 +31,7 @@ import {
 import { IMPORT_MODELS_PART_1 } from "#src/database/legacy-import/models-part-1.ts";
 import { IMPORT_MODELS_PART_2 } from "#src/database/legacy-import/models-part-2.ts";
 import { IMPORT_MODELS_PART_3 } from "#src/database/legacy-import/models-part-3.ts";
+import { legacySqliteSourceDigest } from "#src/database/legacy-import/sqlite-source-digest.ts";
 
 /**
  * Structural client requirement so both the plain PrismaClient (entrypoint
@@ -113,73 +114,6 @@ async function getImportMarker(
   return marker === undefined
     ? null
     : { source: marker.source, sourceDigest: marker.source_digest };
-}
-
-function sqliteDigestValue(value: unknown): unknown {
-  if (typeof value === "bigint") {
-    return value.toString();
-  }
-  if (value instanceof Uint8Array) {
-    return [...value];
-  }
-  return value;
-}
-
-function sqliteDigestRow(row: unknown): string {
-  if (row === null || typeof row !== "object" || Array.isArray(row)) {
-    throw new Error("Unexpected SQLite snapshot row shape");
-  }
-  return JSON.stringify(
-    Object.entries(row)
-      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-      .map(([key, value]) => [key, sqliteDigestValue(value)]),
-  );
-}
-
-function sqliteSourceDigest(sqlitePath: string): string {
-  // Read through SQLite instead of hashing only db.sqlite. SQLite exposes
-  // committed WAL pages through this connection, so the digest represents the
-  // state the importer will actually read after an unclean rollback shutdown.
-  const db = new Database(sqlitePath, { readonly: true, safeIntegers: true });
-  const hasher = new Bun.CryptoHasher("sha256");
-  try {
-    const schemaRows: unknown = db
-      .query(
-        "SELECT name, sql FROM sqlite_master WHERE type = 'table' ORDER BY name",
-      )
-      .all();
-    if (!Array.isArray(schemaRows)) {
-      throw new TypeError("Unexpected SQLite schema result shape");
-    }
-    for (const schemaRow of schemaRows) {
-      if (
-        schemaRow === null ||
-        typeof schemaRow !== "object" ||
-        Array.isArray(schemaRow)
-      ) {
-        throw new TypeError("Unexpected SQLite schema row shape");
-      }
-      const entries = Object.entries(schemaRow);
-      const name: unknown = entries.find(([key]) => key === "name")?.[1];
-      const sql: unknown = entries.find(([key]) => key === "sql")?.[1];
-      if (typeof name !== "string" || typeof sql !== "string") {
-        throw new TypeError("SQLite schema row has invalid name or SQL");
-      }
-      const rows: unknown = db
-        .query(`SELECT * FROM ${quoteIdentifier(name)}`)
-        .all();
-      if (!Array.isArray(rows)) {
-        throw new TypeError(`Unexpected SQLite rows for ${name}`);
-      }
-      hasher.update(`${name}\u{0}${sql}\u{0}`);
-      for (const row of rows.map((value) => sqliteDigestRow(value)).sort()) {
-        hasher.update(`${row}\u{0}`);
-      }
-    }
-    return hasher.digest("hex");
-  } finally {
-    db.close();
-  }
 }
 
 async function postgresHasData(prisma: ImportClient): Promise<boolean> {
@@ -363,7 +297,7 @@ export async function runImport(
   await ensureMarkerTable(prisma);
   const sqliteFile = Bun.file(sqlitePath);
   const sourceDigest =
-    sqliteFile.size === 0 ? null : sqliteSourceDigest(sqlitePath);
+    sqliteFile.size === 0 ? null : legacySqliteSourceDigest(sqlitePath);
 
   const marker = await getImportMarker(prisma);
   if (marker !== null) {

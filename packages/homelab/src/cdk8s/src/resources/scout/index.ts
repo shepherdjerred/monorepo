@@ -19,6 +19,7 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions, {
+  desktopRetirementPreflightImageDigests,
   postgresImageDigests,
 } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
@@ -30,7 +31,10 @@ import {
   zfsVolumeSelinuxLevels,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
-import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
+import {
+  scoutImageRunsDesktopRetirementPreflight,
+  scoutImageUsesPostgres,
+} from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
@@ -41,7 +45,11 @@ function requiredWeeklyParlaySecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
-export function createScoutDeployment(chart: Chart, stage: Stage) {
+export function createScoutDeployment(
+  chart: Chart,
+  stage: Stage,
+  retirementPreflightImageDigests: ReadonlySet<string> = desktopRetirementPreflightImageDigests,
+) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
@@ -153,6 +161,14 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     // migration); shrink only after the legacy file is deleted post-soak.
     storage: Size.gibibytes(24),
   });
+  const dataVolumeMount = {
+    path: "/data",
+    volume: Volume.fromPersistentVolumeClaim(
+      chart,
+      "scout-volume",
+      localPathVolume.claim,
+    ),
+  };
 
   const baseEnvVariables = {
     ...dbEnv,
@@ -290,6 +306,47 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         }
       : baseEnvVariables;
 
+  // This stays explicitly digest-gated until a built Scout image is recorded
+  // in the version catalog with the temporary preflight capability. Without
+  // that gate, applying this chart while an older image is pinned would make
+  // the init container fail because its command does not exist yet.
+  const runsDesktopRetirementPreflight =
+    scoutImageUsesPostgres(imageVersion, postgresImageDigests) &&
+    scoutImageRunsDesktopRetirementPreflight(
+      imageVersion,
+      retirementPreflightImageDigests,
+    );
+  if (runsDesktopRetirementPreflight) {
+    deployment.addInitContainer(
+      withCommonProps({
+        name: "desktop-retirement-preflight",
+        image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
+        command: [
+          "bun",
+          "run",
+          "scripts/retire-desktop-data.ts",
+          "--preflight",
+        ],
+        resources: {
+          cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
+          memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+        },
+        securityContext: {
+          ensureNonRoot: false,
+          readOnlyRootFilesystem: false,
+        },
+        // The inventory needs only the Postgres connection and the retained
+        // SQLite file. It intentionally excludes bot, OAuth, API, and S3
+        // credentials because the preflight is read-only.
+        envVariables: {
+          ...dbEnv,
+          LEGACY_SQLITE_PATH: EnvValue.fromValue("/data/db.sqlite"),
+        },
+        volumeMounts: [dataVolumeMount],
+      }),
+    );
+  }
+
   deployment.addContainer(
     withCommonProps({
       image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
@@ -328,16 +385,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      volumeMounts: [
-        {
-          path: "/data",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "scout-volume",
-            localPathVolume.claim,
-          ),
-        },
-      ],
+      volumeMounts: [dataVolumeMount],
       envVariables,
     }),
   );
