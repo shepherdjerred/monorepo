@@ -1188,10 +1188,6 @@
       "clones": 1,
       "tokens": 86
     },
-    "packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.integration.test.ts": {
-      "clones": 2,
-      "tokens": 150
-    },
     "packages/scout-for-lol/packages/backend/src/storage/s3-query.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
       "clones": 1,
       "tokens": 81
