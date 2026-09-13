@@ -98,8 +98,11 @@ export async function collect(db: Db): Promise<void> {
 }
 
 /**
- * Seeds Riot IDs already cached in the database before spending any quota.
- * On prod that covers 199 of 256 identities, leaving 57 live lookups.
+ * Seeds Riot IDs already cached in the database, for operator visibility only.
+ *
+ * `resolve` does NOT trust these: it re-derives every Riot ID from the old key,
+ * because a cached handle can have been reclaimed by someone else. Seeding just
+ * gives the map readable names before the slow phase runs.
  */
 async function seedFromCache(db: Db): Promise<void> {
   const sources = [
@@ -138,72 +141,39 @@ export async function harvest(db: Db): Promise<void> {
   await seedFromCache(db);
 
   const pending = await db.query(
-    `SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "status" = 'pending'`,
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "gameName" IS NULL`,
   );
-  const minutes = Math.ceil(pending.length / OLD_KEY_LIMITS.perTwoMinutes) * 2;
+  const unnamed = countOf(pending, "unnamed count");
   console.log(
-    `  ${pending.length.toString()} need lookup (~${minutes.toString()} min at personal-key limits)`,
+    `  ${unnamed.toString()} identities have no cached Riot ID; resolve will derive them from the old key`,
   );
-
-  let done = 0;
-  for (const row of pending) {
-    const oldPuuid = asString(row["oldPuuid"], "oldPuuid");
-    const account = await byPuuid(oldPuuid);
-    if (account === null) {
-      await db.exec(
-        `UPDATE "PuuidKeyMap" SET "status" = 'unresolved', "harvestedAt" = ${db.now()} WHERE "oldPuuid" = ${db.param(1)}`,
-        [oldPuuid],
-      );
-    } else {
-      await db.exec(
-        `UPDATE "PuuidKeyMap" SET "gameName" = ${db.param(2)}, "tagLine" = ${db.param(3)}, "status" = 'harvested', "harvestedAt" = ${db.now()} WHERE "oldPuuid" = ${db.param(1)}`,
-        [oldPuuid, account.gameName, account.tagLine],
-      );
-    }
-    done++;
-    if (done % 25 === 0) {
-      console.log(`  ${done.toString()}/${pending.length.toString()}`);
-    }
-  }
   console.log("harvest: complete");
 }
 
 /**
- * Resolve one identity, correcting a stale cached Riot ID if needed.
+ * Resolve one identity, deriving its Riot ID from the old key every time.
  *
- * `seedFromCache` trusts `Account.riotGameName` / `SummonerIndex.gameName`,
- * which go stale when a player renames. Observed in beta: a tracked account
- * cached as `CK ULTRA#333` had actually become `WICKINGTON#333`, so the
- * by-riot-id lookup 404'd and the identity would have orphaned permanently —
- * and unrecoverably, since the old key is the only thing that can map that
- * PUUID back to a human, and it is about to be retired.
+ * The cached Riot ID is never trusted for this hop, and a 404 is not the only
+ * way it can be wrong. Riot IDs are reclaimable: if a tracked player renamed
+ * away from `Name#TAG` and somebody else later claimed that handle, looking it
+ * up under the new key returns 200 with a STRANGER's PUUID. Accepting that
+ * would rewrite the tracked player onto another person's identity, irreversibly
+ * and invisibly — collision detection only fires if that stranger happens to be
+ * mapped too. Prod carried ten stale cached Riot IDs, so the precondition is
+ * ordinary, not exotic.
  *
- * So a 404 here is not accepted until the Riot ID has been re-derived live
- * from the old key and retried.
+ * So the old key answers "who is this PUUID now?" immediately before the new key
+ * answers "what is that person's PUUID under the new domain?". The two calls sit
+ * back to back to keep the rename window as small as the network allows.
  */
 async function resolveOne(
   db: Db,
   oldPuuid: string,
-  gameName: string,
-  tagLine: string,
 ): Promise<RiotAccount | null> {
-  const direct = await byRiotId(gameName, tagLine);
-  if (direct !== null) {
-    return direct;
-  }
-
   const current = await byPuuid(oldPuuid);
   if (current === null) {
     return null;
   }
-  if (current.gameName === gameName && current.tagLine === tagLine) {
-    // The Riot ID was already current, so the account is genuinely gone.
-    return null;
-  }
-
-  console.log(
-    `  stale cache corrected: ${gameName}#${tagLine} -> ${current.gameName}#${current.tagLine}`,
-  );
   await db.exec(
     `UPDATE "PuuidKeyMap" SET "gameName" = ${db.param(2)}, "tagLine" = ${db.param(3)} WHERE "oldPuuid" = ${db.param(1)}`,
     [oldPuuid, current.gameName, current.tagLine],
@@ -213,18 +183,19 @@ async function resolveOne(
 
 export async function resolve(db: Db): Promise<void> {
   const rows = await db.query(
-    `SELECT "oldPuuid", "gameName", "tagLine" FROM "PuuidKeyMap" WHERE "status" IN ('harvested', 'unresolved') AND "gameName" IS NOT NULL`,
+    `SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
   );
-  console.log(`  ${rows.length.toString()} to resolve under the new key`);
+  // One old-key call per identity, so this is the phase the personal-tier
+  // budget gates — and that budget is shared with live traffic.
+  const minutes = Math.ceil(rows.length / OLD_KEY_LIMITS.perTwoMinutes) * 2;
+  console.log(
+    `  ${rows.length.toString()} to resolve, each re-derived from the old key first ` +
+      `(~${minutes.toString()} min at personal-key limits)`,
+  );
 
   for (const row of rows) {
     const oldPuuid = asString(row["oldPuuid"], "oldPuuid");
-    const gameName = asOptionalString(row["gameName"]);
-    const tagLine = asOptionalString(row["tagLine"]);
-    if (gameName === null || tagLine === null) {
-      throw new Error(`${oldPuuid} is 'harvested' without a Riot ID`);
-    }
-    const account = await resolveOne(db, oldPuuid, gameName, tagLine);
+    const account = await resolveOne(db, oldPuuid);
     if (account === null) {
       await db.exec(
         `UPDATE "PuuidKeyMap" SET "status" = 'unresolved', "resolvedAt" = ${db.now()} WHERE "oldPuuid" = ${db.param(1)}`,
