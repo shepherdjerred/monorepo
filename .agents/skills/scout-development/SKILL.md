@@ -57,7 +57,8 @@ bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session
   do). Pass `--backend-port`/`--web-port` rather than killing the holder.
 - For visual inspection with no 1Password session and no Discord login, boot
   the design-audit way instead, against a separate `.design-audit-report-lake`:
-  `SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun --no-install run dev:design-audit -- --no-discord-gateway`.
+  `SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun run --filter='./packages/scout-for-lol' dev:design-audit`.
+  Without the filter the root package has no such script and the boot fails.
   The env var is what lets the backend skip the real secrets; `dev:design-audit`
   alone still demands them.
 

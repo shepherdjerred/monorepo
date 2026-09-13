@@ -40,8 +40,9 @@ project `AGENTS.md` or skill.
 - PinchTab is the browser for development and UI verification; lightpanda is for
   curl-like scraping and extraction. Reach for another browser tool only when
   neither fits.
-- A frontend, UI, or interactive change is not done until it has been rendered
-  and looked at in a browser, not only reasoned about from source.
+- A browser-visible change is not done until it has been rendered and looked at,
+  not only reasoned about from source. Other interactive surfaces — native,
+  React Native, Discord, terminal — use their own matching verification tool.
 - Render PDFs, Typst, documents, slides, spreadsheets, and visual assets with
   their matching skill and inspect the output, not only the source.
 - Use foreground polling or the product's monitoring facility for waits. Never
