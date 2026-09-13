@@ -47,7 +47,7 @@ export async function knownIdentities(db: Db): Promise<Set<string>> {
   return known;
 }
 
-export async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
+async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
   const tracked = await readTrackedPuuids(db);
   const known = await knownIdentities(db);
   return [...tracked].filter((puuid) => !known.has(puuid));

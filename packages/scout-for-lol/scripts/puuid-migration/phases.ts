@@ -12,11 +12,7 @@ import {
   readTrackedPuuids,
 } from "./discovery.ts";
 import { parseJson, translateJsonValue } from "./json-walk.ts";
-import {
-  cutoverApplied,
-  strayIdentities,
-  unmappedTrackedIdentities,
-} from "./cutover.ts";
+import { cutoverApplied, strayIdentities } from "./cutover.ts";
 import { byPuuid, byRiotId, type RiotAccount } from "./riot.ts";
 import {
   asOptionalString,
@@ -409,12 +405,18 @@ async function assertEveryIdentityResolved(
   // tracked accounts can appear mid-cutover with no map row at all. Comparing
   // against the live tracked set catches those; they are unmigrated, not merely
   // unresolved.
-  const unmapped = await unmappedTrackedIdentities(db);
-  if (unmapped.length > 0) {
+  //
+  // Dated against the cutover marker, the same way verify judges them. Once the
+  // rewrite has landed, an account registered since is already new-domain and is
+  // correctly absent from the map — and `collect` refuses to record one, so
+  // faulting it here would leave a re-run of `apply` with no way forward at all.
+  // Only an identity that predates the marker was genuinely skipped.
+  const strays = await strayIdentities(db);
+  if (strays.length > 0) {
     throw new Error(
-      `${unmapped.length.toString()} tracked identities appeared after collect and have no map row; ` +
+      `${strays.length.toString()} tracked identities appeared after collect and have no map row; ` +
         `re-run collect, harvest, and resolve before applying:\n` +
-        unmapped
+        strays
           .slice(0, 10)
           .map((p) => `  ${p.slice(0, 16)}…`)
           .join("\n"),

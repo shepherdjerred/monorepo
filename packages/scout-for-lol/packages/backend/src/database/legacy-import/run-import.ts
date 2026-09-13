@@ -24,7 +24,10 @@ import type {
   SqliteRow,
 } from "#src/database/legacy-import/convert.ts";
 import { toDate, toInt, toStr } from "#src/database/legacy-import/convert.ts";
-import { LEGACY_OPTIONAL_TABLES } from "#src/database/legacy-import/legacy-optional-tables.ts";
+import {
+  assertPuuidRemapIsIntact,
+  LEGACY_OPTIONAL_TABLES,
+} from "#src/database/legacy-import/legacy-optional-tables.ts";
 import { IMPORT_MODELS_PART_1 } from "#src/database/legacy-import/models-part-1.ts";
 import { IMPORT_MODELS_PART_2 } from "#src/database/legacy-import/models-part-2.ts";
 import { IMPORT_MODELS_PART_3 } from "#src/database/legacy-import/models-part-3.ts";
@@ -315,6 +318,12 @@ function readSourceRows(db: Database): Map<string, SqliteRow[]> {
     );
   }
   restoreMissingOpenPositions(sourceRows, missingTables);
+  assertPuuidRemapIsIntact({
+    mapMissing: missingTables.has("PuuidKeyMap"),
+    appliedCutovers: (sourceRows.get("PuuidKeyMigration") ?? []).filter(
+      (row) => row["appliedAt"] !== null && row["appliedAt"] !== undefined,
+    ).length,
+  });
   return sourceRows;
 }
 

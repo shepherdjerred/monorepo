@@ -368,6 +368,36 @@ test("verify faults an identity only MatchRankHistory saw, before the cutover", 
   await db.close();
 });
 
+test("apply re-runs after the cutover when a new account has registered", async () => {
+  // The deadlock this replaced: the new account is already new-domain, so it is
+  // correctly absent from the map — and collect refuses to record one once the
+  // marker exists. Faulting it here left a re-run of apply with nowhere to go.
+  const db = await seed({
+    accounts: [NEW_A, POST_CUTOVER],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+  const rows = await db.query(`SELECT "puuid" FROM "Account" ORDER BY "id"`);
+  expect(rows.map((r) => r["puuid"])).toEqual([NEW_A, POST_CUTOVER]);
+  await db.close();
+});
+
+test("apply still refuses an identity that predates the cutover", async () => {
+  // The other direction: this one existed before the rewrite and was never
+  // mapped, so it was genuinely skipped rather than registered since.
+  const db = await seed({
+    accounts: [NEW_A, POST_CUTOVER],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+    accountsCreatedAt: Date.parse("2020-01-01T00:00:00Z"),
+  });
+  const { apply } = await import("./phases.ts");
+  await expect(apply(db, false)).rejects.toThrow(/no map row/);
+  await db.close();
+});
+
 test("collect maps an identity frozen in a Dare after its account is removed", async () => {
   // A Dare pins its targets at creation and keeps matching them against live
   // games. Once the account row is gone the PUUID survives only here — and it
