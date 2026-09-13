@@ -176,6 +176,33 @@ are also no V2 stage receipts here: those exist so a resumed run can gate a
 phase whose evidence it cannot reconstruct, and the two evidence-bearing
 receipts this path writes already answer exactly the question it asks.
 
+### Durable state before live state
+
+The capture consults its own archive BEFORE it asks Riot anything, and that
+order is the correctness of every resumed run. The Activity has three durable
+effects — the object, the lake projection, the notification intents — and a run
+can die between any two. A live-first capture that died after archiving would,
+once the game ended, be told "no such game", report an empty result and
+complete; the projection would never be staged, the intents never minted, and
+the completed game-scoped Workflow ID would seal all of it.
+
+So a standing `raw-archive-prematch` receipt means this run resumes from the
+ARCHIVED payload — read back by the receipt's key and verified against the
+digest the receipt attested — and finishes the remaining phases from it without
+Riot being involved. Those bytes are canonical by definition: S3 is the raw
+store the report lake rebuilds from. A live absence is believed only when
+nothing was ever archived, which is the one state in which it is informative.
+
+The same principle shapes the spectator boundary itself. `getActiveGame` now
+reports three outcomes rather than two: a confirmed `not-in-game` (Riot
+answered 404), an `in-game` payload, and `unavailable` — a timeout, a 401, a
+429, an upstream 5xx, or a payload that failed its schema. Those used to
+collapse into one "no game" value, which is safe for a caller that re-polls on
+a timer and fatal for one whose conclusion is durable. The V2 capture throws on
+`unavailable` and lets the Activity retry be its wait loop; v1's pollers still
+treat it as a skipped tick, which is stated explicitly at each call site rather
+than inherited from a value that could not tell the difference.
+
 The capture stages the lake rows inline rather than deferring to
 `stageLakeProjectionV2`, which is the one place this path diverges from the
 per-match core's separation of archive from projection. It has nowhere to defer

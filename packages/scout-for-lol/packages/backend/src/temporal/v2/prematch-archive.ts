@@ -26,6 +26,7 @@ import {
   resolveScoutV2PrematchContext,
   type ScoutV2PrematchContext,
 } from "#src/temporal/v2/prematch-context.ts";
+import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch-resume.ts";
 
 /**
  * The V2 per-game core's one Activity: capture the spectator snapshot and
@@ -207,10 +208,28 @@ async function captureArtifactsV2(
 /**
  * Capture one live game, at most once, and record who is owed a notification.
  *
- * A game that is no longer live comes back with no artifacts: the snapshot was
- * missed and no retry can recover it, which is an external-boundary answer
- * rather than a failure. The Workflow reads the same emptiness and reports a
- * no-op instead of claiming a snapshot exists.
+ * ## Durable state first, live state second
+ *
+ * The order of these two reads is the whole correctness of a resumed run. This
+ * Activity has three durable effects — the object, the lake projection and the
+ * notification intents — and a run can die between any of them. If it asked
+ * Riot first, an attempt that archived the snapshot and then died would be told
+ * "that game is over" the moment the game ended, report an empty capture, and
+ * complete; the projection would never be staged, the intents would never be
+ * minted, and the completed game-scoped Workflow ID would seal all of it.
+ *
+ * So the archive is consulted BEFORE the spectator endpoint. If a
+ * `raw-archive-prematch` receipt stands, this run resumes from the archived
+ * canonical payload — S3 is the raw store the report lake rebuilds from, so
+ * those bytes are as good as the live ones and better than nothing — and
+ * finishes the remaining phases from it without Riot being involved. A live
+ * absence is only ever believed when nothing was archived in the first place,
+ * which is the one state in which it is actually informative.
+ *
+ * A game that was never archived and is no longer live comes back with no
+ * artifacts: the snapshot was missed and no retry can recover it, which is an
+ * external-boundary answer rather than a failure. The Workflow reads the same
+ * emptiness and reports a no-op instead of claiming a snapshot exists.
  *
  * The intents are minted after the capture because they are a promise about
  * it. They are minted even on the no-bucket path, where the game was still
@@ -222,7 +241,9 @@ export async function archivePrematchSnapshotV2(
   input: ScoutGameRefV2,
 ): Promise<ScoutPrematchArchiveV2Result> {
   const riotMatchId = scoutPrematchGameV2MatchId(input.gameRef);
-  const context = await resolveScoutV2PrematchContext(input.gameRef);
+  const context =
+    (await resumeArchivedPrematchContext(riotMatchId)) ??
+    (await resolveScoutV2PrematchContext(input.gameRef));
   if (context === null) return { artifacts: [], riotMatchId };
 
   const observedAt = new Date();

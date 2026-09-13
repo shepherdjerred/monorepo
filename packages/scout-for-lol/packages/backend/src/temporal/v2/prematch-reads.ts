@@ -76,20 +76,30 @@ async function probeAccountV2(
   const region = config.league.leagueAccount.region;
   try {
     const spectator = await getActiveGame(puuid, region);
-    if (spectator.upstreamError) {
-      spectatorCircuit.recordFailure(
-        new Error(`Spectator API upstream error for ${puuid}`),
-        { source: "spectator-v2", puuid, region },
-      );
+    if (spectator.kind === "unavailable") {
+      if (spectator.upstream) {
+        spectatorCircuit.recordFailure(
+          new Error(`Spectator API upstream error for ${puuid}`),
+          { source: "spectator-v2", puuid, region },
+        );
+      } else {
+        // Riot answered, just not usably; the API itself is reachable.
+        spectatorCircuit.recordSuccess();
+      }
+      // Unreadable, never idle. An unanswered read says nothing about whether
+      // this account is in a game, and calling it idle would drop a live game
+      // from the page while reporting the scan complete.
       return { kind: "unreadable" };
     }
-    // Any non-upstream response — a game, a 404, a validation failure — proves
-    // the API is reachable.
+    // A 404 is an answer, so the API is reachable.
     spectatorCircuit.recordSuccess();
-    const game = spectator.game;
-    if (game === undefined || !isPrematchRosterComplete(game)) {
+    if (
+      spectator.kind === "not-in-game" ||
+      !isPrematchRosterComplete(spectator.game)
+    ) {
       return { kind: "idle" };
     }
+    const game = spectator.game;
     return {
       kind: "game",
       ref: ScoutPrematchGameRefSchema.parse({

@@ -7,7 +7,11 @@ import {
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutPrematchGameRef } from "@scout-for-lol/temporal/contracts-v2";
 import { scoutPrematchGameV2MatchId } from "@scout-for-lol/temporal/identifiers";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import {
+  getAccountsWithState,
+  prisma,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 
@@ -81,8 +85,7 @@ export function isPrematchRosterComplete(
 export async function resolveScoutV2PrematchContext(
   gameRef: ScoutPrematchGameRef,
 ): Promise<ScoutV2PrematchContext | null> {
-  const accounts = await getAccountsWithState(prisma, getActiveServerIds());
-  const configs = accounts.map((account) => account.config);
+  const configs = await trackedAccountConfigs();
   const surfacedBy = configs.find(
     (config) => config.league.leagueAccount.puuid === gameRef.puuid,
   );
@@ -97,13 +100,20 @@ export async function resolveScoutV2PrematchContext(
     gameRef.puuid,
     surfacedBy.league.leagueAccount.region,
   );
-  if (spectator.upstreamError) {
+  if (spectator.kind === "unavailable") {
+    // No answer is not an answer of "no". Returning `null` here would let the
+    // Workflow complete as a no-op, and its completed game-scoped ID would
+    // then refuse every later poll — so one timeout, one 429 or one malformed
+    // payload would cost this snapshot and its notifications permanently.
+    // Throwing hands the wait to the Activity's retry policy, which is the
+    // only thing in this path that can afford to be patient.
     throw new Error(
-      `Riot's spectator API could not be reached for ${gameRef.puuid}; retrying rather than reporting a game that is not there`,
+      `Riot's spectator API gave no usable answer for ${gameRef.puuid} (${spectator.reason}); retrying rather than recording a game that may well exist as absent`,
     );
   }
+  if (spectator.kind === "not-in-game") return null;
+
   const gameInfo = spectator.game;
-  if (gameInfo === undefined) return null;
   if (
     gameInfo.platformId !== gameRef.platform ||
     gameInfo.gameId.toString() !== gameRef.gameId
@@ -118,12 +128,39 @@ export async function resolveScoutV2PrematchContext(
       `Spectator payload for ${gameRef.platform}_${gameRef.gameId} still reports ${gameInfo.participants.length.toString()} participants; retrying until the roster fills`,
     );
   }
+  return prematchContextFrom(
+    gameInfo,
+    configs,
+    scoutPrematchGameV2MatchId(gameRef),
+  );
+}
 
+/** Every tracked account this process can see, as the task services take them. */
+export async function trackedAccountConfigs(
+  database: ExtendedPrismaClient = prisma,
+): Promise<PlayerConfigEntry[]> {
+  const accounts = await getAccountsWithState(database, getActiveServerIds());
+  return accounts.map((account) => account.config);
+}
+
+/**
+ * Build a capture context from a spectator payload, whatever produced it.
+ *
+ * Pure, and shared between the live read above and the resume path that reads
+ * an already-archived snapshot back from S3. Both need the same answer — which
+ * tracked accounts are in this game — and deriving it twice is how the two
+ * paths would drift into minting intents for different sets of channels.
+ */
+export function prematchContextFrom(
+  gameInfo: RawCurrentGameInfo,
+  configs: readonly PlayerConfigEntry[],
+  riotMatchId: RiotMatchId,
+): ScoutV2PrematchContext {
   const participants = new Set(
     gameInfo.participants.map((participant) => participant.puuid),
   );
   return {
-    riotMatchId: scoutPrematchGameV2MatchId(gameRef),
+    riotMatchId,
     gameInfo,
     trackedPlayers: configs.filter((config) =>
       participants.has(config.league.leagueAccount.puuid),

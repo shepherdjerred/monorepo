@@ -1104,10 +1104,6 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/scout-for-lol/packages/backend/src/league/tasks/prematch/__tests__/active-game-detection.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/__tests__/active-game-detection.test.ts": {
-      "clones": 1,
-      "tokens": 81
-    },
     "packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-loading-screen.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-notification.ts": {
       "clones": 1,
       "tokens": 124

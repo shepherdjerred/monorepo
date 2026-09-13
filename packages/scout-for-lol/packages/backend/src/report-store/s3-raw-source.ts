@@ -9,6 +9,7 @@ import {
 import { format } from "date-fns";
 import { z } from "zod";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import { computeSha256Digest } from "#src/storage/object-integrity.ts";
 
 /**
  * Shared read/enumerate helpers for the S3 raw-object store (SeaweedFS,
@@ -122,6 +123,42 @@ export async function readRawObjectText(
     throw new Error(`S3 object has no body: ${key}`);
   }
   return await response.Body.transformToString();
+}
+
+/**
+ * Read an archived object back and prove it is the one the caller means.
+ *
+ * The write path records a SHA-256 content address precisely so a later reader
+ * can check it, and this is the read that cashes that in. It matters for any
+ * caller that RESUMES from an archive rather than from a live source: it is
+ * about to treat these bytes as the canonical payload, and an object that has
+ * been overwritten, truncated or replaced since the receipt was written is not
+ * that payload. Silently using it would let a resumed run stage rows and mint
+ * notifications from content nothing attested to.
+ *
+ * The digest is taken over the UTF-8 encoding of the text, which is exactly
+ * what `putContentAddressedObject` hashed on the way in.
+ */
+export async function readVerifiedRawObjectText(args: {
+  client: S3Client;
+  bucket: string;
+  key: string;
+  expectedDigest: string;
+  options?: S3ReadOptions;
+}): Promise<string> {
+  const text = await readRawObjectText(
+    args.client,
+    args.bucket,
+    args.key,
+    args.options ?? {},
+  );
+  const digest = computeSha256Digest(new TextEncoder().encode(text));
+  if (digest !== args.expectedDigest) {
+    throw new Error(
+      `Archived object ${args.key} does not match the digest recorded for it: expected ${args.expectedDigest}, read ${digest}`,
+    );
+  }
+  return text;
 }
 
 // A missing object surfaces as a NotFound / 404 error from HeadObject; anything
