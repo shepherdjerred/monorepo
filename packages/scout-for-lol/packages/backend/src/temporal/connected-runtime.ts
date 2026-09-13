@@ -10,7 +10,7 @@ import type { ScoutStage } from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
-import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activities.ts";
+import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
 import { createLogger } from "#src/logger.ts";
 import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
 import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";

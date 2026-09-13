@@ -1,3 +1,4 @@
+import { ApplicationFailure } from "@temporalio/common";
 import type { ArtifactDescriptor } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
@@ -10,6 +11,7 @@ import { prisma } from "#src/database/index.ts";
 import {
   getObservation,
   observeMatch,
+  promoteObservation,
 } from "#src/database/durable/observation-repository.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import { recordTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
@@ -143,6 +145,73 @@ export async function archiveMatchArtifactsV2(input: {
   return { artifacts: [artifact] };
 }
 
+function observationDrift(matchId: RiotMatchId, detail: string): never {
+  throw ApplicationFailure.nonRetryable(
+    `Cannot reconcile the observation for ${matchId}: ${detail}. Refusing to process the match on facts two producers do not share`,
+    "ObservationDrift",
+  );
+}
+
+/**
+ * Reconcile an observation this run could not place as written.
+ *
+ * `observeMatch` compares everything the observation ASSERTS, so a stored
+ * ARCHIVE_ONLY row and this run's FULL one differ and come back as
+ * `observation-differs`. That is not drift — it is exactly the
+ * archive-only-promotes-at-most-once transition the domain models, and
+ * `promoteObservation` is the guarded update that performs it. A capture path
+ * observed the match without downstream effects; post-match discovery has now
+ * surfaced it as work, and the row moves up to FULL once and never back.
+ *
+ * The decision is DELEGATED to `promoteObservation` rather than re-derived
+ * from the stored policy here, because that repository already mirrors the
+ * domain transition and answers all three cases exactly: an archive-only row
+ * promotes (`applied`), a row this pipeline already promoted answers
+ * `already-applied` — which matters, since a plain Activity retry after a
+ * promotion differs from the stored row in nothing but `promotedAt` and would
+ * otherwise be read as fresh drift and wedge the match — and a row born FULL
+ * answers `promotion-target-born-full`, meaning the disagreement is about the
+ * facts rather than the policy.
+ *
+ * That last case and a row this pipeline does not own both fail the Activity.
+ * Continuing from the stored row would let the Workflow attest to a phase and
+ * advance the cursor on facts it never checked, suppressing the disagreement
+ * permanently instead of surfacing it.
+ */
+export async function reconcileObservationConflictV2(
+  matchId: RiotMatchId,
+  reason: string,
+): Promise<ScoutDurableCommitV2> {
+  if (reason !== "observation-differs") {
+    // Ownership conflicts are expected and are the Workflow's to act on: it
+    // reads the stored owner and stops before any effect.
+    return { outcome: "conflict", reason: "ownership-held-by-another-owner" };
+  }
+  const stored = await getObservation(prisma, { matchId });
+  if (stored === null) {
+    observationDrift(matchId, "the match has no observation to reconcile with");
+  }
+  if (stored.owner.kind !== "temporal-v2") {
+    observationDrift(
+      matchId,
+      `the stored observation belongs to ${stored.owner.kind}, so its policy is not this pipeline's to promote`,
+    );
+  }
+  const promoted = durableCommitV2(
+    await promoteObservation(prisma, {
+      matchId,
+      promotedAt: toIsoInstant(new Date()),
+    }),
+  );
+  if (promoted.outcome === "conflict") {
+    observationDrift(
+      matchId,
+      `the stored observation was born FULL (${promoted.reason}), so this run differs from it in more than an archive-only promotion`,
+    );
+  }
+  return promoted;
+}
+
 /**
  * Claim the match for the V2 pipeline and record what it saw in it.
  *
@@ -153,17 +222,19 @@ export async function archiveMatchArtifactsV2(input: {
  * the STORED owner rather than the one this run asked for — which is what lets
  * the Workflow stop instead of double-applying v1's effects.
  *
- * The policy is FULL because post-match discovery only surfaces matches whose
- * complete pipeline should run; ARCHIVE_ONLY belongs to capture paths that
- * deliberately skip downstream effects, and no transition ever downgrades a
- * FULL match, so there is no promotion for this path to record.
+ * The policy asked for is FULL because post-match discovery only surfaces
+ * matches whose complete pipeline should run. A row already standing as
+ * ARCHIVE_ONLY under this pipeline's own ownership is promoted rather than
+ * refused — see {@link reconcileObservationConflictV2} — and the result then
+ * reports the promoted policy, so the Workflow runs the downstream effects
+ * instead of skipping them on a stale policy.
  */
 export async function commitMatchObservationV2(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutMatchObservationV2Result> {
   const context = await resolveScoutV2MatchContext(input.riotMatchId);
   const archived = await readArchivedMatchArtifactV2(input.riotMatchId);
-  const commit = durableCommitV2(
+  const observed = durableCommitV2(
     await observeMatch(prisma, {
       matchId: input.riotMatchId,
       platformRoute: platformRouteOf(input.riotMatchId),
@@ -181,6 +252,10 @@ export async function commitMatchObservationV2(input: {
       },
     }),
   );
+  const commit =
+    observed.outcome === "conflict"
+      ? await reconcileObservationConflictV2(input.riotMatchId, observed.reason)
+      : observed;
 
   await recordTrackedAccounts(
     prisma,

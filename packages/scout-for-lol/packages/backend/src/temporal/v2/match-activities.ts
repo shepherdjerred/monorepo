@@ -1,5 +1,5 @@
-import type { ScoutTemporalV2Activities } from "@scout-for-lol/temporal/activities";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
+import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
 
 /**
  * The nine Activities of the V2 post-match core, as the Activity Worker sees
@@ -11,6 +11,10 @@ import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
  * where they run; that assignment lives once, beside the ID builders, and the
  * `satisfies` on it makes an Activity added without a queue a type error.
  *
+ * The surface TYPE lives in `match-activity-surface.ts` rather than here, so
+ * that naming it does not drag this module — and everything its dynamic
+ * imports reach — into another package's type program.
+ *
  * The implementations are DYNAMICALLY imported, matching v1's activity
  * factory. Building the activity groups happens during process startup for
  * every role that polls a queue, and a static import chain would pull the
@@ -19,19 +23,6 @@ import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
  * heartbeats while it works, so a worker that dies mid-phase is detected by
  * its heartbeat timeout rather than by its start-to-close budget.
  */
-export type ScoutV2MatchActivities = Pick<
-  ScoutTemporalV2Activities,
-  | "discoverPostMatchIdsV2"
-  | "readMatchPipelineStateV2"
-  | "archiveMatchArtifactsV2"
-  | "commitMatchObservationV2"
-  | "settleMatchMarketsV2"
-  | "applyMatchProgressionV2"
-  | "recordMatchReceiptsV2"
-  | "advanceMatchCursorV2"
-  | "planMatchFanOutV2"
->;
-
 export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
   return {
     discoverPostMatchIdsV2: async () =>

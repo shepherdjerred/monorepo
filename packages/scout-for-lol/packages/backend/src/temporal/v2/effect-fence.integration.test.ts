@@ -1,7 +1,11 @@
 import { afterAll, describe, expect, test } from "vitest";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { getScoutEffectClaim } from "#src/temporal/effect-claims.ts";
-import { runGuardedEffectV2 } from "#src/temporal/v2/effect-fence.ts";
+import {
+  runGuardedEffectV2,
+  type ScoutEffectFenceBudget,
+} from "#src/temporal/v2/effect-fence.ts";
 
 const { prisma } = createTestDatabase("scout-v2-effect-fence");
 
@@ -10,6 +14,46 @@ afterAll(async () => {
 });
 
 const applied = { fact: { outcome: "applied" } as const, effects: 3 };
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((done) => setTimeout(done, ms));
+}
+
+/** Pass a member through untouched, keeping Prisma's own `this` binding. */
+function passThrough(target: object, property: string | symbol): unknown {
+  const value = Reflect.get(target, property);
+  return typeof value === "function" ? value.bind(target) : value;
+}
+
+/** The completion the fence asks for: it lands, and its response does not. */
+async function commitThenLoseAck(
+  args: Parameters<typeof prisma.scoutEffectClaim.update>[0],
+): Promise<never> {
+  await prisma.scoutEffectClaim.update(args);
+  throw new Error("connection reset before the completion was acked");
+}
+
+/**
+ * A client whose completion write COMMITS and then loses its acknowledgement.
+ *
+ * Only `scoutEffectClaim.update` is intercepted — the call
+ * `completeScoutEffect` makes. `updateMany`, which the fence's guarded failure
+ * recorder uses, runs for real, so the test observes what that guard actually
+ * does to a row that is already COMPLETED.
+ */
+function clientWhoseCompletionAckIsLost(): ExtendedPrismaClient {
+  return new Proxy(prisma, {
+    get(target, property) {
+      if (property !== "scoutEffectClaim") return passThrough(target, property);
+      return new Proxy(target.scoutEffectClaim, {
+        get(delegate, call) {
+          if (call !== "update") return passThrough(delegate, call);
+          return commitThenLoseAck;
+        },
+      });
+    },
+  });
+}
 
 describe("the V2 effect fence", () => {
   test("applies once and reports the guard and the fact apart", async () => {
@@ -23,7 +67,7 @@ describe("the V2 effect fence", () => {
           return Promise.resolve(applied);
         },
       },
-      prisma,
+      { database: prisma },
     );
 
     expect(result).toEqual({
@@ -48,7 +92,7 @@ describe("the V2 effect fence", () => {
             return Promise.resolve(applied);
           },
         },
-        prisma,
+        { database: prisma },
       );
 
     await run();
@@ -82,24 +126,20 @@ describe("the V2 effect fence", () => {
             applications.push(name);
             if (name === "first") {
               firstEntered.resolve(undefined);
-              // Hold the critical section open long enough that a second
-              // attempt starting now would race if nothing fenced it.
-              await new Promise((done) => setTimeout(done, 300));
+              await sleep(300);
             }
             concurrent -= 1;
             return applied;
           },
         },
-        prisma,
+        { database: prisma },
       );
 
     const first = attempt("first");
     await firstEntered.promise;
-    const second = await (async () => {
-      const pending = attempt("second");
-      await first;
-      return await pending;
-    })();
+    const pending = attempt("second");
+    await first;
+    const second = await pending;
 
     expect(applications).toEqual(["first"]);
     expect(overlapped).toBe(false);
@@ -125,7 +165,7 @@ describe("the V2 effect fence", () => {
             throw new Error("worker died mid-effect");
           },
         },
-        prisma,
+        { database: prisma },
       ),
     ).rejects.toThrow("worker died mid-effect");
     const abandoned = await getScoutEffectClaim(key, prisma);
@@ -140,7 +180,7 @@ describe("the V2 effect fence", () => {
           return Promise.resolve(applied);
         },
       },
-      prisma,
+      { database: prisma },
     );
 
     expect(runs).toBe(2);
@@ -171,7 +211,7 @@ describe("the V2 effect fence", () => {
               effects: 1,
             }),
         },
-        prisma,
+        { database: prisma },
       ),
     ).rejects.toThrow("refusing to complete the claim");
 
@@ -180,4 +220,137 @@ describe("the V2 effect fence", () => {
     expect(claim?.state).not.toBe("COMPLETED");
     expect(claim?.state).toBe("AMBIGUOUS_OR_FAILED");
   });
+});
+
+describe("a fence whose lock cannot outlast its effect", () => {
+  test("abandons an effect that overruns the deadline, with the lock still held", async () => {
+    // The deadline exists so the bookkeeping below happens while the fence is
+    // provably still held: the lock lives 10s here and the effect is cut off
+    // at 300ms.
+    const key = "fence:overrun";
+    const budget: ScoutEffectFenceBudget = {
+      lockLifetimeMs: 10_000,
+      effectDeadlineMs: 300,
+    };
+    const finished = Promise.withResolvers<undefined>();
+
+    await expect(
+      runGuardedEffectV2(
+        {
+          key,
+          kind: "v2-test",
+          apply: async () => {
+            await sleep(1500);
+            finished.resolve(undefined);
+            return applied;
+          },
+        },
+        { database: prisma, budget },
+      ),
+    ).rejects.toThrow("exceeded its 300ms fence deadline");
+
+    const claim = await getScoutEffectClaim(key, prisma);
+    expect(claim?.state).toBe("AMBIGUOUS_OR_FAILED");
+
+    // The abandoned effect keeps running — a promise cannot be cancelled — and
+    // must not be able to complete the claim behind the fence's back.
+    await finished.promise;
+    const afterwards = await getScoutEffectClaim(key, prisma);
+    expect(afterwards?.state).toBe("AMBIGUOUS_OR_FAILED");
+  }, 30_000);
+
+  test("refuses to complete a claim when the fence lapsed mid-effect", async () => {
+    // The transaction's own timer expires while the effect is still running,
+    // so Prisma rolls back and releases the advisory lock underneath it. The
+    // fence must not treat the effect as fenced after that: whether the
+    // liveness probe or Prisma's own rejection surfaces first, the attempt
+    // fails and the claim is never marked COMPLETED.
+    const key = "fence:lapsed";
+    const budget: ScoutEffectFenceBudget = {
+      lockLifetimeMs: 700,
+      effectDeadlineMs: 30_000,
+    };
+    let runs = 0;
+
+    await expect(
+      runGuardedEffectV2(
+        {
+          key,
+          kind: "v2-test",
+          apply: async () => {
+            runs += 1;
+            await sleep(1500);
+            return applied;
+          },
+        },
+        { database: prisma, budget },
+      ),
+    ).rejects.toThrow();
+
+    const claim = await getScoutEffectClaim(key, prisma);
+    expect(claim?.state).not.toBe("COMPLETED");
+
+    // Because nothing was completed, the next attempt re-enters under a lock
+    // it genuinely holds rather than inheriting a completion nobody can vouch
+    // for.
+    const recovered = await runGuardedEffectV2(
+      {
+        key,
+        kind: "v2-test",
+        apply: () => {
+          runs += 1;
+          return Promise.resolve(applied);
+        },
+      },
+      { database: prisma },
+    );
+    expect(runs).toBe(2);
+    expect(recovered.fact).toEqual({ outcome: "applied" });
+    const completed = await getScoutEffectClaim(key, prisma);
+    expect(completed?.state).toBe("COMPLETED");
+  }, 30_000);
+
+  test("never downgrades a completed claim when only the ack is lost", async () => {
+    // The completion commits and the response is lost. An unguarded failure
+    // write would turn COMPLETED into AMBIGUOUS_OR_FAILED, and the next
+    // attempt would re-execute a state-gated effect, produce empty evidence,
+    // conflict with the first run's receipt and wedge the match.
+    const key = "fence:lost-ack";
+    let runs = 0;
+
+    await expect(
+      runGuardedEffectV2(
+        {
+          key,
+          kind: "v2-test",
+          apply: () => {
+            runs += 1;
+            return Promise.resolve(applied);
+          },
+        },
+        { database: clientWhoseCompletionAckIsLost() },
+      ),
+    ).rejects.toThrow("connection reset before the completion was acked");
+
+    const claim = await getScoutEffectClaim(key, prisma);
+    expect(claim?.state).toBe("COMPLETED");
+
+    const next = await runGuardedEffectV2(
+      {
+        key,
+        kind: "v2-test",
+        apply: () => {
+          runs += 1;
+          return Promise.resolve(applied);
+        },
+      },
+      { database: prisma },
+    );
+    expect(runs).toBe(1);
+    expect(next).toEqual({
+      guard: { outcome: "already-applied" },
+      fact: { outcome: "already-applied" },
+      effects: 0,
+    });
+  }, 30_000);
 });
