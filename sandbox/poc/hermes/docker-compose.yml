@@ -1,0 +1,58 @@
+name: hermes-lab
+
+services:
+  gateway:
+    build: .
+    image: hermes-agent-lab
+    command: gateway run
+    restart: unless-stopped
+    # Headful Chromium only ever binds CDP to loopback (it ignores
+    # --remote-debugging-address), so the gateway shares the sidecar's network
+    # namespace and reaches CDP as localhost. Consequence: recreating the
+    # chromium container requires recreating the gateway (compose handles this
+    # via depends_on), and published ports live on the chromium service.
+    network_mode: service:chromium
+    depends_on:
+      - chromium
+    environment:
+      HERMES_UID: "10000"
+      HERMES_GID: "10000"
+      HERMES_DASHBOARD: "1"
+      # The dashboard binds non-loopback inside the container, which engages
+      # its auth gate. With no/empty password it fails closed (dashboard stays
+      # down, gateway unaffected). Set via shell or gitignored .env, never here.
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: jerred
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_PASSWORD:-}
+      HERMES_BROWSER_CDP_URL: http://127.0.0.1:9222
+    volumes:
+      - hermes-data:/opt/data
+      - hermes-home:/home/hermes
+
+  chromium:
+    image: lscr.io/linuxserver/chromium:latest
+    restart: unless-stopped
+    # Chrome's profile SingletonLock records the hostname; without a stable
+    # one, every container recreate strands a "foreign" lock and Chrome
+    # blocks on a profile-in-use dialog (killing CDP).
+    hostname: chromium
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      # Chromium refuses remote debugging on the default user-data-dir; an
+      # explicit profile path (inside the /config volume) is required.
+      CHROME_CLI: "--remote-debugging-port=9222 --remote-allow-origins=* --user-data-dir=/config/cdp-profile"
+    volumes:
+      - chromium-config:/config
+    security_opt:
+      - seccomp:unconfined
+    shm_size: 1gb
+    ports:
+      # KasmVNC web view; CDP (9222) is never published to the host.
+      - "127.0.0.1:3000:3000"
+      # Hermes dashboard — served by the gateway, which shares this netns.
+      - "127.0.0.1:9119:9119"
+
+volumes:
+  hermes-data:
+  hermes-home:
+  chromium-config:
