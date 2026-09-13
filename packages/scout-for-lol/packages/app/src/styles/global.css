@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "@scout-for-lol/design-system/styles.css" layer(components);
 
+/* `dark:` follows the resolved Scout theme, not the operating system.
+   The bootstrap script puts `dark` on <html> whenever the resolved mode is
+   dark, which includes a reader who chose light against a dark OS. Tailwind's
+   default variant reads `prefers-color-scheme` instead, so the two disagree
+   for anyone whose OS and Scout themes differ — a dark-OS reader on the light
+   skin got dark-mode overrides painted over a cream canvas. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-mono: var(--scout-font-mono);
   --font-sans: var(--scout-font-body);
@@ -24,4 +32,38 @@
   --radius-md: var(--scout-radius-medium);
   --radius-lg: var(--scout-radius-large);
   --radius-xl: var(--scout-radius-large);
+}
+
+/**
+ * The fade behind the Explore composer.
+ *
+ * Written out rather than composed from `from-*`/`via-*`/`to-*` because of
+ * what the token utilities compile the last stop to. `to-scout-canvas/0`
+ * becomes `color-mix(in oklab, <canvas> 0%, transparent)`, and that computes
+ * to `oklab(0 0 0 / 0)` — literally black, in every theme, light and dark
+ * alike. It is invisible wherever the gradient is interpolated with
+ * premultiplied alpha, which is what the spec requires and what Safari does.
+ * Where an engine interpolates the stops straight, that black is the colour
+ * the fade runs toward, and the composer gets a dark band behind it.
+ *
+ * So every stop here stays in the canvas hue and only alpha varies: the ramp
+ * is then pure alpha, and no interpolation scheme can darken it. Mixing in
+ * sRGB rather than oklab keeps the fallback and the final declaration reading
+ * the same way.
+ */
+@utility explore-composer-fade {
+  /* Engines without relative colour syntax still fade toward `transparent`,
+     but from stops that are already the canvas colour. */
+  background-image: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--scout-color-canvas) 80%, transparent) 0%,
+    color-mix(in srgb, var(--scout-color-canvas) 30%, transparent) 40%,
+    transparent 100%
+  );
+  background-image: linear-gradient(
+    to top,
+    rgb(from var(--scout-color-canvas) r g b / 0.8) 0%,
+    rgb(from var(--scout-color-canvas) r g b / 0.3) 40%,
+    rgb(from var(--scout-color-canvas) r g b / 0) 100%
+  );
 }

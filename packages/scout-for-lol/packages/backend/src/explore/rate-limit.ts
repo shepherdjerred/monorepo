@@ -68,14 +68,24 @@ export type ExploreRateLimitTicket = {
 
 const MAX_ACTIVE_GLOBAL_RUNS = 5;
 
+/**
+ * Tripled from the original allowance now that every Explore turn runs on
+ * GPT-5.6 Luna, whose per-turn cost makes the old ceilings stricter than the
+ * spend they were protecting.
+ *
+ * The global rules are tripled with the user rules deliberately. They exist to
+ * bound total spend across concurrent explorers, not to be the limit a single
+ * person meets — leaving them alone would have made the global hour the first
+ * wall for even two active users and quietly cancelled the per-user increase.
+ */
 const QUOTA_RULES: QuotaRule<ExploreQuotaScope>[] = [
-  { scope: "user", window: "minute", limit: 4 },
-  { scope: "user", window: "hour", limit: 30 },
-  { scope: "user", window: "day", limit: 100 },
-  { scope: "user", window: "week", limit: 300 },
-  { scope: "global", window: "hour", limit: 120 },
-  { scope: "global", window: "day", limit: 600 },
-  { scope: "global", window: "week", limit: 2000 },
+  { scope: "user", window: "minute", limit: 12 },
+  { scope: "user", window: "hour", limit: 90 },
+  { scope: "user", window: "day", limit: 300 },
+  { scope: "user", window: "week", limit: 900 },
+  { scope: "global", window: "hour", limit: 360 },
+  { scope: "global", window: "day", limit: 1800 },
+  { scope: "global", window: "week", limit: 6000 },
 ];
 
 const engine = createQuotaEngine<ExploreQuotaScope, ExploreRateLimitIdentity>({
