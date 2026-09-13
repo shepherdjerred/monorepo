@@ -32,6 +32,17 @@ export const VOICE_INACTIVITY_TIMEOUT_MS = 45 * 60_000;
  * re-measure it against the trained assets with the M2 corpus method before
  * beta launch (streambot `constants.ts` documents the sweep).
  *
+ * 2026-09-12 investigation note: the acceptance eval at these values found a ~510-520ms
+ * median endpoint delay (below the 650ms floor) alongside 88% clean recall. Raising
+ * HEY_SCOUT/SCOUT to 350ms then 900ms left the delay essentially unchanged while recall
+ * fell to 72% then 39% — reverted to these values (best recall of the three) rather than
+ * ship a worse config while guessing further. The tail is not the lever that controls this
+ * delay in the range tested; the recall collapse at high tail values points at a different
+ * constraint (likely clip trailing-audio length or VAD/finishInput timeout) that needs
+ * tracing through audio-lifecycle.ts before trying again. See
+ * `voice-training/reports/2026-09-12-threshold-0.35.json` and the two later skip-soak
+ * attempts recorded in that investigation.
+ *
  * Must equal `tails` in `../../assets/voice/fragment-tails.json` — that JSON is what the M2
  * offline evaluator and packager read, and `session.test.ts` asserts the two stay identical.
  * Update both together; the JSON alone is not the production source of truth.
