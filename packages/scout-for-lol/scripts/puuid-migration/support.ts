@@ -31,6 +31,7 @@ export const NEW_KEY_LIMITS = { perSecond: 45, perTwoMinutes: 5000 } as const;
 /** Tables the migration owns or must never rewrite. */
 export const EXCLUDED_TABLES = new Set([
   "PuuidKeyMap",
+  "PuuidKeyMigration",
   "_prisma_migrations",
   "sqlite_sequence",
 ]);
@@ -48,6 +49,7 @@ export const EXTRA_JSON_COLUMNS: readonly {
   table: string;
   column: string;
 }[] = [
+  { table: "BucksDareGame", column: "snapshot" },
   { table: "BucksDareTarget", column: "accounts" },
   { table: "BucksDareV2Target", column: "accounts" },
   { table: "BucksDareV2Activation", column: "snapshotJson" },
@@ -64,6 +66,7 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "ConfirmationIntent", column: "payload" },
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
+  { table: "HallRecordBreakOutbox", column: "payloadJson" },
   { table: "HallRecordCell", column: "holdersJson" },
   { table: "HallRecordCell", column: "evidenceJson" },
   { table: "ScoutInteractiveRun", column: "trace" },
@@ -145,6 +148,13 @@ const objectJson = (
 export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // Full match rosters: ten participants per game, mostly strangers.
   { table: "BucksMatchPool", column: "roster" },
+  // A captured game's frozen per-target facts, kept for audit — settlement
+  // re-reads `leafHits` alone. Its subjects come from the Dare's own target
+  // list, which is a tracked source and cascades with it.
+  { table: "BucksDareGame", column: "snapshot" },
+  // A pending record-break announcement. Its holders are copied from the Hall
+  // cells that produced it, and those are tracked sources.
+  { table: "HallRecordBreakOutbox", column: "payloadJson" },
   // Ledger and settlement records, written once and read for history.
   { table: "BucksLedgerEntry", column: "context" },
   { table: "BucksMatchEarning", column: "targetSnapshotJson" },

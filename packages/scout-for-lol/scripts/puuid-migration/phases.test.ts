@@ -513,6 +513,23 @@ test("collect maps the account a rank Dare froze as its baseline", async () => {
   await db.close();
 });
 
+test("collect refuses an identifier no other column would recognise", async () => {
+  // The hole the audit used to have. It matched against the identities already
+  // collected, so a column whose only identity is tracked nowhere else had
+  // nothing to be recognised by — the check meant to find the unknown could
+  // only find the known. Nothing else here holds this value.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `CREATE TABLE "SomeOutbox" ("id" INTEGER PRIMARY KEY, "payloadJson" TEXT)`,
+  );
+  await db.exec(`INSERT INTO "SomeOutbox" VALUES (1, ${db.param(1)})`, [
+    JSON.stringify({ holder: OLD_A }),
+  ]);
+  const { collect } = await import("./phases.ts");
+  await expect(collect(db)).rejects.toThrow(/Unregistered PUUID-bearing/);
+  await db.close();
+});
+
 test("collect refuses a PUUID column nobody classified", async () => {
   // The guard against the failure this migration hit twice: a column holding
   // identities that nothing migrates, failing silently later because an

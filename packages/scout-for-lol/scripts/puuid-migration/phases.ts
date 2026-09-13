@@ -113,10 +113,8 @@ export async function collect(db: Db): Promise<void> {
       `(across ${seenElsewhere.toString()} stored references)`,
   );
 
-  console.log(
-    `\n  auditing every text column for unregistered TRACKED PUUIDs...`,
-  );
-  await auditForUnregistered(db, columns, tracked);
+  console.log(`\n  auditing every text column for unregistered PUUIDs...`);
+  await auditForUnregistered(db, columns);
   console.log("  audit clean");
 
   // Skip identities the map already knows on EITHER side. After a completed

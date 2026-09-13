@@ -94,11 +94,17 @@ export async function discoverColumns(db: Db): Promise<PuuidColumn[]> {
  */
 export const PUUID_TOKEN_PATTERN = /[\w-]{70,90}/g;
 
+/**
+ * The same shape without `g`. A global regex carries `lastIndex` across calls,
+ * so `.test()` on the shared one alternates true and false down a column and
+ * would report half the offending rows as clean.
+ */
+const PUUID_TOKEN_ANYWHERE = /[\w-]{70,90}/;
+
 async function columnHoldsAny(
   db: Db,
   table: string,
   column: string,
-  known: ReadonlySet<string>,
 ): Promise<boolean> {
   const rows = await db.query(
     `SELECT "${column}" AS v FROM "${table}" WHERE "${column}" IS NOT NULL`,
@@ -108,10 +114,8 @@ async function columnHoldsAny(
     if (value === null) {
       continue;
     }
-    for (const token of value.matchAll(PUUID_TOKEN_PATTERN)) {
-      if (known.has(token[0])) {
-        return true;
-      }
+    if (PUUID_TOKEN_ANYWHERE.test(value)) {
+      return true;
     }
   }
   return false;
@@ -120,15 +124,23 @@ async function columnHoldsAny(
 /**
  * Anything holding a PUUID that discovery did not register is a surface we
  * would silently strand. Report it and stop.
+ *
+ * Judged by SHAPE, not by membership of the identities already collected.
+ * Matching against the collected set left the exact hole this audit exists to
+ * cover: a column whose only identity is not tracked anywhere else has nothing
+ * to be recognised by, so the check that was supposed to find the unknown could
+ * only ever find the known. It also skipped itself entirely on a database where
+ * nothing had been collected yet.
+ *
+ * A non-PUUID token of the same shape is a false positive, and the answer to
+ * one is to classify the column — the same work a true positive asks for. It
+ * costs nothing on either live database: a shape-only sweep of every text
+ * column finds 26 in beta and 4 in prod, and every one is already declared.
  */
 export async function auditForUnregistered(
   db: Db,
   registered: readonly PuuidColumn[],
-  known: ReadonlySet<string>,
 ): Promise<void> {
-  if (known.size === 0) {
-    return;
-  }
   const registeredKeys = new Set(
     registered.map((c) => `${c.table}.${c.column}`),
   );
@@ -142,7 +154,7 @@ export async function auditForUnregistered(
       if (registeredKeys.has(`${table}.${column}`)) {
         continue;
       }
-      if (await columnHoldsAny(db, table, column, known)) {
+      if (await columnHoldsAny(db, table, column)) {
         offenders.push(`${table}.${column}`);
       }
     }
