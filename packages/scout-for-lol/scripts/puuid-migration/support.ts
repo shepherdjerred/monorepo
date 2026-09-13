@@ -89,10 +89,32 @@ export const TRACKED_SOURCES: readonly {
   table: string;
   column: string;
   json: boolean;
+  /**
+   * When this row first recorded the identity. Needed to tell an account that
+   * predates the cutover from one registered since, and every source needs one:
+   * an identity datable from no source at all cannot be judged, so it is held
+   * as suspect and fails verification.
+   */
+  createdColumn: string;
 }[] = [
-  { table: "Account", column: "puuid", json: false },
-  { table: "MatchTrackedAccount", column: "puuid", json: false },
-  { table: "ActiveGame", column: "trackedPuuids", json: true },
+  {
+    table: "Account",
+    column: "puuid",
+    json: false,
+    createdColumn: "createdTime",
+  },
+  {
+    table: "MatchTrackedAccount",
+    column: "puuid",
+    json: false,
+    createdColumn: "createdAt",
+  },
+  {
+    table: "ActiveGame",
+    column: "trackedPuuids",
+    json: true,
+    createdColumn: "detectedAt",
+  },
 ];
 
 /** Anything a driver will accept as a bound parameter. */

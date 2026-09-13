@@ -50,6 +50,9 @@ async function seed(options: {
   await db.exec(
     `CREATE TABLE "MatchRankHistory" ("id" INTEGER PRIMARY KEY, "puuid" TEXT)`,
   );
+  await db.exec(
+    `CREATE TABLE "MatchTrackedAccount" ("riotMatchId" TEXT, "puuid" TEXT, "createdAt" INTEGER, PRIMARY KEY ("riotMatchId", "puuid"))`,
+  );
   // Defaults to well after the seeded cutover marker, so accounts read as
   // registered since it.
   const accountCreatedAt = options.accountsCreatedAt ?? Date.now();
@@ -288,6 +291,46 @@ test("verify faults an account created in the cutover's own second", async () =>
   await db.exec(
     `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.900Z')`,
   );
+  const { verify } = await import("./phases.ts");
+  await expect(verify(db)).rejects.toThrow(/unmapped/);
+  await db.close();
+});
+
+/**
+ * A migrated database where one identity is known only to `MatchTrackedAccount`,
+ * first seen at `seenAt`. That table records associations with no account row
+ * and outlives account deletion, so it is the source that made dating from
+ * `Account` alone wrong.
+ */
+const CUTOVER_AT = Date.parse("2026-09-13T11:34:41.000Z");
+
+async function seedTrackedOnlySighting(
+  seenAt: number,
+): Promise<Awaited<ReturnType<typeof openDatabase>>> {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    accountsCreatedAt: CUTOVER_AT - 60_000,
+  });
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.000Z')`,
+  );
+  await db.exec(
+    `INSERT INTO "MatchTrackedAccount" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)})`,
+    ["NA1_1", POST_CUTOVER, seenAt],
+  );
+  return db;
+}
+
+test("verify accepts a post-cutover identity known only to MatchTrackedAccount", async () => {
+  const db = await seedTrackedOnlySighting(CUTOVER_AT + 60_000);
+  const { verify } = await import("./phases.ts");
+  await verify(db);
+  await db.close();
+});
+
+test("verify still faults an identity MatchTrackedAccount saw before the cutover", async () => {
+  const db = await seedTrackedOnlySighting(CUTOVER_AT - 60_000);
   const { verify } = await import("./phases.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();

@@ -10,14 +10,16 @@
 
 import type { Db } from "./db.ts";
 import { readTrackedPuuids } from "./discovery.ts";
+import { collectFromJson, parseJson } from "./json-walk.ts";
 import {
   asOptionalString,
   asString,
   countOf,
   toEpochMillis,
+  TRACKED_SOURCES,
 } from "./support.ts";
 
-export /**
+/**
  * Tracked identities the map has never seen, in either domain.
  *
  * Both sides count as known. A rerun after an interrupted apply finds rows that
@@ -30,7 +32,7 @@ export /**
  * `collect`, which has no map row at all and would otherwise be rewritten to
  * nothing and stranded.
  */
-async function knownIdentities(db: Db): Promise<Set<string>> {
+export async function knownIdentities(db: Db): Promise<Set<string>> {
   const rows = await db.query(
     `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
   );
@@ -51,26 +53,24 @@ export async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
   return [...tracked].filter((puuid) => !known.has(puuid));
 }
 
-export /** Whether `apply` has finished rewriting this database to the new domain. */
-async function cutoverApplied(db: Db): Promise<boolean> {
+/** Whether `apply` has finished rewriting this database to the new domain. */
+export async function cutoverApplied(db: Db): Promise<boolean> {
   const rows = await db.query(
     `SELECT COUNT(*) AS n FROM "PuuidKeyMigration" WHERE "appliedAt" IS NOT NULL`,
   );
   return countOf(rows, "cutover marker") > 0;
 }
 
-export /**
+/**
  * Tracked identities that should have been migrated and were not.
  *
  * Before the cutover, any unmapped tracked identity is missed work. After it,
- * most are not: an account registered since is already new-domain and is
+ * most are not: an identity registered since is already new-domain and is
  * deliberately absent from the map, which is why `collect` refuses to record
- * one. Only an account that predates the cutover and is still unmapped was
- * actually skipped — so the marker's timestamp, not its mere presence, is what
- * separates the two. Without that distinction a re-run of the advertised
- * resumable `verify` would fail permanently on healthy accounts.
+ * one. Only one that predates the cutover and is still unmapped was actually
+ * skipped — so the marker's timestamp, not its mere presence, separates them.
  */
-async function strayIdentities(db: Db): Promise<string[]> {
+export async function strayIdentities(db: Db): Promise<string[]> {
   const unmapped = await unmappedTrackedIdentities(db);
   if (unmapped.length === 0) {
     return unmapped;
@@ -83,36 +83,73 @@ async function strayIdentities(db: Db): Promise<string[]> {
     return unmapped;
   }
   const appliedAt = toEpochMillis(marker["v"], "cutover marker");
-
-  // Compared here rather than in SQL: `createdTime` is epoch-millisecond
-  // integers in the promoted SQLite image and a timestamp elsewhere, and SQLite
-  // sorts every integer before every text value, so the SQL form was true for
-  // every account regardless of date.
-  const accountRows = await db.query(
-    `SELECT "puuid" AS p, "createdTime" AS t FROM "Account"`,
-  );
-  const createdAt = new Map<string, number>();
-  for (const row of accountRows) {
-    const value = row["t"];
-    if (value === null || value === undefined) {
-      continue;
-    }
-    createdAt.set(
-      asString(row["p"], "account puuid"),
-      toEpochMillis(value, "account createdTime"),
-    );
-  }
+  const firstSeen = await earliestSighting(db);
 
   return unmapped.filter((puuid) => {
-    const created = createdAt.get(puuid);
-    // An identity with no account row cannot be dated, so it stays a stray
-    // rather than being excused by a missing timestamp.
-    //
-    // The boundary is inclusive on purpose. An account created in the same
-    // instant the marker was written genuinely raced the rewrite, and the two
-    // errors are not equally bad: flagging a healthy account fails a verify an
-    // operator can investigate, while excusing a raced one strands it against a
-    // key that is about to be retired.
-    return created === undefined || created <= appliedAt;
+    const seen = firstSeen.get(puuid);
+    // Undatable identities stay suspect rather than being excused by a missing
+    // timestamp, and the boundary is inclusive: one first seen in the instant
+    // the marker was written raced the rewrite. Flagging a healthy identity
+    // fails a verify an operator can investigate; excusing a raced one strands
+    // it against a key about to be retired.
+    return seen === undefined || seen <= appliedAt;
   });
+}
+
+/**
+ * The earliest moment each tracked identity was seen, across every source.
+ *
+ * Dating from `Account` alone was wrong: `MatchTrackedAccount` records an
+ * association with no account row and outlives account deletion, so an ordinary
+ * post-cutover identity had no date at all and was held as a stray forever.
+ *
+ * Comparison happens here rather than in SQL because these columns disagree on
+ * representation — the promoted SQLite image stores `createdTime` as epoch
+ * milliseconds while other sources store timestamps, and SQLite orders every
+ * integer before every text value regardless of the dates they encode.
+ *
+ * Earliest wins: an identity seen anywhere before the cutover predates it,
+ * whichever table still happens to hold it.
+ */
+async function earliestSighting(db: Db): Promise<Map<string, number>> {
+  const tables = new Set(await db.listTables());
+  const earliest = new Map<string, number>();
+
+  const record = (puuid: string, at: number): void => {
+    const previous = earliest.get(puuid);
+    if (previous === undefined || at < previous) {
+      earliest.set(puuid, at);
+    }
+  };
+
+  for (const source of TRACKED_SOURCES) {
+    if (!tables.has(source.table)) {
+      continue;
+    }
+    const rows = await db.query(
+      `SELECT "${source.column}" AS v, "${source.createdColumn}" AS t FROM "${source.table}" WHERE "${source.createdColumn}" IS NOT NULL`,
+    );
+    for (const row of rows) {
+      const value = asOptionalString(row["v"]);
+      const stamp = row["t"];
+      if (value === null || stamp === null || stamp === undefined) {
+        continue;
+      }
+      const at = toEpochMillis(
+        stamp,
+        `${source.table}.${source.createdColumn}`,
+      );
+      if (source.json) {
+        // One row timestamps every identity it names.
+        const inRow: string[] = [];
+        collectFromJson(parseJson(value), true, inRow);
+        for (const puuid of inRow) {
+          record(puuid, at);
+        }
+        continue;
+      }
+      record(value, at);
+    }
+  }
+  return earliest;
 }
