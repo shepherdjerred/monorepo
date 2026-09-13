@@ -322,40 +322,61 @@ describe("a fence taking over a dead attempt", () => {
 });
 
 describe("a fence whose lock cannot outlast its effect", () => {
-  test("abandons an effect that overruns the deadline, with the lock still held", async () => {
-    // The deadline exists so the bookkeeping below happens while the fence is
-    // provably still held: the lock lives 10s here and the effect is cut off
-    // at 300ms.
-    const key = "fence:overrun";
+  test("keeps holding the lock while a slow effect runs, and only warns", async () => {
+    // The ruling this test pins: the warning threshold is telemetry, never a
+    // release. A fence that returned on the timer would unwind its
+    // transaction, drop the lock, and leave `apply()` still writing through
+    // top-level connections — so the rival below would enter while the first
+    // effect was live, which is the double-application the lock exists to
+    // prevent.
+    const key = "fence:slow-but-held";
     const budget: ScoutEffectFenceBudget = {
-      lockLifetimeMs: 10_000,
-      effectDeadlineMs: 300,
+      lockLifetimeMs: 30_000,
+      slowEffectWarningMs: 50,
     };
-    const finished = Promise.withResolvers<undefined>();
+    let concurrent = 0;
+    let overlapped = false;
+    const applications: string[] = [];
+    const firstEntered = Promise.withResolvers<undefined>();
 
-    await expect(
-      runGuardedEffectV2(
+    const attempt = async (name: string) =>
+      await runGuardedEffectV2(
         {
           key,
           kind: "v2-test",
           apply: async () => {
-            await sleep(1500);
-            finished.resolve(undefined);
+            concurrent += 1;
+            if (concurrent > 1) overlapped = true;
+            applications.push(name);
+            if (name === "slow") {
+              firstEntered.resolve(undefined);
+              // Far past the 50ms warning, and far short of the 30s lock.
+              await sleep(600);
+            }
+            concurrent -= 1;
             return applied;
           },
         },
         { database: prisma, budget },
-      ),
-    ).rejects.toThrow("exceeded its 300ms fence deadline");
+      );
 
+    const slow = attempt("slow");
+    await firstEntered.promise;
+    const rival = attempt("rival");
+    await slow;
+    const rivalResult = await rival;
+
+    // The rival waited on the lock for the effect's TRUE duration and then
+    // found the claim completed.
+    expect(applications).toEqual(["slow"]);
+    expect(overlapped).toBe(false);
+    expect(rivalResult).toEqual({
+      guard: { outcome: "already-applied" },
+      fact: { outcome: "already-applied" },
+      effects: 0,
+    });
     const claim = await getScoutEffectClaim(key, prisma);
-    expect(claim?.state).toBe("AMBIGUOUS_OR_FAILED");
-
-    // The abandoned effect keeps running — a promise cannot be cancelled — and
-    // must not be able to complete the claim behind the fence's back.
-    await finished.promise;
-    const afterwards = await getScoutEffectClaim(key, prisma);
-    expect(afterwards?.state).toBe("AMBIGUOUS_OR_FAILED");
+    expect(claim?.state).toBe("COMPLETED");
   }, 30_000);
 
   test("refuses to complete a claim when the fence lapsed mid-effect", async () => {
@@ -367,7 +388,7 @@ describe("a fence whose lock cannot outlast its effect", () => {
     const key = "fence:lapsed";
     const budget: ScoutEffectFenceBudget = {
       lockLifetimeMs: 700,
-      effectDeadlineMs: 30_000,
+      slowEffectWarningMs: 30_000,
     };
     let runs = 0;
 
@@ -386,12 +407,14 @@ describe("a fence whose lock cannot outlast its effect", () => {
       ),
     ).rejects.toThrow();
 
+    // The effect itself RAN and still did not complete the claim: the probe
+    // refused to vouch for a lock the transaction had already dropped.
+    expect(runs).toBe(1);
     const claim = await getScoutEffectClaim(key, prisma);
     expect(claim?.state).not.toBe("COMPLETED");
 
-    // Because nothing was completed, the next attempt re-enters under a lock
-    // it genuinely holds rather than inheriting a completion nobody can vouch
-    // for.
+    // A rival entering after that death cannot inherit a completion nobody can
+    // vouch for; it re-enters under a lock it genuinely holds.
     const recovered = await runGuardedEffectV2(
       {
         key,

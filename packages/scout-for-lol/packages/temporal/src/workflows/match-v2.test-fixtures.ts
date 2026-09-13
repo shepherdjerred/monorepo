@@ -8,6 +8,11 @@ import type {
   PipelineOwner,
   ReceiptKind,
 } from "@scout-for-lol/domain/match-processing/states.ts";
+import {
+  ArtifactDescriptorSchema,
+  type ArtifactDescriptor,
+} from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import { ReceiptKindSchema } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
   ScoutArchiveV2Result,
   ScoutFanOutV2Result,
@@ -29,6 +34,16 @@ import {
 } from "#src/match-receipts-v2.ts";
 
 export const MATCH_ID: RiotMatchId = RiotMatchIdSchema.parse("NA1_9001");
+const RAW_ARCHIVE_MATCH = ReceiptKindSchema.parse("raw-archive-match");
+const MATCH_ARTIFACT: ArtifactDescriptor = ArtifactDescriptorSchema.parse({
+  kind: "match",
+  key: "games/2026/09/13/NA1_9001/match.json",
+  digest: "a".repeat(64),
+  bytes: 4096,
+  contentType: "application/json",
+  capturedAt: "2026-09-13T10:00:00.000Z",
+});
+
 export const INTENT_KEY = ScoutNotificationIntentKeySchema.parse(
   "postmatch-discord:NA1_9001:100000000000000001",
 );
@@ -60,6 +75,14 @@ export type ScoutV2MatchStore = {
   /** Whether this match belongs to a tournament-code custom game. */
   tournamentMatch: boolean;
   /**
+   * Whether the FIRST archive attempt meets a receipt already standing for
+   * the same artifact identity with different evidence — the overlapping-
+   * attempt race. Later attempts read-gate on that standing receipt and
+   * report the match as already archived, which is how the race self-heals.
+   */
+  archiveConflictsOnce: boolean;
+  archiveConflicted: boolean;
+  /**
    * The call the worker dies ON, which models a crash right AFTER the
    * preceding phase committed. Mutable so one worker can serve both the run
    * that dies and the run that replaces it: the SDK refuses two workers on one
@@ -83,6 +106,8 @@ export function createScoutV2MatchStore(
     calls: [],
     completedClaims: new Set<string>(),
     tournamentMatch: false,
+    archiveConflictsOnce: false,
+    archiveConflicted: false,
     failAt: null,
     ...overrides,
   };
@@ -178,6 +203,40 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
     },
     archiveMatchArtifactsV2: (): ScoutArchiveV2Result => {
       record("archiveMatchArtifactsV2");
+      if (store.archiveConflictsOnce && !store.archiveConflicted) {
+        store.archiveConflicted = true;
+        return {
+          artifacts: [
+            {
+              descriptor: MATCH_ARTIFACT,
+              outcome: "stored",
+              receipt: {
+                kind: RAW_ARCHIVE_MATCH,
+                commit: {
+                  outcome: "conflict",
+                  reason: "receipt-evidence-mismatch",
+                },
+              },
+            },
+          ],
+        };
+      }
+      if (store.archiveConflicted) {
+        // The read gate: a receipt already stands, so this attempt reports the
+        // first writer's descriptor and writes nothing.
+        return {
+          artifacts: [
+            {
+              descriptor: MATCH_ARTIFACT,
+              outcome: "already-stored",
+              receipt: {
+                kind: RAW_ARCHIVE_MATCH,
+                commit: { outcome: "already-applied" },
+              },
+            },
+          ],
+        };
+      }
       // Content-addressed: a repeat writes the same bytes to the same key, so
       // it is not a second effect and is deliberately not recorded as one.
       return { artifacts: [] };

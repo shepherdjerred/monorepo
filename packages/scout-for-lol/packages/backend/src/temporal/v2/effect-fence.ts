@@ -6,6 +6,7 @@ import {
   type Db,
   type ExtendedPrismaClient,
 } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   claimScoutEffect,
   completeScoutEffect,
@@ -40,30 +41,61 @@ import {
  * still running" does NOT by itself mean "the lock is still held", and a
  * retry that acquired the released lock would double-apply.
  *
- * Two mechanisms close that, and they do different jobs:
+ * So the fence HOLDS UNTIL THE EFFECT SETTLES. `apply()` is awaited to
+ * completion inside the transaction; there is deliberately no deadline that
+ * stops waiting, because stopping waiting is precisely what opens the window.
+ * A race that returned on a timer would unwind the transaction and release the
+ * lock while `apply()` carried on writing through top-level connections — the
+ * abandoned effect and its replacement would then both be live, which is the
+ * defect the lock exists to prevent. A promise cannot be cancelled, so the
+ * only honest options are to wait for it or to leave it unfenced, and waiting
+ * is the one that is safe.
  *
- * - {@link ScoutEffectFenceBudget.effectDeadlineMs} bounds `apply()` strictly
- *   INSIDE the lock's lifetime. If the effect overruns, the fence stops
- *   waiting while it still provably holds the lock, so the bookkeeping that
- *   follows happens under the fence rather than after it.
- * - The liveness probe before completion proves the lock was held for the
- *   whole effect: a transaction that is still open never released its xact
- *   lock, and a transaction Prisma already rolled back fails the probe.
+ * The lock's lifetime is therefore sized to outlast any effect that is still
+ * running rather than to cut one off:
+ * {@link ScoutEffectFenceBudget.lockLifetimeMs} is 30 minutes, twenty times
+ * the Activity's own 90-second start-to-close and fifteen times the longest
+ * legitimate inner wait (progression nests `withChallengeProgressionLock`,
+ * whose budget is two minutes). An effect anywhere near that bound is
+ * pathological, which is what {@link ScoutEffectFenceBudget.slowEffectWarningMs}
+ * exists to say out loud — it LOGS and never releases.
  *
- * Both fail CLOSED. Neither completes the claim, so the next attempt re-enters
- * under a lock it genuinely holds rather than inheriting a completion nobody
- * can vouch for.
+ * The liveness probe before completion closes the remaining cliff: a
+ * transaction that is still open never released its xact lock, and one Prisma
+ * already rolled back fails the probe. It fails CLOSED, so the claim is not
+ * completed and the next attempt re-enters under a lock it genuinely holds.
+ *
+ * ## The residual, stated plainly
+ *
+ * One window remains and is accepted at this depth: an effect that exceeds the
+ * 30-minute lock lifetime. Postgres then kills the fence's transaction, the
+ * probe fails closed so nothing is completed on its behalf, and a rival that
+ * enters afterwards reconciles through the takeover `alreadyApplied` probe —
+ * which reads the durable fact the zombie committed rather than re-applying
+ * on top of it. What is NOT closed is the zombie's own remaining writes racing
+ * that rival. Closing it completely needs cooperative cancellation inside the
+ * effects themselves or a fencing-token column, both of which are design
+ * changes rather than fixes.
  *
  * A session-level `pg_advisory_lock` would have no timer at all, but Prisma
  * offers no way to pin a connection outside a transaction, and a session lock
  * taken inside one outlives the transaction on a pooled connection this code
  * can no longer address — it would leak the lock instead of releasing it. The
  * xact lock is the only pin Prisma can actually give, which is why its
- * lifetime is proved rather than extended.
+ * lifetime is sized rather than extended.
  *
- * No fencing-token column is needed for any of this: Postgres already is the
+ * No fencing-token column is needed for the rest: Postgres already is the
  * shared lock manager a token would substitute for, and the claim row already
  * records the outcome the token would carry.
+ *
+ * ## Connection pool
+ *
+ * Holding to settlement means a slow effect pins its pooled connection for its
+ * TRUE duration, not for a capped one, while the effect's own queries take
+ * other connections. At most four realtime Activities run concurrently, so the
+ * ceiling is four pinned connections plus their effects' working set — the
+ * same shape as `withChallengeProgressionLock`, which is proven in production,
+ * but worth a look at pool saturation once V2 actually runs matches on beta.
  *
  * ## The transaction holds the lock and nothing else
  *
@@ -79,28 +111,31 @@ import {
  * mutual exclusion; the claim must outlive the lock-holder's outcome.
  */
 
+const logger = createLogger("scout-v2-effect-fence");
+
 const SCOUT_V2_EFFECT_LOCK_NAMESPACE = "scout-v2-effect";
 
 /**
- * How long the fence guarantees the lock, and how long the effect may take.
+ * How long the fence guarantees the lock, and when a slow effect starts
+ * screaming.
  *
- * The lock lifetime is deliberately far above any plausible effect: settlement
- * is bounded by its Riot reads and a handful of transactions, and progression
- * nests `withChallengeProgressionLock`, whose own budget is two minutes. The
- * deadline sits well below the lifetime so that an overrun is detected — and
- * recorded — with the lock still in hand.
+ * `slowEffectWarningMs` is TELEMETRY ONLY. It logs and it does not release:
+ * releasing on a timer is the defect this design removed. It is set to the
+ * longest legitimate inner wait — progression's own advisory-lock budget — so
+ * anything past it has already exceeded every bound the effect itself
+ * respects.
  *
- * Injectable so a test can shrink both and drive the expiry paths in seconds
- * rather than minutes; nothing in production passes them.
+ * Injectable so a test can shrink both and drive the slow and expired paths in
+ * seconds rather than half an hour; nothing in production passes them.
  */
 export type ScoutEffectFenceBudget = {
   readonly lockLifetimeMs: number;
-  readonly effectDeadlineMs: number;
+  readonly slowEffectWarningMs: number;
 };
 
 export const SCOUT_V2_EFFECT_FENCE_BUDGET: ScoutEffectFenceBudget = {
-  lockLifetimeMs: 900_000,
-  effectDeadlineMs: 600_000,
+  lockLifetimeMs: 1_800_000,
+  slowEffectWarningMs: 120_000,
 };
 
 const FENCE_LOCK_MAX_WAIT_MS = 15_000;
@@ -163,27 +198,28 @@ async function recordFenceFailure(
   });
 }
 
-/** Run `apply`, refusing to outlast the lock that is fencing it. */
-async function applyWithinDeadline(
+/**
+ * Run `apply` to settlement, holding the fence for exactly as long as it takes.
+ *
+ * The timer only ever LOGS. Returning early on it would unwind the
+ * transaction, release the lock, and leave the effect running unfenced — the
+ * one outcome this fence exists to prevent — so a slow effect is reported and
+ * then waited for.
+ */
+async function applyHoldingTheFence(
   apply: () => Promise<GuardedEffect>,
   key: string,
-  deadlineMs: number,
+  warningMs: number,
 ): Promise<GuardedEffect> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const deadline = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => {
-      reject(
-        ApplicationFailure.nonRetryable(
-          `Effect ${key} exceeded its ${String(deadlineMs)}ms fence deadline; abandoning it while the lock is still held rather than completing a claim the fence cannot vouch for`,
-          "EffectFenceDeadlineExceeded",
-        ),
-      );
-    }, deadlineMs);
-  });
+  const warning = setTimeout(() => {
+    logger.error(
+      `⏳ Effect ${key} has held the V2 fence for more than ${String(warningMs)}ms; the lock is still held and the effect is still being waited on, but an effect this slow is pathological`,
+    );
+  }, warningMs);
   try {
-    return await Promise.race([apply(), deadline]);
+    return await apply();
   } finally {
-    if (timer !== undefined) clearTimeout(timer);
+    clearTimeout(warning);
   }
 }
 
@@ -301,10 +337,10 @@ async function applyUnderFence(
 
   let applied: GuardedEffect;
   try {
-    applied = await applyWithinDeadline(
+    applied = await applyHoldingTheFence(
       args.apply,
       args.key,
-      budget.effectDeadlineMs,
+      budget.slowEffectWarningMs,
     );
   } catch (error) {
     await recordFenceFailure(args.key, error, database);

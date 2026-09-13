@@ -1,6 +1,7 @@
-import { startChild } from "@temporalio/workflow";
+import { ApplicationFailure, startChild } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { ScoutArchiveV2Result } from "#src/activity-contracts-v2.ts";
 import type {
   MatchProcessingPolicy,
   PipelineOwner,
@@ -106,6 +107,42 @@ async function processMatchAsChild(
 }
 
 /**
+ * Refuse to build on an artifact whose attestation is contested.
+ *
+ * Each archived artifact reports its own receipt outcome, and a `conflict`
+ * means a receipt for that identity already stands carrying DIFFERENT
+ * evidence. Discarding it would let this run attest to the archive phase,
+ * derive the observation's artifact identity from a receipt it never agreed
+ * with, and advance the cursor over detected drift — the match would never be
+ * looked at again. So any conflict fails the run, the same way a contested
+ * settlement fact or a contested observation does.
+ *
+ * Two overlapping archives of the SAME bytes can reach here today, because the
+ * raw-archive evidence includes `capturedAt`, which is stamped at put time.
+ * That benign race now fails loudly rather than silently, and it self-heals:
+ * the next attempt read-gates on the standing receipt and reports the match as
+ * already archived without writing anything. Taking `capturedAt` out of the
+ * evidence is the real fix and belongs to the receipted door, under a coordinated
+ * evidence version bump — beta already holds rows written the old way.
+ */
+function assertArtifactsUncontested(
+  archived: ScoutArchiveV2Result,
+  riotMatchId: RiotMatchId,
+): void {
+  const contested = archived.artifacts.filter(
+    (artifact) => artifact.receipt.commit.outcome === "conflict",
+  );
+  if (contested.length === 0) return;
+  const detail = contested
+    .map((artifact) => `${artifact.receipt.kind} (${artifact.descriptor.key})`)
+    .join(", ");
+  throw ApplicationFailure.nonRetryable(
+    `Archived artifacts for ${riotMatchId} disagree with the receipts already standing for them: ${detail}. Refusing to attest to the archive or advance the cursor over drift nothing has reconciled`,
+    "ArchiveReceiptConflict",
+  );
+}
+
+/**
  * Attest to the phases this run completed, if it completed any.
  *
  * One call, after the last domain effect, rather than a receipt beside each
@@ -162,7 +199,10 @@ export async function scoutMatchProcessingV2Workflow(
 
   if (!attested.has(SCOUT_V2_MATCH_RECEIPT_KINDS.archive)) {
     setWorkflowPhase("**Phase:** archiving the raw match artifacts");
-    await activities.archiveMatchArtifactsV2(ref);
+    assertArtifactsUncontested(
+      await activities.archiveMatchArtifactsV2(ref),
+      input.riotMatchId,
+    );
     receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.archive);
   }
 

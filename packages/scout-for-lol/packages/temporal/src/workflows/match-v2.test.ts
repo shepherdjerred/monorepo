@@ -251,6 +251,46 @@ describe("the V2 per-match core", () => {
   }, 60_000);
 });
 
+describe("a contested archive attestation", () => {
+  test("fails the run before the observation, the receipts or the cursor", async () => {
+    // A conflicting receipt means one already stands for this artifact
+    // identity carrying different evidence. Building on it would derive the
+    // observation's artifact identity from a claim this run never agreed with
+    // and then advance the cursor past the match, so nothing would look at it
+    // again.
+    const store = createScoutV2MatchStore({ archiveConflictsOnce: true });
+    await startWorkers(scoutV2MatchActivityStubs(store));
+
+    await expect(processMatch("match-archive-conflict")).rejects.toThrow();
+
+    expect(store.calls).toEqual([
+      "readMatchPipelineStateV2",
+      "archiveMatchArtifactsV2",
+    ]);
+    expect(store.calls).not.toContain("commitMatchObservationV2");
+    expect(store.calls).not.toContain("recordMatchReceiptsV2");
+    expect(store.calls).not.toContain("advanceMatchCursorV2");
+    expect(store.applied).toEqual([]);
+    expect(store.receiptKinds).toEqual([]);
+    expect(store.observed).toBe(false);
+  }, 60_000);
+
+  test("converges on the next attempt through the archive read gate", async () => {
+    // The overlapping-identical-bytes race: the raw-archive evidence carries
+    // `capturedAt`, stamped at put time, so two attempts over the same bytes
+    // disagree. The first fails loudly; the next reads the standing receipt,
+    // reports the match as already archived, and the pipeline proceeds.
+    const store = createScoutV2MatchStore({ archiveConflictsOnce: true });
+    await startWorkers(scoutV2MatchActivityStubs(store));
+
+    await expect(processMatch("match-archive-race")).rejects.toThrow();
+    const result = await processMatch("match-archive-race-retry");
+
+    expect(result).toMatchObject({ data: { status: "completed" } });
+    expect(store.applied).toEqual(["settlement", "progression", "cursor"]);
+  }, 90_000);
+});
+
 describe("the V2 tournament finalization stage", () => {
   test("finalizes a tournament-code custom game before the cursor advances", async () => {
     // v1 finalizes at exactly this point and is the only caller repo-wide.
