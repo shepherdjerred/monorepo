@@ -76,15 +76,42 @@ export async function collect(db: Db): Promise<void> {
 
   // Skip identities the map already knows on EITHER side. After a completed
   // apply the tracked columns hold new-domain values, so inserting them blindly
-  // would create a second, bogus `pending` row per migrated player — which
-  // harvest would then 404 against the old key and apply would refuse. Re-running
-  // collect is advertised as safe, so it has to be.
-  const known = await knownIdentities(db);
-  let recorded = 0;
-  for (const puuid of tracked) {
-    if (known.has(puuid)) {
-      continue;
+  // would create a second, bogus `pending` row per migrated player.
+  const mapRows = await db.query(
+    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
+  );
+  const known = new Set<string>();
+  const rewritten = new Set<string>();
+  for (const row of mapRows) {
+    known.add(asString(row["oldPuuid"], "oldPuuid"));
+    const mapped = asOptionalString(row["newPuuid"]);
+    if (mapped !== null) {
+      known.add(mapped);
+      rewritten.add(mapped);
     }
+  }
+
+  const unknown = [...tracked].filter((puuid) => !known.has(puuid));
+
+  // Evidence that the rewrite already ran against THIS database: a tracked
+  // column holds a value the map lists as new-domain. Once that is true, an
+  // unknown tracked identity is a normal account registered since the cutover —
+  // it is already in the new domain. Recording it as an `oldPuuid` would send
+  // resolve to the retired key, earn a 404, and block every later apply and
+  // verify on a perfectly healthy account.
+  const cutoverDone = [...tracked].some((puuid) => rewritten.has(puuid));
+  if (cutoverDone && unknown.length > 0) {
+    throw new Error(
+      `This database has already been rewritten to the new key domain, but ` +
+        `${unknown.length.toString()} tracked identities are absent from the map.\n` +
+        `They were registered after the cutover and are already new-domain, so ` +
+        `collecting them would strand them against the retired key.\n` +
+        `No action is needed for them; do not re-run the migration here.`,
+    );
+  }
+
+  let recorded = 0;
+  for (const puuid of unknown) {
     await db.exec(
       `INSERT INTO "PuuidKeyMap" ("oldPuuid") VALUES (${db.param(1)}) ON CONFLICT DO NOTHING`,
       [puuid],

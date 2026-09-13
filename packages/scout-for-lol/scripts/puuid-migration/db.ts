@@ -43,7 +43,12 @@ function isTextType(type: string): boolean {
 async function openSqlite(url: string): Promise<Db> {
   const { Database } = await import("bun:sqlite");
   const path = url.startsWith("file:") ? url.slice("file:".length) : url;
-  const db = new Database(path);
+  // `create: false` is load-bearing. Bun's default would CREATE a database at a
+  // mistyped or missing path, and every phase would then succeed against that
+  // empty file — collect finding nothing, verify finding nothing to fault — so
+  // an operator could retire the old key believing the real database had been
+  // migrated. A wrong path has to fail here, loudly, not read as "no work to do".
+  const db = new Database(path, { create: false, readwrite: true });
   db.run("PRAGMA journal_mode = WAL");
 
   const run = (sql: string, params: readonly SqlParam[]): Row[] =>
