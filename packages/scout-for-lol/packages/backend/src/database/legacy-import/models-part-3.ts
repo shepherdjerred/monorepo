@@ -9,6 +9,7 @@
 import type { Prisma } from "#generated/prisma/client/index.js";
 import {
   DesktopClientIdSchema,
+  PuuidKeyMapStatusSchema,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -420,5 +421,29 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     },
     count: (tx) => tx.tournamentLobby.count(),
     findAll: (tx) => tx.tournamentLobby.findMany({ orderBy: [{ id: "asc" }] }),
+  }),
+  defineImportModel({
+    // Carried across promotion because nothing can rebuild it: only the retired
+    // API key could map an old-domain PUUID back to a Riot ID. Losing it here
+    // would silently degrade every later lake rebuild to old-domain identifiers.
+    model: "PuuidKeyMap",
+    idColumns: ["oldPuuid"],
+    resetIdSequence: false,
+    transform: (row): Prisma.PuuidKeyMapCreateManyInput => ({
+      oldPuuid: toStr(row, "oldPuuid"),
+      gameName: toStrOrNull(row, "gameName"),
+      tagLine: toStrOrNull(row, "tagLine"),
+      newPuuid: toStrOrNull(row, "newPuuid"),
+      status: PuuidKeyMapStatusSchema.parse(toStr(row, "status")),
+      harvestedAt: toDateOrNull(row, "harvestedAt"),
+      resolvedAt: toDateOrNull(row, "resolvedAt"),
+    }),
+    createMany: async (tx, data) => {
+      const result = await tx.puuidKeyMap.createMany({ data });
+      return result.count;
+    },
+    count: (tx) => tx.puuidKeyMap.count(),
+    findAll: (tx) =>
+      tx.puuidKeyMap.findMany({ orderBy: [{ oldPuuid: "asc" }] }),
   }),
 ];

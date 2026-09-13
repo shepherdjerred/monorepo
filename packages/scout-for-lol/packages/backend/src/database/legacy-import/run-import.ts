@@ -24,6 +24,7 @@ import type {
   SqliteRow,
 } from "#src/database/legacy-import/convert.ts";
 import { toDate, toInt, toStr } from "#src/database/legacy-import/convert.ts";
+import { LEGACY_OPTIONAL_TABLES } from "#src/database/legacy-import/legacy-optional-tables.ts";
 import { IMPORT_MODELS_PART_1 } from "#src/database/legacy-import/models-part-1.ts";
 import { IMPORT_MODELS_PART_2 } from "#src/database/legacy-import/models-part-2.ts";
 import { IMPORT_MODELS_PART_3 } from "#src/database/legacy-import/models-part-3.ts";
@@ -57,23 +58,6 @@ const SENTINEL_MODELS = new Set([
 ]);
 
 const MARKER_TABLE = "_legacy_sqlite_import";
-
-// The currently promoted SQLite image predates the parlay migration. An absent
-// BucksOpenPosition table is reconstructed from pending bets in open pools;
-// absent post-baseline attribution and parlay tables are empty historical
-// models. Every other missing table remains a hard compatibility error.
-const LEGACY_OPTIONAL_TABLES = new Set([
-  "InstallAttributionToken",
-  "BucksOpenPosition",
-  "BucksParlayDefinition",
-  "BucksParlayMarket",
-  "BucksParlayBet",
-  // The promoted SQLite image predates the tournament-lobby migration. Newer
-  // snapshots carry these tables and import them; older snapshots treat them
-  // as empty so the cutover can still complete.
-  "TournamentRegistration",
-  "TournamentLobby",
-]);
 
 function quoteIdentifier(identifier: string): string {
   return `"${identifier.replaceAll('"', '""')}"`;

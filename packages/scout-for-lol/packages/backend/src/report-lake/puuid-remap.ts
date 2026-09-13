@@ -18,51 +18,39 @@
  * already re-domained.
  */
 
-import { z } from "zod";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("report-lake.puuid-remap");
 
-/** Written by `scripts/migrate-puuid-key.ts`; absent where no migration ran. */
-const MAP_TABLE = "PuuidKeyMap";
-
-const TablePresenceSchema = z.array(z.object({ present: z.boolean() }));
-const RemapRowsSchema = z.array(
-  z.object({ oldPuuid: z.string(), newPuuid: z.string() }),
-);
-
 /**
- * Loads the map, or an empty one where the table does not exist.
+ * Loads the old→new mapping for every identity that was successfully migrated.
  *
- * Absence is a legitimate state, not a swallowed failure: an environment that
- * never crossed key domains has no old-domain PUUIDs to translate, so an empty
- * map is the correct answer. Existence is checked explicitly rather than by
- * catching a query error, so a genuine database fault still surfaces.
+ * An empty result is a legitimate state, not a swallowed failure: an
+ * environment that never crossed key domains has no old-domain PUUIDs to
+ * translate. Unresolved rows are excluded because they have no replacement —
+ * their historical payloads keep old-domain identifiers by design.
  */
 export async function loadPuuidRemap(
   prisma: ExtendedPrismaClient,
 ): Promise<ReadonlyMap<string, string>> {
-  const presence: unknown = await prisma.$queryRawUnsafe(
-    `SELECT to_regclass('public."${MAP_TABLE}"') IS NOT NULL AS present`,
-  );
-  const [presenceRow] = TablePresenceSchema.parse(presence);
-  if (presenceRow?.present !== true) {
-    logger.info(
-      `No ${MAP_TABLE} table; treating the corpus as single-domain and skipping remap`,
-    );
-    return new Map();
-  }
+  const rows = await prisma.puuidKeyMap.findMany({
+    where: { newPuuid: { not: null } },
+    select: { oldPuuid: true, newPuuid: true },
+  });
 
-  const rows: unknown = await prisma.$queryRawUnsafe(
-    `SELECT "oldPuuid", "newPuuid" FROM "${MAP_TABLE}" WHERE "newPuuid" IS NOT NULL`,
-  );
-  const map = new Map<string, string>(
-    RemapRowsSchema.parse(rows).map((r) => [r.oldPuuid, r.newPuuid]),
-  );
-  logger.info(
-    `Loaded ${map.size.toString()} PUUID remappings for historical payloads`,
-  );
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    if (row.newPuuid === null) {
+      continue;
+    }
+    map.set(row.oldPuuid, row.newPuuid);
+  }
+  if (map.size > 0) {
+    logger.info(
+      `Loaded ${map.size.toString()} PUUID remappings for historical payloads`,
+    );
+  }
   return map;
 }
 
@@ -96,4 +84,32 @@ export function remapRawJson(
       remapRawJson(child, map),
     ]),
   );
+}
+
+/**
+ * Identifies the PUUID domain a lake build was written at.
+ *
+ * The fold tier hardlinks the published build's parquet and appends only new
+ * files, so it cannot retranslate history. Without this, deploying the remap
+ * over a pre-cutover lake would leave match rows on old-domain PUUIDs while
+ * accounts — refreshed from the re-domained database — moved to new ones,
+ * hiding historical results until the next full rebuild happened to run.
+ *
+ * Folding the remap into the build fingerprint reuses the machinery that
+ * already exists for column changes: a fingerprint mismatch makes the fold fall
+ * back to a full rebuild, which rewrites every file through the map.
+ */
+export function puuidRemapFingerprint(
+  map: ReadonlyMap<string, string>,
+): string {
+  if (map.size === 0) {
+    return "none";
+  }
+  const hasher = new Bun.CryptoHasher("sha256");
+  for (const [oldPuuid, newPuuid] of [...map.entries()].toSorted(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  )) {
+    hasher.update(`${oldPuuid}>${newPuuid}\n`);
+  }
+  return hasher.digest("hex").slice(0, 16);
 }

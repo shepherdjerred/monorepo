@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { remapRawJson } from "#src/report-lake/puuid-remap.ts";
+import {
+  puuidRemapFingerprint,
+  remapRawJson,
+} from "#src/report-lake/puuid-remap.ts";
 
 const OLD_A = "OLD_A_puuid";
 const NEW_A = "NEW_A_puuid";
@@ -60,5 +63,39 @@ describe("remapRawJson", () => {
       endedAt: null,
     };
     expect(remapRawJson(payload, map)).toEqual(payload);
+  });
+});
+
+describe("puuidRemapFingerprint", () => {
+  test("reports a stable sentinel when nothing was migrated", () => {
+    expect(puuidRemapFingerprint(new Map())).toBe("none");
+  });
+
+  test("changes when the mapping changes, so a fold falls back to a rebuild", () => {
+    const before = puuidRemapFingerprint(new Map([[OLD_A, NEW_A]]));
+    const after = puuidRemapFingerprint(
+      new Map([
+        [OLD_A, NEW_A],
+        [OLD_B, NEW_B],
+      ]),
+    );
+    expect(before).not.toBe(after);
+    expect(before).not.toBe("none");
+  });
+
+  test("does not depend on insertion order", () => {
+    const forward = puuidRemapFingerprint(
+      new Map([
+        [OLD_A, NEW_A],
+        [OLD_B, NEW_B],
+      ]),
+    );
+    const reverse = puuidRemapFingerprint(
+      new Map([
+        [OLD_B, NEW_B],
+        [OLD_A, NEW_A],
+      ]),
+    );
+    expect(forward).toBe(reverse);
   });
 });

@@ -34,7 +34,7 @@
  *
  * Usage:
  *   OLD_RIOT_API_KEY=... NEW_RIOT_API_KEY=... DATABASE_URL=... \
- *     bun scripts/migrate-puuid-key.ts <phase> [--apply]
+ *     bun scripts/migrate-puuid-key.ts <phase> [--apply] [--allow-unresolved]
  */
 
 import { openDb } from "./puuid-migration/db.ts";
@@ -49,6 +49,7 @@ import {
 
 const phase = Bun.argv[2];
 const confirmed = Bun.argv.includes("--apply");
+const allowUnresolved = Bun.argv.includes("--allow-unresolved");
 
 const db = await openDb();
 console.log(`target: ${db.kind}\n`);
@@ -71,7 +72,7 @@ try {
           "apply rewrites production data; pass --apply to confirm",
         );
       }
-      await apply(db);
+      await apply(db, allowUnresolved);
       break;
     case "verify":
       await verify(db);
@@ -79,7 +80,7 @@ try {
     case undefined:
     default:
       throw new Error(
-        "usage: migrate-puuid-key.ts <collect|harvest|resolve|apply|verify> [--apply]",
+        "usage: migrate-puuid-key.ts <collect|harvest|resolve|apply|verify> [--apply] [--allow-unresolved]",
       );
   }
 } finally {

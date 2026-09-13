@@ -2839,3 +2839,29 @@ model ScoutOperatorAuditEvent {
   @@index([subjectKind, subjectId, createdAt])
   @@index([actorDiscordId, createdAt])
 }
+
+/// Permanent old→new PUUID map from a Riot API-key domain change.
+///
+/// Riot encrypts identifiers per API-key holder, so moving between keys
+/// invalidates every stored PUUID. `scripts/migrate-puuid-key.ts` rewrites the
+/// database, but the S3 corpus is canonical and deliberately left untouched —
+/// it holds old-domain PUUIDs permanently, and the report lake is re-derived
+/// from it. This table is what lets that re-derivation stay correct.
+///
+/// It is NOT scratch state. Once the old key is retired, nothing can rebuild
+/// it: only that key could map an old PUUID back to a Riot ID. It is a managed
+/// model, and carried by the legacy SQLite→Postgres import, so the mapping
+/// survives promotion rather than silently degrading rebuilds to old-domain
+/// identifiers.
+model PuuidKeyMap {
+  oldPuuid    String    @id
+  gameName    String?
+  tagLine     String?
+  newPuuid    String?
+  /// pending | harvested | resolved | unresolved
+  status      String    @default("pending")
+  harvestedAt DateTime? @db.Timestamptz()
+  resolvedAt  DateTime? @db.Timestamptz()
+
+  @@index([status])
+}

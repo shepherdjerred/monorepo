@@ -317,18 +317,56 @@ async function loadMap(db: Db): Promise<Map<string, string>> {
   );
 }
 
-export async function apply(db: Db): Promise<void> {
-  await assertNoCollisions(db);
-
-  const stuckRows = await db.query(
-    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "status" <> 'resolved'`,
+/**
+ * Refuse to rewrite while any tracked identity is still unresolved.
+ *
+ * An unresolved identity keeps its old-domain PUUID, which Riot cannot decrypt
+ * once the new key is live — and `verify` cannot see the problem, because it
+ * only inspects rows whose map entry has a `newPuuid`. Warning and proceeding
+ * would let a partial migration finish looking green while quietly stranding
+ * real players. Leaving one behind has to be a deliberate, recorded choice, so
+ * it requires an explicit flag rather than a log line nobody reads.
+ */
+async function assertEveryIdentityResolved(
+  db: Db,
+  allowUnresolved: boolean,
+): Promise<void> {
+  const rows = await db.query(
+    `SELECT "oldPuuid", "status", "gameName", "tagLine" FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
   );
-  const stuck = countOf(stuckRows, "unresolved count");
-  if (stuck > 0) {
-    console.warn(
-      `  WARNING: ${stuck.toString()} PUUIDs are not resolved. Their rows keep old-domain values and will not join to anything.`,
+  if (rows.length === 0) {
+    return;
+  }
+  const detail = rows
+    .slice(0, 20)
+    .map((r) => {
+      const puuid = asString(r["oldPuuid"], "oldPuuid");
+      const status = asOptionalString(r["status"]) ?? "?";
+      const name = asOptionalString(r["gameName"]);
+      const tag = asOptionalString(r["tagLine"]);
+      const who =
+        name === null || tag === null ? "(no Riot ID)" : `${name}#${tag}`;
+      return `  ${puuid.slice(0, 16)}… ${status} ${who}`;
+    })
+    .join("\n");
+  const more =
+    rows.length > 20 ? `\n  …and ${(rows.length - 20).toString()} more` : "";
+
+  if (!allowUnresolved) {
+    throw new Error(
+      `${rows.length.toString()} tracked identities are unresolved; refusing to rewrite.\n` +
+        `Re-run harvest/resolve, or pass --allow-unresolved to accept stranding them:\n${detail}${more}`,
     );
   }
+  console.warn(
+    `  PROCEEDING with ${rows.length.toString()} unresolved identities (--allow-unresolved).\n` +
+      `  These keep old-domain PUUIDs and will not resolve against the new key:\n${detail}${more}`,
+  );
+}
+
+export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
+  await assertNoCollisions(db);
+  await assertEveryIdentityResolved(db, allowUnresolved);
 
   const columns = await discoverColumns(db);
   const map = await loadMap(db);
@@ -410,11 +448,25 @@ export async function verify(db: Db): Promise<void> {
     }
   }
 
-  if (survivors > 0) {
+  // Unresolved identities are invisible to the survivor scan above, which only
+  // considers map entries that actually have a replacement. Counting them here
+  // keeps `verify` honest about identities that were never migrated at all.
+  const unresolvedRows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
+  );
+  const unresolved = countOf(unresolvedRows, "unresolved count");
+  if (unresolved > 0) {
+    console.error(
+      `  ${unresolved.toString()} tracked identities were never resolved and keep old-domain PUUIDs`,
+    );
+  }
+
+  if (survivors > 0 || unresolved > 0) {
     // Throwing, not logging: this is the gate, and a gate that exits 0 on
     // failure is not a gate.
     throw new Error(
-      `verify FAILED — ${survivors.toString()} rows still hold translated old-domain PUUIDs`,
+      `verify FAILED — ${survivors.toString()} rows hold translated old-domain PUUIDs, ` +
+        `${unresolved.toString()} identities unresolved`,
     );
   }
   console.log(
