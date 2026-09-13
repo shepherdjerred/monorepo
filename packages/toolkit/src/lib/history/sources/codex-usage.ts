@@ -116,9 +116,15 @@ function applyTokenUsageRecord(
   timestamp: string | null,
   location: UsageFieldLocation,
 ): void {
-  const usage = parseRecord(payload["turn_token_usage"]);
-  if (usage === null) {
+  const usageValue = payload["turn_token_usage"];
+  if (usageValue === undefined) {
     return;
+  }
+  const usage = parseRecord(usageValue);
+  if (usage === null) {
+    throw new Error(
+      `Malformed Codex turn_token_usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
   }
   if (timestamp === null) {
     throw new Error(
@@ -145,10 +151,25 @@ function applyTokenCount(
   timestamp: string | null,
   location: UsageFieldLocation,
 ): void {
-  const info = parseRecord(payload["info"]);
-  const usage = info === null ? null : parseRecord(info["last_token_usage"]);
-  if (usage === null) {
+  const infoValue = payload["info"];
+  if (infoValue === undefined) {
     return;
+  }
+  const info = parseRecord(infoValue);
+  if (info === null) {
+    throw new Error(
+      `Malformed Codex token_count info container on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const usageValue = info["last_token_usage"];
+  if (usageValue === undefined) {
+    return;
+  }
+  const usage = parseRecord(usageValue);
+  if (usage === null) {
+    throw new Error(
+      `Malformed Codex last_token_usage container on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
   }
   if (timestamp === null) {
     throw new Error(
