@@ -9,7 +9,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./activities": "./src/activities.ts",
+    "./activity-contracts-v2": "./src/activity-contracts-v2.ts",
     "./contracts": "./src/contracts.ts",
+    "./contracts-v2": "./src/contracts-v2.ts",
+    "./workflow-contracts-v2": "./src/workflow-contracts-v2.ts",
     "./execution-metadata": "./src/execution-metadata.ts",
     "./identifiers": "./src/identifiers.ts",
     "./signals": "./src/signals.ts",
@@ -33,6 +36,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@scout-for-lol/domain": "workspace:*",
     "@temporalio/common": "1.22.0",
     "@temporalio/workflow": "1.22.0",
     "zod": "^4.4.3"

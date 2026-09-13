@@ -1644,6 +1644,7 @@
       "name": "@scout-for-lol/temporal",
       "version": "0.1.0",
       "dependencies": {
+        "@scout-for-lol/domain": "workspace:*",
         "@temporalio/common": "1.22.0",
         "@temporalio/workflow": "1.22.0",
         "zod": "^4.4.3",

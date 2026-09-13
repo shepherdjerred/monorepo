@@ -3,7 +3,10 @@ import {
   proxyActivities,
 } from "@temporalio/workflow";
 import type { RetryPolicy } from "@temporalio/common";
-import type { ScoutTemporalActivities } from "#src/activities.ts";
+import type {
+  ScoutTemporalActivities,
+  ScoutTemporalV2Activities,
+} from "#src/activities.ts";
 import type { ScoutStage } from "#src/contracts.ts";
 import { DETACHED_WORK_MAX_ATTEMPTS } from "#src/contracts.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
@@ -82,6 +85,87 @@ export function lakeActivities(stage: ScoutStage) {
       initialInterval: "30 seconds",
       backoffCoefficient: 2,
       maximumInterval: "10 minutes",
+      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+    },
+  });
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// V2 durable pipeline
+// ───────────────────────────────────────────────────────────────────────────
+
+export function realtimeV2Activities(stage: ScoutStage) {
+  return proxyActivities<ScoutTemporalV2Activities>({
+    taskQueue: scoutTaskQueues(stage).realtime,
+    startToCloseTimeout: "90 seconds",
+    scheduleToCloseTimeout: "5 minutes",
+    heartbeatTimeout: "30 seconds",
+    retry: {
+      maximumAttempts: 5,
+      initialInterval: "2 seconds",
+      backoffCoefficient: 2,
+      maximumInterval: "30 seconds",
+      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+    },
+  });
+}
+
+export function backgroundV2Activities(stage: ScoutStage) {
+  return proxyActivities<ScoutTemporalV2Activities>({
+    taskQueue: scoutTaskQueues(stage).background,
+    startToCloseTimeout: "30 minutes",
+    scheduleToCloseTimeout: "2 hours",
+    heartbeatTimeout: "30 seconds",
+    retry: BACKGROUND_ACTIVITY_RETRY_POLICY,
+  });
+}
+
+export function lakeV2Activities(stage: ScoutStage) {
+  return proxyActivities<ScoutTemporalV2Activities>({
+    taskQueue: scoutTaskQueues(stage).lake,
+    startToCloseTimeout: "2 hours",
+    scheduleToCloseTimeout: "6 hours",
+    heartbeatTimeout: "30 seconds",
+    retry: {
+      maximumAttempts: 3,
+      initialInterval: "30 seconds",
+      backoffCoefficient: 2,
+      maximumInterval: "10 minutes",
+      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+    },
+  });
+}
+
+/**
+ * The one V2 deviation from the sibling options, and the reason it exists.
+ *
+ * `deliverNotificationV2` is the single Activity whose retry is itself the
+ * hazard: the request may have reached Discord and posted a message before
+ * the response was lost, so a second attempt can double-deliver to a user.
+ * `maximumAttempts: 1` makes an ambiguous send terminate as one attempt, which
+ * the Workflow then records as `unknown-delivery` against that attempt's
+ * nonce — the domain's deliberate dead end, left only by an operator who
+ * looked. Retrying here would trade a visible stall for an invisible
+ * duplicate.
+ *
+ * `WAIT_CANCELLATION_COMPLETED` closes the same hole from the other side: a
+ * cancelled Workflow must not walk away from a send whose outcome is still
+ * unobserved. The timeouts are Discord's, not the shared realtime budget — a
+ * send that has not answered in 30 seconds is already ambiguous, and waiting
+ * out the 5-minute realtime window only widens the window in which the
+ * Workflow cannot say what happened.
+ */
+export function notificationDeliveryV2Activities(stage: ScoutStage) {
+  return proxyActivities<
+    Pick<ScoutTemporalV2Activities, "deliverNotificationV2">
+  >({
+    taskQueue: scoutTaskQueues(stage).realtime,
+    startToCloseTimeout: "30 seconds",
+    scheduleToCloseTimeout: "2 minutes",
+    heartbeatTimeout: "10 seconds",
+    cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
+    retry: {
+      maximumAttempts: 1,
       nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
     },
   });
