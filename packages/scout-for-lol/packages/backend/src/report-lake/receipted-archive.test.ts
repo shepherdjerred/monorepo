@@ -10,6 +10,8 @@ import {
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { matchProcessingReceiptIdentityKey } from "@scout-for-lol/domain/match-processing/states.ts";
 import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
+import { SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND } from "#src/temporal/v2/notification-receipts.ts";
+import { SCOUT_V2_RECOVERY_CONFLICT_RECEIPT_KIND } from "#src/temporal/v2/recovery-receipts.ts";
 import { MATCH_RECEIPT_KINDS } from "#src/durable/match/receipt-evidence.ts";
 import {
   MatchProcessingReceiptRecordSchema,
@@ -238,6 +240,14 @@ describe("a full ingest receipts every one of its artifacts", () => {
       {
         owner: "V2 per-match core",
         kinds: Object.values(SCOUT_V2_MATCH_RECEIPT_KINDS),
+      },
+      {
+        owner: "V2 notification lane",
+        kinds: [SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND],
+      },
+      {
+        owner: "V2 recovery lane",
+        kinds: [SCOUT_V2_RECOVERY_CONFLICT_RECEIPT_KIND],
       },
     ];
 

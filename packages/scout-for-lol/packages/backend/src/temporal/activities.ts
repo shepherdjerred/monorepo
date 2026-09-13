@@ -11,6 +11,8 @@ import {
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
 import { invokeWeeklyParlayAction } from "./weekly-parlay-activity.ts";
 import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
+import { createScoutV2BackgroundActivities } from "#src/temporal/v2/background-activities.ts";
+import { createScoutV2LakeActivities } from "#src/temporal/v2/lake-activities.ts";
 import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
@@ -80,6 +82,7 @@ function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive
 }
 function createBackgroundActivities(): ScoutTemporalActivityGroups["background"] {
   return {
+    ...createScoutV2BackgroundActivities(),
     probeQueue,
     fetchInitialHistoryPage: async (input) => {
       return await heartbeatWhile(
@@ -350,6 +353,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
 }
 function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
   return {
+    ...createScoutV2LakeActivities(),
     probeQueue,
     runDetachedLakeWork: runDetachedWork,
     runReportLakeJob: async (input) => {

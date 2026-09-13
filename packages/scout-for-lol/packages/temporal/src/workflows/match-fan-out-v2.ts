@@ -22,25 +22,26 @@ import {
  * a pure function of the plan, so the per-match Workflow's fan-out decision is
  * assertable without a Temporal environment and without any child existing.
  *
- * ## Why nothing is started yet
+ * ## Why planning is separate from starting
  *
- * `scoutNotificationV2Workflow` and `scoutLakeProjectionV2Workflow` are
- * registered contracts whose bodies are still `unimplementedV2Workflow` stubs
- * (they belong to other lanes). Starting one would not defer the work, it
- * would destroy it: the stub fails NON-RETRYABLY, and the child IDs below are
- * derived from the intent key and match id, so the failed execution would own
- * that ID. A later run computing the same ID would then be refused by
- * `ALLOW_DUPLICATE_FAILED_ONLY`'s sibling case, or would adopt a history whose
- * only content is a failure. Planning and not starting leaves the durable
- * intent rows exactly as the reconciliation sweep expects to find them.
+ * A V2 Workflow Type is registered long before its body exists, and starting
+ * one whose body is still an `unimplementedV2Workflow` stub would not defer
+ * the work, it would destroy it: the stub fails NON-RETRYABLY, and the child
+ * IDs below are derived from the intent key and match id, so the failed
+ * execution would own the ID every later run computes. A run that then asked
+ * for the same ID would be refused by `ALLOW_DUPLICATE_FAILED_ONLY`'s sibling
+ * case, or would adopt a history whose only content is a failure.
  *
  * ## The seam
  *
  * The lane that implements a child adds its name to
- * {@link IMPLEMENTED_V2_FAN_OUT_WORKFLOWS} and the per-match Workflow starts
- * every planned child whose type is listed, with `parentClosePolicy: "ABANDON"`
- * — a notification outlives the match run that promised it, and the parent
- * closing must not cancel a send. Nothing else about this module changes.
+ * {@link IMPLEMENTED_V2_FAN_OUT_WORKFLOWS}, and the per-match Workflow starts
+ * every planned child whose type is listed. Both are listed now, so the plan
+ * this module computes is started rather than merely counted. This module
+ * stays free of `startChild` on purpose: the fan-out DECISION is a pure
+ * function of the durable state and has to be assertable without a Temporal
+ * environment and without any child existing, which is what
+ * {@link startableMatchFanOutCountsV2} is for.
  */
 
 export type ScoutMatchFanOutChildV2 =
@@ -60,11 +61,12 @@ export type ScoutMatchFanOutChildV2 =
 /**
  * Which fan-out Workflow Types have an implementation behind them.
  *
- * Empty on purpose: see the module comment. The per-match Workflow reads this
- * rather than a boolean so a lane can land one child without the other.
+ * Both, as of the durable lane. The per-match Workflow reads this rather than a
+ * boolean so a lane could land one child without the other, which is exactly
+ * what it was for while only one of these had a body.
  */
 export const IMPLEMENTED_V2_FAN_OUT_WORKFLOWS: readonly ScoutMatchFanOutChildV2["workflowType"][] =
-  [];
+  [SCOUT_WORKFLOW_NAMES.notificationV2, SCOUT_WORKFLOW_NAMES.lakeProjectionV2];
 
 /**
  * The children one match's committed state calls for.
