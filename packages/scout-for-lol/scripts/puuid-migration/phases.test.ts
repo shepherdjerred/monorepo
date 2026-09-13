@@ -490,6 +490,29 @@ test("collect maps the identity in an intent that has not been confirmed", async
   await db.close();
 });
 
+test("collect maps the account a rank Dare froze as its baseline", async () => {
+  // The snapshot names its subject `sourcePuuid`, not `puuid`. Matching the
+  // bare word walked straight past it, so the column would have been rewritten
+  // while contributing no identity — and the audit would then abort on an
+  // identifier nothing had collected.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `CREATE TABLE "BucksDareV2Activation" ("dareId" INTEGER PRIMARY KEY, "snapshotJson" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `INSERT INTO "BucksDareV2Activation" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [
+      JSON.stringify({ kind: "rank", targetKey: "T1", sourcePuuid: OLD_A }),
+      Date.now(),
+    ],
+  );
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
+  expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A]);
+  await db.close();
+});
+
 test("collect refuses a PUUID column nobody classified", async () => {
   // The guard against the failure this migration hit twice: a column holding
   // identities that nothing migrates, failing silently later because an

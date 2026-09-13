@@ -42,6 +42,9 @@ export function parseJson(value: string): Json {
 /**
  * Collect PUUIDs from a parsed value. `bareArrayIsPuuids` is set for columns
  * like `trackedPuuids` whose arrays hold PUUID strings with no enclosing key.
+ *
+ * A string counts when its key ends in `puuid`, which covers both the bare
+ * `puuid` and qualified names like `sourcePuuid`.
  */
 export function collectFromJson(
   value: Json,
@@ -64,7 +67,13 @@ export function collectFromJson(
     return;
   }
   for (const [key, child] of Object.entries(value)) {
-    if (typeof child === "string" && key.toLowerCase() === "puuid") {
+    // Any key ENDING in "puuid", not just the bare word. A Dare activation
+    // snapshot freezes its subject under `sourcePuuid`, and an exact match
+    // silently walked past it — the column would have been registered and
+    // rewritten while contributing no identity to migrate, so the audit would
+    // then abort on an identifier nothing had collected. The suffix rule
+    // matches the one already used for `*Puuids` arrays.
+    if (typeof child === "string" && key.toLowerCase().endsWith("puuid")) {
       out.push(child);
       continue;
     }

@@ -50,6 +50,7 @@ export const EXTRA_JSON_COLUMNS: readonly {
 }[] = [
   { table: "BucksDareTarget", column: "accounts" },
   { table: "BucksDareV2Target", column: "accounts" },
+  { table: "BucksDareV2Activation", column: "snapshotJson" },
   { table: "BucksDareV2Revision", column: "targetsJson" },
   { table: "BucksDareV2", column: "contractJson" },
   { table: "BucksLedgerEntry", column: "context" },
@@ -184,6 +185,11 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   objectJson("BucksDareTarget", "accounts", "createdAt"),
   objectJson("BucksDareV2Target", "accounts", "createdAt"),
   objectJson("BucksDareV2Revision", "targetsJson", "createdAt"),
+  // A rank Dare's activation snapshot freezes the account whose rank is the
+  // baseline, under `sourcePuuid`. Settlement compares live results against it
+  // for the life of the contract, so it stays load-bearing long after the
+  // snapshot was taken.
+  objectJson("BucksDareV2Activation", "snapshotJson", "createdAt"),
   objectJson("BucksDareV2", "contractJson", "createdAt"),
   objectJson("ChallengeRunRevision", "selectedAccountsJson", "createdAt"),
   // An unconsumed intent is an instruction that has not run yet, and its
