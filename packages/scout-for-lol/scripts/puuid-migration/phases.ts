@@ -318,6 +318,35 @@ async function loadMap(db: Db): Promise<Map<string, string>> {
 }
 
 /**
+ * Tracked identities the map has never seen, in either domain.
+ *
+ * Both sides count as known. A rerun after an interrupted apply finds rows that
+ * earlier statements already rewrote — the Postgres path has no enclosing
+ * transaction, by design, so a partial apply is expected and resumable. Judging
+ * only by `oldPuuid` would classify those already-migrated rows as strangers and
+ * abort exactly where resumability is supposed to work.
+ *
+ * What this still catches is the real hazard: an account registered after
+ * `collect`, which has no map row at all and would otherwise be rewritten to
+ * nothing and stranded.
+ */
+async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
+  const tracked = await readTrackedPuuids(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
+  );
+  const known = new Set<string>();
+  for (const row of rows) {
+    known.add(asString(row["oldPuuid"], "oldPuuid"));
+    const mapped = asOptionalString(row["newPuuid"]);
+    if (mapped !== null) {
+      known.add(mapped);
+    }
+  }
+  return [...tracked].filter((puuid) => !known.has(puuid));
+}
+
+/**
  * Refuse to rewrite while any tracked identity is still unresolved.
  *
  * An unresolved identity keeps its old-domain PUUID, which Riot cannot decrypt
@@ -336,12 +365,7 @@ async function assertEveryIdentityResolved(
   // tracked accounts can appear mid-cutover with no map row at all. Comparing
   // against the live tracked set catches those; they are unmigrated, not merely
   // unresolved.
-  const tracked = await readTrackedPuuids(db);
-  const mapRows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
-  const mapped = new Set(
-    mapRows.map((r) => asString(r["oldPuuid"], "oldPuuid")),
-  );
-  const unmapped = [...tracked].filter((p) => !mapped.has(p));
+  const unmapped = await unmappedTrackedIdentities(db);
   if (unmapped.length > 0) {
     throw new Error(
       `${unmapped.length.toString()} tracked identities appeared after collect and have no map row; ` +
@@ -470,6 +494,17 @@ export async function verify(db: Db): Promise<void> {
     }
   }
 
+  // The completeness check in `apply` runs before the rewrite, and the Postgres
+  // path holds no lock across it, so an account registered during the cutover
+  // could still slip in behind it. Re-checking here turns that race from
+  // undetectable into a failed verification.
+  const strays = await unmappedTrackedIdentities(db);
+  if (strays.length > 0) {
+    console.error(
+      `  ${strays.length.toString()} tracked identities have no map row; they were registered after collect and are unmigrated`,
+    );
+  }
+
   // Unresolved identities are invisible to the survivor scan above, which only
   // considers map entries that actually have a replacement. Counting them here
   // keeps `verify` honest about identities that were never migrated at all.
@@ -483,12 +518,13 @@ export async function verify(db: Db): Promise<void> {
     );
   }
 
-  if (survivors > 0 || unresolved > 0) {
+  if (survivors > 0 || unresolved > 0 || strays.length > 0) {
     // Throwing, not logging: this is the gate, and a gate that exits 0 on
     // failure is not a gate.
     throw new Error(
       `verify FAILED — ${survivors.toString()} rows hold translated old-domain PUUIDs, ` +
-        `${unresolved.toString()} identities unresolved`,
+        `${unresolved.toString()} identities unresolved, ` +
+        `${strays.length.toString()} tracked identities unmapped`,
     );
   }
   console.log(
