@@ -85,6 +85,11 @@ S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts inventory --out prod.jsonl
 S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory --out beta.jsonl
 ```
 
+It reads the **whole bucket**, not just the prefixes the report lake rebuilds
+from. Identities also live under `failed-validations/` and in AI pipeline
+output, and an inventory that enumerated only the expected prefixes would leave
+them in the old domain permanently.
+
 It runs once. Every object written since the key swap already carries
 new-domain identifiers, so the set of old-domain identities is closed and cannot
 grow while the next step runs for days. Nothing needs re-scanning afterwards.
@@ -200,10 +205,22 @@ consistent at every moment. Rewriting S3 first inverts that.
 
 ## 6. Rewrite the archive
 
+Both buckets, each against its own database — the rewrite reads the map from
+`DATABASE_URL` and re-points that environment's artifact references:
+
 ```bash
-S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite            # dry run
+# prod
+S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite           # dry run
 S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite --apply
+
+# beta
+S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts rewrite           # dry run
+S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts rewrite --apply
 ```
+
+Skipping either leaves that environment's archive mostly old-domain, so a
+participant tracked after the key change still cannot be joined to the games
+they already appear in — which is the whole point of the exercise.
 
 No downtime. Live ingest keeps writing new-domain objects, which the pass skips,
 and a rewritten object no longer names an old identity — so the run is

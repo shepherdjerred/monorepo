@@ -31,20 +31,34 @@ export const REWRITE_METADATA_KEY = "puuidredomainedat";
 /**
  * Does this document mention any identity we are moving?
  *
- * A substring test over the raw text before parsing. Parsing 61 GiB of JSON to
- * discover that most documents need no change would dominate the run.
+ * Extract the PUUID-shaped tokens once, then test set membership — NOT a
+ * `includes` per mapping. At production scale that difference decides whether
+ * the pass finishes at all: 240,000 mappings against 66,000 objects is sixteen
+ * billion substring scans over multi-megabyte bodies, and an object naming
+ * nobody pays the full price every time.
+ *
+ * Membership against the real map, not the shape, is also what keeps this
+ * correct. Report renders embed base64 PNG data that matches a PUUID's shape;
+ * on shape alone every sampled SVG looked like a hit and none actually held a
+ * mapped identity.
  */
 export function needsRewrite(
   body: string,
   oldPuuids: ReadonlySet<string>,
 ): boolean {
-  for (const oldPuuid of oldPuuids) {
-    if (body.includes(oldPuuid)) {
+  if (oldPuuids.size === 0) {
+    return false;
+  }
+  for (const match of body.matchAll(PUUID_TOKEN)) {
+    if (oldPuuids.has(match[0])) {
       return true;
     }
   }
   return false;
 }
+
+/** A PUUID's shape. Global, and used only with `matchAll`, which is reentrant. */
+const PUUID_TOKEN = /[\w-]{70,90}/gu;
 
 /**
  * Objects that cannot contain an old identifier because of when they were
@@ -75,6 +89,22 @@ export type RewriteOptions = {
   prefix?: string | undefined;
   /** Report what would change without writing anything. */
   dryRun: boolean;
+  /**
+   * Told the new content address of every object this pass rewrites.
+   *
+   * `MatchObservation` stores an object's key and SHA-256 together as the
+   * durable identity of the canonical bytes, and the schema treats a differing
+   * digest as two producers disagreeing rather than as an update. Rewriting an
+   * object without telling it leaves the database asserting a digest for bytes
+   * that no longer exist, and primes that conflict for whoever reports next.
+   *
+   * Processing receipts are deliberately NOT updated here. A receipt says rows
+   * were derived from particular bytes at a particular time, which stays true
+   * afterwards; rewriting it would falsify a record of the past to tidy the
+   * present.
+   */
+  onRewritten?:
+    ((key: string, digest: string) => Promise<void> | void) | undefined;
 };
 
 export async function rewriteCorpus(
@@ -109,7 +139,7 @@ export async function rewriteCorpus(
       }
       const parsed: unknown = JSON.parse(body);
       const translated = remapRawJson(parsed, options.map);
-      await putContentAddressedObject({
+      const stored = await putContentAddressedObject({
         client,
         bucket: options.bucket,
         key: object.key,
@@ -122,6 +152,7 @@ export async function rewriteCorpus(
         errorContext: `PUUID re-domaining of ${object.key}`,
         retryContext: `rewrite ${object.key}`,
       });
+      await options.onRewritten?.(object.key, stored.digest);
       rewritten++;
       return true;
     },

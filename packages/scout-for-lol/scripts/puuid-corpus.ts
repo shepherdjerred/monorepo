@@ -18,12 +18,16 @@
  */
 
 import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
-import { openDb } from "./puuid-migration/db.ts";
 import {
   buildInventory,
   serializeInventory,
 } from "./puuid-corpus/inventory.ts";
 import { rewriteCorpus } from "./puuid-corpus/rewrite.ts";
+import {
+  hasObservations,
+  recordRewrittenDigest,
+} from "./puuid-corpus/observations.ts";
+import { openDb } from "./puuid-migration/db.ts";
 import { asString } from "./puuid-migration/support.ts";
 
 function requireFlag(name: string): string {
@@ -103,17 +107,41 @@ async function runRewrite(): Promise<void> {
     );
   }
   const cutoverRaw = optionalFlag("--cutover");
-  const result = await rewriteCorpus(createS3Client(), {
-    bucket: requireBucket(),
-    map,
-    cutover: cutoverRaw === undefined ? undefined : new Date(cutoverRaw),
-    prefix: optionalFlag("--prefix"),
-    dryRun: !Bun.argv.includes("--apply"),
-  });
-  if (result.failed > 0) {
-    throw new Error(
-      `${result.failed.toString()} objects failed to rewrite; re-run to retry them`,
-    );
+  const dryRun = !Bun.argv.includes("--apply");
+
+  const db = await openDb();
+  const tracksObservations = await hasObservations(db);
+  let digestsUpdated = 0;
+  try {
+    const result = await rewriteCorpus(createS3Client(), {
+      bucket: requireBucket(),
+      map,
+      cutover: cutoverRaw === undefined ? undefined : new Date(cutoverRaw),
+      prefix: optionalFlag("--prefix"),
+      dryRun,
+      onRewritten:
+        dryRun || !tracksObservations
+          ? undefined
+          : async (key, digest) => {
+              digestsUpdated += await recordRewrittenDigest(db, key, digest);
+            },
+    });
+    if (tracksObservations) {
+      console.log(
+        `  ${digestsUpdated.toString()} MatchObservation artifact references re-pointed`,
+      );
+    } else {
+      console.log(
+        "  this database does not model MatchObservation; no artifact reference to move",
+      );
+    }
+    if (result.failed > 0) {
+      throw new Error(
+        `${result.failed.toString()} objects failed to rewrite; re-run to retry them`,
+      );
+    }
+  } finally {
+    await db.close();
   }
 }
 

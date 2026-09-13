@@ -11,25 +11,53 @@ import type { S3Client } from "@aws-sdk/client-s3";
 import {
   classifyRawObjectKey,
   enumerateRawObjects,
-  MATCH_PREFIX,
-  PREMATCH_PREFIX,
-  type RawObjectKind,
   readRawObjectText,
 } from "@scout-for-lol/backend/report-store/s3-raw-source.ts";
 
+/**
+ * `other` is the important one. `classifyRawObjectKey` answers a narrower
+ * question than this pass asks — it names the objects the report lake rebuilds
+ * from, not the objects that contain identities. Auditing the buckets by
+ * content found five shapes it ignores that hold PUUIDs anyway:
+ * `failed-validations/**\/match.json` in both environments, and beta's
+ * `ai-pipeline` match and timeline summaries and `prediction-observation.json`
+ * — roughly 6,900 objects. Trusting the classifier would have stranded every
+ * identity that appears only in those.
+ */
 export type RawObject = {
   key: string;
-  kind: Exclude<RawObjectKind, "ignored">;
+  kind: "match" | "timeline" | "prematch" | "other";
   lastModified: Date | undefined;
 };
 
 /**
- * Every match, timeline and prematch object in a bucket, or under one prefix.
+ * Extensions that cannot carry an identity, and are expensive to prove innocent.
+ *
+ * Report renders embed base64 PNG data, which matches a PUUID's shape closely
+ * enough to fool a regex — sampled SVGs hit on shape every time and contained a
+ * real mapped identity zero times out of eight. They are also 26 GiB of the prod
+ * bucket, so reading them to reach that conclusion object by object would
+ * dominate the run.
+ */
+const BINARY_SUFFIXES = [".png", ".svg", ".jpg", ".jpeg", ".webp", ".gif"];
+
+function isBinary(key: string): boolean {
+  const lower = key.toLocaleLowerCase("en-US");
+  return BINARY_SUFFIXES.some((suffix) => lower.endsWith(suffix));
+}
+
+/**
+ * Every object in a bucket that could hold an identity.
+ *
+ * Deliberately the WHOLE bucket rather than the two prefixes the lake rebuilds
+ * from. Identities turn up under `failed-validations/` and in AI pipeline
+ * output, and a pass that enumerates by expected prefix silently leaves them in
+ * the old domain — which is unrecoverable once the old key is retired.
  *
  * Narrowing to a prefix scopes a run to part of the archive — a single month, a
  * single game — which is how a failed slice gets retried without re-reading the
  * whole corpus, and how a change gets proven against real objects before it is
- * pointed at 61 GiB of them.
+ * pointed at 35 GiB of them.
  */
 export async function listRawObjects(
   client: S3Client,
@@ -37,15 +65,16 @@ export async function listRawObjects(
   prefix?: string,
 ): Promise<RawObject[]> {
   const objects: RawObject[] = [];
-  const prefixes =
-    prefix === undefined ? [MATCH_PREFIX, PREMATCH_PREFIX] : [prefix];
-  for (const scope of prefixes) {
-    for await (const ref of enumerateRawObjects(client, bucket, scope)) {
-      const kind = classifyRawObjectKey(ref.key);
-      if (kind !== "ignored") {
-        objects.push({ key: ref.key, kind, lastModified: ref.lastModified });
-      }
+  for await (const ref of enumerateRawObjects(client, bucket, prefix ?? "")) {
+    if (isBinary(ref.key)) {
+      continue;
     }
+    const classified = classifyRawObjectKey(ref.key);
+    objects.push({
+      key: ref.key,
+      kind: classified === "ignored" ? "other" : classified,
+      lastModified: ref.lastModified,
+    });
   }
   return objects;
 }

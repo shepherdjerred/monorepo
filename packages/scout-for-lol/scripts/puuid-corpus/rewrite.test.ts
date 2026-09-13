@@ -7,9 +7,34 @@ const NEW = `N${"n".repeat(77)}`;
 
 describe("needsRewrite", () => {
   test("spots an old identifier anywhere in the raw text", () => {
-    // Deliberately a substring test on the unparsed body: parsing 61 GiB to
-    // discover most documents need no change would dominate the run.
     expect(needsRewrite(`{"a":{"b":["${OLD}"]}}`, new Set([OLD]))).toBe(true);
+  });
+
+  test("costs one pass over the body, not one per mapping", () => {
+    // The difference between finishing and not: 240k mappings against 66k
+    // objects is sixteen billion substring scans if this loops per mapping.
+    const map = new Set(
+      Array.from(
+        { length: 20_000 },
+        (_, i) => `P${String(i).padStart(77, "0")}`,
+      ),
+    );
+    const body = JSON.stringify({
+      participants: Array.from({ length: 10 }, () => NEW),
+    });
+    const started = performance.now();
+    for (let i = 0; i < 200; i++) {
+      expect(needsRewrite(body, map)).toBe(false);
+    }
+    // Per-mapping scanning would be ~4M string searches here and take seconds.
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+
+  test("a token that merely looks like a PUUID is not a reason to rewrite", () => {
+    // Report SVGs embed base64 PNG data of exactly this shape. Judged on shape
+    // every sampled one looked like a hit; none held a mapped identity.
+    const base64ish = `iVBORw0KGgoAAAANSUhEUgAA${"A".repeat(60)}`;
+    expect(needsRewrite(base64ish, new Set([OLD]))).toBe(false);
   });
 
   test("leaves a document that names nobody we are moving", () => {

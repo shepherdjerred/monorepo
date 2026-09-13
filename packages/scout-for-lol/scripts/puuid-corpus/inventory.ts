@@ -12,7 +12,11 @@
  */
 
 import type { S3Client } from "@aws-sdk/client-s3";
-import { foldSightings, sightingsIn } from "./extract.ts";
+import {
+  foldSightings,
+  sightingsIn,
+  unknownShapeSightings,
+} from "./extract.ts";
 import { listRawObjects, scanObjects } from "./scan.ts";
 
 export type InventoryRow = {
@@ -44,8 +48,22 @@ export async function buildInventory(
     client,
     objects,
     (object, body) => {
-      const parsed: unknown = JSON.parse(body);
+      // A document of an unrecognised shape is still read, and read twice: the
+      // known readers pick up a match payload filed somewhere unexpected, and
+      // the structural pass catches identities in a shape nobody has modelled.
+      // Missing one here is permanent — the map is what the whole migration is
+      // built from.
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(body);
+      } catch {
+        foldSightings(folded, unknownShapeSightings(body));
+        return true;
+      }
       foldSightings(folded, sightingsIn(object.kind, parsed));
+      if (object.kind === "other") {
+        foldSightings(folded, unknownShapeSightings(body));
+      }
       return true;
     },
     { bucket, label: bucket },

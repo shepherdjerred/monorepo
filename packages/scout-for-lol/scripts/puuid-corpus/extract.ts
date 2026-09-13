@@ -154,9 +154,36 @@ function prematchSightings(doc: Record<string, unknown>): Sighting[] {
   return out;
 }
 
+/**
+ * Identities in a document of no recognised shape.
+ *
+ * Structural rather than schema-driven, because the point is to cover documents
+ * nobody enumerated: failed validation payloads, AI pipeline summaries,
+ * prediction observations. They carry no handle, which costs nothing — the old
+ * key is the authority for a handle regardless, and a handle-less sighting
+ * never displaces one a match knew.
+ *
+ * Matching on shape is safe HERE and would not be safe for deciding what to
+ * rewrite. Collecting a non-identity token that merely looks like a PUUID
+ * wastes one lookup that returns 404; rewriting on the same evidence would
+ * corrupt a document.
+ */
+export function unknownShapeSightings(body: string): Sighting[] {
+  const out: Sighting[] = [];
+  const seen = new Set<string>();
+  for (const match of body.matchAll(/[\w-]{70,90}/gu)) {
+    const token = match[0];
+    if (!seen.has(token)) {
+      seen.add(token);
+      out.push({ puuid: token, riotId: null, at: 0 });
+    }
+  }
+  return out;
+}
+
 /** Every identity one archived document names, with whatever handle it knew. */
 export function sightingsIn(
-  kind: "match" | "timeline" | "prematch",
+  kind: "match" | "timeline" | "prematch" | "other",
   parsed: unknown,
 ): Sighting[] {
   const doc = asRecord(parsed);
@@ -169,7 +196,17 @@ export function sightingsIn(
   if (kind === "timeline") {
     return timelineSightings(doc);
   }
-  return prematchSightings(doc);
+  if (kind === "prematch") {
+    return prematchSightings(doc);
+  }
+  // A document of an unrecognised shape may still be a match payload — a failed
+  // validation is one — so try the known readers before falling back.
+  const known = [
+    ...matchSightings(doc),
+    ...timelineSightings(doc),
+    ...prematchSightings(doc),
+  ];
+  return known;
 }
 
 /**
