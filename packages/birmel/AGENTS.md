@@ -12,10 +12,15 @@ the architecture and capability surface.
 - Only configured trusted users may trigger the bot or any tool. Guild, channel,
   and actor identity come from `RequestContext`, never model arguments.
 - The agent reports `conversation`, `supported`, or `unsupported` as an outcome
-  when the turn ends, never as an up-front classification. Every tool call it
-  cites in `reliedOnToolCallIds` must have actually succeeded; that check
-  (`requireGroundedAnswer`) is the anti-hallucination gate and must not be
-  weakened. Missing capability is an honest limitation, not a safety refusal.
+  when the turn ends, never as an up-front classification. Missing capability is
+  an honest limitation, not a safety refusal.
+- There is no grounded-answer gate. The agent used to restate which tool calls
+  it relied on so a check could verify them, but the runtime already records
+  every call and its outcome, so a model omitting that field was indistinguishable
+  from one lying - and turns whose work had demonstrably succeeded were failed
+  and their results discarded. Honesty about tool outcomes is a prompt rule now
+  (`CORE_SYSTEM_POLICY`), not an enforced one. Do not reintroduce a check that
+  makes the model restate what the runtime already knows.
 - One source message gets one reply, and that reply ends on the answer. The
   runtime may edit it while the turn runs to show progress; those edits are
   coalesced, must never persist, and a failed progress edit must not fail the

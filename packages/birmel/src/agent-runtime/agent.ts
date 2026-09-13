@@ -20,16 +20,11 @@ import {
 import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
-import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
-import {
-  requireGroundedAnswer,
-  withResolvedCitations,
-} from "./citation-repair.ts";
 
 export type AgentExecutionResult = {
   text: string;
@@ -60,29 +55,6 @@ function boundedText(value: string, maxLength: number): string {
     : `${value.slice(0, maxLength - 1)}…`;
 }
 
-/**
- * A JSON string with object keys sorted recursively, so two inputs that
- * differ only in key order canonicalize identically. Bun.hash's own object
- * overload does this internally, but its declared type only accepts
- * string/buffer input; canonicalizing here keeps hashing on that well-typed
- * path instead of asserting `unknown` past the type checker.
- */
-function canonicalize(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((entry) => canonicalize(entry)).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value)
-      .toSorted(([left], [right]) => left.localeCompare(right))
-      .map(
-        ([key, entryValue]) =>
-          `${JSON.stringify(key)}:${canonicalize(entryValue)}`,
-      );
-    return `{${entries.join(",")}}`;
-  }
-  return value === undefined ? "null" : JSON.stringify(value);
-}
-
 function boundedSummary(value: unknown): string {
   const redacted = redactSecrets(value);
   const serialized = z
@@ -93,25 +65,6 @@ function boundedSummary(value: unknown): string {
 }
 
 const ActionInputSchema = z.object({ action: z.string().max(64) }).loose();
-
-/**
- * Whether a call was inherently non-mutating, checked per call rather than
- * per tool. A tool's own riskClass is coarse by design (create-tool.ts uses
- * it to gate effect checkpointing for the whole tool), so a composite tool
- * with a "destructive" riskClass still needs its individual read actions
- * (declared as readActions in tool metadata) recognized as reads here.
- */
-function isReadOnlyCall(toolId: string, input: unknown): boolean {
-  const metadata = getToolMetadata(toolId);
-  if (metadata.riskClass === "read") {
-    return true;
-  }
-  const action = ActionInputSchema.safeParse(input);
-  return (
-    action.success &&
-    (metadata.readActions?.includes(action.data.action) ?? false)
-  );
-}
 
 type SanitizeToolOutputOptions = {
   isCookiesCall: boolean;
@@ -341,8 +294,6 @@ export function summarizeToolResultForSession(
     ...(toolResult.output.effectDisposition == null
       ? {}
       : { effectDisposition: toolResult.output.effectDisposition }),
-    inputKey: Bun.hash(canonicalize(toolResult.input)).toString(),
-    readOnly: isReadOnlyCall(toolResult.toolName, toolResult.input),
   });
 }
 
@@ -479,11 +430,7 @@ export async function executeTurn(
       );
       const inputTokens = result.usage.inputTokens ?? 0;
       const outputTokens = result.usage.outputTokens ?? 0;
-      const answer = withResolvedCitations(
-        TurnAnswerSchema.parse(result.output),
-        toolEvents,
-      );
-      requireGroundedAnswer(answer, toolEvents);
+      const answer = TurnAnswerSchema.parse(result.output);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute("gen_ai.usage.input_tokens", inputTokens);
       span.setAttribute("gen_ai.usage.output_tokens", outputTokens);

@@ -144,10 +144,10 @@ describe("successful deterministic turn flow", () => {
     expect(result.runStatuses).toEqual(["completed", "completed"]);
     expect(result.secondReplyObservedWhileFirstBlocked).toBe(false);
     expect(result.deliveryOrder).toEqual([
-      "reply:10000000000000090",
-      "edit:10000000000000090",
-      "reply:10000000000000091",
-      "edit:10000000000000091",
+      "reply:10000000000000080",
+      "edit:10000000000000080",
+      "reply:10000000000000081",
+      "edit:10000000000000081",
     ]);
     expect(result.replyCalls).toBe(2);
     expect(result.deliveredEdits).toHaveLength(2);
@@ -201,15 +201,6 @@ describe("boundary failures", () => {
     expect(result.deliveredEdits[0]).toMatch(/Reference: B3-[0-9a-f]{8}$/u);
     expect(result.deliveredEdits[0]).not.toContain("CONTEXT_SECRET_EXCEPTION");
     expect(result.agentCalls).toBe(0);
-  });
-
-  test("an answer citing a tool call that never succeeded cannot reach Discord", () => {
-    const result = resultFor("ungrounded-answer");
-
-    expect(result.runStatuses).toEqual(["failed"]);
-    expect(result.deliveredEdits).toHaveLength(1);
-    expect(result.deliveredEdits[0]).not.toContain("call-invented");
-    expect(result.agentCalls).toBe(1);
   });
 
   test("agent failure returns only an incident reference", () => {

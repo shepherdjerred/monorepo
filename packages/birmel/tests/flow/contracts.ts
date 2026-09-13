@@ -5,7 +5,6 @@ export const FlowScenarioSchema = z.enum([
   "agent-tool",
   "placeholder-failure",
   "context-failure",
-  "ungrounded-answer",
   "agent-failure",
   "tool-output-failure",
   "final-delivery-failure",

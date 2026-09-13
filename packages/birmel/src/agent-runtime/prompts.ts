@@ -25,5 +25,5 @@ When generating or editing images, write a rich descriptive prompt; when editing
 Finish with a structured answer:
 - answer: the Discord reply itself.
 - disposition: "supported" if you performed or verified the requested outcome with tools; "conversation" if it needed none; "unsupported" if no registered tool can do it. Say so plainly and briefly when unsupported, and do not imply a safety policy or permission check caused it.
-- reliedOnToolCallIds: the tool call IDs whose results your answer depends on. Copy the toolCallId values from the tool results of this turn (for example call_...), never functions.<tool-name> or functions.<tool-name>:0, and never Discord progress text. Every ID must be a call that actually succeeded this turn. Cite nothing you did not use, and never describe an action you did not successfully take.
-- performedMutation: true only if your answer claims a write, destructive, or code-execution outcome actually happened - not merely that you looked something up. If true, at least one ID in reliedOnToolCallIds must be that mutating call, not just a related read.`;
+
+Never describe an action you did not successfully take: if a tool reported failure, say what failed rather than claiming the outcome.`;

@@ -181,8 +181,7 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/agent.ts", () => ({
     // A turn that used no tools: the agent decided nothing needed doing.
     if (
       state.scenario !== "agent-tool" &&
-      state.scenario !== "tool-output-failure" &&
-      state.scenario !== "ungrounded-answer"
+      state.scenario !== "tool-output-failure"
     ) {
       if (state.scenario === "memory-deletion") {
         suppressAutomaticMemoryExtraction();
@@ -214,15 +213,6 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/agent.ts", () => ({
       }
     }
     ToolResultSchema.parse({ success: true, messageId: "tool-message-1" });
-
-    // The grounding gate runs inside the real executor, so the harness
-    // reproduces its failure rather than mocking it away: an answer that cites
-    // a tool call which never succeeded must not reach Discord.
-    if (state.scenario === "ungrounded-answer") {
-      throw new Error(
-        "Answer cited tool calls that did not succeed this turn: call-invented",
-      );
-    }
 
     return successfulToolTurn(`agent reply for ${packet.request}`);
   },
