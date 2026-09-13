@@ -71,6 +71,8 @@ export type RewriteOptions = {
   map: ReadonlyMap<string, string>;
   /** Objects newer than this are skipped unread. */
   cutover?: Date | undefined;
+  /** Narrow the pass to part of the archive. */
+  prefix?: string | undefined;
   /** Report what would change without writing anything. */
   dryRun: boolean;
 };
@@ -85,7 +87,7 @@ export async function rewriteCorpus(
       (options.dryRun ? " (DRY RUN — nothing is written)" : ""),
   );
 
-  const all = await listRawObjects(client, options.bucket);
+  const all = await listRawObjects(client, options.bucket, options.prefix);
   const candidates = all.filter(
     (object) => !writtenAfterCutover(object, options.cutover),
   );

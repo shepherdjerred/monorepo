@@ -5,7 +5,12 @@
 
 import { z } from "zod";
 import { minutesFor, parseRateLimitHeader, RateLimiter } from "./rate-limit.ts";
-import { env, NEW_KEY_PUBLISHED, OLD_KEY_PUBLISHED } from "./support.ts";
+import {
+  accountRoute,
+  NEW_KEY_PUBLISHED,
+  OLD_KEY_PUBLISHED,
+  riotKeys,
+} from "./support.ts";
 
 const AccountSchema = z.object({
   puuid: z.string().min(1),
@@ -106,7 +111,7 @@ async function riotGet(
     let response: Response;
     try {
       response = await fetch(
-        `https://${env.ACCOUNT_ROUTE}.api.riotgames.com${path}`,
+        `https://${accountRoute()}.api.riotgames.com${path}`,
         { headers: { "X-Riot-Token": key } },
       );
     } catch (error) {
@@ -143,7 +148,7 @@ async function riotGet(
 export const byPuuid = (puuid: string): Promise<RiotAccount | null> =>
   riotGet(
     `/riot/account/v1/accounts/by-puuid/${encodeURIComponent(puuid)}`,
-    env.OLD_RIOT_API_KEY,
+    riotKeys().old,
     oldLimiter,
   );
 
@@ -154,7 +159,7 @@ export const byRiotId = (
 ): Promise<RiotAccount | null> =>
   riotGet(
     `/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-    env.NEW_RIOT_API_KEY,
+    riotKeys().fresh,
     newLimiter,
   );
 

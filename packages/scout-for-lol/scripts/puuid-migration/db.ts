@@ -11,7 +11,7 @@ import {
   asCount,
   asOptionalString,
   asString,
-  env,
+  databaseUrl,
   type Row,
   type SqlParam,
   toRows,
@@ -126,7 +126,7 @@ async function openPostgres(): Promise<Db> {
   // Prisma 7 requires an explicit driver adapter, matching how the backend
   // constructs its own client in src/database/index.ts.
   const prisma = new mod.PrismaClient({
-    adapter: new PrismaPg({ connectionString: env.DATABASE_URL }),
+    adapter: new PrismaPg({ connectionString: databaseUrl() }),
   });
 
   const query = async (
@@ -191,7 +191,6 @@ async function openPostgres(): Promise<Db> {
 }
 
 export function openDb(): Promise<Db> {
-  return env.DATABASE_URL.startsWith("file:")
-    ? openSqlite(env.DATABASE_URL)
-    : openPostgres();
+  const url = databaseUrl();
+  return url.startsWith("file:") ? openSqlite(url) : openPostgres();
 }

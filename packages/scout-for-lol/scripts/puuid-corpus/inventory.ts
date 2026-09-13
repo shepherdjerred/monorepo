@@ -31,9 +31,12 @@ export type InventoryResult = {
 export async function buildInventory(
   client: S3Client,
   bucket: string,
+  prefix?: string,
 ): Promise<InventoryResult> {
-  console.log(`inventory: listing ${bucket}`);
-  const objects = await listRawObjects(client, bucket);
+  console.log(
+    `inventory: listing ${bucket}${prefix === undefined ? "" : ` under ${prefix}`}`,
+  );
+  const objects = await listRawObjects(client, bucket, prefix);
   console.log(`  ${objects.length.toString()} raw JSON objects`);
 
   const folded = new Map<string, { riotId: string | null; at: number }>();

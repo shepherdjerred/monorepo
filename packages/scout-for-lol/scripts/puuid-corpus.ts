@@ -50,7 +50,11 @@ function requireBucket(): string {
 
 async function runInventory(): Promise<void> {
   const out = requireFlag("--out");
-  const result = await buildInventory(createS3Client(), requireBucket());
+  const result = await buildInventory(
+    createS3Client(),
+    requireBucket(),
+    optionalFlag("--prefix"),
+  );
   await Bun.write(out, serializeInventory(result.rows));
   console.log(
     `inventory: ${result.rows.length.toString()} distinct identities written to ${out}\n` +
@@ -103,6 +107,7 @@ async function runRewrite(): Promise<void> {
     bucket: requireBucket(),
     map,
     cutover: cutoverRaw === undefined ? undefined : new Date(cutoverRaw),
+    prefix: optionalFlag("--prefix"),
     dryRun: !Bun.argv.includes("--apply"),
   });
   if (result.failed > 0) {
@@ -123,6 +128,7 @@ switch (command) {
   case undefined:
   default:
     throw new Error(
-      "usage: puuid-corpus.ts <inventory --out FILE | rewrite [--apply] [--cutover ISO]>",
+      "usage: puuid-corpus.ts <inventory --out FILE | rewrite [--apply] [--cutover ISO]> " +
+        "[--prefix games/2026/01/]",
     );
 }

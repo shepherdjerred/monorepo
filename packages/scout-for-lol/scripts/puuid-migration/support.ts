@@ -7,14 +7,35 @@
 
 import { z } from "zod";
 
-const EnvSchema = z.object({
-  OLD_RIOT_API_KEY: z.string().min(1),
-  NEW_RIOT_API_KEY: z.string().min(1),
-  DATABASE_URL: z.string().min(1),
-  ACCOUNT_ROUTE: z.string().default("americas"),
+/**
+ * Credentials, demanded one at a time by whoever actually needs them.
+ *
+ * Parsing every variable at import made importing a string helper require a
+ * Riot key: an operator listing S3 had to invent an OLD_RIOT_API_KEY for a
+ * command that never calls Riot. Worse, the failure named all three at once, so
+ * a genuinely missing one was buried among two that did not matter.
+ *
+ * Each accessor names the one thing it needs and says which command needs it.
+ */
+function required(name: string, why: string): string {
+  const value = Bun.env[name];
+  if (value === undefined || value === "") {
+    throw new Error(`${name} must be set: ${why}`);
+  }
+  return value;
+}
+
+export const riotKeys = (): { old: string; fresh: string } => ({
+  old: required("OLD_RIOT_API_KEY", "the key that minted the stored PUUIDs"),
+  fresh: required("NEW_RIOT_API_KEY", "the key being migrated to"),
 });
 
-export const env = EnvSchema.parse(Bun.env);
+export const databaseUrl = (): string =>
+  required("DATABASE_URL", "the database holding PuuidKeyMap");
+
+/** Riot's account routing value. Regional for account-v1, so `americas` fits. */
+export const accountRoute = (): string =>
+  Bun.env["ACCOUNT_ROUTE"] ?? "americas";
 
 /**
  * What each key publishes, measured from its own response headers.

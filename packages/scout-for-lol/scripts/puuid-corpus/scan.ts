@@ -23,14 +23,24 @@ export type RawObject = {
   lastModified: Date | undefined;
 };
 
-/** Every match, timeline and prematch object in a bucket. */
+/**
+ * Every match, timeline and prematch object in a bucket, or under one prefix.
+ *
+ * Narrowing to a prefix scopes a run to part of the archive — a single month, a
+ * single game — which is how a failed slice gets retried without re-reading the
+ * whole corpus, and how a change gets proven against real objects before it is
+ * pointed at 61 GiB of them.
+ */
 export async function listRawObjects(
   client: S3Client,
   bucket: string,
+  prefix?: string,
 ): Promise<RawObject[]> {
   const objects: RawObject[] = [];
-  for (const prefix of [MATCH_PREFIX, PREMATCH_PREFIX]) {
-    for await (const ref of enumerateRawObjects(client, bucket, prefix)) {
+  const prefixes =
+    prefix === undefined ? [MATCH_PREFIX, PREMATCH_PREFIX] : [prefix];
+  for (const scope of prefixes) {
+    for await (const ref of enumerateRawObjects(client, bucket, scope)) {
       const kind = classifyRawObjectKey(ref.key);
       if (kind !== "ignored") {
         objects.push({ key: ref.key, kind, lastModified: ref.lastModified });
