@@ -41,8 +41,11 @@ Treat entrypoints as routing context, not handbooks:
 - global and root `AGENTS.md`: at most 200 lines and 16 KiB;
 - nested maintained `AGENTS.md`: at most 120 lines and 8 KiB;
 - repository or runtime `SKILL.md`: at most 160 lines and 12 KiB;
-- a discoverable repository skill catalog: at most 8 KiB of names and
-  descriptions.
+- a discoverable repository skill catalog: at most 24 KiB of names and
+  descriptions, and that ceiling is a runaway-growth alarm. Never shorten a
+  `description` to fit it: the trigger clause is what an agent matches on, so
+  truncating it drops the skill out of discovery silently. Prune unused skills
+  instead.
 
 Preserve purpose, ownership boundaries, dangerous traps, focused commands, and
 acceptance requirements. Move API reference, topology, runbooks, and historical
