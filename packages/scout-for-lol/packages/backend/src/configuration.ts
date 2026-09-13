@@ -4,6 +4,10 @@ import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
 import {
+  DEFAULT_EXPLORE_QUOTA_LIMITS,
+  ExploreQuotaLimitsInputSchema,
+} from "#src/configuration/explore-quota.ts";
+import {
   parseScoutRuntimeRole,
   scoutRuntimeCapabilities,
 } from "#src/configuration/runtime-role.ts";
@@ -303,6 +307,14 @@ function computeConfiguration() {
       .get("LLM_DAILY_TOKEN_BUDGET")
       .default("20000000")
       .asIntPositive(),
+    // Seeds the dynamic-config snapshot, so a read before the first flag
+    // refresh matches the env layer. Unset means the shipped policy.
+    exploreQuotaLimits: ExploreQuotaLimitsInputSchema.parse(
+      env
+        .get("EXPLORE_QUOTA_LIMITS")
+        .default(JSON.stringify(DEFAULT_EXPLORE_QUOTA_LIMITS))
+        .asString(),
+    ),
     // Seeds the dynamic-config snapshot so a read before the first flag
     // refresh matches the env layer. "stub" is the safe default: stub codes
     // cannot create a real game.
@@ -459,6 +471,9 @@ const configuration: Configuration = {
   },
   get llmHourlyTokenBudget() {
     return getConfiguration().llmHourlyTokenBudget;
+  },
+  get exploreQuotaLimits() {
+    return getConfiguration().exploreQuotaLimits;
   },
   get llmDailyTokenBudget() {
     return getConfiguration().llmDailyTokenBudget;

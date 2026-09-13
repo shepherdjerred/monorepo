@@ -8,6 +8,7 @@ import {
   quotaSecondsUntil,
   type QuotaRule,
 } from "#src/utils/quota-buckets.ts";
+import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 
 /**
  * Explore quotas are per person, not per server.
@@ -69,27 +70,29 @@ export type ExploreRateLimitTicket = {
 const MAX_ACTIVE_GLOBAL_RUNS = 5;
 
 /**
- * Tripled from the original allowance now that every Explore turn runs on
- * GPT-5.6 Luna, whose per-turn cost makes the old ceilings stricter than the
- * spend they were protecting.
+ * Resolved per call rather than frozen at module load.
  *
- * The global rules are tripled with the user rules deliberately. They exist to
- * bound total spend across concurrent explorers, not to be the limit a single
- * person meets — leaving them alone would have made the global hour the first
- * wall for even two active users and quietly cancelled the per-user increase.
+ * These ceilings bound model spend, so an operator has to be able to move
+ * them — down during a cost surprise, or up for one environment — without a
+ * rebuild. `exploreQuotaLimits()` is the typed configuration read; the
+ * shipped policy is its default, so a backend with no flag or env override
+ * behaves exactly as these numbers did when they were literals here.
  */
-const QUOTA_RULES: QuotaRule<ExploreQuotaScope>[] = [
-  { scope: "user", window: "minute", limit: 12 },
-  { scope: "user", window: "hour", limit: 90 },
-  { scope: "user", window: "day", limit: 300 },
-  { scope: "user", window: "week", limit: 900 },
-  { scope: "global", window: "hour", limit: 360 },
-  { scope: "global", window: "day", limit: 1800 },
-  { scope: "global", window: "week", limit: 6000 },
-];
+function quotaRules(): QuotaRule<ExploreQuotaScope>[] {
+  const limits = exploreQuotaLimits();
+  return [
+    { scope: "user", window: "minute", limit: limits.userMinute },
+    { scope: "user", window: "hour", limit: limits.userHour },
+    { scope: "user", window: "day", limit: limits.userDay },
+    { scope: "user", window: "week", limit: limits.userWeek },
+    { scope: "global", window: "hour", limit: limits.globalHour },
+    { scope: "global", window: "day", limit: limits.globalDay },
+    { scope: "global", window: "week", limit: limits.globalWeek },
+  ];
+}
 
 const engine = createQuotaEngine<ExploreQuotaScope, ExploreRateLimitIdentity>({
-  rules: QUOTA_RULES,
+  rules: quotaRules,
   scopeKey: (scope, identity) =>
     scope === "global" ? "global" : identity.userId,
 });

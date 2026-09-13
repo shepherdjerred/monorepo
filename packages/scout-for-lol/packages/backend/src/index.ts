@@ -69,6 +69,7 @@ const { initializeDynamicConfig } = await import("#src/config/dynamic.ts");
 await initializeDynamicConfig({
   seed: {
     exploreGuildAllowlist: configuration.exploreGuildAllowlist,
+    exploreQuotaLimits: configuration.exploreQuotaLimits,
     llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
     llmDailyTokenBudget: configuration.llmDailyTokenBudget,
     reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",

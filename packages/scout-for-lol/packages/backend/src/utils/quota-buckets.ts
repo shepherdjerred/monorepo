@@ -63,11 +63,20 @@ type Bucket = {
 };
 
 export function createQuotaEngine<Scope extends string, Identity>(options: {
-  rules: QuotaRule<Scope>[];
+  /**
+   * A function when the ceilings are operator-configurable, so a change takes
+   * effect on the next request rather than the next deploy. Bucket state is
+   * keyed by scope and window, never by limit, so raising or lowering a
+   * ceiling re-reads against the usage already recorded instead of resetting
+   * anyone's window.
+   */
+  rules: QuotaRule<Scope>[] | (() => QuotaRule<Scope>[]);
   /** Maps a rule's scope plus the caller's identity to a bucket key. */
   scopeKey: (scope: Scope, identity: Identity) => string;
 }): QuotaEngine<Scope, Identity> {
   const buckets = new Map<string, Bucket>();
+  const currentRules = (): QuotaRule<Scope>[] =>
+    typeof options.rules === "function" ? options.rules() : options.rules;
 
   const bucketId = (rule: QuotaRule<Scope>, identity: Identity): string =>
     `${rule.scope}:${rule.window}:${options.scopeKey(rule.scope, identity)}`;
@@ -102,7 +111,7 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
 
   return {
     snapshots: (identity, now) =>
-      options.rules.map((rule) => {
+      currentRules().map((rule) => {
         const bucket = activeBucket(rule, identity, now) ?? {
           startedAt: now,
           used: 0,
@@ -121,12 +130,12 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
         };
       }),
     consume: (identity, now) => {
-      for (const rule of options.rules) {
+      for (const rule of currentRules()) {
         currentBucket(rule, identity, now).used++;
       }
     },
     reserve: (identity, now) => {
-      const reservedBuckets = options.rules.map((rule) =>
+      const reservedBuckets = currentRules().map((rule) =>
         currentBucket(rule, identity, now),
       );
       for (const bucket of reservedBuckets) {
