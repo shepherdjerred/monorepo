@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { openFixtureDatabase, removeDatabase } from "./sqlite-fixture.ts";
 
 const dbPath = path.join(tmpdir(), "puuid-migration-transfer-test.sqlite");
 process.env["DATABASE_URL"] = `file:${dbPath}`;
@@ -9,22 +10,11 @@ const OLD_A = `OLDA_${"a".repeat(70)}`;
 const OLD_B = `OLDB_${"b".repeat(70)}`;
 const NEW_A = `NEWA_${"y".repeat(70)}`;
 
-async function remove(): Promise<void> {
-  for (const suffix of ["", "-wal", "-shm"]) {
-    try {
-      await Bun.file(`${dbPath}${suffix}`).delete();
-    } catch {
-      // Absent is the desired state.
-    }
-  }
-}
+const remove = (): Promise<void> => removeDatabase(dbPath);
 
 async function open() {
-  const { Database } = await import("bun:sqlite");
-  new Database(dbPath, { create: true }).close();
-  const { openDb } = await import("./db.ts");
+  const db = await openFixtureDatabase(dbPath);
   const { ensureMapTable } = await import("./map-table.ts");
-  const db = await openDb();
   await ensureMapTable(db);
   return db;
 }

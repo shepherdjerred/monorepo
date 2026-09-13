@@ -1,26 +1,17 @@
 import { afterAll, beforeEach, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import {
+  openFixtureDatabase,
+  removeDatabase,
+} from "#scripts/puuid-migration/sqlite-fixture.ts";
 
 const dbPath = path.join(tmpdir(), "puuid-corpus-observations-test.sqlite");
 process.env["DATABASE_URL"] = `file:${dbPath}`;
 
-async function remove(): Promise<void> {
-  for (const suffix of ["", "-wal", "-shm"]) {
-    try {
-      await Bun.file(`${dbPath}${suffix}`).delete();
-    } catch {
-      // Absent is the desired state.
-    }
-  }
-}
-
-async function open() {
-  const { Database } = await import("bun:sqlite");
-  new Database(dbPath, { create: true }).close();
-  const { openDb } = await import("#scripts/puuid-migration/db.ts");
-  return openDb();
-}
+const remove = (): Promise<void> => removeDatabase(dbPath);
+const open = (): ReturnType<typeof openFixtureDatabase> =>
+  openFixtureDatabase(dbPath);
 
 beforeEach(remove);
 afterAll(remove);
