@@ -1,0 +1,233 @@
+import { ApplicationFailure } from "@temporalio/common";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import type {
+  MatchProcessingPolicy,
+  PipelineOwner,
+  ReceiptKind,
+} from "@scout-for-lol/domain/match-processing/states.ts";
+import type {
+  ScoutArchiveV2Result,
+  ScoutFanOutV2Result,
+  ScoutGuardedEffectV2Result,
+  ScoutMatchCursorV2Result,
+  ScoutMatchObservationV2Result,
+  ScoutMatchPipelineStateV2Result,
+  ScoutMatchReceiptsV2Input,
+  ScoutReceiptsV2Result,
+} from "#src/activity-contracts-v2.ts";
+import {
+  ScoutNotificationIntentKeySchema,
+  type ScoutDurableCommitV2,
+} from "#src/contracts-v2.ts";
+import {
+  SCOUT_V2_MATCH_RECEIPT_KINDS,
+  type ScoutV2MatchPhase,
+} from "#src/match-receipts-v2.ts";
+
+export const MATCH_ID: RiotMatchId = RiotMatchIdSchema.parse("NA1_9001");
+export const INTENT_KEY = ScoutNotificationIntentKeySchema.parse(
+  "postmatch-discord:NA1_9001:100000000000000001",
+);
+
+/**
+ * A durable store the V2 per-match Activities can be replayed against.
+ *
+ * These tests are about what survives a crash, so the fake keeps exactly the
+ * two things the real system keeps: the receipts that tell a resumed run which
+ * phases already happened, and the effect claims that stop a guarded effect
+ * being applied twice when its receipt was lost. Riot, S3 and the ledger are
+ * irrelevant to that question and are not modelled.
+ *
+ * {@link ScoutV2MatchStore.applied} is the assertion surface — one entry per
+ * effect the store actually APPLIED, as opposed to the calls it received.
+ * Comparing its contents across two runs is what tells "the Activity ran again
+ * and reconciled" apart from "the effect happened twice".
+ */
+export type ScoutV2MatchStore = {
+  observed: boolean;
+  owner: PipelineOwner;
+  policy: MatchProcessingPolicy;
+  receiptKinds: ReceiptKind[];
+  trackedAccounts: number;
+  cursorAdvanced: number;
+  applied: string[];
+  calls: string[];
+  completedClaims: Set<string>;
+  /**
+   * The call the worker dies ON, which models a crash right AFTER the
+   * preceding phase committed. Mutable so one worker can serve both the run
+   * that dies and the run that replaces it: the SDK refuses two workers on one
+   * task queue in a process, and a replay is about the durable state the dead
+   * run left, not about which process reads it.
+   */
+  failAt: string | null;
+};
+
+export function createScoutV2MatchStore(
+  overrides: Partial<ScoutV2MatchStore> = {},
+): ScoutV2MatchStore {
+  return {
+    observed: false,
+    owner: { kind: "temporal-v2" },
+    policy: "FULL",
+    receiptKinds: [],
+    trackedAccounts: 2,
+    cursorAdvanced: 0,
+    applied: [],
+    calls: [],
+    completedClaims: new Set<string>(),
+    failAt: null,
+    ...overrides,
+  };
+}
+
+/** Leave the store as a prior run that attested to these phases would have. */
+export function attested(
+  ...phases: readonly ScoutV2MatchPhase[]
+): ScoutV2MatchStore {
+  return createScoutV2MatchStore({
+    observed: true,
+    receiptKinds: phases.map((phase) => SCOUT_V2_MATCH_RECEIPT_KINDS[phase]),
+  });
+}
+
+function guardedEffect(
+  store: ScoutV2MatchStore,
+  key: string,
+  effects: number,
+): ScoutGuardedEffectV2Result {
+  if (store.completedClaims.has(key)) {
+    // The reconcile the V2 contracts name: an earlier run claimed the guard
+    // and completed it, so this attempt applies nothing.
+    return {
+      guard: { outcome: "already-applied" },
+      fact: { outcome: "already-applied" },
+      effects: 0,
+    };
+  }
+  store.completedClaims.add(key);
+  store.applied.push(key);
+  return {
+    guard: { outcome: "applied" },
+    fact: { outcome: "applied" },
+    effects,
+  };
+}
+
+/** A resume point in which the named phases have already been attested. */
+export function attestedPipelineState(
+  riotMatchId: RiotMatchId,
+  ...phases: readonly ScoutV2MatchPhase[]
+): ScoutMatchPipelineStateV2Result {
+  return {
+    kind: "present",
+    state: {
+      riotMatchId,
+      owner: { kind: "temporal-v2" },
+      policy: "FULL",
+      promoted: false,
+      receiptKinds: phases.map((phase) => SCOUT_V2_MATCH_RECEIPT_KINDS[phase]),
+      intents: [],
+      trackedAccounts: { total: 2, cursorAdvanced: 2 },
+    },
+  };
+}
+
+/**
+ * The nine per-match Activities, backed by {@link ScoutV2MatchStore}.
+ *
+ * The injected failure is non-retryable so the Activity does not quietly
+ * re-enter the stub four more times on its way to failing the Workflow.
+ */
+export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
+  const record = (call: string): void => {
+    store.calls.push(call);
+    if (call === store.failAt) {
+      throw ApplicationFailure.nonRetryable(
+        `injected crash at ${call}`,
+        "InjectedCrash",
+      );
+    }
+  };
+  return {
+    readMatchPipelineStateV2: (): ScoutMatchPipelineStateV2Result => {
+      record("readMatchPipelineStateV2");
+      if (!store.observed) return { kind: "absent" };
+      return {
+        kind: "present",
+        state: {
+          riotMatchId: MATCH_ID,
+          owner: store.owner,
+          policy: store.policy,
+          promoted: false,
+          receiptKinds: [...store.receiptKinds],
+          intents: [],
+          trackedAccounts: {
+            total: store.trackedAccounts,
+            cursorAdvanced: store.cursorAdvanced,
+          },
+        },
+      };
+    },
+    archiveMatchArtifactsV2: (): ScoutArchiveV2Result => {
+      record("archiveMatchArtifactsV2");
+      // Content-addressed: a repeat writes the same bytes to the same key, so
+      // it is not a second effect and is deliberately not recorded as one.
+      return { artifacts: [] };
+    },
+    commitMatchObservationV2: (): ScoutMatchObservationV2Result => {
+      record("commitMatchObservationV2");
+      const commit: ScoutDurableCommitV2 = {
+        outcome: store.observed ? "already-applied" : "applied",
+      };
+      store.observed = true;
+      return {
+        commit,
+        owner: store.owner,
+        policy: store.policy,
+        promoted: false,
+      };
+    },
+    settleMatchMarketsV2: (): ScoutGuardedEffectV2Result => {
+      record("settleMatchMarketsV2");
+      return guardedEffect(store, "settlement", 3);
+    },
+    applyMatchProgressionV2: (): ScoutGuardedEffectV2Result => {
+      record("applyMatchProgressionV2");
+      return guardedEffect(store, "progression", 2);
+    },
+    recordMatchReceiptsV2: (
+      input: ScoutMatchReceiptsV2Input,
+    ): ScoutReceiptsV2Result => {
+      record("recordMatchReceiptsV2");
+      return {
+        receipts: input.kinds.map((kind) => {
+          const stored = store.receiptKinds.includes(kind);
+          if (!stored) store.receiptKinds.push(kind);
+          return {
+            kind,
+            commit: { outcome: stored ? "already-applied" : "applied" },
+          };
+        }),
+      };
+    },
+    advanceMatchCursorV2: (): ScoutMatchCursorV2Result => {
+      record("advanceMatchCursorV2");
+      const advanced = store.trackedAccounts - store.cursorAdvanced;
+      if (advanced > 0) store.applied.push("cursor");
+      const alreadyAdvanced = store.cursorAdvanced;
+      store.cursorAdvanced = store.trackedAccounts;
+      return { advanced, alreadyAdvanced };
+    },
+    planMatchFanOutV2: (): ScoutFanOutV2Result => {
+      record("planMatchFanOutV2");
+      return {
+        notificationIntentKeys: [INTENT_KEY],
+        lakeProjection: true,
+      };
+    },
+  };
+}

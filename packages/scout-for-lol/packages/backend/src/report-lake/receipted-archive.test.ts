@@ -9,6 +9,7 @@ import {
   ArtifactKindSchema,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { matchProcessingReceiptIdentityKey } from "@scout-for-lol/domain/match-processing/states.ts";
+import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
 import { MATCH_RECEIPT_KINDS } from "#src/durable/match/receipt-evidence.ts";
 import {
   MatchProcessingReceiptRecordSchema,
@@ -218,12 +219,38 @@ describe("a full ingest receipts every one of its artifacts", () => {
     );
   });
 
-  test("no receipt kind is owned by both the lake projection and the match bridge", () => {
+  test("no receipt kind is owned by two vocabularies", () => {
     // A shared kind would put two evidence shapes behind one receipt identity,
     // and whichever producer wrote second would lose to an evidence mismatch.
-    const matchKinds: readonly string[] = Object.values(MATCH_RECEIPT_KINDS);
-    expect(
-      RECEIPTED_LAKE_RECEIPT_KINDS.filter((kind) => matchKinds.includes(kind)),
-    ).toEqual([]);
+    // Nothing else prevents that: the migration's `kind` CHECK is a kebab-case
+    // SHAPE constraint, not an enumeration, so a colliding kind inserts
+    // happily and this assertion is the only place it can be caught.
+    //
+    // Pairwise over every vocabulary rather than between two of them, so a
+    // fourth is one entry here instead of a new test someone has to remember
+    // to write.
+    const vocabularies: readonly {
+      owner: string;
+      kinds: readonly string[];
+    }[] = [
+      { owner: "lake projection", kinds: RECEIPTED_LAKE_RECEIPT_KINDS },
+      { owner: "match bridge", kinds: Object.values(MATCH_RECEIPT_KINDS) },
+      {
+        owner: "V2 per-match core",
+        kinds: Object.values(SCOUT_V2_MATCH_RECEIPT_KINDS),
+      },
+    ];
+
+    const collisions = vocabularies.flatMap((left, index) =>
+      vocabularies
+        .slice(index + 1)
+        .flatMap((right) =>
+          left.kinds
+            .filter((kind) => right.kinds.includes(kind))
+            .map((kind) => `${kind}: ${left.owner} and ${right.owner}`),
+        ),
+    );
+
+    expect(collisions).toEqual([]);
   });
 });

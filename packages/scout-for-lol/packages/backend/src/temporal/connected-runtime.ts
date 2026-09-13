@@ -10,6 +10,7 @@ import type { ScoutStage } from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
+import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activities.ts";
 import { createLogger } from "#src/logger.ts";
 import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
 import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
@@ -99,6 +100,13 @@ function installConfiguredRuntime(): void {
   });
 }
 
+/**
+ * The realtime queue serves both pipelines. v1's Activities and the V2
+ * per-match core are declared `realtime` in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`
+ * alike, so one worker registration carries both and an open v1 execution and
+ * a V2 one dispatch to the same place — which is what makes the V2 rollout a
+ * matter of starting Workflows rather than of moving workers.
+ */
 type RealtimeActivities = Pick<
   ScoutTemporalActivities,
   | "pollRealtime"
@@ -106,7 +114,8 @@ type RealtimeActivities = Pick<
   | "runPostMatchMaintenance"
   | "ingestMatch"
   | "probeQueue"
->;
+> &
+  ScoutV2MatchActivities;
 type InteractiveActivities = Pick<
   ScoutTemporalActivities,
   "runInteractive" | "persistInteractiveOutcome" | "probeQueue"

@@ -1,8 +1,6 @@
 import { describe, expect, test } from "vitest";
-import {
-  hardDisabledFeatureForTemporalWork,
-  providerQuotaApplicationFailure,
-} from "./activities.ts";
+import { providerQuotaApplicationFailure } from "./activities.ts";
+import { hardDisabledFeatureForTemporalWork } from "./work-features.ts";
 
 describe("Scout Temporal production policy", () => {
   test.each([

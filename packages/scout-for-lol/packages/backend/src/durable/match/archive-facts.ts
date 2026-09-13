@@ -104,7 +104,18 @@ async function registrationsByPuuid(
   return byPuuid;
 }
 
-async function trackedAccountRecords(
+/**
+ * The association rows for one match's tracked PUUIDs, with each PUUID's
+ * registration snapshotted at observation time.
+ *
+ * Exported because the V2 per-match core commits its own observation — under
+ * the `temporal-v2` owner rather than `legacy-v1` — and the association's
+ * meaning must not depend on which pipeline wrote it. A second implementation
+ * would be free to drift on the one column that carries history:
+ * `accountId` NULL says the PUUID was never registered when the match was
+ * observed, while a non-NULL id says it was.
+ */
+export async function trackedAccountRecords(
   db: Db,
   matchId: RiotMatchId,
   puuids: readonly string[],

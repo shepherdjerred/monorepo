@@ -15,6 +15,7 @@
     "./workflow-contracts-v2": "./src/workflow-contracts-v2.ts",
     "./execution-metadata": "./src/execution-metadata.ts",
     "./identifiers": "./src/identifiers.ts",
+    "./match-receipts-v2": "./src/match-receipts-v2.ts",
     "./signals": "./src/signals.ts",
     "./workflow-ui-interceptor": "./src/workflow-ui-interceptor.ts",
     "./workflows": "./src/workflows/index.ts"
