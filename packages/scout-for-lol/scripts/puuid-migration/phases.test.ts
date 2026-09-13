@@ -48,7 +48,11 @@ async function seed(options: {
     `CREATE TABLE "Account" ("id" INTEGER PRIMARY KEY, "puuid" TEXT, "riotGameName" TEXT, "riotTagLine" TEXT, "createdTime" INTEGER)`,
   );
   await db.exec(
-    `CREATE TABLE "MatchRankHistory" ("id" INTEGER PRIMARY KEY, "puuid" TEXT)`,
+    // `capturedAt` is not decoration: MatchRankHistory is a tracked source, so
+    // dating an unmapped identity reads this column. Omitting it did not fail —
+    // SQLite reads an unknown quoted name as a string literal — it just made the
+    // fixture a shape no real database has.
+    `CREATE TABLE "MatchRankHistory" ("id" INTEGER PRIMARY KEY, "puuid" TEXT, "capturedAt" INTEGER)`,
   );
   await db.exec(
     `CREATE TABLE "MatchTrackedAccount" ("riotMatchId" TEXT, "puuid" TEXT, "createdAt" INTEGER, PRIMARY KEY ("riotMatchId", "puuid"))`,
@@ -167,9 +171,10 @@ test("apply resumes over a partially rewritten database", async () => {
     accounts: [NEW_A],
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
   });
-  await db.exec(`INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)})`, [
-    OLD_A,
-  ]);
+  await db.exec(
+    `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [OLD_A, Date.now()],
+  );
   const { apply, verify } = await import("./phases.ts");
   await apply(db, false);
   const rows = await db.query(`SELECT "puuid" FROM "MatchRankHistory"`);
@@ -337,6 +342,27 @@ test("verify accepts a post-cutover identity known only to MatchTrackedAccount",
 
 test("verify still faults an identity MatchTrackedAccount saw before the cutover", async () => {
   const db = await seedTrackedOnlySighting(CUTOVER_AT - 60_000);
+  const { verify } = await import("./phases.ts");
+  await expect(verify(db)).rejects.toThrow(/unmapped/);
+  await db.close();
+});
+
+test("verify faults an identity only MatchRankHistory saw, before the cutover", async () => {
+  // Rank history is a tracked source in its own right, so it can be the only
+  // thing still naming an identity — and dating it means reading capturedAt.
+  // A fixture without that column makes this case unreachable.
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    accountsCreatedAt: CUTOVER_AT - 60_000,
+  });
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.000Z')`,
+  );
+  await db.exec(
+    `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [POST_CUTOVER, CUTOVER_AT - 60_000],
+  );
   const { verify } = await import("./phases.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();

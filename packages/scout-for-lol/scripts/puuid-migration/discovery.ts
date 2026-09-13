@@ -189,8 +189,54 @@ export async function readPuuids(
 }
 
 /**
+ * Check every declared source against the live catalog before anything reads
+ * one.
+ *
+ * `TRACKED_SOURCES` is hand-maintained, and SQLite will not tell you when it is
+ * wrong: an unresolvable double-quoted identifier is accepted as a string
+ * LITERAL rather than rejected as a column. So `WHERE "capturedAt" IS NOT NULL`
+ * against a table without that column matches every row and hands back the text
+ * `capturedAt` as the timestamp. Nothing errors at the SQL layer; the failure
+ * surfaces much later as an identity that cannot be dated, or not at all.
+ *
+ * Absent tables are fine and expected — prod and beta have different schemas,
+ * and prod's will change again at promotion. A table that IS present with a
+ * column that is not is schema drift, and every use of it from here is wrong.
+ */
+export async function assertTrackedSourcesMatchSchema(db: Db): Promise<void> {
+  const tables = new Set(await db.listTables());
+  const drift: string[] = [];
+
+  for (const source of TRACKED_SOURCES) {
+    if (!tables.has(source.table)) {
+      continue;
+    }
+    const columns = new Set(await db.listColumns(source.table));
+    for (const column of [source.column, source.createdColumn]) {
+      if (!columns.has(column)) {
+        drift.push(`${source.table}.${column}`);
+      }
+    }
+  }
+
+  if (drift.length > 0) {
+    throw new Error(
+      `TRACKED_SOURCES names columns this database does not have:\n${[
+        ...new Set(drift),
+      ]
+        .map((d) => `  ${d}`)
+        .join(
+          "\n",
+        )}\nFix the declaration in support.ts against the live schema.`,
+    );
+  }
+}
+
+/**
  * The tracked identities — the only ones we re-domain. Sources absent from
- * this database are skipped, since prod and beta have different schemas.
+ * this database are skipped, since prod and beta have different schemas; a
+ * source that is present has already been checked against the catalog, so a
+ * missing column here would be a bug rather than a schema difference.
  */
 export async function readTrackedPuuids(db: Db): Promise<Set<string>> {
   const tables = new Set(await db.listTables());
@@ -198,10 +244,6 @@ export async function readTrackedPuuids(db: Db): Promise<Set<string>> {
 
   for (const source of TRACKED_SOURCES) {
     if (!tables.has(source.table)) {
-      continue;
-    }
-    const columns = new Set(await db.listTextColumns(source.table));
-    if (!columns.has(source.column)) {
       continue;
     }
     const values = await readPuuids(

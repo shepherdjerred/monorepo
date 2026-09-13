@@ -29,6 +29,8 @@ export type Db = {
   readonly exec: (sql: string, params?: readonly SqlParam[]) => Promise<void>;
   readonly transaction: (fn: () => Promise<void>) => Promise<void>;
   readonly listTables: () => Promise<string[]>;
+  /** Every column, whatever its type. Timestamps are not text on either target. */
+  readonly listColumns: (table: string) => Promise<string[]>;
   /** Text-ish columns only; PUUIDs are never stored numerically. */
   readonly listTextColumns: (table: string) => Promise<string[]>;
   readonly primaryKey: (table: string) => Promise<string[]>;
@@ -89,6 +91,12 @@ async function openSqlite(url: string): Promise<Db> {
           .map((r) => asString(r["name"], "table name"))
           .filter((n) => !n.startsWith("sqlite_")),
       ),
+    listColumns: (table) =>
+      Promise.resolve(
+        run(`PRAGMA table_info("${table}")`, []).map((r) =>
+          asString(r["name"], "column name"),
+        ),
+      ),
     listTextColumns: (table) =>
       Promise.resolve(
         run(`PRAGMA table_info("${table}")`, [])
@@ -107,6 +115,9 @@ async function openSqlite(url: string): Promise<Db> {
     },
   };
 }
+
+const COLUMN_CATALOG =
+  "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1";
 
 async function openPostgres(): Promise<Db> {
   const mod =
@@ -145,11 +156,12 @@ async function openPostgres(): Promise<Db> {
       );
       return rows.map((r) => asString(r["table_name"], "table name"));
     },
+    listColumns: async (table) => {
+      const rows = await query(COLUMN_CATALOG, [table]);
+      return rows.map((r) => asString(r["column_name"], "column name"));
+    },
     listTextColumns: async (table) => {
-      const rows = await query(
-        "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1",
-        [table],
-      );
+      const rows = await query(COLUMN_CATALOG, [table]);
       return rows
         .filter((r) => {
           const type = asOptionalString(r["data_type"]) ?? "";

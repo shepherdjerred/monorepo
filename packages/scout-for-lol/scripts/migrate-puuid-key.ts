@@ -38,6 +38,7 @@
  */
 
 import { openDb } from "./puuid-migration/db.ts";
+import { assertTrackedSourcesMatchSchema } from "./puuid-migration/discovery.ts";
 import {
   apply,
   collect,
@@ -54,6 +55,10 @@ const allowUnresolved = Bun.argv.includes("--allow-unresolved");
 const db = await openDb();
 console.log(`target: ${db.kind}\n`);
 await ensureMapTable(db);
+// Every phase reads the declared sources, and a wrong column name is not a SQL
+// error on SQLite — it becomes a string literal. Check the declaration against
+// the live catalog once, before any phase acts on it.
+await assertTrackedSourcesMatchSchema(db);
 
 try {
   switch (phase) {
