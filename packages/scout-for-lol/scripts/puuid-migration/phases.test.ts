@@ -398,6 +398,46 @@ test("apply still refuses an identity that predates the cutover", async () => {
   await db.close();
 });
 
+test("a second apply keeps the timestamp the first one recorded", async () => {
+  // Advancing the marker would move the line every later judgement is made
+  // against: this account registered a minute after the real cutover, and a
+  // re-run that restamped the marker would report it as work this migration
+  // skipped.
+  const db = await seed({
+    accounts: [NEW_A, POST_CUTOVER],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    accountsCreatedAt: CUTOVER_AT + 60_000,
+  });
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.000Z')`,
+  );
+  const { apply, verify } = await import("./phases.ts");
+  await apply(db, false);
+  const rows = await db.query(
+    `SELECT "appliedAt" AS v FROM "PuuidKeyMigration"`,
+  );
+  expect(rows[0]?.["v"]).toBe("2026-09-13T11:34:41.000Z");
+  await verify(db);
+  await db.close();
+});
+
+test("apply fills a marker an interrupted run left empty", async () => {
+  // The reason the conflict branch coalesces rather than doing nothing: the
+  // column is nullable, and a row sitting there with no timestamp would
+  // otherwise never get one.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, NULL)`,
+  );
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+  const rows = await db.query(
+    `SELECT "appliedAt" AS v FROM "PuuidKeyMigration"`,
+  );
+  expect(rows[0]?.["v"]).not.toBeNull();
+  await db.close();
+});
+
 test("collect maps an identity frozen in a Dare after its account is removed", async () => {
   // A Dare pins its targets at creation and keeps matching them against live
   // games. Once the account row is gone the PUUID survives only here — and it

@@ -477,9 +477,17 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
   // performed while tracking no accounts is still recorded — updating mapping
   // rows would touch nothing there and lose exactly the case this marker exists
   // to cover.
+  //
+  // The first timestamp is the one that means something, so a re-run keeps it.
+  // Advancing it would move the line every later judgement is made against:
+  // every account registered since the real cutover would fall back on the
+  // wrong side of it and be reported as work this migration skipped. COALESCE
+  // rather than DO NOTHING, because the column is nullable and a row left there
+  // by an interrupted run still needs filling in.
   await db.exec(
     `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})
-     ON CONFLICT ("id") DO UPDATE SET "appliedAt" = ${db.now()}`,
+     ON CONFLICT ("id") DO UPDATE
+        SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()})`,
   );
   console.log("apply: complete");
 }
