@@ -10,6 +10,9 @@
       "project_id": "proj_QrJyOV4FfAHWITH4KItJavYU",
       "name": "Scout for LoL"
     },
+    "scout-active-2026-09": {
+      "name": "Scout for LoL"
+    },
     "birmel": {
       "project_id": "proj_koLZlKBDZ1BhN2tpCnWFEZhb",
       "name": "Birmel"
@@ -30,6 +33,10 @@
       "project_id": "proj_uy98PiWuGIrnHS1aj2ayEe0k",
       "name": "Streambot"
     },
+    "streambot-active-2026-09": {
+      "project_id": "proj_CD2snFoT6oC5EvglqNvIfGCT",
+      "name": "Streambot"
+    },
     "pokemon": {
       "project_id": "proj_WSOt43df4BHtErRdEWXM7c25",
       "name": "Pokemon"
@@ -37,7 +44,7 @@
   },
   "openai_service_accounts": {
     "streambot-2026-08": {
-      "project_key": "streambot",
+      "project_key": "streambot-active-2026-09",
       "name": "streambot 2026-08",
       "onepassword_targets": [
         {
@@ -58,7 +65,7 @@
       ]
     },
     "scout-voice-2026-09": {
-      "project_key": "scout",
+      "project_key": "scout-active-2026-09",
       "name": "Scout voice 2026-09",
       "onepassword_targets": [
         {
@@ -77,13 +84,13 @@
   "openai_project_users": {},
   "openai_project_spend_alerts": {
     "scout-monthly": {
-      "project_key": "scout",
+      "project_key": "scout-active-2026-09",
       "threshold_amount": 10,
       "currency": "USD",
       "interval": "month",
       "notification_channel_type": "email",
       "notification_channel_recipients": ["openai@sjer.red"],
-      "notification_channel_subject_prefix": "[scout-openai]"
+      "notification_channel_subject_prefix": "scout-openai"
     }
   },
   "openai_groups": {},
@@ -100,6 +107,12 @@
   "openai_project_model_permissions": {},
   "openai_project_hosted_tool_permissions": {},
   "openai_project_spend_limits": {
+    "scout-active-monthly-2026-09": {
+      "project_key": "scout-active-2026-09",
+      "threshold_amount": 2500,
+      "currency": "USD",
+      "interval": "month"
+    },
     "scout-monthly": {
       "project_key": "scout",
       "threshold_amount": 2500,

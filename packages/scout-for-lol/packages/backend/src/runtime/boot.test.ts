@@ -38,7 +38,6 @@ function bootActions(log: ScoutBootStep[]): ScoutBootActions {
   };
   return {
     "champion-assets": record("champion-assets"),
-    "voice-assistant": record("voice-assistant"),
     "report-lake": record("report-lake"),
     "temporal-core": record("temporal-core"),
     "discord-gateway": record("discord-gateway"),
@@ -90,7 +89,6 @@ describe("scout runtime boot", () => {
     const log = await boot("combined");
     expect(log.boot).toEqual([
       "champion-assets",
-      "voice-assistant",
       "report-lake",
       "temporal-core",
       "discord-gateway",
@@ -131,7 +129,6 @@ describe("scout runtime boot", () => {
     const log = await boot("gateway");
     expect(log.boot).toEqual([
       "champion-assets",
-      "voice-assistant",
       // Present because this role answers `/scout ask` and the Dare commands
       // from the lake in process, not because it runs a Temporal queue.
       "report-lake",

@@ -402,8 +402,9 @@ export async function initializeLocalVoiceModelsForRuntime(
     },
     assets.wakeThreshold,
   );
+  let models: LocalVoiceModels | null = null;
   try {
-    const models =
+    models =
       runtime === "native"
         ? await createNativeModels(assets, verifier)
         : await createWasmModels(assets, verifier);
@@ -427,7 +428,14 @@ export async function initializeLocalVoiceModelsForRuntime(
     models.createVad().close();
     return models;
   } catch (error) {
-    await verifier.close();
+    if (models === null) {
+      await verifier.close();
+    } else {
+      // Once the runtime owns the verifier, its close method must unwind the
+      // whole model set. This catch is reachable after the verifier smoke or
+      // detector/VAD smoke fails, and callers may retry initialization.
+      await models.close();
+    }
     throw error;
   }
 }

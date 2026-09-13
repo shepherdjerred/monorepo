@@ -242,40 +242,41 @@ describe("local runtime flags", () => {
 });
 
 describe("parseVoiceAssistantConfiguration", () => {
-  test("defaults to disabled with the production asset path", () => {
+  test("defaults to the production asset path with no credential", () => {
     const config = parseVoiceAssistantConfiguration({
-      enabled: false,
       openAiApiKey: undefined,
+      openAiApiKeyFile: undefined,
       assetsDir: undefined,
       kwsRuntime: undefined,
     });
     expect(config).toEqual({
-      enabled: false,
       assetsDir: "/opt/scout/voice",
       kwsRuntime: "auto",
     });
   });
 
-  test("enabled requires an OpenAI key", () => {
+  // Activation is the `voice_assistant_enabled` Flipt flag, so a missing
+  // credential is a runtime answer ("not configured here"), never a parse or
+  // boot failure — a deployment that will not serve voice simply omits it.
+  test("a missing credential parses cleanly instead of throwing", () => {
     expect(() =>
       parseVoiceAssistantConfiguration({
-        enabled: true,
         openAiApiKey: undefined,
-        assetsDir: undefined,
-        kwsRuntime: undefined,
+        openAiApiKeyFile: undefined,
+        assetsDir: "/tmp/voice",
+        kwsRuntime: "wasm",
       }),
-    ).toThrow(/OPENAI_API_KEY/);
+    ).not.toThrow();
   });
 
-  test("accepts a complete enabled configuration", () => {
+  test("accepts a complete configuration", () => {
     const config = parseVoiceAssistantConfiguration({
-      enabled: true,
       openAiApiKey: "sk-test",
+      openAiApiKeyFile: undefined,
       assetsDir: "/tmp/voice",
       kwsRuntime: "wasm",
     });
     expect(config).toEqual({
-      enabled: true,
       openAiApiKey: "sk-test",
       assetsDir: "/tmp/voice",
       kwsRuntime: "wasm",
@@ -285,8 +286,8 @@ describe("parseVoiceAssistantConfiguration", () => {
   test("a present invalid runtime throws instead of falling back", () => {
     expect(() =>
       parseVoiceAssistantConfiguration({
-        enabled: false,
         openAiApiKey: undefined,
+        openAiApiKeyFile: undefined,
         assetsDir: undefined,
         kwsRuntime: "gpu",
       }),

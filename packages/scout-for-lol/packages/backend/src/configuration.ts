@@ -53,50 +53,52 @@ const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
 /**
- * The "Hey Scout" voice assistant's boot contract. Environment variables here
- * are deliberately bootstrap-only: whether the pipeline loads its pinned local
- * models is a fatal boot decision (asset verification throws), so it cannot be
- * a Flipt flag — and unauthenticated Flipt must never control audio capture.
- * Per-guild opt-in stays on the `voice_assistant_enabled` flag; this schema
- * only decides whether the deployment has a voice runtime at all.
+ * The "Hey Scout" voice assistant's environment surface — credentials and
+ * bootstrap only, per the repo's configuration policy.
+ *
+ * There is deliberately no `enabled` flag here. Activation is the
+ * `voice_assistant_enabled` Flipt flag and nothing else: it already decides
+ * whether `/scout join` may open a session and tears down live sessions when
+ * it flips off, so a second env gate duplicated that authority without adding
+ * any. What used to justify the env var — model verification being fatal at
+ * boot — no longer applies: the models load lazily on first use
+ * (`voice-assistant/runtime.ts`), and the image's `voice-smoke` build stage
+ * proves they load before the image can be published, which catches a broken
+ * asset set earlier than a crash-looping pod did.
+ *
+ * The credential can arrive directly for local development or through a
+ * mounted Secret file in Kubernetes. Both stay optional: their absence is a
+ * runtime answer ("voice is not configured in this deployment"), not a boot
+ * failure, so a deployment that never intends to serve voice simply omits
+ * them.
  */
-export const VoiceAssistantConfigSchema = z
-  .object({
-    enabled: z.boolean().default(false),
-    openAiApiKey: z.string().min(1).optional(),
-    assetsDir: z.string().min(1).default("/opt/scout/voice"),
-    kwsRuntime: z.enum(["auto", "native", "wasm"]).default("auto"),
-  })
-  .superRefine((value, context) => {
-    if (value.enabled && value.openAiApiKey === undefined) {
-      context.addIssue({
-        code: "custom",
-        path: ["openAiApiKey"],
-        message:
-          "VOICE_ASSISTANT_ENABLED=true requires OPENAI_API_KEY: a voice deployment without a Realtime credential could accept wakes it can never answer",
-      });
-    }
-  });
+export const VoiceAssistantConfigSchema = z.object({
+  openAiApiKey: z.string().min(1).optional(),
+  openAiApiKeyFile: z.string().min(1).optional(),
+  assetsDir: z.string().min(1).default("/opt/scout/voice"),
+  kwsRuntime: z.enum(["auto", "native", "wasm"]).default("auto"),
+});
 
 export type VoiceAssistantConfig = z.infer<typeof VoiceAssistantConfigSchema>;
 
 /**
- * Parse the voice assistant's environment surface. `enabled` arrives already
- * boolean-parsed by env-var (a present invalid value throws there); the
- * remaining values are optional strings where empty means absent. A present
- * but invalid `kwsRuntime` throws here rather than falling back.
+ * Parse the voice assistant's environment surface. Values are optional strings
+ * where empty means absent. A present but invalid `kwsRuntime` throws here
+ * rather than falling back.
  */
 export function parseVoiceAssistantConfiguration(values: {
-  enabled: boolean;
   openAiApiKey: string | undefined;
+  openAiApiKeyFile: string | undefined;
   assetsDir: string | undefined;
   kwsRuntime: string | undefined;
 }): VoiceAssistantConfig {
   return VoiceAssistantConfigSchema.parse({
-    enabled: values.enabled,
     ...(values.openAiApiKey === undefined
       ? {}
       : { openAiApiKey: values.openAiApiKey }),
+    ...(values.openAiApiKeyFile === undefined
+      ? {}
+      : { openAiApiKeyFile: values.openAiApiKeyFile }),
     ...(values.assetsDir === undefined ? {} : { assetsDir: values.assetsDir }),
     ...(values.kwsRuntime === undefined
       ? {}
@@ -326,8 +328,8 @@ function computeConfiguration() {
       .default("10")
       .asIntPositive(),
     voiceAssistant: parseVoiceAssistantConfiguration({
-      enabled: env.get("VOICE_ASSISTANT_ENABLED").default("false").asBool(),
       openAiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
+      openAiApiKeyFile: getOptionalEnvVar("OPENAI_API_KEY_FILE"),
       assetsDir: getOptionalEnvVar("VOICE_ASSETS_DIR"),
       kwsRuntime: getOptionalEnvVar("VOICE_KWS_RUNTIME"),
     }),

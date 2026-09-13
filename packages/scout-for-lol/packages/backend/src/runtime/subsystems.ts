@@ -63,12 +63,6 @@ export function scoutRuntimeSubsystems(
     boot: {
       "champion-assets": validateChampionAssets,
 
-      "voice-assistant": async () => {
-        const { bootstrapVoiceAssistant } =
-          await import("#src/voice-assistant/runtime.ts");
-        await bootstrapVoiceAssistant();
-      },
-
       /**
        * Settle the report lake for this role: fold it, or verify someone else
        * did.

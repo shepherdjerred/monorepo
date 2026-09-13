@@ -41,6 +41,13 @@ function requiredWeeklyParlaySecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
+function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
+  if (secret === undefined) {
+    throw new Error("Beta Scout requires its voice OpenAI secret.");
+  }
+  return secret;
+}
+
 export function createScoutDeployment(chart: Chart, stage: Stage) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
@@ -81,7 +88,13 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
         cpuRequest: Cpu.millis(50),
-        memoryRequest: Size.gibibytes(2),
+        // 3Gi, up from 2Gi: beta is the only stage that loads the Hey Scout
+        // voice runtime (three sherpa int8 graphs, silero VAD, and the
+        // openWakeWord cascade) on top of the report lake. Sized from
+        // streambot's 2Gi request for a comparable pipeline plus Scout's
+        // existing baseline; re-tune from observed usage under a live session
+        // rather than guessing again.
+        memoryRequest: Size.gibibytes(3),
       };
     })
     .with("prod", () => {
@@ -110,6 +123,21 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           new OnePasswordItem(chart, "scout-weekly-parlay-control-1p", {
             metadata: { name: "scout-weekly-parlay-control" },
             spec: { itemPath: vaultItemPath("scout-weekly-parlay-control") },
+          }).name,
+        )
+      : undefined;
+  // Hey Scout's OpenAI Realtime credential. A dedicated item rather than a
+  // field on scout-for-lol-1p so it rotates on its own (OpenTofu mints it as
+  // the `scout-voice-2026-09` service account), and beta-only because
+  // production is hard-disabled for voice in code.
+  const voiceOpenAiSecret =
+    stage === "beta"
+      ? Secret.fromSecretName(
+          chart,
+          "scout-openai-secret",
+          new OnePasswordItem(chart, "scout-openai-1p", {
+            metadata: { name: "scout-openai" },
+            spec: { itemPath: vaultItemPath("scout-openai") },
           }).name,
         )
       : undefined;
@@ -161,6 +189,23 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       localPathVolume.claim,
     ),
   };
+  const volumeMounts =
+    stage === "beta"
+      ? [
+          dataVolumeMount,
+          {
+            path: "/run/secrets/scout-openai",
+            volume: Volume.fromSecret(
+              chart,
+              "scout-openai-volume",
+              requiredVoiceOpenAiSecret(voiceOpenAiSecret),
+              {
+                optional: true,
+              },
+            ),
+          },
+        ]
+      : [dataVolumeMount];
 
   const baseEnvVariables = {
     ...dbEnv,
@@ -295,6 +340,22 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           // Discord servers. An unset or empty list denies everyone, so this
           // must be present for anyone to reach /app/explore in beta.
           EXPLORE_GUILD_ALLOWLIST: EnvValue.fromValue("1337623164146155593"),
+          // Hey Scout's credential and bootstrap surface. Activation itself is
+          // the `voice_assistant_enabled` Flipt flag and lives nowhere here:
+          // the backend loads its models lazily on first `/scout join`, so
+          // there is no env gate to duplicate the flag's authority. Production
+          // omits these because it has no voice credential and is hard-disabled
+          // for the flag in code.
+          //
+          // A Secret volume is updated in a running pod when 1Password
+          // populates the key. The lazy loader reads it on every attempt, so
+          // the credential handoff needs neither an unschedulable pod nor an
+          // imperative restart.
+          OPENAI_API_KEY_FILE: EnvValue.fromValue(
+            "/run/secrets/scout-openai/OPENAI_API_KEY",
+          ),
+          VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/scout/voice"),
+          VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
         }
       : baseEnvVariables;
 
@@ -336,7 +397,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      volumeMounts: [dataVolumeMount],
+      volumeMounts,
       envVariables,
     }),
   );
