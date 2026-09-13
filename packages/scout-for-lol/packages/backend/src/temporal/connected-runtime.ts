@@ -11,9 +11,11 @@ import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
 import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
-import type { ScoutV2NotificationActivities } from "#src/temporal/v2/notification-activities.ts";
-import type { ScoutV2BackgroundActivities } from "#src/temporal/v2/background-activities.ts";
-import type { ScoutV2LakeActivities } from "#src/temporal/v2/lake-activities.ts";
+import type {
+  ScoutV2BackgroundActivities,
+  ScoutV2LakeActivities,
+  ScoutV2NotificationActivities,
+} from "#src/temporal/v2/durable-activity-surface.ts";
 import { createLogger } from "#src/logger.ts";
 import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
 import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";

@@ -128,10 +128,13 @@ describe("the V2 per-match core", () => {
           SCOUT_V2_MATCH_RECEIPT_KINDS.progression,
           SCOUT_V2_MATCH_RECEIPT_KINDS.tournament,
         ],
-        // The notification and lake children are registered contracts with no
-        // implementation yet, so this run plans them and starts none. The
-        // plan's own content is asserted in `match-fan-out-v2.test.ts`.
-        childrenStarted: { notifications: 0, lakeProjections: 0 },
+        // Both child types have bodies now, so the plan this run computed is
+        // started rather than merely counted. The children are abandoned by
+        // design — a notification outlives the match run that promised it — so
+        // nothing here waits on them, and their own Activities are not
+        // registered on this test's workers; the plan's content is asserted in
+        // `match-fan-out-v2.test.ts`.
+        childrenStarted: { notifications: 1, lakeProjections: 1 },
       }),
     );
     expect(store.applied).toEqual(["settlement", "progression", "cursor"]);

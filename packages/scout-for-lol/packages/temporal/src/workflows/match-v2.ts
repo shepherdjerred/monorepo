@@ -26,8 +26,9 @@ import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "#src/match-receipts-v2.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 import { realtimeV2Activities } from "./activity-options.ts";
 import {
+  IMPLEMENTED_V2_FAN_OUT_WORKFLOWS,
   planMatchFanOutChildrenV2,
-  startableMatchFanOutCountsV2,
+  type ScoutMatchFanOutChildV2,
 } from "./match-fan-out-v2.ts";
 
 /**
@@ -140,6 +141,60 @@ function assertArtifactsUncontested(
     `Archived artifacts for ${riotMatchId} disagree with the receipts already standing for them: ${detail}. Refusing to attest to the archive or advance the cursor over drift nothing has reconciled`,
     "ArchiveReceiptConflict",
   );
+}
+
+/**
+ * Start the planned children that have a body behind them, and count what took.
+ *
+ * The plan is computed first and started second so the fan-out DECISION stays a
+ * pure function of the durable state: `match-fan-out-v2.ts` holds no
+ * `startChild` and is assertable without a Temporal environment. This filters
+ * the plan on the same allowlist that module's `startableMatchFanOutCountsV2`
+ * predicate reads, so what is startable and what is counted as startable cannot
+ * drift apart.
+ *
+ * `parentClosePolicy: "ABANDON"` throughout, because a notification outlives
+ * the match run that promised it and the parent closing must not cancel a send
+ * in flight.
+ *
+ * The reuse policies differ by family and the difference is load-bearing. A
+ * notification uses ALLOW_DUPLICATE because its durable ROW, not this
+ * Workflow's completion, decides whether work remains: a run that completed by
+ * recording `unknown-delivery` SUCCEEDED at its job, the operator resolution
+ * that releases the intent happens out of band, and the fresh run that follows
+ * must not be refused for following a successful execution. A lake projection
+ * uses ALLOW_DUPLICATE_FAILED_ONLY: once it has staged there is nothing left to
+ * do, and a re-projection after a lake rebuild would be a differently-derived
+ * ID for reconciliation to start, not a loosened policy here.
+ *
+ * An ID already in use is an answer rather than a fault — some execution is
+ * already driving that work — so it is not counted as started.
+ */
+async function startMatchFanOutChildrenV2(
+  stage: ScoutStage,
+  children: readonly ScoutMatchFanOutChildV2[],
+): Promise<{ notifications: number; lakeProjections: number }> {
+  const started = { notifications: 0, lakeProjections: 0 };
+  for (const child of children) {
+    if (!IMPLEMENTED_V2_FAN_OUT_WORKFLOWS.includes(child.workflowType))
+      continue;
+    try {
+      await startChild(child.workflowType, {
+        workflowId: child.workflowId,
+        workflowIdReusePolicy:
+          child.family === "notifications"
+            ? "ALLOW_DUPLICATE"
+            : "ALLOW_DUPLICATE_FAILED_ONLY",
+        taskQueue: scoutTaskQueues(stage).workflow,
+        parentClosePolicy: "ABANDON",
+        args: [child.input],
+      });
+      started[child.family] += 1;
+    } catch (error) {
+      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    }
+  }
+  return started;
 }
 
 /**
@@ -275,7 +330,10 @@ export async function scoutMatchProcessingV2Workflow(
   setWorkflowPhase("**Phase:** planning the post-commit fan-out");
   const plan = await activities.planMatchFanOutV2(ref);
   const children = planMatchFanOutChildrenV2({ ...ref, plan });
-  const childrenStarted = startableMatchFanOutCountsV2(children);
+  const childrenStarted = await startMatchFanOutChildrenV2(
+    input.stage,
+    children,
+  );
   setWorkflowPhase(
     `**Phase:** planned ${String(children.length)} fan-out children, started ${String(childrenStarted.notifications + childrenStarted.lakeProjections)}`,
   );

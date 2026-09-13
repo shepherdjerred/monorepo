@@ -1,4 +1,4 @@
-import type { ScoutTemporalV2Activities } from "@scout-for-lol/temporal/activities";
+import type { ScoutV2BackgroundActivities } from "#src/temporal/v2/durable-activity-surface.ts";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
 /**
@@ -15,17 +15,6 @@ import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
  * chain would pull the report renderer, the Riot client and Prisma into a
  * process that may never run any of this.
  */
-export type ScoutV2BackgroundActivities = Pick<
-  ScoutTemporalV2Activities,
-  | "renderNotificationArtifactV2"
-  | "readRecoveryBatchV2"
-  | "scanRecoveryPageV2"
-  | "processRecoveryPageV2"
-  | "digestRecoveryBatchV2"
-  | "closeRecoveryBatchV2"
-  | "scanPipelineReconciliationPageV2"
->;
-
 export function createScoutV2BackgroundActivities(): ScoutV2BackgroundActivities {
   return {
     renderNotificationArtifactV2: async (input) =>

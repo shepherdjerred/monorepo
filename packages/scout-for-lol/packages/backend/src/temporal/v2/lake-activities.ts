@@ -1,4 +1,4 @@
-import type { ScoutTemporalV2Activities } from "@scout-for-lol/temporal/activities";
+import type { ScoutV2LakeActivities } from "#src/temporal/v2/durable-activity-surface.ts";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
 /**
@@ -15,11 +15,6 @@ import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
  * that polls any queue, and the DuckDB and Riot slices behind this one have no
  * business loading into a process that will never stage a projection.
  */
-export type ScoutV2LakeActivities = Pick<
-  ScoutTemporalV2Activities,
-  "stageLakeProjectionV2"
->;
-
 export function createScoutV2LakeActivities(): ScoutV2LakeActivities {
   return {
     stageLakeProjectionV2: async (input) =>

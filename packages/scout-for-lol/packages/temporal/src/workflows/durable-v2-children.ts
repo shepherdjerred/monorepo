@@ -16,6 +16,7 @@ import {
   scoutNotificationV2InputCodec,
   scoutRecoveryBatchV2InputCodec,
 } from "#src/workflow-contracts-v2.ts";
+import { IMPLEMENTED_V2_FAN_OUT_WORKFLOWS } from "./match-fan-out-v2.ts";
 
 /**
  * Turning one reconciliation page into child starts.
@@ -65,19 +66,21 @@ export function emptyReconciliationChildCountsV2(): ScoutReconciliationChildCoun
  * work itself, so the failed execution would own the ID that every later sweep
  * computes for the same work.
  *
- * This is a SIBLING of `IMPLEMENTED_V2_FAN_OUT_WORKFLOWS`, not a copy, and the
- * difference is structural rather than incidental. That list is typed by
- * `ScoutMatchFanOutChildV2["workflowType"]` because it answers a narrower
- * question — which of the two children a MATCH fans out to has a body — while
- * this sweep also starts match processing and recovery batches, which are not
- * fan-out children at all and could never appear there. A type has to be
- * listed wherever it is started from; the two sets overlap on notifications
- * and lake projections, and a lane that lands a body owns keeping both honest.
+ * DERIVED from `IMPLEMENTED_V2_FAN_OUT_WORKFLOWS` rather than restating it, so
+ * the two start sites cannot drift. That list answers a narrower question —
+ * which of the two children a MATCH fans out to has a body — and is typed by
+ * `ScoutMatchFanOutChildV2["workflowType"]` accordingly, so it could never
+ * name the other two types this sweep starts. Spreading it and adding those
+ * two keeps one source of truth for the overlap: a lane that lands a
+ * notification or lake body edits the allowlist, and the sweep follows without
+ * anyone remembering to edit a second list.
+ *
+ * Match processing and recovery batches are named here because nothing fans
+ * out to them; the sweep is their only automated starter.
  */
-const RECONCILIATION_STARTABLE_V2: ReadonlySet<string> = new Set([
+const RECONCILIATION_STARTABLE_V2: ReadonlySet<string> = new Set<string>([
+  ...IMPLEMENTED_V2_FAN_OUT_WORKFLOWS,
   SCOUT_WORKFLOW_NAMES.matchProcessingV2,
-  SCOUT_WORKFLOW_NAMES.notificationV2,
-  SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
   SCOUT_WORKFLOW_NAMES.recoveryBatchV2,
 ]);
 

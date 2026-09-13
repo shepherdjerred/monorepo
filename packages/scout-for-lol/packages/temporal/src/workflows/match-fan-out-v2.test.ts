@@ -91,12 +91,16 @@ describe("the post-commit fan-out plan", () => {
     ).toEqual([]);
   });
 
-  test("starts no child while both child Workflows are stubs", () => {
+  test("counts every planned child whose Workflow has a body", () => {
     // The seam: a lane that implements a child adds its type here and the
-    // per-match Workflow starts every planned child of that type. Until then a
-    // start would not defer the work, it would destroy it — the stub fails
-    // non-retryably and would own the ID the plan derives.
-    expect(IMPLEMENTED_V2_FAN_OUT_WORKFLOWS).toEqual([]);
+    // per-match Workflow starts every planned child of that type. Both have
+    // landed, so every planned child is startable — and this staying a pure
+    // predicate is what lets the fan-out decision be asserted without a
+    // Temporal environment and without any child existing.
+    expect([...IMPLEMENTED_V2_FAN_OUT_WORKFLOWS]).toEqual([
+      SCOUT_WORKFLOW_NAMES.notificationV2,
+      SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+    ]);
     expect(
       startableMatchFanOutCountsV2(
         planMatchFanOutChildrenV2({
@@ -106,6 +110,20 @@ describe("the post-commit fan-out plan", () => {
             notificationIntentKeys: [first, second],
             lakeProjection: true,
           },
+        }),
+      ),
+    ).toEqual({ notifications: 2, lakeProjections: 1 });
+  });
+
+  test("counts nothing startable when nothing was planned", () => {
+    // The count follows the PLAN, never the allowlist: a match with no intents
+    // and no archived payload starts nothing however many types have bodies.
+    expect(
+      startableMatchFanOutCountsV2(
+        planMatchFanOutChildrenV2({
+          stage,
+          riotMatchId,
+          plan: { notificationIntentKeys: [], lakeProjection: false },
         }),
       ),
     ).toEqual({ notifications: 0, lakeProjections: 0 });

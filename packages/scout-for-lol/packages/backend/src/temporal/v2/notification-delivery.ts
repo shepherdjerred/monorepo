@@ -249,6 +249,11 @@ export async function deliverNotificationV2(
       : undefined;
 
   const context = await resolveScoutV2MatchContext(riotMatchId);
+  // This re-renders the report image that `renderNotificationArtifactV2`
+  // already committed and attested, because `generateMatchReport` renders
+  // internally and v1 offers no seam for handing one in. See that module's
+  // header for what closing it costs; it is a coordinated follow-up, not an
+  // oversight here.
   const message = await generateMatchReport(
     context.matchData,
     context.trackedPlayers,

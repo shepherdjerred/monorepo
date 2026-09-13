@@ -35,6 +35,25 @@ import {
  * point of the `rendered | reused` contract: several intents fan out from one
  * match, every one of them starts a notification child, and only the first
  * should pay for the image they all deliver.
+ *
+ * ## The seam this does not close yet
+ *
+ * The artifact committed here is attested but UNCONSUMED. `deliverNotificationV2`
+ * still builds its message through `generateMatchReport`, which renders the
+ * image internally — so a delivered notification pays for the Satori pass a
+ * second time, on `realtime`, which is the queue this split exists to keep it
+ * off. Everything the receipt promises is true (the artifact is durable, it is
+ * attested, and a second render Activity reuses it); what is missing is the
+ * send reading it back.
+ *
+ * Closing it means giving v1's report path a seam for a pre-rendered image:
+ * `createMatchImage` is where the render happens, and it is called from all
+ * three of `processClassicMatch`, `processArenaMatch` and `processStandardMatch`,
+ * so the image has to be threaded through `generateMatchReport` and each of
+ * them. That is a change to the LIVE v1 report path rather than to this lane,
+ * which is why it was deferred rather than folded in here — it is tracked as a
+ * coordinated follow-up. Until it lands, treat the committed artifact as an
+ * attested record of what was delivered, not as the source the send reads.
  */
 
 /**

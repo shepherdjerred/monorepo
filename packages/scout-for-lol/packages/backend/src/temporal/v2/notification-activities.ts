@@ -1,4 +1,4 @@
-import type { ScoutTemporalV2Activities } from "@scout-for-lol/temporal/activities";
+import type { ScoutV2NotificationActivities } from "#src/temporal/v2/durable-activity-surface.ts";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
 /**
@@ -18,15 +18,6 @@ import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
  * Discord client, the report renderer and Prisma into a process that may never
  * deliver a notification.
  */
-export type ScoutV2NotificationActivities = Pick<
-  ScoutTemporalV2Activities,
-  | "readNotificationIntentV2"
-  | "markNotificationReadyV2"
-  | "beginNotificationSendV2"
-  | "deliverNotificationV2"
-  | "recordNotificationOutcomeV2"
->;
-
 export function createScoutV2NotificationActivities(): ScoutV2NotificationActivities {
   return {
     readNotificationIntentV2: async (input) =>

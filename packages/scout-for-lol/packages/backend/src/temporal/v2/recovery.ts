@@ -39,6 +39,7 @@ import {
   getObservation,
   observeMatch,
 } from "#src/database/durable/observation-repository.ts";
+import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import {
   advanceRecoveryCursor,
   getRecoveryBatch,
@@ -59,7 +60,14 @@ import {
   platformRouteOf,
   toIsoInstant,
 } from "#src/durable/match/match-identity.ts";
-import { rawArchiveReceiptKind } from "#src/report-lake/durable-receipts.ts";
+import {
+  buildReceipt,
+  rawArchiveReceiptKind,
+} from "#src/report-lake/durable-receipts.ts";
+import {
+  scoutV2RecoveryConflictEvidenceCodec,
+  SCOUT_V2_RECOVERY_CONFLICT_RECEIPT_KIND,
+} from "#src/temporal/v2/recovery-receipts.ts";
 import { readArchivedMatchArtifactV2 } from "#src/temporal/v2/match-archive.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
@@ -561,6 +569,49 @@ async function recoverArchivedMatch(
  * would invent failures that never happened, and leaving it unattributed would
  * strand the batch one transition short of its digest forever.
  */
+/**
+ * Name the matches this page could not recover, so an operator can act on them.
+ *
+ * A `failed` item is a `conflict`: two producers disagree about what is true of
+ * that match, and no retry resolves a disagreement. Counting it is not enough —
+ * the tally says three matches are a person's problem without saying WHICH
+ * three, and the only route from a count back to the ids is a scan over every
+ * match in the batch's range. Each one therefore gets a receipt, which
+ * `MatchProcessingReceipt`'s `(kind, recordedAt)` index turns into a lookup.
+ *
+ * See `recovery-receipts.ts` for why this is a receipt rather than an operator
+ * audit event, and why its evidence names the match alone.
+ *
+ * A receipt that comes back in conflict THROWS rather than being counted. The
+ * evidence is derived from the match id alone, so a repeat is byte-identical
+ * and `already-applied`; a genuine mismatch means something else owns this kind
+ * for this match, and reporting a conflicted item as recorded when its record
+ * did not land is the one thing a strict V2 Activity must never do.
+ */
+async function recordRecoveryConflicts(
+  conflicted: readonly RiotMatchId[],
+): Promise<void> {
+  const recordedAt = new Date();
+  for (const riotMatchId of conflicted) {
+    const result = await recordReceipt(
+      prisma,
+      buildReceipt({
+        matchId: riotMatchId,
+        kind: SCOUT_V2_RECOVERY_CONFLICT_RECEIPT_KIND,
+        recordedAt,
+        evidence: scoutV2RecoveryConflictEvidenceCodec.serialize({
+          riotMatchId,
+        }),
+      }),
+    );
+    if (result.outcome === "conflict") {
+      throw new Error(
+        `Could not record the recovery conflict for ${riotMatchId} (${result.reason}); refusing to report a conflicted item whose record did not land`,
+      );
+    }
+  }
+}
+
 async function processRecoveryItems(
   batch: RecoveryBatch,
   counts: RecoveryCounts,
@@ -571,13 +622,27 @@ async function processRecoveryItems(
     limit: RECOVERY_PROCESS_PAGE_SIZE,
   });
   const tally = { ...counts };
+  const conflicted: RiotMatchId[] = [];
   for (const riotMatchId of remaining) {
     const outcome = await recoverArchivedMatch(riotMatchId);
     tally[outcome] += 1;
+    if (outcome === "failed") conflicted.push(riotMatchId);
   }
+  await recordRecoveryConflicts(conflicted);
   if (remaining.length < RECOVERY_PROCESS_PAGE_SIZE) {
-    tally.suppressed +=
+    // Only ever CLOSES a gap, never opens one. The shortfall is `discovered`
+    // minus what the three outcomes account for, and that is positive exactly
+    // when items left the gap without this batch seeing them — the case the
+    // rule exists for. A negative value would mean the outcomes already exceed
+    // `discovered`, which is not a shortfall to absorb but a tally that has
+    // gone wrong; `Math.max` keeps the counts representable and leaves the
+    // domain's `counts-exceed-discovered` to refuse it, which is what that
+    // conflict reason is for. Silently subtracting would corrupt `suppressed`,
+    // and throwing here would strand the batch on arithmetic instead of on the
+    // machine's own answer.
+    const unaccounted =
       tally.discovered - (tally.succeeded + tally.suppressed + tally.failed);
+    tally.suppressed += Math.max(0, unaccounted);
   }
   return tally;
 }
