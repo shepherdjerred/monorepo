@@ -17,7 +17,12 @@ import {
 } from "#src/database/durable/observation-repository.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
-import { getIntent } from "#src/database/durable/intent-repository.ts";
+import {
+  getIntent,
+  upsertIntent,
+} from "#src/database/durable/intent-repository.ts";
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import { getWorkflowStart } from "#src/database/durable/workflow-start-repository.ts";
 import {
   scoutDurableDualwriteFailuresTotal,
@@ -38,7 +43,9 @@ import {
   deliveredMessagesByGuild,
   deliveryAttemptNonce,
   recordDeliveryReceipts,
+  type ChannelDeliveryRecorder,
 } from "#src/durable/match/delivery-intents.ts";
+import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
 import { withRecordedWorkflowStart } from "#src/durable/match/workflow-start-facts.ts";
 import {
   deliveryEvidenceCodec,
@@ -65,6 +72,7 @@ const GUILD_TWO = testGuildId("9002");
 const CHANNEL_ONE = testChannelId("9001");
 const CHANNEL_TWO = testChannelId("9002");
 const MESSAGE_ID = "300000000000000001";
+const SECOND_MESSAGE_ID = "300000000000000002";
 
 const facts: DurableFacts = { db: prisma, now: () => NOW };
 
@@ -78,6 +86,25 @@ function intentKey(
   channelId: string,
 ): NotificationIntentKey {
   return NotificationIntentKeySchema.parse(`${keyPrefix}:${channelId}`);
+}
+
+function deliveryRecorderFor(id: string): ChannelDeliveryRecorder {
+  return createChannelDeliveryRecorder({
+    facts,
+    matchId: toRiotMatchId(id),
+    keyPrefix: `postmatch-discord:${id}`,
+    freshnessDeadline: FRESHNESS_DEADLINE,
+  });
+}
+
+/** The state CHANNEL_ONE's stored intent ended up in. */
+async function storedIntentState(
+  keyPrefix: string,
+): Promise<NotificationIntentState | undefined> {
+  const stored = await getIntent(prisma, {
+    intentKey: intentKey(keyPrefix, CHANNEL_ONE),
+  });
+  return stored?.intent.state;
 }
 
 /**
@@ -539,7 +566,127 @@ describe("notification intents", () => {
   });
 });
 
-const SECOND_MESSAGE_ID = "300000000000000002";
+describe("adopting a delivery an earlier pass proved", () => {
+  test("adopts a delivery whose intent was never created", async () => {
+    // The run that sent the message ended before ANY of its fail-open writes
+    // landed, so the claim proves a delivery that has no row at all.
+    const id = matchId(9030);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: NOW.toISOString(),
+    });
+  });
+
+  test("adopts a delivery whose intent stopped at pending", async () => {
+    // `intent-created` landed and `intent-ready` did not.
+    const id = matchId(9031);
+    const keyPrefix = `postmatch-discord:${id}`;
+    await upsertIntent(prisma, {
+      matchId: toRiotMatchId(id),
+      intent: {
+        key: intentKey(keyPrefix, CHANNEL_ONE),
+        target: {
+          kind: "channel",
+          channelId: DiscordChannelIdSchema.parse(CHANNEL_ONE),
+        },
+        freshnessDeadline: toIsoInstant(FRESHNESS_DEADLINE),
+        createdAt: toIsoInstant(NOW),
+        attemptCount: 0,
+        state: { kind: "pending" },
+      },
+    });
+
+    await deliveryRecorderFor(id)({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: NOW.toISOString(),
+    });
+  });
+
+  test("adopts a delivery whose intent stopped at ready", async () => {
+    // The send happened and the claim completed, but `intent-send-started`
+    // never landed. Nothing else will ever move this row.
+    const id = matchId(9032);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+    await record({ kind: "prepared", channelId: CHANNEL_ONE });
+
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: NOW.toISOString(),
+    });
+  });
+
+  test("adopts a delivery whose intent stopped at sending", async () => {
+    const id = matchId(9033);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+    await record({ kind: "prepared", channelId: CHANNEL_ONE });
+    await record({ kind: "send-started", channelId: CHANNEL_ONE });
+
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: NOW.toISOString(),
+    });
+  });
+
+  test("adopting never overwrites a delivery recorded under another message", async () => {
+    const id = matchId(9034);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+    await record({ kind: "prepared", channelId: CHANNEL_ONE });
+    await record({ kind: "send-started", channelId: CHANNEL_ONE });
+    await record({
+      kind: "delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+    });
+
+    // Two producers naming different messages for one send is disagreement,
+    // not something to adopt. The first writer's evidence stands.
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: SECOND_MESSAGE_ID,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: NOW.toISOString(),
+    });
+  });
+});
 
 /** The archive descriptor a receipted ingest hands the bridge. */
 const ARCHIVED_MATCH = {
@@ -592,18 +739,17 @@ async function runMatchPass(
   });
   await recordCursorAdvanced({ facts, matchId: id, puuid: REGISTERED_PUUID });
 
-  const record = createChannelDeliveryRecorder({
-    facts,
-    matchId: toRiotMatchId(id),
-    keyPrefix: `postmatch-discord:${id}`,
-    freshnessDeadline: FRESHNESS_DEADLINE,
-  });
+  const record = deliveryRecorderFor(id);
   for (const { channel, messageId } of DELIVERED_TO) {
     if (delivery === "sends") {
       await record({ kind: "prepared", channelId: channel });
       await record({ kind: "send-started", channelId: channel });
+      await record({ kind: "delivered", channelId: channel, messageId });
+      continue;
     }
-    await record({ kind: "delivered", channelId: channel, messageId });
+    // The reprocess takes the completed-claim branch, which adopts the
+    // delivery rather than replaying the lifecycle.
+    await record({ kind: "already-delivered", channelId: channel, messageId });
   }
   await recordDeliveryReceipts({
     facts,

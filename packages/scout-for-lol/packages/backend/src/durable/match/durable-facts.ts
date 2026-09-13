@@ -90,8 +90,12 @@ export type DurableFacts = {
  * event per write per channel per match, drowning the errors that actually
  * stop work. `scout_durable_dualwrite_failures_total` is the signal an alert
  * watches, and it stays legible under exactly the outage that produces it.
+ *
+ * Exported for the reads a recorder has to make before it can decide what to
+ * write: those sit behind the same boundary as the writes they serve, and a
+ * broken one has to be reported the same way rather than thrown at the caller.
  */
-function reportDurableWriteFailure(
+export function reportDurableWriteFailure(
   kind: DurableWriteKind,
   error: unknown,
 ): void {

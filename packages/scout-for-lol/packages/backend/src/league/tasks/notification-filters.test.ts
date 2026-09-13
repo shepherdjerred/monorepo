@@ -161,7 +161,7 @@ describe("deliverToChannels", () => {
     expect(sentMessages).toEqual([]);
     expect(recorded).toEqual([
       {
-        kind: "delivered",
+        kind: "already-delivered",
         channelId,
         messageId: ALREADY_SENT_MESSAGE_ID,
       },

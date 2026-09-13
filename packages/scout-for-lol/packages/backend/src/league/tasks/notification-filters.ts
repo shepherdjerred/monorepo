@@ -145,18 +145,18 @@ export async function deliverToChannels(params: {
         });
         if (claim === "completed") {
           // An earlier run already sent this message, but its intent writes are
-          // fail-open, so that run may have ended between the send and the
-          // confirmation and left the intent in `ready` or `sending`. No later
-          // pass reaches the lifecycle below, so this is the only place that
-          // can still close it out: confirm the delivery the claim proves,
-          // naming the message it recorded. A row already delivered under that
-          // id is answered `already-applied`, so the ordinary replay stays
-          // quiet.
+          // fail-open, so that run may have ended anywhere between minting the
+          // intent and confirming it — leaving the row missing, `pending`,
+          // `ready`, or `sending`. No later pass reaches the lifecycle below,
+          // so this is the only place that can still close it out. The recorder
+          // adopts the delivery from wherever the intent stopped; a row already
+          // delivered under this message id answers `already-applied`, so the
+          // ordinary replay stays quiet.
           const messageId = await requireCompletedScoutEffectResult(effectKey);
           deliveredGuildIds.add(DiscordGuildIdSchema.parse(serverId));
           messageIdsByChannel.set(channel, messageId);
           await recordDelivery({
-            kind: "delivered",
+            kind: "already-delivered",
             channelId: channel,
             messageId,
           });
