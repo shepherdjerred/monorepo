@@ -688,6 +688,22 @@ describe("rejects usage records with unreliable timestamps or identity", () => {
     expect(result?.error).toContain("invalid timestamp");
   });
 
+  test("rejects a Codex timestamp that parses but isn't an absolute instant", async () => {
+    const result = await scanCodexRolloutUsageFixture(
+      "codex-non-absolute-timestamp-sessions",
+      "t-non-absolute-ts",
+      {
+        timestamp: "2026-08-08T00:00:00",
+        type: "token_usage_record",
+        payload: {
+          turn_token_usage: { input_tokens: 100, output_tokens: 10 },
+        },
+      },
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("invalid timestamp");
+  });
+
   test("rejects a malformed Codex token_usage_record payload instead of dropping the turn", async () => {
     const result = await scanCodexRolloutUsageFixture(
       "codex-malformed-payload-sessions",
@@ -726,6 +742,17 @@ describe("rejects usage records with unreliable timestamps or identity", () => {
       "grok-missing-timestamp-session",
       { inputTokens: 100, outputTokens: 20 },
       null,
+    );
+    expect(result?.available).toBe(false);
+    expect(result?.error).toContain("missing a timestamp");
+  });
+
+  test("rejects a nonpositive Grok timestamp instead of treating it as a real 1970 instant", async () => {
+    const result = await scanGrokTurnCompletedFixture(
+      "grok-nonpositive-timestamp",
+      "grok-nonpositive-timestamp-session",
+      { inputTokens: 100, outputTokens: 20 },
+      0,
     );
     expect(result?.available).toBe(false);
     expect(result?.error).toContain("missing a timestamp");

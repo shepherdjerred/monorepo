@@ -236,8 +236,13 @@ function parseGrokLine(
     return null;
   }
   const timestampRaw = record["timestamp"];
+  // A zero or negative value isn't a real Grok timestamp — parseTimestamp
+  // would still convert it to a valid-looking 1969/1970 instant, which
+  // would silently bypass the missing-timestamp check usage extraction
+  // relies on (see grokTurnCompletedUsage) rather than being treated as
+  // absent the way any other non-numeric value already is.
   const timestamp =
-    typeof timestampRaw === "number"
+    typeof timestampRaw === "number" && timestampRaw > 0
       ? parseTimestamp(timestampRaw, new Date(0))
       : null;
   return { update, timestamp };
