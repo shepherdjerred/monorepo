@@ -172,9 +172,17 @@ async function attemptNotificationSend(
       ref.stage,
     ).deliverNotificationV2({ ...ref, attemptNonce });
   } catch (error) {
-    // A cancellation is the caller's decision and must reach it. Anything else
-    // is a send that did not answer: the request may have reached Discord
-    // before the failure, so the honest record is the unobserved one.
+    // A cancellation is the caller's decision and must reach it.
+    //
+    // Everything else reaching this catch is genuinely ambiguous, and that is
+    // an invariant the Activity maintains rather than a guess made here.
+    // `deliverNotificationV2` decides every failure it can see: anything that
+    // went wrong BEFORE a request could have left comes back as a `failed`
+    // result, retryable or terminal, because it definitely did not send. Only
+    // a failure the Activity could not answer at all — a worker that died, a
+    // timeout that fired mid-call — arrives as a throw, and for those the
+    // request may have reached Discord before the failure. So the honest
+    // record is the unobserved one, against this attempt's own nonce.
     if (isCancellation(error)) throw error;
     return await recordUnobservedSend(activities, ref, attemptNonce);
   }

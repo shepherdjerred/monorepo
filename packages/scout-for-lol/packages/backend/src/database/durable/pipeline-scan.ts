@@ -152,6 +152,21 @@ const MatchIdRowSchema = z.strictObject({ riotMatchId: RiotMatchIdSchema });
  * observation and died before the cursors moved is exactly the state this
  * family exists to find, and either check alone would miss half of it.
  *
+ * The cursor half asks whether ANY association is still unadvanced, and the
+ * quantifier is the whole point. `cursorAdvancedAt` is per ACCOUNT and the
+ * advance walks the associations one at a time, so a run that died between
+ * account A and account B leaves a match that is partly advanced. Asking
+ * instead whether NO association had advanced would be satisfied by A alone,
+ * the sweep would call the phase finished, and B's cursor would stay stuck
+ * forever — the match silently re-pollable for one account and not the other.
+ * Existence of an UNadvanced row is the condition; absence of an advanced one
+ * is a different and much weaker claim.
+ *
+ * It also disposes of an edge the earlier spelling carried: a match with zero
+ * association rows satisfied "no association has advanced" and would have sat
+ * on the page permanently. Nothing is unadvanced when nothing is tracked, so
+ * such a match is now correctly absent.
+ *
  * Scoped to `temporal-v2` and `FULL`: an `ARCHIVE_ONLY` match has no
  * settlement, notification or cursor phase to be stalled short of, and a match
  * the legacy pipeline owns is v1's to reconcile. Both pipelines are live, and
@@ -162,7 +177,7 @@ const MatchIdRowSchema = z.strictObject({ riotMatchId: RiotMatchIdSchema });
  * first, with the id breaking ties so two sweeps over one backlog agree on
  * which page they are looking at. The outer scan rides
  * `MatchObservation(processingPolicy, observedAt)` — equality on the leading
- * column, the ordering on the second — and each anti-join rides its own table's
+ * column, the ordering on the second — and each subquery rides its own table's
  * leading key: the receipt unique index on `(riotMatchId, kind, version,
  * scopeKey)` and the tracked-account primary key on `(riotMatchId, puuid)`.
  */
@@ -179,10 +194,10 @@ export async function listStalledV2MatchProcessing(
                           FROM "MatchProcessingReceipt" AS r
                          WHERE r."riotMatchId" = o."riotMatchId"
                            AND r."kind" = ${args.observationReceiptKind})
-            OR NOT EXISTS (SELECT 1
-                             FROM "MatchTrackedAccount" AS t
-                            WHERE t."riotMatchId" = o."riotMatchId"
-                              AND t."cursorAdvancedAt" IS NOT NULL))
+            OR EXISTS (SELECT 1
+                         FROM "MatchTrackedAccount" AS t
+                        WHERE t."riotMatchId" = o."riotMatchId"
+                          AND t."cursorAdvancedAt" IS NULL))
      ORDER BY o."observedAt" ASC, o."riotMatchId" ASC
      LIMIT ${args.limit}::int`;
   return z

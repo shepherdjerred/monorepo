@@ -107,6 +107,10 @@ const FINISHED_MATCH = RiotMatchIdSchema.parse("NA1_850002");
 const LEGACY_MATCH = RiotMatchIdSchema.parse("NA1_850003");
 const ARCHIVE_ONLY_MATCH = RiotMatchIdSchema.parse("NA1_850004");
 const ACCEPTED_START_MATCH = RiotMatchIdSchema.parse("NA1_850005");
+/** Two tracked accounts, and the cursor advance stopped between them. */
+const PARTIAL_CURSOR_MATCH = RiotMatchIdSchema.parse("NA1_850006");
+/** Two tracked accounts, both advanced: the phase really is finished. */
+const WHOLE_CURSOR_MATCH = RiotMatchIdSchema.parse("NA1_850007");
 const UNPROJECTED_MATCH = RiotMatchIdSchema.parse("NA1_860001");
 const PROJECTED_MATCH = RiotMatchIdSchema.parse("NA1_860002");
 const REQUESTED_LAKE_MATCH = RiotMatchIdSchema.parse("NA1_860003");
@@ -187,6 +191,45 @@ async function seedAdvancedCursor(matchId: RiotMatchId): Promise<void> {
       advancedAt: CURSOR_ADVANCED_AT,
     }),
   ).toEqual({ outcome: "applied" });
+}
+
+/**
+ * Two tracked accounts on one match, advancing only the ones asked for.
+ *
+ * `cursorAdvancedAt` is per ACCOUNT and the advance walks the associations one
+ * at a time, so "this match's cursor phase is done" is a claim about ALL of
+ * them. A match seeded with one advanced and one not is exactly the state a run
+ * that died between two accounts leaves behind.
+ */
+async function seedPartialCursors(
+  matchId: RiotMatchId,
+  advanced: "first-only" | "both",
+): Promise<void> {
+  const puuids = [testPuuid(`${matchId}-a`), testPuuid(`${matchId}-b`)];
+  expect(
+    await recordTrackedAccounts(
+      prisma,
+      puuids.map((puuid) =>
+        matchTrackedAccountRowToRecord({
+          riotMatchId: matchId,
+          puuid,
+          playerId: null,
+          accountId: null,
+          cursorAdvancedAt: null,
+        }),
+      ),
+    ),
+  ).toEqual({ recorded: 2, existing: 0 });
+  const toAdvance = advanced === "both" ? puuids : puuids.slice(0, 1);
+  for (const puuid of toAdvance) {
+    expect(
+      await markTrackedAccountCursorAdvanced(prisma, {
+        matchId,
+        puuid,
+        advancedAt: CURSOR_ADVANCED_AT,
+      }),
+    ).toEqual({ outcome: "applied" });
+  }
 }
 
 async function seedLakeReceipts(
@@ -316,6 +359,28 @@ async function seedMatchProcessingFamily(): Promise<void> {
   });
   await seedObservationReceipt(FINISHED_MATCH);
   await seedAdvancedCursor(FINISHED_MATCH);
+
+  // Partly advanced: the observation attested, then the cursor advance moved
+  // one of two accounts and stopped. The match is NOT finished — the second
+  // account's cursor is stuck, and nothing else will ever move it — so the
+  // sweep has to surface it. Asking whether NO account had advanced would be
+  // satisfied by the first one and lose this match forever.
+  await seedObservation({
+    matchId: PARTIAL_CURSOR_MATCH,
+    policy: "FULL",
+    owner: { kind: "temporal-v2" },
+  });
+  await seedObservationReceipt(PARTIAL_CURSOR_MATCH);
+  await seedPartialCursors(PARTIAL_CURSOR_MATCH, "first-only");
+
+  // The same shape with both accounts advanced, which is what "done" means.
+  await seedObservation({
+    matchId: WHOLE_CURSOR_MATCH,
+    policy: "FULL",
+    owner: { kind: "temporal-v2" },
+  });
+  await seedObservationReceipt(WHOLE_CURSOR_MATCH);
+  await seedPartialCursors(WHOLE_CURSOR_MATCH, "both");
 
   // Both pipelines are live, so driving a V2 child onto a v1-owned match is how
   // one match gets processed twice — and an ARCHIVE_ONLY match has no
@@ -467,7 +532,12 @@ describe("the match-processing family", () => {
     // phase to be stalled short of, so neither belongs on this page — and the
     // finished match proves the receipt check is what excludes it, since its
     // cursor advance is recorded exactly like the stalled match's.
-    expect(page.pending.matchProcessing).toEqual([STALLED_MATCH]);
+    expect(page.pending.matchProcessing).toEqual([
+      STALLED_MATCH,
+      PARTIAL_CURSOR_MATCH,
+    ]);
+    // The cursor phase is only finished when EVERY association has moved.
+    expect(page.pending.matchProcessing).not.toContain(WHOLE_CURSOR_MATCH);
   });
 
   test("counts a re-requested start and a stalled row as one piece of work", () => {

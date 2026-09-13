@@ -1,15 +1,11 @@
 import type { MessageCreateOptions } from "discord.js";
-import { ApplicationFailure } from "@temporalio/common";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
-import {
-  DiscordMessageIdSchema,
-  type RiotMatchId,
-} from "@scout-for-lol/domain/identity/brands.ts";
+import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   NotificationFailure,
   NotificationTarget,
@@ -31,6 +27,9 @@ import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("scout-v2-notification-delivery");
 
 /**
  * The one place a V2 notification reaches Discord.
@@ -168,20 +167,15 @@ async function sendToChannel(args: {
  *
  * A DM cannot carry the report image. `sendDM` sends content and embeds, not
  * files, and a match report IS its attachment — so an intent that would deliver
- * one to a DM is a producer contract that does not exist yet, and this fails
- * loudly rather than sending a report with its report missing.
+ * one to a DM is a producer contract that does not exist yet. That check lives
+ * in the PRE-SEND phase (see {@link prepareNotificationSend}) rather than here,
+ * because it is decided before any request leaves and must never be mistaken
+ * for an ambiguous send.
  */
 async function sendToAccount(
   message: MessageCreateOptions,
   accountId: DiscordAccountId,
-  riotMatchId: RiotMatchId,
 ): Promise<ScoutNotificationDeliveryV2Result> {
-  if ((message.files ?? []).length > 0) {
-    throw ApplicationFailure.nonRetryable(
-      `The notification for ${riotMatchId} carries a file attachment, which sendDM cannot deliver; no producer mints DM intents for attachment-bearing reports`,
-      "MissingDomainRecord",
-    );
-  }
   const status = await sendDM({
     client,
     userId: accountId,
@@ -215,7 +209,6 @@ async function deliverToTarget(args: {
   target: NotificationTarget;
   attemptNonce: string;
   guildId: DiscordGuildId | undefined;
-  riotMatchId: RiotMatchId;
 }): Promise<ScoutNotificationDeliveryV2Result> {
   switch (args.target.kind) {
     case "channel":
@@ -226,17 +219,49 @@ async function deliverToTarget(args: {
         guildId: args.guildId,
       });
     case "dm":
-      return await sendToAccount(
-        args.message,
-        args.target.accountId,
-        args.riotMatchId,
-      );
+      return await sendToAccount(args.message, args.target.accountId);
   }
 }
 
-export async function deliverNotificationV2(
+/**
+ * Everything that happens BEFORE a request could have left, and its failures.
+ *
+ * This is the ambiguity boundary, drawn explicitly because getting it wrong is
+ * expensive in both directions. Resolving the intent, looking up the guild,
+ * fetching the Riot payload, building the report and checking that the target
+ * can carry it are all decided before Discord is contacted: if any of them
+ * fails, the message DEFINITELY did not go out. Treating that as ambiguous
+ * would park a notification behind an operator resolution it does not need, and
+ * the user simply never hears about their game.
+ *
+ * So every failure on this side of the line comes back as a `failed` result
+ * rather than a throw, and the classification says what the caller should do.
+ * Transient causes — Riot unreachable, the renderer falling over — are
+ * `retryable`, which returns the intent to `ready` and lets the Workflow's send
+ * loop try again. The DM attachment case is `terminal`: no retry teaches
+ * `sendDM` to carry files, and the honest reading of the domain's vocabulary is
+ * that this target cannot receive this notification.
+ *
+ * The other side of the line is {@link deliverToTarget}, where `send` and
+ * `sendDM` live. Only failures from there can be `unknown`.
+ */
+type PreparedSend =
+  | {
+      readonly phase: "ready";
+      readonly message: MessageCreateOptions;
+      readonly target: NotificationTarget;
+      readonly guildId: DiscordGuildId | undefined;
+    }
+  | { readonly phase: "failed"; readonly failure: NotificationFailure };
+
+const PRE_SEND_UNAVAILABLE: NotificationFailure = {
+  classification: "retryable",
+  reason: "service-unavailable",
+};
+
+async function prepareNotificationSend(
   input: ScoutIntentAttemptRefV2,
-): Promise<ScoutNotificationDeliveryV2Result> {
+): Promise<PreparedSend> {
   const record = await requireIntentRecordV2(input.intentKey);
   const riotMatchId = record.matchId;
   const target = record.intent.target;
@@ -260,19 +285,66 @@ export async function deliverNotificationV2(
     { targetGuildIds: guildId === undefined ? [] : [guildId] },
   );
   if (message === undefined) {
-    throw ApplicationFailure.nonRetryable(
+    logger.error(
       `No report could be built for ${riotMatchId} despite an intent naming it`,
-      "MissingDomainRecord",
     );
+    return { phase: "failed", failure: PRE_SEND_UNAVAILABLE };
+  }
+  if (target.kind === "dm" && (message.files ?? []).length > 0) {
+    logger.error(
+      `The notification for ${riotMatchId} carries a file attachment, which sendDM cannot deliver; no producer mints DM intents for attachment-bearing reports`,
+    );
+    return {
+      phase: "failed",
+      failure: { classification: "terminal", reason: "target-not-found" },
+    };
+  }
+  return { phase: "ready", message, target, guildId };
+}
+
+/**
+ * Deliver one notification attempt, and say which side of the send it failed on.
+ *
+ * The two phases are separated so the Workflow never has to guess. Anything
+ * this RETURNS is a decided outcome, and `unknown` appears only when the
+ * request may genuinely have reached Discord. A THROW out of here is the
+ * remaining ambiguity — a worker that died or a timeout that fired somewhere
+ * inside the Activity — and the Workflow treats that, and only that, as an
+ * unobserved send.
+ */
+export async function deliverNotificationV2(
+  input: ScoutIntentAttemptRefV2,
+): Promise<ScoutNotificationDeliveryV2Result> {
+  let prepared: PreparedSend;
+  try {
+    prepared = await prepareNotificationSend(input);
+  } catch (error) {
+    // Nothing above has contacted Discord, so a failure here is definite
+    // whatever it was. Reporting it as `failed` keeps the intent retryable
+    // instead of stranding it in the operator dead end that exists for sends
+    // nobody observed.
+    logger.error(
+      `Preparing the notification for ${input.intentKey} failed before any send`,
+      error,
+    );
+    return ScoutNotificationDeliveryV2ResultSchema.parse({
+      outcome: "failed",
+      failure: PRE_SEND_UNAVAILABLE,
+    });
+  }
+  if (prepared.phase === "failed") {
+    return ScoutNotificationDeliveryV2ResultSchema.parse({
+      outcome: "failed",
+      failure: prepared.failure,
+    });
   }
 
   return ScoutNotificationDeliveryV2ResultSchema.parse(
     await deliverToTarget({
-      message,
-      target,
+      message: prepared.message,
+      target: prepared.target,
       attemptNonce: input.attemptNonce,
-      guildId,
-      riotMatchId,
+      guildId: prepared.guildId,
     }),
   );
 }
