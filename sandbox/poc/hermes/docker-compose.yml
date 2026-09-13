@@ -20,7 +20,8 @@ services:
       HERMES_DASHBOARD: "1"
       # The dashboard binds non-loopback inside the container, which engages
       # its auth gate. With no/empty password it fails closed (dashboard stays
-      # down, gateway unaffected). Set via shell or gitignored .env, never here.
+      # down, gateway unaffected). Supply via the invocation environment
+      # (e.g. op read at the prompt); never persist or commit it.
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME: jerred
       HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_PASSWORD:-}
       HERMES_BROWSER_CDP_URL: http://127.0.0.1:9222

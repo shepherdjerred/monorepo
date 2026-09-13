@@ -18,8 +18,10 @@ lives in Docker (OrbStack), state in named volumes only, no host bind mounts.
 - The web dashboard runs inside the gateway container (`HERMES_DASHBOARD=1`,
   s6-supervised — see the [Docker docs](https://hermes-agent.nousresearch.com/docs/user-guide/docker))
   on <http://127.0.0.1:9119>. Its auth gate requires a provider on non-loopback
-  binds, so basic auth is fed from `HERMES_DASHBOARD_PASSWORD` at `up` time
-  (put it in a local gitignored `.env`, e.g. from 1Password; never commit it).
+  binds, so basic auth is fed from `HERMES_DASHBOARD_PASSWORD` in the
+  invocation environment (sourced from 1Password at the prompt — never written
+  to disk). It is only needed when (re)creating the gateway container; when
+  unset the dashboard fails closed and the gateway runs normally.
 - `chromium` — real headful Chrome for the
   [browser tools](https://hermes-agent.nousresearch.com/docs/user-guide/features/browser),
   watchable via KasmVNC at <http://127.0.0.1:3000>; CDP is reachable only on the
@@ -29,8 +31,7 @@ lives in Docker (OrbStack), state in named volumes only, no host bind mounts.
 ## Run
 
 ```bash
-printf 'HERMES_DASHBOARD_PASSWORD=%s\n' "$(op read 'op://<vault>/<item>/password')" > .env
-docker compose up -d --build
+HERMES_DASHBOARD_PASSWORD="$(op read 'op://<vault>/<item>/password')" docker compose up -d --build
 docker compose exec gateway hermes   # interactive TUI, shares gateway state
 ```
 
@@ -56,7 +57,7 @@ family as upstream [#48659](https://github.com/NousResearch/hermes-agent/issues/
 Repair (the gateway's reconnection watcher then picks Photon back up):
 
 ```bash
-docker compose exec gateway sh -c 'cp -p /opt/hermes/plugins/platforms/photon/sidecar/{send-format,stream-staleness}.mjs /opt/data/photon/sidecar/'
+docker compose exec gateway sh -c 'cp -p /opt/hermes/plugins/platforms/photon/sidecar/send-format.mjs /opt/hermes/plugins/platforms/photon/sidecar/stream-staleness.mjs /opt/data/photon/sidecar/'
 ```
 
 ## Notes
