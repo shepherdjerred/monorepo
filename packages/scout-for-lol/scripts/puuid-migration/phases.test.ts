@@ -56,6 +56,9 @@ async function seed(options: {
   await db.exec(
     `CREATE TABLE "BucksDareTarget" ("id" INTEGER PRIMARY KEY, "accounts" TEXT, "createdAt" INTEGER)`,
   );
+  await db.exec(
+    `CREATE TABLE "ScoutTemporalWork" ("id" TEXT PRIMARY KEY, "payload" TEXT, "state" TEXT, "createdAt" INTEGER)`,
+  );
   // Defaults to well after the seeded cutover marker, so accounts read as
   // registered since it.
   const accountCreatedAt = options.accountsCreatedAt ?? Date.now();
@@ -378,5 +381,32 @@ test("collect refuses a PUUID column nobody classified", async () => {
   await expect(collect(db)).rejects.toThrow(
     /neither a tracked source nor a declared archive/,
   );
+  await db.close();
+});
+
+/** The payload shape Temporal work carries for a tracked player. */
+const workPayload = (puuid: string): string =>
+  JSON.stringify({
+    trackedPlayers: [{ league: { leagueAccount: { puuid } } }],
+  });
+
+test("collect takes identities from requeueable work but not completed work", async () => {
+  // A failed row is requeueable, so its payload is an instruction that will
+  // still run and will write its identity into whatever that run produces. A
+  // completed row is only a record — and those payloads are whole match
+  // documents, so collecting them would drag the entire corpus back in.
+  const db = await seed({ accounts: [] });
+  await db.exec(
+    `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
+    ["w1", workPayload(OLD_A), "failed", Date.now()],
+  );
+  await db.exec(
+    `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
+    ["w2", workPayload(OLD_B), "completed", Date.now()],
+  );
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
+  expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A]);
   await db.close();
 });

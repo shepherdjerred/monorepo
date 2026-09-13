@@ -111,44 +111,50 @@ export async function strayIdentities(db: Db): Promise<string[]> {
  * Earliest wins: an identity seen anywhere before the cutover predates it,
  * whichever table still happens to hold it.
  */
+/** Every identity one source names, paired with when that row recorded it. */
+async function sightingsFrom(
+  db: Db,
+  source: (typeof TRACKED_SOURCES)[number],
+): Promise<{ puuid: string; at: number }[]> {
+  const filter = source.where === undefined ? "" : ` AND ${source.where}`;
+  const rows = await db.query(
+    `SELECT "${source.column}" AS v, "${source.createdColumn}" AS t FROM "${source.table}" WHERE "${source.createdColumn}" IS NOT NULL${filter}`,
+  );
+  const sightings: { puuid: string; at: number }[] = [];
+  for (const row of rows) {
+    const value = asOptionalString(row["v"]);
+    const stamp = row["t"];
+    if (value === null || stamp === null || stamp === undefined) {
+      continue;
+    }
+    const at = toEpochMillis(stamp, `${source.table}.${source.createdColumn}`);
+    if (!source.json) {
+      sightings.push({ puuid: value, at });
+      continue;
+    }
+    // One row timestamps every identity it names.
+    const named: string[] = [];
+    collectFromJson(parseJson(value), source.bareArray, named);
+    for (const puuid of named) {
+      sightings.push({ puuid, at });
+    }
+  }
+  return sightings;
+}
+
 async function earliestSighting(db: Db): Promise<Map<string, number>> {
   const tables = new Set(await db.listTables());
   const earliest = new Map<string, number>();
-
-  const record = (puuid: string, at: number): void => {
-    const previous = earliest.get(puuid);
-    if (previous === undefined || at < previous) {
-      earliest.set(puuid, at);
-    }
-  };
 
   for (const source of TRACKED_SOURCES) {
     if (!tables.has(source.table)) {
       continue;
     }
-    const rows = await db.query(
-      `SELECT "${source.column}" AS v, "${source.createdColumn}" AS t FROM "${source.table}" WHERE "${source.createdColumn}" IS NOT NULL`,
-    );
-    for (const row of rows) {
-      const value = asOptionalString(row["v"]);
-      const stamp = row["t"];
-      if (value === null || stamp === null || stamp === undefined) {
-        continue;
+    for (const { puuid, at } of await sightingsFrom(db, source)) {
+      const previous = earliest.get(puuid);
+      if (previous === undefined || at < previous) {
+        earliest.set(puuid, at);
       }
-      const at = toEpochMillis(
-        stamp,
-        `${source.table}.${source.createdColumn}`,
-      );
-      if (source.json) {
-        // One row timestamps every identity it names.
-        const inRow: string[] = [];
-        collectFromJson(parseJson(value), source.bareArray, inRow);
-        for (const puuid of inRow) {
-          record(puuid, at);
-        }
-        continue;
-      }
-      record(value, at);
     }
   }
   return earliest;

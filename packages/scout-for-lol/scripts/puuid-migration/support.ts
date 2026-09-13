@@ -74,6 +74,12 @@ type TrackedSource = {
   json: boolean;
   bareArray: boolean;
   createdColumn: string;
+  /**
+   * Restricts which rows count as a source. A column can be both a source and
+   * an archive depending on row state — queued work still has an identity that
+   * will be acted on, while completed work is only a record of what happened.
+   */
+  where?: string;
 };
 
 const scalar = (
@@ -131,8 +137,6 @@ const objectJson = (
 export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // Full match rosters: ten participants per game, mostly strangers.
   { table: "BucksMatchPool", column: "roster" },
-  // Workflow payloads carrying whole match documents.
-  { table: "ScoutTemporalWork", column: "payload" },
   // Ledger and settlement records, written once and read for history.
   { table: "BucksLedgerEntry", column: "context" },
   { table: "BucksMatchEarning", column: "targetSnapshotJson" },
@@ -154,14 +158,7 @@ export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
  * cannot be judged against the cutover, so it is held as suspect and fails
  * verification rather than being quietly excused.
  */
-export const TRACKED_SOURCES: readonly {
-  table: string;
-  column: string;
-  json: boolean;
-  /** True only where a JSON array holds bare PUUID strings rather than objects. */
-  bareArray: boolean;
-  createdColumn: string;
-}[] = [
+export const TRACKED_SOURCES: readonly TrackedSource[] = [
   scalar("Account", "puuid", "createdTime"),
   scalar("MatchTrackedAccount", "puuid", "createdAt"),
   scalar("MatchRankHistory", "puuid", "capturedAt"),
@@ -188,6 +185,16 @@ export const TRACKED_SOURCES: readonly {
   objectJson("BucksWeeklyParlayContribution", "snapshot", "createdAt"),
   objectJson("HallRecordCell", "holdersJson", "createdAt"),
   objectJson("HallRecordCell", "evidenceJson", "createdAt"),
+  // Unfinished work only. A failed row is requeueable — `work-store` moves it
+  // back to `queued` — so its payload is an instruction that will still be
+  // carried out, and the identity inside it gets written into whatever that run
+  // produces. A completed row is only a record, and the payloads are whole match
+  // documents full of opponents, so collecting those would pull the entire
+  // corpus back in.
+  {
+    ...objectJson("ScoutTemporalWork", "payload", "createdAt"),
+    where: `"state" <> 'completed'`,
+  },
 ];
 
 /** Anything a driver will accept as a bound parameter. */

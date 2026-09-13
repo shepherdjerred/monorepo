@@ -158,9 +158,13 @@ export async function auditForUnregistered(
 }
 
 /** Every PUUID stored in one column, walking JSON structurally. */
-export async function readPuuids(db: Db, col: PuuidColumn): Promise<string[]> {
+export async function readPuuids(
+  db: Db,
+  col: PuuidColumn,
+  where?: string,
+): Promise<string[]> {
   const rows = await db.query(
-    `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL`,
+    `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL${where === undefined ? "" : ` AND ${where}`}`,
   );
   const out: string[] = [];
   for (const row of rows) {
@@ -193,12 +197,16 @@ export async function readTrackedPuuids(db: Db): Promise<Set<string>> {
     if (!columns.has(source.column)) {
       continue;
     }
-    const values = await readPuuids(db, {
-      table: source.table,
-      column: source.column,
-      kind: source.json ? "json" : "scalar",
-      bareArrayIsPuuids: source.bareArray,
-    });
+    const values = await readPuuids(
+      db,
+      {
+        table: source.table,
+        column: source.column,
+        kind: source.json ? "json" : "scalar",
+        bareArrayIsPuuids: source.bareArray,
+      },
+      source.where,
+    );
     for (const v of values) {
       tracked.add(v);
     }
