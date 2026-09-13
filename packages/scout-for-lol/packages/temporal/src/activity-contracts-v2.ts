@@ -220,6 +220,18 @@ export type ScoutNotificationIntentV2Result = z.infer<
   typeof ScoutNotificationIntentV2ResultSchema
 >;
 
+/**
+ * The resume point for one recovery batch: exactly what the durable row
+ * retains, and nothing reconstructed.
+ *
+ * Counts are deliberately not a field here. The row flattens the state union
+ * and holds count columns only while the batch is `processing`, so `state`
+ * already carries the tally when — and only when — one exists. A separate
+ * counts field would have to be empty for every batch past processing, which
+ * is the same fact stated twice and an invitation to fill it in. A workflow
+ * resumed past processing reports `ScoutRecoveryCountsReportV2`'s
+ * `unobserved` instead.
+ */
 export const ScoutRecoveryBatchStateV2ResultSchema = z.discriminatedUnion(
   "kind",
   [

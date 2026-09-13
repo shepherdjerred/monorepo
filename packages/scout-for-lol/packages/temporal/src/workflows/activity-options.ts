@@ -1,6 +1,7 @@
 import {
   ActivityCancellationType,
   proxyActivities,
+  type ActivityOptions,
 } from "@temporalio/workflow";
 import type { RetryPolicy } from "@temporalio/common";
 import type {
@@ -28,29 +29,61 @@ export const BACKGROUND_ACTIVITY_RETRY_POLICY = {
   nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
 } satisfies RetryPolicy;
 
+/**
+ * One queue class's budget, minus the queue it is spent on.
+ *
+ * A queue class gets a named object exactly when two proxies share it: v1 and
+ * V2 both dispatch to `scout-{stage}-realtime`, and workers there serve both,
+ * so "V2 mirrors its v1 sibling" has to be one object rather than two copies
+ * that agree today. `interactiveActivities` keeps its options inline because
+ * nothing else spends that budget.
+ */
+type QueueActivityOptions = Omit<ActivityOptions, "taskQueue">;
+
+export const REALTIME_ACTIVITY_OPTIONS = {
+  startToCloseTimeout: "90 seconds",
+  scheduleToCloseTimeout: "5 minutes",
+  heartbeatTimeout: "30 seconds",
+  retry: {
+    maximumAttempts: 5,
+    initialInterval: "2 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "30 seconds",
+    nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+  },
+} satisfies QueueActivityOptions;
+
+export const BACKGROUND_ACTIVITY_OPTIONS = {
+  startToCloseTimeout: "30 minutes",
+  scheduleToCloseTimeout: "2 hours",
+  heartbeatTimeout: "30 seconds",
+  retry: BACKGROUND_ACTIVITY_RETRY_POLICY,
+} satisfies QueueActivityOptions;
+
+export const LAKE_ACTIVITY_OPTIONS = {
+  startToCloseTimeout: "2 hours",
+  scheduleToCloseTimeout: "6 hours",
+  heartbeatTimeout: "30 seconds",
+  retry: {
+    maximumAttempts: 3,
+    initialInterval: "30 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "10 minutes",
+    nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+  },
+} satisfies QueueActivityOptions;
+
 export function realtimeActivities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalActivities>({
     taskQueue: scoutTaskQueues(stage).realtime,
-    startToCloseTimeout: "90 seconds",
-    scheduleToCloseTimeout: "5 minutes",
-    heartbeatTimeout: "30 seconds",
-    retry: {
-      maximumAttempts: 5,
-      initialInterval: "2 seconds",
-      backoffCoefficient: 2,
-      maximumInterval: "30 seconds",
-      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
-    },
+    ...REALTIME_ACTIVITY_OPTIONS,
   });
 }
 
 export function backgroundActivities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalActivities>({
     taskQueue: scoutTaskQueues(stage).background,
-    startToCloseTimeout: "30 minutes",
-    scheduleToCloseTimeout: "2 hours",
-    heartbeatTimeout: "30 seconds",
-    retry: BACKGROUND_ACTIVITY_RETRY_POLICY,
+    ...BACKGROUND_ACTIVITY_OPTIONS,
   });
 }
 
@@ -77,16 +110,7 @@ export function interactiveActivities(stage: ScoutStage) {
 export function lakeActivities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalActivities>({
     taskQueue: scoutTaskQueues(stage).lake,
-    startToCloseTimeout: "2 hours",
-    scheduleToCloseTimeout: "6 hours",
-    heartbeatTimeout: "30 seconds",
-    retry: {
-      maximumAttempts: 3,
-      initialInterval: "30 seconds",
-      backoffCoefficient: 2,
-      maximumInterval: "10 minutes",
-      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
-    },
+    ...LAKE_ACTIVITY_OPTIONS,
   });
 }
 
@@ -97,42 +121,21 @@ export function lakeActivities(stage: ScoutStage) {
 export function realtimeV2Activities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalV2Activities>({
     taskQueue: scoutTaskQueues(stage).realtime,
-    startToCloseTimeout: "90 seconds",
-    scheduleToCloseTimeout: "5 minutes",
-    heartbeatTimeout: "30 seconds",
-    retry: {
-      maximumAttempts: 5,
-      initialInterval: "2 seconds",
-      backoffCoefficient: 2,
-      maximumInterval: "30 seconds",
-      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
-    },
+    ...REALTIME_ACTIVITY_OPTIONS,
   });
 }
 
 export function backgroundV2Activities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalV2Activities>({
     taskQueue: scoutTaskQueues(stage).background,
-    startToCloseTimeout: "30 minutes",
-    scheduleToCloseTimeout: "2 hours",
-    heartbeatTimeout: "30 seconds",
-    retry: BACKGROUND_ACTIVITY_RETRY_POLICY,
+    ...BACKGROUND_ACTIVITY_OPTIONS,
   });
 }
 
 export function lakeV2Activities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalV2Activities>({
     taskQueue: scoutTaskQueues(stage).lake,
-    startToCloseTimeout: "2 hours",
-    scheduleToCloseTimeout: "6 hours",
-    heartbeatTimeout: "30 seconds",
-    retry: {
-      maximumAttempts: 3,
-      initialInterval: "30 seconds",
-      backoffCoefficient: 2,
-      maximumInterval: "10 minutes",
-      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
-    },
+    ...LAKE_ACTIVITY_OPTIONS,
   });
 }
 
@@ -155,18 +158,22 @@ export function lakeV2Activities(stage: ScoutStage) {
  * out the 5-minute realtime window only widens the window in which the
  * Workflow cannot say what happened.
  */
+export const NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS = {
+  startToCloseTimeout: "30 seconds",
+  scheduleToCloseTimeout: "2 minutes",
+  heartbeatTimeout: "10 seconds",
+  cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
+  retry: {
+    maximumAttempts: 1,
+    nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+  },
+} satisfies QueueActivityOptions;
+
 export function notificationDeliveryV2Activities(stage: ScoutStage) {
   return proxyActivities<
     Pick<ScoutTemporalV2Activities, "deliverNotificationV2">
   >({
     taskQueue: scoutTaskQueues(stage).realtime,
-    startToCloseTimeout: "30 seconds",
-    scheduleToCloseTimeout: "2 minutes",
-    heartbeatTimeout: "10 seconds",
-    cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
-    retry: {
-      maximumAttempts: 1,
-      nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
-    },
+    ...NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS,
   });
 }

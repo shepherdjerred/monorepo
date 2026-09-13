@@ -252,11 +252,43 @@ export type ScoutLakeProjectionV2Result = z.infer<
   typeof ScoutLakeProjectionV2ResultSchema
 >;
 
+/**
+ * What THIS run can say about a recovery batch's tally.
+ *
+ * A batch carries counts only while it is `processing`. The durable row
+ * flattens the state union, and `recoveryBatchStateColumns` builds every row
+ * from a base whose count columns are null, filling them for `processing`
+ * alone — so the transition into `digesting`, `complete` or `abandoned` writes
+ * NULL over the tally, and the migration CHECKs make any other combination
+ * unrepresentable. The counts are gone, not merely absent from the state
+ * union, and no read can recover them.
+ *
+ * A run that drove the batch through processing watched the tally and reports
+ * it. A run that a reconciliation sweep or an operator started onto a batch
+ * already past processing never saw one, and `unobserved` is that answer said
+ * out loud. Without it, such a run has two dishonest options: report zeros it
+ * invented, or fail a batch that actually finished.
+ *
+ * The two axes are independent — a run that drove processing to completion
+ * reports `observed` counts with a `complete` state — so this is a field on
+ * the result rather than a split of it.
+ */
+export const ScoutRecoveryCountsReportV2Schema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("observed"),
+    counts: RecoveryCountsSchema,
+  }),
+  z.strictObject({ kind: z.literal("unobserved") }),
+]);
+export type ScoutRecoveryCountsReportV2 = z.infer<
+  typeof ScoutRecoveryCountsReportV2Schema
+>;
+
 export const ScoutRecoveryBatchV2ResultSchema = z.strictObject({
   status: ScoutWorkflowStatusSchema,
   recoveryBatchId: ScoutRecoveryBatchIdSchema,
   state: RecoveryBatchStateSchema,
-  counts: RecoveryCountsSchema,
+  counts: ScoutRecoveryCountsReportV2Schema,
 });
 export type ScoutRecoveryBatchV2Result = z.infer<
   typeof ScoutRecoveryBatchV2ResultSchema

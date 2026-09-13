@@ -17,6 +17,8 @@ import {
 } from "./contracts-v2.ts";
 import {
   ScoutMatchProcessingV2InputSchema,
+  ScoutRecoveryBatchV2ResultSchema,
+  scoutRecoveryBatchV2ResultCodec,
   scoutLakeProjectionV2InputCodec,
   scoutMatchProcessingV2InputCodec,
   scoutMatchProcessingV2ResultCodec,
@@ -28,7 +30,10 @@ import {
   scoutPrematchGameV2InputCodec,
   scoutRecoveryBatchV2InputCodec,
 } from "./workflow-contracts-v2.ts";
-import { ScoutMatchPipelineStateV2ResultSchema } from "./activity-contracts-v2.ts";
+import {
+  ScoutMatchPipelineStateV2ResultSchema,
+  ScoutRecoveryBatchStateV2ResultSchema,
+} from "./activity-contracts-v2.ts";
 
 const riotMatchId = RiotMatchIdSchema.parse("NA1_5312279829");
 const intentKey = ScoutNotificationIntentKeySchema.parse(
@@ -247,7 +252,97 @@ describe("V2 workflow results", () => {
   });
 });
 
+describe("V2 recovery batch results", () => {
+  test("reports the tally a run that drove processing watched", () => {
+    const result = {
+      status: "completed",
+      recoveryBatchId,
+      state: { kind: "complete" },
+      counts: {
+        kind: "observed",
+        counts: { discovered: 40, succeeded: 38, suppressed: 1, failed: 1 },
+      },
+    } as const;
+    expect(
+      scoutRecoveryBatchV2ResultCodec.parse(
+        scoutRecoveryBatchV2ResultCodec.serialize(result),
+      ),
+    ).toEqual(result);
+  });
+
+  test("lets a run resumed past processing complete without a tally", () => {
+    // A reconciliation sweep or an operator restart can land on a batch whose
+    // row is already `digesting`, `complete` or `abandoned`. Those rows have
+    // NULL count columns — `recoveryBatchStateColumns` writes them that way —
+    // so this run has no tally and never will. Requiring one here would force
+    // an implementation to invent zeros or fail a finished batch.
+    const result = {
+      status: "completed",
+      recoveryBatchId,
+      state: { kind: "complete" },
+      counts: { kind: "unobserved" },
+    } as const;
+    expect(
+      scoutRecoveryBatchV2ResultCodec.parse(
+        scoutRecoveryBatchV2ResultCodec.serialize(result),
+      ),
+    ).toEqual(result);
+  });
+
+  test("lets a run resumed onto an abandoned batch report the reason", () => {
+    const result = {
+      status: "completed",
+      recoveryBatchId,
+      state: { kind: "abandoned", reason: "operator-cancelled" },
+      counts: { kind: "unobserved" },
+    } as const;
+    expect(
+      scoutRecoveryBatchV2ResultCodec.parse(
+        scoutRecoveryBatchV2ResultCodec.serialize(result),
+      ),
+    ).toEqual(result);
+  });
+
+  test("refuses a bare tally that skipped the observation question", () => {
+    // Guards the shape itself: counts must say whether they were observed, so
+    // the old `counts: RecoveryCounts` form cannot quietly come back.
+    expect(() =>
+      ScoutRecoveryBatchV2ResultSchema.parse({
+        status: "completed",
+        recoveryBatchId,
+        state: { kind: "complete" },
+        counts: { discovered: 0, succeeded: 0, suppressed: 0, failed: 0 },
+      }),
+    ).toThrow();
+  });
+});
+
 describe("V2 resume-point read", () => {
+  test("surfaces a processing batch's tally, and has none past it", () => {
+    // The row holds count columns only while the batch is `processing`, so the
+    // state union is the whole truth the read can tell.
+    const processing = ScoutRecoveryBatchStateV2ResultSchema.parse({
+      kind: "present",
+      policy: "normal",
+      state: {
+        kind: "processing",
+        counts: { discovered: 9, succeeded: 4, suppressed: 0, failed: 0 },
+      },
+    });
+    expect(processing).toHaveProperty(["state", "counts", "discovered"], 9);
+
+    const complete = ScoutRecoveryBatchStateV2ResultSchema.parse({
+      kind: "present",
+      policy: "normal",
+      state: { kind: "complete" },
+    });
+    expect(complete).toEqual({
+      kind: "present",
+      policy: "normal",
+      state: { kind: "complete" },
+    });
+  });
+
   test("reports an unstarted match as absent rather than as an empty one", () => {
     // "Nothing recorded" and "recorded with no receipts" are different
     // answers, and a resuming workflow acts differently on each.
