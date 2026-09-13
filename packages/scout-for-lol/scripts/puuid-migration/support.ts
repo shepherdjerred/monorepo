@@ -188,10 +188,20 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   scalar("CustomGameParticipant", "puuid", "createdAt"),
   scalar("SummonerIndex", "puuid", "createdTime"),
   scalar("InitialMatchHistoryImport", "puuid", "createdAt"),
-  bareArrayJson("ActiveGame", "trackedPuuids", "detectedAt"),
-  bareArrayJson("TournamentLobby", "bluePuuids", "createdAt"),
-  bareArrayJson("TournamentLobby", "redPuuids", "createdAt"),
-  bareArrayJson("TournamentLobby", "joinedPuuids", "createdAt"),
+  // Dated by `updatedAt`, not by when the row appeared. These collections gain
+  // identities after creation — a player joins a lobby, another tracked player
+  // is detected in a game already being watched — and the container's creation
+  // time would put a post-cutover arrival before the cutover, reporting a
+  // healthy new-domain identity as work this migration skipped.
+  //
+  // The opposite error, excusing a genuinely skipped identity because the row
+  // was touched later, is not reachable: `apply` refuses to run while any
+  // tracked identity is unmapped, so nothing unmapped can predate the marker
+  // except through `--allow-unresolved`, which records a map row either way.
+  bareArrayJson("ActiveGame", "trackedPuuids", "updatedAt"),
+  bareArrayJson("TournamentLobby", "bluePuuids", "updatedAt"),
+  bareArrayJson("TournamentLobby", "redPuuids", "updatedAt"),
+  bareArrayJson("TournamentLobby", "joinedPuuids", "updatedAt"),
   objectJson("BucksDareTarget", "accounts", "createdAt"),
   objectJson("BucksDareV2Target", "accounts", "createdAt"),
   objectJson("BucksDareV2Revision", "targetsJson", "createdAt"),
@@ -199,7 +209,9 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   // baseline, under `sourcePuuid`. Settlement compares live results against it
   // for the life of the contract, so it stays load-bearing long after the
   // snapshot was taken.
-  objectJson("BucksDareV2Activation", "snapshotJson", "createdAt"),
+  // `updatedAt` because the row is created when activation is requested and the
+  // snapshot is written only once activation succeeds, which can be much later.
+  objectJson("BucksDareV2Activation", "snapshotJson", "updatedAt"),
   objectJson("BucksDareV2", "contractJson", "createdAt"),
   objectJson("ChallengeRunRevision", "selectedAccountsJson", "createdAt"),
   // An unconsumed intent is an instruction that has not run yet, and its
@@ -219,8 +231,9 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   objectJson("BucksWeeklyParlayDefinition", "subjects", "openAt"),
   objectJson("BucksWeeklyParlayDefinition", "historySample", "openAt"),
   objectJson("BucksWeeklyParlayContribution", "snapshot", "createdAt"),
-  objectJson("HallRecordCell", "holdersJson", "createdAt"),
-  objectJson("HallRecordCell", "evidenceJson", "createdAt"),
+  // Also mutable: a cell's holders change whenever the record is broken.
+  objectJson("HallRecordCell", "holdersJson", "updatedAt"),
+  objectJson("HallRecordCell", "evidenceJson", "updatedAt"),
   // Unfinished work only. A failed row is requeueable — `work-store` moves it
   // back to `queued` — so its payload is an instruction that will still be
   // carried out, and the identity inside it gets written into whatever that run

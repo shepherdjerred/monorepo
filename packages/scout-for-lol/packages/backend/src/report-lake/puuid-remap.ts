@@ -29,7 +29,8 @@ const logger = createLogger("report-lake.puuid-remap");
  * An empty result is a legitimate state, not a swallowed failure: an
  * environment that never crossed key domains has no old-domain PUUIDs to
  * translate. Unresolved rows are excluded because they have no replacement —
- * their historical payloads keep old-domain identifiers by design.
+ * their historical payloads keep old-domain identifiers by design — and so are
+ * resolved rows whose rewrite has not run yet.
  */
 export async function loadPuuidRemap(
   prisma: ExtendedPrismaClient,
@@ -48,8 +49,14 @@ export async function loadPuuidRemap(
     return new Map();
   }
 
+  // Per mapping as well as database-wide. A cutover run with
+  // `--allow-unresolved` leaves identities without a replacement; recovering one
+  // later fills in `newPuuid` while the stored columns still hold the old value
+  // until another `apply`. The database-wide marker is already set by then, so
+  // it cannot distinguish that row — and translating it would point historical
+  // payloads at an identifier no account row carries.
   const rows = await prisma.puuidKeyMap.findMany({
-    where: { newPuuid: { not: null } },
+    where: { newPuuid: { not: null }, appliedAt: { not: null } },
     select: { oldPuuid: true, newPuuid: true },
   });
 

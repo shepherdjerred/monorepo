@@ -39,10 +39,10 @@
 
 import { openDb } from "./puuid-migration/db.ts";
 import { assertTrackedSourcesMatchSchema } from "./puuid-migration/discovery.ts";
+import { ensureMapTable } from "./puuid-migration/map-table.ts";
 import {
   apply,
   collect,
-  ensureMapTable,
   harvest,
   resolve,
   verify,

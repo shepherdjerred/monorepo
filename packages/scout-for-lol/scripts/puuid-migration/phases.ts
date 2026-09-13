@@ -24,33 +24,6 @@ import {
   TRACKED_SOURCES,
 } from "./support.ts";
 
-export async function ensureMapTable(db: Db): Promise<void> {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS "PuuidKeyMap" (
-      "oldPuuid"    TEXT PRIMARY KEY,
-      "gameName"    TEXT,
-      "tagLine"     TEXT,
-      "newPuuid"    TEXT,
-      "status"      TEXT NOT NULL DEFAULT 'pending',
-      "harvestedAt" ${db.timestampType()},
-      "resolvedAt"  ${db.timestampType()}
-    )
-  `);
-  await db.exec(
-    `CREATE INDEX IF NOT EXISTS "PuuidKeyMap_status_idx" ON "PuuidKeyMap" ("status")`,
-  );
-  // A separate single-row table, not a column on the map. CREATE TABLE IF NOT
-  // EXISTS is idempotent on both dialects, where ADD COLUMN is not — SQLite has
-  // no IF NOT EXISTS for it, and probing the column list is unreliable because
-  // a timestamp column does not appear among the text columns.
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS "PuuidKeyMigration" (
-      "id"        INTEGER PRIMARY KEY,
-      "appliedAt" ${db.timestampType()}
-    )
-  `);
-}
-
 /**
  * Fail on any PUUID column that is neither a tracked source nor a declared
  * archive. Omission is the dangerous direction — an unmigrated identity does
@@ -486,6 +459,15 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
     `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})
      ON CONFLICT ("id") DO UPDATE
         SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()})`,
+  );
+  // Per mapping, as well. The database-wide marker says a cutover happened; it
+  // cannot say whether THIS mapping was part of it. An identity that a previous
+  // run left unresolved and a later `resolve` recovered has a replacement the
+  // stored columns do not hold yet, and publishing that to the report lake
+  // would translate historical payloads to an identifier nothing joins against.
+  await db.exec(
+    `UPDATE "PuuidKeyMap" SET "appliedAt" = ${db.now()}
+      WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL`,
   );
   console.log("apply: complete");
 }

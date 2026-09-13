@@ -35,7 +35,7 @@ async function seedOneUnresolved() {
   const { Database } = await import("bun:sqlite");
   new Database(dbPath, { create: true }).close();
   const { openDb } = await import("./db.ts");
-  const { ensureMapTable } = await import("./phases.ts");
+  const { ensureMapTable } = await import("./map-table.ts");
   const db = await openDb();
   await ensureMapTable(db);
   await db.exec(

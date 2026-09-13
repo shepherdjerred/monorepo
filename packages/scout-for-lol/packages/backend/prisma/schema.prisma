@@ -2862,6 +2862,10 @@ model PuuidKeyMap {
   status      String    @default("pending")
   harvestedAt DateTime? @db.Timestamptz()
   resolvedAt  DateTime? @db.Timestamptz()
+  /// When this mapping's stored references were actually rewritten. A resolved
+  /// row is not usable until then: translating historical payloads to an
+  /// identifier the database does not yet hold would hide the player it names.
+  appliedAt   DateTime? @db.Timestamptz()
 
   @@index([status])
 }

@@ -75,12 +75,19 @@ async function seed(options: {
       [id, puuid, accountCreatedAt],
     );
   }
-  const { ensureMapTable } = await import("./phases.ts");
+  const { ensureMapTable } = await import("./map-table.ts");
   await ensureMapTable(db);
   for (const row of options.map ?? []) {
     await db.exec(
       `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "gameName", "tagLine") VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, 'Name', 'TAG')`,
       [row.oldPuuid, row.newPuuid, row.status],
+    );
+  }
+  if (options.applied === true) {
+    // A completed cutover rewrote every mapping it had, so those rows carry a
+    // per-mapping timestamp too.
+    await db.exec(
+      `UPDATE "PuuidKeyMap" SET "appliedAt" = datetime('now', '-1 day') WHERE "newPuuid" IS NOT NULL`,
     );
   }
   if (options.applied === true) {
@@ -435,6 +442,93 @@ test("apply fills a marker an interrupted run left empty", async () => {
     `SELECT "appliedAt" AS v FROM "PuuidKeyMigration"`,
   );
   expect(rows[0]?.["v"]).not.toBeNull();
+  await db.close();
+});
+
+test("apply stamps the mappings it rewrote", async () => {
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+  });
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+  const rows = await db.query(
+    `SELECT "appliedAt" AS v FROM "PuuidKeyMap" WHERE "oldPuuid" = ${db.param(1)}`,
+    [OLD_A],
+  );
+  expect(rows[0]?.["v"]).not.toBeNull();
+  await db.close();
+});
+
+test("an identity recovered after the cutover is not stamped until apply runs", async () => {
+  // The `--allow-unresolved` recovery path. resolve fills in a replacement the
+  // stored columns do not hold yet, and the database-wide marker is already set
+  // — so only a per-mapping stamp can keep the report lake from translating
+  // historical payloads to an identifier nothing joins against.
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_B, NEW_B],
+  );
+  const pending = await db.query(
+    `SELECT "appliedAt" AS v FROM "PuuidKeyMap" WHERE "oldPuuid" = ${db.param(1)}`,
+    [OLD_B],
+  );
+  expect(pending[0]?.["v"]).toBeNull();
+
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+  const stamped = await db.query(
+    `SELECT "appliedAt" AS v FROM "PuuidKeyMap" WHERE "oldPuuid" = ${db.param(1)}`,
+    [OLD_B],
+  );
+  expect(stamped[0]?.["v"]).not.toBeNull();
+  await db.close();
+});
+
+test("a map table predating appliedAt gains it and inherits the cutover time", async () => {
+  // Prod's map was written before the column existed. Re-running any phase has
+  // to add it without demoting mappings the completed cutover already applied.
+  const db = await openDatabase();
+  await db.exec(
+    `CREATE TABLE "PuuidKeyMap" ("oldPuuid" TEXT PRIMARY KEY, "gameName" TEXT, "tagLine" TEXT, "newPuuid" TEXT, "status" TEXT, "harvestedAt" TEXT, "resolvedAt" TEXT)`,
+  );
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_A, NEW_A],
+  );
+  await db.exec(
+    `CREATE TABLE "PuuidKeyMigration" ("id" INTEGER PRIMARY KEY, "appliedAt" TEXT)`,
+  );
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" VALUES (1, '2026-09-13T11:34:41.000Z')`,
+  );
+  const { ensureMapTable } = await import("./map-table.ts");
+  await ensureMapTable(db);
+  const rows = await db.query(`SELECT "appliedAt" AS v FROM "PuuidKeyMap"`);
+  expect(rows[0]?.["v"]).toBe("2026-09-13T11:34:41.000Z");
+  await db.close();
+});
+
+test("an unmigrated map predating appliedAt gains an empty column", async () => {
+  // The same upgrade with no cutover recorded: nothing has been rewritten, so
+  // nothing may claim it was.
+  const db = await openDatabase();
+  await db.exec(
+    `CREATE TABLE "PuuidKeyMap" ("oldPuuid" TEXT PRIMARY KEY, "gameName" TEXT, "tagLine" TEXT, "newPuuid" TEXT, "status" TEXT, "harvestedAt" TEXT, "resolvedAt" TEXT)`,
+  );
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_A, NEW_A],
+  );
+  const { ensureMapTable } = await import("./map-table.ts");
+  await ensureMapTable(db);
+  const rows = await db.query(`SELECT "appliedAt" AS v FROM "PuuidKeyMap"`);
+  expect(rows[0]?.["v"]).toBeNull();
   await db.close();
 });
 
