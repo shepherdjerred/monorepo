@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.20.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.1...astro-opengraph-images-v1.20.2) (2026-09-13)
+
+No library behavior changes. The shipped code and runtime dependencies are identical to 1.20.1; this release contains a documentation update.
+
+- README maintenance instructions now point to the scripts' new repository paths ([2d51ed1](https://github.com/shepherdjerred/monorepo/commit/2d51ed150b2e59fc7800db5e41cb2c9e08f25c8b))
+
 ## [1.20.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.0...astro-opengraph-images-v1.20.1) (2026-09-01)
 
 No library behavior changes. The shipped code is identical to 1.20.0; this release exists only because of documentation fixes that release-please picked up.
