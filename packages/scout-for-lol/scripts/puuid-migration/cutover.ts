@@ -107,6 +107,12 @@ async function strayIdentities(db: Db): Promise<string[]> {
     const created = createdAt.get(puuid);
     // An identity with no account row cannot be dated, so it stays a stray
     // rather than being excused by a missing timestamp.
-    return created === undefined || created < appliedAt;
+    //
+    // The boundary is inclusive on purpose. An account created in the same
+    // instant the marker was written genuinely raced the rewrite, and the two
+    // errors are not equally bad: flagging a healthy account fails a verify an
+    // operator can investigate, while excusing a raced one strands it against a
+    // key that is about to be retired.
+    return created === undefined || created <= appliedAt;
   });
 }

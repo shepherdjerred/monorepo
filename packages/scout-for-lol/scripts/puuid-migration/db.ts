@@ -62,7 +62,11 @@ async function openSqlite(url: string): Promise<Db> {
     // first prod harvest/resolve run reported success while persisting nothing.
     // Postgres's `$1` is numbered already, so it never showed the problem.
     param: (index) => `?${index.toString()}`,
-    now: () => "datetime('now')",
+    // Millisecond resolution. `datetime('now')` truncates to whole seconds, and
+    // the cutover marker is compared against account creation times recorded in
+    // epoch milliseconds — an account created later in the marker's own second
+    // would read as postdating a cutover it actually raced.
+    now: () => "strftime('%Y-%m-%dT%H:%M:%fZ','now')",
     timestampType: () => "TEXT",
     query: (sql, params = []) => Promise.resolve(run(sql, params)),
     exec: (sql, params = []) => {

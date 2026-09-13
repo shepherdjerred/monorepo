@@ -274,3 +274,21 @@ test("verify still faults an account that predates the cutover", async () => {
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();
 });
+
+test("verify faults an account created in the cutover's own second", async () => {
+  // The marker used to truncate to whole seconds, so an account registered
+  // later in that same second read as postdating a cutover it actually raced —
+  // and was silently excused while holding an old-domain PUUID.
+  const cutover = Date.parse("2026-09-13T11:34:41.000Z");
+  const db = await seed({
+    accounts: [NEW_A, POST_CUTOVER],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    accountsCreatedAt: cutover + 400,
+  });
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, '2026-09-13T11:34:41.900Z')`,
+  );
+  const { verify } = await import("./phases.ts");
+  await expect(verify(db)).rejects.toThrow(/unmapped/);
+  await db.close();
+});
