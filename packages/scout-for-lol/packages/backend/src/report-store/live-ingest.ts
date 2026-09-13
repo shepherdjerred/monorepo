@@ -9,6 +9,7 @@ import {
   ingestMatch,
   ingestPrematch,
   ingestTimeline,
+  type MatchIngestResult,
 } from "#src/report-store/store.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -76,11 +77,16 @@ function recordFailure(
  * Thin metric wrappers over the S3-authoritative ingest. On failure they record
  * the failure metric and RE-THROW — the caller (e.g. the polling cursor gate)
  * decides how to react. A swallowed failure would silently lose the match.
+ *
+ * The match wrapper passes the ingest's whole answer through, artifact
+ * descriptor included, because the durable bridge above it stamps the
+ * observation with that identity. Summarising the result here is what left the
+ * observation's artifact columns NULL for every live match.
  */
 
 export async function recordMatchForReportStore(
   options: MatchIngestOptions,
-): Promise<{ staged: boolean; stored: boolean }> {
+): Promise<MatchIngestResult> {
   try {
     const result = await ingestMatch(
       options.match,

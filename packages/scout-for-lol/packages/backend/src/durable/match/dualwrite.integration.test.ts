@@ -17,9 +17,17 @@ import {
 } from "#src/database/durable/observation-repository.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
-import { getIntent } from "#src/database/durable/intent-repository.ts";
+import {
+  getIntent,
+  upsertIntent,
+} from "#src/database/durable/intent-repository.ts";
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import { getWorkflowStart } from "#src/database/durable/workflow-start-repository.ts";
-import { scoutDurableDualwriteFailuresTotal } from "#src/metrics/durable.ts";
+import {
+  scoutDurableDualwriteFailuresTotal,
+  scoutDurableDualwriteRecordsTotal,
+} from "#src/metrics/durable.ts";
 import type { DurableFacts } from "#src/durable/match/durable-facts.ts";
 import {
   recordObservedMatch,
@@ -35,7 +43,9 @@ import {
   deliveredMessagesByGuild,
   deliveryAttemptNonce,
   recordDeliveryReceipts,
+  type ChannelDeliveryRecorder,
 } from "#src/durable/match/delivery-intents.ts";
+import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
 import { withRecordedWorkflowStart } from "#src/durable/match/workflow-start-facts.ts";
 import {
   deliveryEvidenceCodec,
@@ -62,6 +72,17 @@ const GUILD_TWO = testGuildId("9002");
 const CHANNEL_ONE = testChannelId("9001");
 const CHANNEL_TWO = testChannelId("9002");
 const MESSAGE_ID = "300000000000000001";
+const SECOND_MESSAGE_ID = "300000000000000002";
+
+/**
+ * A send an earlier pass made, bracketed by its claim row. Both instants are
+ * BEFORE the freshness deadline, which is what lets `beginSend` accept an
+ * adoption that runs after it.
+ */
+const PROVEN_SEND = {
+  startedAt: new Date("2026-09-12T09:30:00.000Z"),
+  deliveredAt: new Date("2026-09-12T09:30:05.000Z"),
+};
 
 const facts: DurableFacts = { db: prisma, now: () => NOW };
 
@@ -75,6 +96,25 @@ function intentKey(
   channelId: string,
 ): NotificationIntentKey {
   return NotificationIntentKeySchema.parse(`${keyPrefix}:${channelId}`);
+}
+
+function deliveryRecorderFor(id: string): ChannelDeliveryRecorder {
+  return createChannelDeliveryRecorder({
+    facts,
+    matchId: toRiotMatchId(id),
+    keyPrefix: `postmatch-discord:${id}`,
+    freshnessDeadline: FRESHNESS_DEADLINE,
+  });
+}
+
+/** The state CHANNEL_ONE's stored intent ended up in. */
+async function storedIntentState(
+  keyPrefix: string,
+): Promise<NotificationIntentState | undefined> {
+  const stored = await getIntent(prisma, {
+    intentKey: intentKey(keyPrefix, CHANNEL_ONE),
+  });
+  return stored?.intent.state;
 }
 
 /**
@@ -99,6 +139,37 @@ async function failureCount(writeKind: string): Promise<number> {
     metric.values.find((value) => value.labels.write_kind === writeKind)
       ?.value ?? 0
   );
+}
+
+/**
+ * Every `scout_durable_dualwrite_records_total` sample, keyed
+ * `write_kind:outcome`. Comparing two snapshots gives the exact multiset of
+ * facts one pass recorded, which is stronger than counting rows: it states
+ * both what was written and what the repository answered.
+ */
+type RecordedFacts = Record<string, number>;
+
+async function recordedFacts(): Promise<RecordedFacts> {
+  const metric = await scoutDurableDualwriteRecordsTotal.get();
+  const counts: RecordedFacts = {};
+  for (const sample of metric.values) {
+    const kind = String(sample.labels.write_kind);
+    const outcome = String(sample.labels.outcome);
+    counts[`${kind}:${outcome}`] = sample.value;
+  }
+  return counts;
+}
+
+function factsRecordedDuring(
+  before: RecordedFacts,
+  after: RecordedFacts,
+): RecordedFacts {
+  const delta: RecordedFacts = {};
+  for (const [key, value] of Object.entries(after)) {
+    const change = value - (before[key] ?? 0);
+    if (change > 0) delta[key] = change;
+  }
+  return delta;
 }
 
 async function seedRegisteredAccount(): Promise<{
@@ -316,6 +387,35 @@ describe("the fail-open boundary", () => {
     ).toBeNull();
   });
 
+  test("a delivered message id that cannot be a durable identity is counted, not thrown", async () => {
+    const id = matchId(9011);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = createChannelDeliveryRecorder({
+      facts,
+      matchId: toRiotMatchId(id),
+      keyPrefix,
+      freshnessDeadline: FRESHNESS_DEADLINE,
+    });
+    const before = await failureCount("intent-delivered");
+
+    await record({ kind: "prepared", channelId: CHANNEL_ONE });
+    await record({ kind: "send-started", channelId: CHANNEL_ONE });
+    // The recorder takes whatever the send answered with. That message is
+    // already in Discord, so a value the durable tables cannot hold has to be
+    // counted here rather than thrown back at a delivery that succeeded.
+    await record({
+      kind: "delivered",
+      channelId: CHANNEL_ONE,
+      messageId: "not-a-snowflake",
+    });
+
+    expect(await failureCount("intent-delivered")).toBe(before + 1);
+    const stored = await getIntent(prisma, {
+      intentKey: intentKey(keyPrefix, CHANNEL_ONE),
+    });
+    expect(stored?.intent.state.kind).toBe("sending");
+  });
+
   test("a match id that cannot be a durable identity is counted, not thrown", async () => {
     const before = await failureCount("match-identity");
     const settled = await commitMatchSettlement({
@@ -473,6 +573,260 @@ describe("notification intents", () => {
     ).toEqual({
       deliveries: [{ channelId: CHANNEL_ONE, messageId: MESSAGE_ID }],
     });
+  });
+});
+
+describe("adopting a delivery an earlier pass proved", () => {
+  test("adopts a delivery whose intent was never created", async () => {
+    // The run that sent the message ended before ANY of its fail-open writes
+    // landed, so the claim proves a delivery that has no row at all.
+    const id = matchId(9030);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
+    });
+  });
+
+  test("adopts a delivery whose intent stopped at pending", async () => {
+    // `intent-created` landed and `intent-ready` did not.
+    const id = matchId(9031);
+    const keyPrefix = `postmatch-discord:${id}`;
+    await upsertIntent(prisma, {
+      matchId: toRiotMatchId(id),
+      intent: {
+        key: intentKey(keyPrefix, CHANNEL_ONE),
+        target: {
+          kind: "channel",
+          channelId: DiscordChannelIdSchema.parse(CHANNEL_ONE),
+        },
+        freshnessDeadline: toIsoInstant(FRESHNESS_DEADLINE),
+        createdAt: toIsoInstant(NOW),
+        attemptCount: 0,
+        state: { kind: "pending" },
+      },
+    });
+
+    await deliveryRecorderFor(id)({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
+    });
+  });
+
+  test("adopts a delivery whose intent stopped at ready", async () => {
+    // The send happened and the claim completed, but `intent-send-started`
+    // never landed. Nothing else will ever move this row.
+    const id = matchId(9032);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+    await record({ kind: "prepared", channelId: CHANNEL_ONE });
+
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
+    });
+  });
+
+  test("adopts a delivery whose intent stopped at sending", async () => {
+    const id = matchId(9033);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+    await record({ kind: "prepared", channelId: CHANNEL_ONE });
+    await record({ kind: "send-started", channelId: CHANNEL_ONE });
+
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+      send: PROVEN_SEND,
+    });
+
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: PROVEN_SEND.deliveredAt.toISOString(),
+    });
+  });
+
+  test("adopting never overwrites a delivery recorded under another message", async () => {
+    const id = matchId(9034);
+    const keyPrefix = `postmatch-discord:${id}`;
+    const record = deliveryRecorderFor(id);
+    await record({ kind: "prepared", channelId: CHANNEL_ONE });
+    await record({ kind: "send-started", channelId: CHANNEL_ONE });
+    await record({
+      kind: "delivered",
+      channelId: CHANNEL_ONE,
+      messageId: MESSAGE_ID,
+    });
+
+    // Two producers naming different messages for one send is disagreement,
+    // not something to adopt. The first writer's evidence stands.
+    await record({
+      kind: "already-delivered",
+      channelId: CHANNEL_ONE,
+      messageId: SECOND_MESSAGE_ID,
+      send: PROVEN_SEND,
+    });
+
+    // Still the message and the instant the ORIGINAL delivery recorded — the
+    // rejected adoption moved neither.
+    expect(await storedIntentState(keyPrefix)).toEqual({
+      kind: "delivered",
+      messageId: MESSAGE_ID,
+      deliveredAt: NOW.toISOString(),
+    });
+  });
+});
+
+/** The archive descriptor a receipted ingest hands the bridge. */
+const ARCHIVED_MATCH = {
+  key: "games/2026/09/12/NA1_9040/match.json",
+  digest: "c".repeat(64),
+};
+
+const DELIVERED_TO = [
+  { channel: CHANNEL_ONE, serverId: GUILD_ONE, messageId: MESSAGE_ID },
+  { channel: CHANNEL_TWO, serverId: GUILD_TWO, messageId: SECOND_MESSAGE_ID },
+];
+
+/**
+ * One match through every durable service the per-match flow uses.
+ *
+ * `delivery` is how the pass reaches Discord. A first pass runs the whole
+ * notification lifecycle; a reprocess does not, because the `ScoutEffectClaim`
+ * answers `completed` and the loop only confirms the delivery that claim names.
+ * Replaying the lifecycle instead would be a test of something v1 never does.
+ */
+async function runMatchPass(
+  id: string,
+  delivery: "sends" | "confirms-a-previous-send",
+): Promise<void> {
+  await requestMatchArchive({
+    facts,
+    match: {
+      matchId: id,
+      gameCreation: GAME_CREATION,
+      trackedPuuids: [REGISTERED_PUUID],
+      source: "postmatch_live",
+    },
+    archive: async () => ({
+      staged: true,
+      stored: true,
+      artifact: ARCHIVED_MATCH,
+    }),
+  });
+  await commitMatchSettlement({
+    facts,
+    matchId: id,
+    settle: async () => ({ announced: true }),
+    evidence: () => SETTLEMENT_EVIDENCE,
+  });
+  await runMatchProgressionStage({
+    facts,
+    matchId: id,
+    evidence: { participantCount: 10, trackedAccountCount: 1 },
+    advance: async () => "progressed",
+  });
+  await recordCursorAdvanced({ facts, matchId: id, puuid: REGISTERED_PUUID });
+
+  const record = deliveryRecorderFor(id);
+  for (const { channel, messageId } of DELIVERED_TO) {
+    if (delivery === "sends") {
+      await record({ kind: "prepared", channelId: channel });
+      await record({ kind: "send-started", channelId: channel });
+      await record({ kind: "delivered", channelId: channel, messageId });
+      continue;
+    }
+    // The reprocess takes the completed-claim branch, which adopts the
+    // delivery rather than replaying the lifecycle.
+    await record({
+      kind: "already-delivered",
+      channelId: channel,
+      messageId,
+      send: PROVEN_SEND,
+    });
+  }
+  await recordDeliveryReceipts({
+    facts,
+    kind: "reportDelivery",
+    matchId: id,
+    messagesByGuild: deliveredMessagesByGuild(
+      DELIVERED_TO,
+      new Map(DELIVERED_TO.map((entry) => [entry.channel, entry.messageId])),
+    ),
+  });
+}
+
+describe("a whole match pass", () => {
+  test("records each fact exactly once, and a replay re-applies none of them", async () => {
+    const id = matchId(9040);
+
+    const beforeFirst = await recordedFacts();
+    await runMatchPass(id, "sends");
+    const firstPass = factsRecordedDuring(beforeFirst, await recordedFacts());
+
+    expect(firstPass).toEqual({
+      "observation:applied": 1,
+      "tracked-accounts:applied": 1,
+      "receipt-settlement:applied": 1,
+      "receipt-progression:applied": 1,
+      "cursor-advanced:applied": 1,
+      "intent-created:applied": 2,
+      "intent-ready:applied": 2,
+      "intent-send-started:applied": 2,
+      "intent-delivered:applied": 2,
+      "receipt-report-delivery:applied": 2,
+    });
+
+    const beforeReplay = await recordedFacts();
+    await runMatchPass(id, "confirms-a-previous-send");
+    const replay = factsRecordedDuring(beforeReplay, await recordedFacts());
+
+    // Every answer is `already-applied`. A `conflict` here would mean two
+    // producers disagree about a fact, and reprocessing the same match with
+    // the same inputs is not disagreement — so a conflict on this path would
+    // be drift the parity dashboard reports that nobody can act on.
+    expect(replay).toEqual({
+      "observation:already-applied": 1,
+      "tracked-accounts:already-applied": 1,
+      "receipt-settlement:already-applied": 1,
+      "receipt-progression:already-applied": 1,
+      "cursor-advanced:already-applied": 1,
+      "intent-delivered:already-applied": 2,
+      "receipt-report-delivery:already-applied": 2,
+    });
+
+    const observation = await getObservation(prisma, {
+      matchId: toRiotMatchId(id),
+    });
+    expect(observation?.artifacts.match).toEqual(ARCHIVED_MATCH);
   });
 });
 

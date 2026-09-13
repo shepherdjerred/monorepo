@@ -24,6 +24,13 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * the pure domain transitions (claimOwnership, promoteArchiveOnlyToFull) as
  * single guarded statements so racing writers get an expected `conflict`
  * result instead of an exception or a silent overwrite.
+ *
+ * Three groups of columns reconcile differently on a replay, and separating
+ * them is what keeps `observation-differs` meaning "two producers disagree".
+ * {@link observationClaim} is the claim itself and must match. The artifact
+ * columns follow {@link reconcileArtifact}: silence is not disagreement, and a
+ * first identity fills the columns in. `pipelineOwner` follows claimOwnership.
+ * `observedAt` is in none of them — see {@link observationClaim}.
  */
 
 const OBSERVE_ATTEMPTS = 3;
@@ -36,8 +43,46 @@ export type ObserveMatchResult =
       reason: "ownership-held-by-another-owner" | "observation-differs";
     };
 
-function ownerNeutral(row: MatchObservationRow): MatchObservationRow {
-  return { ...row, pipelineOwner: null };
+/**
+ * What an observation ASSERTS, as opposed to how it was recorded.
+ *
+ * `observedAt` is deliberately not part of it, for the same reason
+ * `recordedAt` is not part of a receipt's identity (see
+ * `receipt-repository.ts`): it is wall-clock at write time, so an ordinary
+ * replay of an already-committed observation differed in exactly that column
+ * and in nothing else, and every one of those was answered
+ * `observation-differs` — inflating the very dual-write signal the parity
+ * alerting watches with events that are the system working correctly. The
+ * first observer's instant stands; it records when someone first looked, never
+ * what they claim.
+ *
+ * The owner and artifact columns are excluded too, because each has its own
+ * reconciliation rule. Everything else is the claim, and it is spelled as a
+ * REST omission rather than an allowlist on purpose: a column added to the row
+ * joins the claim automatically, so a new fact conflicts when producers
+ * disagree instead of being silently ignored until someone notices.
+ */
+type ObservationClaim = Omit<
+  MatchObservationRow,
+  | "pipelineOwner"
+  | "observedAt"
+  | "matchObjectKey"
+  | "matchDigest"
+  | "timelineObjectKey"
+  | "timelineDigest"
+>;
+
+function observationClaim(row: MatchObservationRow): ObservationClaim {
+  const {
+    pipelineOwner: _pipelineOwner,
+    observedAt: _observedAt,
+    matchObjectKey: _matchObjectKey,
+    matchDigest: _matchDigest,
+    timelineObjectKey: _timelineObjectKey,
+    timelineDigest: _timelineDigest,
+    ...claim
+  } = row;
+  return claim;
 }
 
 /**
@@ -66,10 +111,41 @@ function isRetryOfPrePromotionObservation(
     promotedAt: null,
   };
   return Bun.deepEquals(
-    ownerNeutral(prePromotionForm),
-    ownerNeutral(incoming),
+    observationClaim(prePromotionForm),
+    observationClaim(incoming),
     true,
   );
+}
+
+/** One artifact's columns. The row codec keeps the pair written and read together. */
+type ArtifactColumns = { key: string | null; digest: string | null };
+
+/**
+ * How an incoming artifact identity relates to the stored one.
+ *
+ * An observation that carries no artifact makes NO ASSERTION about it. The v1
+ * path genuinely does not always know: a pass whose archive was already
+ * completed by an earlier run skips the archive entirely and has no descriptor
+ * to offer, so treating its silence as "there is no artifact" would turn every
+ * ordinary reprocess into a conflict.
+ *
+ * A first identity arriving over stored NULLs FILLS THEM IN — the archive-less
+ * observation becoming archived, which happens at most once because the
+ * columns are never cleared. Two DIFFERENT identities stay a conflict: that is
+ * two producers disagreeing about which bytes are canonical for this match,
+ * and nothing about it should be softened.
+ */
+type ArtifactAgreement = "silent" | "backfills" | "agrees" | "disagrees";
+
+function reconcileArtifact(
+  stored: ArtifactColumns,
+  incoming: ArtifactColumns,
+): ArtifactAgreement {
+  if (incoming.key === null) return "silent";
+  if (stored.key === null) return "backfills";
+  return stored.key === incoming.key && stored.digest === incoming.digest
+    ? "agrees"
+    : "disagrees";
 }
 
 async function resolveObservedConflict(
@@ -87,44 +163,82 @@ async function resolveObservedConflict(
   const existingRow = matchObservationRecordToRow(
     matchObservationRowToRecord(existing),
   );
-  if (Bun.deepEquals(existingRow, row, true)) {
-    return { outcome: "already-applied" };
-  }
   const sameObservation =
-    Bun.deepEquals(ownerNeutral(existingRow), ownerNeutral(row), true) ||
-    isRetryOfPrePromotionObservation(existingRow, row);
+    Bun.deepEquals(
+      observationClaim(existingRow),
+      observationClaim(row),
+      true,
+    ) || isRetryOfPrePromotionObservation(existingRow, row);
   if (!sameObservation) {
     return { outcome: "conflict", reason: "observation-differs" };
   }
-  // Same observation, different owner columns. NULL is the domain's
-  // `unowned`: an observation that arrives with an assigned owner claims an
-  // unowned row with a guarded update, exactly like claimOwnership.
-  if (existingRow.pipelineOwner === null && row.pipelineOwner !== null) {
-    const claimed = await db.matchObservation.updateMany({
-      where: { riotMatchId: row.riotMatchId, pipelineOwner: null },
-      data: { pipelineOwner: row.pipelineOwner },
-    });
-    return claimed.count === 1 ? { outcome: "applied" } : "retry";
+
+  const matchArtifact = reconcileArtifact(
+    { key: existingRow.matchObjectKey, digest: existingRow.matchDigest },
+    { key: row.matchObjectKey, digest: row.matchDigest },
+  );
+  const timelineArtifact = reconcileArtifact(
+    { key: existingRow.timelineObjectKey, digest: existingRow.timelineDigest },
+    { key: row.timelineObjectKey, digest: row.timelineDigest },
+  );
+  if (matchArtifact === "disagrees" || timelineArtifact === "disagrees") {
+    return { outcome: "conflict", reason: "observation-differs" };
   }
+
+  // NULL is the domain's `unowned`: an observation that arrives with an
+  // assigned owner claims an unowned row, exactly like claimOwnership.
+  const claimsOwner =
+    existingRow.pipelineOwner === null && row.pipelineOwner !== null;
   if (
-    row.pipelineOwner === null ||
-    row.pipelineOwner === existingRow.pipelineOwner
+    !claimsOwner &&
+    row.pipelineOwner !== null &&
+    row.pipelineOwner !== existingRow.pipelineOwner
   ) {
-    // The observation itself is already recorded, and either the retry does
-    // not claim at all or the claim it repeats is the one already held.
+    return { outcome: "conflict", reason: "ownership-held-by-another-owner" };
+  }
+
+  // One guarded update carries everything this replay adds. The guard names
+  // the NULLs it observed, so a racing writer that filled them first sends
+  // this attempt back around to reconcile against what they wrote.
+  const patch = {
+    ...(claimsOwner ? { pipelineOwner: row.pipelineOwner } : {}),
+    ...(matchArtifact === "backfills"
+      ? { matchObjectKey: row.matchObjectKey, matchDigest: row.matchDigest }
+      : {}),
+    ...(timelineArtifact === "backfills"
+      ? {
+          timelineObjectKey: row.timelineObjectKey,
+          timelineDigest: row.timelineDigest,
+        }
+      : {}),
+  };
+  if (Object.keys(patch).length === 0) {
+    // Everything this observation asserts is already recorded.
     return { outcome: "already-applied" };
   }
-  return { outcome: "conflict", reason: "ownership-held-by-another-owner" };
+  const updated = await db.matchObservation.updateMany({
+    where: {
+      riotMatchId: row.riotMatchId,
+      ...(claimsOwner ? { pipelineOwner: null } : {}),
+      ...(matchArtifact === "backfills" ? { matchObjectKey: null } : {}),
+      ...(timelineArtifact === "backfills" ? { timelineObjectKey: null } : {}),
+    },
+    data: patch,
+  });
+  return updated.count === 1 ? { outcome: "applied" } : "retry";
 }
 
 /**
  * Record one observed match, claiming ownership when the record carries an
- * assigned owner. Exactly one of two racing writers applies; the loser gets
- * `already-applied` for an identical retry — including a delayed retry of the
- * original ARCHIVE_ONLY observation after a promotion raced past it — an
- * ownership conflict for a different claimant, and `observation-differs` only
- * when the facts themselves genuinely disagree (which is a bug upstream,
- * surfaced as a conflict so the caller decides how loudly to fail).
+ * assigned owner and stamping the raw artifact's identity the first time one
+ * arrives. Exactly one of two racing writers applies; the loser gets
+ * `already-applied` for a retry that adds nothing — including one differing
+ * only in its wall clock, and a delayed retry of the original ARCHIVE_ONLY
+ * observation after a promotion raced past it — `applied` for a retry that
+ * genuinely adds an owner or an artifact identity, an ownership conflict for a
+ * different claimant, and `observation-differs` only when the facts themselves
+ * disagree (which is a bug upstream, surfaced as a conflict so the caller
+ * decides how loudly to fail).
  */
 export async function observeMatch(
   db: Db,

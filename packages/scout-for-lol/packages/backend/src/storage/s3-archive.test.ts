@@ -5,11 +5,7 @@ import {
 } from "#src/testing/raw-capture-fixtures.ts";
 import { Sha256DigestSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
-import {
-  archiveMatchToS3,
-  archiveTimelineToS3,
-  saveMatchToS3,
-} from "#src/storage/s3.ts";
+import { archiveMatchToS3, archiveTimelineToS3 } from "#src/storage/s3.ts";
 import {
   getValidatedPutCommand,
   mockSuccessfulPut,
@@ -91,13 +87,6 @@ describe("archived match descriptors", () => {
 
     expect(result).toEqual({ status: "skipped_no_bucket" });
     expect(s3Mock.calls()).toHaveLength(0);
-  });
-
-  test("leaves the legacy status-only signature untouched", async () => {
-    const match = await loadRawMatchFixture();
-    mockSuccessfulPut();
-
-    await expect(saveMatchToS3(match, [])).resolves.toBe("saved");
   });
 });
 

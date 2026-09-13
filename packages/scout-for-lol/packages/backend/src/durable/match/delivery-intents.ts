@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import {
   DiscordMessageIdSchema,
   NotificationIntentKeySchema,
+  type IsoInstant,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
@@ -12,20 +13,24 @@ import {
   NotificationAttemptNonceSchema,
   type NotificationAttemptNonce,
   type NotificationFailure,
+  type NotificationIntent,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   beginSend,
   confirmDelivered,
   markReady,
   recordFailure,
+  type NotificationTransitionResult,
 } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import {
+  getIntent,
   transitionIntent,
   upsertIntent,
 } from "#src/database/durable/intent-repository.ts";
 import {
   recordDurableWrite,
+  reportDurableWriteFailure,
   resolveDurableIdentity,
   type DurableFacts,
 } from "#src/durable/match/durable-facts.ts";
@@ -71,10 +76,29 @@ export function deliveryAttemptNonce(effectKey: string): string {
     .slice(0, 25);
 }
 
+/**
+ * When a send that already happened began, and when it was observed to have
+ * happened. Both are historical: a pass recovering the send can be running
+ * hours later, and the intent's freshness guard would rightly reject a send
+ * claiming to have started then.
+ */
+export type ProvenSend = { startedAt: Date; deliveredAt: Date };
+
 export type ChannelDeliveryEvent =
   | { kind: "prepared"; channelId: string }
   | { kind: "send-started"; channelId: string }
   | { kind: "delivered"; channelId: string; messageId: string }
+  /**
+   * A send an EARLIER pass performed, proven by a completed effect claim. The
+   * lifecycle above never runs for it, so its intent has to be adopted from
+   * wherever that pass left it. See {@link adoptCompletedDelivery}.
+   */
+  | {
+      kind: "already-delivered";
+      channelId: string;
+      messageId: string;
+      send: ProvenSend;
+    }
   | { kind: "failed"; channelId: string; permissionError: boolean };
 
 export type ChannelDeliveryRecorder = (
@@ -119,7 +143,48 @@ function attemptNonceFor(
   );
 }
 
-async function createIntent(
+/**
+ * Confirm a delivery, tolerating one that is already recorded under the same
+ * message id.
+ *
+ * The domain compares the delivery instant as well as the id, which is right
+ * for the transition itself: two confirmations naming different moments are
+ * genuinely different claims. But a pass that finds the send already completed
+ * knows the message id and NOT the instant the earlier pass stamped, and an
+ * intent already delivered under that same id is exactly the fact being
+ * recorded — so it is `already-applied` rather than drift. Without this, every
+ * ordinary reprocess of a delivered match would report a conflict on the
+ * counter the parity alerting watches. Every other state still goes through
+ * the domain unchanged.
+ *
+ * The message id is parsed INSIDE the returned transition, which is what runs
+ * inside {@link recordDurableWrite}. v1 hands over whatever Discord (or a test
+ * double) answered with, and a value that cannot be a durable identity must be
+ * counted as this recorder's failure rather than thrown at a send that already
+ * succeeded.
+ */
+function confirmDelivery(args: {
+  attemptNonce: NotificationAttemptNonce;
+  messageId: string;
+  deliveredAt: () => IsoInstant;
+}): (intent: NotificationIntent) => NotificationTransitionResult {
+  return (intent) => {
+    const messageId = DiscordMessageIdSchema.parse(args.messageId);
+    if (
+      intent.state.kind === "delivered" &&
+      intent.state.messageId === messageId
+    ) {
+      return { outcome: "already-applied" };
+    }
+    return confirmDelivered(intent, {
+      attemptNonce: args.attemptNonce,
+      messageId,
+      deliveredAt: args.deliveredAt(),
+    });
+  };
+}
+
+async function upsertPendingIntent(
   config: RecorderConfig,
   channelId: string,
 ): Promise<void> {
@@ -146,8 +211,67 @@ async function createIntent(
       },
     }),
   );
+}
+
+async function markIntentReady(
+  config: RecorderConfig,
+  channelId: string,
+): Promise<void> {
+  const key = NotificationIntentKeySchema.parse(
+    intentKeyFor(config, channelId),
+  );
   await recordDurableWrite(config.facts, "intent-ready", async (db) =>
     transitionIntent(db, { intentKey: key, transition: markReady }),
+  );
+}
+
+async function createIntent(
+  config: RecorderConfig,
+  channelId: string,
+): Promise<void> {
+  await upsertPendingIntent(config, channelId);
+  await markIntentReady(config, channelId);
+}
+
+/**
+ * `startedAt` is passed rather than read from the clock because a recovery
+ * adopts a send that began earlier, and `beginSend`'s freshness guard compares
+ * against it. The guard stays exactly as the domain wrote it; what changes is
+ * that it is given the true instant instead of the recovering pass's own.
+ */
+async function beginIntentSend(
+  config: RecorderConfig,
+  channelId: string,
+  startedAt: Date,
+): Promise<void> {
+  const nonce = attemptNonceFor(config, channelId);
+  await applyIntentTransition(
+    config,
+    channelId,
+    "intent-send-started",
+    (intent) =>
+      beginSend(intent, {
+        attemptNonce: nonce,
+        startedAt: toIsoInstant(startedAt),
+      }),
+  );
+}
+
+async function confirmIntentDelivered(
+  config: RecorderConfig,
+  channelId: string,
+  messageId: string,
+  deliveredAt: Date,
+): Promise<void> {
+  await applyIntentTransition(
+    config,
+    channelId,
+    "intent-delivered",
+    confirmDelivery({
+      attemptNonce: attemptNonceFor(config, channelId),
+      messageId,
+      deliveredAt: () => toIsoInstant(deliveredAt),
+    }),
   );
 }
 
@@ -166,6 +290,115 @@ async function applyIntentTransition(
 }
 
 /**
+ * The lifecycle steps still owed to an intent whose send already happened.
+ *
+ * The domain machine does not allow skipping states, and this does not invent
+ * a way around it: it reads where the intent actually stopped and replays the
+ * ordinary transitions from exactly there.
+ */
+type AdoptionStep = "created" | "ready" | "send-started" | "delivered";
+
+function stepsOwedTo(stored: NotificationIntent | null): AdoptionStep[] {
+  if (stored === null) {
+    return ["created", "ready", "send-started", "delivered"];
+  }
+  switch (stored.state.kind) {
+    case "pending":
+      return ["ready", "send-started", "delivered"];
+    case "ready":
+      return ["send-started", "delivered"];
+    case "sending":
+      return ["delivered"];
+    // These owe only the confirmation, and the domain's answer to it is the
+    // point: `delivered` under the same message id is `already-applied`, a
+    // different one conflicts, `unknown-delivery` stays the operator's to
+    // resolve, and a terminal state that disagrees with a proven send is a
+    // conflict worth seeing. Adoption completes a record; it never overwrites
+    // evidence that contradicts it.
+    case "delivered":
+    case "unknown-delivery":
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return ["delivered"];
+  }
+}
+
+/**
+ * Adopt a delivery an EARLIER pass performed, from wherever its intent stopped.
+ *
+ * The `ScoutEffectClaim` is the at-most-once guard, so a `completed` claim is
+ * proof the message went out, and it names the message. The intent recording
+ * that send is fail-open, though, so the run that sent it may have ended before
+ * any of its writes landed: the row can be missing, `pending`, `ready`, or
+ * `sending`. Every later pass takes the completed-claim branch and never runs
+ * the lifecycle, so this is the only place those rows can still be finished —
+ * and finishing them is the whole point of keeping the record.
+ *
+ * `beginSend` enforces the freshness deadline, and that guard stays exactly as
+ * the domain wrote it. It passes because the adopted send is given the instant
+ * it REALLY began — the claim row's own `claimedAt`, written immediately before
+ * the send ran — rather than the recovering pass's clock. A recovery can run
+ * hours after the deadline; the send it is adopting did not.
+ *
+ * Every step is separately guarded and separately fail-open, so a step that
+ * cannot be applied is counted and the rest still run.
+ */
+async function adoptCompletedDelivery(
+  config: RecorderConfig,
+  channelId: string,
+  messageId: string,
+  send: ProvenSend,
+): Promise<void> {
+  const stored = await readIntent(config, channelId);
+  if (stored === "unreadable") return;
+  for (const step of stepsOwedTo(stored)) {
+    switch (step) {
+      case "created":
+        await upsertPendingIntent(config, channelId);
+        break;
+      case "ready":
+        await markIntentReady(config, channelId);
+        break;
+      case "send-started":
+        await beginIntentSend(config, channelId, send.startedAt);
+        break;
+      case "delivered":
+        await confirmIntentDelivered(
+          config,
+          channelId,
+          messageId,
+          send.deliveredAt,
+        );
+        break;
+    }
+  }
+}
+
+/**
+ * Read the stored intent behind the same fail-open boundary as the writes: a
+ * recorder that cannot reach its tables must not throw at a send that already
+ * succeeded. `unreadable` is distinct from `null` — absent means "create it",
+ * broken means "record nothing this pass".
+ */
+async function readIntent(
+  config: RecorderConfig,
+  channelId: string,
+): Promise<NotificationIntent | null | "unreadable"> {
+  try {
+    const stored = await getIntent(config.facts.db, {
+      intentKey: NotificationIntentKeySchema.parse(
+        intentKeyFor(config, channelId),
+      ),
+    });
+    return stored === null ? null : stored.intent;
+  } catch (error) {
+    reportDurableWriteFailure("intent-delivered", error);
+    return "unreadable";
+  }
+}
+
+/**
  * Build a recorder for one delivery pass.
  *
  * The recorder remembers which channels actually began a send, so a failure
@@ -181,36 +414,26 @@ export function createChannelDeliveryRecorder(
       case "prepared":
         await createIntent(config, event.channelId);
         return;
-      case "send-started": {
+      case "send-started":
         started.add(event.channelId);
-        const nonce = attemptNonceFor(config, event.channelId);
-        await applyIntentTransition(
+        await beginIntentSend(config, event.channelId, config.facts.now());
+        return;
+      case "delivered":
+        await confirmIntentDelivered(
           config,
           event.channelId,
-          "intent-send-started",
-          (intent) =>
-            beginSend(intent, {
-              attemptNonce: nonce,
-              startedAt: toIsoInstant(config.facts.now()),
-            }),
+          event.messageId,
+          config.facts.now(),
         );
         return;
-      }
-      case "delivered": {
-        const nonce = attemptNonceFor(config, event.channelId);
-        await applyIntentTransition(
+      case "already-delivered":
+        await adoptCompletedDelivery(
           config,
           event.channelId,
-          "intent-delivered",
-          (intent) =>
-            confirmDelivered(intent, {
-              attemptNonce: nonce,
-              messageId: DiscordMessageIdSchema.parse(event.messageId),
-              deliveredAt: toIsoInstant(config.facts.now()),
-            }),
+          event.messageId,
+          event.send,
         );
         return;
-      }
       case "failed": {
         if (!started.has(event.channelId)) return;
         const nonce = attemptNonceFor(config, event.channelId);

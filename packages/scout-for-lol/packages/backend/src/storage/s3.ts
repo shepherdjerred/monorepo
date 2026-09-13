@@ -33,6 +33,12 @@ export type PrematchPayloadSaveResult = {
  * The descriptor is built from what the put actually stored — the real key and
  * the digest of the exact bytes uploaded — so it is usable as durable evidence
  * rather than a restatement of intent.
+ *
+ * There is deliberately NO status-only wrapper over these functions. Two once
+ * existed, and every caller that went through them threw the descriptor away —
+ * which is why `MatchObservation`'s artifact columns were NULL for every live
+ * match until the receipted doors were wired up. A caller that only wants the
+ * status reads `.status`.
  */
 export type RawArchiveResult =
   | { status: "saved"; artifact: ArtifactDescriptor }
@@ -104,18 +110,6 @@ export async function archiveMatchToS3(
   return stored === undefined
     ? { status: "skipped_no_bucket" }
     : archived("match", stored);
-}
-
-/**
- * Save a League of Legends match to S3 storage
- * @returns whether the canonical write happened or S3 is unavailable
- */
-export async function saveMatchToS3(
-  match: RawMatch,
-  trackedPlayerAliases: string[],
-): Promise<"saved" | "skipped_no_bucket"> {
-  const result = await archiveMatchToS3(match, trackedPlayerAliases);
-  return result.status;
 }
 
 /**
@@ -351,16 +345,4 @@ export async function archiveTimelineToS3(
   return stored === undefined
     ? { status: "skipped_no_bucket" }
     : archived("timeline", stored);
-}
-
-/**
- * Save a match timeline to S3 storage
- * @returns Promise that resolves when the timeline is saved
- */
-export async function saveTimelineToS3(
-  timeline: RawTimeline,
-  trackedPlayerAliases: string[],
-  gameCreatedAt: Date,
-): Promise<void> {
-  await archiveTimelineToS3(timeline, trackedPlayerAliases, gameCreatedAt);
 }
