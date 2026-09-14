@@ -8,7 +8,15 @@
 // and passed into containers via env — never printed.
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { z } from "zod/v4";
 import { deleteSession } from "./bundle.ts";
+
+const CodexAuthSchema = z.object({
+  tokens: z.object({ access_token: z.string().min(1) }),
+});
+const ClaudeCredsSchema = z.object({
+  claudeAiOauth: z.object({ accessToken: z.string().min(1) }),
+});
 
 const provider = Bun.argv[2];
 if (provider !== "codex" && provider !== "claude")
@@ -47,11 +55,9 @@ async function awsCred(key: string): Promise<string> {
 async function codexEnv(): Promise<Record<string, string>> {
   const authPath = `${Bun.env["HOME"]}/.codex/auth.json`;
   const raw = await Bun.file(authPath).text();
-  const parsed: unknown = JSON.parse(raw);
-  const access = (parsed as { tokens?: { access_token?: string } }).tokens
-    ?.access_token;
-  if (typeof access !== "string" || access === "")
-    throw new Error("no codex access token; run `codex login`");
+  const parsed = CodexAuthSchema.safeParse(JSON.parse(raw));
+  if (!parsed.success)
+    throw new Error("no codex access token in auth.json; run `codex login`");
   // ChatGPT-subscription auth: the SDK reads auth.json from CODEX_HOME. Passing
   // CODEX_ACCESS_TOKEN as env flips it into API-key mode → 401. auth.json only.
   return { CODEX_AUTH_JSON_B64: Buffer.from(raw).toString("base64") };
@@ -65,15 +71,13 @@ async function claudeEnv(): Promise<Record<string, string>> {
     "Claude Code-credentials",
     "-w",
   ]);
-  const parsed: unknown = JSON.parse(blob);
-  const token = (parsed as { claudeAiOauth?: { accessToken?: string } })
-    .claudeAiOauth?.accessToken;
-  if (typeof token !== "string" || token === "") {
+  const parsed = ClaudeCredsSchema.safeParse(JSON.parse(blob));
+  if (!parsed.success) {
     throw new Error(
       "no claude oauth token in Keychain; run `claude setup-token` and export CLAUDE_CODE_OAUTH_TOKEN",
     );
   }
-  return { CLAUDE_CODE_OAUTH_TOKEN: token };
+  return { CLAUDE_CODE_OAUTH_TOKEN: parsed.data.claudeAiOauth.accessToken };
 }
 
 const providerEnv = provider === "codex" ? await codexEnv() : await claudeEnv();
