@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 storybook-static/
+storybook-site/
 **/bin/
 **/obj/
 .build/

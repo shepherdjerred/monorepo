@@ -247,6 +247,27 @@ const sitePaths = {
     "packages/glitter-context",
     ...deployScripts,
   ],
+  // The Storybook catalogs. Scoped to the two packages that build them rather
+  // than all of `packages/scout-for-lol`, so a backend or bot change does not
+  // redeploy a component catalog neither of them appears in.
+  "site-scout-design-system": [
+    ...workspacePaths,
+    "packages/scout-for-lol/packages/design-system",
+    "packages/scout-for-lol/packages/app",
+    // The full runtime workspace-dependency closure of app + design-system,
+    // so a change several hops away from the catalog packages still redeploys
+    // it: data -> domain, charts import @scout-for-lol/report, and every
+    // story loads @shepherdjerred/loaded through withAppProviders.
+    // @scout-for-lol/backend is deliberately excluded — app imports only its
+    // tRPC router *type*, which is erased at build time.
+    "packages/scout-for-lol/packages/data",
+    "packages/scout-for-lol/packages/domain",
+    "packages/scout-for-lol/packages/report",
+    "packages/loaded",
+    "packages/scout-for-lol/scripts/build-storybook-site.ts",
+    "packages/scout-for-lol/package.json",
+    ...deployScripts,
+  ],
   "site-scout": [
     ...workspacePaths,
     "packages/scout-for-lol",
