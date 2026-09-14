@@ -4,10 +4,12 @@ import { env } from "node:process";
 const isCI = env["CI"] === "true";
 
 export default defineConfig({
-  testDir: "./workbench",
+  testDir: "./e2e",
   timeout: 60_000,
   forbidOnly: isCI,
-  workers: isCI ? 3 : undefined,
+  // Omitted rather than set to undefined so Playwright keeps its own default
+  // locally; exactOptionalPropertyTypes rejects the explicit undefined.
+  ...(isCI ? { workers: 3 } : {}),
   reporter: isCI
     ? [
         ["github"],
@@ -21,55 +23,28 @@ export default defineConfig({
       ]
     : "list",
   outputDir: "./test-results",
-  snapshotDir: "./workbench/__screenshots__",
-  snapshotPathTemplate:
-    "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
   webServer: {
-    // Vite's persisted dependency optimizer can stall before binding when a
-    // prior build populated this package's cache. The workbench is a test-only
-    // server, so rebuild its optimizer state on every Playwright-owned start.
-    command: "bun run dev --host 127.0.0.1 --port 5190 --force --strictPort",
-    url: "http://127.0.0.1:5190",
+    // A static server over the already-built catalog. `test:e2e` depends on
+    // `build`, so there is nothing left to bundle here: this binds in
+    // milliseconds instead of racing Vite's dependency optimizer on a
+    // contended pod, which is what repeatedly stalled the old dev-server
+    // webServer past its timeout.
+    command: "bun run preview",
+    url: "http://127.0.0.1:6006/index.json",
     reuseExistingServer: true,
-    // Playwright defaults to 60s. This vite server shares the browser-E2E pod
-    // with sjer.red's 110-screenshot run at --concurrency=2 and timed out at
-    // exactly 60s on build 10779 without emitting an error. 120s matched
-    // sjer.red, alert-dashboard, and evals — and then hit the same wall on
-    // build 14249, again with no error, on a change that adds nothing this
-    // server loads (the only new import in this package is `import type`,
-    // which is erased before vite sees it).
-    //
-    // The cost is startup, not the suite: `--force` above deliberately
-    // rebuilds the optimizer state on every start to avoid a stall that is
-    // worse, so a cold, contended pod pays for that every time. Raising the
-    // ceiling is the same trade made at 60s, not a new one.
-    timeout: 240_000,
+    timeout: 120_000,
   },
-  use: { baseURL: "http://127.0.0.1:5190", reducedMotion: "reduce" },
+  use: {
+    baseURL: "http://127.0.0.1:6006",
+    // reducedMotion is a browser-context option, not a top-level use option.
+    // Spelled the other way it typechecks as an unknown property and silently
+    // does nothing, which is how the previous config carried it.
+    contextOptions: { reducedMotion: "reduce" },
+  },
   projects: [
     {
       name: "chromium-desktop",
-      use: { ...devices["Desktop Chrome"], browserName: "chromium" },
-    },
-    {
-      name: "firefox-desktop",
-      use: { ...devices["Desktop Firefox"], browserName: "firefox" },
-    },
-    {
-      name: "webkit-desktop",
-      use: { ...devices["Desktop Safari"], browserName: "webkit" },
-    },
-    {
-      name: "chromium-mobile",
-      use: { ...devices["Galaxy S9+"], browserName: "chromium" },
-    },
-    {
-      name: "firefox-mobile",
-      use: { ...devices["Galaxy S9+"], browserName: "firefox" },
-    },
-    {
-      name: "webkit-mobile",
-      use: { ...devices["iPhone 13"], browserName: "webkit" },
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 });

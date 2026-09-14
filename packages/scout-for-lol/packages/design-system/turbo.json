@@ -4,7 +4,11 @@
   "tasks": {
     "build": {
       "dependsOn": ["generate", "^build"],
-      "outputs": ["dist/**", "src/generated/**", "styles/generated/**"]
+      "outputs": [
+        "storybook-static/**",
+        "src/generated/**",
+        "styles/generated/**"
+      ]
     },
     "generate": {
       "outputs": ["src/generated/**", "styles/generated/**"]
