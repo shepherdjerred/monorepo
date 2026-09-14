@@ -7,9 +7,9 @@
       "buildNumber": 15258
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-15393",
-      "digest": "sha256:5162ef61aa39f9320370bd1268c8b3110f972e50ac3a36269abe680ac4fa8df5",
-      "buildNumber": 15393
+      "buildNumber": 15549,
+      "version": "2.0.0-15549",
+      "digest": "sha256:02f855f89921cc026652b58a9f84a2001f8d1a5ea5650efee3df937aceabb36d"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-13290",
@@ -22,9 +22,9 @@
       "buildNumber": 15287
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "version": "2.0.0-15321",
-      "digest": "sha256:3103bf8e67e58f548be8b929ba937ff52284386213c7ad4f8dfaaa8e660726a4",
-      "buildNumber": 15321
+      "buildNumber": 15537,
+      "version": "2.0.0-15537",
+      "digest": "sha256:85a514f0b4437ea2f1cd2802626d321dc1b06942f35ed050a85f35b029880e3b"
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-10760",
@@ -32,9 +32,9 @@
       "buildNumber": 10760
     },
     "shepherdjerred/openrouter-broadcast-ingest": {
-      "version": "2.0.0-15321",
-      "digest": "sha256:cb9f86dac66fd0fd45965fafbc176bc844491f7f28417b7eeaf258dae3931c92",
-      "buildNumber": 15321
+      "buildNumber": 15537,
+      "version": "2.0.0-15537",
+      "digest": "sha256:b7765244ab041e70aadd71e3315df51d0fef7009528603d3bdf7f2fbe6bd7463"
     },
     "shepherdjerred/redlib": {
       "version": "2.0.0-11934",
@@ -42,14 +42,14 @@
       "buildNumber": 11934
     },
     "shepherdjerred/scout-evals": {
-      "buildNumber": 15481,
-      "version": "2.0.0-15481",
-      "digest": "sha256:f9f6ab6ef0033d391044d9d51588bf6b4cfbd32cc91a4f70269bba9890cd76f0"
+      "buildNumber": 15552,
+      "version": "2.0.0-15552",
+      "digest": "sha256:181ece5d14483fef7424eeb267650ebcb54754035a369c90fa94c23b4c2eb98c"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 15481,
-      "version": "2.0.0-15481",
-      "digest": "sha256:5e7df63247213a83dcd25d8c14ddffde718433b650c331a580131ac5cc1229fb"
+      "buildNumber": 15552,
+      "version": "2.0.0-15552",
+      "digest": "sha256:b3f52944cf703ee85e74c8d494aa368399c16fb372af737c837e9277689b553a"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -58,14 +58,14 @@
       "gitSha": "c42ee297992a5be0d83541b9c7deda5d4ceb99c7"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "version": "2.0.0-15321",
-      "digest": "sha256:9d837b7902aaf9932b00bcb49e0152b3b35cce43afc4471e73c3917166de8cb3",
-      "buildNumber": 15321
+      "buildNumber": 15549,
+      "version": "2.0.0-15549",
+      "digest": "sha256:b703022fd75869a6c7f55bd0a6ecbb47f3f96b19653bdf1c9c86c3c102aed103"
     },
     "shepherdjerred/streambot": {
-      "version": "2.0.0-15410",
-      "digest": "sha256:a143510017eda97cda7b9cb1c88a92150d8d89c5882396cc7ca7d6b62a1963cd",
-      "buildNumber": 15410
+      "buildNumber": 15549,
+      "version": "2.0.0-15549",
+      "digest": "sha256:01a2e8943e610fdd461cb5057729c580c069cdd85429a274211808df751aaad7"
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-15258",
@@ -73,9 +73,9 @@
       "buildNumber": 15258
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 15481,
-      "version": "2.0.0-15481",
-      "digest": "sha256:0711d66ab781fbd6dfb155d8c05cad48f592351facdbae1b8be25b8a2f944490"
+      "buildNumber": 15552,
+      "version": "2.0.0-15552",
+      "digest": "sha256:dc48b55f36f0b45b1b7e48644b71975c133af1b4b1ff6f72b3306e3971192784"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
@@ -89,9 +89,9 @@
       "gitSha": "f23505a7251c5029e01d8157e31800e89cec8298"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "version": "2.0.0-15321",
-      "digest": "sha256:bdab4cefc453cd538fe7e22de1d21c1b2ac73c89bbf27863a46bb976471df6b9",
-      "buildNumber": 15321
+      "buildNumber": 15549,
+      "version": "2.0.0-15549",
+      "digest": "sha256:e87c18952e210fe78e5ed41c413395bbfb9f06f3b0a7300bc710937c58ca3650"
     }
   }
 }
