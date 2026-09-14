@@ -1,5 +1,6 @@
 import { EmbedBuilder, Colors, SlashCommandBuilder } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { getDocsUrl, getDashboardUrl } from "#src/discord/commands/links.ts";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
@@ -47,9 +48,16 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
  * Flag-gated commands are registered per guild (`guildScopedCommandGroups`),
  * so `/help` lists each one only where its flag is on — the same rationale as
  * registration: a globally advertised command that answers "not available
- * here" is a confusing dead end.
+ * here" is a confusing dead end. `deploymentGate` covers gates that live
+ * outside Flipt: voice additionally requires the boot-time
+ * `VOICE_ASSISTANT_ENABLED` audio-pipeline gate, and a flag-on guild in a
+ * deployment without it would still get "not switched on" from the command.
  */
-const flagGatedCommands: { flag: FlagName; entry: string }[] = [
+const flagGatedCommands: {
+  flag: FlagName;
+  entry: string;
+  deploymentGate?: () => boolean;
+}[] = [
   {
     flag: "betting_enabled",
     entry: "`/bb` — Bryan Bucks: balances, history, rules, and dares",
@@ -61,6 +69,7 @@ const flagGatedCommands: { flag: FlagName; entry: string }[] = [
   {
     flag: "voice_assistant_enabled",
     entry: '`/scout join` · `/scout leave` — "Hey Scout" voice questions',
+    deploymentGate: () => configuration.voiceAssistant.enabled,
   },
 ];
 
@@ -78,7 +87,10 @@ export async function commandList(guildId: string | null): Promise<string> {
   }
   if (guildId !== null) {
     const server = DiscordGuildIdSchema.parse(guildId);
-    for (const { flag, entry } of flagGatedCommands) {
+    for (const { flag, entry, deploymentGate } of flagGatedCommands) {
+      if (deploymentGate !== undefined && !deploymentGate()) {
+        continue;
+      }
       if (await isPolicyEnabled(flag, { server })) {
         commands.push(entry);
       }

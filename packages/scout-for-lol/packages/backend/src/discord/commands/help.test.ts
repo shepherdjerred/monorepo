@@ -76,13 +76,35 @@ describe("/help", () => {
 
     const gated = await commandList(gatedGuild);
     expect(gated).toContain("`/bb`");
-    expect(gated).toContain("`/scout join`");
+    // The voice flag alone is not enough: this deployment has no
+    // VOICE_ASSISTANT_ENABLED audio pipeline, so /scout join would answer
+    // "not switched on" and must not be advertised.
+    expect(gated).not.toContain("`/scout join`");
     expect(gated).not.toContain("`/lobby`");
 
     const other = await commandList(otherGuild);
     expect(other).not.toContain("`/bb`");
     expect(other).not.toContain("`/scout join`");
     expect(other).not.toContain("`/lobby`");
+  });
+
+  test("advertises voice only when the deployment gate is also on", async () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["VOICE_ASSISTANT_ENABLED"] = "true";
+    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+    resetConfigurationForTests();
+    const gatedGuild = "100000000000000005";
+    const server = DiscordGuildIdSchema.parse(gatedGuild);
+    addFlagOverride("voice_assistant_enabled", true, { server });
+
+    try {
+      const gated = await commandList(gatedGuild);
+      expect(gated).toContain("`/scout join`");
+    } finally {
+      delete Bun.env["VOICE_ASSISTANT_ENABLED"];
+      delete Bun.env["OPENAI_API_KEY"];
+      resetConfigurationForTests();
+    }
   });
 
   test("includes Scout Explore in every production guild", async () => {
