@@ -158,6 +158,7 @@ async function loadDareV2Rows(db: ExtendedPrismaClient) {
   return await db.bucksDareV2.findMany({
     include: {
       targets: true,
+      contributions: { select: { id: true } },
       revisions: {
         select: { id: true, revision: true, compilerVersion: true },
       },
@@ -230,7 +231,9 @@ async function drainV1(
 ): Promise<void> {
   const open = await db.bucksDare.findMany({
     where: { dareState: { in: [...OPEN_V1_STATES] } },
-    include: { targets: { orderBy: { id: "asc" } } },
+    include: {
+      targets: { orderBy: { id: "asc" } },
+    },
     orderBy: { id: "asc" },
   });
   for (const row of open) {
@@ -239,6 +242,19 @@ async function drainV1(
     );
   }
   if (!apply || open.length === 0) return;
+  const proposedIds = open
+    .filter((row) => row.dareState === "proposed")
+    .map((row) => row.id);
+  if (proposedIds.length > 0) {
+    const proposedContributionCount = await db.bucksDareContribution.count({
+      where: { dareId: { in: proposedIds } },
+    });
+    if (proposedContributionCount !== 0) {
+      throw new Error(
+        `Refusing to abandon ${proposedContributionCount.toString()} contribution(s) attached to v1 proposed dares; repair the financial data first`,
+      );
+    }
+  }
   // Proposed and pending_accept dares drain through the shipped sweep
   // helpers; the far-future horizon makes every deadline count as lapsed.
   await abandonExpiredDareProposals(db, DRAIN_HORIZON);
@@ -290,11 +306,21 @@ async function drainV2(
           `Draft dare ${dare.id.toString()} unexpectedly holds a pot of ${dare.potTotal.toString()} BB`,
         );
       }
+      if (dare.contributions.length !== 0) {
+        throw new Error(
+          `Draft dare ${dare.id.toString()} has ${dare.contributions.length.toString()} contribution(s) despite a zero pot; repair the financial data first`,
+        );
+      }
       // Conditional claim: a live beta could fund this draft between the
       // read and this write, and an id-only update would then bury an
       // escrowed pot. Losing the claim is a hard stop — re-run the drain.
       const claim = await db.bucksDareV2.updateMany({
-        where: { id: dare.id, dareState: "draft", potTotal: 0 },
+        where: {
+          id: dare.id,
+          dareState: "draft",
+          potTotal: 0,
+          currentRevision: dare.currentRevision,
+        },
         data: { dareState: "deleted" },
       });
       if (claim.count !== 1) {
