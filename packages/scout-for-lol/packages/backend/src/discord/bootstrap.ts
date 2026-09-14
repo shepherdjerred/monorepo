@@ -141,7 +141,7 @@ async function registerConnectedGuildCommands(
 
 async function handleNewGuild(
   guild: Guild,
-  historicalUnavailableGuildIds: Set<string>,
+  historicalUnavailableGuilds: Map<string, Guild>,
 ): Promise<void> {
   try {
     // Forced: Discord drops a guild's commands when the bot is removed, so a
@@ -157,11 +157,17 @@ async function handleNewGuild(
     });
   }
   // Recheck after command reconciliation: a departure plus genuine rejoin
-  // during that await must not reuse this ready-time historical marker.
+  // during that await must not reuse this ready-time historical marker. Guild
+  // IDs can be reused across gateway objects during this race, so identity
+  // rather than ID is the authority for both decisions.
+  if (guild.client.guilds.cache.get(guild.id) !== guild) {
+    return;
+  }
   await handleGuildCreate(
     guild,
-    historicalUnavailableGuildIds.delete(guild.id),
+    historicalUnavailableGuilds.get(guild.id) === guild,
   );
+  historicalUnavailableGuilds.delete(guild.id);
 }
 
 /**
@@ -196,7 +202,7 @@ export function registerDiscordEventHandlers(target: Client): void {
   // Guilds cached as unavailable at ready time need deferred reconciliation:
   // their later GuildCreate means Discord made an existing connection
   // available, not that Scout was newly installed.
-  const historicalUnavailableGuildIds = new Set<string>();
+  const historicalUnavailableGuilds = new Map<string, Guild>();
 
   target.on(Events.Error, (error) => {
     logger.error("❌ Discord client error:", error);
@@ -317,14 +323,15 @@ export function registerDiscordEventHandlers(target: Client): void {
     // asynchronous database reconciliation runs keeps its first-install
     // lifecycle, rather than being mistaken for a historical connection.
     const connectedGuildsAtReady = [...readyClient.guilds.cache.values()];
-    historicalUnavailableGuildIds.clear();
+    historicalUnavailableGuilds.clear();
     for (const guild of connectedGuildsAtReady) {
       if (!guild.available) {
-        historicalUnavailableGuildIds.add(guild.id);
+        historicalUnavailableGuilds.set(guild.id, guild);
       }
     }
-    void reconcileConnectedGuildInstalls(connectedGuildsAtReady, (guildId) =>
-      readyClient.guilds.cache.has(guildId),
+    void reconcileConnectedGuildInstalls(
+      connectedGuildsAtReady,
+      (guild) => readyClient.guilds.cache.get(guild.id) === guild,
     );
     void registerConnectedGuildCommands(readyClient.guilds.cache.keys());
   });
@@ -333,14 +340,14 @@ export function registerDiscordEventHandlers(target: Client): void {
   target.on(Events.GuildCreate, (guild) => {
     logger.info(`[Guild Create] Bot added to new server: ${guild.name}`);
     discordGuildsGauge.set(target.guilds.cache.size);
-    void handleNewGuild(guild, historicalUnavailableGuildIds);
+    void handleNewGuild(guild, historicalUnavailableGuilds);
   });
 
   // Handle bot being removed from servers (kicked, banned, or guild deleted)
   target.on(Events.GuildDelete, (guild) => {
     logger.info(`[Guild Delete] Bot removed from server: ${guild.name}`);
     discordGuildsGauge.set(target.guilds.cache.size);
-    historicalUnavailableGuildIds.delete(guild.id);
+    historicalUnavailableGuilds.delete(guild.id);
     void handleGuildDelete(guild);
   });
 

@@ -299,7 +299,7 @@ async function markGuildRemovedIfDisconnected(
  */
 export async function reconcileConnectedGuildInstalls(
   guilds: Iterable<Guild>,
-  isStillConnected: (guildId: string) => boolean = () => true,
+  isCurrentGuild: (guild: Guild) => boolean = () => true,
 ): Promise<void> {
   for (const guild of guilds) {
     if (!guild.available) {
@@ -316,7 +316,7 @@ export async function reconcileConnectedGuildInstalls(
       // A guild can leave after ClientReady took its snapshot. Recheck the
       // live cache immediately before creating or reactivating an active
       // authorization row.
-      if (!isStillConnected(guild.id)) {
+      if (!isCurrentGuild(guild)) {
         continue;
       }
       if (existingInstall !== null && existingInstall.removedAt !== null) {
@@ -325,7 +325,9 @@ export async function reconcileConnectedGuildInstalls(
         // `saveGuildInstall` safely claims that lifecycle transition, without
         // sending the welcome message owned by `handleGuildCreate`.
         await saveGuildInstall(guild, ownerDiscordId, false);
-        await markGuildRemovedIfDisconnected(serverId, isStillConnected);
+        await markGuildRemovedIfDisconnected(serverId, () =>
+          isCurrentGuild(guild),
+        );
         continue;
       }
       if (existingInstall !== null) {
@@ -343,7 +345,10 @@ export async function reconcileConnectedGuildInstalls(
           analyticsLifecycleTracked: false,
         },
       });
-      await markGuildRemovedIfDisconnected(serverId, isStillConnected);
+      await retirePendingInstallAttribution(serverId);
+      await markGuildRemovedIfDisconnected(serverId, () =>
+        isCurrentGuild(guild),
+      );
       logger.info(
         `[Guild Install Reconciliation] Backfilled ${guild.name} (${guild.id})`,
       );
@@ -379,8 +384,10 @@ export async function handleGuildCreate(
   }
 
   if (isHistoricalConnection) {
-    await reconcileConnectedGuildInstalls([guild], (guildId) =>
-      guild.client.guilds.cache.has(guildId),
+    await reconcileConnectedGuildInstalls(
+      [guild],
+      (cachedGuild) =>
+        guild.client.guilds.cache.get(cachedGuild.id) === cachedGuild,
     );
     return;
   }
