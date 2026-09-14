@@ -597,6 +597,137 @@ describe("operations reads", () => {
     expect(resolved.state).toBe("ready");
   });
 
+  test("a stalled notification carries the state and deadline of its row", async () => {
+    // A bare key cannot tell the console which actions can succeed: `sending`
+    // cannot be re-driven and a still-fresh intent cannot be suppressed, so the
+    // row has to prove both rather than the UI assuming a query it does not own.
+    const deadlineOffsetMs = 90 * 60_000;
+    const seeded = intentRecord({
+      key: "notification:NA1_5312279829:channel:420010",
+      deadlineOffsetMs,
+      attemptCount: 2,
+      state: { kind: "ready" },
+    });
+    await seedIntent(seeded);
+
+    const queues = await caller().operations.queues({});
+
+    expect(queues.stalledNotifications).toEqual([
+      {
+        intentKey: seeded.intent.key,
+        matchId: MATCH_ID,
+        state: "ready",
+        freshnessDeadline: seeded.intent.freshnessDeadline,
+        attemptCount: 2,
+      },
+    ]);
+  });
+
+  test("each drivable state reaches the queue as itself", async () => {
+    const pending = intentRecord({
+      key: "notification:NA1_5312279829:channel:420011",
+      deadlineOffsetMs: 60 * 60_000,
+      attemptCount: 0,
+      state: { kind: "pending" },
+    });
+    const sending = intentRecord({
+      key: "notification:NA1_5312279829:channel:420012",
+      deadlineOffsetMs: 120 * 60_000,
+      attemptCount: 1,
+      state: {
+        kind: "sending",
+        attemptNonce: NotificationAttemptNonceSchema.parse("run-12:attempt-1"),
+        startedAt: instant(-10_000),
+      },
+    });
+    await seedIntent(pending);
+    await seedIntent(sending);
+
+    const queues = await caller().operations.queues({});
+
+    expect(
+      queues.stalledNotifications.map((row) => [row.intentKey, row.state]),
+    ).toEqual([
+      [pending.intent.key, "pending"],
+      [sending.intent.key, "sending"],
+    ]);
+  });
+
+  test("a queue seeded past the cap pages completely through the cursor", async () => {
+    // Deadlines are distinct and ascending, so the page order is the read's
+    // order and a skipped row would show up as a missing key rather than as a
+    // reordering.
+    const seeded = await Promise.all(
+      Array.from({ length: 5 }, async (_unused, index) => {
+        const record = intentRecord({
+          key: `notification:NA1_5312279829:channel:4201${(20 + index).toString()}`,
+          deadlineOffsetMs: (index + 1) * 60_000,
+          attemptCount: 0,
+          state: { kind: "ready" },
+        });
+        await seedIntent(record);
+        return record.intent.key;
+      }),
+    );
+
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    // A budget rather than an iteration: paging that never reports the last
+    // page is itself the failure, and an unbounded loop would hang instead of
+    // failing. One page per seeded row is more than enough at two per page.
+    let budget = seeded.length;
+    while (budget > 0) {
+      budget -= 1;
+      const resume = cursor;
+      const queues = await caller().operations.queues({
+        limit: 2,
+        ...(resume === null ? {} : { after: { stalledNotifications: resume } }),
+      });
+      seen.push(...queues.stalledNotifications.map((row) => row.intentKey));
+      cursor = queues.pages.stalledNotifications.cursor;
+      if (!queues.pages.stalledNotifications.hasMore) {
+        // The last page carries no cursor: there is nothing to resume from.
+        expect(cursor).toBeNull();
+        break;
+      }
+      expect(cursor).not.toBeNull();
+    }
+
+    // Every seeded row was reached exactly once, in the read's own order.
+    expect(seen).toEqual(seeded);
+  });
+
+  test("a queue inside the cap reports no more and no cursor", async () => {
+    await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420030",
+        deadlineOffsetMs: 60 * 60_000,
+        attemptCount: 0,
+        state: { kind: "ready" },
+      }),
+    );
+
+    const queues = await caller().operations.queues({ limit: 50 });
+
+    expect(queues.pages.stalledNotifications).toEqual({
+      hasMore: false,
+      cursor: null,
+    });
+    // An empty queue is equally unambiguous.
+    expect(queues.pages.unknownDeliveries).toEqual({
+      hasMore: false,
+      cursor: null,
+    });
+  });
+
+  test("a malformed cursor is refused rather than silently restarting", async () => {
+    await expect(
+      caller().operations.queues({
+        after: { stalledNotifications: "not-a-cursor" },
+      }),
+    ).rejects.toThrow();
+  });
+
   test("a match with no observation reads as not-found", async () => {
     expect(
       await caller().operations.matchPipeline({ matchId: MATCH_ID }),

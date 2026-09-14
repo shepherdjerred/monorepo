@@ -1,11 +1,8 @@
 import { z } from "zod";
 import {
-  NotificationIntentKeySchema,
   RecoveryBatchIdSchema,
   RiotMatchIdSchema,
-  type NotificationIntentKey,
   type RecoveryBatchId,
-  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   MatchProcessingPolicySchema,
@@ -13,6 +10,7 @@ import {
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { RecoveryBatchState } from "@scout-for-lol/domain/recovery/batch.ts";
+import { Prisma } from "#generated/prisma/client/index.js";
 import type { Db } from "#src/database/index.ts";
 import {
   scoutWorkflowStartRowToRecord,
@@ -138,16 +136,52 @@ const TEMPORAL_V2_OWNER_COLUMN = "TEMPORAL_V2";
 const FULL_POLICY_COLUMN = MatchProcessingPolicySchema.parse("FULL");
 
 /**
- * The one column every anti-join projects. Parsed rather than read off the
- * driver's row object: `$queryRaw` returns whatever the adapter made of the
- * result set, and a match id is about to become part of a Workflow ID.
+ * Where a page stopped, in the vocabulary every read here already orders by.
  *
- * The `LIMIT` in each of those queries is cast explicitly. A bound parameter
- * there reaches Postgres with no inferred type, and `LIMIT` accepts only
- * bigint, so the cast is what keeps the budget a parameter instead of forcing
- * it to be interpolated into the statement text.
+ * All six queues sort by a timestamp and break ties on an id, so one shape
+ * describes a position in any of them. Paging is KEYSET rather than offset
+ * because these queues drain while they are read: an offset would skip rows as
+ * earlier ones were resolved, and a skipped row in an operator queue is work
+ * nobody is told about.
+ *
+ * `after` is optional on every read, and absent means "from the front". The
+ * reconciliation sweep never pages — it always wants the front — so its
+ * queries keep exactly the shape and plan they had, with the keyset predicate
+ * composed in only when a caller actually supplies a cursor.
  */
-const MatchIdRowSchema = z.strictObject({ riotMatchId: RiotMatchIdSchema });
+export type ScanPosition = {
+  readonly at: Date;
+  readonly id: string;
+};
+
+/**
+ * Each queue returns the value it is ORDERED by alongside the id.
+ *
+ * Without it a caller cannot build the next page's cursor, and an operator
+ * cannot tell a match stranded for a minute from one stranded since Tuesday.
+ * The reads already sort on these values; returning them is exposing evidence
+ * the query held rather than computing anything new.
+ */
+export type StalledMatchProcessingRow = z.infer<
+  typeof StalledMatchProcessingRowSchema
+>;
+const StalledMatchProcessingRowSchema = z.strictObject({
+  riotMatchId: RiotMatchIdSchema,
+  observedAt: z.date(),
+});
+
+export type UnprojectedLakeMatchRow = z.infer<
+  typeof UnprojectedLakeMatchRowSchema
+>;
+const UnprojectedLakeMatchRowSchema = z.strictObject({
+  riotMatchId: RiotMatchIdSchema,
+  archivedAt: z.date(),
+});
+
+export type LiveRecoveryBatchRow = {
+  readonly recoveryBatchId: RecoveryBatchId;
+  readonly createdAt: Date;
+};
 
 /**
  * Matches the V2 core owns whose pipeline never reached its end.
@@ -193,10 +227,18 @@ const MatchIdRowSchema = z.strictObject({ riotMatchId: RiotMatchIdSchema });
  */
 export async function listStalledV2MatchProcessing(
   db: Db,
-  args: { observationReceiptKind: ReceiptKind; limit: number },
-): Promise<RiotMatchId[]> {
-  const rows = await db.$queryRaw`
-    SELECT o."riotMatchId" AS "riotMatchId"
+  args: {
+    observationReceiptKind: ReceiptKind;
+    limit: number;
+    after?: ScanPosition | undefined;
+  },
+): Promise<StalledMatchProcessingRow[]> {
+  const keyset =
+    args.after === undefined
+      ? Prisma.empty
+      : Prisma.sql`AND (o."observedAt", o."riotMatchId") > (${args.after.at}::timestamp, ${args.after.id}::text)`;
+  const rows: unknown = await db.$queryRaw(Prisma.sql`
+    SELECT o."riotMatchId" AS "riotMatchId", o."observedAt" AS "observedAt"
       FROM "MatchObservation" AS o
      WHERE o."processingPolicy" = ${FULL_POLICY_COLUMN}
        AND o."pipelineOwner" = ${TEMPORAL_V2_OWNER_COLUMN}
@@ -208,12 +250,10 @@ export async function listStalledV2MatchProcessing(
                          FROM "MatchTrackedAccount" AS t
                         WHERE t."riotMatchId" = o."riotMatchId"
                           AND t."cursorAdvancedAt" IS NULL))
+       ${keyset}
      ORDER BY o."observedAt" ASC, o."riotMatchId" ASC
-     LIMIT ${args.limit}::int`;
-  return z
-    .array(MatchIdRowSchema)
-    .parse(rows)
-    .map((row) => row.riotMatchId);
+     LIMIT ${args.limit}::int`);
+  return z.array(StalledMatchProcessingRowSchema).parse(rows);
 }
 
 /**
@@ -234,18 +274,29 @@ export async function listStalledV2MatchProcessing(
  */
 export async function listStalledNotificationIntents(
   db: Db,
-  args: { freshAt: Date; limit: number },
-): Promise<NotificationIntentKey[]> {
+  args: { freshAt: Date; limit: number; after?: ScanPosition | undefined },
+): Promise<MatchNotificationIntentRecord[]> {
+  const after = args.after;
   const rows = await db.matchNotificationIntent.findMany({
     where: {
       state: { in: [...DRIVABLE_INTENT_STATES] },
       freshnessDeadline: { gt: args.freshAt },
+      ...(after === undefined
+        ? {}
+        : {
+            OR: [
+              { freshnessDeadline: { gt: after.at } },
+              {
+                freshnessDeadline: after.at,
+                intentKey: { gt: after.id },
+              },
+            ],
+          }),
     },
     orderBy: [{ freshnessDeadline: "asc" }, { intentKey: "asc" }],
     take: args.limit,
-    select: { intentKey: true },
   });
-  return rows.map((row) => NotificationIntentKeySchema.parse(row.intentKey));
+  return rows.map((row) => matchNotificationIntentRowToRecord(row));
 }
 
 /**
@@ -265,10 +316,24 @@ export async function listStalledNotificationIntents(
  */
 export async function listUnknownDeliveryIntents(
   db: Db,
-  args: { limit: number },
+  args: { limit: number; after?: ScanPosition | undefined },
 ): Promise<MatchNotificationIntentRecord[]> {
+  const after = args.after;
   const rows = await db.matchNotificationIntent.findMany({
-    where: { state: { in: [...OPERATOR_DEAD_END_INTENT_STATES] } },
+    where: {
+      state: { in: [...OPERATOR_DEAD_END_INTENT_STATES] },
+      ...(after === undefined
+        ? {}
+        : {
+            OR: [
+              { unknownObservedAt: { gt: after.at } },
+              {
+                unknownObservedAt: after.at,
+                intentKey: { gt: after.id },
+              },
+            ],
+          }),
+    },
     orderBy: [{ unknownObservedAt: "asc" }, { intentKey: "asc" }],
     take: args.limit,
   });
@@ -303,10 +368,18 @@ export async function listUnprojectedLakeMatches(
     archiveReceiptKind: ReceiptKind;
     stagingReceiptKind: ReceiptKind;
     limit: number;
+    after?: ScanPosition | undefined;
   },
-): Promise<RiotMatchId[]> {
-  const rows = await db.$queryRaw`
-    SELECT a."riotMatchId" AS "riotMatchId"
+): Promise<UnprojectedLakeMatchRow[]> {
+  // The keyset goes in HAVING rather than WHERE: the ordering value is the
+  // aggregate MIN over the group, so it does not exist until the group does.
+  const keyset =
+    args.after === undefined
+      ? Prisma.empty
+      : Prisma.sql`HAVING (MIN(a."recordedAt"), a."riotMatchId") > (${args.after.at}::timestamp, ${args.after.id}::text)`;
+  const rows: unknown = await db.$queryRaw(Prisma.sql`
+    SELECT a."riotMatchId" AS "riotMatchId",
+           MIN(a."recordedAt") AS "archivedAt"
       FROM "MatchProcessingReceipt" AS a
      WHERE a."kind" = ${args.archiveReceiptKind}
        AND NOT EXISTS (SELECT 1
@@ -314,12 +387,10 @@ export async function listUnprojectedLakeMatches(
                         WHERE s."riotMatchId" = a."riotMatchId"
                           AND s."kind" = ${args.stagingReceiptKind})
      GROUP BY a."riotMatchId"
+     ${keyset}
      ORDER BY MIN(a."recordedAt") ASC, a."riotMatchId" ASC
-     LIMIT ${args.limit}::int`;
-  return z
-    .array(MatchIdRowSchema)
-    .parse(rows)
-    .map((row) => row.riotMatchId);
+     LIMIT ${args.limit}::int`);
+  return z.array(UnprojectedLakeMatchRowSchema).parse(rows);
 }
 
 /**
@@ -335,15 +406,29 @@ export async function listUnprojectedLakeMatches(
  */
 export async function listLiveRecoveryBatches(
   db: Db,
-  args: { limit: number },
-): Promise<RecoveryBatchId[]> {
+  args: { limit: number; after?: ScanPosition | undefined },
+): Promise<LiveRecoveryBatchRow[]> {
+  const after = args.after;
   const rows = await db.matchRecoveryBatch.findMany({
-    where: { state: { in: [...LIVE_RECOVERY_BATCH_STATES] } },
+    where: {
+      state: { in: [...LIVE_RECOVERY_BATCH_STATES] },
+      ...(after === undefined
+        ? {}
+        : {
+            OR: [
+              { createdAt: { gt: after.at } },
+              { createdAt: after.at, recoveryBatchId: { gt: after.id } },
+            ],
+          }),
+    },
     orderBy: [{ createdAt: "asc" }, { recoveryBatchId: "asc" }],
     take: args.limit,
-    select: { recoveryBatchId: true },
+    select: { recoveryBatchId: true, createdAt: true },
   });
-  return rows.map((row) => RecoveryBatchIdSchema.parse(row.recoveryBatchId));
+  return rows.map((row) => ({
+    recoveryBatchId: RecoveryBatchIdSchema.parse(row.recoveryBatchId),
+    createdAt: row.createdAt,
+  }));
 }
 
 /**
@@ -368,10 +453,26 @@ export async function listLiveRecoveryBatches(
  */
 export async function listUnacceptedWorkflowStarts(
   db: Db,
-  args: { workflowTypes: readonly string[]; limit: number },
+  args: {
+    workflowTypes: readonly string[];
+    limit: number;
+    after?: ScanPosition | undefined;
+  },
 ): Promise<ScoutWorkflowStartRecord[]> {
+  const after = args.after;
   const rows = await db.scoutWorkflowStart.findMany({
-    where: { workflowType: { in: [...args.workflowTypes] }, acceptedAt: null },
+    where: {
+      workflowType: { in: [...args.workflowTypes] },
+      acceptedAt: null,
+      ...(after === undefined
+        ? {}
+        : {
+            OR: [
+              { requestedAt: { gt: after.at } },
+              { requestedAt: after.at, requestedWorkflowId: { gt: after.id } },
+            ],
+          }),
+    },
     orderBy: [{ requestedAt: "asc" }, { requestedWorkflowId: "asc" }],
     take: args.limit,
   });

@@ -1,10 +1,10 @@
 import {
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
-  type Client,
-  type WorkflowHandleWithFirstExecutionRunId,
+  type WorkflowStartOptions,
 } from "@temporalio/client";
 import {
+  SCOUT_V2_REUSE_POLICIES,
   SCOUT_WORKFLOW_NAMES,
   scoutLakeProjectionV2WorkflowId,
   scoutNotificationV2WorkflowId,
@@ -37,17 +37,57 @@ import configuration from "#src/configuration.ts";
  * two envelopes are deliberately different, so the conversion is done here,
  * once, next to the contract it belongs to.
  *
- * Every start here is joined rather than duplicated: `USE_EXISTING` returns a
- * handle to a live execution instead of racing a second one, and
- * `REJECT_DUPLICATE` refuses to silently re-run a Workflow id that has already
- * closed. A caller that wants to know it joined reads the run id, which is the
- * evidence `ScoutWorkflowStart` records.
+ * The two ID policies answer different questions and are set separately here.
+ * The CONFLICT policy governs an execution that is still RUNNING, and every
+ * start below joins it rather than racing a second one — an operator asking for
+ * work already in flight wants that work, not a duplicate of it. The REUSE
+ * policy governs an execution that has CLOSED, and it is per family rather than
+ * uniform, taken from `SCOUT_V2_REUSE_POLICIES` — the same table the
+ * reconciliation sweep's child starter reads.
+ *
+ * Sharing that table is the point. A notification run that completed by
+ * recording `unknown-delivery` SUCCEEDED, so refusing to reuse its ID would
+ * break the retry arm on its main path: resolving the ambiguity as
+ * not-delivered releases the intent to `ready`, and the fresh run that must
+ * follow computes the same deterministic ID the closed execution owns. A
+ * projection is the opposite shape — a successful one has nothing left to do —
+ * so it re-runs only after failure. Spelling either of those here a second time
+ * would let the operator path and the sweep drift apart, and the drift would
+ * surface only as a start a human asked for and Temporal refused.
  */
 
-const OPERATOR_START_POLICIES = {
-  workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+/**
+ * Join a running execution rather than racing a second one. Orthogonal to
+ * reuse: this decides what happens while a run is OPEN.
+ */
+const JOIN_RUNNING_EXECUTION = {
   workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
 } as const;
+
+/**
+ * Reconciliation is deliberately absent from the shared table: nothing
+ * re-drives it, so it has no family policy to inherit. The trigger is part of
+ * its ID, so an operator sweep already cannot collide with the scheduled one,
+ * and `REJECT_DUPLICATE` keeps a closed operator sweep from being silently
+ * re-run. That one-shot-per-trigger behaviour is the `ScoutWorkflowStart`
+ * schema limitation tracked on SJ-205, not a policy to loosen here.
+ */
+const RECONCILIATION_REUSE_POLICY = WorkflowIdReusePolicy.REJECT_DUPLICATE;
+
+/**
+ * The slice of `Client` these starts need, and the handle field the caller
+ * reads back. Structural so a test can pass a plain object and assert the exact
+ * policies sent; the real Client satisfies it. Mirrors `ScoutWorkflowStarter`
+ * in `starts.ts`, which exists for the same reason.
+ */
+export type ScoutV2WorkflowStarter = {
+  readonly workflow: {
+    readonly start: (
+      workflowType: string,
+      options: WorkflowStartOptions,
+    ) => Promise<{ firstExecutionRunId: string }>;
+  };
+};
 
 function operatorStartMetadata(
   stage: ScoutStage,
@@ -67,13 +107,14 @@ function operatorStartMetadata(
 }
 
 export async function startScoutPipelineReconciliationV2(
-  client: Client,
+  client: ScoutV2WorkflowStarter,
   input: ScoutPipelineReconciliationV2Input,
-): Promise<WorkflowHandleWithFirstExecutionRunId> {
+): Promise<{ firstExecutionRunId: string }> {
   return await client.workflow.start(
     SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
     {
-      ...OPERATOR_START_POLICIES,
+      ...JOIN_RUNNING_EXECUTION,
+      workflowIdReusePolicy: RECONCILIATION_REUSE_POLICY,
       workflowId: scoutPipelineReconciliationV2WorkflowId(
         input.stage,
         input.trigger,
@@ -90,11 +131,13 @@ export async function startScoutPipelineReconciliationV2(
 }
 
 export async function startScoutLakeProjectionV2(
-  client: Client,
+  client: ScoutV2WorkflowStarter,
   input: ScoutLakeProjectionV2Input,
-): Promise<WorkflowHandleWithFirstExecutionRunId> {
+): Promise<{ firstExecutionRunId: string }> {
   return await client.workflow.start(SCOUT_WORKFLOW_NAMES.lakeProjectionV2, {
-    ...OPERATOR_START_POLICIES,
+    ...JOIN_RUNNING_EXECUTION,
+    workflowIdReusePolicy:
+      SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.lakeProjectionV2],
     workflowId: scoutLakeProjectionV2WorkflowId(input.stage, input.riotMatchId),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [scoutLakeProjectionV2InputCodec.serialize(input)],
@@ -107,11 +150,13 @@ export async function startScoutLakeProjectionV2(
 }
 
 export async function startScoutNotificationV2(
-  client: Client,
+  client: ScoutV2WorkflowStarter,
   input: ScoutNotificationV2Input,
-): Promise<WorkflowHandleWithFirstExecutionRunId> {
+): Promise<{ firstExecutionRunId: string }> {
   return await client.workflow.start(SCOUT_WORKFLOW_NAMES.notificationV2, {
-    ...OPERATOR_START_POLICIES,
+    ...JOIN_RUNNING_EXECUTION,
+    workflowIdReusePolicy:
+      SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.notificationV2],
     workflowId: scoutNotificationV2WorkflowId(input.stage, input.intentKey),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [scoutNotificationV2InputCodec.serialize(input)],

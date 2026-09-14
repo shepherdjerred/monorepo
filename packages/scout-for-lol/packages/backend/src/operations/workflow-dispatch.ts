@@ -1,3 +1,4 @@
+import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type {
   NotificationIntentKey,
   RiotMatchId,
@@ -25,6 +26,7 @@ import {
   requestWorkflowStart,
 } from "#src/database/durable/workflow-start-repository.ts";
 import type { ScoutWorkflowStartRecord } from "#src/database/durable/workflow-start-row.ts";
+import { scoutTemporalStartsAvailable } from "#src/temporal/availability.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import {
   startScoutLakeProjectionV2,
@@ -96,6 +98,25 @@ export type OperationsDispatchResult =
    */
   | {
       readonly outcome: "unavailable";
+      readonly requestedWorkflowId: string;
+    }
+  /**
+   * Temporal refused to reuse the Workflow id: a previous execution closed and
+   * this family's reuse policy does not permit re-running it. For a projection
+   * that means the prior run SUCCEEDED and there is nothing left to stage —
+   * `ALLOW_DUPLICATE_FAILED_ONLY` re-runs only after a failure.
+   *
+   * Distinct from `already-accepted`, which is about OUR durable record rather
+   * than Temporal's. Collapsing the two would tell an operator the request was
+   * already made when in fact it was made and declined, for a reason that
+   * decides whether re-running would be a repair or a repetition.
+   *
+   * The request row stays, unaccepted. That is correct rather than litter: the
+   * sweep folds unaccepted starts of this family, attempts the same start, and
+   * treats the same refusal as an answer instead of a fault.
+   */
+  | {
+      readonly outcome: "already-run";
       readonly requestedWorkflowId: string;
     };
 
@@ -182,6 +203,29 @@ function requireClient(
 }
 
 /**
+ * Ask Temporal to start, treating a reuse-policy refusal as an answer.
+ *
+ * `WorkflowExecutionAlreadyStartedError` here does not mean something went
+ * wrong; it means the family's reuse policy declined to re-run a closed
+ * execution, which is the policy working. Every OTHER failure — a transport
+ * error, a bad task queue, a rejected argument — stays thrown, because those
+ * are faults and an operator surface must not report them as outcomes. The
+ * reconciliation sweep draws the same line for its own child starts.
+ */
+async function startOrRefusal(
+  planned: PlannedStart,
+): Promise<{ firstExecutionRunId: string } | "already-run"> {
+  try {
+    return await planned.start();
+  } catch (error) {
+    if (error instanceof WorkflowExecutionAlreadyStartedError) {
+      return "already-run";
+    }
+    throw error;
+  }
+}
+
+/**
  * Record the operator's start request, then ask Temporal to run it.
  *
  * @throws when a durable write conflicts — a different start already claims
@@ -225,15 +269,24 @@ export async function dispatchOperationsWorkflowStart(
     };
   }
 
-  if (currentScoutTemporalSupervisor() === undefined) {
+  // The same predicate `operations.availability` reports, so the console's
+  // enablement and the dispatch's answer can never disagree. A supervisor
+  // mid-reconnect is installed but cannot start anything.
+  if (!scoutTemporalStartsAvailable()) {
     return {
       outcome: "unavailable",
       requestedWorkflowId: planned.requestedWorkflowId,
     };
   }
 
-  const handle = await planned.start();
-  const runId = WorkflowRunIdSchema.parse(handle.firstExecutionRunId);
+  const started = await startOrRefusal(planned);
+  if (started === "already-run") {
+    return {
+      outcome: "already-run",
+      requestedWorkflowId: planned.requestedWorkflowId,
+    };
+  }
+  const runId = WorkflowRunIdSchema.parse(started.firstExecutionRunId);
   const accepted = await recordWorkflowStartAccepted(prisma, {
     requestedWorkflowId: planned.requestedWorkflowId,
     acceptedAt: IsoInstantSchema.parse(new Date().toISOString()),

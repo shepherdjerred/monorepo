@@ -15,6 +15,7 @@ import {
 } from "#src/operations/operations-execution.ts";
 import {
   OPERATIONS_QUEUE_MAX,
+  OPERATIONS_QUEUE_NAMES,
   readMatchPipeline,
   readOperationsQueues,
 } from "#src/operations/operations-reads.ts";
@@ -24,7 +25,7 @@ import {
   type OperationsDispatchResult,
   type OperationsWorkflowStart,
 } from "#src/operations/workflow-dispatch.ts";
-import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
+import { scoutTemporalStartsAvailable } from "#src/temporal/availability.ts";
 import { router } from "#src/trpc/trpc.ts";
 import {
   operationsMutationProcedure,
@@ -186,6 +187,17 @@ const intentStatus = operationsProcedure
     };
   });
 
+/**
+ * Per-queue continuation tokens. Each queue pages independently: they drain at
+ * different rates, and an operator working through one must not have their
+ * position in it reset because another filled up.
+ */
+const queueCursorsInput = z.strictObject(
+  Object.fromEntries(
+    OPERATIONS_QUEUE_NAMES.map((name) => [name, z.string().min(1).optional()]),
+  ),
+);
+
 const queues = operationsProcedure
   .input(
     z.strictObject({
@@ -194,10 +206,15 @@ const queues = operationsProcedure
         .min(1)
         .max(OPERATIONS_QUEUE_MAX)
         .default(OPERATIONS_QUEUE_MAX),
+      after: queueCursorsInput.optional(),
     }),
   )
   .query(async ({ input }) =>
-    readOperationsQueues({ limit: input.limit, now: new Date() }),
+    readOperationsQueues({
+      limit: input.limit,
+      now: new Date(),
+      after: input.after,
+    }),
   );
 
 const matchPipeline = operationsProcedure
@@ -214,15 +231,17 @@ const matchPipeline = operationsProcedure
 /**
  * Whether a Workflow start can be dispatched at all right now.
  *
- * Drawn here because here is where the fact is known. A console that offered
+ * Drawn here because here is where the fact is known, and it asks about the
+ * CONNECTION rather than the supervisor: the supervisor stays installed across
+ * its whole reconnect loop, so its presence answers a different question than
+ * the one an operator is asking. A console that offered
  * `reconcile` with no Temporal connection would be offering an action whose
  * only possible result is a durable request nothing will pick up.
  */
 const availability = operationsProcedure.query(() => ({
-  temporal:
-    currentScoutTemporalSupervisor() === undefined
-      ? ("unavailable" as const)
-      : ("available" as const),
+  temporal: scoutTemporalStartsAvailable()
+    ? ("available" as const)
+    : ("unavailable" as const),
 }));
 
 export const operationsRouter = router({
