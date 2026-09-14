@@ -126,7 +126,15 @@ export async function collect(db: Db): Promise<void> {
   let recorded = 0;
   for (const puuid of unknown) {
     await db.exec(
-      `INSERT INTO "PuuidKeyMap" ("oldPuuid") VALUES (${db.param(1)}) ON CONFLICT DO NOTHING`,
+      `INSERT INTO "PuuidKeyMap" ("oldPuuid") VALUES (${db.param(1)})
+       ON CONFLICT ("oldPuuid") DO UPDATE SET
+         "gameName" = NULL,
+         "tagLine" = NULL,
+         "newPuuid" = NULL,
+         "status" = 'pending',
+         "harvestedAt" = NULL,
+         "resolvedAt" = NULL,
+         "appliedAt" = NULL`,
       [puuid],
     );
     recorded++;

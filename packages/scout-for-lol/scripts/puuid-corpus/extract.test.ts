@@ -52,8 +52,10 @@ describe("sightingsIn — match", () => {
   test("ignores anything that is not PUUID-shaped", () => {
     expect(
       sightingsIn("match", {
-        metadata: { participants: ["short", 7, null] },
-        info: { participants: [{ puuid: "also-short" }] },
+        metadata: { participants: ["short", 7, null, "x".repeat(77)] },
+        info: {
+          participants: [{ puuid: "also-short" }, { puuid: "y".repeat(79) }],
+        },
       }),
     ).toEqual([]);
   });

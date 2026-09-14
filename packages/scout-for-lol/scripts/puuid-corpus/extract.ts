@@ -29,7 +29,7 @@ export type Sighting = {
 };
 
 /** PUUIDs are 78-char base64url; anything else is not one. */
-const PuuidSchema = z.string().regex(/^[\w-]{70,90}$/u);
+const PuuidSchema = z.string().regex(/^[\w-]{78}$/u);
 
 /** The value as a PUUID, or null when it is not one. */
 function asPuuid(value: unknown): string | null {
@@ -171,7 +171,7 @@ function prematchSightings(doc: Record<string, unknown>): Sighting[] {
 export function unknownShapeSightings(body: string): Sighting[] {
   const out: Sighting[] = [];
   const seen = new Set<string>();
-  for (const match of body.matchAll(/[\w-]{70,90}/gu)) {
+  for (const match of body.matchAll(/[\w-]{78}/gu)) {
     const token = match[0];
     if (!seen.has(token)) {
       seen.add(token);

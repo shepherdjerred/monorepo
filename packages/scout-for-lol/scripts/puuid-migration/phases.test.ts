@@ -841,6 +841,35 @@ test("collect treats a prior replacement as the next transition's old value", as
   await db.close();
 });
 
+test("collect reopens the current domain after a return cycle", async () => {
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [
+      { oldPuuid: OLD_A, newPuuid: OLD_B, status: "resolved" },
+      { oldPuuid: OLD_B, newPuuid: OLD_A, status: "resolved" },
+    ],
+    applied: true,
+  });
+  const { beginTransition } = await import("./cutover.ts");
+  await beginTransition(db, true);
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid", "newPuuid", "status", "appliedAt"
+       FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+  );
+  expect(rows).toEqual([
+    { oldPuuid: OLD_A, newPuuid: null, status: "pending", appliedAt: null },
+    {
+      oldPuuid: OLD_B,
+      newPuuid: OLD_A,
+      status: "resolved",
+      appliedAt: expect.anything(),
+    },
+  ]);
+  await db.close();
+});
+
 test("begin refuses to reset a marker with unresolved work", async () => {
   const db = await seed({
     accounts: [],
