@@ -49,17 +49,21 @@ Proven:
 ## Spike B — iMessage vertical slice (daemon ready; needs BlueBubbles install)
 
 `src/spike-b-daemon.ts` is the full slice minus Temporal: BlueBubbles webhook →
-guid dedupe → sender allowlist → agent turn (resuming from S3) → BlueBubbles REST
-reply. Typechecks; runs on the Mac.
+Zod-parsed payload → guid dedupe → sender allowlist → per-session-serialized agent
+turn (resuming from S3) → BlueBubbles REST reply. The listener binds loopback only
+and requires a shared `?secret=` — the turn runs a bypass-permission agent holding
+live provider + S3 credentials, so it must never be reachable off-host. Typechecks.
 
 **Manual one-time setup (operator, GUI — not scriptable):**
 
 1. Install the BlueBubbles Server app on this Mac; sign it into Messages; grant
-   Full Disk Access. (Skip the Private API helper — not needed for text.)
+   Full Disk Access. (Skip the Private API helper — the daemon uses the default
+   AppleScript send backend.)
 2. In BlueBubbles settings set a server password and add a webhook →
-   `http://<this-mac>:8787/webhook`, event "new-message".
+   `http://127.0.0.1:8787/webhook?secret=<SPIKE_WEBHOOK_SECRET>`, event
+   "new-message". (BlueBubbles runs on this same Mac, so loopback reaches it.)
 3. `SPIKE_BB_URL=… SPIKE_BB_PASSWORD=… SPIKE_BB_ALLOW=<your imessage handle> \
- SPIKE_PROVIDER=claude <spike-a env> bun src/spike-b-daemon.ts`
+ SPIKE_WEBHOOK_SECRET=… SPIKE_PROVIDER=claude <spike-a env> bun src/spike-b-daemon.ts`
 4. Text yourself from another device; expect an agent reply, and a second text
    should resume the same session (codeword recall).
 

@@ -1,7 +1,9 @@
 // Session-slice push/pull against SeaweedFS S3. Mirrors the planned production
 // layout (per-file objects + manifest + latest pointer) at spike fidelity.
 import {
+  DeleteObjectsCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -165,6 +167,32 @@ async function getJson(
   const text = await res.Body?.transformToString();
   if (text === undefined) throw new Error(`empty object: ${key}`);
   return JSON.parse(text);
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  const { client, bucket, prefix } = makeClient();
+  const root = `${prefix}/sessions/${sessionId}/`;
+  let token: string | undefined;
+  do {
+    const listed = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: root,
+        ContinuationToken: token,
+      }),
+    );
+    const keys = (listed.Contents ?? []).flatMap((o) =>
+      o.Key === undefined ? [] : [{ Key: o.Key }],
+    );
+    if (keys.length > 0) {
+      await client.send(
+        new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: keys } }),
+      );
+    }
+    token =
+      listed.IsTruncated === true ? listed.NextContinuationToken : undefined;
+  } while (token !== undefined);
+  console.error(`[bundle] deleted session ${sessionId} objects under ${root}`);
 }
 
 export async function pullLatest(

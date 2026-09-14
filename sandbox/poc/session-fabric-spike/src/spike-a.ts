@@ -8,6 +8,7 @@
 // and passed into containers via env — never printed.
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { deleteSession } from "./bundle.ts";
 
 const provider = Bun.argv[2];
 if (provider !== "codex" && provider !== "claude")
@@ -123,29 +124,48 @@ async function turn(
   return result as { providerSessionId: string; finalText: string };
 }
 
-console.log(`[spike-a] turn 1 (container A, fresh)...`);
-const t1 = await turn(
-  0,
-  false,
-  `Remember this codeword: ${CODEWORD}. Reply with exactly: OK`,
-);
-console.log(
-  `[spike-a] turn 1 done. providerSessionId=${t1.providerSessionId} reply=${JSON.stringify(t1.finalText.slice(0, 80))}`,
-);
+// deleteSession() reads S3 config from the host env; mirror what the containers get.
+for (const key of [
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
+  "SPIKE_S3_ENDPOINT",
+  "SPIKE_S3_BUCKET",
+  "SPIKE_S3_PREFIX",
+]) {
+  process.env[key] = shared[key];
+}
 
-console.log(
-  `[spike-a] turn 2 (container B, fresh fs, hydrated from S3 only)...`,
-);
-const t2 = await turn(
-  1,
-  true,
-  "What is the codeword I told you earlier? Reply with just the codeword.",
-);
-console.log(
-  `[spike-a] turn 2 reply=${JSON.stringify(t2.finalText.slice(0, 120))}`,
-);
+let passed = false;
+try {
+  console.log(`[spike-a] turn 1 (container A, fresh)...`);
+  const t1 = await turn(
+    0,
+    false,
+    `Remember this codeword: ${CODEWORD}. Reply with exactly: OK`,
+  );
+  console.log(
+    `[spike-a] turn 1 done. providerSessionId=${t1.providerSessionId} reply=${JSON.stringify(t1.finalText.slice(0, 80))}`,
+  );
 
-if (t2.finalText.includes(CODEWORD)) {
+  console.log(
+    `[spike-a] turn 2 (container B, fresh fs, hydrated from S3 only)...`,
+  );
+  const t2 = await turn(
+    1,
+    true,
+    "What is the codeword I told you earlier? Reply with just the codeword.",
+  );
+  console.log(
+    `[spike-a] turn 2 reply=${JSON.stringify(t2.finalText.slice(0, 120))}`,
+  );
+  passed = t2.finalText.includes(CODEWORD);
+} finally {
+  await deleteSession(sessionId).catch((err) =>
+    console.error(`[spike-a] cleanup failed: ${String(err).slice(0, 200)}`),
+  );
+}
+
+if (passed) {
   console.log(
     `[spike-a] ✅ PASS: ${provider} resumed across containers via S3 bundle`,
   );

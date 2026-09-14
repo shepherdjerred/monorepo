@@ -7,12 +7,16 @@
 //   SPIKE_BB_URL           BlueBubbles server URL (e.g. http://localhost:1234)
 //   SPIKE_BB_PASSWORD      BlueBubbles server password
 //   SPIKE_BB_ALLOW         comma-separated allowed sender handles (your number/email)
+//   SPIKE_WEBHOOK_SECRET   shared secret required on the webhook path (?secret=)
 //   SPIKE_PROVIDER         codex | claude
 //   plus the SPIKE_S3_* / AWS_* / provider-auth env that spike-a passes to containers
 //
-// Run: bun src/spike-b-daemon.ts   (then point BlueBubbles webhook at http://<mac>:8787/webhook)
+// Run: bun src/spike-b-daemon.ts
+// Then point the BlueBubbles webhook at http://127.0.0.1:8787/webhook?secret=<SPIKE_WEBHOOK_SECRET>
+// (loopback only; if BlueBubbles runs elsewhere, front this with an authenticated tunnel).
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { z } from "zod/v4";
 
 function env(name: string): string {
   const v = Bun.env[name];
@@ -27,14 +31,32 @@ const ALLOW = new Set(
     .split(",")
     .map((s) => s.trim()),
 );
+const WEBHOOK_SECRET = env("SPIKE_WEBHOOK_SECRET");
 const PROVIDER = env("SPIKE_PROVIDER");
 const IMAGE = "session-fabric-spike";
 const here = import.meta.dir.replace(/\/src$/, "");
+
+// BlueBubbles new-message webhook shape (only the fields we use); unknown fields ignored.
+const WebhookSchema = z.object({
+  type: z.string(),
+  data: z
+    .object({
+      guid: z.string().optional(),
+      isFromMe: z.boolean().optional(),
+      text: z.string().optional(),
+      handle: z.object({ address: z.string().optional() }).nullish(),
+      chats: z.array(z.object({ guid: z.string().optional() })).optional(),
+    })
+    .optional(),
+});
 
 // One session for the whole spike conversation; turns increment.
 const sessionId = `spike-b-${PROVIDER}-${crypto.randomUUID().slice(0, 8)}`;
 let turnIndex = 0;
 const seenGuids = new Set<string>();
+// Serialize turns per session: webhooks that arrive mid-turn chain onto the
+// prior one so turnIndex/resume/output keys never race.
+let turnChain: Promise<unknown> = Promise.resolve();
 console.log(
   `[spike-b] session ${sessionId}, provider ${PROVIDER}, allow ${[...ALLOW].join(",")}`,
 );
@@ -82,10 +104,11 @@ async function sendText(chatGuid: string, text: string): Promise<void> {
   const res = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
+    // Default (AppleScript) backend so the round trip works without the
+    // BlueBubbles Private API helper, which the README setup skips.
     body: JSON.stringify({
       chatGuid,
       message: text,
-      method: "private-api",
       tempGuid: crypto.randomUUID(),
     }),
   });
@@ -96,23 +119,27 @@ async function sendText(chatGuid: string, text: string): Promise<void> {
 }
 
 Bun.serve({
+  // Loopback only: the webhook invokes a bypass-permission agent holding live
+  // provider + S3 credentials, so it must not be reachable off-host. A shared
+  // secret gates it even against local processes.
+  hostname: "127.0.0.1",
   port: 8787,
   async fetch(req) {
-    if (new URL(req.url).pathname !== "/webhook") return new Response("ok");
-    const body = (await req.json()) as {
-      type?: string;
-      data?: Record<string, unknown>;
-    };
+    const url = new URL(req.url);
+    if (url.pathname !== "/webhook") return new Response("ok");
+    if (url.searchParams.get("secret") !== WEBHOOK_SECRET) {
+      return new Response("unauthorized", { status: 401 });
+    }
+    const parsed = WebhookSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) return new Response("bad request", { status: 400 });
+    const body = parsed.data;
     if (body.type !== "new-message") return new Response("ignored");
     const data = body.data ?? {};
-    const guid = String(data["guid"] ?? "");
-    const isFromMe = data["isFromMe"] === true;
-    const text = String(data["text"] ?? "");
-    const handle =
-      (data["handle"] as { address?: string } | undefined)?.address ?? "";
-    const chatGuid =
-      (data["chats"] as { guid?: string }[] | undefined)?.[0]?.guid ?? "";
-    if (isFromMe || guid === "" || seenGuids.has(guid))
+    const guid = data.guid ?? "";
+    const text = data.text ?? "";
+    const handle = data.handle?.address ?? "";
+    const chatGuid = data.chats?.[0]?.guid ?? "";
+    if (data.isFromMe === true || guid === "" || seenGuids.has(guid))
       return new Response("skip");
     seenGuids.add(guid);
     if (!ALLOW.has(handle)) {
@@ -120,7 +147,7 @@ Bun.serve({
       return new Response("drop");
     }
     console.log(`[spike-b] <- ${handle}: ${text.slice(0, 80)}`);
-    void (async () => {
+    turnChain = turnChain.then(async () => {
       try {
         const reply = await runTurn(text);
         await sendText(chatGuid, reply);
@@ -128,10 +155,10 @@ Bun.serve({
       } catch (err) {
         await sendText(chatGuid, `spike error: ${String(err).slice(0, 200)}`);
       }
-    })();
+    });
     return new Response("accepted");
   },
 });
 console.log(
-  "[spike-b] listening on :8787  (point BlueBubbles webhook at http://<this-mac>:8787/webhook)",
+  "[spike-b] listening on 127.0.0.1:8787  (BlueBubbles webhook: http://127.0.0.1:8787/webhook?secret=…)",
 );
