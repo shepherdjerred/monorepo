@@ -13,6 +13,31 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 09 13",
+    banner: "In beta: Explore, player profiles, Hall of Fame, and Hey Scout",
+    sections: [
+      {
+        title: "In beta, on selected servers",
+        color: "yellow",
+        items: [
+          "Scout Explore: ask about your matches in plain language and get charts, tables, and match cards back",
+          "Player profiles: accounts, rank, champion performance, and match history for every tracked player",
+          "Hall of Fame: your server's best games, kept as records and announced the moment one breaks",
+          "Community challenges: turn a goal like winning on every champion into a challenge Scout tracks for you",
+          "Dares: dare someone to pull something off, and Scout calls it the moment they do",
+          'Hey Scout: say "Hey Scout" in voice chat and ask a question mid-game',
+        ],
+      },
+      {
+        title: "For everyone",
+        color: "indigo",
+        items: [
+          "A cleaner app throughout, and more reliable match tracking behind it",
+        ],
+      },
+    ],
+  }),
+  buildChangelogEntry({
     date: "2026 09 10",
     banner: "Updated for League patch 26.18",
     sections: [
