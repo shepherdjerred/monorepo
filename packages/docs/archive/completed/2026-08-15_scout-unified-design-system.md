@@ -68,8 +68,7 @@ tables, Markdown, loading/error states, and form-dialog framing.
 Every existing app, marketing, docs, and review-tool component is classified as
 one of: moved into the design system, rebuilt locally from catalog components,
 or retained as framework/business infrastructure. Duplicate local primitive
-directories and independent theme systems are removed. The desktop-only
-`@scout-for-lol/ui` sound editor remains out of scope.
+directories and independent theme systems are removed.
 
 ### Path-complete migration inventory
 

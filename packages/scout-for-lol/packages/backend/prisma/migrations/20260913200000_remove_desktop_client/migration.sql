@@ -1,27 +1,38 @@
 BEGIN;
 
-LOCK TABLE "ApiToken" IN ACCESS EXCLUSIVE MODE;
-LOCK TABLE "DesktopClient" IN ACCESS EXCLUSIVE MODE;
-LOCK TABLE "SoundPack" IN ACCESS EXCLUSIVE MODE;
-LOCK TABLE "StoredSound" IN ACCESS EXCLUSIVE MODE;
-LOCK TABLE "GameEventLog" IN ACCESS EXCLUSIVE MODE;
-
 DO $$
+DECLARE
+  desktop_table text;
+  has_rows boolean;
 BEGIN
-  IF EXISTS (SELECT FROM "ApiToken")
-    OR EXISTS (SELECT FROM "DesktopClient")
-    OR EXISTS (SELECT FROM "SoundPack")
-    OR EXISTS (SELECT FROM "StoredSound")
-    OR EXISTS (SELECT FROM "GameEventLog") THEN
-    RAISE EXCEPTION
-      'Cannot remove Scout Desktop tables while desktop data exists; re-run the retirement inventory and remove stored sound objects first.';
-  END IF;
+  FOREACH desktop_table IN ARRAY ARRAY[
+    'ApiToken',
+    'DesktopClient',
+    'SoundPack',
+    'StoredSound',
+    'GameEventLog'
+  ] LOOP
+    IF to_regclass(format('public.%I', desktop_table)) IS NOT NULL THEN
+      EXECUTE format(
+        'LOCK TABLE public.%I IN ACCESS EXCLUSIVE MODE',
+        desktop_table
+      );
+      EXECUTE format(
+        'SELECT EXISTS (SELECT FROM public.%I)',
+        desktop_table
+      ) INTO has_rows;
+      IF has_rows THEN
+        RAISE EXCEPTION
+          'Cannot remove Scout Desktop tables while desktop data exists; re-run the retirement inventory and remove stored sound objects first.';
+      END IF;
+    END IF;
+  END LOOP;
 END $$;
 
-DROP TABLE "GameEventLog";
-DROP TABLE "DesktopClient";
-DROP TABLE "StoredSound";
-DROP TABLE "SoundPack";
-DROP TABLE "ApiToken";
+DROP TABLE IF EXISTS "GameEventLog";
+DROP TABLE IF EXISTS "DesktopClient";
+DROP TABLE IF EXISTS "StoredSound";
+DROP TABLE IF EXISTS "SoundPack";
+DROP TABLE IF EXISTS "ApiToken";
 
 COMMIT;
