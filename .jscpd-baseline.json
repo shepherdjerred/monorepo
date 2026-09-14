@@ -1188,18 +1188,6 @@
       "clones": 1,
       "tokens": 83
     },
-    "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
-    "packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/sound-pack.router.ts": {
-      "clones": 2,
-      "tokens": 194
-    },
     "packages/scout-for-lol/packages/backend/src/trpc/router/subscription-filters.router.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/subscription-mute.router.test.ts": {
       "clones": 1,
       "tokens": 156
@@ -1295,10 +1283,6 @@
     "packages/scout-for-lol/packages/report/src/html/ranked-banner/report.tsx|packages/scout-for-lol/packages/report/src/html/ranked-square/report.tsx": {
       "clones": 1,
       "tokens": 97
-    },
-    "packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/rule-editor.tsx|packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/sound-pool-editor.tsx": {
-      "clones": 1,
-      "tokens": 75
     },
     "packages/seaweedfs-backup/test/backup-restore.test.ts|packages/seaweedfs-backup/test/gc.test.ts": {
       "clones": 1,
