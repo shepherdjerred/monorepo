@@ -26,6 +26,7 @@ import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { matchLinkComponents } from "./match-report-components.ts";
 import {
   matchToSvg,
   arenaMatchToSvg,
@@ -191,6 +192,7 @@ async function processClassicMatch(
     ),
     files: [attachment],
     embeds: [embed],
+    components: matchLinkComponents(matchId),
   };
 }
 
@@ -227,6 +229,7 @@ async function processArenaMatch(
     content: completionMessage,
     files: [attachment],
     embeds: [embed],
+    components: matchLinkComponents(matchId),
   };
 }
 
@@ -367,6 +370,7 @@ async function processStandardMatch(
     files: files,
     embeds: [matchReportEmbed],
     content: messageContent,
+    components: matchLinkComponents(matchId),
   };
 }
 
