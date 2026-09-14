@@ -719,22 +719,7 @@
       "purpose": "Offer the durable-pipeline operations console. Visibility only; the Git-managed operator allowlist decides access.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1383,6 +1368,29 @@
           "type": "boolean",
           "default": true,
           "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout_operations_console_enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "scout-guild-1337623164146155593",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "server",
+                  "operator": "eq",
+                  "value": "1337623164146155593"
+                }
+              ],
+              "result": true
+            }
+          ],
           "rules": [],
           "thresholdRollouts": []
         }
