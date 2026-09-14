@@ -11,6 +11,16 @@ const OLD_B = `OLDB_${"b".repeat(70)}`;
 const NEW_A = `NEWA_${"y".repeat(70)}`;
 const NEW_B = `NEWB_${"z".repeat(70)}`;
 
+/** One exported mapping line for OLD_A, pointing wherever the test needs. */
+const mapLine = (newPuuid: string): string =>
+  JSON.stringify({
+    oldPuuid: OLD_A,
+    gameName: "N",
+    tagLine: "T",
+    newPuuid,
+    status: "resolved",
+  });
+
 const remove = (): Promise<void> => removeDatabase(dbPath);
 
 async function open() {
@@ -304,4 +314,21 @@ test("import accepts a replacement identical to the one already held", async () 
   ]);
   expect(result).toEqual({ inserted: 0, updated: 1 });
   await db.close();
+});
+
+test("two rows disagreeing about one identity are refused", async () => {
+  // From a hand edit or two exports concatenated. Without this the last row
+  // silently wins: the check against the target compares each row to what the
+  // DATABASE holds, so two rows that disagree with each other but not with it
+  // both pass, and `apply` rewrites to whichever landed last.
+  const { parseMapRows } = await import("./transfer.ts");
+  expect(() => parseMapRows(`${mapLine(NEW_A)}\n${mapLine(NEW_B)}`)).toThrow(
+    /contradicts an earlier line/,
+  );
+});
+
+test("a duplicate row that agrees is collapsed, not refused", async () => {
+  // Concatenating overlapping exports is ordinary; only disagreement is a fault.
+  const { parseMapRows } = await import("./transfer.ts");
+  expect(parseMapRows(`${mapLine(NEW_A)}\n${mapLine(NEW_A)}`)).toHaveLength(1);
 });

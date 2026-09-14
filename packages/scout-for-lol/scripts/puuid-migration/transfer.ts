@@ -71,6 +71,12 @@ const MapRowSchema = z
 
 export function parseMapRows(text: string): MapRow[] {
   const rows: MapRow[] = [];
+  // One identity, one answer. Two rows for the same identifier can slip in from
+  // a hand edit or from concatenating two exports, and without this the last
+  // one silently wins: the conflict check against the target compares each row
+  // to what the DATABASE holds, so two rows that disagree with each other but
+  // not with it both pass, and `apply` then rewrites to whichever landed last.
+  const seen = new Map<string, string | null>();
   let lineNumber = 0;
   for (const line of text.split("\n")) {
     lineNumber++;
@@ -87,7 +93,20 @@ export function parseMapRows(text: string): MapRow[] {
         `Map line ${lineNumber.toString()} is not a usable mapping (${why}): ${line.slice(0, 80)}`,
       );
     }
-    rows.push(result.data);
+    const row = result.data;
+    if (seen.has(row.oldPuuid)) {
+      const first = seen.get(row.oldPuuid) ?? null;
+      if (first !== row.newPuuid) {
+        throw new Error(
+          `Map line ${lineNumber.toString()} contradicts an earlier line: ` +
+            `${row.oldPuuid.slice(0, 16)}… maps to both ${String(first).slice(0, 16)}… ` +
+            `and ${String(row.newPuuid).slice(0, 16)}…`,
+        );
+      }
+      continue;
+    }
+    seen.set(row.oldPuuid, row.newPuuid);
+    rows.push(row);
   }
   return rows;
 }
