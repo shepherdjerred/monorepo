@@ -76,15 +76,6 @@
       "disabled": false,
       "expires_at": "2027-08-29T19:52:40.651Z"
     },
-    "macbook-existing": {
-      "import_id": "09fca92eea4d82539b7ac2588ec0a034e43e1e89c9c9dc3bce601d13ee0391d1",
-      "name": "MacBook",
-      "workspace_key": "default",
-      "limit": 20,
-      "limit_reset": "monthly",
-      "include_byok_in_limit": true,
-      "disabled": false
-    },
     "birmel-2026-08": {
       "name": "birmel 2026-08",
       "workspace_key": "default",
