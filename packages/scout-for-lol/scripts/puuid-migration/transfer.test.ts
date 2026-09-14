@@ -9,6 +9,7 @@ process.env["DATABASE_URL"] = `file:${dbPath}`;
 const OLD_A = `OLDA_${"a".repeat(70)}`;
 const OLD_B = `OLDB_${"b".repeat(70)}`;
 const NEW_A = `NEWA_${"y".repeat(70)}`;
+const NEW_B = `NEWB_${"z".repeat(70)}`;
 
 const remove = (): Promise<void> => removeDatabase(dbPath);
 
@@ -235,5 +236,72 @@ test("import still upgrades an unresolved row when a replacement arrives", async
   );
   expect(rows[0]?.["n"]).toBe(NEW_A);
   expect(rows[0]?.["s"]).toBe("resolved");
+  await db.close();
+});
+
+test("a replacement equal to its own identifier is refused", async () => {
+  // `resolve` already treats an unchanged identifier as proof both credentials
+  // share a key domain. Here it is worse: for a participant who appears only in
+  // the archive, `apply` and `verify` never see the row, and the corpus rewrite
+  // then replaces the token with itself and reports no failures.
+  const { parseMapRows } = await import("./transfer.ts");
+  expect(() =>
+    parseMapRows(
+      JSON.stringify({
+        oldPuuid: OLD_A,
+        gameName: "N",
+        tagLine: "T",
+        newPuuid: OLD_A,
+        status: "resolved",
+      }),
+    ),
+  ).toThrow(/equal to the identifier it replaces/);
+});
+
+test("import refuses a replacement that contradicts one already held", async () => {
+  // Two irreconcilable claims, and nothing here can tell which is right.
+  // Overwriting would be invisible: the database holds a replacement rather than
+  // the old value, so `apply` changes nothing and `verify` passes while the
+  // archive gets translated to the wrong identity.
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_A, NEW_A],
+  );
+  const { importMap } = await import("./transfer.ts");
+  await expect(
+    importMap(db, [
+      {
+        oldPuuid: OLD_A,
+        gameName: "N",
+        tagLine: "T",
+        newPuuid: NEW_B,
+        status: "resolved",
+      },
+    ]),
+  ).rejects.toThrow(/already maps to/);
+  const rows = await db.query(`SELECT "newPuuid" AS n FROM "PuuidKeyMap"`);
+  expect(rows[0]?.["n"]).toBe(NEW_A);
+  await db.close();
+});
+
+test("import accepts a replacement identical to the one already held", async () => {
+  // Re-importing the same map must stay a no-op; only disagreement is a fault.
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_A, NEW_A],
+  );
+  const { importMap } = await import("./transfer.ts");
+  const result = await importMap(db, [
+    {
+      oldPuuid: OLD_A,
+      gameName: "N",
+      tagLine: "T",
+      newPuuid: NEW_A,
+      status: "resolved",
+    },
+  ]);
+  expect(result).toEqual({ inserted: 0, updated: 1 });
   await db.close();
 });

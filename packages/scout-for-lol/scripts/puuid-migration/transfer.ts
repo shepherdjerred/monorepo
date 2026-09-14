@@ -57,6 +57,16 @@ const MapRowSchema = z
   .refine(
     (row) => (row.newPuuid === null) === (row.status !== "resolved"),
     "a mapping is resolved exactly when it has a replacement",
+  )
+  // An identifier mapping to itself is not a migration, and `resolve` already
+  // treats one as proof that both credentials belong to the same key holder.
+  // Accepting it here would be worse than there: for a participant who appears
+  // only in the archive, `apply` and `verify` never see the row at all, so the
+  // corpus rewrite replaces the token with itself, reports no failures, and
+  // leaves that history old-domain permanently.
+  .refine(
+    (row) => row.newPuuid === null || row.newPuuid !== row.oldPuuid,
+    "a replacement equal to the identifier it replaces is not a mapping",
   );
 
 export function parseMapRows(text: string): MapRow[] {
@@ -159,10 +169,33 @@ export async function importMap(
   db: Db,
   rows: readonly MapRow[],
 ): Promise<{ inserted: number; updated: number }> {
-  const existingRows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
-  const existing = new Set(
-    existingRows.map((row) => asString(row["oldPuuid"], "oldPuuid")),
+  const existingRows = await db.query(
+    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
   );
+  const existing = new Map(
+    existingRows.map((row) => [
+      asString(row["oldPuuid"], "oldPuuid"),
+      asOptionalString(row["newPuuid"]),
+    ]),
+  );
+
+  // Two different replacements for one identity are two irreconcilable claims,
+  // and nothing here can tell which is right. Coalescing would silently pick
+  // one, and the damage would be invisible: the database already holds a
+  // replacement rather than the old value, so `apply` changes nothing and
+  // `verify` passes, while the corpus rewrite translates the archive to the
+  // wrong identity. Unlike a missing replacement, which is only older news,
+  // this has to stop the import.
+  for (const row of rows) {
+    const held = existing.get(row.oldPuuid) ?? null;
+    if (held !== null && row.newPuuid !== null && row.newPuuid !== held) {
+      throw new Error(
+        `Refusing to import: ${row.oldPuuid.slice(0, 16)}… already maps to ` +
+          `${held.slice(0, 16)}… here, and the file says ${row.newPuuid.slice(0, 16)}…. ` +
+          `Nothing can tell which is right, and overwriting would be invisible.`,
+      );
+    }
+  }
 
   let inserted = 0;
   let updated = 0;
