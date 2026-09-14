@@ -175,31 +175,31 @@ void _assertFlagNameSubset;
 export type PolicyFlagName = FlagName;
 
 /**
- * Beta-only product surfaces that are permanently excluded from production.
- * This policy sits above both the local registry and Flipt so an operator
- * override cannot accidentally expose a forbidden production surface.
+ * Product surfaces that are permanently excluded from production. This policy
+ * sits above both the local registry and Flipt so an operator override cannot
+ * accidentally expose a forbidden production surface.
+ *
+ * The set is deliberately narrow: real-money-shaped Bryan Bucks surfaces
+ * (wallets, betting, parlays, transfers, and the Dares funded from them),
+ * custom games, duels, which wait on Riot approval, and the voice assistant,
+ * which captures audio. Everything else is governed by its ordinary flag, so
+ * a surface that is merely beta today stays a Flipt decision rather than a
+ * code change.
  */
 const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
   [
-    "ai_reports_enabled",
-    "ai_reports_unlimited",
-    "ai_reviews_enabled",
     "betting_enabled",
+    "betting_player_bet_outcome_dm_enabled",
+    "betting_settlement_dm_enabled",
+    "bucks_transfers_enabled",
+    "weekly_parlays_enabled",
     "bucks_dares_enabled",
     "dare_v2",
     "dare_extended_contracts_enabled",
     "dare_notifications_enabled",
-    "bucks_transfers_enabled",
-    "weekly_parlays_enabled",
-    "betting_player_bet_outcome_dm_enabled",
-    "betting_settlement_dm_enabled",
-    "challenge_runs_enabled",
-    "competition_builder_v2_enabled",
     "custom_nights_enabled",
-    "duels_enabled",
-    "hall_of_fame_enabled",
     "tournament_lobbies_enabled",
-    "scoutql_relational_enabled",
+    "duels_enabled",
     "voice_assistant_enabled",
   ],
 );

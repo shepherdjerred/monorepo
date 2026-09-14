@@ -23,23 +23,34 @@ const OTHER_GUILD = DiscordGuildIdSchema.parse("2337623164146155593");
 const SOMEONE = DiscordAccountIdSchema.parse("160509172704739399");
 const originalEnvironment = Bun.env["ENVIRONMENT"];
 const PRODUCTION_DENIED_FLAGS = [
+  "betting_enabled",
+  "betting_player_bet_outcome_dm_enabled",
+  "betting_settlement_dm_enabled",
+  "bucks_transfers_enabled",
+  "weekly_parlays_enabled",
+  "bucks_dares_enabled",
+  "dare_v2",
+  "dare_extended_contracts_enabled",
+  "dare_notifications_enabled",
+  "custom_nights_enabled",
+  "tournament_lobbies_enabled",
+  "duels_enabled",
+  "voice_assistant_enabled",
+] as const;
+
+/**
+ * Surfaces the policy deliberately does NOT deny: they are beta today by
+ * ordinary flag state, so production access is a Flipt decision. Without this
+ * list the denial test passes just as well when the policy denies everything.
+ */
+const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reports_enabled",
   "ai_reports_unlimited",
   "ai_reviews_enabled",
-  "betting_enabled",
-  "bucks_dares_enabled",
-  "dare_v2",
-  "bucks_transfers_enabled",
-  "weekly_parlays_enabled",
-  "betting_player_bet_outcome_dm_enabled",
-  "betting_settlement_dm_enabled",
   "challenge_runs_enabled",
   "competition_builder_v2_enabled",
-  "custom_nights_enabled",
-  "duels_enabled",
   "hall_of_fame_enabled",
   "scoutql_relational_enabled",
-  "tournament_lobbies_enabled",
 ] as const;
 
 beforeEach(() => {
@@ -81,22 +92,19 @@ describe("production hard-disable policy", () => {
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
       provider: new StaticProvider({
-        ai_reports_enabled: true,
-        ai_reports_unlimited: true,
-        ai_reviews_enabled: true,
         betting_enabled: true,
-        bucks_dares_enabled: true,
-        dare_v2: true,
-        bucks_transfers_enabled: true,
-        weekly_parlays_enabled: true,
         betting_player_bet_outcome_dm_enabled: true,
         betting_settlement_dm_enabled: true,
-        challenge_runs_enabled: true,
+        bucks_transfers_enabled: true,
+        weekly_parlays_enabled: true,
+        bucks_dares_enabled: true,
+        dare_v2: true,
+        dare_extended_contracts_enabled: true,
+        dare_notifications_enabled: true,
         custom_nights_enabled: true,
-        duels_enabled: true,
-        hall_of_fame_enabled: true,
-        scoutql_relational_enabled: true,
         tournament_lobbies_enabled: true,
+        duels_enabled: true,
+        voice_assistant_enabled: true,
       }),
     });
 
@@ -104,6 +112,30 @@ describe("production hard-disable policy", () => {
       await expect(
         isPolicyEnabled(flag, { server: MY_SERVER, user: SOMEONE }),
       ).resolves.toBe(false);
+    }
+    await shutdownFeatureFlags();
+  });
+
+  test("leaves every other surface to its ordinary flag", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({
+        ai_reports_enabled: true,
+        ai_reports_unlimited: true,
+        ai_reviews_enabled: true,
+        challenge_runs_enabled: true,
+        competition_builder_v2_enabled: true,
+        hall_of_fame_enabled: true,
+        scoutql_relational_enabled: true,
+      }),
+    });
+
+    for (const flag of PRODUCTION_ALLOWED_FLAGS) {
+      await expect(
+        isPolicyEnabled(flag, { server: MY_SERVER, user: SOMEONE }),
+      ).resolves.toBe(true);
     }
     await shutdownFeatureFlags();
   });
