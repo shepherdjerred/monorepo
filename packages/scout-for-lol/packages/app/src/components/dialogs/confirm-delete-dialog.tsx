@@ -53,7 +53,7 @@ export function ConfirmDeleteDialog(props: {
           {props.error !== undefined && props.error !== null && (
             <p
               role="alert"
-              className="rounded-md border border-scout-danger/40 bg-scout-danger/10 px-3 py-2 text-sm text-scout-danger my-2"
+              className="rounded-md border border-scout-danger-fill/40 bg-scout-danger-fill/10 px-3 py-2 text-sm text-scout-danger my-2"
             >
               {props.error}
             </p>

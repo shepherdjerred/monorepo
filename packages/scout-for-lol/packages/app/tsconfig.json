@@ -7,6 +7,14 @@
     "jsxImportSource": "react",
     "noEmit": true
   },
-  "include": ["architecture.config.ts", "src/**/*", "vite.config.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "architecture.config.ts",
+    "src/**/*",
+    "scripts/**/*",
+    "e2e/**/*",
+    ".storybook/**/*",
+    "vite.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": ["node_modules", "dist", "storybook-static"]
 }

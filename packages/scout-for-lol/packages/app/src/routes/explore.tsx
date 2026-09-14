@@ -457,7 +457,7 @@ function ExploreErrorBanner(props: {
   readonly onRetry: () => void;
 }) {
   return (
-    <div className="rounded-md border border-scout-danger/40 bg-scout-danger/10 p-3 text-sm text-scout-ink space-y-2">
+    <div className="rounded-md border border-scout-danger-fill/40 bg-scout-danger-fill/10 p-3 text-sm text-scout-ink space-y-2">
       <div className="flex items-center justify-between gap-3">
         <span className="font-medium">{props.pageError}</span>
         <Button
@@ -474,7 +474,7 @@ function ExploreErrorBanner(props: {
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger/10 transition-colors group"
+            className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger-fill/10 transition-colors group"
           >
             <span>Technical details</span>
             <ChevronDown

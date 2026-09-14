@@ -297,7 +297,7 @@ button.scout-control > span:first-child {
 }
 
 .scout-field__error {
-  color: var(--scout-color-danger);
+  color: var(--scout-color-danger-on-surface);
 }
 
 :where([data-scout-mode="dark"]) .scout-field__error {

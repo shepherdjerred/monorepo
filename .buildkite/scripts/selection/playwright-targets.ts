@@ -24,6 +24,10 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
     reportDirectory: "scout-for-lol__activity",
   },
   {
+    package: "@scout-for-lol/app",
+    reportDirectory: "scout-for-lol__app",
+  },
+  {
     package: "@scout-for-lol/design-system",
     reportDirectory: "scout-for-lol__design-system",
   },
@@ -74,6 +78,7 @@ const SJER_RED_INPUTS = [
 
 const SCOUT_TARGETS = new Set([
   "@scout-for-lol/activity",
+  "@scout-for-lol/app",
   "@scout-for-lol/design-system",
   "@scout-for-lol/evals",
 ]);
