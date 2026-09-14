@@ -100,9 +100,16 @@ export async function fetchObject(
   const response = await client.send(
     new GetObjectCommand({ Bucket: bucket, Key: key }),
   );
-  const body = await (response.Body === undefined
-    ? Promise.resolve("")
-    : response.Body.transformToString());
+  if (response.Body === undefined) {
+    // A 200 with no body is not an empty object, it is a read that did not
+    // happen. Returning "" would count as a successful read holding no
+    // identities: the inventory's failure count would stay at zero and an
+    // operator would proceed to an irreversible rewrite on a map with a hole in
+    // it. The rewrite would be worse still — a marked object read as empty
+    // would reconcile its observation to the digest of nothing.
+    throw new Error(`S3 returned no body for ${bucket}/${key}`);
+  }
+  const body = await response.Body.transformToString();
   return { body, metadata: response.Metadata ?? {} };
 }
 

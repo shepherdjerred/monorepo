@@ -104,9 +104,15 @@ from. Identities also live under `failed-validations/` and in AI pipeline
 output, and an inventory that enumerated only the expected prefixes would leave
 them in the old domain permanently.
 
-It runs once. Every object written since the key swap already carries
-new-domain identifiers, so the set of old-domain identities is closed and cannot
-grow while the next step runs for days. Nothing needs re-scanning afterwards.
+**This is not the only inventory you will need.** The set of old-domain
+identities is closed only once the credential has actually been swapped, and
+that does not happen until step 8. Scout keeps ingesting with the old key
+throughout the multi-day resolve, so every game archived between here and step 4
+adds identities this pass cannot have seen. Step 4 re-runs it after the writes
+stop.
+
+The one case where a single pass suffices is a corpus whose cutover already
+happened — there the boundary is in the past and nothing can extend it.
 
 `--prefix games/2026/01/` narrows a run, which is how a failed slice is retried
 without re-reading 61 GiB.
@@ -193,9 +199,27 @@ a short-lived pod mounting `scout-storage-claim` to hold the volume, and delete
 it before scaling back up so the backend can remount.
 :::
 
-Run `collect` and then `resolve` to catch anything registered since step 3.
-`resolve` only works on identities already in the map, so skipping `collect`
-leaves a new account invisible until `apply` refuses it mid-window.
+Now that nothing is writing with the old key, re-run **both** discoveries to
+catch everything archived while the resolve was running:
+
+```bash
+# the archive, again — days of games have been added since step 2
+S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts inventory --out prod-2.jsonl
+S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory --out beta-2.jsonl
+bun scripts/migrate-puuid-key.ts seed --from prod-2.jsonl
+bun scripts/migrate-puuid-key.ts seed --from beta-2.jsonl
+
+# and the databases
+bun scripts/migrate-puuid-key.ts collect
+bun scripts/migrate-puuid-key.ts resolve
+```
+
+`seed` skips anything the map already knows, so the second inventory only adds
+what is genuinely new. Omit it and those identities are absent from the map: the
+rewrite skips them, and retiring the old key makes them unrecoverable.
+
+No cutover on these — the swap has not happened yet, so everything in the
+archive is still old-domain.
 
 ## 5. Load the map and rewrite the databases
 
