@@ -77,10 +77,19 @@ export const DELETED_SCHEDULE_IDS = [
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
-  // The weekly parlay feature was retired: its workflow types
-  // (`runScoutWeeklyParlayWorkflow`, `runScoutWeeklyParlayCatchupWorkflow`)
-  // are no longer in the bundle, so the live schedule must be deleted on
-  // startup rather than left firing a missing workflow.
+] as const;
+
+/**
+ * Retired schedules that did not live in `prod`.
+ *
+ * `DELETED_SCHEDULES` stamps the list above as `prod`, and reconciliation only
+ * deletes entries whose namespace matches the one it is running for — so a
+ * beta-only schedule listed there would never actually be deleted.
+ */
+const DELETED_BETA_SCHEDULE_IDS = [
+  // The weekly parlay feature was retired: its workflow types are no longer in
+  // the bundle, so the live beta schedule must be deleted on startup rather
+  // than left firing a missing workflow.
   "scout-weekly-parlay",
 ] as const;
 
@@ -89,28 +98,39 @@ export const DELETED_SCHEDULE_IDS = [
 // for one reconciliation so the gateway can terminate those executions before
 // the queue-owning workers receive a bundle without their handlers.
 const RETIRED_WORKFLOW_TYPES = [
-  "observeReviewSignalsWorkflow",
+  { workflowType: "observeReviewSignalsWorkflow", namespace: "prod" },
   // A weekly parlay execution stays open for a week, so a deploy can easily
   // land mid-run. Deleting the Schedule only stops future starts; without
   // these the open execution would keep retrying tasks against workers whose
-  // bundle no longer carries its handler.
-  "runScoutWeeklyParlayWorkflow",
-  "runScoutWeeklyParlayCatchupWorkflow",
-] as const;
+  // bundle no longer carries its handler. Both ran in beta, which is why the
+  // namespace travels with the entry — terminating only in prod would have
+  // left exactly the executions this is here to stop.
+  { workflowType: "runScoutWeeklyParlayWorkflow", namespace: "beta" },
+  { workflowType: "runScoutWeeklyParlayCatchupWorkflow", namespace: "beta" },
+] as const satisfies readonly {
+  workflowType: string;
+  namespace: TemporalNamespace;
+}[];
 
-export async function terminateRetiredWorkflowExecutions(client: {
-  workflow: {
-    list: (options: { query: string }) => AsyncIterable<{
-      workflowId: string;
-      runId: string;
-    }>;
-    getHandle: (
-      workflowId: string,
-      runId: string,
-    ) => { terminate: (reason?: string) => Promise<unknown> };
-  };
-}): Promise<void> {
-  for (const workflowType of RETIRED_WORKFLOW_TYPES) {
+export async function terminateRetiredWorkflowExecutions(
+  client: {
+    workflow: {
+      list: (options: { query: string }) => AsyncIterable<{
+        workflowId: string;
+        runId: string;
+      }>;
+      getHandle: (
+        workflowId: string,
+        runId: string,
+      ) => { terminate: (reason?: string) => Promise<unknown> };
+    };
+  },
+  namespace: TemporalNamespace,
+): Promise<void> {
+  const retired = RETIRED_WORKFLOW_TYPES.filter(
+    (entry) => namespace === "dev" || entry.namespace === namespace,
+  );
+  for (const { workflowType } of retired) {
     const query = `WorkflowType = "${workflowType}" AND ExecutionStatus = "Running"`;
     for await (const execution of client.workflow.list({ query })) {
       try {
@@ -157,10 +177,13 @@ async function pauseLegacyClaudeSchedules(client: Client): Promise<void> {
   }
 }
 
-export const DELETED_SCHEDULES = DELETED_SCHEDULE_IDS.map((id) => ({
-  id,
-  namespace: "prod" as const,
-}));
+export const DELETED_SCHEDULES = [
+  ...DELETED_SCHEDULE_IDS.map((id) => ({ id, namespace: "prod" as const })),
+  ...DELETED_BETA_SCHEDULE_IDS.map((id) => ({
+    id,
+    namespace: "beta" as const,
+  })),
+];
 
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
@@ -313,9 +336,9 @@ export async function registerSchedules(
     declaredIds,
     options.bootstrap,
   );
-  if (options.namespace === "prod") {
-    await terminateRetiredWorkflowExecutions(client);
-  }
+  // Namespace-scoped, not prod-only: a retired workflow terminates in the
+  // namespace it actually ran in.
+  await terminateRetiredWorkflowExecutions(client, options.namespace);
 
   for (const schedule of schedules) {
     const handle = scheduleClient.getHandle(schedule.id);

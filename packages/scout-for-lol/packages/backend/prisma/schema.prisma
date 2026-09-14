@@ -2664,13 +2664,20 @@ model PuuidKeyMigration {
 /// `discordId` is null for a guild-channel message and set for a DM, so a
 /// member's DM cadence is their own and does not consume the channel's.
 model FeatureTipImpression {
-  id        Int      @id @default(autoincrement())
-  serverId  String
-  discordId String?
+  id       Int    @id @default(autoincrement())
+  serverId String
+  /// Who the tip went to: a Discord user id for a DM, or "" for the guild
+  /// channel. A sentinel rather than null because the uniqueness below is what
+  /// makes a tip claim atomic, and Postgres treats NULLs as distinct — a
+  /// nullable column would leave every channel-scoped row unconstrained.
+  /// Deliberately not named `discordId`: it holds a sentinel as well as an id.
+  audienceId String @default("")
   /// A `TipKey` from the tips catalog. Validated on read.
   tipKey    String
   shownAt   DateTime @default(now())
 
-  @@index([serverId, discordId, shownAt])
-  @@index([serverId, discordId, tipKey])
+  /// The claim. Two concurrent deliveries to one audience race to insert here;
+  /// exactly one wins, so a tip cannot be selected twice.
+  @@unique([serverId, audienceId, tipKey])
+  @@index([serverId, audienceId, shownAt])
 }

@@ -6,39 +6,66 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import type { FeatureTip } from "#src/tips/tip-catalog.ts";
 import { withFeatureTip, withFeatureTipOnEmbed } from "#src/tips/tip-render.ts";
 import { selectTip, type TipSelectionDeps } from "#src/tips/tip-selection.ts";
-import { recordTipShown, type TipAudience } from "#src/tips/tip-state.ts";
+import {
+  claimTip,
+  releaseTipClaim,
+  type TipAudience,
+} from "#src/tips/tip-state.ts";
 
 const logger = createLogger("feature-tips");
 
 type TipTarget = TipAudience & { surface: FeatureTipSurface };
 
+/** What a caller must do once it knows whether the send landed. */
+export type TipOutcome = {
+  /** The send was accepted. Captures analytics; the claim already persisted. */
+  confirm: () => Promise<void>;
+  /** The send failed. Returns the claim so the tip stays eligible. */
+  release: () => Promise<void>;
+};
+
+const NO_TIP: TipOutcome = {
+  confirm: () => Promise.resolve(),
+  release: () => Promise.resolve(),
+};
+
 /**
- * Record the impression and capture the analytics event.
- *
- * Deliberately swallows its own failures: this runs after a message has
- * already reached Discord, so nothing here may turn a delivered message into a
- * caller-visible error. The cost of a lost write is one tip that may be
- * offered again, which is the safe direction.
+ * Both halves swallow their own failures: they run around a message that has
+ * already reached Discord, or failed to, and neither outcome may be turned
+ * into a caller-visible error by bookkeeping.
  */
-function confirmation(
+function outcome(
   tip: FeatureTip,
   audience: TipTarget,
   deps: TipSelectionDeps,
-): () => Promise<void> {
-  return async () => {
-    try {
-      await recordTipShown({ ...audience, tipKey: tip.key }, deps.db);
-      await captureFeatureTipShown({
-        guildId: audience.serverId,
-        tipKey: tip.key,
-        surface: audience.surface,
-      });
-    } catch (error) {
-      logger.error(
-        "Failed to record a delivered feature tip",
-        getErrorMessage(error),
-      );
-    }
+): TipOutcome {
+  return {
+    confirm: async () => {
+      try {
+        await captureFeatureTipShown({
+          guildId: audience.serverId,
+          tipKey: tip.key,
+          surface: audience.surface,
+        });
+      } catch (error) {
+        logger.error(
+          "Failed to capture a delivered feature tip",
+          getErrorMessage(error),
+        );
+      }
+    },
+    release: async () => {
+      try {
+        await releaseTipClaim({ ...audience, tipKey: tip.key }, deps.db);
+      } catch (error) {
+        // The tip stays claimed and simply is not offered again. Worse for
+        // discovery than a clean release, but never a wrong message.
+        logger.error(
+          "Failed to release an unsent feature tip",
+          getErrorMessage(error),
+        );
+      }
+    },
   };
 }
 
@@ -58,21 +85,22 @@ export async function decorateWithFeatureTip(
   message: MessageCreateOptions,
   audience: TipTarget,
   deps: TipSelectionDeps = {},
-): Promise<{
-  message: MessageCreateOptions;
-  confirm: () => Promise<void>;
-}> {
-  const unchanged = { message, confirm: () => Promise.resolve() };
+): Promise<{ message: MessageCreateOptions } & TipOutcome> {
+  const unchanged = { message, ...NO_TIP };
   try {
     const tip = await selectTip(audience, deps);
     if (tip === undefined) return unchanged;
 
     const decorated = withFeatureTip(message, tip);
     // `withFeatureTip` refuses a message with no embed or an occupied footer.
-    // Burning the tip on a message that cannot show it would retire it unseen.
+    // Checked before claiming, so a message that cannot show the tip does not
+    // retire it unseen.
     if (decorated === message) return unchanged;
 
-    return { message: decorated, confirm: confirmation(tip, audience, deps) };
+    if (!(await claimTip({ ...audience, tipKey: tip.key }, deps.db))) {
+      return unchanged;
+    }
+    return { message: decorated, ...outcome(tip, audience, deps) };
   } catch (error) {
     logger.error("Failed to select a feature tip", getErrorMessage(error));
     return unchanged;
@@ -88,8 +116,8 @@ export async function decorateEmbedWithFeatureTip(
   embed: EmbedBuilder,
   audience: TipTarget,
   deps: TipSelectionDeps = {},
-): Promise<{ embed: EmbedBuilder; confirm: () => Promise<void> }> {
-  const unchanged = { embed, confirm: () => Promise.resolve() };
+): Promise<{ embed: EmbedBuilder } & TipOutcome> {
+  const unchanged = { embed, ...NO_TIP };
   try {
     const tip = await selectTip(audience, deps);
     if (tip === undefined) return unchanged;
@@ -97,7 +125,10 @@ export async function decorateEmbedWithFeatureTip(
     const decorated = withFeatureTipOnEmbed(embed, tip);
     if (decorated === undefined) return unchanged;
 
-    return { embed: decorated, confirm: confirmation(tip, audience, deps) };
+    if (!(await claimTip({ ...audience, tipKey: tip.key }, deps.db))) {
+      return unchanged;
+    }
+    return { embed: decorated, ...outcome(tip, audience, deps) };
   } catch (error) {
     logger.error("Failed to select a feature tip", getErrorMessage(error));
     return unchanged;

@@ -220,6 +220,8 @@ async function deliverPrematchMessages(input: {
   >();
 
   for (const { channel, serverId } of input.channels) {
+    // Declared out here so a failed send can hand its tip claim back.
+    let tipped: Awaited<ReturnType<typeof decorateWithFeatureTip>> | undefined;
     try {
       const guildId = DiscordGuildIdSchema.parse(serverId);
       const betsOpen = input.bucks.bettingGuildIds.has(guildId);
@@ -232,7 +234,7 @@ async function deliverPrematchMessages(input: {
         fallbackEmbed: () =>
           buildFallbackPrematchEmbed(input.gameInfo, input.trackedPlayers),
       });
-      const tipped = await decorateWithFeatureTip(message, {
+      tipped = await decorateWithFeatureTip(message, {
         serverId: guildId,
         surface: "prematch",
       });
@@ -257,6 +259,7 @@ async function deliverPrematchMessages(input: {
         ]);
       }
     } catch (error) {
+      await tipped?.release();
       await input.recordDelivery?.({
         kind: "failed",
         channelId: channel,

@@ -51,5 +51,11 @@ You should not. Scout records each tip it delivers and never offers the same
 one to the same audience again, so the list only ever shrinks. A server that
 has found everything stops seeing tips entirely.
 
+That record is written before the message goes out, not after, and the database
+refuses a second copy of it. Two messages sent at the same moment therefore
+cannot pick the same tip — one of them claims it and the other simply carries
+no tip. If the send then fails, the claim is handed back and the tip stays
+available.
+
 Channel tips and DM tips are paced separately, so a direct message to one
 member does not use up the channel's tip.

@@ -11,10 +11,11 @@ export type TipAudience = {
   discordId?: DiscordAccountId | undefined;
 };
 
+/** "" is the guild-channel audience; see the model's sentinel note. */
 function audienceWhere(audience: TipAudience) {
   return {
     serverId: audience.serverId,
-    discordId: audience.discordId ?? null,
+    audienceId: audience.discordId ?? "",
   };
 }
 
@@ -44,20 +45,46 @@ export async function lastTipShownAt(
 }
 
 /**
- * Record a delivered tip.
+ * Claim a tip for this audience, returning whether the claim was won.
  *
- * Written after the message is accepted, never before: a tip that failed to
- * send must stay eligible rather than being silently burned.
+ * The insert IS the claim. Two deliveries to the same guild can run
+ * concurrently — two channels, or a post-match and a pre-match message — and
+ * both can read the same cooldown and shown-set before either writes. The
+ * unique constraint settles it: exactly one insert survives, so the same tip
+ * cannot go out twice.
+ *
+ * Claiming happens before the send rather than after, so the loser of a race
+ * never renders the tip at all. {@link releaseTipClaim} undoes the claim when
+ * the send then fails.
  */
-export async function recordTipShown(
+export async function claimTip(
   input: TipAudience & { tipKey: FeatureTipKey; shownAt?: Date },
   db: ExtendedPrismaClient = prisma,
+): Promise<boolean> {
+  const { count } = await db.featureTipImpression.createMany({
+    data: [
+      {
+        ...audienceWhere(input),
+        tipKey: input.tipKey,
+        ...(input.shownAt === undefined ? {} : { shownAt: input.shownAt }),
+      },
+    ],
+    skipDuplicates: true,
+  });
+  return count > 0;
+}
+
+/**
+ * Give a claimed tip back after a failed send, so it stays eligible.
+ *
+ * Deliberately narrow: it deletes only this audience's row for this tip, and
+ * only the caller that won the claim ever calls it.
+ */
+export async function releaseTipClaim(
+  input: TipAudience & { tipKey: FeatureTipKey },
+  db: ExtendedPrismaClient = prisma,
 ): Promise<void> {
-  await db.featureTipImpression.create({
-    data: {
-      ...audienceWhere(input),
-      tipKey: input.tipKey,
-      ...(input.shownAt === undefined ? {} : { shownAt: input.shownAt }),
-    },
+  await db.featureTipImpression.deleteMany({
+    where: { ...audienceWhere(input), tipKey: input.tipKey },
   });
 }

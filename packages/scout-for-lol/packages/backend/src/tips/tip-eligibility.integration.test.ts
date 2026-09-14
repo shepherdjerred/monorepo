@@ -22,6 +22,11 @@ import {
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { FEATURE_TIPS } from "#src/tips/tip-catalog.ts";
 import { eligibleTips } from "#src/tips/tip-eligibility.ts";
+import {
+  claimTip,
+  releaseTipClaim,
+  shownTipKeys,
+} from "#src/tips/tip-state.ts";
 
 const { prisma: db } = createTestDatabase("feature-tip-eligibility");
 const SERVER_ID = DiscordGuildIdSchema.parse("1200000000000000002");
@@ -35,6 +40,7 @@ const BUCKS_FLAGS = [
 ] as const;
 
 async function clearAll(): Promise<void> {
+  await db.featureTipImpression.deleteMany();
   await db.subscription.deleteMany();
   await db.player.deleteMany();
 }
@@ -128,5 +134,41 @@ describe("Bucks tip availability", () => {
       const tip = FEATURE_TIPS.find((candidate) => candidate.key === key);
       expect(tip?.flags).toContain("betting_enabled");
     }
+  });
+});
+
+describe("tip claims", () => {
+  test("only one of two concurrent claims for the same audience wins", async () => {
+    // Two deliveries to one guild can read the same cooldown and shown-set
+    // before either writes. The unique constraint is what stops both from
+    // sending the same tip.
+    const audience = { serverId: SERVER_ID };
+    const [first, second] = await Promise.all([
+      claimTip({ ...audience, tipKey: "competitions" }, db),
+      claimTip({ ...audience, tipKey: "competitions" }, db),
+    ]);
+    expect([first, second].filter(Boolean)).toHaveLength(1);
+    expect(await shownTipKeys(audience, db)).toEqual(new Set(["competitions"]));
+  });
+
+  test("a channel claim and a DM claim do not collide", async () => {
+    const serverId = SERVER_ID;
+    const discordId = DiscordAccountIdSchema.parse("100000000000000042");
+    expect(await claimTip({ serverId, tipKey: "duels" }, db)).toBe(true);
+    expect(await claimTip({ serverId, discordId, tipKey: "duels" }, db)).toBe(
+      true,
+    );
+    expect(await shownTipKeys({ serverId }, db)).toEqual(new Set(["duels"]));
+    expect(await shownTipKeys({ serverId, discordId }, db)).toEqual(
+      new Set(["duels"]),
+    );
+  });
+
+  test("releasing a claim makes the tip eligible again", async () => {
+    const audience = { serverId: SERVER_ID };
+    expect(await claimTip({ ...audience, tipKey: "dares" }, db)).toBe(true);
+    await releaseTipClaim({ ...audience, tipKey: "dares" }, db);
+    expect(await shownTipKeys(audience, db)).toEqual(new Set());
+    expect(await claimTip({ ...audience, tipKey: "dares" }, db)).toBe(true);
   });
 });

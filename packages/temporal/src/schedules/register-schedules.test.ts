@@ -8,6 +8,7 @@ import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts"
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
+  DELETED_SCHEDULES,
   buildSchedulePolicies,
   routeDynamicAgentTaskSchedule,
   terminateRetiredWorkflowExecutions,
@@ -601,7 +602,8 @@ test("terminates running executions of retired workflow types", async () => {
     },
   };
 
-  await terminateRetiredWorkflowExecutions(client);
+  // "dev" reconciles every namespace, so this covers the whole list.
+  await terminateRetiredWorkflowExecutions(client, "dev");
 
   expect(queries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
@@ -617,7 +619,7 @@ test("terminates running executions of retired workflow types", async () => {
   );
 });
 
-test("the retired list covers every workflow type this release removed", async () => {
+test("terminates a retired workflow in the namespace it actually ran in", async () => {
   // A week-long weekly parlay execution can still be open when this deploys.
   // Deleting its Schedule only stops future starts, so both handlers must be
   // terminated or the execution retries against a bundle without them.
@@ -636,16 +638,35 @@ test("the retired list covers every workflow type this release removed", async (
     },
   };
 
-  await terminateRetiredWorkflowExecutions(client);
+  // The weekly parlay schedule was beta-only. Terminating just in prod would
+  // have left exactly the week-long executions this is meant to stop.
+  await terminateRetiredWorkflowExecutions(client, "beta");
 
-  for (const workflowType of [
-    "runScoutWeeklyParlayWorkflow",
-    "runScoutWeeklyParlayCatchupWorkflow",
-  ]) {
-    expect(queries).toContain(
-      `WorkflowType = "${workflowType}" AND ExecutionStatus = "Running"`,
-    );
-  }
+  expect(queries).toEqual([
+    'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
+  ]);
+
+  const prodQueries: string[] = [];
+  await terminateRetiredWorkflowExecutions(
+    {
+      workflow: {
+        list({ query }: { query: string }) {
+          prodQueries.push(query);
+          return (async function* () {
+            // No executions; this asserts which types are queried.
+          })();
+        },
+        getHandle() {
+          return { terminate: () => Promise.resolve() };
+        },
+      },
+    },
+    "prod",
+  );
+  expect(prodQueries).toEqual([
+    'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+  ]);
 });
 
 describe("Glitter corpus schedule", () => {
@@ -828,8 +849,13 @@ describe("orphan schedule detection", () => {
     );
   });
 
-  test("the retired weekly parlay schedule is queued for deletion", () => {
-    expect(DELETED_SCHEDULE_IDS).toContain("scout-weekly-parlay");
+  test("the retired weekly parlay schedule is queued for deletion in beta", () => {
+    // Listing it among the prod ids would not delete it: reconciliation filters
+    // deletions by namespace, and this schedule only ever existed in beta.
+    const entry = DELETED_SCHEDULES.find(
+      (schedule) => schedule.id === "scout-weekly-parlay",
+    );
+    expect(entry?.namespace).toBe("beta");
     expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
       "scout-weekly-parlay",
     );

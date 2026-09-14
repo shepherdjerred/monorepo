@@ -140,6 +140,7 @@ export async function deliverToChannels(params: {
   ) => Promise<{
     message: MessageCreateOptions;
     confirm: () => Promise<void>;
+    release: () => Promise<void>;
   }>;
 }): Promise<{
   deliveredGuildIds: Set<DiscordGuildId>;
@@ -149,6 +150,9 @@ export async function deliverToChannels(params: {
   const messageIdsByChannel = new Map<DiscordChannelId, string>();
   const recordDelivery = params.recordDelivery ?? RECORD_NOTHING;
   for (const { channel, serverId } of params.channels) {
+    // Declared out here so a failed send can hand its tip claim back.
+    let decorated:
+      Awaited<ReturnType<NonNullable<typeof params.decorate>>> | undefined;
     const effectKey =
       params.effectKeyPrefix === undefined
         ? undefined
@@ -190,7 +194,7 @@ export async function deliverToChannels(params: {
       }
       await recordDelivery({ kind: "prepared", channelId: channel });
       const guildId = DiscordGuildIdSchema.parse(serverId);
-      const decorated =
+      decorated =
         params.decorate === undefined
           ? undefined
           : await params.decorate(params.message, guildId);
@@ -221,6 +225,9 @@ export async function deliverToChannels(params: {
         messageId: sentMessage.id,
       });
     } catch (error) {
+      // The decoration claimed its tip before the send; give it back so the
+      // audience stays eligible for it.
+      await decorated?.release();
       if (effectKey !== undefined && effectClaimed) {
         await recordScoutEffectFailure(effectKey, error);
       }
