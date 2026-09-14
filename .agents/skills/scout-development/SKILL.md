@@ -7,8 +7,8 @@ description: Develop, test, or operate Scout for League of Legends across its we
 
 Read `packages/scout-for-lol/AGENTS.md` and the closest package README before
 editing. The public marketing site, docs, management app, Discord bot, report
-renderer, report lake, desktop client, and Scout Temporal workers share one
-domain but have separate runtime boundaries.
+renderer, report lake, and Scout Temporal workers share one domain but have
+separate runtime boundaries.
 
 Preserve these contracts:
 
@@ -62,9 +62,9 @@ bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session
   The env var is what lets the backend skip the real secrets; `dev:design-audit`
   alone still demands them.
 
-Eight Scout workspaces have a bare `dev` script, so pick deliberately: `app` is
-the SPA behind `dev:web`, `frontend` and `docs-site` are Astro, `design-system`
-serves its own Vite instance, and `desktop` is Tauri.
+Seven Scout workspaces have a bare `dev` script, so pick deliberately: `app` is
+the SPA behind `dev:web`, `frontend` and `docs-site` are Astro, and
+`design-system` serves its own Vite instance.
 
 Verify UI changes in the browser rather than from source, and keep the
 screenshot or recording for the PR:

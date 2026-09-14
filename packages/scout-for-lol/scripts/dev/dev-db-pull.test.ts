@@ -211,6 +211,7 @@ describe("argv builders", () => {
       "public",
       "--extension=plpgsql",
       "--extension=pg_trgm",
+      '--exclude-table-data=public."ApiToken"',
       '--exclude-table-data=public."ExploreConversation"',
       '--exclude-table-data=public."InstallAttributionToken"',
       '--exclude-table-data=public."TournamentLobby"',
@@ -279,7 +280,10 @@ describe("handoffMessage", () => {
 
 describe("credential handling", () => {
   test("leaves no data for the credential-only tables", () => {
-    expect(EXCLUDED_TABLE_DATA).toEqual(["InstallAttributionToken"]);
+    expect(EXCLUDED_TABLE_DATA).toEqual([
+      "ApiToken",
+      "InstallAttributionToken",
+    ]);
   });
 
   test("redacts the live OAuth tokens and the share/lobby credentials", () => {
@@ -320,6 +324,7 @@ describe("credential handling", () => {
     // The tokens must never be written locally, so this list and the dump
     // must not drift apart.
     expect(tablesWithoutDumpedData()).toEqual([
+      "ApiToken",
       "ExploreConversation",
       "InstallAttributionToken",
       "TournamentLobby",

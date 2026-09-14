@@ -229,12 +229,14 @@ export function selectDumpableExtensions(
 /**
  * Tables whose rows are nothing but credentials.
  *
- * Their schema is restored and their data is not. `InstallAttributionToken.token`
- * is `NOT NULL` and unique, so there is
+ * Their schema is restored and their data is not. `ApiToken.token` remains
+ * excluded while a pull can target a deployed pre-retirement schema.
+ * `InstallAttributionToken.token` is `NOT NULL` and unique, so there is
  * no redacted value to substitute — and neither table shows up in a screen
  * worth looking at locally.
  */
 export const EXCLUDED_TABLE_DATA: readonly string[] = [
+  "ApiToken",
   "InstallAttributionToken",
 ];
 
