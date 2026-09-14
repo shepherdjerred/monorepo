@@ -192,10 +192,46 @@ export async function seedIdentities(
  * could rebuild it once the old key is gone. Riot forgetting an account does not
  * unmake the identifier it used to have.
  */
+/**
+ * Give up on nothing by accident.
+ *
+ * `stranded` is not a fact, it is a decision: an operator looked at an identity
+ * Riot no longer knows and accepted losing it forever. `strand` demands a flag
+ * for exactly that reason. A map file carrying the status would make the
+ * decision on their behalf — `apply` allows a stranded row and `verify`
+ * tolerates it, so an identity could be abandoned permanently with every gate
+ * green and no one having chosen it.
+ *
+ * So an imported stranding is downgraded to unfinished work. Deciding again on
+ * the target costs one command; not being asked costs an identity that nothing
+ * can recover once the old key is gone.
+ */
+function withoutBorrowedStrandings(rows: readonly MapRow[]): {
+  rows: MapRow[];
+  downgraded: number;
+} {
+  let downgraded = 0;
+  const out = rows.map((row) => {
+    if (row.status !== "stranded") {
+      return row;
+    }
+    downgraded++;
+    return { ...row, status: "unresolved" };
+  });
+  return { rows: out, downgraded };
+}
+
 export async function importMap(
   db: Db,
-  rows: readonly MapRow[],
-): Promise<{ inserted: number; updated: number }> {
+  incoming: readonly MapRow[],
+): Promise<{ inserted: number; updated: number; downgraded: number }> {
+  const { rows, downgraded } = withoutBorrowedStrandings(incoming);
+  if (downgraded > 0) {
+    console.log(
+      `  ${downgraded.toString()} imported strandings recorded as unresolved; ` +
+        `run \`strand --accept-stranded\` here to accept them`,
+    );
+  }
   const existingRows = await db.query(
     `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
   );
@@ -258,7 +294,7 @@ export async function importMap(
     );
     inserted++;
   }
-  return { inserted, updated };
+  return { inserted, updated, downgraded };
 }
 
 /** How many rows the map holds, for reporting a transfer's effect. */

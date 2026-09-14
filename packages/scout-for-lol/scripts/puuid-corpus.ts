@@ -25,7 +25,9 @@ import {
 import { rewriteCorpus } from "./puuid-corpus/rewrite.ts";
 import {
   hasObservations,
+  hasReceipts,
   recordRewrittenDigest,
+  repointReceipts,
 } from "./puuid-corpus/observations.ts";
 import { openDb } from "./puuid-migration/db.ts";
 import { asString } from "./puuid-migration/support.ts";
@@ -141,29 +143,36 @@ async function runRewrite(): Promise<void> {
 
   const db = await openDb();
   const tracksObservations = await hasObservations(db);
+  const tracksReceipts = await hasReceipts(db);
   let digestsUpdated = 0;
+  let receiptsMoved = 0;
   try {
     const result = await rewriteCorpus(createS3Client(), {
       bucket: requireBucket(),
       map,
       prefix: optionalFlag("--prefix"),
       dryRun,
-      onRewritten:
-        dryRun || !tracksObservations
-          ? undefined
-          : async (key, digest) => {
+      onRewritten: dryRun
+        ? undefined
+        : async (key, digest) => {
+            if (tracksObservations) {
               digestsUpdated += await recordRewrittenDigest(db, key, digest);
-            },
+            }
+            if (tracksReceipts) {
+              receiptsMoved += await repointReceipts(db, key, digest);
+            }
+          },
     });
-    if (tracksObservations) {
-      console.log(
-        `  ${digestsUpdated.toString()} MatchObservation artifact references re-pointed`,
-      );
-    } else {
-      console.log(
-        "  this database does not model MatchObservation; no artifact reference to move",
-      );
-    }
+    console.log(
+      tracksObservations
+        ? `  ${digestsUpdated.toString()} MatchObservation artifact references re-pointed`
+        : "  this database does not model MatchObservation; no artifact reference to move",
+    );
+    console.log(
+      tracksReceipts
+        ? `  ${receiptsMoved.toString()} raw-archive receipts re-pointed (staging receipts left as history)`
+        : "  this database records no processing receipts",
+    );
     if (result.failed > 0) {
       throw new Error(
         `${result.failed.toString()} objects failed to rewrite; re-run to retry them`,

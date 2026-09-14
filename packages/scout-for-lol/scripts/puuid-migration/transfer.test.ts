@@ -100,7 +100,7 @@ test("import does not carry appliedAt, which is a fact about the target", async 
       status: "resolved",
     },
   ]);
-  expect(result).toEqual({ inserted: 1, updated: 0 });
+  expect(result).toEqual({ inserted: 1, updated: 0, downgraded: 0 });
   const rows = await db.query(
     `SELECT "appliedAt" AS v, "newPuuid" AS n FROM "PuuidKeyMap"`,
   );
@@ -125,7 +125,7 @@ test("import updates an existing row, because the imported map is the newer answ
       status: "resolved",
     },
   ]);
-  expect(result).toEqual({ inserted: 0, updated: 1 });
+  expect(result).toEqual({ inserted: 0, updated: 1, downgraded: 0 });
   const rows = await db.query(
     `SELECT "status" AS s, "newPuuid" AS n FROM "PuuidKeyMap"`,
   );
@@ -322,7 +322,7 @@ test("import accepts a replacement identical to the one already held", async () 
       status: "resolved",
     },
   ]);
-  expect(result).toEqual({ inserted: 0, updated: 1 });
+  expect(result).toEqual({ inserted: 0, updated: 1, downgraded: 0 });
   await db.close();
 });
 
@@ -360,4 +360,45 @@ test("duplicate rows agreeing on both value and reason are collapsed", async () 
   expect(
     parseMapRows(`${lostLine("stranded")}\n${lostLine("stranded")}`),
   ).toHaveLength(1);
+});
+
+test("an imported stranding is downgraded, not honoured", async () => {
+  // `stranded` is a decision, not a fact: an operator accepted losing an
+  // identity forever, and `strand` demands a flag for it. A map file carrying
+  // the status would make that decision on their behalf — `apply` allows a
+  // stranded row and `verify` tolerates it, so the identity would be abandoned
+  // with every gate green and nobody having chosen it.
+  const db = await open();
+  const { importMap } = await import("./transfer.ts");
+  const result = await importMap(db, [
+    {
+      oldPuuid: OLD_A,
+      gameName: null,
+      tagLine: null,
+      newPuuid: null,
+      status: "stranded",
+    },
+  ]);
+  expect(result.downgraded).toBe(1);
+  const rows = await db.query(`SELECT "status" AS s FROM "PuuidKeyMap"`);
+  expect(rows[0]?.["s"]).toBe("unresolved");
+  await db.close();
+});
+
+test("a resolved mapping imports untouched", async () => {
+  const db = await open();
+  const { importMap } = await import("./transfer.ts");
+  const result = await importMap(db, [
+    {
+      oldPuuid: OLD_A,
+      gameName: "Zozio8z",
+      tagLine: "EUW",
+      newPuuid: NEW_A,
+      status: "resolved",
+    },
+  ]);
+  expect(result.downgraded).toBe(0);
+  const rows = await db.query(`SELECT "status" AS s FROM "PuuidKeyMap"`);
+  expect(rows[0]?.["s"]).toBe("resolved");
+  await db.close();
 });
