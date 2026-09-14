@@ -18,9 +18,13 @@ toolkit linear issue view SJ-123
 toolkit linear issue list --team <key>
 ```
 
-The configured workspace is `sjerred` (`monorepo`). Search before creating an
-issue. Read the issue, comments, relationships, project, and cycle before
-editing it.
+The configured workspace is `sjerred` (`monorepo`), which has separate `AI`
+and `SJ` teams. Search the `AI` team before creating an issue. Create every
+agent-generated issue in `AI`; do not assign a project unless the task names
+one. Never create an issue in `SJ`, which is reserved for human-created work.
+An agent may update an existing `SJ` issue only when the task explicitly
+identifies it. Read the issue, comments, relationships, project, and cycle
+before editing it.
 
 For mutations, inspect the command or API schema, name the exact target, and
 change only fields required by the task. Keep issue state synchronized with
