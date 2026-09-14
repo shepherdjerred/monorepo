@@ -72,10 +72,26 @@ wrong store — and the failure is silent: `verify` will pass against a scratch
 map while neither live database has been touched.
 
 ```bash
-SCRATCH="file:$HOME/puuid-harvest.sqlite"   # the laptop's working map
-PROD_DB="…"                                  # prod's own database
-BETA_DB="…"                                  # beta's own database
+export TRANSITION=2026-09-13                              # the date of this swap
+SCRATCH="file:$HOME/puuid-harvest-$TRANSITION.sqlite"     # the laptop's working map
+PROD_DB="…"                                               # prod's own database
+BETA_DB="…"                                               # beta's own database
 ```
+
+`TRANSITION` is exported because the file-creation command below reads it; it
+names a file, not a store, so it carries none of the risk that keeps
+`DATABASE_URL` unexported.
+
+The scratch file is named for the transition, and a later one must never reuse
+it. `seed` skips any identity the map already knows, including every replacement
+it has produced — which is right within a transition, because objects written
+after the cutover already name new-domain identities. But the next transition's
+old domain IS this one's new domain, so seeding into a stale file skips
+everything: nothing resolves, the export is empty, and `apply` and `verify` both
+pass having done nothing. The stranding surfaces only when the key is retired.
+`seed` says how many of the identities it skipped were replacements it had
+already produced; on the first seed of a new transition that number should be
+near zero.
 
 ## 1. Back up both databases
 
@@ -153,7 +169,8 @@ export OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=…
 # database that every phase then "succeeds" against. A scratch harvest file is
 # the one case where you do want it created, so do it explicitly.
 bun -e 'new (require("bun:sqlite").Database)(
-  `${process.env.HOME}/puuid-harvest.sqlite`, { create: true }).close()'
+  `${process.env.HOME}/puuid-harvest-${process.env.TRANSITION}.sqlite`,
+  { create: true }).close()'
 
 DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from prod.jsonl
 DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from beta.jsonl

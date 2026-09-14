@@ -115,6 +115,23 @@ try {
         `seed: ${result.added.toString()} identities added, ` +
           `${result.alreadyKnown.toString()} already known; map now holds ${seededTotal.toString()}`,
       );
+      if (result.alreadyReplacements > 0) {
+        // Seeding an identity this map already produced is normal WITHIN a
+        // transition: objects written after the cutover name new-domain
+        // identities, and re-resolving one would be meaningless.
+        //
+        // Across transitions it is the symptom of a reused scratch file. The
+        // identities being seeded are then the PREVIOUS run's replacements, so
+        // every one is skipped, nothing resolves, the export is empty, and
+        // `apply` and `verify` both pass having done nothing — with the
+        // stranding only appearing once the key is retired. Said out loud
+        // because the counts alone look like an ordinary no-op.
+        console.log(
+          `  ${result.alreadyReplacements.toString()} of them are replacements this map already produced. ` +
+            "Expected for post-cutover objects; if this is a NEW key transition, " +
+            "you are reusing an earlier transition's scratch file — start a fresh one.",
+        );
+      }
       break;
     }
     case "export": {

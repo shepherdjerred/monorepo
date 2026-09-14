@@ -47,9 +47,13 @@ test("seed adds identities from an inventory and reports what it skipped", async
   const db = await open();
   const { seedIdentities } = await import("./transfer.ts");
   const first = await seedIdentities(db, [OLD_A, OLD_B]);
-  expect(first).toEqual({ added: 2, alreadyKnown: 0 });
+  expect(first).toEqual({ added: 2, alreadyKnown: 0, alreadyReplacements: 0 });
   const again = await seedIdentities(db, [OLD_A, OLD_B]);
-  expect(again).toEqual({ added: 0, alreadyKnown: 2 });
+  expect(again).toEqual({
+    added: 0,
+    alreadyKnown: 2,
+    alreadyReplacements: 0,
+  });
   await db.close();
 });
 
@@ -63,7 +67,40 @@ test("seed refuses to record an identity that is already a migration RESULT", as
   );
   const { seedIdentities } = await import("./transfer.ts");
   const result = await seedIdentities(db, [NEW_A]);
-  expect(result).toEqual({ added: 0, alreadyKnown: 1 });
+  // Counted as a replacement as well: within one transition that is an
+  // ordinary post-cutover object, but it is also the only signal that a scratch
+  // file from an EARLIER transition is being reused, where every identity being
+  // seeded is a previous run's result and the whole migration silently no-ops.
+  expect(result).toEqual({
+    added: 0,
+    alreadyKnown: 1,
+    alreadyReplacements: 1,
+  });
+  await db.close();
+});
+
+test("seeding a stale transition's map reports every identity as a replacement", async () => {
+  // The reuse trap end to end. A second key transition seeded into the first
+  // transition's file: its old domain is that file's new domain, so nothing is
+  // added, nothing resolves, and the export would be empty while `apply` and
+  // `verify` both pass. The replacement count is what distinguishes this from
+  // an ordinary re-seed.
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_A, NEW_A],
+  );
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_B, NEW_B],
+  );
+  const { seedIdentities } = await import("./transfer.ts");
+  const result = await seedIdentities(db, [NEW_A, NEW_B]);
+  expect(result).toEqual({
+    added: 0,
+    alreadyKnown: 2,
+    alreadyReplacements: 2,
+  });
   await db.close();
 });
 

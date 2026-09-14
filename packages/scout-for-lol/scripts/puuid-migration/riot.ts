@@ -25,8 +25,8 @@ function limiterFor(
   published: { app: string; method: string },
 ): RateLimiter {
   return new RateLimiter(label, [
-    ...parseRateLimitHeader(published.app),
-    ...parseRateLimitHeader(published.method),
+    ...parseRateLimitHeader(published.app, "app"),
+    ...parseRateLimitHeader(published.method, "method"),
   ]);
 }
 
@@ -145,7 +145,10 @@ async function riotGet(
       response.headers.get("x-app-rate-limit"),
       response.headers.get("x-method-rate-limit"),
     );
-    limiter.observeUsage(response.headers.get("x-app-rate-limit-count"));
+    limiter.observeUsage(
+      response.headers.get("x-app-rate-limit-count"),
+      response.headers.get("x-method-rate-limit-count"),
+    );
 
     const outcome = await classify(response, attempt);
     if (outcome.kind === "account") {

@@ -19,8 +19,11 @@
 /** Fraction of every published limit this migration is allowed to use. */
 export const BUDGET_FRACTION = 0.8;
 
+/** Which header a window came from; its usage is counted separately. */
+export type RateScope = "app" | "method";
+
 /** One `count:seconds` pair from a Riot rate-limit header. */
-export type RateWindow = { limit: number; seconds: number };
+export type RateWindow = { limit: number; seconds: number; scope: RateScope };
 
 /**
  * Parse `"100:120,20:1"` into windows, already scaled to the budget.
@@ -29,7 +32,10 @@ export type RateWindow = { limit: number; seconds: number };
  * than throttle, which is a worse failure than running slightly over budget on
  * an implausibly small limit.
  */
-export function parseRateLimitHeader(header: string): RateWindow[] {
+export function parseRateLimitHeader(
+  header: string,
+  scope: RateScope,
+): RateWindow[] {
   const windows: RateWindow[] = [];
   for (const pair of header.split(",")) {
     const trimmed = pair.trim();
@@ -52,6 +58,7 @@ export function parseRateLimitHeader(header: string): RateWindow[] {
     windows.push({
       limit: Math.max(1, Math.floor(limit * BUDGET_FRACTION)),
       seconds,
+      scope,
     });
   }
   if (windows.length === 0) {
@@ -74,7 +81,10 @@ export class RateLimiter {
   #windows: RateWindow[];
   #recent: number[] = [];
   #adopted = false;
-  #observed: { at: number; counts: Map<number, number> } | undefined;
+  readonly #observed = new Map<
+    RateScope,
+    { at: number; counts: Map<number, number> }
+  >();
   readonly #label: string;
 
   constructor(label: string, windows: readonly RateWindow[]) {
@@ -98,8 +108,22 @@ export class RateLimiter {
    * other callers have already spent in a window is subtracted from what this
    * process may spend in it, which makes the migration yield to live traffic
    * automatically instead of being told a fixed share to keep out of.
+   *
+   * Both counts are read, and they are kept apart. Observing only the app count
+   * left the method window — the one that actually binds on the production key,
+   * at `1000:60` against a `500:10,30000:600` app limit — seeing no external
+   * usage at all, because a lookup keyed on window length finds no 60-second
+   * window among the app's. Live Account-V1 traffic was therefore invisible in
+   * exactly the window it was most likely to exhaust. Keying by scope as well
+   * also stops an app and a method window that happen to share a length from
+   * being credited with each other's usage.
    */
-  observeUsage(countHeader: string | null): void {
+  observeUsage(appCount: string | null, methodCount: string | null): void {
+    this.#observeScope("app", appCount);
+    this.#observeScope("method", methodCount);
+  }
+
+  #observeScope(scope: RateScope, countHeader: string | null): void {
     if (countHeader === null) {
       return;
     }
@@ -110,7 +134,7 @@ export class RateLimiter {
         counts.set(Number(match[2]), Number(match[1]));
       }
     }
-    this.#observed = { at: Date.now(), counts };
+    this.#observed.set(scope, { at: Date.now(), counts });
   }
 
   /**
@@ -122,7 +146,7 @@ export class RateLimiter {
    * and stall this process for no reason.
    */
   #externalUsage(window: RateWindow, now: number): number {
-    const observed = this.#observed;
+    const observed = this.#observed.get(window.scope);
     if (observed === undefined || now - observed.at > window.seconds * 1000) {
       return 0;
     }
@@ -148,9 +172,9 @@ export class RateLimiter {
     if (appHeader === null || this.#adopted) {
       return;
     }
-    const windows = parseRateLimitHeader(appHeader);
+    const windows = parseRateLimitHeader(appHeader, "app");
     if (methodHeader !== null) {
-      windows.push(...parseRateLimitHeader(methodHeader));
+      windows.push(...parseRateLimitHeader(methodHeader, "method"));
     }
     this.#windows = windows;
     this.#adopted = true;
@@ -210,7 +234,7 @@ export class RateLimiter {
         // the next attempt measures the key afresh. That is also why this can
         // never deadlock — the only thing refreshing an observation is a request
         // of ours, so the recovery must not depend on making one.
-        const observedAt = this.#observed?.at ?? now;
+        const observedAt = this.#observed.get(window.scope)?.at ?? now;
         wait = Math.max(wait, observedAt + spanMs - now + 1);
         continue;
       }

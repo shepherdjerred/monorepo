@@ -148,8 +148,13 @@ export async function exportMap(db: Db): Promise<MapRow[]> {
 export async function seedIdentities(
   db: Db,
   puuids: readonly string[],
-): Promise<{ added: number; alreadyKnown: number }> {
+): Promise<{
+  added: number;
+  alreadyKnown: number;
+  alreadyReplacements: number;
+}> {
   const known = new Set<string>();
+  const replacements = new Set<string>();
   for (const row of await db.query(
     `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
   )) {
@@ -157,12 +162,17 @@ export async function seedIdentities(
     const mapped = asOptionalString(row["newPuuid"]);
     if (mapped !== null) {
       known.add(mapped);
+      replacements.add(mapped);
     }
   }
 
   let added = 0;
+  let alreadyReplacements = 0;
   for (const puuid of puuids) {
     if (known.has(puuid)) {
+      if (replacements.has(puuid)) {
+        alreadyReplacements++;
+      }
       continue;
     }
     await db.exec(
@@ -172,7 +182,11 @@ export async function seedIdentities(
     known.add(puuid);
     added++;
   }
-  return { added, alreadyKnown: puuids.length - added };
+  return {
+    added,
+    alreadyKnown: puuids.length - added,
+    alreadyReplacements,
+  };
 }
 
 /**
