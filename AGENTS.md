@@ -21,7 +21,9 @@ deployment targets.
   Do not copy a static workspace tree into agent guidance.
 
 Do not turn plans, work logs, or historical rollout details into repository
-documents. Track unfinished work in Linear or the PR.
+documents. Track unfinished work in the Linear `AI` team or the PR. Never
+create an issue in `SJ`, which is reserved for human-created work; update an
+existing `SJ` issue only when the task explicitly identifies it.
 
 ## Workspace and runtime
 

@@ -52,6 +52,9 @@ project `AGENTS.md` or skill.
 
 - Follow the repository's branch and PR workflow. Do not create or merge a PR
   unless the task authorizes it.
+- In the `sjerred` Linear workspace, create agent-generated issues only in the
+  `AI` team. `SJ` is reserved for human-created issues; an agent may update an
+  existing `SJ` issue only when the task explicitly identifies it.
 - Visual and interactive changes ship with the smallest artifact that proves the
   behavior, attached to the PR: a screenshot for a state, a short recording for
   a flow, or a rendered asset. Capture it while verifying, not after review.
