@@ -455,11 +455,10 @@ why the read-time remap
 stays in place. Once the archive holds no old identifiers it is a no-op, and it
 is still correct for a restore and for stranded identities.
 
-It resolves one mapping rather than a chain, so it can only carry a restore
-across the transition whose map it holds. That is sufficient because each
-transition's map is archived rather than accumulated; if they were left to pile
-up, a restore predating an earlier transition would be translated one hop into a
-domain nothing else uses.
+It composes the retained mappings to their terminal replacement, so a restore
+predating any earlier transition still lands in the current domain. Keep the
+previous rows in the live map when starting a later transition; dropping or
+renaming them would remove the history this recovery path needs.
 
 **Observability tags, logs and traces.** Sentry, Bugsink, Loki and Tempo keep
 whatever they recorded, and age out on their own retention.
