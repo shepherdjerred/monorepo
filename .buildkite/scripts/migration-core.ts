@@ -247,6 +247,18 @@ const sitePaths = {
     "packages/glitter-context",
     ...deployScripts,
   ],
+  // The Storybook catalogs. Scoped to the two packages that build them rather
+  // than all of `packages/scout-for-lol`, so a backend or bot change does not
+  // redeploy a component catalog neither of them appears in.
+  "site-scout-design-system": [
+    ...workspacePaths,
+    "packages/scout-for-lol/packages/design-system",
+    "packages/scout-for-lol/packages/app",
+    "packages/scout-for-lol/packages/data",
+    "packages/scout-for-lol/scripts/build-storybook-site.ts",
+    "packages/scout-for-lol/package.json",
+    ...deployScripts,
+  ],
   "site-scout": [
     ...workspacePaths,
     "packages/scout-for-lol",
