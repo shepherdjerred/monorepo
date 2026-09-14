@@ -35,6 +35,7 @@ Monorepo workflows:
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
   deployed [SELECTOR]          Trace a commit or service to the live homelab
   screenshot <PKG> [ROUTE]     Start a site and capture a browser screenshot
+  screenshot-server <PKG>      Start a site without browser credentials
   alerts <list|show>           Query the durable alert ledger
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
@@ -106,6 +107,16 @@ async function main(): Promise<void> {
       const { handleScreenshotCommand } =
         await import("./handlers/screenshot.ts");
       await handleScreenshotCommand(subcommand, args.slice(1));
+      return;
+    }
+    case "screenshot-server": {
+      const { screenshotServerCommand } =
+        await import("./commands/screenshot/server.ts");
+      if (subcommand === undefined || args.length !== 2) {
+        console.error("Usage: toolkit screenshot-server <package>");
+        process.exit(1);
+      }
+      await screenshotServerCommand(subcommand);
       return;
     }
     case "alerts": {

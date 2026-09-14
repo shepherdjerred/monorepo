@@ -63,7 +63,8 @@ export const PACKAGES: PackageEntry[] = [
   {
     alias: "scout-app",
     cwd: "packages/scout-for-lol",
-    devCommand: ["bun", "run", "dev:web"],
+    devCommand: ["bun", "run", "dev:design-audit"],
+    serverEnv: { SCOUT_DESIGN_AUDIT_LOCAL_BOOT: "true" },
     // dev:web boots the backend (:3000) AND the Vite dev server; the Vite
     // port is what a browser actually navigates to (it proxies /trpc +
     // /api to the backend), so that's the port this entry probes/waits on.

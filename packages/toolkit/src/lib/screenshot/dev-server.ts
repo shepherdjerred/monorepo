@@ -28,6 +28,21 @@ async function probeReady(url: string, timeoutMs: number): Promise<boolean> {
 // Bun.connect requires socket lifecycle handlers; this probe only cares
 // whether the connection opens at all, so every handler is a no-op.
 const noopSocketHandler = (): void => undefined;
+const DEV_SERVER_BLOCKED_ENV = new Set([
+  "PINCHTAB_CONFIG",
+  "PINCHTAB_SESSION",
+  "PINCHTAB_TOKEN",
+]);
+
+function devServerEnvironment(): Record<string, string> {
+  const environment: Record<string, string> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (value !== undefined && !DEV_SERVER_BLOCKED_ENV.has(key)) {
+      environment[key] = value;
+    }
+  }
+  return environment;
+}
 
 /** Can we open a TCP connection to `hostname:port`? True means something is
  * listening there. */
@@ -111,7 +126,11 @@ export async function ensureDevServer(
   // isolated PinchTab tab instead.
   const proc = Bun.spawn(entry.devCommand, {
     cwd: `${root}/${entry.cwd}`,
-    env: { ...Bun.env, ...options.envOverrides, BROWSER: "none" },
+    env: {
+      ...devServerEnvironment(),
+      ...options.envOverrides,
+      BROWSER: "none",
+    },
     stdout: "pipe",
     stderr: "pipe",
     detached: true,

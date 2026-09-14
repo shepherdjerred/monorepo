@@ -25,6 +25,8 @@ export type ScreenshotCommandOptions = {
   viewport?: { width: number; height: number } | undefined;
   theme?: "light" | "dark" | undefined;
   fullPage?: boolean | undefined;
+  /** Use an already-running server instead of spawning one. */
+  baseUrl?: string | undefined;
 };
 
 export type ScreenshotCommandResult = {
@@ -101,11 +103,14 @@ export async function screenshotCommand(
     // it spawns — before it waits for readiness — so a signal during startup
     // still tears the child down (no window where the process is alive but
     // unregistered).
-    const devServer = await ensureDevServer(entry, {
-      envOverrides: options.envOverrides,
-      timeoutMs: options.timeoutMs,
-      registerCleanup,
-    });
+    const devServer =
+      options.baseUrl === undefined
+        ? await ensureDevServer(entry, {
+            envOverrides: { ...entry.serverEnv, ...options.envOverrides },
+            timeoutMs: options.timeoutMs,
+            registerCleanup,
+          })
+        : { baseUrl: options.baseUrl, stop: () => Promise.resolve() };
 
     try {
       const { path } = await captureScreenshot({

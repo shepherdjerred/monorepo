@@ -94,6 +94,11 @@ service (`scout`), variant (`scout/prod`), or commit. Use `--json`,
 development port and drives a PinchTab-controlled browser. It fails if the port
 is already occupied rather than capturing an unrelated process.
 
+For credential-separated captures, run `toolkit screenshot-server <package>` in
+one container and pass its URL to `toolkit screenshot <package> [route]
+--base-url <url>` from a separate container. The server container never receives
+PinchTab credentials or config.
+
 ### Operations and local history
 
 - `toolkit alerts list|show` queries the durable alert occurrence ledger.

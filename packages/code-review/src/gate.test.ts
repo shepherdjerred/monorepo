@@ -9,6 +9,7 @@ import {
 } from "./gate.ts";
 import { codexProvider } from "./providers/codex.ts";
 import { greptileProvider } from "./providers/greptile.ts";
+import { qodoProvider } from "./providers/qodo.ts";
 import type { ReviewThread } from "./types.ts";
 
 function thread(overrides: Partial<ReviewThread>): ReviewThread {
@@ -38,13 +39,34 @@ function policy(
 }
 
 describe("reviewGateSkipReasonForAuthor", () => {
-  test("skips a GitHub Bot author when Codex cannot review it", () => {
+  test("skips a GitHub Bot author when the provider cannot review it", () => {
     expect(
       reviewGateSkipReasonForAuthor({
         author: {
           login: "long-summer-intern[bot]",
           type: "Bot",
         },
+        provider: qodoProvider,
+      }),
+    ).toBe("bot-author");
+  });
+
+  test("requires Codex review for a GitHub App-authored PR", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "justin-principal-engineer[bot]",
+          type: "Bot",
+        },
+        provider: codexProvider,
+      }),
+    ).toBeNull();
+  });
+
+  test("skips other GitHub App-authored PRs for Codex", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: { login: "renovate[bot]", type: "Bot" },
         provider: codexProvider,
       }),
     ).toBe("bot-author");
