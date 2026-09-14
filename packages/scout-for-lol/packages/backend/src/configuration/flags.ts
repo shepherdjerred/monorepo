@@ -129,6 +129,17 @@ const LIMIT_REGISTRY: Record<LimitName, LimitConfig> = {
 type FlagOverride = {
   value: boolean;
   attributes: FlagAttributes;
+  /**
+   * Early access for the beta guild, and nothing more.
+   *
+   * The registry is the fail-closed fallback for when Flipt is unavailable,
+   * and the beta guild carries the same Discord id in both deployments. An
+   * unqualified rollout here would therefore switch a surface on in production
+   * for that guild the moment its hard disable is lifted. Marking the override
+   * beta-only keeps the fallback matching Flipt's production state, where the
+   * same flags carry no rollout at all.
+   */
+  betaOnly?: true;
 };
 
 /**
@@ -211,16 +222,35 @@ export function isFeatureHardDisabled(name: FlagName): boolean {
 }
 
 /**
+ * The registry overrides that apply to the running deployment.
+ *
+ * Production drops every beta-only rollout, so a flag whose only affirmative
+ * entry is beta early access falls back to its default there. This is what
+ * keeps lifting a hard disable from switching a surface on by itself: the
+ * production decision moves to Flipt rather than arriving with the deploy.
+ */
+function applicableOverrides(config: FlagConfig): FlagOverride[] {
+  if (resolveEnvironment() !== "prod") {
+    return config.overrides;
+  }
+  return config.overrides.filter((override) => override.betaOnly !== true);
+}
+
+/**
  * Central registry for all boolean flags
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   hall_of_fame_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   challenge_runs_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   // Direct duels and structured events stay disabled in beta and production
   // until Riot's written approval for classic objective rules and sub-20
@@ -236,7 +266,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   },
   competition_builder_v2_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   ai_reports_enabled: {
     default: false,
@@ -244,12 +276,13 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       {
         value: true,
         attributes: { server: MY_SERVER },
+        betaOnly: true,
       },
     ],
   },
   ai_reports_unlimited: {
     default: false,
-    overrides: [{ value: true, attributes: { user: ME } }],
+    overrides: [{ value: true, attributes: { user: ME }, betaOnly: true }],
   },
   /**
    * Tournament-code custom lobbies (`/lobby`).
@@ -268,6 +301,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       {
         value: true,
         attributes: { server: MY_SERVER },
+        betaOnly: true,
       },
     ],
   },
@@ -317,7 +351,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // because it exposes a wider query surface than Dare v2 creation itself.
   scoutql_relational_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   // Fee-bearing Bryan Bucks wallet transfers. This is narrower than the
   // betting economy itself, so the domain requires both flags. Production's
@@ -526,7 +562,7 @@ export function getFlag(
   }
   const config = FLAG_REGISTRY[name];
   const override: boolean | undefined = findBestMatch(
-    config.overrides,
+    applicableOverrides(config),
     attributes,
   );
   return override ?? config.default;
@@ -623,7 +659,7 @@ function listWholeGuildOverrides(
   }
 
   const guilds = new Set<DiscordGuildId>();
-  for (const override of config.overrides) {
+  for (const override of applicableOverrides(config)) {
     if (!accept(override.value)) {
       continue;
     }

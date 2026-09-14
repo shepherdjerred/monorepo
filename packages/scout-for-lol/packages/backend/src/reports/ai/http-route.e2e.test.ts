@@ -11,6 +11,10 @@
  * makes the auth decision observable by the error message: a denied caller is
  * rejected with the missing permission, an authorized one with the
  * feature-disabled message.
+ *
+ * The same fall-through is what keeps production safe now that the flag governs
+ * this route instead of the hard-disable policy: the flag carries no production
+ * rollout, so production authorization ends at the disabled 403.
  */
 
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
@@ -100,13 +104,26 @@ afterEach(() => {
 });
 
 describe("report AI stream endpoint authorization", () => {
-  test("is absent in production before authorization or generation", async () => {
+  test("generates nothing in production even for an authorized caller", async () => {
+    // The route is no longer absent in production: ai_reports_enabled left the
+    // hard-disable policy, so the flag governs it like any other surface. What
+    // must still hold is that production reaches no LLM call — the flag carries
+    // no production rollout, so an authorized caller lands on the disabled 403
+    // rather than a generation.
     Bun.env["ENVIRONMENT"] = "prod";
     resetConfigurationForTests();
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedGrants(
+      permissionKey({ resource: "reports", action: "create" }),
+      permissionKey({ resource: "reports", action: "read" }),
+    );
 
     const res = await post();
-    expect(res?.status).toBe(404);
-    expect(ErrBody.parse(await res?.json()).error).toBe("Not found.");
+    expect(res?.status).toBe(403);
+    const body = ErrBody.parse(await res?.json());
+    expect(body.error).not.toContain("reports:create");
+    expect(body.error).not.toContain("reports:read");
+    expect(body.error.toLowerCase()).toContain("not enabled");
   });
 
   test("member without reports:create is denied on the missing permission", async () => {

@@ -15,6 +15,7 @@ import {
   isPolicyEnabled,
   listGuildsWithFlagDeclared,
   listGuildsWithFlagEnabled,
+  ME,
   MY_SERVER,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
@@ -114,6 +115,28 @@ describe("production hard-disable policy", () => {
       ).resolves.toBe(false);
     }
     await shutdownFeatureFlags();
+  });
+
+  test("drops beta rollouts from the production fallback", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    for (const flag of PRODUCTION_ALLOWED_FLAGS) {
+      expect(getFlag(flag, { server: MY_SERVER, user: ME })).toBe(false);
+      expect(listGuildsWithFlagEnabled(flag)).toEqual([]);
+    }
+  });
+
+  test("keeps those same beta rollouts outside production", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    resetConfigurationForTests();
+
+    expect(getFlag("hall_of_fame_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("challenge_runs_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("ai_reports_unlimited", { user: ME })).toBe(true);
+    expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
+      MY_SERVER,
+    ]);
   });
 
   test("leaves every other surface to its ordinary flag", async () => {
