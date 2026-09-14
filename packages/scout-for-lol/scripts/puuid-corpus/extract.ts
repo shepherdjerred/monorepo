@@ -171,8 +171,11 @@ function prematchSightings(doc: Record<string, unknown>): Sighting[] {
 export function unknownShapeSightings(body: string): Sighting[] {
   const out: Sighting[] = [];
   const seen = new Set<string>();
-  for (const match of body.matchAll(/[\w-]{78}/gu)) {
-    const token = match[0];
+  for (const match of body.matchAll(/[\w-]+/gu)) {
+    const token = asPuuid(match[0]);
+    if (token === null) {
+      continue;
+    }
     if (!seen.has(token)) {
       seen.add(token);
       out.push({ puuid: token, riotId: null, at: 0 });

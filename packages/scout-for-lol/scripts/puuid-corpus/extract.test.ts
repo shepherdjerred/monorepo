@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { foldSightings, sightingsIn, splitRiotId } from "./extract.ts";
+import {
+  foldSightings,
+  sightingsIn,
+  splitRiotId,
+  unknownShapeSightings,
+} from "./extract.ts";
 
 const A = `A${"a".repeat(77)}`;
 const B = `B${"b".repeat(77)}`;
@@ -87,6 +92,14 @@ describe("sightingsIn — timeline", () => {
     });
     expect(sightings.every((s) => s.riotId === null)).toBe(true);
     expect(sightings.map((s) => s.puuid)).toEqual([A, A]);
+  });
+});
+
+describe("unknownShapeSightings", () => {
+  test("does not extract a PUUID-shaped substring from a longer token", () => {
+    expect(unknownShapeSightings(`prefix ${"x".repeat(79)} suffix`)).toEqual(
+      [],
+    );
   });
 });
 
