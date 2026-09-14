@@ -35,7 +35,7 @@ export const Destructive: Story = {
 };
 
 export const Sizes: Story = {
-  args: { children: "Sizes" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
       <Button size="sm">Small</Button>
@@ -50,7 +50,7 @@ export const Disabled: Story = {
 };
 
 export const Icon: Story = {
-  args: { children: "Icon" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <IconButton label="Show details">
       <Info />

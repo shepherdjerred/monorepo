@@ -28,14 +28,14 @@ export const LoadingWithLabel: Story = {
 };
 
 export const Error: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <ErrorState message="Riot returned 503 while fetching the last five Ranked Solo/Duo matches." />
   ),
 };
 
 export const ErrorWithRetry: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <ErrorState
       title="Match ingest failed"
@@ -46,12 +46,12 @@ export const ErrorWithRetry: Story = {
 };
 
 export const Permission: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <PermissionState />,
 };
 
 export const PermissionWithAction: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <PermissionState
       message="Managing subscriptions for the Bearded Lyfe guild needs the Manage Server permission in Discord."
@@ -61,7 +61,7 @@ export const PermissionWithAction: Story = {
 };
 
 export const Stale: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <StaleState
       errors={[

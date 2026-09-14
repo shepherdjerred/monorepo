@@ -50,8 +50,8 @@ function ControlledPopover() {
 
 export const Default: Story = {
   args: {},
-  render: () => (
-    <Popover>
+  render: (args) => (
+    <Popover {...args}>
       <PopoverTrigger asChild>
         <Button variant="outline">Match details</Button>
       </PopoverTrigger>
@@ -69,8 +69,8 @@ export const Default: Story = {
 
 export const WithForm: Story = {
   args: {},
-  render: () => (
-    <Popover>
+  render: (args) => (
+    <Popover {...args}>
       <PopoverTrigger asChild>
         <IconButton label="Filter matches" variant="ghost">
           <Filter />
@@ -99,9 +99,9 @@ export const WithForm: Story = {
 
 export const AlignedEnd: Story = {
   args: {},
-  render: () => (
+  render: (args) => (
     <div style={{ display: "flex", justifyContent: "flex-end" }}>
-      <Popover>
+      <Popover {...args}>
         <PopoverTrigger asChild>
           <Button variant="outline">Ingest status</Button>
         </PopoverTrigger>
@@ -119,6 +119,6 @@ export const AlignedEnd: Story = {
 };
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <ControlledPopover />,
 };

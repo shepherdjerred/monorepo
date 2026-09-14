@@ -113,8 +113,8 @@ function RegionMenu() {
 
 export const Default: Story = {
   args: {},
-  render: () => (
-    <DropdownMenu>
+  render: (args) => (
+    <DropdownMenu {...args}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Report actions</Button>
       </DropdownMenuTrigger>
@@ -136,8 +136,8 @@ export const Default: Story = {
 
 export const IconTrigger: Story = {
   args: {},
-  render: () => (
-    <DropdownMenu>
+  render: (args) => (
+    <DropdownMenu {...args}>
       <DropdownMenuTrigger asChild>
         <IconButton label="Match options" variant="ghost">
           <MoreHorizontal />
@@ -154,19 +154,19 @@ export const IconTrigger: Story = {
 };
 
 export const CheckboxItems: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <QueueFilterMenu />,
 };
 
 export const RadioItems: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <RegionMenu />,
 };
 
 export const Submenu: Story = {
   args: {},
-  render: () => (
-    <DropdownMenu>
+  render: (args) => (
+    <DropdownMenu {...args}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Subscription</Button>
       </DropdownMenuTrigger>

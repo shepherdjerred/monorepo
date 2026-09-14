@@ -105,21 +105,26 @@ function ChampionCombobox(props: {
 }
 
 export const Default: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ChampionCombobox />,
 };
 
 export const OpenOnEmptyQuery: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ChampionCombobox openOnEmptyQuery />,
 };
 
 export const Loading: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ChampionCombobox isLoading openOnEmptyQuery />,
 };
 
 export const Invalid: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ChampionCombobox invalid />,
 };
 
 export const Disabled: Story = {
+  parameters: { controls: { disable: true } },
   render: () => <ChampionCombobox disabled />,
 };

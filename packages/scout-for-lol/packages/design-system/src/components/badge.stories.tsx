@@ -26,7 +26,7 @@ export const Destructive: Story = {
 };
 
 export const AllVariants: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div
       style={{
@@ -45,7 +45,7 @@ export const AllVariants: Story = {
 };
 
 export const ChampionTags: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div
       style={{

@@ -85,7 +85,7 @@ function TextareaField() {
 }
 
 export const Default: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <DescribedField />
@@ -94,7 +94,7 @@ export const Default: Story = {
 };
 
 export const WithError: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <ErroredField />
@@ -103,7 +103,7 @@ export const WithError: Story = {
 };
 
 export const MultilineInput: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <TextareaField />
@@ -112,7 +112,7 @@ export const MultilineInput: Story = {
 };
 
 export const Section: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <FormSection
       legend="Subscription"
@@ -145,7 +145,7 @@ export const Section: Story = {
 };
 
 export const SemanticFormStates: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <form
       aria-label="Semantic form states"

@@ -28,7 +28,7 @@ export const Default: Story = {
 };
 
 export const TextLines: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={stack}>
       <Skeleton style={{ height: "1rem", width: "16rem" }} />
@@ -39,7 +39,7 @@ export const TextLines: Story = {
 };
 
 export const Avatar: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
       <Skeleton style={circle("3rem")} />
@@ -52,7 +52,7 @@ export const Avatar: Story = {
 };
 
 export const MatchCard: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <Card role="status" aria-busy="true" aria-label="Loading match report">
       <CardHeader
@@ -76,7 +76,7 @@ export const MatchCard: Story = {
 };
 
 export const MatchHistoryList: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div role="status" aria-busy="true" aria-label="Loading match history">
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>

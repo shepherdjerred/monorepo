@@ -33,6 +33,7 @@ export const Neutral: Story = {
 
 export const SubscriptionStates: Story = {
   args: { status: "info", children: "Subscription states" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <StatusBadge status="success">Active</StatusBadge>
@@ -46,6 +47,7 @@ export const SubscriptionStates: Story = {
 
 export const MatchOutcomes: Story = {
   args: { status: "success", children: "Match outcomes" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <StatusBadge status="success">Win · +21 LP</StatusBadge>

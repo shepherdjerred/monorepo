@@ -72,11 +72,13 @@ function ChampionField(props: {
 
 export const Empty: Story = {
   args: { value: undefined, onChange: noop },
+  parameters: { controls: { disable: true } },
   render: () => <ChampionField label="Champion" />,
 };
 
 export const Preselected: Story = {
   args: { value: undefined, onChange: noop },
+  parameters: { controls: { disable: true } },
   render: () => (
     <ChampionField label="Champion" initial={findChampion("Ahri")} />
   ),
@@ -84,6 +86,7 @@ export const Preselected: Story = {
 
 export const RestrictedPool: Story = {
   args: { value: undefined, onChange: noop },
+  parameters: { controls: { disable: true } },
   render: () => (
     <ChampionField
       label="Mid lane pool"
@@ -97,6 +100,7 @@ export const RestrictedPool: Story = {
 
 export const Required: Story = {
   args: { value: undefined, onChange: noop },
+  parameters: { controls: { disable: true } },
   render: () => (
     <ChampionField
       label="Champion for this dare"
@@ -108,6 +112,7 @@ export const Required: Story = {
 
 export const Invalid: Story = {
   args: { value: undefined, onChange: noop },
+  parameters: { controls: { disable: true } },
   render: () => (
     <ChampionField
       label="Champion"
@@ -119,6 +124,7 @@ export const Invalid: Story = {
 
 export const Disabled: Story = {
   args: { value: undefined, onChange: noop },
+  parameters: { controls: { disable: true } },
   render: () => (
     <ChampionField
       label="Champion"

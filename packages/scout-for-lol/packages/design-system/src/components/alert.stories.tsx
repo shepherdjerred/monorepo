@@ -98,7 +98,7 @@ export const DescriptionOnly: Story = {
 };
 
 export const AllTones: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <Alert tone="info" icon={<Info size={18} />}>

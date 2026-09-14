@@ -69,20 +69,20 @@ function RegionSelect(props: { defaultValue?: string }) {
 }
 
 export const Default: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <RegionSelect />,
 };
 
 export const WithDefaultValue: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <RegionSelect defaultValue="kr" />,
 };
 
 export const Grouped: Story = {
-  args: {},
-  render: () => (
+  args: { defaultValue: "weekly-ranked" },
+  render: (args) => (
     <div style={{ maxWidth: "22rem" }}>
-      <Select defaultValue="weekly-ranked">
+      <Select {...args}>
         <SelectTrigger aria-label="Report template">
           <SelectValue />
         </SelectTrigger>
@@ -106,10 +106,10 @@ export const Grouped: Story = {
 
 export const WithFieldAndError: Story = {
   args: {},
-  render: () => (
+  render: (args) => (
     <div style={{ maxWidth: "22rem" }}>
       <Field>
-        <Select>
+        <Select {...args}>
           <SelectTrigger
             aria-label="Delivery channel"
             aria-invalid="true"
@@ -132,11 +132,11 @@ export const WithFieldAndError: Story = {
 };
 
 export const Disabled: Story = {
-  args: {},
-  render: () => (
+  args: { disabled: true, defaultValue: "na1" },
+  render: (args) => (
     <div style={{ maxWidth: "22rem" }}>
       <Field>
-        <Select disabled defaultValue="na1">
+        <Select {...args}>
           <SelectTrigger
             aria-label="Riot region"
             aria-describedby="select-region-description"
@@ -160,6 +160,6 @@ export const Disabled: Story = {
 };
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <ControlledQueue />,
 };

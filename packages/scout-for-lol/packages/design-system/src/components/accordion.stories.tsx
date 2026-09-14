@@ -17,9 +17,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { type: "single", collapsible: true },
-  render: () => (
-    <Accordion type="single" collapsible defaultValue="ranked">
+  args: { type: "single", collapsible: true, defaultValue: "ranked" },
+  render: (args) => (
+    <Accordion {...args}>
       <AccordionItem value="ranked">
         <AccordionTrigger>Ranked solo queue</AccordionTrigger>
         <AccordionContent>
@@ -44,8 +44,8 @@ export const Default: Story = {
 
 export const Collapsed: Story = {
   args: { type: "single", collapsible: true },
-  render: () => (
-    <Accordion type="single" collapsible>
+  render: (args) => (
+    <Accordion {...args}>
       <AccordionItem value="jungle">
         <AccordionTrigger>Jungle pathing notes</AccordionTrigger>
         <AccordionContent>
@@ -63,9 +63,9 @@ export const Collapsed: Story = {
 };
 
 export const Multiple: Story = {
-  args: { type: "multiple" },
-  render: () => (
-    <Accordion type="multiple" defaultValue={["baron", "dragon"]}>
+  args: { type: "multiple", defaultValue: ["baron", "dragon"] },
+  render: (args) => (
+    <Accordion {...args}>
       <AccordionItem value="baron">
         <AccordionTrigger>Baron Nashor</AccordionTrigger>
         <AccordionContent>
@@ -89,9 +89,9 @@ export const Multiple: Story = {
 };
 
 export const SingleItem: Story = {
-  args: { type: "single", collapsible: true },
-  render: () => (
-    <Accordion type="single" collapsible defaultValue="subscription">
+  args: { type: "single", collapsible: true, defaultValue: "subscription" },
+  render: (args) => (
+    <Accordion {...args}>
       <AccordionItem value="subscription">
         <AccordionTrigger>How do report subscriptions work?</AccordionTrigger>
         <AccordionContent>
@@ -104,9 +104,9 @@ export const SingleItem: Story = {
 };
 
 export const DisabledItem: Story = {
-  args: { type: "single", collapsible: true },
-  render: () => (
-    <Accordion type="single" collapsible defaultValue="match-history">
+  args: { type: "single", collapsible: true, defaultValue: "match-history" },
+  render: (args) => (
+    <Accordion {...args}>
       <AccordionItem value="match-history">
         <AccordionTrigger>Match history</AccordionTrigger>
         <AccordionContent>

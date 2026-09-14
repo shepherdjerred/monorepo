@@ -87,30 +87,29 @@ function LpSparkline() {
 export const WinRateByChampion: Story = {
   args: {
     title: "Win rate by champion",
+    description: <p>Ranked Solo/Duo, last twelve games.</p>,
     children: null,
   },
-  render: () => (
-    <ChartFrame
-      title="Win rate by champion"
-      description={<p>Ranked Solo/Duo, last twelve games.</p>}
-    >
+  render: (args) => (
+    <ChartFrame {...args}>
       <WinRateBars />
     </ChartFrame>
   ),
 };
 
 export const WithActions: Story = {
-  args: { title: "Win rate by champion", children: null },
-  render: () => (
-    <ChartFrame
-      title="LP earned this split"
-      description={<p>Bearded Lyfe #NA1 · Emerald II</p>}
-      actions={
-        <Button variant="outline" size="sm">
-          Export CSV
-        </Button>
-      }
-    >
+  args: {
+    title: "LP earned this split",
+    description: <p>Bearded Lyfe #NA1 · Emerald II</p>,
+    actions: (
+      <Button variant="outline" size="sm">
+        Export CSV
+      </Button>
+    ),
+    children: null,
+  },
+  render: (args) => (
+    <ChartFrame {...args}>
       <WinRateBars />
     </ChartFrame>
   ),
@@ -118,6 +117,7 @@ export const WithActions: Story = {
 
 export const Sparkline: Story = {
   args: { title: "LP trend", children: null },
+  parameters: { controls: { disable: true } },
   render: () => (
     <InteractiveVisualization label="LP trend over the last eight ranked games, rising from 0 to plus 61 LP with a dip after game four.">
       <LpSparkline />
@@ -126,12 +126,13 @@ export const Sparkline: Story = {
 };
 
 export const FramedVisualization: Story = {
-  args: { title: "LP trend", children: null },
-  render: () => (
-    <ChartFrame
-      title="LP trend"
-      description={<p>Net LP after each Ranked Solo/Duo game this week.</p>}
-    >
+  args: {
+    title: "LP trend",
+    description: <p>Net LP after each Ranked Solo/Duo game this week.</p>,
+    children: null,
+  },
+  render: (args) => (
+    <ChartFrame {...args}>
       <InteractiveVisualization label="LP trend over the last eight ranked games, rising from 0 to plus 61 LP with a dip after game four.">
         <LpSparkline />
       </InteractiveVisualization>
@@ -140,12 +141,13 @@ export const FramedVisualization: Story = {
 };
 
 export const FallbackWhenEmpty: Story = {
-  args: { title: "Lane distribution", children: null },
-  render: () => (
-    <ChartFrame
-      title="Lane distribution"
-      description={<p>Needs at least five ranked games in the window.</p>}
-    >
+  args: {
+    title: "Lane distribution",
+    description: <p>Needs at least five ranked games in the window.</p>,
+    children: null,
+  },
+  render: (args) => (
+    <ChartFrame {...args}>
       <InteractiveVisualization
         label="Lane distribution chart is unavailable"
         fallback={<p>Not enough ranked games yet — play five to unlock.</p>}

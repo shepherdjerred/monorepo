@@ -22,11 +22,11 @@ const row = {
 } as const;
 
 export const Horizontal: Story = {
-  args: { orientation: "horizontal" },
-  render: () => (
+  args: { orientation: "horizontal", style: { marginBlock: "0.75rem" } },
+  render: (args) => (
     <div>
       <p style={{ margin: 0 }}>Ranked solo queue · Emerald II · 47 LP</p>
-      <Separator style={{ marginBlock: "0.75rem" }} />
+      <Separator {...args} />
       <p style={{ margin: 0 }}>Ranked flex · Platinum IV · 12 LP</p>
     </div>
   ),
@@ -34,6 +34,7 @@ export const Horizontal: Story = {
 
 export const Vertical: Story = {
   args: { orientation: "vertical" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={row}>
       <span>NA1</span>
@@ -46,11 +47,11 @@ export const Vertical: Story = {
 };
 
 export const Semantic: Story = {
-  args: { decorative: false },
-  render: () => (
+  args: { decorative: false, style: { marginBlock: "0.75rem" } },
+  render: (args) => (
     <div>
       <p style={{ margin: 0 }}>Match history synced 4 minutes ago.</p>
-      <Separator decorative={false} style={{ marginBlock: "0.75rem" }} />
+      <Separator {...args} />
       <p style={{ margin: 0 }}>
         Report subscriptions are evaluated after each game.
       </p>
@@ -60,6 +61,7 @@ export const Semantic: Story = {
 
 export const InSummary: Story = {
   args: { orientation: "horizontal" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <div>

@@ -56,7 +56,7 @@ const chipStyle: CSSProperties = {
 };
 
 export const ColorTokens: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <ul style={gridStyle}>
       {colorTokens.map(([name, value]) => (
@@ -74,7 +74,7 @@ export const ColorTokens: Story = {
 };
 
 export const TypographyTokens: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <ul style={{ ...gridStyle, gridTemplateColumns: "1fr" }}>
       {typographyTokens.map(([name]) => (
@@ -92,23 +92,17 @@ export const TypographyTokens: Story = {
 };
 
 export const Emblem: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <ScoutEmblem width={96} height={96} />,
 };
 
 export const EmblemLabelled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <ScoutEmblem width={96} height={96} role="img" aria-label="Scout emblem" />
   ),
 };
 
-export const Mark: Story = {
-  args: {},
-  render: () => <ScoutMark />,
-};
+export const Mark: Story = { args: {} };
 
-export const MarkCompact: Story = {
-  args: {},
-  render: () => <ScoutMark compact />,
-};
+export const MarkCompact: Story = { args: { compact: true } };

@@ -26,7 +26,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Containers: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Container>
       <p>
@@ -38,7 +38,7 @@ export const Containers: Story = {
 };
 
 export const Stacks: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Stack>
       <h2>Weekly ranked report</h2>
@@ -49,7 +49,7 @@ export const Stacks: Story = {
 };
 
 export const Clusters: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Cluster>
       <Badge>Ranked Solo</Badge>
@@ -61,7 +61,7 @@ export const Clusters: Story = {
 };
 
 export const Grids: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Grid>
       <Panel>
@@ -87,7 +87,7 @@ export const Grids: Story = {
 };
 
 export const Sections: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Section>
       <Container>
@@ -104,7 +104,7 @@ export const Sections: Story = {
 };
 
 export const Panels: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Panel>
       <Stack>
@@ -119,7 +119,7 @@ export const Panels: Story = {
 };
 
 export const Callouts: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Callout>
       Scout only reads match data for summoners a guild administrator has
@@ -129,7 +129,7 @@ export const Callouts: Story = {
 };
 
 export const PageHeaders: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <PageHeader>
       <Stack>
@@ -145,7 +145,7 @@ export const PageHeaders: Story = {
 };
 
 export const EmptyStates: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <EmptyState>
       <Stack>
@@ -160,18 +160,18 @@ export const EmptyStates: Story = {
 };
 
 export const MarketingHeaderBar: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => <MarketingHeader landmark="div" currentPath="/" />,
 };
 
 export const MarketingHeaderSignedIn: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <MarketingHeader landmark="div" currentPath="/support" signedIn />
   ),
 };
 
 export const GlobalFooterBar: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => <GlobalFooter release="storybook" />,
 };

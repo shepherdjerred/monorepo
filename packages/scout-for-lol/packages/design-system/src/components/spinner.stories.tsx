@@ -24,17 +24,17 @@ const row = {
 export const Default: Story = { args: {} };
 
 export const WithLabel: Story = {
-  args: {},
-  render: () => (
+  args: { "aria-label": "Generating report" },
+  render: (args) => (
     <div style={row}>
-      <Spinner aria-label="Generating report" />
+      <Spinner {...args} />
       <span>Generating match report…</span>
     </div>
   ),
 };
 
 export const Sizes: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
       <Spinner
@@ -54,21 +54,24 @@ export const Sizes: Story = {
 };
 
 export const InButton: Story = {
-  args: {},
-  render: () => (
+  args: {
+    "aria-label": "Syncing",
+    style: { width: "1rem", height: "1rem" },
+  },
+  render: (args) => (
     <Button disabled>
-      <Spinner aria-label="Syncing" style={{ width: "1rem", height: "1rem" }} />
+      <Spinner {...args} />
       Syncing match history
     </Button>
   ),
 };
 
 export const InCard: Story = {
-  args: {},
-  render: () => (
+  args: { "aria-label": "Loading ranked ladder" },
+  render: (args) => (
     <Card>
       <CardContent style={row}>
-        <Spinner aria-label="Loading ranked ladder" />
+        <Spinner {...args} />
         <span>Loading ranked ladder for Rift Wardens…</span>
       </CardContent>
     </Card>

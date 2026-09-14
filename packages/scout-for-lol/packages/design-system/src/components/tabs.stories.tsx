@@ -15,8 +15,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { defaultValue: "overview" },
-  render: () => (
-    <Tabs defaultValue="overview">
+  render: (args) => (
+    <Tabs {...args}>
       <TabsList aria-label="Match report sections">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="details">Details</TabsTrigger>
@@ -39,9 +39,9 @@ export const Default: Story = {
 };
 
 export const Vertical: Story = {
-  args: { defaultValue: "solo" },
-  render: () => (
-    <Tabs defaultValue="solo" orientation="vertical">
+  args: { defaultValue: "solo", orientation: "vertical" },
+  render: (args) => (
+    <Tabs {...args}>
       <TabsList aria-label="Queue types">
         <TabsTrigger value="solo">Ranked Solo</TabsTrigger>
         <TabsTrigger value="flex">Ranked Flex</TabsTrigger>
@@ -56,8 +56,8 @@ export const Vertical: Story = {
 
 export const WithDisabledTab: Story = {
   args: { defaultValue: "matches" },
-  render: () => (
-    <Tabs defaultValue="matches">
+  render: (args) => (
+    <Tabs {...args}>
       <TabsList aria-label="Summoner profile sections">
         <TabsTrigger value="matches">Match history</TabsTrigger>
         <TabsTrigger value="champions">Champions</TabsTrigger>
@@ -103,14 +103,14 @@ function GuildTabsFrame() {
 }
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <GuildTabsFrame />,
 };
 
 export const TwoTabs: Story = {
   args: { defaultValue: "blue" },
-  render: () => (
-    <Tabs defaultValue="blue">
+  render: (args) => (
+    <Tabs {...args}>
       <TabsList aria-label="Team scoreboards">
         <TabsTrigger value="blue">Blue team</TabsTrigger>
         <TabsTrigger value="red">Red team</TabsTrigger>

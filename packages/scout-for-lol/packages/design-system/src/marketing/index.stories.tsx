@@ -33,47 +33,44 @@ const heroArgs = {
 } satisfies Parameters<typeof Hero>[0];
 
 export const HeroSection: Story = {
-  args: heroArgs,
-  render: () => (
-    <Hero
-      eyebrow={<Badge>Live</Badge>}
-      title="Know the match before it starts."
-      description="Scout watches your Discord server's ranked games and publishes a recap the moment the match ends."
-      primaryAction={
-        <MarketingButton href="/app/login">Get Started</MarketingButton>
-      }
-      secondaryAction={
-        <MarketingButton href="/docs/" secondary>
-          Read the docs
-        </MarketingButton>
-      }
-      media={
-        <ChampionSplashArt
-          champion="Ahri"
-          alt="Ahri splash artwork from League of Legends"
-          style={{ width: "100%", height: "auto" }}
-        />
-      }
-    />
-  ),
+  args: {
+    eyebrow: <Badge>Live</Badge>,
+    title: "Know the match before it starts.",
+    description:
+      "Scout watches your Discord server's ranked games and publishes a recap the moment the match ends.",
+    primaryAction: (
+      <MarketingButton href="/app/login">Get Started</MarketingButton>
+    ),
+    secondaryAction: (
+      <MarketingButton href="/docs/" secondary>
+        Read the docs
+      </MarketingButton>
+    ),
+    media: (
+      <ChampionSplashArt
+        champion="Ahri"
+        alt="Ahri splash artwork from League of Legends"
+        style={{ width: "100%", height: "auto" }}
+      />
+    ),
+  },
 };
 
 export const HeroWithoutMedia: Story = {
-  args: heroArgs,
-  render: () => (
-    <Hero
-      titleLevel="h2"
-      title="Every ranked game, recapped in Discord."
-      description="A nested hero drops to an h2 so it can sit inside a longer marketing page."
-      primaryAction={
-        <MarketingButton href="/app/login">Invite Scout</MarketingButton>
-      }
-    />
-  ),
+  args: {
+    titleLevel: "h2",
+    title: "Every ranked game, recapped in Discord.",
+    description:
+      "A nested hero drops to an h2 so it can sit inside a longer marketing page.",
+    primaryAction: (
+      <MarketingButton href="/app/login">Invite Scout</MarketingButton>
+    ),
+  },
 };
 
 export const CallToAction: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <Cta
       title="Ready to scout?"
@@ -90,6 +87,7 @@ export const CallToAction: Story = {
 
 export const Feature: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <FeatureCard icon={<Radar aria-hidden="true" />} title="Prematch insight">
       See lanes, champions, and recent form for every player in champion select.
@@ -99,6 +97,7 @@ export const Feature: Story = {
 
 export const FeatureCards: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <FeatureGrid>
       <FeatureCard icon={<Radar aria-hidden="true" />} title="Prematch insight">
@@ -119,6 +118,7 @@ export const FeatureCards: Story = {
 
 export const ProcessSteps: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <Stack>
       <SectionHeader>
@@ -139,6 +139,7 @@ export const ProcessSteps: Story = {
 
 export const FAQ: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <Stack>
       <FAQItem value="queues" question="Which queues does Scout track?">
@@ -154,6 +155,7 @@ export const FAQ: Story = {
 
 export const Gallery: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <FeatureGrid>
       <GalleryItem
@@ -182,6 +184,7 @@ export const Gallery: Story = {
 
 export const ImageFeatureSection: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <ImageFeature
       image={
@@ -203,6 +206,7 @@ export const ImageFeatureSection: Story = {
 
 export const ImageFeatureReversed: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <ImageFeature
       reverse
@@ -222,6 +226,7 @@ export const ImageFeatureReversed: Story = {
 
 export const Announcement: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <AnnouncementBanner>Scout 2.0 is available.</AnnouncementBanner>
   ),
@@ -229,6 +234,7 @@ export const Announcement: Story = {
 
 export const AnnouncementLink: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <AnnouncementBanner href="/whatsnew">
       Arena recaps are live — see what changed.
@@ -238,6 +244,7 @@ export const AnnouncementLink: Story = {
 
 export const SectionHeading: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <SectionHeader>
       <h2>Built for the server you already play in</h2>
@@ -250,6 +257,7 @@ export const SectionHeading: Story = {
 
 export const Buttons: Story = {
   args: heroArgs,
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <MarketingButton href="/app/login" analyticsEvent="marketing_get_started">

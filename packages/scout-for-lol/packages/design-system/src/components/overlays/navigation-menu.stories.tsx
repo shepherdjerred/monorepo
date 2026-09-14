@@ -78,9 +78,9 @@ function ControlledNavigationMenu() {
 }
 
 export const Default: Story = {
-  args: {},
-  render: () => (
-    <NavigationMenu aria-label="Scout sections">
+  args: { "aria-label": "Scout sections" },
+  render: (args) => (
+    <NavigationMenu {...args}>
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuTrigger>Reports</NavigationMenuTrigger>
@@ -99,9 +99,9 @@ export const Default: Story = {
 };
 
 export const LinksOnly: Story = {
-  args: {},
-  render: () => (
-    <NavigationMenu aria-label="Guild navigation">
+  args: { "aria-label": "Guild navigation" },
+  render: (args) => (
+    <NavigationMenu {...args}>
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuLink href="#overview">Overview</NavigationMenuLink>
@@ -120,9 +120,9 @@ export const LinksOnly: Story = {
 };
 
 export const Vertical: Story = {
-  args: {},
-  render: () => (
-    <NavigationMenu aria-label="Report library" orientation="vertical">
+  args: { "aria-label": "Report library", orientation: "vertical" },
+  render: (args) => (
+    <NavigationMenu {...args}>
       <NavigationMenuList className="scout-stack">
         <NavigationMenuItem>
           <NavigationMenuTrigger>Ranked</NavigationMenuTrigger>
@@ -142,6 +142,6 @@ export const Vertical: Story = {
 };
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <ControlledNavigationMenu />,
 };

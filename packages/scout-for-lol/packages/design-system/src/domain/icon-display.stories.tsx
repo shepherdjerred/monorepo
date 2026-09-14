@@ -23,6 +23,7 @@ export const Item: Story = {
 
 export const FullBuild: Story = {
   args: { item: 6672, label: "Kraken Slayer" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-grid">
       <ItemDisplay item={6672} label="Kraken Slayer" detail="Completed 14:20" />
@@ -49,6 +50,7 @@ export const FullBuild: Story = {
 
 export const RunePage: Story = {
   args: { item: 6672, label: "Kraken Slayer" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-grid">
       <RuneDisplay
@@ -79,6 +81,7 @@ export const RunePage: Story = {
 
 export const SummonerSpells: Story = {
   args: { item: 6672, label: "Kraken Slayer" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <SpellDisplay spell="SummonerFlash" label="Flash" detail="D · 300s" />
@@ -97,6 +100,7 @@ export const SummonerSpells: Story = {
 
 export const ArenaAugments: Story = {
   args: { item: 6672, label: "Kraken Slayer" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-grid">
       <AugmentDisplay
@@ -125,6 +129,7 @@ export const ArenaAugments: Story = {
 
 export const Lanes: Story = {
   args: { item: 6672, label: "Kraken Slayer" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <LaneDisplay lane="top" label="Top" />
@@ -138,6 +143,7 @@ export const Lanes: Story = {
 
 export const MatchLoadout: Story = {
   args: { item: 6672, label: "Kraken Slayer" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <LaneDisplay lane="adc" label="Bot · Ranked Solo/Duo" />

@@ -22,7 +22,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Card>
       <CardHeader>
@@ -36,7 +36,7 @@ export const Default: Story = {
 };
 
 export const WithDescription: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Card>
       <CardHeader>
@@ -53,7 +53,7 @@ export const WithDescription: Story = {
 };
 
 export const WithFooter: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Card>
       <CardHeader>
@@ -77,7 +77,7 @@ export const WithFooter: Story = {
 };
 
 export const ContentOnly: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Card>
       <CardContent>
@@ -89,7 +89,7 @@ export const ContentOnly: Story = {
 };
 
 export const MatchSummary: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <Card>
       <CardHeader
@@ -122,7 +122,7 @@ export const MatchSummary: Story = {
 };
 
 export const Grid: Story = {
-  args: { children: "unused" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div
       style={{

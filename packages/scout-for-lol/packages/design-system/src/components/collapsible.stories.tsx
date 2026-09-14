@@ -20,8 +20,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {},
-  render: () => (
-    <Collapsible>
+  render: (args) => (
+    <Collapsible {...args}>
       <CollapsibleTrigger asChild>
         <Button variant="outline" size="sm">
           Show build order
@@ -48,9 +48,9 @@ export const Default: Story = {
 };
 
 export const DefaultOpen: Story = {
-  args: {},
-  render: () => (
-    <Collapsible defaultOpen>
+  args: { defaultOpen: true },
+  render: (args) => (
+    <Collapsible {...args}>
       <CollapsibleTrigger asChild>
         <Button variant="outline" size="sm">
           Objective timeline
@@ -108,14 +108,14 @@ function GuildRosterFrame() {
 }
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <GuildRosterFrame />,
 };
 
 export const Disabled: Story = {
-  args: {},
-  render: () => (
-    <Collapsible disabled>
+  args: { disabled: true },
+  render: (args) => (
+    <Collapsible {...args}>
       <CollapsibleTrigger asChild>
         <Button variant="outline" size="sm" disabled>
           Champion mastery (link a Riot account)

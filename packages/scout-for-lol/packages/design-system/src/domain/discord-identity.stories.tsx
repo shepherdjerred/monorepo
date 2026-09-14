@@ -43,6 +43,7 @@ export const UnlinkedAccount: Story = {
 
 export const GuildRoster: Story = {
   args: { displayName: "roster" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <DiscordIdentity

@@ -127,12 +127,12 @@ function InvalidConsent() {
 }
 
 export const Default: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <LabelledCheckbox label="Track ranked games" />,
 };
 
 export const Checked: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <LabelledCheckbox
       label="Include ARAM matches"
@@ -143,12 +143,12 @@ export const Checked: Story = {
 };
 
 export const Indeterminate: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <QueueSelection />,
 };
 
 export const Disabled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <LabelledCheckbox label="Track Teamfight Tactics" disabled />
@@ -158,6 +158,6 @@ export const Disabled: Story = {
 };
 
 export const Invalid: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <InvalidConsent />,
 };

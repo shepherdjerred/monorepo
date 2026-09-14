@@ -29,17 +29,16 @@ const crestStyle = { width: 64, height: 64 } as const;
 const artStyle = { width: "100%", height: "auto" } as const;
 
 export const Portrait: Story = {
-  args: { champion: "Ahri" },
-  render: () => <ChampionPortrait champion="Ahri" style={portraitStyle} />,
+  args: { champion: "Ahri", style: portraitStyle },
 };
 
 export const PortraitById: Story = {
-  args: { champion: 64 },
-  render: () => <ChampionPortrait champion={64} style={portraitStyle} />,
+  args: { champion: 64, style: portraitStyle },
 };
 
 export const PortraitRow: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       {["Ahri", "Aatrox", "Jinx", "LeeSin", "Thresh"].map((champion) => (
@@ -55,6 +54,7 @@ export const PortraitRow: Story = {
 
 export const LoadingArt: Story = {
   args: { champion: "Aatrox" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <ChampionLoadingArt
       champion="Aatrox"
@@ -65,6 +65,7 @@ export const LoadingArt: Story = {
 
 export const SplashArt: Story = {
   args: { champion: "Jinx" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <ChampionSplashArt
       champion="Jinx"
@@ -75,19 +76,17 @@ export const SplashArt: Story = {
 };
 
 export const MissingChampion: Story = {
-  args: { champion: "Ahri" },
-  render: () => (
-    <ChampionPortrait
-      champion="NotAChampion"
-      optional
-      alt="Champion portrait unavailable"
-      style={portraitStyle}
-    />
-  ),
+  args: {
+    champion: "NotAChampion",
+    optional: true,
+    alt: "Champion portrait unavailable",
+    style: portraitStyle,
+  },
 };
 
 export const Items: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <ItemIcon item="1001" alt="Boots" style={iconStyle} />
@@ -99,6 +98,7 @@ export const Items: Story = {
 
 export const Runes: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <RuneIcon rune="ArcaneComet" alt="Arcane Comet rune" style={iconStyle} />
@@ -110,6 +110,7 @@ export const Runes: Story = {
 
 export const SummonerSpells: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <SummonerSpellIcon
@@ -133,6 +134,7 @@ export const SummonerSpells: Story = {
 
 export const Augments: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <AugmentIcon
@@ -151,6 +153,7 @@ export const Augments: Story = {
 
 export const Lanes: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       <LaneIcon lane="top" alt="Top lane" style={iconStyle} />
@@ -164,6 +167,7 @@ export const Lanes: Story = {
 
 export const GenericAsset: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <GameAssetImage
       kind="background"
@@ -177,6 +181,7 @@ export const GenericAsset: Story = {
 
 export const RankCrests: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-cluster">
       {SCOUT_RANKS.map((rank) => (
@@ -188,6 +193,7 @@ export const RankCrests: Story = {
 
 export const RankCrestSingle: Story = {
   args: { champion: "Ahri" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <RankCrest
       rank="Challenger"

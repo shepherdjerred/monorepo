@@ -88,10 +88,7 @@ export function scoutAssetStreamFailureAction(
   return headersSent ? "destroy" : "not-found";
 }
 
-function configureAssetServer(
-  middlewares: Connect.Server,
-  base: string,
-): void {
+function configureAssetServer(middlewares: Connect.Server, base: string): void {
   const basePrefix = base === "/" ? "" : base.replace(/\/$/, "");
   middlewares.use((request, response, next) => {
     const requestPath = request.url?.split("?")[0];
@@ -124,7 +121,9 @@ function configureAssetServer(
         response.setHeader("content-type", mimeType(source));
         const stream = createReadStream(source);
         stream.on("error", () => {
-          if (scoutAssetStreamFailureAction(response.headersSent) === "destroy") {
+          if (
+            scoutAssetStreamFailureAction(response.headersSent) === "destroy"
+          ) {
             response.destroy();
             return;
           }

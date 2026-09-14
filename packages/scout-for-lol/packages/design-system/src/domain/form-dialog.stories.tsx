@@ -112,6 +112,7 @@ export const CreateSubscription: Story = {
     footer: null,
     children: null,
   },
+  parameters: { controls: { disable: true } },
   render: () => (
     <DialogStage
       initialOpen
@@ -132,6 +133,7 @@ export const WithoutDescription: Story = {
     footer: null,
     children: null,
   },
+  parameters: { controls: { disable: true } },
   render: () => (
     <DialogStage initialOpen title="Rename report" confirmLabel="Save name">
       <Field>
@@ -154,6 +156,7 @@ export const DestructiveConfirmation: Story = {
     footer: null,
     children: null,
   },
+  parameters: { controls: { disable: true } },
   render: () => (
     <DialogStage
       initialOpen
@@ -178,6 +181,7 @@ export const TriggeredFromButton: Story = {
     footer: null,
     children: null,
   },
+  parameters: { controls: { disable: true } },
   render: () => (
     <DialogStage
       initialOpen={false}

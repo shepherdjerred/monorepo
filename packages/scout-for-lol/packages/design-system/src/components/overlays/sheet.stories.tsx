@@ -68,8 +68,8 @@ function ControlledSheet() {
 
 export const Default: Story = {
   args: {},
-  render: () => (
-    <Sheet>
+  render: (args) => (
+    <Sheet {...args}>
       <SheetTrigger asChild>
         <Button variant="outline">Open navigation</Button>
       </SheetTrigger>
@@ -91,8 +91,8 @@ export const Default: Story = {
 
 export const IconTrigger: Story = {
   args: {},
-  render: () => (
-    <Sheet>
+  render: (args) => (
+    <Sheet {...args}>
       <SheetTrigger asChild>
         <IconButton label="Open menu" variant="ghost">
           <Menu />
@@ -114,9 +114,9 @@ export const IconTrigger: Story = {
 };
 
 export const DefaultOpen: Story = {
-  args: {},
-  render: () => (
-    <Sheet defaultOpen>
+  args: { defaultOpen: true },
+  render: (args) => (
+    <Sheet {...args}>
       <SheetTrigger asChild>
         <Button variant="outline">Show ingest log</Button>
       </SheetTrigger>
@@ -138,6 +138,6 @@ export const DefaultOpen: Story = {
 };
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <ControlledSheet />,
 };

@@ -34,6 +34,7 @@ export const Unranked: Story = {
 
 export const QueueComparison: Story = {
   args: { rank: "Emerald", division: "II", leaguePoints: 42 },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <div className="scout-cluster">
@@ -50,6 +51,7 @@ export const QueueComparison: Story = {
 
 export const AllTiers: Story = {
   args: { rank: "Iron" },
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-grid">
       {SCOUT_RANKS.map((rank) => (

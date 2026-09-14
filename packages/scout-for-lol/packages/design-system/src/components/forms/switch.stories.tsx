@@ -76,12 +76,12 @@ function ControlledSwitch() {
 }
 
 export const Default: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <PublishSwitch />,
 };
 
 export const On: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <DescribedSwitch
       label="Weekly ranked digest"
@@ -92,7 +92,7 @@ export const On: Story = {
 };
 
 export const WithDescription: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <DescribedSwitch
       label="Include Bryan Bucks payouts"
@@ -102,7 +102,7 @@ export const WithDescription: Story = {
 };
 
 export const Disabled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div className="scout-stack">
       <DescribedSwitch
@@ -121,6 +121,6 @@ export const Disabled: Story = {
 };
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <ControlledSwitch />,
 };

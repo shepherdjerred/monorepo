@@ -20,7 +20,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <Table>
       <TableHeader>
@@ -52,7 +52,7 @@ export const Default: Story = {
 };
 
 export const WithCaption: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <Table>
       <caption style={{ textAlign: "left", paddingBottom: "0.5rem" }}>
@@ -87,7 +87,7 @@ export const WithCaption: Story = {
 };
 
 export const MatchHistory: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <Table>
       <TableHeader>
@@ -133,7 +133,7 @@ export const MatchHistory: Story = {
 };
 
 export const RowHeaders: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <Table>
       <TableHeader>
@@ -165,7 +165,7 @@ export const RowHeaders: Story = {
 };
 
 export const Empty: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <Table>
       <TableHeader>
@@ -187,7 +187,7 @@ export const Empty: Story = {
 };
 
 export const Scrollable: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => (
     <div style={{ maxWidth: "28rem" }}>
       <Table>

@@ -58,8 +58,8 @@ function ControlledDialog() {
 
 export const CreateReport: Story = {
   args: {},
-  render: () => (
-    <Dialog>
+  render: (args) => (
+    <Dialog {...args}>
       <DialogTrigger asChild>
         <Button>Create report</Button>
       </DialogTrigger>
@@ -91,8 +91,8 @@ export const CreateReport: Story = {
 
 export const Destructive: Story = {
   args: {},
-  render: () => (
-    <Dialog>
+  render: (args) => (
+    <Dialog {...args}>
       <DialogTrigger asChild>
         <Button variant="destructive">Delete subscription</Button>
       </DialogTrigger>
@@ -118,9 +118,9 @@ export const Destructive: Story = {
 };
 
 export const DefaultOpen: Story = {
-  args: {},
-  render: () => (
-    <Dialog defaultOpen>
+  args: { defaultOpen: true },
+  render: (args) => (
+    <Dialog {...args}>
       <DialogTrigger asChild>
         <Button variant="outline">Show dare receipt</Button>
       </DialogTrigger>
@@ -142,6 +142,6 @@ export const DefaultOpen: Story = {
 };
 
 export const Controlled: Story = {
-  args: {},
+  parameters: { controls: { disable: true } },
   render: () => <ControlledDialog />,
 };
