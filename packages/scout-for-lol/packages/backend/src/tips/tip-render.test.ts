@@ -12,7 +12,7 @@ function footerTextOf(
 
 const TIP: FeatureTip = {
   key: "competitions",
-  flag: "always",
+  flags: [],
   text: "Tip: run a competition.",
 };
 

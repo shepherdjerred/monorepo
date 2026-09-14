@@ -679,6 +679,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-feature-tip-percent",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Percent of eligible Scout messages that carry a feature tip.",
+      "type": "variant",
+      "default": "10",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout-feature-tip-cooldown-hours",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Minimum hours between two feature tips to the same audience.",
+      "type": "variant",
+      "default": "72",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-temporal-call-graph-tracing",
       "owner": "scout",
       "namespace": "scout",

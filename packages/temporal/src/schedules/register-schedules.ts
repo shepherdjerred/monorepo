@@ -88,7 +88,15 @@ export const DELETED_SCHEDULE_IDS = [
 // was already started. The retired workflow types stay on this migration list
 // for one reconciliation so the gateway can terminate those executions before
 // the queue-owning workers receive a bundle without their handlers.
-const RETIRED_WORKFLOW_TYPES = ["observeReviewSignalsWorkflow"] as const;
+const RETIRED_WORKFLOW_TYPES = [
+  "observeReviewSignalsWorkflow",
+  // A weekly parlay execution stays open for a week, so a deploy can easily
+  // land mid-run. Deleting the Schedule only stops future starts; without
+  // these the open execution would keep retrying tasks against workers whose
+  // bundle no longer carries its handler.
+  "runScoutWeeklyParlayWorkflow",
+  "runScoutWeeklyParlayCatchupWorkflow",
+] as const;
 
 export async function terminateRetiredWorkflowExecutions(client: {
   workflow: {

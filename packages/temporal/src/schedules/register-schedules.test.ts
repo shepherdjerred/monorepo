@@ -605,10 +605,47 @@ test("terminates running executions of retired workflow types", async () => {
 
   expect(queries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
   ]);
-  expect(terminated).toEqual([
-    "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
-  ]);
+  expect(terminated).toEqual(
+    Array.from(
+      { length: queries.length },
+      () =>
+        "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
+    ),
+  );
+});
+
+test("the retired list covers every workflow type this release removed", async () => {
+  // A week-long weekly parlay execution can still be open when this deploys.
+  // Deleting its Schedule only stops future starts, so both handlers must be
+  // terminated or the execution retries against a bundle without them.
+  const queries: string[] = [];
+  const client = {
+    workflow: {
+      list({ query }: { query: string }) {
+        queries.push(query);
+        return (async function* () {
+          // No executions; this test only asserts coverage of the type list.
+        })();
+      },
+      getHandle() {
+        return { terminate: () => Promise.resolve() };
+      },
+    },
+  };
+
+  await terminateRetiredWorkflowExecutions(client);
+
+  for (const workflowType of [
+    "runScoutWeeklyParlayWorkflow",
+    "runScoutWeeklyParlayCatchupWorkflow",
+  ]) {
+    expect(queries).toContain(
+      `WorkflowType = "${workflowType}" AND ExecutionStatus = "Running"`,
+    );
+  }
 });
 
 describe("Glitter corpus schedule", () => {

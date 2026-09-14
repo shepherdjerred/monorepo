@@ -25,9 +25,18 @@ const HAS_USED: Record<
       take: 1,
     })) > 0,
   // One tracked player is the bare minimum a working install has; the tip is
-  // for servers that never added the rest of their group.
-  "track-more-players": async (serverId, db) =>
-    (await db.subscription.count({ where: { serverId }, take: 2 })) > 1,
+  // for servers that never added the rest of their group. Counted over
+  // DISTINCT players, not subscription rows: the same player subscribed in two
+  // channels is two rows and would otherwise read as a well-populated guild.
+  "track-more-players": async (serverId, db) => {
+    const players = await db.subscription.findMany({
+      where: { serverId },
+      select: { playerId: true },
+      distinct: ["playerId"],
+      take: 2,
+    });
+    return players.length > 1;
+  },
   "hall-of-fame": async (serverId, db) =>
     (await db.hallSettings.count({ where: { guildId: serverId }, take: 1 })) >
     0,
@@ -47,13 +56,17 @@ const HAS_USED: Record<
     (await db.tournamentLobby.count({ where: { serverId }, take: 1 })) > 0,
 };
 
+/** Every flag a tip names must be on; a feature with none is always available. */
 async function isAvailable(
   tip: FeatureTip,
   serverId: DiscordGuildId,
 ): Promise<boolean> {
-  return tip.flag === "always"
-    ? true
-    : await isPolicyEnabled(tip.flag, { server: serverId });
+  const verdicts = await Promise.all(
+    tip.flags.map(
+      async (flag) => await isPolicyEnabled(flag, { server: serverId }),
+    ),
+  );
+  return verdicts.every(Boolean);
 }
 
 /**
