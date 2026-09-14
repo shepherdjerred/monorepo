@@ -63,3 +63,129 @@ test("a database that does not model observations is not an error", async () => 
   expect(await hasObservations(db)).toBe(false);
   await db.close();
 });
+
+/**
+ * Receipt evidence built the way the producer builds it.
+ *
+ * These tests construct evidence through `rawArchiveEvidenceCodec` rather than
+ * by hand. A hand-written fixture is what let the first version of
+ * `repointReceipts` ship broken: it agreed with the walker's invented
+ * `{ key, payload }` shape, so a no-op passed. Anything the reader would refuse
+ * is refused here too.
+ */
+async function evidenceFor(key: string, digest: string): Promise<string> {
+  const { rawArchiveEvidenceCodec } =
+    await import("@scout-for-lol/backend/report-lake/durable-receipts.ts");
+  return JSON.stringify(
+    rawArchiveEvidenceCodec.serialize(
+      rawArchiveEvidenceCodec.parse({
+        kind: rawArchiveEvidenceCodec.kind,
+        version: rawArchiveEvidenceCodec.version,
+        data: {
+          kind: "prematch",
+          key,
+          digest,
+          bytes: 1234,
+          contentType: "application/json",
+          capturedAt: "2026-09-01T00:00:00.000Z",
+        },
+      }),
+    ),
+  );
+}
+
+const OLD_DIGEST = "a".repeat(64);
+const NEW_DIGEST = "b".repeat(64);
+
+async function receiptTable(db: Awaited<ReturnType<typeof open>>) {
+  await db.exec(
+    `CREATE TABLE "MatchProcessingReceipt" ("id" TEXT PRIMARY KEY, "kind" TEXT, "evidence" TEXT)`,
+  );
+}
+
+test("a raw-archive receipt attests the bytes now under its key", async () => {
+  // The regression that matters: the descriptor lives under the envelope's
+  // `data`, and a walker looking for `payload` moved nothing at all while
+  // reporting success.
+  const db = await open();
+  await receiptTable(db);
+  await db.exec(
+    `INSERT INTO "MatchProcessingReceipt" VALUES ('r1', 'raw-archive-prematch', ${db.param(1)})`,
+    [await evidenceFor("prematch/a.json", OLD_DIGEST)],
+  );
+  const { repointReceipts } = await import("./observations.ts");
+  expect(await repointReceipts(db, "prematch/a.json", NEW_DIGEST)).toBe(1);
+
+  const rows = await db.query(
+    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 'r1'`,
+  );
+  const { rawArchiveEvidenceCodec } =
+    await import("@scout-for-lol/backend/report-lake/durable-receipts.ts");
+  // Parsed with the reader's codec: a receipt the reader cannot read is not a
+  // moved receipt, however right the digest looks in the JSON.
+  const descriptor = rawArchiveEvidenceCodec.parse(
+    JSON.parse(String(rows[0]?.["e"])),
+  );
+  expect(descriptor.digest).toBe(NEW_DIGEST);
+  expect(descriptor.bytes).toBe(1234);
+  expect(descriptor.capturedAt).toBe("2026-09-01T00:00:00.000Z");
+  await db.close();
+});
+
+test("a receipt for another object keeps its digest", async () => {
+  // `LIKE '%key%'` matches on substrings, so a shorter key can select a
+  // receipt describing a different object.
+  const db = await open();
+  await receiptTable(db);
+  await db.exec(
+    `INSERT INTO "MatchProcessingReceipt" VALUES ('r2', 'raw-archive-prematch', ${db.param(1)})`,
+    [await evidenceFor("prematch/a.json.backup", OLD_DIGEST)],
+  );
+  const { repointReceipts } = await import("./observations.ts");
+  expect(await repointReceipts(db, "prematch/a.json", NEW_DIGEST)).toBe(0);
+  const rows = await db.query(
+    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 'r2'`,
+  );
+  expect(String(rows[0]?.["e"])).toContain(OLD_DIGEST);
+  await db.close();
+});
+
+test("a staging receipt is left alone, being a record of the past", async () => {
+  const db = await open();
+  await receiptTable(db);
+  await db.exec(
+    `INSERT INTO "MatchProcessingReceipt" VALUES ('r3', 'lake-staging-match', ${db.param(1)})`,
+    [await evidenceFor("prematch/a.json", OLD_DIGEST)],
+  );
+  const { repointReceipts } = await import("./observations.ts");
+  expect(await repointReceipts(db, "prematch/a.json", NEW_DIGEST)).toBe(0);
+  const rows = await db.query(
+    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 'r3'`,
+  );
+  expect(String(rows[0]?.["e"])).toContain(OLD_DIGEST);
+  await db.close();
+});
+
+test("evidence the reader could not read stops the rewrite", async () => {
+  // Skipping it would leave a live claim pointing at bytes that no longer
+  // exist, which is the failure this whole function exists to prevent.
+  const db = await open();
+  await receiptTable(db);
+  await db.exec(
+    `INSERT INTO "MatchProcessingReceipt" VALUES ('r4', 'raw-archive-match', ${db.param(1)})`,
+    [JSON.stringify({ key: "games/a/match.json", digest: OLD_DIGEST })],
+  );
+  const { repointReceipts } = await import("./observations.ts");
+  await expect(
+    repointReceipts(db, "games/a/match.json", NEW_DIGEST),
+  ).rejects.toThrow();
+  await db.close();
+});
+
+test("a database without receipts is not an error", async () => {
+  const db = await open();
+  await db.exec(`CREATE TABLE "Unrelated2" ("id" INTEGER PRIMARY KEY)`);
+  const { hasReceipts } = await import("./observations.ts");
+  expect(await hasReceipts(db)).toBe(false);
+  await db.close();
+});

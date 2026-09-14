@@ -366,9 +366,29 @@ and the pass skips them; a rewritten object no longer names an old identity, so
 the run is idempotent and resumable with no cursor to lose. Re-run it until it
 reports zero failures.
 
-The report lake stays consistent the whole time, which is what makes running hot
-safe rather than merely tolerable: a rewritten object needs no translation, and
-one not yet reached still gets it from the map applied in step 5.
+The report lake stays consistent the whole time: a rewritten object needs no
+translation, and one not yet reached still gets it from the map applied in
+step 5.
+
+One reader is not safe to run hot, and the rewrite refuses until you say it has
+drained. A prematch snapshot is read back and checked against its receipt, and
+`prematch-resume.ts` treats a mismatch as non-retryable — it drops the rest of
+that match's lake projection and its notifications, permanently. The rewrite
+moves the receipt with the bytes, but a PUT and a database write are not one
+transaction, so a resume landing between them sees the two disagree.
+
+A game running across the outage is the case that bites: its snapshot was
+captured under the old key, so the rewrite touches it, and its workflow resumes
+when the game ends twenty to forty minutes later. Snapshots captured after the
+swap name nobody in the map and are skipped.
+
+So wait out the games that were live during the window, confirm no prematch
+workflow from before the swap is still open, and then add the flag:
+
+```bash
+DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
+  bun scripts/puuid-corpus.ts rewrite --apply --prematch-drained
+```
 
 It refuses to touch anything until the database `apply` has landed. Translating
 the archive to an identifier the database does not hold would hide the players

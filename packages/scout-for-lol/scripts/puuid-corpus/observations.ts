@@ -21,6 +21,7 @@
  * the past to tidy the present.
  */
 
+import { rawArchiveEvidenceCodec } from "@scout-for-lol/backend/report-lake/durable-receipts.ts";
 import type { Db } from "#scripts/puuid-migration/db.ts";
 import {
   asOptionalString,
@@ -111,32 +112,61 @@ export async function repointReceipts(
 /**
  * Replace the digest in a descriptor that names this key, or report no match.
  *
- * A `LIKE` can match a receipt whose evidence merely mentions the key, so the
- * descriptor is checked properly before anything is written.
+ * The evidence is read and written with the same codec the reader uses, rather
+ * than by walking the JSON. An earlier version of this walked for a `key` at
+ * the top level and recursed through a `payload` property, and neither exists:
+ * `rawArchiveEvidenceCodec` wraps the descriptor in a strict
+ * `{ kind, version, data }` envelope, so every match fell through and no
+ * receipt ever moved. Borrowing the codec is what makes that class of
+ * disagreement impossible — the script cannot hold an opinion about the shape
+ * that the reader does not share.
+ *
+ * Parsing is also the check. A `LIKE` can match a receipt that merely mentions
+ * the key, and an envelope this codec cannot read is a broken contract rather
+ * than a receipt to skip: leaving a live claim stale would strand exactly the
+ * workflows this function exists to protect, so it fails loudly.
  */
 function withDigest(
   evidence: unknown,
   key: string,
   digest: string,
-): Record<string, unknown> | null {
-  if (
-    typeof evidence !== "object" ||
-    evidence === null ||
-    Array.isArray(evidence)
-  ) {
+): ReturnType<typeof rawArchiveEvidenceCodec.serialize> | null {
+  const descriptor = rawArchiveEvidenceCodec.parse(evidence);
+  if (descriptor.key !== key) {
     return null;
   }
-  const record: Record<string, unknown> = { ...evidence };
-  const payload = record["payload"];
-  if (
-    typeof payload === "object" &&
-    payload !== null &&
-    !Array.isArray(payload)
-  ) {
-    const inner = withDigest(payload, key, digest);
-    return inner === null ? null : { ...record, payload: inner };
-  }
-  return record["key"] === key ? { ...record, digest } : null;
+  // Re-parsed rather than spread onto the branded type: the replacement digest
+  // arrives as a plain string, and the codec is what decides it is a digest.
+  return rawArchiveEvidenceCodec.serialize(
+    rawArchiveEvidenceCodec.parse({
+      kind: rawArchiveEvidenceCodec.kind,
+      version: rawArchiveEvidenceCodec.version,
+      data: { ...descriptor, digest },
+    }),
+  );
+}
+
+/**
+ * How many prematch snapshots are attested by a receipt a reader still checks.
+ *
+ * Only the prematch path reads an archived object back and verifies it against
+ * its receipt, and `prematch-resume.ts` turns a mismatch into a non-retryable
+ * failure. A rewrite cannot make the S3 PUT and the receipt update one atomic
+ * step, so for an instant the stored bytes and the attested digest disagree,
+ * and a resume landing in that instant loses its lake projection and
+ * notifications for good.
+ *
+ * Which snapshots can actually be read in that instant is a question about
+ * open workflows, not about this database, so the count is reported and the
+ * operator decides. Match and timeline receipts are not counted: nothing reads
+ * them back, so moving them is bookkeeping rather than a race.
+ */
+export async function countPrematchReceipts(db: Db): Promise<number> {
+  const rows = await db.query(
+    `SELECT COUNT(*) AS n FROM "MatchProcessingReceipt" WHERE "kind" = ${db.param(1)}`,
+    ["raw-archive-prematch"],
+  );
+  return countOf(rows, "prematch receipt");
 }
 
 /** Whether this database records processing receipts at all. */
