@@ -73,6 +73,10 @@ export function parseExploreSkillFile(
   return { ...frontmatter, body, placeholders };
 }
 
+// Resolved at runtime, so the directory must sit next to the executing code:
+// in the source tree that is this file's own `content/`, and in the bundled
+// artifact the package build copies `content/` into `dist/` (the bundle's
+// `import.meta.dir`). A bundle without it fails loudly at module init below.
 const CONTENT_DIR = `${import.meta.dir}/content`;
 
 /** Every skill file, sorted by name for a deterministic prompt index. */

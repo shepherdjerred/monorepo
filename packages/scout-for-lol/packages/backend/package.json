@@ -15,7 +15,7 @@
     "start:gateway": "SCOUT_RUNTIME_ROLE=gateway bun src/index.ts",
     "start:activity-worker": "SCOUT_RUNTIME_ROLE=activity-worker bun src/index.ts",
     "start:workflow-worker": "bun src/temporal/workflow-worker.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static --external '@duckdb/*' --external '@temporalio/*'",
+    "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static --external '@duckdb/*' --external '@temporalio/*' && rm -rf dist/content && cp -R src/explore/skills/content dist/content",
     "test": "DATABASE_URL=${DATABASE_URL:-postgres://scout@127.0.0.1:${SCOUT_PG_PORT:-5471}/scout_test_unbound} bun --no-install --bun vitest --config ../../../../vitest.config.ts run --testTimeout 20000",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
