@@ -55,7 +55,8 @@ export async function knownIdentities(db: Db): Promise<Set<string>> {
  */
 export async function collectKnownIdentities(db: Db): Promise<Set<string>> {
   const rows = await db.query(
-    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"`,
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
+      ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
   );
   const applied = new Map(
     rows.flatMap((row) => {
