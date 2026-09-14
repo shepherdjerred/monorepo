@@ -131,6 +131,11 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
       ]),
     );
     composePuuidRemap(map);
+    for (const [oldPuuid, replacement] of map) {
+      if (oldPuuid === replacement) {
+        map.delete(oldPuuid);
+      }
+    }
     return map;
   } finally {
     await db.close();

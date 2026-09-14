@@ -12,6 +12,7 @@
  */
 
 import { z } from "zod";
+import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import { PuuidKeyMapStatusSchema } from "@scout-for-lol/data/model/riot/puuid-key-map.ts";
 import type { Db } from "./db.ts";
 import { asOptionalString, asString, countOf, toSqlParam } from "./support.ts";
@@ -232,7 +233,8 @@ export async function importMap(
     );
   }
   const existingRows = await db.query(
-    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"`,
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
+      ORDER BY "appliedAt", "oldPuuid"`,
   );
   const existing = new Map(
     existingRows.map((row) => [
@@ -240,22 +242,22 @@ export async function importMap(
       asOptionalString(row["newPuuid"]),
     ]),
   );
+  const composedExisting = composePuuidRemap(
+    new Map(
+      existingRows
+        .filter((row) => row["appliedAt"] !== null)
+        .flatMap((row) => {
+          const replacement = asOptionalString(row["newPuuid"]);
+          return replacement === null
+            ? []
+            : [[asString(row["oldPuuid"], "oldPuuid"), replacement] as const];
+        }),
+    ),
+  );
   const returnCycleSources = new Set(
-    existingRows
-      .filter((row) => row["appliedAt"] !== null)
-      .filter((row) => {
-        const replacement = asOptionalString(row["newPuuid"]);
-        if (replacement === null) {
-          return false;
-        }
-        return existingRows.some(
-          (candidate) =>
-            candidate["oldPuuid"] === replacement &&
-            candidate["newPuuid"] === row["oldPuuid"] &&
-            candidate["appliedAt"] !== null,
-        );
-      })
-      .map((row) => asString(row["oldPuuid"], "oldPuuid")),
+    [...composedExisting]
+      .filter(([oldPuuid, replacement]) => oldPuuid === replacement)
+      .map(([oldPuuid]) => oldPuuid),
   );
 
   // Two different replacements for one identity are two irreconcilable claims,
