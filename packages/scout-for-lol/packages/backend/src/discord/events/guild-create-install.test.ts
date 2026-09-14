@@ -32,12 +32,26 @@ vi.doMock("#src/analytics/guild-lifecycle.ts", () => ({
   captureGuildInstalled,
 }));
 
-const { handleGuildCreate } =
+const installAttributionModule =
+  await import("#src/analytics/install-attribution.ts");
+const reconcilePendingInstallAttribution =
+  vi.fn<typeof installAttributionModule.reconcilePendingInstallAttribution>();
+const retirePendingInstallAttribution =
+  vi.fn<typeof installAttributionModule.retirePendingInstallAttribution>();
+vi.doMock("#src/analytics/install-attribution.ts", () => ({
+  ...installAttributionModule,
+  reconcilePendingInstallAttribution,
+  retirePendingInstallAttribution,
+}));
+
+const { handleGuildCreate, reconcileConnectedGuildInstalls } =
   await import("#src/discord/events/guild-create.ts");
 
 const SERVER_ID = testGuildId("500");
 
-function guildFixture(): ReturnType<typeof mockGuild> {
+function guildFixture(
+  send = vi.fn(() => Promise.resolve({})),
+): ReturnType<typeof mockGuild> {
   return mockGuild({
     name: "Fixture Server",
     id: SERVER_ID,
@@ -47,7 +61,7 @@ function guildFixture(): ReturnType<typeof mockGuild> {
       type: ChannelType.GuildText,
       name: "general",
       permissionsFor: vi.fn(() => ({ has: vi.fn(() => true) })),
-      send: vi.fn(() => Promise.resolve({})),
+      send,
     }),
     channels: { fetch: vi.fn(() => Promise.resolve(new Map())) },
     members: { me: { id: testAccountId("999") } },
@@ -55,9 +69,19 @@ function guildFixture(): ReturnType<typeof mockGuild> {
   });
 }
 
+async function reconcileWhileGuildLeaves(): Promise<void> {
+  let checks = 0;
+  await reconcileConnectedGuildInstalls([guildFixture()], () => {
+    checks += 1;
+    return checks === 1;
+  });
+}
+
 beforeEach(async () => {
   await prisma.guildInstall.deleteMany();
   captureGuildInstalled.mockClear();
+  reconcilePendingInstallAttribution.mockClear();
+  retirePendingInstallAttribution.mockClear();
 });
 
 afterAll(async () => {
@@ -65,6 +89,84 @@ afterAll(async () => {
 });
 
 describe("handleGuildCreate — GuildInstall bookkeeping", () => {
+  it("backfills a connected historical guild without marking a new install", async () => {
+    await reconcileConnectedGuildInstalls([guildFixture()]);
+
+    const row = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    expect(row).toMatchObject({
+      serverId: SERVER_ID,
+      serverName: "Fixture Server",
+      ownerDiscordId: testAccountId("77"),
+      addedByDiscordId: testAccountId("77"),
+      memberCount: 42,
+      analyticsLifecycleTracked: false,
+      removedAt: null,
+    });
+    expect(captureGuildInstalled).not.toHaveBeenCalled();
+  });
+
+  it("does not alter an existing guild during connection reconciliation", async () => {
+    const installedAt = new Date("2026-01-01T00:00:00.000Z");
+    await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Original name",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("88"),
+        memberCount: 10,
+        installedAt,
+      },
+    });
+
+    await reconcileConnectedGuildInstalls([guildFixture()]);
+
+    const row = await prisma.guildInstall.findUniqueOrThrow({
+      where: { serverId: SERVER_ID },
+    });
+    expect(row.serverName).toBe("Original name");
+    expect(row.addedByDiscordId).toBe(testAccountId("88"));
+    expect(row.installedAt).toEqual(installedAt);
+  });
+
+  it("restores a previously removed guild without sending onboarding", async () => {
+    await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        removedAt: new Date("2026-02-01T00:00:00.000Z"),
+      },
+    });
+
+    await reconcileConnectedGuildInstalls([guildFixture()]);
+
+    const row = await prisma.guildInstall.findUniqueOrThrow({
+      where: { serverId: SERVER_ID },
+    });
+    expect(row.removedAt).toBeNull();
+    expect(row.analyticsLifecycleTracked).toBe(true);
+    expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+    expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("reinstall");
+    expect(reconcilePendingInstallAttribution).not.toHaveBeenCalled();
+    expect(retirePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
+  });
+
+  it("does not backfill an unavailable guild", async () => {
+    const guild = guildFixture();
+    Object.defineProperty(guild, "available", { value: false });
+
+    await reconcileConnectedGuildInstalls([guild]);
+
+    await expect(
+      prisma.guildInstall.findUnique({ where: { serverId: SERVER_ID } }),
+    ).resolves.toBeNull();
+  });
+
   it("records a first install with a fresh outreach slate", async () => {
     await handleGuildCreate(guildFixture());
 
@@ -217,7 +319,59 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
   });
 });
 
+describe("handleGuildCreate — deferred historical availability", () => {
+  it("backfills without onboarding when an unavailable guild becomes available", async () => {
+    const send = vi.fn(() => Promise.resolve({}));
+    const guild = guildFixture(send);
+    Object.defineProperty(guild.client, "guilds", {
+      value: { cache: new Map([[SERVER_ID, guild]]) },
+    });
+
+    await handleGuildCreate(guild, true);
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({ analyticsLifecycleTracked: false });
+    expect(send).not.toHaveBeenCalled();
+    expect(captureGuildInstalled).not.toHaveBeenCalled();
+  });
+});
+
 describe("handleGuildCreate — availability guard and concurrent races", () => {
+  it("does not backfill a guild that left after the ready snapshot", async () => {
+    await reconcileConnectedGuildInstalls([guildFixture()], () => false);
+    await expect(
+      prisma.guildInstall.findUnique({ where: { serverId: SERVER_ID } }),
+    ).resolves.toBeNull();
+  });
+
+  it("marks a backfill removed when the guild leaves during its write", async () => {
+    await reconcileWhileGuildLeaves();
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({ removedAt: expect.any(Date) });
+  });
+
+  it("marks a recovered reinstall removed when it leaves during its write", async () => {
+    await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        removedAt: new Date("2026-02-01T00:00:00.000Z"),
+      },
+    });
+    await reconcileWhileGuildLeaves();
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({ removedAt: expect.any(Date) });
+  });
+
   it("does not touch the install row when the guild is unavailable", async () => {
     const installedAt = new Date("2026-01-01T00:00:00.000Z");
     await prisma.guildInstall.create({

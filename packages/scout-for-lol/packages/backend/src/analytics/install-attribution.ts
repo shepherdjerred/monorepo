@@ -130,6 +130,11 @@ async function tryAttributeInstall(params: {
   if (install?.removedAt !== null) {
     return "missing";
   }
+  // A row recovered from an already-connected guild authorizes the dashboard,
+  // but it has no reliable installation lifecycle to attribute.
+  if (!install.analyticsLifecycleTracked) {
+    return "already_installed";
+  }
   if (
     install.installedAt.getTime() <
     params.tokenCreatedAt.getTime() - INSTALL_FRESHNESS_SLACK_MS
@@ -282,4 +287,20 @@ export async function reconcilePendingInstallAttribution(
       getErrorMessage(error),
     );
   }
+}
+
+/** Retire a consumed browser token when startup recovers an old install. */
+export async function retirePendingInstallAttribution(
+  serverId: DiscordGuildId,
+  options?: AttributionOptions,
+): Promise<void> {
+  const db = options?.db ?? prisma;
+  await db.installAttributionToken.updateMany({
+    where: {
+      guildId: serverId,
+      consumedAt: { not: null },
+      reconciledAt: null,
+    },
+    data: { reconciledAt: options?.now ?? new Date() },
+  });
 }
