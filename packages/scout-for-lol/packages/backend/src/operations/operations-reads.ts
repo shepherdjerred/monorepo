@@ -33,6 +33,14 @@ import {
  * Every read is bounded by the caller's budget and deterministically ordered,
  * so a short page means a short backlog rather than a full window of finished
  * work.
+ *
+ * A queue item must be SUFFICIENT to act on. Each row an operator can answer
+ * carries every field the corresponding intent payload structurally requires,
+ * so an operator holding only this API can construct a valid confirmation
+ * without reaching into the database for a value the queue saw and discarded.
+ * The unknown-delivery row's `attemptNonce` is the case that bites: the
+ * resolution names the attempt it answers, so a queue that omitted it would be
+ * listing work this API could not then perform.
  */
 
 /** The page size any one queue may return to the console. */
@@ -50,6 +58,7 @@ export async function readOperationsQueues(args: {
     intentKey: string;
     matchId: string;
     attemptCount: number;
+    attemptNonce: string;
     state: string;
   }[];
   unprojectedMatches: readonly RiotMatchId[];
@@ -93,12 +102,25 @@ export async function readOperationsQueues(args: {
   return {
     stalledMatchProcessing,
     stalledNotifications,
-    unknownDeliveries: unknownDeliveries.map((record) => ({
-      intentKey: record.intent.key,
-      matchId: record.matchId,
-      attemptCount: record.intent.attemptCount,
-      state: record.intent.state.kind,
-    })),
+    unknownDeliveries: unknownDeliveries.map((record) => {
+      const state = record.intent.state;
+      if (state.kind !== "unknown-delivery") {
+        throw new Error(
+          `listUnknownDeliveryIntents returned ${record.intent.key} in state ${state.kind}`,
+        );
+      }
+      return {
+        intentKey: record.intent.key,
+        matchId: record.matchId,
+        attemptCount: record.intent.attemptCount,
+        // The nonce is not decoration: `ops_resolve_unknown_delivery` REQUIRES
+        // the exact nonce of the attempt being answered, and the domain refuses
+        // a mismatch as `stale-operator-view`. Without it here, this queue
+        // would hand an operator a row they could not act on through the API.
+        attemptNonce: state.attemptNonce,
+        state: state.kind,
+      };
+    }),
     unprojectedMatches,
     liveRecoveryBatches: liveRecoveryBatches.map((id) => id),
     unacceptedWorkflowStarts: unacceptedStarts.map((start) => ({

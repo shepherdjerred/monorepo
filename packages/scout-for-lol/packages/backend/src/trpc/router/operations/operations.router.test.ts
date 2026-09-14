@@ -20,7 +20,10 @@ import {
   SCOUT_WORKFLOW_NAMES,
   scoutPipelineReconciliationV2WorkflowId,
 } from "@scout-for-lol/temporal";
-import type { OperationsIntentPayload } from "@scout-for-lol/data";
+import {
+  OperationsIntentPayloadSchema,
+  type OperationsIntentPayload,
+} from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import {
   addFlagOverride,
@@ -527,12 +530,71 @@ describe("operations reads", () => {
         intentKey: key,
         matchId: MATCH_ID,
         attemptCount: 1,
+        attemptNonce: nonce,
         state: "unknown-delivery",
       },
     ]);
     // The same intent must NOT appear as stalled: nothing may start a child on
     // it, which is exactly why it has its own queue.
     expect(queues.stalledNotifications).toEqual([]);
+  });
+
+  test("a queued unknown delivery is sufficient to resolve through this API alone", async () => {
+    // The regression guard for the whole read surface, and the reason it asserts
+    // an ACTION rather than a field list: a queue that lists work an operator
+    // then cannot perform without reaching into the database is a queue that has
+    // silently dropped evidence it held. Everything below is built from the
+    // queue item, so a field the read stops returning breaks this test rather
+    // than quietly moving the work off-API.
+    await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420008",
+        deadlineOffsetMs: 60 * 60_000,
+        attemptCount: 3,
+        state: {
+          kind: "unknown-delivery",
+          attemptNonce:
+            NotificationAttemptNonceSchema.parse("run-91:attempt-3"),
+          observedAt: instant(-45_000),
+        },
+      }),
+    );
+
+    const queues = await caller().operations.queues({});
+    const [queued] = queues.unknownDeliveries;
+    if (queued === undefined) {
+      throw new Error("the seeded unknown delivery was not queued");
+    }
+
+    // Constructed ONLY from the queue item — no test-local nonce, no second
+    // read. If the payload cannot be assembled from what the queue returned,
+    // the parse fails here.
+    const payload = OperationsIntentPayloadSchema.parse({
+      kind: "ops_resolve_unknown_delivery",
+      version: 1,
+      intentKey: queued.intentKey,
+      answer: { outcome: "not-delivered", attemptNonce: queued.attemptNonce },
+    });
+
+    // Parsing is not enough: a well-formed payload naming the WRONG attempt
+    // would still be refused as `stale-operator-view`, so the assertion runs it
+    // through the machine and requires the intent to actually move.
+    const intentId = await prepare(payload);
+    const result = await caller().operations.confirm({ intentId });
+
+    expect(result).toEqual({
+      kind: "executed",
+      outcome: {
+        kind: "delivery-resolved",
+        intentKey: queued.intentKey,
+        intentState: "ready",
+      },
+      dispatch: null,
+    });
+    const resolved = await db.matchNotificationIntent.findUniqueOrThrow({
+      where: { intentKey: queued.intentKey },
+    });
+    expect(resolved.state).toBe("ready");
   });
 
   test("a match with no observation reads as not-found", async () => {
