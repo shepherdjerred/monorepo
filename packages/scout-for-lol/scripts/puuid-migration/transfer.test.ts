@@ -159,6 +159,34 @@ test("import updates an existing row, because the imported map is the newer answ
   await db.close();
 });
 
+test("import permits a new edge after a return transition and resets its applied marker", async () => {
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "appliedAt") VALUES
+      (${db.param(1)}, ${db.param(2)}, 'resolved', datetime('now', '-2 days')),
+      (${db.param(2)}, ${db.param(1)}, 'resolved', datetime('now', '-1 day'))`,
+    [OLD_A, NEW_A],
+  );
+  const { importMap } = await import("./transfer.ts");
+  const result = await importMap(db, [
+    {
+      oldPuuid: OLD_A,
+      gameName: "N",
+      tagLine: "T",
+      newPuuid: NEW_B,
+      status: "resolved",
+    },
+  ]);
+  expect(result).toEqual({ inserted: 0, updated: 1, downgraded: 0 });
+  const rows = await db.query(
+    `SELECT "newPuuid" AS n, "appliedAt" AS a FROM "PuuidKeyMap" WHERE "oldPuuid" = ${db.param(1)}`,
+    [OLD_A],
+  );
+  expect(rows[0]?.["n"]).toBe(NEW_B);
+  expect(rows[0]?.["a"]).toBeNull();
+  await db.close();
+});
+
 describe("a map file is parsed, not trusted", () => {
   // It crosses machines. `apply` rewrites every stored reference to whatever is
   // in it, and `verify` would pass afterwards because it only asks whether a

@@ -232,13 +232,30 @@ export async function importMap(
     );
   }
   const existingRows = await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"`,
   );
   const existing = new Map(
     existingRows.map((row) => [
       asString(row["oldPuuid"], "oldPuuid"),
       asOptionalString(row["newPuuid"]),
     ]),
+  );
+  const returnCycleSources = new Set(
+    existingRows
+      .filter((row) => row["appliedAt"] !== null)
+      .filter((row) => {
+        const replacement = asOptionalString(row["newPuuid"]);
+        if (replacement === null) {
+          return false;
+        }
+        return existingRows.some(
+          (candidate) =>
+            candidate["oldPuuid"] === replacement &&
+            candidate["newPuuid"] === row["oldPuuid"] &&
+            candidate["appliedAt"] !== null,
+        );
+      })
+      .map((row) => asString(row["oldPuuid"], "oldPuuid")),
   );
 
   // Two different replacements for one identity are two irreconcilable claims,
@@ -250,7 +267,12 @@ export async function importMap(
   // this has to stop the import.
   for (const row of rows) {
     const held = existing.get(row.oldPuuid) ?? null;
-    if (held !== null && row.newPuuid !== null && row.newPuuid !== held) {
+    if (
+      held !== null &&
+      row.newPuuid !== null &&
+      row.newPuuid !== held &&
+      !returnCycleSources.has(row.oldPuuid)
+    ) {
       throw new Error(
         `Refusing to import: ${row.oldPuuid.slice(0, 16)}… already maps to ` +
           `${held.slice(0, 16)}… here, and the file says ${row.newPuuid.slice(0, 16)}…. ` +
@@ -279,7 +301,11 @@ export async function importMap(
                 "tagLine"  = COALESCE(${db.param(3)}, "tagLine"),
                 "status"   = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL
                                   THEN "status" ELSE ${db.param(5)} END,
-                "newPuuid" = COALESCE(${db.param(4)}, "newPuuid")
+                "newPuuid" = COALESCE(${db.param(4)}, "newPuuid"),
+                "appliedAt" = CASE
+                  WHEN ${db.param(4)} IS NOT NULL
+                   AND ("newPuuid" IS NULL OR "newPuuid" <> ${db.param(4)})
+                  THEN NULL ELSE "appliedAt" END
           WHERE "oldPuuid" = ${db.param(1)}`,
         params,
       );

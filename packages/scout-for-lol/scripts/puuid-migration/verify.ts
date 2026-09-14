@@ -8,6 +8,7 @@
  */
 
 import { cutoverApplied, strayIdentities } from "./cutover.ts";
+import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import type { Db } from "./db.ts";
 import {
   discoverColumns,
@@ -17,13 +18,22 @@ import {
 import { asOptionalString, asString, countOf } from "./support.ts";
 
 /** Rows in a scalar column still holding a translated old-domain PUUID. */
-async function scalarSurvivors(db: Db, col: PuuidColumn): Promise<number> {
-  const rows = await db.query(`
-    SELECT COUNT(*) AS n FROM "${col.table}" t
-      JOIN "PuuidKeyMap" m ON t."${col.column}" = m."oldPuuid"
-     WHERE m."newPuuid" IS NOT NULL
-  `);
-  return countOf(rows, "survivor count");
+async function scalarSurvivors(
+  db: Db,
+  col: PuuidColumn,
+  translated: ReadonlySet<string>,
+): Promise<number> {
+  const rows = await db.query(
+    `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL`,
+  );
+  let survivors = 0;
+  for (const row of rows) {
+    const value = asOptionalString(row["v"]);
+    if (value !== null && translated.has(value)) {
+      survivors++;
+    }
+  }
+  return survivors;
 }
 
 /**
@@ -91,10 +101,21 @@ export async function strand(db: Db, confirmed: boolean): Promise<void> {
 export async function verify(db: Db): Promise<void> {
   const columns = await discoverColumns(db);
   const mapRows = await db.query(
-    `SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL`,
+    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"
+      WHERE "newPuuid" IS NOT NULL
+      ORDER BY "appliedAt", "oldPuuid"`,
   );
+  const remap = new Map(
+    mapRows.map((row) => [
+      asString(row["oldPuuid"], "oldPuuid"),
+      asString(row["newPuuid"], "newPuuid"),
+    ]),
+  );
+  composePuuidRemap(remap);
   const translated = new Set(
-    mapRows.map((r) => asString(r["oldPuuid"], "oldPuuid")),
+    [...remap]
+      .filter(([oldPuuid, newPuuid]) => oldPuuid !== newPuuid)
+      .map(([oldPuuid]) => oldPuuid),
   );
   console.log(
     `  checking ${columns.length.toString()} columns against ${translated.size.toString()} translated identities`,
@@ -104,7 +125,7 @@ export async function verify(db: Db): Promise<void> {
   for (const col of columns) {
     const n =
       col.kind === "scalar"
-        ? await scalarSurvivors(db, col)
+        ? await scalarSurvivors(db, col, translated)
         : await jsonSurvivors(db, col, translated);
     if (n > 0) {
       console.error(
