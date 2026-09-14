@@ -23,45 +23,12 @@ A beta deployment of the same dashboard runs at
 | `/app/explore`           | Persistent Explore conversations and contract authoring |
 | `/app/challenges`        | Global community challenge catalog                      |
 | `/app/halls/<server id>` | Member-facing Hall of Fame                              |
-| `/app/duels/<server id>` | Direct duels, events, and rolling records               |
-| `/app/bucks/dares`       | Dare discovery and management for Bryan Bucks           |
 | `/app/g/<server id>/…`   | The management workspace for one server                 |
 
 ## Explore
 
 Explore keeps private, branching conversations over Scout's recorded match
-corpus. It is also the conversational Dare authoring surface: `/bb dare` starts
-a private Explore conversation, and transcript cards let the author clarify a
-contract and confirm its next action.
-
-## Bryan Bucks Dares
-
-The **Dares** tab under Bryan Bucks is the discovery and management surface for
-the currently selected server. It appears when Dare v2 is enabled or when the
-member has an existing Dare that must remain accessible.
-
-**My Dares** includes your private unfunded drafts and every visible funded
-contract involving you. **Guild Dares** includes funded contracts in the
-selected server; it never exposes another member's draft. A Dare detail shows
-its stable ID, revision, lifecycle state, explicit same-game or cross-game
-meaning, targets, queue and time bounds, current pot, evidence progress, and
-reproducible proof after settlement.
-
-Nonterminal details refresh every 30 seconds. Their progress view includes
-per-condition and per-target values, remaining work, race leaders, rank and
-normalized LP movement, frozen improvement baselines, streaks, and sequence
-steps when the contract uses them. The evidence list shows each evaluated match
-in chronological order with candidate membership, actual values, coverage,
-source references, progress before and after, and the structured raw trace.
-Processing health distinguishes complete, delayed, stale, and failed polling;
-an activating contract also shows snapshot attempts and the next retry.
-
-Draft owners can validate, historically preview, or revise a draft with the
-advanced editor, or return to Explore for conversational revision.
-The advanced editor exposes the typed contract plan and generated ScoutQL with
-diagnostics, semantic explanation, and a meaning diff before revision. Funding,
-acceptance, decline, contribution, and cancellation first create a revision-
-bound, single-use confirmation; merely opening or sharing a card never moves BB.
+corpus.
 
 ## Server workspace sections
 
@@ -136,9 +103,6 @@ Creating and editing are gated on `reports:create` and `reports:update`.
 - **Challenges** turn explicitly confirmed Explore drafts into immutable,
   deterministic progress contracts. Runs support a clean slate or retained
   history import.
-- **Duels** cover direct 1v1 and 2v2 challenges, rolling records, and structured
-  events. Tournament codes remain in the authorized web view and every player
-  accepts the custom-match disclosure for themselves.
 
 See the [competitive progression
 reference](/docs/reference/competitive-progression/) for routes, records,

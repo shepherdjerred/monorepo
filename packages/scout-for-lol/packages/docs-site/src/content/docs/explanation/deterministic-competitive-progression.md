@@ -87,4 +87,3 @@ mutate the friendly betting ledger.
 
 - [Set up a Hall of Fame](/docs/how-to/set-up-hall-of-fame/)
 - [Start a community challenge run](/docs/how-to/run-community-challenge/)
-- [Run a duel or tournament](/docs/how-to/run-duel-event/)
