@@ -29,7 +29,10 @@ function gatewaylessClient() {
   });
 }
 
-async function seedInstall(serverId: DiscordGuildId): Promise<void> {
+async function seedInstall(
+  serverId: DiscordGuildId,
+  options?: { analyticsLifecycleTracked?: boolean },
+): Promise<void> {
   await prisma.guildInstall.create({
     data: {
       serverId,
@@ -40,6 +43,7 @@ async function seedInstall(serverId: DiscordGuildId): Promise<void> {
       // Long enough ago that the outreach ladder would have something to say.
       installedAt: new Date("2026-01-01T00:00:00.000Z"),
       removedAt: null,
+      analyticsLifecycleTracked: options?.analyticsLifecycleTracked ?? true,
     },
   });
 }
@@ -94,6 +98,22 @@ describe("outreach membership", () => {
   });
 
   test("no installs means no membership questions", async () => {
+    const asked: string[] = [];
+
+    await runOutreach(gatewaylessClient(), {
+      dryRun: true,
+      db: prisma,
+      isInstalled: (guildId) => {
+        asked.push(guildId);
+        return Promise.resolve(true);
+      },
+    });
+
+    expect(asked).toEqual([]);
+  });
+
+  test("does not contact a historical backfill", async () => {
+    await seedInstall(stillInstalled, { analyticsLifecycleTracked: false });
     const asked: string[] = [];
 
     await runOutreach(gatewaylessClient(), {

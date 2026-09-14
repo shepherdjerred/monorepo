@@ -246,7 +246,10 @@ export async function runOutreach(
   const now = new Date();
 
   const installs = await db.guildInstall.findMany({
-    where: { removedAt: null },
+    // Backfilled historical connections deliberately have no lifecycle date.
+    // They grant dashboard access, but must never become a fresh outreach
+    // cohort merely because the backfill was written today.
+    where: { analyticsLifecycleTracked: true, removedAt: null },
   });
 
   let sent = 0;

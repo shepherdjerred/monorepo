@@ -295,7 +295,6 @@ export async function reconcileConnectedGuildInstalls(
           analyticsLifecycleTracked: false,
         },
       });
-      await reconcilePendingInstallAttribution(serverId);
       logger.info(
         `[Guild Install Reconciliation] Backfilled ${guild.name} (${guild.id})`,
       );

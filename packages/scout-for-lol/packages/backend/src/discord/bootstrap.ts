@@ -300,7 +300,11 @@ export function registerDiscordEventHandlers(target: Client): void {
     // row, otherwise the dashboard's picker hides a server where Scout is
     // connected. This path is intentionally not `handleGuildCreate`: it must
     // never welcome or re-onboard an existing server.
-    void reconcileConnectedGuildInstalls(readyClient.guilds.cache.values());
+    // Snapshot at ready time so a real `guildCreate` arriving while the
+    // asynchronous database reconciliation runs keeps its first-install
+    // lifecycle, rather than being mistaken for a historical connection.
+    const connectedGuildsAtReady = [...readyClient.guilds.cache.values()];
+    void reconcileConnectedGuildInstalls(connectedGuildsAtReady);
     void registerConnectedGuildCommands(readyClient.guilds.cache.keys());
   });
 
