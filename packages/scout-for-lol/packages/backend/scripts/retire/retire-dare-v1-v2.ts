@@ -31,7 +31,11 @@ import {
 } from "#src/betting/dares/settlement/dare-settle-shared.ts";
 import { cancelDareV2InTransaction } from "#src/betting/dares/settlement/dare-refund-v2.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dares/settlement/dare-void-v2.ts";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import {
+  BucksDareStateSchema,
+  BucksDareV2StateSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/data";
 
 const DARE_SQL_V3_COMPILER = "dare-scoutql-3";
 
@@ -40,6 +44,46 @@ const DRAIN_HORIZON = new Date("2100-01-01T00:00:00Z");
 
 const OPEN_V1_STATES = ["proposed", "pending_accept", "active"] as const;
 const OPEN_V2_STATES = ["pending_accept", "activating", "active"] as const;
+
+const OPEN_V1_STATE_SET = new Set<string>(OPEN_V1_STATES);
+const OPEN_V2_STATE_SET = new Set<string>(OPEN_V2_STATES);
+
+const TERMINAL_V1_STATES = BucksDareStateSchema.options.filter(
+  (state) => !OPEN_V1_STATE_SET.has(state),
+);
+const TERMINAL_V2_STATES = BucksDareV2StateSchema.options.filter(
+  (state) => state !== "draft" && !OPEN_V2_STATE_SET.has(state),
+);
+
+/**
+ * A misspelled, corrupt, or newly introduced state must stop the run before
+ * openness is judged: an unknown state would otherwise read as "terminal" and
+ * purge could cascade-delete a pot it never refunded.
+ */
+async function assertKnownDareStates(db: ExtendedPrismaClient): Promise<void> {
+  const v1States = await db.bucksDare.findMany({
+    select: { id: true, dareState: true },
+  });
+  for (const row of v1States) {
+    const parsed = BucksDareStateSchema.safeParse(row.dareState);
+    if (!parsed.success) {
+      throw new Error(
+        `v1 dare ${row.id.toString()} has unrecognized state "${row.dareState}"`,
+      );
+    }
+  }
+  const v2States = await db.bucksDareV2.findMany({
+    select: { id: true, dareState: true },
+  });
+  for (const row of v2States) {
+    const parsed = BucksDareV2StateSchema.safeParse(row.dareState);
+    if (!parsed.success) {
+      throw new Error(
+        `v2 dare ${row.id.toString()} has unrecognized state "${row.dareState}"`,
+      );
+    }
+  }
+}
 
 const ArgsSchema = z.strictObject({
   apply: z.boolean(),
@@ -258,14 +302,14 @@ async function drainV2(
 
 /** True when nothing open remains on any pre-v3 dialect. */
 async function verify(db: ExtendedPrismaClient = prisma): Promise<boolean> {
+  await assertKnownDareStates(db);
   const openV1 = await db.bucksDare.count({
     where: { dareState: { in: [...OPEN_V1_STATES] } },
   });
-  const openV2States = new Set<string>(OPEN_V2_STATES);
   const openPreV3 = (await loadDareV2Rows(db)).filter(
     (dare) =>
       isPreV3(dare) &&
-      (dare.dareState === "draft" || openV2States.has(dare.dareState)),
+      (dare.dareState === "draft" || OPEN_V2_STATE_SET.has(dare.dareState)),
   );
   console.log(`open v1 dares: ${openV1.toString()}`);
   console.log(`open pre-v3 v2 dares: ${openPreV3.length.toString()}`);
@@ -301,6 +345,11 @@ async function purge(
           `Dare ${dare.id.toString()} is v3-effective but its governing revision is pre-v3`,
         );
       }
+      if (!PRE_V3_COMPILERS.has(revision.compilerVersion)) {
+        throw new Error(
+          `Dare ${dare.id.toString()} revision ${revision.revision.toString()} has unrecognized compiler version "${revision.compilerVersion}"`,
+        );
+      }
       supersededRevisionIds.push(revision.id);
       console.log(
         `superseded pre-v3 revision: dare #${dare.id.toString()} revision ${revision.revision.toString()} (${revision.compilerVersion})`,
@@ -325,10 +374,26 @@ async function purge(
   const deletedRevisions = await db.bucksDareV2Revision.deleteMany({
     where: { id: { in: supersededRevisionIds } },
   });
-  const deletedV1 = await db.bucksDare.deleteMany({});
-  const deletedV2 = await db.bucksDareV2.deleteMany({
-    where: { id: { in: preV3Ids } },
+  // Terminal-state-conditioned deletes: a dare opened or funded between the
+  // verify read and this write must survive and fail the count assertion,
+  // never be cascade-deleted with an unrefunded pot.
+  const deletedV1 = await db.bucksDare.deleteMany({
+    where: { dareState: { in: TERMINAL_V1_STATES } },
   });
+  const v1Remaining = await db.bucksDare.count();
+  if (v1Remaining !== 0) {
+    throw new Error(
+      `${v1Remaining.toString()} v1 dare(s) appeared or reopened mid-purge; drain again before re-running`,
+    );
+  }
+  const deletedV2 = await db.bucksDareV2.deleteMany({
+    where: { id: { in: preV3Ids }, dareState: { in: TERMINAL_V2_STATES } },
+  });
+  if (deletedV2.count !== preV3Ids.length) {
+    throw new Error(
+      `Claimed ${deletedV2.count.toString()} of ${preV3Ids.length.toString()} pre-v3 dares; some changed state mid-purge — drain again before re-running`,
+    );
+  }
   console.log(
     `deleted ${deletedRevisions.count.toString()} superseded pre-v3 revisions from retained v3 dares`,
   );
