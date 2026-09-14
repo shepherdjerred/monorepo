@@ -315,7 +315,7 @@ export async function refreshDuelSeriesWorkflowState(
   }
 
   const guildId = DiscordGuildIdSchema.parse(series.guildId);
-  if (!(await duelRolloutAllowed(prisma, guildId, input.stage))) {
+  if (!(await duelRolloutAllowed(guildId))) {
     return refreshResult("awaiting_readiness", deadlineAt);
   }
   if (!(await participantsHaveCurrentConsent(guildId, series.participants))) {

@@ -1,38 +1,30 @@
 import { TRPCError } from "@trpc/server";
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import type { ScoutStage } from "@scout-for-lol/temporal";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
 
-const REQUIRED_RIOT_APPROVALS = [
-  "classic_objectives",
-  "sub_twenty_events",
-] as const;
-
+/**
+ * The dev-guild override keeps the gate aligned with `duel.status` (and with
+ * `assertHallEnabled`): the dev-login/design-audit fixture guild can use
+ * duels without a flag, so navigation never advertises a route the gate
+ * would then refuse.
+ */
 export async function duelRolloutAllowed(
-  db: ExtendedPrismaClient,
   guildId: DiscordGuildId,
-  stage: ScoutStage,
 ): Promise<boolean> {
-  if (!(await isPolicyEnabled("duels_enabled", { server: guildId }))) {
-    return false;
-  }
-  if (stage === "dev") return true;
-  const approvals = await db.duelRiotApproval.count({
-    where: { feature: { in: [...REQUIRED_RIOT_APPROVALS] } },
-  });
-  return approvals === REQUIRED_RIOT_APPROVALS.length;
+  return (
+    (await isPolicyEnabled("duels_enabled", { server: guildId })) ||
+    isDevGuildOverrideGuild(guildId)
+  );
 }
 
 export async function assertDuelsEnabled(
-  db: ExtendedPrismaClient,
   guildId: DiscordGuildId,
-  stage: ScoutStage,
 ): Promise<void> {
-  if (!(await duelRolloutAllowed(db, guildId, stage))) {
+  if (!(await duelRolloutAllowed(guildId))) {
     throw new TRPCError({
       code: "NOT_FOUND",
-      message: "Duels are unavailable pending Riot approval",
+      message: "Duels are not enabled in this server",
     });
   }
 }
