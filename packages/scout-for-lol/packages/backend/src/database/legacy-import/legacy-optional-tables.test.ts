@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { assertPuuidRemapIsIntact } from "#src/database/legacy-import/legacy-optional-tables.ts";
+import {
+  assertPuuidRemapIsIntact,
+  LEGACY_PRE_BUCKS_TABLES,
+  optionalTablesForLegacySnapshot,
+} from "#src/database/legacy-import/legacy-optional-tables.ts";
 
 describe("assertPuuidRemapIsIntact", () => {
   it("accepts a snapshot that never crossed key domains", () => {
@@ -26,5 +30,20 @@ describe("assertPuuidRemapIsIntact", () => {
     expect(() => {
       assertPuuidRemapIsIntact({ mapMissing: true, appliedCutovers: 1 });
     }).toThrow(/applied PUUID key cutover but has no/);
+  });
+});
+
+describe("optionalTablesForLegacySnapshot", () => {
+  it("accepts a snapshot from before the entire Bucks schema", () => {
+    const optionalTables = optionalTablesForLegacySnapshot(
+      new Set(LEGACY_PRE_BUCKS_TABLES),
+    );
+    expect(optionalTables.has("BucksAccount")).toBe(true);
+  });
+
+  it("refuses a partial Bucks schema", () => {
+    expect(() => {
+      optionalTablesForLegacySnapshot(new Set(["BucksAccount"]));
+    }).toThrow(/partial Bryan Bucks schema/);
   });
 });

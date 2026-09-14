@@ -27,6 +27,41 @@ export const LEGACY_OPTIONAL_TABLES = new Set([
 ]);
 
 /**
+ * Bryan Bucks was introduced after the oldest retained production SQLite
+ * snapshot. That snapshot has no Bucks schema at all, so importing it with
+ * empty Bucks models is sound. A partly missing Bucks schema is not an older
+ * version we understand: it could discard real ledger data, and must fail.
+ */
+export const LEGACY_PRE_BUCKS_TABLES = new Set([
+  "BucksAccount",
+  "BucksMatchPool",
+  "BucksMatchEarning",
+  "BucksBet",
+  "BucksLedgerEntry",
+]);
+
+/** Return the audited missing-table allowances for one SQLite snapshot. */
+export function optionalTablesForLegacySnapshot(
+  missingTables: ReadonlySet<string>,
+): ReadonlySet<string> {
+  const missingBucksTables = [...LEGACY_PRE_BUCKS_TABLES].filter((table) =>
+    missingTables.has(table),
+  );
+  if (
+    missingBucksTables.length > 0 &&
+    missingBucksTables.length !== LEGACY_PRE_BUCKS_TABLES.size
+  ) {
+    throw new Error(
+      "Legacy SQLite source has a partial Bryan Bucks schema; refusing to " +
+        "treat possibly missing ledger data as an older snapshot.",
+    );
+  }
+  return missingBucksTables.length === 0
+    ? LEGACY_OPTIONAL_TABLES
+    : new Set([...LEGACY_OPTIONAL_TABLES, ...LEGACY_PRE_BUCKS_TABLES]);
+}
+
+/**
  * A completed cutover without its map is not a legitimately older snapshot.
  *
  * The two tables are independently optional because an environment that never
