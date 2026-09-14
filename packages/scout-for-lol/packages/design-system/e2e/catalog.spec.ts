@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { scoutThemes } from "#src/generated/tokens.ts";
 import { loadStorybookStories } from "./storybook-index.ts";
 
 const stories = await loadStorybookStories();
@@ -9,6 +10,13 @@ const themes = [
   { skin: "modern", mode: "dark" },
   { skin: "classic", mode: "light" },
 ] as const;
+
+const themeTokens = (theme: (typeof themes)[number]) => {
+  if (theme.skin === "modern") {
+    return scoutThemes["modern-dark"];
+  }
+  return scoutThemes["classic-light"];
+};
 
 // A story renders one component, not a document. Page-structure rules fail on
 // every story for reasons no component owns.
@@ -39,6 +47,37 @@ for (const story of stories) {
         "data-scout-mode",
         theme.mode,
       );
+      const expectedColors = themeTokens(theme).colors;
+      await expect
+        .poll(async () =>
+          page.locator("html").evaluate((root) => {
+            const styles = getComputedStyle(root);
+            return {
+              canvas: styles
+                .getPropertyValue("--scout-color-canvas")
+                .trim()
+                .toLowerCase(),
+              surface: styles
+                .getPropertyValue("--scout-color-surface")
+                .trim()
+                .toLowerCase(),
+              text: styles
+                .getPropertyValue("--scout-color-text")
+                .trim()
+                .toLowerCase(),
+              textMuted: styles
+                .getPropertyValue("--scout-color-text-muted")
+                .trim()
+                .toLowerCase(),
+            };
+          }),
+        )
+        .toEqual({
+          canvas: expectedColors.canvas.toLowerCase(),
+          surface: expectedColors.surface.toLowerCase(),
+          text: expectedColors.text.toLowerCase(),
+          textMuted: expectedColors.textMuted.toLowerCase(),
+        });
       // Mounted, not non-blank: icon-only stories render no text at all.
       await expect(page.locator("#storybook-root > *").first()).toBeAttached();
       await expect(page.locator("body.sb-show-errordisplay")).toHaveCount(0);
