@@ -11,6 +11,8 @@
  * halves the Riot spend and guarantees the two environments agree.
  */
 
+import { z } from "zod";
+import { PuuidKeyMapStatusSchema } from "@scout-for-lol/data/model/riot/puuid-key-map.ts";
 import type { Db } from "./db.ts";
 import { asOptionalString, asString, countOf, toSqlParam } from "./support.ts";
 
@@ -27,36 +29,55 @@ export function serializeMap(rows: readonly MapRow[]): string {
   return rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
 }
 
+/**
+ * What a mapping must look like to be worth acting on.
+ *
+ * The file crosses machines, so nothing in it is trusted. An identifier that
+ * merely parses as a string is not enough: `apply` rewrites every stored
+ * reference to whatever it finds here, and `verify` would pass afterwards
+ * because it only asks whether a replacement exists and the old value is gone.
+ * One corrupted row therefore replaces real identities across two databases and
+ * an archive, reports success, and cannot be undone once the old key is retired.
+ */
+const PuuidSchema = z
+  .string()
+  .regex(/^[\w-]{70,90}$/u, "not a PUUID: expected 70-90 base64url characters");
+
+const MapRowSchema = z
+  .object({
+    oldPuuid: PuuidSchema,
+    gameName: z.string().min(1).nullable().default(null),
+    tagLine: z.string().min(1).nullable().default(null),
+    newPuuid: PuuidSchema.nullable().default(null),
+    status: PuuidKeyMapStatusSchema,
+  })
+  // A replacement and the status announcing it have to agree. Either half alone
+  // is a row that behaves as neither: a `resolved` row with nothing to rewrite
+  // to, or a replacement the gates read as unfinished work.
+  .refine(
+    (row) => (row.newPuuid === null) === (row.status !== "resolved"),
+    "a mapping is resolved exactly when it has a replacement",
+  );
+
 export function parseMapRows(text: string): MapRow[] {
   const rows: MapRow[] = [];
+  let lineNumber = 0;
   for (const line of text.split("\n")) {
+    lineNumber++;
     if (line.trim() === "") {
       continue;
     }
     const parsed: unknown = JSON.parse(line);
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      Array.isArray(parsed)
-    ) {
-      throw new Error(`Map line is not an object: ${line.slice(0, 80)}`);
+    const result = MapRowSchema.safeParse(parsed);
+    if (!result.success) {
+      const why = result.error.issues
+        .map((issue) => `${issue.path.join(".") || "row"}: ${issue.message}`)
+        .join("; ");
+      throw new Error(
+        `Map line ${lineNumber.toString()} is not a usable mapping (${why}): ${line.slice(0, 80)}`,
+      );
     }
-    const record: Record<string, unknown> = { ...parsed };
-    const oldPuuid = record["oldPuuid"];
-    const status = record["status"];
-    if (typeof oldPuuid !== "string" || oldPuuid === "") {
-      throw new Error(`Map line has no oldPuuid: ${line.slice(0, 80)}`);
-    }
-    if (typeof status !== "string" || status === "") {
-      throw new Error(`Map line has no status: ${line.slice(0, 80)}`);
-    }
-    rows.push({
-      oldPuuid,
-      gameName: asOptionalString(record["gameName"]),
-      tagLine: asOptionalString(record["tagLine"]),
-      newPuuid: asOptionalString(record["newPuuid"]),
-      status,
-    });
+    rows.push(result.data);
   }
   return rows;
 }

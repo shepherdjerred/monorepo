@@ -218,8 +218,8 @@ catch everything archived while the resolve was running:
 # the archive, again — days of games have been added since step 2
 S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts inventory --out prod-2.jsonl
 S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory --out beta-2.jsonl
-bun scripts/migrate-puuid-key.ts seed --from prod-2.jsonl
-bun scripts/migrate-puuid-key.ts seed --from beta-2.jsonl
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from prod-2.jsonl
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from beta-2.jsonl
 
 # and the databases — each one, pointed at itself
 DATABASE_URL="$PROD_DB" bun scripts/migrate-puuid-key.ts collect

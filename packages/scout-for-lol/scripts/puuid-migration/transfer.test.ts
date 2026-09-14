@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, expect, test } from "vitest";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { openFixtureDatabase, removeDatabase } from "./sqlite-fixture.ts";
@@ -113,10 +113,76 @@ test("import updates an existing row, because the imported map is the newer answ
   await db.close();
 });
 
-test("parseMapRows refuses a line with no identity rather than dropping it", async () => {
-  const { parseMapRows } = await import("./transfer.ts");
-  expect(() => parseMapRows(`{"status":"resolved"}`)).toThrow(/no oldPuuid/);
-  expect(() => parseMapRows(`{"oldPuuid":"x"}`)).toThrow(/no status/);
+describe("a map file is parsed, not trusted", () => {
+  // It crosses machines. `apply` rewrites every stored reference to whatever is
+  // in it, and `verify` would pass afterwards because it only asks whether a
+  // replacement exists and the old value is gone — so a corrupted row replaces
+  // real identities across two databases and an archive and reports success.
+  const good = {
+    oldPuuid: OLD_A,
+    gameName: "Zozio8z",
+    tagLine: "EUW",
+    newPuuid: NEW_A,
+    status: "resolved",
+  };
+  const line = (over: Record<string, unknown>) =>
+    JSON.stringify({ ...good, ...over });
+
+  test("accepts a well-formed mapping", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    expect(parseMapRows(line({}))).toHaveLength(1);
+  });
+
+  test("refuses a replacement that is not a PUUID", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    expect(() => parseMapRows(line({ newPuuid: "x" }))).toThrow(/not a PUUID/);
+  });
+
+  test("refuses an identity that is not a PUUID", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    expect(() => parseMapRows(line({ oldPuuid: "x" }))).toThrow(/not a PUUID/);
+  });
+
+  test("refuses a status nothing understands", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    expect(() => parseMapRows(line({ status: "probably-fine" }))).toThrow(
+      /status/,
+    );
+  });
+
+  test("refuses a resolved row with nothing to rewrite to", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    expect(() =>
+      parseMapRows(line({ newPuuid: null, status: "resolved" })),
+    ).toThrow(/resolved exactly when/);
+  });
+
+  test("refuses a replacement the gates would read as unfinished", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    expect(() => parseMapRows(line({ status: "pending" }))).toThrow(
+      /resolved exactly when/,
+    );
+  });
+
+  test("accepts a stranded row, which has no replacement by definition", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    const rows = parseMapRows(
+      line({
+        newPuuid: null,
+        status: "stranded",
+        gameName: null,
+        tagLine: null,
+      }),
+    );
+    expect(rows[0]?.status).toBe("stranded");
+  });
+
+  test("names the line it could not read", async () => {
+    const { parseMapRows } = await import("./transfer.ts");
+    expect(() =>
+      parseMapRows(`${line({})}\n${line({ newPuuid: "x" })}`),
+    ).toThrow(/line 2/);
+  });
 });
 
 test("import never erases a replacement this database already holds", async () => {
