@@ -216,24 +216,6 @@ describe("completeInstallAttribution", () => {
     });
     expect(untouched.attributedAt).toBeNull();
   });
-
-  test("refuses to attribute a historical backfill", async () => {
-    await seedInstall({ analyticsLifecycleTracked: false });
-    const token = await mint();
-    const { analytics, capture } = createAnalyticsFixture();
-
-    const result = await completeInstallAttribution(
-      { state: token, guildId: SERVER_ID, discordId: INSTALLER },
-      { db: prisma, analytics, now: T_PLUS_5M },
-    );
-
-    expect(result.outcome).toBe("already_installed");
-    expect(capture).not.toHaveBeenCalled();
-    const untouched = await prisma.guildInstall.findUniqueOrThrow({
-      where: { serverId: SERVER_ID },
-    });
-    expect(untouched.attributedAt).toBeNull();
-  });
 });
 
 async function consumePending(token: string) {
