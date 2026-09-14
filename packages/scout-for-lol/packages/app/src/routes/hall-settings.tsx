@@ -1,3 +1,4 @@
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
@@ -42,6 +43,7 @@ export function HallSettings() {
   const hall = useQuery(trpc.hall.get.queryOptions({ guildId }));
   const update = useMutation(
     trpc.hall.updateSettings.mutationOptions({
+      meta: analyticsMeta("hall_settings_changed"),
       onSuccess: (result) => {
         setError(null);
         queryClient.setQueryData(
@@ -59,6 +61,7 @@ export function HallSettings() {
   );
   const baseline = useMutation(
     trpc.hall.startBaseline.mutationOptions({
+      meta: analyticsMeta("hall_baseline_requested"),
       onSuccess: () => {
         setError(null);
         void queryClient.invalidateQueries({

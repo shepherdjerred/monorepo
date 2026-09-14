@@ -121,6 +121,7 @@ export async function handleChatInputCommand(
     await captureDiscordCommandUsed({
       guildId: interaction.guildId,
       commandName,
+      subcommand: interaction.options.getSubcommand(false),
       status: commandStatus,
     });
     if (commandName === "bb") {

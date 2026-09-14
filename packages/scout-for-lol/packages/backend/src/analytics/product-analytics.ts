@@ -41,7 +41,27 @@ export type DiscordCommandName =
   | "track"
   | "list"
   | "bb"
+  | "lobby"
   | "scout";
+/**
+ * Closed set of subcommand names across the grouped commands (`/bb`, `/scout`,
+ * `/lobby`). An unrecognized subcommand drops the property, never mints a new
+ * value — same policy as the command names themselves.
+ */
+export type DiscordCommandSubcommand =
+  | "balance"
+  | "prizes"
+  | "rules"
+  | "history"
+  | "transfer"
+  | "dare"
+  | "notifications"
+  | "ask"
+  | "join"
+  | "leave"
+  | "create"
+  | "status"
+  | "cancel";
 export type DiscordCommandStatus = "success" | "error";
 export type BucksMemberActivityKind =
   | "command"
@@ -80,6 +100,15 @@ type ProductAnalyticsEventProperties = {
   discord_command_used: {
     command_name: DiscordCommandName;
     status: DiscordCommandStatus;
+    subcommand?: DiscordCommandSubcommand | undefined;
+  };
+  /**
+   * One delivered Hall of Fame record-break announcement. `records` is the
+   * number of record cells the match broke — a bounded count, never record
+   * ids or holder identity.
+   */
+  hall_record_broken: {
+    records: number;
   };
   guild_install_attributed: {
     attribution_surface: AttributionSurface;

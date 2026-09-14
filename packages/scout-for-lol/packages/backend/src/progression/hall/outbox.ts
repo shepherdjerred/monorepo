@@ -7,6 +7,7 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
+import { captureHallRecordBroken } from "#src/analytics/hall.ts";
 import { parseHallBreakOutboxPayload } from "#src/progression/hall/evaluate-match.ts";
 import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
 import { loadProgressionOutboxRows } from "#src/progression/outbox.ts";
@@ -173,6 +174,10 @@ export async function deliverHallRecordBreakOutbox(): Promise<void> {
         data: { deliveryStatus: "sent", sentAt: new Date(), lastError: null },
       });
       hallRecordBreakDeliveries.inc({ status: "sent" });
+      await captureHallRecordBroken({
+        guildId: row.guildId,
+        records: embed.toJSON().fields?.length ?? 0,
+      });
     } catch (error) {
       await recordScoutEffectFailure(effectKey, error);
       await prisma.hallRecordBreakOutbox.update({

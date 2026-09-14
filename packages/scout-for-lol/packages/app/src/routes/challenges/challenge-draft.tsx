@@ -1,3 +1,4 @@
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
@@ -21,6 +22,7 @@ export function ChallengeDraft() {
   const draft = useQuery(trpc.challenge.getDraft.queryOptions({ draftId }));
   const publish = useMutation(
     trpc.challenge.publishDraft.mutationOptions({
+      meta: analyticsMeta("challenge_template_published"),
       onSuccess: (version) => {
         void navigate(`/challenges/${version.templateId}`);
       },

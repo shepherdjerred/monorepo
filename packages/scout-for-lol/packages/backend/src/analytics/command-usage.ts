@@ -26,7 +26,29 @@ const DiscordCommandNameSchema = z.enum([
   "track",
   "list",
   "bb",
+  "lobby",
   "scout",
+]);
+
+/**
+ * Closed subcommand vocabulary across the grouped commands. Unknown or absent
+ * subcommands simply omit the property — same drop-don't-mint policy as the
+ * command names.
+ */
+const DiscordCommandSubcommandSchema = z.enum([
+  "balance",
+  "prizes",
+  "rules",
+  "history",
+  "transfer",
+  "dare",
+  "notifications",
+  "ask",
+  "join",
+  "leave",
+  "create",
+  "status",
+  "cancel",
 ]);
 
 /**
@@ -43,6 +65,7 @@ export async function captureDiscordCommandUsed(
   input: {
     guildId: string | null;
     commandName: string;
+    subcommand?: string | null;
     status: DiscordCommandStatus;
   },
   options?: {
@@ -58,6 +81,9 @@ export async function captureDiscordCommandUsed(
     if (!commandName.success) {
       return;
     }
+    const subcommand = DiscordCommandSubcommandSchema.safeParse(
+      input.subcommand ?? undefined,
+    );
 
     const db = options?.db ?? prisma;
     const analytics = options?.analytics ?? getProductAnalytics();
@@ -71,7 +97,11 @@ export async function captureDiscordCommandUsed(
 
     analytics.capture(install, {
       event: "discord_command_used",
-      properties: { command_name: commandName.data, status: input.status },
+      properties: {
+        command_name: commandName.data,
+        status: input.status,
+        ...(subcommand.success ? { subcommand: subcommand.data } : {}),
+      },
     });
   } catch (error) {
     logger.error(
