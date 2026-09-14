@@ -93,6 +93,35 @@ pass having done nothing. The stranding surfaces only when the key is retired.
 already produced; on the first seed of a new transition that number should be
 near zero.
 
+### Archive the previous transition's state first
+
+This tooling migrates **one** key transition. Its state is a single map and a
+single marker row with nothing naming which transition they belong to, so
+nothing can detect a stale one for you. Before starting a later transition,
+archive both in each live database:
+
+```bash
+# per database, against $PROD_DB and $BETA_DB in turn
+ALTER TABLE "PuuidKeyMap"       RENAME TO "PuuidKeyMap_2026_09_13";
+ALTER TABLE "PuuidKeyMigration" RENAME TO "PuuidKeyMigration_2026_09_13";
+```
+
+Then re-create the empty tables the way the first transition did.
+
+Skipping this fails late and badly. `collect` refuses to record a tracked
+identity once a cutover marker stands — correctly, because after a cutover an
+unmapped identity is usually a new account that is already new-domain. With the
+previous transition's marker still in place every account registered since then
+looks exactly like that, so `collect` aborts **after the backends are already
+scaled down**. `apply` would also `COALESCE` the new marker onto the old
+timestamp, leaving `verify` measuring strays against a boundary years stale.
+
+Archiving is also what keeps the read-time remap correct. It resolves one
+mapping, not a chain. Accumulated across transitions the table would hold
+old₁→old₂ beside old₂→new₃, and a restore from before the first rewrite would be
+translated one hop into a domain nothing else uses — silently, since every row
+involved is real. One map per transition means a chain never exists to walk.
+
 ## 1. Back up both databases
 
 Prod is SQLite on the backend pod's volume. Take a compacted copy — a plain copy
@@ -437,6 +466,12 @@ why the read-time remap
 ([`puuid-remap.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/puuid-remap.ts))
 stays in place. Once the archive holds no old identifiers it is a no-op, and it
 is still correct for a restore and for stranded identities.
+
+It resolves one mapping rather than a chain, so it can only carry a restore
+across the transition whose map it holds. That is sufficient because each
+transition's map is archived rather than accumulated; if they were left to pile
+up, a restore predating an earlier transition would be translated one hop into a
+domain nothing else uses.
 
 **Observability tags, logs and traces.** Sentry, Bugsink, Loki and Tempo keep
 whatever they recorded, and age out on their own retention.
