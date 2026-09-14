@@ -259,6 +259,14 @@ async function drainV1(
   // helpers; the far-future horizon makes every deadline count as lapsed.
   await abandonExpiredDareProposals(db, DRAIN_HORIZON);
   await expireDareAcceptWindows(db, DRAIN_HORIZON);
+  const remainingUnsettled = await db.bucksDare.count({
+    where: { dareState: { in: ["proposed", "pending_accept"] } },
+  });
+  if (remainingUnsettled !== 0) {
+    throw new Error(
+      `${remainingUnsettled.toString()} v1 proposal(s) or acceptance window(s) remained after the sweep; re-run --void`,
+    );
+  }
   const active = await db.bucksDare.findMany({
     where: { dareState: "active" },
     include: { targets: { orderBy: { id: "asc" } } },
@@ -444,6 +452,10 @@ async function purge(
     db.confirmationIntent.count(),
     db.confirmationIntent.count({ where: { dareId: { not: null } } }),
   ]);
+  const nonDareIntentIdsBefore = await db.confirmationIntent.findMany({
+    where: { dareId: null },
+    select: { id: true },
+  });
   console.log(
     `would delete: ${v1Count.toString()} BucksDare rows (cascades to targets/contributions/games)`,
   );
@@ -512,6 +524,10 @@ async function purge(
         where: { compilerVersion: { not: DARE_SQL_V3_COMPILER } },
       }),
     ]);
+  const nonDareIntentIdsAfter = await db.confirmationIntent.findMany({
+    where: { dareId: null },
+    select: { id: true },
+  });
   console.log(
     `deleted ${deletedV1.count.toString()} BucksDare rows and ${deletedV2.count.toString()} BucksDareV2 rows`,
   );
@@ -523,11 +539,15 @@ async function purge(
       `${revisionsLeft.toString()} pre-v3 revisions remain after purge`,
     );
   }
-  const nonDareBefore = intentTotal - intentDareBound;
-  const nonDareAfter = intentTotalAfter - intentDareBoundAfter;
-  if (nonDareBefore !== nonDareAfter) {
+  const nonDareIntentIdsAfterSet = new Set(
+    nonDareIntentIdsAfter.map(({ id }) => id),
+  );
+  const removedNonDareIntent = nonDareIntentIdsBefore.find(
+    ({ id }) => !nonDareIntentIdsAfterSet.has(id),
+  );
+  if (removedNonDareIntent !== undefined) {
     throw new Error(
-      `Non-dare confirmation intents changed (${nonDareBefore.toString()} -> ${nonDareAfter.toString()}); the cascade touched rows it must not`,
+      `Non-dare confirmation intent ${removedNonDareIntent.id.toString()} disappeared; the cascade touched a row it must not`,
     );
   }
 }
