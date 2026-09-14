@@ -11,9 +11,7 @@ import {
   assertDuelsEnabled,
   duelRolloutAllowed,
 } from "#src/progression/duels/access.ts";
-import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
-import { installedGuildIdsAmong } from "#src/lib/discord/installed-guilds.ts";
-import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
+import { guildFeatureStatus } from "#src/trpc/guild-feature-status.ts";
 import { advanceDuelEvent } from "#src/progression/duels/advancement.ts";
 import {
   eligibleDuelAccounts,
@@ -89,41 +87,9 @@ export const duelRouter = router({
    * Non-throwing availability probe for navigation, mirroring hall.status:
    * every other duel procedure throws NOT_FOUND where the flag is off.
    */
-  status: webProcedure.query(async ({ ctx }) => {
-    const userGuilds = await fetchUserGuildsForRequest(ctx.user);
-    const installedGuildIds = await installedGuildIdsAmong(
-      userGuilds.map((g) => g.id),
-    );
-    const present = userGuilds.filter(
-      (g) => installedGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
-    );
-    if (present.length === 0) {
-      return { state: "no_shared_guild", guilds: [] } as const;
-    }
-    const evaluations = await Promise.all(
-      present.map(async (guild) => {
-        const guildId = DiscordGuildIdSchema.parse(guild.id);
-        const enabled =
-          (await duelRolloutAllowed(guildId)) ||
-          isDevGuildOverrideGuild(guild.id);
-        return { guild, enabled };
-      }),
-    );
-    const enabledGuilds = evaluations.flatMap((evaluation) =>
-      evaluation.enabled ? [evaluation.guild] : [],
-    );
-    if (enabledGuilds.length === 0) {
-      return { state: "feature_disabled", guilds: [] } as const;
-    }
-    return {
-      state: "available",
-      guilds: enabledGuilds.map((g) => ({
-        id: g.id,
-        name: g.name,
-        icon: g.icon,
-      })),
-    } as const;
-  }),
+  status: webProcedure.query(
+    async ({ ctx }) => await guildFeatureStatus(ctx.user, duelRolloutAllowed),
+  ),
   list: webProcedure
     .input(DuelGuildInputSchema)
     .query(async ({ ctx, input }) => {

@@ -23,8 +23,7 @@ import {
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
 import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
-import { installedGuildIdsAmong } from "#src/lib/discord/installed-guilds.ts";
-import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
+import { guildFeatureStatus } from "#src/trpc/guild-feature-status.ts";
 
 const GuildInputSchema = z.strictObject({ guildId: DiscordGuildIdSchema });
 
@@ -41,44 +40,14 @@ async function assertHallEnabled(guildId: DiscordGuildId): Promise<void> {
 }
 
 export const hallRouter = router({
-  status: webProcedure.query(async ({ ctx }) => {
-    const userGuilds = await fetchUserGuildsForRequest(ctx.user);
-    const installedGuildIds = await installedGuildIdsAmong(
-      userGuilds.map((g) => g.id),
-    );
-    const present = userGuilds.filter(
-      (g) => installedGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
-    );
-    if (present.length === 0) {
-      return { state: "no_shared_guild", guilds: [] } as const;
-    }
-    const evaluations = await Promise.all(
-      present.map(async (guild) => {
-        const guildId = DiscordGuildIdSchema.parse(guild.id);
-        const enabled =
-          (await isPolicyEnabled("hall_of_fame_enabled", {
-            server: guildId,
-          })) || isDevGuildOverrideGuild(guild.id);
-        return { guild, enabled };
-      }),
-    );
-    const enabledGuilds = evaluations.flatMap((evaluation) =>
-      evaluation.enabled ? [evaluation.guild] : [],
-    );
-
-    if (enabledGuilds.length === 0) {
-      return { state: "feature_disabled", guilds: [] } as const;
-    }
-
-    return {
-      state: "available",
-      guilds: enabledGuilds.map((g) => ({
-        id: g.id,
-        name: g.name,
-        icon: g.icon,
-      })),
-    } as const;
-  }),
+  status: webProcedure.query(
+    async ({ ctx }) =>
+      await guildFeatureStatus(
+        ctx.user,
+        async (guildId) =>
+          await isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
+      ),
+  ),
   get: webProcedure.input(GuildInputSchema).query(async ({ ctx, input }) => {
     await assertHallEnabled(input.guildId);
     await resolveGuildPermissions(ctx.user, input.guildId);
