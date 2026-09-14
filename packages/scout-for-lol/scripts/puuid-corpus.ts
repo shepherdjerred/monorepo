@@ -41,7 +41,37 @@ function requireFlag(name: string): string {
 
 function optionalFlag(name: string): string | undefined {
   const at = Bun.argv.indexOf(name);
-  return at === -1 ? undefined : Bun.argv[at + 1];
+  if (at === -1) {
+    return undefined;
+  }
+  const value = Bun.argv[at + 1];
+  if (value === undefined || value.startsWith("--")) {
+    throw new Error(`${name} requires a value`);
+  }
+  return value;
+}
+
+/**
+ * A cutover that cannot be read is refused rather than defaulted.
+ *
+ * An invalid Date compares false against everything, so every dated object
+ * would fail the "written at or before the cutover" test and the inventory
+ * would scan almost nothing — reporting zero failures over an empty corpus. A
+ * map built that way looks clean and omits nearly every identity, and retiring
+ * the old key afterwards strands all of them.
+ */
+function optionalDate(name: string): Date | undefined {
+  const raw = optionalFlag(name);
+  if (raw === undefined) {
+    return undefined;
+  }
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new TypeError(
+      `${name} must be a valid date, received ${JSON.stringify(raw)}`,
+    );
+  }
+  return parsed;
 }
 
 function requireBucket(): string {
@@ -54,12 +84,11 @@ function requireBucket(): string {
 
 async function runInventory(): Promise<void> {
   const out = requireFlag("--out");
-  const cutoverRaw = optionalFlag("--cutover");
   const result = await buildInventory(
     createS3Client(),
     requireBucket(),
     optionalFlag("--prefix"),
-    cutoverRaw === undefined ? undefined : new Date(cutoverRaw),
+    optionalDate("--cutover"),
   );
   await Bun.write(out, serializeInventory(result.rows));
   console.log(

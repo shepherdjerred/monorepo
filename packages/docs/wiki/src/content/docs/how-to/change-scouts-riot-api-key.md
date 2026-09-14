@@ -327,9 +327,10 @@ is still correct for a restore and for stranded identities.
 whatever they recorded, and age out on their own retention.
 
 Rewriting the archive costs something real: it is no longer a byte-faithful copy
-of what Riot returned, and re-serialization normalizes formatting on every
-object that changes. That is the trade for a corpus whose identifiers still mean
-something. See [Scout's report lake](/explanation/scout-report-lake/).
+of what Riot returned. Only the identifiers change — the rewrite substitutes
+tokens rather than re-serializing, so formatting and every other byte survive —
+but the record now says something Riot never said. That is the trade for a
+corpus whose identifiers still mean something. See [Scout's report lake](/explanation/scout-report-lake/).
 
 ## Related
 

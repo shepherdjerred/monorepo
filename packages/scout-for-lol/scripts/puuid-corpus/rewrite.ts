@@ -22,7 +22,6 @@
 
 import type { S3Client } from "@aws-sdk/client-s3";
 import { putContentAddressedObject } from "@scout-for-lol/backend/storage/object-integrity.ts";
-import { remapRawJson } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import { listRawObjects, scanObjects, type FetchedObject } from "./scan.ts";
 import { computeSha256Digest } from "@scout-for-lol/backend/storage/object-integrity.ts";
 
@@ -58,6 +57,49 @@ export function needsRewrite(
   return false;
 }
 
+/**
+ * Move every mapped identifier in a document, wherever it sits.
+ *
+ * Deliberately a token substitution over the raw text rather than a parse, a
+ * structural walk and a re-serialize. Two reasons, one of them a bug the walk
+ * could not have fixed.
+ *
+ * The walk replaces a string only when the WHOLE value is a mapped identifier,
+ * and identifiers are not always whole values. A single AI pipeline trace in
+ * beta holds a 100,772-character prompt with 21 identifiers embedded in it.
+ * Detection sees those tokens, so the object would be rewritten and marked
+ * while every one of them survived — old-domain, reported as done, and rewritten
+ * again on every later run because the tokens are still there. Neither complete
+ * nor idempotent.
+ *
+ * It also keeps the bytes. Re-serializing normalizes formatting across the whole
+ * document; substituting tokens changes exactly the identifiers and nothing
+ * else, so the archive stays as close to what Riot returned as a re-domaining
+ * allows.
+ *
+ * Only a complete token is substituted. A longer run of word characters does
+ * not match any key, so an identifier glued to something else is left alone
+ * rather than half-rewritten — and detection reads the same tokens, so the two
+ * cannot disagree about what needs doing.
+ */
+export function redomainBody(
+  body: string,
+  map: ReadonlyMap<string, string>,
+): string {
+  return body.replaceAll(PUUID_TOKEN, (token) => map.get(token) ?? token);
+}
+
+/** S3 metadata rides in an HTTP header: only printable ASCII survives. */
+const PRINTABLE_ASCII = /^[\u{20}-\u{7E}]*$/u;
+
+/** How many players a legacy comma-joined alias list names. */
+function countAliases(value: string): number {
+  return value
+    .split(",")
+    .map((alias) => alias.trim())
+    .filter((alias) => alias.length > 0).length;
+}
+
 /** Where an object's original capture time is kept once the put restamps it. */
 export const ORIGINAL_UPLOAD_METADATA_KEY = "originaluploadedat";
 
@@ -68,11 +110,35 @@ export const ORIGINAL_UPLOAD_METADATA_KEY = "originaluploadedat";
  * values for the bytes it is storing, which is correct — they describe the
  * object that now exists. The capture time is provenance rather than integrity,
  * so it is moved aside instead of being overwritten away.
+ *
+ * A value that is not printable ASCII cannot be carried forward, and refusing
+ * it is right rather than pedantic: writing one back re-encodes it. Measured
+ * against the live store, `KbeÃ§a` comes back as `KbeÃÂ§a`, so every rewrite
+ * would corrupt it further.
+ *
+ * In practice that is one legacy key. Around 3% of prod's match objects carry
+ * `trackedplayers`, a comma-joined list of aliases written before the producer
+ * switched to a count, and an alias holds whatever a player can type. The only
+ * thing that reads it derives a count, so the count is what carries forward —
+ * the same information in the form the current producer already writes. The
+ * aliases themselves go, because there is no way to write them back intact.
  */
 export function preservedMetadata(
   existing: Record<string, string>,
 ): Record<string, string> {
-  const merged: Record<string, string> = { ...existing };
+  const merged: Record<string, string> = {};
+  for (const [key, value] of Object.entries(existing)) {
+    if (PRINTABLE_ASCII.test(key) && PRINTABLE_ASCII.test(value)) {
+      merged[key] = value;
+      continue;
+    }
+    if (
+      key === "trackedplayers" &&
+      merged["trackedplayercount"] === undefined
+    ) {
+      merged["trackedplayercount"] = countAliases(value).toString();
+    }
+  }
   const captured = merged["uploadedat"];
   if (
     captured !== undefined &&
@@ -172,13 +238,11 @@ export async function rewriteCorpus(
         rewritten++;
         return true;
       }
-      const parsed: unknown = JSON.parse(body);
-      const translated = remapRawJson(parsed, options.map);
       const stored = await putContentAddressedObject({
         client,
         bucket: options.bucket,
         key: object.key,
-        body: JSON.stringify(translated),
+        body: redomainBody(body, options.map),
         contentType: "application/json",
         // A PUT REPLACES user metadata rather than merging it, and these objects
         // carry the producer's own record: match id, queue, frame counts,
