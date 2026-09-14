@@ -2646,13 +2646,14 @@ model PuuidKeyMigration {
   appliedAt DateTime? @db.Timestamptz()
 }
 
-/// One delivered feature tip, append-only.
+/// One feature-tip impression, with a temporary pre-send claim.
 ///
 /// Two questions are answered from these rows rather than from stored counters,
 /// the same way the settlement-DM hint derives its cadence from `DmAuditLog`:
 /// whether an audience is still inside its tip cooldown (the newest `shownAt`),
-/// and which tips it has already been shown (`tipKey` presence). Deriving both
-/// means a tip can never be silently re-shown because a counter drifted.
+/// and which tips it has already been shown (`tipKey` presence). A non-null
+/// `claimedAt` is a temporary reservation removed after send failure or
+/// confirmation; delivered rows remain as history.
 ///
 /// `discordId` is null for a guild-channel message and set for a DM, so a
 /// member's DM cadence is their own and does not consume the channel's.
@@ -2668,9 +2669,13 @@ model FeatureTipImpression {
   /// A `TipKey` from the tips catalog. Validated on read.
   tipKey    String
   shownAt   DateTime @default(now())
+  /// Non-null while the row is a pre-send claim. Cleared after Discord accepts
+  /// the message; the partial audience index serializes all tip keys.
+  claimedAt DateTime?
 
   /// The claim. Two concurrent deliveries to one audience race to insert here;
   /// exactly one wins, so a tip cannot be selected twice.
   @@unique([serverId, audienceId, tipKey])
   @@index([serverId, audienceId, shownAt])
+  @@index([serverId, audienceId, claimedAt])
 }

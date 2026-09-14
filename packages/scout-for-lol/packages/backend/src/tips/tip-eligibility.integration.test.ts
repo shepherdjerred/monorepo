@@ -20,6 +20,7 @@ import {
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import { testGuildId } from "#src/testing/test-ids.ts";
 import { FEATURE_TIPS } from "#src/tips/tip-catalog.ts";
 import { eligibleTips } from "#src/tips/tip-eligibility.ts";
 import {
@@ -149,6 +150,15 @@ describe("tip claims", () => {
     ]);
     expect([first, second].filter(Boolean)).toHaveLength(1);
     expect(await shownTipKeys(audience, db)).toEqual(new Set(["competitions"]));
+  });
+
+  test("serializes concurrent claims even when tip keys differ", async () => {
+    const audience = { serverId: testGuildId("333000000000000003") };
+    const [first, second] = await Promise.all([
+      claimTip({ ...audience, tipKey: "competitions" }, db),
+      claimTip({ ...audience, tipKey: "duels" }, db),
+    ]);
+    expect([first, second].filter(Boolean)).toHaveLength(1);
   });
 
   test("a channel claim and a DM claim do not collide", async () => {

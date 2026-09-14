@@ -153,6 +153,7 @@ export async function deliverToChannels(params: {
     // Declared out here so a failed send can hand its tip claim back.
     let decorated:
       Awaited<ReturnType<NonNullable<typeof params.decorate>>> | undefined;
+    let sendAccepted = false;
     const effectKey =
       params.effectKeyPrefix === undefined
         ? undefined
@@ -207,6 +208,7 @@ export async function deliverToChannels(params: {
         channel,
         guildId,
       });
+      sendAccepted = true;
       // Before the effect is completed, not after: a crash in between would
       // otherwise leave the tip delivered but unrecorded, and the retry would
       // take the `completed` branch below and never confirm it — so the same
@@ -227,7 +229,7 @@ export async function deliverToChannels(params: {
     } catch (error) {
       // The decoration claimed its tip before the send; give it back so the
       // audience stays eligible for it.
-      await decorated?.release();
+      if (!sendAccepted) await decorated?.release();
       if (effectKey !== undefined && effectClaimed) {
         await recordScoutEffectFailure(effectKey, error);
       }

@@ -99,6 +99,43 @@ const defaultSettlementDmDeliveryDependencies: SettlementDmDeliveryDependencies 
     observeBucksDelivery,
   };
 
+type TippedSettlementDm = Awaited<
+  ReturnType<typeof decorateEmbedWithFeatureTip>
+>;
+
+async function handleSettlementDmDeliveryError(input: {
+  error: unknown;
+  status: DmStatus | undefined;
+  tipped: TippedSettlementDm | undefined;
+  recipientKind: "bettor" | "player";
+  matchId: string;
+  recipientId: string;
+}): Promise<void> {
+  if (input.status !== "sent") await input.tipped?.release();
+  // `sendDM` handles expected Discord failures. The observer still needs
+  // a rejection to count those statuses, but they are not Sentry errors.
+  bettingSettlementDmsTotal.inc({
+    recipient: input.recipientKind,
+    result: input.status ?? "failed",
+  });
+  if (input.error instanceof SettlementDmStatusError) {
+    logger.info(
+      `Bryan Bucks DM for ${input.matchId} to ${input.recipientId} returned ${input.error.status}.`,
+    );
+  } else {
+    logger.error(
+      `❌ Could not deliver Bryan Bucks DM for ${input.matchId} to ${input.recipientId}:`,
+      input.error,
+    );
+    Sentry.captureException(input.error, {
+      tags: {
+        source: "betting-settlement-dm",
+        matchId: input.matchId,
+      },
+    });
+  }
+}
+
 async function playerRecipientsForRoster(input: {
   roster: readonly BucksPoolParticipant[];
   serverId: DiscordGuildId;
@@ -433,29 +470,15 @@ export async function deliverSettlementDms(
         }
       }
     } catch (error) {
-      // `sendDM` handles expected Discord failures. The observer still needs
-      // a rejection to count those statuses, but they are not Sentry errors.
-      bettingSettlementDmsTotal.inc({
-        recipient:
+      await handleSettlementDmDeliveryError({
+        error,
+        status,
+        tipped,
+        recipientKind:
           message.kind === "betting_settlement_receipt" ? "bettor" : "player",
-        result: status ?? "failed",
+        matchId: input.summary.matchId,
+        recipientId: message.recipientId,
       });
-      if (error instanceof SettlementDmStatusError) {
-        logger.info(
-          `Bryan Bucks DM for ${input.summary.matchId} to ${message.recipientId} returned ${error.status}.`,
-        );
-      } else {
-        logger.error(
-          `❌ Could not deliver Bryan Bucks DM for ${input.summary.matchId} to ${message.recipientId}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "betting-settlement-dm",
-            matchId: input.summary.matchId,
-          },
-        });
-      }
     }
   }
 }

@@ -8,6 +8,7 @@ import { withFeatureTip, withFeatureTipOnEmbed } from "#src/tips/tip-render.ts";
 import { selectTip, type TipSelectionDeps } from "#src/tips/tip-selection.ts";
 import {
   claimTip,
+  confirmTipClaim,
   releaseTipClaim,
   type TipAudience,
 } from "#src/tips/tip-state.ts";
@@ -42,6 +43,7 @@ function outcome(
   return {
     confirm: async () => {
       try {
+        await confirmTipClaim({ ...audience, tipKey: tip.key }, deps.db);
         await captureFeatureTipShown({
           guildId: audience.serverId,
           tipKey: tip.key,

@@ -43,12 +43,16 @@ export async function lastTipShownAt(
   audience: TipAudience,
   db: ExtendedPrismaClient = prisma,
 ): Promise<Date | undefined> {
-  const row = await db.featureTipImpression.findFirst({
+  const rows = await db.featureTipImpression.findMany({
     where: audienceWhere(audience),
-    orderBy: { shownAt: "desc" },
-    select: { shownAt: true },
+    select: { shownAt: true, tipKey: true },
   });
-  return row?.shownAt;
+  for (const row of rows) parseTipKey(row.tipKey);
+  return rows.reduce<Date | undefined>(
+    (latest, row) =>
+      latest === undefined || row.shownAt > latest ? row.shownAt : latest,
+    undefined,
+  );
 }
 
 /**
@@ -73,12 +77,28 @@ export async function claimTip(
       {
         ...audienceWhere(input),
         tipKey: input.tipKey,
+        claimedAt: input.shownAt ?? new Date(),
         ...(input.shownAt === undefined ? {} : { shownAt: input.shownAt }),
       },
     ],
     skipDuplicates: true,
   });
   return count > 0;
+}
+
+/** Mark a claimed row as a delivered impression without changing its timestamp. */
+export async function confirmTipClaim(
+  input: TipAudience & { tipKey: FeatureTipKey },
+  db: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await db.featureTipImpression.updateMany({
+    where: {
+      ...audienceWhere(input),
+      tipKey: input.tipKey,
+      claimedAt: { not: null },
+    },
+    data: { claimedAt: null },
+  });
 }
 
 /**
@@ -92,6 +112,10 @@ export async function releaseTipClaim(
   db: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   await db.featureTipImpression.deleteMany({
-    where: { ...audienceWhere(input), tipKey: input.tipKey },
+    where: {
+      ...audienceWhere(input),
+      tipKey: input.tipKey,
+      claimedAt: { not: null },
+    },
   });
 }

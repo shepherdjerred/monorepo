@@ -222,6 +222,7 @@ async function deliverPrematchMessages(input: {
   for (const { channel, serverId } of input.channels) {
     // Declared out here so a failed send can hand its tip claim back.
     let tipped: Awaited<ReturnType<typeof decorateWithFeatureTip>> | undefined;
+    let sendAccepted = false;
     try {
       const guildId = DiscordGuildIdSchema.parse(serverId);
       const betsOpen = input.bucks.bettingGuildIds.has(guildId);
@@ -244,6 +245,7 @@ async function deliverPrematchMessages(input: {
         channelId: channel,
       });
       const sentMessage = await send(tipped.message, channel, guildId);
+      sendAccepted = true;
       await tipped.confirm();
       await input.recordDelivery?.({
         kind: "delivered",
@@ -259,7 +261,7 @@ async function deliverPrematchMessages(input: {
         ]);
       }
     } catch (error) {
-      await tipped?.release();
+      if (!sendAccepted) await tipped?.release();
       await input.recordDelivery?.({
         kind: "failed",
         channelId: channel,
