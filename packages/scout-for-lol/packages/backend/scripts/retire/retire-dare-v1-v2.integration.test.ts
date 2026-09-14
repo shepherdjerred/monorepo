@@ -40,11 +40,26 @@ async function seedV2Dare(dareState: string, compilerVersion: string) {
       dareState,
     },
   });
-  await prisma.bucksDareV2Revision.create({
+  await appendV2Revision(
+    dare,
+    compilerVersion,
+    "retired fixture",
+    dare.currentRevision,
+  );
+  return dare;
+}
+
+async function appendV2Revision(
+  dare: { id: number; currentRevision: number },
+  compilerVersion: string,
+  originalText: string,
+  revision = dare.currentRevision + 1,
+) {
+  return await prisma.bucksDareV2Revision.create({
     data: {
       dareId: dare.id,
-      revision: dare.currentRevision,
-      originalText: "retired fixture",
+      revision,
+      originalText,
       canonicalScoutQl: "SELECT true AS achieved",
       compiledPlan: "{}",
       compilerVersion,
@@ -59,7 +74,6 @@ async function seedV2Dare(dareState: string, compilerVersion: string) {
       semanticProofPlan: "{}",
     },
   });
-  return dare;
 }
 
 beforeEach(async () => {
@@ -159,22 +173,7 @@ describe("retire-dare-v1-v2", () => {
 
   test("an unknown superseded compiler version blocks purge", async () => {
     const mixed = await seedV2Dare("active", "dare-scoutql-9");
-    await prisma.bucksDareV2Revision.create({
-      data: {
-        dareId: mixed.id,
-        revision: mixed.currentRevision + 1,
-        originalText: "revised into v3",
-        canonicalScoutQl: "SELECT true AS achieved",
-        compiledPlan: "{}",
-        compilerVersion: "dare-scoutql-3",
-        evaluatorVersion: "dare-evaluator-3",
-        targetsJson: "[]",
-        deadlineSpecJson: "{}",
-        openingStake: 5,
-        plainLanguage: "revised into v3",
-        semanticProofPlan: "{}",
-      },
-    });
+    await appendV2Revision(mixed, "dare-scoutql-3", "revised into v3");
     await prisma.bucksDareV2.update({
       where: { id: mixed.id },
       data: { currentRevision: mixed.currentRevision + 1 },
@@ -201,20 +200,17 @@ describe("retire-dare-v1-v2", () => {
 
   test("purge removes superseded pre-v3 revisions from retained v3 dares", async () => {
     const mixed = await seedV2Dare("active", "dare-scoutql-2");
-    await prisma.bucksDareV2Revision.create({
+    await appendV2Revision(mixed, "dare-scoutql-3", "revised into v3");
+    await prisma.confirmationIntent.create({
       data: {
+        kind: "dare_fund",
+        serverId: SERVER,
         dareId: mixed.id,
-        revision: mixed.currentRevision + 1,
-        originalText: "revised into v3",
-        canonicalScoutQl: "SELECT true AS achieved",
-        compiledPlan: "{}",
-        compilerVersion: "dare-scoutql-3",
-        evaluatorVersion: "dare-evaluator-3",
-        targetsJson: "[]",
-        deadlineSpecJson: "{}",
-        openingStake: 5,
-        plainLanguage: "revised into v3",
-        semanticProofPlan: "{}",
+        actorDiscordId: OWNER,
+        payload: "{}",
+        idempotencyKey: "retire-test-stale-revision-intent",
+        expiresAt: new Date(Date.now() + 60_000),
+        expectedRevision: mixed.currentRevision,
       },
     });
     await prisma.bucksDareV2.update({
@@ -233,5 +229,8 @@ describe("retire-dare-v1-v2", () => {
     expect(
       await prisma.bucksDareV2Revision.count({ where: { dareId: mixed.id } }),
     ).toBe(1);
+    expect(
+      await prisma.confirmationIntent.count({ where: { dareId: mixed.id } }),
+    ).toBe(0);
   });
 });

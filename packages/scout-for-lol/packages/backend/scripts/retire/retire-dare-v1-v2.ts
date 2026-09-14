@@ -21,12 +21,13 @@
  *
  * QUIESCENCE INTERLOCK: purge additionally requires --writes-quiesced, the
  * operator's assertion that no pre-v3 dare can be authored or funded while
- * the purge runs or afterwards — concretely, `dare_v2` is disabled in Flipt
- * for every guild (making /bb dare v3-only where dares are on at all) and
- * STAYS disabled until the retirement PRs that delete the v2 write path have
- * deployed. The claim-conditioned deletes and the post-delete pre-v3 scans
- * catch a violation mid-run, but only the durable flag flip prevents a pre-v3
- * dare from being authored after the run declares success.
+ * the purge runs or afterwards — concretely, both `dare_v2` and
+ * `bucks_dares_enabled` are disabled in Flipt for every guild (`/bb dare`
+ * otherwise falls back to the v1 writer), and they STAY disabled until the
+ * retirement PRs that delete the v2 and v1 write paths have deployed. The
+ * claim-conditioned deletes and the post-delete pre-v3 scans catch a violation
+ * mid-run, but only the durable flag flips prevent a pre-v3 dare from being
+ * authored after the run declares success.
  */
 import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -368,7 +369,7 @@ async function purge(
 ): Promise<void> {
   if (apply && !writesQuiesced) {
     throw new Error(
-      "Refusing to purge without --writes-quiesced: disable dare_v2 in Flipt for every guild first (and keep it disabled until the retirement PRs deploy), then re-run with the flag",
+      "Refusing to purge without --writes-quiesced: disable dare_v2 and bucks_dares_enabled in Flipt for every guild first (and keep both disabled until the retirement PRs deploy), then re-run with the flag",
     );
   }
   if (!(await verify(db))) {
@@ -382,7 +383,11 @@ async function purge(
   // (revised into v3 before funding). Those rows are draft history — never
   // the governing revision — and must go BEFORE the deletes, or the final
   // no-pre-v3-revisions assertion would fail after a partial purge.
-  const supersededRevisionIds: number[] = [];
+  const supersededRevisions: Array<{
+    id: number;
+    dareId: number;
+    revision: number;
+  }> = [];
   for (const dare of allDares) {
     if (isPreV3(dare)) continue;
     const governing = dare.fundedRevision ?? dare.currentRevision;
@@ -398,7 +403,11 @@ async function purge(
           `Dare ${dare.id.toString()} revision ${revision.revision.toString()} has unrecognized compiler version "${revision.compilerVersion}"`,
         );
       }
-      supersededRevisionIds.push(revision.id);
+      supersededRevisions.push({
+        id: revision.id,
+        dareId: dare.id,
+        revision: revision.revision,
+      });
       console.log(
         `superseded pre-v3 revision: dare #${dare.id.toString()} revision ${revision.revision.toString()} (${revision.compilerVersion})`,
       );
@@ -415,12 +424,33 @@ async function purge(
   console.log(
     `would delete: ${preV3Ids.length.toString()} pre-v3 BucksDareV2 rows [${preV3Ids.join(", ")}] (cascades to revisions/targets/contributions/evidence/activations/dare-bound intents/notifications)`,
   );
+  const staleRevisionIntentWhere = {
+    OR: supersededRevisions.map(({ dareId, revision }) => ({
+      dareId,
+      expectedRevision: revision,
+    })),
+  };
+  const staleRevisionIntentCount =
+    supersededRevisions.length === 0
+      ? 0
+      : await db.confirmationIntent.count({ where: staleRevisionIntentWhere });
+  console.log(
+    `would delete: ${staleRevisionIntentCount.toString()} confirmation intents targeting superseded pre-v3 revisions`,
+  );
   console.log(
     `confirmation intents before: total=${intentTotal.toString()} dare-bound=${intentDareBound.toString()}`,
   );
   if (!apply) return;
+  const deletedStaleRevisionIntents =
+    supersededRevisions.length === 0
+      ? 0
+      : (
+          await db.confirmationIntent.deleteMany({
+            where: staleRevisionIntentWhere,
+          })
+        ).count;
   const deletedRevisions = await db.bucksDareV2Revision.deleteMany({
-    where: { id: { in: supersededRevisionIds } },
+    where: { id: { in: supersededRevisions.map(({ id }) => id) } },
   });
   // Terminal-state-conditioned deletes: a dare opened or funded between the
   // verify read and this write must survive and fail the count assertion,
@@ -444,6 +474,9 @@ async function purge(
   }
   console.log(
     `deleted ${deletedRevisions.count.toString()} superseded pre-v3 revisions from retained v3 dares`,
+  );
+  console.log(
+    `deleted ${deletedStaleRevisionIntents.toString()} confirmation intents targeting superseded pre-v3 revisions`,
   );
   const [intentTotalAfter, intentDareBoundAfter, revisionsLeft] =
     await Promise.all([
