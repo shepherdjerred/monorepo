@@ -1,7 +1,7 @@
 # Scout constraints
 
-Scout is the League of Legends product spanning Discord, backend APIs, web and
-desktop clients, reporting, analytics, a DuckDB report lake, and Temporal.
+Scout is the League of Legends product spanning Discord, backend APIs, web
+clients, reporting, analytics, a DuckDB report lake, and Temporal.
 `README.md` and the Scout wiki explanations own architecture and contributor
 reference. Load `scout-development` for its working procedure.
 

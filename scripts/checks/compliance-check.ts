@@ -348,14 +348,8 @@ packages/discord-plays-pokemon/packages/common:test
 packages/discord-plays-pokemon/packages/frontend:test
 packages/scout-for-lol/packages/app:test
 packages/scout-for-lol/packages/data:build
-packages/scout-for-lol/packages/desktop:test
-packages/scout-for-lol/packages/desktop/src-tauri:build
-packages/scout-for-lol/packages/desktop/src-tauri:test
-packages/scout-for-lol/packages/desktop/src-tauri:typecheck
 packages/scout-for-lol/packages/frontend:test
 packages/scout-for-lol/packages/report:build
-packages/scout-for-lol/packages/ui:build
-packages/scout-for-lol/packages/ui:test
 packages/scout-for-lol:build
 packages/scout-for-lol:test
 packages/scout-for-lol:lint

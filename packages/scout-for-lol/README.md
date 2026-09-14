@@ -94,7 +94,6 @@ are one-shot and each command starts a new saved conversation.
 - tRPC for the backend ↔ web-app API contract
 - React + Satori + resvg for report image generation
 - DuckDB for the ScoutQL report query engine
-- Tauri (Rust) + React for the desktop client
 - Zod for runtime validation
 
 **Architecture:**
@@ -137,12 +136,10 @@ packages/
   app/          - Vite + React SPA dashboard (scout-for-lol.com/app/)
   backend/      - Discord bot, tRPC/HTTP server, report lake, cron jobs
   data/         - Shared data models, schemas, and Data Dragon assets
-  desktop/      - Tauri desktop client for live game events
   docs-site/    - User documentation site
   evals/        - Post-match review eval datasets and rating app
   frontend/     - Astro marketing site
   report/       - Match report image generation (React + Satori)
-  ui/           - Shared React UI components
 ```
 
 **Development:**

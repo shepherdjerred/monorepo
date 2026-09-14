@@ -1,6 +1,6 @@
 # Scout for LoL - Technical Documentation
 
-Technical documentation for Scout for LoL, a Discord bot and desktop application that monitors League of Legends matches and generates AI-powered match reviews.
+Technical documentation for Scout for LoL, a Discord bot that monitors League of Legends matches and generates AI-powered match reviews.
 
 ## Documentation Index
 
@@ -9,7 +9,6 @@ Technical documentation for Scout for LoL, a Discord bot and desktop application
 | [Architecture Overview](./architecture.md) | High-level system architecture and component interactions |
 | [Backend Service](./backend.md)            | Discord bot, cron jobs, and API integrations              |
 | [AI Review System](./ai-review-system.md)  | Match analysis and art generation pipeline                |
-| [Desktop Application](./desktop.md)        | Tauri desktop client architecture                         |
 | [Database Schema](./database.md)           | Prisma models and data relationships                      |
 
 ## Quick Architecture Overview
@@ -36,11 +35,6 @@ graph TB
             SITE[Marketing Site]
         end
 
-        subgraph Desktop
-            TAURI[Tauri App]
-            LCU[LCU Client]
-        end
-
         DB[(PostgreSQL)]
     end
 
@@ -52,9 +46,7 @@ graph TB
     LAKE --> TRPC
     BOT --> DB
     TRPC --> DB
-    SPA <--> TRPC
-    LCU --> TAURI
-    TAURI --> TRPC
+        SPA <--> TRPC
 ```
 
 The backend polls the Riot API for tracked players, stores raw match JSON in
@@ -65,7 +57,7 @@ executed by embedded DuckDB over a Parquet "report lake" derived from the S3
 match objects. Version-three Bryan Bucks Dares use a separately bounded
 standard-SQL contract over the same normalized relations; frozen v1 and v2
 contracts retain their original evaluators. The web app SPA talks to the backend
-over tRPC; the desktop client forwards live game events to the same backend.
+over tRPC.
 
 ## Tech Stack
 
@@ -77,7 +69,6 @@ over tRPC; the desktop client forwards live game events to the same backend.
 | Report Lake   | DuckDB over Parquet (ScoutQL)    |
 | Bot Framework | Discord.js                       |
 | Web API       | tRPC                             |
-| Desktop       | Tauri (Rust) + React             |
 | Reports       | React + Satori + Resvg           |
 | AI            | OpenAI                           |
 | External APIs | Riot Games API (native client)   |
@@ -91,12 +82,10 @@ packages/
 ├── app/       # Vite + React SPA dashboard (scout-for-lol.com/app/)
 ├── backend/   # Discord bot, tRPC/HTTP server, report lake, cron jobs
 ├── data/      # Shared models, schemas, and Data Dragon assets
-├── desktop/   # Tauri desktop application
 ├── docs-site/ # User documentation site
 ├── evals/     # Post-match review eval datasets and rating app
 ├── frontend/  # Astro marketing site
 ├── report/    # Match report image generation
-└── ui/        # Shared React UI components
 ```
 
 ## Key Concepts

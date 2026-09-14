@@ -180,7 +180,6 @@ export {
 } from "./data-dragon/arena-augments.ts";
 
 // Sound pack exports
-export * from "./sound-pack/index.ts";
 export {
   // URL getters (synchronous, for browser/frontend use)
   getChampionImageUrl,

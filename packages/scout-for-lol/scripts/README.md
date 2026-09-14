@@ -12,12 +12,11 @@ detail below; the rest of the directory is indexed here.
 | `check-asset-sizes.ts`    | Enforces size limits on committed assets (`bun run check:assets`)                               |
 | `check-suppressions.ts`   | Fails when new lint- or type-error-suppression comments are added                               |
 | `contract-hash.ts`        | Deterministic hash of the sources defining the frontend ↔ backend tRPC contract                 |
-| `create-minimal-png.ts`   | Writes minimal placeholder Tauri icon PNGs                                                      |
 | `dev-db-pull.ts`          | Copies a beta or prod Scout Postgres database into a local dev database (`dev:db-pull`)         |
 | `dev-web.ts`              | Local backend + web SPA dev environment (`--no-backend-watch` for stable browser testing)       |
 | `find-dependent-tests.ts` | Finds test files affected by changed source files (see below)                                   |
 | `install-pkgs.ts`         | Workspace install helper: `bun install` plus Prisma client regeneration when the schema drifted |
-| `migration-core.ts`       | Shared helpers for the scripts above (secret checks, minimal PNG bytes, file comparison)        |
+| `migration-core.ts`       | Shared helpers for the scripts above (secret checks and file comparison)                        |
 | `run-relevant-tests.ts`   | Finds and runs the affected tests (see below)                                                   |
 
 `*.test.ts` files are the tests for these scripts (`bun run test ./scripts` from

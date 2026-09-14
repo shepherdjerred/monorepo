@@ -7,7 +7,6 @@ import {
 import { VersionMapSchema } from "./version-map.generated.ts";
 import {
   applyCurrentBuildImageOverrides,
-  catalogScoutDesktopRetirementPreflightImageDigests,
   catalogScoutPostgresImageDigests,
 } from "./release-configuration.ts";
 
@@ -22,12 +21,6 @@ export const postgresImageDigests = new Set([
   ...catalogScoutPostgresImageDigests(versionCatalog),
   ...applyCurrentBuildImageOverrides(versions),
 ]);
-
-// Intentionally catalog-only. The preflight command may run only from an
-// immutable image whose contents were inspected before this temporary init
-// container is enabled; a current-build override alone is not that proof.
-export const desktopRetirementPreflightImageDigests =
-  catalogScoutDesktopRetirementPreflightImageDigests(versionCatalog);
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned

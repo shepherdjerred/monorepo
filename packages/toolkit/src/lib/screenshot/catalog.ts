@@ -5,8 +5,6 @@
  *
  * Deliberately excluded, not silently guessed at:
  * - `astro-opengraph-images` has no `dev` script (build-time codegen only).
- * - `scout-for-lol/packages/desktop` (Tauri/Rust) has no browser-drivable
- *   dev server.
  * - `tasks-for-obsidian` (React Native/Metro) needs a simulator/device, not
  *   a browser.
  */

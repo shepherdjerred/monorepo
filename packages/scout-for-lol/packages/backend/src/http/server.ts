@@ -70,15 +70,15 @@ const EXPECTED_CLIENT_ERROR_CODES = new Set<string>([
  * CORS headers for API responses.
  *
  * We only emit CORS headers when the request's `Origin` matches the
- * configured web-app origin (i.e. the SPA). For every other caller — Tauri
- * desktop clients, server-to-server traffic, or anything cross-origin — we
+ * configured web-app origin (i.e. the SPA). For every other caller —
+ * server-to-server traffic or anything cross-origin — we
  * return no CORS headers at all. Browsers refuse the response, which is
  * what we want for cross-origin browser callers; non-browser clients
  * ignore CORS entirely.
  *
  * `Authorization` is intentionally NOT in `Access-Control-Allow-Headers`:
- * the SPA uses cookies + X-CSRF-Token, and the desktop client isn't a
- * browser. Add it back deliberately if a future browser flow needs Bearer.
+ * the SPA uses cookies + X-CSRF-Token. Add it back deliberately if a future
+ * browser flow needs Bearer.
  */
 function corsHeadersFor(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin");

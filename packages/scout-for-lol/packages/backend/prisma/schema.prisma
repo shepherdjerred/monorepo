@@ -438,10 +438,6 @@ model User {
   // cannot answer this: it moves on token refresh, not on activity.
   lastSeenAt          DateTime?
 
-  apiTokens            ApiToken[]
-  soundPacks           SoundPack[]
-  desktopClients       DesktopClient[]
-  storedSounds         StoredSound[]
   exploreConversations ExploreConversation[]
   challengeDrafts      ChallengeDraft[]
   challengeRuns        ChallengeRun[]
@@ -514,78 +510,6 @@ model ExploreMessage {
 
   @@index([conversationId])
   @@index([conversationId, parentId])
-}
-
-model ApiToken {
-  id         Int       @id @default(autoincrement())
-  userId     String
-  user       User      @relation(fields: [userId], references: [discordId], onDelete: Cascade)
-  token      String    @unique // hashed token
-  name       String
-  scopes     String    @default("events:write")
-  lastUsedAt DateTime?
-  expiresAt  DateTime?
-  createdAt  DateTime  @default(now())
-  revokedAt  DateTime?
-
-  @@index([userId])
-}
-
-model DesktopClient {
-  id                Int        @id @default(autoincrement())
-  userId            String
-  user              User       @relation(fields: [userId], references: [discordId], onDelete: Cascade)
-  clientId          String     @unique // UUID generated on first connection
-  hostname          String?
-  isConnected       Boolean    @default(false)
-  lastHeartbeat     DateTime?
-  currentGameId     String? // Game ID if in active game
-  voiceChannelId    String? // Discord voice channel to join
-  guildId           String? // Discord guild ID for voice
-  activeSoundPackId Int?
-  activeSoundPack   SoundPack? @relation(fields: [activeSoundPackId], references: [id])
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-
-  @@index([userId])
-}
-
-model SoundPack {
-  id          Int      @id @default(autoincrement())
-  userId      String
-  user        User     @relation(fields: [userId], references: [discordId], onDelete: Cascade)
-  name        String
-  version     String   @default("1.0.0")
-  description String?
-  isPublic    Boolean  @default(false) // Whether other users can use this pack
-  settings    String // JSON: { masterVolume: number, normalization: boolean }
-  defaults    String // JSON: { gameStart?: SoundPool, kill?: SoundPool, ... }
-  rules       String // JSON: SoundRule[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  desktopClients DesktopClient[]
-
-  @@unique([userId, name])
-  @@index([userId])
-  @@index([isPublic])
-}
-
-model StoredSound {
-  id           Int      @id @default(autoincrement())
-  userId       String
-  user         User     @relation(fields: [userId], references: [discordId], onDelete: Cascade)
-  s3Key        String   @unique // S3/R2 object key
-  originalName String // Original filename
-  mimeType     String
-  sizeBytes    Int
-  durationMs   Int?
-  sourceType   String // "upload", "youtube", "url"
-  sourceUrl    String? // Original URL if from YouTube/URL
-  createdAt    DateTime @default(now())
-
-  @@index([userId])
-  @@index([sourceUrl])
 }
 
 model GuildInstall {
@@ -736,19 +660,6 @@ model ActiveGame {
   updatedAt           DateTime @updatedAt
 
   @@index([expiresAt])
-}
-
-model GameEventLog {
-  id          Int      @id @default(autoincrement())
-  userId      String
-  clientId    String
-  eventType   String // "kill", "multikill", "objective", etc.
-  eventData   String // JSON of event context
-  soundPlayed String? // Sound ID that was played
-  timestamp   DateTime @default(now())
-
-  @@index([userId, timestamp])
-  @@index([clientId, timestamp])
 }
 
 // Records every match for which the AI review pipeline has been entered.

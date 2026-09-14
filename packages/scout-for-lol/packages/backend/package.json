@@ -32,7 +32,6 @@
     "generate": "bun run db:generate",
     "temporal:requeue-work": "bun run scripts/requeue-temporal-work.ts",
     "compact:report-lake": "bun run scripts/compact-report-lake.ts",
-    "retire:desktop:preflight": "bun run scripts/retire-desktop-data.ts --preflight",
     "generate-lane-priors": "bun run scripts/lane-priors/generate-lane-priors.ts",
     "evaluate-lane-priors": "bun run scripts/lane-priors/evaluate-lane-priors.ts",
     "update-queue-windows": "bun run scripts/update-queue-windows.ts",

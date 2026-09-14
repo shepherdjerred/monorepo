@@ -2,10 +2,9 @@ import { expect, test } from "vitest";
 
 test("migrated entrypoints load without executing", async () => {
   const modules = await Promise.all([
-    import("./create-minimal-png.ts"),
     import("./dev/dev-db-pull.ts"),
     import("./dev/dev-web.ts"),
     import("./install-pkgs.ts"),
   ]);
-  expect(modules).toHaveLength(4);
+  expect(modules).toHaveLength(3);
 });

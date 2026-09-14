@@ -38,16 +38,6 @@
       "count": 1
     }
   },
-  "scripts/lane-priors/evaluate-lane-priors.ts": {
-    "custom-rules/prefer-structured-logging": {
-      "count": 1
-    }
-  },
-  "scripts/lane-priors/generate-lane-priors.ts": {
-    "custom-rules/prefer-structured-logging": {
-      "count": 1
-    }
-  },
   "scripts/inspect-pipeline-trace.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
@@ -68,14 +58,19 @@
       "count": 1
     }
   },
-  "scripts/lane-priors/lane-prior-cli.ts": {
-    "@typescript-eslint/no-deprecated": {
+  "scripts/lane-priors/evaluate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
       "count": 1
     }
   },
-  "scripts/migrate-scoutql-v2.test.ts": {
-    "unicorn/no-await-expression-member": {
-      "count": 3
+  "scripts/lane-priors/generate-lane-priors.ts": {
+    "custom-rules/prefer-structured-logging": {
+      "count": 1
+    }
+  },
+  "scripts/lane-priors/lane-prior-cli.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
     }
   },
   "scripts/outreach.ts": {
@@ -151,14 +146,24 @@
       "count": 2
     }
   },
+  "src/betting/markets/matching.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
   "src/betting/notify/announce.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/markets/matching.ts": {
+  "src/betting/parlays/model/parlay-pricing.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
+    }
+  },
+  "src/betting/parlays/model/parlay-stats.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
     }
   },
   "src/betting/parlays/parlay-evaluator.ts": {
@@ -181,22 +186,12 @@
       "count": 1
     }
   },
-  "src/betting/parlays/model/parlay-pricing.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/betting/parlays/runtime/parlay-publish.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
   "src/betting/parlays/runtime/parlay-settle.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
-  "src/betting/parlays/model/parlay-stats.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }
@@ -347,11 +342,6 @@
     }
   },
   "src/testing/postgres-server.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/trpc/context.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

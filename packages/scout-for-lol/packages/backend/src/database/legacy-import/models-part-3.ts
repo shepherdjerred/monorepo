@@ -8,7 +8,6 @@
  */
 import type { Prisma } from "#generated/prisma/client/index.js";
 import {
-  DesktopClientIdSchema,
   PuuidKeyMapStatusSchema,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -245,31 +244,6 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     },
     count: (tx) => tx.subscription.count(),
     findAll: (tx) => tx.subscription.findMany({ orderBy: [{ id: "asc" }] }),
-  }),
-  defineImportModel({
-    model: "DesktopClient",
-    idColumns: ["id"],
-    resetIdSequence: true,
-    transform: (row): Prisma.DesktopClientCreateManyInput => ({
-      id: DesktopClientIdSchema.parse(toInt(row, "id")),
-      userId: DiscordAccountIdSchema.parse(toStr(row, "userId")),
-      clientId: toStr(row, "clientId"),
-      hostname: toStrOrNull(row, "hostname"),
-      isConnected: toBool(row, "isConnected"),
-      lastHeartbeat: toDateOrNull(row, "lastHeartbeat"),
-      currentGameId: toStrOrNull(row, "currentGameId"),
-      voiceChannelId: toStrOrNull(row, "voiceChannelId"),
-      guildId: toStrOrNull(row, "guildId"),
-      activeSoundPackId: toIntOrNull(row, "activeSoundPackId"),
-      createdAt: toDate(row, "createdAt"),
-      updatedAt: toDate(row, "updatedAt"),
-    }),
-    createMany: async (tx, data) => {
-      const result = await tx.desktopClient.createMany({ data });
-      return result.count;
-    },
-    count: (tx) => tx.desktopClient.count(),
-    findAll: (tx) => tx.desktopClient.findMany({ orderBy: [{ id: "asc" }] }),
   }),
   defineImportModel({
     model: "BucksBet",
