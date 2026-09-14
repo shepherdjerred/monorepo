@@ -1,3 +1,15 @@
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM "ApiToken")
+    OR EXISTS (SELECT FROM "DesktopClient")
+    OR EXISTS (SELECT FROM "SoundPack")
+    OR EXISTS (SELECT FROM "StoredSound")
+    OR EXISTS (SELECT FROM "GameEventLog") THEN
+    RAISE EXCEPTION
+      'Cannot remove Scout Desktop tables while desktop data exists; re-run the retirement inventory and remove stored sound objects first.';
+  END IF;
+END $$;
+
 DROP TABLE "GameEventLog";
 DROP TABLE "DesktopClient";
 DROP TABLE "StoredSound";
