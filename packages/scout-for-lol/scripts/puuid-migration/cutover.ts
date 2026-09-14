@@ -13,6 +13,7 @@ import { readTrackedPuuids } from "./discovery.ts";
 import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import { collectFromJson, parseJson, selectSubtree } from "./json-walk.ts";
 import {
+  asCount,
   asOptionalString,
   asString,
   countOf,
@@ -48,16 +49,24 @@ export async function knownIdentities(db: Db): Promise<Set<string>> {
 /**
  * Identities collect may treat as already present during the current run.
  *
- * A replacement from a completed transition is intentionally omitted: after
- * `begin`, that value is the old-domain input for the next transition. A
- * replacement whose rewrite is still in flight remains known so an interrupted
- * apply can be resumed without creating a duplicate pending row.
+ * A replacement from a completed transition is intentionally omitted only
+ * after `begin --new-transition` explicitly opens the next scope. If the
+ * marker write was interrupted after map rows were stamped, the closed state
+ * keeps those replacements known so a rerun cannot collect new-domain values
+ * with the retired key.
  */
 export async function collectKnownIdentities(db: Db): Promise<Set<string>> {
   const rows = await db.query(
     `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
       ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
   );
+  const migration = await db.query(
+    `SELECT "transitionOpen" FROM "PuuidKeyMigration" WHERE "id" = 1`,
+  );
+  const transitionOpen =
+    migration[0] === undefined
+      ? true
+      : asCount(migration[0]["transitionOpen"], "transition state") !== 0;
   const applied = new Map(
     rows.flatMap((row) => {
       const oldPuuid = asOptionalString(row["oldPuuid"]);
@@ -76,11 +85,15 @@ export async function collectKnownIdentities(db: Db): Promise<Set<string>> {
   const known = new Set<string>();
   for (const row of rows) {
     const oldPuuid = asString(row["oldPuuid"], "oldPuuid");
-    if (!currentCycleDomains.has(oldPuuid) || row["appliedAt"] === null) {
+    if (
+      !transitionOpen ||
+      !currentCycleDomains.has(oldPuuid) ||
+      row["appliedAt"] === null
+    ) {
       known.add(oldPuuid);
     }
     const mapped = asOptionalString(row["newPuuid"]);
-    if (mapped !== null && row["appliedAt"] === null) {
+    if (mapped !== null && (!transitionOpen || row["appliedAt"] === null)) {
       known.add(mapped);
     }
   }
@@ -133,7 +146,9 @@ export async function beginTransition(
     );
   }
   await db.exec(
-    `UPDATE "PuuidKeyMigration" SET "appliedAt" = NULL WHERE "id" = 1`,
+    `UPDATE "PuuidKeyMigration"
+        SET "appliedAt" = NULL, "transitionOpen" = 1
+      WHERE "id" = 1`,
   );
   console.log(
     "begin: previous remap history retained; current transition marker reset",

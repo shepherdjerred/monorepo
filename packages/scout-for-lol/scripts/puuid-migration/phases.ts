@@ -283,7 +283,8 @@ export async function resolve(db: Db): Promise<void> {
 async function assertNoCollisions(db: Db): Promise<void> {
   const collisions = await db.query(
     `SELECT "newPuuid", COUNT(*) AS n FROM "PuuidKeyMap"
-      WHERE "newPuuid" IS NOT NULL GROUP BY "newPuuid" HAVING COUNT(*) > 1`,
+      WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
+      GROUP BY "newPuuid" HAVING COUNT(*) > 1`,
   );
   if (collisions.length > 0) {
     const detail = collisions
@@ -479,9 +480,10 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
       WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL`,
   );
   await db.exec(
-    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt", "transitionOpen") VALUES (1, ${db.now()}, 0)
      ON CONFLICT ("id") DO UPDATE
-        SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()})`,
+        SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()}),
+            "transitionOpen" = 0`,
   );
   console.log("apply: complete");
 }

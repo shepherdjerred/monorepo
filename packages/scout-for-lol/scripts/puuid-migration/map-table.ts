@@ -33,10 +33,35 @@ export async function ensureMapTable(db: Db): Promise<void> {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS "PuuidKeyMigration" (
       "id"        INTEGER PRIMARY KEY,
-      "appliedAt" ${db.timestampType()}
+      "appliedAt" ${db.timestampType()},
+      "transitionOpen" INTEGER NOT NULL DEFAULT 1
     )
   `);
   await addAppliedAtToExistingMap(db);
+  await addTransitionOpenToMigration(db);
+}
+
+/** Track whether applied replacements may be collected as the next domain. */
+async function addTransitionOpenToMigration(db: Db): Promise<void> {
+  const columns = await db.listColumns("PuuidKeyMigration");
+  if (columns.includes("transitionOpen")) {
+    return;
+  }
+  await db.exec(
+    `ALTER TABLE "PuuidKeyMigration" ADD COLUMN "transitionOpen" INTEGER NOT NULL DEFAULT 1`,
+  );
+  // A null cutover marker with already-applied map rows is an interrupted
+  // marker write, not an explicitly opened later transition.
+  await db.exec(`
+    UPDATE "PuuidKeyMigration"
+       SET "transitionOpen" = CASE
+         WHEN "appliedAt" IS NOT NULL THEN 0
+         WHEN EXISTS (
+           SELECT 1 FROM "PuuidKeyMap" WHERE "appliedAt" IS NOT NULL
+         ) THEN 0
+         ELSE 1
+       END
+  `);
 }
 
 /**

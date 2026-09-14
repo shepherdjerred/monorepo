@@ -841,6 +841,22 @@ test("collect treats a prior replacement as the next transition's old value", as
   await db.close();
 });
 
+test("collect does not reopen replacements after an interrupted marker write", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  await db.exec(
+    `UPDATE "PuuidKeyMigration" SET "appliedAt" = NULL, "transitionOpen" = 0`,
+  );
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
+  expect(rows.map((row) => row["oldPuuid"])).toEqual([OLD_A]);
+  await db.close();
+});
+
 test("collect reopens the current domain after a return cycle", async () => {
   const db = await seed({
     accounts: [OLD_A],
