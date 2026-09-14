@@ -2,11 +2,11 @@ import { describe, expect, test } from "vitest";
 import { VoiceConnectionStatus, type AudioPlayer } from "@discordjs/voice";
 import { Client, GatewayIntentBits } from "discord.js";
 import {
-  enqueuePerKey,
   VoiceManager,
   type EstablishVoiceConnection,
   type VoiceManagerConnection,
 } from "#src/voice/voice-manager.ts";
+import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 
 const GUILD = "100000000000000001";
 

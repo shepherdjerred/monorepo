@@ -1,11 +1,21 @@
 import { describe, expect, test, vi } from "vitest";
-import { Client, Events, GatewayIntentBits, ShardEvents } from "discord.js";
 import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  ShardEvents,
+  type Guild,
+} from "discord.js";
+import {
+  claimGuildInstallReplacement,
   DISCORD_EVENT_NAMES,
   registerDiscordEventHandlers,
   runGuildConfigRefresh,
   startDiscordGateway,
+  updateHistoricalUnavailableGuilds,
 } from "#src/discord/bootstrap.ts";
+import { mockGuild } from "#src/testing/discord-mocks.ts";
+import type { GuildInstallReplacement } from "#src/discord/events/guild-create.ts";
 
 function newClient(): Client {
   return new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -159,5 +169,93 @@ describe("runGuildConfigRefresh", () => {
       },
     });
     expect(order).toEqual(["sweep", "reconcile"]);
+  });
+});
+
+describe("observed removal claims", () => {
+  test("clears only an accepted removal generation", () => {
+    const acceptedGuild = mockGuild({ id: "guild-1" });
+    const oldRemoval = {
+      identity: Symbol("old removal"),
+      observedAt: new Date("2026-01-01T00:00:00.000Z"),
+    };
+    const laterRemoval = {
+      identity: Symbol("later removal"),
+      observedAt: new Date("2026-01-02T00:00:00.000Z"),
+    };
+    const observedRemovals = new Map([[acceptedGuild.id, oldRemoval]]);
+    const replacementGuilds = new WeakMap<Guild, GuildInstallReplacement>();
+
+    const oldClaim = claimGuildInstallReplacement({
+      replacementGuilds,
+      observedRemovals,
+      guild: acceptedGuild,
+      observedRemoval: oldRemoval,
+    });
+    expect(oldClaim?.replacement).toEqual({
+      kind: "observed-removal",
+      observedAt: oldRemoval.observedAt,
+    });
+    expect(observedRemovals.get(acceptedGuild.id)).toBe(oldRemoval);
+
+    observedRemovals.set(acceptedGuild.id, laterRemoval);
+    oldClaim?.accept();
+    expect(observedRemovals.get(acceptedGuild.id)).toBe(laterRemoval);
+
+    const laterClaim = claimGuildInstallReplacement({
+      replacementGuilds,
+      observedRemovals,
+      guild: acceptedGuild,
+      observedRemoval: laterRemoval,
+    });
+    laterClaim?.accept();
+    expect(observedRemovals.has(acceptedGuild.id)).toBe(false);
+  });
+
+  test("keeps an updated replacement generation claimable", () => {
+    const guild = mockGuild({ id: "guild-1" });
+    const pending: GuildInstallReplacement = {
+      kind: "reconciliation-pending-retirement",
+      analyticsInstallationId: "pending-installation",
+    };
+    const completed: GuildInstallReplacement = {
+      kind: "reconciliation",
+      analyticsInstallationId: "pending-installation",
+      retiredAttribution: {
+        tokenIds: [101],
+        retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    };
+    const replacementGuilds = new WeakMap([[guild, pending]]);
+    const claim = claimGuildInstallReplacement({
+      replacementGuilds,
+      observedRemovals: new Map(),
+      guild,
+      observedRemoval: undefined,
+    });
+
+    expect(claim?.update(completed)).toBe(true);
+    expect(replacementGuilds.get(guild)).toBe(completed);
+    const refreshedClaim = claimGuildInstallReplacement({
+      replacementGuilds,
+      observedRemovals: new Map(),
+      guild,
+      observedRemoval: undefined,
+    });
+    expect(refreshedClaim?.replacement).toBe(completed);
+    refreshedClaim?.accept();
+    expect(replacementGuilds.has(guild)).toBe(false);
+  });
+});
+
+describe("historical unavailable guild markers", () => {
+  test("preserves an in-flight marker when a later ready sees the same guild available", () => {
+    const guild = mockGuild({ id: "guild-1" });
+    Object.defineProperty(guild, "available", { value: true });
+    const markers = new Map([[guild.id, guild]]);
+
+    updateHistoricalUnavailableGuilds(markers, [guild]);
+
+    expect(markers.get(guild.id)).toBe(guild);
   });
 });
