@@ -2651,3 +2651,25 @@ model PuuidKeyMigration {
   id        Int       @id @default(1)
   appliedAt DateTime? @db.Timestamptz()
 }
+
+/// One delivered feature tip, append-only.
+///
+/// Two questions are answered from these rows rather than from stored counters,
+/// the same way the settlement-DM hint derives its cadence from `DmAuditLog`:
+/// whether an audience is still inside its tip cooldown (the newest `shownAt`),
+/// and which tips it has already been shown (`tipKey` presence). Deriving both
+/// means a tip can never be silently re-shown because a counter drifted.
+///
+/// `discordId` is null for a guild-channel message and set for a DM, so a
+/// member's DM cadence is their own and does not consume the channel's.
+model FeatureTipImpression {
+  id        Int      @id @default(autoincrement())
+  serverId  String
+  discordId String?
+  /// A `TipKey` from the tips catalog. Validated on read.
+  tipKey    String
+  shownAt   DateTime @default(now())
+
+  @@index([serverId, discordId, shownAt])
+  @@index([serverId, discordId, tipKey])
+}

@@ -14,6 +14,7 @@ import {
 import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filters.ts";
 import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import { send, ChannelSendError } from "#src/league/discord/channel.ts";
+import { decorateWithFeatureTip } from "#src/tips/index.ts";
 import { getChampionDisplayName } from "#src/utils/champion.ts";
 import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
@@ -231,12 +232,17 @@ async function deliverPrematchMessages(input: {
         fallbackEmbed: () =>
           buildFallbackPrematchEmbed(input.gameInfo, input.trackedPlayers),
       });
+      const tipped = await decorateWithFeatureTip(message, {
+        serverId: guildId,
+        surface: "prematch",
+      });
       await input.recordDelivery?.({ kind: "prepared", channelId: channel });
       await input.recordDelivery?.({
         kind: "send-started",
         channelId: channel,
       });
-      const sentMessage = await send(message, channel, guildId);
+      const sentMessage = await send(tipped.message, channel, guildId);
+      await tipped.confirm();
       await input.recordDelivery?.({
         kind: "delivered",
         channelId: channel,

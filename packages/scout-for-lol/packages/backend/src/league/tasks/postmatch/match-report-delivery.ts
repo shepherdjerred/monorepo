@@ -13,6 +13,7 @@ import {
 import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
 import { uniqueBy } from "remeda";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
+import { decorateWithFeatureTip } from "#src/tips/index.ts";
 import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
@@ -153,6 +154,11 @@ export async function deliverPostmatchReport(input: {
     sentryTags: { matchId },
     replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
     effectKeyPrefix,
+    decorate: async (built, guildId) =>
+      await decorateWithFeatureTip(built, {
+        serverId: guildId,
+        surface: "postmatch",
+      }),
     recordDelivery:
       tryCreateChannelDeliveryRecorder({
         facts,

@@ -33,6 +33,7 @@ import {
 } from "#src/betting/notify/notification-preferences.ts";
 import { client } from "#src/discord/client.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
+import { decorateEmbedWithFeatureTip } from "#src/tips/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { bettingSettlementDmsTotal } from "#src/metrics/betting/betting.ts";
 
@@ -360,6 +361,22 @@ export async function deliverSettlementDms(
   });
   for (const message of messages) {
     let status: DmStatus | undefined;
+    // A DM carries the notification hint or a feature tip, never both: two
+    // asides on one settlement receipt is the noise the DM budget exists to
+    // prevent, and the hint is the more actionable of the two.
+    const tipped = message.showHint
+      ? undefined
+      : await decorateEmbedWithFeatureTip(
+          message.embed,
+          {
+            serverId: guildId,
+            discordId: DiscordAccountIdSchema.parse(message.recipientId),
+            surface: "bucks_dm",
+          },
+          // The caller's client, so a tip read and the settlement it rides on
+          // see the same database.
+          { db: prismaClient },
+        );
     try {
       await dependencies.observeBucksDelivery(
         {
@@ -375,7 +392,7 @@ export async function deliverSettlementDms(
             // The plain rendering is the audit-log record; the embed is what
             // the recipient sees, with the hint as content above it.
             message: message.content,
-            embeds: [message.embed],
+            embeds: [tipped?.embed ?? message.embed],
             ...(message.showHint
               ? { contentWithEmbeds: SETTLEMENT_DM_NOTIFICATION_HINT }
               : {}),
@@ -395,6 +412,7 @@ export async function deliverSettlementDms(
           message.kind === "betting_settlement_receipt" ? "bettor" : "player",
         result: "sent",
       });
+      await tipped?.confirm();
       if (hintRecipientIds.has(message.recipientId)) {
         try {
           await dependencies.markNotificationHintShown(

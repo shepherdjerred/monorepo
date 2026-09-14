@@ -71,6 +71,7 @@ const layers = [
   "sound-engine",
   "storage",
   "testing",
+  "tips",
   "trpc",
   "utils",
   "voice",

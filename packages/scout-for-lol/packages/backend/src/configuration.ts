@@ -328,6 +328,16 @@ function computeConfiguration() {
       .get("TOURNAMENT_MAX_OPEN_LOBBIES")
       .default("10")
       .asIntPositive(),
+    // env-var's asIntPositive admits zero, which matters here: 0 silences
+    // tips without removing the feature.
+    featureTipPercent: env
+      .get("FEATURE_TIP_PERCENT")
+      .default("10")
+      .asIntPositive(),
+    featureTipCooldownHours: env
+      .get("FEATURE_TIP_COOLDOWN_HOURS")
+      .default("72")
+      .asIntPositive(),
     voiceAssistant: parseVoiceAssistantConfiguration({
       openAiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
       openAiApiKeyFile: getOptionalEnvVar("OPENAI_API_KEY_FILE"),
@@ -483,6 +493,12 @@ const configuration: Configuration = {
   },
   get tournamentApiMode() {
     return getConfiguration().tournamentApiMode;
+  },
+  get featureTipPercent() {
+    return getConfiguration().featureTipPercent;
+  },
+  get featureTipCooldownHours() {
+    return getConfiguration().featureTipCooldownHours;
   },
   get tournamentMaxOpenLobbies() {
     return getConfiguration().tournamentMaxOpenLobbies;

@@ -125,6 +125,22 @@ export async function deliverToChannels(params: {
   replyToMessageIds?: ReadonlyMap<string, string>;
   effectKeyPrefix?: string;
   recordDelivery?: ChannelDeliveryRecorder | undefined;
+  /**
+   * Per-guild last look at the message before it is sent, and a confirmation
+   * to run once that guild's send is accepted.
+   *
+   * One built message fans out to every subscribed guild, so anything
+   * guild-specific — a feature tip, for instance — has to be applied here
+   * rather than by the caller, and must return a copy instead of mutating the
+   * shared message.
+   */
+  decorate?: (
+    message: MessageCreateOptions,
+    guildId: DiscordGuildId,
+  ) => Promise<{
+    message: MessageCreateOptions;
+    confirm: () => Promise<void>;
+  }>;
 }): Promise<{
   deliveredGuildIds: Set<DiscordGuildId>;
   messageIdsByChannel: Map<DiscordChannelId, string>;
@@ -174,9 +190,13 @@ export async function deliverToChannels(params: {
       }
       await recordDelivery({ kind: "prepared", channelId: channel });
       const guildId = DiscordGuildIdSchema.parse(serverId);
+      const decorated =
+        params.decorate === undefined
+          ? undefined
+          : await params.decorate(params.message, guildId);
       await recordDelivery({ kind: "send-started", channelId: channel });
       const sentMessage = await sendWithReplyFallback({
-        message: params.message,
+        message: decorated?.message ?? params.message,
         replyToMessageId: params.replyToMessageIds?.get(channel),
         nonce:
           effectKey === undefined ? undefined : deliveryAttemptNonce(effectKey),
@@ -188,6 +208,7 @@ export async function deliverToChannels(params: {
       }
       deliveredGuildIds.add(guildId);
       messageIdsByChannel.set(channel, sentMessage.id);
+      await decorated?.confirm();
       await recordDelivery({
         kind: "delivered",
         channelId: channel,
