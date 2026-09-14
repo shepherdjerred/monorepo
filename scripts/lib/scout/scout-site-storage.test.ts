@@ -122,20 +122,30 @@ test("input indexes accept version aliases but reject changed content", () => {
   );
 });
 
-test("beta deployment checks served entrypoints before an exact-marker no-op", async () => {
+test("beta deployment checks the complete static archive before an exact-marker no-op", async () => {
   const source = await Bun.file(
     new URL("scout-site-storage.ts", import.meta.url),
   ).text();
   const betaStart = source.indexOf("export async function deployScoutBeta");
   const prodStart = source.indexOf("export async function reconcileScoutProd");
   const beta = source.slice(betaStart, prodStart);
+  const archivePaths = beta.indexOf("await staticSiteFilePaths");
   const mismatch = beta.indexOf("await firstS3ObjectMismatch");
+  const retryingProbe = beta.indexOf("await assertStageArchiveIsLive");
   const exactMarkerNoOp = beta.indexOf("mismatch === undefined");
-  expect(mismatch).toBeGreaterThan(0);
+  expect(archivePaths).toBeGreaterThan(0);
+  expect(mismatch).toBeGreaterThan(archivePaths);
   expect(exactMarkerNoOp).toBeGreaterThan(mismatch);
+  expect(retryingProbe).toBeGreaterThan(exactMarkerNoOp);
+  expect(beta).toContain("syncSource: archiveSource");
+  expect(beta).toContain("paths: archivePaths");
   expect(beta).toContain("currentMarker?.trim() === desired");
   expect(beta).toContain("forceMutableUpload: true");
-  expect(beta.indexOf("await assertS3ObjectsMatchSource")).toBeGreaterThan(0);
+  const postSyncProbe = beta.lastIndexOf("await assertStageArchiveIsLive");
+  expect(postSyncProbe).toBeGreaterThan(beta.indexOf("await s3SyncStaticSite"));
+  expect(beta.indexOf("await assertS3ObjectsMatchSource")).toBeGreaterThan(
+    postSyncProbe,
+  );
   expect(beta.indexOf("await writeMarker")).toBeGreaterThan(
     beta.indexOf("await assertS3ObjectsMatchSource"),
   );

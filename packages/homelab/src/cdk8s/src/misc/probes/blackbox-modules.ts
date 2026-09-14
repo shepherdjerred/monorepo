@@ -33,6 +33,17 @@ export const HTTP_2XX_MODULE: BlackboxHttpModule = {
   },
 };
 
+export const HTTP_200_NO_REDIRECT_MODULE: BlackboxHttpModule = {
+  prober: "http",
+  timeout: "10s",
+  http: {
+    valid_http_versions: ["HTTP/1.1", "HTTP/2.0"],
+    valid_status_codes: [200],
+    follow_redirects: false,
+    preferred_ip_protocol: "ip4",
+  },
+};
+
 export const RSS_2XX_MODULE: BlackboxHttpModule = {
   prober: "http",
   timeout: "10s",
@@ -71,6 +82,7 @@ export const TCP_CONNECT_MODULE: BlackboxTcpModule = {
 
 export const BLACKBOX_MODULES = {
   http_2xx: HTTP_2XX_MODULE,
+  http_200_no_redirect: HTTP_200_NO_REDIRECT_MODULE,
   rss_2xx: RSS_2XX_MODULE,
   https_2xx_insecure: HTTPS_2XX_INSECURE_MODULE,
   tcp_connect: TCP_CONNECT_MODULE,

@@ -5,6 +5,7 @@ import {
   firstS3ObjectMismatch,
   isMissingS3Object,
   s3SyncStaticSite,
+  staticSiteFilePaths,
   SEAWEEDFS_ENDPOINT,
   SEAWEEDFS_AWS_ENV,
 } from "../s3-static-site.ts";
@@ -19,14 +20,12 @@ import {
   type ScoutReleaseState,
 } from "./scout-release-state.ts";
 import { assertScoutCustomsArtifactPolicy } from "./scout-customs-artifact.ts";
-import {
-  archiveEntrypoints,
-  requiredReleaseEntrypoints,
-} from "./scout-release-entrypoints.ts";
+import { requiredReleaseEntrypoints } from "./scout-release-entrypoints.ts";
 import {
   requireScoutStorageCredentials as requireCreds,
   scoutStorageRoot as root,
 } from "./scout-storage-runtime.ts";
+import { assertStageArchiveIsLive } from "./scout-site-stage-bucket.ts";
 
 export const SCOUT_RELEASES_BUCKET = "scout-site-releases";
 export const SCOUT_RELEASE_WORK_DIR = ".scout-release";
@@ -39,6 +38,7 @@ const IMMUTABLE_PREFIXES = [
   "docs/_astro/",
   "assets/scout/game/",
 ];
+
 async function writeMarker(bucket: string, identity: string): Promise<void> {
   const file = `${tmpBase()}/scout-site-marker-${process.pid.toString()}`;
   try {
@@ -364,19 +364,23 @@ export async function deployScoutBeta(
   const desired = siteReleaseIdentity(state);
   const currentMarker = await readOptionalBucketObject(BETA_BUCKET, MARKER_KEY);
   const scratch = `${tmpBase()}/scout-beta-${identity}-${process.pid.toString()}`;
+  const archiveSource = `s3://${SCOUT_RELEASES_BUCKET}/${identity}/beta/`;
   try {
     await assertScoutArchived(state, "beta");
     await downloadAndVerifyArchiveBytes(state, "beta", `${scratch}/site`);
-    const entrypoints = await archiveEntrypoints(`${scratch}/site`);
+    const archivePaths = await staticSiteFilePaths(`${scratch}/site`);
     const mismatch = await firstS3ObjectMismatch({
       sourceDir: `${scratch}/site`,
       bucket: BETA_BUCKET,
-      paths: entrypoints,
+      paths: archivePaths,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
     });
     if (mismatch === undefined && currentMarker?.trim() === desired) {
+      await assertStageArchiveIsLive("beta", `${scratch}/site`, {
+        syncSource: archiveSource,
+      });
       return;
     }
     await s3SyncStaticSite({
@@ -391,10 +395,13 @@ export async function deployScoutBeta(
       dryRun: false,
       haveCreds: true,
     });
+    await assertStageArchiveIsLive("beta", `${scratch}/site`, {
+      syncSource: archiveSource,
+    });
     await assertS3ObjectsMatchSource({
       sourceDir: `${scratch}/site`,
       bucket: BETA_BUCKET,
-      paths: entrypoints,
+      paths: archivePaths,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
@@ -421,10 +428,11 @@ export async function reconcileScoutProd(
     return;
   }
   const scratch = `${tmpBase()}/scout-prod-${identity}-${process.pid.toString()}`;
+  const archiveSource = `s3://${SCOUT_RELEASES_BUCKET}/${identity}/prod/`;
   try {
     await assertScoutArchived(state, "prod");
     await downloadAndVerifyArchiveBytes(state, "prod", `${scratch}/site`);
-    const entrypoints = await archiveEntrypoints(`${scratch}/site`);
+    const archivePaths = await staticSiteFilePaths(`${scratch}/site`);
     const markerContent = await readOptionalBucketObject(
       PROD_BUCKET,
       MARKER_KEY,
@@ -433,12 +441,15 @@ export async function reconcileScoutProd(
     const mismatch = await firstS3ObjectMismatch({
       sourceDir: `${scratch}/site`,
       bucket: PROD_BUCKET,
-      paths: entrypoints,
+      paths: archivePaths,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
     });
     if (marker === desired && mismatch === undefined) {
+      await assertStageArchiveIsLive("prod", `${scratch}/site`, {
+        syncSource: archiveSource,
+      });
       return;
     }
     await s3SyncStaticSite({
@@ -453,10 +464,13 @@ export async function reconcileScoutProd(
       dryRun: false,
       haveCreds: true,
     });
+    await assertStageArchiveIsLive("prod", `${scratch}/site`, {
+      syncSource: archiveSource,
+    });
     await assertS3ObjectsMatchSource({
       sourceDir: `${scratch}/site`,
       bucket: PROD_BUCKET,
-      paths: entrypoints,
+      paths: archivePaths,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,

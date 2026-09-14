@@ -71,6 +71,24 @@ const wikiCsp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+const scoutDocsProbes = [
+  {
+    endpoint: "scoutql-sources",
+    path: "/docs/reference/scoutql-sources/",
+    module: "http_200_no_redirect",
+  },
+  {
+    endpoint: "scoutql-filters",
+    path: "/docs/reference/scoutql-filters/",
+    module: "http_200_no_redirect",
+  },
+  {
+    endpoint: "scoutql-functions",
+    path: "/docs/reference/scoutql-functions/",
+    module: "http_200_no_redirect",
+  },
+] as const satisfies NonNullable<StaticSiteConfig["probes"]>;
+
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
 export const staticSites: StaticSiteConfig[] = [
   {
@@ -107,6 +125,7 @@ export const staticSites: StaticSiteConfig[] = [
     probes: [
       { endpoint: "app", path: "/app/", module: "http_2xx" },
       { endpoint: "docs", path: "/docs/", module: "http_2xx" },
+      ...scoutDocsProbes,
       { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
@@ -134,6 +153,7 @@ export const staticSites: StaticSiteConfig[] = [
       { endpoint: "app", path: "/app/", module: "http_2xx" },
       { endpoint: "customs", path: "/customs/", module: "http_2xx" },
       { endpoint: "docs", path: "/docs/", module: "http_2xx" },
+      ...scoutDocsProbes,
       { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
     ],
     spaFallbacks: [

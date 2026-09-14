@@ -4,7 +4,7 @@
  * lockstep deploy scripts share the exact same sync semantics).
  */
 
-import { run, runAllowExit } from "./run.ts";
+import { run } from "./run.ts";
 
 export const SEAWEEDFS_ENDPOINT = "https://seaweedfs-s3.tailnet-1a49.ts.net";
 
@@ -41,6 +41,39 @@ export async function assertStaticSiteComplete(
   }
 }
 
+/**
+ * List every file owned by a static release in deterministic order. Release
+ * certification uses this list for byte-for-byte readback: S3 sync's normal
+ * size-and-timestamp comparison is not an integrity check.
+ */
+export async function staticSiteFilePaths(
+  directory: string,
+): Promise<string[]> {
+  const paths: string[] = [];
+  for await (const path of new Bun.Glob("**/*").scan({
+    cwd: directory,
+    onlyFiles: true,
+  })) {
+    paths.push(path);
+  }
+  return paths.sort();
+}
+
+/** Compare local files as bytes so binary static assets are certified exactly. */
+export async function filesHaveSameBytes(
+  expectedPath: string,
+  actualPath: string,
+): Promise<boolean> {
+  const [expected, actual] = await Promise.all([
+    Bun.file(expectedPath).bytes(),
+    Bun.file(actualPath).bytes(),
+  ]);
+  return (
+    expected.length === actual.length &&
+    !expected.some((byte, index) => byte !== actual[index])
+  );
+}
+
 /** AWS CLI's stable missing-key diagnostics for `s3 cp` object reads. */
 export function isMissingS3Object(stderr: string): boolean {
   return (
@@ -61,6 +94,8 @@ export function forceMutableUploadCommand(opts: {
   dest: string;
   endpoint: string;
   excludes: string[];
+  includes?: string[];
+  cacheControl?: string;
   dryRun: boolean;
 }): string[] {
   return [
@@ -73,16 +108,83 @@ export function forceMutableUploadCommand(opts: {
     "--endpoint-url",
     opts.endpoint,
     ...opts.excludes.flatMap((pattern) => ["--exclude", pattern]),
+    ...(opts.includes ?? []).flatMap((pattern) => ["--include", pattern]),
     "--cache-control",
-    "no-cache",
+    opts.cacheControl ?? "no-cache",
     ...(opts.dryRun ? ["--dryrun"] : []),
   ];
 }
 
 /**
- * Read stage-bucket objects back and require them to be byte-identical to the
- * source release. Deployment markers must not advance when an S3 comparator
- * skipped a changed mutable entrypoint.
+ * Build the read-only reconciliation probe for a static-site bucket. Unlike
+ * the entrypoint byte checks, this asks the AWS CLI whether *any* source file
+ * would still need uploading. It catches a partial recursive upload before a
+ * release marker can certify the bucket as complete.
+ */
+export function staticSiteSyncDryRunCommand(opts: {
+  source: string;
+  bucket: string;
+  endpoint: string;
+}): string[] {
+  return [
+    "aws",
+    "s3",
+    "sync",
+    opts.source,
+    `s3://${opts.bucket}/`,
+    "--endpoint-url",
+    opts.endpoint,
+    "--dryrun",
+  ];
+}
+
+/**
+ * Whether an S3 bucket is missing or differs from any file in the static-site
+ * source. This deliberately does not use `--delete`: retained prior hashed
+ * assets are valid, but every object in the selected release must be present.
+ */
+export async function s3StaticSiteNeedsSync(opts: {
+  source: string;
+  bucket: string;
+  endpoint: string;
+  cwd: string;
+  env: Record<string, string>;
+}): Promise<boolean> {
+  const result = await run(staticSiteSyncDryRunCommand(opts), {
+    cwd: opts.cwd,
+    env: opts.env,
+    capture: true,
+    echoCapturedStdout: false,
+  });
+  return result.stdout.trim() !== "";
+}
+
+/** Build the one-pass stage readback used for full release certification. */
+export function s3StaticSiteDownloadCommand(opts: {
+  bucket: string;
+  destination: string;
+  endpoint: string;
+  paths: readonly string[];
+}): string[] {
+  return [
+    "aws",
+    "s3",
+    "sync",
+    `s3://${opts.bucket}/`,
+    opts.destination,
+    "--endpoint-url",
+    opts.endpoint,
+    "--exclude",
+    "*",
+    ...opts.paths.flatMap((path) => ["--include", path]),
+  ];
+}
+
+/**
+ * Read a stage bucket back once, then require every source-release object to
+ * be byte-identical locally. Deployment markers must not advance when S3's
+ * size-and-timestamp comparator skipped a changed object. Downloading the
+ * prefix once avoids one process and TLS connection per emitted static asset.
  */
 export async function firstS3ObjectMismatch(opts: {
   sourceDir: string;
@@ -92,36 +194,24 @@ export async function firstS3ObjectMismatch(opts: {
   endpoint: string;
   env: Record<string, string>;
 }): Promise<string | undefined> {
+  const servedDir = `${opts.scratchDir}/served`;
+  await Bun.$`rm -rf ${servedDir}`.quiet();
+  await run(
+    s3StaticSiteDownloadCommand({
+      bucket: opts.bucket,
+      destination: servedDir,
+      endpoint: opts.endpoint,
+      paths: opts.paths,
+    }),
+    { env: opts.env },
+  );
   for (const path of opts.paths) {
     const expectedPath = `${opts.sourceDir}/${path}`;
-    const servedPath = `${opts.scratchDir}/served/${path}`;
-    const parentDir = servedPath.slice(0, servedPath.lastIndexOf("/"));
-    await Bun.$`mkdir -p ${parentDir}`.quiet();
-    const download = await runAllowExit(
-      [
-        "aws",
-        "s3",
-        "cp",
-        `s3://${opts.bucket}/${path}`,
-        servedPath,
-        "--endpoint-url",
-        opts.endpoint,
-      ],
-      { env: opts.env, capture: true },
-    );
-    if (download.exitCode !== 0) {
-      if (isMissingS3Object(download.stderr)) {
-        return path;
-      }
-      throw new Error(
-        `could not read s3://${opts.bucket}/${path} for release verification (exit ${download.exitCode.toString()}): ${download.stderr.trim()}`,
-      );
+    const servedPath = `${servedDir}/${path}`;
+    if (!(await Bun.file(servedPath).exists())) {
+      return path;
     }
-    const [expected, served] = await Promise.all([
-      Bun.file(expectedPath).text(),
-      Bun.file(servedPath).text(),
-    ]);
-    if (expected !== served) {
+    if (!(await filesHaveSameBytes(expectedPath, servedPath))) {
       return path;
     }
   }
@@ -165,7 +255,8 @@ export async function assertS3ObjectsMatchSource(opts: {
  * The archive download preserves object timestamps, so `aws s3 sync` can
  * incorrectly retain a changed mutable entrypoint when its size and timestamp
  * compare equal to the destination. When enabled, a recursive `aws s3 cp`
- * uploads every non-immutable object before the normal deleting sync.
+ * uploads every release object before the immutable metadata pass and normal
+ * deleting sync, so equal-size/timestamp-corrupted immutable assets repair.
  */
 export async function s3SyncStaticSite(opts: {
   source: string;
@@ -265,8 +356,38 @@ export async function s3SyncStaticSite(opts: {
     return;
   }
 
+  if (forceMutableUpload) {
+    await run(
+      forceMutableUploadCommand({
+        source,
+        dest,
+        endpoint,
+        excludes: [
+          ...immutablePrefixes.map((prefix) => `${prefix}*`),
+          ...extraExcludes,
+        ],
+        dryRun: false,
+      }),
+      { cwd, env },
+    );
+  }
+
   // Pass 1: immutable, fingerprinted assets — no --delete.
   if (immutablePrefixes.length > 0) {
+    if (forceMutableUpload) {
+      await run(
+        forceMutableUploadCommand({
+          source,
+          dest,
+          endpoint,
+          excludes: ["*"],
+          includes: immutablePrefixes.map((prefix) => `${prefix}*`),
+          cacheControl: "public, max-age=31536000, immutable",
+          dryRun: false,
+        }),
+        { cwd, env },
+      );
+    }
     await run(
       [
         "aws",
@@ -282,19 +403,6 @@ export async function s3SyncStaticSite(opts: {
         "--cache-control",
         "public, max-age=31536000, immutable",
       ],
-      { cwd, env },
-    );
-  }
-
-  if (forceMutableUpload) {
-    await run(
-      forceMutableUploadCommand({
-        source,
-        dest,
-        endpoint,
-        excludes: deletePassExcludes,
-        dryRun: false,
-      }),
       { cwd, env },
     );
   }

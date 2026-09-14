@@ -6,6 +6,7 @@ import {
   firstS3ObjectMismatch,
   isMissingS3Object,
   s3SyncStaticSite,
+  staticSiteFilePaths,
   SEAWEEDFS_AWS_ENV,
   SEAWEEDFS_ENDPOINT,
 } from "../s3-static-site.ts";
@@ -23,7 +24,6 @@ import {
 const PROD_BUCKET = "scout-frontend";
 const MARKER_KEY = ".release-version";
 const IMMUTABLE_PREFIXES = ["_astro/", "app/assets/"];
-const RELEASE_ENTRYPOINTS = ["index.html", "app/index.html"] as const;
 const ImageManifestSchema = z.looseObject({
   digest: z.string().regex(CANONICAL_DIGEST_PATTERN),
 });
@@ -154,11 +154,12 @@ export async function reconcileLegacyScoutProd(
       { env: SEAWEEDFS_AWS_ENV },
     );
     await assertStaticSiteComplete(`${scratch}/site`, "legacy-reconcile-prod");
+    const archivePaths = await staticSiteFilePaths(`${scratch}/site`);
     const markerContent = await readOptionalObject(PROD_BUCKET, MARKER_KEY);
     const mismatch = await firstS3ObjectMismatch({
       sourceDir: `${scratch}/site`,
       bucket: PROD_BUCKET,
-      paths: RELEASE_ENTRYPOINTS,
+      paths: archivePaths,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
@@ -181,7 +182,7 @@ export async function reconcileLegacyScoutProd(
     await assertS3ObjectsMatchSource({
       sourceDir: `${scratch}/site`,
       bucket: PROD_BUCKET,
-      paths: RELEASE_ENTRYPOINTS,
+      paths: archivePaths,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
