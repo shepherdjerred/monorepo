@@ -26,6 +26,7 @@ import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { matchLinkComponents } from "./match-report-components.ts";
 import {
   matchToSvg,
   arenaMatchToSvg,
@@ -184,6 +185,9 @@ async function processClassicMatch(
     });
     throw error;
   }
+  // No "View match" link: the Explore match page rejects Classic asset
+  // modes (isExploreMatchSnapshotSupported), so a button here would open
+  // "Match unavailable".
   return {
     content: formatGameCompletionMessage(
       classicMatch.players.map((player) => player.playerConfig.alias),
@@ -223,6 +227,9 @@ async function processArenaMatch(
     arenaMatch.queueType,
   );
 
+  // No "View match" link: the Explore match page rejects Arena matches
+  // (isExploreMatchSnapshotSupported), so a button here would open
+  // "Match unavailable".
   return {
     content: completionMessage,
     files: [attachment],
@@ -367,6 +374,7 @@ async function processStandardMatch(
     files: files,
     embeds: [matchReportEmbed],
     content: messageContent,
+    components: matchLinkComponents(matchId),
   };
 }
 

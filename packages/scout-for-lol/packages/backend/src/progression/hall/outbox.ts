@@ -6,6 +6,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { getHallOfFameUrl } from "#src/discord/commands/links.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { parseHallBreakOutboxPayload } from "#src/progression/hall/evaluate-match.ts";
 import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
@@ -49,10 +50,11 @@ function truncateToLength(text: string, maxLength: number): string {
 export function hallBreakEmbed(
   payloadJson: string,
   matchId: string,
+  guildId: string,
 ): EmbedBuilder | null {
   const records = parseHallBreakOutboxPayload(payloadJson);
   if (records.length === 0) return null;
-  const description = `Match ${escapeMarkdown(matchId)} set new guild records.`;
+  const description = `Match ${escapeMarkdown(matchId)} set new guild records.\n[Open the Hall of Fame](${getHallOfFameUrl(guildId)})`;
   const rawFields = records.map((record) => ({
     name: `${queueLabel(record.queueFamilyId)} · ${recordLabel(record.recordId)}`,
     prefix: `${record.value.toLocaleString("en-US")} — `,
@@ -143,7 +145,7 @@ export async function deliverHallRecordBreakOutbox(): Promise<void> {
           lastError: null,
         },
       });
-      const embed = hallBreakEmbed(row.payloadJson, row.matchId);
+      const embed = hallBreakEmbed(row.payloadJson, row.matchId, row.guildId);
       if (embed === null) {
         await completeScoutEffect(effectKey);
         await prisma.hallRecordBreakOutbox.update({
