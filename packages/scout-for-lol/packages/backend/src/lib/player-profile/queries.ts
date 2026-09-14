@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  computeKda,
   LOW_SAMPLE_GAME_THRESHOLD,
   PlayerProfileGameWindowSchema,
   PlayerProfileQueueSelectionSchema,
@@ -367,10 +368,7 @@ async function profileSummaryForPlayer(
         games: row.games,
         wins: row.wins,
         winRate: row.games > 0 ? row.wins / row.games : 0,
-        kda:
-          row.deaths === 0
-            ? row.kills + row.assists
-            : (row.kills + row.assists) / row.deaths,
+        kda: computeKda(row),
         csPerMinute: minutes > 0 ? row.creep_score / minutes : 0,
         lowSample: row.games < MIN_GAMES_FOR_RATE,
       };

@@ -8,6 +8,26 @@ import { parseLane } from "#src/model/riot/lane.ts";
 import { type Team, parseTeam } from "#src/model/riot/team.ts";
 
 /**
+ * Canonical KDA: `(kills + assists) / max(deaths, 1)`.
+ *
+ * A zero-death game therefore scores its takedowns — the same value the
+ * "takedowns when deaths = 0" phrasing produces. This is Scout's single KDA
+ * definition; every surface (lake column, report grades, profiles, review
+ * signals) computes through it rather than re-deriving the formula.
+ *
+ * Aggregation conventions: lifetime/champion-pool KDA is the ratio of sums
+ * (pass summed kills/deaths/assists here); a mean of per-game KDA is a
+ * different statistic and must be labeled as such where used.
+ */
+export function computeKda(stats: {
+  kills: number;
+  deaths: number;
+  assists: number;
+}): number {
+  return (stats.kills + stats.assists) / Math.max(stats.deaths, 1);
+}
+
+/**
  * Finds a participant in a match by their PUUID
  */
 export function findParticipant(

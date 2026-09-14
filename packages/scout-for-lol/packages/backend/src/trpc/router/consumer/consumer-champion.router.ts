@@ -5,6 +5,7 @@ import {
   ChampionComparisonCursorSchema,
   ChampionComparisonSortSchema,
   ChampionIdSchema,
+  computeKda,
   DiscordGuildIdSchema,
   PlayerProfileGameWindowSchema,
   PlayerProfileQueueSelectionSchema,
@@ -161,10 +162,7 @@ export const consumerChampionRouter = router({
           wins: lakeRow.wins,
           losses: lakeRow.games - lakeRow.wins,
           winRate: lakeRow.wins / lakeRow.games,
-          kda:
-            lakeRow.deaths === 0
-              ? lakeRow.kills + lakeRow.assists
-              : (lakeRow.kills + lakeRow.assists) / lakeRow.deaths,
+          kda: computeKda(lakeRow),
           csPerMinute: minutes > 0 ? lakeRow.creep_score / minutes : 0,
           damagePerMinute:
             minutes > 0 ? lakeRow.damage_to_champions / minutes : 0,

@@ -1,5 +1,6 @@
 import {
   championNameToDisplayName,
+  computeKda,
   type ArenaChampion,
 } from "@scout-for-lol/data";
 import { palette } from "@scout-for-lol/design-system/satori/colors";
@@ -207,8 +208,10 @@ export function PlayerColumn({
 }
 
 function kdaRatio(kills: number, deaths: number, assists: number): string {
+  // "Perfect" is an arena display convention for zero-death games; the
+  // numeric value everywhere else is the canonical computeKda.
   if (deaths === 0) {
     return "Perfect";
   }
-  return ((kills + assists) / deaths).toFixed(2);
+  return computeKda({ kills, deaths, assists }).toFixed(2);
 }

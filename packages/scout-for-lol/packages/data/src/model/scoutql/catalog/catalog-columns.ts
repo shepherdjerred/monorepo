@@ -112,7 +112,7 @@ const DESCRIPTIONS: Record<string, string> = {
   kills: "Champion kills.",
   deaths: "Deaths.",
   assists: "Assists.",
-  kda: "Riot-computed KDA ratio for this game.",
+  kda: "KDA for this game: (kills + assists) / max(deaths, 1).",
   creep_score: "Total creep score (lane + neutral minions).",
   total_minions_killed: "Lane minions killed.",
   neutral_minions_killed: "Neutral (jungle) minions killed.",

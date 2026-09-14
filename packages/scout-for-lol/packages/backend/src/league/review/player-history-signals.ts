@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 import {
+  computeKda,
   laneToString,
   LaneSchema,
   type Lane,
@@ -128,7 +129,7 @@ export type PlayerHistorySignals = z.infer<typeof PlayerHistorySignalsSchema>;
 // ============================================================================
 
 function kda(kills: number, deaths: number, assists: number): number {
-  return deaths === 0 ? kills + assists : (kills + assists) / deaths;
+  return computeKda({ kills, deaths, assists });
 }
 
 function laDateString(date: Date): string {
