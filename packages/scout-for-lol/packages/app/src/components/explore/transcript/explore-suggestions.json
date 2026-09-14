@@ -30,11 +30,6 @@
     "condition": "bucks"
   },
   {
-    "prompt": "What is the weekly parlay for this week?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
     "prompt": "Who owes the most Bryan Bucks?",
     "category": "bucks",
     "condition": "bucks"

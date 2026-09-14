@@ -125,6 +125,23 @@ export async function deliverToChannels(params: {
   replyToMessageIds?: ReadonlyMap<string, string>;
   effectKeyPrefix?: string;
   recordDelivery?: ChannelDeliveryRecorder | undefined;
+  /**
+   * Per-guild last look at the message before it is sent, and a confirmation
+   * to run once that guild's send is accepted.
+   *
+   * One built message fans out to every subscribed guild, so anything
+   * guild-specific — a feature tip, for instance — has to be applied here
+   * rather than by the caller, and must return a copy instead of mutating the
+   * shared message.
+   */
+  decorate?: (
+    message: MessageCreateOptions,
+    guildId: DiscordGuildId,
+  ) => Promise<{
+    message: MessageCreateOptions;
+    confirm: () => Promise<void>;
+    release: () => Promise<void>;
+  }>;
 }): Promise<{
   deliveredGuildIds: Set<DiscordGuildId>;
   messageIdsByChannel: Map<DiscordChannelId, string>;
@@ -133,6 +150,10 @@ export async function deliverToChannels(params: {
   const messageIdsByChannel = new Map<DiscordChannelId, string>();
   const recordDelivery = params.recordDelivery ?? RECORD_NOTHING;
   for (const { channel, serverId } of params.channels) {
+    // Declared out here so a failed send can hand its tip claim back.
+    let decorated:
+      Awaited<ReturnType<NonNullable<typeof params.decorate>>> | undefined;
+    let sendAccepted = false;
     const effectKey =
       params.effectKeyPrefix === undefined
         ? undefined
@@ -174,15 +195,27 @@ export async function deliverToChannels(params: {
       }
       await recordDelivery({ kind: "prepared", channelId: channel });
       const guildId = DiscordGuildIdSchema.parse(serverId);
+      decorated =
+        params.decorate === undefined
+          ? undefined
+          : await params.decorate(params.message, guildId);
       await recordDelivery({ kind: "send-started", channelId: channel });
       const sentMessage = await sendWithReplyFallback({
-        message: params.message,
+        message: decorated?.message ?? params.message,
         replyToMessageId: params.replyToMessageIds?.get(channel),
         nonce:
           effectKey === undefined ? undefined : deliveryAttemptNonce(effectKey),
         channel,
         guildId,
       });
+      sendAccepted = true;
+      // Before the effect is completed, not after: a crash in between would
+      // otherwise leave the tip delivered but unrecorded, and the retry would
+      // take the `completed` branch below and never confirm it — so the same
+      // audience could be shown the same tip twice. Confirming first inverts
+      // the risk to a recorded tip whose message is resent, which costs at
+      // most one tip rather than breaking the once-only promise.
+      await decorated?.confirm();
       if (effectKey !== undefined) {
         await completeScoutEffectWithResult(effectKey, sentMessage.id);
       }
@@ -194,6 +227,9 @@ export async function deliverToChannels(params: {
         messageId: sentMessage.id,
       });
     } catch (error) {
+      // The decoration claimed its tip before the send; give it back so the
+      // audience stays eligible for it.
+      if (!sendAccepted) await decorated?.release();
       if (effectKey !== undefined && effectClaimed) {
         await recordScoutEffectFailure(effectKey, error);
       }

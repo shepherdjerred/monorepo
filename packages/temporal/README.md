@@ -22,8 +22,8 @@ Temporal's internal `temporal-system` namespace. Unexpected workflow starts in
 any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 
 The central Scout worker also polls its unchanged `scout` queue in `beta` for
-the beta-owned weekly parlay and Bryan Bucks analytics schedules; all other
-central queues are `prod` only.
+the beta-owned Bryan Bucks analytics schedule; all other central queues are
+`prod` only.
 
 | Role              | Queue or surface        | Activity concurrency |
 | ----------------- | ----------------------- | -------------------: |

@@ -153,6 +153,33 @@ const DEFINITION = {
       env: "TOURNAMENT_MAX_OPEN_LOBBIES",
     },
   },
+  /**
+   * Percent of eligible messages that carry a feature tip. The roll is only
+   * reached after the audience's cooldown has expired and an unused, available
+   * tip exists, so this bounds noise within that set rather than overall.
+   */
+  featureTipPercent: {
+    schema: z.coerce.number().int().min(0).max(100),
+    sources: ["flag", "env", "default"],
+    default: 10,
+    names: {
+      flag: "scout-feature-tip-percent",
+      env: "FEATURE_TIP_PERCENT",
+    },
+  },
+  /**
+   * Minimum hours between two tips to the same audience. A busy server must
+   * not out-earn a quiet one on tips, so pacing is time-based, not volume-based.
+   */
+  featureTipCooldownHours: {
+    schema: z.coerce.number().int().positive(),
+    sources: ["flag", "env", "default"],
+    default: 72,
+    names: {
+      flag: "scout-feature-tip-cooldown-hours",
+      env: "FEATURE_TIP_COOLDOWN_HOURS",
+    },
+  },
   temporalCallGraphTracing: {
     schema: z.boolean(),
     sources: ["flag", "default"],
@@ -175,6 +202,8 @@ export type DynamicConfigSeed = {
   exploreModel?: string;
   tournamentApiMode?: TournamentApiMode;
   tournamentMaxOpenLobbies?: number;
+  featureTipPercent?: number;
+  featureTipCooldownHours?: number;
   // Required, unlike the rest: `temporalCallGraphTracing()` is read
   // unconditionally at boot, and `snapshot.get` throws on an unseeded key. Its
   // `?? false` guards a null snapshot, not that throw — so an optional field
@@ -209,6 +238,8 @@ function buildSnapshot(
                 exploreModel: "string",
                 tournamentApiMode: "string",
                 tournamentMaxOpenLobbies: "number",
+                featureTipPercent: "number",
+                featureTipCooldownHours: "number",
                 temporalCallGraphTracing: "boolean",
               },
             }),
@@ -369,6 +400,17 @@ export function tournamentMaxOpenLobbies(): number {
   return (
     snapshot?.get("tournamentMaxOpenLobbies") ??
     configuration.tournamentMaxOpenLobbies
+  );
+}
+
+export function featureTipPercent(): number {
+  return snapshot?.get("featureTipPercent") ?? configuration.featureTipPercent;
+}
+
+export function featureTipCooldownHours(): number {
+  return (
+    snapshot?.get("featureTipCooldownHours") ??
+    configuration.featureTipCooldownHours
   );
 }
 

@@ -90,7 +90,6 @@ export async function syncBucksAnalytics(options?: {
     accounts,
     pendingOutcome,
     pendingParlay,
-    pendingWeekly,
     pendingDareContributions,
     openPools,
   ] = await Promise.all([
@@ -109,12 +108,8 @@ export async function syncBucksAnalytics(options?: {
       where: { betOutcome: "pending" },
       select: { stake: true, bucksAccount: { select: { serverId: true } } },
     }),
-    database.bucksWeeklyParlayBet.findMany({
-      where: { betOutcome: "pending" },
-      select: { stake: true, bucksAccount: { select: { serverId: true } } },
-    }),
     // A dare's pot is contributor money at risk until the dare resolves —
-    // the same "pending stake" the outcome/parlay/weekly sources measure.
+    // the same "pending stake" the outcome and parlay sources measure.
     database.bucksDareContribution.findMany({
       where: { dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } } },
       select: { amount: true, bucksAccount: { select: { serverId: true } } },
@@ -131,7 +126,6 @@ export async function syncBucksAnalytics(options?: {
   const pendingByServer = aggregateBucksPendingStakes(
     pendingOutcome,
     pendingParlay,
-    pendingWeekly,
     pendingDare,
   );
   const openMarketsByServer = countBucksOpenMarkets(openPools);

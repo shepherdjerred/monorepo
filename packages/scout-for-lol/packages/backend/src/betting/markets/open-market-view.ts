@@ -20,14 +20,6 @@ import {
   renderParlay,
 } from "#src/betting/parlays/model/parlay-criteria.ts";
 import { formatDecimalOdds } from "#src/betting/parlays/model/parlay-odds.ts";
-import {
-  WeeklyParlayDefinitionCriteriaSchema,
-  WeeklyParlaySubjectsSchema,
-} from "#src/betting/weekly/weekly-parlay-criteria.ts";
-import {
-  legLine,
-  weeklyParlayQualificationCopy,
-} from "#src/betting/weekly/weekly-parlay-discord-copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 
 /**
@@ -38,8 +30,6 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
  * - Outcome and match-parlay positions are public with bettor identity and
  *   stake, exactly as the market messages render them; house rows and
  *   cancelled bets are excluded.
- * - Weekly parlays expose aggregate bettor count and total staked only,
- *   matching the weekly publication.
  * - No fee, window, cap, or rounding copy appears in any payload — rule
  *   numbers are stated only by `/bb rules` and the docs. The caller-scoped
  *   `cancellationFee` is a computed amount for the caller's own position, not
@@ -80,46 +70,12 @@ export type OpenParlayMarketView = {
   yourPosition: { side: BucksParlaySide; stake: number } | null;
 };
 
-export type OpenWeeklyParlayMarketView = {
-  marketId: number;
-  periodKey: string;
-  bettingClosesAt: Date;
-  scoringStartsAt: Date;
-  scoringEndsAt: Date;
-  subjects: string[];
-  legs: string[];
-  qualification: string | undefined;
-  yesProbabilityBps: number;
-  yesOdds: string;
-  noOdds: string;
-  bettorCount: number;
-  totalStaked: number;
-  yourPosition: { side: BucksParlaySide; stake: number } | null;
-};
-
 export type OpenMarketsView = {
   /** Clock-skew anchor for client countdowns; the server stays authoritative. */
   serverNow: Date;
   outcome: OpenOutcomeMarketView[];
   parlays: OpenParlayMarketView[];
-  weeklyParlays: OpenWeeklyParlayMarketView[];
 };
-
-/**
- * The weekly copy renderers produce Discord markdown (`**bold**`, `• ` list
- * bullets). The web renders plain text, so the shared wording is kept and the
- * Discord syntax is stripped rather than forking the copy.
- */
-function stripDiscordMarkdown(line: string): string {
-  return line.replaceAll("**", "").replace(/^• /, "");
-}
-
-function mapQualification(
-  criteria: Parameters<typeof weeklyParlayQualificationCopy>[0],
-): string | undefined {
-  const copy = weeklyParlayQualificationCopy(criteria);
-  return copy === undefined ? undefined : stripDiscordMarkdown(copy);
-}
 
 function decimalOdds(yesProbabilityBps: number): {
   yesOdds: string;
@@ -257,87 +213,6 @@ async function loadParlayMarkets(
   });
 }
 
-async function loadWeeklyParlayMarkets(
-  input: { serverId: DiscordGuildId; discordId: DiscordAccountId; now: Date },
-  prismaClient: ExtendedPrismaClient,
-): Promise<OpenWeeklyParlayMarketView[]> {
-  const markets = await prismaClient.bucksWeeklyParlayMarket.findMany({
-    where: {
-      serverId: input.serverId,
-      marketState: "open",
-      bettingClosesAt: { gt: input.now },
-    },
-    orderBy: [{ bettingClosesAt: "asc" }, { id: "asc" }],
-    select: {
-      id: true,
-      periodKey: true,
-      bettingClosesAt: true,
-      definition: {
-        select: {
-          criteria: true,
-          subjects: true,
-          yesProbabilityBps: true,
-          scoringStartsAt: true,
-          scoringEndsAt: true,
-        },
-      },
-      bets: {
-        where: { betOutcome: "pending" },
-        orderBy: { id: "asc" },
-        select: {
-          side: true,
-          stake: true,
-          bucksAccount: { select: { discordId: true } },
-        },
-      },
-    },
-  });
-
-  return markets.map((market) => {
-    const subjects = WeeklyParlaySubjectsSchema.parse(
-      JSON.parse(market.definition.subjects),
-    );
-    const criteria = WeeklyParlayDefinitionCriteriaSchema.parse(
-      JSON.parse(market.definition.criteria),
-    );
-    const aliases = new Map(
-      subjects.map((subject) => [subject.key, subject.alias]),
-    );
-    const yours = market.bets.find(
-      (bet) => bet.bucksAccount.discordId === input.discordId,
-    );
-    return {
-      marketId: market.id,
-      periodKey: market.periodKey,
-      bettingClosesAt: market.bettingClosesAt,
-      scoringStartsAt: market.definition.scoringStartsAt,
-      scoringEndsAt: market.definition.scoringEndsAt,
-      subjects: subjects.map((subject) => subject.alias),
-      legs: criteria.legs.map((leg) =>
-        stripDiscordMarkdown(
-          legLine({
-            leg,
-            current: undefined,
-            subjectAlias: aliases.get(leg.subject) ?? leg.subject,
-          }),
-        ),
-      ),
-      qualification: mapQualification(criteria),
-      yesProbabilityBps: market.definition.yesProbabilityBps,
-      ...decimalOdds(market.definition.yesProbabilityBps),
-      bettorCount: market.bets.length,
-      totalStaked: market.bets.reduce((total, bet) => total + bet.stake, 0),
-      yourPosition:
-        yours === undefined
-          ? null
-          : {
-              side: BucksParlaySideSchema.parse(yours.side),
-              stake: yours.stake,
-            },
-    };
-  });
-}
-
 /** Every open market in one guild, shaped for the web. */
 export async function getOpenMarketsView(
   input: {
@@ -349,10 +224,9 @@ export async function getOpenMarketsView(
 ): Promise<OpenMarketsView> {
   const now = input.now ?? new Date();
   const scoped = { serverId: input.serverId, discordId: input.discordId, now };
-  const [outcome, parlays, weeklyParlays] = await Promise.all([
+  const [outcome, parlays] = await Promise.all([
     loadOutcomeMarkets(scoped, prismaClient),
     loadParlayMarkets(scoped, prismaClient),
-    loadWeeklyParlayMarkets(scoped, prismaClient),
   ]);
-  return { serverNow: now, outcome, parlays, weeklyParlays };
+  return { serverNow: now, outcome, parlays };
 }

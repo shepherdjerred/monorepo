@@ -18,7 +18,6 @@ import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/markets/bet-button.ts";
-import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly/weekly-parlay-criteria.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";
@@ -46,11 +45,6 @@ const LEDGER_KIND_LABELS = {
   parlay_payout: "parlay payout",
   parlay_refund: "parlay refund",
   parlay_release: "parlay reserve release",
-  weekly_parlay_stake: "weekly parlay stake",
-  weekly_parlay_reserve: "weekly parlay house reserve",
-  weekly_parlay_payout: "weekly parlay payout",
-  weekly_parlay_refund: "weekly parlay refund",
-  weekly_parlay_release: "weekly parlay reserve release",
   // Retired feature; the label survives so historical rows stay readable.
   peek_pass: "24-hour peek pass",
   transfer_sent: "transfer sent",
@@ -143,17 +137,6 @@ function needsRosterLookup(context: LedgerContext): boolean {
   );
 }
 
-function weeklyDefinitionId(context: LedgerContext): number | undefined {
-  if (
-    context?.type === "weekly_parlay_stake" ||
-    context?.type === "weekly_parlay_reserve" ||
-    context?.type === "weekly_parlay_settlement"
-  ) {
-    return context.definitionId;
-  }
-  return;
-}
-
 async function loadRosterLabels(
   serverId: DiscordGuildId,
   matchIds: ReadonlySet<string>,
@@ -180,39 +163,13 @@ async function loadRosterLabels(
   return labels;
 }
 
-async function loadWeeklySubjectLabels(
-  serverId: DiscordGuildId,
-  definitionIds: ReadonlySet<number>,
-  prismaClient: ExtendedPrismaClient,
-): Promise<Map<number, string | undefined>> {
-  const labels = new Map<number, string | undefined>();
-  if (definitionIds.size === 0) {
-    return labels;
-  }
-  const definitions = await prismaClient.bucksWeeklyParlayDefinition.findMany({
-    where: { serverId, id: { in: [...definitionIds] } },
-    select: { id: true, subjects: true },
-  });
-  for (const definition of definitions) {
-    const subjects = WeeklyParlaySubjectsSchema.safeParse(
-      JSON.parse(definition.subjects),
-    );
-    labels.set(
-      definition.id,
-      formatGameLabel(subjects.data?.map((subject) => subject.alias) ?? []),
-    );
-  }
-  return labels;
-}
-
 /**
  * Who was in the game behind each ledger row, so `/bb history` reads
  * "bet offer reserved · jerred, bryan" instead of a raw Riot match ID.
  *
  * Outcome-bet rows answer from their frozen context alone. Earn and parlay
- * rows carry only a match ID, which resolves through the pool's frozen roster;
- * weekly-parlay rows span matches and resolve through their definition's
- * frozen subjects. Anything that cannot resolve keeps the match ID — a worse
+ * rows carry only a match ID, which resolves through the pool's frozen
+ * roster. Anything that cannot resolve keeps the match ID — a worse
  * label beats a missing audit line.
  */
 export async function resolveLedgerGameLabels(
@@ -223,27 +180,13 @@ export async function resolveLedgerGameLabels(
   const contexts = new Map(
     entries.map((entry) => [entry.id, parsedContext(entry)]),
   );
-  const { labels, rosterMatchIds, definitionIds } = collectLabelSources(
-    entries,
-    contexts,
-  );
+  const { labels, rosterMatchIds } = collectLabelSources(entries, contexts);
   const aliasesByMatchId = await loadRosterLabels(
     serverId,
     rosterMatchIds,
     prismaClient,
   );
-  const subjectsByDefinitionId = await loadWeeklySubjectLabels(
-    serverId,
-    definitionIds,
-    prismaClient,
-  );
-  applyLookupLabels({
-    entries,
-    contexts,
-    labels,
-    aliasesByMatchId,
-    subjectsByDefinitionId,
-  });
+  applyLookupLabels({ entries, labels, aliasesByMatchId });
   return labels;
 }
 
@@ -253,11 +196,9 @@ function collectLabelSources(
 ): {
   labels: Map<number, string>;
   rosterMatchIds: Set<string>;
-  definitionIds: Set<number>;
 } {
   const labels = new Map<number, string>();
   const rosterMatchIds = new Set<string>();
-  const definitionIds = new Set<number>();
   for (const entry of entries) {
     const context = contexts.get(entry.id);
     const fromContext = contextAliasLabel(context);
@@ -268,20 +209,14 @@ function collectLabelSources(
     if (needsRosterLookup(context) && entry.matchId !== null) {
       rosterMatchIds.add(entry.matchId);
     }
-    const definitionId = weeklyDefinitionId(context);
-    if (definitionId !== undefined) {
-      definitionIds.add(definitionId);
-    }
   }
-  return { labels, rosterMatchIds, definitionIds };
+  return { labels, rosterMatchIds };
 }
 
 function applyLookupLabels(input: {
   entries: readonly LedgerPageEntry[];
-  contexts: ReadonlyMap<number, LedgerContext>;
   labels: Map<number, string>;
   aliasesByMatchId: ReadonlyMap<string, string | undefined>;
-  subjectsByDefinitionId: ReadonlyMap<number, string | undefined>;
 }): void {
   for (const entry of input.entries) {
     if (input.labels.has(entry.id)) {
@@ -293,15 +228,6 @@ function applyLookupLabels(input: {
         : input.aliasesByMatchId.get(entry.matchId);
     if (fromRoster !== undefined) {
       input.labels.set(entry.id, fromRoster);
-      continue;
-    }
-    const definitionId = weeklyDefinitionId(input.contexts.get(entry.id));
-    const fromDefinition =
-      definitionId === undefined
-        ? undefined
-        : input.subjectsByDefinitionId.get(definitionId);
-    if (fromDefinition !== undefined) {
-      input.labels.set(entry.id, `weekly · ${fromDefinition}`);
     }
   }
 }

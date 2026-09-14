@@ -33,6 +33,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   debug: false,
   duels_enabled: false,
   explore_creation_enabled: false,
+  feature_tips_enabled: false,
   hall_of_fame_enabled: false,
   initial_match_history_import_enabled: false,
   scout_operations_console_enabled: false,
@@ -41,7 +42,6 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   "scout-temporal-call-graph-tracing": false,
   tournament_lobbies_enabled: false,
   voice_assistant_enabled: false,
-  weekly_parlays_enabled: false,
   // Variant flags: same defaults as the `DEFINITION` snapshot in
   // packages/backend/src/config/dynamic.ts, which already falls back to them
   // gracefully on a refresh failure — listing them here just stops the noisy
@@ -49,6 +49,8 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   "scout-betting-parlay-ai-model": "gpt-5.6-sol",
   "scout-explore-model": "gpt-5.6-luna",
   "scout-report-ai-model": "gpt-5.6-sol",
+  "scout-feature-tip-percent": 10,
+  "scout-feature-tip-cooldown-hours": 72,
   "scout-tournament-api-mode": "stub",
   "scout-tournament-max-open-lobbies": 10,
   "llm-hourly-token-budget": 2_000_000,

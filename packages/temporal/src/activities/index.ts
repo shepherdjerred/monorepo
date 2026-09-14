@@ -42,7 +42,6 @@ import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciIoImpactActivities } from "./maintenance/ci-io-impact.ts";
 import { freshrssActivities } from "./maintenance/freshrss.ts";
-import { scoutWeeklyParlayActivities } from "./scout/scout-weekly-parlay.ts";
 import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
@@ -98,7 +97,6 @@ export const scoutActivities = {
   ...scoutImageGcActivities,
   ...scoutShowcaseRefreshActivities,
   ...scoutQueueWindowsActivities,
-  ...scoutWeeklyParlayActivities,
   ...scoutBryanBucksActivities,
   ...scheduleRehearsalActivities,
 };

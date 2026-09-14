@@ -17,6 +17,24 @@ export type InstallKind = "first" | "reinstall";
 export type MemberCountBucket =
   "1-10" | "11-50" | "51-250" | "251-1000" | "1001+";
 export type SubscriptionSurface = "discord" | "web";
+/**
+ * The closed set of feature tips, owned here because `analytics/` may not
+ * depend on the domain and every event property must be a bounded union. The
+ * tips catalog derives its key type from this, so the two cannot drift.
+ */
+export type FeatureTipKey =
+  | "competitions"
+  | "scheduled-reports"
+  | "queue-filters"
+  | "track-more-players"
+  | "hall-of-fame"
+  | "duels"
+  | "dares"
+  | "transfers"
+  | "custom-nights"
+  | "tournament-lobbies";
+/** Where a feature tip was appended. */
+export type FeatureTipSurface = "postmatch" | "prematch" | "bucks_dm";
 export type CoreOutputKind =
   | "prematch"
   | "postmatch"
@@ -64,12 +82,7 @@ export type DiscordCommandSubcommand =
   | "cancel";
 export type DiscordCommandStatus = "success" | "error";
 export type BucksMemberActivityKind =
-  | "command"
-  | "outcome_bet"
-  | "parlay_bet"
-  | "weekly_parlay_bet"
-  | "navigation"
-  | "dare";
+  "command" | "outcome_bet" | "parlay_bet" | "navigation" | "dare";
 export type BucksActivitySurface = "command" | "button" | "web" | "unknown";
 /** Hey Scout turn outcomes; the closed set is the whole analytics vocabulary. */
 export type VoiceQuestionOutcome =
@@ -92,6 +105,7 @@ type ProductAnalyticsEventProperties = {
   };
   first_subscription_created: { surface: SubscriptionSurface };
   core_output_delivered: { output_kind: CoreOutputKind };
+  feature_tip_shown: { tip_key: FeatureTipKey; surface: FeatureTipSurface };
   first_core_output_delivered: { output_kind: CoreOutputKind };
   guild_removed: {
     activation_state: RemovalActivationState;

@@ -77,6 +77,8 @@ await initializeDynamicConfig({
     exploreModel: configuration.exploreModel,
     tournamentApiMode: configuration.tournamentApiMode,
     tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
+    featureTipPercent: configuration.featureTipPercent,
+    featureTipCooldownHours: configuration.featureTipCooldownHours,
     // Flag-only, so there is no env-derived value: seed the definition's
     // default, which is the pre-flag behaviour.
     temporalCallGraphTracing: false,

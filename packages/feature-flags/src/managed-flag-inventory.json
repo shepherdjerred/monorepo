@@ -568,11 +568,11 @@
       "thresholdRollouts": []
     },
     {
-      "key": "weekly_parlays_enabled",
+      "key": "feature_tips_enabled",
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable Scout weekly parlays.",
+      "purpose": "Append feature-discovery tips to a fraction of Scout's messages.",
       "type": "boolean",
       "default": false,
       "rollouts": [
@@ -674,6 +674,30 @@
       "purpose": "Bound the number of concurrently open Scout tournament lobbies.",
       "type": "variant",
       "default": "10",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout-feature-tip-percent",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Percent of eligible Scout messages that carry a feature tip.",
+      "type": "variant",
+      "default": "10",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scout-feature-tip-cooldown-hours",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Minimum hours between two feature tips to the same audience.",
+      "type": "variant",
+      "default": "72",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

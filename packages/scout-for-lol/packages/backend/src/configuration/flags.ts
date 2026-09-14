@@ -160,7 +160,6 @@ export type FlagName =
   | "dare_extended_contracts_enabled"
   | "dare_notifications_enabled"
   | "bucks_transfers_enabled"
-  | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
   | "competition_builder_v2_enabled"
@@ -169,6 +168,7 @@ export type FlagName =
   | "debug"
   | "duels_enabled"
   | "explore_creation_enabled"
+  | "feature_tips_enabled"
   | "hall_of_fame_enabled"
   | "initial_match_history_import_enabled"
   | "scout_operations_console_enabled"
@@ -204,7 +204,6 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "betting_player_bet_outcome_dm_enabled",
     "betting_settlement_dm_enabled",
     "bucks_transfers_enabled",
-    "weekly_parlays_enabled",
     "bucks_dares_enabled",
     "dare_v2",
     "dare_extended_contracts_enabled",
@@ -361,10 +360,11 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
-  // Week-spanning Bryan Bucks markets remain a narrower private-beta rollout
-  // than the betting economy itself. New positions require both flags;
-  // settlement and refunds deliberately do not.
-  weekly_parlays_enabled: {
+  // Feature-discovery tips append a line to messages Scout already sends, so
+  // they reach every reader of a channel rather than an opted-in subset. Beta
+  // first, and the percent and cooldown in dynamic config bound the noise once
+  // it is on.
+  feature_tips_enabled: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },

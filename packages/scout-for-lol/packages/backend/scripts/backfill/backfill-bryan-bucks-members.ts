@@ -11,8 +11,8 @@ type MemberBet = {
   createdAt: Date;
 };
 
-type MemberBetKind = "outcome_bet" | "parlay_bet" | "weekly_parlay_bet";
-type MemberBetSource = "direct-bet" | "parlay-bet" | "weekly-parlay-bet";
+type MemberBetKind = "outcome_bet" | "parlay_bet";
+type MemberBetSource = "direct-bet" | "parlay-bet";
 type BackfillCapture = (eventId: string, callback: () => void) => Promise<void>;
 type BucksAccount = { analyticsUserId: string; serverId: string };
 
@@ -69,7 +69,6 @@ export async function backfillMemberBets(input: {
 }): Promise<{
   directBets: number;
   parlayBets: number;
-  weeklyParlayBets: number;
 }> {
   const analytics = input.analytics ?? getProductAnalytics();
   const createdAt = {
@@ -108,25 +107,8 @@ export async function backfillMemberBets(input: {
     }),
   );
 
-  const weeklyParlayBets = await prisma.bucksWeeklyParlayBet.findMany({
-    where: { createdAt, bucksAccount: { isHouse: false } },
-    select: { id: true, bucksAccountId: true, createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
-  await forEachAsync(weeklyParlayBets, (bet) =>
-    captureMemberBet({
-      bet,
-      source: "weekly-parlay-bet",
-      activityKind: "weekly_parlay_bet",
-      accountById: input.accountById,
-      analytics,
-      capture: input.capture,
-    }),
-  );
-
   return {
     directBets: directBets.length,
     parlayBets: parlayBets.length,
-    weeklyParlayBets: weeklyParlayBets.length,
   };
 }

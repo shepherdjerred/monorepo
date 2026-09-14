@@ -54,7 +54,7 @@ function githubEnv(secret: ISecret): Record<string, EnvValue> {
 export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
-  scoutWeeklyParlaySecret: ISecret;
+  scoutBryanBucksControlSecret: ISecret;
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
   talosConfigVolume: Volume;
@@ -223,11 +223,11 @@ export function createTemporalOperationsWorkers(
         secret: props.secret,
         key: "OPENROUTER_API_KEY",
       }),
-      SCOUT_WEEKLY_PARLAY_CONTROL_URL: EnvValue.fromValue(
-        "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/weekly-parlays/actions",
+      SCOUT_BRYAN_BUCKS_CONTROL_URL: EnvValue.fromValue(
+        "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/bryan-bucks/analytics-sync",
       ),
-      SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN: EnvValue.fromSecretValue({
-        secret: props.scoutWeeklyParlaySecret,
+      SCOUT_BRYAN_BUCKS_CONTROL_TOKEN: EnvValue.fromSecretValue({
+        secret: props.scoutBryanBucksControlSecret,
         key: "token",
       }),
     },

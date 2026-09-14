@@ -17,15 +17,15 @@ For the list of what runs and when, see
 
 ## Schedule properties
 
-| Property        | Value                                                                 |
-| --------------- | --------------------------------------------------------------------- |
-| Timing          | Cron with an IANA timezone, or a fixed interval with optional offset  |
-| Timezone        | Declared per cron schedule; interval schedules do not use a timezone  |
-| Overlap policy  | `SKIP` by default; reports use `BUFFER_ONE`; weekly parlay allows all |
-| Reconciliation  | upsert of every schedule at each worker boot                          |
-| Source of truth | the `SCHEDULES` array in code; a PR is the change process             |
-| Deletion        | explicit — add the schedule ID to the deletion list                   |
-| Orphan drift    | a metric is exported for any server schedule code no longer defines   |
+| Property        | Value                                                                |
+| --------------- | -------------------------------------------------------------------- |
+| Timing          | Cron with an IANA timezone, or a fixed interval with optional offset |
+| Timezone        | Declared per cron schedule; interval schedules do not use a timezone |
+| Overlap policy  | `SKIP` by default; reports use `BUFFER_ONE`                          |
+| Reconciliation  | upsert of every schedule at each worker boot                         |
+| Source of truth | the `SCHEDULES` array in code; a PR is the change process            |
+| Deletion        | explicit — add the schedule ID to the deletion list                  |
+| Orphan drift    | a metric is exported for any server schedule code no longer defines  |
 
 ## Pause behaviour
 
@@ -34,12 +34,6 @@ For the list of what runs and when, see
 | Paused in the Temporal UI             | preserved across restarts and reconciliation           |
 | Required environment variable missing | auto-paused at boot, with a note                       |
 | Removed from `SCHEDULES`              | remains on the server until added to the deletion list |
-
-`scout-weekly-parlay` also starts with a source-defined initial pause note. It
-must remain paused until the private-beta Discord fixture cycle is approved;
-after that, the Temporal UI's durable pause state is the operational suspension
-control. Its weekly executions may overlap: each execution owns a distinct
-period key, and a delayed prior finalization must not suppress the next market.
 
 ## Catchup windows
 

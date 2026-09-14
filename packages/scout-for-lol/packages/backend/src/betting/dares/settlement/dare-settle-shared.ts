@@ -189,10 +189,9 @@ export type DareVoidReason =
  *
  * Two callers: a stored evaluator version this code no longer implements
  * (capture and the window sweep), and a payout that cannot be persisted
- * without overflowing Int32 wallet storage (the weekly-parlay
- * `storage_overflow` precedent). Returns undefined when another resolution
- * won the claim. Deliberately takes a `DareRefundView`, never a `ParsedDare`:
- * voiding must not require the conditions blob to parse.
+ * without overflowing Int32 wallet storage. Returns undefined when another
+ * resolution won the claim. Deliberately takes a `DareRefundView`, never a
+ * `ParsedDare`: voiding must not require the conditions blob to parse.
  */
 export async function voidDareWithFullRefund(
   dare: DareRefundView,

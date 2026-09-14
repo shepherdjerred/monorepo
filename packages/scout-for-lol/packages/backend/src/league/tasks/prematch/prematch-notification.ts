@@ -14,6 +14,7 @@ import {
 import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filters.ts";
 import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import { send, ChannelSendError } from "#src/league/discord/channel.ts";
+import { decorateWithFeatureTip } from "#src/tips/index.ts";
 import { getChampionDisplayName } from "#src/utils/champion.ts";
 import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
@@ -219,6 +220,9 @@ async function deliverPrematchMessages(input: {
   >();
 
   for (const { channel, serverId } of input.channels) {
+    // Declared out here so a failed send can hand its tip claim back.
+    let tipped: Awaited<ReturnType<typeof decorateWithFeatureTip>> | undefined;
+    let sendAccepted = false;
     try {
       const guildId = DiscordGuildIdSchema.parse(serverId);
       const betsOpen = input.bucks.bettingGuildIds.has(guildId);
@@ -231,12 +235,18 @@ async function deliverPrematchMessages(input: {
         fallbackEmbed: () =>
           buildFallbackPrematchEmbed(input.gameInfo, input.trackedPlayers),
       });
+      tipped = await decorateWithFeatureTip(message, {
+        serverId: guildId,
+        surface: "prematch",
+      });
       await input.recordDelivery?.({ kind: "prepared", channelId: channel });
       await input.recordDelivery?.({
         kind: "send-started",
         channelId: channel,
       });
-      const sentMessage = await send(message, channel, guildId);
+      const sentMessage = await send(tipped.message, channel, guildId);
+      sendAccepted = true;
+      await tipped.confirm();
       await input.recordDelivery?.({
         kind: "delivered",
         channelId: channel,
@@ -251,6 +261,7 @@ async function deliverPrematchMessages(input: {
         ]);
       }
     } catch (error) {
+      if (!sendAccepted) await tipped?.release();
       await input.recordDelivery?.({
         kind: "failed",
         channelId: channel,

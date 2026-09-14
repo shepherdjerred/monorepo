@@ -34,9 +34,9 @@ import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/releas
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
-function requiredWeeklyParlaySecret(secret: ISecret | undefined): ISecret {
+function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
-    throw new Error("Beta Scout requires its weekly parlay secret.");
+    throw new Error("Beta Scout requires its Bryan Bucks control secret.");
   }
   return secret;
 }
@@ -115,13 +115,15 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       itemPath: path,
     },
   });
-  const weeklyParlaySecret =
+  // The vault item keeps its original name; only the Kubernetes secret and the
+  // environment variable follow the feature that still uses the credential.
+  const bryanBucksControlSecret =
     stage === "beta"
       ? Secret.fromSecretName(
           chart,
-          "scout-weekly-parlay-control-secret",
-          new OnePasswordItem(chart, "scout-weekly-parlay-control-1p", {
-            metadata: { name: "scout-weekly-parlay-control" },
+          "scout-bryan-bucks-control-secret",
+          new OnePasswordItem(chart, "scout-bryan-bucks-control-1p", {
+            metadata: { name: "scout-bryan-bucks-control" },
             spec: { itemPath: vaultItemPath("scout-weekly-parlay-control") },
           }).name,
         )
@@ -332,8 +334,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     stage === "beta"
       ? {
           ...baseEnvVariables,
-          WEEKLY_PARLAY_CONTROL_TOKEN: EnvValue.fromSecretValue({
-            secret: requiredWeeklyParlaySecret(weeklyParlaySecret),
+          BRYAN_BUCKS_CONTROL_TOKEN: EnvValue.fromSecretValue({
+            secret: requiredBryanBucksControlSecret(bryanBucksControlSecret),
             key: "token",
           }),
           // Beta's entire access gate: sign in, and belong to one of these

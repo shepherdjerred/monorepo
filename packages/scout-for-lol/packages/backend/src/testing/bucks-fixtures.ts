@@ -54,8 +54,7 @@ export function bucksTestRoster(): BucksPoolParticipant[] {
 
 /**
  * Input for {@link createTrackedTestPlayer}: a tracked `Player` row plus its
- * linked `Account` rows, in the shape both dare-shortlist and weekly-parlay
- * subject loading query against.
+ * linked `Account` rows, in the shape dare-shortlist queries against.
  */
 export type CreateTrackedTestPlayerInput = {
   alias: string;
@@ -70,10 +69,9 @@ export type CreateTrackedTestPlayerInput = {
  * Creates one `Player` row and its linked `Account` rows for shortlist/subject
  * integration tests.
  *
- * Extracted for the same reason as the rest of this file: `dare-shortlist`
- * and `weekly-parlay-subjects` both build their candidate list from "a
- * tracked player with N linked accounts", and two independently hand-rolled
- * copies of that seed is how the two suites drift apart.
+ * Extracted for the same reason as the rest of this file: consumers build
+ * their candidate list from "a tracked player with N linked accounts", and
+ * independently hand-rolled copies of that seed are how suites drift apart.
  */
 export async function createTrackedTestPlayer(
   prisma: ExtendedPrismaClient,

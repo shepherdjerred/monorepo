@@ -53,9 +53,6 @@ async function clearAll(): Promise<void> {
   await db.bucksDareV2.deleteMany();
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksOpenPosition.deleteMany();
-  await db.bucksWeeklyParlayBet.deleteMany();
-  await db.bucksWeeklyParlayMarket.deleteMany();
-  await db.bucksWeeklyParlayDefinition.deleteMany();
   await db.bucksParlayBet.deleteMany();
   await db.bucksParlayMarket.deleteMany();
   await db.bucksParlayDefinition.deleteMany();
@@ -158,95 +155,6 @@ async function seedParlayMarket(
   });
 }
 
-async function seedWeeklyMarket(
-  playerId: number,
-  input?: { slot?: number },
-): Promise<number> {
-  const slot = input?.slot ?? 0;
-  const openAt = new Date(Date.now() - 60 * 60_000);
-  const bettingClosesAt = new Date(Date.now() + 60 * 60_000);
-  const scoringStartsAt = new Date(Date.now() + 2 * 60 * 60_000);
-  const scoringEndsAt = new Date(Date.now() + 26 * 60 * 60_000);
-  const definition = await db.bucksWeeklyParlayDefinition.create({
-    data: {
-      serverId: guildId,
-      periodKey: "2026-08-31",
-      slot,
-      openAt,
-      bettingClosesAt,
-      scoringStartsAt,
-      scoringEndsAt,
-      subjects: JSON.stringify([
-        {
-          key: "P1",
-          playerId,
-          alias: "jerred",
-          discordId: actor,
-          accounts: [
-            {
-              puuid: bucksTestPuuid(0),
-              trackingStartedAt: new Date(0).toISOString(),
-            },
-          ],
-        },
-      ]),
-      eligibleQueues: JSON.stringify(["solo", "flex", "ranked 5s"]),
-      proposal: JSON.stringify({ version: 1, legs: [] }),
-      criteria: JSON.stringify({
-        version: 1,
-        legs: [
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "wins",
-            operator: "gte",
-            threshold: 2,
-          },
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "best_game_kills",
-            operator: "gte",
-            threshold: 5,
-          },
-          {
-            kind: "aggregate",
-            subject: "P1",
-            metric: "longest_win_streak",
-            operator: "gte",
-            threshold: 2,
-          },
-        ],
-      }),
-      historySample: "[]",
-      pricing: "{}",
-      yesProbabilityBps: 3000,
-      promptVersion: "test",
-      catalogVersion: "test",
-      schemaVersion: 1,
-      evaluatorVersion: "1",
-      pricingVersion: "1",
-      generationContext: "{}",
-      requestedModel: "test",
-      usage: "{}",
-      durationMs: 1,
-    },
-  });
-  const market = await db.bucksWeeklyParlayMarket.create({
-    data: {
-      definitionId: definition.id,
-      serverId: guildId,
-      periodKey: "2026-08-31",
-      slot,
-      publishedAt: openAt,
-      bettingClosesAt,
-      scoringEndsAt,
-      marketState: "open",
-    },
-  });
-  return market.id;
-}
-
 beforeAll(async () => {
   await initFeatureFlags({
     environment: { FEATURE_FLAGS_MODE: "disabled" },
@@ -257,7 +165,6 @@ beforeEach(async () => {
   resetFlagOverrides("betting_enabled");
   resetFlagOverrides("dare_v2");
   resetFlagOverrides("scoutql_relational_enabled");
-  resetFlagOverrides("weekly_parlays_enabled");
   addFlagOverride("betting_enabled", true, { server: guildId });
   trpc.setMembership([{ guildId, asAdmin: false }]);
   await clearAll();
@@ -267,7 +174,6 @@ afterAll(async () => {
   resetFlagOverrides("betting_enabled");
   resetFlagOverrides("dare_v2");
   resetFlagOverrides("scoutql_relational_enabled");
-  resetFlagOverrides("weekly_parlays_enabled");
   await shutdownFeatureFlags();
   await db.$disconnect();
   if (originalEnvironment === undefined) {
@@ -423,35 +329,6 @@ describe("bucks reads", () => {
     expect(position.cancellationFee).toBeNull();
   });
 
-  test("wallet gives two weekly-parlay slots in the same period distinct identities", async () => {
-    // A member can hold bets in two weekly-parlay slots for the same period,
-    // so the period key alone is not a unique position identity — the app's
-    // React key relies on the market id being embedded too.
-    addFlagOverride("weekly_parlays_enabled", true, { server: guildId });
-    const playerId = await seedTrackedPlayer();
-    const firstMarketId = await seedWeeklyMarket(playerId, { slot: 0 });
-    const secondMarketId = await seedWeeklyMarket(playerId, { slot: 1 });
-    await caller().bucks.placeWeeklyParlayBet({
-      guildId,
-      marketId: firstMarketId,
-      side: "YES",
-      stake: 1,
-    });
-    await caller().bucks.placeWeeklyParlayBet({
-      guildId,
-      marketId: secondMarketId,
-      side: "NO",
-      stake: 1,
-    });
-
-    const view = await caller().bucks.wallet({ guildId });
-    const matchIds = (view.wallet?.pendingPositions ?? [])
-      .filter((position) => position.marketType === "parlay")
-      .map((position) => position.matchId);
-    expect(matchIds).toHaveLength(2);
-    expect(new Set(matchIds).size).toBe(2);
-  });
-
   test("ledger pages stay frozen against new entries and omit raw context", async () => {
     await seedTrackedPlayer();
     await seedPool();
@@ -544,13 +421,9 @@ describe("bucks reads", () => {
 describe("bucks.openMarkets", () => {
   test("exposes public positions", async () => {
     await seedTrackedPlayer();
-    const playerId = await seedTrackedPlayer({
-      discordId: rival,
-      alias: "bryan",
-    });
+    await seedTrackedPlayer({ discordId: rival, alias: "bryan" });
     const poolId = await seedPool();
     await seedParlayMarket(poolId);
-    await seedWeeklyMarket(playerId);
 
     const mine = await caller().bucks.placeOutcomeBet({
       guildId,
@@ -567,16 +440,6 @@ describe("bucks.openMarkets", () => {
       stake: 6,
     });
     expect(theirs.kind).toBe("placed");
-    const weeklyMarket = await db.bucksWeeklyParlayMarket.findFirstOrThrow();
-    const weeklyMarketId = weeklyMarket.id;
-    addFlagOverride("weekly_parlays_enabled", true, { server: guildId });
-    const weeklyBet = await rivalCaller.bucks.placeWeeklyParlayBet({
-      guildId,
-      marketId: weeklyMarketId,
-      side: "YES",
-      stake: 2,
-    });
-    expect(weeklyBet.kind).toBe("placed");
 
     const markets = await caller().bucks.openMarkets({ guildId });
 
@@ -601,14 +464,6 @@ describe("bucks.openMarkets", () => {
     expect(markets.parlays).toHaveLength(1);
     expect(markets.parlays[0]?.legs.length).toBeGreaterThan(0);
     expect(markets.parlays[0]?.yesOdds.length).toBeGreaterThan(0);
-
-    // Weekly publications are aggregate-only: bettor count + total staked.
-    expect(markets.weeklyParlays).toHaveLength(1);
-    const weekly = markets.weeklyParlays[0];
-    expect(weekly?.bettorCount).toBe(1);
-    expect(weekly?.totalStaked).toBe(2);
-    expect(weekly?.yourPosition).toBeNull();
-    expect(JSON.stringify(markets.weeklyParlays)).not.toContain(rival);
   });
 
   test("excludes publishing parlay markets", async () => {
@@ -782,27 +637,6 @@ describe("bucks parlay mutations", () => {
     expect(opposite).toEqual({ kind: "side_conflict", existingSide: "YES" });
   });
 
-  test("placeWeeklyParlayBet needs both flags, then places", async () => {
-    const playerId = await seedTrackedPlayer();
-    const marketId = await seedWeeklyMarket(playerId);
-    const disabled = await caller().bucks.placeWeeklyParlayBet({
-      guildId,
-      marketId,
-      side: "YES",
-      stake: 2,
-    });
-    expect(disabled).toEqual({ kind: "feature_disabled" });
-
-    addFlagOverride("weekly_parlays_enabled", true, { server: guildId });
-    const placed = await caller().bucks.placeWeeklyParlayBet({
-      guildId,
-      marketId,
-      side: "YES",
-      stake: 2,
-    });
-    expect(placed.kind).toBe("placed");
-  });
-
   test("a failing Discord market-message refresh never fails the mutation", async () => {
     await seedTrackedPlayer();
     await seedPool();
@@ -820,31 +654,6 @@ describe("bucks parlay mutations", () => {
       guildId,
       matchId: MATCH_ID,
       teamId: 100,
-      stake: 2,
-    });
-    expect(placed.kind).toBe("placed");
-  });
-
-  test("a failing weekly-parlay message refresh never fails the mutation", async () => {
-    addFlagOverride("weekly_parlays_enabled", true, { server: guildId });
-    const playerId = await seedTrackedPlayer();
-    const marketId = await seedWeeklyMarket(playerId);
-    // Point the market message at a channel the (offline) Discord client
-    // cannot reach: the stake has already committed by the time the refresh
-    // runs, so a Discord failure here must never surface as a mutation error
-    // (that would invite a retry that tops up and debits again).
-    await db.bucksWeeklyParlayMarket.update({
-      where: { id: marketId },
-      data: {
-        messageRefs: JSON.stringify([
-          { channelId: "100000000000000900", messageId: "100000000000000901" },
-        ]),
-      },
-    });
-    const placed = await caller().bucks.placeWeeklyParlayBet({
-      guildId,
-      marketId,
-      side: "YES",
       stake: 2,
     });
     expect(placed.kind).toBe("placed");

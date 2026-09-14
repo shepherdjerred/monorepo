@@ -555,8 +555,8 @@ describe("Temporal operations worker isolation", () => {
     expect(repoEnv).toContain("OPENROUTER_API_KEY");
     expect(scoutEnv).toContain("OPENROUTER_API_KEY");
     for (const replayOnly of [
-      "SCOUT_WEEKLY_PARLAY_CONTROL_URL",
-      "SCOUT_WEEKLY_PARLAY_CONTROL_TOKEN",
+      "SCOUT_BRYAN_BUCKS_CONTROL_URL",
+      "SCOUT_BRYAN_BUCKS_CONTROL_TOKEN",
     ]) {
       expect(scoutEnv).toContain(replayOnly);
       expect(repoEnv).not.toContain(replayOnly);

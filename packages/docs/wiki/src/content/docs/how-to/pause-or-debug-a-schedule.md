@@ -101,9 +101,7 @@ A missed run outside the window is gone and will not replay.
 
 Overlap policy is normally `SKIP`. A slow run does not stack a second one; the
 next tick is skipped instead. A job that appears to have "missed" a run may have
-still been executing. The `scout-weekly-parlay` exception uses `ALLOW_ALL`
-because each execution owns a distinct period and delayed finalization must not
-suppress the next Sunday's market.
+still been executing.
 
 ## Change or remove a schedule
 

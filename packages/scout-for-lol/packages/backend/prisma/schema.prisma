@@ -756,7 +756,6 @@ model BucksAccount {
   ledgerEntries       BucksLedgerEntry[]
   bets                BucksBet[]
   parlayBets          BucksParlayBet[]
-  weeklyParlayBets    BucksWeeklyParlayBet[]
   openPositions       BucksOpenPosition[]
   dareContributions   BucksDareContribution[]
   dareV2Contributions BucksDareV2Contribution[]
@@ -818,6 +817,9 @@ model BucksLedgerEntry {
   // parlay_release | transfer_sent | transfer_received | transfer_fee |
   // dare_stake | dare_payout | dare_refund | dare_fee |
   // legacy bet_refund/house_rake/peek_pass | adjustment.
+  // Weekly-parlay kinds were removed with that feature; the retirement
+  // migration converted those rows to `adjustment` in place, preserving their
+  // amounts, order, and timestamps.
   // Not a Prisma enum (kept a plain string through the Postgres migration).
   // Zod-validated on write
   // and on read.
@@ -831,9 +833,6 @@ model BucksLedgerEntry {
 
   parlayBetId Int?
   parlayBet   BucksParlayBet? @relation(fields: [parlayBetId], references: [id])
-
-  weeklyParlayBetId Int?
-  weeklyParlayBet   BucksWeeklyParlayBet? @relation(fields: [weeklyParlayBetId], references: [id])
 
   // Riot team IDs (100/200). Both null for seed/earn_*/adjustment.
   // `actualWinningTeamId` is also null for bet_stake (unknown at bet time) and
@@ -1118,145 +1117,6 @@ model BucksParlayBet {
 
   @@unique([marketId, bucksAccountId])
   @@index([marketId, side])
-}
-
-// Immutable cross-game proposition for one guild-local Pacific scoring period.
-// The subject/account snapshots and every generation/pricing input are frozen
-// here so later alias, account, model, or catalog changes cannot alter it.
-model BucksWeeklyParlayDefinition {
-  id        Int    @id @default(autoincrement())
-  serverId  String
-  periodKey String
-  slot      Int
-
-  openAt          DateTime
-  bettingClosesAt DateTime
-  scoringStartsAt DateTime
-  scoringEndsAt   DateTime
-
-  subjects       String
-  eligibleQueues String
-  proposal       String
-  criteria       String
-  historySample  String
-  pricing        String
-
-  yesProbabilityBps Int
-  promptVersion     String
-  catalogVersion    String
-  schemaVersion     Int
-  evaluatorVersion  String
-  pricingVersion    String
-  generationContext String
-  requestedModel    String
-  resolvedModel     String?
-  usage             String
-  durationMs        Int
-
-  createdAt DateTime @default(now())
-
-  market        BucksWeeklyParlayMarket?
-  contributions BucksWeeklyParlayContribution[]
-
-  @@unique([serverId, scoringStartsAt, slot])
-  @@unique([serverId, periodKey, slot])
-  @@index([scoringStartsAt, scoringEndsAt])
-}
-
-// Guild-local publication and settlement state for one weekly definition.
-model BucksWeeklyParlayMarket {
-  id           Int                         @id @default(autoincrement())
-  definitionId Int                         @unique
-  definition   BucksWeeklyParlayDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
-  serverId     String
-  periodKey    String
-  slot         Int
-
-  publishedAt     DateTime
-  bettingClosesAt DateTime
-  scoringEndsAt   DateTime
-  messageRefs     String   @default("[]")
-
-  // publishing | open | active | settled | voided
-  marketState String    @default("publishing")
-  yesResult   Boolean?
-  legResults  String?
-  voidReason  String?
-  settledAt   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  bets       BucksWeeklyParlayBet[]
-  deliveries BucksWeeklyParlayDelivery[]
-
-  @@unique([serverId, periodKey, slot])
-  @@index([marketState, bettingClosesAt])
-  @@index([marketState, scoringEndsAt])
-}
-
-// One fixed-odds YES/NO position per wallet and weekly market.
-model BucksWeeklyParlayBet {
-  id             Int                     @id @default(autoincrement())
-  marketId       Int
-  market         BucksWeeklyParlayMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  bucksAccountId Int
-  bucksAccount   BucksAccount            @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-
-  side         String
-  stake        Int
-  houseReserve Int
-  grossPayout  Int
-  betOutcome   String    @default("pending")
-  payout       Int?
-  settledAt    DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  ledgerEntries BucksLedgerEntry[]
-
-  @@unique([marketId, bucksAccountId])
-  @@index([marketId, side])
-}
-
-// Idempotent contribution from one completed, eligible match for one frozen
-// subject. Progress and settlement are derived only from these rows.
-model BucksWeeklyParlayContribution {
-  id           Int                         @id @default(autoincrement())
-  definitionId Int
-  definition   BucksWeeklyParlayDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
-  matchId      String
-  subjectKey   String
-  completedAt  DateTime
-  ingestedAt   DateTime
-  queueType    String
-  snapshot     String
-  createdAt    DateTime                    @default(now())
-
-  @@unique([definitionId, matchId, subjectKey])
-  @@index([definitionId, completedAt])
-  @@index([matchId])
-}
-
-// One durable Discord action attempt per market/action key. The action key is
-// also the enforced Discord nonce, so activity retries cannot duplicate posts.
-model BucksWeeklyParlayDelivery {
-  id            Int                     @id @default(autoincrement())
-  marketId      Int
-  market        BucksWeeklyParlayMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  actionKey     String
-  kind          String
-  scheduledAt   DateTime
-  deliveryState String                  @default("pending")
-  messageRefs   String                  @default("[]")
-  attemptedAt   DateTime?
-  deliveredAt   DateTime?
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-
-  @@unique([marketId, actionKey])
-  @@index([deliveryState, scheduledAt])
 }
 
 // One free-text dare bounty: a one-sided pot contributors fund and targets can
@@ -2784,4 +2644,38 @@ model PuuidKeyMigration {
   /// Always 1. One row describes one database.
   id        Int       @id @default(1)
   appliedAt DateTime? @db.Timestamptz()
+}
+
+/// One feature-tip impression, with a temporary pre-send claim.
+///
+/// Two questions are answered from these rows rather than from stored counters,
+/// the same way the settlement-DM hint derives its cadence from `DmAuditLog`:
+/// whether an audience is still inside its tip cooldown (the newest `shownAt`),
+/// and which tips it has already been shown (`tipKey` presence). A non-null
+/// `claimedAt` is a temporary reservation removed after send failure or
+/// confirmation; delivered rows remain as history.
+///
+/// `discordId` is null for a guild-channel message and set for a DM, so a
+/// member's DM cadence is their own and does not consume the channel's.
+model FeatureTipImpression {
+  id       Int    @id @default(autoincrement())
+  serverId String
+  /// Who the tip went to: a Discord user id for a DM, or "" for the guild
+  /// channel. A sentinel rather than null because the uniqueness below is what
+  /// makes a tip claim atomic, and Postgres treats NULLs as distinct — a
+  /// nullable column would leave every channel-scoped row unconstrained.
+  /// Deliberately not named `discordId`: it holds a sentinel as well as an id.
+  audienceId String @default("")
+  /// A `TipKey` from the tips catalog. Validated on read.
+  tipKey    String
+  shownAt   DateTime @default(now())
+  /// Non-null while the row is a pre-send claim. Cleared after Discord accepts
+  /// the message; the partial audience index serializes all tip keys.
+  claimedAt DateTime?
+
+  /// The claim. Two concurrent deliveries to one audience race to insert here;
+  /// exactly one wins, so a tip cannot be selected twice.
+  @@unique([serverId, audienceId, tipKey])
+  @@index([serverId, audienceId, shownAt])
+  @@index([serverId, audienceId, claimedAt])
 }

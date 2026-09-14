@@ -8,6 +8,7 @@ import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts"
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
+  DELETED_SCHEDULES,
   buildSchedulePolicies,
   routeDynamicAgentTaskSchedule,
   terminateRetiredWorkflowExecutions,
@@ -377,16 +378,12 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
   // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.
   // Activity time and retries are covered by SLACK_MS below.
   runVacuumIfNotHome: 7 * ONE_MINUTE,
-  // Sunday noon through the next Sunday 11:00 PT. The fall DST transition
-  // makes the maximum elapsed duration 168 hours.
-  runScoutWeeklyParlayWorkflow: 168 * ONE_HOUR,
 };
 
-// Weekly finalization continues as new without a chain-wide execution timeout;
-// this is deliberate so a prolonged Scout outage cannot strand bets.
-const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set([
-  "runScoutWeeklyParlayWorkflow",
-]);
+// Escape hatch for a long-sleeping workflow that deliberately runs without a
+// chain-wide execution timeout. Empty since the weekly parlay lifecycle — its
+// only member — was retired; a new entry needs that same explicit rationale.
+const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
@@ -558,23 +555,6 @@ describe("Scout lane-prior schedule config", () => {
   });
 });
 
-describe("Scout weekly parlay schedule config", () => {
-  test("starts one Pacific lifecycle at Sunday noon", () => {
-    const schedule = findScheduleById("scout-weekly-parlay");
-    expect(schedule).toMatchObject({
-      workflowType: "runScoutWeeklyParlayWorkflow",
-      args: [{}],
-      timing: {
-        kind: "cron",
-        expression: "0 12 * * 0",
-        timezone: "America/Los_Angeles",
-      },
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-    });
-  });
-});
-
 describe("Scout Bryan Bucks analytics schedule config", () => {
   test("runs the committed-ledger sync every fifteen minutes", () => {
     expect(findScheduleById("scout-bryan-bucks-analytics")).toMatchObject({
@@ -622,13 +602,70 @@ test("terminates running executions of retired workflow types", async () => {
     },
   };
 
-  await terminateRetiredWorkflowExecutions(client);
+  // "dev" reconciles every namespace, so this covers the whole list.
+  await terminateRetiredWorkflowExecutions(client, "dev");
 
   expect(queries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
   ]);
-  expect(terminated).toEqual([
-    "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
+  expect(terminated).toEqual(
+    Array.from(
+      { length: queries.length },
+      () =>
+        "retired-workflow/retired-run: Workflow type retired; terminating during deployment",
+    ),
+  );
+});
+
+test("terminates a retired workflow in the namespace it actually ran in", async () => {
+  // A week-long weekly parlay execution can still be open when this deploys.
+  // Deleting its Schedule only stops future starts, so both handlers must be
+  // terminated or the execution retries against a bundle without them.
+  const queries: string[] = [];
+  const client = {
+    workflow: {
+      list({ query }: { query: string }) {
+        queries.push(query);
+        return (async function* () {
+          // No executions; this test only asserts coverage of the type list.
+        })();
+      },
+      getHandle() {
+        return { terminate: () => Promise.resolve() };
+      },
+    },
+  };
+
+  // The weekly parlay schedule was beta-only. Terminating just in prod would
+  // have left exactly the week-long executions this is meant to stop.
+  await terminateRetiredWorkflowExecutions(client, "beta");
+
+  expect(queries).toEqual([
+    'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
+  ]);
+
+  const prodQueries: string[] = [];
+  await terminateRetiredWorkflowExecutions(
+    {
+      workflow: {
+        list({ query }: { query: string }) {
+          prodQueries.push(query);
+          return (async function* () {
+            // No executions; this asserts which types are queried.
+          })();
+        },
+        getHandle() {
+          return { terminate: () => Promise.resolve() };
+        },
+      },
+    },
+    "prod",
+  );
+  expect(prodQueries).toEqual([
+    'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
   ]);
 });
 
@@ -782,13 +819,6 @@ describe("catchup window policy", () => {
     );
   });
 
-  test("weekly Scout publication preserves the Sunday betting window", () => {
-    expect(
-      buildSchedulePolicies(findScheduleById("scout-weekly-parlay"))
-        .catchupWindow,
-    ).toBe("12 hours");
-  });
-
   test("tight window is strictly shorter than the relaxed default", () => {
     const tight = buildSchedulePolicies(
       findScheduleById("vacuum-9am"),
@@ -816,6 +846,18 @@ describe("orphan schedule detection", () => {
     expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
     expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
       "review-signals-collect",
+    );
+  });
+
+  test("the retired weekly parlay schedule is queued for deletion in beta", () => {
+    // Listing it among the prod ids would not delete it: reconciliation filters
+    // deletions by namespace, and this schedule only ever existed in beta.
+    const entry = DELETED_SCHEDULES.find(
+      (schedule) => schedule.id === "scout-weekly-parlay",
+    );
+    expect(entry?.namespace).toBe("beta");
+    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
+      "scout-weekly-parlay",
     );
   });
 

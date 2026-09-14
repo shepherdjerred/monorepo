@@ -3,7 +3,6 @@ import {
   BucksLedgerKindSchema,
   BucksParlayMarketStateSchema,
   BucksParlaySideSchema,
-  BucksWeeklyParlayMarketStateSchema,
   BucksPoolRosterSchema,
   BucksPoolStateSchema,
   RiotTeamIdSchema,
@@ -21,7 +20,6 @@ import {
 } from "#src/betting/ledger.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlays/model/parlay-criteria.ts";
 import type { PendingPosition } from "#src/betting/accounts/pending-position.ts";
-import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly/weekly-parlay-criteria.ts";
 import {
   hasTrackedPlayersOnBothTeams,
   outcomeLabel,
@@ -335,13 +333,7 @@ export async function getPersonalBucksView(
       return;
     }
 
-    const [
-      outcomeBets,
-      parlayAggregate,
-      parlayBets,
-      weeklyAggregate,
-      weeklyBets,
-    ] = await Promise.all([
+    const [outcomeBets, parlayAggregate, parlayBets] = await Promise.all([
       tx.bucksBet.findMany({
         where: { bucksAccountId: account.id, betOutcome: "pending" },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -381,31 +373,6 @@ export async function getPersonalBucksView(
             select: {
               matchId: true,
               closesAt: true,
-              marketState: true,
-              definition: { select: { subjects: true } },
-            },
-          },
-        },
-      }),
-      tx.bucksWeeklyParlayBet.aggregate({
-        where: { bucksAccountId: account.id, betOutcome: "pending" },
-        _sum: { stake: true },
-        _count: true,
-      }),
-      tx.bucksWeeklyParlayBet.findMany({
-        where: { bucksAccountId: account.id, betOutcome: "pending" },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        take: 10,
-        select: {
-          id: true,
-          createdAt: true,
-          stake: true,
-          side: true,
-          marketId: true,
-          market: {
-            select: {
-              periodKey: true,
-              bettingClosesAt: true,
               marketState: true,
               definition: { select: { subjects: true } },
             },
@@ -460,29 +427,7 @@ export async function getPersonalBucksView(
       closesAt: bet.market.closesAt,
       poolState: BucksParlayMarketStateSchema.parse(bet.market.marketState),
     }));
-    const weeklyPositions = weeklyBets.map((bet) => ({
-      id: bet.id,
-      createdAt: bet.createdAt,
-      marketType: "parlay" as const,
-      // Period key alone isn't unique across two slots in the same period.
-      matchId: `weekly:${bet.market.periodKey}:${bet.marketId.toString()}`,
-      subjectAlias: `Weekly (${WeeklyParlaySubjectsSchema.parse(
-        JSON.parse(bet.market.definition.subjects),
-      )
-        .map((subject) => subject.alias)
-        .join(", ")})`,
-      side: BucksParlaySideSchema.parse(bet.side),
-      stake: bet.stake,
-      closesAt: bet.market.bettingClosesAt,
-      poolState: BucksWeeklyParlayMarketStateSchema.parse(
-        bet.market.marketState,
-      ),
-    }));
-    const pendingPositions = [
-      ...outcomePositions,
-      ...parlayPositions,
-      ...weeklyPositions,
-    ]
+    const pendingPositions = [...outcomePositions, ...parlayPositions]
       .toSorted(
         (left, right) =>
           right.createdAt.getTime() - left.createdAt.getTime() ||
@@ -497,11 +442,8 @@ export async function getPersonalBucksView(
         outcomeBets.reduce(
           (total, bet) => total + (bet.matchedStake ?? bet.stake),
           0,
-        ) +
-        (parlayAggregate._sum.stake ?? 0) +
-        (weeklyAggregate._sum.stake ?? 0),
-      pendingPositionCount:
-        outcomeBets.length + parlayAggregate._count + weeklyAggregate._count,
+        ) + (parlayAggregate._sum.stake ?? 0),
+      pendingPositionCount: outcomeBets.length + parlayAggregate._count,
       pendingPositions,
     };
   });

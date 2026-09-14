@@ -430,8 +430,7 @@ async function settleOneDareForMatch(
     if (error instanceof BucksStorageOverflowError) {
       // A payout the wallet cannot hold rolled the capture back. Stranding
       // the dare would mis-settle it later as unachieved WITH a cut, so it
-      // is voided instead: full refunds, no cut, fresh transaction
-      // (weekly-parlay "storage_overflow" precedent).
+      // is voided instead: full refunds, no cut, fresh transaction.
       return await voidDareWithFullRefund(
         dareRefundView(row, matchId),
         prismaClient,

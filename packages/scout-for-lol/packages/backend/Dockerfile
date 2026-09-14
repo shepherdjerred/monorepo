@@ -44,10 +44,6 @@ RUN cd packages/glitter-context && bun run build
 # startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
 # catalog is compiled first.
 RUN cd packages/llm-models && bun run build
-# The temporal worker and backend both consume the lifecycle contract through
-# the data package's built export; produce that bundled JS and declaration set
-# in the image instead of relying on a developer checkout's dist directory.
-RUN cd packages/scout-for-lol/packages/data && bun run build
 # Generate the Prisma client for the backend (output is gitignored, so it must
 # be produced in-image). Engines download at build time — that's expected.
 # Only `prisma generate` here — the package's full `generate` script also runs
@@ -165,7 +161,6 @@ RUN cd packages/scout-for-lol/packages/backend && bun x --trust prisma generate
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
-COPY --from=build /app/packages/scout-for-lol/packages/data/dist packages/scout-for-lol/packages/data/dist
 COPY --from=build /app/packages/scout-for-lol/packages/backend/generated packages/scout-for-lol/packages/backend/generated
 # Pinned voice assets. Present in every image, loaded only when
 # VOICE_ASSISTANT_ENABLED is set — baking them unconditionally keeps the

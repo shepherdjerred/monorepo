@@ -559,7 +559,7 @@ ask` and the Dare commands execute the Explore agent in the process that
   `activity-worker` is not deployable yet.** Every embedded Temporal activity
   queue reads the lake somewhere: `realtime` settles SQL dares and evaluates
   hall progression, `interactive` answers Explore queries, `background` runs
-  reports, parlay generation, the weekly parlay and the summoner-index
+  reports, parlay generation and the summoner-index
   backfill, and `lake` is the compactor. Several of them also write its staging
   directories. So `activity-worker` needs the same volume `application` owns,
   and the cluster PVC is ReadWriteOnce — the two roles cannot both mount it as

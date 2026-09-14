@@ -38,7 +38,7 @@ export function asTextChannel(channel: Channel): SendableChannel | undefined {
  * gateway.
  *
  * Every Discord delivery Scout performs — posting a report, editing a Bryan
- * Bucks message, deleting a stale weekly parlay — is a REST call against a
+ * Bucks message, deleting a stale market message — is a REST call against a
  * channel id. Resolving that id is where the gateway used to sneak back in:
  * `client.channels.fetch(id)` performs the REST lookup either way, but then
  * builds the channel by resolving its guild in `client.guilds.cache`, and with

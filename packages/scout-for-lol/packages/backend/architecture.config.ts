@@ -71,6 +71,7 @@ const layers = [
   "sound-engine",
   "storage",
   "testing",
+  "tips",
   "trpc",
   "utils",
   "voice",
@@ -208,9 +209,9 @@ export default defineArchitecture({
     {
       name: "http-is-limited-to-its-endpoint-adapters",
       comment:
-        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI and weekly " +
-        "parlay endpoints. Those adapters are its complete direct application surface; a new " +
-        "feature or repository must join tRPC or be introduced explicitly as an HTTP endpoint.",
+        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI and Bryan " +
+        "Bucks analytics endpoints. Those adapters are its complete direct application surface; " +
+        "a new feature or repository must join tRPC or be introduced explicitly as an HTTP endpoint.",
       from: "http",
       to: everythingExcept(
         "http",

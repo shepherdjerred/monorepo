@@ -59,7 +59,6 @@ export type ApplyBucksDeltaInput = {
   matchId?: string | undefined;
   betId?: number | undefined;
   parlayBetId?: number | undefined;
-  weeklyParlayBetId?: number | undefined;
   predictedTeamId?: number | undefined;
   actualWinningTeamId?: number | undefined;
   /**
@@ -131,8 +130,6 @@ export async function refundableBucksHeldForAccounts(
     outcomeRows,
     humanParlayRows,
     houseParlayRows,
-    humanWeeklyRows,
-    houseWeeklyRows,
     humanDareRows,
     humanDareV2Rows,
   ] = await Promise.all([
@@ -152,24 +149,6 @@ export async function refundableBucksHeldForAccounts(
       _sum: { stake: true },
     }),
     tx.bucksParlayBet.findMany({
-      where: {
-        betOutcome: "pending",
-        market: { serverId: { in: houseServerIds } },
-      },
-      select: {
-        houseReserve: true,
-        market: { select: { serverId: true } },
-      },
-    }),
-    tx.bucksWeeklyParlayBet.groupBy({
-      by: ["bucksAccountId"],
-      where: {
-        bucksAccountId: { in: humanAccountIds },
-        betOutcome: "pending",
-      },
-      _sum: { stake: true },
-    }),
-    tx.bucksWeeklyParlayBet.findMany({
       where: {
         betOutcome: "pending",
         market: { serverId: { in: houseServerIds } },
@@ -210,9 +189,6 @@ export async function refundableBucksHeldForAccounts(
   const parlayByAccount = new Map(
     humanParlayRows.map((row) => [row.bucksAccountId, row._sum.stake ?? 0]),
   );
-  const weeklyByAccount = new Map(
-    humanWeeklyRows.map((row) => [row.bucksAccountId, row._sum.stake ?? 0]),
-  );
   const dareByAccount = new Map(
     humanDareRows.map((row) => [row.bucksAccountId, row._sum.amount ?? 0]),
   );
@@ -227,13 +203,6 @@ export async function refundableBucksHeldForAccounts(
         BigInt(row.houseReserve),
     );
   }
-  for (const row of houseWeeklyRows) {
-    reserveByServer.set(
-      row.market.serverId,
-      (reserveByServer.get(row.market.serverId) ?? 0n) +
-        BigInt(row.houseReserve),
-    );
-  }
 
   return new Map(
     accounts.map((account) => [
@@ -242,7 +211,6 @@ export async function refundableBucksHeldForAccounts(
         (account.isHouse
           ? (reserveByServer.get(account.serverId) ?? 0n)
           : BigInt(parlayByAccount.get(account.id) ?? 0) +
-            BigInt(weeklyByAccount.get(account.id) ?? 0) +
             BigInt(dareByAccount.get(account.id) ?? 0) +
             BigInt(dareV2ByAccount.get(account.id) ?? 0)),
     ]),
@@ -272,34 +240,17 @@ export async function refundableBucksHeld(
     0n,
   );
   if (account.isHouse) {
-    const [parlay, weekly] = await Promise.all([
-      tx.bucksParlayBet.aggregate({
-        where: {
-          betOutcome: "pending",
-          market: { serverId: account.serverId },
-        },
-        _sum: { houseReserve: true },
-      }),
-      tx.bucksWeeklyParlayBet.aggregate({
-        where: {
-          betOutcome: "pending",
-          market: { serverId: account.serverId },
-        },
-        _sum: { houseReserve: true },
-      }),
-    ]);
-    return (
-      outcomeHeld +
-      BigInt(parlay._sum.houseReserve ?? 0) +
-      BigInt(weekly._sum.houseReserve ?? 0)
-    );
+    const parlay = await tx.bucksParlayBet.aggregate({
+      where: {
+        betOutcome: "pending",
+        market: { serverId: account.serverId },
+      },
+      _sum: { houseReserve: true },
+    });
+    return outcomeHeld + BigInt(parlay._sum.houseReserve ?? 0);
   }
-  const [parlay, weekly, dare, dareV2] = await Promise.all([
+  const [parlay, dare, dareV2] = await Promise.all([
     tx.bucksParlayBet.aggregate({
-      where: { bucksAccountId, betOutcome: "pending" },
-      _sum: { stake: true },
-    }),
-    tx.bucksWeeklyParlayBet.aggregate({
       where: { bucksAccountId, betOutcome: "pending" },
       _sum: { stake: true },
     }),
@@ -324,7 +275,6 @@ export async function refundableBucksHeld(
   return (
     outcomeHeld +
     BigInt(parlay._sum.stake ?? 0) +
-    BigInt(weekly._sum.stake ?? 0) +
     BigInt(dare._sum.amount ?? 0) +
     BigInt(dareV2._sum.amount ?? 0)
   );
@@ -415,7 +365,6 @@ export async function applyBucksDelta(
       matchId: input.matchId ?? null,
       betId: input.betId ?? null,
       parlayBetId: input.parlayBetId ?? null,
-      weeklyParlayBetId: input.weeklyParlayBetId ?? null,
       predictedTeamId: input.predictedTeamId ?? null,
       actualWinningTeamId: input.actualWinningTeamId ?? null,
       // Validated on the way in, so a malformed explanation can never be

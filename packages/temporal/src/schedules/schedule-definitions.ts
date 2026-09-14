@@ -1,5 +1,4 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
-import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";
@@ -29,9 +28,6 @@ import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 //     that needs a staleness guard inside the workflow.)
 //   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
 //     is "ran this cycle," so running late after a server outage is acceptable.
-//   * CATCHUP_WEEKLY_PARLAY — Scout's Sunday publication window. A missed
-//     publication may be replayed through the betting window so the market is
-//     still available before Monday scoring begins.
 //
 // Inferred string-literal types, NOT `: Duration`. `Duration` is
 // `StringValue | number`, and under the old CI's per-package Node16 install the canary
@@ -44,8 +40,6 @@ import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
 // keeps every catchup value off the error-typed `Duration` path entirely.
 export const CATCHUP_TIGHT = "5 minutes";
 export const CATCHUP_RELAXED = "1 hour";
-export const CATCHUP_WEEKLY_PARLAY = "12 hours";
-export const WEEKLY_PARLAY_CRON_EXPRESSION = `0 ${WEEKLY_PARLAY_LIFECYCLE.openHour.toString()} * * 0`;
 
 // The declared catchup tiers as a literal union (not `Duration`), so reading
 // the optional schedule field in buildSchedulePolicies can never yield an
@@ -193,29 +187,6 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "60 minutes",
     memo: "Weekly marketing-showcase refresh — regenerates the committed showcase PNGs + asset index from scout-prod, opens a PR on drift (generatedAt-only churn suppressed)",
-  },
-  {
-    id: "scout-weekly-parlay",
-    namespace: "beta",
-    workflowType: "runScoutWeeklyParlayWorkflow",
-    args: [{}],
-    // Sunday 12:00 PT. The workflow remains open through the following Sunday
-    // 11:00 PT and owns the reminder, start, six progress updates, and final
-    // reconciliation for one immutable period/slot.
-    timing: {
-      kind: "cron",
-      expression: WEEKLY_PARLAY_CRON_EXPRESSION,
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    // Preserve the full Sunday betting window when Temporal itself is down.
-    catchupWindow: CATCHUP_WEEKLY_PARLAY,
-    // A delayed final reconciliation for one period must not suppress the
-    // next Sunday's distinct period execution.
-    overlap: ScheduleOverlapPolicy.ALLOW_ALL,
-    memo: "Weekly Scout Bryan Bucks parlay lifecycle from Sunday publication through final settlement",
-    initialPauseNote:
-      "Awaiting the approved Discord fixture cycle before private-beta activation",
   },
   {
     id: "scout-bryan-bucks-analytics",

@@ -32,9 +32,7 @@ import { placeBet } from "#src/betting/markets/place-bet.ts";
 import { placeParlayBet } from "#src/betting/parlays/runtime/parlay-place-bet.ts";
 import { refreshParlayMessages } from "#src/betting/parlays/runtime/parlay-refresh.ts";
 import { subjectWinsForTeam } from "#src/betting/team.ts";
-import { placeWeeklyParlayBet } from "#src/betting/weekly/weekly-parlay-bet.ts";
-import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/weekly/leaderboard/weekly-leaderboard-snapshot.ts";
-import { refreshWeeklyParlayMessage } from "#src/betting/weekly/weekly-parlay-refresh.ts";
+import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/leaderboard/weekly-leaderboard-snapshot.ts";
 import {
   assertBucksGuildMembership,
   assertBucksScope,
@@ -421,34 +419,6 @@ export const bucksRouter = router({
         });
       }
       await captureWebActivity(input.guildId, discordId, "parlay_bet");
-      return result;
-    }),
-
-  placeWeeklyParlayBet: webMutationProcedure
-    .input(
-      GuildInput.extend({
-        marketId: z.number().int().positive(),
-        side: BucksParlaySideSchema,
-        stake: BucksStakeSchema,
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await assertBucksScope(ctx.user, input.guildId);
-      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
-      // `placeWeeklyParlayBet` validates that the market belongs to this guild
-      // and requires both betting flags internally.
-      const result = await placeWeeklyParlayBet({
-        marketId: input.marketId,
-        serverId: input.guildId,
-        discordId,
-        side: input.side,
-        stake: input.stake,
-        surface: "web",
-      });
-      if (result.kind === "placed") {
-        await refreshWeeklyParlayMessage(input.marketId);
-      }
-      await captureWebActivity(input.guildId, discordId, "weekly_parlay_bet");
       return result;
     }),
 });

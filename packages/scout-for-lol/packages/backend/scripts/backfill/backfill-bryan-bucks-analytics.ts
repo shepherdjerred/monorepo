@@ -109,15 +109,13 @@ async function main(): Promise<void> {
       serverId: account.serverId,
     });
   }
-  const { directBets, parlayBets, weeklyParlayBets } = await backfillMemberBets(
-    {
-      launchBoundary: LAUNCH_BOUNDARY,
-      liveCaptureBoundary: LIVE_CAPTURE_BOUNDARY,
-      accountById,
-      analytics,
-      capture,
-    },
-  );
+  const { directBets, parlayBets } = await backfillMemberBets({
+    launchBoundary: LAUNCH_BOUNDARY,
+    liveCaptureBoundary: LIVE_CAPTURE_BOUNDARY,
+    accountById,
+    analytics,
+    capture,
+  });
 
   const pools = await prisma.bucksMatchPool.findMany({
     where: {
@@ -236,57 +234,6 @@ async function main(): Promise<void> {
     }
   });
 
-  const weeklyMarkets = await prisma.bucksWeeklyParlayMarket.findMany({
-    where: {
-      publishedAt: { gte: LAUNCH_BOUNDARY, lt: LIVE_CAPTURE_BOUNDARY },
-    },
-    select: {
-      id: true,
-      serverId: true,
-      publishedAt: true,
-      settledAt: true,
-      marketState: true,
-    },
-    orderBy: { publishedAt: "asc" },
-  });
-  await forEachAsync(weeklyMarkets, async (market) => {
-    await capture(eventUuid("weekly-market", market.id, "published"), () => {
-      captureBucksLifecycle({
-        serverId: market.serverId,
-        transition: "bucks.weekly_parlay.published",
-        options: eventOptions(
-          "weekly-market",
-          market.id,
-          market.publishedAt,
-          "published",
-        ),
-        analytics,
-      });
-    });
-    if (market.settledAt !== null && isHistoricalTimestamp(market.settledAt)) {
-      const settledAt = market.settledAt;
-      await capture(
-        eventUuid("weekly-market", market.id, market.marketState),
-        () => {
-          captureBucksLifecycle({
-            serverId: market.serverId,
-            transition:
-              market.marketState === "voided"
-                ? "bucks.weekly_parlay.voided"
-                : "bucks.weekly_parlay.settled",
-            options: eventOptions(
-              "weekly-market",
-              market.id,
-              settledAt,
-              market.marketState,
-            ),
-            analytics,
-          });
-        },
-      );
-    }
-  });
-
   const ledgerEntries = await prisma.bucksLedgerEntry.findMany({
     where: {
       createdAt: { gte: LAUNCH_BOUNDARY, lt: LIVE_CAPTURE_BOUNDARY },
@@ -314,7 +261,7 @@ async function main(): Promise<void> {
     });
   });
 
-  const [allAccounts, pendingOutcome, pendingParlay, pendingWeekly, openPools] =
+  const [allAccounts, pendingOutcome, pendingParlay, openPools] =
     await Promise.all([
       prisma.bucksAccount.findMany({
         select: { serverId: true, isHouse: true, balance: true },
@@ -331,10 +278,6 @@ async function main(): Promise<void> {
         where: { betOutcome: "pending" },
         select: { stake: true, bucksAccount: { select: { serverId: true } } },
       }),
-      prisma.bucksWeeklyParlayBet.findMany({
-        where: { betOutcome: "pending" },
-        select: { stake: true, bucksAccount: { select: { serverId: true } } },
-      }),
       prisma.bucksMatchPool.findMany({
         where: { poolState: { in: ["open", "closed"] } },
         select: { serverId: true },
@@ -347,7 +290,6 @@ async function main(): Promise<void> {
   const pendingByServer = aggregateBucksPendingStakes(
     pendingOutcome,
     pendingParlay,
-    pendingWeekly,
   );
   const openMarketsByServer = countBucksOpenMarkets(openPools);
   const snapshotDate = new Date();
@@ -396,10 +338,8 @@ async function main(): Promise<void> {
     accounts: accounts.length,
     directBets,
     parlayBets,
-    weeklyParlayBets,
     pools: pools.length,
     parlayMarkets: parlayMarkets.length,
-    weeklyMarkets: weeklyMarkets.length,
     ledgerEntries: ledgerEntries.length,
     planned,
     skipped,

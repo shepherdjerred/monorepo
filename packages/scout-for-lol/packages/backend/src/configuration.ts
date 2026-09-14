@@ -290,9 +290,10 @@ function computeConfiguration() {
       "BETTING_PARLAY_AI_MODEL",
       "gpt-5.6-sol",
     ),
-    // Replay-only compatibility credential for weekly-parlay executions that
-    // started before the embedded Scout Activity patch was recorded.
-    weeklyParlayControlToken: getOptionalEnvVar("WEEKLY_PARLAY_CONTROL_TOKEN"),
+    // Bearer credential for the internal Bryan Bucks analytics control route
+    // the Temporal analytics Schedule calls. Absent in deployments that do not
+    // expose that route.
+    bryanBucksControlToken: getOptionalEnvVar("BRYAN_BUCKS_CONTROL_TOKEN"),
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-luna").asString(),
     // Beta Explore access is an explicit Discord server allowlist. Production
     // authorizes against the bot's live connected-guild set instead. Unset
@@ -326,6 +327,16 @@ function computeConfiguration() {
     tournamentMaxOpenLobbies: env
       .get("TOURNAMENT_MAX_OPEN_LOBBIES")
       .default("10")
+      .asIntPositive(),
+    // env-var's asIntPositive admits zero, which matters here: 0 silences
+    // tips without removing the feature.
+    featureTipPercent: env
+      .get("FEATURE_TIP_PERCENT")
+      .default("10")
+      .asIntPositive(),
+    featureTipCooldownHours: env
+      .get("FEATURE_TIP_COOLDOWN_HOURS")
+      .default("72")
       .asIntPositive(),
     voiceAssistant: parseVoiceAssistantConfiguration({
       openAiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
@@ -462,8 +473,8 @@ const configuration: Configuration = {
   get bettingParlayAiModel() {
     return getConfiguration().bettingParlayAiModel;
   },
-  get weeklyParlayControlToken() {
-    return getConfiguration().weeklyParlayControlToken;
+  get bryanBucksControlToken() {
+    return getConfiguration().bryanBucksControlToken;
   },
   get exploreModel() {
     return getConfiguration().exploreModel;
@@ -482,6 +493,12 @@ const configuration: Configuration = {
   },
   get tournamentApiMode() {
     return getConfiguration().tournamentApiMode;
+  },
+  get featureTipPercent() {
+    return getConfiguration().featureTipPercent;
+  },
+  get featureTipCooldownHours() {
+    return getConfiguration().featureTipCooldownHours;
   },
   get tournamentMaxOpenLobbies() {
     return getConfiguration().tournamentMaxOpenLobbies;

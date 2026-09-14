@@ -15,7 +15,7 @@ import {
   participantBooleanValue,
   participantNumericValue,
 } from "#src/betting/parlays/model/parlay-catalog.ts";
-import { countLabel } from "#src/betting/weekly/weekly-parlay-discord-copy.ts";
+import { countLabel } from "#src/betting/copy.ts";
 
 /**
  * The closed condition language for `/bb dare` bounties.
@@ -48,8 +48,8 @@ export const DARE_EVALUATOR_VERSION = "1";
 
 /**
  * Deliberately its own list rather than `BUCKS_EARNING_QUEUES`: clash is an
- * earning queue but not a dare queue (weekly-parlay precedent — a dare about
- * ranked habit should not be achievable in a one-off clash bracket).
+ * earning queue but not a dare queue: a dare about ranked habit should not
+ * be achievable in a one-off clash bracket.
  */
 export const DARE_ELIGIBLE_QUEUES = ["solo", "flex", "ranked 5s"] as const;
 
@@ -171,7 +171,7 @@ export const DareConditionsSchema = z.strictObject({
 });
 export type DareConditions = z.infer<typeof DareConditionsSchema>;
 
-/** Frozen account identity for one dare target (weekly-parlay precedent). */
+/** Frozen account identity for one dare target. */
 export const DareFrozenAccountSchema = z.strictObject({
   puuid: z.string().min(1),
   trackingStartedAt: z.iso.datetime(),

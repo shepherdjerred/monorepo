@@ -120,6 +120,10 @@ async function seedGuild(
     },
   });
 
+  await db.featureTipImpression.create({
+    data: { serverId, tipKey: "competitions" },
+  });
+
   await recordPermissionError(db, {
     serverId,
     channelId,
@@ -188,6 +192,9 @@ async function countGuild(
     hallRecordBreakOutbox: await db.hallRecordBreakOutbox.count({
       where: { guildId: serverId },
     }),
+    featureTipImpressions: await db.featureTipImpression.count({
+      where: { serverId },
+    }),
   };
 }
 
@@ -209,6 +216,7 @@ beforeEach(async () => {
   await prisma.serverPermission.deleteMany();
   await prisma.guildPermissionError.deleteMany();
   await prisma.bucksNotificationPreference.deleteMany();
+  await prisma.featureTipImpression.deleteMany();
 });
 
 afterAll(async () => {
@@ -234,6 +242,7 @@ describe("cleanupRemovedGuild", () => {
       permissionErrors: 1,
       hallSettings: 1,
       hallRecordBreakOutbox: 1,
+      featureTipImpressions: 1,
     });
 
     // ...and actually gone from the database.
@@ -249,6 +258,7 @@ describe("cleanupRemovedGuild", () => {
       permissionErrors: 0,
       hallSettings: 0,
       hallRecordBreakOutbox: 0,
+      featureTipImpressions: 0,
     });
 
     // The cascade removed the competition participant too.
@@ -267,6 +277,7 @@ describe("cleanupRemovedGuild", () => {
       permissionErrors: 1,
       hallSettings: 1,
       hallRecordBreakOutbox: 1,
+      featureTipImpressions: 1,
     });
   });
 
@@ -283,6 +294,7 @@ describe("cleanupRemovedGuild", () => {
       permissionErrors: 0,
       hallSettings: 0,
       hallRecordBreakOutbox: 0,
+      featureTipImpressions: 0,
     });
   });
 });

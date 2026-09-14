@@ -61,8 +61,8 @@ const LedgerRowIdSchema = z.int().positive();
  * different semantics — a Dare moves balances between two people, a market
  * settles a pool — and the Scout boundaries forbid collapsing them.
  *
- * Weekly parlays carry no per-bet row id out of the settle call, so they are
- * identified by the guild whose parlay settled; earnings are identified by the
+ * Parlay settlements are identified by the guild whose parlay settled;
+ * earnings are identified by the
  * account awarded, which together with the receipt's match id names the ledger
  * rows exactly. Every list is sorted and deduplicated so a replay of the same
  * commit produces byte-identical evidence.

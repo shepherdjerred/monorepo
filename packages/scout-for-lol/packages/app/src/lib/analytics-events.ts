@@ -95,7 +95,6 @@ const SCOUT_ANALYTICS_EVENTS = [
   "bucks_bet_placed",
   "bucks_bet_cancelled",
   "bucks_parlay_bet_placed",
-  "bucks_weekly_parlay_bet_placed",
   "bucks_notification_prefs_updated",
   // Feedback prompt
   "feedback_shown",
