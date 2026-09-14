@@ -85,7 +85,9 @@ gateway latency in milliseconds.
 An embed containing the dashboard URL, the documentation URL, the command list,
 and a summary of what the dashboard is for. Production includes `/scout ask` in
 every server where Scout is installed; beta includes it only in selected beta
-servers.
+servers. Server-scoped commands (such as `/lobby`) are listed only in servers
+where the matching feature is enabled, mirroring where the commands themselves
+are registered.
 
 ![The /help embed listing the dashboard and documentation links, the lightweight commands with one-line descriptions, and what the dashboard is for.](../../../assets/discord-help.png)
 
