@@ -1,14 +1,9 @@
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { createLogger } from "#src/logger.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
-import {
-  getProductAnalytics,
-  type ProductAnalytics,
-  type VoiceQuestionOutcome,
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type {
+  ProductAnalytics,
+  VoiceQuestionOutcome,
 } from "#src/analytics/product-analytics.ts";
-import { findAnalyticsGuildInstallation } from "#src/analytics/guild-installation.ts";
-
-const logger = createLogger("voice-question-analytics");
+import { captureWithGuildInstallation } from "#src/analytics/capture-with-installation.ts";
 
 export type VoiceQuestionCapture = {
   readonly guildId: string;
@@ -36,35 +31,26 @@ export async function captureVoiceQuestionAsked(
     analytics?: ProductAnalytics;
   },
 ): Promise<void> {
-  try {
-    const db = options?.db ?? prisma;
-    const analytics = options?.analytics ?? getProductAnalytics();
-    const install = await findAnalyticsGuildInstallation(db, input.guildId);
-    if (install === null) {
-      logger.warn(
-        "Cannot capture voice question without a GuildInstall lifecycle row",
-      );
-      return;
-    }
-    analytics.capture(install, {
-      event: "voice_question_asked",
-      properties: {
-        outcome: input.observation.outcome,
-        ...(input.observation.wakeToReplySeconds === undefined
-          ? {}
-          : { wake_to_reply_seconds: input.observation.wakeToReplySeconds }),
-        ...(input.observation.champion === undefined
-          ? {}
-          : { champion: input.observation.champion }),
-        ...(input.observation.abilitySlot === undefined
-          ? {}
-          : { ability_slot: input.observation.abilitySlot }),
+  await captureWithGuildInstallation(
+    {
+      guildId: input.guildId,
+      what: "voice question",
+      event: {
+        event: "voice_question_asked",
+        properties: {
+          outcome: input.observation.outcome,
+          ...(input.observation.wakeToReplySeconds === undefined
+            ? {}
+            : { wake_to_reply_seconds: input.observation.wakeToReplySeconds }),
+          ...(input.observation.champion === undefined
+            ? {}
+            : { champion: input.observation.champion }),
+          ...(input.observation.abilitySlot === undefined
+            ? {}
+            : { ability_slot: input.observation.abilitySlot }),
+        },
       },
-    });
-  } catch (error) {
-    logger.error(
-      "Failed to capture voice question analytics",
-      getErrorMessage(error),
-    );
-  }
+    },
+    options,
+  );
 }
