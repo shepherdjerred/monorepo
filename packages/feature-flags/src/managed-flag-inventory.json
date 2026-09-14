@@ -1420,6 +1420,14 @@
           "thresholdRollouts": []
         },
         {
+          "key": "duels_enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "hall_of_fame_enabled",
           "type": "boolean",
           "default": false,
