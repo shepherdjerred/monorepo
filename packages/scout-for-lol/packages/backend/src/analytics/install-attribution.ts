@@ -130,6 +130,11 @@ async function tryAttributeInstall(params: {
   if (install?.removedAt !== null) {
     return "missing";
   }
+  // A row recovered from an already-connected guild authorizes the dashboard,
+  // but it has no reliable installation lifecycle to attribute.
+  if (!install.analyticsLifecycleTracked) {
+    return "already_installed";
+  }
   if (
     install.installedAt.getTime() <
     params.tokenCreatedAt.getTime() - INSTALL_FRESHNESS_SLACK_MS

@@ -18,7 +18,10 @@ const T_PLUS_1M = new Date("2026-08-22T12:01:00Z");
 const T_PLUS_5M = new Date("2026-08-22T12:05:00Z");
 const T_PLUS_20M = new Date("2026-08-22T12:20:00Z");
 
-async function seedInstall(options?: { installedAt?: Date }) {
+async function seedInstall(options?: {
+  analyticsLifecycleTracked?: boolean;
+  installedAt?: Date;
+}) {
   return prisma.guildInstall.create({
     data: {
       serverId: SERVER_ID,
@@ -27,6 +30,7 @@ async function seedInstall(options?: { installedAt?: Date }) {
       addedByDiscordId: INSTALLER,
       memberCount: 25,
       installedAt: options?.installedAt ?? T_PLUS_1M,
+      analyticsLifecycleTracked: options?.analyticsLifecycleTracked ?? true,
     },
   });
 }
@@ -191,6 +195,24 @@ describe("completeInstallAttribution", () => {
 
   test("refuses to attribute an install that predates the token", async () => {
     await seedInstall({ installedAt: new Date("2026-08-01T00:00:00Z") });
+    const token = await mint();
+    const { analytics, capture } = createAnalyticsFixture();
+
+    const result = await completeInstallAttribution(
+      { state: token, guildId: SERVER_ID, discordId: INSTALLER },
+      { db: prisma, analytics, now: T_PLUS_5M },
+    );
+
+    expect(result.outcome).toBe("already_installed");
+    expect(capture).not.toHaveBeenCalled();
+    const untouched = await prisma.guildInstall.findUniqueOrThrow({
+      where: { serverId: SERVER_ID },
+    });
+    expect(untouched.attributedAt).toBeNull();
+  });
+
+  test("refuses to attribute a historical backfill", async () => {
+    await seedInstall({ analyticsLifecycleTracked: false });
     const token = await mint();
     const { analytics, capture } = createAnalyticsFixture();
 
