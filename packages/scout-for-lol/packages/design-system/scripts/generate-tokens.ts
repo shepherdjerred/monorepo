@@ -23,10 +23,17 @@ const ColorsSchema = z.object({
   focus: HexColorSchema,
   success: HexColorSchema,
   successText: HexColorSchema,
+  // Same split as danger: `success` fills, `successText` sits on that fill, and
+  // this is success-coloured text on an ordinary background.
+  successOnSurface: HexColorSchema,
   warning: HexColorSchema,
   warningText: HexColorSchema,
   danger: HexColorSchema,
   dangerText: HexColorSchema,
+  // `danger` fills a surface and `dangerText` is the text on that fill. Danger
+  // text on an ordinary background is a third colour: the fill is too dark to
+  // read against the dark themes' canvas.
+  dangerOnSurface: HexColorSchema,
   info: HexColorSchema,
   infoText: HexColorSchema,
   overlay: HexColorSchema,

@@ -61,7 +61,7 @@ export function ErrorPanel(props: {
   return (
     <div
       className={cn(
-        "rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center",
+        "rounded-lg border border-scout-danger-fill/40 bg-scout-surface p-8 text-center",
         props.className,
       )}
     >

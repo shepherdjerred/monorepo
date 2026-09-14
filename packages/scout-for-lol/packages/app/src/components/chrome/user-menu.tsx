@@ -71,7 +71,7 @@ export function UserMenu(props: { username: string }) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="gap-2 text-xs text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
+          className="gap-2 text-xs text-scout-danger focus:bg-scout-danger-fill/10 focus:text-scout-danger"
           onSelect={() => {
             void logout();
           }}
