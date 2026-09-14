@@ -44,6 +44,7 @@ import { recordPrematchOutputs } from "#src/league/tasks/prematch/prematch-outpu
 import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
 import {
   deliveredMessagesByGuild,
+  prematchDeliveryKeyPrefix,
   recordDeliveryReceipts,
   tryCreateChannelDeliveryRecorder,
   type ChannelDeliveryRecorder,
@@ -487,7 +488,7 @@ export async function sendPrematchNotification(
       tryCreateChannelDeliveryRecorder({
         facts,
         matchId: prematchMatchId,
-        keyPrefix: `prematch-discord:${prematchMatchId}`,
+        keyPrefix: prematchDeliveryKeyPrefix(prematchMatchId),
         // The ActiveGame row's own lifetime: past it the game is no longer
         // tracked, so a pre-match send would be about a game already over.
         freshnessDeadline: new Date(detectedAt.getTime() + ACTIVE_GAME_TTL_MS),

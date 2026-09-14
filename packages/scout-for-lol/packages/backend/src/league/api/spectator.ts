@@ -22,22 +22,34 @@ import * as Sentry from "@sentry/bun";
 const logger = createLogger("spectator-api");
 
 /**
- * Result of a spectator API call. The `upstreamError` flag lets callers
- * distinguish "player not in game" from "Riot API is down" so they can
- * engage a circuit breaker without re-inspecting the HTTP status.
+ * What one spectator call actually established.
+ *
+ * Three outcomes, not two, and the third one is the point. `not-in-game` is a
+ * CONFIRMED absence: Riot answered 404, so the account is provably not in a
+ * game. `unavailable` is the absence of an ANSWER — a timeout, a 401, a 429, a
+ * payload that failed its schema, an upstream 5xx — and it establishes nothing
+ * at all about whether a game exists.
+ *
+ * These used to collapse into one `game: undefined`, which is safe only for a
+ * caller that re-polls on a timer and can afford to miss a tick. A caller whose
+ * conclusion is DURABLE — a Temporal Workflow whose completed, game-scoped ID
+ * blocks every later poll — would turn one transient blip into a permanently
+ * lost snapshot. Absence of evidence is not evidence of absence, and this
+ * boundary is where the two stop being the same value.
+ *
+ * `upstream` stays a separate flag rather than folding into `reason` because it
+ * carries an operational decision: the circuit breaker engages on an upstream
+ * outage and on nothing else.
  */
-export type SpectatorResult = {
-  /** Active game data, or undefined if the player is not in a game / API errored */
-  game: RawCurrentGameInfo | undefined;
-  /** True when the API returned an expected Riot or edge upstream error */
-  upstreamError: boolean;
-};
+export type SpectatorResult =
+  | { kind: "in-game"; game: RawCurrentGameInfo }
+  | { kind: "not-in-game" }
+  | { kind: "unavailable"; upstream: boolean; reason: string };
 
 /**
  * Fetch active game data for a player from the Spectator V5 API.
  *
- * @returns A SpectatorResult containing the game data (if any) and whether
- *          the request failed due to an expected upstream error.
+ * @returns Which of the three outcomes above this call established.
  */
 export async function getActiveGame(
   puuid: LeaguePuuid,
@@ -79,13 +91,19 @@ export async function getActiveGame(
           region,
         },
       });
-      return { game: undefined, upstreamError: false };
+      // Riot answered, but not with something this code can trust. That is a
+      // broken boundary, never a statement that the account is idle.
+      return {
+        kind: "unavailable",
+        upstream: false,
+        reason: "payload-failed-validation",
+      };
     }
 
     logger.info(
       `[getActiveGame] ✅ ${puuid} is in game ${parseResult.data.gameId.toString()} (${parseResult.data.gameMode})`,
     );
-    return { game: parseResult.data, upstreamError: false };
+    return { kind: "in-game", game: parseResult.data };
   } catch (error: unknown) {
     // 404 = player not in a game — expected/normal case
     const httpStatus = extractHttpStatus(error);
@@ -94,7 +112,8 @@ export async function getActiveGame(
       riotApiRequestsTotal.inc({ source: "spectator", status: "not_found" });
       updateRiotApiHealth(true);
       logger.debug(`[getActiveGame] Player ${puuid} not in game`);
-      return { game: undefined, upstreamError: false };
+      // The only confirmed absence: Riot looked and there is no game.
+      return { kind: "not-in-game" };
     }
 
     // 502/503/504 = Riot upstream outage — expected during maintenance windows.
@@ -113,7 +132,11 @@ export async function getActiveGame(
       logger.warn(
         `[getActiveGame] Riot API returned ${httpStatus.toString()} for ${puuid} (expected upstream error)`,
       );
-      return { game: undefined, upstreamError: true };
+      return {
+        kind: "unavailable",
+        upstream: true,
+        reason: `upstream-${httpStatus.toString()}`,
+      };
     }
 
     riotApiRequestsTotal.inc({
@@ -149,6 +172,15 @@ export async function getActiveGame(
       });
     }
 
-    return { game: undefined, upstreamError: false };
+    // A timeout, a 401, a 429, a network fault: the request did not come back
+    // with an answer, so this call establishes nothing about the account.
+    return {
+      kind: "unavailable",
+      upstream: false,
+      reason:
+        httpStatus === undefined
+          ? "unreachable"
+          : `http-${httpStatus.toString()}`,
+    };
   }
 }

@@ -118,8 +118,11 @@ async function resolveMatchId(
     LeaguePuuidSchema.parse(probeTarget),
     lobby.region,
   );
+  // Both "no game" and "no answer" leave this probe with nothing to link, and
+  // the lobby poller runs again shortly with no durable record of the miss —
+  // v1's behaviour before the boundary distinguished them, kept deliberately.
+  if (spectator.kind !== "in-game") return undefined;
   const game = spectator.game;
-  if (game === undefined) return undefined;
 
   return {
     matchId: `${game.platformId}_${game.gameId.toString()}`,

@@ -77,6 +77,24 @@ function mkGameInfo(gameId: number, puuid: LeaguePuuid): RawCurrentGameInfo {
   });
 }
 
+/**
+ * An unexpired ActiveGame row for P1 in G1. `matchId` is what the dedup tests
+ * vary: a legacy row carries none, while a platform-qualified one is what
+ * keeps the same numeric game id on two platforms apart.
+ */
+function trackedActiveGame(
+  matchId: ActiveGameRecord["matchId"],
+): ActiveGameRecord {
+  return {
+    gameId: G1,
+    matchId,
+    trackedPuuids: [P1],
+    prematchMessageIds: {},
+    detectedAt: new Date(),
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+  };
+}
+
 // Module-level mutable state captured by the mocks
 let mockActiveGames: ActiveGameRecord[] = [];
 let mockAccounts: PlayerAccountWithState[] = [];
@@ -126,7 +144,7 @@ await vi.doMock("#src/league/api/spectator.ts", () => ({
   getActiveGame: (puuid: LeaguePuuid) => {
     const response = mockSpectatorResponses.get(puuid);
     if (response === undefined) {
-      return Promise.resolve({ game: undefined, upstreamError: false });
+      return Promise.resolve({ kind: "not-in-game" as const });
     }
     return Promise.resolve(response);
   },
@@ -192,8 +210,8 @@ describe("checkActiveGames — subsequent-match polling", () => {
     mockAccounts = [mkAccount(P1)];
     // Spectator now reports P1 in a DIFFERENT game (G2)
     mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
       game: mkGameInfo(G2, P1),
-      upstreamError: false,
     });
 
     await checkActiveGames();
@@ -239,8 +257,8 @@ describe("checkActiveGames — subsequent-match polling", () => {
       ],
     });
     mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
       game: incomplete,
-      upstreamError: false,
     });
 
     // Pass retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
@@ -288,8 +306,8 @@ describe("checkActiveGames — subsequent-match polling", () => {
       ),
     });
     mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
       game: incomplete,
-      upstreamError: false,
     });
 
     // retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
@@ -303,22 +321,12 @@ describe("checkActiveGames — subsequent-match polling", () => {
   });
 
   test("dedupes when Spectator returns the SAME gameId already in ActiveGame", async () => {
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-    mockActiveGames = [
-      {
-        gameId: G1,
-        matchId: null,
-        trackedPuuids: [P1],
-        prematchMessageIds: {},
-        detectedAt: new Date(),
-        expiresAt,
-      },
-    ];
+    mockActiveGames = [trackedActiveGame(null)];
     mockAccounts = [mkAccount(P1)];
     // Spectator reports P1 still in game G1 (still mid-match)
     mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
       game: mkGameInfo(G1, P1),
-      upstreamError: false,
     });
 
     await checkActiveGames();
@@ -330,21 +338,13 @@ describe("checkActiveGames — subsequent-match polling", () => {
   });
 
   test("does not dedupe the same numeric game ID across platforms", async () => {
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
     mockActiveGames = [
-      {
-        gameId: G1,
-        matchId: MatchIdSchema.parse(`EUW1_${G1.toString()}`),
-        trackedPuuids: [P1],
-        prematchMessageIds: {},
-        detectedAt: new Date(),
-        expiresAt,
-      },
+      trackedActiveGame(MatchIdSchema.parse(`EUW1_${G1.toString()}`)),
     ];
     mockAccounts = [mkAccount(P1)];
     mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
       game: mkGameInfo(G1, P1),
-      upstreamError: false,
     });
 
     await checkActiveGames();

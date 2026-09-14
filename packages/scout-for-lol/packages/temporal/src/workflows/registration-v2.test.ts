@@ -1,6 +1,4 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { WorkflowFailedError } from "@temporalio/client";
-import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import {
@@ -33,6 +31,10 @@ import {
   scoutPrematchGameV2WorkflowId,
   scoutRecoveryBatchV2WorkflowId,
 } from "#src/identifiers.ts";
+import {
+  applicationFailureOf,
+  settleWorkflow,
+} from "./workflow-harness.test-fixtures.ts";
 
 let environment: TestWorkflowEnvironment;
 
@@ -89,13 +91,13 @@ const registrations = [
     name: SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
     workflowId: scoutPrematchDiscoveryV2WorkflowId(stage),
     input: scoutPrematchDiscoveryV2InputCodec.serialize({ stage }),
-    implemented: false,
+    implemented: true,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.prematchGameV2,
     workflowId: scoutPrematchGameV2WorkflowId(stage, gameRef),
     input: scoutPrematchGameV2InputCodec.serialize({ stage, gameRef }),
-    implemented: false,
+    implemented: true,
   },
   {
     name: SCOUT_WORKFLOW_NAMES.notificationV2,
@@ -147,24 +149,19 @@ test("registers all eight V2 types, and every unimplemented one refuses to run",
       // A type missing from the bundle fails its workflow task and retries
       // forever, so this settling at all is the registration proof; the
       // assertions are that it stopped, terminally, and said why.
-      const settled: unknown = await environment.client.workflow
-        .execute(entry.name, {
-          taskQueue: "scout-dev",
-          workflowId: entry.workflowId,
-          args: [entry.input],
-        })
-        .then(
-          (value: unknown) => value,
-          (error: unknown) => error,
-        );
+      const failure = applicationFailureOf(
+        await settleWorkflow(
+          environment.client.workflow.execute(entry.name, {
+            taskQueue: "scout-dev",
+            workflowId: entry.workflowId,
+            args: [entry.input],
+          }),
+        ),
+      );
 
-      expect(settled).toBeInstanceOf(WorkflowFailedError);
-      if (!(settled instanceof WorkflowFailedError)) return;
-      expect(settled.cause).toBeInstanceOf(ApplicationFailure);
-      if (!(settled.cause instanceof ApplicationFailure)) return;
-      expect(settled.cause.type).toBe("UnimplementedWorkflow");
-      expect(settled.cause.nonRetryable).toBe(true);
-      expect(settled.cause.message).toContain(entry.name);
+      expect(failure?.type).toBe("UnimplementedWorkflow");
+      expect(failure?.nonRetryable).toBe(true);
+      expect(failure?.message).toContain(entry.name);
     }
   });
 }, 120_000);

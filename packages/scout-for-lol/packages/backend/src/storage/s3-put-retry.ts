@@ -55,13 +55,24 @@ export async function sendPutWithRetry(
   client: S3Client,
   command: PutObjectCommand,
   context: string,
+  abortSignal?: AbortSignal,
 ): Promise<PutObjectCommandOutput> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_PUT_ATTEMPTS; attempt++) {
     try {
-      return await client.send(command);
+      return await client.send(
+        command,
+        abortSignal === undefined ? {} : { abortSignal },
+      );
     } catch (error) {
       lastError = error;
+      // A caller that fenced this put gave it a deadline, and the retry budget
+      // must not outlive it. Three attempts plus backoff is precisely how an
+      // unbounded put escapes the lock that was meant to be holding it, so an
+      // aborted signal ends the loop rather than starting another attempt.
+      if (abortSignal?.aborted === true) {
+        throw error;
+      }
       if (attempt === MAX_PUT_ATTEMPTS || !isRetryableError(error)) {
         throw error;
       }

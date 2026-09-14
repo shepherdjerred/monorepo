@@ -118,12 +118,34 @@ function failureOf(permissionError: boolean): NotificationFailure {
     : { classification: "retryable", reason: "service-unavailable" };
 }
 
+/**
+ * The shared prefix of one game's PREMATCH delivery keys.
+ *
+ * Exported because two pipelines mint against it: v1's `sendPrematchNotification`
+ * hands it to the recorder below, and the V2 per-game Activity writes the same
+ * intents strictly through the repository. Both have to compute the same key or
+ * the same channel gets two intent rows and a user gets told twice, so the
+ * format lives here rather than in either caller.
+ */
+export function prematchDeliveryKeyPrefix(matchId: string): string {
+  return `prematch-discord:${matchId}`;
+}
+
+/** One channel's intent key under a delivery prefix. */
+export function deliveryIntentKey(
+  keyPrefix: string,
+  channelId: string,
+): string {
+  return `${keyPrefix}:${channelId}`;
+}
+
 type RecorderConfig = {
   facts: DurableFacts;
   matchId: RiotMatchId;
   /**
    * The shared prefix of the delivery's effect keys — `postmatch-discord:<id>`
-   * or `prematch-discord:<id>`. One intent key per channel is built from it.
+   * or {@link prematchDeliveryKeyPrefix}. One intent key per channel is built
+   * from it.
    */
   keyPrefix: string;
   /** Sending after this instant is a conflict; the intent is stale. */
@@ -131,7 +153,7 @@ type RecorderConfig = {
 };
 
 function intentKeyFor(config: RecorderConfig, channelId: string): string {
-  return `${config.keyPrefix}:${channelId}`;
+  return deliveryIntentKey(config.keyPrefix, channelId);
 }
 
 function attemptNonceFor(

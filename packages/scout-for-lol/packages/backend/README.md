@@ -161,6 +161,173 @@ read-back could not run inside one. The guard and the fact are therefore two
 commits by construction, which is why every V2 guarded-effect result reports
 them as separate outcomes and names the reconcile.
 
+## The V2 prematch path
+
+The `prematch-*` modules beside them serve `scoutPrematchDiscoveryV2Workflow`
+and `scoutPrematchGameV2Workflow`, and they are shaped differently from the
+per-match core on purpose.
+
+There is no resume-point read, because there is nothing for one to answer: the
+pipeline-state aggregate hangs off `MatchObservation`, and a live game has not
+been observed yet by definition. The per-game Workflow has one phase instead of
+four, so its replay gate is the receipts themselves — the archive's inside the
+door (below), the lake projection's inside `archivePrematchSnapshotV2`. There
+are also no V2 stage receipts here: those exist so a resumed run can gate a
+phase whose evidence it cannot reconstruct, and the two evidence-bearing
+receipts this path writes already answer exactly the question it asks.
+
+### Durable state before live state
+
+The capture consults its own archive BEFORE it asks Riot anything, and that
+order is the correctness of every resumed run. The Activity has three durable
+effects — the object, the lake projection, the notification intents — and a run
+can die between any two. A live-first capture that died after archiving would,
+once the game ended, be told "no such game", report an empty result and
+complete; the projection would never be staged, the intents never minted, and
+the completed game-scoped Workflow ID would seal all of it.
+
+So a standing `raw-archive-prematch` receipt means this run resumes from the
+ARCHIVED payload — read back by the receipt's key and verified against the
+digest the receipt attested — and finishes the remaining phases from it without
+Riot being involved. Those bytes are canonical by definition: S3 is the raw
+store the report lake rebuilds from. A live absence is believed only when
+nothing was ever archived, which is the one state in which it is informative.
+
+The same principle shapes the spectator boundary itself. `getActiveGame` now
+reports three outcomes rather than two: a confirmed `not-in-game` (Riot
+answered 404), an `in-game` payload, and `unavailable` — a timeout, a 401, a
+429, an upstream 5xx, or a payload that failed its schema. Those used to
+collapse into one "no game" value, which is safe for a caller that re-polls on
+a timer and fatal for one whose conclusion is durable. The V2 capture throws on
+`unavailable` and lets the Activity retry be its wait loop; v1's pollers still
+treat it as a skipped tick, which is stated explicitly at each call site rather
+than inherited from a value that could not tell the difference.
+
+It shapes the STORAGE boundary the resume path reads through too, where the
+same collapse is available and just as costly. `ArchivedObjectUnusableError`
+names the three ways an archived object cannot serve as the snapshot its
+receipt attests — gone, digest-mismatched, or unparseable — each a fact about
+what is stored that no retry changes, so each terminates the run. Every other
+read failure is transport: a SeaweedFS timeout, a 5xx, a dropped connection,
+none of which establish anything about whether the object is there. Those
+propagate untouched and stay retryable, because terminating on one would
+permanently strand an archived snapshot without its projection or its
+notifications — once the game has ended, discovery cannot start another
+execution to try again. The classification lives in `s3-raw-source.ts`, the
+only layer that sees the SDK's error taxonomy, and the Activity translates it
+into Temporal's retry vocabulary.
+
+The capture stages the lake rows inline rather than deferring to
+`stageLakeProjectionV2`, which is the one place this path diverges from the
+per-match core's separation of archive from projection. It has nowhere to defer
+to: `scoutLakeProjectionV2Workflow` is keyed by a match id and projects the
+MatchV5 payload, which does not exist while the game is still being played.
+
+### The prematch archive door is fenced
+
+`archivePrematchReceipted` is the only one of the three archive doors that
+takes an advisory lock, and the asymmetry is in the data rather than in the
+pipeline. A prematch S3 key is deterministic but the spectator PAYLOAD is not —
+`gameLength` advances between fetches — so two captures of one game write
+different bytes to the same key. A match or timeline payload is immutable once
+the game is over, so a repeat put writes byte-identical content and only the
+descriptor's `capturedAt` differs; the key and digest an attestation names stay
+true of the object either way.
+
+Unfenced, the prematch race is not merely a duplicated put. The second attempt
+overwrites the object and only THEN discovers the receipt mismatch, so S3 ends
+up holding the second capture's bytes under the first's attested digest — the
+object and its attestation permanently disagree, which is precisely what the
+receipt table exists to rule out.
+
+Serializing alone would not fix that: an attempt that waited its turn and then
+put anyway would still overwrite, just in an orderly fashion. So the lock wraps
+the read-gate, the put and the attestation as one critical section, and a
+snapshot already archived is answered from its standing receipt with no put at
+all. The fence lives in the DOOR rather than in either caller because both
+pipelines enter through it — v1 via `ingestPrematch`, V2 via
+`archivePrematchSnapshotV2` — and a fence at one call site would serialize that
+caller against itself while leaving the cross-pipeline race open.
+
+The attestation is written through the fencing transaction so the arrangement
+fails closed: an advisory xact lock dies with its transaction, and Prisma ends
+one on its own timer as well as on its callback, so a put that outran the lock
+lifetime would be running unfenced — and an aborted transaction cannot record a
+receipt. No attestation is ever written for a put the fence could not vouch
+for. `prematch-archive-fence.integration.test.ts` proves the serialization
+against a real Postgres rather than a double, since a double would serialize by
+construction and prove nothing.
+
+The put is also bounded strictly INSIDE the lock's lifetime, at 25 seconds
+against the lock's 45. The margin is not decoration: an S3 put is not one
+request, and the SDK's request timeout multiplied by the retry budget plus
+backoff can outlast the transaction on its own. Prisma releases the lock on
+rollback without cancelling anything in flight, so an unbounded put becomes a
+zombie — a rival takes the freed lock, writes and attests its own bytes, and the
+zombie then lands the older body over them. The deadline therefore both RACES
+the put (so the caller always settles inside the lifetime) and ABORTS it through
+an `AbortSignal` the SDK honours (so the request actually stops rather than
+being abandoned). A race alone would leave the zombie running. This mirrors the
+600/900 split `temporal/v2/effect-fence.ts` documents for the same hazard.
+
+Because the door gates its put, it also hands back the CANONICAL payload with
+`already_archived`, not just a descriptor. A caller holding a fresher spectator
+payload — the two pipelines poll independently, and `gameLength` advances
+between polls — would otherwise stage lake rows derived from its own bytes
+while the staging receipt named the archived object they did not come from,
+leaving the lake disagreeing with both its receipt and canonical S3. Returning
+the verified archived contents makes staging the wrong bytes unrepresentable
+rather than merely discouraged, and both callers stage what they are given.
+
+A receipt conflict is still never returned as a commit, and the fence does not
+make that redundant: it serializes captures that go through the door, so the
+throw remains the answer for any disagreement the lock does not cover.
+Reporting a conflict as a commit
+would put that receipt's kind in the Workflow's `receiptKinds`, so the run
+would claim an attestation it does not hold and then complete, leaving the
+drift inside one Activity result no later poll re-examines. It throws
+non-retryably instead, because a retry would read the standing receipt and
+converge quietly on the other writer's descriptor, burying exactly the signal
+worth seeing. A receipt that could not be written at all is the opposite case
+and throws retryably.
+
+The capture also mints the prematch delivery intents, and that is likewise
+forced rather than chosen. `planPrematchFanOutV2` READS intents — the frozen
+contract's discipline — and receives only a match reference, while the channels
+owed an announcement are derived from the tracked accounts in the game, which
+only the spectator roster names. The capture is the one Activity holding that
+roster. It mints them `pending`; `markNotificationReadyV2` is the notification
+Workflow's own phase.
+
+Both pipelines mint against the same channel while the rollout runs, so the
+prematch intent key format lives in `durable/match/delivery-intents.ts`
+(`prematchDeliveryKeyPrefix` + `deliveryIntentKey`) and both callers build it
+there. Two spellings would mean two rows and one channel told twice. The V2
+write is strict where v1's recorder is fail-open, for the reason the section
+above gives, and it reads before it writes: `upsertIntent` compares the whole
+stored row, so a retry on a later clock would otherwise be answered
+`intent-differs`.
+
+An `intent-differs` conflict that survives that read is reported rather than
+thrown — the opposite call from the receipt conflict above, because the two
+mean different things. A receipt mismatch is two producers disagreeing about a
+fact, where only one answer can be true. `intent-differs` is two producers
+minting the same INSTRUCTION during the window where both pipelines are live,
+differing only in the clock each stamped it with; the stored row is a valid,
+drivable instruction whoever wrote it. Failing would turn a benign dual-run
+race into a flapping child. It stays a distinct outcome rather than folding
+into "already existed", so a rate that climbs after v1 is retired — when the
+race should be impossible — is visible.
+
+Dedup is the per-game Workflow ID rather than the `ActiveGame` row.
+`scoutPrematchGameV2WorkflowId` drops the puuid, so one game surfaced through
+every tracked account in it computes one ID, and
+`ALLOW_DUPLICATE_FAILED_ONLY` replaces a run that failed while refusing one
+that is running or done. Unlike post-match discovery, the poller does not wait
+for its children and does not stop at a taken ID: live games have no chronology
+to protect, and the discovery Workflow ID is a per-stage singleton, so waiting
+would put the next poll behind the slowest game.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client

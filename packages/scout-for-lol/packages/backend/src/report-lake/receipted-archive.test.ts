@@ -28,11 +28,19 @@ import {
 
 const mocks = vi.hoisted(() => ({
   recordReceipt: vi.fn(),
+  /** No receipt stands, so the prematch door's gate falls through to its put. */
+  listReceipts: vi.fn(() => []),
 }));
 
-vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
+// These tests are about which receipts each artifact produces, so the door's
+// transaction is only scaffolding here; see `fenced-door-doubles.ts`.
+vi.mock("#src/database/index.ts", async () => {
+  const doubles = await import("#src/testing/fenced-door-doubles.ts");
+  return { prisma: doubles.transactionRunningPrismaDouble() };
+});
 vi.mock("#src/database/durable/receipt-repository.ts", () => ({
   recordReceipt: mocks.recordReceipt,
+  listReceipts: mocks.listReceipts,
 }));
 
 const ARTIFACT_KINDS = ArtifactKindSchema.options;

@@ -98,26 +98,71 @@ async function refetchLobbyUntilFilled(
     );
     await Bun.sleep(retryDelayMs);
     const retry = await getActiveGame(puuid, region);
-    // If the API errors mid-retry, record the failure in the circuit breaker
-    // so repeated failures during the retry window trip the breaker for
-    // subsequent players in the same cron tick.
-    if (retry.upstreamError) {
-      spectatorCircuit.recordFailure(
-        new Error(
-          `Spectator API upstream error during pre-start lobby retry for ${puuid}`,
-        ),
-        { source: "spectator-retry", puuid, region },
-      );
+    // Any answer that is not a fresh payload ends the retry loop with the most
+    // recent one, and the caller's outer logic decides — v1's behaviour before
+    // the spectator boundary distinguished its three outcomes, kept exactly.
+    // It is safe HERE in a way it would not be in the V2 capture: this runs on
+    // a 30-second cron with no durable conclusion, so a missed retry costs one
+    // tick rather than the whole snapshot.
+    if (retry.kind === "unavailable") {
+      // Only a genuine upstream outage feeds the breaker, so repeated failures
+      // during the retry window trip it for later players in the same tick.
+      if (retry.upstream) {
+        spectatorCircuit.recordFailure(
+          new Error(
+            `Spectator API upstream error during pre-start lobby retry for ${puuid}`,
+          ),
+          { source: "spectator-retry", puuid, region },
+        );
+      }
       return latest;
     }
-    // Player left the lobby between retries — fall back to the most recent
-    // payload so the caller's outer logic decides.
-    if (!retry.game) {
+    // Player left the lobby between retries.
+    if (retry.kind === "not-in-game") {
       return latest;
     }
     latest = retry.game;
   }
   return latest;
+}
+
+/**
+ * One player's spectator read, reduced to the only thing this poller acts on:
+ * a game to process, or nothing.
+ *
+ * The three outcomes the boundary now distinguishes collapse back to two HERE,
+ * deliberately, because that is v1's behaviour and it is safe in v1. This runs
+ * on a 30-second cron and records nothing durable about a skip, so an
+ * unanswered read costs one tick. The V2 capture cannot make the same trade —
+ * its conclusion is sealed by a completed Workflow ID — which is why the
+ * distinction lives at the boundary rather than being flattened inside it.
+ *
+ * Extracted from the polling loop so the collapse is stated once, somewhere it
+ * can explain itself, rather than adding a branch to a function already at its
+ * complexity budget.
+ */
+async function pollPlayerForGame(
+  puuid: LeaguePuuid,
+  region: PlayerConfigEntry["league"]["leagueAccount"]["region"],
+): Promise<RawCurrentGameInfo | undefined> {
+  const spectator = await getActiveGame(puuid, region);
+  if (spectator.kind === "unavailable") {
+    if (spectator.upstream) {
+      // Feed the failure into the circuit breaker (rate-limited Sentry reporting)
+      spectatorCircuit.recordFailure(
+        new Error(`Spectator API upstream error for ${puuid}`),
+        { source: "spectator", puuid, region },
+      );
+      return undefined;
+    }
+    // A validation failure or a one-off HTTP error still proves the API is
+    // reachable, so it closes the breaker exactly as it did before.
+    spectatorCircuit.recordSuccess();
+    return undefined;
+  }
+  // A 404 is an answer, so the API is reachable.
+  spectatorCircuit.recordSuccess();
+  return spectator.kind === "in-game" ? spectator.game : undefined;
 }
 
 async function processPrematchWithRetryCleanup(input: {
@@ -294,22 +339,8 @@ export async function checkActiveGames(
       }
 
       try {
-        const initial = await getActiveGame(puuid, region);
-        const { upstreamError } = initial;
-
-        if (upstreamError) {
-          // Feed the failure into the circuit breaker (rate-limited Sentry reporting)
-          spectatorCircuit.recordFailure(
-            new Error(`Spectator API upstream error for ${puuid}`),
-            { source: "spectator", puuid, region },
-          );
-          continue;
-        }
-
-        // Any non-upstream response (success, 404, validation error) means the API is reachable
-        spectatorCircuit.recordSuccess();
-
-        if (!initial.game) {
+        const initial = await pollPlayerForGame(puuid, region);
+        if (initial === undefined) {
           continue;
         }
 
@@ -317,14 +348,14 @@ export async function checkActiveGames(
         // Spectator before all 10 players have loaded in. Retry a couple of
         // times in-process; if still incomplete, defer to the next 30s cron
         // tick (do NOT upsert) so a partial roster never reaches the builder.
-        const gameInfo = isLikelyPreStartLobby(initial.game)
+        const gameInfo = isLikelyPreStartLobby(initial)
           ? await refetchLobbyUntilFilled(
-              initial.game,
+              initial,
               puuid,
               region,
               lobbyRetryDelayMs,
             )
-          : initial.game;
+          : initial;
 
         if (isLikelyPreStartLobby(gameInfo)) {
           logger.info(
