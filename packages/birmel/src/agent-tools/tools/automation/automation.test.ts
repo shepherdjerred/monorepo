@@ -3,11 +3,12 @@ import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { getConfig, resetConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { browserAutomationTool } from "./browser.ts";
 import {
-  browserAutomationTool,
-  runAbortablePlaywrightOperation,
-} from "./browser.ts";
-import { executeShellCommandTool } from "./shell.ts";
+  RunCodeRequestSchema,
+  SANDBOX_MAX_SOURCE_BYTES,
+} from "@shepherdjerred/birmel/sandbox/contracts.ts";
+import { BrowserInputSchema } from "./browser-types.ts";
 
 beforeAll(() => {
   Bun.env["DISCORD_CLIENT_ID"] = "123456789012345678";
@@ -17,6 +18,7 @@ beforeAll(() => {
 const ToolResultSchema = z.object({
   success: z.boolean(),
   message: z.string(),
+  effectDisposition: z.literal("not_applied").optional(),
   data: z.record(z.string(), z.unknown()).optional(),
 });
 const ExecutableToolSchema = z.object({ execute: z.function() }).loose();
@@ -48,100 +50,45 @@ function stringField(
   return parsed.success ? parsed.data : "";
 }
 
-describe("shell automation", () => {
-  test("executes Python, Node, and Bun commands", async () => {
-    const commands = [
-      {
-        command: "python3",
-        args: ["-c", "print('python-ok')"],
-        expected: "python-ok",
-      },
-      {
-        command: "node",
-        args: ["-e", "console.log('node-ok')"],
-        expected: "node-ok",
-      },
-      { command: "bun", args: ["--version"], expected: "1." },
-    ];
-    for (const command of commands) {
-      const result = await executeTool(executeShellCommandTool, command);
-      expect(result.success).toBe(true);
-      expect(stringField(result.data, "stdout")).toContain(command.expected);
-      expect(result.data?.["exitCode"]).toBe(0);
+describe("code sandbox contract", () => {
+  test("accepts only bounded Python, JavaScript, and TypeScript snippets", () => {
+    for (const language of ["python", "javascript", "typescript"] as const) {
+      expect(
+        RunCodeRequestSchema.safeParse({ language, source: "print(1)" })
+          .success,
+      ).toBe(true);
     }
-  });
-
-  test("reports timeout and non-zero command results", async () => {
-    const timedOut = await executeTool(executeShellCommandTool, {
-      command: "sleep",
-      args: ["5"],
-      timeout: 100,
-    });
-    expect(timedOut.success).toBe(false);
-    expect(timedOut.message).toContain("timed out");
-
-    const nonzero = await executeTool(executeShellCommandTool, {
-      command: "ls",
-      args: ["/nonexistent-directory-xyz"],
-    });
-    expect(nonzero.success).toBe(true);
-    expect(nonzero.data?.["exitCode"]).not.toBe(0);
-  });
-});
-
-describe("Playwright cancellation", () => {
-  test("cleans up a browser or page returned after cancellation", async () => {
-    const operation = Promise.withResolvers<{ close: () => Promise<void> }>();
-    const cleanupFinished = Promise.withResolvers<undefined>();
-    const controller = new AbortController();
-    let closeCount = 0;
-    const execution = runAbortablePlaywrightOperation(
-      controller.signal,
-      async () => await operation.promise,
-      undefined,
-      async (resource) => {
-        await resource.close();
-        cleanupFinished.resolve(undefined);
-      },
-    );
-
-    controller.abort(new Error("cancelled during Playwright creation"));
-    await expect(execution).rejects.toThrow(
-      "cancelled during Playwright creation",
-    );
-
-    operation.resolve({
-      close: async () => {
-        closeCount += 1;
-      },
-    });
-    await cleanupFinished.promise;
-    expect(closeCount).toBe(1);
-  });
-
-  test("starts active-resource cleanup before rejecting cancellation", async () => {
-    const operation = Promise.withResolvers<string>();
-    const controller = new AbortController();
-    let closeCount = 0;
-    const execution = runAbortablePlaywrightOperation(
-      controller.signal,
-      async () => await operation.promise,
-      async () => {
-        closeCount += 1;
-        operation.reject(new Error("page closed"));
-      },
-    );
-
-    controller.abort(new Error("cancelled during Playwright action"));
-
-    await expect(execution).rejects.toThrow(
-      "cancelled during Playwright action",
-    );
-    expect(closeCount).toBe(1);
+    expect(
+      RunCodeRequestSchema.safeParse({ language: "shell", source: "id" })
+        .success,
+    ).toBe(false);
+    expect(
+      RunCodeRequestSchema.safeParse({
+        language: "python",
+        source: "x".repeat(SANDBOX_MAX_SOURCE_BYTES + 1),
+      }).success,
+    ).toBe(false);
   });
 });
 
 describe("PinchTab HTTP boundary", () => {
+  test("does not expose cookie, profile, instance, or filename controls", () => {
+    expect(BrowserInputSchema.safeParse({ action: "cookies" }).success).toBe(
+      false,
+    );
+    for (const input of [
+      { action: "navigate", url: "https://example.com", profile: "other" },
+      {
+        action: "navigate",
+        url: "https://example.com",
+        instanceId: "other",
+      },
+      { action: "screenshot", filename: "../../secret" },
+    ]) {
+      expect(BrowserInputSchema.safeParse(input).success).toBe(false);
+    }
+  });
+
   test("navigates to a URL", async () => {
     const navigated = await executeTool(browserAutomationTool, {
       action: "navigate",
@@ -150,6 +97,59 @@ describe("PinchTab HTTP boundary", () => {
     expect(navigated.success).toBe(true);
     expect(navigated.data?.["provider"]).toBe("pinchtab");
     expect(navigated.data?.["url"]).toBe("https://example.com");
+  });
+
+  test("rehydrates a persisted tab before a durable action", async () => {
+    const navigated = await executeTool(browserAutomationTool, {
+      action: "navigate",
+      tabId: "tab-persisted",
+      url: "https://example.com/persisted",
+    });
+    expect(navigated).toMatchObject({
+      success: true,
+      data: {
+        provider: "pinchtab",
+        tabId: "tab-persisted",
+        url: "https://example.com/persisted",
+      },
+    });
+  });
+
+  test("restarts the configured profile when its cached instance disappears", async () => {
+    const opened = await executeTool(browserAutomationTool, {
+      action: "open",
+      url: "https://example.com/restart-pinchtab",
+    });
+    expect(opened).toMatchObject({
+      success: true,
+      data: {
+        provider: "pinchtab",
+        url: "https://example.com/restart-pinchtab",
+      },
+    });
+    expect(stringField(opened.data, "tabId")).toMatch(
+      /^tab-instance-test-profile-\d+$/,
+    );
+  });
+
+  test("reopens a validated URL when a cached tab disappears", async () => {
+    const initial = await executeTool(browserAutomationTool, {
+      action: "open",
+      url: "https://example.com/initial-tab",
+    });
+    const navigated = await executeTool(browserAutomationTool, {
+      action: "navigate",
+      tabId: stringField(initial.data, "tabId"),
+      url: "https://example.com/stale-pinchtab-tab",
+    });
+    expect(navigated).toMatchObject({
+      success: true,
+      message: "Browser tab opened",
+      data: {
+        provider: "pinchtab",
+        url: "https://example.com/stale-pinchtab-tab",
+      },
+    });
   });
 
   test("reads page text", async () => {
@@ -170,10 +170,8 @@ describe("PinchTab HTTP boundary", () => {
       action: "navigate",
       url: "https://example.com",
     });
-    const filename = `test-e2e-screenshot-${crypto.randomUUID()}.png`;
     const result = await executeTool(browserAutomationTool, {
       action: "screenshot",
-      filename,
     });
     const screenshotPath = stringField(result.data, "path");
     try {
@@ -201,6 +199,25 @@ describe("PinchTab HTTP boundary", () => {
     expect(result.message).toContain("failed with HTTP 422");
   });
 
+  test.each([
+    { action: "get-text" },
+    { action: "snapshot" },
+    { action: "screenshot" },
+    { action: "click", selector: "h1" },
+    { action: "type", selector: "input", text: "query" },
+    { action: "press", key: "Enter" },
+    { action: "close" },
+  ])("evicts a stale tab when $action returns 404", async (input) => {
+    const result = await executeTool(browserAutomationTool, {
+      ...input,
+      tabId: "tab-stale-direct",
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("failed with HTTP 404");
+    expect(result.effectDisposition).toBe("not_applied");
+  });
+
   test("closes the browser session", async () => {
     await executeTool(browserAutomationTool, {
       action: "navigate",
@@ -211,7 +228,7 @@ describe("PinchTab HTTP boundary", () => {
     });
     expect(result).toMatchObject({
       success: true,
-      message: "PinchTab tab closed",
+      message: "Browser tab closed",
     });
   });
 });

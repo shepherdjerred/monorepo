@@ -8,69 +8,40 @@ import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { validateSnowflakes, validateSnowflakeArray } from "./validation.ts";
+import { validateSnowflakes } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
 import {
   handleSend,
-  handleReply,
   handleSendDm,
-  handleEdit,
-  handleDelete,
-  handleBulkDelete,
-  handlePinUnpin,
   handleGetMessages,
 } from "./actions/message-actions.ts";
-import {
-  handleAddReaction,
-  handleRemoveReaction,
-} from "./actions/reaction-actions.ts";
+import { handleAddReaction } from "./actions/reaction-actions.ts";
+import { validateChannelsInRequestGuild } from "./channel-resolver.ts";
 
 const logger = loggers.tools.child("discord.messages");
+
+function isMissing(value: string | null | undefined): boolean {
+  return value == null || value.length === 0;
+}
 
 export const manageMessageTool = createTool({
   id: "manage-message",
   description:
-    "Manage Discord messages: send, reply, send DM, edit, delete, bulk-delete, pin, unpin, add/remove reaction, or get channel messages. Use 'reply' to respond to the user's message with Discord's native reply feature.",
+    "Use Discord conversation utilities: send to another channel in this server, send a DM, add a reaction, or read channel messages. The runtime owns the one reply to the triggering message.",
   inputSchema: z.object({
     action: z
-      .enum([
-        "send",
-        "reply",
-        "send-dm",
-        "edit",
-        "delete",
-        "bulk-delete",
-        "pin",
-        "unpin",
-        "add-reaction",
-        "remove-reaction",
-        "get",
-      ])
-      .describe(
-        "The action to perform. Use 'reply' to respond to the user with Discord's native reply feature.",
-      ),
+      .enum(["send", "send-dm", "add-reaction", "get"])
+      .describe("The conversation action to perform"),
     channelId: z
       .string()
       .nullish()
-      .describe(
-        "Channel ID (for send/edit/delete/bulk-delete/pin/unpin/reaction/get)",
-      ),
-    userId: z
-      .string()
-      .nullish()
-      .describe("User ID (for send-dm or remove-reaction)"),
-    messageId: z
-      .string()
-      .nullish()
-      .describe("Message ID (for edit/delete/pin/unpin/reaction)"),
-    messageIds: z
-      .array(z.string())
-      .nullish()
-      .describe("Message IDs (for bulk-delete)"),
+      .describe("Channel ID (for send/add-reaction/get)"),
+    userId: z.string().nullish().describe("User ID (for send-dm)"),
+    messageId: z.string().nullish().describe("Message ID (for add-reaction)"),
     content: z
       .string()
       .nullish()
-      .describe("Message content (for send/reply/send-dm/edit)"),
+      .describe("Message content (for send/send-dm)"),
     emoji: z.string().nullish().describe("Emoji for reactions"),
     limit: z
       .number()
@@ -102,89 +73,69 @@ export const manageMessageTool = createTool({
       ])
       .optional(),
   }),
+  preflight: async (ctx, { signal }) => {
+    signal.throwIfAborted();
+    const requiredFieldError = (() => {
+      switch (ctx.action) {
+        case "send":
+          return isMissing(ctx.channelId) || isMissing(ctx.content)
+            ? "channelId and content are required for send"
+            : null;
+        case "send-dm":
+          return isMissing(ctx.userId) || isMissing(ctx.content)
+            ? "userId and content are required for send-dm"
+            : null;
+        case "add-reaction":
+          return isMissing(ctx.channelId) ||
+            isMissing(ctx.messageId) ||
+            isMissing(ctx.emoji)
+            ? "channelId, messageId, and emoji are required for add-reaction"
+            : null;
+        case "get":
+          return isMissing(ctx.channelId)
+            ? "channelId is required for get"
+            : null;
+      }
+    })();
+    if (requiredFieldError != null) {
+      return { success: false, message: requiredFieldError };
+    }
+    const idError = validateSnowflakes([
+      { value: ctx.channelId, fieldName: "channelId" },
+      { value: ctx.userId, fieldName: "userId" },
+      { value: ctx.messageId, fieldName: "messageId" },
+      { value: ctx.before, fieldName: "before" },
+    ]);
+    if (idError != null && idError.length > 0) {
+      return { success: false, message: idError };
+    }
+    const targetError = await validateChannelsInRequestGuild(
+      getDiscordClient(),
+      [ctx.channelId],
+    );
+    signal.throwIfAborted();
+    return targetError == null
+      ? undefined
+      : { success: false, message: targetError };
+  },
   execute: async (ctx, { signal }) => {
     return withToolSpan("manage-message", undefined, async () => {
       try {
         signal.throwIfAborted();
-        const idError = validateSnowflakes([
-          { value: ctx.channelId, fieldName: "channelId" },
-          { value: ctx.userId, fieldName: "userId" },
-          { value: ctx.messageId, fieldName: "messageId" },
-          { value: ctx.before, fieldName: "before" },
-        ]);
-        if (idError != null && idError.length > 0) {
-          return { success: false, message: idError };
-        }
-
-        const arrayError = validateSnowflakeArray(ctx.messageIds, "messageIds");
-        if (arrayError != null && arrayError.length > 0) {
-          return { success: false, message: arrayError };
-        }
-
         const client = getDiscordClient();
-
         switch (ctx.action) {
           case "send":
             return await handleSend(client, ctx.channelId, ctx.content, {
               signal,
             });
-          case "reply":
-            return await handleReply(client, ctx.content, signal);
           case "send-dm":
             return await handleSendDm(client, ctx.userId, ctx.content, signal);
-          case "edit":
-            return await handleEdit({
-              client,
-              channelId: ctx.channelId,
-              messageId: ctx.messageId,
-              content: ctx.content,
-              signal,
-            });
-          case "delete":
-            return await handleDelete(
-              client,
-              ctx.channelId,
-              ctx.messageId,
-              signal,
-            );
-          case "bulk-delete":
-            return await handleBulkDelete(
-              client,
-              ctx.channelId,
-              ctx.messageIds,
-              signal,
-            );
-          case "pin":
-            return await handlePinUnpin({
-              client,
-              channelId: ctx.channelId,
-              messageId: ctx.messageId,
-              pin: true,
-              signal,
-            });
-          case "unpin":
-            return await handlePinUnpin({
-              client,
-              channelId: ctx.channelId,
-              messageId: ctx.messageId,
-              pin: false,
-              signal,
-            });
           case "add-reaction":
             return await handleAddReaction({
               client,
               channelId: ctx.channelId,
               messageId: ctx.messageId,
               emoji: ctx.emoji,
-              signal,
-            });
-          case "remove-reaction":
-            return await handleRemoveReaction({
-              client,
-              channelId: ctx.channelId,
-              messageId: ctx.messageId,
-              emoji: ctx.emoji,
-              userId: ctx.userId,
               signal,
             });
           case "get":

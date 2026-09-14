@@ -15,21 +15,12 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
  * goes, so the only thing that matters is that the list is complete.
  */
 
-import { guildTools } from "./discord/guild.ts";
 import { messageTools } from "./discord/messages.ts";
-import { moderationTools } from "./discord/moderation.ts";
-import { channelTools } from "./discord/channels.ts";
-import { roleTools } from "./discord/roles.ts";
-import { memberTools } from "./discord/members.ts";
-import { emojiTools } from "./discord/emojis.ts";
 import { eventTools } from "./discord/events.ts";
-import { webhookTools } from "./discord/webhooks.ts";
-import { inviteTools } from "./discord/invites.ts";
-import { automodTools } from "./discord/automod.ts";
 import { pollTools } from "./discord/polls.ts";
 import { threadTools } from "./discord/threads.ts";
 import { activityTools } from "./discord/activity.ts";
-import { executeShellCommandTool } from "./automation/shell.ts";
+import { runCodeTool } from "./automation/run-code.ts";
 import { manageJobTool } from "./automation/agent-jobs.ts";
 import { browserAutomationTool } from "./automation/browser.ts";
 import { externalServiceTool } from "./external/web.ts";
@@ -48,16 +39,7 @@ export const registeredTools = [
   ...activityTools,
   manageMemoryTool,
   manageAgentSessionTool,
-  ...guildTools,
-  ...channelTools,
-  ...moderationTools,
-  ...roleTools,
-  ...memberTools,
-  ...automodTools,
-  ...webhookTools,
-  ...inviteTools,
-  ...emojiTools,
-  executeShellCommandTool,
+  runCodeTool,
   manageJobTool,
   browserAutomationTool,
   externalServiceTool,

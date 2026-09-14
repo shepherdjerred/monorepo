@@ -18,6 +18,10 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
+import {
+  NET_ADMIN_FIREWALL_RESOURCES,
+  netAdminFirewallSecurityContext,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
 
 type CreateTemporalAgentWorkerProps = {
   serviceAccount: ServiceAccount;
@@ -118,26 +122,9 @@ done
 iptables -L OUTPUT -n
 ip6tables -L OUTPUT -n`,
       ],
-      securityContext: {
-        user: 0,
-        group: 0,
-        ensureNonRoot: false,
-        privileged: false,
-        allowPrivilegeEscalation: false,
-        readOnlyRootFilesystem: true,
-        capabilities: {
-          drop: [Capability.ALL],
-          add: [Capability.NET_ADMIN],
-        },
-      },
+      securityContext: netAdminFirewallSecurityContext(true),
       volumeMounts: [{ path: "/run", volume: firewallRunVolume }],
-      resources: {
-        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
-        memory: {
-          request: Size.mebibytes(16),
-          limit: Size.mebibytes(64),
-        },
-      },
+      resources: NET_ADMIN_FIREWALL_RESOURCES,
     }),
   );
 

@@ -44,8 +44,8 @@ const TOOL_INPUT = { action: "leaderboard" };
 // tool's behaviour differs between them.
 const WRITE_PAYLOAD = {
   kind: "tool" as const,
-  toolId: "external-service",
-  input: { action: "fetch-url", url: "https://example.test" },
+  toolId: "manage-agent-session",
+  input: { action: "create" },
 };
 const previousTrustedUserIds = Bun.env["TRUSTED_USER_IDS"];
 const previousSchedulerEnabled = Bun.env["SCHEDULER_ENABLED"];
@@ -367,16 +367,14 @@ describe("durable AgentJob tool payload validation", () => {
       scheduleValue: new Date(Date.now() + 60_000).toISOString(),
       payload: {
         kind: "tool",
-        toolId: "execute-shell-command",
+        toolId: "run-code",
         input: { args: ["--version"] },
       },
     });
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain(
-      'Invalid input for tool "execute-shell-command"',
-    );
-    expect(result.message).toContain("command");
+    expect(result.message).toContain('Invalid input for tool "run-code"');
+    expect(result.message).toContain("language");
     expect(await prisma.agentJob.count()).toBe(0);
   });
 
@@ -390,10 +388,10 @@ describe("durable AgentJob tool payload validation", () => {
       name: "malformed registered-tool input",
       payload: {
         kind: "tool",
-        toolId: "execute-shell-command",
+        toolId: "run-code",
         input: { timeout: 1000 },
       },
-      expectedMessage: 'Invalid input for tool "execute-shell-command"',
+      expectedMessage: 'Invalid input for tool "run-code"',
     },
   ])(
     "rejects $name before edit persists it",
@@ -452,10 +450,10 @@ describe("durable AgentJob tool payload validation", () => {
       scheduleValue: new Date(Date.now() + 60_000).toISOString(),
       payload: {
         kind: "tool",
-        toolId: "manage-guild",
+        toolId: "get-activity-stats",
         input: {
           guildId: "111111111111111111",
-          action: "get-info",
+          action: "leaderboard",
         },
       },
     });
@@ -469,10 +467,10 @@ describe("durable AgentJob tool payload validation", () => {
       z
         .object({
           guildId: z.literal(GUILD_ID),
-          action: z.literal("get-info"),
+          action: z.literal("leaderboard"),
         })
         .parse(parseJsonRecord(job.toolInput ?? "{}")),
-    ).toEqual({ guildId: GUILD_ID, action: "get-info" });
+    ).toEqual({ guildId: GUILD_ID, action: "leaderboard" });
   });
 
   test("rejects metadata-only edits of an invalid stored tool payload", async () => {

@@ -14,6 +14,8 @@ import {
   handleGetPollResults,
   handleEndPoll,
 } from "./actions/poll-actions.ts";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { validateChannelInGuild } from "./channel-resolver.ts";
 
 const logger = loggers.tools.child("discord.polls");
 
@@ -63,6 +65,7 @@ export const managePollTool = createTool({
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
+    effectDisposition: z.literal("not_applied").optional(),
     data: z
       .union([
         z.object({
@@ -87,24 +90,46 @@ export const managePollTool = createTool({
       ])
       .optional(),
   }),
+  preflight: async (ctx, { signal }) => {
+    signal.throwIfAborted();
+    const idError = validateSnowflakes([
+      { value: ctx.channelId, fieldName: "channelId" },
+      { value: ctx.messageId, fieldName: "messageId" },
+    ]);
+    if (idError != null && idError.length > 0) {
+      return { success: false, message: idError };
+    }
+    const request = getRequestContext();
+    if (request == null) {
+      throw new Error("Poll operations require request context");
+    }
+    const client = getDiscordClient();
+    const targetError = await validateChannelInGuild(
+      client,
+      ctx.channelId,
+      request.guildId,
+    );
+    if (targetError != null) {
+      return { success: false, message: targetError };
+    }
+    const channel = await client.channels.fetch(ctx.channelId);
+    signal.throwIfAborted();
+    return channel?.isTextBased() === true && "send" in channel
+      ? undefined
+      : { success: false, message: "Channel must be a text channel" };
+  },
   execute: async (ctx) => {
     return withToolSpan("manage-poll", undefined, async () => {
       try {
-        // Validate all Discord IDs before making API calls
-        const idError = validateSnowflakes([
-          { value: ctx.channelId, fieldName: "channelId" },
-          { value: ctx.messageId, fieldName: "messageId" },
-        ]);
-        if (idError != null && idError.length > 0) {
-          return { success: false, message: idError };
-        }
-
         const client = getDiscordClient();
-        const channel = await client.channels.fetch(ctx.channelId);
+        const channel = client.channels.cache.get(ctx.channelId);
         if (channel?.isTextBased() !== true || !("send" in channel)) {
-          return { success: false, message: "Channel must be a text channel" };
+          return {
+            success: false,
+            message: "Preflighted poll channel is no longer available",
+            effectDisposition: "not_applied" as const,
+          };
         }
-
         switch (ctx.action) {
           case "create":
             return await handleCreatePoll({

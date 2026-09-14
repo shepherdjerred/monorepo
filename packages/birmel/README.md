@@ -39,6 +39,26 @@ jobs system with durable effect checkpoints. Health is exposed on `/live`
 (process) and `/ready` (migrations applied, Prisma connected, Discord ready,
 scheduler started).
 
+## Capability boundary
+
+Birmel is a general assistant and community organizer, not a server
+administrator. Trusted users can research the web, use the shared persistent
+browser profile, generate images, run networkless Python/JavaScript/TypeScript
+snippets, manage jobs and sessions, and work with messages, DMs, reactions,
+threads, polls, scheduled events, activity, birthdays, elections, and memory.
+It has no registered moderation, role, member, channel-definition, guild,
+invite, webhook, emoji, sticker, automod, generic shell, or SQL capability.
+
+The browser always uses the configured PinchTab profile. Its cookies persist
+inside PinchTab but are never returned to the model, and navigation is limited
+to public HTTPS destinations. Code runs in a credential-free sidecar with a
+fresh temporary directory, bounded resources and output, and no network or
+persistent volume access.
+
+Scheduled agent prompts use the same bounded tool loop as an interactive turn.
+They are durable and checkpoint external effects, but they are still
+best-effort agent runs rather than a staged workflow engine.
+
 ## Commands
 
 Run from `packages/birmel`:
@@ -71,8 +91,8 @@ unmigrated database, resolves the verified baseline when appropriate, and runs
 bun run docker:build   # builds birmel:dev from the repo root context (Dockerfile)
 ```
 
-The image is the Bun runtime plus the scoped source closure — it installs no
-CLIs or extra language runtimes. Production deploys go through the Buildkite
-image build and ArgoCD GitOps flow.
+The image contains Bun, Python, and the isolation utilities required by the
+credential-free code sidecar. Production deploys go through the Buildkite image
+build and ArgoCD GitOps flow.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.

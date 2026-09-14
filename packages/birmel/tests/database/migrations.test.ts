@@ -49,6 +49,13 @@ const AGENT_TURN_OUTCOME_MIGRATION_URL = new URL(
 const AGENT_TURN_OUTCOME_SQL = await Bun.file(
   AGENT_TURN_OUTCOME_MIGRATION_URL,
 ).text();
+const PAUSE_REMOVED_CAPABILITY_JOBS_MIGRATION_URL = new URL(
+  "../../prisma/migrations/20260913000000_pause_removed_capability_jobs/migration.sql",
+  import.meta.url,
+);
+const PAUSE_REMOVED_CAPABILITY_JOBS_SQL = await Bun.file(
+  PAUSE_REMOVED_CAPABILITY_JOBS_MIGRATION_URL,
+).text();
 
 const FINAL_TABLES = [
   "AgentJob",
@@ -616,7 +623,260 @@ function expectArchivedLegacyRows(database: Database): void {
   );
 }
 
+function expectRemovedCapabilityJobStates(database: Database): void {
+  const states = database
+    .query<
+      {
+        id: string;
+        status: string;
+        nextRunAt: string | null;
+        lastStatus: string | null;
+      },
+      []
+    >(
+      `SELECT "id", "status", "nextRunAt", "lastStatus" FROM "AgentJob" ORDER BY "id"`,
+    )
+    .all();
+  expect(states).toEqual([
+    {
+      id: "ambiguous-effect",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "effect_ambiguous",
+    },
+    {
+      id: "ambiguous-recovery",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "recovery_ambiguous",
+    },
+    {
+      id: "checkpoint-acknowledged",
+      status: "running",
+      nextRunAt: "2026-09-14T00:00:00.000Z",
+      lastStatus: null,
+    },
+    {
+      id: "checkpoint-in-flight",
+      status: "running",
+      nextRunAt: "2026-09-14T00:00:00.000Z",
+      lastStatus: null,
+    },
+    {
+      id: "removed-browser-http",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "unsupported_tool",
+    },
+    {
+      id: "removed-browser-override",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "unsupported_tool",
+    },
+    {
+      id: "removed-completed",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "unsupported_tool",
+    },
+    {
+      id: "removed-failed",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "unsupported_tool",
+    },
+    {
+      id: "removed-message-action",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "unsupported_tool",
+    },
+    {
+      id: "removed-thread-action",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "unsupported_tool",
+    },
+    {
+      id: "removed-tool",
+      status: "paused",
+      nextRunAt: null,
+      lastStatus: "unsupported_tool",
+    },
+    {
+      id: "supported-browser",
+      status: "active",
+      nextRunAt: "2026-09-14T00:00:00.000Z",
+      lastStatus: null,
+    },
+    {
+      id: "supported-message",
+      status: "active",
+      nextRunAt: "2026-09-14T00:00:00.000Z",
+      lastStatus: null,
+    },
+  ]);
+}
+
+function expectCheckpointClaimsPreserved(database: Database): void {
+  expect(
+    database
+      .query<
+        {
+          id: string;
+          claimedBy: string | null;
+          leaseExpiresAt: string | null;
+        },
+        []
+      >(
+        `SELECT "id", "claimedBy", "leaseExpiresAt" FROM "AgentJob" WHERE "id" LIKE 'checkpoint-%' ORDER BY "id"`,
+      )
+      .all(),
+  ).toEqual([
+    {
+      id: "checkpoint-acknowledged",
+      claimedBy: "migration-claim",
+      leaseExpiresAt: "2026-09-14T00:05:00.000Z",
+    },
+    {
+      id: "checkpoint-in-flight",
+      claimedBy: "migration-claim",
+      leaseExpiresAt: "2026-09-14T00:05:00.000Z",
+    },
+  ]);
+}
+
+async function expectRemovedCapabilityJobsPaused(): Promise<void> {
+  await withTemporaryDatabase(async (databasePath) => {
+    await runMigrationBootstrap(databasePath);
+    const database = openDatabase(databasePath);
+    try {
+      const insert = database.prepare(`
+          INSERT INTO "AgentJob" (
+            "id", "guildId", "actorUserId", "scheduleKind", "scheduleValue",
+            "nextRunAt", "status", "payloadKind", "toolId", "toolInput",
+            "updatedAt"
+          ) VALUES (?, 'guild', 'actor', 'once', '2026-09-14T00:00:00.000Z',
+            '2026-09-14T00:00:00.000Z', ?, 'tool', ?, ?, CURRENT_TIMESTAMP)
+        `);
+      const jobs = [
+        ["removed-tool", "active", "manage-guild", '{"action":"get"}'],
+        [
+          "removed-message-action",
+          "running",
+          "manage-message",
+          '{"action":"delete"}',
+        ],
+        [
+          "removed-thread-action",
+          "retrying",
+          "manage-thread",
+          '{"action":"modify"}',
+        ],
+        [
+          "checkpoint-acknowledged",
+          "running",
+          "manage-guild",
+          '{"action":"get"}',
+        ],
+        [
+          "checkpoint-in-flight",
+          "running",
+          "manage-message",
+          '{"action":"delete"}',
+        ],
+        [
+          "removed-browser-override",
+          "active",
+          "browser-automation",
+          '{"action":"open","profile":"private"}',
+        ],
+        [
+          "removed-browser-http",
+          "active",
+          "browser-automation",
+          '{"action":"navigate","url":"http://example.com"}',
+        ],
+        ["removed-completed", "completed", "manage-guild", '{"action":"get"}'],
+        ["removed-failed", "failed", "manage-guild", '{"action":"get"}'],
+        ["supported-message", "active", "manage-message", '{"action":"send"}'],
+        [
+          "supported-browser",
+          "active",
+          "browser-automation",
+          '{"action":"open","url":"https://example.com"}',
+        ],
+      ] as const;
+      for (const job of jobs) {
+        insert.run(...job);
+      }
+      database.run(`
+        UPDATE "AgentJob"
+        SET
+          "claimedAt" = CURRENT_TIMESTAMP,
+          "claimedBy" = 'migration-claim',
+          "leaseExpiresAt" = '2026-09-14T00:05:00.000Z'
+        WHERE "id" IN ('checkpoint-acknowledged', 'checkpoint-in-flight')
+      `);
+      database.run(`
+        INSERT INTO "AgentJobRun" (
+          "id", "jobId", "status", "startedAt", "metadata", "createdAt"
+        ) VALUES
+          ('checkpoint-acknowledged-run', 'checkpoint-acknowledged',
+            'effect_acknowledged', CURRENT_TIMESTAMP,
+            '{"claimId":"migration-claim"}', CURRENT_TIMESTAMP),
+          ('checkpoint-in-flight-run', 'checkpoint-in-flight',
+            'effect_in_flight', CURRENT_TIMESTAMP,
+            '{"claimId":"migration-claim"}', CURRENT_TIMESTAMP)
+      `);
+      database.run(`
+        INSERT INTO "AgentJob" (
+          "id", "guildId", "actorUserId", "scheduleKind", "scheduleValue",
+          "nextRunAt", "status", "payloadKind", "toolId", "toolInput",
+          "lastStatus", "lastError", "updatedAt"
+        ) VALUES
+          ('ambiguous-effect', 'guild', 'actor', 'once', '2026-09-14T00:00:00.000Z',
+            NULL, 'paused', 'tool', 'manage-guild', '{"action":"get"}',
+            'effect_ambiguous', 'effect requires operator resolution', CURRENT_TIMESTAMP),
+          ('ambiguous-recovery', 'guild', 'actor', 'once', '2026-09-14T00:00:00.000Z',
+            NULL, 'paused', 'tool', 'manage-message', '{"action":"delete"}',
+            'recovery_ambiguous', 'recovery requires operator resolution', CURRENT_TIMESTAMP)
+      `);
+
+      database.run(PAUSE_REMOVED_CAPABILITY_JOBS_SQL);
+
+      expectRemovedCapabilityJobStates(database);
+      expect(
+        database
+          .query<{ id: string; lastError: string | null }, []>(
+            `SELECT "id", "lastError" FROM "AgentJob" WHERE "id" LIKE 'ambiguous-%' ORDER BY "id"`,
+          )
+          .all(),
+      ).toEqual([
+        {
+          id: "ambiguous-effect",
+          lastError: "effect requires operator resolution",
+        },
+        {
+          id: "ambiguous-recovery",
+          lastError: "recovery requires operator resolution",
+        },
+      ]);
+      expectCheckpointClaimsPreserved(database);
+    } finally {
+      database.close();
+    }
+  });
+}
+
 describe("Birmel database migrations", () => {
+  test(
+    "removed tools, actions, and browser inputs pause without affecting supported jobs",
+    expectRemovedCapabilityJobsPaused,
+    30_000,
+  );
+
   test("an empty database applies every committed migration and matches the final Prisma schema", async () => {
     await withTemporaryDatabase(async (databasePath) => {
       await runMigrationBootstrap(databasePath);

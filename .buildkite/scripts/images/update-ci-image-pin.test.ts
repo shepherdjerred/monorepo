@@ -349,7 +349,6 @@ describe("Playwright candidate promotion", () => {
       ".buildkite/ci-playwright/DIGEST",
       ".buildkite/ci-playwright/STATE.json",
       ".buildkite/ci-playwright/PACKAGE_VERSION",
-      "packages/birmel/package.json",
       "packages/monarch/package.json",
       "packages/sjer.red/package.json",
       // These three pin @playwright/test exactly but were missing from

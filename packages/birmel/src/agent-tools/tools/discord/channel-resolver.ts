@@ -4,6 +4,7 @@ import type {
   SendableChannels,
   TextBasedChannel,
 } from "discord.js";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 
 /**
  * Resolution result for a Discord channel lookup.
@@ -105,6 +106,47 @@ export async function resolveTextBasedChannel(
   channelId: string,
 ): Promise<ChannelResolution<TextBasedChannel>> {
   return narrowToTextBased(await client.channels.fetch(channelId));
+}
+
+/** Reject Discord channel IDs that escape the guild which admitted the turn. */
+export async function validateChannelInGuild(
+  client: Client,
+  channelId: string,
+  guildId: string,
+): Promise<string | null> {
+  const channel = await client.channels.fetch(channelId);
+  if (channel == null) {
+    return `Channel ${channelId} not found (deleted or no access)`;
+  }
+  if (!("guildId" in channel) || channel.guildId !== guildId) {
+    return `Channel ${channelId} is not in this server`;
+  }
+  return null;
+}
+
+/** Validate every present channel ID against the guild that admitted the turn. */
+export async function validateChannelsInRequestGuild(
+  client: Client,
+  channelIds: readonly (string | null | undefined)[],
+): Promise<string | null> {
+  const request = getRequestContext();
+  if (request == null) {
+    throw new Error("Discord channel operations require request context");
+  }
+  for (const channelId of channelIds) {
+    if (channelId == null) {
+      continue;
+    }
+    const error = await validateChannelInGuild(
+      client,
+      channelId,
+      request.guildId,
+    );
+    if (error != null) {
+      return error;
+    }
+  }
+  return null;
 }
 
 /**

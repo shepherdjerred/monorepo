@@ -12,11 +12,6 @@ export const PLAYWRIGHT_VERSION_FILE =
   ".buildkite/ci-playwright/PACKAGE_VERSION";
 export const PLAYWRIGHT_PACKAGE_TARGETS = [
   {
-    path: "packages/birmel/package.json",
-    section: "dependencies",
-    dependency: "playwright",
-  },
-  {
     path: "packages/monarch/package.json",
     section: "dependencies",
     dependency: "playwright",
@@ -26,7 +21,7 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     section: "devDependencies",
     dependency: "@playwright/test",
   },
-  // Registered after these three drifted. They pin @playwright/test exactly but
+  // Registered after earlier targets drifted. They pin @playwright/test exactly but
   // were never listed here, so the v1.62.0 -> v1.62.1 image promotion left them
   // behind. @axe-core/playwright asks for `playwright-core: ">= 1.0.0"`, which
   // then resolved 1.62.1 alongside design-audit's 1.62.0 and produced two

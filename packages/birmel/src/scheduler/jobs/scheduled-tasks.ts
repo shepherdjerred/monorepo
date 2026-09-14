@@ -21,14 +21,17 @@ import {
   serializeCheckpointOutput,
 } from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
 import { parseJsonRecord } from "@shepherdjerred/birmel/utils/errors.ts";
-import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
+import { toolRequiresExternalEffectCheckpoint } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
+import {
+  executeCreatedToolAfterPreflight,
+  preflightCreatedTool,
+} from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 
 const AgentExecutionResultSchema = z.object({
   message: z.string().min(1).max(20_000),
   data: z.unknown().optional(),
 });
-const ExecutableToolSchema = z.object({ execute: z.function() }).loose();
 const ScheduledToolResultSchema = z
   .object({
     success: z.boolean(),
@@ -127,14 +130,27 @@ async function executeRegisteredTool(
   if (tool == null) {
     throw new Error(`Tool not found or not executable: ${toolId}`);
   }
-  const executableTool = ExecutableToolSchema.parse(tool);
-  return await Reflect.apply(executableTool.execute, undefined, [
-    input,
-    {
-      runId: `agent-job-${execution.jobId}`,
-      agentId: "birmel-job-runner",
-    },
-  ]);
+  return await executeCreatedToolAfterPreflight(tool, input, {
+    runId: `agent-job-${execution.jobId}`,
+    agentId: "birmel-job-runner",
+  });
+}
+
+async function preflightRegisteredTool(
+  toolId: string,
+  input: Record<string, unknown>,
+  execution: AgentJobExecution,
+): Promise<unknown> {
+  const { allTools } =
+    await import("@shepherdjerred/birmel/agent-tools/tools/index.ts");
+  const tool = allTools[toolId];
+  if (tool == null) {
+    throw new Error(`Tool not found or not executable: ${toolId}`);
+  }
+  return await preflightCreatedTool(tool, input, {
+    runId: `agent-job-${execution.jobId}`,
+    agentId: "birmel-job-runner",
+  });
 }
 
 async function executeUnconfiguredAgent(): Promise<never> {
@@ -173,6 +189,7 @@ async function deliverDiscordMessage(
 }
 
 const defaultRuntimeDependencies: AgentJobRuntimeDependencies = {
+  preflightTool: preflightRegisteredTool,
   executeTool: executeRegisteredTool,
   executeAgent: executeUnconfiguredAgent,
   deliverMessage: deliverDiscordMessage,
@@ -269,21 +286,28 @@ async function executeToolPayload(
     job.toolInput == null || job.toolInput.length === 0
       ? {}
       : parseJsonRecord(job.toolInput);
-  const requiresEffectCheckpoint =
-    getToolMetadata(job.toolId).riskClass !== "read";
-  if (requiresEffectCheckpoint) {
-    await beginExternalEffect(execution);
-  }
-  const result = await runtimeDependencies.executeTool(
+  const preflightResult = await runtimeDependencies.preflightTool(
     job.toolId,
     input,
     execution,
   );
+  const requiresEffectCheckpoint = toolRequiresExternalEffectCheckpoint(
+    job.toolId,
+    input,
+  );
+  const effectCheckpointAcquired =
+    preflightResult === undefined && requiresEffectCheckpoint;
+  if (effectCheckpointAcquired) {
+    await beginExternalEffect(execution);
+  }
+  const result =
+    preflightResult ??
+    (await runtimeDependencies.executeTool(job.toolId, input, execution));
   const toolResult = ScheduledToolResultSchema.parse(result);
-  if (requiresEffectCheckpoint && toolResult.success) {
+  if (effectCheckpointAcquired && toolResult.success) {
     await acknowledgeExternalEffect(execution, result);
   } else if (
-    requiresEffectCheckpoint &&
+    effectCheckpointAcquired &&
     toolResult.effectDisposition === "not_applied"
   ) {
     await recordExternalEffectNotApplied(execution);

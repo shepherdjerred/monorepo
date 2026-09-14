@@ -18,6 +18,11 @@ export function createPinchtabChart(app: App) {
   new Namespace(chart, "pinchtab-namespace", {
     metadata: {
       name: "pinchtab",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/audit": "restricted",
+        "pod-security.kubernetes.io/warn": "restricted",
+      },
     },
   });
 
@@ -66,8 +71,8 @@ export function createPinchtabChart(app: App) {
     },
   });
 
-  // NetworkPolicy: allow egress to DNS and the open internet (HTTP/HTTPS) so the
-  // browser can navigate to arbitrary sites.
+  // NetworkPolicy documents the same HTTPS-only public browsing boundary that
+  // the pod-local firewall enforces for the current Flannel CNI.
   new KubeNetworkPolicy(chart, "pinchtab-egress-netpol", {
     metadata: { name: "pinchtab-egress-netpol" },
     spec: {
@@ -87,13 +92,10 @@ export function createPinchtabChart(app: App) {
             { port: IntOrString.fromNumber(53), protocol: "TCP" },
           ],
         },
-        // External HTTP/HTTPS for arbitrary browsing.
+        // External HTTPS for public browsing.
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [
-            { port: IntOrString.fromNumber(80), protocol: "TCP" },
-            { port: IntOrString.fromNumber(443), protocol: "TCP" },
-          ],
+          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
         },
       ],
     },

@@ -13,6 +13,11 @@ const PINCHTAB_TOKEN = "test-pinchtab-token";
 const SCREENSHOT_BYTES = new Uint8Array([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 ]);
+const RESTART_TEST_URL = "https://example.com/restart-pinchtab";
+const STALE_TAB_TEST_URL = "https://example.com/stale-pinchtab-tab";
+let fakeProfileGeneration = 0;
+let simulatedRestart = false;
+let simulatedStaleTab = false;
 
 function jsonResponse(value: unknown, status = 200): Response {
   return Response.json(value, { status });
@@ -36,7 +41,10 @@ async function startFakeProfile(
   if (!body.success) {
     return jsonResponse({ error: "invalid profile start request" }, 400);
   }
-  return jsonResponse({ instanceId: `instance-${profile}` });
+  fakeProfileGeneration += 1;
+  return jsonResponse({
+    instanceId: `instance-${profile}-${String(fakeProfileGeneration)}`,
+  });
 }
 
 async function openFakeTab(
@@ -47,6 +55,10 @@ async function openFakeTab(
   if (!body.success) {
     return jsonResponse({ error: "invalid tab open request" }, 400);
   }
+  if (!simulatedRestart && body.data.url === RESTART_TEST_URL) {
+    simulatedRestart = true;
+    return jsonResponse({ error: "instance not found" }, 404);
+  }
   return jsonResponse({ tabId: `tab-${instanceId}`, url: body.data.url });
 }
 
@@ -54,6 +66,10 @@ async function navigateFakeTab(request: Request): Promise<Response> {
   const body = UrlRequestSchema.safeParse(await request.json());
   if (!body.success) {
     return jsonResponse({ error: "invalid navigate request" }, 400);
+  }
+  if (!simulatedStaleTab && body.data.url === STALE_TAB_TEST_URL) {
+    simulatedStaleTab = true;
+    return jsonResponse({ error: "tab not found" }, 404);
   }
   return jsonResponse({
     title: "Example Domain",
@@ -78,11 +94,9 @@ async function prepareTestEnvironment(
   Bun.env["DISCORD_TOKEN"] ??= "test-token";
   Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
   Bun.env["OPENROUTER_API_KEY"] ??= "test-key";
-  Bun.env["SHELL_ENABLED"] ??= "true";
   Bun.env["SCHEDULER_ENABLED"] ??= "true";
   Bun.env["BROWSER_ENABLED"] = "true";
   Bun.env["BROWSER_HEADLESS"] ??= "true";
-  Bun.env["BROWSER_PROVIDER"] = "pinchtab";
   Bun.env["PINCHTAB_BASE_URL"] = pinchtabOrigin;
   Bun.env["PINCHTAB_TOKEN"] = PINCHTAB_TOKEN;
   Bun.env["PINCHTAB_PROFILE"] = "test-profile";
@@ -161,11 +175,23 @@ async function handleFakePinchtabRequest(request: Request): Promise<Response> {
     String(segments.length),
   ].join(":");
 
+  if (segments[0] === "tabs" && segments[1] === "tab-stale-direct") {
+    return jsonResponse({ error: "tab not found" }, 404);
+  }
+
   switch (route) {
     case "POST:profiles:start:3":
       return await startFakeProfile(request, segments[1] ?? "");
     case "POST:instances:open:4":
       return await openFakeTab(request, segments[1] ?? "");
+    case "GET:instances:tabs:3":
+      return jsonResponse({
+        tabs: [
+          { id: `tab-${segments[1] ?? ""}`, title: "Current tab" },
+          { id: "tab-persisted", title: "Persisted tab" },
+          { id: "tab-stale-direct", title: "Stale direct tab" },
+        ],
+      });
     case "POST:tabs:navigate:3":
       return await navigateFakeTab(request);
     case "GET:tabs:text:3":

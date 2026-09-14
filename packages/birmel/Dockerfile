@@ -56,14 +56,13 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/birmel'
 
-# ── runtime: shell-tool runtimes + COPY-only app layers — no build tooling ──
+# ── runtime: sandbox runtimes + COPY-only app layers — no build tooling ─────
 FROM base AS runtime
 
-# --- Runtimes advertised by the shell tool ---
-# `execute-shell-command` documents `python3` and `node` with worked examples
-# (src/agent-tools/tools/automation/shell.ts), so the image must actually carry
-# them. Bun ships a `node` shim at /usr/local/bun-node-fallback-bin/node that is
-# not a usable Node, so real Node is installed rather than relied upon.
+# Python, libkeyutils, and util-linux support the credential-free run-code sidecar;
+# util-linux-extra supplies the seccomp filter compiler. Tini and uid-scoped
+# cleanup remain defense in depth around the no-descendants process limit.
+# iptables is used by init containers to enforce browser and snippet egress.
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
 # into a build failure here. Acknowledged per-site so a NEW unpinned install
@@ -71,9 +70,36 @@ FROM base AS runtime
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends nodejs python3; \
+    apt-get install -y -qq --no-install-recommends iptables libkeyutils1 python3 tini util-linux util-linux-extra; \
     rm -rf /var/lib/apt/lists/*; \
-    node --version; python3 --version
+    iptables --version; enosys --version; prlimit --version; setpriv --version; tini --version; python3 --version; \
+    enosys --dump=/usr/local/share/birmel-persistence.seccomp \
+      -s mq_open:EPERM -s mq_unlink:EPERM -s mq_timedsend:EPERM \
+      -s mq_timedreceive:EPERM -s mq_notify:EPERM -s mq_getsetattr:EPERM \
+      -s msgget:EPERM -s msgsnd:EPERM -s msgrcv:EPERM -s msgctl:EPERM \
+      -s semget:EPERM -s semop:EPERM -s semtimedop:EPERM -s semctl:EPERM \
+      -s shmget:EPERM -s shmat:EPERM -s shmdt:EPERM -s shmctl:EPERM \
+      -s add_key:EPERM -s request_key:EPERM -s keyctl:EPERM; \
+    test -s /usr/local/share/birmel-persistence.seccomp
+RUN set -e; \
+    check_blocked() { \
+      set +e; \
+      setpriv --no-new-privs --seccomp-filter=/usr/local/share/birmel-persistence.seccomp -- "$@"; \
+      status="$?"; \
+      set -e; \
+      [ "$status" -eq 1 ]; \
+    }; \
+    check_blocked ipcmk --queue; \
+    check_blocked ipcmk --shmem 4096; \
+    check_blocked ipcmk --semaphore 1; \
+    setpriv --no-new-privs --seccomp-filter=/usr/local/share/birmel-persistence.seccomp -- \
+      python3 -c 'import ctypes, errno, os; library = ctypes.CDLL("librt.so.1", use_errno=True); result = library.mq_open(b"/birmel-build-smoke", os.O_CREAT | os.O_RDWR, 0o600, None); raise SystemExit(0 if result == -1 and ctypes.get_errno() == errno.EPERM else 1)'; \
+    setpriv --no-new-privs --seccomp-filter=/usr/local/share/birmel-persistence.seccomp -- \
+      python3 -c 'import ctypes, errno; library = ctypes.CDLL("libkeyutils.so.1", use_errno=True); result = library.add_key(b"user", b"birmel-build-smoke", b"persist", 7, -4); raise SystemExit(0 if result == -1 and ctypes.get_errno() == errno.EPERM else 1)'
+COPY --chmod=0444 \
+  packages/birmel/src/sandbox/limit-bun-processes.ts \
+  packages/birmel/src/sandbox/process-limits.ts \
+  /usr/local/share/birmel-sandbox/
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install
@@ -115,7 +141,8 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 # unmigrated database, resolves the verified baseline, and runs migrate deploy
 # before starting Discord.
 WORKDIR /app/packages/birmel
-RUN mkdir -p /app/data/screenshots && chown -R 1000:1000 /app/data
+RUN chown -R root:1000 /app && chmod -R o-rwx /app && chmod -R g+rX /app && \
+    mkdir -p /app/data/screenshots && chown -R 1000:1000 /app/data && chmod 700 /app/data
 USER 1000:1000
 CMD ["bun", "scripts/start.ts"]
 

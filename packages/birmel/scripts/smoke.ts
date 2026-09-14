@@ -5,7 +5,8 @@
  * Translated from the old Dagger `smokeTestBirmelHelper`. Boots the bot inside
  * the image with dummy creds and asserts the Discord login fails with the
  * expected auth error:
- *   - node and python3 are present, because the shell tool advertises them
+ *   - the credential-free code sandbox executes its three languages without
+ *     network, Birmel files, or ambient credentials
  *   - the bot boots and Discord login fails with TokenInvalid/401/etc.
  *
  * One shell pipeline, run to completion (not detached). Dependency-free:
@@ -37,14 +38,12 @@ async function main(): Promise<void> {
 
   const script = [
     "set -e",
+    "for uid in 1001 1002; do iptables -A OUTPUT -m owner --uid-owner $uid -j REJECT; ip6tables -A OUTPUT -m owner --uid-owner $uid -j REJECT; done",
     "cd /app/packages/birmel",
-    // The shell tool documents python3 and node by name, so a production image
-    // without them silently breaks an advertised capability.
-    "node --version",
-    "python3 --version",
+    "bun scripts/smoke-sandbox.ts",
     // Time-boxed boot; capture output and assert the expected auth failure.
     "set +e",
-    'output="$(timeout 30s bun run scripts/start.ts 2>&1)"',
+    'output="$(timeout 30s setpriv --reuid=1000 --regid=1000 --clear-groups -- bun run scripts/start.ts 2>&1)"',
     'status="$?"',
     String.raw`printf '%s\n' "$output"`,
     '[ "$status" -eq 124 ] && exit 0',
@@ -56,6 +55,31 @@ async function main(): Promise<void> {
     "run",
     "--name",
     CONTAINER,
+    "--read-only",
+    "--tmpfs",
+    "/tmp/birmel-sandbox:rw,noexec,nosuid,nodev,size=64m,mode=0711",
+    "--tmpfs",
+    "/app/data:rw,noexec,nosuid,nodev,size=16m,uid=1000,gid=1000,mode=0700",
+    "--cap-drop",
+    "ALL",
+    "--cap-add",
+    "NET_ADMIN",
+    "--cap-add",
+    "CHOWN",
+    "--cap-add",
+    "DAC_OVERRIDE",
+    "--cap-add",
+    "FOWNER",
+    "--cap-add",
+    "KILL",
+    "--cap-add",
+    "SETGID",
+    "--cap-add",
+    "SETPCAP",
+    "--cap-add",
+    "SETUID",
+    "--user",
+    "0:0",
     "-e",
     "DISCORD_TOKEN=smoke-test-dummy",
     "-e",
@@ -63,7 +87,7 @@ async function main(): Promise<void> {
     "-e",
     "OPENROUTER_API_KEY=smoke-test-dummy",
     "-e",
-    "DATABASE_URL=file:/tmp/smoke-test.db",
+    "DATABASE_URL=file:/app/data/smoke-test.db",
     // Production runs FEATURE_FLAGS_MODE=flipt, which this sandbox cannot
     // reach. The variable has no default on purpose, so boot needs it set.
     "-e",
