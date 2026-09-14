@@ -81,9 +81,23 @@ From inside the cluster, or through a port-forward to SeaweedFS. This is the
 only step that needs S3, and it needs no Riot key at all.
 
 ```bash
-S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts inventory --out prod.jsonl
-S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory --out beta.jsonl
+S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts inventory \
+  --cutover 2026-09-13T05:22:00Z --out prod.jsonl
+S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory \
+  --cutover 2026-09-12T22:40:00Z --out beta.jsonl
 ```
+
+:::danger[Pass the cutover, or the run will fight itself]
+Objects written after the key swap carry NEW-domain identifiers. Collecting
+those feeds the old key exactly what it cannot decrypt — Riot answers 400 — so
+they burn the scarcest budget in the migration and then appear as permanently
+lost identities that were never lost at all. Excluding 425 post-cutover objects
+in prod dropped 1,649 of them.
+
+Use each environment's own boundary, with a few minutes of slack. Erring late
+costs a handful of wasted lookups; erring early drops real old-domain
+identities, and nothing recovers those once the old key is gone.
+:::
 
 It reads the **whole bucket**, not just the prefixes the report lake rebuilds
 from. Identities also live under `failed-validations/` and in AI pipeline
@@ -109,6 +123,14 @@ laptop sleeps or roams.
 ```bash
 export DATABASE_URL="file:$HOME/puuid-harvest.sqlite"
 export OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=…
+
+# Create the file first. The migration opens databases with `create: false`, so
+# that a mistyped path fails loudly instead of silently becoming an empty
+# database that every phase then "succeeds" against. A scratch harvest file is
+# the one case where you do want it created, so do it explicitly.
+bun -e 'new (require("bun:sqlite").Database)(
+  Bun.env.DATABASE_URL.slice("file:".length), { create: true }).close()'
+
 bun scripts/migrate-puuid-key.ts seed --from prod.jsonl
 bun scripts/migrate-puuid-key.ts seed --from beta.jsonl
 bun scripts/migrate-puuid-key.ts resolve

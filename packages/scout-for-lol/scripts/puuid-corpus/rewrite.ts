@@ -63,6 +63,32 @@ export function needsRewrite(
   return false;
 }
 
+/** Where an object's original capture time is kept once the put restamps it. */
+export const ORIGINAL_UPLOAD_METADATA_KEY = "originaluploadedat";
+
+/**
+ * The metadata to write back: everything the producer recorded, plus our marker.
+ *
+ * `putContentAddressedObject` overwrites `sha256` and `uploadedAt` with the
+ * values for the bytes it is storing, which is correct — they describe the
+ * object that now exists. The capture time is provenance rather than integrity,
+ * so it is moved aside instead of being overwritten away.
+ */
+export function preservedMetadata(
+  existing: Record<string, string>,
+): Record<string, string> {
+  const merged: Record<string, string> = { ...existing };
+  const captured = merged["uploadedat"];
+  if (
+    captured !== undefined &&
+    merged[ORIGINAL_UPLOAD_METADATA_KEY] === undefined
+  ) {
+    merged[ORIGINAL_UPLOAD_METADATA_KEY] = captured;
+  }
+  merged[REWRITE_METADATA_KEY] = new Date().toISOString();
+  return merged;
+}
+
 /** A PUUID's shape. Global, and used only with `matchAll`, which is reentrant. */
 const PUUID_TOKEN = /[\w-]{70,90}/gu;
 
@@ -171,10 +197,16 @@ export async function rewriteCorpus(
         key: object.key,
         body: JSON.stringify(translated),
         contentType: "application/json",
-        // The digest recorded in metadata is recomputed by the put, which is the
-        // point of going through it: a rewritten object whose stored digest
-        // still described the old bytes would be worse than one with none.
-        metadata: { [REWRITE_METADATA_KEY]: new Date().toISOString() },
+        // A PUT REPLACES user metadata rather than merging it, and these objects
+        // carry the producer's own record: match id, queue, frame counts,
+        // participant and tracked-player counts, capture time. Sending only the
+        // marker would erase all of it while rewriting the canonical archive —
+        // changing far more than the identifiers this migration is for, with no
+        // backup to recover from.
+        //
+        // The digest and upload time are recomputed by the put, so the original
+        // capture time is carried forward under its own key rather than lost.
+        metadata: preservedMetadata(metadata),
         errorContext: `PUUID re-domaining of ${object.key}`,
         retryContext: `rewrite ${object.key}`,
       });

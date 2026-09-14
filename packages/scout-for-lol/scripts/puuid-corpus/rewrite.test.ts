@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
   needsRewrite,
+  ORIGINAL_UPLOAD_METADATA_KEY,
+  preservedMetadata,
   REWRITE_METADATA_KEY,
   writtenAfterCutover,
 } from "./rewrite.ts";
@@ -132,5 +134,57 @@ describe("recognising an interrupted run", () => {
     const theirs: Record<string, string> = { uploadedat: "2026-01-01" };
     expect(ours[REWRITE_METADATA_KEY]).toBeDefined();
     expect(theirs[REWRITE_METADATA_KEY]).toBeUndefined();
+  });
+});
+
+describe("preservedMetadata", () => {
+  // What a real match object carries, read off the live archive.
+  const producer = {
+    matchid: "BR1_3268119783",
+    participantcount: "10",
+    queueid: "420",
+    result: "GameComplete",
+    trackedplayercount: "1",
+    uploadedat: "2026-08-01T20:52:06.239Z",
+  };
+
+  test("keeps everything the producer recorded", () => {
+    // A PUT replaces user metadata rather than merging it, so sending only the
+    // marker would erase the producer's own record of the capture.
+    const merged = preservedMetadata(producer);
+    expect(merged["matchid"]).toBe("BR1_3268119783");
+    expect(merged["queueid"]).toBe("420");
+    expect(merged["result"]).toBe("GameComplete");
+    expect(merged["trackedplayercount"]).toBe("1");
+  });
+
+  test("carries the original capture time aside from the restamped one", () => {
+    // The put overwrites `uploadedat` with the time it stored these bytes.
+    // Capture time is provenance, not integrity, so it is moved rather than lost.
+    const merged = preservedMetadata(producer);
+    expect(merged[ORIGINAL_UPLOAD_METADATA_KEY]).toBe(
+      "2026-08-01T20:52:06.239Z",
+    );
+  });
+
+  test("marks the object as re-domained", () => {
+    expect(preservedMetadata(producer)[REWRITE_METADATA_KEY]).toBeDefined();
+  });
+
+  test("a second rewrite does not overwrite the first capture time", () => {
+    const once = preservedMetadata(producer);
+    const twice = preservedMetadata({
+      ...once,
+      uploadedat: "2026-09-13T00:00:00Z",
+    });
+    expect(twice[ORIGINAL_UPLOAD_METADATA_KEY]).toBe(
+      "2026-08-01T20:52:06.239Z",
+    );
+  });
+
+  test("an object with no metadata still gets the marker", () => {
+    const merged = preservedMetadata({});
+    expect(merged[REWRITE_METADATA_KEY]).toBeDefined();
+    expect(merged[ORIGINAL_UPLOAD_METADATA_KEY]).toBeUndefined();
   });
 });
