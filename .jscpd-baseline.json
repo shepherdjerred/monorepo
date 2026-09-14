@@ -68,10 +68,6 @@
       "clones": 1,
       "tokens": 89
     },
-    "packages/birmel/src/agent-tools/tools/automation/browser.ts|packages/birmel/src/agent-tools/tools/automation/pinchtab-browser.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
     "packages/birmel/src/agent-tools/tools/discord/actions/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
       "clones": 1,
       "tokens": 90
@@ -614,7 +610,7 @@
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
       "clones": 1,
-      "tokens": 142
+      "tokens": 126
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/flipt.ts": {
       "clones": 1,

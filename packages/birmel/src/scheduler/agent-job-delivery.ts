@@ -21,6 +21,11 @@ export type AgentJobExecution = {
 };
 
 export type AgentJobRuntimeDependencies = {
+  preflightTool: (
+    toolId: string,
+    input: Record<string, unknown>,
+    execution: AgentJobExecution,
+  ) => Promise<unknown>;
   executeTool: (
     toolId: string,
     input: Record<string, unknown>,

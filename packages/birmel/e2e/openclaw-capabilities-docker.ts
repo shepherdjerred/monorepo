@@ -58,8 +58,6 @@ async function runPhase(phase: "setup" | "verify"): Promise<void> {
     "--env",
     "BIRMEL_MOCK_DISCORD_DELIVERY=true",
     "--env",
-    "BROWSER_PROVIDER=pinchtab",
-    "--env",
     "PINCHTAB_BASE_URL=http://localhost:9867",
     "--env",
     "PINCHTAB_PROFILE=birmel-e2e",

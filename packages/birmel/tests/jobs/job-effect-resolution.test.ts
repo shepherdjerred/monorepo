@@ -1,12 +1,4 @@
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
+import { describe, expect, test } from "vitest";
 import { editAgentJob } from "@shepherdjerred/birmel/agent-tools/tools/automation/agent-job-actions.ts";
 import {
   resolveAmbiguousAgentJobEffect,
@@ -18,18 +10,17 @@ import {
   runWithRequestContext,
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
-import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import {
   runAgentJobById,
   setAgentJobRuntimeDependencies,
 } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
+import { registerAgentJobTestEnvironment } from "./agent-job-test-environment.ts";
 
 const ACTOR_USER_ID = "186665676134547461";
 const GUILD_ID = "987654321098765432";
 const CHANNEL_ID = "876543210987654321";
 const SOURCE_MESSAGE_ID = "765432109876543210";
-const previousTrustedUserIds = Bun.env["TRUSTED_USER_IDS"];
 
 const requestContext: RequestContext = {
   guildId: GUILD_ID,
@@ -90,29 +81,7 @@ async function seedAmbiguousJob() {
   return { job, run };
 }
 
-beforeAll(() => {
-  Bun.env["TRUSTED_USER_IDS"] = JSON.stringify([ACTOR_USER_ID]);
-  resetConfig();
-});
-
-beforeEach(async () => {
-  setAgentJobRuntimeDependencies(null);
-  await prisma.agentJobRun.deleteMany();
-  await prisma.agentJob.deleteMany();
-});
-
-afterEach(() => {
-  setAgentJobRuntimeDependencies(null);
-});
-
-afterAll(() => {
-  if (previousTrustedUserIds == null) {
-    delete Bun.env["TRUSTED_USER_IDS"];
-  } else {
-    Bun.env["TRUSTED_USER_IDS"] = previousTrustedUserIds;
-  }
-  resetConfig();
-});
+registerAgentJobTestEnvironment(ACTOR_USER_ID);
 
 describe("durable AgentJob effect resolution", () => {
   test("rejects not-applied resolution at the typed tool boundary", () => {
@@ -170,6 +139,53 @@ describe("durable AgentJob effect resolution", () => {
         async () => await editAgentJob({ jobId: job.id, status: "active" }),
       ),
     ).toMatchObject({ success: false });
+  });
+
+  test("requires an unsupported migrated payload to be replaced before reactivation", async () => {
+    const job = await prisma.agentJob.create({
+      data: {
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        actorUserId: ACTOR_USER_ID,
+        sourceChannelId: CHANNEL_ID,
+        sourceMessageId: SOURCE_MESSAGE_ID,
+        scheduleKind: "at",
+        scheduleValue: new Date(Date.now() - 1000).toISOString(),
+        nextRunAt: null,
+        status: "paused",
+        payloadKind: "tool",
+        toolId: "manage-guild",
+        toolInput: "{}",
+        lastStatus: "unsupported_tool",
+        lastError: "This tool was removed",
+      },
+    });
+
+    expect(
+      await withRequest(async () => await runAgentJobNow({ jobId: job.id })),
+    ).toMatchObject({
+      success: false,
+      message: "Replace the unsupported job payload before running this job",
+    });
+    expect(
+      await withRequest(
+        async () =>
+          await editAgentJob({
+            jobId: job.id,
+            payload: { kind: "message", message: "safe replacement" },
+            status: "active",
+          }),
+      ),
+    ).toMatchObject({ success: true });
+    expect(
+      await prisma.agentJob.findUniqueOrThrow({ where: { id: job.id } }),
+    ).toMatchObject({
+      status: "active",
+      payloadKind: "message",
+      message: "safe replacement",
+      lastStatus: null,
+      lastError: null,
+    });
   });
 
   test("marks an applied effect complete without permitting replay", async () => {

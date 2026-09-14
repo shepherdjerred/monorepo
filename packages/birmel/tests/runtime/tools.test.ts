@@ -12,6 +12,7 @@ import {
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { manageMessageTool } from "@shepherdjerred/birmel/agent-tools/tools/discord/messages.ts";
+import { allDiscordTools } from "@shepherdjerred/birmel/agent-tools/tools/discord/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import {
   getCapabilityCatalog,
@@ -25,6 +26,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
     id: "manage-message",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["get"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -36,6 +38,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
     id: "manage-thread",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["get-messages", "summarize"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -47,6 +50,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
     id: "manage-poll",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["get-results"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -236,6 +240,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
     id: "browser-automation",
     riskClass: "write",
     timeoutMs: 120_000,
+    readActions: ["tabs", "snapshot", "screenshot", "get-text"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -245,7 +250,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "external-service",
-    riskClass: "write",
+    riskClass: "read",
     timeoutMs: 120_000,
     requiredRequestContext: [
       "guildId",
@@ -269,6 +274,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
     id: "manage-scheduled-event",
     riskClass: "write",
     timeoutMs: 30_000,
+    readActions: ["list", "get-users"],
     requiredRequestContext: [
       "guildId",
       "channelId",
@@ -336,6 +342,37 @@ function trustedContext(
   };
 }
 
+const REMOVED_TOOL_IDS = new Set([
+  "execute-shell-command",
+  "manage-automod-rule",
+  "manage-channel",
+  "manage-emoji",
+  "manage-guild",
+  "manage-invite",
+  "manage-member",
+  "manage-role",
+  "manage-sticker",
+  "manage-webhook",
+  "moderate-member",
+]);
+
+function expectedCurrentMetadata() {
+  return BirmelToolMetadataSchema.array().parse([
+    ...expectedMetadata.filter(({ id }) => !REMOVED_TOOL_IDS.has(id)),
+    {
+      id: "run-code",
+      riskClass: "code-execution",
+      timeoutMs: 15_000,
+      requiredRequestContext: [
+        "guildId",
+        "channelId",
+        "userId",
+        "sourceMessageId",
+      ],
+    },
+  ]);
+}
+
 async function executeInContext<T>(
   context: RequestContext,
   operation: () => T | PromiseLike<T>,
@@ -344,11 +381,22 @@ async function executeInContext<T>(
 }
 
 describe("tool metadata contracts", () => {
+  test("keeps the Discord barrel importable and limited to active tools", () => {
+    expect(allDiscordTools.map(({ id }) => id).toSorted()).toEqual([
+      "get-activity-stats",
+      "manage-message",
+      "manage-poll",
+      "manage-scheduled-event",
+      "manage-thread",
+      "record-activity",
+    ]);
+  });
+
   test("declares the exact risk, timeout, and request context for every stable tool", () => {
     const actual = getRegisteredToolMetadata().toSorted((left, right) =>
       left.id.localeCompare(right.id),
     );
-    const expected = expectedMetadata.toSorted((left, right) =>
+    const expected = expectedCurrentMetadata().toSorted((left, right) =>
       left.id.localeCompare(right.id),
     );
 
@@ -381,7 +429,9 @@ describe("tool metadata contracts", () => {
     expect({ duplicateIds, mismatchedIds, registeredIds }).toEqual({
       duplicateIds: [],
       mismatchedIds: [],
-      registeredIds: expectedMetadata.map(({ id }) => id).toSorted(),
+      registeredIds: expectedCurrentMetadata()
+        .map(({ id }) => id)
+        .toSorted(),
     });
   });
 
@@ -390,7 +440,8 @@ describe("tool metadata contracts", () => {
     const ids = catalog.map(({ id }) => id);
 
     expect(ids).toContain("get-activity-stats");
-    expect(ids).toContain("moderate-member");
+    expect(ids).toContain("run-code");
+    expect(ids).not.toContain("moderate-member");
     expect(ids).not.toContain("manage-database");
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain("sql");
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain(
@@ -433,7 +484,7 @@ describe("createTool", () => {
 
   test("rejects execution without trusted request context", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -447,7 +498,7 @@ describe("createTool", () => {
 
   test("rejects an actor outside the trusted allowlist", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -463,7 +514,7 @@ describe("createTool", () => {
 
   test("overrides a model-supplied guild with trusted runtime context", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ guildId: z.string() }),
@@ -479,7 +530,7 @@ describe("createTool", () => {
 
   test("validates tool results before returning them to the model", async () => {
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.number().positive(),
@@ -492,6 +543,57 @@ describe("createTool", () => {
       ),
     ).rejects.toThrow();
   });
+
+  test("does not checkpoint credential-free sandbox execution", async () => {
+    let checkpoints = 0;
+    const tool = createTool({
+      id: "run-code",
+      description: "Test sandbox tool",
+      inputSchema: z.object({ source: z.string() }),
+      outputSchema: z.object({ success: z.boolean() }),
+      execute: () => ({ success: false }),
+    });
+
+    const result = await executeInContext(
+      trustedContext({
+        beforeExternalEffect: async () => {
+          checkpoints += 1;
+        },
+      }),
+      async () => await tool.execute({ source: "throw new Error()" }),
+    );
+
+    expect(result).toEqual({ success: false });
+    expect(checkpoints).toBe(0);
+  });
+
+  test.each([
+    { action: "tabs", expectedCheckpoints: 0 },
+    { action: "click", expectedCheckpoints: 1 },
+  ])(
+    "acquires $expectedCheckpoints browser checkpoint(s) for $action",
+    async ({ action, expectedCheckpoints }) => {
+      let checkpoints = 0;
+      const tool = createTool({
+        id: "browser-automation",
+        description: "Test composite tool",
+        inputSchema: z.object({ action: z.string() }),
+        outputSchema: z.object({ success: z.boolean() }),
+        execute: () => ({ success: true }),
+      });
+
+      await executeInContext(
+        trustedContext({
+          beforeExternalEffect: async () => {
+            checkpoints += 1;
+          },
+        }),
+        async () => await tool.execute({ action }),
+      );
+
+      expect(checkpoints).toBe(expectedCheckpoints);
+    },
+  );
 
   test("allows a durable job to reply in its source channel", async () => {
     const tool = createTool({
@@ -527,13 +629,13 @@ describe("createTool cancellation", () => {
   });
 
   test("aborts timed-out work before a later side effect", async () => {
-    const metadata = getToolMetadata("manage-guild");
+    const metadata = getToolMetadata("manage-memory");
     const originalTimeoutMs = metadata.timeoutMs;
     metadata.timeoutMs = 10;
     let observedSignal: AbortSignal | undefined;
     let sideEffectCount = 0;
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -571,14 +673,14 @@ describe("createTool cancellation", () => {
   });
 
   test("does not release a timed-out tool until signal-ignoring work settles", async () => {
-    const metadata = getToolMetadata("manage-guild");
+    const metadata = getToolMetadata("manage-memory");
     const originalTimeoutMs = metadata.timeoutMs;
     metadata.timeoutMs = 10;
     const started = Promise.withResolvers<undefined>();
     const release = Promise.withResolvers<undefined>();
     let sideEffectCount = 0;
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -621,7 +723,7 @@ describe("createTool cancellation", () => {
     const started = Promise.withResolvers<undefined>();
     let observedSignal: AbortSignal | undefined;
     const tool = createTool({
-      id: "manage-guild",
+      id: "manage-memory",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
@@ -649,6 +751,19 @@ describe("createTool cancellation", () => {
 
     await expect(execution).rejects.toThrow("caller cancelled");
     expect(observedSignal?.aborted).toBe(true);
+  });
+});
+
+describe("createTool cancellation at Discord boundaries", () => {
+  beforeEach(() => {
+    Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
+    Bun.env["DISCORD_TOKEN"] = "test-discord-token";
+    Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
+    resetConfig();
+  });
+
+  afterEach(() => {
+    resetConfig();
   });
 
   test("an already-aborted signal prevents a manage-message Discord write", async () => {
@@ -684,6 +799,46 @@ describe("createTool cancellation", () => {
       ).rejects.toThrow("cancelled before Discord write");
       expect(fetchCount).toBe(0);
       expect(sendCount).toBe(0);
+    } finally {
+      Reflect.set(channels, "fetch", originalFetch);
+    }
+  });
+
+  test("rejects a message destination outside the admitted guild", async () => {
+    const channels = getDiscordClient().channels;
+    const originalFetch = Reflect.get(channels, "fetch");
+    let sendCount = 0;
+    let checkpointCount = 0;
+    Reflect.set(channels, "fetch", async () => ({
+      guildId: "999999999999999999",
+      isSendable: () => true,
+      send: async () => {
+        sendCount += 1;
+        return { id: "400000000000000001" };
+      },
+    }));
+
+    try {
+      await expect(
+        executeInContext(
+          trustedContext({
+            beforeExternalEffect: async () => {
+              checkpointCount += 1;
+            },
+          }),
+          () =>
+            manageMessageTool.execute({
+              action: "send",
+              channelId: "400000000000000002",
+              content: "must not be sent",
+            }),
+        ),
+      ).resolves.toMatchObject({
+        success: false,
+        message: expect.stringContaining("not in this server"),
+      });
+      expect(sendCount).toBe(0);
+      expect(checkpointCount).toBe(0);
     } finally {
       Reflect.set(channels, "fetch", originalFetch);
     }

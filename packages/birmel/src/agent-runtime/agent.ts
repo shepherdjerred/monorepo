@@ -152,7 +152,7 @@ const RETAINED_DATA_KEYS_BY_TOOL: ReadonlyMap<
   ["manage-agent-session", new Set(["sessionId", "eventCount"])],
   // stdout and stderr carry whatever the command printed; the rest is our
   // own measurement of the run.
-  ["execute-shell-command", new Set(["exitCode", "timedOut", "duration"])],
+  ["run-code", new Set(["exitCode", "timedOut", "durationMs", "truncated"])],
   // The agent wrote the schedule it asked for, so reading it back is safe.
   [
     "manage-job",

@@ -314,8 +314,8 @@ describe("summarizeToolResultForSession: invite capability redaction", () => {
   });
 });
 
-describe("summarizeToolResultForSession: shell output exclusion", () => {
-  test("omits shell stdout and stderr from result summary and session content", () => {
+describe("summarizeToolResultForSession: code output exclusion", () => {
+  test("omits sandbox stdout and stderr from result summary and session content", () => {
     const leakedOutput = [
       "transient",
       "shell",
@@ -325,9 +325,9 @@ describe("summarizeToolResultForSession: shell output exclusion", () => {
     ].join("_");
     const event = summarizeToolResultForSession(
       {
-        toolCallId: "call-shell-1",
-        toolName: "execute-shell-command",
-        input: { command: "cat", args: ["~/.ssh/id_rsa"] },
+        toolCallId: "call-code-1",
+        toolName: "run-code",
+        input: { language: "python", source: "print('secret')" },
         output: {
           success: true,
           message: "Command executed successfully in 15ms",
@@ -336,11 +336,12 @@ describe("summarizeToolResultForSession: shell output exclusion", () => {
             stderr: "warning: sensitive output",
             exitCode: 0,
             timedOut: false,
-            duration: 15,
+            durationMs: 15,
+            truncated: false,
           },
         },
       },
-      ["execute-shell-command"],
+      ["run-code"],
     );
     expect(event.resultSummary).toContain(
       "Command executed successfully in 15ms",
@@ -546,13 +547,11 @@ describe("agent instructions", () => {
     );
   });
 
-  test("allows ordinary supported writes while retaining narrow bulk bans", () => {
+  test("allows ordinary supported writes while retaining the bulk creation ban", () => {
     expect(CORE_SYSTEM_POLICY).toContain(
       "Trusted users may request ordinary supported reads and writes",
     );
-    expect(CORE_SYSTEM_POLICY).toContain(
-      "Refuse only bulk destructive operations and bulk creation",
-    );
+    expect(CORE_SYSTEM_POLICY).toContain("Refuse bulk creation");
   });
 });
 

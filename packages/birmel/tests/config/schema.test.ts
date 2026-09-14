@@ -181,7 +181,6 @@ describe("BrowserConfigSchema", () => {
     const result = BrowserConfigSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.provider).toBe("pinchtab");
       expect(result.data.pinchtabBaseUrl).toBe("http://localhost:9867");
       expect(result.data.pinchtabProfile).toBe("default");
     }

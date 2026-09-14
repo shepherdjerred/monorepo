@@ -3,6 +3,9 @@ import {
   type BirmelToolMetadata,
   type ToolRiskClass,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { z } from "zod";
+
+const ToolActionInputSchema = z.object({ action: z.string() }).loose();
 
 const REQUIRED_CONTEXT = [
   "guildId",
@@ -27,42 +30,33 @@ function metadata(
 }
 
 const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
-  ["manage-message", metadata("manage-message", "write")],
-  ["manage-thread", metadata("manage-thread", "write")],
-  ["manage-poll", metadata("manage-poll", "write")],
+  ["manage-message", metadata("manage-message", "write", 30_000, ["get"])],
+  [
+    "manage-thread",
+    metadata("manage-thread", "write", 30_000, ["get-messages", "summarize"]),
+  ],
+  ["manage-poll", metadata("manage-poll", "write", 30_000, ["get-results"])],
   ["get-activity-stats", metadata("get-activity-stats", "read")],
   ["record-activity", metadata("record-activity", "write")],
   ["manage-memory", metadata("manage-memory", "write")],
   ["manage-agent-session", metadata("manage-agent-session", "write")],
+  ["run-code", metadata("run-code", "code-execution", 15_000)],
+  ["manage-job", metadata("manage-job", "write")],
   [
-    "manage-guild",
-    metadata("manage-guild", "write", 30_000, [
-      "get-info",
-      "get-owner",
-      "get-audit-logs",
+    "browser-automation",
+    metadata("browser-automation", "write", 120_000, [
+      "tabs",
+      "snapshot",
+      "screenshot",
+      "get-text",
     ]),
   ],
-  ["manage-channel", metadata("manage-channel", "destructive")],
-  ["moderate-member", metadata("moderate-member", "destructive")],
-  [
-    "manage-role",
-    metadata("manage-role", "destructive", 30_000, ["list", "get"]),
-  ],
-  ["manage-member", metadata("manage-member", "destructive")],
-  ["manage-automod-rule", metadata("manage-automod-rule", "destructive")],
-  ["manage-webhook", metadata("manage-webhook", "destructive")],
-  ["manage-invite", metadata("manage-invite", "write")],
-  ["manage-emoji", metadata("manage-emoji", "destructive")],
-  ["manage-sticker", metadata("manage-sticker", "destructive")],
-  [
-    "execute-shell-command",
-    metadata("execute-shell-command", "code-execution", 300_000),
-  ],
-  ["manage-job", metadata("manage-job", "write")],
-  ["browser-automation", metadata("browser-automation", "write", 120_000)],
-  ["external-service", metadata("external-service", "write", 120_000)],
+  ["external-service", metadata("external-service", "read", 120_000)],
   ["web-research", metadata("web-research", "read", 120_000)],
-  ["manage-scheduled-event", metadata("manage-scheduled-event", "write")],
+  [
+    "manage-scheduled-event",
+    metadata("manage-scheduled-event", "write", 30_000, ["list", "get-users"]),
+  ],
   ["manage-election", metadata("manage-election", "write")],
   ["get-candidate-stats", metadata("get-candidate-stats", "read")],
   ["manage-birthday", metadata("manage-birthday", "write")],
@@ -75,6 +69,25 @@ export function getToolMetadata(toolId: string): BirmelToolMetadata {
     throw new Error(`Missing Birmel tool metadata for ${toolId}`);
   }
   return value;
+}
+
+export function toolRequiresExternalEffectCheckpoint(
+  toolId: string,
+  input?: unknown,
+): boolean {
+  if (toolId === "run-code") {
+    return false;
+  }
+  const toolMetadata = getToolMetadata(toolId);
+  if (toolMetadata.riskClass === "read") {
+    return false;
+  }
+  const parsedInput = ToolActionInputSchema.safeParse(input);
+  const action = parsedInput.success ? parsedInput.data.action : undefined;
+  return (
+    typeof action !== "string" ||
+    toolMetadata.readActions?.includes(action) !== true
+  );
 }
 
 export function getRegisteredToolMetadata(): BirmelToolMetadata[] {

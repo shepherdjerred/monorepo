@@ -1,4 +1,5 @@
 import {
+  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -21,11 +22,16 @@ import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-ar
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import {
+  NET_ADMIN_FIREWALL_RESOURCES,
+  netAdminFirewallSecurityContext,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
 
 export function createBirmelDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "birmel", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    automountServiceAccountToken: false,
     securityContext: {
       fsGroup: 1000,
       ensureNonRoot: false,
@@ -38,7 +44,37 @@ export function createBirmelDeployment(chart: Chart) {
           "Birmel requires writable filesystem for SQLite databases",
       },
     },
+    podMetadata: {
+      annotations: {
+        "ci.sjer.red/pod-security-enforcement": "privileged",
+      },
+    },
   });
+
+  const firewallRunVolume = Volume.fromEmptyDir(
+    chart,
+    "birmel-sandbox-firewall-run",
+    "sandbox-firewall-run",
+  );
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "install-code-sandbox-firewall",
+      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        `set -eu
+for firewall in iptables ip6tables; do
+  for uid in 1001 1002; do
+    "$firewall" -A OUTPUT -m owner --uid-owner "$uid" -j REJECT
+  done
+  "$firewall" -L OUTPUT -n
+done`,
+      ],
+      securityContext: netAdminFirewallSecurityContext(true),
+      volumeMounts: [{ path: "/run", volume: firewallRunVolume }],
+      resources: NET_ADMIN_FIREWALL_RESOURCES,
+    }),
+  );
 
   const onePasswordItem = new OnePasswordItem(chart, "birmel-1p", {
     spec: {
@@ -213,7 +249,6 @@ export function createBirmelDeployment(chart: Chart) {
         LOG_LEVEL: EnvValue.fromValue("info"),
         DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
         WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
-        BROWSER_PROVIDER: EnvValue.fromValue("pinchtab"),
         PINCHTAB_BASE_URL: EnvValue.fromValue(
           "http://pinchtab.pinchtab.svc.cluster.local:9867",
         ),
@@ -230,6 +265,75 @@ export function createBirmelDeployment(chart: Chart) {
           key: "PINCHTAB_TOKEN",
         }),
       },
+    }),
+  );
+
+  const sandboxTmp = Volume.fromEmptyDir(
+    chart,
+    "birmel-code-sandbox-tmp",
+    "code-sandbox-tmp",
+    { sizeLimit: Size.mebibytes(64) },
+  );
+  deployment.addContainer(
+    withCommonProps({
+      name: "code-sandbox",
+      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      command: ["tini", "-s", "--", "bun", "src/sandbox/server.ts"],
+      securityContext: {
+        user: 0,
+        group: 0,
+        ensureNonRoot: false,
+        privileged: false,
+        allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: true,
+        capabilities: {
+          drop: [Capability.ALL],
+          add: [
+            Capability.CHOWN,
+            Capability.DAC_OVERRIDE,
+            Capability.FOWNER,
+            Capability.KILL,
+            Capability.SETGID,
+            Capability.SETPCAP,
+            Capability.SETUID,
+          ],
+        },
+      },
+      resources: {
+        cpu: { request: Cpu.millis(50), limit: Cpu.millis(1000) },
+        memory: {
+          request: Size.mebibytes(256),
+          // Descendant creation is blocked per run, so two concurrent Bun
+          // snippets can each reach only their single 1 GiB address space.
+          // Leave another 512 MiB for the broker and cleanup.
+          limit: Size.mebibytes(2560),
+        },
+      },
+      startup: Probe.fromCommand(
+        [
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)",
+        ],
+        { periodSeconds: Duration.seconds(5), failureThreshold: 12 },
+      ),
+      liveness: Probe.fromCommand(
+        [
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)",
+        ],
+        { periodSeconds: Duration.seconds(30), failureThreshold: 3 },
+      ),
+      readiness: Probe.fromCommand(
+        [
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8090/health');process.exit(r.ok?0:1)",
+        ],
+        { periodSeconds: Duration.seconds(10), failureThreshold: 3 },
+      ),
+      volumeMounts: [{ path: "/tmp/birmel-sandbox", volume: sandboxTmp }],
     }),
   );
 

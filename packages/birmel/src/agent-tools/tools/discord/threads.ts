@@ -12,25 +12,22 @@ import { discordChannelName, validateSnowflakes } from "./validation.ts";
 import {
   handleCreateFromMessage,
   handleCreateStandalone,
-  handleModifyThread,
-  handleAddMember,
   handleGetThreadMessages,
   handleSummarizeThread,
 } from "./actions/thread-actions.ts";
+import { validateChannelsInRequestGuild } from "./channel-resolver.ts";
 
 const logger = loggers.tools.child("discord.threads");
 
 export const manageThreadTool = createTool({
   id: "manage-thread",
   description:
-    "Manage Discord threads as first-class routing targets: create/move a conversation into a thread, edit settings, add members, fetch or summarize messages, and use thread IDs as session/job anchors. Does NOT send messages to a thread — use manage-message with the thread's channelId for that.",
+    "Create Discord threads in this server, read their messages, or summarize them. Use manage-message with the thread ID to post into a thread.",
   inputSchema: z.object({
     action: z
       .enum([
         "create-from-message",
         "create-standalone",
-        "modify",
-        "add-member",
         "get-messages",
         "summarize",
       ])
@@ -44,20 +41,14 @@ export const manageThreadTool = createTool({
     threadId: z
       .string()
       .optional()
-      .describe("The thread ID (for modify/add-member/get-messages)"),
+      .describe("The thread ID (for get-messages/summarize)"),
     messageId: z
       .string()
       .optional()
       .describe(
         "The message ID to create thread from (for create-from-message)",
       ),
-    userId: z
-      .string()
-      .optional()
-      .describe("The user ID to add (for add-member)"),
-    name: discordChannelName
-      .optional()
-      .describe("Thread name (for create/modify)"),
+    name: discordChannelName.optional().describe("Thread name (for create)"),
     autoArchiveDuration: z
       .enum(["60", "1440", "4320", "10080"])
       .optional()
@@ -72,11 +63,6 @@ export const manageThreadTool = createTool({
       .enum(["public", "private"])
       .optional()
       .describe("Thread type (for create-standalone)"),
-    archived: z
-      .boolean()
-      .optional()
-      .describe("Whether to archive (for modify)"),
-    locked: z.boolean().optional().describe("Whether to lock (for modify)"),
     limit: z
       .number()
       .min(1)
@@ -93,23 +79,30 @@ export const manageThreadTool = createTool({
     message: z.string(),
     data: z.unknown().optional(),
   }),
+  preflight: async (ctx, { signal }) => {
+    signal.throwIfAborted();
+    const idError = validateSnowflakes([
+      { value: ctx.channelId, fieldName: "channelId" },
+      { value: ctx.threadId, fieldName: "threadId" },
+      { value: ctx.messageId, fieldName: "messageId" },
+      { value: ctx.before, fieldName: "before" },
+    ]);
+    if (idError != null) {
+      return { success: false, message: idError };
+    }
+    const targetError = await validateChannelsInRequestGuild(
+      getDiscordClient(),
+      [ctx.channelId, ctx.threadId],
+    );
+    signal.throwIfAborted();
+    return targetError == null
+      ? undefined
+      : { success: false, message: targetError };
+  },
   execute: async (ctx) => {
     return withToolSpan("manage-thread", undefined, async () => {
       try {
-        // Validate all Discord IDs before making API calls
-        const idError = validateSnowflakes([
-          { value: ctx.channelId, fieldName: "channelId" },
-          { value: ctx.threadId, fieldName: "threadId" },
-          { value: ctx.messageId, fieldName: "messageId" },
-          { value: ctx.userId, fieldName: "userId" },
-          { value: ctx.before, fieldName: "before" },
-        ]);
-        if (idError != null && idError.length > 0) {
-          return { success: false, message: idError };
-        }
-
         const client = getDiscordClient();
-
         switch (ctx.action) {
           case "create-from-message":
             return await handleCreateFromMessage({
@@ -128,17 +121,6 @@ export const manageThreadTool = createTool({
               type: ctx.type,
               messageContent: ctx.message,
             });
-          case "modify":
-            return await handleModifyThread({
-              client,
-              threadId: ctx.threadId,
-              name: ctx.name,
-              archived: ctx.archived,
-              locked: ctx.locked,
-              autoArchiveDuration: ctx.autoArchiveDuration,
-            });
-          case "add-member":
-            return await handleAddMember(client, ctx.threadId, ctx.userId);
           case "get-messages":
             return await handleGetThreadMessages(
               client,

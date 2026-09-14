@@ -132,9 +132,9 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/birmel",
-      // The shell tool advertises python3 and node by name, so their absence
-      // is a broken capability rather than a missing convenience.
-      "node --version",
+      // The sandbox executes Python directly and JavaScript/TypeScript with
+      // Bun. Missing either runtime is a broken advertised capability.
+      "bun --version",
       "python3 --version",
       "set +e",
       'output="$(timeout 30s bun run scripts/start.ts 2>&1)"',

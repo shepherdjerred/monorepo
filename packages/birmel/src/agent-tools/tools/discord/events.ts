@@ -12,6 +12,8 @@ import {
   handleDeleteEvent,
   handleGetEventUsers,
 } from "./actions/event-actions.ts";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { validateChannelInGuild } from "./channel-resolver.ts";
 
 type EventInput = {
   guildId: string;
@@ -131,17 +133,35 @@ export const manageScheduledEventTool = createTool({
       ])
       .optional(),
   }),
+  preflight: async (ctx, { signal }) => {
+    signal.throwIfAborted();
+    const idError = validateSnowflakes([
+      { value: ctx.guildId, fieldName: "guildId" },
+      { value: ctx.eventId, fieldName: "eventId" },
+      { value: ctx.channelId, fieldName: "channelId" },
+    ]);
+    if (idError != null && idError.length > 0) {
+      return { success: false, message: idError };
+    }
+    if (ctx.channelId == null) {
+      return;
+    }
+    const request = getRequestContext();
+    if (request == null) {
+      throw new Error("Scheduled event operations require request context");
+    }
+    const targetError = await validateChannelInGuild(
+      getDiscordClient(),
+      ctx.channelId,
+      request.guildId,
+    );
+    signal.throwIfAborted();
+    return targetError == null
+      ? undefined
+      : { success: false, message: targetError };
+  },
   execute: async (ctx) => {
     try {
-      const idError = validateSnowflakes([
-        { value: ctx.guildId, fieldName: "guildId" },
-        { value: ctx.eventId, fieldName: "eventId" },
-        { value: ctx.channelId, fieldName: "channelId" },
-      ]);
-      if (idError != null && idError.length > 0) {
-        return { success: false, message: idError };
-      }
-
       const client = getDiscordClient();
       const guild = await client.guilds.fetch(ctx.guildId);
 

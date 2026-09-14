@@ -17,6 +17,11 @@ export function createBirmelChart(app: App) {
   new Namespace(chart, "birmel-namespace", {
     metadata: {
       name: "birmel",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/audit": "restricted",
+        "pod-security.kubernetes.io/warn": "restricted",
+      },
     },
   });
 

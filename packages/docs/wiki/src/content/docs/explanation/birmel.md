@@ -45,8 +45,9 @@ An accepted alias is a persona claim for one guild. It becomes a wake name for
 every trusted user and channel in that guild. The same name has no effect in a
 different guild.
 
-That same allowlist governs every capability, including shell and scheduled
-work. A queued job re-checks its original actor when it executes,
+That same allowlist governs every capability, including sandboxed code,
+the shared browser profile, and scheduled work. A queued job re-checks its
+original actor when it executes,
 because authority at enqueue time is not authority at run time.
 
 Each Discord message ID identifies one
@@ -89,8 +90,36 @@ disagree. Birmel has scoped activity queries but no generic SQL access.
 
 Ordinary supported writes are allowed for trusted users. The
 [core policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/prompts.ts)
-blocks only bulk destructive and bulk-creation effects. It does not disguise
+blocks bulk-creation requests. It does not disguise
 missing integrations as safety refusals.
+
+The registered surface deliberately makes Birmel a general assistant and
+community organizer rather than a server administrator. It retains research,
+creative work, schedules, and conversational Discord features. Administrative
+server capabilities are absent, as are generic shell and SQL access.
+
+[Python, JavaScript, and TypeScript snippets](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/sandbox/server.ts)
+run in a credential-free sidecar. The broker gives each execution a minimal
+fixed environment, a private temporary directory, and a distinct unprivileged
+identity. Each runtime lowers its hard process limit before user code starts,
+so a run cannot create descendants and its address-space limit is aggregate.
+The broker still kills every process owned by that identity before reuse as a
+defensive cleanup boundary. The run directory is the identity's only writable
+filesystem location. Persistent IPC and keyring syscalls are blocked before
+they reach the kernel. It also imposes fixed CPU, memory, time, process, and
+output limits. The
+[deployment boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/birmel/index.ts)
+removes network, service-account, secret, and persistent-volume access. The
+main Birmel process never executes model-supplied commands.
+
+[Browser automation](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-tools/tools/automation/pinchtab-browser.ts)
+uses one configured persistent PinchTab profile for every trusted user in the
+guild. Cookies remain inside that profile and are not model-readable.
+Application validation permits only public HTTPS destinations. A
+[pod-local firewall](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/pinchtab/index.ts)
+also blocks private destinations after redirects and subresource loads.
+Scheduled jobs revalidate saved tab IDs against that configured instance before
+reuse, so a Birmel restart does not orphan valid persistent tabs.
 
 The agent receives a compact task packet. Not a manager transcript, not another
 agent's tool trace, not a recursively assembled prompt. That is the whole point:
@@ -166,6 +195,11 @@ outcome unknown, the job **pauses instead of replaying**.
 That asymmetry is intentional. An ambiguous occurrence cannot be marked
 not-applied or retried in place, because its prior executor may still settle.
 Duplicating a real-world effect is worse than stalling.
+
+A scheduled agent prompt still receives one bounded agent run. It can perform a
+multi-step task such as research followed by image generation and Discord
+delivery, but it is best effort: there is no persisted stage graph, resumable
+plan, or guarantee that the model will use every available step.
 
 ## Why this shape
 

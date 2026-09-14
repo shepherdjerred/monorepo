@@ -22,6 +22,10 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  NET_ADMIN_FIREWALL_RESOURCES,
+  netAdminFirewallSecurityContext,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
 
 const PINCHTAB_PORT = 9867;
 
@@ -40,6 +44,7 @@ export function createPinchtabDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "pinchtab", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    automountServiceAccountToken: false,
     securityContext: {
       // The pinchtab image runs Chrome as its own non-root user. fsGroup lets
       // that user (whatever its UID) write to the persisted /data PVC.
@@ -54,7 +59,61 @@ export function createPinchtabDeployment(chart: Chart) {
           "Chrome requires a writable filesystem for its user-data and cache directories",
       },
     },
+    podMetadata: {
+      annotations: {
+        "ci.sjer.red/pod-security-enforcement": "privileged",
+      },
+    },
   });
+
+  const firewallRunVolume = Volume.fromEmptyDir(
+    chart,
+    "pinchtab-firewall-run",
+    "firewall-run",
+  );
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "install-browser-firewall",
+      image: `ghcr.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        `set -eu
+iptables -F OUTPUT
+ip6tables -F OUTPUT
+iptables -P OUTPUT DROP
+ip6tables -P OUTPUT DROP
+iptables -A OUTPUT -o lo -j ACCEPT
+ip6tables -A OUTPUT -o lo -j ACCEPT
+iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+ip6tables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+for address in $(awk '/^nameserver / { print $2 }' /etc/resolv.conf); do
+  case "$address" in
+    *:*)
+      ip6tables -A OUTPUT -d "$address" -p udp --dport 53 -j ACCEPT
+      ip6tables -A OUTPUT -d "$address" -p tcp --dport 53 -j ACCEPT
+      ;;
+    *)
+      iptables -A OUTPUT -d "$address" -p udp --dport 53 -j ACCEPT
+      iptables -A OUTPUT -d "$address" -p tcp --dport 53 -j ACCEPT
+      ;;
+  esac
+done
+for cidr in 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 224.0.0.0/4; do
+  iptables -A OUTPUT -d "$cidr" -j REJECT
+done
+for cidr in ::/128 ::1/128 fc00::/7 fe80::/10 ff00::/8; do
+  ip6tables -A OUTPUT -d "$cidr" -j REJECT
+done
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+ip6tables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+iptables -L OUTPUT -n
+ip6tables -L OUTPUT -n`,
+      ],
+      securityContext: netAdminFirewallSecurityContext(true),
+      volumeMounts: [{ path: "/run", volume: firewallRunVolume }],
+      resources: NET_ADMIN_FIREWALL_RESOURCES,
+    }),
+  );
 
   // Shared "PinchTab" 1Password item (also synced into the birmel namespace).
   // Single source of truth for the bearer token used by both pinchtab and birmel.

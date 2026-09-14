@@ -128,10 +128,32 @@ function requireUpdatedJob(updateCount: number): void {
   }
 }
 
+function hasPayloadEdit(options: EditAgentJobOptions): boolean {
+  return (
+    options.payload !== undefined ||
+    options.toolId !== undefined ||
+    options.message !== undefined ||
+    options.agentPrompt !== undefined
+  );
+}
+
+function unsupportedPayloadResolution(
+  options: EditAgentJobOptions,
+  lastStatus: string | null,
+): { lastStatus: null; lastError: null } | Record<string, never> {
+  if (lastStatus === "unsupported_tool" && hasPayloadEdit(options)) {
+    return { lastStatus: null, lastError: null };
+  }
+  return {};
+}
+
 function wouldUnsafelyReactivateEffect(
   options: EditAgentJobOptions,
   lastStatus: string | null,
 ): boolean {
+  if (lastStatus === "unsupported_tool") {
+    return options.status === "active" && !hasPayloadEdit(options);
+  }
   if (
     lastStatus === "cancelled_after_effect" ||
     hasAmbiguousAgentJobEffect(lastStatus)
@@ -332,6 +354,10 @@ export async function editAgentJob(
           }
         : await resolveDeliveryTarget(request, options.sessionId);
     const payloadPatch = await serializeEditPayload(options, existing);
+    const unsupportedPayloadPatch = unsupportedPayloadResolution(
+      options,
+      existing.lastStatus,
+    );
     const resultingStatus = options.status ?? existing.status;
     const updateCount = await updateAgentJobWithinLimits({
       where: {
@@ -355,6 +381,7 @@ export async function editAgentJob(
         threadId: target.threadId,
         sessionId: target.sessionId,
         ...payloadPatch,
+        ...unsupportedPayloadPatch,
         status: resultingStatus,
         name: options.name ?? existing.name,
         description: options.description ?? existing.description,

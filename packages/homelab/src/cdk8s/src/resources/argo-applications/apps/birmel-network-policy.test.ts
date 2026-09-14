@@ -43,24 +43,46 @@ const NetworkPolicySchema = z.object({
     .optional(),
 });
 
+const InitContainerSchema = z.object({
+  name: z.string(),
+  args: z.array(z.string()),
+  securityContext: z.record(z.string(), z.unknown()),
+});
+
 const BirmelDeploymentSchema = z.object({
   kind: z.literal("Deployment"),
   metadata: z.object({ name: z.literal("birmel") }),
   spec: z.object({
     template: z.object({
+      metadata: z.object({
+        annotations: z.record(z.string(), z.string()),
+      }),
       spec: z.object({
         containers: z.array(
           z.object({
-            name: z.literal("main"),
-            env: z.array(z.object({ name: z.string() }).loose()),
-            ports: z.array(
-              z.object({ name: z.string(), containerPort: z.number() }),
-            ),
-            startupProbe: z.unknown(),
-            livenessProbe: z.unknown(),
-            readinessProbe: z.unknown(),
+            name: z.string(),
+            command: z.array(z.string()).optional(),
+            env: z.array(z.object({ name: z.string() }).loose()).optional(),
+            ports: z
+              .array(z.object({ name: z.string(), containerPort: z.number() }))
+              .optional(),
+            volumeMounts: z
+              .array(z.object({ mountPath: z.string() }))
+              .optional(),
+            securityContext: z.record(z.string(), z.unknown()).optional(),
+            startupProbe: z.unknown().optional(),
+            livenessProbe: z.unknown().optional(),
+            readinessProbe: z.unknown().optional(),
+            resources: z
+              .object({
+                requests: z.record(z.string(), z.string()).optional(),
+                limits: z.record(z.string(), z.string()).optional(),
+              })
+              .optional(),
           }),
         ),
+        automountServiceAccountToken: z.boolean(),
+        initContainers: z.array(InitContainerSchema),
       }),
     }),
   }),
@@ -124,7 +146,9 @@ describe("birmel runtime deployment", () => {
     if (deployment?.success !== true) {
       throw new Error("birmel Deployment was not synthesized");
     }
-    const container = deployment.data.spec.template.spec.containers[0];
+    const container = deployment.data.spec.template.spec.containers.find(
+      ({ name }) => name === "main",
+    );
     if (container == null) {
       throw new Error("birmel container was not synthesized");
     }
@@ -150,10 +174,71 @@ describe("birmel runtime deployment", () => {
       httpGet: { path: "/ready", port: 8080, scheme: "HTTP" },
       periodSeconds: 10,
     });
-    const environmentNames = container.env.map(({ name }) => name);
+    const environmentNames = (container.env ?? []).map(({ name }) => name);
     expect(environmentNames).toContain("HEALTH_PORT");
     expect(environmentNames).not.toContain("MEMORY_DB_PATH");
     expect(environmentNames).not.toContain("MASTRA_MEMORY_DB_PATH");
     expect(environmentNames).not.toContain("EDITOR_ENABLED");
+
+    const sandbox = deployment.data.spec.template.spec.containers.find(
+      ({ name }) => name === "code-sandbox",
+    );
+    if (sandbox == null) {
+      throw new Error("code sandbox sidecar was not synthesized");
+    }
+    expect(
+      deployment.data.spec.template.spec.automountServiceAccountToken,
+    ).toBe(false);
+    expect((sandbox.env ?? []).map(({ name }) => name)).toEqual(["TZ"]);
+    expect(sandbox.command).toEqual([
+      "tini",
+      "-s",
+      "--",
+      "bun",
+      "src/sandbox/server.ts",
+    ]);
+    expect(sandbox.volumeMounts).toEqual([
+      expect.objectContaining({ mountPath: "/tmp/birmel-sandbox" }),
+    ]);
+    expect(sandbox.resources).toEqual({
+      requests: { cpu: "50m", memory: "256Mi" },
+      limits: { cpu: "1000m", memory: "2560Mi" },
+    });
+    expect(sandbox.securityContext).toMatchObject({
+      runAsUser: 0,
+      allowPrivilegeEscalation: false,
+      readOnlyRootFilesystem: true,
+      capabilities: {
+        add: [
+          "CHOWN",
+          "DAC_OVERRIDE",
+          "FOWNER",
+          "KILL",
+          "SETGID",
+          "SETPCAP",
+          "SETUID",
+        ],
+        drop: ["ALL"],
+      },
+    });
+    expect(
+      deployment.data.spec.template.metadata.annotations[
+        "ci.sjer.red/pod-security-enforcement"
+      ],
+    ).toBe("privileged");
+    const firewall = deployment.data.spec.template.spec.initContainers.find(
+      ({ name }) => name === "install-code-sandbox-firewall",
+    );
+    if (firewall == null) {
+      throw new Error("code sandbox firewall was not synthesized");
+    }
+    expect(firewall.securityContext).toMatchObject({
+      runAsUser: 0,
+      allowPrivilegeEscalation: false,
+      capabilities: { add: ["NET_ADMIN"], drop: ["ALL"] },
+    });
+    const firewallRules = firewall.args.join("\n");
+    expect(firewallRules).toContain("for uid in 1001 1002");
+    expect(firewallRules).toContain('--uid-owner "$uid"');
   });
 });
