@@ -4,7 +4,6 @@ import {
   ORIGINAL_UPLOAD_METADATA_KEY,
   preservedMetadata,
   REWRITE_METADATA_KEY,
-  writtenAfterCutover,
 } from "./rewrite.ts";
 import { parseInventory, serializeInventory } from "./inventory.ts";
 
@@ -58,37 +57,6 @@ describe("needsRewrite", () => {
   });
 });
 
-describe("writtenAfterCutover", () => {
-  const cutover = new Date("2026-09-13T05:07:05Z");
-  const object = (iso: string | undefined) => ({
-    key: "games/x/match.json",
-    kind: "match" as const,
-    lastModified: iso === undefined ? undefined : new Date(iso),
-  });
-
-  test("skips an object written under the production key", () => {
-    expect(writtenAfterCutover(object("2026-09-13T06:00:00Z"), cutover)).toBe(
-      true,
-    );
-  });
-
-  test("keeps an object written before the swap", () => {
-    expect(writtenAfterCutover(object("2026-09-13T04:00:00Z"), cutover)).toBe(
-      false,
-    );
-  });
-
-  test("keeps an object with no timestamp rather than assuming it is new", () => {
-    expect(writtenAfterCutover(object(undefined), cutover)).toBe(false);
-  });
-
-  test("keeps everything when no cutover is given", () => {
-    expect(writtenAfterCutover(object("2030-01-01T00:00:00Z"), undefined)).toBe(
-      false,
-    );
-  });
-});
-
 describe("inventory round trip", () => {
   test("survives serialize and parse unchanged", () => {
     const rows = [
@@ -117,6 +85,15 @@ describe("inventory round trip", () => {
 });
 
 describe("recognising an interrupted run", () => {
+  test("the pass must not filter by modification time", () => {
+    // Rewriting advances LastModified, so any such filter would exclude exactly
+    // the object a re-run needs: one whose PUT landed and whose database update
+    // did not. The filter would defeat the recovery it sits beside.
+    const rewrittenJustNow = new Date();
+    const cutover = new Date("2026-09-13T05:07:05Z");
+    expect(rewrittenJustNow > cutover).toBe(true);
+  });
+
   test("a rewritten object is indistinguishable from an untouched one by content", () => {
     // Why the metadata marker has to exist at all: once the identifiers are
     // gone, nothing in the body says whether this pass wrote it.

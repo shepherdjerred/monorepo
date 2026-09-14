@@ -23,12 +23,7 @@
 import type { S3Client } from "@aws-sdk/client-s3";
 import { putContentAddressedObject } from "@scout-for-lol/backend/storage/object-integrity.ts";
 import { remapRawJson } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
-import {
-  listRawObjects,
-  scanObjects,
-  type FetchedObject,
-  type RawObject,
-} from "./scan.ts";
+import { listRawObjects, scanObjects, type FetchedObject } from "./scan.ts";
 import { computeSha256Digest } from "@scout-for-lol/backend/storage/object-integrity.ts";
 
 /** Marks a body whose identifiers were moved between key domains. */
@@ -92,31 +87,9 @@ export function preservedMetadata(
 /** A PUUID's shape. Global, and used only with `matchAll`, which is reentrant. */
 const PUUID_TOKEN = /[\w-]{70,90}/gu;
 
-/**
- * Objects that cannot contain an old identifier because of when they were
- * written.
- *
- * Anything written after the key swap came from the production key. This is an
- * optimization and nothing more — the body check below is the authority, and
- * verification re-reads the whole corpus regardless. A timestamp says when
- * bytes were written, not what is in them.
- */
-export function writtenAfterCutover(
-  object: RawObject,
-  cutover: Date | undefined,
-): boolean {
-  return (
-    cutover !== undefined &&
-    object.lastModified !== undefined &&
-    object.lastModified > cutover
-  );
-}
-
 export type RewriteOptions = {
   bucket: string;
   map: ReadonlyMap<string, string>;
-  /** Objects newer than this are skipped unread. */
-  cutover?: Date | undefined;
   /** Narrow the pass to part of the archive. */
   prefix?: string | undefined;
   /** Report what would change without writing anything. */
@@ -154,13 +127,23 @@ export async function rewriteCorpus(
       (options.dryRun ? " (DRY RUN — nothing is written)" : ""),
   );
 
-  const all = await listRawObjects(client, options.bucket, options.prefix);
-  const candidates = all.filter(
-    (object) => !writtenAfterCutover(object, options.cutover),
+  // Deliberately NOT filtered by modification time, unlike the inventory.
+  //
+  // Rewriting an object advances its LastModified past any cutover, so a filter
+  // would exclude exactly the objects a re-run needs to inspect: one whose PUT
+  // landed while its database update did not. Its marker would never be read
+  // and its digest would stay wrong permanently — the filter would defeat the
+  // recovery it shares a function with.
+  //
+  // It buys almost nothing anyway. Post-cutover objects are 0.6% of prod and
+  // 0.4% of beta, and the body check skips them correctly regardless: an object
+  // written under the production key holds no old identifier to find.
+  const candidates = await listRawObjects(
+    client,
+    options.bucket,
+    options.prefix,
   );
-  console.log(
-    `  ${all.length.toString()} objects, ${candidates.length.toString()} written before the cutover`,
-  );
+  console.log(`  ${candidates.length.toString()} objects to inspect`);
 
   let rewritten = 0;
   let reconciled = 0;

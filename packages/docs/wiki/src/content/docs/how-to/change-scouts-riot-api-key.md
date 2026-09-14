@@ -253,8 +253,10 @@ It refuses to touch anything until the database `apply` has landed. Translating
 the archive to an identifier the database does not hold would hide the players
 it names.
 
-`--cutover 2026-09-13T05:07:05Z` skips objects written after the key swap
-without reading them. An optimization only: the body check is the authority.
+The rewrite takes no cutover, unlike the inventory. Rewriting an object advances
+its modification time, so filtering on it would exclude exactly the objects a
+re-run needs to inspect — one whose upload landed while its database update did
+not. It would save under one percent of reads and cost that recovery.
 
 ## 7. Rebuild the report lakes
 

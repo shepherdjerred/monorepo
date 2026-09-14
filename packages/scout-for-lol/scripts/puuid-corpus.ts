@@ -108,7 +108,6 @@ async function runRewrite(): Promise<void> {
         "to identifiers the database does not hold would hide the players it names.",
     );
   }
-  const cutoverRaw = optionalFlag("--cutover");
   const dryRun = !Bun.argv.includes("--apply");
 
   const db = await openDb();
@@ -118,7 +117,6 @@ async function runRewrite(): Promise<void> {
     const result = await rewriteCorpus(createS3Client(), {
       bucket: requireBucket(),
       map,
-      cutover: cutoverRaw === undefined ? undefined : new Date(cutoverRaw),
       prefix: optionalFlag("--prefix"),
       dryRun,
       onRewritten:
@@ -158,7 +156,7 @@ switch (command) {
   case undefined:
   default:
     throw new Error(
-      "usage: puuid-corpus.ts <inventory --out FILE [--cutover ISO] | rewrite [--apply] [--cutover ISO]> " +
+      "usage: puuid-corpus.ts <inventory --out FILE [--cutover ISO] | rewrite [--apply]> " +
         "[--prefix games/2026/01/]",
     );
 }
