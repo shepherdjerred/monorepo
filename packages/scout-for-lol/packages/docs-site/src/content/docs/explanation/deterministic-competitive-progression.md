@@ -1,6 +1,6 @@
 ---
 title: Why competitive progress is deterministic
-description: How Scout turns retained match evidence into reproducible Hall records, challenge progress, and duel results.
+description: How Scout turns retained match evidence into reproducible Hall records and challenge progress.
 sidebar:
   order: 8
 ---
@@ -12,7 +12,7 @@ by a versioned contract evaluated against retained match evidence.
 ## Evidence comes before state
 
 The report lake supplies participant facts shared by the Hall and community
-challenges. Timeline-dependent challenges and every duel additionally require
+challenges. Timeline-dependent challenges additionally require
 the retained Riot timeline. The timeline must be durable before Scout advances
 an account cursor for a feature that depends on it.
 
@@ -53,8 +53,8 @@ never mixes old and new progress.
 
 ## Workflows own long-running coordination
 
-Temporal workflows own Hall baselines, challenge recomputation, and active duel
-series deadlines. Stable business identifiers make activity retries and
+Temporal workflows own Hall baselines and challenge recomputation. Stable
+business identifiers make activity retries and
 duplicate signals safe. A recurring reconciliation pass reconnects committed
 database intent to a workflow if a process stopped between those two actions.
 
@@ -62,26 +62,14 @@ The database remains authoritative for member-visible state. Workflows
 coordinate retries, paging, and deadlines; they do not hide an uncommitted
 side-effect in workflow history.
 
-## Duels fail into review
-
-A duel result needs a complete roster and timeline. Exact events identify kill
-and turret crossings; participant frames identify lane-CS crossings. Scout
-compares the first configured objective to occur.
-
-Simultaneous crossings, missing evidence, unexpected players, or a complete
-game with no winning objective cannot produce a trustworthy automatic result.
-Those cases enter an audited organizer review. Likewise, an expired deadline
-marks a series overdue but never invents a no-show winner.
-
 ## Consent and friendly competition stay separate
 
 Custom-match results become member-visible only after every invited participant
-accepts the versioned disclosure. That is also why custom and duel games do not
-feed the server-wide Hall.
+accepts the versioned disclosure. That is also why custom games do not feed the
+server-wide Hall.
 
 Competitive progression does not depend on Bryan Bucks. It creates no entry
-fees, prizes, wagers, or bracket markets, and verified duel results cannot
-mutate the friendly betting ledger.
+fees, prizes, wagers, or bracket markets.
 
 ## Related
 
