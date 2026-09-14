@@ -719,7 +719,22 @@
       "purpose": "Offer the durable-pipeline operations console. Visibility only; the Git-managed operator allowlist decides access.",
       "type": "boolean",
       "default": false,
-      "rollouts": [],
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1018,7 +1033,7 @@
       "source": "karma-dynamic",
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
-      "default": "⭐",
+      "default": "\u2b50",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
