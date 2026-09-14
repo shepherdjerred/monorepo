@@ -17,6 +17,15 @@ export function ScoutQlCode(props: { queryText: string; className?: string }) {
   const tokens = scoutQlTokenSpans(props.queryText);
   return (
     <pre
+      // The block scrolls horizontally for a long query, so it needs to be
+      // reachable and named for anyone scrolling it from the keyboard.
+      // `group` rather than `region`: a surface can show several of these at
+      // once — a trace step per tool call, an idiom per recipe — and landmarks
+      // have to be distinguishable from one another, which same-named repeats
+      // of one component cannot be.
+      tabIndex={0}
+      role="group"
+      aria-label="ScoutQL query"
       className={`overflow-x-auto rounded-md border border-scout-border bg-scout-hover/50 p-3 font-mono text-xs leading-5 ${props.className ?? ""}`}
     >
       <code>

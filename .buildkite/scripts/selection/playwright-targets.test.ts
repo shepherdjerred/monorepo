@@ -27,10 +27,29 @@ const workspaces = new Map<string, WorkspacePackage>([
     },
   ],
   [
+    "@scout-for-lol/app",
+    {
+      dir: "packages/scout-for-lol/packages/app/",
+      workspaceDependencies: [
+        "@scout-for-lol/backend",
+        "@scout-for-lol/data",
+        "@scout-for-lol/design-system",
+        "@scout-for-lol/report",
+      ],
+    },
+  ],
+  [
     "@scout-for-lol/backend",
     {
       dir: "packages/scout-for-lol/packages/backend/",
       workspaceDependencies: [],
+    },
+  ],
+  [
+    "@scout-for-lol/report",
+    {
+      dir: "packages/scout-for-lol/packages/report/",
+      workspaceDependencies: ["@scout-for-lol/data"],
     },
   ],
   [
@@ -76,7 +95,7 @@ describe("Playwright target selection", () => {
           workspaces,
         ),
       ),
-    ).toEqual(["@scout-for-lol/activity"]);
+    ).toEqual(["@scout-for-lol/activity", "@scout-for-lol/app"]);
     expect(
       packages(
         await selectPlaywrightTargets(
@@ -87,9 +106,24 @@ describe("Playwright target selection", () => {
       ),
     ).toEqual([
       "@scout-for-lol/activity",
+      "@scout-for-lol/app",
       "@scout-for-lol/design-system",
       "@scout-for-lol/evals",
     ]);
+  });
+
+  test("selects the app catalog for its own components", async () => {
+    expect(
+      packages(
+        await selectPlaywrightTargets(
+          [
+            "packages/scout-for-lol/packages/app/src/components/chrome/section.tsx",
+          ],
+          ".",
+          workspaces,
+        ),
+      ),
+    ).toEqual(["@scout-for-lol/app"]);
   });
 
   test("selects Activity when its synthetic Prisma prerequisite changes", async () => {

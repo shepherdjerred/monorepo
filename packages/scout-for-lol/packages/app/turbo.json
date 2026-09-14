@@ -1,0 +1,21 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:storybook": {
+      "dependsOn": ["^build"],
+      "outputs": ["storybook-static/**"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build:storybook"],
+      "cache": true,
+      "env": [
+        "CI",
+        "CI_PLAYWRIGHT_IMAGE",
+        "CI_REPORTING_BUILD_ID",
+        "PLAYWRIGHT_BRANDED_BROWSERS"
+      ],
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
+    }
+  }
+}
