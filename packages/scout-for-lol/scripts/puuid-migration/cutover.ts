@@ -104,7 +104,8 @@ export async function beginTransition(
   }
   const incomplete = await db.query(
     `SELECT COUNT(*) AS n FROM "PuuidKeyMap"
-      WHERE "status" NOT IN ('resolved', 'stranded')`,
+      WHERE "status" <> 'stranded'
+        AND ("status" <> 'resolved' OR "appliedAt" IS NULL)`,
   );
   if (countOf(incomplete, "incomplete mapping") > 0) {
     throw new Error(

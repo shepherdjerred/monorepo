@@ -57,6 +57,7 @@ export async function loadPuuidRemap(
   // payloads at an identifier no account row carries.
   const rows = await prisma.puuidKeyMap.findMany({
     where: { newPuuid: { not: null }, appliedAt: { not: null } },
+    orderBy: [{ appliedAt: "asc" }, { oldPuuid: "asc" }],
     select: { oldPuuid: true, newPuuid: true },
   });
 
@@ -76,27 +77,72 @@ export async function loadPuuidRemap(
   return map;
 }
 
-/** Collapse old→intermediate→current chains retained across transitions. */
+/**
+ * Collapse old→intermediate→current chains retained across transitions.
+ *
+ * A rotation back to an earlier key holder is valid and produces a cycle (for
+ * example A→B followed by B→A). The newest edge identifies the current domain;
+ * map every member of that cycle to its destination instead of rejecting a
+ * healthy database or leaving older identifiers one transition behind.
+ */
 export function composePuuidRemap(
   map: Map<string, string>,
 ): Map<string, string> {
-  for (const [oldPuuid, replacement] of map) {
-    const seen = new Set<string>([oldPuuid]);
-    let terminal = replacement;
-    while (map.has(terminal)) {
-      if (seen.has(terminal)) {
-        throw new Error(`cycle in PUUID remap at ${terminal}`);
-      }
-      seen.add(terminal);
-      const next = map.get(terminal);
-      if (next === undefined) {
-        break;
-      }
-      terminal = next;
+  const original = new Map(map);
+  const order = new Map([...original.keys()].map((key, index) => [key, index]));
+  const composed = new Map<string, string>();
+  for (const start of original.keys()) {
+    const { path, terminal } = resolveRemap(start, original, order);
+    for (const value of path) {
+      composed.set(value, terminal);
     }
-    map.set(oldPuuid, terminal);
+  }
+  map.clear();
+  for (const [oldPuuid, replacement] of composed) {
+    map.set(oldPuuid, replacement);
   }
   return map;
+}
+
+function resolveRemap(
+  start: string,
+  original: ReadonlyMap<string, string>,
+  order: ReadonlyMap<string, number>,
+): { path: string[]; terminal: string } {
+  const path: string[] = [];
+  const seen = new Map<string, number>();
+  let current = start;
+  while (original.has(current)) {
+    const cycleAt = seen.get(current);
+    if (cycleAt !== undefined) {
+      return {
+        path,
+        terminal: cycleDestination(path.slice(cycleAt), original, order),
+      };
+    }
+    seen.set(current, path.length);
+    path.push(current);
+    current = original.get(current) ?? current;
+  }
+  return { path, terminal: current };
+}
+
+function cycleDestination(
+  cycle: readonly string[],
+  original: ReadonlyMap<string, string>,
+  order: ReadonlyMap<string, number>,
+): string {
+  const latest = cycle.toSorted(
+    (a, b) => (order.get(b) ?? 0) - (order.get(a) ?? 0),
+  )[0];
+  if (latest === undefined) {
+    throw new Error("cycle in PUUID remap has no members");
+  }
+  const destination = original.get(latest);
+  if (destination === undefined) {
+    throw new Error(`cycle in PUUID remap at ${latest}`);
+  }
+  return destination;
 }
 
 /**

@@ -851,3 +851,15 @@ test("begin refuses to reset a marker with unresolved work", async () => {
   await expect(beginTransition(db, true)).rejects.toThrow("unresolved work");
   await db.close();
 });
+
+test("begin refuses a resolved mapping whose rewrite was not applied", async () => {
+  const db = await seed({
+    accounts: [],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  await db.exec(`UPDATE "PuuidKeyMap" SET "appliedAt" = NULL`);
+  const { beginTransition } = await import("./cutover.ts");
+  await expect(beginTransition(db, true)).rejects.toThrow("unresolved work");
+  await db.close();
+});

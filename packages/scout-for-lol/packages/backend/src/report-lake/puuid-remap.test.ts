@@ -78,6 +78,21 @@ describe("remapRawJson", () => {
       participants: [NEW_B],
     });
   });
+
+  test("collapses a return transition cycle toward its latest domain", () => {
+    const composed = composePuuidRemap(
+      new Map([
+        [OLD_A, NEW_A],
+        [NEW_A, OLD_A],
+      ]),
+    );
+    expect(composed).toEqual(
+      new Map([
+        [OLD_A, OLD_A],
+        [NEW_A, OLD_A],
+      ]),
+    );
+  });
 });
 
 describe("puuidRemapFingerprint", () => {

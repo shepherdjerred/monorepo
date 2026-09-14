@@ -18,6 +18,7 @@
  */
 
 import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
+import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import {
   buildInventory,
   serializeInventory,
@@ -120,7 +121,8 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
   try {
     const rows = await db.query(
       `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"
-        WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL`,
+        WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL
+        ORDER BY "appliedAt", "oldPuuid"`,
     );
     const map = new Map(
       rows.map((row) => [
@@ -128,22 +130,7 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
         asString(row["newPuuid"], "newPuuid"),
       ]),
     );
-    for (const [oldPuuid, replacement] of map) {
-      const seen = new Set<string>([oldPuuid]);
-      let terminal = replacement;
-      while (map.has(terminal)) {
-        if (seen.has(terminal)) {
-          throw new Error(`cycle in PUUID remap at ${terminal}`);
-        }
-        seen.add(terminal);
-        const next = map.get(terminal);
-        if (next === undefined) {
-          break;
-        }
-        terminal = next;
-      }
-      map.set(oldPuuid, terminal);
-    }
+    composePuuidRemap(map);
     return map;
   } finally {
     await db.close();
