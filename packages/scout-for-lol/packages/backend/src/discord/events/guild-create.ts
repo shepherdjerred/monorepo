@@ -259,6 +259,7 @@ async function saveGuildInstall(
  */
 export async function reconcileConnectedGuildInstalls(
   guilds: Iterable<Guild>,
+  isStillConnected: (guildId: string) => boolean = () => true,
 ): Promise<void> {
   for (const guild of guilds) {
     if (!guild.available) {
@@ -272,6 +273,12 @@ export async function reconcileConnectedGuildInstalls(
         where: { serverId },
         select: { removedAt: true },
       });
+      // A guild can leave after ClientReady took its snapshot. Recheck the
+      // live cache immediately before creating or reactivating an active
+      // authorization row.
+      if (!isStillConnected(guild.id)) {
+        continue;
+      }
       if (existingInstall !== null && existingInstall.removedAt !== null) {
         // A previously observed removal followed by a connected guild is a
         // real re-install whose gateway event was missed while Scout was down.

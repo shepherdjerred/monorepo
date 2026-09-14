@@ -294,6 +294,13 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
 });
 
 describe("handleGuildCreate — availability guard and concurrent races", () => {
+  it("does not backfill a guild that left after the ready snapshot", async () => {
+    await reconcileConnectedGuildInstalls([guildFixture()], () => false);
+    await expect(
+      prisma.guildInstall.findUnique({ where: { serverId: SERVER_ID } }),
+    ).resolves.toBeNull();
+  });
+
   it("does not touch the install row when the guild is unavailable", async () => {
     const installedAt = new Date("2026-01-01T00:00:00.000Z");
     await prisma.guildInstall.create({

@@ -304,7 +304,9 @@ export function registerDiscordEventHandlers(target: Client): void {
     // asynchronous database reconciliation runs keeps its first-install
     // lifecycle, rather than being mistaken for a historical connection.
     const connectedGuildsAtReady = [...readyClient.guilds.cache.values()];
-    void reconcileConnectedGuildInstalls(connectedGuildsAtReady);
+    void reconcileConnectedGuildInstalls(connectedGuildsAtReady, (guildId) =>
+      readyClient.guilds.cache.has(guildId),
+    );
     void registerConnectedGuildCommands(readyClient.guilds.cache.keys());
   });
 
