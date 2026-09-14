@@ -30,7 +30,7 @@ export function createScoutV2PrematchActivities(): ScoutV2PrematchActivities {
     discoverPrematchGamesV2: async () =>
       await heartbeatWhile({ phase: "discovering-prematch-v2" }, async () => {
         const { discoverPrematchGamesV2 } =
-          await import("#src/temporal/v2/prematch-reads.ts");
+          await import("#src/temporal/v2/prematch/prematch-reads.ts");
         return await discoverPrematchGamesV2();
       }),
     archivePrematchSnapshotV2: async (input) =>
@@ -41,7 +41,7 @@ export function createScoutV2PrematchActivities(): ScoutV2PrematchActivities {
         },
         async () => {
           const { archivePrematchSnapshotV2 } =
-            await import("#src/temporal/v2/prematch-archive.ts");
+            await import("#src/temporal/v2/prematch/prematch-archive.ts");
           return await archivePrematchSnapshotV2(input);
         },
       ),
@@ -53,7 +53,7 @@ export function createScoutV2PrematchActivities(): ScoutV2PrematchActivities {
         },
         async () => {
           const { planPrematchFanOutV2 } =
-            await import("#src/temporal/v2/prematch-reads.ts");
+            await import("#src/temporal/v2/prematch/prematch-reads.ts");
           return await planPrematchFanOutV2(input);
         },
       ),

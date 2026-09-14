@@ -22,7 +22,7 @@ import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filte
 import { ACTIVE_GAME_TTL_MS } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { createLogger } from "#src/logger.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
-import type { ScoutV2PrematchContext } from "#src/temporal/v2/prematch-context.ts";
+import type { ScoutV2PrematchContext } from "#src/temporal/v2/prematch/prematch-context.ts";
 
 const logger = createLogger("scout-v2-prematch-intents");
 

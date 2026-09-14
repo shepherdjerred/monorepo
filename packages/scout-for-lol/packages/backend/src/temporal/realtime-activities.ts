@@ -4,7 +4,7 @@ import { heartbeatWhile, probeQueue } from "#src/temporal/activity-runtime.ts";
 import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 import { createScoutV2MatchActivities } from "#src/temporal/v2/match-activities.ts";
 import { createScoutV2NotificationActivities } from "#src/temporal/v2/notification-activities.ts";
-import { createScoutV2PrematchActivities } from "#src/temporal/v2/prematch-activities.ts";
+import { createScoutV2PrematchActivities } from "#src/temporal/v2/prematch/prematch-activities.ts";
 
 /**
  * The realtime queue's Activities, for both pipelines.

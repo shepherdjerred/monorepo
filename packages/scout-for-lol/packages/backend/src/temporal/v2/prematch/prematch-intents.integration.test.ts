@@ -10,7 +10,7 @@ import {
   prematchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { mintPrematchIntent } from "#src/temporal/v2/prematch-intents.ts";
+import { mintPrematchIntent } from "#src/temporal/v2/prematch/prematch-intents.ts";
 
 const { prisma } = createTestDatabase("scout-v2-prematch-intents");
 

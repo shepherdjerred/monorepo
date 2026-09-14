@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
-import { receiptedCommitV2 } from "#src/temporal/v2/prematch-archive.ts";
+import { receiptedCommitV2 } from "#src/temporal/v2/prematch/prematch-archive.ts";
 
 const WHAT = "Archived the NA1_9101 spectator snapshot";
 

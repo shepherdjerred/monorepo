@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
-import { isPrematchRosterComplete } from "#src/temporal/v2/prematch-context.ts";
+import { isPrematchRosterComplete } from "#src/temporal/v2/prematch/prematch-context.ts";
 
 function gameWith(overrides: {
   participants: number;

@@ -21,12 +21,12 @@ import {
 } from "#src/report-lake/durable-receipts.ts";
 import { archivePrematchReceipted } from "#src/report-lake/receipted-archive.ts";
 import { stagePrematchReceipted } from "#src/report-lake/receipted-staging.ts";
-import { recordPrematchDeliveryIntentsV2 } from "#src/temporal/v2/prematch-intents.ts";
+import { recordPrematchDeliveryIntentsV2 } from "#src/temporal/v2/prematch/prematch-intents.ts";
 import {
   resolveScoutV2PrematchContext,
   type ScoutV2PrematchContext,
-} from "#src/temporal/v2/prematch-context.ts";
-import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch-resume.ts";
+} from "#src/temporal/v2/prematch/prematch-context.ts";
+import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch/prematch-resume.ts";
 
 /**
  * The V2 per-game core's one Activity: capture the spectator snapshot and

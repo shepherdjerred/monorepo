@@ -45,18 +45,18 @@ vi.mock("#src/report-lake/receipted-archive.ts", () => ({
 vi.mock("#src/report-lake/receipted-staging.ts", () => ({
   stagePrematchReceipted: mocks.stage,
 }));
-vi.mock("#src/temporal/v2/prematch-intents.ts", () => ({
+vi.mock("#src/temporal/v2/prematch/prematch-intents.ts", () => ({
   recordPrematchDeliveryIntentsV2: mocks.intents,
 }));
-vi.mock("#src/temporal/v2/prematch-resume.ts", () => ({
+vi.mock("#src/temporal/v2/prematch/prematch-resume.ts", () => ({
   resumeArchivedPrematchContext: mocks.resume,
 }));
-vi.mock("#src/temporal/v2/prematch-context.ts", () => ({
+vi.mock("#src/temporal/v2/prematch/prematch-context.ts", () => ({
   resolveScoutV2PrematchContext: mocks.live,
 }));
 
 const { archivePrematchSnapshotV2 } =
-  await import("#src/temporal/v2/prematch-archive.ts");
+  await import("#src/temporal/v2/prematch/prematch-archive.ts");
 
 const GAME_REF = ScoutPrematchGameRefSchema.parse({
   puuid: "p".repeat(78),

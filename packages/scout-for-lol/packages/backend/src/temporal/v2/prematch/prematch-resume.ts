@@ -10,7 +10,7 @@ import {
   prematchContextFrom,
   trackedAccountConfigs,
   type ScoutV2PrematchContext,
-} from "#src/temporal/v2/prematch-context.ts";
+} from "#src/temporal/v2/prematch/prematch-context.ts";
 
 /**
  * Resuming a prematch capture from what it already archived.

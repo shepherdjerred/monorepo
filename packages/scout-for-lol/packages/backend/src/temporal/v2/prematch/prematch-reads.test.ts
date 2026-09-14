@@ -10,7 +10,7 @@ import {
   type NotificationIntentState,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
-import { drivablePrematchIntentKeys } from "#src/temporal/v2/prematch-reads.ts";
+import { drivablePrematchIntentKeys } from "#src/temporal/v2/prematch/prematch-reads.ts";
 
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_9101");
 const CHANNEL = "100000000000000001";

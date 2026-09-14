@@ -36,7 +36,7 @@ vi.mock("#src/discord/utils/guild-membership.ts", () => ({
 }));
 
 const { resolveScoutV2PrematchContext } =
-  await import("#src/temporal/v2/prematch-context.ts");
+  await import("#src/temporal/v2/prematch/prematch-context.ts");
 
 const GAME_REF = ScoutPrematchGameRefSchema.parse({
   puuid: PUUID,

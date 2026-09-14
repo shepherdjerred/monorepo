@@ -24,7 +24,7 @@ import {
 } from "#src/storage/s3-test-helpers.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { rawCurrentGameInfoFixture } from "#src/testing/raw-capture-fixtures.ts";
-import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch-resume.ts";
+import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch/prematch-resume.ts";
 
 /**
  * Resuming a capture from what it already archived.

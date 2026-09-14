@@ -27,7 +27,7 @@ import { createLogger } from "#src/logger.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 import { DRIVABLE_INTENT_STATES } from "#src/temporal/v2/match-reads.ts";
-import { isPrematchRosterComplete } from "#src/temporal/v2/prematch-context.ts";
+import { isPrematchRosterComplete } from "#src/temporal/v2/prematch/prematch-context.ts";
 
 /**
  * The V2 prematch path's reads: which live games exist, and what one game's
