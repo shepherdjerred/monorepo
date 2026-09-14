@@ -135,4 +135,51 @@ describe("retire-dare-v1-v2", () => {
     await expect(purge(true, prisma)).rejects.toThrow(/Refusing to purge/u);
     expect(await prisma.bucksDareV2.count()).toBe(1);
   });
+
+  test("an unrecognized compiler version fails loudly instead of retiring", async () => {
+    await seedV2Dare("achieved", "dare-scoutql-9");
+    await expect(verify(prisma)).rejects.toThrow(
+      /unrecognized compiler version/u,
+    );
+    await expect(purge(true, prisma)).rejects.toThrow(
+      /unrecognized compiler version/u,
+    );
+    expect(await prisma.bucksDareV2.count()).toBe(1);
+  });
+
+  test("purge removes superseded pre-v3 revisions from retained v3 dares", async () => {
+    const mixed = await seedV2Dare("active", "dare-scoutql-2");
+    await prisma.bucksDareV2Revision.create({
+      data: {
+        dareId: mixed.id,
+        revision: mixed.currentRevision + 1,
+        originalText: "revised into v3",
+        canonicalScoutQl: "SELECT true AS achieved",
+        compiledPlan: "{}",
+        compilerVersion: "dare-scoutql-3",
+        evaluatorVersion: "dare-evaluator-3",
+        targetsJson: "[]",
+        deadlineSpecJson: "{}",
+        openingStake: 5,
+        plainLanguage: "revised into v3",
+        semanticProofPlan: "{}",
+      },
+    });
+    await prisma.bucksDareV2.update({
+      where: { id: mixed.id },
+      data: { currentRevision: mixed.currentRevision + 1 },
+    });
+
+    await purge(true, prisma);
+
+    expect(await prisma.bucksDareV2.count({ where: { id: mixed.id } })).toBe(1);
+    expect(
+      await prisma.bucksDareV2Revision.count({
+        where: { compilerVersion: { not: "dare-scoutql-3" } },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.bucksDareV2Revision.count({ where: { dareId: mixed.id } }),
+    ).toBe(1);
+  });
 });

@@ -72,7 +72,9 @@ async function loadDareV2Rows(db: ExtendedPrismaClient) {
   return await db.bucksDareV2.findMany({
     include: {
       targets: true,
-      revisions: { select: { revision: true, compilerVersion: true } },
+      revisions: {
+        select: { id: true, revision: true, compilerVersion: true },
+      },
     },
     orderBy: { id: "asc" },
   });
@@ -92,8 +94,22 @@ function effectiveCompilerVersion(dare: DareV2WithRevisions): string {
   return revision.compilerVersion;
 }
 
+/** Every dialect this retirement recognizes as retirable. */
+const PRE_V3_COMPILERS = new Set(["dare-scoutql-1", "dare-scoutql-2"]);
+
+/**
+ * Closed classification: v3 is retained, the two known pre-v3 dialects are
+ * retired, and any other stored value fails loudly — an unrecognized
+ * compiler version is corrupt data, never something to silently refund and
+ * delete.
+ */
 function isPreV3(dare: DareV2WithRevisions): boolean {
-  return effectiveCompilerVersion(dare) !== DARE_SQL_V3_COMPILER;
+  const compiler = effectiveCompilerVersion(dare);
+  if (compiler === DARE_SQL_V3_COMPILER) return false;
+  if (PRE_V3_COMPILERS.has(compiler)) return true;
+  throw new Error(
+    `Dare ${dare.id.toString()} has unrecognized compiler version "${compiler}"`,
+  );
 }
 
 async function report(db: ExtendedPrismaClient = prisma): Promise<void> {
@@ -188,10 +204,18 @@ async function drainV2(
           `Draft dare ${dare.id.toString()} unexpectedly holds a pot of ${dare.potTotal.toString()} BB`,
         );
       }
-      await db.bucksDareV2.update({
-        where: { id: dare.id },
+      // Conditional claim: a live beta could fund this draft between the
+      // read and this write, and an id-only update would then bury an
+      // escrowed pot. Losing the claim is a hard stop — re-run the drain.
+      const claim = await db.bucksDareV2.updateMany({
+        where: { id: dare.id, dareState: "draft", potTotal: 0 },
         data: { dareState: "deleted" },
       });
+      if (claim.count !== 1) {
+        throw new Error(
+          `Draft dare ${dare.id.toString()} changed state mid-run; re-run --void`,
+        );
+      }
       continue;
     }
     if (dare.dareState === "pending_accept") {
@@ -237,11 +261,11 @@ async function verify(db: ExtendedPrismaClient = prisma): Promise<boolean> {
   const openV1 = await db.bucksDare.count({
     where: { dareState: { in: [...OPEN_V1_STATES] } },
   });
+  const openV2States = new Set<string>(OPEN_V2_STATES);
   const openPreV3 = (await loadDareV2Rows(db)).filter(
     (dare) =>
       isPreV3(dare) &&
-      (dare.dareState === "draft" ||
-        (OPEN_V2_STATES as readonly string[]).includes(dare.dareState)),
+      (dare.dareState === "draft" || openV2States.has(dare.dareState)),
   );
   console.log(`open v1 dares: ${openV1.toString()}`);
   console.log(`open pre-v3 v2 dares: ${openPreV3.length.toString()}`);
@@ -258,9 +282,31 @@ async function purge(
   if (!(await verify(db))) {
     throw new Error("Refusing to purge while open pre-v3 dares remain");
   }
-  const preV3Ids = (await loadDareV2Rows(db))
+  const allDares = await loadDareV2Rows(db);
+  const preV3Ids = allDares
     .filter((dare) => isPreV3(dare))
     .map((dare) => dare.id);
+  // A v3-effective dare may still carry superseded pre-v3 draft revisions
+  // (revised into v3 before funding). Those rows are draft history — never
+  // the governing revision — and must go BEFORE the deletes, or the final
+  // no-pre-v3-revisions assertion would fail after a partial purge.
+  const supersededRevisionIds: number[] = [];
+  for (const dare of allDares) {
+    if (isPreV3(dare)) continue;
+    const governing = dare.fundedRevision ?? dare.currentRevision;
+    for (const revision of dare.revisions) {
+      if (revision.compilerVersion === DARE_SQL_V3_COMPILER) continue;
+      if (revision.revision === governing) {
+        throw new Error(
+          `Dare ${dare.id.toString()} is v3-effective but its governing revision is pre-v3`,
+        );
+      }
+      supersededRevisionIds.push(revision.id);
+      console.log(
+        `superseded pre-v3 revision: dare #${dare.id.toString()} revision ${revision.revision.toString()} (${revision.compilerVersion})`,
+      );
+    }
+  }
   const [v1Count, intentTotal, intentDareBound] = await Promise.all([
     db.bucksDare.count(),
     db.confirmationIntent.count(),
@@ -276,10 +322,16 @@ async function purge(
     `confirmation intents before: total=${intentTotal.toString()} dare-bound=${intentDareBound.toString()}`,
   );
   if (!apply) return;
+  const deletedRevisions = await db.bucksDareV2Revision.deleteMany({
+    where: { id: { in: supersededRevisionIds } },
+  });
   const deletedV1 = await db.bucksDare.deleteMany({});
   const deletedV2 = await db.bucksDareV2.deleteMany({
     where: { id: { in: preV3Ids } },
   });
+  console.log(
+    `deleted ${deletedRevisions.count.toString()} superseded pre-v3 revisions from retained v3 dares`,
+  );
   const [intentTotalAfter, intentDareBoundAfter, revisionsLeft] =
     await Promise.all([
       db.confirmationIntent.count(),
