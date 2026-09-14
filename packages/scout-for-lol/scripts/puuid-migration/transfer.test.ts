@@ -11,6 +11,16 @@ const OLD_B = `OLDB_${"b".repeat(70)}`;
 const NEW_A = `NEWA_${"y".repeat(70)}`;
 const NEW_B = `NEWB_${"z".repeat(70)}`;
 
+/** One exported line for OLD_A with no replacement, for a given reason. */
+const lostLine = (status: string): string =>
+  JSON.stringify({
+    oldPuuid: OLD_A,
+    gameName: null,
+    tagLine: null,
+    newPuuid: null,
+    status,
+  });
+
 /** One exported mapping line for OLD_A, pointing wherever the test needs. */
 const mapLine = (newPuuid: string): string =>
   JSON.stringify({
@@ -331,4 +341,23 @@ test("a duplicate row that agrees is collapsed, not refused", async () => {
   // Concatenating overlapping exports is ordinary; only disagreement is a fault.
   const { parseMapRows } = await import("./transfer.ts");
   expect(parseMapRows(`${mapLine(NEW_A)}\n${mapLine(NEW_A)}`)).toHaveLength(1);
+});
+
+test("two rows agreeing on no replacement but not on why are refused", async () => {
+  // `stranded` is a recorded decision to give an identity up; `unresolved` is
+  // work not finished. Collapsing them would let a stranded row smuggled in
+  // ahead of an honest unresolved one bypass `--accept-stranded` — and `verify`
+  // tolerates stranded, so the archive would stay old-domain with every gate
+  // green.
+  const { parseMapRows } = await import("./transfer.ts");
+  expect(() =>
+    parseMapRows(`${lostLine("stranded")}\n${lostLine("unresolved")}`),
+  ).toThrow(/contradicts an earlier line/);
+});
+
+test("duplicate rows agreeing on both value and reason are collapsed", async () => {
+  const { parseMapRows } = await import("./transfer.ts");
+  expect(
+    parseMapRows(`${lostLine("stranded")}\n${lostLine("stranded")}`),
+  ).toHaveLength(1);
 });

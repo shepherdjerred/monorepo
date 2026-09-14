@@ -220,15 +220,22 @@ it before scaling back up so the backend can remount.
 Now that nothing is writing with the old key, re-run **both** discoveries to
 catch everything archived while the resolve was running.
 
-:::note[Retrofitting an already-swapped archive? Skip the inventory half]
-If the credential was swapped before this migration began, nothing has written
-an old-domain object since — the set was closed before step 2 and the archive
-half of this step finds nothing new. Run only the database `collect` below.
+:::note[Retrofitting an already-swapped archive? Skip this whole step]
+If the credential was swapped before this migration began, there is no delta to
+catch. Nothing has written an old-domain identity since — the set closed before
+step 2 — so neither half of this step finds anything new, and both halves do
+harm if run anyway.
 
-Running it anyway without each environment's `--cutover` is actively harmful:
-it collects the healthy post-swap identities, the old key answers 400 for every
-one of them, and `strand` then records identities as permanently lost that were
-never lost at all.
+The archive half collects healthy post-swap identities; the old key answers 400
+for every one, and `strand` then records as permanently lost identities that
+were never lost. The database half does the same for accounts registered since
+the swap.
+
+`collect` should refuse outright, because a retrofit requires the cutover marker
+to be recorded first and `collect` will not run against a database that already
+reports one. If it does not refuse, the marker is missing — record it before
+going any further, or every account added since the swap is about to be sent to
+a key that cannot read it.
 :::
 
 ```bash

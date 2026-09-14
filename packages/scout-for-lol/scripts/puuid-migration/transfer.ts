@@ -76,7 +76,7 @@ export function parseMapRows(text: string): MapRow[] {
   // one silently wins: the conflict check against the target compares each row
   // to what the DATABASE holds, so two rows that disagree with each other but
   // not with it both pass, and `apply` then rewrites to whichever landed last.
-  const seen = new Map<string, string | null>();
+  const seen = new Map<string, string>();
   let lineNumber = 0;
   for (const line of text.split("\n")) {
     lineNumber++;
@@ -94,18 +94,26 @@ export function parseMapRows(text: string): MapRow[] {
       );
     }
     const row = result.data;
-    if (seen.has(row.oldPuuid)) {
-      const first = seen.get(row.oldPuuid) ?? null;
-      if (first !== row.newPuuid) {
+    // Compared on the STATUS as well as the replacement. Two rows can agree
+    // that an identity has no replacement and still disagree about what that
+    // means: `stranded` is an operator's recorded decision to give an identity
+    // up, and `unresolved` is work not finished. Keeping the first silently
+    // would let a `stranded` row smuggled in ahead of an honest `unresolved`
+    // one bypass the flag that exists to make that decision deliberate — and
+    // `verify` tolerates stranded, so the archive would stay old-domain with
+    // every gate green.
+    const decision = `${row.newPuuid ?? "none"}/${row.status}`;
+    const first = seen.get(row.oldPuuid);
+    if (first !== undefined) {
+      if (first !== decision) {
         throw new Error(
           `Map line ${lineNumber.toString()} contradicts an earlier line: ` +
-            `${row.oldPuuid.slice(0, 16)}… maps to both ${String(first).slice(0, 16)}… ` +
-            `and ${String(row.newPuuid).slice(0, 16)}…`,
+            `${row.oldPuuid.slice(0, 16)}… is recorded as ${first} and as ${decision}`,
         );
       }
       continue;
     }
-    seen.set(row.oldPuuid, row.newPuuid);
+    seen.set(row.oldPuuid, decision);
     rows.push(row);
   }
   return rows;
