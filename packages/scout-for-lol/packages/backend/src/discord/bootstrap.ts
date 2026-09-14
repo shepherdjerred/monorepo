@@ -7,7 +7,10 @@ import {
   registerDiscordCommands,
   reconcileGuildScopedCommands,
 } from "#src/discord/rest.ts";
-import { handleGuildCreate } from "#src/discord/events/guild-create.ts";
+import {
+  handleGuildCreate,
+  reconcileConnectedGuildInstalls,
+} from "#src/discord/events/guild-create.ts";
 import { handleGuildDelete } from "#src/discord/events/guild-delete.ts";
 import {
   discordConnectionStatus,
@@ -292,6 +295,12 @@ export function registerDiscordEventHandlers(target: Client): void {
       },
     );
 
+    // `guildCreate` only tells us about a join as it happens. Cached guilds
+    // from before `GuildInstall` became an authorization source still need a
+    // row, otherwise the dashboard's picker hides a server where Scout is
+    // connected. This path is intentionally not `handleGuildCreate`: it must
+    // never welcome or re-onboard an existing server.
+    void reconcileConnectedGuildInstalls(readyClient.guilds.cache.values());
     void registerConnectedGuildCommands(readyClient.guilds.cache.keys());
   });
 

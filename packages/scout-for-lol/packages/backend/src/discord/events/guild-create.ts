@@ -246,6 +246,72 @@ async function saveGuildInstall(
 }
 
 /**
+ * Backfill install rows for guilds that were already connected when
+ * `GuildInstall` became an authorization source.
+ *
+ * A gateway `guildCreate` is the only lifecycle event that may send a welcome
+ * or record a first install. Discord does not replay that event for every
+ * cached guild on a later process start, though, so relying on it alone leaves
+ * long-standing guilds with no row and therefore no dashboard access. This
+ * reconciliation deliberately records those guilds without treating them as a
+ * new installation: it never sends a message and marks the lifecycle as
+ * untracked, because the real installation time is unknown.
+ */
+export async function reconcileConnectedGuildInstalls(
+  guilds: Iterable<Guild>,
+): Promise<void> {
+  for (const guild of guilds) {
+    if (!guild.available) {
+      continue;
+    }
+
+    try {
+      const serverId = DiscordGuildIdSchema.parse(guild.id);
+      const ownerDiscordId = DiscordAccountIdSchema.parse(guild.ownerId);
+      const existingInstall = await prisma.guildInstall.findUnique({
+        where: { serverId },
+        select: { removedAt: true },
+      });
+      if (existingInstall !== null && existingInstall.removedAt !== null) {
+        // A previously observed removal followed by a connected guild is a
+        // real re-install whose gateway event was missed while Scout was down.
+        // `saveGuildInstall` safely claims that lifecycle transition, without
+        // sending the welcome message owned by `handleGuildCreate`.
+        await saveGuildInstall(guild, ownerDiscordId);
+        continue;
+      }
+      if (existingInstall !== null) {
+        continue;
+      }
+      await prisma.guildInstall.create({
+        data: {
+          serverId,
+          serverName: guild.name,
+          ownerDiscordId,
+          // A historical connection has no trustworthy BotAdd audit-log entry.
+          addedByDiscordId: ownerDiscordId,
+          memberCount: guild.memberCount,
+          installedAt: new Date(),
+          analyticsLifecycleTracked: false,
+        },
+      });
+      await reconcilePendingInstallAttribution(serverId);
+      logger.info(
+        `[Guild Install Reconciliation] Backfilled ${guild.name} (${guild.id})`,
+      );
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        continue;
+      }
+      logger.error(
+        `[Guild Install Reconciliation] Failed to backfill ${guild.name} (${guild.id}):`,
+        getErrorMessage(error),
+      );
+    }
+  }
+}
+
+/**
  * Handle guildCreate event - send welcome message when bot joins a server
  */
 export async function handleGuildCreate(guild: Guild): Promise<void> {
