@@ -185,6 +185,9 @@ async function processClassicMatch(
     });
     throw error;
   }
+  // No "View match" link: the Explore match page rejects Classic asset
+  // modes (isExploreMatchSnapshotSupported), so a button here would open
+  // "Match unavailable".
   return {
     content: formatGameCompletionMessage(
       classicMatch.players.map((player) => player.playerConfig.alias),
@@ -192,7 +195,6 @@ async function processClassicMatch(
     ),
     files: [attachment],
     embeds: [embed],
-    components: matchLinkComponents(matchId),
   };
 }
 
@@ -225,11 +227,13 @@ async function processArenaMatch(
     arenaMatch.queueType,
   );
 
+  // No "View match" link: the Explore match page rejects Arena matches
+  // (isExploreMatchSnapshotSupported), so a button here would open
+  // "Match unavailable".
   return {
     content: completionMessage,
     files: [attachment],
     embeds: [embed],
-    components: matchLinkComponents(matchId),
   };
 }
 
