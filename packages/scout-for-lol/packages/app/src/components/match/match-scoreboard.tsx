@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { championNameToDisplayName } from "@scout-for-lol/data";
+import { championNameToDisplayName, computeKda } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
   Card,
@@ -64,11 +64,7 @@ function percent(value: number | null): string {
 }
 
 function kda(participant: MatchParticipant): string {
-  const value =
-    participant.deaths === 0
-      ? participant.kills + participant.assists
-      : (participant.kills + participant.assists) / participant.deaths;
-  return value.toFixed(2);
+  return computeKda(participant).toFixed(2);
 }
 
 export function MatchScoreboards(props: { teams: MatchTeam[] }) {

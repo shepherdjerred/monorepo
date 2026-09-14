@@ -2,6 +2,7 @@ import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import {
   ACCOUNT_LAKE_COLUMNS,
+  computeKda,
   type AccountLakeRow,
   type MatchLakeRow,
   type PrematchLakeRow,
@@ -136,10 +137,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     kills: fact.kills,
     deaths: fact.deaths,
     assists: fact.assists,
-    kda:
-      fact.deaths === 0
-        ? fact.kills + fact.assists
-        : (fact.kills + fact.assists) / fact.deaths,
+    kda: computeKda(fact),
     creep_score: fact.creepScore ?? 150,
     total_minions_killed: 140,
     neutral_minions_killed: 10,

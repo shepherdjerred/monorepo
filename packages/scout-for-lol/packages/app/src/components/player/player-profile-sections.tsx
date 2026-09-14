@@ -1,5 +1,6 @@
 import {
   championNameToDisplayName,
+  computeKda,
   divisionToString,
   type Rank,
 } from "@scout-for-lol/data";
@@ -31,8 +32,7 @@ export function formatPercent(value: number | null): string {
 }
 
 function formatKda(kills: number, deaths: number, assists: number): string {
-  const value = deaths === 0 ? kills + assists : (kills + assists) / deaths;
-  return value.toFixed(2);
+  return computeKda({ kills, deaths, assists }).toFixed(2);
 }
 
 function formatRelative(epochMs: number): string {

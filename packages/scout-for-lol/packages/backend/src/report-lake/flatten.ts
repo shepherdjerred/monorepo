@@ -11,6 +11,7 @@ import type {
   RawParticipant,
 } from "@scout-for-lol/data";
 import {
+  computeKda,
   rankToLeaguePoints,
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
@@ -22,10 +23,6 @@ import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
  *
  * These are the ONLY places lake rows are produced (staging appends at ingest
  * and compaction rebuilds), so the derivations below define lake semantics.
- * They intentionally match the fact-table derivations in
- * report-store/store.ts (participantKda / participantCreepScore /
- * participantSurrendered) — pinned by unit tests — until the fact tables are
- * dropped in the follow-up PR.
  */
 
 type AccountWithPlayer = Prisma.AccountGetPayload<{
@@ -33,8 +30,7 @@ type AccountWithPlayer = Prisma.AccountGetPayload<{
 }>;
 
 function participantKda(participant: RawParticipant): number {
-  const takedowns = participant.kills + participant.assists;
-  return participant.deaths === 0 ? takedowns : takedowns / participant.deaths;
+  return computeKda(participant);
 }
 
 function participantCreepScore(participant: RawParticipant): number {
