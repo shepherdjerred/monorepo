@@ -56,6 +56,16 @@
           "vault_json_path": "/openai"
         }
       ]
+    },
+    "scout-voice-2026-09": {
+      "project_key": "scout",
+      "name": "Scout voice 2026-09",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "aqksmuq6o3qwe4qqiauqdu2pge",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
     }
   },
   "openai_organization_users": {
@@ -65,7 +75,17 @@
     }
   },
   "openai_project_users": {},
-  "openai_project_spend_alerts": {},
+  "openai_project_spend_alerts": {
+    "scout-monthly": {
+      "project_key": "scout",
+      "threshold_amount": 10,
+      "currency": "USD",
+      "interval": "month",
+      "notification_channel_type": "email",
+      "notification_channel_recipients": ["openai@sjer.red"],
+      "notification_channel_subject_prefix": "[scout-openai]"
+    }
+  },
   "openai_groups": {},
   "openai_group_users": {},
   "openai_group_roles": {},
@@ -79,6 +99,13 @@
   "openai_project_data_retention": {},
   "openai_project_model_permissions": {},
   "openai_project_hosted_tool_permissions": {},
-  "openai_project_spend_limits": {},
+  "openai_project_spend_limits": {
+    "scout-monthly": {
+      "project_key": "scout",
+      "threshold_amount": 2500,
+      "currency": "USD",
+      "interval": "month"
+    }
+  },
   "openai_project_rate_limits": {}
 }

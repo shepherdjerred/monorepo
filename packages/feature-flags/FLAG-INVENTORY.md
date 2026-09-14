@@ -37,8 +37,11 @@ value must match the current production value.
 - Credentials, feature-flag bootstrap variables, telemetry/Sentry, archive
   retention, CI/review switches, one-shot CLI options, and infrastructure shape.
 - Birmel trusted-user grants, shell/browser/repository-editor capability, and
-  Streambot voice activation or voice capture. Flipt has no authentication and
-  voice capture persists human audio.
+  Streambot or Scout voice activation, plus Streambot voice capture. Flipt has
+  no authentication and voice capture persists human audio. Both voice
+  assistants keep a second, env-only activation gate
+  (`VOICE_ASSISTANT_ENABLED`) that decides whether the deployment loads a voice
+  runtime at all; their Flipt flags only choose which guilds may use one.
 - Temporal schedule enablement, TaskNotes/user-owned settings, persisted Scout
   report/sound settings, and UI query-state booleans.
 

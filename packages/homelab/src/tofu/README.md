@@ -131,8 +131,17 @@ pinned `jianyuan/openai` companion is used only for project service accounts
 because that resource returns the newly created key. The sensitive output pairs
 that key with one or more existing 1Password rotation units for the
 operator-controlled handoff. Existing projects carry their permanent import IDs;
-new service accounts are limited to the Streambot and OpenRouter BYOK rotations.
-OpenAI subscription/Codex authentication is a separate boundary.
+new service accounts are limited to the Streambot, OpenRouter BYOK, and Scout
+voice rotations. OpenAI subscription/Codex authentication is a separate
+boundary.
+
+Spend controls denominate their thresholds inconsistently upstream, and the
+committed values rely on it: `openai_project_spend_limit` /
+`openai_organization_spend_limit` take **cents** (the provider documents
+"Hard spend limit amount, in cents"), while the `*_spend_alert` resources take
+**whole currency units**. The Scout entries therefore read `2500` for a $25
+monthly hard cap and `10` for a $10 alert. Do not "normalize" one to match the
+other.
 
 ### Anthropic
 

@@ -129,7 +129,13 @@ const openAiDesiredState = z.strictObject({
   openai_service_accounts: resourceMap(openAiServiceAccount),
   openai_organization_users: resourceMap(openAiOrganizationUser),
   openai_project_users: resourceMap(openAiProjectUser),
-  openai_project_spend_alerts: resourceMap(spendAlert),
+  // Project-scoped alerts carry the project they bind to, exactly like
+  // `openai_project_spend_limits` below; the organization-scoped maps do not.
+  // This stayed wrong until the first project alert was declared because an
+  // empty map validates against either shape.
+  openai_project_spend_alerts: resourceMap(
+    spendAlert.extend({ project_key: nonEmptyString }),
+  ),
   openai_groups: resourceMap(openAiGroup),
   openai_group_users: resourceMap(openAiGroupUser),
   openai_group_roles: resourceMap(openAiGroupRole),

@@ -67,6 +67,60 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile --production --filter '@scout-for-lol/backend'
 
+# ── voice-models: pinned, checksum-verified local wake + VAD assets ─────────
+# Fetched only while building the immutable image; runtime startup validates
+# these files and never reaches the network for local activation. The upstream
+# archives are byte-identical to the ones streambot pins, so the SHA-256 values
+# are deliberately the same two constants — if one image's download is
+# tampered with or silently re-cut, both builds fail identically.
+#
+# The download supplies the sherpa keyword-spotting trio, tokens/bpe, and the
+# VAD; `assets/voice/` supplies the trained hey-scout classifier, its keyword
+# file, the wake-verifier manifest, and the smoke/feedback WAVs. Together they
+# are exactly `scoutVoiceAssetManifest` plus `VOICE_FEEDBACK_CLIP_FILES`
+# (src/voice-assistant/constants.ts) — the packaging contract that file's
+# comment calls "M5's Docker voice stage".
+FROM base AS voice-models
+# Scout's `base` is a bare bun image with no TLS roots or curl, unlike
+# streambot's compiler-bearing `base-build`. Install only what the fetch needs.
+# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure here. Reproducibility would need a snapshot archive, not
+# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# hadolint ignore=DL3008
+RUN apt-get update -qq \
+  && apt-get install -y -qq --no-install-recommends ca-certificates curl bzip2 \
+  && rm -rf /var/lib/apt/lists/*
+# Fail-fast shell: the checksum verification pipes echo into sha256sum, and a
+# failed producer must fail the build rather than be masked by the consumer.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ARG SHERPA_KWS_ARCHIVE_SHA256=f170013b4716e41b62b9bfd809687c207cef798ef9bc6534d524e17af9b6561a
+ARG SILERO_VAD_SHA256=9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6
+RUN set -e; \
+    mkdir -p /opt/scout/voice; \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 \
+      https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2 \
+      -o /tmp/kws.tar.bz2; \
+    echo "${SHERPA_KWS_ARCHIVE_SHA256}  /tmp/kws.tar.bz2" | sha256sum -c -; \
+    tar -xjf /tmp/kws.tar.bz2 -C /opt/scout/voice --strip-components=1; \
+    rm -f /tmp/kws.tar.bz2 \
+      /opt/scout/voice/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+      /opt/scout/voice/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+      /opt/scout/voice/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
+      /opt/scout/voice/keywords.txt \
+      /opt/scout/voice/keywords_raw.txt; \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 \
+      https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx \
+      -o /opt/scout/voice/silero_vad.onnx; \
+    echo "${SILERO_VAD_SHA256}  /opt/scout/voice/silero_vad.onnx" | sha256sum -c -
+COPY packages/scout-for-lol/packages/backend/assets/voice/ /opt/scout/voice/
+
+# Local-output target for the operator acceptance flow: exports the exact
+# assembled asset set so `voice-training/` work no longer hand-copies streambot's
+# export and overlays Scout's files by hand.
+FROM scratch AS voice-model-export
+COPY --from=voice-models /opt/scout/voice/ /
+
 # ── runtime: COPY-only — no install, no build tooling, no network ───────────
 FROM base AS runtime
 # The isolated-linker tree uses relative symlinks (store at node_modules/.bun),
@@ -81,8 +135,8 @@ COPY --from=prod-deps /app/ /app/
 # here too, not just linked from node_modules — `discord/bootstrap.ts` imports
 # the voice-assistant manager unconditionally (voice's own enabled gate is
 # evaluated only after that import resolves), so this is required in every
-# environment, not only a voice-enabled one. Trained wake-word assets and the
-# model-baking Docker stage remain M5's responsibility.
+# environment, not only a voice-enabled one. The trained wake-word assets
+# themselves are baked at /opt/scout/voice by the voice-models stage below.
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
@@ -115,6 +169,12 @@ COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/di
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/scout-for-lol/packages/data/dist packages/scout-for-lol/packages/data/dist
 COPY --from=build /app/packages/scout-for-lol/packages/backend/generated packages/scout-for-lol/packages/backend/generated
+# Pinned voice assets. Present in every image, loaded only when
+# VOICE_ASSISTANT_ENABLED is set — baking them unconditionally keeps the
+# published digest identical between a voice-enabled and voice-disabled
+# deployment, so enabling voice is purely a Deployment change and never needs a
+# different image.
+COPY --from=voice-models /opt/scout/voice /opt/scout/voice
 
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
@@ -151,6 +211,19 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 # resolves it from the installed tree without a network fetch.
 CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/scoutql/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
 
+FROM runtime AS voice-smoke
+# Model loading runs as the non-root deploy uid, never root: the published image
+# runs as 1000 over a root-owned tree, and a root-only smoke would miss exactly
+# that class of failure. The final image copies this stage's sentinel, which is
+# what makes the gate mandatory rather than advisory — an image whose baked
+# assets fail SHA verification or cannot load under either keyword runtime
+# cannot be built, let alone pushed.
+USER 1000:1000
+ENV HOME=/tmp
+RUN VOICE_ASSETS_DIR=/opt/scout/voice \
+    bun scripts/voice-model-smoke.ts \
+    && touch /tmp/voice-model-smoke-passed
+
 FROM runtime AS smoke
 # The smoke boots the backend against a throwaway local Postgres (the app no
 # longer speaks SQLite). Debian bookworm's postgresql (v15) is fine here: the
@@ -168,6 +241,8 @@ USER 0
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql postgresql-client && rm -rf /var/lib/apt/lists/*
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
+# Depend on voice-smoke so an explicit `--target smoke` build proves both.
+COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
 COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
 COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=scout-for-lol
@@ -184,3 +259,7 @@ ENV HOME=/tmp
 RUN --network=none bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image
+# Corpus evaluation is deliberately NOT a build dependency: it is a multi-hour
+# acceptance measurement run by an operator, with its report committed under
+# voice-training/reports/. The build gate is the two-runtime smoke above.
+COPY --from=voice-smoke /tmp/voice-model-smoke-passed /opt/scout/voice/.image-smoke-passed

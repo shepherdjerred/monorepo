@@ -64,9 +64,20 @@ training corpus provenance counts and the full ACAV artifact first.
 
 ## Post-training acceptance (macOS)
 
-1. Assemble an assets dir at `.context/scout-voice-models/`: the pinned sherpa base model +
-   `silero_vad.onnx` + `test_wavs/` (copy from the `bun run voice:harness:prepare` export,
-   dropping streambot's wake files) plus everything in `../assets/voice/`.
+1. Export the exact asset set the image ships, straight from the backend's own
+   `voice-model-export` stage — the same `voice-models` stage the published image
+   bakes, so what you evaluate is what runs:
+
+   ```bash
+   docker buildx build \
+     --target voice-model-export \
+     --output type=local,dest=.context/scout-voice-models \
+     -f packages/scout-for-lol/packages/backend/Dockerfile .
+   ```
+
+   (Run from the repository root. This replaces the older manual assembly that
+   copied streambot's export and overlaid `../assets/voice/` by hand.)
+
 2. Generate and verify the 400-clip Scout corpus (~$1–5 of OpenAI TTS):
 
    ```bash
