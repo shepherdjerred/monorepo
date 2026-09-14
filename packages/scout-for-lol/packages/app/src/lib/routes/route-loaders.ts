@@ -66,6 +66,28 @@ export function bucksLoader(): null {
   return null;
 }
 
+/**
+ * Warm the operations probe and its queues.
+ *
+ * The probe is the route's gate, so prefetching it is what keeps the console
+ * from showing a loading state before it can say whether this account may be
+ * here at all. It still only warms the cache — the workspace's own query owns
+ * the answer, refusals included.
+ */
+export function operationsLoader(): null {
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.operations.availability.queryOptions(undefined, {
+        retry: false,
+      }),
+    ),
+  );
+  void preloadQuery(
+    queryClient.query(trpcOptions.operations.queues.queryOptions({})),
+  );
+  return null;
+}
+
 export function consumerPlayersLoader(): null {
   void preloadQuery(
     queryClient.query(trpcOptions.consumerPlayer.status.queryOptions()),

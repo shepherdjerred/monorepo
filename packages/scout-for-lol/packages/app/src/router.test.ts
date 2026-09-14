@@ -53,6 +53,7 @@ const KNOWN_URLS = [
   "/g/1/hall-of-fame",
   "/g/1/audit",
   "/g/1/access",
+  "/operations/matches",
 ];
 
 describe("router route matching", () => {

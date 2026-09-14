@@ -44,6 +44,8 @@ import { BucksLeaderboard } from "#src/routes/bucks/bucks-leaderboard.tsx";
 import { BucksSettings } from "#src/routes/bucks/bucks-settings.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
+import { OperationsMatches } from "#src/routes/operations/operations-matches.tsx";
+import { OperationsWorkspace } from "#src/routes/operations/operations-workspace.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
 import { HallOfFame, HallPicker } from "#src/routes/hall-of-fame.tsx";
@@ -69,6 +71,7 @@ import {
   consumerPlayersLoader,
   exploreLoader,
   guildLoader,
+  operationsLoader,
   playerDetailLoader,
   playersLoader,
   reportDetailLoader,
@@ -371,6 +374,24 @@ export const routes: RouteObject[] = [
           { path: "manage", element: <ManageServers /> },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
+          {
+            // The operator surface. `OperationsWorkspace` is the gate and the
+            // gate is the server: its probe is an operations procedure, so the
+            // allowlist decides this route the same way it decides every call
+            // made beneath it. The rollout flag can only remove the surface.
+            path: "operations",
+            element: <OperationsWorkspace />,
+            loader: operationsLoader,
+            errorElement: <RouteErrorPanel />,
+            children: [
+              { index: true, element: <Navigate to="matches" replace /> },
+              {
+                path: "matches",
+                element: <OperationsMatches />,
+                errorElement: <RouteErrorPanel />,
+              },
+            ],
+          },
           {
             path: "g/:guildId",
             element: <GuildWorkspace />,
