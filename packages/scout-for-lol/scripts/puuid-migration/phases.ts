@@ -12,7 +12,11 @@ import {
   readTrackedPuuids,
 } from "./discovery.ts";
 import { parseJson, translateJsonValue } from "./json-walk.ts";
-import { cutoverApplied, strayIdentities } from "./cutover.ts";
+import {
+  collectKnownIdentities,
+  cutoverApplied,
+  strayIdentities,
+} from "./cutover.ts";
 import {
   byPuuid,
   byRiotId,
@@ -94,20 +98,10 @@ export async function collect(db: Db): Promise<void> {
   await auditForUnregistered(db, columns);
   console.log("  audit clean");
 
-  // Skip identities the map already knows on EITHER side. After a completed
-  // apply the tracked columns hold new-domain values, so inserting them blindly
-  // would create a second, bogus `pending` row per migrated player.
-  const mapRows = await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
-  );
-  const known = new Set<string>();
-  for (const row of mapRows) {
-    known.add(asString(row["oldPuuid"], "oldPuuid"));
-    const mapped = asOptionalString(row["newPuuid"]);
-    if (mapped !== null) {
-      known.add(mapped);
-    }
-  }
+  // A replacement from a completed transition is the old-domain input for the
+  // next one. Only a replacement whose current rewrite is still in flight is
+  // suppressed, so a rerun after an interrupted apply stays resumable.
+  const known = await collectKnownIdentities(db);
 
   const unknown = [...tracked].filter((puuid) => !known.has(puuid));
 

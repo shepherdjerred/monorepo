@@ -36,6 +36,7 @@ owns the databases:
 
 | Phase     | Does                                                    | Key used |
 | --------- | ------------------------------------------------------- | -------- |
+| `begin`   | Opens a new key-transition scope                        | none     |
 | `collect` | Finds every PUUID-bearing column, then every identity   | none     |
 | `seed`    | Adds identities from a corpus inventory                 | none     |
 | `resolve` | old PUUID → Riot ID → new PUUID, both hops per identity | both     |
@@ -83,44 +84,31 @@ names a file, not a store, so it carries none of the risk that keeps
 `DATABASE_URL` unexported.
 
 The scratch file is named for the transition, and a later one must never reuse
-it. `seed` skips any identity the map already knows, including every replacement
-it has produced — which is right within a transition, because objects written
-after the cutover already name new-domain identities. But the next transition's
-old domain IS this one's new domain, so seeding into a stale file skips
-everything: nothing resolves, the export is empty, and `apply` and `verify` both
-pass having done nothing. The stranding surfaces only when the key is retired.
-`seed` says how many of the identities it skipped were replacements it had
-already produced; on the first seed of a new transition that number should be
-near zero.
+it. The live map is retained across transitions so backups can still be
+translated; `begin --new-transition` resets only the current cutover marker after
+the previous map is complete. `seed` treats a previous replacement as a valid
+input for the next transition, while duplicate old-side rows are still skipped.
 
-### Archive the previous transition's state first
+### Open a later transition explicitly
 
-This tooling migrates **one** key transition. Its state is a single map and a
-single marker row with nothing naming which transition they belong to, so
-nothing can detect a stale one for you. Before starting a later transition,
-archive both in each live database:
+Before collecting a later transition, reset the current marker in each live
+database while retaining the map history:
 
 ```bash
 # per database, against $PROD_DB and $BETA_DB in turn
-ALTER TABLE "PuuidKeyMap"       RENAME TO "PuuidKeyMap_2026_09_13";
-ALTER TABLE "PuuidKeyMigration" RENAME TO "PuuidKeyMigration_2026_09_13";
+DATABASE_URL="$PROD_DB" bun scripts/migrate-puuid-key.ts begin --new-transition
+DATABASE_URL="$BETA_DB" bun scripts/migrate-puuid-key.ts begin --new-transition
 ```
 
-Then re-create the empty tables the way the first transition did.
-
 Skipping this fails late and badly. `collect` refuses to record a tracked
-identity once a cutover marker stands — correctly, because after a cutover an
-unmapped identity is usually a new account that is already new-domain. With the
-previous transition's marker still in place every account registered since then
-looks exactly like that, so `collect` aborts **after the backends are already
-scaled down**. `apply` would also `COALESCE` the new marker onto the old
-timestamp, leaving `verify` measuring strays against a boundary years stale.
+identity once a cutover marker stands, while reusing the old marker would judge
+the next transition against the previous boundary. `begin` refuses if the
+previous map still has unresolved work, so the marker cannot be reset while the
+old transition is incomplete.
 
-Archiving is also what keeps the read-time remap correct. It resolves one
-mapping, not a chain. Accumulated across transitions the table would hold
-old₁→old₂ beside old₂→new₃, and a restore from before the first rewrite would be
-translated one hop into a domain nothing else uses — silently, since every row
-involved is real. One map per transition means a chain never exists to walk.
+The read-time remap composes retained mappings to their terminal replacement.
+Thus old₁→old₂ beside old₂→new₃ still translates a restore from before the first
+rewrite directly to new₃.
 
 ## 1. Back up both databases
 

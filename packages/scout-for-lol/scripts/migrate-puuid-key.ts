@@ -19,6 +19,7 @@
  *
  * Phases are independent and resumable; each is safe to re-run.
  *
+ *   begin   open a later key transition without discarding remap history
  *   collect  discover every PUUID-bearing column, then every distinct PUUID
  *   seed     add identities from a corpus inventory file
  *   harvest  old PUUID -> Riot ID, using the OLD key
@@ -54,6 +55,7 @@ import {
 } from "./puuid-migration/transfer.ts";
 import { parseInventory } from "./puuid-corpus/inventory.ts";
 import { apply, collect, harvest, resolve } from "./puuid-migration/phases.ts";
+import { beginTransition } from "./puuid-migration/cutover.ts";
 import { strand, verify } from "./puuid-migration/verify.ts";
 import { waitOutColdStart } from "./puuid-migration/riot.ts";
 
@@ -70,6 +72,7 @@ const phase = Bun.argv[2];
 const confirmed = Bun.argv.includes("--apply");
 const allowUnresolved = Bun.argv.includes("--allow-unresolved");
 const acceptStranded = Bun.argv.includes("--accept-stranded");
+const newTransition = Bun.argv.includes("--new-transition");
 
 const db = await openDb();
 console.log(`target: ${db.kind}\n`);
@@ -81,6 +84,9 @@ await assertTrackedSourcesMatchSchema(db);
 
 try {
   switch (phase) {
+    case "begin":
+      await beginTransition(db, newTransition);
+      break;
     case "collect":
       await collect(db);
       break;
@@ -115,23 +121,6 @@ try {
         `seed: ${result.added.toString()} identities added, ` +
           `${result.alreadyKnown.toString()} already known; map now holds ${seededTotal.toString()}`,
       );
-      if (result.alreadyReplacements > 0) {
-        // Seeding an identity this map already produced is normal WITHIN a
-        // transition: objects written after the cutover name new-domain
-        // identities, and re-resolving one would be meaningless.
-        //
-        // Across transitions it is the symptom of a reused scratch file. The
-        // identities being seeded are then the PREVIOUS run's replacements, so
-        // every one is skipped, nothing resolves, the export is empty, and
-        // `apply` and `verify` both pass having done nothing — with the
-        // stranding only appearing once the key is retired. Said out loud
-        // because the counts alone look like an ordinary no-op.
-        console.log(
-          `  ${result.alreadyReplacements.toString()} of them are replacements this map already produced. ` +
-            "Expected for post-cutover objects; if this is a NEW key transition, " +
-            "you are reusing an earlier transition's scratch file — start a fresh one.",
-        );
-      }
       break;
     }
     case "export": {
@@ -163,8 +152,8 @@ try {
     default:
       throw new Error(
         "usage: migrate-puuid-key.ts " +
-          "<collect|seed|harvest|resolve|apply|strand|verify|export|import> " +
-          "[--apply] [--allow-unresolved] [--accept-stranded] [--no-wait-window] " +
+          "<begin|collect|seed|harvest|resolve|apply|strand|verify|export|import> " +
+          "[--apply] [--allow-unresolved] [--accept-stranded] [--new-transition] [--no-wait-window] " +
           "[--from FILE] [--out FILE]",
       );
   }

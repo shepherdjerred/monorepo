@@ -67,10 +67,34 @@ export async function loadPuuidRemap(
     }
     map.set(row.oldPuuid, row.newPuuid);
   }
+  composePuuidRemap(map);
   if (map.size > 0) {
     logger.info(
       `Loaded ${map.size.toString()} PUUID remappings for historical payloads`,
     );
+  }
+  return map;
+}
+
+/** Collapse old→intermediate→current chains retained across transitions. */
+export function composePuuidRemap(
+  map: Map<string, string>,
+): Map<string, string> {
+  for (const [oldPuuid, replacement] of map) {
+    const seen = new Set<string>([oldPuuid]);
+    let terminal = replacement;
+    while (map.has(terminal)) {
+      if (seen.has(terminal)) {
+        throw new Error(`cycle in PUUID remap at ${terminal}`);
+      }
+      seen.add(terminal);
+      const next = map.get(terminal);
+      if (next === undefined) {
+        break;
+      }
+      terminal = next;
+    }
+    map.set(oldPuuid, terminal);
   }
   return map;
 }

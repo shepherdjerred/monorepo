@@ -47,19 +47,18 @@ test("seed adds identities from an inventory and reports what it skipped", async
   const db = await open();
   const { seedIdentities } = await import("./transfer.ts");
   const first = await seedIdentities(db, [OLD_A, OLD_B]);
-  expect(first).toEqual({ added: 2, alreadyKnown: 0, alreadyReplacements: 0 });
+  expect(first).toEqual({ added: 2, alreadyKnown: 0 });
   const again = await seedIdentities(db, [OLD_A, OLD_B]);
   expect(again).toEqual({
     added: 0,
     alreadyKnown: 2,
-    alreadyReplacements: 0,
   });
   await db.close();
 });
 
-test("seed refuses to record an identity that is already a migration RESULT", async () => {
-  // The either-side skip. Recording a new-domain identifier as something to
-  // migrate would send it to a key that can no longer decrypt anything.
+test("seed records a previous migration result as the next transition's input", async () => {
+  // The previous result is the next transition's old-domain value. Skipping it
+  // would make a successive migration silently resolve nothing.
   const db = await open();
   await db.exec(
     `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
@@ -67,24 +66,14 @@ test("seed refuses to record an identity that is already a migration RESULT", as
   );
   const { seedIdentities } = await import("./transfer.ts");
   const result = await seedIdentities(db, [NEW_A]);
-  // Counted as a replacement as well: within one transition that is an
-  // ordinary post-cutover object, but it is also the only signal that a scratch
-  // file from an EARLIER transition is being reused, where every identity being
-  // seeded is a previous run's result and the whole migration silently no-ops.
   expect(result).toEqual({
-    added: 0,
-    alreadyKnown: 1,
-    alreadyReplacements: 1,
+    added: 1,
+    alreadyKnown: 0,
   });
   await db.close();
 });
 
-test("seeding a stale transition's map reports every identity as a replacement", async () => {
-  // The reuse trap end to end. A second key transition seeded into the first
-  // transition's file: its old domain is that file's new domain, so nothing is
-  // added, nothing resolves, and the export would be empty while `apply` and
-  // `verify` both pass. The replacement count is what distinguishes this from
-  // an ordinary re-seed.
+test("seeding a stale transition's map records every next-transition identity", async () => {
   const db = await open();
   await db.exec(
     `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
@@ -97,9 +86,8 @@ test("seeding a stale transition's map reports every identity as a replacement",
   const { seedIdentities } = await import("./transfer.ts");
   const result = await seedIdentities(db, [NEW_A, NEW_B]);
   expect(result).toEqual({
-    added: 0,
-    alreadyKnown: 2,
-    alreadyReplacements: 2,
+    added: 2,
+    alreadyKnown: 0,
   });
   await db.close();
 });

@@ -137,9 +137,8 @@ export async function exportMap(db: Db): Promise<MapRow[]> {
  * Add identities to work on, without disturbing anything already decided.
  *
  * A row whose PUUID the map already knows on EITHER side is left alone. On the
- * old side it is already being worked; on the new side it is the RESULT of an
- * earlier migration, and recording that as something to migrate would send a
- * new-domain identifier to a retired key.
+ * old side it is already being worked. A replacement can also be the old domain
+ * of a later key transition, so only an existing old-side row suppresses it.
  *
  * Deliberately not gated on the cutover marker, unlike `collect`. These
  * identities come from the archive, which is known to be old-domain, rather
@@ -151,28 +150,15 @@ export async function seedIdentities(
 ): Promise<{
   added: number;
   alreadyKnown: number;
-  alreadyReplacements: number;
 }> {
   const known = new Set<string>();
-  const replacements = new Set<string>();
-  for (const row of await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
-  )) {
+  for (const row of await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`)) {
     known.add(asString(row["oldPuuid"], "oldPuuid"));
-    const mapped = asOptionalString(row["newPuuid"]);
-    if (mapped !== null) {
-      known.add(mapped);
-      replacements.add(mapped);
-    }
   }
 
   let added = 0;
-  let alreadyReplacements = 0;
   for (const puuid of puuids) {
     if (known.has(puuid)) {
-      if (replacements.has(puuid)) {
-        alreadyReplacements++;
-      }
       continue;
     }
     await db.exec(
@@ -185,7 +171,6 @@ export async function seedIdentities(
   return {
     added,
     alreadyKnown: puuids.length - added,
-    alreadyReplacements,
   };
 }
 

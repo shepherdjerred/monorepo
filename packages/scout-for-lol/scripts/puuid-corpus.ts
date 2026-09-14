@@ -122,12 +122,29 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
       `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"
         WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL`,
     );
-    return new Map(
+    const map = new Map(
       rows.map((row) => [
         asString(row["oldPuuid"], "oldPuuid"),
         asString(row["newPuuid"], "newPuuid"),
       ]),
     );
+    for (const [oldPuuid, replacement] of map) {
+      const seen = new Set<string>([oldPuuid]);
+      let terminal = replacement;
+      while (map.has(terminal)) {
+        if (seen.has(terminal)) {
+          throw new Error(`cycle in PUUID remap at ${terminal}`);
+        }
+        seen.add(terminal);
+        const next = map.get(terminal);
+        if (next === undefined) {
+          break;
+        }
+        terminal = next;
+      }
+      map.set(oldPuuid, terminal);
+    }
+    return map;
   } finally {
     await db.close();
   }

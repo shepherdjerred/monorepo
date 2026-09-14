@@ -802,3 +802,52 @@ test("collect takes only the actionable identities from a work payload", async (
   expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A]);
   await db.close();
 });
+
+test("begin opens a new marker scope while retaining applied map rows", async () => {
+  const db = await seed({
+    accounts: [],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  const { beginTransition, cutoverApplied } = await import("./cutover.ts");
+  await beginTransition(db, true);
+  expect(await cutoverApplied(db)).toBe(false);
+  const rows = await db.query(
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"`,
+  );
+  expect(rows[0]?.["oldPuuid"]).toBe(OLD_A);
+  expect(rows[0]?.["newPuuid"]).toBe(NEW_A);
+  expect(rows[0]?.["appliedAt"]).not.toBeNull();
+  await db.close();
+});
+
+test("collect treats a prior replacement as the next transition's old value", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  const { beginTransition } = await import("./cutover.ts");
+  await beginTransition(db, true);
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid", "status" FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+  );
+  expect(rows).toEqual([
+    { oldPuuid: NEW_A, status: "pending" },
+    { oldPuuid: OLD_A, status: "resolved" },
+  ]);
+  await db.close();
+});
+
+test("begin refuses to reset a marker with unresolved work", async () => {
+  const db = await seed({
+    accounts: [],
+    map: [{ oldPuuid: OLD_A, newPuuid: null, status: "unresolved" }],
+    applied: true,
+  });
+  const { beginTransition } = await import("./cutover.ts");
+  await expect(beginTransition(db, true)).rejects.toThrow("unresolved work");
+  await db.close();
+});
