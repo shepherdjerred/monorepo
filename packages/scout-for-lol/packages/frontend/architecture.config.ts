@@ -12,19 +12,14 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * still worth having: `lib/` and `data/` are what an island reaches for, and
  * they are the parts most likely to accrete a UI import.
  *
- * As in the web app, the client/server boundary is out of reach. The site
- * names the backend's `AppRouter` type in `lib/trpc.ts` and must never import
- * backend runtime, but each cruise is deliberately scoped to its own source
- * root, so a cross-package edge is invisible here. The boundary holds today;
- * enforcing it needs a different mechanism.
  */
 export default defineArchitecture({
   boundaries: [
     {
       name: "lib-does-not-depend-on-the-site",
       comment:
-        "`lib/` holds colours, marketing copy constants, the OG-image template and the tRPC " +
-        "client — things a page or an island reaches for. Importing a component or a layout " +
+        "`lib/` holds colours, marketing copy constants, and the OG-image template — things " +
+        "a page or an island reaches for. Importing a component or a layout " +
         "back out of it inverts that and makes the helper unusable from an `.astro` file that " +
         "does not already render the component.",
       from: "lib",
