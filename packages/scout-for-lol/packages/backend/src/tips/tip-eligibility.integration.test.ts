@@ -172,3 +172,16 @@ describe("tip claims", () => {
     expect(await claimTip({ ...audience, tipKey: "dares" }, db)).toBe(true);
   });
 });
+
+describe("persisted tip keys", () => {
+  test("a corrupt tipKey fails loudly instead of occupying the shown set", async () => {
+    // Malformed persisted data is an internal contract violation, not user
+    // input: it must surface rather than silently suppress real tips.
+    await db.featureTipImpression.create({
+      data: { serverId: SERVER_ID, audienceId: "", tipKey: "not-a-real-tip" },
+    });
+    await expect(shownTipKeys({ serverId: SERVER_ID }, db)).rejects.toThrow(
+      /Unknown persisted feature tip key/,
+    );
+  });
+});

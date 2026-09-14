@@ -80,3 +80,19 @@ export const FEATURE_TIPS: readonly FeatureTip[] = [
     text: "Tip: `/lobby create` runs a tournament-code custom game with full post-game reports.",
   },
 ];
+
+/**
+ * Narrow a persisted `tipKey` to a known tip.
+ *
+ * The catalog is the only source of valid keys, so this cannot drift from it.
+ * An unknown key is corrupt persisted state, not a user input: it throws
+ * rather than being skipped, because silently dropping it would let a bad row
+ * sit in the cooldown window suppressing real tips with nothing to show for it.
+ */
+export function parseTipKey(value: string): FeatureTipKey {
+  const tip = FEATURE_TIPS.find((candidate) => candidate.key === value);
+  if (tip === undefined) {
+    throw new Error(`Unknown persisted feature tip key: ${value}`);
+  }
+  return tip.key;
+}

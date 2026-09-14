@@ -312,10 +312,6 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchId: toStrOrNull(row, "matchId"),
       betId: toIntOrNull(row, "betId"),
       parlayBetId: toIntOrNullIfMissing(row, "parlayBetId"),
-      // Retired feature's column, kept for one compatibility release. Named
-      // explicitly so verification compares the imported row to its full
-      // Postgres shape.
-      weeklyParlayBetId: null,
       predictedTeamId: toIntOrNull(row, "predictedTeamId"),
       actualWinningTeamId: toIntOrNull(row, "actualWinningTeamId"),
       context: toStr(row, "context"),

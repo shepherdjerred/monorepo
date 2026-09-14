@@ -1,8 +1,16 @@
 -- Retire the weekly parlay feature.
 --
--- `BucksLedgerEntry.weeklyParlayBetId` is deliberately NOT dropped here. It is
--- kept for one compatibility release so a rollback to the pre-removal image
--- does not hit a missing column; a follow-up migration drops it.
+-- ROLLING BACK PAST THIS MIGRATION IS NOT SUPPORTED. It drops the weekly
+-- parlay tables, and the pre-removal image still reads BucksWeeklyParlayBet
+-- from postmatch settlement and the analytics sync, so that image cannot run
+-- against this schema. Recovery from a bad deploy is a database restore, not a
+-- rollback. `weeklyParlayBetId` is dropped here for the same reason: retaining
+-- it would only imply a compatibility that dropping the tables already
+-- forecloses.
+--
+-- The guard below is what makes this safe to run: it refuses while any weekly
+-- parlay money is still in flight, so the destructive steps only ever execute
+-- against a fully settled feature.
 
 -- Refuse to run while any weekly parlay money is still in flight.
 --
@@ -62,6 +70,7 @@ WHERE "kind" IN (
 );
 
 ALTER TABLE "BucksLedgerEntry" DROP CONSTRAINT IF EXISTS "BucksLedgerEntry_weeklyParlayBetId_fkey";
+ALTER TABLE "BucksLedgerEntry" DROP COLUMN IF EXISTS "weeklyParlayBetId";
 
 DROP TABLE IF EXISTS "BucksWeeklyParlayDelivery";
 DROP TABLE IF EXISTS "BucksWeeklyParlayContribution";

@@ -834,13 +834,6 @@ model BucksLedgerEntry {
   parlayBetId Int?
   parlayBet   BucksParlayBet? @relation(fields: [parlayBetId], references: [id])
 
-  // Retired with the weekly parlay feature; no code reads or writes this
-  // anymore. Kept for one compatibility release so a rollback to the
-  // pre-removal image (which still writes it) doesn't hit a missing column.
-  // Drop in a follow-up migration once this release is no longer a rollback
-  // target.
-  weeklyParlayBetId Int?
-
   // Riot team IDs (100/200). Both null for seed/earn_*/adjustment.
   // `actualWinningTeamId` is also null for bet_stake (unknown at bet time) and
   // for a refund on a voided match (there is no winner).

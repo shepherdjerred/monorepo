@@ -1,6 +1,7 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
+import { parseTipKey } from "#src/tips/tip-catalog.ts";
 
 /**
  * Who a tip is aimed at. A guild-channel message has no `discordId`; a DM
@@ -19,16 +20,22 @@ function audienceWhere(audience: TipAudience) {
   };
 }
 
-/** The tip keys this audience has already been shown. */
+/**
+ * The tip keys this audience has already been shown.
+ *
+ * Every key is parsed at this database boundary: an unrecognised one is
+ * corrupt persisted state and fails loudly here rather than quietly occupying
+ * the shown-set.
+ */
 export async function shownTipKeys(
   audience: TipAudience,
   db: ExtendedPrismaClient = prisma,
-): Promise<Set<string>> {
+): Promise<Set<FeatureTipKey>> {
   const rows = await db.featureTipImpression.findMany({
     where: audienceWhere(audience),
     select: { tipKey: true },
   });
-  return new Set(rows.map((row) => row.tipKey));
+  return new Set(rows.map((row) => parseTipKey(row.tipKey)));
 }
 
 /** When this audience last saw a tip, or undefined if it never has. */
