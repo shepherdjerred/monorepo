@@ -32,6 +32,15 @@ vi.doMock("#src/analytics/guild-lifecycle.ts", () => ({
   captureGuildInstalled,
 }));
 
+const installAttributionModule =
+  await import("#src/analytics/install-attribution.ts");
+const reconcilePendingInstallAttribution =
+  vi.fn<typeof installAttributionModule.reconcilePendingInstallAttribution>();
+vi.doMock("#src/analytics/install-attribution.ts", () => ({
+  ...installAttributionModule,
+  reconcilePendingInstallAttribution,
+}));
+
 const { handleGuildCreate, reconcileConnectedGuildInstalls } =
   await import("#src/discord/events/guild-create.ts");
 
@@ -58,6 +67,7 @@ function guildFixture(): ReturnType<typeof mockGuild> {
 beforeEach(async () => {
   await prisma.guildInstall.deleteMany();
   captureGuildInstalled.mockClear();
+  reconcilePendingInstallAttribution.mockClear();
 });
 
 afterAll(async () => {
@@ -128,6 +138,7 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(row.analyticsLifecycleTracked).toBe(true);
     expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
     expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("reinstall");
+    expect(reconcilePendingInstallAttribution).not.toHaveBeenCalled();
   });
 
   it("does not backfill an unavailable guild", async () => {
@@ -299,6 +310,18 @@ describe("handleGuildCreate — availability guard and concurrent races", () => 
     await expect(
       prisma.guildInstall.findUnique({ where: { serverId: SERVER_ID } }),
     ).resolves.toBeNull();
+  });
+
+  it("marks a backfill removed when the guild leaves during its write", async () => {
+    let checks = 0;
+    await reconcileConnectedGuildInstalls([guildFixture()], () => {
+      checks += 1;
+      return checks === 1;
+    });
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({ removedAt: expect.any(Date) });
   });
 
   it("does not touch the install row when the guild is unavailable", async () => {

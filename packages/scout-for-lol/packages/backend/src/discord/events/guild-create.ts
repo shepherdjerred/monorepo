@@ -7,6 +7,7 @@
 import { type Guild, ChannelType, AuditLogEvent } from "discord.js";
 import { z } from "zod";
 import {
+  type DiscordGuildId,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
@@ -142,6 +143,7 @@ async function resolveInstaller(guild: Guild): Promise<string> {
 async function saveGuildInstall(
   guild: Guild,
   addedByDiscordId: string,
+  shouldReconcilePendingAttribution = true,
 ): Promise<void> {
   try {
     const serverId = DiscordGuildIdSchema.parse(guild.id);
@@ -173,7 +175,9 @@ async function saveGuildInstall(
       captureGuildInstalled(install, "first", guild.memberCount);
       // Complete a web-flow attribution whose browser beat the gateway.
       // Best-effort by contract: the reconciler never throws.
-      await reconcilePendingInstallAttribution(serverId);
+      if (shouldReconcilePendingAttribution) {
+        await reconcilePendingInstallAttribution(serverId);
+      }
       logger.info(
         `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: false`,
       );
@@ -220,7 +224,9 @@ async function saveGuildInstall(
         "reinstall",
         guild.memberCount,
       );
-      await reconcilePendingInstallAttribution(serverId);
+      if (shouldReconcilePendingAttribution) {
+        await reconcilePendingInstallAttribution(serverId);
+      }
       logger.info(
         `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: true`,
       );
@@ -243,6 +249,27 @@ async function saveGuildInstall(
       getErrorMessage(error),
     );
   }
+}
+
+async function markBackfillRemovedIfDisconnected(
+  serverId: DiscordGuildId,
+  isStillConnected: (guildId: string) => boolean,
+): Promise<void> {
+  if (isStillConnected(serverId)) {
+    return;
+  }
+
+  // `guildDelete` can finish its cleanup between the startup snapshot and the
+  // backfill insert. Compensate after that write so a departed guild cannot
+  // regain dashboard access from a late, active historical row.
+  await prisma.guildInstall.updateMany({
+    where: {
+      serverId,
+      analyticsLifecycleTracked: false,
+      removedAt: null,
+    },
+    data: { removedAt: new Date() },
+  });
 }
 
 /**
@@ -284,7 +311,7 @@ export async function reconcileConnectedGuildInstalls(
         // real re-install whose gateway event was missed while Scout was down.
         // `saveGuildInstall` safely claims that lifecycle transition, without
         // sending the welcome message owned by `handleGuildCreate`.
-        await saveGuildInstall(guild, ownerDiscordId);
+        await saveGuildInstall(guild, ownerDiscordId, false);
         continue;
       }
       if (existingInstall !== null) {
@@ -302,6 +329,7 @@ export async function reconcileConnectedGuildInstalls(
           analyticsLifecycleTracked: false,
         },
       });
+      await markBackfillRemovedIfDisconnected(serverId, isStillConnected);
       logger.info(
         `[Guild Install Reconciliation] Backfilled ${guild.name} (${guild.id})`,
       );

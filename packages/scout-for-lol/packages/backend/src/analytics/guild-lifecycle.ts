@@ -297,27 +297,29 @@ export async function captureGuildRemoval(
     return false;
   }
 
-  try {
-    analytics.capture(install, {
-      event: "guild_removed",
-      properties: {
-        activation_state: removalActivationState({
-          firstCoreOutputAt: install.firstCoreOutputAt,
-          subscriptions: claim.subscriptions,
-          reports: claim.reports,
-          competitions: claim.competitions,
-        }),
-        tenure_bucket: tenureBucket(install.installedAt, removedAt),
-      },
-    });
-  } catch (error) {
-    productAnalyticsFailuresTotal.inc({
-      operation: "guild-removed-classification",
-    });
-    logger.error(
-      "Failed to capture guild removal analytics",
-      getErrorMessage(error),
-    );
+  if (install.analyticsLifecycleTracked) {
+    try {
+      analytics.capture(install, {
+        event: "guild_removed",
+        properties: {
+          activation_state: removalActivationState({
+            firstCoreOutputAt: install.firstCoreOutputAt,
+            subscriptions: claim.subscriptions,
+            reports: claim.reports,
+            competitions: claim.competitions,
+          }),
+          tenure_bucket: tenureBucket(install.installedAt, removedAt),
+        },
+      });
+    } catch (error) {
+      productAnalyticsFailuresTotal.inc({
+        operation: "guild-removed-classification",
+      });
+      logger.error(
+        "Failed to capture guild removal analytics",
+        getErrorMessage(error),
+      );
+    }
   }
   return true;
 }

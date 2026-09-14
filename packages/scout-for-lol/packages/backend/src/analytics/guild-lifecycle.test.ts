@@ -312,6 +312,20 @@ describe("guild removal", () => {
     });
   });
 
+  test("stamps a historical backfill without synthetic removal analytics", async () => {
+    await seedInstall({ analyticsLifecycleTracked: false });
+    const { analytics, capture } = createAnalyticsFixture();
+    const removedAt = new Date("2026-08-10T00:00:00Z");
+
+    expect(
+      await captureGuildRemoval(SERVER_ID, removedAt, prisma, analytics),
+    ).toBe(true);
+    expect(capture).not.toHaveBeenCalled();
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({ removedAt });
+  });
+
   test("classifies an accurate subscription count under the same concurrent-cleanup pattern cleanupRemovedGuild uses", async () => {
     // Regression coverage for a race where cleanupRemovedGuild's deletion
     // transaction runs unconditionally after captureGuildRemoval returns,
