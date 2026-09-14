@@ -3,6 +3,7 @@ import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.t
 import {
   exploreGuildAllowlist,
   exploreModel,
+  exploreQuotaLimits,
   initializeDynamicConfig,
   isDynamicConfigReady,
   llmHourlyTokenBudget,
@@ -11,11 +12,13 @@ import {
   tournamentApiMode,
   type DynamicConfigSeed,
 } from "#src/config/dynamic.ts";
+import { DEFAULT_EXPLORE_QUOTA_LIMITS } from "#src/configuration/explore-quota.ts";
 
 const DISABLED = { FEATURE_FLAGS_MODE: "disabled" } as const;
 
 const SEED: DynamicConfigSeed = {
   exploreGuildAllowlist: ["seeded-guild"],
+  exploreQuotaLimits: DEFAULT_EXPLORE_QUOTA_LIMITS,
   exploreModel: "gpt-5.6-luna",
   llmHourlyTokenBudget: 2_000_000,
   llmDailyTokenBudget: 20_000_000,
@@ -179,5 +182,113 @@ describe("tournament api mode", () => {
       startPolling: false,
     });
     expect(tournamentApiMode()).toBe("stub");
+  });
+});
+
+describe("explore quota limits", () => {
+  test("absence resolves to the shipped policy", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
+  });
+
+  test("env supplies the whole policy as one JSON object", async () => {
+    await initializeDynamicConfig({
+      environment: {
+        ...DISABLED,
+        EXPLORE_QUOTA_LIMITS: JSON.stringify({
+          ...DEFAULT_EXPLORE_QUOTA_LIMITS,
+          userMinute: 4,
+        }),
+      },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreQuotaLimits().userMinute).toBe(4);
+  });
+
+  test("a flag outranks env, so a cost rollback needs no deploy", async () => {
+    await initializeDynamicConfig({
+      environment: {
+        ...DISABLED,
+        EXPLORE_QUOTA_LIMITS: JSON.stringify(DEFAULT_EXPLORE_QUOTA_LIMITS),
+      },
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-explore-quota-limits": JSON.stringify({
+          ...DEFAULT_EXPLORE_QUOTA_LIMITS,
+          userMinute: 1,
+          userHour: 2,
+        }),
+      }),
+    });
+    expect(exploreQuotaLimits().userMinute).toBe(1);
+    expect(exploreQuotaLimits().userHour).toBe(2);
+  });
+
+  test("a policy whose windows shrink as they widen is refused", async () => {
+    // Not merely strict: the minute rule could never bind, so a refusal would
+    // name a window the caller had not actually exhausted.
+    await initializeDynamicConfig({
+      environment: {
+        ...DISABLED,
+        EXPLORE_QUOTA_LIMITS: JSON.stringify({
+          ...DEFAULT_EXPLORE_QUOTA_LIMITS,
+          userMinute: 500,
+        }),
+      },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
+  });
+
+  test("a user ceiling above its own global window is refused", async () => {
+    // The hourly pair stays valid here on purpose. Checking only that pair —
+    // which is what shipped first — let an operator lower the longer global
+    // windows and leave a weekly user allowance the global bucket refuses.
+    await initializeDynamicConfig({
+      environment: {
+        ...DISABLED,
+        EXPLORE_QUOTA_LIMITS: JSON.stringify({
+          ...DEFAULT_EXPLORE_QUOTA_LIMITS,
+          userDay: 5000,
+          userWeek: 5000,
+        }),
+      },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
+  });
+
+  test("a user ceiling above the global one is refused", async () => {
+    await initializeDynamicConfig({
+      environment: {
+        ...DISABLED,
+        EXPLORE_QUOTA_LIMITS: JSON.stringify({
+          ...DEFAULT_EXPLORE_QUOTA_LIMITS,
+          userHour: 100_000,
+          userDay: 100_000,
+          userWeek: 100_000,
+        }),
+      },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
+  });
+
+  test("malformed JSON keeps the seed rather than guessing", async () => {
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, EXPLORE_QUOTA_LIMITS: "not json" },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
   });
 });

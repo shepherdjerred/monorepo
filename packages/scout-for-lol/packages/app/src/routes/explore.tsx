@@ -189,6 +189,13 @@ export function Explore() {
     shared,
   ]);
 
+  // Memoized because `visiblePending` returns fresh literals — `trace: []`
+  // among them — on every call, and those values are the dependencies of the
+  // follow-the-stream effect below. Unmemoized, the effect fired on *every*
+  // render, including the ones `usePinnedScroll` itself causes when the
+  // reader's scroll position crosses the pinned threshold. The result was a
+  // page that scrolled itself to the bottom the moment a reader scrolled into
+  // the last 120px, with no turn streaming at all.
   const {
     pendingQuestion,
     pendingAnswer,
@@ -197,10 +204,12 @@ export function Explore() {
     trace: pendingTrace,
     preview: pendingPreview,
     visualization: pendingVisualization,
-  } = visiblePending(pendingTurn, conversationId, messages);
+  } = useMemo(
+    () => visiblePending(pendingTurn, conversationId, messages),
+    [pendingTurn, conversationId, messages],
+  );
 
-  const { bottomRef, scrollIfPinned, pinned, scrollToBottom } =
-    usePinnedScroll();
+  const { scrollIfPinned, pinned, scrollToBottom } = usePinnedScroll();
   useEffect(() => {
     scrollIfPinned();
   }, [
@@ -335,13 +344,14 @@ export function Explore() {
         {share.showShareLink && share.shareLink !== null && (
           <ExploreShareRow shareLink={share.shareLink} copied={share.copied} />
         )}
-
-        <div ref={bottomRef} />
       </div>
 
       {/* Pinned to the bottom of the viewport with a translucent gradient fade:
-          allows chat text to remain visible below the composer through the fade effect. */}
-      <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 bg-gradient-to-t from-scout-canvas/80 via-scout-canvas/30 via-40% to-scout-canvas/0 dark:from-black/75 dark:via-black/30 dark:via-40% dark:to-black/0">
+          allows chat text to remain visible below the composer through the fade
+          effect. `explore-composer-fade` carries the gradient (see global.css
+          for why it is not built from `from-*`/`to-*`); it is the canvas colour
+          in every theme, which switches with `data-scout-mode`. */}
+      <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 explore-composer-fade">
         <ExploreJumpToLatest pinned={pinned} onClick={scrollToBottom} />
         <div className="pointer-events-auto">
           <ExploreComposer
@@ -367,16 +377,25 @@ function errorText(error: unknown): string {
 /**
  * Only while the reader is away from the bottom, so the idle page is
  * unchanged and nothing overlaps the composer at rest.
+ *
+ * Absolutely positioned, not a flow sibling of the composer. In flow the pill
+ * added its own height to the sticky footer, so appearing and disappearing
+ * changed the document's height by ~40px — and it appears and disappears
+ * exactly when the reader is scrolling near the bottom, which shunted the page
+ * under them in whichever direction they had just moved.
+ *
+ * It carries its own surface because `outline` is transparent by design: over
+ * the transcript it otherwise read as loose text sitting on the conversation.
  */
 function ExploreJumpToLatest(props: { pinned: boolean; onClick: () => void }) {
   if (props.pinned) return null;
   return (
-    <div className="pointer-events-auto mb-2 flex justify-center">
+    <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center">
       <Button
         type="button"
         variant="outline"
         size="sm"
-        className="rounded-full shadow-sm"
+        className="pointer-events-auto rounded-full bg-scout-surface shadow-sm hover:bg-scout-hover"
         onClick={props.onClick}
       >
         <ArrowDown className="size-3.5" aria-hidden="true" />

@@ -16,6 +16,11 @@ import {
   TournamentApiModeSchema,
   type TournamentApiMode,
 } from "#src/configuration/tournament-mode.ts";
+import {
+  DEFAULT_EXPLORE_QUOTA_LIMITS,
+  ExploreQuotaLimitsInputSchema,
+  type ExploreQuotaLimits,
+} from "#src/configuration/explore-quota.ts";
 
 const logger = createLogger("config-dynamic");
 
@@ -63,6 +68,24 @@ const DEFINITION = {
     sources: ["flag", "env", "default"],
     default: [],
     names: { env: "EXPLORE_GUILD_ALLOWLIST" },
+  },
+  /**
+   * Explore's question ceilings, as one object.
+   *
+   * Flag-capable because these bound model spend: a cost surprise should be
+   * answerable by moving the ceiling, not by waiting for a deploy. The schema
+   * rejects a partially-sane policy rather than letting one through, since an
+   * unreachable window refuses requests while naming a limit the caller has
+   * not actually reached.
+   */
+  exploreQuotaLimits: {
+    schema: ExploreQuotaLimitsInputSchema,
+    sources: ["flag", "env", "default"],
+    default: DEFAULT_EXPLORE_QUOTA_LIMITS,
+    names: {
+      flag: "scout-explore-quota-limits",
+      env: "EXPLORE_QUOTA_LIMITS",
+    },
   },
   llmHourlyTokenBudget: {
     schema: z.coerce.number().int().positive(),
@@ -144,6 +167,7 @@ const DEFINITION = {
  */
 export type DynamicConfigSeed = {
   exploreGuildAllowlist: string[];
+  exploreQuotaLimits: ExploreQuotaLimits;
   llmHourlyTokenBudget: number;
   llmDailyTokenBudget: number;
   reportAiModel?: string;
@@ -176,6 +200,8 @@ function buildSnapshot(
               targetingKey: "scout-backend",
               kinds: {
                 exploreGuildAllowlist: "string",
+                // A JSON object arrives as a string, like the allowlist.
+                exploreQuotaLimits: "string",
                 llmHourlyTokenBudget: "number",
                 llmDailyTokenBudget: "number",
                 reportAiModel: "string",
@@ -282,6 +308,16 @@ export function exploreGuildAllowlist(): string[] {
   return (
     snapshot?.get("exploreGuildAllowlist") ??
     configuration.exploreGuildAllowlist
+  );
+}
+
+/**
+ * Read per request rather than captured at module load, so an operator's
+ * change lands on the next question instead of the next deploy.
+ */
+export function exploreQuotaLimits(): ExploreQuotaLimits {
+  return (
+    snapshot?.get("exploreQuotaLimits") ?? configuration.exploreQuotaLimits
   );
 }
 

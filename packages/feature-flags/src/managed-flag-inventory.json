@@ -616,6 +616,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-explore-quota-limits",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Set the Scout Explore question ceilings, as one JSON policy object.",
+      "type": "variant",
+      "default": "{\"userMinute\":12,\"userHour\":90,\"userDay\":300,\"userWeek\":900,\"globalHour\":360,\"globalDay\":1800,\"globalWeek\":6000}",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-report-ai-model",
       "owner": "scout",
       "namespace": "scout",
