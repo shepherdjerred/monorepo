@@ -181,7 +181,8 @@ export function baseSummary(
   };
 }
 
-export type DareVoidReason = "unknown_evaluator" | "storage_overflow";
+export type DareVoidReason =
+  "unknown_evaluator" | "storage_overflow" | "version_retired";
 
 /**
  * Void an active dare with FULL refunds and no cut, in its own transaction.
