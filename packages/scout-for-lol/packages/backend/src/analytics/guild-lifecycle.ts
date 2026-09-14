@@ -215,12 +215,19 @@ export async function deliverTrackedCoreOutput(params: {
   });
 }
 
-export async function captureGuildRemoval(
+type GuildRemovalOptions = {
+  db?: ExtendedPrismaClient;
+  analytics?: ProductAnalytics;
+  expectedAnalyticsInstallationId?: string;
+};
+
+async function captureGuildRemovalWithOptions(
   serverId: DiscordGuildId,
   removedAt: Date,
-  db: ExtendedPrismaClient = prisma,
-  analytics: ProductAnalytics = getProductAnalytics(),
+  options: GuildRemovalOptions,
 ): Promise<boolean> {
+  const db = options.db ?? prisma;
+  const analytics = options.analytics ?? getProductAnalytics();
   const install = await db.guildInstall.findUnique({
     where: { serverId },
     select: {
@@ -234,6 +241,12 @@ export async function captureGuildRemoval(
     },
   });
   if (install?.removedAt !== null) {
+    return false;
+  }
+  if (
+    options.expectedAnalyticsInstallationId !== undefined &&
+    install.analyticsInstallationId !== options.expectedAnalyticsInstallationId
+  ) {
     return false;
   }
 
@@ -322,4 +335,30 @@ export async function captureGuildRemoval(
     }
   }
   return true;
+}
+
+export async function captureGuildRemoval(
+  serverId: DiscordGuildId,
+  removedAt: Date,
+  db: ExtendedPrismaClient = prisma,
+  analytics: ProductAnalytics = getProductAnalytics(),
+): Promise<boolean> {
+  return captureGuildRemovalWithOptions(serverId, removedAt, { db, analytics });
+}
+
+/**
+ * Stamp a removal only when the active row still represents the installation
+ * generation observed by the caller. Gateway callbacks for a replaced Guild
+ * object must not remove a newer re-install that reused the same server id.
+ */
+export async function captureGuildRemovalForInstallation(
+  serverId: DiscordGuildId,
+  removedAt: Date,
+  analyticsInstallationId: string,
+  options?: Omit<GuildRemovalOptions, "expectedAnalyticsInstallationId">,
+): Promise<boolean> {
+  return captureGuildRemovalWithOptions(serverId, removedAt, {
+    ...options,
+    expectedAnalyticsInstallationId: analyticsInstallationId,
+  });
 }
