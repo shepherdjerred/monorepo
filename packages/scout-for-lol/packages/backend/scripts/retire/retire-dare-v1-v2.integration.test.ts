@@ -114,7 +114,7 @@ describe("retire-dare-v1-v2", () => {
       },
     });
 
-    await purge(true, prisma);
+    await purge(true, prisma, true);
 
     expect(await prisma.bucksDare.count()).toBe(0);
     expect(await prisma.bucksDareV2.count()).toBe(1);
@@ -130,9 +130,17 @@ describe("retire-dare-v1-v2", () => {
     expect(intents.map((intent) => intent.kind)).toEqual(["report_create"]);
   });
 
+  test("purge refuses to apply without the writes-quiesced interlock", async () => {
+    await seedV2Dare("achieved", "dare-scoutql-2");
+    await expect(purge(true, prisma)).rejects.toThrow(/writes-quiesced/u);
+    expect(await prisma.bucksDareV2.count()).toBe(1);
+  });
+
   test("purge refuses while an open pre-v3 dare remains", async () => {
     await seedV2Dare("active", "dare-scoutql-2");
-    await expect(purge(true, prisma)).rejects.toThrow(/Refusing to purge/u);
+    await expect(purge(true, prisma, true)).rejects.toThrow(
+      /Refusing to purge/u,
+    );
     expect(await prisma.bucksDareV2.count()).toBe(1);
   });
 
@@ -143,7 +151,9 @@ describe("retire-dare-v1-v2", () => {
     await prisma.bucksDare.deleteMany({});
     await seedV2Dare("not-a-state", "dare-scoutql-2");
     await expect(verify(prisma)).rejects.toThrow(/unrecognized state/u);
-    await expect(purge(true, prisma)).rejects.toThrow(/unrecognized state/u);
+    await expect(purge(true, prisma, true)).rejects.toThrow(
+      /unrecognized state/u,
+    );
     expect(await prisma.bucksDareV2.count()).toBe(1);
   });
 
@@ -170,7 +180,7 @@ describe("retire-dare-v1-v2", () => {
       data: { currentRevision: mixed.currentRevision + 1 },
     });
 
-    await expect(purge(true, prisma)).rejects.toThrow(
+    await expect(purge(true, prisma, true)).rejects.toThrow(
       /unrecognized compiler version/u,
     );
     expect(
@@ -183,7 +193,7 @@ describe("retire-dare-v1-v2", () => {
     await expect(verify(prisma)).rejects.toThrow(
       /unrecognized compiler version/u,
     );
-    await expect(purge(true, prisma)).rejects.toThrow(
+    await expect(purge(true, prisma, true)).rejects.toThrow(
       /unrecognized compiler version/u,
     );
     expect(await prisma.bucksDareV2.count()).toBe(1);
@@ -212,7 +222,7 @@ describe("retire-dare-v1-v2", () => {
       data: { currentRevision: mixed.currentRevision + 1 },
     });
 
-    await purge(true, prisma);
+    await purge(true, prisma, true);
 
     expect(await prisma.bucksDareV2.count({ where: { id: mixed.id } })).toBe(1);
     expect(

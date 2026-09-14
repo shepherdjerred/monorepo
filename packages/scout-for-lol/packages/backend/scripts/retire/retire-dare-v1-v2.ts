@@ -10,7 +10,7 @@
  *   bun run scripts/retire/retire-dare-v1-v2.ts                    # report
  *   bun run scripts/retire/retire-dare-v1-v2.ts --void --apply     # drain
  *   bun run scripts/retire/retire-dare-v1-v2.ts --verify           # prove
- *   bun run scripts/retire/retire-dare-v1-v2.ts --purge --apply    # delete
+ *   bun run scripts/retire/retire-dare-v1-v2.ts --purge --apply --writes-quiesced
  *
  * Money movement always goes through the shipped refund paths while they
  * still exist — v1 sweep/void helpers and the v2 cancel/void transactions —
@@ -18,6 +18,15 @@
  * verify predicate passes in the same invocation, and reports the dare-bound
  * ConfirmationIntent count so the cascade provably left the report and
  * subscription intents alone.
+ *
+ * QUIESCENCE INTERLOCK: purge additionally requires --writes-quiesced, the
+ * operator's assertion that no pre-v3 dare can be authored or funded while
+ * the purge runs or afterwards — concretely, `dare_v2` is disabled in Flipt
+ * for every guild (making /bb dare v3-only where dares are on at all) and
+ * STAYS disabled until the retirement PRs that delete the v2 write path have
+ * deployed. The claim-conditioned deletes and the post-delete pre-v3 scans
+ * catch a violation mid-run, but only the durable flag flip prevents a pre-v3
+ * dare from being authored after the run declares success.
  */
 import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -85,13 +94,44 @@ async function assertKnownDareStates(db: ExtendedPrismaClient): Promise<void> {
   }
 }
 
+/**
+ * Every stored revision — governing or historical, on retired and retained
+ * dares alike — must carry a recognized compiler version before any phase
+ * proceeds, so no cascade can silently erase a revision this run never
+ * classified.
+ */
+async function assertKnownCompilerVersions(
+  db: ExtendedPrismaClient,
+): Promise<void> {
+  const revisions = await db.bucksDareV2Revision.findMany({
+    select: { dareId: true, revision: true, compilerVersion: true },
+  });
+  for (const row of revisions) {
+    if (
+      row.compilerVersion !== DARE_SQL_V3_COMPILER &&
+      !PRE_V3_COMPILERS.has(row.compilerVersion)
+    ) {
+      throw new Error(
+        `Dare ${row.dareId.toString()} revision ${row.revision.toString()} has unrecognized compiler version "${row.compilerVersion}"`,
+      );
+    }
+  }
+}
+
 const ArgsSchema = z.strictObject({
   apply: z.boolean(),
+  writesQuiesced: z.boolean(),
   phase: z.enum(["report", "void", "verify", "purge"]),
 });
 
 function parseArgs(argv: readonly string[]) {
-  const known = new Set(["--apply", "--void", "--verify", "--purge"]);
+  const known = new Set([
+    "--apply",
+    "--void",
+    "--verify",
+    "--purge",
+    "--writes-quiesced",
+  ]);
   const unknown = argv.filter(
     (argument) => argument.startsWith("--") && !known.has(argument),
   );
@@ -106,6 +146,7 @@ function parseArgs(argv: readonly string[]) {
   }
   return ArgsSchema.parse({
     apply: argv.includes("--apply"),
+    writesQuiesced: argv.includes("--writes-quiesced"),
     phase: phases[0]?.slice(2) ?? "report",
   });
 }
@@ -303,6 +344,7 @@ async function drainV2(
 /** True when nothing open remains on any pre-v3 dialect. */
 async function verify(db: ExtendedPrismaClient = prisma): Promise<boolean> {
   await assertKnownDareStates(db);
+  await assertKnownCompilerVersions(db);
   const openV1 = await db.bucksDare.count({
     where: { dareState: { in: [...OPEN_V1_STATES] } },
   });
@@ -322,7 +364,13 @@ async function verify(db: ExtendedPrismaClient = prisma): Promise<boolean> {
 async function purge(
   apply: boolean,
   db: ExtendedPrismaClient = prisma,
+  writesQuiesced = false,
 ): Promise<void> {
+  if (apply && !writesQuiesced) {
+    throw new Error(
+      "Refusing to purge without --writes-quiesced: disable dare_v2 in Flipt for every guild first (and keep it disabled until the retirement PRs deploy), then re-run with the flag",
+    );
+  }
   if (!(await verify(db))) {
     throw new Error("Refusing to purge while open pre-v3 dares remain");
   }
@@ -451,7 +499,7 @@ async function main(): Promise<void> {
       break;
     }
     case "purge":
-      await purge(args.apply);
+      await purge(args.apply, prisma, args.writesQuiesced);
       break;
   }
 }
