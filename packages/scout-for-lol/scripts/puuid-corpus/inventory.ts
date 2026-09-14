@@ -36,18 +36,35 @@ export async function buildInventory(
   client: S3Client,
   bucket: string,
   prefix?: string,
+  cutover?: Date,
 ): Promise<InventoryResult> {
   console.log(
     `inventory: listing ${bucket}${prefix === undefined ? "" : ` under ${prefix}`}`,
   );
-  const objects = await listRawObjects(client, bucket, prefix);
-  console.log(`  ${objects.length.toString()} raw JSON objects`);
+  const all = await listRawObjects(client, bucket, prefix);
+  // Objects written since the key swap carry NEW-domain identifiers. Collecting
+  // those would send a perfectly valid identifier to the key that cannot
+  // decrypt it, which wastes the scarcest budget in the migration and puts
+  // rows in the map that were never old-domain to begin with.
+  const objects =
+    cutover === undefined
+      ? all
+      : all.filter(
+          (object) =>
+            object.lastModified === undefined || object.lastModified <= cutover,
+        );
+  console.log(
+    `  ${all.length.toString()} raw JSON objects` +
+      (cutover === undefined
+        ? ""
+        : `, ${objects.length.toString()} written at or before the cutover`),
+  );
 
   const folded = new Map<string, { riotId: string | null; at: number }>();
   const report = await scanObjects(
     client,
     objects,
-    (object, body) => {
+    (object, { body }) => {
       // A document of an unrecognised shape is still read, and read twice: the
       // known readers pick up a match payload filed somewhere unexpected, and
       // the structural pass catches identities in a shape nobody has modelled.

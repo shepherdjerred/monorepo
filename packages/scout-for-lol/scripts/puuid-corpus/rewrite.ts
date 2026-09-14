@@ -23,7 +23,13 @@
 import type { S3Client } from "@aws-sdk/client-s3";
 import { putContentAddressedObject } from "@scout-for-lol/backend/storage/object-integrity.ts";
 import { remapRawJson } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
-import { listRawObjects, scanObjects, type RawObject } from "./scan.ts";
+import {
+  listRawObjects,
+  scanObjects,
+  type FetchedObject,
+  type RawObject,
+} from "./scan.ts";
+import { computeSha256Digest } from "@scout-for-lol/backend/storage/object-integrity.ts";
 
 /** Marks a body whose identifiers were moved between key domains. */
 export const REWRITE_METADATA_KEY = "puuidredomainedat";
@@ -110,7 +116,12 @@ export type RewriteOptions = {
 export async function rewriteCorpus(
   client: S3Client,
   options: RewriteOptions,
-): Promise<{ rewritten: number; skipped: number; failed: number }> {
+): Promise<{
+  rewritten: number;
+  reconciled: number;
+  skipped: number;
+  failed: number;
+}> {
   const oldPuuids = new Set(options.map.keys());
   console.log(
     `rewrite: ${options.bucket}, ${oldPuuids.size.toString()} identities to move` +
@@ -126,11 +137,26 @@ export async function rewriteCorpus(
   );
 
   let rewritten = 0;
+  let reconciled = 0;
   const report = await scanObjects(
     client,
     candidates,
-    async (object, body) => {
+    async (object, fetched: FetchedObject) => {
+      const { body, metadata } = fetched;
       if (!needsRewrite(body, oldPuuids)) {
+        // A re-run cannot recognise its own interrupted work by content: a
+        // rewritten object carries no old identifier, so it looks exactly like
+        // one that never needed touching. The marker is the difference. If the
+        // put landed and the database update did not, this is the only chance
+        // to notice — and the stale digest would otherwise stand forever,
+        // conflicting with whoever reports next.
+        if (!options.dryRun && metadata[REWRITE_METADATA_KEY] !== undefined) {
+          await options.onRewritten?.(
+            object.key,
+            computeSha256Digest(new TextEncoder().encode(body)),
+          );
+          reconciled++;
+        }
         return false;
       }
       if (options.dryRun) {
@@ -170,7 +196,13 @@ export async function rewriteCorpus(
   console.log(
     `rewrite: ${rewritten.toString()} rewritten, ` +
       `${report.skipped.toString()} untouched (named nobody in the map), ` +
+      `${reconciled.toString()} digests reconciled from an earlier run, ` +
       `${report.failed.toString()} failed`,
   );
-  return { rewritten, skipped: report.skipped, failed: report.failed };
+  return {
+    rewritten,
+    reconciled,
+    skipped: report.skipped,
+    failed: report.failed,
+  };
 }

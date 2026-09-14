@@ -54,10 +54,12 @@ function requireBucket(): string {
 
 async function runInventory(): Promise<void> {
   const out = requireFlag("--out");
+  const cutoverRaw = optionalFlag("--cutover");
   const result = await buildInventory(
     createS3Client(),
     requireBucket(),
     optionalFlag("--prefix"),
+    cutoverRaw === undefined ? undefined : new Date(cutoverRaw),
   );
   await Bun.write(out, serializeInventory(result.rows));
   console.log(
@@ -156,7 +158,7 @@ switch (command) {
   case undefined:
   default:
     throw new Error(
-      "usage: puuid-corpus.ts <inventory --out FILE | rewrite [--apply] [--cutover ISO]> " +
+      "usage: puuid-corpus.ts <inventory --out FILE [--cutover ISO] | rewrite [--apply] [--cutover ISO]> " +
         "[--prefix games/2026/01/]",
     );
 }

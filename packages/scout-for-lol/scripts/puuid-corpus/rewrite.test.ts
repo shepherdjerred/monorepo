@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { needsRewrite, writtenAfterCutover } from "./rewrite.ts";
+import {
+  needsRewrite,
+  REWRITE_METADATA_KEY,
+  writtenAfterCutover,
+} from "./rewrite.ts";
 import { parseInventory, serializeInventory } from "./inventory.ts";
 
 const OLD = `O${"o".repeat(77)}`;
@@ -107,5 +111,26 @@ describe("inventory round trip", () => {
     expect(() => parseInventory(`["not","an","object"]`)).toThrow(
       /not an object/,
     );
+  });
+});
+
+describe("recognising an interrupted run", () => {
+  test("a rewritten object is indistinguishable from an untouched one by content", () => {
+    // Why the metadata marker has to exist at all: once the identifiers are
+    // gone, nothing in the body says whether this pass wrote it.
+    const rewritten = `{"puuid":"${NEW}"}`;
+    const neverTouched = `{"puuid":"${NEW}"}`;
+    expect(needsRewrite(rewritten, new Set([OLD]))).toBe(false);
+    expect(needsRewrite(neverTouched, new Set([OLD]))).toBe(false);
+    expect(rewritten).toBe(neverTouched);
+  });
+
+  test("the marker is what tells them apart", () => {
+    const ours: Record<string, string> = {
+      [REWRITE_METADATA_KEY]: "2026-09-13T00:00:00.000Z",
+    };
+    const theirs: Record<string, string> = { uploadedat: "2026-01-01" };
+    expect(ours[REWRITE_METADATA_KEY]).toBeDefined();
+    expect(theirs[REWRITE_METADATA_KEY]).toBeUndefined();
   });
 });

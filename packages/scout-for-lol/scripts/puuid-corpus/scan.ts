@@ -7,11 +7,10 @@
  * progress reporting and one failure policy.
  */
 
-import type { S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, type S3Client } from "@aws-sdk/client-s3";
 import {
   classifyRawObjectKey,
   enumerateRawObjects,
-  readRawObjectText,
 } from "@scout-for-lol/backend/report-store/s3-raw-source.ts";
 
 /**
@@ -79,6 +78,34 @@ export async function listRawObjects(
   return objects;
 }
 
+/** An object's body together with the user metadata stored beside it. */
+export type FetchedObject = {
+  body: string;
+  metadata: Record<string, string>;
+};
+
+/**
+ * Read a body AND the metadata stored with it, in one request.
+ *
+ * The metadata is what lets a re-run tell an object this migration already
+ * rewrote from one it has never touched. Without it a re-run cannot repair its
+ * own interrupted work: a rewritten object carries no old identifier, so by
+ * content it is indistinguishable from one that never needed changing.
+ */
+export async function fetchObject(
+  client: S3Client,
+  bucket: string,
+  key: string,
+): Promise<FetchedObject> {
+  const response = await client.send(
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+  );
+  const body = await (response.Body === undefined
+    ? Promise.resolve("")
+    : response.Body.transformToString());
+  return { body, metadata: response.Metadata ?? {} };
+}
+
 export type ScanReport = {
   read: number;
   skipped: number;
@@ -99,7 +126,10 @@ export type ScanReport = {
 export async function scanObjects(
   client: S3Client,
   objects: readonly RawObject[],
-  visit: (object: RawObject, body: string) => Promise<boolean> | boolean,
+  visit: (
+    object: RawObject,
+    fetched: FetchedObject,
+  ) => Promise<boolean> | boolean,
   options: { bucket: string; label: string; concurrency?: number | undefined },
 ): Promise<ScanReport> {
   const report: ScanReport = { read: 0, skipped: 0, failed: 0 };
@@ -116,12 +146,8 @@ export async function scanObjects(
         return;
       }
       try {
-        const body = await readRawObjectText(
-          client,
-          options.bucket,
-          object.key,
-        );
-        if (await visit(object, body)) {
+        const fetched = await fetchObject(client, options.bucket, object.key);
+        if (await visit(object, fetched)) {
           report.read++;
         } else {
           report.skipped++;

@@ -79,6 +79,22 @@ async function classify(response: Response, attempt: number): Promise<Outcome> {
   if (response.status === 404) {
     return { kind: "absent" };
   }
+  if (response.status === 400) {
+    // Riot answers a token it cannot decrypt with 400, not 404. That is an
+    // answer about the token — it does not belong to this key's domain — and
+    // the commonest cause is a perfectly valid identifier minted under the
+    // OTHER key, which is what every object written since the cutover carries.
+    //
+    // Treating it as a fault killed the run: the process exited, the supervisor
+    // restarted it, and it spent ten minutes on a cold-start wait before
+    // reaching the next such token. A malformed request is still a fault, so
+    // only the decryption message is read as data.
+    const text = await response.text();
+    if (text.includes("decrypting")) {
+      return { kind: "absent" };
+    }
+    throw new Error(`Riot rejected the request: HTTP 400 ${text}`);
+  }
   if (response.status === 429) {
     const retryAfter = Number(response.headers.get("retry-after") ?? "10");
     return {
@@ -170,3 +186,6 @@ export const estimateOldKeyMinutes = (count: number): number =>
 /** Minutes the new-key hop will take for `count` identities, at its budget. */
 export const estimateNewKeyMinutes = (count: number): number =>
   minutesFor(count, newLimiter.windows);
+
+/** Exposed for tests: the response classification, without the network. */
+export const classifyForTest = classify;
