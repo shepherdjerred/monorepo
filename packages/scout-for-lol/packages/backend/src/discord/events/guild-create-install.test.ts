@@ -36,9 +36,12 @@ const installAttributionModule =
   await import("#src/analytics/install-attribution.ts");
 const reconcilePendingInstallAttribution =
   vi.fn<typeof installAttributionModule.reconcilePendingInstallAttribution>();
+const retirePendingInstallAttribution =
+  vi.fn<typeof installAttributionModule.retirePendingInstallAttribution>();
 vi.doMock("#src/analytics/install-attribution.ts", () => ({
   ...installAttributionModule,
   reconcilePendingInstallAttribution,
+  retirePendingInstallAttribution,
 }));
 
 const { handleGuildCreate, reconcileConnectedGuildInstalls } =
@@ -78,6 +81,7 @@ beforeEach(async () => {
   await prisma.guildInstall.deleteMany();
   captureGuildInstalled.mockClear();
   reconcilePendingInstallAttribution.mockClear();
+  retirePendingInstallAttribution.mockClear();
 });
 
 afterAll(async () => {
@@ -149,6 +153,7 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
     expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("reinstall");
     expect(reconcilePendingInstallAttribution).not.toHaveBeenCalled();
+    expect(retirePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
   });
 
   it("does not backfill an unavailable guild", async () => {

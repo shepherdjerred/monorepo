@@ -20,9 +20,23 @@ import {
   captureGuildInstalled,
   captureGuildRemoval,
 } from "#src/analytics/guild-lifecycle.ts";
-import { reconcilePendingInstallAttribution } from "#src/analytics/install-attribution.ts";
+import {
+  reconcilePendingInstallAttribution,
+  retirePendingInstallAttribution,
+} from "#src/analytics/install-attribution.ts";
 
 const logger = createLogger("guild-create");
+
+async function finalizePendingInstallAttribution(
+  serverId: DiscordGuildId,
+  shouldReconcile: boolean,
+): Promise<void> {
+  if (shouldReconcile) {
+    await reconcilePendingInstallAttribution(serverId);
+    return;
+  }
+  await retirePendingInstallAttribution(serverId);
+}
 
 // Prisma surfaces unique-constraint violations as { code: "P2002", ... }.
 const PrismaKnownErrorSchema = z.object({ code: z.string() });
@@ -178,9 +192,10 @@ async function saveGuildInstall(
       captureGuildInstalled(install, "first", guild.memberCount);
       // Complete a web-flow attribution whose browser beat the gateway.
       // Best-effort by contract: the reconciler never throws.
-      if (shouldReconcilePendingAttribution) {
-        await reconcilePendingInstallAttribution(serverId);
-      }
+      await finalizePendingInstallAttribution(
+        serverId,
+        shouldReconcilePendingAttribution,
+      );
       logger.info(
         `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: false`,
       );
@@ -227,9 +242,10 @@ async function saveGuildInstall(
         "reinstall",
         guild.memberCount,
       );
-      if (shouldReconcilePendingAttribution) {
-        await reconcilePendingInstallAttribution(serverId);
-      }
+      await finalizePendingInstallAttribution(
+        serverId,
+        shouldReconcilePendingAttribution,
+      );
       logger.info(
         `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: true`,
       );

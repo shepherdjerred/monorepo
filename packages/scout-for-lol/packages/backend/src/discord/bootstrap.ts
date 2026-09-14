@@ -141,7 +141,7 @@ async function registerConnectedGuildCommands(
 
 async function handleNewGuild(
   guild: Guild,
-  isHistoricalConnection = false,
+  historicalUnavailableGuildIds: Set<string>,
 ): Promise<void> {
   try {
     // Forced: Discord drops a guild's commands when the bot is removed, so a
@@ -156,7 +156,12 @@ async function handleNewGuild(
       tags: { source: "discord-guild-command-registration" },
     });
   }
-  await handleGuildCreate(guild, isHistoricalConnection);
+  // Recheck after command reconciliation: a departure plus genuine rejoin
+  // during that await must not reuse this ready-time historical marker.
+  await handleGuildCreate(
+    guild,
+    historicalUnavailableGuildIds.delete(guild.id),
+  );
 }
 
 /**
@@ -328,7 +333,7 @@ export function registerDiscordEventHandlers(target: Client): void {
   target.on(Events.GuildCreate, (guild) => {
     logger.info(`[Guild Create] Bot added to new server: ${guild.name}`);
     discordGuildsGauge.set(target.guilds.cache.size);
-    void handleNewGuild(guild, historicalUnavailableGuildIds.delete(guild.id));
+    void handleNewGuild(guild, historicalUnavailableGuildIds);
   });
 
   // Handle bot being removed from servers (kicked, banned, or guild deleted)

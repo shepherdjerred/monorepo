@@ -67,23 +67,31 @@ export async function handleGuildDelete(guild: Guild): Promise<void> {
   try {
     const install = await prisma.guildInstall.findUnique({
       where: { serverId },
-      select: { installedAt: true, serverName: true },
+      select: {
+        installedAt: true,
+        serverName: true,
+        analyticsLifecycleTracked: true,
+      },
     });
-    if (install !== null) {
-      const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
-      await sendDM({
-        client: guild.client,
-        userId: ownerId,
-        message: buildFeedbackRequestMessage(guild.name),
-        kind: "feedback_request",
-        guildId: serverId,
-        budget: {
-          guildId: serverId,
-          serverName: install.serverName,
-          installedAt: install.installedAt,
-        },
-      });
+    if (install === null) {
+      return;
     }
+    if (!install.analyticsLifecycleTracked) {
+      return;
+    }
+    const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
+    await sendDM({
+      client: guild.client,
+      userId: ownerId,
+      message: buildFeedbackRequestMessage(guild.name),
+      kind: "feedback_request",
+      guildId: serverId,
+      budget: {
+        guildId: serverId,
+        serverName: install.serverName,
+        installedAt: install.installedAt,
+      },
+    });
   } catch (error) {
     logger.warn(
       `[Guild Delete] Could not send feedback request for guild ${guild.id}: ${getErrorMessage(error)}`,
