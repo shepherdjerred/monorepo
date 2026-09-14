@@ -98,8 +98,11 @@ const OLD_DIGEST = "a".repeat(64);
 const NEW_DIGEST = "b".repeat(64);
 
 async function receiptTable(db: Awaited<ReturnType<typeof open>>) {
+  // Integer ids, as both targets really have them: prod's SQLite hands back a
+  // number and beta's Postgres a BigInt for the same `BigInt @id` column. A
+  // TEXT id here would pass while proving nothing about either.
   await db.exec(
-    `CREATE TABLE "MatchProcessingReceipt" ("id" TEXT PRIMARY KEY, "kind" TEXT, "evidence" TEXT)`,
+    `CREATE TABLE "MatchProcessingReceipt" ("id" INTEGER PRIMARY KEY, "kind" TEXT, "evidence" TEXT)`,
   );
 }
 
@@ -110,14 +113,14 @@ test("a raw-archive receipt attests the bytes now under its key", async () => {
   const db = await open();
   await receiptTable(db);
   await db.exec(
-    `INSERT INTO "MatchProcessingReceipt" VALUES ('r1', 'raw-archive-prematch', ${db.param(1)})`,
+    `INSERT INTO "MatchProcessingReceipt" VALUES (1, 'raw-archive-prematch', ${db.param(1)})`,
     [await evidenceFor("prematch/a.json", OLD_DIGEST)],
   );
   const { repointReceipts } = await import("./observations.ts");
   expect(await repointReceipts(db, "prematch/a.json", NEW_DIGEST)).toBe(1);
 
   const rows = await db.query(
-    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 'r1'`,
+    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 1`,
   );
   const { rawArchiveEvidenceCodec } =
     await import("@scout-for-lol/backend/report-lake/durable-receipts.ts");
@@ -138,13 +141,13 @@ test("a receipt for another object keeps its digest", async () => {
   const db = await open();
   await receiptTable(db);
   await db.exec(
-    `INSERT INTO "MatchProcessingReceipt" VALUES ('r2', 'raw-archive-prematch', ${db.param(1)})`,
+    `INSERT INTO "MatchProcessingReceipt" VALUES (2, 'raw-archive-prematch', ${db.param(1)})`,
     [await evidenceFor("prematch/a.json.backup", OLD_DIGEST)],
   );
   const { repointReceipts } = await import("./observations.ts");
   expect(await repointReceipts(db, "prematch/a.json", NEW_DIGEST)).toBe(0);
   const rows = await db.query(
-    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 'r2'`,
+    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 2`,
   );
   expect(String(rows[0]?.["e"])).toContain(OLD_DIGEST);
   await db.close();
@@ -154,13 +157,13 @@ test("a staging receipt is left alone, being a record of the past", async () => 
   const db = await open();
   await receiptTable(db);
   await db.exec(
-    `INSERT INTO "MatchProcessingReceipt" VALUES ('r3', 'lake-staging-match', ${db.param(1)})`,
+    `INSERT INTO "MatchProcessingReceipt" VALUES (3, 'lake-staging-match', ${db.param(1)})`,
     [await evidenceFor("prematch/a.json", OLD_DIGEST)],
   );
   const { repointReceipts } = await import("./observations.ts");
   expect(await repointReceipts(db, "prematch/a.json", NEW_DIGEST)).toBe(0);
   const rows = await db.query(
-    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 'r3'`,
+    `SELECT "evidence" AS e FROM "MatchProcessingReceipt" WHERE "id" = 3`,
   );
   expect(String(rows[0]?.["e"])).toContain(OLD_DIGEST);
   await db.close();
@@ -172,7 +175,7 @@ test("evidence the reader could not read stops the rewrite", async () => {
   const db = await open();
   await receiptTable(db);
   await db.exec(
-    `INSERT INTO "MatchProcessingReceipt" VALUES ('r4', 'raw-archive-match', ${db.param(1)})`,
+    `INSERT INTO "MatchProcessingReceipt" VALUES (4, 'raw-archive-match', ${db.param(1)})`,
     [JSON.stringify({ key: "games/a/match.json", digest: OLD_DIGEST })],
   );
   const { repointReceipts } = await import("./observations.ts");
