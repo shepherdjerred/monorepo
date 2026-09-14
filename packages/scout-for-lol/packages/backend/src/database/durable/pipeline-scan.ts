@@ -18,6 +18,10 @@ import {
   scoutWorkflowStartRowToRecord,
   type ScoutWorkflowStartRecord,
 } from "#src/database/durable/workflow-start-row.ts";
+import {
+  matchNotificationIntentRowToRecord,
+  type MatchNotificationIntentRecord,
+} from "#src/database/durable/intent-row.ts";
 
 /**
  * The reconciliation sweep's reads: what the durable tables say nothing is
@@ -85,6 +89,12 @@ const DRIVABLE_INTENT_STATES: readonly string[] = Object.entries(
   INTENT_DRIVABILITY,
 )
   .filter(([, drivability]) => drivability === "drivable")
+  .map(([kind]) => kind);
+
+const OPERATOR_DEAD_END_INTENT_STATES: readonly string[] = Object.entries(
+  INTENT_DRIVABILITY,
+)
+  .filter(([, drivability]) => drivability === "operator-dead-end")
   .map(([kind]) => kind);
 
 /**
@@ -236,6 +246,33 @@ export async function listStalledNotificationIntents(
     select: { intentKey: true },
   });
   return rows.map((row) => NotificationIntentKeySchema.parse(row.intentKey));
+}
+
+/**
+ * Intents parked at the domain's operator dead end, the oldest first.
+ *
+ * The companion of {@link listStalledNotificationIntents}: that read excludes
+ * `unknown-delivery` because no sweep may start a child on one, and this is
+ * where those rows go instead. The set comes from the same exhaustive
+ * drivability table, so a state added to the domain has to be classified once
+ * rather than silently falling out of both reads.
+ *
+ * Whole records rather than keys, and the reason is `attemptNonce`. Resolving
+ * one of these means answering what happened to a SPECIFIC attempt, and the
+ * domain refuses a resolution that names a different nonce than the one stored
+ * — so an operator surface that returned only keys would be asking a human to
+ * make a judgement it withheld the evidence for.
+ */
+export async function listUnknownDeliveryIntents(
+  db: Db,
+  args: { limit: number },
+): Promise<MatchNotificationIntentRecord[]> {
+  const rows = await db.matchNotificationIntent.findMany({
+    where: { state: { in: [...OPERATOR_DEAD_END_INTENT_STATES] } },
+    orderBy: [{ unknownObservedAt: "asc" }, { intentKey: "asc" }],
+    take: args.limit,
+  });
+  return rows.map((row) => matchNotificationIntentRowToRecord(row));
 }
 
 /**

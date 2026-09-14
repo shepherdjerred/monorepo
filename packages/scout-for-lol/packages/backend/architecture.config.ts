@@ -62,6 +62,7 @@ const layers = [
   "lib",
   "metrics",
   "observability",
+  "operations",
   "report-lake",
   "report-store",
   "reports",

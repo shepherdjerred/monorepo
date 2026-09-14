@@ -712,6 +712,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_operations_console_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Offer the durable-pipeline operations console. Visibility only; the Git-managed operator allowlist decides access.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "llm-daily-token-budget",
       "owner": "scout",
       "namespace": "scout",

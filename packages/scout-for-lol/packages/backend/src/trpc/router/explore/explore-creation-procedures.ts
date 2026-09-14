@@ -99,7 +99,13 @@ function asCreationPayload(
     case "dare_accept":
     case "dare_decline":
     case "dare_contribute":
-    case "dare_cancel": {
+    case "dare_cancel":
+    case "ops_reconcile_pipeline":
+    case "ops_retry_notification":
+    case "ops_suppress_stale_notification":
+    case "ops_resolve_unknown_delivery":
+    case "ops_repair_projection":
+    case "ops_release_recovery_policy": {
       return null;
     }
   }

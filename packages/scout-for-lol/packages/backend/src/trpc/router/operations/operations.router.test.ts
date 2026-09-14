@@ -1,0 +1,543 @@
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "vitest";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import {
+  IsoInstantSchema,
+  NotificationIntentKeySchema,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import {
+  SCOUT_WORKFLOW_NAMES,
+  scoutPipelineReconciliationV2WorkflowId,
+} from "@scout-for-lol/temporal";
+import type { OperationsIntentPayload } from "@scout-for-lol/data";
+import configuration from "#src/configuration.ts";
+import {
+  addFlagOverride,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
+import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { upsertIntent } from "#src/database/durable/intent-repository.ts";
+import { requestWorkflowStart } from "#src/database/durable/workflow-start-repository.ts";
+import { SCOUT_OPERATOR_IDS } from "#src/operations/operator-allowlist.ts";
+import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
+import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
+
+/**
+ * The operations surface is the one place in this backend where a caller can
+ * mark an undelivered message delivered, suppress a notification, or re-drive
+ * the pipeline. So the properties under test here are the ones that decide
+ * whether that power stays where it belongs:
+ *
+ * - the allowlist is what denies, and the feature flag is not — a stranger is
+ *   refused with the flag fully ON;
+ * - a confirmation acts exactly once, and re-confirming replays the stored
+ *   outcome instead of acting again;
+ * - a Workflow start is durably REQUESTED after the claim commits, never
+ *   started inside the transaction that claimed it.
+ *
+ * The harness installs module mocks, so it must run before anything imports the
+ * router (see its docblock).
+ */
+
+const [FIRST_OPERATOR] = SCOUT_OPERATOR_IDS;
+if (FIRST_OPERATOR === undefined) {
+  // An empty allowlist would make every assertion below vacuous rather than
+  // failing, so it is refused here instead.
+  throw new Error("The operator allowlist is empty; these tests prove nothing");
+}
+const OPERATOR = FIRST_OPERATOR;
+const STRANGER = testAccountId("920000001");
+const CHANNEL = testChannelId("420003");
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279829");
+
+const trpc = await createOfflineTrpcHarness("operations-router-test");
+const db = trpc.prisma;
+
+function caller(discordId: string = OPERATOR) {
+  return trpc.authedCaller(discordId);
+}
+
+function instant(offsetMs: number) {
+  return IsoInstantSchema.parse(new Date(Date.now() + offsetMs).toISOString());
+}
+
+function intentRecord(args: {
+  key: string;
+  deadlineOffsetMs: number;
+  state: MatchNotificationIntentRecord["intent"]["state"];
+  attemptCount: number;
+}): MatchNotificationIntentRecord {
+  return {
+    matchId: MATCH_ID,
+    intent: {
+      key: NotificationIntentKeySchema.parse(args.key),
+      target: { kind: "channel", channelId: CHANNEL },
+      freshnessDeadline: instant(args.deadlineOffsetMs),
+      createdAt: instant(-60_000),
+      attemptCount: args.attemptCount,
+      state: args.state,
+    },
+  };
+}
+
+async function seedIntent(
+  record: MatchNotificationIntentRecord,
+): Promise<string> {
+  const result = await upsertIntent(db, record);
+  expect(result.outcome).toBe("applied");
+  return record.intent.key;
+}
+
+async function prepare(payload: OperationsIntentPayload): Promise<string> {
+  const prepared = await caller().operations.prepare({ payload });
+  return prepared.intentId;
+}
+
+async function readStoredResult(intentId: string): Promise<unknown> {
+  const row = await db.confirmationIntent.findUniqueOrThrow({
+    where: { id: intentId },
+  });
+  expect(row.consumedAt).not.toBeNull();
+  return row.resultJson === null ? null : JSON.parse(row.resultJson);
+}
+
+const RECONCILE_WORKFLOW_ID = scoutPipelineReconciliationV2WorkflowId(
+  configuration.environment,
+  "operator",
+);
+
+beforeAll(async () => {
+  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+});
+
+beforeEach(async () => {
+  await db.confirmationIntent.deleteMany();
+  await db.auditLog.deleteMany();
+  await db.matchNotificationIntent.deleteMany();
+  await db.scoutWorkflowStart.deleteMany();
+
+  resetFlagOverrides("scout_operations_console_enabled");
+  // Deliberately global rather than targeted at the operator: every denial in
+  // this file must be the allowlist's doing, never the flag's.
+  addFlagOverride("scout_operations_console_enabled", true, {});
+});
+
+afterAll(async () => {
+  resetFlagOverrides("scout_operations_console_enabled");
+  await shutdownFeatureFlags();
+  await db.$disconnect();
+});
+
+describe("operations authorization", () => {
+  test("a non-allowlisted caller is refused with the flag fully enabled", async () => {
+    // If the allowlist check is removed, this caller reaches `prepare` and the
+    // assertion fails — the flag is on, so nothing else can be denying here.
+    await expect(
+      caller(STRANGER).operations.prepare({
+        payload: { kind: "ops_reconcile_pipeline", version: 1 },
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  test("every operations procedure denies a non-allowlisted caller", async () => {
+    const stranger = caller(STRANGER);
+    const attempts = [
+      stranger.operations.availability(),
+      stranger.operations.queues({}),
+      stranger.operations.matchPipeline({ matchId: MATCH_ID }),
+      stranger.operations.intentStatus({ intentId: crypto.randomUUID() }),
+      stranger.operations.confirm({ intentId: crypto.randomUUID() }),
+    ];
+    for (const attempt of attempts) {
+      await expect(attempt).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+  });
+
+  test("an operator is refused when the console flag is off", async () => {
+    // The flag can only ever REMOVE the surface, so an operator meeting a
+    // disabled console is hidden from rather than forbidden.
+    resetFlagOverrides("scout_operations_console_enabled");
+    await expect(
+      caller().operations.prepare({
+        payload: { kind: "ops_reconcile_pipeline", version: 1 },
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  test("a caller off the allowlist cannot confirm an operator's intent", async () => {
+    const intentId = await prepare({
+      kind: "ops_reconcile_pipeline",
+      version: 1,
+    });
+    await expect(
+      trpc
+        .authedCaller(testAccountId("920000009"))
+        .operations.confirm({ intentId }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  test("an operator probing an intent that is not theirs sees an absence", async () => {
+    // Reported as absent rather than forbidden: an intent id is a handle to a
+    // pipeline action, and probing must not confirm that one exists.
+    await expect(
+      caller().operations.confirm({ intentId: crypto.randomUUID() }),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "Operations confirmation not found.",
+    });
+  });
+});
+
+describe("operations confirmation is single-use", () => {
+  test("resolving an unknown delivery acts once and then replays", async () => {
+    const nonce = NotificationAttemptNonceSchema.parse("run-77:attempt-2");
+    const key = await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420003",
+        deadlineOffsetMs: 60 * 60_000,
+        attemptCount: 1,
+        state: {
+          kind: "unknown-delivery",
+          attemptNonce: nonce,
+          observedAt: instant(-30_000),
+        },
+      }),
+    );
+    const intentId = await prepare({
+      kind: "ops_resolve_unknown_delivery",
+      version: 1,
+      intentKey: NotificationIntentKeySchema.parse(key),
+      answer: { outcome: "not-delivered", attemptNonce: nonce },
+    });
+
+    const first = await caller().operations.confirm({ intentId });
+
+    expect(first).toEqual({
+      kind: "executed",
+      outcome: {
+        kind: "delivery-resolved",
+        intentKey: key,
+        // Read off the state the machine produced, not from the answer.
+        intentState: "ready",
+      },
+      dispatch: null,
+    });
+    const row = await db.matchNotificationIntent.findUniqueOrThrow({
+      where: { intentKey: key },
+    });
+    expect(row.state).toBe("ready");
+    // `confirmed-unsent` releases the intent without resetting the attempt it
+    // already spent.
+    expect(row.attemptCount).toBe(1);
+
+    const second = await caller().operations.confirm({ intentId });
+
+    expect(second).toEqual({
+      kind: "already_consumed",
+      result: {
+        kind: "delivery-resolved",
+        intentKey: key,
+        intentState: "ready",
+      },
+    });
+    // The replay did not move the machine a second time.
+    const afterReplay = await db.matchNotificationIntent.findUniqueOrThrow({
+      where: { intentKey: key },
+    });
+    expect(afterReplay).toMatchObject({ state: "ready", attemptCount: 1 });
+    expect(await db.auditLog.count()).toBe(1);
+  });
+
+  test("two concurrent confirmations of one intent produce one effect", async () => {
+    const key = await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420004",
+        deadlineOffsetMs: -60_000,
+        attemptCount: 0,
+        state: { kind: "ready" },
+      }),
+    );
+    const intentId = await prepare({
+      kind: "ops_suppress_stale_notification",
+      version: 1,
+      intentKey: NotificationIntentKeySchema.parse(key),
+      note: "Two days stale after the gateway outage.",
+    });
+
+    const [a, b] = await Promise.all([
+      caller().operations.confirm({ intentId }),
+      caller().operations.confirm({ intentId }),
+    ]);
+
+    const kinds = [a.kind, b.kind].sort();
+    expect(kinds).toEqual(["already_consumed", "executed"]);
+    const row = await db.matchNotificationIntent.findUniqueOrThrow({
+      where: { intentKey: key },
+    });
+    expect(row).toMatchObject({
+      state: "suppressed",
+      suppressedReason: "stale",
+    });
+    // One claim, one audit row — the loser of the race did nothing.
+    expect(await db.auditLog.count()).toBe(1);
+  });
+});
+
+describe("operations report what the machine actually did", () => {
+  test("suppressing an intent that is not yet stale is refused, not faked", async () => {
+    const key = await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420005",
+        deadlineOffsetMs: 60 * 60_000,
+        attemptCount: 0,
+        state: { kind: "ready" },
+      }),
+    );
+    const intentId = await prepare({
+      kind: "ops_suppress_stale_notification",
+      version: 1,
+      intentKey: NotificationIntentKeySchema.parse(key),
+      note: "Trying to suppress a live intent.",
+    });
+
+    const result = await caller().operations.confirm({ intentId });
+
+    expect(result).toEqual({
+      kind: "executed",
+      outcome: { kind: "machine-refused", reason: "not-stale" },
+      dispatch: null,
+    });
+    const row = await db.matchNotificationIntent.findUniqueOrThrow({
+      where: { intentKey: key },
+    });
+    expect(row.state).toBe("ready");
+    // A refusal still spent a single-use authorization, so it is still audited.
+    expect(await db.auditLog.count()).toBe(1);
+  });
+
+  test("an answer naming a stale attempt is refused as a stale operator view", async () => {
+    const key = await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420006",
+        deadlineOffsetMs: 60 * 60_000,
+        attemptCount: 2,
+        state: {
+          kind: "unknown-delivery",
+          attemptNonce:
+            NotificationAttemptNonceSchema.parse("run-99:attempt-3"),
+          observedAt: instant(-30_000),
+        },
+      }),
+    );
+    const intentId = await prepare({
+      kind: "ops_resolve_unknown_delivery",
+      version: 1,
+      intentKey: NotificationIntentKeySchema.parse(key),
+      answer: {
+        outcome: "not-delivered",
+        attemptNonce: NotificationAttemptNonceSchema.parse("run-77:attempt-2"),
+      },
+    });
+
+    const result = await caller().operations.confirm({ intentId });
+
+    expect(result).toEqual({
+      kind: "executed",
+      outcome: { kind: "machine-refused", reason: "stale-operator-view" },
+      dispatch: null,
+    });
+    const unmoved = await db.matchNotificationIntent.findUniqueOrThrow({
+      where: { intentKey: key },
+    });
+    expect(unmoved.state).toBe("unknown-delivery");
+  });
+
+  test("repairing a match this pipeline has never seen is a not-found", async () => {
+    const intentId = await prepare({
+      kind: "ops_repair_projection",
+      version: 1,
+      riotMatchId: MATCH_ID,
+    });
+
+    const result = await caller().operations.confirm({ intentId });
+
+    expect(result).toEqual({
+      kind: "executed",
+      outcome: {
+        kind: "target-not-found",
+        target: "match",
+        id: MATCH_ID,
+      },
+      dispatch: null,
+    });
+    // Nothing was authorized, so nothing was requested.
+    expect(await db.scoutWorkflowStart.count()).toBe(0);
+  });
+});
+
+describe("workflow starts travel as post-commit durable requests", () => {
+  test("confirming a reconcile records the request and starts nothing inline", async () => {
+    const intentId = await prepare({
+      kind: "ops_reconcile_pipeline",
+      version: 1,
+    });
+
+    const result = await caller().operations.confirm({ intentId });
+
+    // The stored outcome says the request was AUTHORIZED. At the moment it was
+    // written nothing had started, and a replay must not claim otherwise.
+    expect(result).toMatchObject({
+      kind: "executed",
+      outcome: { kind: "start-authorized", workflow: "reconcile-pipeline" },
+      dispatch: {
+        outcome: "unavailable",
+        requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+      },
+    });
+
+    const start = await db.scoutWorkflowStart.findUniqueOrThrow({
+      where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
+    });
+    expect(start).toMatchObject({
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      requestSource: "operations:reconcile-pipeline",
+      requestedBy: OPERATOR,
+      // No Temporal connection in this harness, so the request is durable
+      // evidence of an intent to start and nothing more.
+      acceptedAt: null,
+      runId: null,
+    });
+    expect(JSON.parse(start.inputPayload)).toEqual({
+      kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      version: 1,
+      data: { stage: configuration.environment, trigger: "operator" },
+    });
+    expect(await readStoredResult(intentId)).toEqual({
+      kind: "start-authorized",
+      workflow: "reconcile-pipeline",
+    });
+  });
+
+  test("a conflicting durable request fails loudly and leaves the claim committed", async () => {
+    // A start already claims this Workflow id with a different input. The
+    // dispatch must refuse rather than adopt it.
+    const seeded = await requestWorkflowStart(db, {
+      requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      requestedBy: null,
+      requestSource: "test:pre-existing",
+      inputPayload: {
+        kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+        version: 1,
+        data: { stage: configuration.environment, trigger: "schedule" },
+      },
+      requestedAt: instant(-120_000),
+      acceptance: null,
+    });
+    expect(seeded.outcome).toBe("applied");
+
+    const intentId = await prepare({
+      kind: "ops_reconcile_pipeline",
+      version: 1,
+    });
+
+    await expect(caller().operations.confirm({ intentId })).rejects.toThrow(
+      /already requested with a different input/u,
+    );
+
+    // The proof that the start is dispatched AFTER the claim's transaction
+    // rather than inside it: the dispatch threw, and the claim still committed
+    // with its stored outcome. An inline start would have rolled both back.
+    expect(await readStoredResult(intentId)).toEqual({
+      kind: "start-authorized",
+      workflow: "reconcile-pipeline",
+    });
+    expect(await db.auditLog.count()).toBe(1);
+    // The conflicting row was left exactly as it was.
+    expect(await db.scoutWorkflowStart.count()).toBe(1);
+    const untouched = await db.scoutWorkflowStart.findUniqueOrThrow({
+      where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
+    });
+    expect(untouched.requestSource).toBe("test:pre-existing");
+  });
+
+  test("a request already accepted is reported rather than started again", async () => {
+    await requestWorkflowStart(db, {
+      requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      requestedBy: null,
+      requestSource: "operations:reconcile-pipeline",
+      inputPayload: {
+        kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+        version: 1,
+        data: { stage: configuration.environment, trigger: "operator" },
+      },
+      requestedAt: instant(-120_000),
+      acceptance: { acceptedAt: instant(-119_000), runId: null },
+    });
+
+    const intentId = await prepare({
+      kind: "ops_reconcile_pipeline",
+      version: 1,
+    });
+
+    const result = await caller().operations.confirm({ intentId });
+
+    expect(result).toMatchObject({
+      kind: "executed",
+      dispatch: {
+        outcome: "already-accepted",
+        requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+      },
+    });
+  });
+});
+
+describe("operations reads", () => {
+  test("the queue view surfaces unknown deliveries the sweep refuses to drive", async () => {
+    const nonce = NotificationAttemptNonceSchema.parse("run-55:attempt-1");
+    const key = await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420007",
+        deadlineOffsetMs: 60 * 60_000,
+        attemptCount: 1,
+        state: {
+          kind: "unknown-delivery",
+          attemptNonce: nonce,
+          observedAt: instant(-30_000),
+        },
+      }),
+    );
+
+    const queues = await caller().operations.queues({});
+
+    expect(queues.unknownDeliveries).toEqual([
+      {
+        intentKey: key,
+        matchId: MATCH_ID,
+        attemptCount: 1,
+        state: "unknown-delivery",
+      },
+    ]);
+    // The same intent must NOT appear as stalled: nothing may start a child on
+    // it, which is exactly why it has its own queue.
+    expect(queues.stalledNotifications).toEqual([]);
+  });
+
+  test("a match with no observation reads as not-found", async () => {
+    expect(
+      await caller().operations.matchPipeline({ matchId: MATCH_ID }),
+    ).toEqual({ kind: "not-found" });
+  });
+});

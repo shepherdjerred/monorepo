@@ -30,6 +30,16 @@ export const AuditActionSchema = z.enum([
   "ROLE_REVOKE",
   "REPORT_CREATE",
   "COMPETITION_CREATE",
+  // Operating the durable match pipeline. Unlike every action above, these are
+  // recorded for refusals too: an operator spends a single-use authorization
+  // either way, and a refused pipeline operation during an incident is exactly
+  // what a later reviewer needs to see.
+  "OPS_PIPELINE_RECONCILE",
+  "OPS_NOTIFICATION_RETRY",
+  "OPS_NOTIFICATION_SUPPRESS",
+  "OPS_DELIVERY_RESOLVE",
+  "OPS_PROJECTION_REPAIR",
+  "OPS_RECOVERY_POLICY_RELEASE",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

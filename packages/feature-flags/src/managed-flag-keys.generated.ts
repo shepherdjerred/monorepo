@@ -47,6 +47,7 @@ export const SCOUT_FLAG_KEYS = [
   "scout-temporal-call-graph-tracing",
   "explore-guild-allowlist",
   "explore_creation_enabled",
+  "scout_operations_console_enabled",
   "llm-daily-token-budget",
   "llm-hourly-token-budget",
 ] as const;
@@ -79,6 +80,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "weekly_parlays_enabled",
   "scout-temporal-call-graph-tracing",
   "explore_creation_enabled",
+  "scout_operations_console_enabled",
 ] as const;
 
 export type ScoutBooleanFlagKey = (typeof SCOUT_BOOLEAN_FLAG_KEYS)[number];
@@ -288,6 +290,7 @@ export const MANAGED_FLAG_KEYS = [
   "temporal-call-graph-tracing",
   "explore-guild-allowlist",
   "explore_creation_enabled",
+  "scout_operations_console_enabled",
   "llm-daily-token-budget",
   "llm-hourly-token-budget",
   "birmel-activity-tracking-enabled",
@@ -359,6 +362,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   "scout-temporal-call-graph-tracing",
   "temporal-call-graph-tracing",
   "explore_creation_enabled",
+  "scout_operations_console_enabled",
   "birmel-activity-tracking-enabled",
   "birmel-birthdays-enabled",
   "birmel-daily-posts-enabled",

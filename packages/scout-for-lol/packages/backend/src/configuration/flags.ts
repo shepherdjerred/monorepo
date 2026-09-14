@@ -171,6 +171,7 @@ export type FlagName =
   | "explore_creation_enabled"
   | "hall_of_fame_enabled"
   | "initial_match_history_import_enabled"
+  | "scout_operations_console_enabled"
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
   | "tournament_lobbies_enabled"
@@ -401,6 +402,25 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * blocks intents that were already prepared.
    */
   explore_creation_enabled: {
+    default: false,
+    overrides: [],
+  },
+  /**
+   * Offering the durable-pipeline operations console.
+   *
+   * VISIBILITY only. Who may operate the pipeline is the Git-managed allowlist
+   * in `operations/operator-allowlist.ts`, checked server-side on every
+   * operations procedure — this flag can only ever take the surface away, never
+   * grant anyone access to it, and turning it on for a non-operator changes
+   * nothing.
+   *
+   * Deliberately absent from `PRODUCTION_HARD_DISABLED_FLAGS`: an operations
+   * console that cannot exist in production is an operations console for the
+   * environment that needs it least. It ramps through Flipt instead, and is
+   * re-read at confirm time so revoking it also blocks intents already
+   * prepared.
+   */
+  scout_operations_console_enabled: {
     default: false,
     overrides: [],
   },
