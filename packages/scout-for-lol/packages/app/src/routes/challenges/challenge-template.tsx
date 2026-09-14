@@ -1,3 +1,4 @@
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
@@ -58,6 +59,7 @@ export function ChallengeTemplate() {
   const accounts = useQuery(trpc.challenge.linkedAccounts.queryOptions());
   const start = useMutation(
     trpc.challenge.startRun.mutationOptions({
+      meta: analyticsMeta("challenge_run_started"),
       onSuccess: (result) => {
         form.reset();
         void navigate(`/challenge-runs/${result.runId}`);

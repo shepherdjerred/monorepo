@@ -53,6 +53,39 @@ describe("captureDiscordCommandUsed", () => {
     );
   });
 
+  test("carries a known subcommand and drops an unknown one", async () => {
+    await seedInstall();
+    const { analytics, capture } = createAnalyticsFixture();
+
+    await captureDiscordCommandUsed(
+      {
+        guildId: SERVER_ID,
+        commandName: "bb",
+        subcommand: "dare",
+        status: "success",
+      },
+      { db: prisma, analytics },
+    );
+    await captureDiscordCommandUsed(
+      {
+        guildId: SERVER_ID,
+        commandName: "bb",
+        subcommand: "not-a-subcommand",
+        status: "success",
+      },
+      { db: prisma, analytics },
+    );
+
+    expect(capture).toHaveBeenNthCalledWith(1, expect.anything(), {
+      event: "discord_command_used",
+      properties: { command_name: "bb", status: "success", subcommand: "dare" },
+    });
+    expect(capture).toHaveBeenNthCalledWith(2, expect.anything(), {
+      event: "discord_command_used",
+      properties: { command_name: "bb", status: "success" },
+    });
+  });
+
   test("captures error status for a failed command", async () => {
     await seedInstall();
     const { analytics, capture } = createAnalyticsFixture();

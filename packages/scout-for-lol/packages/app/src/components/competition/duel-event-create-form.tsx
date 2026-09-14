@@ -1,3 +1,4 @@
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
@@ -111,6 +112,7 @@ export function DuelEventCreateForm(props: {
   const firstChannelId = props.channels[0]?.id ?? "";
   const mutation = useMutation(
     trpc.duel.createEvent.mutationOptions({
+      meta: analyticsMeta("duel_event_created"),
       onSuccess: (event) => {
         form.reset(initialValue(firstChannelId));
         props.onCreated(event.id);

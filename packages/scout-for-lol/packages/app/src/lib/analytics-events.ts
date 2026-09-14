@@ -84,6 +84,13 @@ const SCOUT_ANALYTICS_EVENTS = [
   "login_click",
   "sign_out",
   "theme_changed",
+  // Competitive progression
+  "hall_settings_changed",
+  "hall_baseline_requested",
+  "challenge_run_started",
+  "challenge_template_published",
+  "duel_challenge_issued",
+  "duel_event_created",
   // Bryan Bucks
   "bucks_bet_placed",
   "bucks_bet_cancelled",

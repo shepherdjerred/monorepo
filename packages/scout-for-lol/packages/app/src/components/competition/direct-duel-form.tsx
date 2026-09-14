@@ -1,3 +1,4 @@
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useRef, useState, type SyntheticEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
@@ -132,6 +133,7 @@ export function DirectDuelForm(props: {
   const firstChannelId = props.channels[0]?.id ?? "";
   const mutation = useMutation(
     trpc.duel.challenge.mutationOptions({
+      meta: analyticsMeta("duel_challenge_issued"),
       onSuccess: (result) => {
         requestId.current = crypto.randomUUID();
         form.reset(initialValue(firstChannelId));
