@@ -11,9 +11,9 @@ entry fees, prizes, bets, or Bryan Bucks markets.
 
 ## Confirm the feature is available
 
-Duel access is controlled per Scout environment and server. Classic objective
-rules and events below 20 participants remain unavailable in beta and
-production until Scout records Riot's written approval for them.
+Duel access is controlled per Scout environment and server by the
+`duels_enabled` flag. When it is off for a server, every duel page and action
+reports that duels are not enabled there.
 
 ## Create a direct challenge
 

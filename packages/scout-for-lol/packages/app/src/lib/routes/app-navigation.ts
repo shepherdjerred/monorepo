@@ -7,6 +7,8 @@ export type ConsumerNavigationAvailability = {
   bucksAvailable: boolean;
   hallAvailable?: boolean;
   hallTo?: string;
+  duelsAvailable?: boolean;
+  duelsTo?: string;
 };
 
 export function consumerNavigationItems(
@@ -21,8 +23,24 @@ export function consumerNavigationItems(
     ...(input.challengesAvailable
       ? [{ label: "Challenges", to: "/challenges" }]
       : []),
+    ...(input.duelsAvailable === true && input.duelsTo !== undefined
+      ? [{ label: "Duels", to: input.duelsTo }]
+      : []),
     ...(input.bucksAvailable ? [{ label: "Bryan Bucks", to: "/bucks" }] : []),
   ];
+}
+
+/**
+ * Duels routes are guild-scoped with no bare index route, so the nav entry
+ * needs a concrete guild: the active one when it has duels enabled, else the
+ * first enabled guild, else no entry at all.
+ */
+export function resolveDuelsTo(
+  activeDuelGuild: { id: string } | undefined,
+  duelGuilds: readonly { id: string }[],
+): string | undefined {
+  const target = activeDuelGuild ?? duelGuilds[0];
+  return target === undefined ? undefined : `/duels/${target.id}`;
 }
 
 export function resolveHallTo(

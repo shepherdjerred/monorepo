@@ -31,6 +31,7 @@ import {
   guildIdFromAppPath,
   guildWorkspacePath,
   isExplorePath,
+  resolveDuelsTo,
   resolveHallTo,
   visibleGuildNavigationItems,
 } from "#src/lib/routes/app-navigation.ts";
@@ -277,6 +278,25 @@ function WorkspaceSwitcherSection(props: {
   );
 }
 
+function useDuelsNavTarget(guildId: string | undefined, pathname: string) {
+  const trpc = useTRPC();
+  const duelsQuery = useQuery(
+    trpc.duel.status.queryOptions(undefined, { retry: 2 }),
+  );
+  const duelGuilds =
+    duelsQuery.data?.state === "available" ? duelsQuery.data.guilds : [];
+  const duelMatchGuildId = pathname.startsWith("/duels")
+    ? /^\/duels\/([^/]+)/.exec(pathname)?.[1]
+    : undefined;
+  const activeDuelGuild = duelGuilds.find(
+    (guild) => guild.id === (guildId ?? duelMatchGuildId),
+  );
+  return {
+    available: duelsQuery.data?.state === "available",
+    to: resolveDuelsTo(activeDuelGuild, duelGuilds),
+  };
+}
+
 export function AppNavigation() {
   const location = useLocation();
   const trpc = useTRPC();
@@ -299,6 +319,7 @@ export function AppNavigation() {
   const hallQuery = useQuery(
     trpc.hall.status.queryOptions(undefined, { retry: 2 }),
   );
+  const duelsNav = useDuelsNavTarget(guildId, location.pathname);
   const { perms } = usePermissions(guildId);
 
   const hallGuilds =
@@ -319,6 +340,8 @@ export function AppNavigation() {
     bucksAvailable: bucksQuery.data?.state === "available",
     hallAvailable: hallQuery.data?.state === "available",
     hallTo,
+    duelsAvailable: duelsNav.available,
+    ...(duelsNav.to === undefined ? {} : { duelsTo: duelsNav.to }),
   });
 
   const selectedGuild = guildsQuery.data?.find((guild) => guild.id === guildId);

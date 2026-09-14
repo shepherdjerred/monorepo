@@ -192,10 +192,10 @@ export type PolicyFlagName = FlagName;
  *
  * The set is deliberately narrow: real-money-shaped Bryan Bucks surfaces
  * (wallets, betting, parlays, transfers, and the Dares funded from them),
- * custom games, duels, which wait on Riot approval, and the voice assistant,
- * which captures audio. Everything else is governed by its ordinary flag, so
- * a surface that is merely beta today stays a Flipt decision rather than a
- * code change.
+ * custom games and duels, which both issue tournament-code lobbies, and the
+ * voice assistant, which captures audio. Everything else is governed by its
+ * ordinary flag, so a surface that is merely beta today stays a Flipt
+ * decision rather than a code change.
  */
 const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
   [
@@ -252,13 +252,11 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
     ],
   },
-  // Direct duels and structured events stay disabled in beta and production
-  // until Riot's written approval for classic objective rules and sub-20
-  // events is recorded. Pure domain behavior remains available to dev/stub
-  // tests while this rollout flag has no enabled compatibility override.
   duels_enabled: {
     default: false,
-    overrides: [],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   custom_nights_enabled: {
     default: false,

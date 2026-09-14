@@ -2410,14 +2410,6 @@ model ChallengeRunMatchTrigger {
   @@index([matchId, createdAt])
 }
 
-model DuelRiotApproval {
-  feature             String   @id
-  evidenceReference   String
-  approvedAt          DateTime
-  recordedByDiscordId String
-  createdAt           DateTime @default(now())
-}
-
 model DuelEvent {
   id                   String    @id @default(uuid())
   guildId              String

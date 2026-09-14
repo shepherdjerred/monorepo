@@ -7,7 +7,13 @@ import {
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
-import { assertDuelsEnabled } from "#src/progression/duels/access.ts";
+import {
+  assertDuelsEnabled,
+  duelRolloutAllowed,
+} from "#src/progression/duels/access.ts";
+import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
+import { installedGuildIdsAmong } from "#src/lib/discord/installed-guilds.ts";
+import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { advanceDuelEvent } from "#src/progression/duels/advancement.ts";
 import {
   eligibleDuelAccounts,
@@ -74,11 +80,50 @@ async function assertMemberAndFeature(
   guildId: ReturnType<typeof DiscordGuildIdSchema.parse>,
 ) {
   const permissions = await resolveGuildPermissions(user, guildId);
-  await assertDuelsEnabled(prisma, guildId, configuration.environment);
+  await assertDuelsEnabled(guildId);
   return permissions;
 }
 
 export const duelRouter = router({
+  /**
+   * Non-throwing availability probe for navigation, mirroring hall.status:
+   * every other duel procedure throws NOT_FOUND where the flag is off.
+   */
+  status: webProcedure.query(async ({ ctx }) => {
+    const userGuilds = await fetchUserGuildsForRequest(ctx.user);
+    const installedGuildIds = await installedGuildIdsAmong(
+      userGuilds.map((g) => g.id),
+    );
+    const present = userGuilds.filter(
+      (g) => installedGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
+    );
+    if (present.length === 0) {
+      return { state: "no_shared_guild", guilds: [] } as const;
+    }
+    const evaluations = await Promise.all(
+      present.map(async (guild) => {
+        const guildId = DiscordGuildIdSchema.parse(guild.id);
+        const enabled =
+          (await duelRolloutAllowed(guildId)) ||
+          isDevGuildOverrideGuild(guild.id);
+        return { guild, enabled };
+      }),
+    );
+    const enabledGuilds = evaluations.flatMap((evaluation) =>
+      evaluation.enabled ? [evaluation.guild] : [],
+    );
+    if (enabledGuilds.length === 0) {
+      return { state: "feature_disabled", guilds: [] } as const;
+    }
+    return {
+      state: "available",
+      guilds: enabledGuilds.map((g) => ({
+        id: g.id,
+        name: g.name,
+        icon: g.icon,
+      })),
+    } as const;
+  }),
   list: webProcedure
     .input(DuelGuildInputSchema)
     .query(async ({ ctx, input }) => {
@@ -233,11 +278,7 @@ export const duelRouter = router({
   createEvent: guildMutationProcedure("competitions", "create")
     .input(DuelEventInputSchema)
     .mutation(async ({ ctx, input }) => {
-      await assertDuelsEnabled(
-        prisma,
-        input.guildId,
-        configuration.environment,
-      );
+      await assertDuelsEnabled(input.guildId);
       await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
@@ -295,11 +336,7 @@ export const duelRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertDuelsEnabled(
-        prisma,
-        input.guildId,
-        configuration.environment,
-      );
+      await assertDuelsEnabled(input.guildId);
       try {
         return await registerDuelEventEntrant(prisma, {
           guildId: input.guildId,
@@ -343,11 +380,7 @@ export const duelRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertDuelsEnabled(
-        prisma,
-        input.guildId,
-        configuration.environment,
-      );
+      await assertDuelsEnabled(input.guildId);
       try {
         return await startDuelEvent(prisma, {
           guildId: input.guildId,
@@ -376,11 +409,7 @@ export const duelRouter = router({
   standings: guildProcedure("competitions", "read")
     .input(z.strictObject({ guildId: DiscordGuildIdSchema, eventId: z.uuid() }))
     .query(async ({ input }) => {
-      await assertDuelsEnabled(
-        prisma,
-        input.guildId,
-        configuration.environment,
-      );
+      await assertDuelsEnabled(input.guildId);
       return await getDuelEventStandings(prisma, input.guildId, input.eventId);
     }),
   rollingRecords: guildProcedure("competitions", "read")
@@ -391,11 +420,7 @@ export const duelRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      await assertDuelsEnabled(
-        prisma,
-        input.guildId,
-        configuration.environment,
-      );
+      await assertDuelsEnabled(input.guildId);
       return await getRollingDuelRecords(prisma, input.guildId, input.scope);
     }),
   headToHead: guildProcedure("competitions", "read")
@@ -408,11 +433,7 @@ export const duelRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      await assertDuelsEnabled(
-        prisma,
-        input.guildId,
-        configuration.environment,
-      );
+      await assertDuelsEnabled(input.guildId);
       return await getDuelHeadToHead(prisma, input);
     }),
   reviewResult: webMutationProcedure
