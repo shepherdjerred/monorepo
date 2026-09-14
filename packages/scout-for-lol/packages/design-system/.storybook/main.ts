@@ -1,6 +1,16 @@
 import type { StorybookConfig } from "@storybook/react-vite";
+import { env } from "node:process";
+
+// The deployed site serves the app's catalog alongside this one, under /app/.
+// Composition is opt-in because a local `bun run dev` has no /app to reach, and
+// an unreachable ref surfaces as a broken entry in the sidebar.
+const composedRefs =
+  env["SCOUT_STORYBOOK_COMPOSED"] === "true"
+    ? { refs: { app: { title: "Scout app", url: "/app" } } }
+    : {};
 
 const config: StorybookConfig = {
+  ...composedRefs,
   stories: ["../src/**/*.stories.tsx"],
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y"],
   framework: { name: "@storybook/react-vite", options: {} },

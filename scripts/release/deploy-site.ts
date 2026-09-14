@@ -99,6 +99,21 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     immutablePrefixes: [],
   },
   {
+    bucket: "scout-design-system",
+    name: "scout-design-system",
+    url: "https://design.scout-for-lol.com",
+    buildDir: "packages/scout-for-lol",
+    // Builds both catalogs and joins them: the design system at the root, the
+    // app's components under /app/.
+    buildCmd: "bun --no-install run build:storybook-site",
+    distDir: "packages/scout-for-lol/storybook-site",
+    target: "s3",
+    // Storybook's hashed chunks share `assets/` with the unhashed Scout art,
+    // fonts, and theme bootstrap the asset plugin copies in, so nothing here
+    // can be marked immutable wholesale.
+    immutablePrefixes: [],
+  },
+  {
     bucket: "webring",
     name: "webring",
     url: "https://webring.sjer.red",
