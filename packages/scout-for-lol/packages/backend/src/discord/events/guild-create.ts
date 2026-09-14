@@ -16,7 +16,10 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { randomUUID } from "node:crypto";
-import { captureGuildInstalled } from "#src/analytics/guild-lifecycle.ts";
+import {
+  captureGuildInstalled,
+  captureGuildRemoval,
+} from "#src/analytics/guild-lifecycle.ts";
 import { reconcilePendingInstallAttribution } from "#src/analytics/install-attribution.ts";
 
 const logger = createLogger("guild-create");
@@ -251,7 +254,7 @@ async function saveGuildInstall(
   }
 }
 
-async function markBackfillRemovedIfDisconnected(
+async function markGuildRemovedIfDisconnected(
   serverId: DiscordGuildId,
   isStillConnected: (guildId: string) => boolean,
 ): Promise<void> {
@@ -259,17 +262,11 @@ async function markBackfillRemovedIfDisconnected(
     return;
   }
 
-  // `guildDelete` can finish its cleanup between the startup snapshot and the
-  // backfill insert. Compensate after that write so a departed guild cannot
-  // regain dashboard access from a late, active historical row.
-  await prisma.guildInstall.updateMany({
-    where: {
-      serverId,
-      analyticsLifecycleTracked: false,
-      removedAt: null,
-    },
-    data: { removedAt: new Date() },
-  });
+  // `guildDelete` can finish before an in-flight reconciliation write: it
+  // sees the old removed row, while that write reactivates it afterward. Make
+  // the same atomic removal claim here for both historical backfills and
+  // recovered reinstalls, including lifecycle analytics for the latter.
+  await captureGuildRemoval(serverId, new Date());
 }
 
 /**
@@ -312,6 +309,7 @@ export async function reconcileConnectedGuildInstalls(
         // `saveGuildInstall` safely claims that lifecycle transition, without
         // sending the welcome message owned by `handleGuildCreate`.
         await saveGuildInstall(guild, ownerDiscordId, false);
+        await markGuildRemovedIfDisconnected(serverId, isStillConnected);
         continue;
       }
       if (existingInstall !== null) {
@@ -329,7 +327,7 @@ export async function reconcileConnectedGuildInstalls(
           analyticsLifecycleTracked: false,
         },
       });
-      await markBackfillRemovedIfDisconnected(serverId, isStillConnected);
+      await markGuildRemovedIfDisconnected(serverId, isStillConnected);
       logger.info(
         `[Guild Install Reconciliation] Backfilled ${guild.name} (${guild.id})`,
       );
@@ -348,7 +346,10 @@ export async function reconcileConnectedGuildInstalls(
 /**
  * Handle guildCreate event - send welcome message when bot joins a server
  */
-export async function handleGuildCreate(guild: Guild): Promise<void> {
+export async function handleGuildCreate(
+  guild: Guild,
+  isHistoricalConnection = false,
+): Promise<void> {
   // guildCreate also fires when a guild the bot was already in becomes
   // available again (Discord outage, shard reconnect). That is NOT an install:
   // treating it as one would re-post the welcome message into their channel and
@@ -357,6 +358,13 @@ export async function handleGuildCreate(guild: Guild): Promise<void> {
   if (!guild.available) {
     logger.warn(
       `[Guild Create] Guild ${guild.id} is unavailable (likely a Discord outage) - skipping install handling`,
+    );
+    return;
+  }
+
+  if (isHistoricalConnection) {
+    await reconcileConnectedGuildInstalls([guild], (guildId) =>
+      guild.client.guilds.cache.has(guildId),
     );
     return;
   }
