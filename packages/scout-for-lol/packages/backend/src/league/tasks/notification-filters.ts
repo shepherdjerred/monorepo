@@ -203,12 +203,18 @@ export async function deliverToChannels(params: {
         channel,
         guildId,
       });
+      // Before the effect is completed, not after: a crash in between would
+      // otherwise leave the tip delivered but unrecorded, and the retry would
+      // take the `completed` branch below and never confirm it — so the same
+      // audience could be shown the same tip twice. Confirming first inverts
+      // the risk to a recorded tip whose message is resent, which costs at
+      // most one tip rather than breaking the once-only promise.
+      await decorated?.confirm();
       if (effectKey !== undefined) {
         await completeScoutEffectWithResult(effectKey, sentMessage.id);
       }
       deliveredGuildIds.add(guildId);
       messageIdsByChannel.set(channel, sentMessage.id);
-      await decorated?.confirm();
       await recordDelivery({
         kind: "delivered",
         channelId: channel,

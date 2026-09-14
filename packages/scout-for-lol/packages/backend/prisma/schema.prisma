@@ -818,7 +818,8 @@ model BucksLedgerEntry {
   // dare_stake | dare_payout | dare_refund | dare_fee |
   // legacy bet_refund/house_rake/peek_pass | adjustment.
   // Weekly-parlay kinds were removed with that feature; the retirement
-  // migration folded their net effect into one `adjustment` row per account.
+  // migration converted those rows to `adjustment` in place, preserving their
+  // amounts, order, and timestamps.
   // Not a Prisma enum (kept a plain string through the Postgres migration).
   // Zod-validated on write
   // and on read.
