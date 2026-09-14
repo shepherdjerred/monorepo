@@ -9,6 +9,15 @@ export type ConsumerNavigationAvailability = {
   hallTo?: string;
   duelsAvailable?: boolean;
   duelsTo?: string;
+  /**
+   * Whether the server would serve the operations console to this session.
+   *
+   * Read off an operations procedure rather than a client-side flag, because
+   * the two checks behind it are the allowlist and the rollout flag, and only
+   * the server can answer either. Absent means "do not offer it", which is what
+   * every non-operator sees.
+   */
+  operationsAvailable?: boolean;
 };
 
 export function consumerNavigationItems(
@@ -27,6 +36,13 @@ export function consumerNavigationItems(
       ? [{ label: "Duels", to: input.duelsTo }]
       : []),
     ...(input.bucksAvailable ? [{ label: "Bryan Bucks", to: "/bucks" }] : []),
+    // Last, and only for an operator the server has already agreed to serve.
+    // Hiding it is not the access control — the operations router refuses a
+    // non-operator whatever this list says — it only keeps the sidebar from
+    // advertising a surface that would refuse the reader.
+    ...(input.operationsAvailable === true
+      ? [{ label: "Operations", to: "/operations/matches" }]
+      : []),
   ];
 }
 

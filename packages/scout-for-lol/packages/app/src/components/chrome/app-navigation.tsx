@@ -16,6 +16,7 @@ import {
   Target,
   Trophy,
   Users,
+  Wrench,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,10 @@ import {
   DropdownMenuTrigger,
 } from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
+import {
+  operationsNavVisible,
+  resolveOperationsAccess,
+} from "#src/lib/operations/operations-access.ts";
 import {
   type GuildNavigationItem,
   consumerNavigationItems,
@@ -83,6 +88,9 @@ function ToolNavIcon(props: { to: string }) {
   }
   if (props.to.startsWith("/halls")) {
     return <Trophy className="size-4 shrink-0 text-scout-subtle" />;
+  }
+  if (props.to.startsWith("/operations")) {
+    return <Wrench className="size-4 shrink-0 text-scout-subtle" />;
   }
   return null;
 }
@@ -320,6 +328,13 @@ export function AppNavigation() {
     trpc.hall.status.queryOptions(undefined, { retry: 2 }),
   );
   const duelsNav = useDuelsNavTarget(guildId, location.pathname);
+  // Unlike the status probes above, this one answers by refusing: the
+  // operations procedures throw FORBIDDEN for a non-operator and NOT_FOUND for
+  // a disabled console, so a successful answer is the whole signal and a retry
+  // would only repeat a refusal that will not change.
+  const operationsQuery = useQuery(
+    trpc.operations.availability.queryOptions(undefined, { retry: false }),
+  );
   const { perms } = usePermissions(guildId);
 
   const hallGuilds =
@@ -342,6 +357,12 @@ export function AppNavigation() {
     hallTo,
     duelsAvailable: duelsNav.available,
     ...(duelsNav.to === undefined ? {} : { duelsTo: duelsNav.to }),
+    operationsAvailable: operationsNavVisible(
+      resolveOperationsAccess({
+        hasData: operationsQuery.data !== undefined,
+        error: operationsQuery.error,
+      }),
+    ),
   });
 
   const selectedGuild = guildsQuery.data?.find((guild) => guild.id === guildId);
