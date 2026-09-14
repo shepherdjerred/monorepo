@@ -26,7 +26,7 @@ import type {
 import { toDate, toInt, toStr } from "#src/database/legacy-import/convert.ts";
 import {
   assertPuuidRemapIsIntact,
-  LEGACY_OPTIONAL_TABLES,
+  optionalTablesForLegacySnapshot,
 } from "#src/database/legacy-import/legacy-optional-tables.ts";
 import { IMPORT_MODELS_PART_1 } from "#src/database/legacy-import/models-part-1.ts";
 import { IMPORT_MODELS_PART_2 } from "#src/database/legacy-import/models-part-2.ts";
@@ -162,10 +162,10 @@ function readSqliteRows(
   db: Database,
   spec: ImportModelSpec,
   missingTables: Set<string>,
+  optionalTables: ReadonlySet<string>,
 ): SqliteRow[] {
-  if (!sqliteTableExists(db, spec.model)) {
-    if (LEGACY_OPTIONAL_TABLES.has(spec.model)) {
-      missingTables.add(spec.model);
+  if (missingTables.has(spec.model)) {
+    if (optionalTables.has(spec.model)) {
       return [];
     }
     throw new Error(
@@ -242,10 +242,15 @@ function restoreMissingOpenPositions(
 }
 
 function readSourceRows(db: Database): Map<string, SqliteRow[]> {
-  const missingTables = new Set<string>();
+  const missingTables = new Set(
+    IMPORT_MODELS.filter((spec) => !sqliteTableExists(db, spec.model)).map(
+      (spec) => spec.model,
+    ),
+  );
+  const optionalTables = optionalTablesForLegacySnapshot(missingTables);
   const sourceRows = new Map<string, SqliteRow[]>();
   for (const spec of IMPORT_MODELS) {
-    const rows = readSqliteRows(db, spec, missingTables);
+    const rows = readSqliteRows(db, spec, missingTables, optionalTables);
     sourceRows.set(
       spec.model,
       spec.model === "ExploreMessage" ? topoSortByParent(rows) : rows,

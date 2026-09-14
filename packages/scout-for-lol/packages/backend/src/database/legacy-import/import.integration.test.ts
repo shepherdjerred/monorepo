@@ -5,6 +5,7 @@ import { PrismaClient } from "#generated/prisma/client/index.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { LEGACY_TABLE_COLUMNS } from "#src/testing/legacy-sqlite-fixture.ts";
+import { LEGACY_PRE_BUCKS_TABLES } from "#src/database/legacy-import/legacy-optional-tables.ts";
 import {
   runImport,
   verifyImport,
@@ -396,16 +397,34 @@ function buildLegacySqlite(
   }
 }
 
+function omitLegacySqliteTables(
+  path: string,
+  tables: ReadonlySet<string>,
+): void {
+  const db = new Database(path);
+  try {
+    for (const table of tables) {
+      db.run(`DROP TABLE "${table}"`);
+    }
+  } finally {
+    db.close();
+  }
+}
+
 const fixtureDir = `${tmpdir()}/legacy-import-fixture-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 Bun.spawnSync(["mkdir", "-p", fixtureDir]);
 const fixturePath = `${fixtureDir}/legacy.sqlite`;
 const oldSchemaDbUrl = createTestDatabase("legacy-import-old-schema").dbUrl;
 const oldSchemaPrisma = bareClient(oldSchemaDbUrl);
 const oldSchemaFixturePath = `${fixtureDir}/legacy-old-schema.sqlite`;
+const preBucksDbUrl = createTestDatabase("legacy-import-pre-bucks").dbUrl;
+const preBucksPrisma = bareClient(preBucksDbUrl);
+const preBucksFixturePath = `${fixtureDir}/legacy-pre-bucks.sqlite`;
 
 afterAll(async () => {
   await prisma.$disconnect();
   await oldSchemaPrisma.$disconnect();
+  await preBucksPrisma.$disconnect();
 });
 
 describe("legacy sqlite import", () => {
@@ -612,6 +631,38 @@ describe("legacy sqlite import", () => {
       await verifyImport({
         prisma: oldSchemaPrisma,
         sqlitePath: oldSchemaFixturePath,
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("legacy SQLite pre-Bucks import", () => {
+  test("imports a snapshot from before the entire Bucks schema", async () => {
+    buildLegacySqlite(preBucksFixturePath);
+    omitLegacySqliteTables(
+      preBucksFixturePath,
+      new Set([
+        ...LEGACY_PRE_BUCKS_TABLES,
+        "BucksOpenPosition",
+        "BucksParlayDefinition",
+        "BucksParlayMarket",
+        "BucksParlayBet",
+      ]),
+    );
+    await preBucksPrisma.season.deleteMany();
+
+    const summary = await runImport({
+      prisma: preBucksPrisma,
+      sqlitePath: preBucksFixturePath,
+    });
+
+    expect(summary.action).toBe("imported");
+    expect(summary.rowCounts["BucksAccount"]).toBe(0);
+    expect(summary.rowCounts["BucksLedgerEntry"]).toBe(0);
+    expect(
+      await verifyImport({
+        prisma: preBucksPrisma,
+        sqlitePath: preBucksFixturePath,
       }),
     ).toEqual([]);
   });
