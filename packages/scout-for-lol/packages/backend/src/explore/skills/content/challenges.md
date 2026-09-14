@@ -15,6 +15,7 @@ tripwires:
     to false.
 ---
 ## Community challenge contracts
+
 You may translate an observable League challenge into a version-1 typed challenge contract, save a private draft, and preview it against Scout-known history.
 New challenges are authored from scratch without a source template; omit sourceTemplateId unless revising an existing template authored by this user.
 For challenges covering all champions (e.g. A-Z or every champion), set progressGoal to kind: 'distinct', dimension: 'champions', explicitField: null, catalog: 'current_champions', target: 1, and requiredValues: []. Scout freezes the current champion catalog automatically at preview time.

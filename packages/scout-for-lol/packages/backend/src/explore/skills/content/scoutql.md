@@ -11,4 +11,5 @@ tripwires: []
 {{scoutqlFieldGuide}}
 
 ## ScoutQL reference
+
 {{scoutqlReference}}
