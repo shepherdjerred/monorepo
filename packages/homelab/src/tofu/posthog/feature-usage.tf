@@ -44,6 +44,11 @@ resource "posthog_insight" "scout_progression_actions_weekly" {
           name  = "hall_settings_changed"
         },
         {
+          event = "hall_baseline_requested"
+          kind  = "EventsNode"
+          name  = "hall_baseline_requested"
+        },
+        {
           event = "challenge_run_started"
           kind  = "EventsNode"
           name  = "challenge_run_started"
