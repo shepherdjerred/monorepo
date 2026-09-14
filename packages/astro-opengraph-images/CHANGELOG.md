@@ -2,10 +2,9 @@
 
 ## [1.20.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.1...astro-opengraph-images-v1.20.2) (2026-09-14)
 
+No library behavior changes. The shipped code is identical to 1.20.1; this release exists only because of repo-level housekeeping that release-please picked up.
 
-### Bug Fixes
-
-* **root:** tighten the jscpd baseline to the current clone count ([#2817](https://github.com/shepherdjerred/monorepo/issues/2817)) ([0b2d74d](https://github.com/shepherdjerred/monorepo/commit/0b2d74d1096aeb828145b1f8c861e86923000181))
+- README instructions now point to the moved `scripts/misc/copy-example-deps.ts` and `scripts/release/publish-npm.ts` paths ([2d51ed1](https://github.com/shepherdjerred/monorepo/commit/2d51ed150be9b83174b90393348310e4e266aa93))
 
 ## [1.20.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.0...astro-opengraph-images-v1.20.1) (2026-09-01)
 
