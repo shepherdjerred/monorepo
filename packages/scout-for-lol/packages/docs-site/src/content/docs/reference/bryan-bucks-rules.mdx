@@ -41,10 +41,10 @@ joke catalogue.
 
 ## Windows
 
-| Market        | Open for                                                                                                                                                        |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Outcome       | {Math.floor(BETTING_WINDOW_MS / 60_000)} minutes from detection                                                                                                 |
-| Match parlay  | {Math.floor(PARLAY_BETTING_WINDOW_MS / 60_000)} minutes from publication                                                                                        |
+| Market       | Open for                                                                 |
+| ------------ | ------------------------------------------------------------------------ |
+| Outcome      | {Math.floor(BETTING_WINDOW_MS / 60_000)} minutes from detection          |
+| Match parlay | {Math.floor(PARLAY_BETTING_WINDOW_MS / 60_000)} minutes from publication |
 
 The outcome window runs from when Scout _detected_ the game, not from when the
 game started, and it is clamped against the game's own start time so a late
