@@ -37,11 +37,20 @@ value must match the current production value.
 - Credentials, feature-flag bootstrap variables, telemetry/Sentry, archive
   retention, CI/review switches, one-shot CLI options, and infrastructure shape.
 - Birmel trusted-user grants, shell/browser/repository-editor capability, and
-  Streambot or Scout voice activation, plus Streambot voice capture. Flipt has
-  no authentication and voice capture persists human audio. Both voice
-  assistants keep a second, env-only activation gate
-  (`VOICE_ASSISTANT_ENABLED`) that decides whether the deployment loads a voice
-  runtime at all; their Flipt flags only choose which guilds may use one.
+  Streambot voice activation plus Streambot voice capture. Flipt has no
+  authentication and voice capture persists human audio.
+
+  Scout's voice assistant is deliberately **not** in this list. Its activation
+  is `voice_assistant_enabled` and nothing else: the flag already decided which
+  guilds could open a session and already tore down live ones when it flipped
+  off, so the second env gate duplicated that authority without adding any.
+  What justified the env var was model verification being fatal at boot; Scout
+  now loads models lazily on first use and proves the asset set in its image
+  build instead, so the flag can own activation outright. Production stays
+  protected by `PRODUCTION_HARD_DISABLED_FLAGS` — a code-level gate Flipt
+  cannot override — rather than by an environment variable. Streambot has not
+  had that lifecycle work done and keeps its env gate.
+
 - Temporal schedule enablement, TaskNotes/user-owned settings, persisted Scout
   report/sound settings, and UI query-state booleans.
 

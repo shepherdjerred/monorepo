@@ -433,12 +433,11 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *
-   * Guild-level opt-in for the beta test guild only. The flag decides where
-   * the subcommands register and whether `/scout join` may start a session;
-   * whether the voice pipeline loads at all is the `VOICE_ASSISTANT_ENABLED`
-   * env gate in `configuration.ts` — model verification is fatal at boot, and
-   * unauthenticated Flipt must never control audio capture. Production's
-   * hard-disable policy wins before this registry or Flipt is evaluated.
+   * Guild-level opt-in for the beta test guild only. This is the sole
+   * activation gate: it decides where the subcommands register, whether
+   * `/scout join` may load the voice pipeline and start a session, and whether
+   * an active session may keep capturing audio. Production's hard-disable
+   * policy wins before this registry or Flipt is evaluated.
    */
   voice_assistant_enabled: {
     default: false,

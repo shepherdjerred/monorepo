@@ -399,29 +399,36 @@ without an accepted wake, when the channel holds no non-bot members, or on
 connection loss. No transcript text or audio is ever persisted; PostHog gets
 only guild identity, outcome, the resolved champion/slot, and latency.
 
-Two independent gates:
+**Activation is one flag: `voice_assistant_enabled`.** It decides where the
+`/scout join`/`leave` subcommands register, whether a join may open a session,
+and — rechecked mid-join and swept periodically — whether a live session keeps
+running. Production is hard-disabled in code
+(`PRODUCTION_HARD_DISABLED_FLAGS`), which unauthenticated Flipt cannot
+override.
 
-- **Deployment (env, bootstrap-only)**: `VOICE_ASSISTANT_ENABLED` (default
-  `false`), `OPENAI_API_KEY` (required when enabled), `VOICE_ASSETS_DIR`
-  (default `/opt/scout/voice`), `VOICE_KWS_RUNTIME` (`auto`/`native`/`wasm`).
-  When enabled, SHA-pinned model verification is fatal at boot — this gate can
-  never live in Flipt, because unauthenticated Flipt must not control audio
-  capture. Asset filenames are the manifest in
-  `src/voice-assistant/constants.ts`. No deployment sets this gate yet, so no
-  environment currently loads the voice runtime
-  (`packages/homelab/.../resources/scout/index.ts`).
-- **Guild (flag)**: `voice_assistant_enabled` — beta-only
-  (production-hard-disabled); it also decides where the `/scout join`/`leave`
-  subcommands register.
+There is deliberately no second `VOICE_ASSISTANT_ENABLED` env gate. It used to
+exist because SHA-pinned model verification was fatal at boot, which a flag
+cannot express; the models now load lazily on first `/scout join`
+(`voice-assistant/runtime.ts`) and the asset set is proven by the image's
+`voice-smoke` build stage instead. A boot-time gate would also have been a poor
+flag — it only takes effect on the next restart.
+
+The remaining environment surface is credentials and bootstrap only:
+`OPENAI_API_KEY` (direct/local) or `OPENAI_API_KEY_FILE` (mounted Secret),
+`VOICE_ASSETS_DIR` (default `/opt/scout/voice`), and `VOICE_KWS_RUNTIME`
+(`auto`/`native`/`wasm`). Asset filenames are the manifest
+in `src/voice-assistant/constants.ts`.
+
+Loading is reported, never fatal: a missing credential answers "not configured
+in this deployment", and a failed model load answers "could not start" and is
+logged — the two are distinct so a broken asset set is never reported as a
+benign one. A pod that cannot load voice still serves everything else.
 
 The models are baked into every image at `/opt/scout/voice` by the Dockerfile's
 `voice-models` stage, whose downloads are SHA-256 pinned, and a `voice-smoke`
 stage loads them as the deploy uid under both keyword runtimes before the image
 can be published. Baking unconditionally keeps the published digest identical
-whether or not voice is switched on, so enabling it is purely a Deployment
-change. Because bootstrap is fatal, the credential and the image must be in
-place _before_ `VOICE_ASSISTANT_ENABLED` is set — otherwise the pod crash-loops
-rather than starting without voice.
+in every environment, so enabling voice is a flag flip rather than a redeploy.
 
 The guild `/scout` command is a per-guild merge: `ask` follows the Explore
 allowlist, `join`/`leave` follow the voice flag

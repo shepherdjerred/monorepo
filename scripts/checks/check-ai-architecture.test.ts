@@ -130,6 +130,10 @@ describe("AI architecture guard", () => {
     expect(
       findAiArchitectureViolations([
         {
+          path: "packages/homelab/src/cdk8s/src/resources/scout/index.ts",
+          contents: "OPENAI_API_KEY: EnvValue.fromSecretValue(secret)",
+        },
+        {
           path: "packages/scout-for-lol/packages/backend/src/voice-assistant/runtime.ts",
           contents: "const key = Bun.env.OPENAI_API_KEY;",
         },

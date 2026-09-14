@@ -9,7 +9,7 @@ const GUILD = "100000000000000001";
 
 type HarnessOptions = {
   flagEnabled?: boolean;
-  runtimeAvailable?: boolean;
+  runtimeStatus?: "ready" | "unconfigured" | "failed";
   memberChannelId?: string | null;
   activeChannelId?: string | undefined;
   leaveResult?: boolean;
@@ -53,7 +53,7 @@ function voiceHarness(options: HarnessOptions = {}) {
       if (options.leaveDuringFlagCheck) epoch++;
       return options.flagEnabled ?? true;
     },
-    isRuntimeAvailable: () => options.runtimeAvailable ?? true,
+    resolveRuntime: () => Promise.resolve(options.runtimeStatus ?? "ready"),
     manager: () => ({
       captureJoinEpoch: () => epoch,
       join: (guildId: string, channelId: string, expectedEpoch?: number) => {
@@ -96,10 +96,44 @@ describe("/scout join and /scout leave", () => {
     expect(h.joins).toEqual([]);
   });
 
-  test("answers plainly when the deployment has no voice runtime", async () => {
-    const h = voiceHarness({ runtimeAvailable: false });
+  test("answers plainly when the deployment has no voice credential", async () => {
+    // Needs a channel: the runtime gate now sits after the cheap checks and
+    // after deferReply, so the models are never loaded for a user who is not
+    // in a voice channel to begin with.
+    const h = voiceHarness({
+      runtimeStatus: "unconfigured",
+      memberChannelId: "vc-1",
+    });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
-    expect(h.replies[0]).toContain("not switched on in this deployment");
+    expect(h.replies[0]).toContain("not configured in this deployment");
+    expect(h.joins).toEqual([]);
+  });
+
+  // The first join after a process start loads the voice models, measured at
+  // ~1.6 s native and ~3.2 s WASM. Discord rejects the response entirely if the
+  // interaction is not acknowledged within three seconds, so the load must sit
+  // behind the defer — otherwise a successful load still shows the user
+  // "interaction failed". Asserting the event order is what keeps that true.
+  test("defers before loading the runtime, so a slow cold load cannot time out", async () => {
+    const h = voiceHarness({
+      runtimeStatus: "unconfigured",
+      memberChannelId: "vc-1",
+    });
+    await executeScoutVoice(h.interaction, "join", h.dependencies);
+    expect(h.events).toEqual(["defer", "edit"]);
+    expect(h.events).not.toContain("reply");
+  });
+
+  // A deployment that was meant to serve voice and could not is a fault, and
+  // must not be reported with the same benign message as one that never was.
+  test("distinguishes a failed model load from an unconfigured deployment", async () => {
+    const h = voiceHarness({
+      runtimeStatus: "failed",
+      memberChannelId: "vc-1",
+    });
+    await executeScoutVoice(h.interaction, "join", h.dependencies);
+    expect(h.replies[0]).toContain("could not start");
+    expect(h.replies[0]).not.toContain("not configured");
     expect(h.joins).toEqual([]);
   });
 
@@ -186,7 +220,10 @@ describe("/scout join and /scout leave", () => {
   });
 
   test("leave still works when the runtime is unavailable", async () => {
-    const h = voiceHarness({ runtimeAvailable: false, leaveResult: false });
+    const h = voiceHarness({
+      runtimeStatus: "unconfigured",
+      leaveResult: false,
+    });
     await executeScoutVoice(h.interaction, "leave", h.dependencies);
     expect(h.leaves).toEqual([GUILD]);
     expect(h.replies[0]).toContain("not in a voice channel");

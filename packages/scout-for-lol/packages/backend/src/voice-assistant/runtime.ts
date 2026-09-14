@@ -4,7 +4,9 @@ import {
   type LocalVoiceModels,
   type SpokenFeedbackClips,
 } from "@shepherdjerred/voice-assistant";
-import configuration from "#src/configuration.ts";
+import configuration, {
+  type VoiceAssistantConfig,
+} from "#src/configuration.ts";
 import {
   scoutVoiceAssetManifest,
   VOICE_FEEDBACK_CLIP_FILES,
@@ -20,27 +22,42 @@ export type VoiceAssistantRuntime = {
   readonly openAiApiKey: string;
 };
 
-let runtime: VoiceAssistantRuntime | null = null;
-
 /**
- * Env-gated fatal bootstrap, run between champion-asset validation and the
- * Discord gateway start. `VOICE_ASSISTANT_ENABLED=false` (the default) loads
- * nothing — no model file is even stat'ed. When enabled, every failure is
- * fatal on purpose: SHA-pinned asset verification, the keyword runtime smoke
- * test, and the feedback clips are one packaging contract, and a pod that
- * cannot verify them must not come up half-deaf. The enabled gate lives here,
- * never in Flipt — unauthenticated Flipt must not control audio capture.
+ * Why a join could not be served, when it could not.
+ *
+ * `unconfigured` and `failed` are deliberately distinct: the first is a
+ * deployment that was never meant to serve voice (no Realtime credential) and
+ * is not a fault, the second is a deployment that was and could not, which is.
+ * Collapsing them would hide a broken asset set behind a benign-looking
+ * message.
  */
-export async function bootstrapVoiceAssistant(): Promise<void> {
+export type VoiceRuntimeStatus = "ready" | "unconfigured" | "failed";
+
+let runtime: VoiceAssistantRuntime | null = null;
+let inFlight: Promise<VoiceRuntimeStatus> | null = null;
+
+/** Resolve the direct development credential or the live Kubernetes Secret projection. */
+export async function resolveVoiceCredential(
+  config: VoiceAssistantConfig,
+): Promise<string | undefined> {
+  if (config.openAiApiKey !== undefined) return config.openAiApiKey;
+  if (config.openAiApiKeyFile === undefined) return undefined;
+
+  const credentialFile = Bun.file(config.openAiApiKeyFile);
+  if (!(await credentialFile.exists())) return undefined;
+  const rawCredential = await credentialFile.text();
+  const credential = rawCredential.trim();
+  return credential === "" ? undefined : credential;
+}
+
+async function loadRuntime(): Promise<VoiceRuntimeStatus> {
   const config = configuration.voiceAssistant;
-  if (!config.enabled) {
-    logger.info("🔇 Voice assistant disabled (VOICE_ASSISTANT_ENABLED unset)");
-    return;
-  }
-  if (config.openAiApiKey === undefined) {
-    // configuration.ts already refuses this combination; repeated here so the
-    // invariant holds even if bootstrap order ever changes.
-    throw new Error("Voice assistant enabled without OPENAI_API_KEY");
+  const openAiApiKey = await resolveVoiceCredential(config);
+  if (openAiApiKey === undefined) {
+    logger.info(
+      "🔇 Voice assistant not configured in this deployment (no OpenAI credential)",
+    );
+    return "unconfigured";
   }
   logger.info("🎙️ Loading voice assistant models", {
     assetsDir: config.assetsDir,
@@ -51,17 +68,61 @@ export async function bootstrapVoiceAssistant(): Promise<void> {
     config.kwsRuntime,
     scoutVoiceObservability("voice-models").logger,
   );
-  const feedbackClips = await loadSpokenFeedbackClips(
-    config.assetsDir,
-    VOICE_FEEDBACK_CLIP_FILES,
-  );
-  runtime = { models, feedbackClips, openAiApiKey: config.openAiApiKey };
+  // Anything that throws between here and the assignment below owns these
+  // models and must release them: the loader is retryable, so a leak here
+  // would strand a whole native/WASM model set on every subsequent join until
+  // the process runs out of memory.
+  let feedbackClips;
+  try {
+    feedbackClips = await loadSpokenFeedbackClips(
+      config.assetsDir,
+      VOICE_FEEDBACK_CLIP_FILES,
+    );
+  } catch (error: unknown) {
+    await models.close();
+    throw error;
+  }
+  runtime = { models, feedbackClips, openAiApiKey };
   logger.info("✅ Voice assistant models verified", {
     kwsRuntime: models.runtime,
   });
+  return "ready";
 }
 
-/** Null whenever the deployment is not voice-enabled; callers answer users accordingly. */
+/**
+ * Load the voice pipeline on first use, once per process.
+ *
+ * Activation is the `voice_assistant_enabled` Flipt flag, evaluated per guild
+ * at the call site; this function answers the separate question of whether
+ * this deployment can serve a session at all. Loading here rather than at boot
+ * is what makes that flag meaningful — a boot-time gate only takes effect on
+ * the next pod restart, and the models are useless weight in a process no
+ * guild has enabled.
+ *
+ * Failures are reported, never fatal. A pod that cannot load its models still
+ * serves reports, commands and the web surface; only voice is unavailable, and
+ * it says so. The in-flight promise is shared so concurrent joins load once,
+ * and is cleared on failure so a later join retries rather than pinning the
+ * process to a transient error.
+ */
+export async function ensureVoiceAssistantRuntime(): Promise<VoiceRuntimeStatus> {
+  if (runtime !== null) return "ready";
+  inFlight ??= loadRuntime();
+  try {
+    const status = await inFlight;
+    // Keep the memo only for a usable runtime; anything else must be
+    // re-attempted, since the fix (a credential, a corrected asset mount) can
+    // arrive without a restart.
+    if (status !== "ready") inFlight = null;
+    return status;
+  } catch (error: unknown) {
+    inFlight = null;
+    logger.error("❌ Voice assistant models failed to load", { error });
+    return "failed";
+  }
+}
+
+/** Null until a session has successfully loaded the pipeline in this process. */
 export function getVoiceAssistantRuntime(): VoiceAssistantRuntime | null {
   return runtime;
 }
@@ -71,4 +132,5 @@ export function setVoiceAssistantRuntimeForTests(
   value: VoiceAssistantRuntime | null,
 ): void {
   runtime = value;
+  inFlight = null;
 }

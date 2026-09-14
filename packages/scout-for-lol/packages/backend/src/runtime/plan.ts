@@ -14,9 +14,13 @@
  *
  * - Asset verification is first because its entire purpose is to crash the pod
  *   before it can be reached in a state where it renders broken output.
- * - Voice model verification is fatal for the same reason and must land before
- *   the gateway connects, so a voice-enabled pod is never briefly reachable
- *   while half-deaf.
+ * - Voice models are deliberately NOT a boot step. They load on first
+ *   `/scout join` (`voice-assistant/runtime.ts`), because activation is the
+ *   `voice_assistant_enabled` Flipt flag and a boot-time gate would only take
+ *   effect on the next restart. The verification that used to justify booting
+ *   them — proving the pinned asset set actually loads — now happens in the
+ *   image's `voice-smoke` build stage, which fails the build rather than the
+ *   pod. Voice still shuts down first; see below.
  * - The report lake is settled before anything queries it. The role that owns
  *   the lake folds it into a published build; a role that only reads it
  *   verifies a build is there. Both must happen before the Temporal workers
@@ -47,7 +51,6 @@ import type { ScoutRuntimeCapabilities } from "#src/configuration/runtime-role.t
 
 export const SCOUT_BOOT_STEPS = [
   "champion-assets",
-  "voice-assistant",
   "report-lake",
   "temporal-core",
   "discord-gateway",
@@ -84,7 +87,6 @@ export function scoutBootSteps(
 ): readonly ScoutBootStep[] {
   const steps: ScoutBootStep[] = [];
   if (capabilities.championAssets) steps.push("champion-assets");
-  if (capabilities.voiceAssistant) steps.push("voice-assistant");
   if (capabilities.reportLakeAccess) steps.push("report-lake");
   steps.push("temporal-core");
   if (capabilities.discordGateway) steps.push("discord-gateway");

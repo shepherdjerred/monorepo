@@ -114,6 +114,7 @@ const WHISPER_TRANSCRIPTION_ADAPTER =
 // operator-probe surfaces may hold the dedicated project credential.
 const OPENAI_NATIVE_REALTIME_PATHS = new Set([
   "packages/homelab/src/cdk8s/src/resources/streambot/streambot.ts",
+  "packages/homelab/src/cdk8s/src/resources/scout/index.ts",
   "packages/streambot/Dockerfile",
   "packages/streambot/scripts/voice-corpus-generate.ts",
   "packages/streambot/scripts/voice-cloud-probe.ts",

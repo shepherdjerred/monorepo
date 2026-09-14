@@ -187,6 +187,30 @@ export function createScoutChart(
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
         },
+        // Discord voice RTP for the Hey Scout assistant, beta only — prod never
+        // sets VOICE_ASSISTANT_ENABLED, so it gets no UDP egress at all. The
+        // gateway and voice websockets ride the TCP/443 rule above, but the
+        // actual media stream is UDP to a per-session Discord voice server;
+        // without this, `/scout join` connects and then silently carries no
+        // audio in either direction, which reads as a broken wake word rather
+        // than a blocked packet. Discord allocates those endpoints from the
+        // ephemeral range, so the destination IP cannot be enumerated ahead of
+        // time — the port range is the tightest constraint available, and is
+        // narrower than the all-UDP rule Eufy P2P needs (see home.ts).
+        ...(stage === "beta"
+          ? [
+              {
+                to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
+                ports: [
+                  {
+                    port: IntOrString.fromNumber(50_000),
+                    endPort: 65_535,
+                    protocol: "UDP",
+                  },
+                ],
+              },
+            ]
+          : []),
       ],
     },
   });

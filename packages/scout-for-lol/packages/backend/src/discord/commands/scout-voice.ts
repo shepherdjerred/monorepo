@@ -9,7 +9,10 @@ import {
   getVoiceAssistantManager,
   type VoiceAssistantManager,
 } from "#src/voice-assistant/manager.ts";
-import { getVoiceAssistantRuntime } from "#src/voice-assistant/runtime.ts";
+import {
+  ensureVoiceAssistantRuntime,
+  type VoiceRuntimeStatus,
+} from "#src/voice-assistant/runtime.ts";
 import { voiceManager } from "#src/voice/voice-manager.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -32,7 +35,12 @@ export type ScoutVoiceAction = "join" | "leave";
 
 type ScoutVoiceDependencies = {
   isVoiceEnabledForGuild: (guildId: string) => Promise<boolean>;
-  isRuntimeAvailable: () => boolean;
+  /**
+   * Load the pipeline if this deployment can serve one. Called only after the
+   * flag says yes, so a deployment nobody has enabled never pays for the
+   * models.
+   */
+  resolveRuntime: () => Promise<VoiceRuntimeStatus>;
   manager: () => Pick<
     VoiceAssistantManager,
     "join" | "leave" | "isActive" | "activeChannelId" | "captureJoinEpoch"
@@ -49,7 +57,7 @@ const defaultDependencies: ScoutVoiceDependencies = {
     await isPolicyEnabled("voice_assistant_enabled", {
       server: DiscordGuildIdSchema.parse(guildId),
     }),
-  isRuntimeAvailable: () => getVoiceAssistantRuntime() !== null,
+  resolveRuntime: ensureVoiceAssistantRuntime,
   manager: getVoiceAssistantManager,
   memberVoiceChannelId: (guildId, userId) =>
     voiceManager
@@ -119,14 +127,6 @@ export async function executeScoutVoice(
     );
     return;
   }
-  if (!dependencies.isRuntimeAvailable()) {
-    await replyPrivate(
-      interaction,
-      "The Hey Scout voice assistant is not switched on in this deployment yet.",
-    );
-    return;
-  }
-
   const channelId = dependencies.memberVoiceChannelId(
     guildId.data,
     interaction.user.id,
@@ -145,11 +145,30 @@ export async function executeScoutVoice(
     );
     return;
   }
-  // Establishing the voice connection can take longer than Discord's
-  // interaction acknowledgement window (Ready waits up to 30 s), so
-  // acknowledge first and edit the deferred reply after the join. A join
-  // failure after this point lands in the dispatcher's deferred-error path.
+  // Everything above is cheap enough to answer inside Discord's three-second
+  // acknowledgement window. Everything below is not, so acknowledge here and
+  // edit from now on. The first join after a process start loads the voice
+  // models — measured at ~1.6 s native and ~3.2 s WASM in the image smoke —
+  // which on its own can exceed that window and turn a successful load into
+  // "interaction failed". Establishing the connection afterwards can take
+  // longer still (Ready waits up to 30 s). A failure past this point lands in
+  // the dispatcher's deferred-error path.
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const runtimeStatus = await dependencies.resolveRuntime();
+  if (runtimeStatus === "unconfigured") {
+    await interaction.editReply({
+      content:
+        "The Hey Scout voice assistant is not configured in this deployment yet.",
+    });
+    return;
+  }
+  if (runtimeStatus === "failed") {
+    await interaction.editReply({
+      content:
+        "The Hey Scout voice assistant could not start. This has been logged; please try again shortly.",
+    });
+    return;
+  }
   const outcome = await manager.join(guildId.data, channelId, joinEpoch);
   if (outcome === "cancelled") {
     // A leave/flag-disable/empty-channel-check/shutdown ended this guild's

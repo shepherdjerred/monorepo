@@ -22,7 +22,6 @@ describe("runtime boot order", () => {
     // system rather than to a new role.
     expect(bootStepsFor("combined")).toEqual([
       "champion-assets",
-      "voice-assistant",
       "report-lake",
       "temporal-core",
       "discord-gateway",
@@ -50,22 +49,20 @@ describe("runtime boot order", () => {
     expect(steps).not.toContain("voice-assistant");
   });
 
-  test("gateway boots the shard and voice, and nothing that owns data", () => {
+  test("gateway boots the shard and nothing that owns data", () => {
     const steps = bootStepsFor("gateway");
     expect(steps).toEqual([
       "champion-assets",
-      "voice-assistant",
       "report-lake",
       "temporal-core",
       "discord-gateway",
       "gateway-ready-reconciliation",
       "http-server",
     ]);
-    // Voice verification is fatal and must land before the shard connects, so
-    // a voice-enabled pod is never briefly reachable while half-deaf.
-    expect(steps.indexOf("voice-assistant")).toBeLessThan(
-      steps.indexOf("discord-gateway"),
-    );
+    // Voice is not booted at all: activation is the `voice_assistant_enabled`
+    // Flipt flag, so the models load on first `/scout join` instead. A boot
+    // step here would only take effect on the next restart.
+    expect(steps).not.toContain("voice-assistant");
     // The lake is settled before the shard connects too: this role answers
     // `/scout ask` and the Dare commands from the lake, in process, as soon as
     // the first interaction arrives.
@@ -210,12 +207,27 @@ describe("runtime shutdown order", () => {
     for (const role of SCOUT_RUNTIME_ROLES) {
       const boot = bootStepsFor(role);
       const shutdown = shutdownStepsFor(role);
-      for (const step of ["voice-assistant", "competition-worker"] as const) {
-        expect(shutdown.includes(step)).toBe(boot.includes(step));
-      }
+      expect(shutdown.includes("competition-worker")).toBe(
+        boot.includes("competition-worker"),
+      );
       expect(shutdown.includes("discord-gateway")).toBe(
         boot.includes("discord-gateway"),
       );
+    }
+  });
+
+  // Voice is the one subsystem with no boot step: it starts lazily on the first
+  // `/scout join` that the `voice_assistant_enabled` flag permits. The boot list
+  // therefore cannot say whether a role starts it — the capability can, and a
+  // role that may start voice must still drain it, or a shutdown would leave a
+  // live Realtime turn and an open audio capture behind.
+  test("a role that can start voice lazily still drains it", () => {
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      const capabilities = scoutRuntimeCapabilities(role);
+      expect(shutdownStepsFor(role).includes("voice-assistant")).toBe(
+        capabilities.voiceAssistant,
+      );
+      expect(bootStepsFor(role)).not.toContain("voice-assistant");
     }
   });
 });

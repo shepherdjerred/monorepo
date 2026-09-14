@@ -69,7 +69,12 @@ const flagGatedCommands: {
   {
     flag: "voice_assistant_enabled",
     entry: '`/scout join` · `/scout leave` — "Hey Scout" voice questions',
-    deploymentGate: () => configuration.voiceAssistant.enabled,
+    // Not an activation gate — `voice_assistant_enabled` owns that. This only
+    // avoids advertising a command that would answer "not configured in this
+    // deployment": without a Realtime credential the join cannot be served, so
+    // listing it would be a promise this pod cannot keep.
+    deploymentGate: () =>
+      configuration.voiceAssistant.openAiApiKey !== undefined,
   },
 ];
 
