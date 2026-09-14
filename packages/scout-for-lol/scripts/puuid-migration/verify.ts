@@ -18,22 +18,23 @@ import {
 import { asOptionalString, asString, countOf } from "./support.ts";
 
 /** Rows in a scalar column still holding a translated old-domain PUUID. */
+async function columnValues(db: Db, col: PuuidColumn): Promise<string[]> {
+  const rows = await db.query(
+    `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL`,
+  );
+  return rows.flatMap((row) => {
+    const value = asOptionalString(row["v"]);
+    return value === null ? [] : [value];
+  });
+}
+
 async function scalarSurvivors(
   db: Db,
   col: PuuidColumn,
   translated: ReadonlySet<string>,
 ): Promise<number> {
-  const rows = await db.query(
-    `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL`,
-  );
-  let survivors = 0;
-  for (const row of rows) {
-    const value = asOptionalString(row["v"]);
-    if (value !== null && translated.has(value)) {
-      survivors++;
-    }
-  }
-  return survivors;
+  const values = await columnValues(db, col);
+  return values.filter((value) => translated.has(value)).length;
 }
 
 /**
@@ -46,15 +47,8 @@ async function jsonSurvivors(
   col: PuuidColumn,
   translated: ReadonlySet<string>,
 ): Promise<number> {
-  const rows = await db.query(
-    `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL`,
-  );
   let survivors = 0;
-  for (const row of rows) {
-    const value = asOptionalString(row["v"]);
-    if (value === null) {
-      continue;
-    }
+  for (const value of await columnValues(db, col)) {
     for (const token of value.matchAll(PUUID_TOKEN_PATTERN)) {
       if (translated.has(token[0])) {
         survivors++;

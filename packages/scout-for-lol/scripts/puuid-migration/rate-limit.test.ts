@@ -6,6 +6,16 @@ import {
   RateLimiter,
 } from "./rate-limit.ts";
 
+async function expectBlocked(limiter: RateLimiter): Promise<void> {
+  const started = Date.now();
+  const race = await Promise.race([
+    limiter.take().then(() => "took"),
+    Bun.sleep(300).then(() => "blocked"),
+  ]);
+  expect(race).toBe("blocked");
+  expect(Date.now() - started).toBeGreaterThanOrEqual(250);
+}
+
 describe("parseRateLimitHeader", () => {
   test("scales every window to the budget", () => {
     // The old key's real header, measured 2026-09-13.
@@ -128,13 +138,7 @@ describe("sharing a key with live traffic", () => {
       { limit: 4, seconds: 60, scope: "app" },
     ]);
     limiter.observeUsage("4:60", null);
-    const started = Date.now();
-    const race = await Promise.race([
-      limiter.take().then(() => "took"),
-      Bun.sleep(300).then(() => "blocked"),
-    ]);
-    expect(race).toBe("blocked");
-    expect(Date.now() - started).toBeGreaterThanOrEqual(250);
+    await expectBlocked(limiter);
   });
 
   test("yields the method window to other callers too", async () => {
@@ -149,13 +153,7 @@ describe("sharing a key with live traffic", () => {
       { limit: 4, seconds: 60, scope: "method" },
     ]);
     limiter.observeUsage("1:10", "4:60");
-    const started = Date.now();
-    const race = await Promise.race([
-      limiter.take().then(() => "took"),
-      Bun.sleep(300).then(() => "blocked"),
-    ]);
-    expect(race).toBe("blocked");
-    expect(Date.now() - started).toBeGreaterThanOrEqual(250);
+    await expectBlocked(limiter);
   });
 
   test("keeps app and method usage apart when windows share a length", async () => {
