@@ -178,7 +178,7 @@ export const changelog: ChangelogEntry[] = [
         items: [
           "Report queries can now do real analytics — math and aggregate expressions (per-game, per-minute, rounding), grouping by up to two dimensions with day/week/month time buckets, and many more metrics across economy, farming, damage, vision, objectives, and Arena",
           "Seven new chart types — stacked bar, area, donut, scatter, heatmap, radar, and KPI cards — with themes, palettes, and custom colors, plus 23 ready-made presets",
-          "A cleaner report builder: live AI-draft preview, visible AI credits, a point-and-click Data Explorer, champion-name filters, and full custom scheduling with a timezone picker and next-run preview",
+          "A cleaner report builder: a point-and-click Data Explorer, champion-name filters, and full custom scheduling with a timezone picker and next-run preview — plus live AI-draft preview with visible AI credits on selected beta servers",
         ],
       },
       {

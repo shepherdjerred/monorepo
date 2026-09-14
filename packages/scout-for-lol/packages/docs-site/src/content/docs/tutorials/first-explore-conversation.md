@@ -63,27 +63,6 @@ shows.
 You have completed an Explore conversation: one question, one evidence-aware
 answer, and one useful refinement.
 
-## Optional: continue a Discord dare
-
-In a Bryan Bucks server with Dare v2 enabled, `/bb dare` creates a separate
-private Explore conversation and an unfunded draft. Open **Revise in Explore**
-from Discord, then tell Scout what was wrong in ordinary language—for example,
-“the CS and duration conditions must happen in the same game.”
-
-To find the draft later, open Bryan Bucks, choose its server, and select the
-**Dares** tab. **My Dares** contains your private draft; **Guild Dares** contains
-the server's funded contracts. Open the draft there to inspect its evidence or
-use the advanced editor, then return to Explore for another conversational
-revision.
-
-Before replacing the draft, inspect the card's explicit scope, targets,
-participation relationship, queues, first-N or game cap, deadline, stake, plain
-meaning, and canonical ScoutQL. Historical preview uses only matches and
-timelines already present in Scout's lake; missing timeline coverage is shown as
-unknown rather than as a failed condition. Save the revision only when the diff
-matches the intended dare, then prepare and confirm funding. The confirmation
-is single-use and expires after ten minutes.
-
 ## Set something up from the conversation
 
 Where your server has this enabled, Explore can also prepare a scheduled report,
@@ -96,9 +75,9 @@ confirmation card summarising exactly what it would create.
 
 Nothing exists until you press **Confirm**. Scout re-checks your permissions in
 that server at that moment, so a card prepared before your access changed still
-cannot create anything you are no longer allowed to create. Like a Dare funding
-confirmation, the card is single-use and expires after ten minutes; when it
-expires, ask again to prepare a fresh one.
+cannot create anything you are no longer allowed to create. The card is
+single-use and expires after ten minutes; when it expires, ask again to prepare
+a fresh one.
 
 The card appears only for you, in your own conversation. Sharing or publishing
 the conversation shows the question and answer without it, so nobody else is
