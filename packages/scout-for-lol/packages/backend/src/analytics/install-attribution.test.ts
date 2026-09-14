@@ -193,26 +193,14 @@ describe("completeInstallAttribution", () => {
     expect(replay).toEqual({ outcome: "invalid" });
   });
 
-  test("refuses to attribute an install that predates the token", async () => {
-    await seedInstall({ installedAt: new Date("2026-08-01T00:00:00Z") });
-    const token = await mint();
-    const { analytics, capture } = createAnalyticsFixture();
-
-    const result = await completeInstallAttribution(
-      { state: token, guildId: SERVER_ID, discordId: INSTALLER },
-      { db: prisma, analytics, now: T_PLUS_5M },
-    );
-
-    expect(result.outcome).toBe("already_installed");
-    expect(capture).not.toHaveBeenCalled();
-    const untouched = await prisma.guildInstall.findUniqueOrThrow({
-      where: { serverId: SERVER_ID },
-    });
-    expect(untouched.attributedAt).toBeNull();
-  });
-
-  test("refuses to attribute a historical backfill", async () => {
-    await seedInstall({ analyticsLifecycleTracked: false });
+  test.each([
+    [
+      "an install that predates the token",
+      { installedAt: new Date("2026-08-01T00:00:00Z") },
+    ],
+    ["a historical backfill", { analyticsLifecycleTracked: false }],
+  ])("refuses to attribute %s", async (_description, installOptions) => {
+    await seedInstall(installOptions);
     const token = await mint();
     const { analytics, capture } = createAnalyticsFixture();
 
