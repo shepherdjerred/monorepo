@@ -1,8 +1,11 @@
 import { EmbedBuilder, Colors, SlashCommandBuilder } from "discord.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { getDocsUrl, getDashboardUrl } from "#src/discord/commands/links.ts";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
+import { isPolicyEnabled, type FlagName } from "#src/configuration/flags.ts";
 
 const logger = createLogger("commands-help");
 type HelpInteraction = { guildId: string | null; reply: CommandReply };
@@ -27,7 +30,7 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
       },
       {
         name: "Lightweight commands",
-        value: commandList(interaction.guildId),
+        value: await commandList(interaction.guildId),
       },
       {
         name: "Use the dashboard for",
@@ -41,7 +44,36 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
   logger.info("✅ Help command completed successfully");
 }
 
-function commandList(guildId: string | null): string {
+/**
+ * Flag-gated commands are registered per guild (`guildScopedCommandGroups`),
+ * so `/help` lists each one only where its flag is on — the same rationale as
+ * registration: a globally advertised command that answers "not available
+ * here" is a confusing dead end. `deploymentGate` covers gates that live
+ * outside Flipt: voice additionally requires the boot-time
+ * `VOICE_ASSISTANT_ENABLED` audio-pipeline gate, and a flag-on guild in a
+ * deployment without it would still get "not switched on" from the command.
+ */
+const flagGatedCommands: {
+  flag: FlagName;
+  entry: string;
+  deploymentGate?: () => boolean;
+}[] = [
+  {
+    flag: "betting_enabled",
+    entry: "`/bb` — Bryan Bucks: balances, history, rules, and dares",
+  },
+  {
+    flag: "tournament_lobbies_enabled",
+    entry: "`/lobby` — Create and manage custom-game lobbies",
+  },
+  {
+    flag: "voice_assistant_enabled",
+    entry: '`/scout join` · `/scout leave` — "Hey Scout" voice questions',
+    deploymentGate: () => configuration.voiceAssistant.enabled,
+  },
+];
+
+export async function commandList(guildId: string | null): Promise<string> {
   const commands = [
     "`/setup` — See the recommended web setup flow",
     "`/track` — Track one player in this channel",
@@ -52,6 +84,17 @@ function commandList(guildId: string | null): string {
   ];
   if (guildId !== null && isExploreGuildAllowed(guildId)) {
     commands.push("`/scout ask` — Ask a private, saved Explore question");
+  }
+  if (guildId !== null) {
+    const server = DiscordGuildIdSchema.parse(guildId);
+    for (const { flag, entry, deploymentGate } of flagGatedCommands) {
+      if (deploymentGate !== undefined && !deploymentGate()) {
+        continue;
+      }
+      if (await isPolicyEnabled(flag, { server })) {
+        commands.push(entry);
+      }
+    }
   }
   return commands.join("\n");
 }
