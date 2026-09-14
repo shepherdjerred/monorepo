@@ -118,3 +118,56 @@ test("parseMapRows refuses a line with no identity rather than dropping it", asy
   expect(() => parseMapRows(`{"status":"resolved"}`)).toThrow(/no oldPuuid/);
   expect(() => parseMapRows(`{"oldPuuid":"x"}`)).toThrow(/no status/);
 });
+
+test("import never erases a replacement this database already holds", async () => {
+  // An identity the earlier migration resolved can fail to resolve now, because
+  // the account was deleted in between. The old mapping is still correct for
+  // every object already written, and nothing can rebuild it once the old key
+  // is gone — Riot forgetting an account does not unmake the identifier it used
+  // to have.
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [OLD_A, NEW_A],
+  );
+  const { importMap } = await import("./transfer.ts");
+  await importMap(db, [
+    {
+      oldPuuid: OLD_A,
+      gameName: null,
+      tagLine: null,
+      newPuuid: null,
+      status: "unresolved",
+    },
+  ]);
+  const rows = await db.query(
+    `SELECT "newPuuid" AS n, "status" AS s FROM "PuuidKeyMap"`,
+  );
+  expect(rows[0]?.["n"]).toBe(NEW_A);
+  expect(rows[0]?.["s"]).toBe("resolved");
+  await db.close();
+});
+
+test("import still upgrades an unresolved row when a replacement arrives", async () => {
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "status") VALUES (${db.param(1)}, 'unresolved')`,
+    [OLD_A],
+  );
+  const { importMap } = await import("./transfer.ts");
+  await importMap(db, [
+    {
+      oldPuuid: OLD_A,
+      gameName: "Zozio8z",
+      tagLine: "EUW",
+      newPuuid: NEW_A,
+      status: "resolved",
+    },
+  ]);
+  const rows = await db.query(
+    `SELECT "newPuuid" AS n, "status" AS s FROM "PuuidKeyMap"`,
+  );
+  expect(rows[0]?.["n"]).toBe(NEW_A);
+  expect(rows[0]?.["s"]).toBe("resolved");
+  await db.close();
+});

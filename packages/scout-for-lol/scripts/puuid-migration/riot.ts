@@ -145,6 +145,7 @@ async function riotGet(
       response.headers.get("x-app-rate-limit"),
       response.headers.get("x-method-rate-limit"),
     );
+    limiter.observeUsage(response.headers.get("x-app-rate-limit-count"));
 
     const outcome = await classify(response, attempt);
     if (outcome.kind === "account") {

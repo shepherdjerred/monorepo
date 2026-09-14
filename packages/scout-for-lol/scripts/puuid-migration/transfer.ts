@@ -125,6 +125,14 @@ export async function seedIdentities(
  * carried — whether a mapping's rewrite has landed is a fact about THIS
  * database, and importing someone else's would tell the report lake to publish
  * a translation the stored columns do not hold yet.
+ *
+ * With one exception, which is not symmetric: a replacement is never replaced by
+ * its absence. An identity resolved by an earlier migration can fail to resolve
+ * now — the account was deleted in between — and the scratch map would carry
+ * `newPuuid: null` for it. Taking that as the newer answer would erase a durable
+ * mapping that is still correct for every object already written, and nothing
+ * could rebuild it once the old key is gone. Riot forgetting an account does not
+ * unmake the identifier it used to have.
  */
 export async function importMap(
   db: Db,
@@ -146,10 +154,16 @@ export async function importMap(
       toSqlParam(row.status, "status"),
     ];
     if (existing.has(row.oldPuuid)) {
+      // COALESCE, not assignment: an incoming null leaves a replacement this
+      // database already holds standing. The status follows the same rule, so a
+      // row that stays resolved is not relabelled as lost.
       await db.exec(
         `UPDATE "PuuidKeyMap"
-            SET "gameName" = ${db.param(2)}, "tagLine" = ${db.param(3)},
-                "newPuuid" = ${db.param(4)}, "status" = ${db.param(5)}
+            SET "gameName" = COALESCE(${db.param(2)}, "gameName"),
+                "tagLine"  = COALESCE(${db.param(3)}, "tagLine"),
+                "status"   = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL
+                                  THEN "status" ELSE ${db.param(5)} END,
+                "newPuuid" = COALESCE(${db.param(4)}, "newPuuid")
           WHERE "oldPuuid" = ${db.param(1)}`,
         params,
       );

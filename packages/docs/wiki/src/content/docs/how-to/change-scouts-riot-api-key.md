@@ -209,10 +209,25 @@ S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory --out beta-2.jso
 bun scripts/migrate-puuid-key.ts seed --from prod-2.jsonl
 bun scripts/migrate-puuid-key.ts seed --from beta-2.jsonl
 
-# and the databases
-bun scripts/migrate-puuid-key.ts collect
+# and the databases — each one, pointed at itself
+for env in "$PROD_DATABASE_URL" "$BETA_DATABASE_URL"; do
+  DATABASE_URL="$env" bun scripts/migrate-puuid-key.ts collect
+  DATABASE_URL="$env" bun scripts/migrate-puuid-key.ts export --out "delta-$RANDOM.jsonl"
+done
+
+# bring those identities back into the scratch map and resolve everything new
+export DATABASE_URL="file:$HOME/puuid-harvest.sqlite"
+for f in delta-*.jsonl; do bun scripts/migrate-puuid-key.ts import --from "$f"; done
 bun scripts/migrate-puuid-key.ts resolve
 ```
+
+:::caution[`collect` reads whatever `DATABASE_URL` points at]
+Step 3 set it to the scratch file, and it is still set. Left alone, `collect`
+scans the scratch map instead of the live databases and finds nothing — so a
+player subscribed during the multi-day resolve is never added, and `apply`
+refuses on that stray in the middle of the maintenance window with no way to
+resolve it before the old key is retired.
+:::
 
 `seed` skips anything the map already knows, so the second inventory only adds
 what is genuinely new. Omit it and those identities are absent from the map: the

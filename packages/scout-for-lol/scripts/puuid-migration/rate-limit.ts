@@ -74,6 +74,7 @@ export class RateLimiter {
   #windows: RateWindow[];
   #recent: number[] = [];
   #adopted = false;
+  #observed: { at: number; counts: Map<number, number> } | undefined;
   readonly #label: string;
 
   constructor(label: string, windows: readonly RateWindow[]) {
@@ -83,6 +84,57 @@ export class RateLimiter {
 
   get windows(): readonly RateWindow[] {
     return this.#windows;
+  }
+
+  /**
+   * Note how full the key's windows are ACROSS EVERY CALLER.
+   *
+   * `X-App-Rate-Limit-Count` is app-wide, not per-process. During a migration
+   * the same key is usually still serving live traffic — Scout's own prematch
+   * and postmatch polling — and a limiter that counts only its own requests
+   * would spend the whole budget and leave the application to collect the 429s.
+   *
+   * So the budget is a ceiling on TOTAL usage rather than on ours. Whatever
+   * other callers have already spent in a window is subtracted from what this
+   * process may spend in it, which makes the migration yield to live traffic
+   * automatically instead of being told a fixed share to keep out of.
+   */
+  observeUsage(countHeader: string | null): void {
+    if (countHeader === null) {
+      return;
+    }
+    const counts = new Map<number, number>();
+    for (const pair of countHeader.split(",")) {
+      const match = /^(\d+):(\d+)$/.exec(pair.trim());
+      if (match !== null) {
+        counts.set(Number(match[2]), Number(match[1]));
+      }
+    }
+    this.#observed = { at: Date.now(), counts };
+  }
+
+  /**
+   * How many of a window's slots other callers hold right now.
+   *
+   * Our own recent requests are subtracted, so this is what everyone ELSE is
+   * using. A stale observation is discarded rather than trusted: the count
+   * decays as the window rolls, and an old one would understate the headroom
+   * and stall this process for no reason.
+   */
+  #externalUsage(window: RateWindow, now: number): number {
+    const observed = this.#observed;
+    if (observed === undefined || now - observed.at > window.seconds * 1000) {
+      return 0;
+    }
+    const total = observed.counts.get(window.seconds);
+    if (total === undefined) {
+      return 0;
+    }
+    const spanMs = window.seconds * 1000;
+    const ours = this.#recent.filter(
+      (t) => observed.at - t < spanMs && t <= observed.at,
+    ).length;
+    return Math.max(0, total - ours);
   }
 
   /**
@@ -148,12 +200,28 @@ export class RateLimiter {
     for (const window of this.#windows) {
       const spanMs = window.seconds * 1000;
       const inWindow = this.#recent.filter((t) => now - t < spanMs);
-      if (inWindow.length < window.limit) {
+      // What is left for us once other callers on this key are accounted for.
+      const ourLimit = window.limit - this.#externalUsage(window, now);
+
+      if (ourLimit <= 0) {
+        // Other traffic alone has reached the ceiling. Wait for the observation
+        // to age out rather than trickling requests through: past that point it
+        // no longer describes the window, `#externalUsage` returns nothing, and
+        // the next attempt measures the key afresh. That is also why this can
+        // never deadlock — the only thing refreshing an observation is a request
+        // of ours, so the recovery must not depend on making one.
+        const observedAt = this.#observed?.at ?? now;
+        wait = Math.max(wait, observedAt + spanMs - now + 1);
+        continue;
+      }
+      if (inWindow.length < ourLimit) {
         continue;
       }
       // The oldest request holding this window open frees a slot when it ages
-      // out, so sleep exactly that long rather than polling.
-      const oldest = inWindow[inWindow.length - window.limit] ?? now;
+      // out, so sleep exactly that long rather than polling. With no request of
+      // our own in the window, the wait is for someone else's to age out, and
+      // one window is the longest that can take.
+      const oldest = inWindow[inWindow.length - ourLimit] ?? now - spanMs;
       wait = Math.max(wait, oldest + spanMs - now + 1);
     }
     return wait;

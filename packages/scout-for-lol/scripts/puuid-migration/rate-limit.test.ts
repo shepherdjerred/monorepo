@@ -105,3 +105,50 @@ describe("minutesFor", () => {
     expect(minutesFor(240_000, windows)).toBe(300);
   });
 });
+
+describe("sharing a key with live traffic", () => {
+  test("yields its budget to whatever else is using the key", async () => {
+    // The old key still serves Scout's own polling until the backends are
+    // scaled down. `X-App-Rate-Limit-Count` is app-wide, so the budget is a
+    // ceiling on TOTAL usage: what others have spent comes out of ours, rather
+    // than the migration spending it all and leaving them the 429s.
+    const limiter = new RateLimiter("shared", [{ limit: 4, seconds: 60 }]);
+    limiter.observeUsage("4:60");
+    const started = Date.now();
+    const race = await Promise.race([
+      limiter.take().then(() => "took"),
+      Bun.sleep(300).then(() => "blocked"),
+    ]);
+    expect(race).toBe("blocked");
+    expect(Date.now() - started).toBeGreaterThanOrEqual(250);
+  });
+
+  test("uses the headroom others leave", async () => {
+    const limiter = new RateLimiter("shared", [{ limit: 10, seconds: 60 }]);
+    limiter.observeUsage("2:60");
+    // Eight slots remain; taking a few must not block.
+    const started = Date.now();
+    await limiter.take();
+    await limiter.take();
+    expect(Date.now() - started).toBeLessThan(200);
+  });
+
+  test("ignores an observation older than the window it describes", async () => {
+    // The count decays as the window rolls. Trusting a stale one would stall
+    // this process against traffic that has long since aged out.
+    const limiter = new RateLimiter("shared", [{ limit: 2, seconds: 1 }]);
+    limiter.observeUsage("2:1");
+    await Bun.sleep(1100);
+    const started = Date.now();
+    await limiter.take();
+    expect(Date.now() - started).toBeLessThan(200);
+  });
+
+  test("a response with no count header changes nothing", async () => {
+    const limiter = new RateLimiter("shared", [{ limit: 3, seconds: 60 }]);
+    limiter.observeUsage(null);
+    const started = Date.now();
+    await limiter.take();
+    expect(Date.now() - started).toBeLessThan(200);
+  });
+});
