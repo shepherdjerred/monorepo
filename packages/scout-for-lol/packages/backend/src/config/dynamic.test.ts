@@ -247,6 +247,25 @@ describe("explore quota limits", () => {
     expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
   });
 
+  test("a user ceiling above its own global window is refused", async () => {
+    // The hourly pair stays valid here on purpose. Checking only that pair —
+    // which is what shipped first — let an operator lower the longer global
+    // windows and leave a weekly user allowance the global bucket refuses.
+    await initializeDynamicConfig({
+      environment: {
+        ...DISABLED,
+        EXPLORE_QUOTA_LIMITS: JSON.stringify({
+          ...DEFAULT_EXPLORE_QUOTA_LIMITS,
+          userDay: 5000,
+          userWeek: 5000,
+        }),
+      },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
+  });
+
   test("a user ceiling above the global one is refused", async () => {
     await initializeDynamicConfig({
       environment: {

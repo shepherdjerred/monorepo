@@ -46,14 +46,25 @@ export const ExploreQuotaLimitsSchema = z
         }
       });
     }
-    // The per-user ceiling is meaningless above the global one — the global
-    // rule would refuse the request first, and every user would be told they
-    // had allowance left right up until Explore said it was busy.
-    if (limits.userHour > limits.globalHour) {
-      ctx.addIssue({
-        code: "custom",
-        message: "user hourly quota must not exceed the global hourly quota",
-      });
+    // A per-user ceiling above its global counterpart is meaningless: the
+    // global rule refuses the request first, so the user is told they have
+    // allowance left right up until Explore says it is busy. Every shared
+    // window is checked, not just the hourly one — lowering only the longer
+    // global windows is the likelier operator mistake, and checking one pair
+    // would let it through while this comment claimed otherwise. The minute
+    // window has no global counterpart and is bounded by `userHour` above.
+    const shared = [
+      ["hourly", limits.userHour, limits.globalHour],
+      ["daily", limits.userDay, limits.globalDay],
+      ["weekly", limits.userWeek, limits.globalWeek],
+    ] as const;
+    for (const [window, user, global] of shared) {
+      if (user > global) {
+        ctx.addIssue({
+          code: "custom",
+          message: `user ${window} quota must not exceed the global ${window} quota`,
+        });
+      }
     }
   });
 
