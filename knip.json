@@ -203,8 +203,19 @@
       "project": ["src/**/*.{ts,tsx,astro,mdx}", "*.ts", "public/**/*.js"]
     },
     "packages/scout-for-lol/packages/app": {
-      "entry": ["src/**/*.test.ts", "index.html"],
-      "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
+      "entry": [
+        "src/**/*.test.ts",
+        "index.html",
+        "playwright.config.ts",
+        "src/**/*.stories.tsx",
+        "e2e/**/*.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx,css}",
+        ".storybook/**/*.{ts,tsx}",
+        "e2e/**/*.ts",
+        "*.ts"
+      ]
     },
     "packages/scout-for-lol/packages/evals": {
       "entry": [

@@ -39,6 +39,9 @@ function TeamChampions(props: {
   return (
     <div
       className="flex flex-wrap gap-1"
+      // A plain div has no role that can carry a name; `group` is what lets the
+      // label below be announced.
+      role="group"
       aria-label={`Team ${props.team.teamId.toString()} champions`}
     >
       {props.team.participants.map((participant) => (
@@ -214,7 +217,7 @@ function ExploreMatchCard(props: { card: ExploreMatchCard }) {
 export function ExploreMatchCards(props: { cards: ExploreMatchCard[] }) {
   if (props.cards.length === 0) return null;
   return (
-    <div className="space-y-3" aria-label="Match cards">
+    <div className="space-y-3" role="group" aria-label="Match cards">
       {props.cards.map((card) => (
         <ExploreMatchCard key={card.match.matchId} card={card} />
       ))}

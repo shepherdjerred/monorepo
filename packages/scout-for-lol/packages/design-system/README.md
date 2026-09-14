@@ -92,6 +92,13 @@ stories by id, so renaming those stories or their exports breaks the specs —
 `Runtime/ThemeMenu` → `Default`, `Components/Overlays/Dialog` → `CreateReport`,
 and `Components/Forms/Field` → `SemanticFormStates` are load-bearing names.
 
+The parts both Scout catalogs share — the story-index loader, the page-level
+axe exclusions, the mount assertions, and the CI reporter shape — live in
+`src/storybook/e2e.ts`, and the toolbar globals and theme seeding in
+`src/storybook/preview.ts`. They are exported as
+`@scout-for-lol/design-system/storybook/e2e` and `.../storybook/preview` so the
+app's catalog consumes them rather than copying them.
+
 Cross-browser visual coverage lives in `@scout-for-lol/design-audit`, which
 exercises the shipped Scout surfaces nightly. This package runs chromium only.
 

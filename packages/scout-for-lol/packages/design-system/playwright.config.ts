@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { env } from "node:process";
+import { storybookCiReporter } from "#src/storybook/e2e.ts";
 
 const isCI = env["CI"] === "true";
 
@@ -10,18 +11,7 @@ export default defineConfig({
   // Omitted rather than set to undefined so Playwright keeps its own default
   // locally; exactOptionalPropertyTypes rejects the explicit undefined.
   ...(isCI ? { workers: 3 } : {}),
-  reporter: isCI
-    ? [
-        ["github"],
-        [
-          "junit",
-          {
-            outputFile:
-              "../../../../.ci-reports/junit/scout-for-lol__design-system/playwright.xml",
-          },
-        ],
-      ]
-    : "list",
+  reporter: isCI ? storybookCiReporter("scout-for-lol__design-system") : "list",
   outputDir: "./test-results",
   webServer: {
     // A static server over the already-built catalog. `test:e2e` depends on

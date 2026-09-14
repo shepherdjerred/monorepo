@@ -23,9 +23,16 @@
   --color-scout-brand-ink: var(--scout-color-primary-text);
   --color-scout-accent: var(--scout-color-accent);
   --color-scout-accent-ink: var(--scout-color-accent-text);
-  --color-scout-danger: var(--scout-color-danger);
+  /* `text-scout-danger` is by far the most common danger utility, so it maps to
+     the colour that is readable as text. The fill that `--scout-color-danger`
+     names is too dark to read against the dark themes' canvas — it is a
+     surface, paired with `danger-ink` on top — so backgrounds and borders take
+     `danger-fill` explicitly. */
+  --color-scout-danger: var(--scout-color-danger-on-surface);
+  --color-scout-danger-fill: var(--scout-color-danger);
   --color-scout-danger-ink: var(--scout-color-danger-text);
-  --color-scout-success: var(--scout-color-success);
+  --color-scout-success: var(--scout-color-success-on-surface);
+  --color-scout-success-fill: var(--scout-color-success);
   --color-scout-border: var(--scout-color-border);
   --color-scout-focus: var(--scout-color-focus);
   --radius-sm: var(--scout-radius-small);

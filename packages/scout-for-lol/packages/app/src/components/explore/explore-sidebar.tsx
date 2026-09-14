@@ -171,7 +171,7 @@ function ConversationRow(props: {
                 <span>Rename</span>
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="gap-2 text-sm text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
+                className="gap-2 text-sm text-scout-danger focus:bg-scout-danger-fill/10 focus:text-scout-danger"
                 onSelect={() => {
                   props.onDelete(conversation);
                 }}
@@ -205,7 +205,9 @@ function ConversationRunStatus(props: {
   return (
     <span
       className={`size-2 shrink-0 rounded-full ${
-        props.status === "completed" ? "bg-scout-primary" : "bg-scout-danger"
+        props.status === "completed"
+          ? "bg-scout-primary"
+          : "bg-scout-danger-fill"
       }`}
       role="status"
       aria-label={

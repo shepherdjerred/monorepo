@@ -1,47 +1,24 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { loadStorybookStories } from "./storybook-index.ts";
+import {
+  expectStoryAccessible,
+  loadStorybookStories,
+  mountStory,
+} from "#src/storybook/e2e.ts";
 
-const stories = await loadStorybookStories();
+const stories = await loadStorybookStories(
+  new URL("../storybook-static/index.json", import.meta.url),
+);
 
-// Both skins and both modes are covered without multiplying the suite by four.
+// Both skins and both modes, without multiplying the suite by four.
 const themes = [
   { skin: "modern", mode: "dark" },
   { skin: "classic", mode: "light" },
 ] as const;
 
-// A story renders one component, not a document. Page-structure rules fail on
-// every story for reasons no component owns.
-const pageLevelRules = [
-  "region",
-  "landmark-one-main",
-  "page-has-heading-one",
-  "bypass",
-];
-
 for (const story of stories) {
   for (const theme of themes) {
     test(`${story.id} [${theme.skin}/${theme.mode}]`, async ({ page }) => {
-      const pageErrors: string[] = [];
-      page.on("pageerror", (error) => {
-        pageErrors.push(error.message);
-      });
-
-      await page.goto(
-        `/iframe.html?viewMode=story&id=${story.id}&globals=skin:${theme.skin};mode:${theme.mode}`,
-      );
-
-      await expect(page.locator("html")).toHaveAttribute(
-        "data-scout-skin",
-        theme.skin,
-      );
-      await expect(page.locator("html")).toHaveAttribute(
-        "data-scout-mode",
-        theme.mode,
-      );
-      // Mounted, not non-blank: icon-only stories render no text at all.
-      await expect(page.locator("#storybook-root > *").first()).toBeAttached();
-      await expect(page.locator("body.sb-show-errordisplay")).toHaveCount(0);
+      const pageErrors = await mountStory(page, { id: story.id, ...theme });
       expect(pageErrors).toEqual([]);
 
       // Champion art and rank crests resolve through scoutAssetsPlugin. A
@@ -79,10 +56,7 @@ for (const story of stories) {
         });
       expect(brokenImages).toEqual([]);
 
-      const accessibility = await new AxeBuilder({ page })
-        .disableRules(pageLevelRules)
-        .analyze();
-      expect(accessibility.violations).toEqual([]);
+      await expectStoryAccessible(page);
     });
   }
 }

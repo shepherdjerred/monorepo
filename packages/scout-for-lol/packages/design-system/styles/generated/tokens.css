@@ -17,10 +17,12 @@
   --scout-color-focus: #007a8a;
   --scout-color-success: #176b45;
   --scout-color-success-text: #ffffff;
+  --scout-color-success-on-surface: #176b45;
   --scout-color-warning: #8a4b00;
   --scout-color-warning-text: #ffffff;
   --scout-color-danger: #992e1e;
   --scout-color-danger-text: #ffffff;
+  --scout-color-danger-on-surface: #992e1e;
   --scout-color-info: #005a82;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #010a1399;
@@ -68,10 +70,12 @@
   --scout-color-focus: #25e6d4;
   --scout-color-success: #246b4c;
   --scout-color-success-text: #ffffff;
+  --scout-color-success-on-surface: #5fbe8c;
   --scout-color-warning: #8a4b00;
   --scout-color-warning-text: #ffffff;
   --scout-color-danger: #a83832;
   --scout-color-danger-text: #ffffff;
+  --scout-color-danger-on-surface: #e8756b;
   --scout-color-info: #14759b;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #010a13cc;
@@ -79,9 +83,9 @@
   --scout-color-chart2: #c8aa6e;
   --scout-color-chart3: #68b455;
   --scout-color-chart4: #d9574d;
-  --scout-color-chart5: #9b7fd1;
+  --scout-color-chart5: #a187d4;
   --scout-color-chart6: #e09545;
-  --scout-color-chart7: #d66ba0;
+  --scout-color-chart7: #d871a4;
   --scout-color-chart8: #74a6c7;
   --scout-font-display:
     Beaufort for LoL, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC,
@@ -119,10 +123,12 @@
   --scout-color-focus: #1d5b78;
   --scout-color-success: #32633d;
   --scout-color-success-text: #ffffff;
+  --scout-color-success-on-surface: #32633d;
   --scout-color-warning: #7a4700;
   --scout-color-warning-text: #ffffff;
   --scout-color-danger: #84271b;
   --scout-color-danger-text: #ffffff;
+  --scout-color-danger-on-surface: #84271b;
   --scout-color-info: #1b5070;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #06111bb3;
@@ -170,10 +176,12 @@
   --scout-color-focus: #d9b77e;
   --scout-color-success: #35734a;
   --scout-color-success-text: #ffffff;
+  --scout-color-success-on-surface: #5fbe8c;
   --scout-color-warning: #9a5c16;
   --scout-color-warning-text: #ffffff;
   --scout-color-danger: #96382a;
   --scout-color-danger-text: #ffffff;
+  --scout-color-danger-on-surface: #e8756b;
   --scout-color-info: #2d6892;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #02070ccc;
@@ -181,9 +189,9 @@
   --scout-color-chart2: #4a8db9;
   --scout-color-chart3: #6c9b55;
   --scout-color-chart4: #c15c48;
-  --scout-color-chart5: #9a7cb3;
+  --scout-color-chart5: #a286b9;
   --scout-color-chart6: #d08a42;
-  --scout-color-chart7: #b86c82;
+  --scout-color-chart7: #c17e91;
   --scout-color-chart8: #7f9aa8;
   --scout-font-display:
     QTFrizQuad, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC,
