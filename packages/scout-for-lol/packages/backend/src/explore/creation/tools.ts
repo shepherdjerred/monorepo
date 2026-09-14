@@ -162,7 +162,7 @@ export function createCreationExploreTools(input: CreationExploreToolsInput) {
   return {
     list_creation_targets: tool({
       description:
-        "List the servers this user can create a report, tracked player or competition in, with what they are allowed to create in each and whether any limit is already reached. When exactly one server is eligible its postable channels are included. Call this before proposing any creation.",
+        "List the servers this user can create a report, tracked player or competition in, with what they are allowed to create in each and whether any limit is already reached. When exactly one server is eligible its postable channels are included. Call this before proposing any creation. Load the creation skill first if you have not this turn.",
       inputSchema: ListCreationTargetsToolInputSchema,
       outputSchema: CreationTargetsResultSchema,
       execute: () => executors.listTargets(),

@@ -40,6 +40,11 @@ import {
 } from "#src/explore/creation/capability.ts";
 import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+import {
+  enabledExploreSkills,
+  type ExploreSkillOptions,
+} from "#src/explore/skills/registry.ts";
+import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";
@@ -54,7 +59,6 @@ import {
 } from "#src/metrics/explore.ts";
 import {
   createFormatTool,
-  createLanguageTool,
   createValidateTool,
   QueryResultToolOutputSchema,
   validateQuery,
@@ -129,6 +133,8 @@ type RunState = {
   lastVisualization: VisualizationSnapshot | null;
   /** Match ids from the most recent query that support a two-team card. */
   lastMatchIds: Set<string>;
+  /** Skills loaded this turn, so result messages can stop nudging. */
+  loadedSkills: Set<string>;
 };
 
 export async function streamExploreAgent(
@@ -157,6 +163,7 @@ async function streamExploreAgentInternal(
     lastPreview: null,
     lastVisualization: null,
     lastMatchIds: new Set(),
+    loadedSkills: new Set(),
   };
 
   // Derived per turn rather than persisted, so Temporal recovery and flag
@@ -173,22 +180,25 @@ async function streamExploreAgentInternal(
     guildIds: params.guildIds,
   });
 
+  const skillOptions = {
+    bucks:
+      bucksCapability === null
+        ? null
+        : { currentTime: new Date().toISOString() },
+    dares: daresEnabled,
+    challenges: challengesEnabled,
+    creation: creationCapability !== null,
+    surface: params.surface,
+  };
+
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
-    instructions: exploreAgentInstructions({
-      bucks:
-        bucksCapability === null
-          ? null
-          : { currentTime: new Date().toISOString() },
-      dares: daresEnabled,
-      challenges: challengesEnabled,
-      creation: creationCapability !== null,
-      surface: params.surface,
-    }),
+    instructions: exploreAgentInstructions(skillOptions),
     model: runtime.languageModel(model, ["tools"]),
     tools: createExploreTools({
       params,
       state,
+      skillOptions,
       bucksCapability,
       daresEnabled,
       challengesEnabled,
@@ -315,6 +325,7 @@ function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
 type ExploreToolsOptions = {
   params: ExploreAgentParams;
   state: RunState;
+  skillOptions: ExploreSkillOptions;
   bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>;
   daresEnabled: boolean;
   challengesEnabled: boolean;
@@ -325,6 +336,7 @@ function createExploreTools(options: ExploreToolsOptions) {
   const {
     params,
     state,
+    skillOptions,
     bucksCapability,
     daresEnabled,
     challengesEnabled,
@@ -410,7 +422,7 @@ function createExploreTools(options: ExploreToolsOptions) {
 
   const runReportQuery = tool({
     description:
-      "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool.",
+      "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool. Load the scoutql skill first if you have not this turn.",
     inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
     outputSchema: QueryResultToolOutputSchema,
     execute: (inputData) =>
@@ -469,6 +481,11 @@ function createExploreTools(options: ExploreToolsOptions) {
             state.lastMatchIds.size === 0
               ? "This query has no supported match cards. Set matchCards to []."
               : `For this query, cards may use only these match_id values: ${[...state.lastMatchIds].join(", ")}.`,
+            ...(state.loadedSkills.has("visualization")
+              ? []
+              : [
+                  "Before attaching a visualization, load the visualization skill.",
+                ]),
           ].join(" "),
           formattedQueryText: validation.formattedQueryText,
           preview: modelPreview,
@@ -476,8 +493,16 @@ function createExploreTools(options: ExploreToolsOptions) {
       }),
   });
 
+  // The scoutql skill carries the full language reference, so the
+  // `get_report_language` reference tool is not registered here — one load
+  // path keeps the model from splitting its budget between two.
   return {
-    get_report_language: createLanguageTool(track),
+    load_skill: createLoadSkillTool({
+      skills: enabledExploreSkills(skillOptions),
+      context: { bucks: skillOptions.bucks, surface: params.surface },
+      track,
+      onLoaded: (name) => state.loadedSkills.add(name),
+    }),
     resolve_player: resolvePlayer,
     validate_report_query: createValidateTool(track),
     run_report_query: runReportQuery,

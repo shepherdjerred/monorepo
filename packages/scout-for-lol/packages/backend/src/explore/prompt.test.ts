@@ -5,12 +5,27 @@ import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts
 import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
 
 describe("exploreAgentInstructions", () => {
-  test("includes the generated ScoutQL reference without requiring a tool call", () => {
+  test("is a lean core: skills index instead of inlined domain sections", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
 
-    expect(instructions).toContain("## ScoutQL reference");
-    expect(instructions).toContain(JSON.stringify(scoutQlLanguageReference()));
-    expect(instructions).not.toContain("Call get_report_language");
+    expect(instructions).toContain("## Skills");
+    expect(instructions).toContain("load_skill");
+    // The ScoutQL language reference and field guide moved into the scoutql
+    // skill; the prompt must not carry either any more.
+    expect(instructions).not.toContain("## ScoutQL reference");
+    expect(instructions).not.toContain(
+      JSON.stringify(scoutQlLanguageReference()),
+    );
+    expect(instructions).not.toContain(scoutQlFieldGuideSection());
+    expect(instructions).toContain("Load the scoutql skill");
+  });
+
+  test("keeps the answer-shaping rules that apply to every turn", () => {
+    const instructions = exploreAgentInstructions({ bucks: null });
+
+    expect(instructions).toContain(
+      "NEVER state a statistic you did not read from a tool result",
+    );
     expect(instructions).toContain("Based on N games");
     expect(instructions).toContain("N games in Scout's data");
     expect(instructions).toContain(
@@ -27,28 +42,53 @@ describe("exploreAgentInstructions", () => {
     expect(instructions).toContain(
       "Never attach a visualization just because a query ran",
     );
-    expect(instructions).not.toContain("Always choose an output render kind");
+    // The worst-looking viz failure keeps a standing rule via the
+    // visualization skill's tripwire even when the skill is never loaded.
+    expect(instructions).toContain(
+      "Never use a line or area chart when the x axis is a category",
+    );
   });
 
-  test("appends the Bryan Bucks section only for a bucks-capable turn", () => {
+  test("lists capability skills only when the capability exists", () => {
     const plain = exploreAgentInstructions({ bucks: null });
-    const withBucks = exploreAgentInstructions({
+    const everything = exploreAgentInstructions({
       bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      dares: true,
+      challenges: true,
+      creation: true,
+      surface: "web",
     });
 
-    expect(plain).not.toContain("## Bryan Bucks");
-    expect(withBucks).toContain("## Bryan Bucks");
-    // The injected timestamp anchors relative-date questions.
-    expect(withBucks).toContain("2026-08-29T00:00:00.000Z");
-    // The load-bearing definitions ported from the retired /bb ask agent.
-    expect(withBucks).toContain(
-      "Current balance, ledger delta, and betting P&L are different measures.",
-    );
-    expect(withBucks).toContain("private to the asker");
-    // A bucks-only answer runs no ScoutQL.
-    expect(withBucks).toContain("set queryText to null");
-    // Both variants still carry the whole ScoutQL contract.
-    expect(withBucks).toContain("## ScoutQL reference");
+    for (const name of ["bryan-bucks", "dares", "challenges", "creation"]) {
+      expect(plain).not.toContain(`- ${name}:`);
+      expect(everything).toContain(`- ${name}:`);
+    }
+  });
+
+  test("carries tripwires but not skill bodies", () => {
+    const everything = exploreAgentInstructions({
+      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      dares: true,
+      challenges: true,
+      creation: true,
+      surface: "web",
+    });
+
+    // Tripwires: the rules that must hold even if a skill is never loaded.
+    expect(everything).toContain("a proposal, not an entity");
+    expect(everything).toContain("Never publish a challenge from Explore");
+    expect(everything).toContain("private to the asker");
+    expect(everything).toContain("queryText to null");
+
+    // Bodies stay out: one marker line per moved section.
+    expect(everything).not.toContain("game-set CTE");
+    expect(everything).not.toContain("Betting P&L is gross payout minus stake");
+    expect(everything).not.toContain("catalog: 'current_champions'");
+    expect(everything).not.toContain("NOTHING HAS BEEN CREATED YET");
+    expect(everything).not.toContain("RENDER kpi_card");
+    // The per-turn timestamp lives in the bryan-bucks skill body now, so the
+    // prompt stays byte-stable across turns for the provider prompt cache.
+    expect(everything).not.toContain("2026-08-29T00:00:00.000Z");
   });
 
   test("keeps Discord answers self-contained instead of selecting web cards", () => {
@@ -59,56 +99,17 @@ describe("exploreAgentInstructions", () => {
 
     expect(instructions).toContain("Set matchCards to []");
     expect(instructions).toContain("fully self-contained");
-    expect(instructions).not.toContain(
-      "Choose S for a compact score reference",
-    );
+    expect(instructions).not.toContain("- match-cards:");
   });
 
-  test("appends the creation section only when the creation tools exist", () => {
-    const plain = exploreAgentInstructions({ bucks: null });
-    const withCreation = exploreAgentInstructions({
+  test("offers match cards on the web surface via the skill index", () => {
+    const instructions = exploreAgentInstructions({
       bucks: null,
-      creation: true,
+      surface: "web",
     });
 
-    expect(plain).not.toContain("## Creating reports");
-    expect(plain).not.toContain("list_creation_targets");
-    expect(withCreation).toContain(
-      "## Creating reports, tracked players and competitions",
-    );
-    // The load-bearing rules: discover before proposing, ask which server,
-    // confirm the fields, and never claim an entity exists.
-    expect(withCreation).toContain(
-      "Call list_creation_targets before proposing any creation",
-    );
-    expect(withCreation).toContain("ask which one they mean");
-    expect(withCreation).toContain(
-      "Confirm every required field with the user",
-    );
-    expect(withCreation).toContain("NOTHING HAS BEEN CREATED YET");
-    expect(withCreation).toContain("expires in ten minutes");
-    expect(withCreation).toContain(
-      "NEVER say that a report, tracked player or competition exists",
-    );
-    // An outage is never reported as a denial — the same rule the tools enforce.
-    expect(withCreation).toContain("Do NOT say they lack permission");
-  });
-
-  test("appends the challenges section only when challenges are enabled", () => {
-    const plain = exploreAgentInstructions({ bucks: null });
-    const withChallenges = exploreAgentInstructions({
-      bucks: null,
-      challenges: true,
-    });
-
-    expect(plain).not.toContain("## Community challenge contracts");
-    expect(plain).not.toContain("draft_challenge_contract");
-    expect(withChallenges).toContain("## Community challenge contracts");
-    expect(withChallenges).toContain(
-      "New challenges are authored from scratch without a source template",
-    );
-    expect(withChallenges).toContain("catalog: 'current_champions'");
-    expect(withChallenges).toContain("draft_challenge_contract");
+    expect(instructions).toContain("- match-cards:");
+    expect(instructions).not.toContain("fully self-contained");
   });
 
   test("carries no v1 clause the language no longer has", () => {
@@ -121,15 +122,14 @@ describe("exploreAgentInstructions", () => {
 });
 
 describe("ScoutQL field guide", () => {
-  test("is identical in both agent prompts", () => {
-    // The two agents teach the same language. A rule stated one way in Explore
-    // and another way in the report editor is invisible until a user gets two
-    // different answers to the same question, so the section is shared
-    // verbatim rather than written twice.
+  test("still reaches the report-query agent verbatim", () => {
+    // Explore now serves the guide through its scoutql skill (asserted in
+    // skills/registry.test.ts); the report-query agent keeps it inline. Both
+    // read the same generated section, so the two agents cannot be taught
+    // different languages.
     const section = scoutQlFieldGuideSection();
 
     expect(section.length).toBeGreaterThan(0);
-    expect(exploreAgentInstructions({ bucks: null })).toContain(section);
     expect(reportAgentInstructions()).toContain(section);
   });
 });

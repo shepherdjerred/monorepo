@@ -116,3 +116,8 @@ packages/webring/README.md
 # Test fixtures are content under test, not code to format.
 **/__tests__/fixtures/**
 **/e2e/fixtures/**
+
+# Explore agent skill bodies are model instructions, not prose to reflow:
+# prettier's markdown printer restructures them (it indents lines following a
+# list as list continuations), which silently changes what the model is told.
+packages/scout-for-lol/packages/backend/src/explore/skills/content/

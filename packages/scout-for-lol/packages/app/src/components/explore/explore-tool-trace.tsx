@@ -258,6 +258,11 @@ function StatusIcon(props: { status: ExploreTraceStatus }) {
 }
 
 function toolLabel(toolName: string): string {
+  if (toolName === "load_skill") {
+    return "Load skill instructions";
+  }
+  // No longer registered on new turns; kept for traces persisted before the
+  // ScoutQL reference moved into the scoutql skill.
   if (toolName === "get_report_language") {
     return "Read ScoutQL reference";
   }
