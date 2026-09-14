@@ -19,7 +19,8 @@ export async function voidDareV2WithFullRefund(
     | "storage_overflow"
     | "target_unavailable"
     | "activation_timeout"
-    | "insufficient_baseline",
+    | "insufficient_baseline"
+    | "version_retired",
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<boolean> {
