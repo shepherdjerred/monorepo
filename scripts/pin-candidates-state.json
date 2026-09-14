@@ -73,9 +73,9 @@
       "digest": "sha256:e30d5be0c4ac87561d45dd906bb4d0a04b79cb0a527b66952ad577db0ea71fe6"
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 15697,
-      "version": "2.0.0-15697",
-      "digest": "sha256:3cd1926410bb5ddcbd32da6b5d1e7fbffcfbca94109a001ee05cad248714d5cf"
+      "buildNumber": 15708,
+      "version": "2.0.0-15708",
+      "digest": "sha256:b4a4691c12a3f451096d60164745109634576c176b4c9408d01fdef60091d7c6"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
