@@ -6,10 +6,10 @@ import { openFixtureDatabase, removeDatabase } from "./sqlite-fixture.ts";
 const dbPath = path.join(tmpdir(), "puuid-migration-transfer-test.sqlite");
 process.env["DATABASE_URL"] = `file:${dbPath}`;
 
-const OLD_A = `OLDA_${"a".repeat(70)}`;
-const OLD_B = `OLDB_${"b".repeat(70)}`;
-const NEW_A = `NEWA_${"y".repeat(70)}`;
-const NEW_B = `NEWB_${"z".repeat(70)}`;
+const OLD_A = `OLDA_${"a".repeat(73)}`;
+const OLD_B = `OLDB_${"b".repeat(73)}`;
+const NEW_A = `NEWA_${"y".repeat(73)}`;
+const NEW_B = `NEWB_${"z".repeat(73)}`;
 
 /** One exported line for OLD_A with no replacement, for a given reason. */
 const lostLine = (status: string): string =>
@@ -131,6 +131,22 @@ test("import does not carry appliedAt, which is a fact about the target", async 
   );
   expect(rows[0]?.["v"]).toBeNull();
   expect(rows[0]?.["n"]).toBe(NEW_A);
+  await db.close();
+});
+
+test("export carries only the current unapplied transition delta", async () => {
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "appliedAt") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved', datetime('now'))`,
+    [OLD_A, NEW_A],
+  );
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "status") VALUES (${db.param(1)}, 'pending')`,
+    [OLD_B],
+  );
+  const { exportMap } = await import("./transfer.ts");
+  const rows = await exportMap(db);
+  expect(rows.map((row) => row.oldPuuid)).toEqual([OLD_B]);
   await db.close();
 });
 

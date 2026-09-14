@@ -10,6 +10,7 @@
 
 import type { Db } from "./db.ts";
 import { readTrackedPuuids } from "./discovery.ts";
+import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import { collectFromJson, parseJson, selectSubtree } from "./json-walk.ts";
 import {
   asOptionalString,
@@ -56,9 +57,27 @@ export async function collectKnownIdentities(db: Db): Promise<Set<string>> {
   const rows = await db.query(
     `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"`,
   );
+  const applied = new Map(
+    rows.flatMap((row) => {
+      const oldPuuid = asOptionalString(row["oldPuuid"]);
+      const newPuuid = asOptionalString(row["newPuuid"]);
+      return oldPuuid !== null && newPuuid !== null && row["appliedAt"] !== null
+        ? [[oldPuuid, newPuuid] as const]
+        : [];
+    }),
+  );
+  composePuuidRemap(applied);
+  const currentCycleDomains = new Set(
+    [...applied]
+      .filter(([oldPuuid, replacement]) => oldPuuid === replacement)
+      .map(([oldPuuid]) => oldPuuid),
+  );
   const known = new Set<string>();
   for (const row of rows) {
-    known.add(asString(row["oldPuuid"], "oldPuuid"));
+    const oldPuuid = asString(row["oldPuuid"], "oldPuuid");
+    if (!currentCycleDomains.has(oldPuuid) || row["appliedAt"] === null) {
+      known.add(oldPuuid);
+    }
     const mapped = asOptionalString(row["newPuuid"]);
     if (mapped !== null && row["appliedAt"] === null) {
       known.add(mapped);

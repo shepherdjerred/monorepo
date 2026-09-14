@@ -42,7 +42,7 @@ export function serializeMap(rows: readonly MapRow[]): string {
  */
 const PuuidSchema = z
   .string()
-  .regex(/^[\w-]{70,90}$/u, "not a PUUID: expected 70-90 base64url characters");
+  .regex(/^[\w-]{78}$/u, "not a PUUID: expected 78 base64url characters");
 
 const MapRowSchema = z
   .object({
@@ -123,7 +123,7 @@ export function parseMapRows(text: string): MapRow[] {
 export async function exportMap(db: Db): Promise<MapRow[]> {
   const rows = await db.query(
     `SELECT "oldPuuid", "gameName", "tagLine", "newPuuid", "status"
-       FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+       FROM "PuuidKeyMap" WHERE "appliedAt" IS NULL ORDER BY "oldPuuid"`,
   );
   return rows.map((row) => ({
     oldPuuid: asString(row["oldPuuid"], "oldPuuid"),

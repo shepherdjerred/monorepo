@@ -279,7 +279,7 @@ S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts inventory --out beta-2.jso
 DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from prod-2.jsonl
 DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from beta-2.jsonl
 
-# and the databases — each one, pointed at itself
+# and the databases — each one, pointed at itself; export is this transition's delta
 DATABASE_URL="$PROD_DB" bun scripts/migrate-puuid-key.ts collect
 DATABASE_URL="$PROD_DB" bun scripts/migrate-puuid-key.ts export --out delta-prod.jsonl
 DATABASE_URL="$BETA_DB" bun scripts/migrate-puuid-key.ts collect
