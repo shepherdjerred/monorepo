@@ -34,12 +34,12 @@
   "imports": {
     "#src/*": "./src/*",
     "#styles/*": "./styles/*",
-    "#tokens/*": "./tokens/*",
-    "#workbench/*": "./workbench/*"
+    "#tokens/*": "./tokens/*"
   },
   "scripts": {
-    "build": "bun run generate && vite build",
-    "dev": "vite",
+    "build": "bun run generate && bun x --no-install storybook build",
+    "dev": "bun run generate && bun x --no-install storybook dev --port 6006 --no-open",
+    "preview": "bun x --no-install vite preview --outDir storybook-static --host 127.0.0.1 --port 6006 --strictPort",
     "generate": "bun run scripts/generate-tokens.ts",
     "generate:brand": "bun run scripts/generate-brand.ts",
     "check:generated": "bun run scripts/generate-tokens.ts --check && bun run scripts/generate-brand.ts --check",
@@ -48,7 +48,7 @@
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "test:e2e": "bun --no-install --bun playwright test",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bun x --no-install eslint src scripts workbench --max-warnings=0",
+    "lint": "bun x --no-install eslint src scripts e2e .storybook --max-warnings=0",
     "format": "bun x --no-install prettier --check ."
   },
   "dependencies": {
@@ -83,18 +83,21 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "1.62.1",
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
     "@types/bun": "1.4.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^6.0.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "4.1.10",
     "ajv": "^8.20.0",
     "eslint": "^10.3.0",
     "prettier": "^3.9.6",
+    "storybook": "^10.6.0",
     "typescript": "^6.0.3",
-    "@typescript/native": "npm:typescript@7.0.2",
     "vite": "^8.0.11",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "4.1.10"
   },
   "peerDependencies": {
     "react": "19.2.8",

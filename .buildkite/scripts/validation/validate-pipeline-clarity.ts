@@ -40,8 +40,8 @@ export function validatePipelineClarity(
     // The target-aware runner prints the exact selected package list. The label
     // still identifies the supported browser surface without claiming every
     // suite executes on every change.
-    ["playwright-e2e-pr", "browser E2E — sites + Scout catalog/evals"],
-    ["playwright-e2e-main", "browser E2E — sites + Scout catalog/evals"],
+    ["playwright-e2e-pr", "browser E2E — sites + Scout Storybook/evals"],
+    ["playwright-e2e-main", "browser E2E — sites + Scout Storybook/evals"],
     ["docker-e2e-pr", "llm-observability E2E — Tempo + MinIO"],
     ["docker-e2e-main", "llm-observability E2E — Tempo + MinIO"],
     ["codex-review-gate", "Codex review gate (required)"],

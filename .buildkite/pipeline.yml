@@ -1119,7 +1119,7 @@ steps:
   # PR change filters include the global CI/toolchain closure. A selector
   # mistake can therefore only run extra work; it cannot hide changes to the
   # machinery that decides or executes a lane.
-  - label: ":performing_arts: browser E2E — sites + Scout catalog/evals (PR)"
+  - label: ":performing_arts: browser E2E — sites + Scout Storybook/evals (PR)"
     key: playwright-e2e-pr
     timeout_in_minutes: 30
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
@@ -1261,12 +1261,16 @@ steps:
                   # honest; the 12Gi burst limit already had the headroom.
                   #
                   # 4 cores was the tightest limit on the heaviest parallel
-                  # workload here: Playwright drives six browser projects while
-                  # sibling packages build in the same container, and these pods
-                  # sat at 41% of CFS periods throttled (p90 98%) — starving the
-                  # design-system vite server badly enough that it failed to
-                  # bind inside its 120s webServer timeout on main build 14255,
-                  # which cancelled that release. The reporting pipeline's
+                  # workload here: Playwright drives several browser projects
+                  # while sibling packages build in the same container, and
+                  # these pods sat at 41% of CFS periods throttled (p90 98%) —
+                  # starving the design-system vite server badly enough that it
+                  # failed to bind inside its 120s webServer timeout on main
+                  # build 14255, which cancelled that release. That package now
+                  # serves a prebuilt Storybook catalog and no longer races the
+                  # dependency optimizer, but sjer.red, alert-dashboard, and
+                  # evals still start real servers here, so the headroom stays.
+                  # The reporting pipeline's
                   # design-audit pod already carries cpu "4" against a 12Gi
                   # reservation for the same browser workload.
                   requests: { cpu: "1", memory: "9Gi" }
@@ -1278,7 +1282,7 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  - label: ":performing_arts: browser E2E — sites + Scout catalog/evals (main)"
+  - label: ":performing_arts: browser E2E — sites + Scout Storybook/evals (main)"
     key: playwright-e2e-main
     timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
@@ -1351,12 +1355,16 @@ steps:
                   # honest; the 12Gi burst limit already had the headroom.
                   #
                   # 4 cores was the tightest limit on the heaviest parallel
-                  # workload here: Playwright drives six browser projects while
-                  # sibling packages build in the same container, and these pods
-                  # sat at 41% of CFS periods throttled (p90 98%) — starving the
-                  # design-system vite server badly enough that it failed to
-                  # bind inside its 120s webServer timeout on main build 14255,
-                  # which cancelled that release. The reporting pipeline's
+                  # workload here: Playwright drives several browser projects
+                  # while sibling packages build in the same container, and
+                  # these pods sat at 41% of CFS periods throttled (p90 98%) —
+                  # starving the design-system vite server badly enough that it
+                  # failed to bind inside its 120s webServer timeout on main
+                  # build 14255, which cancelled that release. That package now
+                  # serves a prebuilt Storybook catalog and no longer races the
+                  # dependency optimizer, but sjer.red, alert-dashboard, and
+                  # evals still start real servers here, so the headroom stays.
+                  # The reporting pipeline's
                   # design-audit pod already carries cpu "4" against a 12Gi
                   # reservation for the same browser workload.
                   requests: { cpu: "1", memory: "9Gi" }

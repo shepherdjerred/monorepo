@@ -219,7 +219,7 @@
       "entry": ["playwright.config.ts"]
     },
     "packages/scout-for-lol/packages/design-system": {
-      "entry": ["playwright.config.ts"]
+      "entry": ["playwright.config.ts", "src/**/*.stories.tsx", "e2e/**/*.ts"]
     },
     "packages/scout-for-lol": {
       "entry": ["scripts/**/*.ts"],
