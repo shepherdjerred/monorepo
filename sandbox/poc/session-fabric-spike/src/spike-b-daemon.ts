@@ -32,7 +32,9 @@ const ALLOW = new Set(
     .map((s) => s.trim()),
 );
 const WEBHOOK_SECRET = env("SPIKE_WEBHOOK_SECRET");
-const PROVIDER = env("SPIKE_PROVIDER");
+const ProviderSchema = z.enum(["codex", "claude"]);
+const PROVIDER = ProviderSchema.parse(env("SPIKE_PROVIDER"));
+const TurnResultSchema = z.strictObject({ finalText: z.string() });
 const IMAGE = "session-fabric-spike";
 const here = import.meta.dir.replace(/\/src$/, "");
 
@@ -66,14 +68,15 @@ async function runTurn(text: string): Promise<string> {
   const outDir = join(here, ".spike-out", `${sessionId}-t${turnIndex}`);
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
+  const providerCredential =
+    PROVIDER === "codex" ? "CODEX_AUTH_JSON_B64" : "CLAUDE_CODE_OAUTH_TOKEN";
   const forward = [
     "SPIKE_S3_ENDPOINT",
     "SPIKE_S3_BUCKET",
     "SPIKE_S3_PREFIX",
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
-    "CODEX_AUTH_JSON_B64",
-    "CLAUDE_CODE_OAUTH_TOKEN",
+    providerCredential,
   ].filter((k) => Bun.env[k] !== undefined);
   const perTurn: Record<string, string> = {
     SPIKE_PROVIDER: PROVIDER,
@@ -92,9 +95,9 @@ async function runTurn(text: string): Promise<string> {
     stderr: "inherit",
   });
   if ((await proc.exited) !== 0) throw new Error("turn container failed");
-  const result = JSON.parse(
-    await Bun.file(join(outDir, "result.json")).text(),
-  ) as { finalText: string };
+  const result = TurnResultSchema.parse(
+    JSON.parse(await Bun.file(join(outDir, "result.json")).text()),
+  );
   turnIndex += 1;
   return result.finalText;
 }
@@ -117,6 +120,15 @@ async function sendText(chatGuid: string, text: string): Promise<void> {
       `[spike-b] send failed: ${res.status} ${(await res.text()).slice(0, 200)}`,
     );
 }
+
+async function run(cmd: string[]): Promise<void> {
+  const proc = Bun.spawn(cmd, { stdout: "inherit", stderr: "inherit" });
+  if ((await proc.exited) !== 0)
+    throw new Error(`${cmd.join(" ").slice(0, 120)} failed`);
+}
+
+console.log(`[spike-b] building image...`);
+await run(["docker", "build", "-q", "-t", IMAGE, here]);
 
 Bun.serve({
   // Loopback only: the webhook invokes a bypass-permission agent holding live
@@ -147,15 +159,20 @@ Bun.serve({
       return new Response("drop");
     }
     console.log(`[spike-b] <- ${handle}: ${text.slice(0, 80)}`);
-    turnChain = turnChain.then(async () => {
+    const processTurn = async (): Promise<void> => {
       try {
         const reply = await runTurn(text);
         await sendText(chatGuid, reply);
         console.log(`[spike-b] -> ${reply.slice(0, 80)}`);
       } catch (err) {
-        await sendText(chatGuid, `spike error: ${String(err).slice(0, 200)}`);
+        try {
+          await sendText(chatGuid, `spike error: ${String(err).slice(0, 200)}`);
+        } catch (sendError) {
+          console.error(`[spike-b] error reply failed: ${String(sendError)}`);
+        }
       }
-    });
+    };
+    turnChain = turnChain.then(processTurn, processTurn);
     return new Response("accepted");
   },
 });

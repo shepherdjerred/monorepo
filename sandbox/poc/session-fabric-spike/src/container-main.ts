@@ -41,6 +41,11 @@ if (codexAuthB64 !== undefined && codexAuthB64 !== "") {
 let resumeProviderSessionId: string | undefined;
 if (input.resume) {
   const manifest = await pullLatest(input.sessionId, sessionHome);
+  if (manifest.provider !== input.provider) {
+    throw new Error(
+      `provider mismatch: bundle=${manifest.provider} here=${input.provider}`,
+    );
+  }
   if (manifest.workspacePath !== workspace) {
     throw new Error(
       `workspacePath mismatch: bundle=${manifest.workspacePath} here=${workspace}`,

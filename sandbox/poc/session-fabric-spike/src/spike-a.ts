@@ -17,6 +17,10 @@ const CodexAuthSchema = z.object({
 const ClaudeCredsSchema = z.object({
   claudeAiOauth: z.object({ accessToken: z.string().min(1) }),
 });
+const TurnResultSchema = z.strictObject({
+  providerSessionId: z.string().min(1),
+  finalText: z.string(),
+});
 
 const provider = Bun.argv[2];
 if (provider !== "codex" && provider !== "claude")
@@ -55,7 +59,13 @@ async function awsCred(key: string): Promise<string> {
 async function codexEnv(): Promise<Record<string, string>> {
   const authPath = `${Bun.env["HOME"]}/.codex/auth.json`;
   const raw = await Bun.file(authPath).text();
-  const parsed = CodexAuthSchema.safeParse(JSON.parse(raw));
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    throw new Error("no codex access token in auth.json; run `codex login`");
+  }
+  const parsed = CodexAuthSchema.safeParse(value);
   if (!parsed.success)
     throw new Error("no codex access token in auth.json; run `codex login`");
   // ChatGPT-subscription auth: the SDK reads auth.json from CODEX_HOME. Passing
@@ -71,7 +81,15 @@ async function claudeEnv(): Promise<Record<string, string>> {
     "Claude Code-credentials",
     "-w",
   ]);
-  const parsed = ClaudeCredsSchema.safeParse(JSON.parse(blob));
+  let value: unknown;
+  try {
+    value = JSON.parse(blob);
+  } catch {
+    throw new Error(
+      "no claude oauth token in Keychain; run `claude setup-token` and export CLAUDE_CODE_OAUTH_TOKEN",
+    );
+  }
+  const parsed = ClaudeCredsSchema.safeParse(value);
   if (!parsed.success) {
     throw new Error(
       "no claude oauth token in Keychain; run `claude setup-token` and export CLAUDE_CODE_OAUTH_TOKEN",
@@ -122,10 +140,9 @@ async function turn(
   });
   if ((await proc.exited) !== 0)
     throw new Error(`turn ${turnIndex} container failed`);
-  const result: unknown = JSON.parse(
-    await Bun.file(join(outDir, "result.json")).text(),
+  return TurnResultSchema.parse(
+    JSON.parse(await Bun.file(join(outDir, "result.json")).text()),
   );
-  return result as { providerSessionId: string; finalText: string };
 }
 
 // deleteSession() reads S3 config from the host env; mirror what the containers get.

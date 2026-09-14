@@ -8,7 +8,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { readdir, mkdir } from "node:fs/promises";
-import { join, relative, dirname } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { z } from "zod/v4";
 
 const ManifestSchema = z.strictObject({
@@ -18,13 +18,15 @@ const ManifestSchema = z.strictObject({
   turn: z.number().int().nonnegative(),
   providerSessionId: z.string().min(1),
   workspacePath: z.string().min(1),
-  files: z.array(
-    z.strictObject({
-      path: z.string().min(1),
-      key: z.string().min(1),
-      bytes: z.number().int(),
-    }),
-  ),
+  files: z
+    .array(
+      z.strictObject({
+        path: z.string().min(1),
+        key: z.string().min(1),
+        bytes: z.number().int().nonnegative(),
+      }),
+    )
+    .min(1),
 });
 export type Manifest = z.infer<typeof ManifestSchema>;
 
@@ -210,14 +212,43 @@ export async function pullLatest(
   const manifest = ManifestSchema.parse(
     await getJson(client, bucket, latest.manifestKey),
   );
+  const sessionPrefix = `${prefix}/sessions/${sessionId}/`;
+  const manifestKey = `${sessionPrefix}turns/${latest.turn}/manifest.json`;
+  if (latest.manifestKey !== manifestKey) {
+    throw new Error(`manifest pointer outside session: ${latest.manifestKey}`);
+  }
+  if (manifest.sessionId !== sessionId || manifest.turn !== latest.turn) {
+    throw new Error("manifest does not match the requested session turn");
+  }
   for (const file of manifest.files) {
+    if (EXCLUDED_BASENAMES.has(file.path.split("/").at(-1) ?? "")) {
+      throw new Error(`session bundle contains excluded file: ${file.path}`);
+    }
+    if (isAbsolute(file.path) || file.path.includes("\\")) {
+      throw new Error(`session bundle path is not relative: ${file.path}`);
+    }
+    const dest = resolve(sessionHome, file.path);
+    const escaped = relative(sessionHome, dest);
+    if (
+      escaped === ".." ||
+      escaped.startsWith(`..${sep}`) ||
+      isAbsolute(escaped)
+    ) {
+      throw new Error(`session bundle path escapes session home: ${file.path}`);
+    }
+    const filesPrefix = `${sessionPrefix}turns/${manifest.turn}/files/`;
+    if (file.key !== `${filesPrefix}${file.path}`) {
+      throw new Error(`session bundle key does not match path: ${file.path}`);
+    }
     const res = await client.send(
       new GetObjectCommand({ Bucket: bucket, Key: file.key }),
     );
     const bytes = await res.Body?.transformToByteArray();
     if (bytes === undefined) throw new Error(`empty object: ${file.key}`);
-    const dest = join(sessionHome, file.path);
     await mkdir(dirname(dest), { recursive: true });
+    if (bytes.byteLength !== file.bytes) {
+      throw new Error(`session bundle byte count mismatch: ${file.path}`);
+    }
     await Bun.write(dest, bytes);
   }
   console.error(
