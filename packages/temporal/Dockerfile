@@ -430,7 +430,6 @@ COPY --parents \
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
-COPY --from=build /app/packages/scout-for-lol/packages/data/dist packages/scout-for-lol/packages/data/dist
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 
 # Verify the copied toolkit binary boots, then ensure the HA schema: the worker
