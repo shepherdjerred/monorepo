@@ -3,7 +3,9 @@ import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type { ScoutStage } from "#src/contracts.ts";
 import type { ScoutReconciliationScanV2Result } from "#src/activity-contracts-v2.ts";
 import {
+  SCOUT_V2_REUSE_POLICIES,
   SCOUT_WORKFLOW_NAMES,
+  type ScoutV2ReusePolicy,
   scoutLakeProjectionV2WorkflowId,
   scoutMatchProcessingV2WorkflowId,
   scoutNotificationV2WorkflowId,
@@ -85,29 +87,17 @@ const RECONCILIATION_STARTABLE_V2: ReadonlySet<string> = new Set<string>([
 ]);
 
 /**
- * Why a family reuses IDs the way it does.
- *
- * `ALLOW_DUPLICATE_FAILED_ONLY` is right for work whose successful completion
- * means there is nothing left to do: a match that processed, a projection that
- * staged. Restarting one would re-run a phase the durable state already
- * attests to.
- *
- * `ALLOW_DUPLICATE` is for the two families whose durable ROW — not the
- * Workflow's own completion — decides whether work remains. A notification run
- * that completed by recording `unknown-delivery` succeeded at its job; the
- * operator resolution that releases the intent happens out of band, so the
- * fresh run that follows a SUCCESSFUL execution must not be refused. A
- * recovery batch is the same shape: the batch row holds the cursor and the
- * counts, its `workflowId` column is the adoption key, and a run that was
- * terminated rather than failed still leaves the batch live and driverless.
+ * Why a family reuses IDs the way it does is answered by
+ * `SCOUT_V2_REUSE_POLICIES` in `identifiers.ts`, which carries the reasoning.
+ * The sweep reads that table rather than restating its values, because the
+ * operations API's operator starts re-drive the same families from the backend
+ * and the two starters must never disagree about the terms of a start.
  */
-type ChildReusePolicyV2 = "ALLOW_DUPLICATE" | "ALLOW_DUPLICATE_FAILED_ONLY";
-
 type ReconciliationChildV2 = {
   readonly workflowType: string;
   readonly workflowId: string;
   readonly input: unknown;
-  readonly reuse: ChildReusePolicyV2;
+  readonly reuse: ScoutV2ReusePolicy;
 };
 
 function childrenOfFamily(
@@ -124,14 +114,14 @@ function childrenOfFamily(
           stage,
           riotMatchId,
         }),
-        reuse: "ALLOW_DUPLICATE_FAILED_ONLY",
+        reuse: SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.matchProcessingV2],
       }));
     case "notifications":
       return pending.notifications.map((intentKey) => ({
         workflowType: SCOUT_WORKFLOW_NAMES.notificationV2,
         workflowId: scoutNotificationV2WorkflowId(stage, intentKey),
         input: scoutNotificationV2InputCodec.serialize({ stage, intentKey }),
-        reuse: "ALLOW_DUPLICATE",
+        reuse: SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.notificationV2],
       }));
     case "lakeProjections":
       return pending.lakeProjections.map((riotMatchId) => ({
@@ -141,7 +131,7 @@ function childrenOfFamily(
           stage,
           riotMatchId,
         }),
-        reuse: "ALLOW_DUPLICATE_FAILED_ONLY",
+        reuse: SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.lakeProjectionV2],
       }));
     case "recoveryBatches":
       return pending.recoveryBatches.map((recoveryBatchId) => ({
@@ -151,7 +141,7 @@ function childrenOfFamily(
           stage,
           recoveryBatchId,
         }),
-        reuse: "ALLOW_DUPLICATE",
+        reuse: SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.recoveryBatchV2],
       }));
   }
 }

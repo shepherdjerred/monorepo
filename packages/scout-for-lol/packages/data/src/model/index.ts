@@ -4,6 +4,7 @@ export * from "./competitions/competition.ts";
 export * from "./competitions/competition-format.ts";
 export * from "./competitions/competition-write.ts";
 export * from "./bucks/confirmation-intent.ts";
+export * from "./operations/operations-intent.ts";
 export * from "./core/discord.ts";
 export * from "./core/audio-source.ts";
 export * from "./riot/division.ts";

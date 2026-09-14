@@ -284,17 +284,25 @@ export async function scanPipelineReconciliationPageV2(
     starts: unacceptedStarts,
     stage: input.stage,
   });
+  // The reads carry each row's ordering value so an operator surface can page
+  // and date them; the sweep only ever wants the identity, and takes it here.
   const pages = {
     matchProcessing: reconciliationPage(
-      stalledMatches,
+      stalledMatches.map((row) => row.riotMatchId),
       requested.matchProcessing,
     ),
-    notifications: reconciliationPage(stalledIntents, requested.notifications),
+    notifications: reconciliationPage(
+      stalledIntents.map((record) => record.intent.key),
+      requested.notifications,
+    ),
     lakeProjections: reconciliationPage(
-      unprojectedMatches,
+      unprojectedMatches.map((row) => row.riotMatchId),
       requested.lakeProjections,
     ),
-    recoveryBatches: reconciliationPage(liveBatches, requested.recoveryBatches),
+    recoveryBatches: reconciliationPage(
+      liveBatches.map((row) => row.recoveryBatchId),
+      requested.recoveryBatches,
+    ),
   };
 
   return ScoutReconciliationScanV2ResultSchema.parse({

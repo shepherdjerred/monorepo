@@ -58,6 +58,56 @@ export const SCOUT_V2_WORKFLOW_NAMES = [
 ] as const;
 export type ScoutV2WorkflowName = (typeof SCOUT_V2_WORKFLOW_NAMES)[number];
 
+/**
+ * How a V2 family reuses a Workflow ID when something re-drives it.
+ *
+ * `ALLOW_DUPLICATE_FAILED_ONLY` is right for work whose successful completion
+ * means there is nothing left to do: a match that processed, a projection that
+ * staged. Restarting one would re-run a phase the durable state already
+ * attests to.
+ *
+ * `ALLOW_DUPLICATE` is for the two families whose durable ROW — not the
+ * Workflow's own completion — decides whether work remains. A notification run
+ * that completed by recording `unknown-delivery` SUCCEEDED at its job; the
+ * operator resolution that releases the intent happens out of band, so the
+ * fresh run that follows a successful execution must not be refused. A
+ * recovery batch is the same shape: the batch row holds the cursor and the
+ * counts, its `workflowId` column is the adoption key, and a run that was
+ * terminated rather than failed still leaves the batch live and driverless.
+ *
+ * The table lives here, beside the ID builders, because it answers the same
+ * question they do — what identity a start claims and on what terms — and
+ * because it has TWO callers that must never disagree: the reconciliation
+ * sweep's child starter and the operations API's operator starts. The sweep
+ * runs inside the Workflow sandbox and operator starts run in the backend, so
+ * neither module can import the other; a policy spelled at both call sites
+ * would drift silently, and the drift surfaces only as a start a human asked
+ * for and Temporal refused. The Workflow and Client SDKs spell these policies
+ * with the same strings, so both callers consume this table unmapped.
+ *
+ * Only the families something re-drives are named. A Workflow nothing sweeps
+ * or repairs has no reuse question to answer, and inventing a policy for one
+ * here would put a decision nobody made into a table two callers trust.
+ */
+export type ScoutV2ReusePolicy =
+  "ALLOW_DUPLICATE" | "ALLOW_DUPLICATE_FAILED_ONLY";
+
+export const SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES = [
+  SCOUT_WORKFLOW_NAMES.matchProcessingV2,
+  SCOUT_WORKFLOW_NAMES.notificationV2,
+  SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+  SCOUT_WORKFLOW_NAMES.recoveryBatchV2,
+] as const;
+export type ScoutV2RedrivableWorkflowName =
+  (typeof SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES)[number];
+
+export const SCOUT_V2_REUSE_POLICIES = {
+  [SCOUT_WORKFLOW_NAMES.matchProcessingV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
+  [SCOUT_WORKFLOW_NAMES.notificationV2]: "ALLOW_DUPLICATE",
+  [SCOUT_WORKFLOW_NAMES.lakeProjectionV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
+  [SCOUT_WORKFLOW_NAMES.recoveryBatchV2]: "ALLOW_DUPLICATE",
+} as const satisfies Record<ScoutV2RedrivableWorkflowName, ScoutV2ReusePolicy>;
+
 export function scoutTaskQueues(stage: ScoutStage) {
   const prefix = `scout-${stage}`;
   return {

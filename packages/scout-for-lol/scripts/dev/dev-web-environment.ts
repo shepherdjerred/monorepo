@@ -35,6 +35,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   explore_creation_enabled: false,
   hall_of_fame_enabled: false,
   initial_match_history_import_enabled: false,
+  scout_operations_console_enabled: false,
   scoutql_relational_enabled: false,
   "scout-consumer-player-profiles-enabled": true,
   "scout-temporal-call-graph-tracing": false,

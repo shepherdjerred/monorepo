@@ -29,6 +29,7 @@ import { customsHistoryRouter } from "#src/trpc/router/customs-history.router.ts
 import { hallRouter } from "#src/trpc/router/hall.router.ts";
 import { challengeRouter } from "#src/trpc/router/challenge.router.ts";
 import { duelRouter } from "#src/trpc/router/competitions/duel.router.ts";
+import { operationsRouter } from "#src/trpc/router/operations/operations.router.ts";
 
 export const appRouter = router({
   auth: authRouter,
@@ -54,6 +55,7 @@ export const appRouter = router({
   hall: hallRouter,
   challenge: challengeRouter,
   duel: duelRouter,
+  operations: operationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

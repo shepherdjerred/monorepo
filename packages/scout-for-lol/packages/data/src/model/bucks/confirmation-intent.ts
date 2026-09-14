@@ -14,6 +14,10 @@ import {
 } from "#src/model/riot/league-account.ts";
 import { ReportCreateInputSchema } from "#src/model/reports/report.ts";
 import { SubscriptionFilterSpecSchema } from "#src/model/core/subscription-filter.ts";
+import {
+  operationsIntentPayloadArms,
+  OperationsIntentKindSchema,
+} from "#src/model/operations/operations-intent.ts";
 
 /**
  * The arms that act on an existing dare.
@@ -93,6 +97,7 @@ export type DareIntentPayload = z.infer<typeof DareIntentPayloadSchema>;
 export const ConfirmationIntentPayloadSchema = z.discriminatedUnion("kind", [
   ...dareIntentPayloadArms,
   ...creationIntentPayloadArms,
+  ...operationsIntentPayloadArms,
 ]);
 export type ConfirmationIntentPayload = z.infer<
   typeof ConfirmationIntentPayloadSchema
@@ -129,6 +134,7 @@ export type CreationIntentPayload = Extract<
 export const ConfirmationIntentKindSchema = z.enum([
   ...DareIntentKindSchema.options,
   ...CreationIntentKindSchema.options,
+  ...OperationsIntentKindSchema.options,
 ]);
 export type ConfirmationIntentKind = z.infer<
   typeof ConfirmationIntentKindSchema

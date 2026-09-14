@@ -80,6 +80,8 @@ export {
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
   SCOUT_V2_ACTIVITY_QUEUE_CLASSES,
+  SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES,
+  SCOUT_V2_REUSE_POLICIES,
   SCOUT_V2_WORKFLOW_NAMES,
   scoutLakeProjectionV2WorkflowId,
   scoutMatchProcessingV2WorkflowId,
@@ -92,4 +94,8 @@ export {
   scoutPrematchGameV2WorkflowId,
   scoutRecoveryBatchV2WorkflowId,
 } from "./identifiers.ts";
-export type { ScoutV2WorkflowName } from "./identifiers.ts";
+export type {
+  ScoutV2RedrivableWorkflowName,
+  ScoutV2ReusePolicy,
+  ScoutV2WorkflowName,
+} from "./identifiers.ts";
