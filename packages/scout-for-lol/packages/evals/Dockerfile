@@ -27,7 +27,6 @@ COPY --parents \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@scout-for-lol/evals'
 
@@ -39,7 +38,6 @@ COPY --parents \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --filter '@scout-for-lol/evals'
 # The evals tsconfig extends scout's own tsconfig.base.json (not the root one).

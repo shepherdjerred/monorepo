@@ -237,7 +237,6 @@ function user(discordId: string): User {
 function caller(discordId: string = ACTOR): TrpcCaller {
   return appRouter.createCaller({
     user: user(discordId),
-    apiToken: null,
     activitySession: null,
     webSession: {
       discordId,

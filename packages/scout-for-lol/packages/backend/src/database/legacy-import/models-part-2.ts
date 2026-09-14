@@ -8,12 +8,8 @@
  */
 import type { Prisma } from "#generated/prisma/client/index.js";
 import {
-  ApiTokenIdSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  GameEventLogIdSchema,
-  SoundPackIdSchema,
-  StoredSoundIdSchema,
 } from "@scout-for-lol/data";
 import {
   defineImportModel,
@@ -103,75 +99,6 @@ export const IMPORT_MODELS_PART_2: ImportModelSpec[] = [
     },
     count: (tx) => tx.exploreMessage.count(),
     findAll: (tx) => tx.exploreMessage.findMany({ orderBy: [{ id: "asc" }] }),
-  }),
-  defineImportModel({
-    model: "ApiToken",
-    idColumns: ["id"],
-    resetIdSequence: true,
-    transform: (row): Prisma.ApiTokenCreateManyInput => ({
-      id: ApiTokenIdSchema.parse(toInt(row, "id")),
-      userId: DiscordAccountIdSchema.parse(toStr(row, "userId")),
-      token: toStr(row, "token"),
-      name: toStr(row, "name"),
-      scopes: toStr(row, "scopes"),
-      lastUsedAt: toDateOrNull(row, "lastUsedAt"),
-      expiresAt: toDateOrNull(row, "expiresAt"),
-      createdAt: toDate(row, "createdAt"),
-      revokedAt: toDateOrNull(row, "revokedAt"),
-    }),
-    createMany: async (tx, data) => {
-      const result = await tx.apiToken.createMany({ data });
-      return result.count;
-    },
-    count: (tx) => tx.apiToken.count(),
-    findAll: (tx) => tx.apiToken.findMany({ orderBy: [{ id: "asc" }] }),
-  }),
-  defineImportModel({
-    model: "SoundPack",
-    idColumns: ["id"],
-    resetIdSequence: true,
-    transform: (row): Prisma.SoundPackCreateManyInput => ({
-      id: SoundPackIdSchema.parse(toInt(row, "id")),
-      userId: DiscordAccountIdSchema.parse(toStr(row, "userId")),
-      name: toStr(row, "name"),
-      version: toStr(row, "version"),
-      description: toStrOrNull(row, "description"),
-      isPublic: toBool(row, "isPublic"),
-      settings: toStr(row, "settings"),
-      defaults: toStr(row, "defaults"),
-      rules: toStr(row, "rules"),
-      createdAt: toDate(row, "createdAt"),
-      updatedAt: toDate(row, "updatedAt"),
-    }),
-    createMany: async (tx, data) => {
-      const result = await tx.soundPack.createMany({ data });
-      return result.count;
-    },
-    count: (tx) => tx.soundPack.count(),
-    findAll: (tx) => tx.soundPack.findMany({ orderBy: [{ id: "asc" }] }),
-  }),
-  defineImportModel({
-    model: "StoredSound",
-    idColumns: ["id"],
-    resetIdSequence: true,
-    transform: (row): Prisma.StoredSoundCreateManyInput => ({
-      id: StoredSoundIdSchema.parse(toInt(row, "id")),
-      userId: DiscordAccountIdSchema.parse(toStr(row, "userId")),
-      s3Key: toStr(row, "s3Key"),
-      originalName: toStr(row, "originalName"),
-      mimeType: toStr(row, "mimeType"),
-      sizeBytes: toInt(row, "sizeBytes"),
-      durationMs: toIntOrNull(row, "durationMs"),
-      sourceType: toStr(row, "sourceType"),
-      sourceUrl: toStrOrNull(row, "sourceUrl"),
-      createdAt: toDate(row, "createdAt"),
-    }),
-    createMany: async (tx, data) => {
-      const result = await tx.storedSound.createMany({ data });
-      return result.count;
-    },
-    count: (tx) => tx.storedSound.count(),
-    findAll: (tx) => tx.storedSound.findMany({ orderBy: [{ id: "asc" }] }),
   }),
   defineImportModel({
     model: "GuildInstall",
@@ -321,26 +248,6 @@ export const IMPORT_MODELS_PART_2: ImportModelSpec[] = [
     },
     count: (tx) => tx.activeGame.count(),
     findAll: (tx) => tx.activeGame.findMany({ orderBy: [{ id: "asc" }] }),
-  }),
-  defineImportModel({
-    model: "GameEventLog",
-    idColumns: ["id"],
-    resetIdSequence: true,
-    transform: (row): Prisma.GameEventLogCreateManyInput => ({
-      id: GameEventLogIdSchema.parse(toInt(row, "id")),
-      userId: DiscordAccountIdSchema.parse(toStr(row, "userId")),
-      clientId: toStr(row, "clientId"),
-      eventType: toStr(row, "eventType"),
-      eventData: toStr(row, "eventData"),
-      soundPlayed: toStrOrNull(row, "soundPlayed"),
-      timestamp: toDate(row, "timestamp"),
-    }),
-    createMany: async (tx, data) => {
-      const result = await tx.gameEventLog.createMany({ data });
-      return result.count;
-    },
-    count: (tx) => tx.gameEventLog.count(),
-    findAll: (tx) => tx.gameEventLog.findMany({ orderBy: [{ id: "asc" }] }),
   }),
   defineImportModel({
     model: "MatchAiAttempt",

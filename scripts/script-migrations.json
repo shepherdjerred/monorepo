@@ -463,21 +463,6 @@
       ]
     },
     {
-      "source": "packages/scout-for-lol/packages/desktop/src-tauri/icons/create_minimal_png.sh",
-      "disposition": "port",
-      "reason": "Scout tooling already requires Bun",
-      "replacement": "packages/scout-for-lol/scripts/create-minimal-png.ts",
-      "owner": {
-        "packageJson": "packages/scout-for-lol/package.json",
-        "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
-        "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
-      },
-      "tests": [
-        "packages/scout-for-lol/scripts/create-minimal-png.test.ts",
-        "packages/scout-for-lol/scripts/migration-smoke.test.ts"
-      ]
-    },
-    {
       "source": "packages/scout-for-lol/scripts/dev-web.sh",
       "disposition": "port",
       "reason": "Long-lived process supervision needs explicit typed signal handling",

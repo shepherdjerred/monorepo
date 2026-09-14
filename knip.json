@@ -221,15 +221,6 @@
     "packages/scout-for-lol/packages/design-system": {
       "entry": ["playwright.config.ts"]
     },
-    "packages/scout-for-lol/packages/desktop": {
-      "entry": ["src/main.tsx"],
-      "project": ["src/**/*.{ts,tsx,css}"],
-      "vite": false,
-      "postcss": false
-    },
-    "packages/scout-for-lol/packages/ui": {
-      "project": ["src/**/*.{ts,tsx}"]
-    },
     "packages/scout-for-lol": {
       "entry": ["scripts/**/*.ts"],
       "project": ["scripts/**/*.ts"]
@@ -358,15 +349,11 @@
     "@prisma/client-runtime-utils",
     "@resvg/resvg-js",
     "@scout-for-lol/data",
-    "@scout-for-lol/ui",
     "@shepherdjerred/eslint-config",
     "@svgr/plugin-jsx",
     "@tailwindcss/forms",
     "@tailwindcss/postcss",
     "@tanstack/eslint-plugin-query",
-    "@tauri-apps/api",
-    "@tauri-apps/plugin-dialog",
-    "@tauri-apps/plugin-fs",
     "@temporalio/testing",
     "@total-typescript/ts-reset",
     "@types/eslint-plugin-jsx-a11y",
@@ -456,9 +443,6 @@
       "exports"
     ],
     "packages/scout-for-lol/packages/app/src/components/ui/select.tsx": [
-      "exports"
-    ],
-    "packages/scout-for-lol/packages/desktop/src/components/ui/card.tsx": [
       "exports"
     ],
     "packages/scout-for-lol/packages/frontend/src/lib/review-tool/reset-defaults.ts": [

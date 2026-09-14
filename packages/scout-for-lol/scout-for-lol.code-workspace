@@ -17,10 +17,6 @@
       "path": "packages/frontend",
     },
     {
-      "name": "desktop",
-      "path": "packages/desktop",
-    },
-    {
       "name": "root",
       "path": ".",
     },

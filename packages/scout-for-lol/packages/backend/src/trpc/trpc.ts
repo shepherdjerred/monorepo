@@ -101,39 +101,9 @@ const isAuthenticated = middleware(async ({ ctx, next }) => {
 });
 
 /**
- * Middleware that enforces API token authentication (for desktop clients)
- */
-const hasApiToken = middleware(async ({ ctx, next }) => {
-  if (!ctx.apiToken) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Valid API token required",
-    });
-  }
-  if (!ctx.user) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "User not found",
-    });
-  }
-  return next({
-    ctx: {
-      ...ctx,
-      apiToken: ctx.apiToken,
-      user: ctx.user,
-    },
-  });
-});
-
-/**
  * Protected procedure - requires session-based authentication
  */
 export const protectedProcedure = instrumentedProcedure.use(isAuthenticated);
-
-/**
- * Desktop client procedure - requires API token authentication
- */
-export const desktopClientProcedure = instrumentedProcedure.use(hasApiToken);
 
 const hasActivitySession = middleware(async ({ ctx, next }) => {
   if (ctx.activitySession === null) {

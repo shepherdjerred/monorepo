@@ -98,9 +98,7 @@ const config = [
       "./packages/domain/tsconfig.json",
       "./packages/report/tsconfig.json",
       "./packages/temporal/tsconfig.json",
-      "./packages/desktop/tsconfig.json",
       "./packages/evals/tsconfig.json",
-      "./packages/ui/tsconfig.json",
       "./tsconfig.scripts.json",
     ],
     ignores: [
@@ -204,12 +202,9 @@ const config = [
       "packages/data/src/index.ts",
       "packages/data/src/model/arena/index.ts",
       "packages/data/src/model/index.ts",
-      "packages/data/src/sound-pack/index.ts",
       "packages/report/src/browser.ts",
       "packages/report/src/index.ts",
       "packages/temporal/src/index.ts",
-      "packages/ui/src/components/sound-pack-editor/index.ts",
-      "packages/ui/src/index.ts",
       "packages/backend/src/voice/index.ts",
     ],
     rules: { "custom-rules/no-re-exports": "off" },
@@ -252,11 +247,6 @@ const config = [
       "**/example/**/*.ts",
     ],
     rules: { "no-secrets/no-secrets": "off" },
-  },
-  // Vite config runs in Node context, not Bun
-  {
-    files: ["packages/desktop/vite.config.ts"],
-    rules: { "custom-rules/prefer-bun-apis": "off" },
   },
   // UI components use shadcn theme tokens by design
   {

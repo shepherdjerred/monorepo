@@ -13,8 +13,6 @@ const ImageDigestsSchema = z.record(z.string().min(1), DigestSchema);
 const ChartRevisionsSchema = z.record(z.string().min(1), BuildVersionSchema);
 const ScoutImageDigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/);
 const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
-const SCOUT_DESKTOP_RETIREMENT_PREFLIGHT_IMAGE_NOTE =
-  "desktop retirement preflight";
 
 function scoutImageUsesListedDigest(
   version: string,
@@ -64,39 +62,6 @@ export function catalogScoutPostgresImageDigests(
     }
   }
   return digests;
-}
-
-/**
- * A temporary init container must not be enabled merely because its source is
- * present on this branch: the deployed image must contain that exact command.
- * The release catalog records the immutable digest only after the image has
- * been built and inspected, preventing a missing-script CrashLoop during a
- * retirement rollout.
- */
-export function catalogScoutDesktopRetirementPreflightImageDigests(
-  catalog: VersionCatalog,
-): ReadonlySet<string> {
-  const digests = new Set<string>();
-  for (const entry of catalog.entries) {
-    if (!entry.name.startsWith("shepherdjerred/scout-for-lol/")) {
-      continue;
-    }
-    for (const note of entry.notes ?? []) {
-      const prefix = `${SCOUT_DESKTOP_RETIREMENT_PREFLIGHT_IMAGE_NOTE} `;
-      if (!note.startsWith(prefix)) {
-        continue;
-      }
-      digests.add(ScoutImageDigestSchema.parse(note.slice(prefix.length)));
-    }
-  }
-  return digests;
-}
-
-export function scoutImageRunsDesktopRetirementPreflight(
-  version: string,
-  preflightImageDigests: ReadonlySet<string>,
-): boolean {
-  return scoutImageUsesListedDigest(version, preflightImageDigests);
 }
 
 function parseJson(raw: string, label: string): unknown {

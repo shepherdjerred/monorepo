@@ -7,7 +7,7 @@
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { webSessionRejectedTotal } from "#src/metrics/platform/web.ts";
-import type { ApiToken, User } from "#generated/prisma/client/index.js";
+import type { User } from "#generated/prisma/client/index.js";
 import { verifySession } from "#src/trpc/jwt.ts";
 import {
   isCustomActivityTokenCandidate,
@@ -37,10 +37,8 @@ export type WebSession = {
 };
 
 export type Context = {
-  /** The authenticated user (from session, API token, or web cookie) */
+  /** The authenticated user (from a Customs activity or web cookie) */
   user: User | null;
-  /** The API token used for authentication (if using token auth) */
-  apiToken: ApiToken | null;
   /** The web session, if the request carried a valid scout_session cookie */
   webSession: WebSession | null;
   /** Dedicated, short-lived Discord Activity bearer session. */
@@ -68,15 +66,6 @@ function parseCookies(header: string | null): Map<string, string> {
     map.set(name, decodeURIComponent(value));
   }
   return map;
-}
-
-/**
- * Hash a token for comparison with stored hash
- */
-function hashToken(token: string): string {
-  const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(token);
-  return hasher.digest("hex");
 }
 
 /**
@@ -139,7 +128,6 @@ export async function createContext(request: Request): Promise<Context> {
   const bearerToken = extractBearerToken(authHeader);
 
   let user: User | null = null;
-  let apiToken: ApiToken | null = null;
   let webSession: WebSession | null = null;
   let activitySession: CustomActivityClaims | null = null;
 
@@ -147,32 +135,6 @@ export async function createContext(request: Request): Promise<Context> {
     activitySession = isCustomActivityTokenCandidate(bearerToken)
       ? await verifyCustomActivityToken(bearerToken)
       : null;
-    if (activitySession === null) {
-      const hashedToken = hashToken(bearerToken);
-      const tokenRecord = await prisma.apiToken.findUnique({
-        where: { token: hashedToken },
-        include: { user: true },
-      });
-
-      if (tokenRecord && !tokenRecord.revokedAt) {
-        if (!tokenRecord.expiresAt || tokenRecord.expiresAt > new Date()) {
-          apiToken = tokenRecord;
-          user = tokenRecord.user;
-
-          await prisma.apiToken.update({
-            where: { id: tokenRecord.id },
-            data: { lastUsedAt: new Date() },
-          });
-
-          logger.debug(
-            `API token auth successful for user ${user.discordUsername}`,
-            { requestId },
-          );
-        } else {
-          logger.debug("API token expired", { requestId });
-        }
-      }
-    }
   }
 
   // Web session via signed cookie.
@@ -224,7 +186,6 @@ export async function createContext(request: Request): Promise<Context> {
 
   return {
     user,
-    apiToken,
     webSession,
     activitySession,
     clientIp:
@@ -232,15 +193,4 @@ export async function createContext(request: Request): Promise<Context> {
       request.headers.get("X-Forwarded-For"),
     requestId,
   };
-}
-
-/**
- * Generate a new API token (returns unhashed token - show only once!)
- */
-export function generateApiToken(): { token: string; hash: string } {
-  const bytes = new Uint8Array(32);
-  globalThis.crypto.getRandomValues(bytes);
-  const token = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
-  const hash = hashToken(token);
-  return { token, hash };
 }

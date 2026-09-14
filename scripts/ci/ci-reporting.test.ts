@@ -763,22 +763,6 @@ describe("CI reporting manifest", () => {
         "The Temporal SDK worker requires authentic Node worker_threads, VM, promise hooks, and native worker support; Bun 1.4 exits the workflow thread with code 1.",
       args: ["src/workflows", "--no-file-parallelism"],
     });
-    // The Tauri crate (@scout-for-lol/desktop-rust) is intentionally listed in
-    // testlessWorkspaces, not workspaces: its cargo tests require GTK/glib
-    // system libraries in the ci-base image, which only rebuilds on main after
-    // verify. Reporting for it is deferred until an image-only change lands
-    // those prerequisites on main.
-    expect(
-      manifest.workspaces.some(
-        (entry) => entry.package === "@scout-for-lol/desktop-rust",
-      ),
-    ).toBe(false);
-    expect(
-      manifest.testlessWorkspaces.some(
-        (entry) => entry.package === "@scout-for-lol/desktop-rust",
-      ),
-    ).toBe(true);
-
     for (const directory of workspaceDirectories) {
       const packageJsonPath = path.join(
         repositoryRoot,

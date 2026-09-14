@@ -380,11 +380,6 @@ const MODEL_ID_MAP: Record<string, string> = {
   Subscription: "SubscriptionId",
   ServerPermission: "PermissionId",
   GuildPermissionError: "PermissionErrorId",
-  ApiToken: "ApiTokenId",
-  SoundPack: "SoundPackId",
-  DesktopClient: "DesktopClientId",
-  StoredSound: "StoredSoundId",
-  GameEventLog: "GameEventLogId",
 };
 
 const FIELD_TYPE_MAP: Record<string, string> = {

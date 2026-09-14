@@ -26,8 +26,6 @@ const evalsPublic = fileURLToPath(
 const docsPublic = fileURLToPath(
   new URL("../../docs-site/public/", import.meta.url),
 );
-const desktopDir = fileURLToPath(new URL("../../desktop/", import.meta.url));
-const desktopIcons = `${desktopDir}src-tauri/icons/`;
 const colors = scoutThemes["modern-light"].colors;
 const dark = scoutThemes["modern-dark"].colors;
 
@@ -303,27 +301,6 @@ const ogSvg = await satori(
   },
 );
 await emit(`${brandDir}og-default.png`, pngFromSvg(ogSvg, 1200));
-
-if (!check) {
-  const tauri = Bun.spawnSync(
-    [
-      "bun",
-      "x",
-      "--no-install",
-      "@tauri-apps/cli",
-      "icon",
-      `${brandDir}app-icon-512.png`,
-      "-o",
-      desktopIcons,
-      "--ios-color",
-      colors.canvas,
-    ],
-    { cwd: desktopDir, stdout: "inherit", stderr: "inherit" },
-  );
-  if (tauri.exitCode !== 0) {
-    throw new Error("Failed to generate Tauri icons");
-  }
-}
 
 console.log(
   check ? "Scout brand assets are in sync" : "Generated Scout brand assets",

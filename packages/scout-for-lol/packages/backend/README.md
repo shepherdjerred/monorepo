@@ -4,7 +4,7 @@ The Scout for LoL backend service. One Bun image that runs:
 
 - The Discord bot (Discord.js): slash commands, match notifications, report delivery
 - Match polling cron jobs through Scout's native Riot API client, with raw match JSON archived to S3
-- The tRPC/HTTP server that the web app SPA (`@scout-for-lol/app`) and desktop client call
+- The tRPC/HTTP server that the web app SPA (`@scout-for-lol/app`) calls
 - The DuckDB "report lake" (Parquet, derived from S3) that executes ScoutQL report queries
 - Server-side product analytics (PostHog) and metrics (Prometheus) / error tracking (Sentry)
 

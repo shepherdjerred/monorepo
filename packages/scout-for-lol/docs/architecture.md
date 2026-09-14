@@ -29,12 +29,6 @@ flowchart TB
         REPORT["@scout-for-lol/report<br/>(JSX → SVG → PNG)"]
     end
 
-    subgraph Desktop["Desktop App"]
-        TAURI["Tauri (Rust)"]
-        REACT["React Frontend"]
-        LCU["LCU Client"]
-    end
-
     subgraph Storage["Data Storage"]
         DB[("PostgreSQL<br/>(Prisma ORM)")]
     end
@@ -65,12 +59,6 @@ flowchart TB
     DATA --> Backend
     REPORT --> REPORT_GEN
     DATA --> REPORT
-    DATA --> Desktop
-
-    %% Desktop connections
-    LCU --> LEAGUE_CLIENT
-    TAURI --> LCU
-    REACT --> TAURI
 ```
 
 ## Package Dependency Graph
@@ -81,12 +69,10 @@ graph BT
     REPORT["@scout-for-lol/report"]
     BACKEND["@scout-for-lol/backend"]
     FRONTEND["@scout-for-lol/frontend"]
-    DESKTOP["@scout-for-lol/desktop"]
 
     DATA --> REPORT
     DATA --> BACKEND
     DATA --> FRONTEND
-    DATA --> DESKTOP
     REPORT --> BACKEND
 ```
 
@@ -239,14 +225,6 @@ advance either evidence or the match cursor.
 | `matchToImage()`          | Render CompletedMatch to PNG bytes  |
 | `arenaMatchToSvg/Image()` | Arena mode variants                 |
 | `svgToPng()`              | Convert SVG string to PNG           |
-
-### Desktop Application
-
-| Module         | Responsibility                                  |
-| -------------- | ----------------------------------------------- |
-| Tauri Core     | Window management, IPC, system integration      |
-| LCU Client     | Connect to League Client Update API             |
-| React Frontend | User interface for monitoring and configuration |
 
 ## Validation Architecture
 
@@ -441,5 +419,4 @@ creation and stakes but never settlement or refunds.
 
 - [Backend Service](./backend.md) - Detailed backend architecture
 - [AI Review System](./ai-review-system.md) - AI pipeline details
-- [Desktop Application](./desktop.md) - Tauri app architecture
 - [Database Schema](./database.md) - Data model documentation
