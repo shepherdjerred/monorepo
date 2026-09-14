@@ -33,8 +33,9 @@ packages/**/.vscode/settings.json
 # Playwright test results
 test-results/
 
-# Built Storybook catalogs
+# Built Storybook catalogs, and the deployed site assembled from them
 storybook-static/
+storybook-site/
 *storybook.log
 
 # discord-plays-pokemon workspace build artifacts

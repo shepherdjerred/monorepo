@@ -40,6 +40,34 @@ const scoutCsp = [
   "form-action 'self' https://discord.com",
 ].join("; ");
 
+/**
+ * CSP for the Scout Storybook catalogs.
+ *
+ * Deliberately not `scoutCsp`: the catalog talks to no analytics, no error
+ * reporter, and no marketing pixel, so it gets a policy that says so.
+ *
+ * - `frame-ancestors 'self'` and `frame-src 'self'` are the load-bearing pair.
+ *   Storybook's manager renders each story inside a same-origin iframe, which
+ *   the `'none'` the other Scout sites use would block outright.
+ * - `script-src` and `style-src` allow `'unsafe-inline'` because Storybook's
+ *   manager and the pre-paint Scout theme bootstrap are both inline.
+ * - Every asset — champion art, rank crests, fonts — is copied into the bucket
+ *   by scoutAssetsPlugin, so `img-src`/`font-src` stay same-origin; `data:` and
+ *   `blob:` cover inlined icons and canvas exports.
+ */
+const storybookCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "frame-src 'self'",
+  "frame-ancestors 'self'",
+  "base-uri 'self'",
+  "form-action 'none'",
+].join("; ");
+
 const scoutActivityCsp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -148,6 +176,21 @@ export const staticSites: StaticSiteConfig[] = [
       },
     ],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
+  },
+  {
+    hostname: "design.scout-for-lol.com",
+    bucket: "scout-design-system",
+    probes: [
+      // The manager shell is a thin loader; the preview is where a story
+      // actually renders, so both are worth watching.
+      { endpoint: "iframe", path: "/iframe.html" },
+    ],
+    responseHeaders: {
+      "Content-Security-Policy": storybookCsp,
+      // Storybook's manager renders every story inside a same-origin iframe, so
+      // the DENY default would leave the catalog permanently blank.
+      "X-Frame-Options": "SAMEORIGIN",
+    },
   },
   {
     hostname: "better-skill-capped.com",

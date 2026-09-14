@@ -2,6 +2,39 @@ import { describe, expect, test } from "vitest";
 
 import { staticSites } from "./sites.ts";
 
+describe("Scout Storybook catalog site", () => {
+  const catalog = staticSites.find(
+    ({ hostname }) => hostname === "design.scout-for-lol.com",
+  );
+  if (catalog === undefined) {
+    throw new Error("design.scout-for-lol.com static site is missing");
+  }
+
+  test("serves the dedicated bucket and probes the story preview", () => {
+    expect(catalog.bucket).toBe("scout-design-system");
+    expect(catalog.probes).toContainEqual({
+      endpoint: "iframe",
+      path: "/iframe.html",
+    });
+  });
+
+  test("permits the same-origin preview iframe Storybook renders into", () => {
+    // Both headers matter: the shared default is X-Frame-Options DENY, and the
+    // other Scout sites' CSP sets frame-ancestors 'none'. Either one alone
+    // would leave the catalog blank.
+    expect(catalog.responseHeaders?.["X-Frame-Options"]).toBe("SAMEORIGIN");
+    const csp = catalog.responseHeaders?.["Content-Security-Policy"];
+    expect(csp).toContain("frame-ancestors 'self'");
+    expect(csp).toContain("frame-src 'self'");
+  });
+
+  test("talks to no third-party host", () => {
+    const csp = catalog.responseHeaders?.["Content-Security-Policy"] ?? "";
+    expect(csp).toContain("connect-src 'self'");
+    expect(csp).not.toContain("https://");
+  });
+});
+
 describe("Scout static sites", () => {
   for (const hostname of [
     "scout-for-lol.com",
