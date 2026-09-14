@@ -334,6 +334,10 @@ for no benefit. Nothing in them needs the backends down.
 
 ## 8. Rewrite the archive, with everything running
 
+First wait out the prematch snapshots, because `--apply` refuses without it.
+The reason is below; the check is that no game live during the outage is still
+waiting to resume.
+
 Both buckets, each against its own database — the rewrite reads the map from
 `DATABASE_URL` and re-points that environment's artifact references:
 
@@ -342,14 +346,17 @@ Both buckets, each against its own database — the rewrite reads the map from
 DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
   bun scripts/puuid-corpus.ts rewrite                                   # dry run
 DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
-  bun scripts/puuid-corpus.ts rewrite --apply
+  bun scripts/puuid-corpus.ts rewrite --apply --prematch-drained
 
 # beta
 DATABASE_URL="$BETA_DB" S3_BUCKET_NAME=scout-beta \
   bun scripts/puuid-corpus.ts rewrite                                   # dry run
 DATABASE_URL="$BETA_DB" S3_BUCKET_NAME=scout-beta \
-  bun scripts/puuid-corpus.ts rewrite --apply
+  bun scripts/puuid-corpus.ts rewrite --apply --prematch-drained
 ```
+
+Both environments need the flag. Beta holds prematch receipts too, so an applied
+run there stops at the same gate.
 
 The rewrite reads its map from `DATABASE_URL` and re-points that environment's
 artifact references, so the database and the bucket have to be the same
@@ -382,13 +389,9 @@ captured under the old key, so the rewrite touches it, and its workflow resumes
 when the game ends twenty to forty minutes later. Snapshots captured after the
 swap name nobody in the map and are skipped.
 
-So wait out the games that were live during the window, confirm no prematch
-workflow from before the swap is still open, and then add the flag:
-
-```bash
-DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
-  bun scripts/puuid-corpus.ts rewrite --apply --prematch-drained
-```
+So wait out the games that were live during the window and confirm no prematch
+workflow from before the swap is still open. That is what `--prematch-drained`
+asserts, in both environments.
 
 It refuses to touch anything until the database `apply` has landed. Translating
 the archive to an identifier the database does not hold would hide the players
