@@ -81,7 +81,9 @@ describe("Scout weekly parlay deployment boundary", () => {
 });
 
 describe("Scout Temporal ingress identity", () => {
-  test("Temporal admits only the two Scout backend identities on gRPC", () => {
+  // The gateway role is a third admitted identity on beta; it is asserted in
+  // scout-runtime-roles.test.ts, next to the rest of the split's boundary.
+  test("Temporal admits both Scout backend identities on gRPC", () => {
     const policy = findResource(
       temporalResources(),
       "NetworkPolicy",

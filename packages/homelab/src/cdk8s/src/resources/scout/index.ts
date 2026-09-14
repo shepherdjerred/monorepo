@@ -33,6 +33,11 @@ import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/r
 import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import {
+  assertStageCanHostSplitRoles,
+  createScoutGatewayDeployment,
+  SPLIT_TOPOLOGY_STAGES,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 
 function requiredWeeklyParlaySecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -189,22 +194,29 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       localPathVolume.claim,
     ),
   };
-  const volumeMounts =
+  // Voice is a gateway-role capability: the table gives voiceAssistant and
+  // voiceStateAccess to `combined` and `gateway`, never to `application`. So on
+  // a split stage the credential follows the shard into scout-gateway, and this
+  // pod — which runs `application` — neither mounts nor needs it. On an unsplit
+  // stage the combined pod keeps it exactly as #2870 wired it.
+  const splitTopology = SPLIT_TOPOLOGY_STAGES.includes(stage);
+  const voiceSecretMount =
     stage === "beta"
-      ? [
-          dataVolumeMount,
-          {
-            path: "/run/secrets/scout-openai",
-            volume: Volume.fromSecret(
-              chart,
-              "scout-openai-volume",
-              requiredVoiceOpenAiSecret(voiceOpenAiSecret),
-              {
-                optional: true,
-              },
-            ),
-          },
-        ]
+      ? {
+          path: "/run/secrets/scout-openai",
+          volume: Volume.fromSecret(
+            chart,
+            "scout-openai-volume",
+            requiredVoiceOpenAiSecret(voiceOpenAiSecret),
+            {
+              optional: true,
+            },
+          ),
+        }
+      : undefined;
+  const volumeMounts =
+    voiceSecretMount !== undefined && !splitTopology
+      ? [dataVolumeMount, voiceSecretMount]
       : [dataVolumeMount];
 
   const baseEnvVariables = {
@@ -340,24 +352,43 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           // Discord servers. An unset or empty list denies everyone, so this
           // must be present for anyone to reach /app/explore in beta.
           EXPLORE_GUILD_ALLOWLIST: EnvValue.fromValue("1337623164146155593"),
-          // Hey Scout's credential and bootstrap surface. Activation itself is
-          // the `voice_assistant_enabled` Flipt flag and lives nowhere here:
-          // the backend loads its models lazily on first `/scout join`, so
-          // there is no env gate to duplicate the flag's authority. Production
-          // omits these because it has no voice credential and is hard-disabled
-          // for the flag in code.
-          //
-          // A Secret volume is updated in a running pod when 1Password
-          // populates the key. The lazy loader reads it on every attempt, so
-          // the credential handoff needs neither an unschedulable pod nor an
-          // imperative restart.
+        }
+      : baseEnvVariables;
+
+  // Hey Scout's credential and bootstrap surface. Activation itself is the
+  // `voice_assistant_enabled` Flipt flag and lives nowhere here: the backend
+  // loads its models lazily on first `/scout join`, so there is no env gate to
+  // duplicate the flag's authority. Production omits these because it has no
+  // voice credential and is hard-disabled for the flag in code.
+  //
+  // A Secret volume is updated in a running pod when 1Password populates the
+  // key. The lazy loader reads it on every attempt, so the credential handoff
+  // needs neither an unschedulable pod nor an imperative restart.
+  //
+  // Held separately from envVariables because these follow the shard: on a
+  // split stage they belong to scout-gateway, which is the process that
+  // actually runs `/scout join`.
+  const voiceEnvVariables: Record<string, EnvValue> =
+    stage === "beta"
+      ? {
           OPENAI_API_KEY_FILE: EnvValue.fromValue(
             "/run/secrets/scout-openai/OPENAI_API_KEY",
           ),
           VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/scout/voice"),
           VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
         }
-      : baseEnvVariables;
+      : {};
+
+  // A split stage runs this Deployment as the `application` role, with the
+  // Discord shard — and therefore voice — moved to scout-gateway. Every other
+  // stage stays on the combined role, which is what an unset SCOUT_RUNTIME_ROLE
+  // resolves to, so an unsplit stage's manifest is unchanged by the split.
+  const roleEnvVariables: Record<string, EnvValue> = splitTopology
+    ? {
+        ...envVariables,
+        SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
+      }
+    : { ...envVariables, ...voiceEnvVariables };
 
   deployment.addContainer(
     withCommonProps({
@@ -398,7 +429,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         failureThreshold: 3,
       }),
       volumeMounts,
-      envVariables,
+      envVariables: roleEnvVariables,
     }),
   );
 
@@ -424,4 +455,21 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     name: `scout-${stage}`,
     matchLabels: { app: "scout", stage },
   });
+
+  // The gateway role shares this stage's claim and SELinux level by design;
+  // see createScoutGatewayDeployment for why that is safe for this role and
+  // not for activity-worker. A stage is in the split because a human added it
+  // to SPLIT_TOPOLOGY_STAGES; the assertion then proves that stage's pin can
+  // actually host a second pod on the shared claim.
+  if (splitTopology) {
+    assertStageCanHostSplitRoles(stage, imageVersion);
+    createScoutGatewayDeployment(chart, stage, {
+      imageVersion,
+      envVariables: { ...envVariables, ...voiceEnvVariables },
+      claim: localPathVolume.claim,
+      selinuxLevel,
+      colocateWith: deployment,
+      voiceSecretMount,
+    });
+  }
 }
