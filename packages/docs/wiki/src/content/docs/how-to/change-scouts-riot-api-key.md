@@ -63,6 +63,19 @@ so their history before they were subscribed is invisible, permanently.
 Covering everyone means resolving every participant ever seen. Budget days, not
 hours.
 
+## 0. Name the three databases
+
+Every later command says which one it means. Nothing is exported, because an
+inherited `DATABASE_URL` is the single easiest way to run a step against the
+wrong store — and the failure is silent: `verify` will pass against a scratch
+map while neither live database has been touched.
+
+```bash
+SCRATCH="file:$HOME/puuid-harvest.sqlite"   # the laptop's working map
+PROD_DB="…"                                  # prod's own database
+BETA_DB="…"                                  # beta's own database
+```
+
 ## 1. Back up both databases
 
 Prod is SQLite on the backend pod's volume. Take a compacted copy — a plain copy
@@ -127,7 +140,6 @@ key and an internet connection — no tunnel to hold open, nothing to lose when 
 laptop sleeps or roams.
 
 ```bash
-export DATABASE_URL="file:$HOME/puuid-harvest.sqlite"
 export OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=…
 
 # Create the file first. The migration opens databases with `create: false`, so
@@ -135,11 +147,11 @@ export OLD_RIOT_API_KEY=… NEW_RIOT_API_KEY=…
 # database that every phase then "succeeds" against. A scratch harvest file is
 # the one case where you do want it created, so do it explicitly.
 bun -e 'new (require("bun:sqlite").Database)(
-  Bun.env.DATABASE_URL.slice("file:".length), { create: true }).close()'
+  `${process.env.HOME}/puuid-harvest.sqlite`, { create: true }).close()'
 
-bun scripts/migrate-puuid-key.ts seed --from prod.jsonl
-bun scripts/migrate-puuid-key.ts seed --from beta.jsonl
-bun scripts/migrate-puuid-key.ts resolve
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from prod.jsonl
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts seed --from beta.jsonl
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts resolve
 ```
 
 One map serves both environments: they ran on the same old key, so an old PUUID
@@ -210,23 +222,22 @@ bun scripts/migrate-puuid-key.ts seed --from prod-2.jsonl
 bun scripts/migrate-puuid-key.ts seed --from beta-2.jsonl
 
 # and the databases — each one, pointed at itself
-for env in "$PROD_DATABASE_URL" "$BETA_DATABASE_URL"; do
-  DATABASE_URL="$env" bun scripts/migrate-puuid-key.ts collect
-  DATABASE_URL="$env" bun scripts/migrate-puuid-key.ts export --out "delta-$RANDOM.jsonl"
-done
+DATABASE_URL="$PROD_DB" bun scripts/migrate-puuid-key.ts collect
+DATABASE_URL="$PROD_DB" bun scripts/migrate-puuid-key.ts export --out delta-prod.jsonl
+DATABASE_URL="$BETA_DB" bun scripts/migrate-puuid-key.ts collect
+DATABASE_URL="$BETA_DB" bun scripts/migrate-puuid-key.ts export --out delta-beta.jsonl
 
-# bring those identities back into the scratch map and resolve everything new
-export DATABASE_URL="file:$HOME/puuid-harvest.sqlite"
-for f in delta-*.jsonl; do bun scripts/migrate-puuid-key.ts import --from "$f"; done
-bun scripts/migrate-puuid-key.ts resolve
+# bring those identities into the scratch map and resolve everything new
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts import --from delta-prod.jsonl
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts import --from delta-beta.jsonl
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts resolve
 ```
 
-:::caution[`collect` reads whatever `DATABASE_URL` points at]
-Step 3 set it to the scratch file, and it is still set. Left alone, `collect`
-scans the scratch map instead of the live databases and finds nothing — so a
-player subscribed during the multi-day resolve is never added, and `apply`
-refuses on that stray in the middle of the maintenance window with no way to
-resolve it before the old key is retired.
+:::caution[Every command reads whatever `DATABASE_URL` points at]
+Pointed at the wrong store, `collect` finds nothing and looks like it worked —
+so a player subscribed during the multi-day resolve is never added, and `apply`
+refuses on that stray mid-window with no way to resolve it before the old key is
+retired. This is why nothing here is exported.
 :::
 
 `seed` skips anything the map already knows, so the second inventory only adds
@@ -239,15 +250,21 @@ archive is still old-domain.
 ## 5. Load the map and rewrite the databases
 
 ```bash
-# on the laptop
-bun scripts/migrate-puuid-key.ts export --out map.jsonl
+DATABASE_URL="$SCRATCH" bun scripts/migrate-puuid-key.ts export --out map.jsonl
 
-# against each database
-bun scripts/migrate-puuid-key.ts import --from map.jsonl
-bun scripts/migrate-puuid-key.ts strand --accept-stranded
-bun scripts/migrate-puuid-key.ts apply --apply
-bun scripts/migrate-puuid-key.ts verify
+for DB in "$PROD_DB" "$BETA_DB"; do
+  DATABASE_URL="$DB" bun scripts/migrate-puuid-key.ts import --from map.jsonl
+  DATABASE_URL="$DB" bun scripts/migrate-puuid-key.ts strand --accept-stranded
+  DATABASE_URL="$DB" bun scripts/migrate-puuid-key.ts apply --apply
+  DATABASE_URL="$DB" bun scripts/migrate-puuid-key.ts verify
+done
 ```
+
+:::danger[A green `verify` against the scratch map means nothing]
+These commands must name a live database. Run against the scratch file they
+import, apply and verify happily while prod and beta are untouched — and the
+run looks like a complete success.
+:::
 
 `strand` writes off identities Riot can no longer resolve. It is separate and
 flag-gated because it is permanent: those keep old-domain values, and once the
@@ -271,13 +288,22 @@ Both buckets, each against its own database — the rewrite reads the map from
 
 ```bash
 # prod
-S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite           # dry run
-S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite --apply
+DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
+  bun scripts/puuid-corpus.ts rewrite                                   # dry run
+DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
+  bun scripts/puuid-corpus.ts rewrite --apply
 
 # beta
-S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts rewrite           # dry run
-S3_BUCKET_NAME=scout-beta bun scripts/puuid-corpus.ts rewrite --apply
+DATABASE_URL="$BETA_DB" S3_BUCKET_NAME=scout-beta \
+  bun scripts/puuid-corpus.ts rewrite                                   # dry run
+DATABASE_URL="$BETA_DB" S3_BUCKET_NAME=scout-beta \
+  bun scripts/puuid-corpus.ts rewrite --apply
 ```
+
+The rewrite reads its map from `DATABASE_URL` and re-points that environment's
+artifact references, so the database and the bucket have to be the same
+environment's. Pointed at the scratch map it would load mappings the live
+database has not applied, and reconcile nothing.
 
 Skipping either leaves that environment's archive mostly old-domain, so a
 participant tracked after the key change still cannot be joined to the games
