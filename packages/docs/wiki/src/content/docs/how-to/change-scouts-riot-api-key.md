@@ -11,8 +11,9 @@ only crossing between holders does. This guide re-domains the stored identities
 across both databases and the raw archive, swaps the credential, and verifies
 the result.
 
-Budget a short maintenance window for the database rewrite, and days of
-unattended running before it for the Riot lookups.
+Budget days of unattended running for the Riot lookups, and a short maintenance
+window for the database rewrite. Only steps 4 to 7 need the backends down; the
+archive rewrite and the lake rebuilds run with everything live.
 
 :::danger[The first hop is a one-way door]
 Only the **old** key can say who an old PUUID belongs to. Once it is retired,
@@ -217,7 +218,18 @@ it before scaling back up so the backend can remount.
 :::
 
 Now that nothing is writing with the old key, re-run **both** discoveries to
-catch everything archived while the resolve was running:
+catch everything archived while the resolve was running.
+
+:::note[Retrofitting an already-swapped archive? Skip the inventory half]
+If the credential was swapped before this migration began, nothing has written
+an old-domain object since — the set was closed before step 2 and the archive
+half of this step finds nothing new. Run only the database `collect` below.
+
+Running it anyway without each environment's `--cutover` is actively harmful:
+it collects the healthy post-swap identities, the old key answers 400 for every
+one of them, and `strand` then records identities as permanently lost that were
+never lost at all.
+:::
 
 ```bash
 # the archive, again — days of games have been added since step 2
@@ -286,7 +298,34 @@ still translates the objects that have not moved yet — so the lake stays
 consistent at every moment. Rewriting S3 first inverts that.
 :::
 
-## 6. Rewrite the archive
+## 6. Swap the credential
+
+Update `RIOT_API_KEY` in both 1Password items. Beta's item also feeds local dev
+through `dev-web.env.tpl`.
+
+Wait for the operator to sync, then confirm both Kubernetes secrets carry the
+new key before scaling anything up.
+
+:::danger[The danger window]
+Between `apply` and a confirmed swap, the database holds new-domain identifiers
+while the app still has the old key. Nothing may scale up until both secrets are
+confirmed.
+:::
+
+Check the tier landed by reading `X-App-Rate-Limit` off any response. Production
+reports `500:10,30000:600`.
+
+## 7. Scale back up — the outage ends here
+
+Confirm ingestion resumes with no Riot errors, and that a tracked player's
+prematch and postmatch reports both fire.
+
+The remaining steps are deliberately outside the window. The archive rewrite
+reads and writes tens of gigabytes and the lake rebuilds take hours; holding the
+outage open across them would turn a short database window into most of a day
+for no benefit. Nothing in them needs the backends down.
+
+## 8. Rewrite the archive, with everything running
 
 Both buckets, each against its own database — the rewrite reads the map from
 `DATABASE_URL` and re-points that environment's artifact references:
@@ -314,10 +353,15 @@ Skipping either leaves that environment's archive mostly old-domain, so a
 participant tracked after the key change still cannot be joined to the games
 they already appear in — which is the whole point of the exercise.
 
-No downtime. Live ingest keeps writing new-domain objects, which the pass skips,
-and a rewritten object no longer names an old identity — so the run is
-idempotent and resumable with no cursor to lose. Re-run it until it reports zero
-failures.
+Scout is serving traffic throughout this step, which is why it comes after the
+scale-up rather than inside the window. Live ingest writes new-domain objects
+and the pass skips them; a rewritten object no longer names an old identity, so
+the run is idempotent and resumable with no cursor to lose. Re-run it until it
+reports zero failures.
+
+The report lake stays consistent the whole time, which is what makes running hot
+safe rather than merely tolerable: a rewritten object needs no translation, and
+one not yet reached still gets it from the map applied in step 5.
 
 It refuses to touch anything until the database `apply` has landed. Translating
 the archive to an identifier the database does not hold would hide the players
@@ -328,33 +372,11 @@ its modification time, so filtering on it would exclude exactly the objects a
 re-run needs to inspect — one whose upload landed while its database update did
 not. It would save under one percent of reads and cost that recovery.
 
-## 7. Rebuild the report lakes
+## 9. Rebuild the report lakes
 
 Both lakes are derived, so they pick the change up from the rewritten archive.
 The remap fingerprint changes when the map grows, which already forces a full
 rebuild rather than a fold.
-
-## 8. Swap the credential
-
-Update `RIOT_API_KEY` in both 1Password items. Beta's item also feeds local dev
-through `dev-web.env.tpl`.
-
-Wait for the operator to sync, then confirm both Kubernetes secrets carry the
-new key before scaling anything up.
-
-:::danger[The danger window]
-Between `apply` and a confirmed swap, the database holds new-domain identifiers
-while the app still has the old key. Nothing may scale up until both secrets are
-confirmed.
-:::
-
-Check the tier landed by reading `X-App-Rate-Limit` off any response. Production
-reports `500:10,30000:600`.
-
-## 9. Scale back up and watch
-
-Confirm ingestion resumes with no Riot errors, and that a tracked player's
-prematch and postmatch reports both fire.
 
 ## What stays in the old domain
 
