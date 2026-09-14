@@ -994,7 +994,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.test.ts|packages/scout-for-lol/packages/backend/src/discord/commands/help.test.ts": {
       "clones": 1,
-      "tokens": 92
+      "tokens": 87
     },
     "packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts|packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts": {
       "clones": 1,
