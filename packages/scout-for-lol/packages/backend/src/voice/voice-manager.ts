@@ -28,6 +28,7 @@ import {
 } from "@discordjs/voice";
 import type { Client } from "discord.js";
 import { createLogger } from "#src/logger.ts";
+import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 import type { SoundSource } from "@scout-for-lol/data";
 import { getAudioStream } from "#src/voice/audio-player.ts";
 
@@ -75,49 +76,6 @@ export type PlaybackGate = (guildId: string) => Promise<{
   readonly volumeMultiplier: number;
   readonly release: () => void;
 }>;
-
-/**
- * Run `task` after every earlier task queued under `key` has settled, without
- * letting an earlier failure poison the queue. A guild's alerts share one
- * `AudioPlayer`, and `player.play()` replaces whatever the previous alert was
- * still playing — so concurrent alerts (including a batch the playback gate
- * releases together after assistant speech) must play one at a time or later
- * ones truncate earlier ones while every caller records success.
- */
-export async function enqueuePerKey<T>(
-  queues: Map<string, Promise<unknown>>,
-  key: string,
-  task: () => Promise<T>,
-): Promise<T> {
-  // Only never-rejecting tails are ever stored, so awaiting the predecessor
-  // cannot throw — a failed alert already rejected its own caller via `run`.
-  // An uncontended key starts its task synchronously, exactly like the
-  // pre-queue behavior.
-  const previous = queues.get(key);
-  const run =
-    previous === undefined
-      ? task()
-      : (async () => {
-          await previous;
-          return await task();
-        })();
-  const tail = (async () => {
-    try {
-      await run;
-    } catch {
-      // Swallowed so the NEXT task starts either way; `run` carries the
-      // failure to this task's caller.
-    }
-  })();
-  queues.set(key, tail);
-  try {
-    return await run;
-  } finally {
-    if (queues.get(key) === tail) {
-      queues.delete(key);
-    }
-  }
-}
 
 /**
  * Manages voice connections and audio playback for Discord guilds

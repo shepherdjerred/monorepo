@@ -132,6 +132,7 @@ export async function updateOutreachConversionMetrics(): Promise<void> {
   });
 
   const installs = await prisma.guildInstall.findMany({
+    where: { analyticsLifecycleTracked: true },
     select: { serverId: true, installedAt: true },
   });
   // Plain-string keys: DmAuditLog.guildId is unbranded.

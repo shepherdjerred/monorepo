@@ -13,35 +13,65 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { randomUUID } from "node:crypto";
-import {
-  captureGuildInstalled,
-  captureGuildRemoval,
-} from "#src/analytics/guild-lifecycle.ts";
+import { captureGuildInstalled } from "#src/analytics/guild-lifecycle.ts";
 import {
   reconcilePendingInstallAttribution,
-  retirePendingInstallAttribution,
+  restoreRetiredInstallAttribution,
+  type RetiredInstallAttribution,
 } from "#src/analytics/install-attribution.ts";
+import {
+  claimObservedRemovalReplacement,
+  createLifecycleReset,
+  preserveAttributedReplacement,
+  type GuildInstallIdentity,
+} from "#src/discord/events/guild-install-transition.ts";
 
 const logger = createLogger("guild-create");
 
 async function finalizePendingInstallAttribution(
   serverId: DiscordGuildId,
-  shouldReconcile: boolean,
 ): Promise<void> {
-  if (shouldReconcile) {
+  try {
     await reconcilePendingInstallAttribution(serverId);
-    return;
+  } catch (error) {
+    // Attribution is best-effort bookkeeping. Once the install transition is
+    // committed, a token failure must not hide its installation generation
+    // from the connection-race compensation below.
+    logger.error(
+      `[Guild Create] Failed to finalize install attribution for ${serverId}:`,
+      getErrorMessage(error),
+    );
   }
-  await retirePendingInstallAttribution(serverId);
 }
+
+export type GuildInstallReplacement =
+  | {
+      readonly kind: "reconciliation";
+      readonly analyticsInstallationId: string;
+      readonly retiredAttribution?: RetiredInstallAttribution;
+    }
+  | {
+      readonly kind: "reconciliation-pending-retirement";
+      readonly analyticsInstallationId: string;
+    }
+  | {
+      readonly kind: "observed-removal";
+      readonly observedAt: Date;
+    };
+
+export type GuildInstallReplacementClaim = {
+  readonly replacement: GuildInstallReplacement;
+  readonly update: (replacement: GuildInstallReplacement) => boolean;
+  readonly accept: () => void;
+};
 
 // Prisma surfaces unique-constraint violations as { code: "P2002", ... }.
 const PrismaKnownErrorSchema = z.object({ code: z.string() });
 
-function isUniqueConstraintError(error: unknown): boolean {
+export function isUniqueConstraintError(error: unknown): boolean {
   const parsed = PrismaKnownErrorSchema.safeParse(error);
   return parsed.success && parsed.data.code === "P2002";
 }
@@ -50,6 +80,156 @@ type WelcomeChannel = {
   name: string;
   send: (options: { content: string }) => Promise<unknown>;
 };
+
+async function claimReplacement(params: {
+  readonly serverId: DiscordGuildId;
+  readonly replacement: GuildInstallReplacement;
+  readonly identity: GuildInstallIdentity;
+  readonly installedAt: Date;
+  readonly analyticsInstallationId: string;
+}): Promise<string | undefined> {
+  if (params.replacement.kind === "observed-removal") {
+    return await claimObservedRemovalReplacement({
+      db: prisma,
+      serverId: params.serverId,
+      observedAt: params.replacement.observedAt,
+      identity: params.identity,
+      installedAt: params.installedAt,
+      analyticsInstallationId: params.analyticsInstallationId,
+    });
+  }
+  if (params.replacement.kind === "reconciliation-pending-retirement") {
+    throw new Error(
+      "Pending attribution retirement must be reconciled before replacement",
+    );
+  }
+  const reconciliationReplacement = params.replacement;
+
+  // If the browser attributed the provisional generation first, preserve its
+  // identity so the already-emitted attribution event remains attached to the
+  // installation that survives this handoff.
+  const attributedClaim = await preserveAttributedReplacement({
+    db: prisma,
+    serverId: params.serverId,
+    expectedAnalyticsInstallationId:
+      reconciliationReplacement.analyticsInstallationId,
+    identity: params.identity,
+    installedAt: params.installedAt,
+  });
+  if (attributedClaim) {
+    return params.replacement.analyticsInstallationId;
+  }
+
+  // Otherwise rotate only while attribution is still null. A browser request
+  // that wins the row lock makes this claim miss; the retry below then
+  // preserves that generation.
+  const rotated = await prisma.$transaction(async (tx) => {
+    const rotationClaim = await tx.guildInstall.updateMany({
+      where: {
+        serverId: params.serverId,
+        analyticsInstallationId:
+          reconciliationReplacement.analyticsInstallationId,
+        attributedAt: null,
+      },
+      data: createLifecycleReset({
+        identity: params.identity,
+        installedAt: params.installedAt,
+        analyticsInstallationId: params.analyticsInstallationId,
+      }),
+    });
+    if (rotationClaim.count !== 1) {
+      return false;
+    }
+    await restoreReplacementAttribution(reconciliationReplacement, tx);
+    return true;
+  });
+  if (!rotated) {
+    const attributedRetry = await preserveAttributedReplacement({
+      db: prisma,
+      serverId: params.serverId,
+      expectedAnalyticsInstallationId:
+        reconciliationReplacement.analyticsInstallationId,
+      identity: params.identity,
+      installedAt: params.installedAt,
+    });
+    return attributedRetry
+      ? reconciliationReplacement.analyticsInstallationId
+      : undefined;
+  }
+  return params.analyticsInstallationId;
+}
+
+async function restoreReplacementAttribution(
+  replacement: GuildInstallReplacement,
+  db: Pick<Db, "installAttributionToken">,
+): Promise<void> {
+  if (
+    replacement.kind === "reconciliation" &&
+    replacement.retiredAttribution !== undefined
+  ) {
+    await restoreRetiredInstallAttribution(replacement.retiredAttribution, {
+      db,
+    });
+  }
+}
+
+async function createFirstGuildInstall(params: {
+  guild: Guild;
+  serverId: DiscordGuildId;
+  identity: GuildInstallIdentity;
+  installedAt: Date;
+  shouldReconcilePendingAttribution: boolean;
+}): Promise<string | undefined> {
+  try {
+    const install = await prisma.guildInstall.create({
+      data: {
+        serverId: params.serverId,
+        ...params.identity,
+        installedAt: params.installedAt,
+        analyticsInstallationId: randomUUID(),
+        analyticsLifecycleTracked: true,
+      },
+    });
+    captureGuildInstalled(install, "first", params.guild.memberCount);
+    if (params.shouldReconcilePendingAttribution) {
+      await finalizePendingInstallAttribution(params.serverId);
+    }
+    logger.info(
+      `[Guild Create] Saved install info for ${params.guild.name} (${params.guild.id}), installer: ${params.identity.addedByDiscordId}, reinstall: false`,
+    );
+    return install.analyticsInstallationId;
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function completeGuildReinstall(params: {
+  guild: Guild;
+  serverId: DiscordGuildId;
+  analyticsInstallationId: string;
+  addedByDiscordId: string;
+  shouldReconcilePendingAttribution: boolean;
+}): Promise<string> {
+  captureGuildInstalled(
+    {
+      analyticsInstallationId: params.analyticsInstallationId,
+      analyticsLifecycleTracked: true,
+      serverId: params.serverId,
+    },
+    "reinstall",
+    params.guild.memberCount,
+  );
+  if (params.shouldReconcilePendingAttribution) {
+    await finalizePendingInstallAttribution(params.serverId);
+  }
+  logger.info(
+    `[Guild Create] Saved install info for ${params.guild.name} (${params.guild.id}), installer: ${params.addedByDiscordId}, reinstall: true`,
+  );
+  return params.analyticsInstallationId;
+}
 
 /**
  * Find the best channel to send a welcome message to
@@ -157,11 +337,12 @@ async function resolveInstaller(guild: Guild): Promise<string> {
  * claim-the-transition pattern already used for `firstCoreOutputAt` /
  * `firstSubscriptionAt` / `removedAt` in guild-lifecycle.ts.
  */
-async function saveGuildInstall(
+export async function saveGuildInstall(
   guild: Guild,
   addedByDiscordId: string,
   shouldReconcilePendingAttribution = true,
-): Promise<void> {
+  replacement?: GuildInstallReplacement,
+): Promise<string | undefined> {
   try {
     const serverId = DiscordGuildIdSchema.parse(guild.id);
     const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
@@ -179,31 +360,15 @@ async function saveGuildInstall(
     // can succeed against the unique `serverId` constraint; every other
     // racing caller gets a P2002 and falls through to case 2/3 instead of
     // also believing it made the first install.
-    try {
-      const install = await prisma.guildInstall.create({
-        data: {
-          serverId,
-          ...identity,
-          installedAt,
-          analyticsInstallationId: randomUUID(),
-          analyticsLifecycleTracked: true,
-        },
-      });
-      captureGuildInstalled(install, "first", guild.memberCount);
-      // Complete a web-flow attribution whose browser beat the gateway.
-      // Best-effort by contract: the reconciler never throws.
-      await finalizePendingInstallAttribution(
-        serverId,
-        shouldReconcilePendingAttribution,
-      );
-      logger.info(
-        `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: false`,
-      );
-      return;
-    } catch (error) {
-      if (!isUniqueConstraintError(error)) {
-        throw error;
-      }
+    const firstInstallId = await createFirstGuildInstall({
+      guild,
+      serverId,
+      identity,
+      installedAt,
+      shouldReconcilePendingAttribution,
+    });
+    if (firstInstallId !== undefined) {
+      return firstInstallId;
     }
 
     // Case 2: a genuine re-install. Guard the update on the row still being
@@ -212,150 +377,83 @@ async function saveGuildInstall(
     // winner has already flipped removedAt to null, so only one caller
     // rotates the identity and emits `guild_installed`.
     const analyticsInstallationId = randomUUID();
-    const reinstallClaim = await prisma.guildInstall.updateMany({
-      where: { serverId, removedAt: { not: null } },
-      data: {
-        ...identity,
-        // Moving installedAt forward IS the reset: outreach state is
-        // derived from audit rows created after it, so there is no list of
-        // counters to remember to clear.
-        installedAt,
-        analyticsInstallationId,
-        analyticsLifecycleTracked: true,
-        firstCoreOutputAt: null,
-        firstSubscriptionAt: null,
-        emailNudgeSentAt: null,
-        outreach3dSentAt: null,
-        outreach14dSentAt: null,
-        outreach30dSentAt: null,
-        removedAt: null,
-        // A rotated identity starts unattributed; only a fresh web-flow
-        // token may attribute the new installation.
-        attributedAt: null,
-        attributionSurface: null,
-      },
+    const lifecycleReset = createLifecycleReset({
+      identity,
+      installedAt,
+      analyticsInstallationId,
+      analyticsLifecycleTracked: shouldReconcilePendingAttribution,
     });
 
-    if (reinstallClaim.count === 1) {
-      captureGuildInstalled(
-        { analyticsInstallationId, analyticsLifecycleTracked: true, serverId },
-        "reinstall",
-        guild.memberCount,
-      );
-      await finalizePendingInstallAttribution(
+    // Startup reconciliation can hand an exact in-flight generation to the
+    // replacement Guild object that displaced its snapshot. Only that
+    // identity-scoped handoff may rotate an active row: a normal guildCreate
+    // for an availability restore must remain case 3 below.
+    if (replacement === undefined) {
+      const reinstallClaim = await prisma.guildInstall.updateMany({
+        where: { serverId, removedAt: { not: null } },
+        data: lifecycleReset,
+      });
+      if (reinstallClaim.count === 1) {
+        if (shouldReconcilePendingAttribution) {
+          return await completeGuildReinstall({
+            guild,
+            serverId,
+            analyticsInstallationId,
+            addedByDiscordId,
+            shouldReconcilePendingAttribution,
+          });
+        }
+        return analyticsInstallationId;
+      }
+    } else {
+      const replacementInstallationId = await claimReplacement({
         serverId,
-        shouldReconcilePendingAttribution,
-      );
-      logger.info(
-        `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: true`,
-      );
-      return;
+        replacement,
+        identity,
+        installedAt,
+        analyticsInstallationId,
+      });
+      if (replacementInstallationId !== undefined) {
+        return await completeGuildReinstall({
+          guild,
+          serverId,
+          analyticsInstallationId: replacementInstallationId,
+          addedByDiscordId,
+          shouldReconcilePendingAttribution,
+        });
+      }
     }
 
     // Case 3: a guild we never left (or a concurrent caller already claimed
     // the reinstall above). No lifecycle transition, no analytics event —
     // just refresh identity fields, which can legitimately change.
-    await prisma.guildInstall.updateMany({
+    if (shouldReconcilePendingAttribution) {
+      const refreshClaim = await prisma.guildInstall.updateMany({
+        where: { serverId, removedAt: null },
+        data: identity,
+      });
+      if (refreshClaim.count === 0) {
+        return undefined;
+      }
+      // A prior post-promotion attempt may have left a durable consumed token
+      // pending. Availability events safely retry the unchanged generation;
+      // historical rows remain ineligible inside the attribution guard.
+      await finalizePendingInstallAttribution(serverId);
+    }
+    const currentInstall = await prisma.guildInstall.findUnique({
       where: { serverId },
-      data: { ...identity, removedAt: null },
+      select: { analyticsInstallationId: true },
     });
     logger.info(
       `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: false`,
     );
+    return currentInstall?.analyticsInstallationId;
   } catch (error) {
     logger.error(
       `[Guild Create] Failed to save install info for ${guild.name} (${guild.id}):`,
       getErrorMessage(error),
     );
-  }
-}
-
-async function markGuildRemovedIfDisconnected(
-  serverId: DiscordGuildId,
-  isStillConnected: (guildId: string) => boolean,
-): Promise<void> {
-  if (isStillConnected(serverId)) {
-    return;
-  }
-
-  // `guildDelete` can finish before an in-flight reconciliation write: it
-  // sees the old removed row, while that write reactivates it afterward. Make
-  // the same atomic removal claim here for both historical backfills and
-  // recovered reinstalls, including lifecycle analytics for the latter.
-  await captureGuildRemoval(serverId, new Date());
-}
-
-/**
- * Backfill install rows for guilds that were already connected when
- * `GuildInstall` became an authorization source.
- *
- * A gateway `guildCreate` is the only lifecycle event that may send a welcome
- * or record a first install. Discord does not replay that event for every
- * cached guild on a later process start, though, so relying on it alone leaves
- * long-standing guilds with no row and therefore no dashboard access. This
- * reconciliation deliberately records those guilds without treating them as a
- * new installation: it never sends a message and marks the lifecycle as
- * untracked, because the real installation time is unknown.
- */
-export async function reconcileConnectedGuildInstalls(
-  guilds: Iterable<Guild>,
-  isStillConnected: (guildId: string) => boolean = () => true,
-): Promise<void> {
-  for (const guild of guilds) {
-    if (!guild.available) {
-      continue;
-    }
-
-    try {
-      const serverId = DiscordGuildIdSchema.parse(guild.id);
-      const ownerDiscordId = DiscordAccountIdSchema.parse(guild.ownerId);
-      const existingInstall = await prisma.guildInstall.findUnique({
-        where: { serverId },
-        select: { removedAt: true },
-      });
-      // A guild can leave after ClientReady took its snapshot. Recheck the
-      // live cache immediately before creating or reactivating an active
-      // authorization row.
-      if (!isStillConnected(guild.id)) {
-        continue;
-      }
-      if (existingInstall !== null && existingInstall.removedAt !== null) {
-        // A previously observed removal followed by a connected guild is a
-        // real re-install whose gateway event was missed while Scout was down.
-        // `saveGuildInstall` safely claims that lifecycle transition, without
-        // sending the welcome message owned by `handleGuildCreate`.
-        await saveGuildInstall(guild, ownerDiscordId, false);
-        await markGuildRemovedIfDisconnected(serverId, isStillConnected);
-        continue;
-      }
-      if (existingInstall !== null) {
-        continue;
-      }
-      await prisma.guildInstall.create({
-        data: {
-          serverId,
-          serverName: guild.name,
-          ownerDiscordId,
-          // A historical connection has no trustworthy BotAdd audit-log entry.
-          addedByDiscordId: ownerDiscordId,
-          memberCount: guild.memberCount,
-          installedAt: new Date(),
-          analyticsLifecycleTracked: false,
-        },
-      });
-      await markGuildRemovedIfDisconnected(serverId, isStillConnected);
-      logger.info(
-        `[Guild Install Reconciliation] Backfilled ${guild.name} (${guild.id})`,
-      );
-    } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        continue;
-      }
-      logger.error(
-        `[Guild Install Reconciliation] Failed to backfill ${guild.name} (${guild.id}):`,
-        getErrorMessage(error),
-      );
-    }
+    return undefined;
   }
 }
 
@@ -364,7 +462,7 @@ export async function reconcileConnectedGuildInstalls(
  */
 export async function handleGuildCreate(
   guild: Guild,
-  isHistoricalConnection = false,
+  replacementClaim?: GuildInstallReplacementClaim,
 ): Promise<void> {
   // guildCreate also fires when a guild the bot was already in becomes
   // available again (Discord outage, shard reconnect). That is NOT an install:
@@ -374,13 +472,6 @@ export async function handleGuildCreate(
   if (!guild.available) {
     logger.warn(
       `[Guild Create] Guild ${guild.id} is unavailable (likely a Discord outage) - skipping install handling`,
-    );
-    return;
-  }
-
-  if (isHistoricalConnection) {
-    await reconcileConnectedGuildInstalls([guild], (guildId) =>
-      guild.client.guilds.cache.has(guildId),
     );
     return;
   }
@@ -396,7 +487,15 @@ export async function handleGuildCreate(
   const installerId = await resolveInstaller(guild);
 
   // Save install info to database
-  await saveGuildInstall(guild, installerId);
+  const savedInstallationId = await saveGuildInstall(
+    guild,
+    installerId,
+    true,
+    replacementClaim?.replacement,
+  );
+  if (savedInstallationId !== undefined) {
+    replacementClaim?.accept();
+  }
 
   try {
     const channel = await findWelcomeChannel(guild);

@@ -16,7 +16,11 @@
 
 import { z } from "zod";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import {
@@ -56,6 +60,10 @@ type AttributionOptions = {
   db?: ExtendedPrismaClient;
   analytics?: ProductAnalytics;
   now?: Date;
+};
+
+type AttributionRestorationOptions = {
+  db?: Pick<ExtendedPrismaClient, "installAttributionToken">;
 };
 
 function randomToken(): string {
@@ -110,56 +118,69 @@ async function tryAttributeInstall(params: {
   db: ExtendedPrismaClient;
   analytics: ProductAnalytics;
   serverId: string;
-  tokenId: number;
+  tokenConsumedAt: Date;
   tokenCreatedAt: Date;
   surface: AttributionSurface;
   timing: AttributionTiming;
   now: Date;
 }): Promise<AttributeResult> {
-  const install = await params.db.guildInstall.findUnique({
-    where: { serverId: params.serverId },
-    select: {
-      id: true,
-      serverId: true,
-      analyticsInstallationId: true,
-      analyticsLifecycleTracked: true,
-      installedAt: true,
-      removedAt: true,
-    },
+  const result = await params.db.$transaction(async (db) => {
+    const install = await db.guildInstall.findUnique({
+      where: { serverId: params.serverId },
+      select: {
+        id: true,
+        serverId: true,
+        analyticsInstallationId: true,
+        analyticsLifecycleTracked: true,
+        installedAt: true,
+        removedAt: true,
+      },
+    });
+    if (install?.removedAt !== null) {
+      return { outcome: "missing" } as const;
+    }
+    // A row recovered from an already-connected guild authorizes the dashboard,
+    // but it has no reliable installation lifecycle to attribute.
+    if (!install.analyticsLifecycleTracked) {
+      return { outcome: "already_installed" } as const;
+    }
+    if (
+      install.installedAt.getTime() <
+      params.tokenCreatedAt.getTime() - INSTALL_FRESHNESS_SLACK_MS
+    ) {
+      return { outcome: "already_installed" } as const;
+    }
+
+    const claim = await db.guildInstall.updateMany({
+      where: {
+        id: install.id,
+        analyticsInstallationId: install.analyticsInstallationId,
+        attributedAt: null,
+      },
+      data: { attributedAt: params.now, attributionSurface: params.surface },
+    });
+    if (claim.count !== 1) {
+      return { outcome: "already_installed" } as const;
+    }
+
+    // Once this installation owns attribution, retire every consumed token for
+    // the guild. A historical handoff can restore an older token beside a newer
+    // pending one; leaving either behind could attribute a later reinstall.
+    await db.installAttributionToken.updateMany({
+      where: {
+        guildId: params.serverId,
+        consumedAt: { not: null, lte: params.tokenConsumedAt },
+        reconciledAt: null,
+      },
+      data: { reconciledAt: params.now },
+    });
+    return { outcome: "attributed", install } as const;
   });
-  if (install?.removedAt !== null) {
-    return "missing";
-  }
-  // A row recovered from an already-connected guild authorizes the dashboard,
-  // but it has no reliable installation lifecycle to attribute.
-  if (!install.analyticsLifecycleTracked) {
-    return "already_installed";
-  }
-  if (
-    install.installedAt.getTime() <
-    params.tokenCreatedAt.getTime() - INSTALL_FRESHNESS_SLACK_MS
-  ) {
-    return "already_installed";
+  if (result.outcome !== "attributed") {
+    return result.outcome;
   }
 
-  const claim = await params.db.guildInstall.updateMany({
-    where: {
-      id: install.id,
-      analyticsInstallationId: install.analyticsInstallationId,
-      attributedAt: null,
-    },
-    data: { attributedAt: params.now, attributionSurface: params.surface },
-  });
-  if (claim.count !== 1) {
-    return "already_installed";
-  }
-
-  await params.db.installAttributionToken.updateMany({
-    where: { id: params.tokenId, reconciledAt: null },
-    data: { reconciledAt: params.now },
-  });
-
-  params.analytics.capture(install, {
+  params.analytics.capture(result.install, {
     event: "guild_install_attributed",
     properties: {
       attribution_surface: params.surface,
@@ -215,7 +236,7 @@ export async function completeInstallAttribution(
     where: { token: input.state },
   });
   const surface = AttributionSurfaceSchema.safeParse(token?.surface);
-  if (token === null || !surface.success) {
+  if (token?.consumedAt == null || !surface.success) {
     return { outcome: "invalid" };
   }
   if (input.guildId === undefined) {
@@ -227,7 +248,7 @@ export async function completeInstallAttribution(
     db,
     analytics,
     serverId: input.guildId,
-    tokenId: token.id,
+    tokenConsumedAt: token.consumedAt,
     tokenCreatedAt: token.createdAt,
     surface: surface.data,
     timing: "after_gateway",
@@ -264,7 +285,7 @@ export async function reconcilePendingInstallAttribution(
       },
       orderBy: { createdAt: "desc" },
     });
-    if (token === null) {
+    if (token?.consumedAt == null) {
       return;
     }
     const surface = AttributionSurfaceSchema.safeParse(token.surface);
@@ -275,7 +296,7 @@ export async function reconcilePendingInstallAttribution(
       db,
       analytics,
       serverId,
-      tokenId: token.id,
+      tokenConsumedAt: token.consumedAt,
       tokenCreatedAt: token.createdAt,
       surface: surface.data,
       timing: "before_gateway",
@@ -289,18 +310,82 @@ export async function reconcilePendingInstallAttribution(
   }
 }
 
-/** Retire a consumed browser token when startup recovers an old install. */
-export async function retirePendingInstallAttribution(
+export type RetiredInstallAttribution = {
+  /** The newest retired token that may be restored for an exact handoff. */
+  readonly tokenIds: number[];
+  readonly retiredAt: Date;
+};
+
+/**
+ * Retire pending tokens using an existing transaction. Startup recovery uses
+ * this so the provisional install generation and its token retirement commit
+ * or roll back together.
+ */
+export async function retirePendingInstallAttributionInTransaction(
   serverId: DiscordGuildId,
-  options?: AttributionOptions,
-): Promise<void> {
-  const db = options?.db ?? prisma;
-  await db.installAttributionToken.updateMany({
+  db: Pick<Db, "installAttributionToken">,
+  retiredAt = new Date(),
+): Promise<RetiredInstallAttribution> {
+  const candidates = await db.installAttributionToken.findMany({
     where: {
       guildId: serverId,
       consumedAt: { not: null },
       reconciledAt: null,
     },
-    data: { reconciledAt: options?.now ?? new Date() },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+  const candidateIds = candidates.map((token) => token.id);
+  if (candidateIds.length === 0) {
+    return { tokenIds: [], retiredAt };
+  }
+  await db.installAttributionToken.updateMany({
+    where: { id: { in: candidateIds }, reconciledAt: null },
+    data: { reconciledAt: retiredAt },
+  });
+  const newestCandidate = candidates[0];
+  if (newestCandidate === undefined) {
+    return { tokenIds: [], retiredAt };
+  }
+  const retiredNewest = await db.installAttributionToken.findFirst({
+    where: { id: newestCandidate.id, reconciledAt: retiredAt },
+    select: { id: true },
+  });
+  return {
+    tokenIds: retiredNewest === null ? [] : [retiredNewest.id],
+    retiredAt,
+  };
+}
+
+/** Retire consumed browser tokens when startup recovers an old install. */
+export async function retirePendingInstallAttribution(
+  serverId: DiscordGuildId,
+  options?: AttributionOptions,
+): Promise<RetiredInstallAttribution> {
+  const db = options?.db ?? prisma;
+  const retiredAt = options?.now ?? new Date();
+  return await db.$transaction((tx) =>
+    retirePendingInstallAttributionInTransaction(serverId, tx, retiredAt),
+  );
+}
+
+/**
+ * Undo one exact historical retirement when that startup snapshot is replaced
+ * by a real guild join before its reconciliation task finishes.
+ */
+export async function restoreRetiredInstallAttribution(
+  retirement: RetiredInstallAttribution,
+  options?: AttributionRestorationOptions,
+): Promise<void> {
+  if (retirement.tokenIds.length === 0) {
+    return;
+  }
+  const db = options?.db ?? prisma;
+  await db.installAttributionToken.updateMany({
+    where: {
+      id: { in: retirement.tokenIds },
+      reconciledAt: retirement.retiredAt,
+    },
+    data: { reconciledAt: null },
   });
 }

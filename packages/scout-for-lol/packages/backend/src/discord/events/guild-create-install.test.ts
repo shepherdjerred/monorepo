@@ -13,6 +13,7 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import { mockGuild, mockTextChannel } from "#src/testing/discord-mocks.ts";
 import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
 import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
+import type { GuildInstallReplacement } from "#src/discord/events/guild-create.ts";
 
 const { prisma } = createTestDatabase("guild-create-install-test");
 
@@ -38,14 +39,24 @@ const reconcilePendingInstallAttribution =
   vi.fn<typeof installAttributionModule.reconcilePendingInstallAttribution>();
 const retirePendingInstallAttribution =
   vi.fn<typeof installAttributionModule.retirePendingInstallAttribution>();
+const retirePendingInstallAttributionInTransaction =
+  vi.fn<
+    typeof installAttributionModule.retirePendingInstallAttributionInTransaction
+  >();
+const restoreRetiredInstallAttribution =
+  vi.fn<typeof installAttributionModule.restoreRetiredInstallAttribution>();
 vi.doMock("#src/analytics/install-attribution.ts", () => ({
   ...installAttributionModule,
   reconcilePendingInstallAttribution,
   retirePendingInstallAttribution,
+  retirePendingInstallAttributionInTransaction,
+  restoreRetiredInstallAttribution,
 }));
 
-const { handleGuildCreate, reconcileConnectedGuildInstalls } =
+const { handleGuildCreate, saveGuildInstall } =
   await import("#src/discord/events/guild-create.ts");
+const { reconcileConnectedGuildInstalls } =
+  await import("#src/discord/events/guild-install-reconciliation.ts");
 
 const SERVER_ID = testGuildId("500");
 
@@ -69,12 +80,66 @@ function guildFixture(
   });
 }
 
-async function reconcileWhileGuildLeaves(): Promise<void> {
+async function reconcileWhileGuildLeaves(connectedChecks = 2): Promise<void> {
+  const guild = guildFixture();
   let checks = 0;
-  await reconcileConnectedGuildInstalls([guildFixture()], () => {
-    checks += 1;
-    return checks === 1;
+  await reconcileConnectedGuildInstalls([guild], {
+    getConnectedGuild: () => {
+      checks += 1;
+      return checks <= connectedChecks ? guild : undefined;
+    },
   });
+}
+
+async function expectReplacementClaimRetry(params: {
+  readonly analyticsInstallationId: string;
+  readonly replacement: GuildInstallReplacement;
+}): Promise<void> {
+  const guild = guildFixture();
+  await prisma.guildInstall.create({
+    data: {
+      serverId: SERVER_ID,
+      serverName: guild.name,
+      ownerDiscordId: testAccountId("77"),
+      addedByDiscordId: testAccountId("77"),
+      memberCount: guild.memberCount,
+      installedAt: new Date(),
+      analyticsInstallationId: params.analyticsInstallationId,
+      analyticsLifecycleTracked: false,
+    },
+  });
+  const acceptReplacement = vi.fn();
+  const claimReplacement = vi.fn(() => ({
+    replacement: params.replacement,
+    update: vi.fn(() => true),
+    accept: acceptReplacement,
+  }));
+  const waitBeforeRetry = vi.fn(() => Promise.resolve());
+
+  await reconcileConnectedGuildInstalls([guild], {
+    getConnectedGuild: () => guild,
+    claimReplacement,
+    waitBeforeRetry,
+  });
+
+  expect(acceptReplacement).not.toHaveBeenCalled();
+  expect(waitBeforeRetry.mock.calls).toEqual([[250], [1000]]);
+  await expect(
+    prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+  ).resolves.toMatchObject({
+    analyticsInstallationId: params.analyticsInstallationId,
+    analyticsLifecycleTracked: false,
+  });
+
+  await reconcileConnectedGuildInstalls([guild], {
+    getConnectedGuild: () => guild,
+    claimReplacement,
+  });
+
+  expect(acceptReplacement).toHaveBeenCalledTimes(1);
+  await expect(
+    prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+  ).resolves.toMatchObject({ analyticsLifecycleTracked: true });
 }
 
 beforeEach(async () => {
@@ -82,15 +147,31 @@ beforeEach(async () => {
   captureGuildInstalled.mockClear();
   reconcilePendingInstallAttribution.mockClear();
   retirePendingInstallAttribution.mockClear();
+  retirePendingInstallAttribution.mockResolvedValue({
+    tokenIds: [101],
+    retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+  });
+  retirePendingInstallAttributionInTransaction.mockClear();
+  retirePendingInstallAttributionInTransaction.mockResolvedValue({
+    tokenIds: [101],
+    retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+  });
+  restoreRetiredInstallAttribution.mockClear();
 });
 
 afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("handleGuildCreate — GuildInstall bookkeeping", () => {
-  it("backfills a connected historical guild without marking a new install", async () => {
-    await reconcileConnectedGuildInstalls([guildFixture()]);
+describe("reconcileConnectedGuildInstalls — bounded retries", () => {
+  it("backfills a historical guild and retries failed token retirement", async () => {
+    retirePendingInstallAttribution.mockRejectedValueOnce(
+      new Error("database unavailable"),
+    );
+    const waitBeforeRetry = vi.fn(() => Promise.resolve());
+    await reconcileConnectedGuildInstalls([guildFixture()], {
+      waitBeforeRetry,
+    });
 
     const row = await prisma.guildInstall.findUnique({
       where: { serverId: SERVER_ID },
@@ -105,8 +186,31 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
       removedAt: null,
     });
     expect(captureGuildInstalled).not.toHaveBeenCalled();
+    expect(retirePendingInstallAttribution).toHaveBeenCalledTimes(2);
+    expect(waitBeforeRetry).toHaveBeenCalledExactlyOnceWith(250);
   });
 
+  it("retries a transient ready-time backfill failure", async () => {
+    vi.spyOn(prisma.guildInstall, "findUnique").mockRejectedValueOnce(
+      new Error("database unavailable"),
+    );
+    const waitBeforeRetry = vi.fn(() => Promise.resolve());
+
+    await reconcileConnectedGuildInstalls([guildFixture()], {
+      waitBeforeRetry,
+    });
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({
+      analyticsLifecycleTracked: false,
+      removedAt: null,
+    });
+    expect(waitBeforeRetry).toHaveBeenCalledExactlyOnceWith(250);
+  });
+});
+
+describe("handleGuildCreate — GuildInstall bookkeeping", () => {
   it("does not alter an existing guild during connection reconciliation", async () => {
     const installedAt = new Date("2026-01-01T00:00:00.000Z");
     await prisma.guildInstall.create({
@@ -128,9 +232,10 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(row.serverName).toBe("Original name");
     expect(row.addedByDiscordId).toBe(testAccountId("88"));
     expect(row.installedAt).toEqual(installedAt);
+    expect(reconcilePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
   });
 
-  it("restores a previously removed guild without sending onboarding", async () => {
+  it("restores a removed guild and retries attribution after promotion", async () => {
     await prisma.guildInstall.create({
       data: {
         serverId: SERVER_ID,
@@ -143,6 +248,15 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
       },
     });
 
+    reconcilePendingInstallAttribution.mockImplementationOnce(async () => {
+      expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+      await expect(
+        prisma.guildInstall.findUniqueOrThrow({
+          where: { serverId: SERVER_ID },
+        }),
+      ).resolves.toMatchObject({ analyticsLifecycleTracked: true });
+    });
+
     await reconcileConnectedGuildInstalls([guildFixture()]);
 
     const row = await prisma.guildInstall.findUniqueOrThrow({
@@ -152,8 +266,63 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(row.analyticsLifecycleTracked).toBe(true);
     expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
     expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("reinstall");
+    expect(reconcilePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
+    expect(retirePendingInstallAttributionInTransaction).toHaveBeenCalledWith(
+      SERVER_ID,
+      expect.any(Object),
+    );
+  });
+
+  it("retries a recovered guild when attribution retirement fails", async () => {
+    const previousRemovedAt = new Date("2026-02-01T00:00:00.000Z");
+    await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        removedAt: previousRemovedAt,
+      },
+    });
+    const original = await prisma.guildInstall.findUniqueOrThrow({
+      where: { serverId: SERVER_ID },
+    });
+    retirePendingInstallAttributionInTransaction
+      .mockRejectedValueOnce(new Error("database unavailable"))
+      .mockRejectedValueOnce(new Error("database unavailable"))
+      .mockRejectedValueOnce(new Error("database unavailable"));
+    const waitBeforeRetry = vi.fn(() => Promise.resolve());
+
+    await reconcileConnectedGuildInstalls([guildFixture()], {
+      waitBeforeRetry,
+    });
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({
+      removedAt: previousRemovedAt,
+      analyticsInstallationId: original.analyticsInstallationId,
+      analyticsLifecycleTracked: true,
+    });
+    expect(captureGuildInstalled).not.toHaveBeenCalled();
     expect(reconcilePendingInstallAttribution).not.toHaveBeenCalled();
-    expect(retirePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
+    expect(waitBeforeRetry.mock.calls).toEqual([[250], [1000]]);
+
+    await reconcileConnectedGuildInstalls([guildFixture()]);
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({
+      removedAt: null,
+      analyticsLifecycleTracked: true,
+    });
+    expect(retirePendingInstallAttributionInTransaction).toHaveBeenCalledTimes(
+      4,
+    );
+    expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+    expect(reconcilePendingInstallAttribution).toHaveBeenCalledTimes(1);
   });
 
   it("does not backfill an unavailable guild", async () => {
@@ -221,6 +390,36 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(row?.firstSubscriptionAt).toEqual(sentAt);
     // Identity fields still refresh (name/member count can legitimately change).
     expect(row?.memberCount).toBe(42);
+    expect(reconcilePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
+  });
+});
+
+describe("handleGuildCreate — lifecycle transitions", () => {
+  it("keeps an availability restore out of the install lifecycle", async () => {
+    const installedAt = new Date("2026-01-01T00:00:00.000Z");
+    const original = await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt,
+        analyticsLifecycleTracked: false,
+      },
+    });
+
+    await handleGuildCreate(guildFixture());
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({
+      analyticsInstallationId: original.analyticsInstallationId,
+      analyticsLifecycleTracked: false,
+      installedAt,
+      removedAt: null,
+    });
+    expect(captureGuildInstalled).not.toHaveBeenCalled();
   });
 
   it("restarts onboarding after a genuine re-install and clears removedAt", async () => {
@@ -327,7 +526,9 @@ describe("handleGuildCreate — deferred historical availability", () => {
       value: { cache: new Map([[SERVER_ID, guild]]) },
     });
 
-    await handleGuildCreate(guild, true);
+    await reconcileConnectedGuildInstalls([guild], {
+      getConnectedGuild: (guildId) => guild.client.guilds.cache.get(guildId),
+    });
 
     await expect(
       prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
@@ -337,9 +538,51 @@ describe("handleGuildCreate — deferred historical availability", () => {
   });
 });
 
+describe("handleGuildCreate — displaced snapshot handoff", () => {
+  it("registers a replacement that appears between the removal checks", async () => {
+    const snapshotGuild = guildFixture();
+    const replacementGuild = guildFixture();
+    const registerReplacement = vi.fn();
+    let checks = 0;
+
+    await reconcileConnectedGuildInstalls([snapshotGuild], {
+      getConnectedGuild: () => {
+        checks += 1;
+        if (checks <= 3) {
+          return snapshotGuild;
+        }
+        return checks === 4 ? undefined : replacementGuild;
+      },
+      registerReplacement,
+    });
+
+    const historicalInstall = await prisma.guildInstall.findUniqueOrThrow({
+      where: { serverId: SERVER_ID },
+    });
+    expect(registerReplacement).toHaveBeenCalledExactlyOnceWith(
+      replacementGuild,
+      {
+        kind: "reconciliation",
+        analyticsInstallationId: historicalInstall.analyticsInstallationId,
+        retiredAttribution: {
+          tokenIds: [101],
+          retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      },
+    );
+    expect(historicalInstall).toMatchObject({
+      analyticsLifecycleTracked: false,
+      removedAt: null,
+    });
+  });
+});
+
 describe("handleGuildCreate — availability guard and concurrent races", () => {
   it("does not backfill a guild that left after the ready snapshot", async () => {
-    await reconcileConnectedGuildInstalls([guildFixture()], () => false);
+    const connectedGuilds = new Map<string, ReturnType<typeof mockGuild>>();
+    await reconcileConnectedGuildInstalls([guildFixture()], {
+      getConnectedGuild: (guildId) => connectedGuilds.get(guildId),
+    });
     await expect(
       prisma.guildInstall.findUnique({ where: { serverId: SERVER_ID } }),
     ).resolves.toBeNull();
@@ -351,6 +594,346 @@ describe("handleGuildCreate — availability guard and concurrent races", () => 
     await expect(
       prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
     ).resolves.toMatchObject({ removedAt: expect.any(Date) });
+  });
+
+  it("still checks for departure when historical token retirement fails", async () => {
+    retirePendingInstallAttribution.mockRejectedValueOnce(
+      new Error("database unavailable"),
+    );
+
+    await reconcileWhileGuildLeaves(3);
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({ removedAt: expect.any(Date) });
+  });
+
+  it.each([
+    {
+      source: "initial backfill",
+      createExisting: false,
+      failFirstRetirement: false,
+      failReplacementSave: false,
+    },
+    {
+      source: "retirement retry",
+      createExisting: true,
+      failFirstRetirement: false,
+      failReplacementSave: false,
+    },
+    {
+      source: "failed retirement handoff",
+      createExisting: true,
+      failFirstRetirement: true,
+      failReplacementSave: true,
+    },
+  ])(
+    "lets a later ready snapshot finalize its exact handoff during $source",
+    async ({ createExisting, failFirstRetirement, failReplacementSave }) => {
+      const snapshotGuild = guildFixture();
+      const replacementGuild = guildFixture();
+      if (createExisting) {
+        await prisma.guildInstall.create({
+          data: {
+            serverId: SERVER_ID,
+            serverName: snapshotGuild.name,
+            ownerDiscordId: testAccountId("77"),
+            addedByDiscordId: testAccountId("77"),
+            memberCount: snapshotGuild.memberCount,
+            installedAt: new Date("2026-01-01T00:00:00.000Z"),
+            analyticsLifecycleTracked: false,
+          },
+        });
+      }
+      let checks = 0;
+      let replacementClaim: GuildInstallReplacement | undefined;
+      if (failFirstRetirement) {
+        retirePendingInstallAttribution
+          .mockRejectedValueOnce(new Error("database unavailable"))
+          .mockRejectedValueOnce(new Error("database unavailable"));
+      }
+
+      await reconcileConnectedGuildInstalls([snapshotGuild], {
+        getConnectedGuild: () => {
+          checks += 1;
+          return checks <= 3 ? snapshotGuild : replacementGuild;
+        },
+        registerReplacement: (_guild, claim) => {
+          replacementClaim = claim;
+        },
+      });
+
+      const historicalInstall = await prisma.guildInstall.findUniqueOrThrow({
+        where: { serverId: SERVER_ID },
+      });
+      expect(historicalInstall).toMatchObject({
+        analyticsLifecycleTracked: false,
+        removedAt: null,
+      });
+      expect(retirePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
+      if (replacementClaim === undefined) {
+        throw new Error("Expected replacement reconciliation claim");
+      }
+      const acceptedReplacement = replacementClaim;
+
+      const acceptReplacement = vi.fn();
+      let currentReplacement = acceptedReplacement;
+      const updateReplacement = vi.fn(
+        (updatedReplacement: GuildInstallReplacement) => {
+          currentReplacement = updatedReplacement;
+          return true;
+        },
+      );
+      const claimReplacement = vi.fn(() => ({
+        replacement: currentReplacement,
+        update: updateReplacement,
+        accept: acceptReplacement,
+      }));
+      const waitBeforeRetry = vi.fn(() => Promise.resolve());
+      if (failReplacementSave) {
+        vi.spyOn(prisma.guildInstall, "updateMany")
+          .mockRejectedValueOnce(new Error("database unavailable"))
+          .mockRejectedValueOnce(new Error("database unavailable"));
+      }
+      await reconcileConnectedGuildInstalls([replacementGuild], {
+        getConnectedGuild: () => replacementGuild,
+        claimReplacement,
+        waitBeforeRetry,
+      });
+      if (failReplacementSave) {
+        expect(acceptReplacement).not.toHaveBeenCalled();
+        expect(waitBeforeRetry.mock.calls).toEqual([[250], [1000]]);
+        expect(currentReplacement).toMatchObject({
+          kind: "reconciliation",
+          retiredAttribution: {
+            tokenIds: [101],
+            retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+          },
+        });
+        await reconcileConnectedGuildInstalls([replacementGuild], {
+          getConnectedGuild: () => replacementGuild,
+          claimReplacement,
+        });
+      }
+
+      const replacementInstall = await prisma.guildInstall.findUniqueOrThrow({
+        where: { serverId: SERVER_ID },
+      });
+      expect(replacementInstall).toMatchObject({
+        analyticsLifecycleTracked: true,
+        removedAt: null,
+      });
+      expect(replacementInstall.analyticsInstallationId).not.toBe(
+        historicalInstall.analyticsInstallationId,
+      );
+      expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+      expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("reinstall");
+      expect(claimReplacement).toHaveBeenCalledWith(replacementGuild);
+      expect(acceptReplacement).toHaveBeenCalledTimes(1);
+      expect(restoreRetiredInstallAttribution).toHaveBeenCalledWith(
+        {
+          tokenIds: [101],
+          retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+        expect.any(Object),
+      );
+      expect(reconcilePendingInstallAttribution).toHaveBeenCalledWith(
+        SERVER_ID,
+      );
+    },
+  );
+
+  it("retains an exact handoff when replacement saving fails", async () => {
+    const analyticsInstallationId = "replacement-installation";
+    vi.spyOn(prisma.guildInstall, "updateMany")
+      .mockRejectedValueOnce(new Error("database unavailable"))
+      .mockRejectedValueOnce(new Error("database unavailable"))
+      .mockRejectedValueOnce(new Error("database unavailable"));
+
+    await expectReplacementClaimRetry({
+      analyticsInstallationId,
+      replacement: { kind: "reconciliation", analyticsInstallationId },
+    });
+  });
+
+  it("retains an exact handoff when token restoration fails", async () => {
+    const analyticsInstallationId = "restoration-installation";
+    restoreRetiredInstallAttribution
+      .mockRejectedValueOnce(new Error("database unavailable"))
+      .mockRejectedValueOnce(new Error("database unavailable"))
+      .mockRejectedValueOnce(new Error("database unavailable"));
+
+    await expectReplacementClaimRetry({
+      analyticsInstallationId,
+      replacement: {
+        kind: "reconciliation",
+        analyticsInstallationId,
+        retiredAttribution: {
+          tokenIds: [101],
+          retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      },
+    });
+
+    expect(restoreRetiredInstallAttribution).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("handleGuildCreate — serialized replacement transitions", () => {
+  it("preserves a handoff generation attributed by the browser", async () => {
+    const attributedAt = new Date("2026-01-02T00:00:00.000Z");
+    const historical = await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        analyticsLifecycleTracked: false,
+        attributedAt,
+        attributionSurface: "guild_picker",
+      },
+    });
+
+    const returnedInstallationId = await saveGuildInstall(
+      guildFixture(),
+      testAccountId("77"),
+      true,
+      {
+        kind: "reconciliation",
+        analyticsInstallationId: historical.analyticsInstallationId,
+        retiredAttribution: {
+          tokenIds: [101],
+          retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      },
+    );
+
+    expect(returnedInstallationId).toBe(historical.analyticsInstallationId);
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({
+      analyticsInstallationId: historical.analyticsInstallationId,
+      analyticsLifecycleTracked: true,
+      attributedAt,
+      attributionSurface: "guild_picker",
+    });
+    expect(restoreRetiredInstallAttribution).not.toHaveBeenCalled();
+    expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+  });
+
+  it("rotates an active generation after an observed removal", async () => {
+    const original = await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    });
+
+    await saveGuildInstall(guildFixture(), testAccountId("77"), true, {
+      kind: "observed-removal",
+      observedAt: new Date("2026-02-01T00:00:00.000Z"),
+    });
+
+    const replacement = await prisma.guildInstall.findUniqueOrThrow({
+      where: { serverId: SERVER_ID },
+    });
+    expect(replacement.analyticsInstallationId).not.toBe(
+      original.analyticsInstallationId,
+    );
+    expect(replacement.analyticsLifecycleTracked).toBe(true);
+    expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("handleGuildCreate — observed removal attribution", () => {
+  it("preserves attribution completed after an observed removal", async () => {
+    const observedAt = new Date("2026-02-01T00:00:00.000Z");
+    const attributedAt = new Date("2026-02-01T00:01:00.000Z");
+    const original = await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        attributedAt,
+        attributionSurface: "guild_picker",
+      },
+    });
+
+    await saveGuildInstall(guildFixture(), testAccountId("77"), true, {
+      kind: "observed-removal",
+      observedAt,
+    });
+
+    await expect(
+      prisma.guildInstall.findUniqueOrThrow({ where: { serverId: SERVER_ID } }),
+    ).resolves.toMatchObject({
+      analyticsInstallationId: original.analyticsInstallationId,
+      attributedAt,
+      attributionSurface: "guild_picker",
+    });
+    expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+    expect(captureGuildInstalled.mock.calls[0]?.[0]).toMatchObject({
+      analyticsInstallationId: original.analyticsInstallationId,
+    });
+  });
+});
+
+describe("handleGuildCreate — replacement recovery", () => {
+  it("restores handoff attribution after an intervening removal", async () => {
+    const historical = await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        analyticsLifecycleTracked: false,
+        removedAt: new Date("2026-01-02T00:00:00.000Z"),
+      },
+    });
+    const retiredAttribution = {
+      tokenIds: [101],
+      retiredAt: new Date("2026-01-01T00:00:00.000Z"),
+    };
+
+    await saveGuildInstall(guildFixture(), testAccountId("77"), true, {
+      kind: "reconciliation",
+      analyticsInstallationId: historical.analyticsInstallationId,
+      retiredAttribution,
+    });
+
+    expect(restoreRetiredInstallAttribution).toHaveBeenCalledWith(
+      retiredAttribution,
+      expect.any(Object),
+    );
+    expect(reconcilePendingInstallAttribution).toHaveBeenCalledWith(SERVER_ID);
+  });
+
+  it("returns the active generation after a lost reinstall claim", async () => {
+    const install = await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    });
+
+    await expect(
+      saveGuildInstall(guildFixture(), testAccountId("77"), false),
+    ).resolves.toBe(install.analyticsInstallationId);
   });
 
   it("marks a recovered reinstall removed when it leaves during its write", async () => {
