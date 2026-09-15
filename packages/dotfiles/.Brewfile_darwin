@@ -1,4 +1,4 @@
-tap "artginzburg/tap", trusted: { formulae: ["sudo-touchid"] }
+tap "artginzburg/tap"
 tap "buildkite/buildkite"
 tap "catppuccin/tap"
 tap "cormacrelf/tap"
@@ -76,6 +76,8 @@ brew "herdr"
 brew "hyperfine"
 # Tool to unpack installers created by Inno Setup
 brew "innoextract", args: ["HEAD"]
+# Enhanced version of john, a UNIX password cracker
+brew "john-jumbo"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Static analysis tool for Kubernetes YAML files and Helm charts
@@ -144,6 +146,8 @@ brew "watch"
 brew "watchman"
 # Internet file retriever
 brew "wget"
+# Network analyzer and capture tool - without graphical user interface
+brew "wireshark"
 # Generate your Xcode project from a spec file and your folder structure
 brew "xcodegen"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
@@ -152,6 +156,8 @@ brew "yq"
 brew "yt-dlp"
 # Pluggable terminal workspace, with terminal multiplexer as the base feature
 brew "zellij"
+# Permanent TouchID support for sudo
+brew "artginzburg/tap/sudo-touchid", trusted: true
 # Work with Buildkite from the command-line
 brew "buildkite/buildkite/bk@3", trusted: true
 # Watcher for macOS 10.14+ light/dark mode changes
@@ -212,6 +218,8 @@ cask "ghostty"
 cask "google-chrome"
 # Web browser
 cask "google-chrome@canary"
+# Extensible coding agent for the terminal
+cask "grok-build"
 # Free and open-source media player
 cask "iina"
 # File archiver
@@ -236,6 +244,8 @@ cask "paseo"
 cask "qlmarkdown"
 # Window snapping tool
 cask "rectangle-pro"
+# Video game digital distribution service
+cask "steam"
 # Text editor for code, markup and prose
 cask "sublime-text"
 # Control windows and applications right from your trackpad
@@ -246,8 +256,12 @@ cask "syncthing-app"
 cask "syntax-highlight"
 # Mesh VPN based on WireGuard
 cask "tailscale-app"
+# Virtual machines UI using QEMU
+cask "utm"
 # Open-source code editor
 cask "visual-studio-code"
+# Network protocol analyzer
+cask "wireshark-app"
 # Multiplayer code editor
 cask "zed"
 vscode "catppuccin.catppuccin-vsc"
@@ -256,7 +270,6 @@ vscode "vscodevim.vim"
 go "cmd/go"
 go "cmd/gofmt"
 uv "docling[asr,easyocr,htmlrender,ocrmac,onnxruntime,rapidocr,remote-serving,tesserocr,vlm,xbrl]"
-npm "@google/gemini-cli"
 npm "@posthog/cli"
 npm "corepack"
 npm "eslint"
