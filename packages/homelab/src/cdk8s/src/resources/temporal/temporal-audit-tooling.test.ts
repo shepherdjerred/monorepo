@@ -471,6 +471,7 @@ describe("Temporal domain worker isolation", () => {
     for (const required of [
       "GITHUB_WEBHOOK_SECRET",
       "AGENT_TASK_API_TOKEN",
+      "AGENT_CHAT_DISCORD_TOKEN",
       "SLEEP_WEBHOOK_TOKEN",
       "XCODE_CLOUD_WEBHOOK_TOKEN",
     ]) {
@@ -668,6 +669,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
 
     for (const prohibited of [
       "AGENT_TASK_API_TOKEN",
+      "AGENT_CHAT_DISCORD_TOKEN",
       "ARGOCD_AUTH_TOKEN",
       "BUGSINK_TOKEN",
       "BUILDKITE_API_TOKEN",

@@ -36,6 +36,13 @@ normalize message IDs and prompts, then use the shared
 [`agent-chat-client.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/lib/agent-chat-client.ts)
 path.
 
+The dedicated Discord adapter exposes `/agent new`, `/agent continue`, and
+`/agent list`. iMessage automation uses the bearer-authenticated gateway routes.
+Both can explicitly select any cataloged chat; a successful turn makes that
+chat active for the requesting Discord channel, thread, or iMessage
+conversation. [The ingress reference](/reference/durable-agent-chat-ingress/)
+defines those contracts.
+
 ## Temporal owns ordering
 
 Each chat has a stable Workflow ID. Workflow updates serialize turns and return
@@ -101,5 +108,6 @@ describes the surrounding worker isolation and its limits.
 ## Related
 
 - [Temporal workflow inventory](/reference/temporal-workflows/)
+- [Durable agent chat ingress](/reference/durable-agent-chat-ingress/)
 - [Temporal schedule mechanics](/reference/temporal-schedules/)
 - [Why Temporal](/explanation/temporal/overview/)
