@@ -177,11 +177,11 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       };
 
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
-    // 24Gi: sized when the SQLite match DB lived here and filled the original
-    // 8Gi (2026-05). Still hosts the report lake plus the retained legacy
-    // /data/db.sqlite (importer source + rollback path for the Postgres
-    // migration); shrink only after the legacy file is deleted post-soak.
-    storage: Size.gibibytes(24),
+    // 48Gi: the retained legacy /data/db.sqlite is about 12Gi and a full
+    // report-lake rebuild writes a new snapshot beside the retained builds
+    // before garbage collection. 24Gi cannot provide that working headroom;
+    // shrink only after the legacy file is deleted post-soak.
+    storage: Size.gibibytes(48),
   });
   const dataVolumeMount = {
     path: "/data",

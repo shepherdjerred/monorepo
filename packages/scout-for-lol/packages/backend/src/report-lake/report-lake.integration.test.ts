@@ -437,6 +437,27 @@ describe("rank-history compaction", () => {
 });
 
 describe("compactor", () => {
+  test("removes an unpublished rebuild after failure", async () => {
+    const originalBucket = Bun.env["S3_BUCKET_NAME"];
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+    const lakeDir = await makeLakeDir();
+    try {
+      await expect(runReportLakeRebuild({ lakeDir })).rejects.toThrow(
+        "S3_BUCKET_NAME not configured",
+      );
+      expect(await readdir(path.join(lakeDir, "builds"))).toEqual([]);
+    } finally {
+      if (originalBucket === undefined) {
+        delete Bun.env["S3_BUCKET_NAME"];
+      } else {
+        Bun.env["S3_BUCKET_NAME"] = originalBucket;
+      }
+      resetConfigurationForTests();
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
   test("rebuild publishes a build with parquet, accounts, and manifest", async () => {
     const match = await loadMatchFixture();
     const firstPuuid = match.metadata.participants[0];
