@@ -65,7 +65,7 @@ export async function collectKnownIdentities(db: Db): Promise<Set<string>> {
   );
   const transitionOpen =
     migration[0] === undefined
-      ? true
+      ? !rows.some((row) => row["appliedAt"] !== null)
       : asCount(migration[0]["transitionOpen"], "transition state") !== 0;
   const applied = new Map(
     rows.flatMap((row) => {
