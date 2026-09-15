@@ -34,6 +34,10 @@ export function stageBucketNeedsSync(
     endpoint: SEAWEEDFS_ENDPOINT,
     cwd: scoutStorageRoot(),
     env: SEAWEEDFS_AWS_ENV,
+    // Both sides are remote S3 objects. Their modification times are
+    // expected to differ after a release copy; byte-for-byte certification
+    // still runs after this structural reconciliation check.
+    sizeOnly: source.startsWith("s3://"),
   });
 }
 
