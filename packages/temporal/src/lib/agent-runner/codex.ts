@@ -1,4 +1,14 @@
-import { Codex, type ThreadEvent, type Usage } from "@openai/codex-sdk";
+import {
+  Codex,
+  type CodexOptions,
+  type ThreadEvent,
+  type Usage,
+} from "@openai/codex-sdk";
+import { chmod, chown, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { z } from "zod/v4";
 import { createCodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { attachCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
 import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
@@ -6,11 +16,17 @@ import { register } from "#observability/metrics.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import type {
   AgentTurnOutcome,
-  RunAgentTurnInput,
+  AgentTurnUsage,
+  RunCodexAgentTurnInput,
   TurnBudgetKind,
 } from "./contract.ts";
 import { SandboxPolicySchema, TurnBudgetKindSchema } from "./contract.ts";
 import { agentTurnExecutionError } from "./errors.ts";
+import { createAgentTurnProgress, type AgentTurnProgress } from "./progress.ts";
+import {
+  providerSubprocessCommand,
+  providerSubprocessUid,
+} from "#shared/agent/agent-subprocess-identity.ts";
 
 const CODEX_TOOL_ITEM_TYPES = new Set([
   "command_execution",
@@ -19,13 +35,191 @@ const CODEX_TOOL_ITEM_TYPES = new Set([
   "web_search",
 ]);
 
-function emptyUsage(): Usage {
+const CODEX_TOOL_ENVIRONMENT_CONFIG = {
+  allow_login_shell: false,
+  shell_environment_policy: {
+    inherit: "all",
+    ignore_default_excludes: false,
+    exclude: ["CODEX_ACCESS_TOKEN", "CODEX_API_KEY", "OPENROUTER_API_KEY"],
+    experimental_use_profile: false,
+  },
+};
+
+const CodexSubscriptionAuthSchema = z.object({
+  auth_mode: z.literal("chatgpt").optional(),
+  tokens: z.object({ access_token: z.string().min(1) }),
+});
+
+async function materializeCodexSubscriptionAuth(
+  codexHome: string,
+  authJson: string,
+  providerUid: number | undefined,
+): Promise<string> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(authJson);
+  } catch {
+    throw new Error("Codex subscription auth is not valid JSON");
+  }
+  CodexSubscriptionAuthSchema.parse(parsed);
+  await mkdir(codexHome, { recursive: true });
+  const authPath = path.join(codexHome, "auth.json");
+  await writeFile(authPath, authJson, { encoding: "utf8", mode: 0o600 });
+  await chmod(authPath, 0o600);
+  if (providerUid !== undefined) {
+    await chown(authPath, providerUid, process.getgid?.() ?? providerUid);
+  }
+  return authPath;
+}
+
+type PreparedCodex = {
+  options: CodexOptions;
+  model: string;
+  providerWrapperDirectory: string | undefined;
+  subscriptionAuthPath: string | undefined;
+};
+
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", `'"'"'`)}'`;
+}
+
+function codexLauncherPath(): string {
+  const sdkEntry = Bun.resolveSync(
+    "@openai/codex-sdk",
+    path.dirname(fileURLToPath(import.meta.url)),
+  );
+  const sdkPackageDirectory = path.dirname(path.dirname(sdkEntry));
+  return path.join(
+    path.dirname(sdkPackageDirectory),
+    "codex",
+    "bin",
+    "codex.js",
+  );
+}
+
+async function materializeProviderWrapper(
+  command: readonly string[],
+  environment: Readonly<Record<string, string | undefined>>,
+): Promise<{ directory: string; executable: string }> {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "agent-codex-provider-"),
+  );
+  try {
+    await chmod(directory, 0o755);
+    const executable = path.join(directory, "codex");
+    const wrappedCommand = providerSubprocessCommand(command, environment)
+      .map((part) => shellQuote(part))
+      .join(" ");
+    await writeFile(executable, `#!/bin/sh\nexec ${wrappedCommand} "$@"\n`, {
+      encoding: "utf8",
+      mode: 0o755,
+    });
+    await chmod(executable, 0o755);
+    return { directory, executable };
+  } catch (error: unknown) {
+    await rm(directory, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+async function providerPathOverride(input: RunCodexAgentTurnInput): Promise<{
+  pathOverride: Pick<CodexOptions, "codexPathOverride"> | undefined;
+  wrapperDirectory: string | undefined;
+}> {
+  if (providerSubprocessUid(input.env) === undefined) {
+    return {
+      pathOverride:
+        input.codexPathOverride === undefined
+          ? undefined
+          : { codexPathOverride: input.codexPathOverride },
+      wrapperDirectory: undefined,
+    };
+  }
+
+  const command =
+    input.codexPathOverride === undefined
+      ? [process.execPath, codexLauncherPath()]
+      : [input.codexPathOverride];
+  const wrapper = await materializeProviderWrapper(command, input.env);
   return {
-    input_tokens: 0,
-    cached_input_tokens: 0,
-    cache_write_input_tokens: 0,
-    output_tokens: 0,
-    reasoning_output_tokens: 0,
+    pathOverride: { codexPathOverride: wrapper.executable },
+    wrapperDirectory: wrapper.directory,
+  };
+}
+
+async function prepareCodex(
+  input: RunCodexAgentTurnInput,
+): Promise<PreparedCodex> {
+  const childEnvironment = Object.fromEntries(
+    Object.entries(input.env).filter(
+      ([key]) => key !== "OPENROUTER_API_KEY" && key !== "CODEX_ACCESS_TOKEN",
+    ),
+  );
+  if (input.auth.kind === "openrouter") {
+    const openRouter = createOpenRouterCodexConfig({
+      apiKey: input.auth.apiKey,
+      modelId: input.model,
+      env: childEnvironment,
+    });
+    const providerPath = await providerPathOverride(input);
+    return {
+      options: {
+        ...openRouter.codexOptions,
+        config: CODEX_TOOL_ENVIRONMENT_CONFIG,
+        ...providerPath.pathOverride,
+      },
+      model: openRouter.routeModelId,
+      providerWrapperDirectory: providerPath.wrapperDirectory,
+      subscriptionAuthPath: undefined,
+    };
+  }
+
+  const codexHome = childEnvironment["CODEX_HOME"];
+  if (codexHome === undefined || codexHome === "") {
+    throw new Error("CODEX_HOME is required for ChatGPT subscription auth");
+  }
+  const subscriptionAuthPath = await materializeCodexSubscriptionAuth(
+    codexHome,
+    input.auth.authJson,
+    providerSubprocessUid(input.env),
+  );
+  let providerPath: Awaited<ReturnType<typeof providerPathOverride>>;
+  try {
+    providerPath = await providerPathOverride(input);
+  } catch (error: unknown) {
+    await rm(subscriptionAuthPath, { force: true });
+    throw error;
+  }
+  return {
+    options: {
+      env: childEnvironment,
+      config: CODEX_TOOL_ENVIRONMENT_CONFIG,
+      ...providerPath.pathOverride,
+    },
+    model: input.model,
+    providerWrapperDirectory: providerPath.wrapperDirectory,
+    subscriptionAuthPath,
+  };
+}
+
+function emptyUsage(): AgentTurnUsage {
+  return {
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    cacheWriteInputTokens: 0,
+    outputTokens: 0,
+    reasoningTokens: 0,
+  };
+}
+
+function normalizedUsage(usage: Usage | undefined): AgentTurnUsage {
+  if (usage === undefined) return emptyUsage();
+  return {
+    inputTokens: usage.input_tokens,
+    cachedInputTokens: usage.cached_input_tokens,
+    cacheWriteInputTokens: usage.cache_write_input_tokens,
+    outputTokens: usage.output_tokens,
+    reasoningTokens: usage.reasoning_output_tokens,
   };
 }
 
@@ -104,46 +298,6 @@ function enforceTurnBudget(input: {
   return result.stepsStarted;
 }
 
-function createProgress(
-  startedAtMs: number,
-  onEvent: RunAgentTurnInput["onEvent"],
-): {
-  observe: (type: string) => void;
-  summary: () => Pick<
-    AgentTurnOutcome,
-    "durationMs" | "eventCount" | "firstEventLatencyMs" | "maxIdleMs"
-  >;
-} {
-  let eventCount = 0;
-  let firstEventAtMs: number | undefined;
-  let previousEventAtMs = startedAtMs;
-  let maxIdleMs = 0;
-  return {
-    observe(type): void {
-      const now = Date.now();
-      firstEventAtMs ??= now;
-      const idleMs = now - previousEventAtMs;
-      maxIdleMs = Math.max(maxIdleMs, idleMs);
-      previousEventAtMs = now;
-      eventCount += 1;
-      onEvent({ type, elapsedMs: now - startedAtMs, idleMs });
-    },
-    summary() {
-      const finishedAtMs = Date.now();
-      maxIdleMs = Math.max(maxIdleMs, finishedAtMs - previousEventAtMs);
-      return {
-        durationMs: finishedAtMs - startedAtMs,
-        eventCount,
-        firstEventLatencyMs:
-          firstEventAtMs === undefined
-            ? undefined
-            : firstEventAtMs - startedAtMs,
-        maxIdleMs,
-      };
-    },
-  };
-}
-
 type CodexRunState = {
   generationStarted: boolean;
   possiblyAppliedEffects: boolean;
@@ -156,11 +310,11 @@ type CodexRunState = {
 };
 
 async function handleEvent(input: {
-  run: RunAgentTurnInput;
+  run: RunCodexAgentTurnInput;
   event: ThreadEvent;
   tokens: readonly (string | undefined)[];
   parser: ReturnType<typeof createCodexJsonlParser>;
-  progress: ReturnType<typeof createProgress>;
+  progress: AgentTurnProgress;
   state: CodexRunState;
 }): Promise<void> {
   if (!(await input.run.beforeEvent())) {
@@ -212,11 +366,11 @@ async function handleEvent(input: {
 }
 
 export async function runCodexAgentTurn(
-  input: RunAgentTurnInput,
+  input: RunCodexAgentTurnInput,
 ): Promise<AgentTurnOutcome> {
   const sandboxPolicy = SandboxPolicySchema.parse(input.sandboxPolicy);
   const startedAtMs = Date.now();
-  const progress = createProgress(startedAtMs, input.onEvent);
+  const progress = createAgentTurnProgress(startedAtMs, input.onEvent);
   const tokens = input.redactTokens ?? [];
   const parser =
     input.warn === undefined
@@ -243,26 +397,28 @@ export async function runCodexAgentTurn(
     stepsStarted: 0,
     evidenceEvents: [],
   };
+  let providerWrapperDirectory: string | undefined;
+  let subscriptionAuthPath: string | undefined;
 
   try {
-    const childEnvironment = Object.fromEntries(
-      Object.entries(input.env).filter(([key]) => key !== "OPENROUTER_API_KEY"),
-    );
-    const openRouter = createOpenRouterCodexConfig({
-      apiKey: input.auth.apiKey,
-      modelId: input.model,
-      env: childEnvironment,
-    });
-    const codex = new Codex(openRouter.codexOptions);
-    const thread = codex.startThread({
+    const prepared = await prepareCodex(input);
+    providerWrapperDirectory = prepared.providerWrapperDirectory;
+    subscriptionAuthPath = prepared.subscriptionAuthPath;
+    const codex = new Codex(prepared.options);
+    const threadOptions = {
       approvalPolicy: "never",
-      model: openRouter.routeModelId,
+      model: prepared.model,
       modelReasoningEffort: "high",
       networkAccessEnabled: sandboxPolicy.networkAccessEnabled,
       sandboxMode: sandboxPolicy.sandboxMode,
       webSearchMode: sandboxPolicy.webSearchMode,
       workingDirectory: input.cwd,
-    });
+      skipGitRepoCheck: input.skipGitRepoCheck ?? false,
+    } as const;
+    const thread =
+      input.resumeSessionId === undefined
+        ? codex.startThread(threadOptions)
+        : codex.resumeThread(input.resumeSessionId, threadOptions);
     const streamed = await trace.run(() =>
       thread.runStreamed(input.prompt, {
         ...(input.outputSchema === undefined
@@ -273,6 +429,13 @@ export async function runCodexAgentTurn(
     );
 
     for await (const event of streamed.events) {
+      if (
+        subscriptionAuthPath !== undefined &&
+        event.type === "thread.started"
+      ) {
+        await rm(subscriptionAuthPath, { force: true });
+        subscriptionAuthPath = undefined;
+      }
       await handleEvent({
         run: input,
         event,
@@ -295,6 +458,12 @@ export async function runCodexAgentTurn(
       messagePrefix: input.errorMessagePrefix ?? "Codex Agent SDK run failed",
     });
   } finally {
+    if (subscriptionAuthPath !== undefined) {
+      await rm(subscriptionAuthPath, { force: true });
+    }
+    if (providerWrapperDirectory !== undefined) {
+      await rm(providerWrapperDirectory, { recursive: true, force: true });
+    }
     parser.finish();
     trace.end(traceOutcome);
   }
@@ -303,7 +472,7 @@ export async function runCodexAgentTurn(
     finalText: state.finalText,
     evidenceEvents: state.evidenceEvents,
     sessionId: state.sessionId,
-    usage: state.usage ?? emptyUsage(),
+    usage: normalizedUsage(state.usage),
     numTurns: state.numTurns,
     generationStarted: state.generationStarted,
     possiblyAppliedEffects: state.possiblyAppliedEffects,
