@@ -8,8 +8,9 @@ import {
 } from "./blackbox-modules.ts";
 
 describe("BLACKBOX_MODULES", () => {
-  test("exposes exactly the four modules service files reference by name", () => {
+  test("exposes exactly the five modules service files reference by name", () => {
     expect(Object.keys(BLACKBOX_MODULES).toSorted()).toEqual([
+      "http_200_no_redirect",
       "http_2xx",
       "https_2xx_insecure",
       "rss_2xx",

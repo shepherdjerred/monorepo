@@ -1,9 +1,26 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test } from "vitest";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 import {
+  filesHaveSameBytes,
   forceMutableUploadCommand,
   isMissingS3Object,
+  s3StaticSiteDownloadCommand,
+  staticSiteFilePaths,
+  staticSiteSyncDryRunCommand,
 } from "./s3-static-site.ts";
+
+const temporaryDirectories: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories
+      .splice(0)
+      .map((directory) => rm(directory, { recursive: true, force: true })),
+  );
+});
 
 test("forced mutable upload overwrites entrypoints and preserves protected prefixes", () => {
   expect(
@@ -44,6 +61,77 @@ test("forced mutable upload supports an AWS dry run", () => {
       dryRun: true,
     }).at(-1),
   ).toBe("--dryrun");
+});
+
+test("static-site reconciliation probes every release file without pruning retained assets", () => {
+  expect(
+    staticSiteSyncDryRunCommand({
+      source: "/tmp/release",
+      bucket: "scout-frontend-beta",
+      endpoint: "https://s3.example.test",
+    }),
+  ).toEqual([
+    "aws",
+    "s3",
+    "sync",
+    "/tmp/release",
+    "s3://scout-frontend-beta/",
+    "--endpoint-url",
+    "https://s3.example.test",
+    "--dryrun",
+  ]);
+});
+
+test("release certification enumerates every file for byte-for-byte readback", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "static-site-files-"));
+  temporaryDirectories.push(directory);
+  await Bun.write(`${directory}/index.html`, "home");
+  await mkdir(`${directory}/docs/reference`, { recursive: true });
+  await mkdir(`${directory}/_astro`, { recursive: true });
+  await Bun.write(`${directory}/docs/reference/index.html`, "reference");
+  await Bun.write(`${directory}/_astro/site.js`, "asset");
+
+  await expect(staticSiteFilePaths(directory)).resolves.toEqual([
+    "_astro/site.js",
+    "docs/reference/index.html",
+    "index.html",
+  ]);
+});
+
+test("release certification rejects equal-length binary mutations", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "static-site-bytes-"));
+  temporaryDirectories.push(directory);
+  const expected = `${directory}/expected.webp`;
+  const mutated = `${directory}/mutated.webp`;
+  await Bun.write(expected, new Uint8Array([0, 1, 2, 3]));
+  await Bun.write(mutated, new Uint8Array([0, 1, 9, 3]));
+
+  await expect(filesHaveSameBytes(expected, mutated)).resolves.toBe(false);
+});
+
+test("release certification downloads selected stage objects once before local comparison", () => {
+  expect(
+    s3StaticSiteDownloadCommand({
+      bucket: "scout-frontend-beta",
+      destination: "/tmp/release-readback",
+      endpoint: "https://s3.example.test",
+      paths: ["index.html", "docs/reference/scoutql-filters/index.html"],
+    }),
+  ).toEqual([
+    "aws",
+    "s3",
+    "sync",
+    "s3://scout-frontend-beta/",
+    "/tmp/release-readback",
+    "--endpoint-url",
+    "https://s3.example.test",
+    "--exclude",
+    "*",
+    "--include",
+    "index.html",
+    "--include",
+    "docs/reference/scoutql-filters/index.html",
+  ]);
 });
 
 test("recognizes only missing-object S3 diagnostics as repairable drift", () => {

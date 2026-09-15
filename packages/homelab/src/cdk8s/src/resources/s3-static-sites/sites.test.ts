@@ -50,6 +50,35 @@ describe("Scout static sites", () => {
   });
 });
 
+describe("ScoutQL reference probes", () => {
+  const routes = [
+    ["scoutql-sources", "/docs/reference/scoutql-sources/"],
+    ["scoutql-filters", "/docs/reference/scoutql-filters/"],
+    ["scoutql-functions", "/docs/reference/scoutql-functions/"],
+  ] as const;
+
+  for (const hostname of [
+    "scout-for-lol.com",
+    "beta.scout-for-lol.com",
+  ] as const) {
+    test(`${hostname} probes ScoutQL reference pages`, () => {
+      const site = staticSites.find(
+        (candidate) => candidate.hostname === hostname,
+      );
+      if (site === undefined) {
+        throw new Error(`${hostname} static site is missing`);
+      }
+      for (const [endpoint, path] of routes) {
+        expect(site.probes).toContainEqual({
+          endpoint,
+          path,
+          module: "http_200_no_redirect",
+        });
+      }
+    });
+  }
+});
+
 describe("human wiki static site", () => {
   const wiki = staticSites.find(({ hostname }) => hostname === "wiki.sjer.red");
   if (wiki === undefined) {

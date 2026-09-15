@@ -262,6 +262,7 @@ const sitePaths = {
     "scripts/lib/scout/scout-customs-artifact.ts",
     "scripts/lib/s3-static-site.ts",
     "scripts/lib/scout/scout-release-state.ts",
+    "scripts/lib/scout/scout-site-stage-bucket.ts",
     "scripts/lib/scout/scout-site-storage.ts",
     "docker-bake.hcl",
     ".dockerignore",
