@@ -163,11 +163,7 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
  */
 async function requireLiveReceiptsDrained(db: Db): Promise<void> {
   const liveReceipts = await countLiveReceipts(db);
-  if (
-    liveReceipts === 0 ||
-    Bun.argv.includes("--live-receipts-drained") ||
-    Bun.argv.includes("--prematch-drained")
-  ) {
+  if (liveReceipts === 0 || Bun.argv.includes("--live-receipts-drained")) {
     return;
   }
   throw new Error(

@@ -2644,6 +2644,8 @@ model PuuidKeyMigration {
   /// Always 1. One row describes one database.
   id        Int       @id @default(1)
   appliedAt DateTime? @db.Timestamptz()
+  /// Whether an explicitly opened later transition is still collecting identities.
+  transitionOpen Int @default(1)
 }
 
 /// One feature-tip impression, with a temporary pre-send claim.
