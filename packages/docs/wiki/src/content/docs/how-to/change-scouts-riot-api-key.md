@@ -457,9 +457,14 @@ stays in place. Once the archive holds no old identifiers it is a no-op, and it
 is still correct for a restore and for stranded identities.
 
 It composes the retained mappings to their terminal replacement, so a restore
-predating any earlier transition still lands in the current domain. Keep the
-previous rows in the live map when starting a later transition; dropping or
-renaming them would remove the history this recovery path needs.
+predating a transition still lands in the current domain only if that retained
+map is present. A full-database backup taken before a later transition cannot
+contain that newer map: retain a separate backup of the live `PuuidKeyMap` and
+`PuuidKeyMigration` rows, restore those rows into the copy, and run
+`apply`/`verify` before serving it (or keep the old key and treat the restore as
+an old-domain copy). Keep previous rows in the live map when starting a later
+transition; dropping or renaming them would remove the history this recovery
+path needs.
 
 **Observability tags, logs and traces.** Sentry, Bugsink, Loki and Tempo keep
 whatever they recorded, and age out on their own retention.

@@ -4,6 +4,7 @@
  */
 
 import type { Db } from "./db.ts";
+import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import {
   auditForUnregistered,
   discoverColumns,
@@ -354,14 +355,23 @@ async function rewriteJsonColumn(
 
 async function loadMap(db: Db): Promise<Map<string, string>> {
   const rows = await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL`,
+    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"
+      WHERE "newPuuid" IS NOT NULL
+      ORDER BY "appliedAt", "oldPuuid"`,
   );
-  return new Map(
+  const map = new Map(
     rows.map((r) => [
       asString(r["oldPuuid"], "oldPuuid"),
       asString(r["newPuuid"], "newPuuid"),
     ]),
   );
+  composePuuidRemap(map);
+  for (const [oldPuuid, replacement] of map) {
+    if (oldPuuid === replacement) {
+      map.delete(oldPuuid);
+    }
+  }
+  return map;
 }
 
 /**
