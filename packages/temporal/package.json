@@ -6,6 +6,7 @@
   "imports": {
     "#architecture": "./architecture.config.ts",
     "#client": "./src/client.ts",
+    "#config/*": "./src/config/*",
     "#shared/*": "./src/shared/*",
     "#activities/*": "./src/activities/*",
     "#workflows/*": "./src/workflows/*",
@@ -52,6 +53,7 @@
     "@anthropic-ai/claude-agent-sdk": "0.3.245",
     "@shepherdjerred/seaweedfs-backup": "workspace:*",
     "@shepherdjerred/s3-signed-request": "workspace:*",
+    "@shepherdjerred/config": "workspace:*",
     "@aws-sdk/client-s3": "^3.1001.0",
     "@kubernetes/client-node": "^2.0.0",
     "@modelcontextprotocol/sdk": "1.30.1",
@@ -84,6 +86,7 @@
     "@types/sanitize-html": "^2.16.1",
     "ai": "7.0.114",
     "csv-parse": "^7.0.1",
+    "discord.js": "^14.27.0",
     "fflate": "^0.8.3",
     "firebase": "^12.12.1",
     "hono": "^4.12.18",

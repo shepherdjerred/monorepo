@@ -188,17 +188,22 @@ send. Models cannot select the status or subject.
 
 ## Durable agent chats
 
-| Workflow                  | Trigger                    | Brain                           | Output                           |
-| ------------------------- | -------------------------- | ------------------------------- | -------------------------------- |
-| agent-chat                | ingress or schedule update | Claude Code or Codex App Server | cataloged resumable turn         |
-| agent-chat-turn-receipt   | shared chat client         | deterministic                   | retained run-pinned turn outcome |
-| agent-chat-catalog        | client update              | deterministic                   | chat metadata + active bindings  |
-| scheduled-agent-chat-turn | declared Temporal Schedule | deterministic dispatcher        | update to a cataloged chat       |
+| Workflow                  | Trigger                    | Brain                           | Output                            |
+| ------------------------- | -------------------------- | ------------------------------- | --------------------------------- |
+| agent-chat                | ingress or schedule update | Claude Code or Codex App Server | cataloged resumable turn          |
+| agent-chat-turn-receipt   | shared chat client         | deterministic                   | retained run-pinned turn outcome  |
+| agent-chat-catalog        | client update              | deterministic                   | chat metadata + active bindings   |
+| scheduled-agent-chat-turn | declared Temporal Schedule | deterministic dispatcher        | update to a cataloged chat        |
+| HTTP agent chat           | HTTP POST                  | deterministic dispatcher        | durable pollable turn result      |
+| Discord agent chat        | Discord slash command      | deterministic dispatcher        | durable channel delivery          |
 
 Agent chat Activities run on `agent-task`. Scheduled dispatch waits on its own
 `agent-chat-dispatch` queue inside the repo worker process, so it occupies
-neither the provider queue nor unrelated `repo-automation`. Provider session
-slices are stored in SeaweedFS; the workspace is fresh for each turn.
+neither the provider queue nor unrelated `repo-automation`. HTTP and Discord
+command Activities run on `agent-chat-ingress`; only
+the control worker accepts the dedicated bot token used by Discord delivery.
+Provider session slices are stored in SeaweedFS; the workspace is fresh for
+each turn.
 Receipt dispatch uses a separate `agent-chat-receipts` queue in the repo process,
 so a scheduled dispatcher waiting for a receipt cannot occupy its executor.
 Every global Activity queue has a schedule-to-close admission bound in addition
