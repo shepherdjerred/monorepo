@@ -186,6 +186,7 @@ deployment and runtime acceptance window.
 
 - [Workflow families](/explanation/temporal/workflow-families/) — what actually runs
 - [Event-driven surfaces](/explanation/temporal/event-surfaces/)
+- [Durable agent chats](/explanation/temporal/durable-agent-chats/)
 - [Temporal workflow inventory](/reference/temporal-workflows/)
 - [Temporal PostgreSQL's TLS identity](/explanation/temporal/postgresql-tls-identity/)
 - [Upgrade the Temporal server](/how-to/upgrade-temporal-server/)

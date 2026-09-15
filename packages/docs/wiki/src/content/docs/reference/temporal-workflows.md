@@ -182,9 +182,23 @@ All heartbeat emails use one validated report envelope. A clear status requires
 successful evidence for every required check; partial and failed runs still
 send. Models cannot select the status or subject.
 
+## Durable agent chats
+
+| Workflow                  | Trigger                    | Brain                    | Output                          |
+| ------------------------- | -------------------------- | ------------------------ | ------------------------------- |
+| agent-chat                | ingress or schedule update | Claude Code or Codex SDK | cataloged resumable turn        |
+| agent-chat-catalog        | client update              | deterministic            | chat metadata + active bindings |
+| scheduled-agent-chat-turn | declared Temporal Schedule | deterministic dispatcher | update to a cataloged chat      |
+
+Agent chat Activities run on `agent-task`. Scheduled dispatch waits on its own
+`agent-chat-dispatch` queue inside the repo worker process, so it occupies
+neither the provider queue nor unrelated `repo-automation`. Provider session
+slices are stored in SeaweedFS; the workspace is fresh for each turn.
+
 ## Related
 
 - [Schedule reference](/reference/temporal-schedules/) — cron mechanics
 - [Roll out Scout's Temporal workers](/how-to/roll-out-scout-temporal/) — cutover and soak procedure
 - [Agent task input](/reference/agent-task-input/) — the task schema
+- [Durable agent chats](/explanation/temporal/durable-agent-chats/) — chat identity and persistence boundaries
 - [Why Temporal](/explanation/temporal/overview/) — what the fleet is for

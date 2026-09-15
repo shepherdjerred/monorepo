@@ -70,6 +70,7 @@ const NetworkPolicySchema = z.object({
         }),
       )
       .optional(),
+    egress: z.array(z.unknown()).optional(),
   }),
 });
 
@@ -156,7 +157,7 @@ describe("Temporal agent provider network boundary", () => {
     expect(worker.securityContext).toMatchObject({
       runAsUser: 0,
       allowPrivilegeEscalation: false,
-      capabilities: { add: ["SETUID"], drop: ["ALL"] },
+      capabilities: { add: ["CHOWN", "SETUID"], drop: ["ALL"] },
     });
     expect(
       worker.env.find((variable) => variable.name === "AGENT_PROVIDER_UID")
@@ -205,6 +206,8 @@ describe("Temporal agent provider network boundary", () => {
     expect(agent.spec.podSelector.matchLabels["component"]).toBe(
       "agent-worker",
     );
+    expect(JSON.stringify(agent.spec.egress)).toContain("seaweedfs");
+    expect(JSON.stringify(agent.spec.egress)).toContain("8333");
     expect(
       (server.spec.ingress ?? []).some((entry) =>
         (entry.from ?? []).some(
