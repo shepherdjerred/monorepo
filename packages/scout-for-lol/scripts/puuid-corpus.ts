@@ -126,12 +126,12 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
         SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMapHistory"
         ORDER BY "appliedAt" ASC, "oldPuuid" ASC`,
     );
-    const map = new Map<string, string>();
-    for (const row of rows) {
+    const map = rows.reduce((result, row) => {
       const oldPuuid = asString(row["oldPuuid"], "oldPuuid");
-      map.delete(oldPuuid);
-      map.set(oldPuuid, asString(row["newPuuid"], "newPuuid"));
-    }
+      result.delete(oldPuuid);
+      result.set(oldPuuid, asString(row["newPuuid"], "newPuuid"));
+      return result;
+    }, new Map<string, string>());
     composePuuidRemap(map);
     for (const [oldPuuid, replacement] of map) {
       if (oldPuuid === replacement) {
