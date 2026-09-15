@@ -49,6 +49,7 @@ const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reviews_enabled",
   "challenge_runs_enabled",
   "competition_builder_v2_enabled",
+  "explore_on_demand_riot_enabled",
   "hall_of_fame_enabled",
   "scoutql_relational_enabled",
 ] as const;
@@ -148,6 +149,7 @@ describe("production hard-disable policy", () => {
         ai_reviews_enabled: true,
         challenge_runs_enabled: true,
         competition_builder_v2_enabled: true,
+        explore_on_demand_riot_enabled: true,
         hall_of_fame_enabled: true,
         scoutql_relational_enabled: true,
       }),

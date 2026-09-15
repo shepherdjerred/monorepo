@@ -17,6 +17,7 @@ export const EXPLORE_SKILL_CAPABILITIES = [
   "dares",
   "challenges",
   "creation",
+  "riot-history",
 ] as const;
 
 export const ExploreSkillCapabilitySchema = z.enum(EXPLORE_SKILL_CAPABILITIES);

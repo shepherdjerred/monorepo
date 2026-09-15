@@ -13,6 +13,27 @@ function toPascalCase(str: string): string {
     .join("");
 }
 
+function appendAggregateKeyArray(
+  lines: string[],
+  namespaceKeys: readonly string[],
+  input: {
+    constantName: string;
+    namespaceSuffix: string;
+    typeName: string;
+  },
+): void {
+  lines.push(`export const ${input.constantName} = [`);
+  for (const namespaceKey of namespaceKeys) {
+    lines.push(`  ...${toUpperSnake(namespaceKey)}_${input.namespaceSuffix},`);
+  }
+  lines.push("] as const;");
+  lines.push("");
+  lines.push(
+    `export type ${input.typeName} = (typeof ${input.constantName})[number];`,
+  );
+  lines.push("");
+}
+
 export async function generateFlagTypesSource(): Promise<string> {
   const parsed = ManagedFlagInventorySchema.parse(inventory);
 
@@ -83,43 +104,24 @@ export async function generateFlagTypesSource(): Promise<string> {
     lines.push("");
   }
 
-  // All managed flags
-  const allFlags = parsed.flags;
-  const allBooleanFlags = allFlags.filter((f) => f.type === "boolean");
-  const allVariantFlags = allFlags.filter((f) => f.type === "variant");
-
-  lines.push("export const MANAGED_FLAG_KEYS = [");
-  for (const flag of allFlags) {
-    lines.push(`  ${JSON.stringify(flag.key)},`);
-  }
-  lines.push("] as const;");
-  lines.push("");
-  lines.push(
-    "export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];",
-  );
-  lines.push("");
-
-  lines.push("export const MANAGED_BOOLEAN_FLAG_KEYS = [");
-  for (const flag of allBooleanFlags) {
-    lines.push(`  ${JSON.stringify(flag.key)},`);
-  }
-  lines.push("] as const;");
-  lines.push("");
-  lines.push(
-    "export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];",
-  );
-  lines.push("");
-
-  lines.push("export const MANAGED_VARIANT_FLAG_KEYS = [");
-  for (const flag of allVariantFlags) {
-    lines.push(`  ${JSON.stringify(flag.key)},`);
-  }
-  lines.push("] as const;");
-  lines.push("");
-  lines.push(
-    "export type ManagedVariantFlagKey = (typeof MANAGED_VARIANT_FLAG_KEYS)[number];",
-  );
-  lines.push("");
+  // Aggregate from the namespace tuples instead of repeating every literal.
+  // This keeps the generated global unions and Zod enums in sync without a
+  // second copy of the flag catalog.
+  appendAggregateKeyArray(lines, namespaceKeys, {
+    constantName: "MANAGED_FLAG_KEYS",
+    namespaceSuffix: "FLAG_KEYS",
+    typeName: "ManagedFlagKey",
+  });
+  appendAggregateKeyArray(lines, namespaceKeys, {
+    constantName: "MANAGED_BOOLEAN_FLAG_KEYS",
+    namespaceSuffix: "BOOLEAN_FLAG_KEYS",
+    typeName: "ManagedBooleanFlagKey",
+  });
+  appendAggregateKeyArray(lines, namespaceKeys, {
+    constantName: "MANAGED_VARIANT_FLAG_KEYS",
+    namespaceSuffix: "VARIANT_FLAG_KEYS",
+    typeName: "ManagedVariantFlagKey",
+  });
   lines.push(
     "export const ManagedBooleanFlagKeySchema = z.enum(MANAGED_BOOLEAN_FLAG_KEYS);",
   );

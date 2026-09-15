@@ -26,7 +26,7 @@ export type VoiceAssistantRuntime = {
  * Why a join could not be served, when it could not.
  *
  * `unconfigured` and `failed` are deliberately distinct: the first is a
- * deployment that was never meant to serve voice (no Realtime credential) and
+ * deployment that was never meant to serve voice (no OpenAI credential) and
  * is not a fault, the second is a deployment that was and could not, which is.
  * Collapsing them would hide a broken asset set behind a benign-looking
  * message.

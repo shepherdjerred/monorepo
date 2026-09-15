@@ -1,11 +1,13 @@
 import type {
   DiscordAccountId,
+  DiscordChannelId,
   ExploreActiveRun,
   ExploreMessage,
   ExploreStreamEvent,
   ExploreTraceEntry,
   ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import type {
   ExploreAgentParams,
   ExploreAgentResult,
@@ -52,6 +54,8 @@ export type ActiveRun = {
   summary: ExploreActiveRun;
   identity: ExploreRateLimitIdentity;
   guildIds: string[];
+  surface: ExploreSurface;
+  originChannelId: DiscordChannelId | null;
   ticket: ExploreRateLimitTicket;
   started: StartedTurn;
   history: ExploreMessage[];

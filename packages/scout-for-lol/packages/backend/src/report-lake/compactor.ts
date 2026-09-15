@@ -38,18 +38,17 @@ const logger = createLogger("report-lake-compactor");
 
 const GC_KEEP_BUILDS = 2;
 
-let compactionInFlight = false;
+let compactionTail: Promise<unknown> = Promise.resolve();
 
-async function withCompactionLock<T>(fn: () => Promise<T>): Promise<T | null> {
-  if (compactionInFlight) {
-    logger.info("Skipping compaction run: another run is in flight");
-    return null;
-  }
-  compactionInFlight = true;
+async function withCompactionLock<T>(fn: () => Promise<T>): Promise<T> {
+  const previous = compactionTail;
+  const release = Promise.withResolvers<boolean>();
+  compactionTail = release.promise;
+  await previous;
   try {
     return await fn();
   } finally {
-    compactionInFlight = false;
+    release.resolve(true);
   }
 }
 
@@ -62,7 +61,7 @@ async function withCompactionLock<T>(fn: () => Promise<T>): Promise<T | null> {
  */
 export async function runReportLakeFold(
   options: CompactionOptions = {},
-): Promise<CompactionSummary | null> {
+): Promise<CompactionSummary> {
   return await withCompactionLock(async () => {
     const startedAt = Date.now();
     const prisma = options.prisma ?? defaultPrisma;
@@ -297,7 +296,7 @@ export async function runReportLakeFold(
  */
 export async function runReportLakeRebuild(
   options: CompactionOptions = {},
-): Promise<CompactionSummary | null> {
+): Promise<CompactionSummary> {
   return await withCompactionLock(async () => {
     const prisma = options.prisma ?? defaultPrisma;
     const lakeDir = options.lakeDir ?? resolveLakeDir();

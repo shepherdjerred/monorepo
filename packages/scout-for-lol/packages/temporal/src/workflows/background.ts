@@ -14,10 +14,16 @@ import {
   ScoutDetachedWorkInputSchema,
   ScoutIngestionReconciliationInputSchema,
   ScoutInitialHistoryInputSchema,
+  ScoutExploreHistoryInputSchema,
+  ScoutExploreTimelineInputSchema,
   type ScoutBackgroundJobInput,
   type ScoutDetachedWorkInput,
   type ScoutIngestionReconciliationInput,
   type ScoutInitialHistoryInput,
+  type ScoutExploreHistoryInput,
+  type ScoutExploreHistoryResult,
+  type ScoutExploreTimelineInput,
+  type ScoutExploreTimelineResult,
   type ScoutWorkflowStatus,
 } from "#src/contracts.ts";
 import { backgroundActivities } from "./activity-options.ts";
@@ -80,6 +86,48 @@ export async function scoutInitialHistoryWorkflow(
       });
     }
   }
+}
+
+export async function scoutExploreHistoryWorkflow(
+  rawInput: ScoutExploreHistoryInput,
+): Promise<ScoutExploreHistoryResult> {
+  const input = ScoutExploreHistoryInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** importing recent ranked match history");
+  const result = await backgroundActivities(input.stage).importExploreHistory(
+    input,
+  );
+  if (result.ingested > 0) {
+    setWorkflowPhase(
+      "**Phase:** folding imported matches into the report lake",
+    );
+    await lakeActivities(input.stage).runReportLakeJob({
+      stage: input.stage,
+      kind: "fold",
+    });
+  }
+  setWorkflowPhase("**Phase:** recent ranked history is ready");
+  return result;
+}
+
+export async function scoutExploreTimelineWorkflow(
+  rawInput: ScoutExploreTimelineInput,
+): Promise<ScoutExploreTimelineResult> {
+  const input = ScoutExploreTimelineInputSchema.parse(rawInput);
+  setWorkflowPhase("**Phase:** importing requested match timelines");
+  const result = await backgroundActivities(input.stage).importExploreTimelines(
+    input,
+  );
+  if (result.ingested > 0) {
+    setWorkflowPhase(
+      "**Phase:** folding imported timelines into the report lake",
+    );
+    await lakeActivities(input.stage).runReportLakeJob({
+      stage: input.stage,
+      kind: "fold",
+    });
+  }
+  setWorkflowPhase("**Phase:** requested timelines are ready");
+  return result;
 }
 
 async function fetchHistoryPage(

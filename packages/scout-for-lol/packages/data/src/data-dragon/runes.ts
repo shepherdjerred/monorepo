@@ -27,6 +27,31 @@ export const RuneTreeSchema = z.array(
 
 export const runes = RuneTreeSchema.parse(runesData);
 
+export type RuneInfo = {
+  id: number;
+  key: string;
+  name: string;
+  shortDesc: string;
+  longDesc: string;
+  icon: string;
+  treeId: number;
+  treeName: string;
+  slot: number;
+};
+
+export function listRunes(): RuneInfo[] {
+  return runes.flatMap((tree) =>
+    tree.slots.flatMap((slot, slotIndex) =>
+      slot.runes.map((rune) => ({
+        ...rune,
+        treeId: tree.id,
+        treeName: tree.name,
+        slot: slotIndex,
+      })),
+    ),
+  );
+}
+
 export function getRuneInfo(runeId: number):
   | {
       name: string;
@@ -51,6 +76,20 @@ export function getRuneInfo(runeId: number):
     }
   }
   return undefined;
+}
+
+export function findRunes(query: string): RuneInfo[] {
+  const normalized = query.trim().toLowerCase();
+  const numericId = Number(normalized);
+  const all = listRunes();
+  const exact = all.filter(
+    (rune) =>
+      rune.name.toLowerCase() === normalized ||
+      rune.key.toLowerCase() === normalized ||
+      (Number.isInteger(numericId) && rune.id === numericId),
+  );
+  if (exact.length > 0) return exact;
+  return all.filter((rune) => rune.name.toLowerCase().includes(normalized));
 }
 
 export function getRuneTreeName(treeId: number): string | undefined {

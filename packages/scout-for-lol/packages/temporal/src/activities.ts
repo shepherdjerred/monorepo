@@ -8,6 +8,10 @@ import type {
   ScoutDetachedWorkInput,
   ScoutIngestionReconciliationInput,
   ScoutInitialHistoryInput,
+  ScoutExploreHistoryInput,
+  ScoutExploreHistoryResult,
+  ScoutExploreTimelineInput,
+  ScoutExploreTimelineResult,
   ScoutInteractiveRunInput,
   ScoutMatchIngestionInput,
   ScoutPostMatchDiscoveryInput,
@@ -78,6 +82,12 @@ export type ScoutTemporalActivities = {
   fetchInitialHistoryPage: (
     input: ScoutInitialHistoryInput,
   ) => Promise<InitialHistoryPageResult>;
+  importExploreHistory: (
+    input: ScoutExploreHistoryInput,
+  ) => Promise<ScoutExploreHistoryResult>;
+  importExploreTimelines: (
+    input: ScoutExploreTimelineInput,
+  ) => Promise<ScoutExploreTimelineResult>;
   reconcileIngestion: (
     input: ScoutIngestionReconciliationInput,
   ) => Promise<IngestionReconciliationResult>;

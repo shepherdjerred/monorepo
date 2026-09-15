@@ -95,6 +95,65 @@ export type ScoutInitialHistoryInput = z.infer<
   typeof ScoutInitialHistoryInputSchema
 >;
 
+export const ScoutExploreHistoryInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  puuid: RiotPuuidSchema,
+  region: z.enum([
+    "BRAZIL",
+    "EU_EAST",
+    "EU_WEST",
+    "KOREA",
+    "LAT_NORTH",
+    "LAT_SOUTH",
+    "AMERICA_NORTH",
+    "OCEANIA",
+    "TURKEY",
+    "RUSSIA",
+    "JAPAN",
+    "VIETNAM",
+    "TAIWAN",
+    "SINGAPORE",
+    "PBE",
+  ]),
+  /** Ten-minute UTC bucket: coalesces simultaneous asks but permits refreshes. */
+  acquisitionBucket: z.number().int().nonnegative(),
+  requestedMatches: z.number().int().min(1).max(100).default(100),
+});
+export type ScoutExploreHistoryInput = z.infer<
+  typeof ScoutExploreHistoryInputSchema
+>;
+
+export const ScoutExploreHistoryResultSchema = z.strictObject({
+  requested: z.number().int().nonnegative(),
+  found: z.number().int().nonnegative(),
+  alreadyAvailable: z.number().int().nonnegative(),
+  ingested: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+});
+export type ScoutExploreHistoryResult = z.infer<
+  typeof ScoutExploreHistoryResultSchema
+>;
+
+export const ScoutExploreTimelineInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  matchIds: z.array(OpaqueIdentifierSchema).min(1).max(10),
+  /** Ten-minute UTC bucket coalesces simultaneous requests. */
+  acquisitionBucket: z.number().int().nonnegative(),
+});
+export type ScoutExploreTimelineInput = z.infer<
+  typeof ScoutExploreTimelineInputSchema
+>;
+
+export const ScoutExploreTimelineResultSchema = z.strictObject({
+  requested: z.number().int().nonnegative(),
+  alreadyAvailable: z.number().int().nonnegative(),
+  ingested: z.number().int().nonnegative(),
+  unavailable: z.number().int().nonnegative(),
+});
+export type ScoutExploreTimelineResult = z.infer<
+  typeof ScoutExploreTimelineResultSchema
+>;
+
 export const ScoutIngestionReconciliationInputSchema = z.object({
   stage: ScoutStageSchema,
   trigger: z.enum(["schedule", "gateway-ready"]),

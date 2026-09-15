@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from "react";
 import { Link } from "react-router";
 import {
   LoaderCircle,
+  Mic,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -143,6 +144,12 @@ function ConversationRow(props: {
           props.onSelect(conversation.id);
         }}
       >
+        {conversation.origin === "voice" && (
+          <Mic
+            className="mr-1.5 size-3.5 shrink-0 text-scout-subtle"
+            aria-label="Voice conversation"
+          />
+        )}
         <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
       </Link>
       <div className="relative flex size-7 shrink-0 items-center justify-center">

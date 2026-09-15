@@ -2,6 +2,28 @@ import { describe, expect, test } from "vitest";
 import { CloudVerificationRateLimiter } from "@shepherdjerred/voice-assistant";
 
 describe("CloudVerificationRateLimiter", () => {
+  test("supports a consumer-specific burst without raising the minute ceiling", () => {
+    let nowMs = 0;
+    const limiter = new CloudVerificationRateLimiter(() => nowMs, 3);
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      expect(limiter.tryAcquire()).toEqual({ allowed: true });
+    }
+    expect(limiter.tryAcquire()).toEqual({ allowed: false, reason: "burst" });
+
+    for (const laterAttemptAt of [12_000, 24_000]) {
+      nowMs = laterAttemptAt;
+      expect(limiter.tryAcquire()).toEqual({ allowed: true });
+    }
+    nowMs = 36_000;
+    expect(limiter.tryAcquire()).toEqual({
+      allowed: false,
+      reason: "minute",
+    });
+    nowMs = 60_000;
+    expect(limiter.tryAcquire()).toEqual({ allowed: true });
+  });
+
   test("allows a burst of two and at most five attempts in a rolling minute", () => {
     let nowMs = 0;
     const limiter = new CloudVerificationRateLimiter(() => nowMs);

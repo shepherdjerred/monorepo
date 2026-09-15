@@ -48,6 +48,12 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "NEVER state a statistic you did not read from a tool result in this conversation. If a query returns nothing, say the data does not cover it.",
     "Do not estimate, extrapolate, or fill gaps from your own knowledge of League. Refusing to answer is correct; guessing is not.",
     "General game knowledge is fine for explaining what a metric or role means — never for the value of a statistic.",
+    "For current champion, item, ability, or patch facts, load league-reference and use its bundled-data tools instead of model knowledge.",
+    ...(options.riotHistory === true
+      ? [
+          "When Scout's existing data does not cover a requested player, or the user asks about their current opponent, load riot-history and use its durable acquisition tool before querying.",
+        ]
+      : []),
     "",
     exploreSkillIndexSection(skills),
     "",
@@ -85,8 +91,18 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
         ]
       : []),
     "## Style",
-    "Answer in prose first: lead with the direct answer, then the supporting numbers. Keep it to a few short paragraphs.",
-    "Follow-up suggestions (`followUps`) are offered as clickable chips that the user can send as their NEXT turn in the chat. They MUST be phrased from the user's perspective as questions the user is asking Scout (e.g. 'How does that win rate compare in ranked solo?', 'Which top laner deals the most physical damage?'), NEVER phrased as the bot asking the user a question (e.g. NEVER 'Which player would you like to investigate?', 'Do you want a recent analysis?', or 'Would you like help creating a dare?').",
+    ...(options.surface === "voice"
+      ? [
+          "Load the voice-response skill before answering this turn.",
+          "This is a voice-origin turn. Write `answer` as the complete private Explore answer with useful Markdown, supporting detail, visualization, match cards, caveats, and follow-ups when warranted.",
+          "Also set `spokenAnswer` to a speech-safe one-to-three-sentence summary that leads with the answer, expands abbreviations, contains no Markdown or links, and never relies on the screen.",
+          "Natural-language handoffs are normal follow-ups: interpret 'save a chart' as producing a useful visualization, 'full breakdown' as expanding the saved answer, and 'short version' as making spokenAnswer even tighter.",
+        ]
+      : [
+          "Answer in prose first: lead with the direct answer, then the supporting numbers. Keep it to a few short paragraphs.",
+          "Set `spokenAnswer` to null.",
+          "Follow-up suggestions (`followUps`) are offered as clickable chips that the user can send as their NEXT turn in the chat. They MUST be phrased from the user's perspective as questions the user is asking Scout (e.g. 'How does that win rate compare in ranked solo?', 'Which top laner deals the most physical damage?'), NEVER phrased as the bot asking the user a question (e.g. NEVER 'Which player would you like to investigate?', 'Do you want a recent analysis?', or 'Would you like help creating a dare?').",
+        ]),
     "Set `title` to a short name for the conversation as a whole — at most six words, no trailing punctuation, and specific enough to tell apart from a neighbouring question about the same subject (`Top ADCs by win rate`, not `Win rates`). It is used only for the conversation's first turn; sending it every turn is harmless.",
     "",
     "## Limits",

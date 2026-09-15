@@ -7,10 +7,14 @@ import {
   type WorkflowStartOptions,
 } from "@temporalio/client";
 import type { Client } from "@temporalio/client";
+import type { scoutExploreHistoryWorkflow } from "@scout-for-lol/temporal/workflows";
+import type { scoutExploreTimelineWorkflow } from "@scout-for-lol/temporal/workflows";
 import {
   SCOUT_WORKFLOW_NAMES,
   scoutIngestionReconciliationGatewayReadyWorkflowId,
   scoutInitialHistoryWorkflowId,
+  scoutExploreHistoryWorkflowId,
+  scoutExploreTimelineWorkflowId,
   scoutDetachedWorkWorkflowId,
   scoutInteractiveWorkflowId,
   scoutMatchWorkflowId,
@@ -22,6 +26,8 @@ import {
   scoutTaskQueues,
   type ScoutIngestionReconciliationInput,
   type ScoutInitialHistoryInput,
+  type ScoutExploreHistoryInput,
+  type ScoutExploreTimelineInput,
   type ScoutDetachedWorkInput,
   type ScoutInteractiveRunInput,
   type ScoutMatchIngestionInput,
@@ -59,6 +65,24 @@ const RESTART_CLOSED_START_POLICIES = {
   workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
   workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
 } as const;
+
+/**
+ * Join the execution already identified by a deterministic Workflow ID even
+ * after it has closed. `USE_EXISTING` only joins an open execution; with
+ * `REJECT_DUPLICATE`, Temporal reports a closed execution as already started.
+ * The caller still wants that execution's durable result, not a fresh run.
+ */
+export async function startOrReuseWorkflow<T>(
+  start: () => Promise<T>,
+  existing: () => T,
+): Promise<T> {
+  try {
+    return await start();
+  } catch (error: unknown) {
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    return existing();
+  }
+}
 
 function startMetadata(
   stage: ScoutStage,
@@ -134,6 +158,68 @@ export async function startScoutInitialHistory(
         "Coordinates the durable initial match-history import for one linked account.",
       ),
     },
+  );
+}
+
+export async function startScoutExploreHistory(
+  client: Client,
+  input: ScoutExploreHistoryInput,
+): Promise<WorkflowHandle<typeof scoutExploreHistoryWorkflow>> {
+  const workflowId = scoutExploreHistoryWorkflowId(
+    input.stage,
+    input.puuid,
+    input.acquisitionBucket,
+  );
+  return await startOrReuseWorkflow<
+    WorkflowHandle<typeof scoutExploreHistoryWorkflow>
+  >(
+    async () =>
+      await client.workflow.start(SCOUT_WORKFLOW_NAMES.exploreHistory, {
+        ...IDEMPOTENT_START_POLICIES,
+        workflowId,
+        taskQueue: scoutTaskQueues(input.stage).workflow,
+        args: [input],
+        ...startMetadata(
+          input.stage,
+          "api",
+          "Import ranked history for Explore",
+          "Fetches recent ranked matches on demand, stores them permanently, and folds them into Scout's report lake.",
+        ),
+      }),
+    () =>
+      client.workflow.getHandle<typeof scoutExploreHistoryWorkflow>(workflowId),
+  );
+}
+
+export async function startScoutExploreTimeline(
+  client: Client,
+  input: ScoutExploreTimelineInput,
+): Promise<WorkflowHandle<typeof scoutExploreTimelineWorkflow>> {
+  const workflowId = scoutExploreTimelineWorkflowId(
+    input.stage,
+    input.matchIds,
+    input.acquisitionBucket,
+  );
+  return await startOrReuseWorkflow<
+    WorkflowHandle<typeof scoutExploreTimelineWorkflow>
+  >(
+    async () =>
+      await client.workflow.start(SCOUT_WORKFLOW_NAMES.exploreTimeline, {
+        ...IDEMPOTENT_START_POLICIES,
+        workflowId,
+        taskQueue: scoutTaskQueues(input.stage).workflow,
+        args: [input],
+        ...startMetadata(
+          input.stage,
+          "api",
+          "Import timelines for Explore",
+          "Fetches selected match timelines on demand, stores them permanently, and folds them into Scout's report lake.",
+        ),
+      }),
+    () =>
+      client.workflow.getHandle<typeof scoutExploreTimelineWorkflow>(
+        workflowId,
+      ),
   );
 }
 

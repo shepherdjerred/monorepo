@@ -39,6 +39,8 @@ import {
   type CreationCapability,
 } from "#src/explore/creation/capability.ts";
 import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
+import { createLeagueExploreTools } from "#src/explore/tools/league-tools.ts";
+import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import {
   enabledExploreSkills,
@@ -133,6 +135,8 @@ type RunState = {
   lastVisualization: VisualizationSnapshot | null;
   /** Match ids from the most recent query that support a two-team card. */
   lastMatchIds: Set<string>;
+  /** Every match id in the most recent query, including card-ineligible modes. */
+  lastQueryMatchIds: Set<string>;
   /** Skills loaded this turn, so result messages can stop nudging. */
   loadedSkills: Set<string>;
 };
@@ -163,6 +167,7 @@ async function streamExploreAgentInternal(
     lastPreview: null,
     lastVisualization: null,
     lastMatchIds: new Set(),
+    lastQueryMatchIds: new Set(),
     loadedSkills: new Set(),
   };
 
@@ -179,6 +184,7 @@ async function streamExploreAgentInternal(
     surface: params.surface,
     guildIds: params.guildIds,
   });
+  const riotHistoryEnabled = await riotHistoryExploreEnabled(params.guildIds);
 
   const skillOptions = {
     bucks:
@@ -188,6 +194,7 @@ async function streamExploreAgentInternal(
     dares: daresEnabled,
     challenges: challengesEnabled,
     creation: creationCapability !== null,
+    riotHistory: riotHistoryEnabled,
     surface: params.surface,
   };
 
@@ -203,6 +210,7 @@ async function streamExploreAgentInternal(
       daresEnabled,
       challengesEnabled,
       creationCapability,
+      riotHistoryEnabled,
     }),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
@@ -235,8 +243,14 @@ async function streamExploreAgentInternal(
   const streamState = await drainExploreStreams(stream, params.emit);
 
   const answer = ExploreAnswerSchema.parse(await stream.output);
+  if (
+    params.surface === "voice" &&
+    (answer.spokenAnswer === null || answer.spokenAnswer === undefined)
+  ) {
+    throw new Error("Voice Explore answers require spokenAnswer");
+  }
   const matchCards =
-    params.surface === "web"
+    params.surface === "web" || params.surface === "voice"
       ? await hydrateExploreMatchCards({
           requests: answer.matchCards,
           eligibleMatchIds: state.lastMatchIds,
@@ -330,6 +344,7 @@ type ExploreToolsOptions = {
   daresEnabled: boolean;
   challengesEnabled: boolean;
   creationCapability: CreationCapability | null;
+  riotHistoryEnabled: boolean;
 };
 
 function createExploreTools(options: ExploreToolsOptions) {
@@ -341,6 +356,7 @@ function createExploreTools(options: ExploreToolsOptions) {
     daresEnabled,
     challengesEnabled,
     creationCapability,
+    riotHistoryEnabled,
   } = options;
   const track: ToolTracker = async (toolName, work) => {
     state.toolCalls++;
@@ -455,9 +471,10 @@ function createExploreTools(options: ExploreToolsOptions) {
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
+        state.lastQueryMatchIds = matchIdsInPreview(preview, source);
         const cardSupportRows =
-          params.surface === "web"
-            ? await fetchMatchSupport([...matchIdsInPreview(preview, source)])
+          params.surface === "web" || params.surface === "voice"
+            ? await fetchMatchSupport([...state.lastQueryMatchIds])
             : [];
         state.lastMatchIds = new Set(
           cardSupportRows
@@ -507,6 +524,13 @@ function createExploreTools(options: ExploreToolsOptions) {
     validate_report_query: createValidateTool(track),
     run_report_query: runReportQuery,
     format_report_query: createFormatTool(track),
+    ...createLeagueExploreTools({
+      requesterId: params.requesterId,
+      guildIds: params.guildIds,
+      riotHistoryEnabled,
+      eligibleTimelineMatchIds: () => state.lastQueryMatchIds,
+      track,
+    }),
     ...(bucksCapability === null
       ? {}
       : createBucksExploreTools({

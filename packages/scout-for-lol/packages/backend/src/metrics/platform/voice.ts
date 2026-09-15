@@ -58,7 +58,7 @@ export const scoutVoiceRateLimitedTotal = new Counter({
 
 export const scoutVoiceAudioTokensTotal = new Counter({
   name: "scout_voice_audio_tokens_total",
-  help: "OpenAI Realtime audio tokens billed by direction.",
+  help: "OpenAI voice audio tokens billed by direction when reported.",
   labelNames: ["direction"] as const,
   registers: [registry],
 });
@@ -87,21 +87,21 @@ export const scoutVoiceWakeToReplySeconds = new Histogram({
 
 export const scoutVoiceOpenAiFailuresTotal = new Counter({
   name: "scout_voice_openai_failures_total",
-  help: "OpenAI Realtime turn failures by stage.",
+  help: "OpenAI voice request failures by stage.",
   labelNames: ["stage"] as const,
   registers: [registry],
 });
 
 export const scoutVoiceCloudRequestsTotal = new Counter({
   name: "scout_voice_cloud_requests_total",
-  help: "OpenAI Realtime requests by stage and outcome.",
+  help: "OpenAI voice requests by stage and outcome.",
   labelNames: ["stage", "outcome"] as const,
   registers: [registry],
 });
 
 export const scoutVoiceConcurrentTurns = new Gauge({
   name: "scout_voice_concurrent_turns",
-  help: "Realtime turns currently in flight.",
+  help: "Voice question transactions currently in flight.",
   registers: [registry],
 });
 

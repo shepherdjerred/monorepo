@@ -41,10 +41,10 @@
  * ## Shutdown order
  *
  * Unchanged from the single-pod drain, minus the steps a role does not have:
- * voice first (it aborts in-flight Realtime turns and stops audio capture, and
- * everything after it can take tens of seconds), then Temporal, then the
- * competition worker, then HTTP, then the gateway, then the config poller,
- * analytics and the database.
+ * voice first (it aborts in-flight speech I/O and stops audio capture while
+ * durable Explore work continues, and everything after it can take tens of
+ * seconds), then Temporal, then the competition worker, then HTTP, then the
+ * gateway, then the config poller, analytics and the database.
  */
 
 import type { ScoutRuntimeCapabilities } from "#src/configuration/runtime-role.ts";

@@ -449,6 +449,9 @@ model ExploreConversation {
   id            String    @id @default(uuid())
   userId        String
   title         String
+  /// Server-owned provenance for the surface that created this conversation.
+  /// Follow-up turns do not change it.
+  origin        String    @default("legacy")
   /// Set when the owner shares the conversation; null means private. Opaque
   /// and unguessable rather than derived from `id`, because possession of the
   /// token is the only credential a share link carries.
@@ -490,6 +493,8 @@ model ExploreMessage {
   /// "user" or "assistant".
   role           String
   content        String
+  /// Speech-safe rendering used only by the private voice delivery path.
+  spokenContent  String?
   /// The ScoutQL the answer rests on, when the turn ran one.
   queryText      String?
   /// JSON string arrays; empty when the turn produced none.

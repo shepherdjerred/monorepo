@@ -721,6 +721,24 @@ describe("compactor idempotency and schema transitions", () => {
 });
 
 describe("compactor rank replacement and invalid input", () => {
+  test("serializes concurrent folds instead of skipping the contender", async () => {
+    const lakeDir = await makeLakeDir();
+    try {
+      await runReportLakeRebuild({ prisma, lakeDir });
+
+      const [first, second] = await Promise.all([
+        runReportLakeFold({ prisma, lakeDir }),
+        runReportLakeFold({ prisma, lakeDir }),
+      ]);
+
+      expect(first.tier).toBe("fold");
+      expect(second.tier).toBe("fold");
+      expect(second.buildId).not.toBe(first.buildId);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
   test("a newer daily rank snapshot atomically replaces every prior entry", async () => {
     const competitionId = CompetitionIdSchema.parse(78);
     const lakeDir = await makeLakeDir();

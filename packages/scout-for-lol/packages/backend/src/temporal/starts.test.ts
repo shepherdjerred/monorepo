@@ -6,6 +6,7 @@ import {
   type WorkflowStartOptions,
 } from "@temporalio/client";
 import {
+  startOrReuseWorkflow,
   startScoutGatewayReadyIngestionReconciliation,
   type ScoutWorkflowStarter,
 } from "#src/temporal/starts.ts";
@@ -86,6 +87,35 @@ describe("startScoutGatewayReadyIngestionReconciliation", () => {
 
     await expect(
       startScoutGatewayReadyIngestionReconciliation(client, "beta"),
+    ).rejects.toThrow("temporal unavailable");
+  });
+});
+
+describe("startOrReuseWorkflow", () => {
+  test("returns the handle for a closed execution in the same acquisition bucket", async () => {
+    const existing = { execution: "completed" };
+
+    await expect(
+      startOrReuseWorkflow(
+        () =>
+          Promise.reject(
+            new WorkflowExecutionAlreadyStartedError(
+              "Workflow execution already started",
+              "scout-beta-explore-history-puuid-bucket",
+              "scoutExploreHistoryWorkflow",
+            ),
+          ),
+        () => existing,
+      ),
+    ).resolves.toBe(existing);
+  });
+
+  test("propagates a start failure that is not an existing execution", async () => {
+    await expect(
+      startOrReuseWorkflow(
+        () => Promise.reject(new Error("temporal unavailable")),
+        () => ({ execution: "never reached" }),
+      ),
     ).rejects.toThrow("temporal unavailable");
   });
 });

@@ -72,6 +72,7 @@ export function Explore() {
     transcript,
     messages,
     title,
+    origin,
     shared,
   } = useExploreConversation(conversationId);
 
@@ -305,6 +306,7 @@ export function Explore() {
     <div className={EXPLORE_CONTAINER_CLASS}>
       <ExploreHeader
         title={conversationId === null ? "Explore" : title}
+        voiceConversation={origin === "voice"}
         {...(headerActions === undefined ? {} : { actions: headerActions })}
       />
 

@@ -28,8 +28,7 @@ export async function publishReadyImports(
 
   const ready = jobs.filter((job) => trackedPuuids.has(job.puuid));
   if (ready.length === 0) return;
-  const summary = await runReportLakeFold({ prisma: db });
-  if (summary === null) return;
+  await runReportLakeFold({ prisma: db });
 
   const completions = await Promise.all(
     ready.map(

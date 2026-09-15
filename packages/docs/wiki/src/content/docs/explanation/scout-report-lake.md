@@ -35,6 +35,8 @@ flowchart LR
   I -->|best effort| ST[NDJSON staging]
   H[Quiet first-run import] -->|must succeed| S3
   H -->|must succeed before checkpoint| ST
+  O[Explore on-demand ranked history] -->|must succeed| S3
+  O -->|must succeed before fold| ST
   ST --> F[Fold, every 15 min]
   S3 --> R[Rebuild, nightly]
   F --> B[Immutable Parquet build]
@@ -136,6 +138,17 @@ not send Discord messages, generate reports or AI recaps, write ActiveGame
 state, settle Bryan Bucks, award earnings, or fabricate per-match rank deltas.
 The live poller resumes only after the fixed snapshot is stored and its newest
 ID becomes the cursor, so a game completed during import is notified once.
+
+Explore also has user-requested acquisition paths. Ranked-history acquisition
+checks the lake first, then fetches only the missing games among the newest 100
+matches Riot classifies as ranked for a resolved account. Each new match uses
+the same permanent S3 and staging path, then one durable Workflow folds the
+batch before the tool returns. A separate Workflow can acquire complete
+timelines for at most ten match IDs selected from the latest ScoutQL result,
+with no more than three Riot reads in parallel.
+Unlike initial history, this path does not update a tracked account's polling
+cursor or readiness. The acquired public match evidence becomes globally
+queryable through ScoutQL.
 
 ### Every archived capture is content-addressed
 

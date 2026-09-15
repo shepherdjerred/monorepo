@@ -14,6 +14,8 @@ import {
   scoutDuelSeriesWorkflowId,
   scoutHallBaselineWorkflowId,
   scoutIngestionReconciliationGatewayReadyWorkflowId,
+  scoutExploreHistoryWorkflowId,
+  scoutExploreTimelineWorkflowId,
   scoutInitialHistoryWorkflowId,
   scoutInteractiveWorkflowId,
   scoutLakeProjectionV2WorkflowId,
@@ -50,6 +52,12 @@ describe("Scout Temporal identifiers", () => {
     expect(scoutInitialHistoryWorkflowId("beta", "puuid_123")).toBe(
       "scout-beta-history-puuid_123",
     );
+    expect(scoutExploreHistoryWorkflowId("beta", "puuid_123", 456)).toBe(
+      "scout-beta-explore-history-puuid_123-456",
+    );
+    expect(
+      scoutExploreTimelineWorkflowId("beta", ["NA1_2", "NA1_1"], 456),
+    ).toBe("scout-beta-explore-timeline-NA1_1-NA1_2-456");
     expect(scoutInteractiveWorkflowId("beta", "explore", "run_123")).toBe(
       "scout-beta-explore-run_123",
     );

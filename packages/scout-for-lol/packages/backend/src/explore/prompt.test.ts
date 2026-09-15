@@ -112,6 +112,19 @@ describe("exploreAgentInstructions", () => {
     expect(instructions).not.toContain("fully self-contained");
   });
 
+  test("voice keeps a full saved answer and a separate spoken rendering", () => {
+    const instructions = exploreAgentInstructions({
+      bucks: null,
+      surface: "voice",
+    });
+    expect(instructions).toContain("- voice-response:");
+    expect(instructions).toContain("complete private Explore answer");
+    expect(instructions).toContain("one-to-three-sentence summary");
+    expect(instructions).toContain("- visualization:");
+    expect(instructions).toContain("- match-cards:");
+    expect(instructions).not.toContain("Set includeVisualization to false");
+  });
+
   test("carries no v1 clause the language no longer has", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
 

@@ -9,6 +9,8 @@ import {
   type EpochSeconds,
   type RawAccount,
   RawAccountSchema,
+  RawChampionMasteryListSchema,
+  type RawChampionMastery,
   MatchIdSchema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
@@ -147,6 +149,19 @@ export class RiotClient {
     ): Promise<unknown> => {
       const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/league/v4/entries/by-puuid/${encodeURIComponent(puuid)}`;
       return this.fetchJson(url, requestOptions);
+    },
+  };
+
+  public readonly championMastery = {
+    topByPuuid: async (
+      puuid: LeaguePuuid,
+      platform: PlatformRoute,
+      count: number,
+      requestOptions: RateLimitedRequestOptions = {},
+    ): Promise<RawChampionMastery[]> => {
+      const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${encodeURIComponent(puuid)}/top?count=${count.toString()}`;
+      const data = await this.fetchJson(url, requestOptions);
+      return RawChampionMasteryListSchema.parse(data);
     },
   };
 

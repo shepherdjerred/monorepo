@@ -4,6 +4,10 @@ import type {
   ScoutDetachedWorkInput,
   ScoutIngestionReconciliationInput,
   ScoutInitialHistoryInput,
+  ScoutExploreHistoryInput,
+  ScoutExploreHistoryResult,
+  ScoutExploreTimelineInput,
+  ScoutExploreTimelineResult,
   ScoutInteractiveRunInput,
   ScoutMatchIngestionInput,
   ScoutPostMatchDiscoveryInput,
@@ -40,6 +44,8 @@ import { scoutRealtimePollWorkflow as realtimePoll } from "./realtime.ts";
 import { scoutMatchIngestionWorkflow as matchIngestion } from "./realtime.ts";
 import { scoutPostMatchDiscoveryWorkflow as postMatchDiscovery } from "./realtime.ts";
 import { scoutInitialHistoryWorkflow as initialHistory } from "./background.ts";
+import { scoutExploreHistoryWorkflow as exploreHistory } from "./background.ts";
+import { scoutExploreTimelineWorkflow as exploreTimeline } from "./background.ts";
 import { scoutIngestionReconciliationWorkflow as ingestionReconciliation } from "./background.ts";
 import { scoutBackgroundJobWorkflow as backgroundJob } from "./background.ts";
 import { scoutDetachedWorkWorkflow as detachedWork } from "./background.ts";
@@ -90,6 +96,18 @@ export async function scoutInitialHistoryWorkflow(
   input: ScoutInitialHistoryInput,
 ): Promise<{ status: ScoutWorkflowStatus; pagesProcessed: number }> {
   return await initialHistory(input);
+}
+
+export async function scoutExploreHistoryWorkflow(
+  input: ScoutExploreHistoryInput,
+): Promise<ScoutExploreHistoryResult> {
+  return await exploreHistory(input);
+}
+
+export async function scoutExploreTimelineWorkflow(
+  input: ScoutExploreTimelineInput,
+): Promise<ScoutExploreTimelineResult> {
+  return await exploreTimeline(input);
 }
 
 export async function scoutIngestionReconciliationWorkflow(

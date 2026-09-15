@@ -75,6 +75,7 @@ describe("explore stream mapping", () => {
     const parsed = ExploreAnswerSchema.parse(
       ExploreAnswerWireSchema.parse({
         answer: "Ambessa leads.",
+        spokenAnswer: null,
         title: "Champion win-rate leaders",
         queryText: null,
         includeVisualization: false,

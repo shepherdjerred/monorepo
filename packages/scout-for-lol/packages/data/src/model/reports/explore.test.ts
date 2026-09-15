@@ -15,6 +15,7 @@ describe("ExploreAnswerSchema", () => {
     expect(
       ExploreAnswerSchema.parse({
         answer: "Ahri leads.",
+        spokenAnswer: null,
         queryText: null,
         caveats: [],
         followUps: [],
@@ -36,6 +37,7 @@ describe("ExploreAnswerSchema", () => {
       ExploreAnswerSchema.parse(
         ExploreAnswerWireSchema.parse({
           answer: "Ahri leads.",
+          spokenAnswer: null,
           title: null,
           queryText: null,
           includeVisualization: true,
@@ -50,6 +52,7 @@ describe("ExploreAnswerSchema", () => {
   test("limits model-selected cards to five with at most one large card", () => {
     const answer = {
       answer: "The match was a bloodbath.",
+      spokenAnswer: null,
       title: null,
       queryText: "SELECT match_id FROM matches",
       includeVisualization: false,

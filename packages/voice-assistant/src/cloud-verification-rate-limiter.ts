@@ -1,6 +1,6 @@
 export const CLOUD_VERIFICATION_WINDOW_MS = 60_000;
 export const CLOUD_VERIFICATION_MAX_ATTEMPTS = 5;
-const BURST_CAPACITY = 2;
+const DEFAULT_BURST_CAPACITY = 2;
 const REJECTION_COOLDOWN_MS = 3000;
 
 /**
@@ -19,15 +19,22 @@ export type CloudVerificationRateLimitDecision =
       readonly reason: "burst" | "minute" | "cooldown" | "quota";
     };
 
-/** Per-playback-session limiter: burst two, five attempts/minute, rejection cooldown. */
+/** Per-playback-session limiter: bounded burst, five attempts/minute, rejection cooldown. */
 export class CloudVerificationRateLimiter {
   private attempts: number[] = [];
-  private tokens = BURST_CAPACITY;
+  private tokens: number;
   private lastRefillMs: number;
   private cooldownUntilMs = 0;
   private quotaUntilMs = 0;
 
-  constructor(private readonly now: () => number = Date.now) {
+  constructor(
+    private readonly now: () => number = Date.now,
+    private readonly burstCapacity: number = DEFAULT_BURST_CAPACITY,
+  ) {
+    if (!Number.isInteger(burstCapacity) || burstCapacity < 1) {
+      throw new Error("Cloud verification burst capacity must be positive");
+    }
+    this.tokens = burstCapacity;
     this.lastRefillMs = now();
   }
 
@@ -49,7 +56,7 @@ export class CloudVerificationRateLimiter {
     }
     const elapsedMs = Math.max(0, nowMs - this.lastRefillMs);
     this.tokens = Math.min(
-      BURST_CAPACITY,
+      this.burstCapacity,
       this.tokens +
         (elapsedMs / CLOUD_VERIFICATION_WINDOW_MS) *
           CLOUD_VERIFICATION_MAX_ATTEMPTS,

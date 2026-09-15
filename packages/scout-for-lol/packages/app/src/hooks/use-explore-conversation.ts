@@ -49,6 +49,7 @@ export function useExploreConversation(conversationId: string | null) {
     transcript,
     messages: conversation?.messages ?? NO_MESSAGES,
     title: conversation?.conversation.title ?? "Explore",
+    origin: conversation?.conversation.origin ?? null,
     shared: conversation?.conversation.shareToken ?? null,
   };
 }

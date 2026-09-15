@@ -113,6 +113,33 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
         },
       );
     },
+    importExploreHistory: async (input) => {
+      return await heartbeatWhile(
+        {
+          puuid: input.puuid,
+          requestedMatches: input.requestedMatches,
+          phase: "importing-explore-history",
+        },
+        async () => {
+          const { importExploreRankedHistory } =
+            await import("#src/league/explore-history/import.ts");
+          return await importExploreRankedHistory(input);
+        },
+      );
+    },
+    importExploreTimelines: async (input) => {
+      return await heartbeatWhile(
+        {
+          matchIds: input.matchIds,
+          phase: "importing-explore-timelines",
+        },
+        async () => {
+          const { importExploreTimelines } =
+            await import("#src/league/explore-history/timelines.ts");
+          return await importExploreTimelines(input);
+        },
+      );
+    },
     reconcileIngestion: async () => {
       return await heartbeatWhile(
         { phase: "reconciling-ingestion" },
