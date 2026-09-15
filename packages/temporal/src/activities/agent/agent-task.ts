@@ -8,11 +8,11 @@ import {
 import { withSpan } from "#observability/tracing.ts";
 import { buildAgentTaskSdkConfig } from "#activities/agent/agent-task-sdk-config.ts";
 import {
-  AgentTaskSdkExecutionError,
   runAgentTaskSdk,
   type AgentTaskSdkResult,
   type AgentTaskSdkRunInput,
 } from "#activities/agent/agent-task-sdk.ts";
+import { AgentTurnExecutionError } from "#lib/agent-runner/errors.ts";
 import {
   collectDeclaredAgentTaskEvidence,
   mergeAgentTaskEvidence,
@@ -99,7 +99,7 @@ function timeoutAbortController(startToCloseTimeoutMs: number | undefined): {
   return { controller, timer };
 }
 
-function asNonRetryableSdkFailure(error: AgentTaskSdkExecutionError): Error {
+function asNonRetryableSdkFailure(error: AgentTurnExecutionError): Error {
   if (
     !error.authOrQuotaFailure &&
     !error.generationStarted &&
@@ -238,7 +238,7 @@ async function runAgent(
           outcome: "failed",
         });
         const classified =
-          error instanceof AgentTaskSdkExecutionError
+          error instanceof AgentTurnExecutionError
             ? asNonRetryableSdkFailure(error)
             : error;
         captureWithContext(classified, {
@@ -246,11 +246,11 @@ async function runAgent(
           model: config.model,
           phase: "agent-sdk",
           generationStarted:
-            error instanceof AgentTaskSdkExecutionError
+            error instanceof AgentTurnExecutionError
               ? error.generationStarted
               : undefined,
           possiblyAppliedEffects:
-            error instanceof AgentTaskSdkExecutionError
+            error instanceof AgentTurnExecutionError
               ? error.possiblyAppliedEffects
               : undefined,
         });

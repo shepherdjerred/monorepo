@@ -4,11 +4,6 @@
       "count": 1
     }
   },
-  "src/activities/agent/agent-task-sdk.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/activities/agent/agent-task-side-activities.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
