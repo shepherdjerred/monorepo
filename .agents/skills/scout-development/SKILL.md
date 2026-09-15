@@ -64,7 +64,7 @@ bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session
 
 Seven Scout workspaces have a bare `dev` script, so pick deliberately: `app` is
 the SPA behind `dev:web`, `frontend` and `docs-site` are Astro, and
-`design-system` serves its own Vite instance.
+`design-system` serves its Storybook catalog on port 6006.
 
 Verify UI changes in the browser rather than from source, and keep the
 screenshot or recording for the PR:
