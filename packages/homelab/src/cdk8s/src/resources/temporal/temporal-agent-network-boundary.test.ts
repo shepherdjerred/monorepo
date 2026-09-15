@@ -70,6 +70,7 @@ const NetworkPolicySchema = z.object({
         }),
       )
       .optional(),
+    egress: z.array(z.unknown()).optional(),
   }),
 });
 
@@ -205,6 +206,8 @@ describe("Temporal agent provider network boundary", () => {
     expect(agent.spec.podSelector.matchLabels["component"]).toBe(
       "agent-worker",
     );
+    expect(JSON.stringify(agent.spec.egress)).toContain("seaweedfs");
+    expect(JSON.stringify(agent.spec.egress)).toContain("8333");
     expect(
       (server.spec.ingress ?? []).some((entry) =>
         (entry.from ?? []).some(
