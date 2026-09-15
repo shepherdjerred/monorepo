@@ -7,7 +7,6 @@ import {
   ExploreTraceEntrySchema,
   ReportAiPreviewSummarySchema,
   type DiscordAccountId,
-  type DiscordChannelId,
   type ExploreActiveRun,
   type ExploreRunOutcome,
   type ExploreStreamEvent,
@@ -16,8 +15,8 @@ import { scoutInteractiveWorkflowId } from "@scout-for-lol/temporal";
 import { requestStopSignal } from "@scout-for-lol/temporal/signals";
 import configuration from "#src/configuration.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import type { ExploreSurface } from "#src/explore/surface.ts";
-import { reserveDurableExploreRun } from "#src/temporal/durable-quota.ts";
+import { rollbackUnstartedExploreTurnInTransaction } from "#src/explore/rollback.ts";
+import { lockDurableExploreConversation } from "#src/temporal/durable-quota.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { startScoutInteractiveRun } from "#src/temporal/starts.ts";
 import { createLogger } from "#src/logger.ts";
@@ -39,38 +38,12 @@ type StartedTurn = {
 
 export class DurableExploreUnavailableError extends Error {}
 
-type DurableExploreRejection = {
-  reason: string;
-  retryAfterSeconds: number;
-};
-
-export async function reserveAndStartDurableExploreRun(input: {
+export async function startReservedDurableExploreRun(input: {
   database: ExtendedPrismaClient;
   summary: ExploreActiveRun;
   ownerId: DiscordAccountId;
   started: StartedTurn;
-  guildIds: string[];
-  /**
-   * Serialized into the run row, so the activity answers the resumed turn on
-   * the surface that started it rather than on a default.
-   */
-  surface: ExploreSurface;
-  originChannelId: DiscordChannelId | null;
-}): Promise<DurableExploreRejection | null> {
-  const rejection = await reserveDurableExploreRun({
-    id: input.summary.runId,
-    ownerId: input.ownerId,
-    conversationId: input.summary.conversationId,
-    payload: JSON.stringify({
-      summary: input.summary,
-      started: input.started,
-      guildIds: input.guildIds,
-      surface: input.surface,
-      originChannelId: input.originChannelId,
-    }),
-    database: input.database,
-  });
-  if (rejection !== null) return rejection;
+}): Promise<void> {
   try {
     const supervisor = currentScoutTemporalSupervisor();
     if (supervisor === undefined) {
@@ -85,22 +58,34 @@ export async function reserveAndStartDurableExploreRun(input: {
     // A client-side start error is ambiguous: Temporal may have accepted the
     // workflow while the response was lost. Keep the reservation PENDING so
     // the ingestion reconciler can reattach it instead of deleting the turn
-    // or issuing a second provider request. Only a supervisor that was known
-    // to be unavailable is terminalized immediately.
+    // or issuing a second provider request. A supervisor that was known to be
+    // unavailable can be rolled back, but the row transition and message
+    // deletion must hold the same conversation lock as a competing start.
     if (error instanceof DurableExploreUnavailableError) {
-      await input.database.scoutInteractiveRun.updateMany({
-        where: { id: input.summary.runId, state: "PENDING" },
-        data: {
-          state: "FAILED",
-          outcome: "failed",
-          lastError: error.message,
-          completedAt: new Date(),
-        },
+      await input.database.$transaction(async (tx) => {
+        await lockDurableExploreConversation(tx, input.summary.conversationId);
+        const terminalized = await tx.scoutInteractiveRun.updateMany({
+          where: { id: input.summary.runId, state: "PENDING" },
+          data: {
+            state: "FAILED",
+            outcome: "failed",
+            lastError: error.message,
+            completedAt: new Date(),
+          },
+        });
+        if (terminalized.count !== 1) {
+          throw new Error(
+            `Explore reservation ${input.summary.runId} could not be terminalized`,
+          );
+        }
+        await rollbackUnstartedExploreTurnInTransaction(tx, {
+          ...input.started,
+          userId: input.ownerId,
+        });
       });
     }
     throw error;
   }
-  return null;
 }
 
 export async function listDurableExploreRuns(

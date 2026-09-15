@@ -174,7 +174,6 @@ export class ExploreRunManager {
           new ExploreRunRateLimitedError(rejection),
         isDurableUnavailable: (error) =>
           error instanceof DurableExploreUnavailableError,
-        isRateLimited: (error) => error instanceof ExploreRunRateLimitedError,
         createUnavailableError: (error) =>
           new ExploreRunUnavailableError(
             "Temporal is unavailable. Try again after it reconnects.",

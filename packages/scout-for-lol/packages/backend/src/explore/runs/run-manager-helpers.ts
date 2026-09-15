@@ -21,6 +21,7 @@ import {
   ExploreInvalidTurnError,
   resolveRegenerateTarget,
   startExploreTurn,
+  type ExploreTurnStoreClient,
 } from "#src/explore/store.ts";
 import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { createLogger } from "#src/logger.ts";
@@ -74,7 +75,7 @@ export function settleActiveExploreRun(
 const logger = createLogger("explore-run-manager");
 
 export async function resolveTurnTarget(input: {
-  client: ExtendedPrismaClient;
+  client: ExploreTurnStoreClient;
   request: ExploreTurnRequest;
   identity: ExploreRateLimitIdentity;
   newId: string;

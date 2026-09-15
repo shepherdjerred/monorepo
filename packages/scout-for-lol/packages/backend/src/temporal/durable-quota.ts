@@ -1,7 +1,11 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 
-type DurableQuotaRejection = {
+export type DurableQuotaRejection = {
   reason: string;
   retryAfterSeconds: number;
 };
@@ -163,10 +167,66 @@ export async function durableReportAiQuotaRejection(
 }
 
 async function lockQuotaScope(
-  database: Pick<ExtendedPrismaClient, "$executeRaw">,
+  database: Pick<Db, "$executeRaw">,
   scope: string,
 ): Promise<void> {
   await database.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-interactive-quota'), hashtext(${scope}))`;
+}
+
+export async function lockDurableExploreConversation(
+  database: Pick<Db, "$executeRaw">,
+  conversationId: string,
+): Promise<void> {
+  await lockQuotaScope(database, `explore:conversation:${conversationId}`);
+}
+
+export async function durableExploreReservationRejection(input: {
+  database: Db;
+  ownerId: DiscordAccountId;
+  conversationId: string;
+  now?: number;
+}): Promise<DurableQuotaRejection | null> {
+  await lockQuotaScope(input.database, "explore:global");
+  await lockQuotaScope(input.database, `explore:user:${input.ownerId}`);
+  await lockDurableExploreConversation(input.database, input.conversationId);
+  const activeConversationRun =
+    await input.database.scoutInteractiveRun.findFirst({
+      where: {
+        kind: "explore",
+        conversationId: input.conversationId,
+        state: { in: ACTIVE_STATUSES },
+      },
+      select: { id: true },
+    });
+  if (activeConversationRun !== null) {
+    return {
+      reason: "This conversation already has an answer running.",
+      retryAfterSeconds: 30,
+    };
+  }
+  return await durableExploreQuotaRejection(
+    input.ownerId,
+    input.now,
+    input.database,
+  );
+}
+
+export async function createDurableExploreRunReservation(input: {
+  database: Db;
+  id: string;
+  ownerId: DiscordAccountId;
+  conversationId: string;
+  payload: string;
+}): Promise<void> {
+  await input.database.scoutInteractiveRun.create({
+    data: {
+      id: input.id,
+      kind: "explore",
+      ownerId: input.ownerId,
+      conversationId: input.conversationId,
+      payload: input.payload,
+    },
+  });
 }
 
 export async function reserveDurableExploreRun(input: {
@@ -179,22 +239,19 @@ export async function reserveDurableExploreRun(input: {
 }): Promise<DurableQuotaRejection | null> {
   const database = input.database ?? prisma;
   return await database.$transaction(async (tx) => {
-    await lockQuotaScope(tx, "explore:global");
-    await lockQuotaScope(tx, `explore:user:${input.ownerId}`);
-    const rejection = await durableExploreQuotaRejection(
-      input.ownerId,
-      input.now,
-      tx,
-    );
+    const rejection = await durableExploreReservationRejection({
+      database: tx,
+      ownerId: input.ownerId,
+      conversationId: input.conversationId,
+      ...(input.now === undefined ? {} : { now: input.now }),
+    });
     if (rejection !== null) return rejection;
-    await tx.scoutInteractiveRun.create({
-      data: {
-        id: input.id,
-        kind: "explore",
-        ownerId: input.ownerId,
-        conversationId: input.conversationId,
-        payload: input.payload,
-      },
+    await createDurableExploreRunReservation({
+      database: tx,
+      id: input.id,
+      ownerId: input.ownerId,
+      conversationId: input.conversationId,
+      payload: input.payload,
     });
     return null;
   });

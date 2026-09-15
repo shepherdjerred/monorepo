@@ -20,6 +20,11 @@ import {
 } from "#src/explore/store-mappers.ts";
 import { deepestLeafFrom } from "#src/explore/tree.ts";
 
+export type ExploreTurnStoreClient = Pick<
+  ExtendedPrismaClient,
+  "exploreConversation" | "exploreMessage"
+>;
+
 /**
  * Storage for explore conversations.
  *
@@ -88,7 +93,7 @@ export async function listExploreConversations(
 }
 
 export async function loadExploreTranscript(
-  prisma: ExtendedPrismaClient,
+  prisma: ExploreTurnStoreClient,
   conversationId: string,
   userId: DiscordAccountId,
   /**
@@ -143,7 +148,7 @@ export async function loadSharedExploreTranscript(
  * cannot express, because the root's parent is null.
  */
 export async function startExploreTurn(
-  prisma: ExtendedPrismaClient,
+  prisma: ExploreTurnStoreClient,
   input: {
     conversationId: string | null;
     newId?: string;
@@ -269,7 +274,7 @@ export async function startExploreTurn(
  * answer where a reader expects them.
  */
 export async function resolveRegenerateTarget(
-  prisma: ExtendedPrismaClient,
+  prisma: ExploreTurnStoreClient,
   input: {
     conversationId: string;
     userId: DiscordAccountId;

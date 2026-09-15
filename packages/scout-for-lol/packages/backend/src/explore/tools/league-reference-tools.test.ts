@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { items } from "@scout-for-lol/data";
 import {
   comparePatchChangesText,
   lookupItemText,
@@ -26,6 +27,21 @@ describe("League reference tools", () => {
     expect(result).toContain("Gold:");
     expect(result).toContain("Builds from:");
     expect(result).toContain("Enabled map IDs:");
+  });
+
+  test("rejects item recipes with missing catalog references", () => {
+    const component = items.data["1038"];
+    if (component === undefined) {
+      throw new Error("Infinity Edge fixture component 1038 is missing");
+    }
+    delete items.data["1038"];
+    try {
+      expect(() => lookupItemText({ item: "3031" })).toThrow(
+        "Bundled item 3031 recipe from references unknown item ID 1038",
+      );
+    } finally {
+      items.data["1038"] = component;
+    }
   });
 
   test("returns every exact same-name item variant for disambiguation", () => {
