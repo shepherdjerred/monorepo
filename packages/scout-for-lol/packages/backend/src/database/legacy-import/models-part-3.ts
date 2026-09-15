@@ -430,6 +430,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
     transform: (row): Prisma.PuuidKeyMigrationCreateManyInput => ({
       id: toInt(row, "id"),
       appliedAt: toDateOrNull(row, "appliedAt"),
+      transitionOpen: toIntOrNullIfMissing(row, "transitionOpen") ?? 1,
     }),
     createMany: async (tx, data) => {
       const result = await tx.puuidKeyMigration.createMany({ data });

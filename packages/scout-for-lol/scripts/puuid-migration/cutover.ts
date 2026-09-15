@@ -10,8 +10,10 @@
 
 import type { Db } from "./db.ts";
 import { readTrackedPuuids } from "./discovery.ts";
+import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import { collectFromJson, parseJson, selectSubtree } from "./json-walk.ts";
 import {
+  asCount,
   asOptionalString,
   asString,
   countOf,
@@ -22,11 +24,8 @@ import {
 /**
  * Tracked identities the map has never seen, in either domain.
  *
- * Both sides count as known. A rerun after an interrupted apply finds rows that
- * earlier statements already rewrote — the Postgres path has no enclosing
- * transaction, by design, so a partial apply is expected and resumable. Judging
- * only by `oldPuuid` would classify those already-migrated rows as strangers and
- * abort exactly where resumability is supposed to work.
+ * Both sides count as known. This is used by verification, where a completed
+ * mapping's replacement is the value the database should contain.
  *
  * What this still catches is the real hazard: an account registered after
  * `collect`, which has no map row at all and would otherwise be rewritten to
@@ -47,6 +46,60 @@ export async function knownIdentities(db: Db): Promise<Set<string>> {
   return known;
 }
 
+/**
+ * Identities collect may treat as already present during the current run.
+ *
+ * A replacement from a completed transition is intentionally omitted only
+ * after `begin --new-transition` explicitly opens the next scope. If the
+ * marker write was interrupted after map rows were stamped, the closed state
+ * keeps those replacements known so a rerun cannot collect new-domain values
+ * with the retired key.
+ */
+export async function collectKnownIdentities(db: Db): Promise<Set<string>> {
+  const rows = await db.query(
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
+      ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
+  );
+  const migration = await db.query(
+    `SELECT "transitionOpen" FROM "PuuidKeyMigration" WHERE "id" = 1`,
+  );
+  const transitionOpen =
+    migration[0] === undefined
+      ? !rows.some((row) => row["appliedAt"] !== null)
+      : asCount(migration[0]["transitionOpen"], "transition state") !== 0;
+  const applied = new Map(
+    rows.flatMap((row) => {
+      const oldPuuid = asOptionalString(row["oldPuuid"]);
+      const newPuuid = asOptionalString(row["newPuuid"]);
+      return oldPuuid !== null && newPuuid !== null && row["appliedAt"] !== null
+        ? [[oldPuuid, newPuuid] as const]
+        : [];
+    }),
+  );
+  composePuuidRemap(applied);
+  const currentCycleDomains = new Set(
+    [...applied]
+      .filter(([oldPuuid, replacement]) => oldPuuid === replacement)
+      .map(([oldPuuid]) => oldPuuid),
+  );
+  const known = new Set<string>();
+  for (const row of rows) {
+    const oldPuuid = asString(row["oldPuuid"], "oldPuuid");
+    if (
+      !transitionOpen ||
+      !currentCycleDomains.has(oldPuuid) ||
+      row["appliedAt"] === null
+    ) {
+      known.add(oldPuuid);
+    }
+    const mapped = asOptionalString(row["newPuuid"]);
+    if (mapped !== null && (!transitionOpen || row["appliedAt"] === null)) {
+      known.add(mapped);
+    }
+  }
+  return known;
+}
+
 async function unmappedTrackedIdentities(db: Db): Promise<string[]> {
   const tracked = await readTrackedPuuids(db);
   const known = await knownIdentities(db);
@@ -59,6 +112,47 @@ export async function cutoverApplied(db: Db): Promise<boolean> {
     `SELECT COUNT(*) AS n FROM "PuuidKeyMigration" WHERE "appliedAt" IS NOT NULL`,
   );
   return countOf(rows, "cutover marker") > 0;
+}
+
+/**
+ * Start a new key transition without discarding the old remap history.
+ *
+ * The marker describes the current transition, while the map rows retain every
+ * previous transition so backups can still be translated. Resetting the marker
+ * is therefore the transition boundary; it is explicit because doing it after
+ * a completed cutover changes how `collect` judges new rows.
+ */
+export async function beginTransition(
+  db: Db,
+  newTransition: boolean,
+): Promise<void> {
+  if (!(await cutoverApplied(db))) {
+    console.log("begin: no completed cutover; starting the first transition");
+    return;
+  }
+  if (!newTransition) {
+    throw new Error(
+      "this database already has a completed cutover; pass --new-transition to begin another key transition",
+    );
+  }
+  const incomplete = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap"
+      WHERE "status" <> 'stranded'
+        AND ("status" <> 'resolved' OR "appliedAt" IS NULL)`,
+  );
+  if (countOf(incomplete, "incomplete mapping") > 0) {
+    throw new Error(
+      "cannot begin a new transition while the previous map has unresolved work",
+    );
+  }
+  await db.exec(
+    `UPDATE "PuuidKeyMigration"
+        SET "appliedAt" = NULL, "transitionOpen" = 1
+      WHERE "id" = 1`,
+  );
+  console.log(
+    "begin: previous remap history retained; current transition marker reset",
+  );
 }
 
 /**

@@ -1,25 +1,34 @@
 /**
- * The five migration phases. Each is independent and safe to re-run.
+ * The phases that change things: discovery, the two Riot hops, and the rewrite.
+ * Each is independent and safe to re-run. Verification lives in `verify.ts`.
  */
 
 import type { Db } from "./db.ts";
+import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import {
   auditForUnregistered,
   discoverColumns,
-  PUUID_TOKEN_PATTERN,
   type PuuidColumn,
   readPuuids,
   readTrackedPuuids,
 } from "./discovery.ts";
 import { parseJson, translateJsonValue } from "./json-walk.ts";
-import { cutoverApplied, strayIdentities } from "./cutover.ts";
-import { byPuuid, byRiotId, type RiotAccount } from "./riot.ts";
+import {
+  collectKnownIdentities,
+  cutoverApplied,
+  strayIdentities,
+} from "./cutover.ts";
+import {
+  byPuuid,
+  byRiotId,
+  estimateOldKeyMinutes,
+  type RiotAccount,
+} from "./riot.ts";
 import {
   asOptionalString,
   asString,
   countOf,
   ARCHIVE_COLUMNS,
-  OLD_KEY_LIMITS,
   toSqlParam,
   TRACKED_SOURCES,
 } from "./support.ts";
@@ -90,20 +99,10 @@ export async function collect(db: Db): Promise<void> {
   await auditForUnregistered(db, columns);
   console.log("  audit clean");
 
-  // Skip identities the map already knows on EITHER side. After a completed
-  // apply the tracked columns hold new-domain values, so inserting them blindly
-  // would create a second, bogus `pending` row per migrated player.
-  const mapRows = await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"`,
-  );
-  const known = new Set<string>();
-  for (const row of mapRows) {
-    known.add(asString(row["oldPuuid"], "oldPuuid"));
-    const mapped = asOptionalString(row["newPuuid"]);
-    if (mapped !== null) {
-      known.add(mapped);
-    }
-  }
+  // A replacement from a completed transition is the old-domain input for the
+  // next one. Only a replacement whose current rewrite is still in flight is
+  // suppressed, so a rerun after an interrupted apply stays resumable.
+  const known = await collectKnownIdentities(db);
 
   const unknown = [...tracked].filter((puuid) => !known.has(puuid));
 
@@ -128,7 +127,15 @@ export async function collect(db: Db): Promise<void> {
   let recorded = 0;
   for (const puuid of unknown) {
     await db.exec(
-      `INSERT INTO "PuuidKeyMap" ("oldPuuid") VALUES (${db.param(1)}) ON CONFLICT DO NOTHING`,
+      `INSERT INTO "PuuidKeyMap" ("oldPuuid") VALUES (${db.param(1)})
+       ON CONFLICT ("oldPuuid") DO UPDATE SET
+         "gameName" = NULL,
+         "tagLine" = NULL,
+         "newPuuid" = NULL,
+         "status" = 'pending',
+         "harvestedAt" = NULL,
+         "resolvedAt" = NULL,
+         "appliedAt" = NULL`,
       [puuid],
     );
     recorded++;
@@ -227,12 +234,12 @@ export async function resolve(db: Db): Promise<void> {
   const rows = await db.query(
     `SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
   );
-  // One old-key call per identity, so this is the phase the personal-tier
-  // budget gates — and that budget is shared with live traffic.
-  const minutes = Math.ceil(rows.length / OLD_KEY_LIMITS.perTwoMinutes) * 2;
+  // One old-key call per identity, so the personal-tier budget gates this
+  // phase. The estimate comes from the limiter's own windows rather than a
+  // second copy of the numbers, so it cannot drift from what is enforced.
   console.log(
     `  ${rows.length.toString()} to resolve, each re-derived from the old key first ` +
-      `(~${minutes.toString()} min at personal-key limits)`,
+      `(~${estimateOldKeyMinutes(rows.length).toString()} min at the old key's budget)`,
   );
 
   for (const row of rows) {
@@ -277,7 +284,8 @@ export async function resolve(db: Db): Promise<void> {
 async function assertNoCollisions(db: Db): Promise<void> {
   const collisions = await db.query(
     `SELECT "newPuuid", COUNT(*) AS n FROM "PuuidKeyMap"
-      WHERE "newPuuid" IS NOT NULL GROUP BY "newPuuid" HAVING COUNT(*) > 1`,
+      WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
+      GROUP BY "newPuuid" HAVING COUNT(*) > 1`,
   );
   if (collisions.length > 0) {
     const detail = collisions
@@ -289,20 +297,26 @@ async function assertNoCollisions(db: Db): Promise<void> {
   }
 }
 
-async function rewriteScalarColumn(db: Db, col: PuuidColumn): Promise<void> {
-  // The correlated-subquery form works identically on SQLite and Postgres,
-  // unlike UPDATE ... FROM.
-  await db.exec(`
-    UPDATE "${col.table}"
-       SET "${col.column}" = (
-             SELECT m."newPuuid" FROM "PuuidKeyMap" m
-              WHERE m."oldPuuid" = "${col.table}"."${col.column}"
-           )
-     WHERE "${col.column}" IN (
-             SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL
-           )
-  `);
-  console.log(`  ${col.table}.${col.column}: rewritten`);
+async function rewriteScalarColumn(
+  db: Db,
+  col: PuuidColumn,
+  map: ReadonlyMap<string, string>,
+): Promise<void> {
+  // Apply the already-composed map one edge at a time. This keeps the query
+  // portable across SQLite and Postgres without asking either dialect to join
+  // against a temporary table, and prevents a retained return-cycle edge from
+  // rewriting a value through only one historical hop.
+  let changed = 0;
+  for (const [oldPuuid, newPuuid] of map) {
+    await db.exec(
+      `UPDATE "${col.table}" SET "${col.column}" = ${db.param(2)} WHERE "${col.column}" = ${db.param(1)}`,
+      [oldPuuid, newPuuid],
+    );
+    changed++;
+  }
+  console.log(
+    `  ${col.table}.${col.column}: ${changed.toString()} mappings applied`,
+  );
 }
 
 async function rewriteJsonColumn(
@@ -347,14 +361,25 @@ async function rewriteJsonColumn(
 
 async function loadMap(db: Db): Promise<Map<string, string>> {
   const rows = await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL`,
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
+      WHERE "newPuuid" IS NOT NULL
+      UNION ALL
+      SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMapHistory"
+      ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
   );
-  return new Map(
-    rows.map((r) => [
-      asString(r["oldPuuid"], "oldPuuid"),
-      asString(r["newPuuid"], "newPuuid"),
-    ]),
-  );
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    const oldPuuid = asString(row["oldPuuid"], "oldPuuid");
+    map.delete(oldPuuid);
+    map.set(oldPuuid, asString(row["newPuuid"], "newPuuid"));
+  }
+  composePuuidRemap(map);
+  for (const [oldPuuid, replacement] of map) {
+    if (oldPuuid === replacement) {
+      map.delete(oldPuuid);
+    }
+  }
+  return map;
 }
 
 /**
@@ -394,8 +419,11 @@ async function assertEveryIdentityResolved(
     );
   }
 
+  // Stranded rows are a recorded decision, not an obstacle: an operator already
+  // accepted that they keep old-domain values. Only rows still awaiting one
+  // block the rewrite.
   const rows = await db.query(
-    `SELECT "oldPuuid", "status", "gameName", "tagLine" FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
+    `SELECT "oldPuuid", "status", "gameName", "tagLine" FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL AND "status" <> 'stranded'`,
   );
   if (rows.length === 0) {
     return;
@@ -437,12 +465,21 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
   await db.transaction(async () => {
     for (const col of columns) {
       if (col.kind === "scalar") {
-        await rewriteScalarColumn(db, col);
+        await rewriteScalarColumn(db, col, map);
       } else {
         await rewriteJsonColumn(db, col, map);
       }
     }
   });
+  // Close the transition before stamping mapping rows. If the Postgres path
+  // stops between these statements, collect still treats the already-written
+  // replacements as current-domain values rather than reopening them under the
+  // retired key. The applied marker remains unset until the rewrite is known to
+  // have completed.
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "transitionOpen") VALUES (1, 0)
+     ON CONFLICT ("id") DO UPDATE SET "transitionOpen" = 0`,
+  );
   // Written after the rewrite, so an interrupted run leaves it unset and the
   // database still reads as mid-migration. Written unconditionally, so a cutover
   // performed while tracking no accounts is still recorded — updating mapping
@@ -470,155 +507,10 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
       WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL`,
   );
   await db.exec(
-    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt") VALUES (1, ${db.now()})
+    `INSERT INTO "PuuidKeyMigration" ("id", "appliedAt", "transitionOpen") VALUES (1, ${db.now()}, 0)
      ON CONFLICT ("id") DO UPDATE
-        SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()})`,
+        SET "appliedAt" = COALESCE("PuuidKeyMigration"."appliedAt", ${db.now()}),
+            "transitionOpen" = 0`,
   );
   console.log("apply: complete");
-}
-
-/** Rows in a scalar column still holding a translated old-domain PUUID. */
-async function scalarSurvivors(db: Db, col: PuuidColumn): Promise<number> {
-  const rows = await db.query(`
-    SELECT COUNT(*) AS n FROM "${col.table}" t
-      JOIN "PuuidKeyMap" m ON t."${col.column}" = m."oldPuuid"
-     WHERE m."newPuuid" IS NOT NULL
-  `);
-  return countOf(rows, "survivor count");
-}
-
-/**
- * JSON columns cannot be checked with a join, so scan their text for any
- * old-domain PUUID that has a replacement. Skipping them would have left 16 of
- * beta's 27 columns and 3 of prod's 6 unverified.
- */
-async function jsonSurvivors(
-  db: Db,
-  col: PuuidColumn,
-  translated: ReadonlySet<string>,
-): Promise<number> {
-  const rows = await db.query(
-    `SELECT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL`,
-  );
-  let survivors = 0;
-  for (const row of rows) {
-    const value = asOptionalString(row["v"]);
-    if (value === null) {
-      continue;
-    }
-    for (const token of value.matchAll(PUUID_TOKEN_PATTERN)) {
-      if (translated.has(token[0])) {
-        survivors++;
-        break;
-      }
-    }
-  }
-  return survivors;
-}
-
-export async function verify(db: Db): Promise<void> {
-  const columns = await discoverColumns(db);
-  const mapRows = await db.query(
-    `SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL`,
-  );
-  const translated = new Set(
-    mapRows.map((r) => asString(r["oldPuuid"], "oldPuuid")),
-  );
-  console.log(
-    `  checking ${columns.length.toString()} columns against ${translated.size.toString()} translated identities`,
-  );
-
-  let survivors = 0;
-  for (const col of columns) {
-    const n =
-      col.kind === "scalar"
-        ? await scalarSurvivors(db, col)
-        : await jsonSurvivors(db, col, translated);
-    if (n > 0) {
-      console.error(
-        `  ${col.table}.${col.column} (${col.kind}): ${n.toString()} old-domain rows`,
-      );
-      survivors += n;
-    }
-  }
-
-  // The completeness check in `apply` runs before the rewrite, and the Postgres
-  // path holds no lock across it, so an account registered during the cutover
-  // could still slip in behind it. Re-checking here turns that race from
-  // undetectable into a failed verification.
-  const strays = await strayIdentities(db);
-  if (strays.length > 0) {
-    console.error(
-      `  ${strays.length.toString()} tracked identities predate the cutover and have no map row; they were never migrated`,
-    );
-  }
-
-  // Unresolved identities are invisible to the survivor scan above, which only
-  // considers map entries that actually have a replacement. Counting them here
-  // keeps `verify` honest about identities that were never migrated at all.
-  const unresolvedRows = await db.query(
-    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "newPuuid" IS NULL`,
-  );
-  const unresolved = countOf(unresolvedRows, "unresolved count");
-  if (unresolved > 0) {
-    console.error(
-      `  ${unresolved.toString()} tracked identities were never resolved and keep old-domain PUUIDs`,
-    );
-  }
-
-  // A resolved mapping the lake will not publish. The rewrite can land and the
-  // cutover be recorded while these go unstamped, and the survivor scan above
-  // sees nothing wrong — no old value is left in the database. It is the lake
-  // that would be wrong, months later, once the old key can no longer rebuild
-  // the mapping.
-  const unpublishedRows = await db.query(
-    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NULL`,
-  );
-  const unpublished = countOf(unpublishedRows, "unpublished count");
-  if (unpublished > 0) {
-    console.error(
-      `  ${unpublished.toString()} resolved mappings are not marked applied; the report lake will not use them`,
-    );
-  }
-
-  // And the cutover itself has to be on record. `apply` stamps mappings before
-  // writing this, so an interruption between the two leaves a database that is
-  // fully rewritten and silent about it: nothing survives, nothing is
-  // unpublished, and every check above passes. The report lake reads the absent
-  // marker as "never migrated" and translates nothing, so the next rebuild
-  // re-derives old-domain identifiers against accounts that have moved — and
-  // the operator, having seen a green verify, has by then retired the only key
-  // that could have rebuilt the mapping.
-  //
-  // A database that never migrated fails here too, which is correct: this is
-  // the gate that proves a cutover completed, and it did not.
-  const cutoverRecorded = await cutoverApplied(db);
-  if (!cutoverRecorded) {
-    console.error(
-      `  the cutover is not recorded; the report lake would translate nothing`,
-    );
-  }
-
-  // Every operand is an already-computed value, so the order is presentation
-  // only; the counts are all gathered above regardless.
-  if (
-    !cutoverRecorded ||
-    survivors > 0 ||
-    unresolved > 0 ||
-    strays.length > 0 ||
-    unpublished > 0
-  ) {
-    // Throwing, not logging: this is the gate, and a gate that exits 0 on
-    // failure is not a gate.
-    throw new Error(
-      `verify FAILED — ${survivors.toString()} rows hold translated old-domain PUUIDs, ` +
-        `${unresolved.toString()} identities unresolved, ` +
-        `${strays.length.toString()} tracked identities unmapped, ` +
-        `${unpublished.toString()} mappings unpublished, ` +
-        `cutover ${cutoverRecorded ? "recorded" : "NOT RECORDED"}`,
-    );
-  }
-  console.log(
-    `verify: clean — no translated PUUID survives in any of ${columns.length.toString()} columns`,
-  );
 }

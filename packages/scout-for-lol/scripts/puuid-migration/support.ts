@@ -7,30 +7,71 @@
 
 import { z } from "zod";
 
-const EnvSchema = z.object({
-  OLD_RIOT_API_KEY: z.string().min(1),
-  NEW_RIOT_API_KEY: z.string().min(1),
-  DATABASE_URL: z.string().min(1),
-  ACCOUNT_ROUTE: z.string().default("americas"),
+/**
+ * Credentials, demanded one at a time by whoever actually needs them.
+ *
+ * Parsing every variable at import made importing a string helper require a
+ * Riot key: an operator listing S3 had to invent an OLD_RIOT_API_KEY for a
+ * command that never calls Riot. Worse, the failure named all three at once, so
+ * a genuinely missing one was buried among two that did not matter.
+ *
+ * Each accessor names the one thing it needs and says which command needs it.
+ */
+function required(name: string, why: string): string {
+  const value = Bun.env[name];
+  if (value === undefined || value === "") {
+    throw new Error(`${name} must be set: ${why}`);
+  }
+  return value;
+}
+
+export const riotKeys = (): { old: string; fresh: string } => ({
+  old: required("OLD_RIOT_API_KEY", "the key that minted the stored PUUIDs"),
+  fresh: required("NEW_RIOT_API_KEY", "the key being migrated to"),
 });
 
-export const env = EnvSchema.parse(Bun.env);
+export const databaseUrl = (): string =>
+  required("DATABASE_URL", "the database holding PuuidKeyMap");
+
+/** Riot's account routing value. Regional for account-v1, so `americas` fits. */
+export const accountRoute = (): string =>
+  Bun.env["ACCOUNT_ROUTE"] ?? "americas";
 
 /**
- * The old key is personal-tier: 20 requests/second and 100 per 120 seconds.
+ * What each key publishes, measured from its own response headers.
  *
- * That budget is SHARED with live prod and beta traffic — both environments run
- * on this same key right now — so harvest deliberately claims only half of the
- * 2-minute window. Starving Scout's own prematch and postmatch polling to
- * finish a migration a few minutes sooner is a bad trade, and the tracked sets
- * are small enough (173 prod, 50 beta) that the slower pace costs little.
+ * These are the BOOTSTRAP budget only: the limiter replaces them with whatever
+ * the first live response reports, so a tier change corrects itself instead of
+ * running for days at a silently wrong rate. They are recorded here so a run
+ * starts at a sane rate before it has seen a header, and so the numbers below
+ * are checkable against a real observation rather than folklore.
+ *
+ * Both were confirmed on 2026-09-13 against `account-v1`:
+ *
+ *   old key   app `100:120,20:1`     method `1000:60`   -> app binds at 0.83/s
+ *   new key   app `500:10,30000:600` method `1000:60`   -> METHOD binds at 16.7/s
+ *
+ * The new key's method ceiling is the one that matters and is easy to miss: its
+ * app limit would allow 50/s, and account-v1 will not.
+ *
+ * The old key no longer carries live traffic — both environments moved to the
+ * production key — so the migration gets its whole budget. The production key
+ * does still serve live polling, which is why the budget is a fraction of
+ * published rather than all of it.
  */
-export const OLD_KEY_LIMITS = { perSecond: 8, perTwoMinutes: 50 } as const;
-export const NEW_KEY_LIMITS = { perSecond: 45, perTwoMinutes: 5000 } as const;
+export const OLD_KEY_PUBLISHED = {
+  app: "100:120,20:1",
+  method: "1000:60",
+} as const;
+export const NEW_KEY_PUBLISHED = {
+  app: "500:10,30000:600",
+  method: "1000:60",
+} as const;
 
 /** Tables the migration owns or must never rewrite. */
 export const EXCLUDED_TABLES = new Set([
   "PuuidKeyMap",
+  "PuuidKeyMapHistory",
   "PuuidKeyMigration",
   "_prisma_migrations",
   "sqlite_sequence",

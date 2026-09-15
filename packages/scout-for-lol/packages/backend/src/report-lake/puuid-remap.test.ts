@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  composePuuidRemap,
   puuidRemapFingerprint,
   remapRawJson,
 } from "#src/report-lake/puuid-remap.ts";
@@ -63,6 +64,34 @@ describe("remapRawJson", () => {
       endedAt: null,
     };
     expect(remapRawJson(payload, map)).toEqual(payload);
+  });
+
+  test("composes retained mappings across key transitions", () => {
+    const composed = composePuuidRemap(
+      new Map([
+        [OLD_A, OLD_B],
+        [OLD_B, NEW_B],
+      ]),
+    );
+    expect(composed.get(OLD_A)).toBe(NEW_B);
+    expect(remapRawJson({ participants: [OLD_A] }, composed)).toEqual({
+      participants: [NEW_B],
+    });
+  });
+
+  test("collapses a return transition cycle toward its latest domain", () => {
+    const composed = composePuuidRemap(
+      new Map([
+        [OLD_A, NEW_A],
+        [NEW_A, OLD_A],
+      ]),
+    );
+    expect(composed).toEqual(
+      new Map([
+        [OLD_A, OLD_A],
+        [NEW_A, OLD_A],
+      ]),
+    );
   });
 });
 

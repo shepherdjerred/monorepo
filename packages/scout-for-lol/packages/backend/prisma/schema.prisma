@@ -2621,7 +2621,7 @@ model PuuidKeyMap {
   gameName    String?
   tagLine     String?
   newPuuid    String?
-  /// pending | harvested | resolved | unresolved
+  /// pending | harvested | resolved | unresolved | stranded
   status      String    @default("pending")
   harvestedAt DateTime? @db.Timestamptz()
   resolvedAt  DateTime? @db.Timestamptz()
@@ -2631,6 +2631,18 @@ model PuuidKeyMap {
   appliedAt   DateTime? @db.Timestamptz()
 
   @@index([status])
+}
+
+/// Applied remap edges retained when a source domain is reused by a later
+/// transition. The live PuuidKeyMap row then remains free to record the current
+/// transition's unresolved or resolved result.
+model PuuidKeyMapHistory {
+  oldPuuid  String
+  newPuuid  String
+  appliedAt DateTime @db.Timestamptz()
+
+  @@id([oldPuuid, appliedAt])
+  @@index([oldPuuid])
 }
 
 /// Whether this database has been rewritten to a new Riot key domain.
@@ -2644,6 +2656,8 @@ model PuuidKeyMigration {
   /// Always 1. One row describes one database.
   id        Int       @id @default(1)
   appliedAt DateTime? @db.Timestamptz()
+  /// Whether an explicitly opened later transition is still collecting identities.
+  transitionOpen Int @default(1)
 }
 
 /// One feature-tip impression, with a temporary pre-send claim.

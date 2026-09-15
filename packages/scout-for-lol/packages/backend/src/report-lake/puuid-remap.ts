@@ -35,37 +35,39 @@ const logger = createLogger("report-lake.puuid-remap");
 export async function loadPuuidRemap(
   prisma: ExtendedPrismaClient,
 ): Promise<ReadonlyMap<string, string>> {
-  // Nothing is translated until the database itself has been rewritten.
-  // `resolve` fills in `newPuuid` one identity at a time and can run for a long
-  // while before `apply` touches anything, so reading the map early would
-  // translate historical payloads to new-domain identifiers while the account
-  // rows they join against are still old-domain — hiding exactly the migrated
-  // players it is meant to preserve, and churning rebuilds as the map grows.
-  const applied = await prisma.puuidKeyMigration.findFirst({
-    where: { appliedAt: { not: null } },
-    select: { id: true },
-  });
-  if (applied === null) {
-    return new Map();
-  }
-
-  // Per mapping as well as database-wide. A cutover run with
+  // Per mapping rather than database-wide. A cutover run with
   // `--allow-unresolved` leaves identities without a replacement; recovering one
   // later fills in `newPuuid` while the stored columns still hold the old value
   // until another `apply`. The database-wide marker is already set by then, so
   // it cannot distinguish that row — and translating it would point historical
   // payloads at an identifier no account row carries.
-  const rows = await prisma.puuidKeyMap.findMany({
-    where: { newPuuid: { not: null }, appliedAt: { not: null } },
-    select: { oldPuuid: true, newPuuid: true },
-  });
+  const [rows, history] = await Promise.all([
+    prisma.puuidKeyMap.findMany({
+      where: { newPuuid: { not: null }, appliedAt: { not: null } },
+      orderBy: [{ appliedAt: "asc" }, { oldPuuid: "asc" }],
+      select: { oldPuuid: true, newPuuid: true },
+    }),
+    prisma.puuidKeyMapHistory.findMany({
+      orderBy: [{ appliedAt: "asc" }, { oldPuuid: "asc" }],
+      select: { oldPuuid: true, newPuuid: true },
+    }),
+  ]);
 
   const map = new Map<string, string>();
-  for (const row of rows) {
+  for (const row of [...history, ...rows]) {
     if (row.newPuuid === null) {
       continue;
     }
+    // Map#set does not move an existing key. Delete first so a reused source
+    // domain keeps the latest applied edge's insertion order for cycle folding.
+    map.delete(row.oldPuuid);
     map.set(row.oldPuuid, row.newPuuid);
+  }
+  composePuuidRemap(map);
+  for (const [oldPuuid, replacement] of map) {
+    if (oldPuuid === replacement) {
+      map.delete(oldPuuid);
+    }
   }
   if (map.size > 0) {
     logger.info(
@@ -73,6 +75,74 @@ export async function loadPuuidRemap(
     );
   }
   return map;
+}
+
+/**
+ * Collapse old→intermediate→current chains retained across transitions.
+ *
+ * A rotation back to an earlier key holder is valid and produces a cycle (for
+ * example A→B followed by B→A). The newest edge identifies the current domain;
+ * map every member of that cycle to its destination instead of rejecting a
+ * healthy database or leaving older identifiers one transition behind.
+ */
+export function composePuuidRemap(
+  map: Map<string, string>,
+): Map<string, string> {
+  const original = new Map(map);
+  const order = new Map([...original.keys()].map((key, index) => [key, index]));
+  const composed = new Map<string, string>();
+  for (const start of original.keys()) {
+    const { path, terminal } = resolveRemap(start, original, order);
+    for (const value of path) {
+      composed.set(value, terminal);
+    }
+  }
+  map.clear();
+  for (const [oldPuuid, replacement] of composed) {
+    map.set(oldPuuid, replacement);
+  }
+  return map;
+}
+
+function resolveRemap(
+  start: string,
+  original: ReadonlyMap<string, string>,
+  order: ReadonlyMap<string, number>,
+): { path: string[]; terminal: string } {
+  const path: string[] = [];
+  const seen = new Map<string, number>();
+  let current = start;
+  while (original.has(current)) {
+    const cycleAt = seen.get(current);
+    if (cycleAt !== undefined) {
+      return {
+        path,
+        terminal: cycleDestination(path.slice(cycleAt), original, order),
+      };
+    }
+    seen.set(current, path.length);
+    path.push(current);
+    current = original.get(current) ?? current;
+  }
+  return { path, terminal: current };
+}
+
+function cycleDestination(
+  cycle: readonly string[],
+  original: ReadonlyMap<string, string>,
+  order: ReadonlyMap<string, number>,
+): string {
+  const latest = cycle.toSorted(
+    (a, b) => (order.get(b) ?? 0) - (order.get(a) ?? 0),
+  )[0];
+  if (latest === undefined) {
+    throw new Error("cycle in PUUID remap has no members");
+  }
+  const destination = original.get(latest);
+  if (destination === undefined) {
+    throw new Error(`cycle in PUUID remap at ${latest}`);
+  }
+  return destination;
 }
 
 /**

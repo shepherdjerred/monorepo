@@ -201,11 +201,37 @@ test("apply resumes over a partially rewritten database", async () => {
     `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
     [OLD_A, Date.now()],
   );
-  const { apply, verify } = await import("./phases.ts");
+  const { apply } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await apply(db, false);
   const rows = await db.query(`SELECT "puuid" FROM "MatchRankHistory"`);
   expect(rows[0]?.["puuid"]).toBe(NEW_A);
   await verify(db);
+  await db.close();
+});
+
+test("apply rewrites scalar columns to the newest return-cycle domain", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  // A→B was applied by the prior cutover. The current transition returns to A,
+  // so the retained map is a cycle whose newest edge must win for every column.
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [NEW_A, OLD_A],
+  );
+  await db.exec(
+    `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [NEW_A, Date.now()],
+  );
+
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+
+  const rows = await db.query(`SELECT "puuid" FROM "MatchRankHistory"`);
+  expect(rows[0]?.["puuid"]).toBe(OLD_A);
   await db.close();
 });
 
@@ -214,7 +240,7 @@ test("verify fails when a translated identity survives the rewrite", async () =>
     accounts: [OLD_A],
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
   });
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/verify FAILED/);
   await db.close();
 });
@@ -226,7 +252,7 @@ test("verify fails when a tracked identity was never mapped", async () => {
     accounts: [NEW_A, POST_CUTOVER],
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
   });
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();
 });
@@ -239,7 +265,7 @@ test("verify accepts accounts registered after the cutover", async () => {
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
     applied: true,
   });
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await verify(db);
   await db.close();
 });
@@ -310,7 +336,7 @@ test("verify still faults an account that predates the cutover", async () => {
     applied: true,
     accountsCreatedAt: Date.parse("2020-01-01T00:00:00Z"),
   });
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();
 });
@@ -326,7 +352,7 @@ test("verify faults an account created in the cutover's own second", async () =>
     accountsCreatedAt: cutover + 400,
   });
   await markCutover(db, "2026-09-13T11:34:41.900Z");
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();
 });
@@ -357,14 +383,14 @@ async function seedTrackedOnlySighting(
 
 test("verify accepts a post-cutover identity known only to MatchTrackedAccount", async () => {
   const db = await seedTrackedOnlySighting(CUTOVER_AT + 60_000);
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await verify(db);
   await db.close();
 });
 
 test("verify still faults an identity MatchTrackedAccount saw before the cutover", async () => {
   const db = await seedTrackedOnlySighting(CUTOVER_AT - 60_000);
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();
 });
@@ -383,7 +409,7 @@ test("verify faults an identity only MatchRankHistory saw, before the cutover", 
     `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
     [POST_CUTOVER, CUTOVER_AT - 60_000],
   );
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/unmapped/);
   await db.close();
 });
@@ -429,7 +455,8 @@ test("a second apply keeps the timestamp the first one recorded", async () => {
     accountsCreatedAt: CUTOVER_AT + 60_000,
   });
   await markCutover(db, "2026-09-13T11:34:41.000Z");
-  const { apply, verify } = await import("./phases.ts");
+  const { apply } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await apply(db, false);
   const rows = await db.query(
     `SELECT "appliedAt" AS v FROM "PuuidKeyMigration"`,
@@ -554,7 +581,7 @@ test("verify fails when a rewritten mapping was never marked applied", async () 
     applied: true,
   });
   await db.exec(`UPDATE "PuuidKeyMap" SET "appliedAt" = NULL`);
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/unpublished/);
   await db.close();
 });
@@ -570,8 +597,70 @@ test("verify fails when the rewrite landed but the cutover was never recorded", 
     applied: true,
   });
   await db.exec(`DELETE FROM "PuuidKeyMigration"`);
-  const { verify } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
   await expect(verify(db)).rejects.toThrow(/NOT RECORDED/);
+  await db.close();
+});
+
+test("verify fails while an identity is unresolved but undecided", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [
+      { oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" },
+      { oldPuuid: OLD_B, newPuuid: null, status: "unresolved" },
+    ],
+    applied: true,
+  });
+  const { verify } = await import("./verify.ts");
+  await expect(verify(db)).rejects.toThrow(/unresolved/);
+  await db.close();
+});
+
+test("verify passes once an unresolvable identity is accepted as stranded", async () => {
+  // Riot has no account either way. What changes is that someone looked at it
+  // and accepted the loss — which is the only thing that can let a migration
+  // covering every participant ever seen reach a green gate at all.
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [
+      { oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" },
+      { oldPuuid: OLD_B, newPuuid: null, status: "unresolved" },
+    ],
+    applied: true,
+  });
+  const { strand } = await import("./verify.ts");
+  await strand(db, true);
+  const { verify } = await import("./verify.ts");
+  await verify(db);
+  await db.close();
+});
+
+test("strand refuses to write off identities without an explicit decision", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_B, newPuuid: null, status: "unresolved" }],
+  });
+  const { strand } = await import("./verify.ts");
+  await expect(strand(db, false)).rejects.toThrow(/--accept-stranded/);
+  const rows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "status" = 'stranded'`,
+  );
+  expect(Number(rows[0]?.["n"])).toBe(0);
+  await db.close();
+});
+
+test("apply is not blocked by an identity already written off", async () => {
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [
+      { oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" },
+      { oldPuuid: OLD_B, newPuuid: null, status: "stranded" },
+    ],
+  });
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+  const rows = await db.query(`SELECT "puuid" FROM "Account"`);
+  expect(rows[0]?.["puuid"]).toBe(NEW_A);
   await db.close();
 });
 
@@ -736,5 +825,111 @@ test("collect takes only the actionable identities from a work payload", async (
   await collect(db);
   const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
   expect(rows.map((r) => r["oldPuuid"])).toEqual([OLD_A]);
+  await db.close();
+});
+
+test("begin opens a new marker scope while retaining applied map rows", async () => {
+  const db = await seed({
+    accounts: [],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  const { beginTransition, cutoverApplied } = await import("./cutover.ts");
+  await beginTransition(db, true);
+  expect(await cutoverApplied(db)).toBe(false);
+  const rows = await db.query(
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"`,
+  );
+  expect(rows[0]?.["oldPuuid"]).toBe(OLD_A);
+  expect(rows[0]?.["newPuuid"]).toBe(NEW_A);
+  expect(rows[0]?.["appliedAt"]).not.toBeNull();
+  await db.close();
+});
+
+test("collect treats a prior replacement as the next transition's old value", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  const { beginTransition } = await import("./cutover.ts");
+  await beginTransition(db, true);
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid", "status" FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+  );
+  expect(rows).toEqual([
+    { oldPuuid: NEW_A, status: "pending" },
+    { oldPuuid: OLD_A, status: "resolved" },
+  ]);
+  await db.close();
+});
+
+test("collect does not reopen replacements after an interrupted marker write", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  await db.exec(
+    `UPDATE "PuuidKeyMigration" SET "appliedAt" = NULL, "transitionOpen" = 0`,
+  );
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(`SELECT "oldPuuid" FROM "PuuidKeyMap"`);
+  expect(rows.map((row) => row["oldPuuid"])).toEqual([OLD_A]);
+  await db.close();
+});
+
+test("collect reopens the current domain after a return cycle", async () => {
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [
+      { oldPuuid: OLD_A, newPuuid: OLD_B, status: "resolved" },
+      { oldPuuid: OLD_B, newPuuid: OLD_A, status: "resolved" },
+    ],
+    applied: true,
+  });
+  const { beginTransition } = await import("./cutover.ts");
+  await beginTransition(db, true);
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid", "newPuuid", "status", "appliedAt"
+       FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+  );
+  expect(rows).toEqual([
+    { oldPuuid: OLD_A, newPuuid: null, status: "pending", appliedAt: null },
+    {
+      oldPuuid: OLD_B,
+      newPuuid: OLD_A,
+      status: "resolved",
+      appliedAt: expect.anything(),
+    },
+  ]);
+  await db.close();
+});
+
+test("begin refuses to reset a marker with unresolved work", async () => {
+  const db = await seed({
+    accounts: [],
+    map: [{ oldPuuid: OLD_A, newPuuid: null, status: "unresolved" }],
+    applied: true,
+  });
+  const { beginTransition } = await import("./cutover.ts");
+  await expect(beginTransition(db, true)).rejects.toThrow("unresolved work");
+  await db.close();
+});
+
+test("begin refuses a resolved mapping whose rewrite was not applied", async () => {
+  const db = await seed({
+    accounts: [],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  await db.exec(`UPDATE "PuuidKeyMap" SET "appliedAt" = NULL`);
+  const { beginTransition } = await import("./cutover.ts");
+  await expect(beginTransition(db, true)).rejects.toThrow("unresolved work");
   await db.close();
 });
