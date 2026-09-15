@@ -29,10 +29,16 @@ const REPOSITORY_CHART_URLS = new Set([
 // Its Service, TunnelBinding, and Tailscale Ingress are stateless retired
 // resources; leaving them live keeps Birmel OutOfSync and blocks the root
 // release health wait.
+// scout-beta is here because the weekly-parlay control object was intentionally
+// renamed to scout-bryan-bucks-control. The replacement still reads the same
+// vault item, while the old OnePasswordItem is a stateless retired resource;
+// leaving it live keeps Scout beta OutOfSync and blocks the root release health
+// wait.
 const PRUNED_RELEASE_CHARTS = new Set([
   "birmel",
   "freshrss",
   "media",
+  "scout-beta",
   "service-probes",
   "temporal",
   "turbo-cache",
