@@ -148,7 +148,7 @@ ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends ca-certificates curl git iptables libxml2 util-linux; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---

@@ -25,6 +25,8 @@ describe("agent-task secret token state", () => {
 
       expect(state.tokens).toContain("first-mounted-secret-value");
       expect(state.tokens).toContain("second-mounted-secret-value");
+      expect(state.mountedTokens).toContain("first-mounted-secret-value");
+      expect(state.mountedTokens).toContain("second-mounted-secret-value");
     } finally {
       await rm(tokenPath);
     }
@@ -57,12 +59,27 @@ describe("agent-task secret token state", () => {
     expect(tokens).toContain(credentialFragment);
   });
 
+  it("tokenizes the decoded Codex auth document for redaction", () => {
+    const decodedCredential = "decoded-codex-credential-value";
+    const tokens = agentTaskSecretTokens(undefined, {
+      CODEX_AUTH_JSON_B64: Buffer.from(
+        JSON.stringify({ tokens: { access_token: decodedCredential } }),
+      ).toString("base64"),
+    });
+
+    expect(tokens).toContain(decodedCredential);
+  });
+
   it("forwards refresh failures so the activity can fail closed with the cause", async () => {
     const refreshError = new Error("mounted secret read failed");
     let observed: unknown;
 
     await refreshAgentTaskSecretTokenStateInBackground(
-      { tokens: [], refresh: () => Promise.reject(refreshError) },
+      {
+        tokens: [],
+        mountedTokens: [],
+        refresh: () => Promise.reject(refreshError),
+      },
       (error) => {
         observed = error;
       },

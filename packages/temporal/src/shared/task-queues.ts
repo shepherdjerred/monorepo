@@ -19,6 +19,8 @@ export const TASK_QUEUES = {
   BACKUP: "backup",
   /** Official provider usage and cost reconciliation with isolated credentials. */
   BILLING: "billing",
+  /** Scheduled chat waiters, isolated from unrelated repository automation. */
+  AGENT_CHAT_DISPATCH: "agent-chat-dispatch",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
   SCOUT_BETA: "scout-beta",
   /** Scout production activity worker, co-located with its database and Discord bot. */
@@ -51,6 +53,7 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.SCOUT,
   TASK_QUEUES.MAINTENANCE,
   TASK_QUEUES.BILLING,
+  TASK_QUEUES.AGENT_CHAT_DISPATCH,
   TASK_QUEUES.SCOUT_BETA,
   TASK_QUEUES.SCOUT_PROD,
   TASK_QUEUES.AGENT_TASK,
