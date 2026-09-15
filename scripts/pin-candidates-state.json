@@ -47,9 +47,9 @@
       "buildNumber": 15898
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 15908,
-      "version": "2.0.0-15908",
-      "digest": "sha256:01aee1bb4db8ef7be74453ced4c6465bd3702ee87663598f2011a0e6bad4dc2a"
+      "buildNumber": 15948,
+      "version": "2.0.0-15948",
+      "digest": "sha256:d1d32eb9008e092aa6972cff85ede3d6d2f5c2696557b587d1585155b3505ad7"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
