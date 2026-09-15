@@ -257,6 +257,21 @@ function readSourceRows(db: Database): Map<string, SqliteRow[]> {
     );
   }
   restoreMissingOpenPositions(sourceRows, missingTables);
+  const migrationRows = sourceRows.get("PuuidKeyMigration") ?? [];
+  const mapRows = sourceRows.get("PuuidKeyMap") ?? [];
+  for (const row of migrationRows) {
+    if (row["transitionOpen"] !== undefined) {
+      continue;
+    }
+    // Older SQLite snapshots have no explicit state. A null marker alongside
+    // stamped mappings is an interrupted apply, not an opened later transition.
+    row["transitionOpen"] = mapRows.some(
+      (mapping) =>
+        mapping["appliedAt"] !== null && mapping["appliedAt"] !== undefined,
+    )
+      ? 0
+      : 1;
+  }
   assertPuuidRemapIsIntact({
     mapMissing: missingTables.has("PuuidKeyMap"),
     appliedCutovers: (sourceRows.get("PuuidKeyMigration") ?? []).filter(
