@@ -42,6 +42,20 @@ import {
   resolveAgentChatBindingQuery,
 } from "#shared/agent/agent-chat-workflow.ts";
 
+export class AgentChatNotFoundError extends Error {
+  public constructor(chatId: string) {
+    super(`Unknown durable agent chat: ${chatId}`);
+    this.name = "AgentChatNotFoundError";
+  }
+}
+
+export class AgentChatBindingNotFoundError extends Error {
+  public constructor() {
+    super("No active durable agent chat is bound to this ingress conversation");
+    this.name = "AgentChatBindingNotFoundError";
+  }
+}
+
 type AgentChatCatalogWorkflow = (
   state?: AgentChatCatalogState,
 ) => Promise<never>;
@@ -102,6 +116,9 @@ export async function bindAgentChat(
   updatedAt: string,
 ): Promise<AgentChatCatalogEntry> {
   const binding = AgentChatBindingSchema.parse(rawBinding);
+  if ((await getAgentChat(client, chatId)) === undefined) {
+    throw new AgentChatNotFoundError(chatId);
+  }
   const updateId = createHash("sha256")
     .update(JSON.stringify({ binding, chatId, updatedAt }))
     .digest("hex");
@@ -261,11 +278,10 @@ export async function continueAgentChat(input: {
         : await resolveAgentChatBinding(input.client, request.source)
       : await getAgentChat(input.client, input.chatId);
   if (entry === undefined) {
-    throw new Error(
-      input.chatId === undefined
-        ? "No active durable agent chat is bound to this ingress conversation"
-        : `Unknown durable agent chat: ${input.chatId}`,
-    );
+    if (input.chatId === undefined) {
+      throw new AgentChatBindingNotFoundError();
+    }
+    throw new AgentChatNotFoundError(input.chatId);
   }
   return await runAgentChatTurn({
     client: input.client,

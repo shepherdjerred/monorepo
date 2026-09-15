@@ -2,6 +2,7 @@ import {
   agentActivities,
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
+  agentChatIngressActivities,
   glitterContextWorkerActivities,
   glitterCorpusWorkerActivities,
   homeActivities,
@@ -18,6 +19,7 @@ import type { WorkerRole } from "./shared/infra/worker-role.ts";
 
 export type QueueWorkerRole =
   | "agent"
+  | "control"
   | "backup"
   | "billing"
   | "glitter-context"
@@ -49,6 +51,13 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
+    activities: agentChatIngressActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
   {
     kind: "activity",
     role: "billing",
