@@ -243,7 +243,11 @@ export const TRMNL_DASHBOARD_VARIANT_FLAG_KEYS = [] as const;
 export type TrmnlDashboardVariantFlagKey =
   (typeof TRMNL_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
-export const TEMPORAL_FLAG_KEYS = ["temporal-call-graph-tracing"] as const;
+export const TEMPORAL_FLAG_KEYS = [
+  "temporal-call-graph-tracing",
+  "temporal-agent-chat-discord-claude-default-model",
+  "temporal-agent-chat-discord-codex-default-model",
+] as const;
 
 export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
@@ -254,7 +258,10 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
 export type TemporalBooleanFlagKey =
   (typeof TEMPORAL_BOOLEAN_FLAG_KEYS)[number];
 
-export const TEMPORAL_VARIANT_FLAG_KEYS = [] as const;
+export const TEMPORAL_VARIANT_FLAG_KEYS = [
+  "temporal-agent-chat-discord-claude-default-model",
+  "temporal-agent-chat-discord-codex-default-model",
+] as const;
 
 export type TemporalVariantFlagKey =
   (typeof TEMPORAL_VARIANT_FLAG_KEYS)[number];
@@ -294,6 +301,8 @@ export const MANAGED_FLAG_KEYS = [
   "scout-feature-tip-cooldown-hours",
   "scout-temporal-call-graph-tracing",
   "temporal-call-graph-tracing",
+  "temporal-agent-chat-discord-claude-default-model",
+  "temporal-agent-chat-discord-codex-default-model",
   "explore-guild-allowlist",
   "explore_creation_enabled",
   "scout_operations_console_enabled",
@@ -398,6 +407,8 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   "scout-tournament-max-open-lobbies",
   "scout-feature-tip-percent",
   "scout-feature-tip-cooldown-hours",
+  "temporal-agent-chat-discord-claude-default-model",
+  "temporal-agent-chat-discord-codex-default-model",
   "explore-guild-allowlist",
   "llm-daily-token-budget",
   "llm-hourly-token-budget",

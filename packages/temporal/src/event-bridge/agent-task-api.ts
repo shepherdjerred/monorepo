@@ -1,10 +1,11 @@
-import { timingSafeEqual } from "node:crypto";
 import type { Client } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
 import { Hono } from "hono";
 import { ZodError } from "zod/v4";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { AgentTaskInputV2Schema } from "#shared/agent/agent-task.ts";
+import { buildAgentChatApiRoutes } from "./agent-chat-api.ts";
+import { bearerMatches, bearerToken } from "./http-auth.ts";
 
 const COMPONENT = "agent-task-api";
 const DEFAULT_PORT = 9467;
@@ -31,32 +32,6 @@ function jsonLog(
   );
 }
 
-function bearerToken(header: string | undefined): string | undefined {
-  if (header === undefined) {
-    return undefined;
-  }
-  const prefix = "Bearer ";
-  if (!header.startsWith(prefix)) {
-    return undefined;
-  }
-  return header.slice(prefix.length);
-}
-
-function bearerMatches(
-  presented: string | undefined,
-  expected: string,
-): boolean {
-  if (presented === undefined) {
-    return false;
-  }
-  const a = Buffer.from(presented);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) {
-    return false;
-  }
-  return timingSafeEqual(a, b);
-}
-
 export function buildAgentTaskApiApp(
   token: string,
   client: Client,
@@ -65,6 +40,7 @@ export function buildAgentTaskApiApp(
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
+  app.route("/", buildAgentChatApiRoutes(token, client));
 
   app.post("/agent-tasks", async (c) => {
     if (!bearerMatches(bearerToken(c.req.header("authorization")), token)) {

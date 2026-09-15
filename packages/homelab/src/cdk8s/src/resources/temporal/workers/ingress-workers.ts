@@ -43,6 +43,10 @@ export function createTemporalIngressWorkers(
         secret: props.secret,
         key: "AGENT_TASK_API_TOKEN",
       }),
+      AGENT_CHAT_DISCORD_TOKEN: EnvValue.fromSecretValue({
+        secret: props.secret,
+        key: "AGENT_CHAT_DISCORD_TOKEN",
+      }),
       ...sleepWebhookEnv(props.secret),
       XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
       XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
