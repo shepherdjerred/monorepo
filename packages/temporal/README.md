@@ -9,8 +9,9 @@ homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
-without a task queue. The credentialless `workflows` role owns deterministic
-Workflow execution on `monorepo-workflows`. The domain roles own only Activity
+plus the `agent-chat-ingress` command and delivery queue. The credentialless
+`workflows` role owns deterministic Workflow execution on
+`monorepo-workflows`. The domain roles own only Activity
 Workers, with separate registries, credentials, service accounts, and
 concurrency budgets. The explicit `all` role composes every role in one process
 for local development.
@@ -27,7 +28,7 @@ the beta-owned Bryan Bucks analytics schedule; all other central queues are
 
 | Role              | Queue or surface                                                | Activity concurrency |
 | ----------------- | --------------------------------------------------------------- | -------------------: |
-| `control`         | schedules and HTTP APIs                                         |                 none |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`                      |                    4 |
 | `home`            | `home`                                                          |                    4 |
 | `reports`         | `reports`                                                       |                    4 |
 | `infra`           | `infra`                                                         |                    1 |

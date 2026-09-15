@@ -668,6 +668,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
 
     for (const prohibited of [
       "AGENT_TASK_API_TOKEN",
+      "AGENT_CHAT_DISCORD_TOKEN",
       "ARGOCD_AUTH_TOKEN",
       "BUGSINK_TOKEN",
       "BUILDKITE_API_TOKEN",

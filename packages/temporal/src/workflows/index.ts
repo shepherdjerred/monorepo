@@ -138,12 +138,16 @@ import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from ".
 import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
 import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
 import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
+import { discordAgentChatWorkflow as _discordAgentChatWorkflow } from "./discord-agent-chat.ts";
+import { httpAgentChatWorkflow as _httpAgentChatWorkflow } from "./http-agent-chat.ts";
 import type {
   AgentChatCatalogState,
   AgentChatTurnResult,
   AgentChatWorkflowInput,
   ScheduledAgentChatTurnInput,
 } from "#shared/agent/agent-chat.ts";
+import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
+import type { HttpAgentChatCommand } from "#shared/agent/agent-chat-http.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -468,4 +472,16 @@ export async function scheduledAgentChatTurnWorkflow(
   input: ScheduledAgentChatTurnInput,
 ): Promise<AgentChatTurnResult> {
   return _scheduledAgentChatTurnWorkflow(input);
+}
+
+export async function discordAgentChatWorkflow(
+  input: DiscordAgentChatCommand,
+): Promise<void> {
+  return _discordAgentChatWorkflow(input);
+}
+
+export async function httpAgentChatWorkflow(
+  input: HttpAgentChatCommand,
+): Promise<AgentChatTurnResult> {
+  return _httpAgentChatWorkflow(input);
 }
