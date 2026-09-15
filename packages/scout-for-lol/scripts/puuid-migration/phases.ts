@@ -297,20 +297,26 @@ async function assertNoCollisions(db: Db): Promise<void> {
   }
 }
 
-async function rewriteScalarColumn(db: Db, col: PuuidColumn): Promise<void> {
-  // The correlated-subquery form works identically on SQLite and Postgres,
-  // unlike UPDATE ... FROM.
-  await db.exec(`
-    UPDATE "${col.table}"
-       SET "${col.column}" = (
-             SELECT m."newPuuid" FROM "PuuidKeyMap" m
-              WHERE m."oldPuuid" = "${col.table}"."${col.column}"
-           )
-     WHERE "${col.column}" IN (
-             SELECT "oldPuuid" FROM "PuuidKeyMap" WHERE "newPuuid" IS NOT NULL
-           )
-  `);
-  console.log(`  ${col.table}.${col.column}: rewritten`);
+async function rewriteScalarColumn(
+  db: Db,
+  col: PuuidColumn,
+  map: ReadonlyMap<string, string>,
+): Promise<void> {
+  // Apply the already-composed map one edge at a time. This keeps the query
+  // portable across SQLite and Postgres without asking either dialect to join
+  // against a temporary table, and prevents a retained return-cycle edge from
+  // rewriting a value through only one historical hop.
+  let changed = 0;
+  for (const [oldPuuid, newPuuid] of map) {
+    await db.exec(
+      `UPDATE "${col.table}" SET "${col.column}" = ${db.param(2)} WHERE "${col.column}" = ${db.param(1)}`,
+      [oldPuuid, newPuuid],
+    );
+    changed++;
+  }
+  console.log(
+    `  ${col.table}.${col.column}: ${changed.toString()} mappings applied`,
+  );
 }
 
 async function rewriteJsonColumn(
@@ -357,7 +363,7 @@ async function loadMap(db: Db): Promise<Map<string, string>> {
   const rows = await db.query(
     `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"
       WHERE "newPuuid" IS NOT NULL
-      ORDER BY "appliedAt", "oldPuuid"`,
+      ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
   );
   const map = new Map(
     rows.map((r) => [
@@ -457,7 +463,7 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
   await db.transaction(async () => {
     for (const col of columns) {
       if (col.kind === "scalar") {
-        await rewriteScalarColumn(db, col);
+        await rewriteScalarColumn(db, col, map);
       } else {
         await rewriteJsonColumn(db, col, map);
       }

@@ -210,6 +210,31 @@ test("apply resumes over a partially rewritten database", async () => {
   await db.close();
 });
 
+test("apply rewrites scalar columns to the newest return-cycle domain", async () => {
+  const db = await seed({
+    accounts: [NEW_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+    applied: true,
+  });
+  // A→B was applied by the prior cutover. The current transition returns to A,
+  // so the retained map is a cycle whose newest edge must win for every column.
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+    [NEW_A, OLD_A],
+  );
+  await db.exec(
+    `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [NEW_A, Date.now()],
+  );
+
+  const { apply } = await import("./phases.ts");
+  await apply(db, false);
+
+  const rows = await db.query(`SELECT "puuid" FROM "MatchRankHistory"`);
+  expect(rows[0]?.["puuid"]).toBe(OLD_A);
+  await db.close();
+});
+
 test("verify fails when a translated identity survives the rewrite", async () => {
   const db = await seed({
     accounts: [OLD_A],
