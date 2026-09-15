@@ -453,6 +453,15 @@ export async function apply(db: Db, allowUnresolved: boolean): Promise<void> {
       }
     }
   });
+  // Close the transition before stamping mapping rows. If the Postgres path
+  // stops between these statements, collect still treats the already-written
+  // replacements as current-domain values rather than reopening them under the
+  // retired key. The applied marker remains unset until the rewrite is known to
+  // have completed.
+  await db.exec(
+    `INSERT INTO "PuuidKeyMigration" ("id", "transitionOpen") VALUES (1, 0)
+     ON CONFLICT ("id") DO UPDATE SET "transitionOpen" = 0`,
+  );
   // Written after the rewrite, so an interrupted run leaves it unset and the
   // database still reads as mid-migration. Written unconditionally, so a cutover
   // performed while tracking no accounts is still recorded — updating mapping
