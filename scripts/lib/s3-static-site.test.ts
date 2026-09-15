@@ -82,27 +82,6 @@ test("static-site reconciliation probes every release file without pruning retai
   ]);
 });
 
-test("remote archive reconciliation ignores expected object timestamp differences", () => {
-  expect(
-    staticSiteSyncDryRunCommand({
-      source: "s3://scout-site-releases/release/beta/",
-      bucket: "scout-frontend-beta",
-      endpoint: "https://s3.example.test",
-      sizeOnly: true,
-    }),
-  ).toEqual([
-    "aws",
-    "s3",
-    "sync",
-    "s3://scout-site-releases/release/beta/",
-    "s3://scout-frontend-beta/",
-    "--endpoint-url",
-    "https://s3.example.test",
-    "--size-only",
-    "--dryrun",
-  ]);
-});
-
 test("release certification enumerates every file for byte-for-byte readback", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "static-site-files-"));
   temporaryDirectories.push(directory);

@@ -34,10 +34,6 @@ export function stageBucketNeedsSync(
     endpoint: SEAWEEDFS_ENDPOINT,
     cwd: scoutStorageRoot(),
     env: SEAWEEDFS_AWS_ENV,
-    // Both sides are remote S3 objects. Their modification times are
-    // expected to differ after a release copy; byte-for-byte certification
-    // still runs after this structural reconciliation check.
-    sizeOnly: source.startsWith("s3://"),
   });
 }
 
@@ -98,11 +94,17 @@ export async function stageArchiveIsLive(opts: {
   fetch?: Fetch;
   needsSync?: NeedsSync;
 }): Promise<boolean> {
+  const storageSource = opts.syncSource ?? opts.source;
+  // A remote archive and its live bucket have independent object metadata,
+  // so an S3 sync probe cannot establish equality between them. Release
+  // callers compare every selected object by bytes after this check; the
+  // custom probe remains available for callers that need structural checks.
   if (
-    await (opts.needsSync ?? stageBucketNeedsSync)(
-      opts.syncSource ?? opts.source,
+    (opts.needsSync !== undefined || opts.syncSource === undefined) &&
+    (await (opts.needsSync ?? stageBucketNeedsSync)(
+      storageSource,
       STAGE_BUCKETS[opts.stage],
-    )
+    ))
   ) {
     return false;
   }

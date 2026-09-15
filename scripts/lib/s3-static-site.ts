@@ -125,7 +125,6 @@ export function staticSiteSyncDryRunCommand(opts: {
   source: string;
   bucket: string;
   endpoint: string;
-  sizeOnly?: boolean;
 }): string[] {
   return [
     "aws",
@@ -135,7 +134,6 @@ export function staticSiteSyncDryRunCommand(opts: {
     `s3://${opts.bucket}/`,
     "--endpoint-url",
     opts.endpoint,
-    ...(opts.sizeOnly === true ? ["--size-only"] : []),
     "--dryrun",
   ];
 }
@@ -151,22 +149,13 @@ export async function s3StaticSiteNeedsSync(opts: {
   endpoint: string;
   cwd: string;
   env: Record<string, string>;
-  sizeOnly?: boolean;
 }): Promise<boolean> {
-  const result = await run(
-    staticSiteSyncDryRunCommand({
-      source: opts.source,
-      bucket: opts.bucket,
-      endpoint: opts.endpoint,
-      ...(opts.sizeOnly === undefined ? {} : { sizeOnly: opts.sizeOnly }),
-    }),
-    {
-      cwd: opts.cwd,
-      env: opts.env,
-      capture: true,
-      echoCapturedStdout: false,
-    },
-  );
+  const result = await run(staticSiteSyncDryRunCommand(opts), {
+    cwd: opts.cwd,
+    env: opts.env,
+    capture: true,
+    echoCapturedStdout: false,
+  });
   return result.stdout.trim() !== "";
 }
 
