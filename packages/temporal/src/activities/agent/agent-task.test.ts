@@ -13,10 +13,10 @@ import type { ReportEvidenceReceiptV1 } from "#shared/reports/report.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
 import {
-  AgentTaskSdkExecutionError,
   type AgentTaskSdkResult,
   type AgentTaskSdkRunInput,
 } from "./agent-task-sdk.ts";
+import { AgentTurnExecutionError } from "#lib/agent-runner/errors.ts";
 import {
   agentTaskSecretTokens,
   envForEvidenceCollector,
@@ -272,7 +272,7 @@ describe("agentTaskActivities", () => {
 describe("agent task runtime support", () => {
   it("makes a completed SDK failure non-retryable", async () => {
     const activities = createTestAgentTaskActivities(() => {
-      throw new AgentTaskSdkExecutionError("hit max turns", {
+      throw new AgentTurnExecutionError("hit max turns", {
         provider: "codex",
         generationStarted: true,
         possiblyAppliedEffects: false,
