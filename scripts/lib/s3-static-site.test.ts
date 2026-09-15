@@ -7,6 +7,7 @@ import {
   filesHaveSameBytes,
   forceMutableUploadCommand,
   isMissingS3Object,
+  mutableSitePruneCommand,
   s3StaticSiteDownloadCommand,
   staticSiteFilePaths,
   staticSiteSyncDryRunCommand,
@@ -61,6 +62,34 @@ test("forced mutable upload supports an AWS dry run", () => {
       dryRun: true,
     }).at(-1),
   ).toBe("--dryrun");
+});
+
+test("mutable pruning protects immutable files and the release marker", () => {
+  expect(
+    mutableSitePruneCommand({
+      source: "/tmp/release",
+      dest: "s3://scout-frontend/",
+      endpoint: "https://s3.example.test",
+      excludes: ["_astro/*", "app/assets/*", ".release-version"],
+    }),
+  ).toEqual([
+    "aws",
+    "s3",
+    "sync",
+    "/tmp/release",
+    "s3://scout-frontend/",
+    "--endpoint-url",
+    "https://s3.example.test",
+    "--exclude",
+    "_astro/*",
+    "--exclude",
+    "app/assets/*",
+    "--exclude",
+    ".release-version",
+    "--cache-control",
+    "no-cache",
+    "--delete",
+  ]);
 });
 
 test("static-site reconciliation probes every release file without pruning retained assets", () => {

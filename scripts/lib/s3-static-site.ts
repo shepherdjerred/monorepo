@@ -116,6 +116,32 @@ export function forceMutableUploadCommand(opts: {
 }
 
 /**
+ * Build the deleting sync pass for mutable site files. Forced uploads run this
+ * before their overwrite pass so an eventually consistent bucket listing
+ * cannot delete files that the overwrite just added.
+ */
+export function mutableSitePruneCommand(opts: {
+  source: string;
+  dest: string;
+  endpoint: string;
+  excludes: string[];
+}): string[] {
+  return [
+    "aws",
+    "s3",
+    "sync",
+    opts.source,
+    opts.dest,
+    "--endpoint-url",
+    opts.endpoint,
+    ...opts.excludes.flatMap((pattern) => ["--exclude", pattern]),
+    "--cache-control",
+    "no-cache",
+    "--delete",
+  ];
+}
+
+/**
  * Build the read-only reconciliation probe for a static-site bucket. Unlike
  * the entrypoint byte checks, this asks the AWS CLI whether *any* source file
  * would still need uploading. It catches a partial recursive upload before a
@@ -255,8 +281,9 @@ export async function assertS3ObjectsMatchSource(opts: {
  * The archive download preserves object timestamps, so `aws s3 sync` can
  * incorrectly retain a changed mutable entrypoint when its size and timestamp
  * compare equal to the destination. When enabled, a recursive `aws s3 cp`
- * uploads every release object before the immutable metadata pass and normal
- * deleting sync, so equal-size/timestamp-corrupted immutable assets repair.
+ * uploads every release object after the deleting sync and before the
+ * immutable metadata pass, so equal-size/timestamp-corrupted mutable assets
+ * repair without an eventually consistent listing deleting them again.
  */
 export async function s3SyncStaticSite(opts: {
   source: string;
@@ -356,16 +383,26 @@ export async function s3SyncStaticSite(opts: {
     return;
   }
 
+  // A recursive force copy is needed because release archives preserve source
+  // timestamps, but SeaweedFS can return a stale listing immediately after a
+  // write. Prune first, then overwrite mutable files, so the deleting sync
+  // never sees files that this release has just uploaded.
   if (forceMutableUpload) {
+    await run(
+      mutableSitePruneCommand({
+        source,
+        dest,
+        endpoint,
+        excludes: deletePassExcludes,
+      }),
+      { cwd, env },
+    );
     await run(
       forceMutableUploadCommand({
         source,
         dest,
         endpoint,
-        excludes: [
-          ...immutablePrefixes.map((prefix) => `${prefix}*`),
-          ...extraExcludes,
-        ],
+        excludes: deletePassExcludes,
         dryRun: false,
       }),
       { cwd, env },
@@ -409,20 +446,17 @@ export async function s3SyncStaticSite(opts: {
 
   // Pass 2 (or single pass): everything else, no-cache + --delete, excluding
   // the immutable prefixes so `--delete` never prunes retained hashed assets.
-  await run(
-    [
-      "aws",
-      "s3",
-      "sync",
-      source,
-      dest,
-      "--endpoint-url",
-      endpoint,
-      ...deletePassExcludes.flatMap((p) => ["--exclude", p]),
-      "--cache-control",
-      "no-cache",
-      "--delete",
-    ],
-    { cwd, env },
-  );
+  // Forced uploads already ran this pass before their overwrite, which avoids
+  // the eventual-consistency deletion race described above.
+  if (!forceMutableUpload) {
+    await run(
+      mutableSitePruneCommand({
+        source,
+        dest,
+        endpoint,
+        excludes: deletePassExcludes,
+      }),
+      { cwd, env },
+    );
+  }
 }
