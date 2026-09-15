@@ -6,7 +6,6 @@
   <body>
     <outline text="Uncategorized">
       <outline text="Andreas Kling" type="rss" xmlUrl="https://awesomekling.github.io/feed.xml" htmlUrl="https://awesomekling.github.io/" description="I like computers!"/>
-      <outline text="Anthropic Engineering (community RSS)" type="rss" xmlUrl="https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_engineering.xml" htmlUrl="https://www.anthropic.com/engineering" description="Community-generated RSS feed for Anthropic's Engineering blog"/>
       <outline text="Bartosz Ciechanowski" type="rss" xmlUrl="https://ciechanow.ski/atom.xml" htmlUrl="https://ciechanow.ski/" description="Recent content on Bartosz Ciechanowski"/>
       <outline text="bookbear express" type="rss" xmlUrl="https://www.avabear.xyz/feed" htmlUrl="https://www.avabear.xyz/" description="help-self"/>
       <outline text="Brandur Leach" type="rss" xmlUrl="https://brandur.org/articles.atom" htmlUrl="https://brandur.org/" description="Brandur Leach's essays on software, systems, and databases"/>
@@ -30,7 +29,6 @@
       <outline text="Ludicity" type="rss" xmlUrl="https://ludic.mataroa.blog/rss/" htmlUrl="https://ludic.mataroa.blog/" description="&lt;blockquote&gt;&#13;&#10;&#13;&#10;&quot;While I'm deeply sympathetic, the author should be discussing their issues with a therapist rather than spreading this on the internet.&quot;&#13;&#10;&lt;/blockquote&gt;&#13;&#10;&#13;&#10;I'm also trying out Unoffice Hours, where anyone can book time with me.&#13;&#10;&lt;ol&gt;&#13;&#10;&lt;li&gt;If you're just a reader that wants to chat about whatever, you can grab me at this link. Don't pick crazy hours for yourself — you'll oversleep and have booked my calendar for no reason!&lt;/li&gt;&#13;&#10;&lt;li&gt;If you want to chat and might buy consulting one day, you can use this link, which is exactly the same as the previous link but with more availability. It's just a social call, so it's honour system rules on not using it to sneak extra time from my calendar.&lt;/li&gt;&#13;&#10;&lt;li&gt;If you live in Melbourne, this final link straight-up arranges an in-person meeting at a nice coffee place.&lt;/li&gt;&#13;&#10;&lt;/ol&gt;&#13;&#10;&#13;&#10;I read all mail without exception, and love getting it. I may not respond, but I'll always read! You can reach me at: ludicity.hackernews@gmail.com.&#13;&#10;&#13;&#10;My podcast, &quot;Does A Frog Have Scorpion Nature&quot;, where I talk to people I like, and sometimes find blog post inspiration.&#13;&#10;&#13;&#10;You can also catch me on Mastodon.&#13;&#10;&#13;&#10;Liberapay | Patreon to support me writing taking time off to write amidst the difficulty of launching a business.&#13;&#10;&#13;&#10;I looked at some code in late 2024 which was so hideous that I rage-quit my job on the spot and started an IT consultancy, Hermit Tech. We sell the voice of reason to companies, especially on data-related issues. You can always book time with us to talk about your problems! I've worked with some readers before and everyone had a good time. We have some bold, innovative technology, such as not lying, explaining things clearly, and listening to people."/>
       <outline text="Mitchell Hashimoto" type="rss" xmlUrl="https://mitchellh.com/feed.xml" htmlUrl="https://mitchellh.com/" description="Mitchell Hashimoto's personal blog"/>
       <outline text="OlegWock blog" type="rss" xmlUrl="https://sinja.io/rss" htmlUrl="https://sinja.io/" description="OlegWock blog"/>
-      <outline text="OpenAI News" type="rss" xmlUrl="https://openai.com/news/rss.xml" htmlUrl="https://openai.com/news/" description="Official OpenAI news feed, including Engineering posts"/>
       <outline text="Peter Norvig" type="rss" xmlUrl="https://www.norvig.com/rss-feed.xml" htmlUrl="http://www.norvig.com/" description="Articles by Peter Norvig"/>
       <outline text="samwho.dev" type="rss" xmlUrl="https://samwho.dev/rss.xml" htmlUrl="https://samwho.dev/" description="Personal website of Sam Rose."/>
       <outline text="seangoedecke.com RSS feed" type="rss" xmlUrl="https://www.seangoedecke.com/rss.xml" htmlUrl="https://seangoedecke.com/" description="Sean Goedecke's personal blog"/>
@@ -39,6 +37,7 @@
       <outline text="Visual Studio Code - Code Editing. Redefined." type="rss" xmlUrl="https://code.visualstudio.com/feed.xml" htmlUrl="https://code.visualstudio.com/" frss:priority="hidden"/>
     </outline>
     <outline text="Repo Stack">
+      <outline text="Anthropic Engineering (community RSS)" type="rss" xmlUrl="https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_engineering.xml" htmlUrl="https://www.anthropic.com/engineering" description="Community-generated RSS feed for Anthropic's Engineering blog"/>
       <outline text="PostgreSQL News" type="rss" xmlUrl="https://www.postgresql.org/news/pgsql.rss" htmlUrl="https://www.postgresql.org/about/news/"/>
       <outline text="SQLite Releases" type="rss" xmlUrl="https://sqlite.org/src/timeline.rss?tag=release" htmlUrl="https://sqlite.org/changes.html"/>
       <outline text="DuckDB Blog" type="rss" xmlUrl="https://duckdb.org/feed.xml" htmlUrl="https://duckdb.org/news/"/>
@@ -83,6 +82,7 @@
       <outline text="PostHog Blog" type="rss" xmlUrl="https://posthog.com/rss.xml" htmlUrl="https://posthog.com/blog" description="PostHog engineering blog and product updates"/>
       <outline text="Buildkite Changelog" type="rss" xmlUrl="https://buildkite.com/changelog.atom" htmlUrl="https://buildkite.com/changelog"/>
       <outline text="FreshRSS Releases" type="rss" xmlUrl="https://github.com/FreshRSS/FreshRSS/releases.atom" htmlUrl="https://github.com/FreshRSS/FreshRSS/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
+      <outline text="OpenAI News" type="rss" xmlUrl="https://openai.com/news/rss.xml" htmlUrl="https://openai.com/news/" description="Official OpenAI news feed, including Engineering posts"/>
     </outline>
   </body>
 </opml>
