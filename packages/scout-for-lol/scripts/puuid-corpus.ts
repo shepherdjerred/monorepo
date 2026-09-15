@@ -14,7 +14,7 @@
  *
  * Usage:
  *   S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts inventory --out prod.jsonl
- *   DATABASE_URL=... S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite [--apply] [--prematch-drained]
+ *   DATABASE_URL=... S3_BUCKET_NAME=scout-prod bun scripts/puuid-corpus.ts rewrite [--apply] [--live-receipts-drained]
  */
 
 import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
@@ -26,7 +26,7 @@ import {
 import type { Db } from "./puuid-migration/db.ts";
 import { rewriteCorpus } from "./puuid-corpus/rewrite.ts";
 import {
-  countPrematchReceipts,
+  countLiveReceipts,
   hasObservations,
   hasReceipts,
   recordRewrittenDigest,
@@ -143,8 +143,8 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
 }
 
 /**
- * A prematch snapshot cannot be rewritten safely while a workflow may resume on
- * it, and only the operator can know whether one might.
+ * A live raw-archive snapshot cannot be rewritten safely while a workflow may
+ * recover from it, and only the operator can know whether one might.
  *
  * The rewrite moves the receipt onto the new bytes, but the PUT and that update
  * are two stores and cannot be one transaction. A resume that reads the object
@@ -153,28 +153,29 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
  * projection and its notifications are dropped and no later reconciliation
  * brings them back.
  *
- * The exposure is narrow and real. A game running across the credential swap
- * has a snapshot captured under the old key — so the rewrite does touch it —
- * and a workflow that resumes when the game ends, twenty to forty minutes
- * later. Snapshots captured after the swap name nobody in the map and are
- * skipped, so a drained queue stays drained.
+ * Recovery can create an observation from a raw-match receipt even when no
+ * observation exists yet. The same two-store race therefore applies to match,
+ * timeline, and prematch receipts; all live receipt kinds are fenced together.
  *
  * Refusing rather than warning, and taking an acknowledgement rather than
  * guessing, follows `strand --accept-stranded`: the loss is silent, permanent,
  * and belongs to whoever can see the queue.
  */
-async function requirePrematchDrained(db: Db): Promise<void> {
-  const prematch = await countPrematchReceipts(db);
-  if (prematch === 0 || Bun.argv.includes("--prematch-drained")) {
+async function requireLiveReceiptsDrained(db: Db): Promise<void> {
+  const liveReceipts = await countLiveReceipts(db);
+  if (
+    liveReceipts === 0 ||
+    Bun.argv.includes("--live-receipts-drained") ||
+    Bun.argv.includes("--prematch-drained")
+  ) {
     return;
   }
   throw new Error(
-    `This database holds ${prematch.toString()} raw-archive prematch receipts, and a ` +
-      "workflow resuming on one while its object is being rewritten loses its lake " +
-      "projection and notifications permanently. Confirm no prematch workflow " +
-      "opened before the credential swap is still waiting to resume — games in " +
-      "progress across the outage are the ones at risk — then re-run with " +
-      "--prematch-drained.",
+    `This database holds ${liveReceipts.toString()} live raw-archive receipts, and a ` +
+      "recovery workflow can create a stale observation while its object is being " +
+      "rewritten, losing its lake projection and notifications permanently. Confirm " +
+      "no pre-swap match, timeline, or prematch recovery is still waiting to run, " +
+      "then re-run with --live-receipts-drained.",
   );
 }
 
@@ -192,7 +193,7 @@ async function runRewrite(): Promise<void> {
   const tracksObservations = await hasObservations(db);
   const tracksReceipts = await hasReceipts(db);
   if (!dryRun && tracksReceipts) {
-    await requirePrematchDrained(db);
+    await requireLiveReceiptsDrained(db);
   }
   let digestsUpdated = 0;
   let receiptsMoved = 0;
@@ -244,7 +245,7 @@ switch (command) {
   case undefined:
   default:
     throw new Error(
-      "usage: puuid-corpus.ts <inventory --out FILE [--cutover ISO] | rewrite [--apply] [--prematch-drained]> " +
+      "usage: puuid-corpus.ts <inventory --out FILE [--cutover ISO] | rewrite [--apply] [--live-receipts-drained]> " +
         "[--prefix games/2026/01/]",
     );
 }

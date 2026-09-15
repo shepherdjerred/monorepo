@@ -147,7 +147,7 @@ function withDigest(
 }
 
 /**
- * How many prematch snapshots are attested by a receipt a reader still checks.
+ * How many live raw-archive snapshots are attested by receipts a reader still checks.
  *
  * Only the prematch path reads an archived object back and verifies it against
  * its receipt, and `prematch-resume.ts` turns a mismatch into a non-retryable
@@ -161,12 +161,13 @@ function withDigest(
  * operator decides. Match and timeline receipts are not counted: nothing reads
  * them back, so moving them is bookkeeping rather than a race.
  */
-export async function countPrematchReceipts(db: Db): Promise<number> {
+export async function countLiveReceipts(db: Db): Promise<number> {
+  const kinds = LIVE_RECEIPT_KINDS.map((_, i) => db.param(i + 1)).join(", ");
   const rows = await db.query(
-    `SELECT COUNT(*) AS n FROM "MatchProcessingReceipt" WHERE "kind" = ${db.param(1)}`,
-    ["raw-archive-prematch"],
+    `SELECT COUNT(*) AS n FROM "MatchProcessingReceipt" WHERE "kind" IN (${kinds})`,
+    LIVE_RECEIPT_KINDS,
   );
-  return countOf(rows, "prematch receipt");
+  return countOf(rows, "live receipt");
 }
 
 /** Whether this database records processing receipts at all. */

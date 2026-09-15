@@ -368,7 +368,7 @@ for no benefit. Nothing in them needs the backends down.
 
 ## 8. Rewrite the archive, with everything running
 
-First wait out the prematch snapshots, because `--apply` refuses without it.
+First drain all live raw-archive recovery receipts, because `--apply` refuses without it.
 The reason is below; the check is that no game live during the outage is still
 waiting to resume.
 
@@ -380,17 +380,17 @@ Both buckets, each against its own database — the rewrite reads the map from
 DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
   bun scripts/puuid-corpus.ts rewrite                                   # dry run
 DATABASE_URL="$PROD_DB" S3_BUCKET_NAME=scout-prod \
-  bun scripts/puuid-corpus.ts rewrite --apply --prematch-drained
+  bun scripts/puuid-corpus.ts rewrite --apply --live-receipts-drained
 
 # beta
 DATABASE_URL="$BETA_DB" S3_BUCKET_NAME=scout-beta \
   bun scripts/puuid-corpus.ts rewrite                                   # dry run
 DATABASE_URL="$BETA_DB" S3_BUCKET_NAME=scout-beta \
-  bun scripts/puuid-corpus.ts rewrite --apply --prematch-drained
+  bun scripts/puuid-corpus.ts rewrite --apply --live-receipts-drained
 ```
 
-Both environments need the flag. Beta holds prematch receipts too, so an applied
-run there stops at the same gate.
+Both environments need the flag. Each can hold live match, timeline, and
+prematch receipts, so an applied run stops at the same recovery gate.
 
 The rewrite reads its map from `DATABASE_URL` and re-points that environment's
 artifact references, so the database and the bucket have to be the same
@@ -411,21 +411,22 @@ The report lake stays consistent the whole time: a rewritten object needs no
 translation, and one not yet reached still gets it from the map applied in
 step 5.
 
-One reader is not safe to run hot, and the rewrite refuses until you say it has
-drained. A prematch snapshot is read back and checked against its receipt, and
-`prematch-resume.ts` treats a mismatch as non-retryable — it drops the rest of
-that match's lake projection and its notifications, permanently. The rewrite
-moves the receipt with the bytes, but a PUT and a database write are not one
-transaction, so a resume landing between them sees the two disagree.
+Recovery is not safe to run hot, and the rewrite refuses until you say all live
+receipts have drained. A recovery path can read a raw match, timeline, or
+prematch snapshot back and check it against its receipt; a mismatch is
+non-retryable and drops the rest of that match's lake projection and
+notifications permanently. The rewrite moves the receipt with the bytes, but a
+PUT and a database write are not one transaction, so a recovery landing between
+them can see the two disagree.
 
 A game running across the outage is the case that bites: its snapshot was
 captured under the old key, so the rewrite touches it, and its workflow resumes
 when the game ends twenty to forty minutes later. Snapshots captured after the
 swap name nobody in the map and are skipped.
 
-So wait out the games that were live during the window and confirm no prematch
-workflow from before the swap is still open. That is what `--prematch-drained`
-asserts, in both environments.
+So wait out the games that were live during the window and confirm no match,
+timeline, or prematch recovery from before the swap is still open. That is what
+`--live-receipts-drained` asserts, in both environments.
 
 It refuses to touch anything until the database `apply` has landed. Translating
 the archive to an identifier the database does not hold would hide the players

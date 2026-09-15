@@ -90,14 +90,16 @@ describe("RateLimiter", () => {
     ]);
   });
 
-  test("adopts once, so a later response cannot loosen the budget", () => {
+  test("keeps bootstrap limits until both scopes are observed", () => {
     const limiter = new RateLimiter("test", [
       { limit: 999, seconds: 1, scope: "app" },
     ]);
     limiter.adopt("100:120", null);
-    limiter.adopt("30000:600", null);
+    expect(limiter.windows).toEqual([{ limit: 999, seconds: 1, scope: "app" }]);
+    limiter.adopt("100:120", "1000:60");
     expect(limiter.windows).toEqual([
       { limit: 80, seconds: 120, scope: "app" },
+      { limit: 800, seconds: 60, scope: "method" },
     ]);
   });
 

@@ -164,23 +164,22 @@ export class RateLimiter {
   /**
    * Replace the bootstrap budget with what this key actually reports.
    *
-   * Done once, from the first response. A key whose tier changed, or a constant
-   * that drifted from reality, then corrects itself instead of running at a
-   * silently wrong rate for days.
+   * Done once, from the first response containing both scopes. A key whose tier
+   * changed, or a constant that drifted from reality, then corrects itself
+   * instead of running at a silently wrong rate for days. Missing method data
+   * leaves the conservative bootstrap ceiling in place.
    */
   adopt(appHeader: string | null, methodHeader: string | null): void {
-    if (appHeader === null || this.#adopted) {
+    if (appHeader === null || methodHeader === null || this.#adopted) {
       return;
     }
     const windows = parseRateLimitHeader(appHeader, "app");
-    if (methodHeader !== null) {
-      windows.push(...parseRateLimitHeader(methodHeader, "method"));
-    }
+    windows.push(...parseRateLimitHeader(methodHeader, "method"));
     this.#windows = windows;
     this.#adopted = true;
     console.log(
       `  ${this.#label}: budgeting ${(BUDGET_FRACTION * 100).toString()}% of ` +
-        `app ${appHeader}${methodHeader === null ? "" : ` and method ${methodHeader}`} — ` +
+        `app ${appHeader} and method ${methodHeader} — ` +
         windows
           .map((w) => `${w.limit.toString()}/${w.seconds.toString()}s`)
           .join(", "),
