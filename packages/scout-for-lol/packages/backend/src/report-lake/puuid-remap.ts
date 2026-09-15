@@ -58,6 +58,9 @@ export async function loadPuuidRemap(
     if (row.newPuuid === null) {
       continue;
     }
+    // Map#set does not move an existing key. Delete first so a reused source
+    // domain keeps the latest applied edge's insertion order for cycle folding.
+    map.delete(row.oldPuuid);
     map.set(row.oldPuuid, row.newPuuid);
   }
   composePuuidRemap(map);
