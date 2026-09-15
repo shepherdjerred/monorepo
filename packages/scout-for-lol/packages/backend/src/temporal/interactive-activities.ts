@@ -4,15 +4,12 @@ import { z } from "zod";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  EXPLORE_ANSWER_MAX_LENGTH,
-  EXPLORE_TIMEOUT_MS,
+  ExploreActiveRunSchema,
   ExploreRunOutcomeSchema,
   ExploreTraceEntrySchema,
   ReportAiEditRequestSchema,
   ReportAiStreamEventSchema,
   type ExploreRunOutcome,
-  type ExploreStreamEvent,
-  type ExploreTraceEntry,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
 import type {
@@ -20,14 +17,13 @@ import type {
   ScoutInteractiveRunInput,
 } from "@scout-for-lol/temporal";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
+import {
+  ExploreRunManager,
+  exploreRunManager,
+} from "#src/explore/runs/run-manager.ts";
 import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
-import { loadExploreTranscript } from "#src/explore/store.ts";
+import { ExploreNotFoundError } from "#src/explore/store.ts";
 import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
-import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
-import { streamExploreAgent } from "#src/explore/agent.ts";
-import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
-import { recordExploreTraceEvent } from "#src/explore/trace.ts";
 import { streamReportQueryAgent } from "#src/reports/ai/report-query-agent.ts";
 import { getReportAiQuotaStatus } from "#src/reports/ai/rate-limit.ts";
 import { scoutTemporalInterruptedProviderAttempts } from "#src/metrics/platform/temporal.ts";
@@ -230,103 +226,45 @@ export async function executeRecoveredExplore(
   run: ScoutInteractiveRun,
   abortSignal: AbortSignal,
   database: ExtendedPrismaClient,
+  suppliedManager?: ExploreRunManager,
 ): Promise<ExploreRunOutcome> {
   const payload = ExploreDurablePayloadSchema.parse(JSON.parse(run.payload));
-  const transcript = await loadExploreTranscript(
-    database,
-    payload.started.conversationId,
-    run.ownerId,
-    payload.started.messageId,
-  );
-  if (transcript === null) {
-    throw ApplicationFailure.nonRetryable(
-      `Explore conversation ${payload.started.conversationId} no longer exists`,
-      "MissingDomainRecord",
-    );
-  }
-  const trace: ExploreTraceEntry[] = [];
-  let partial = "";
-  const ticket: ExploreRateLimitTicket = {
-    allowed: true,
-    runId: run.id,
-    claimConversation: () => true,
-    commit: () => {
-      // The database reservation is already the authoritative quota claim.
-    },
-    finish: () => {
-      // Durable cleanup releases quota when this Activity records its outcome.
-    },
-  };
-  let activity: string | null = null;
-  let preview: string | null = null;
-  const emit = async (event: ExploreStreamEvent): Promise<void> => {
-    switch (event.type) {
-      case "answer_delta": {
-        const available = EXPLORE_ANSWER_MAX_LENGTH - partial.length;
-        if (available > 0) partial += event.text.slice(0, available);
-        break;
-      }
-      case "final": {
-        partial = event.message.content;
-        break;
-      }
-      case "activity": {
-        activity = event.text;
-        break;
-      }
-      case "preview": {
-        // The chart is deliberately not mirrored, matching the reconnect
-        // snapshot: it is far larger and the observer re-reads this row about
-        // once a second.
-        preview = JSON.stringify(event.preview);
-        break;
-      }
-      case "snapshot":
-      case "run_preview":
-      case "started":
-      case "tool_call":
-      case "tool_result":
-      case "error":
-      case "done": {
-        // Nothing mirrored: the trace is folded below, and the rest is either
-        // reconstructed by the observer or terminal.
-        break;
-      }
-    }
-    recordExploreTraceEvent(trace, event);
-    await database.scoutInteractiveRun.update({
-      where: { id: run.id },
-      data: {
-        partialOutput: partial.length === 0 ? null : partial,
-        trace: JSON.stringify(trace),
-        activity,
-        preview,
-        ...(event.type === "final"
-          ? { resultMessageId: event.message.id }
-          : {}),
-      },
-    });
-  };
-  const result = await runPersistedExploreTurn(
-    {
-      ticket,
-      identity: { userId: run.ownerId },
+  const manager =
+    suppliedManager ??
+    (database === prisma
+      ? exploreRunManager
+      : new ExploreRunManager({ client: database }));
+  try {
+    await manager.rehydrateTemporalRun({
+      summary: ExploreActiveRunSchema.parse(payload.summary),
+      identity: { userId: DiscordAccountIdSchema.parse(run.ownerId) },
       guildIds: payload.guildIds,
-      surface: payload.surface,
       started: payload.started,
-      history: transcript.messages,
-      abortSignal,
-      abortOutcome: () => "stopped",
-      emit,
-    },
-    {
-      client: database,
-      executeAgent: streamExploreAgent,
-      now: Date.now,
-      timeoutMs: EXPLORE_TIMEOUT_MS,
-    },
-  );
-  return result.outcome;
+      surface: payload.surface,
+      originChannelId: payload.originChannelId,
+    });
+  } catch (error) {
+    if (error instanceof ExploreNotFoundError) {
+      throw ApplicationFailure.nonRetryable(
+        `Explore conversation ${payload.started.conversationId} no longer exists`,
+        "MissingDomainRecord",
+      );
+    }
+    throw error;
+  }
+  const cancel = (): void => {
+    manager.cancelTemporal(
+      run.id,
+      "Explore turn cancelled by its Temporal Workflow.",
+    );
+  };
+  abortSignal.addEventListener("abort", cancel, { once: true });
+  if (abortSignal.aborted) cancel();
+  try {
+    return await manager.executeTemporal(run.id);
+  } finally {
+    abortSignal.removeEventListener("abort", cancel);
+  }
 }
 
 async function runExploreActivity(

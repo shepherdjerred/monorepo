@@ -168,6 +168,7 @@ export type FlagName =
   | "debug"
   | "duels_enabled"
   | "explore_creation_enabled"
+  | "explore_on_demand_riot_enabled"
   | "feature_tips_enabled"
   | "hall_of_fame_enabled"
   | "initial_match_history_import_enabled"
@@ -402,6 +403,13 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   explore_creation_enabled: {
     default: false,
     overrides: [],
+  },
+  /** On-demand Riot reads are beta-only until their cost and rate impact settle. */
+  explore_on_demand_riot_enabled: {
+    default: false,
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   /**
    * Offering the durable-pipeline operations console.

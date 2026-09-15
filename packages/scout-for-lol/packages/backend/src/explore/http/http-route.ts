@@ -187,12 +187,26 @@ async function handleSharedTranscript(
     return jsonError("Not found.", 404, corsHeaders);
   }
   const shared = redactSharedExploreTranscript(transcript);
+  // Keep the anonymous endpoint on its pre-origin wire shape. A cached SPA
+  // bundle parses this response strictly and would reject a newly added key;
+  // current clients default an absent origin to `legacy`.
+  const compatibleShared = {
+    ...shared,
+    conversation: {
+      id: shared.conversation.id,
+      title: shared.conversation.title,
+      shareToken: shared.conversation.shareToken,
+      sharedLeafId: shared.conversation.sharedLeafId,
+      createdAt: shared.conversation.createdAt,
+      updatedAt: shared.conversation.updatedAt,
+    },
+  };
   const payload =
     url.searchParams.get("cards") === "1"
-      ? shared
+      ? compatibleShared
       : {
-          ...shared,
-          messages: shared.messages.map(
+          ...compatibleShared,
+          messages: compatibleShared.messages.map(
             ({ matchCards: _, ...message }) => message,
           ),
         };

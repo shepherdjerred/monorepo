@@ -4,6 +4,8 @@ import {
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { DiscordChannelId } from "@scout-for-lol/data";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   getExploreQuotaStatus,
   type ExploreRateLimitIdentity,
@@ -33,6 +35,8 @@ export async function startExploreRun(input: {
   conversationId: string;
   ticket: ExploreRateLimitTicket;
   inlineExecutionForTests: boolean;
+  surface: ExploreSurface;
+  originChannelId: DiscordChannelId | null;
   assertAcceptingRuns: () => void;
   registerRun: (run: ActiveRun) => void;
   removeRun: (summary: ExploreActiveRun) => void;
@@ -45,12 +49,13 @@ export async function startExploreRun(input: {
 }): Promise<ExploreActiveRun> {
   const { client, identity, request, guildIds, conversationId, ticket } = input;
   try {
-    const started = await resolveTurnTarget(
+    const started = await resolveTurnTarget({
       client,
       request,
       identity,
-      conversationId,
-    );
+      newId: conversationId,
+      origin: input.surface,
+    });
     const versionCountAtStart = await client.exploreMessage.count({
       where: {
         conversationId: started.conversationId,
@@ -83,6 +88,8 @@ export async function startExploreRun(input: {
       ticket,
       started,
       history: transcript.messages,
+      surface: input.surface,
+      originChannelId: input.originChannelId,
     });
     input.registerRun(run);
     if (input.inlineExecutionForTests) {
@@ -101,6 +108,8 @@ async function startDurableRun(
     client: ExtendedPrismaClient;
     identity: ExploreRateLimitIdentity;
     guildIds: string[];
+    surface: ExploreSurface;
+    originChannelId: DiscordChannelId | null;
     removeRun: (summary: ExploreActiveRun) => void;
     createRateLimitedError: (rejection: ExploreRateLimitRejection) => Error;
     isDurableUnavailable: (error: unknown) => boolean;
@@ -117,8 +126,8 @@ async function startDurableRun(
       ownerId: input.identity.userId,
       started,
       guildIds: input.guildIds,
-      // Durable Explore runs are only ever enqueued from the Explore page.
-      surface: "web",
+      surface: input.surface,
+      originChannelId: input.originChannelId,
     });
     if (durableRejection !== null) {
       throw input.createRateLimitedError({

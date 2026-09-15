@@ -15,6 +15,8 @@ import type {
   ExploreRateLimitIdentity,
   ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
+import type { DiscordChannelId } from "@scout-for-lol/data";
 import {
   ExploreInvalidTurnError,
   resolveRegenerateTarget,
@@ -29,6 +31,7 @@ import type {
   StartedTurn,
   TerminalRun,
 } from "#src/explore/runs/run-manager-types.ts";
+import { broadcastExploreEvent } from "#src/explore/runs/run-events.ts";
 
 export function abortActiveExploreRun(
   run: ActiveRun,
@@ -58,34 +61,49 @@ export function recordTerminalExploreOutcome(
   });
 }
 
+export function settleActiveExploreRun(
+  run: ActiveRun,
+  outcome: ExploreRunOutcome,
+): void {
+  run.ticket.finish();
+  broadcastExploreEvent(run, { type: "done", outcome });
+  run.subscribers.clear();
+  run.resolveSettled(null);
+}
+
 const logger = createLogger("explore-run-manager");
 
-export async function resolveTurnTarget(
-  client: ExtendedPrismaClient,
-  input: ExploreTurnRequest,
-  identity: ExploreRateLimitIdentity,
-  newId: string,
-): Promise<StartedTurn> {
-  if (input.question === null) {
-    if (input.conversationId === null || input.attach.kind !== "message") {
+export async function resolveTurnTarget(input: {
+  client: ExtendedPrismaClient;
+  request: ExploreTurnRequest;
+  identity: ExploreRateLimitIdentity;
+  newId: string;
+  origin: "legacy" | "web" | "discord" | "voice";
+}): Promise<StartedTurn> {
+  if (input.request.question === null) {
+    if (
+      input.request.conversationId === null ||
+      input.request.attach.kind !== "message"
+    ) {
       throw new ExploreInvalidTurnError(
         "Answering again needs an existing question.",
       );
     }
-    return await resolveRegenerateTarget(client, {
-      conversationId: input.conversationId,
-      userId: identity.userId,
-      parentMessageId: input.attach.messageId,
+    return await resolveRegenerateTarget(input.client, {
+      conversationId: input.request.conversationId,
+      userId: input.identity.userId,
+      parentMessageId: input.request.attach.messageId,
     });
   }
-  const started = await startExploreTurn(client, {
-    conversationId: input.conversationId,
-    newId,
-    userId: identity.userId,
-    question: input.question,
-    attach: input.attach,
+  const started = await startExploreTurn(input.client, {
+    conversationId: input.request.conversationId,
+    newId: input.newId,
+    userId: input.identity.userId,
+    question: input.request.question,
+    attach: input.request.attach,
+    origin: input.origin,
   });
-  return { ...started, question: input.question };
+  return { ...started, question: input.request.question };
 }
 
 export function createDeferred(): {
@@ -111,6 +129,8 @@ export function createActiveExploreRun(input: {
   ticket: ExploreRateLimitTicket;
   started: StartedTurn;
   history: ExploreMessage[];
+  surface: ExploreSurface;
+  originChannelId: DiscordChannelId | null;
 }): ActiveRun {
   const deferred = createDeferred();
   return {
@@ -120,6 +140,8 @@ export function createActiveExploreRun(input: {
     ticket: input.ticket,
     started: input.started,
     history: input.history,
+    surface: input.surface,
+    originChannelId: input.originChannelId,
     abortController: new AbortController(),
     subscribers: new Set(),
     answer: "",
@@ -175,10 +197,12 @@ export async function executeActiveExploreRun(input: {
         ticket: input.run.ticket,
         identity: input.run.identity,
         guildIds: input.run.guildIds,
-        // The web run manager only ever answers the Explore page.
-        surface: "web",
+        surface: input.run.surface,
         started: input.run.started,
         history: input.run.history,
+        ...(input.run.originChannelId === null
+          ? {}
+          : { originChannelId: input.run.originChannelId }),
         abortSignal: input.run.abortController.signal,
         abortOutcome: () =>
           input.run.termination === "stop" || input.run.termination === "delete"

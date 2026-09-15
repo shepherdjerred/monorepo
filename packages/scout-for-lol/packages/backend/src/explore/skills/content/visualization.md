@@ -4,7 +4,7 @@ description: >-
   Choosing the RENDER kind that matches a query's data. Load before setting
   includeVisualization to true.
 capability: always
-surfaces: [web, discord]
+surfaces: [web, discord, voice]
 tripwires:
   - >-
     Never use a line or area chart when the x axis is a category. A line drawn

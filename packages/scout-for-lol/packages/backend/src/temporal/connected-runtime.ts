@@ -133,6 +133,8 @@ type InteractiveActivities = Pick<
 type BackgroundActivities = Pick<
   ScoutTemporalActivities,
   | "fetchInitialHistoryPage"
+  | "importExploreHistory"
+  | "importExploreTimelines"
   | "reconcileIngestion"
   | "runBackgroundJob"
   | "runDetachedBackgroundWork"

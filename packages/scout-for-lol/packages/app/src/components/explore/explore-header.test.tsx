@@ -3,6 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ExploreHeader } from "#src/components/explore/explore-header.tsx";
 
 describe("ExploreHeader", () => {
+  test("labels a voice-originated conversation", () => {
+    const markup = renderToStaticMarkup(
+      <ExploreHeader title="Lane opponent" voiceConversation />,
+    );
+
+    expect(markup).toContain("Voice");
+  });
+
   test("keeps the mobile conversations trigger in a responsive wrapper", () => {
     const markup = renderToStaticMarkup(
       <ExploreHeader

@@ -516,7 +516,12 @@ describe("explore http route — remaining surface", () => {
     const rawBody: unknown = await response.json();
     const body = z
       .object({
-        conversation: z.object({ title: z.string() }),
+        conversation: z.object({
+          title: z.string(),
+          // Older cached clients use a strict conversation schema that does
+          // not know this field, so the anonymous wire contract omits it.
+          origin: z.never().optional(),
+        }),
         messages: z.array(
           z.object({
             content: z.string(),

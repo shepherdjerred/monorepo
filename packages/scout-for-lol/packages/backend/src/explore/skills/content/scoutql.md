@@ -5,7 +5,7 @@ description: >-
   writing correct queries. Load before writing, validating, or running any
   report query.
 capability: always
-surfaces: [web, discord]
+surfaces: [web, discord, voice]
 tripwires: []
 ---
 {{scoutqlFieldGuide}}

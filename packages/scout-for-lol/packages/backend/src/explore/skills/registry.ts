@@ -44,6 +44,7 @@ export type ExploreSkillOptions = {
   dares?: boolean | undefined;
   challenges?: boolean | undefined;
   creation?: boolean | undefined;
+  riotHistory?: boolean | undefined;
   surface?: ExploreSurface | undefined;
 };
 
@@ -93,6 +94,8 @@ export function enabledExploreSkills(
         return options.challenges === true;
       case "creation":
         return options.creation === true;
+      case "riot-history":
+        return options.riotHistory === true;
     }
   });
 }

@@ -1,10 +1,12 @@
 import {
   EXPLORE_TIMEOUT_MS,
   type DiscordAccountId,
+  type DiscordChannelId,
   type ExploreActiveRun,
   type ExploreRunOutcome,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
@@ -34,6 +36,8 @@ import {
   createActiveExploreRun,
   createDeferred,
   executeActiveExploreRun,
+  recordTerminalExploreOutcome,
+  settleActiveExploreRun,
 } from "#src/explore/runs/run-manager-helpers.ts";
 import { startExploreRun } from "#src/explore/runs/run-manager-start.ts";
 import type {
@@ -46,10 +50,7 @@ import type {
   TerminalRun,
 } from "#src/explore/runs/run-manager-types.ts";
 import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
-import {
-  broadcastExploreEvent,
-  recordExploreEvent,
-} from "#src/explore/runs/run-events.ts";
+import { recordExploreEvent } from "#src/explore/runs/run-events.ts";
 
 const TERMINAL_OUTCOME_TTL_MS = 5 * 60 * 1000;
 export class ExploreRunUnavailableError extends Error {}
@@ -88,27 +89,30 @@ export class ExploreRunManager {
   readonly #terminalRuns = new Map<string, TerminalRun>();
   #acceptingRuns = true;
 
-  constructor(
-    dependencies: {
-      client?: ExtendedPrismaClient;
-      runAgent?: ExploreAgentRunner;
-      timeoutMs?: number;
-      inlineExecutionForTests?: boolean;
-    } = {},
-  ) {
-    this.#client = dependencies.client ?? prisma;
-    this.#runAgent = dependencies.runAgent ?? streamExploreAgent;
-    this.#timeoutMs = dependencies.timeoutMs ?? EXPLORE_TIMEOUT_MS;
-    this.#inlineExecutionForTests =
-      dependencies.inlineExecutionForTests ?? false;
+  constructor(dependencies?: {
+    client?: ExtendedPrismaClient;
+    runAgent?: ExploreAgentRunner;
+    timeoutMs?: number;
+    inlineExecutionForTests?: boolean;
+  }) {
+    const resolved = dependencies ?? {};
+    this.#client = resolved.client ?? prisma;
+    this.#runAgent = resolved.runAgent ?? streamExploreAgent;
+    this.#timeoutMs = resolved.timeoutMs ?? EXPLORE_TIMEOUT_MS;
+    this.#inlineExecutionForTests = resolved.inlineExecutionForTests ?? false;
   }
 
   async start(
     identity: ExploreRateLimitIdentity,
     request: ExploreTurnRequest,
     guildIds: string[],
+    context?: {
+      surface: ExploreSurface;
+      originChannelId?: DiscordChannelId | undefined;
+    },
   ): Promise<ExploreActiveRun> {
     this.#assertAcceptingRuns();
+    const resolvedContext = context ?? { surface: "web" };
     const conversationId =
       request.conversationId ?? globalThis.crypto.randomUUID();
     if (
@@ -144,6 +148,8 @@ export class ExploreRunManager {
         conversationId,
         ticket,
         inlineExecutionForTests: this.#inlineExecutionForTests,
+        surface: resolvedContext.surface,
+        originChannelId: resolvedContext.originChannelId ?? null,
         assertAcceptingRuns: () => {
           this.#assertAcceptingRuns();
         },
@@ -260,6 +266,8 @@ export class ExploreRunManager {
     identity: ExploreRateLimitIdentity;
     guildIds: string[];
     started: StartedTurn;
+    surface: ExploreSurface;
+    originChannelId: DiscordChannelId | null;
   }): Promise<void> {
     if (this.#runs.has(input.summary.runId)) return;
     const existingRunId = this.#conversationRuns.get(
@@ -297,6 +305,8 @@ export class ExploreRunManager {
       ticket,
       started: input.started,
       history: transcript.messages,
+      surface: input.surface,
+      originChannelId: input.originChannelId,
     });
     this.#runs.set(run.summary.runId, run);
     this.#conversationRuns.set(run.summary.conversationId, run.summary.runId);
@@ -310,6 +320,16 @@ export class ExploreRunManager {
       );
     }
     return await this.#execute(run);
+  }
+
+  /** Release a gateway copy and its rate-limit ticket after remote execution. */
+  settleDurablePlaceholder(runId: string, outcome: ExploreRunOutcome): void {
+    const run = this.#runs.get(runId);
+    if (run === undefined) return;
+    this.#recordTerminalOutcome(run, outcome);
+    settleActiveExploreRun(run, outcome);
+    this.#runs.delete(run.summary.runId);
+    this.#conversationRuns.delete(run.summary.conversationId);
   }
 
   outcome(runId: string, userId: DiscordAccountId): ExploreRunOutcome | null {
@@ -470,27 +490,17 @@ export class ExploreRunManager {
     try {
       return outcome;
     } finally {
-      this.#recordTerminalOutcome(run, outcome);
-      broadcastExploreEvent(run, { type: "done", outcome });
-      run.subscribers.clear();
-      this.#runs.delete(run.summary.runId);
-      this.#conversationRuns.delete(run.summary.conversationId);
-      run.resolveSettled(null);
+      this.settleDurablePlaceholder(run.summary.runId, outcome);
     }
   }
 
   #recordTerminalOutcome(run: ActiveRun, outcome: ExploreRunOutcome): void {
-    const completedAt = Date.now();
-    for (const [runId, terminal] of this.#terminalRuns) {
-      if (completedAt - terminal.completedAt > TERMINAL_OUTCOME_TTL_MS) {
-        this.#terminalRuns.delete(runId);
-      }
-    }
-    this.#terminalRuns.set(run.summary.runId, {
-      userId: run.identity.userId,
+    recordTerminalExploreOutcome(
+      this.#terminalRuns,
+      run,
       outcome,
-      completedAt,
-    });
+      TERMINAL_OUTCOME_TTL_MS,
+    );
   }
 }
 export const exploreRunManager = new ExploreRunManager();

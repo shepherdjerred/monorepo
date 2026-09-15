@@ -126,6 +126,13 @@ const OPENAI_NATIVE_REALTIME_PATHS = new Set([
   "packages/scout-for-lol/packages/backend/src/configuration.ts",
   "packages/scout-for-lol/packages/backend/src/voice-assistant/runtime.ts",
 ]);
+// OpenRouter and llm-runtime do not expose OpenAI's speech-to-text or
+// text-to-speech REST APIs. Keep that native transport inside the shared voice
+// package so application code can only consume the reviewed typed adapter.
+const OPENAI_NATIVE_VOICE_AUDIO_PATHS = new Set([
+  "packages/voice-assistant/src/openai-audio.ts",
+  "packages/voice-assistant/test/openai-audio.test.ts",
+]);
 const STREAMBOT_VOICE_TTS_PATHS = new Set([
   "packages/streambot/package.json",
   "packages/streambot/src/voice/corpus-generator.ts",
@@ -205,7 +212,8 @@ function isAllowedViolation(
     return (
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
-      filePath === OPENAI_BILLING_RECONCILIATION_PATH
+      filePath === OPENAI_BILLING_RECONCILIATION_PATH ||
+      OPENAI_NATIVE_VOICE_AUDIO_PATHS.has(filePath)
     );
   }
 

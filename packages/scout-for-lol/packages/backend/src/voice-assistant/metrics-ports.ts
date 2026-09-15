@@ -1,24 +1,14 @@
 import type {
-  RealtimeTurnMetrics,
   ReplyMetrics,
   VoiceLifecycleMetrics,
   VoiceObservability,
 } from "@shepherdjerred/voice-assistant";
 import {
-  scoutVoiceActivationStageLatencySeconds,
-  scoutVoiceAudioTokensTotal,
-  scoutVoiceCloudRequestsTotal,
-  scoutVoiceConcurrentTurns,
-  scoutVoiceOpenAiFailuresTotal,
   scoutVoiceReplyBytesTotal,
   scoutVoiceReplyDurationSeconds,
   scoutVoiceReplyPacketsTotal,
   scoutVoiceReplySendFailuresTotal,
-  scoutVoiceTranscriptVerificationsTotal,
-  scoutVoiceTranscriptionUsageTotal,
   scoutVoiceTurnDeliveryFailuresTotal,
-  scoutVoiceTurnsTotal,
-  scoutVoiceWakeToReplySeconds,
 } from "#src/metrics/platform/voice.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -55,62 +45,6 @@ export const scoutVoiceLifecycleMetrics: VoiceLifecycleMetrics = {
   turnDeliveryFailures: {
     inc: (value) => {
       scoutVoiceTurnDeliveryFailuresTotal.inc(value);
-    },
-  },
-};
-
-export const scoutRealtimeTurnMetrics: RealtimeTurnMetrics = {
-  audioTokens: {
-    inc: (labels, value) => {
-      scoutVoiceAudioTokensTotal.inc(labels, value);
-    },
-  },
-  activationStageLatencySeconds: {
-    observe: (labels, value) => {
-      scoutVoiceActivationStageLatencySeconds.observe(labels, value);
-    },
-  },
-  concurrentTurns: {
-    inc: () => {
-      scoutVoiceConcurrentTurns.inc();
-    },
-    dec: () => {
-      scoutVoiceConcurrentTurns.dec();
-    },
-  },
-  openAiFailures: {
-    inc: (labels, value) => {
-      scoutVoiceOpenAiFailuresTotal.inc(labels, value);
-    },
-  },
-  replySendFailures: {
-    inc: (value) => {
-      scoutVoiceReplySendFailuresTotal.inc(value);
-    },
-  },
-  transcriptVerifications: {
-    inc: (labels, value) => {
-      scoutVoiceTranscriptVerificationsTotal.inc(labels, value);
-    },
-  },
-  transcriptionUsage: {
-    inc: (labels, value) => {
-      scoutVoiceTranscriptionUsageTotal.inc(labels, value);
-    },
-  },
-  turns: {
-    inc: (labels, value) => {
-      scoutVoiceTurnsTotal.inc(labels, value);
-    },
-  },
-  wakeToReplySeconds: {
-    observe: (value) => {
-      scoutVoiceWakeToReplySeconds.observe(value);
-    },
-  },
-  cloudRequests: {
-    inc: (labels, value) => {
-      scoutVoiceCloudRequestsTotal.inc(labels, value);
     },
   },
 };

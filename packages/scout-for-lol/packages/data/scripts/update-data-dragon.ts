@@ -30,6 +30,10 @@ import {
 } from "./riot-patch.ts";
 import { generateAbilityFactsAssets } from "./ability-facts.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
+import {
+  PatchChangesetHistorySchema,
+  type PatchChangeset,
+} from "#src/data-dragon/patch-notes.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
@@ -37,6 +41,7 @@ const IMG_DIR = `${ASSETS_DIR}/img`;
 const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx`;
 // Structured patch changeset consumed at review time (bundled asset).
 const PATCH_NOTES_ASSET = `${ASSETS_DIR}/patch-notes.json`;
+const PATCH_NOTES_HISTORY_ASSET = `${ASSETS_DIR}/patch-notes-history.json`;
 // Raw patch-notes provenance — committed but not imported at runtime.
 const PATCH_NOTES_ARCHIVE_DIR = `${import.meta.dir}/../patch-notes-archive`;
 // scout-for-lol/packages/data/scripts → monorepo root (for resolving prettier).
@@ -1391,6 +1396,34 @@ async function saveRawPatchNotes(
   console.log(`✓ Archived raw patch ${patch.patch} notes`);
 }
 
+async function savePatchChangeset(changeset: PatchChangeset): Promise<void> {
+  const historyFile = Bun.file(PATCH_NOTES_HISTORY_ASSET);
+  const history =
+    historyFile.size === 0
+      ? []
+      : PatchChangesetHistorySchema.parse(await historyFile.json());
+  const merged = [
+    changeset,
+    ...history.filter((entry) => entry.patch !== changeset.patch),
+  ].sort((left, right) =>
+    right.patch.localeCompare(left.patch, undefined, { numeric: true }),
+  );
+  await Promise.all([
+    Bun.write(PATCH_NOTES_ASSET, `${JSON.stringify(changeset, null, 2)}\n`),
+    Bun.write(
+      PATCH_NOTES_HISTORY_ASSET,
+      `${JSON.stringify(merged, null, 2)}\n`,
+    ),
+  ]);
+  const prettierResult =
+    await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${PATCH_NOTES_ASSET} ${PATCH_NOTES_HISTORY_ASSET}`.quiet();
+  if (prettierResult.exitCode !== 0) {
+    throw new Error(
+      `prettier failed to format patch changesets (exit ${String(prettierResult.exitCode)}): ${prettierResult.stderr.toString()}`,
+    );
+  }
+}
+
 async function maybeAppendChangelogEntry(
   previousVersion: string | undefined,
   version: string,
@@ -1435,17 +1468,7 @@ async function maybeAppendChangelogEntry(
     );
     const officialPatchContent = await fetchOfficialPatchNotes(patch);
     const changeset = await analyzePatch(patch, officialPatchContent);
-    await Bun.write(
-      PATCH_NOTES_ASSET,
-      `${JSON.stringify(changeset, null, 2)}\n`,
-    );
-    const prettierResult =
-      await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${PATCH_NOTES_ASSET}`.quiet();
-    if (prettierResult.exitCode !== 0) {
-      throw new Error(
-        `prettier failed to format patch-notes.json (exit ${String(prettierResult.exitCode)}): ${prettierResult.stderr.toString()}`,
-      );
-    }
+    await savePatchChangeset(changeset);
     console.log(
       `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
     );

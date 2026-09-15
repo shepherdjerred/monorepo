@@ -153,7 +153,9 @@ describe("AI architecture compatibility exceptions", () => {
       ]).map(({ rule }) => rule),
     ).toEqual(["provider-api-key"]);
   });
+});
 
+describe("AI architecture guard exceptions", () => {
   test("allows native OpenAI Realtime credentials only on named voice surfaces", () => {
     expect(
       findAiArchitectureViolations([
@@ -175,6 +177,32 @@ describe("AI architecture compatibility exceptions", () => {
         },
       ]).map(({ rule }) => rule),
     ).toEqual(["provider-api-key"]);
+  });
+
+  test("allows native OpenAI audio only through the shared voice adapter", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/voice-assistant/src/openai-audio.ts",
+          contents:
+            'const transcription = "https://api.openai.com/v1/audio/transcriptions";',
+        },
+        {
+          path: "packages/voice-assistant/test/openai-audio.test.ts",
+          contents:
+            'expect(url).toBe("https://api.openai.com/v1/audio/speech");',
+        },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/scout-for-lol/packages/backend/src/voice-assistant/new-audio.ts",
+          contents: 'const speech = "https://api.openai.com/v1/audio/speech";',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["direct-provider-endpoint"]);
   });
 
   test("does not turn a broad source path into a provider exception", () => {

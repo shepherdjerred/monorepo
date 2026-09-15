@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DiscordChannelIdSchema } from "@scout-for-lol/data";
 import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
 
 /**
@@ -24,10 +25,11 @@ export const ExploreDurablePayloadSchema = z.strictObject({
   guildIds: z.array(z.string()),
   /**
    * Rows written before this field existed carry no surface. Durable Explore
-   * runs are enqueued from exactly one place — `run-manager-start.ts`, the web
-   * run manager — so `"web"` restores what those rows already meant rather than
-   * guessing at it. A Discord ask never becomes a durable run: it runs the turn
-   * inline inside the interaction.
+   * runs were previously enqueued only by the web surface, so `"web"` restores
+   * what those rows already meant rather than guessing at it. Voice started
+   * using this path only after the field existed.
    */
   surface: ExploreSurfaceSchema.default("web"),
+  /** Discord channel metadata for mutation drafts; old and non-Discord rows have none. */
+  originChannelId: DiscordChannelIdSchema.nullable().default(null),
 });

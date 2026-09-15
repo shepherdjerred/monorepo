@@ -1,8 +1,8 @@
 /**
  * Manual Hey Scout microphone probe: mic → shared audio lifecycle → one
- * OpenAI Realtime turn with the League tools. No Discord involved — this is
- * the fastest way to exercise the full wake → transcribe → tool-call → answer
- * path against the committed data assets. Mirrors streambot's
+ * OpenAI transcription request. No Discord identity is involved, so the
+ * durable Explore turn is exercised by the normal app or `/scout join`; this
+ * probe isolates microphone → wake → endpoint → transcription. Mirrors streambot's
  * `local-voice-probe.ts`/`voice-harness.ts` pair, trimmed to one always-on
  * loop.
  *
@@ -17,8 +17,7 @@
  *   OPENAI_API_KEY=... bun scripts/smoke/voice-probe.ts --device 1 --assets-dir ~/scout-voice-models
  *
  * Say "hey scout, how much true damage does Cho'Gath ult do at rank one" and
- * expect a printed transcript plus the grounded tool calls. Assistant reply
- * audio is discarded (this probe checks grounding, not playback).
+ * expect a printed transcript and verified command.
  */
 import { parseArgs } from "node:util";
 import {
@@ -29,10 +28,8 @@ import {
   listAvfoundationAudioDevices,
   loadSpokenFeedbackClips,
   NOOP_VOICE_LOGGER,
-  runRealtimeCommandTurn,
+  verifyWakeTranscript,
   VoiceAudioLifecycle,
-  type AssistantAudioSink,
-  type SpokenFeedbackClips,
 } from "@shepherdjerred/voice-assistant";
 import {
   scoutVoiceAssetManifest,
@@ -40,9 +37,9 @@ import {
   VOICE_FRAGMENT_TAIL_MS,
   VOICE_MAX_UTTERANCE_MS,
   VOICE_PRE_ROLL_MS,
+  VOICE_WAKE_PREFIXES,
 } from "#src/voice-assistant/constants.ts";
-import { scoutRealtimeTurnOptions } from "#src/voice-assistant/session.ts";
-import { VoiceTurnFactsRecorder } from "#src/voice-assistant/league-tools.ts";
+import { transcribeVoiceQuestion } from "@shepherdjerred/voice-assistant/openai-audio.ts";
 
 const help = `Hey Scout local voice probe
 
@@ -63,18 +60,6 @@ Ctrl-C quits.`;
 
 const LIST_DEVICES_OPTION = { type: "boolean", default: false } as const;
 const HELP_OPTION = { type: "boolean", short: "h", default: false } as const;
-
-class DiscardAssistantAudio implements AssistantAudioSink {
-  enqueue(pcm24k: Uint8Array): void {
-    pcm24k.fill(0);
-  }
-  finish(): Promise<void> {
-    return Promise.resolve();
-  }
-  cancel(): Promise<void> {
-    return Promise.resolve();
-  }
-}
 
 async function listDevices(): Promise<void> {
   const devices = await listAvfoundationAudioDevices("ffmpeg");
@@ -133,16 +118,12 @@ async function main(): Promise<void> {
   // malformed feedback WAV fails it exactly like production's fatal
   // bootstrap would — a passing probe must mean a bootable bundle. Skipping
   // is an explicit pre-training opt-out, never a silent downgrade.
-  let feedbackClips: SpokenFeedbackClips | undefined;
   if (values["no-feedback-clips"]) {
     console.log(
       "(--no-feedback-clips: rejected/bare wakes stay silent; this bundle is NOT production-complete)",
     );
   } else {
-    feedbackClips = await loadSpokenFeedbackClips(
-      assetsDir,
-      VOICE_FEEDBACK_CLIP_FILES,
-    );
+    await loadSpokenFeedbackClips(assetsDir, VOICE_FEEDBACK_CLIP_FILES);
   }
 
   const noop = createNoopVoiceMetrics();
@@ -163,26 +144,18 @@ async function main(): Promise<void> {
       );
     },
     onTurn: async (turn) => {
-      const recorder = new VoiceTurnFactsRecorder();
       try {
-        const result = await runRealtimeCommandTurn(
-          scoutRealtimeTurnOptions(apiKey, recorder),
-          {
-            pcm16k: turn.pcm16k,
-            activatedAtMs: turn.activatedAtMs,
-            assistantAudio: new DiscardAssistantAudio(),
-            ...(feedbackClips === undefined ? {} : { feedbackClips }),
-          },
-        );
-        console.log(`transcript: ${JSON.stringify(result.transcript ?? "")}`);
-        console.log(`wake verified: ${result.wakeVerified ? "Y" : "N"}`);
-        if (recorder.champion !== undefined) {
-          console.log(
-            `grounded in: ${recorder.champion} ${recorder.slot ?? ""}`,
-          );
-        }
+        const transcript = await transcribeVoiceQuestion({
+          apiKey,
+          pcm16k: turn.pcm16k,
+          signal: new AbortController().signal,
+        });
+        const verified = verifyWakeTranscript(transcript, VOICE_WAKE_PREFIXES);
+        console.log(`transcript: ${JSON.stringify(transcript)}`);
+        console.log(`wake verified: ${verified === null ? "N" : "Y"}`);
+        console.log(`command: ${JSON.stringify(verified?.command ?? "")}`);
       } catch (error) {
-        console.error("realtime turn failed:", error);
+        console.error("transcription failed:", error);
       } finally {
         turn.pcm16k.fill(0);
       }

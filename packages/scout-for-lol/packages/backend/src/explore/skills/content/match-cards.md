@@ -1,11 +1,11 @@
 ---
 name: match-cards
 description: >-
-  Attaching source-backed match cards to a web answer when an individual match
+  Attaching source-backed match cards to a saved Explore answer when an individual match
   makes it easier to understand. Load before setting matchCards to anything
   other than [].
 capability: always
-surfaces: [web]
+surfaces: [web, voice]
 tripwires:
   - >-
     A match card may name only a match_id listed as card-supported by your most

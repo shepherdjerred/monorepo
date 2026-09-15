@@ -13,7 +13,9 @@ import {
   appendExploreAnswer,
   deleteExploreConversation,
   listExploreConversations,
+  loadExploreRunResult,
   loadExploreTranscript,
+  loadExploreSpokenContent,
   loadSharedExploreTranscript,
   renameExploreConversation,
   resolveRegenerateTarget,
@@ -176,6 +178,130 @@ async function path(conversationId: string): Promise<string[]> {
   );
   return (transcript?.messages ?? []).map((message) => message.content);
 }
+
+describe("explore store — voice", () => {
+  test("persists Voice provenance without changing it on later turns", async () => {
+    const first = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Who is my lane opponent?",
+      attach: { kind: "leaf" },
+      origin: "voice",
+    });
+    await appendExploreAnswer(prisma, {
+      conversationId: first.conversationId,
+      parentMessageId: first.messageId,
+      answer: ANSWER,
+      preview: null,
+      visualization: null,
+      trace: [],
+    });
+    await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "What about their last hundred games?",
+      attach: { kind: "leaf" },
+      origin: "web",
+    });
+
+    const transcript = await loadExploreTranscript(
+      prisma,
+      first.conversationId,
+      userId,
+    );
+    expect(transcript?.conversation.origin).toBe("voice");
+  });
+
+  test("keeps the speech rendering private from transcript contracts", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Give me the full breakdown",
+      attach: { kind: "leaf" },
+      origin: "voice",
+    });
+    const message = await appendExploreAnswer(prisma, {
+      conversationId: started.conversationId,
+      parentMessageId: started.messageId,
+      answer: { ...ANSWER, spokenAnswer: "Short spoken summary." },
+      preview: null,
+      visualization: null,
+      trace: [],
+    });
+    expect(message).not.toHaveProperty("spokenContent");
+    await expect(
+      loadExploreSpokenContent(prisma, {
+        conversationId: started.conversationId,
+        messageId: message.id,
+        userId,
+      }),
+    ).resolves.toBe("Short spoken summary.");
+    await expect(
+      loadExploreSpokenContent(prisma, {
+        conversationId: started.conversationId,
+        messageId: message.id,
+        userId: otherUserId,
+      }),
+    ).resolves.toBeNull();
+  });
+
+  test("loads the answer produced by the run after the visible branch changes", async () => {
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Who should I play?",
+      answer: "Play Ahri.",
+    });
+    const secondTurn = await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "What is the backup pick?",
+      attach: { kind: "leaf" },
+      origin: "voice",
+    });
+    const secondAnswer = await appendExploreAnswer(prisma, {
+      conversationId: first.conversationId,
+      parentMessageId: secondTurn.messageId,
+      answer: {
+        ...ANSWER,
+        answer: "Play Orianna.",
+        spokenAnswer: "Orianna is the backup.",
+      },
+      preview: null,
+      visualization: null,
+      trace: [],
+    });
+    const runId = globalThis.crypto.randomUUID();
+    await prisma.scoutInteractiveRun.create({
+      data: {
+        id: runId,
+        kind: "explore",
+        ownerId: userId,
+        conversationId: first.conversationId,
+        payload: "{}",
+        state: "COMPLETED",
+        resultMessageId: secondAnswer.id,
+      },
+    });
+
+    expect(
+      await setExploreLeaf(
+        prisma,
+        first.conversationId,
+        userId,
+        first.answerId,
+      ),
+    ).toBe(true);
+    const result = await loadExploreRunResult(prisma, {
+      runId,
+      conversationId: first.conversationId,
+      userId,
+    });
+
+    expect(result?.answer.id).toBe(secondAnswer.id);
+    expect(result?.answer.content).toBe("Play Orianna.");
+    expect(result?.spokenContent).toBe("Orianna is the backup.");
+  });
+});
 
 describe("explore store", () => {
   test("persists a frozen match card for the owner and shared transcript", async () => {

@@ -4,11 +4,8 @@ import type {
   ExploreTraceEntry,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import {
-  ExploreNotFoundError,
-  toMessage,
-  versionsOf,
-} from "#src/explore/store.ts";
+import { ExploreNotFoundError } from "#src/explore/store.ts";
+import { toMessage, versionsOf } from "#src/explore/store-mappers.ts";
 
 /** Replace a just-created answer when cancellation wins during persistence. */
 export async function replaceExploreAnswer(
@@ -24,6 +21,7 @@ export async function replaceExploreAnswer(
     where: { id: input.messageId, conversationId: input.conversationId },
     data: {
       content: input.answer.answer,
+      spokenContent: input.answer.spokenAnswer ?? null,
       queryText: input.answer.queryText,
       caveats: JSON.stringify(input.answer.caveats),
       followUps: JSON.stringify(input.answer.followUps),

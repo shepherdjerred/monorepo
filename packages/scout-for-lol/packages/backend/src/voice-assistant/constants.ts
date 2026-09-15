@@ -9,9 +9,6 @@ import type { VoiceAssetManifest } from "@shepherdjerred/voice-assistant";
  * `src/configuration.ts`.
  */
 
-export const VOICE_REALTIME_MODEL = "gpt-realtime-2.1";
-export const VOICE_ASSISTANT_VOICE = "marin";
-
 /**
  * Rolling pre-roll retained before a sherpa candidate. Matches the shared
  * pipeline's `VOICE_WAKE_WINDOW_MS` (asserted by test) — the verifier scores
@@ -19,7 +16,16 @@ export const VOICE_ASSISTANT_VOICE = "marin";
  */
 export const VOICE_PRE_ROLL_MS = 2000;
 export const VOICE_MAX_UTTERANCE_MS = 15_000;
-export const VOICE_TRANSACTION_TIMEOUT_MS = 30_000;
+
+/** Hard deadline for each direct OpenAI transcription or speech request. */
+export const VOICE_OPENAI_AUDIO_REQUEST_TIMEOUT_MS = 30_000;
+
+export function voiceAudioRequestSignal(
+  parent: AbortSignal,
+  timeoutMs = VOICE_OPENAI_AUDIO_REQUEST_TIMEOUT_MS,
+): AbortSignal {
+  return AbortSignal.any([parent, AbortSignal.timeout(timeoutMs)]);
+}
 
 /** A session with no accepted wake for this long leaves the channel. */
 export const VOICE_INACTIVITY_TIMEOUT_MS = 45 * 60_000;

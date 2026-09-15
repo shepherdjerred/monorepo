@@ -25,15 +25,18 @@ describe("ExploreDurablePayloadSchema", () => {
     const parsed = ExploreDurablePayloadSchema.parse(legacyRow);
 
     expect(parsed.surface).toBe("web");
+    expect(parsed.originChannelId).toBeNull();
   });
 
   test("a stored surface is read back rather than defaulted", () => {
     const parsed = ExploreDurablePayloadSchema.parse({
       ...legacyRow,
-      surface: "discord",
+      surface: "voice",
+      originChannelId: "12345678901234567",
     });
 
-    expect(parsed.surface).toBe("discord");
+    expect(parsed.surface).toBe("voice");
+    expect(parsed.originChannelId).toBe("12345678901234567");
   });
 
   test("an unknown surface is rejected instead of falling back", () => {

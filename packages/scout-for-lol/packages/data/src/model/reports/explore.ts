@@ -319,6 +319,7 @@ export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
     title: ExploreConversationTitleSchema,
+    origin: z.enum(["legacy", "web", "discord", "voice"]).default("legacy"),
     shareToken: ExploreShareTokenSchema.nullable().default(null),
     /** The leaf a share link is pinned to, if the conversation is shared. */
     sharedLeafId: z.uuid().nullable().default(null),

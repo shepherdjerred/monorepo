@@ -1172,10 +1172,6 @@
       "clones": 1,
       "tokens": 156
     },
-    "packages/scout-for-lol/packages/data/scripts/update-data-dragon-schemas.ts|packages/scout-for-lol/packages/data/src/data-dragon/item.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
     "packages/scout-for-lol/packages/data/src/example/example.ts|packages/scout-for-lol/packages/report/src/html/index.test.ts": {
       "clones": 5,
       "tokens": 424

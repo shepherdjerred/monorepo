@@ -87,6 +87,7 @@ export type BucksActivitySurface = "command" | "button" | "web" | "unknown";
 /** Hey Scout turn outcomes; the closed set is the whole analytics vocabulary. */
 export type VoiceQuestionOutcome =
   | "answered"
+  | "busy"
   | "bare-wake"
   | "transcript-rejected"
   | "rate-limited"

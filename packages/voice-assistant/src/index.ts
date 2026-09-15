@@ -11,6 +11,7 @@ export * from "./audio/discord-opus-container.ts";
 export * from "./local-models.ts";
 export * from "./mac-microphone.ts";
 export * from "./mutation-gate.ts";
+export * from "./openai-audio.ts";
 export * from "./phrase-verifier.ts";
 export * from "./ports.ts";
 export * from "./quota-errors.ts";

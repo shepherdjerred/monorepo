@@ -7,7 +7,12 @@ import type { ReportQueryAgentParams } from "#src/reports/ai/report-query-agent.
 import type { ExploreAgentParams } from "#src/explore/agent.ts";
 
 const reportAiProvider = vi.hoisted(() => ({ calls: 0 }));
-const exploreProvider = vi.hoisted(() => ({ calls: 0 }));
+const exploreProvider = vi.hoisted(
+  (): { calls: number; gate: Promise<null> | null } => ({
+    calls: 0,
+    gate: null,
+  }),
+);
 vi.mock("#src/reports/ai/report-query-agent.ts", () => ({
   streamReportQueryAgent: async (params: ReportQueryAgentParams) => {
     reportAiProvider.calls++;
@@ -24,6 +29,7 @@ vi.mock("#src/reports/ai/report-query-agent.ts", () => ({
 vi.mock("#src/explore/agent.ts", () => ({
   streamExploreAgent: async (params: ExploreAgentParams) => {
     exploreProvider.calls++;
+    if (exploreProvider.gate !== null) await exploreProvider.gate;
     await params.emit({ type: "answer_delta", text: "Recovered answer" });
     return {
       answer: {
@@ -60,12 +66,15 @@ import {
   runScoutInteractiveActivity,
 } from "#src/temporal/interactive-activities.ts";
 import { startExploreTurn } from "#src/explore/store.ts";
+import { ExploreRunManager } from "#src/explore/runs/run-manager.ts";
+import { ExploreConversationBusyError } from "#src/explore/rate-limit.ts";
 
 const { prisma } = createTestDatabase("temporal-durability");
 
 beforeEach(async () => {
   reportAiProvider.calls = 0;
   exploreProvider.calls = 0;
+  exploreProvider.gate = null;
   await prisma.scoutEffectClaim.deleteMany();
   await prisma.scoutInteractiveRun.deleteMany();
   await prisma.exploreMessage.deleteMany();
@@ -297,54 +306,103 @@ describe("durable interactive recovery", () => {
       partialOutput: "SELECT player",
     });
   });
+});
 
-  test("rebuilds a pending Explore turn from its durable payload", async () => {
-    const ownerId = DiscordAccountIdSchema.parse("900000000000000221");
-    await prisma.user.create({
-      data: { discordId: ownerId, discordUsername: "recovered-explorer" },
-    });
-    const started = await startExploreTurn(prisma, {
-      conversationId: null,
-      newId: globalThis.crypto.randomUUID(),
-      userId: ownerId,
-      question: "Which champion wins the most?",
-      attach: { kind: "leaf" },
-    });
-    const runId = globalThis.crypto.randomUUID();
-    await prisma.scoutInteractiveRun.create({
-      data: {
-        id: runId,
-        kind: "explore",
-        ownerId,
-        conversationId: started.conversationId,
-        payload: JSON.stringify({
-          summary: { runId },
-          started: {
-            ...started,
-            question: "Which champion wins the most?",
-          },
-          guildIds: [],
-        }),
-      },
-    });
-    const run = await prisma.scoutInteractiveRun.findUniqueOrThrow({
-      where: { id: runId },
-    });
-
-    await expect(
-      executeRecoveredExplore(run, new AbortController().signal, prisma),
-    ).resolves.toBe("succeeded");
-    expect(exploreProvider.calls).toBe(1);
-    await expect(
-      prisma.exploreMessage.findFirstOrThrow({
-        where: {
-          conversationId: started.conversationId,
-          role: "assistant",
+test("rebuilds a pending Explore turn from its durable payload", async () => {
+  const ownerId = DiscordAccountIdSchema.parse("900000000000000221");
+  await prisma.user.create({
+    data: { discordId: ownerId, discordUsername: "recovered-explorer" },
+  });
+  const started = await startExploreTurn(prisma, {
+    conversationId: null,
+    newId: globalThis.crypto.randomUUID(),
+    userId: ownerId,
+    question: "Which champion wins the most?",
+    attach: { kind: "leaf" },
+  });
+  const runId = globalThis.crypto.randomUUID();
+  const summary = {
+    runId,
+    conversationId: started.conversationId,
+    questionMessageId: started.messageId,
+    leafIdAtStart: started.expectedCurrentLeafId,
+    versionCountAtStart: 0,
+    startedAt: new Date().toISOString(),
+  };
+  await prisma.scoutInteractiveRun.create({
+    data: {
+      id: runId,
+      kind: "explore",
+      ownerId,
+      conversationId: started.conversationId,
+      payload: JSON.stringify({
+        summary,
+        started: {
+          ...started,
+          question: "Which champion wins the most?",
         },
+        guildIds: [],
       }),
-    ).resolves.toMatchObject({ content: "Recovered answer" });
+    },
+  });
+  const run = await prisma.scoutInteractiveRun.findUniqueOrThrow({
+    where: { id: runId },
   });
 
+  const gatewayManager = new ExploreRunManager({ client: prisma });
+  await gatewayManager.rehydrateTemporalRun({
+    summary,
+    identity: { userId: ownerId },
+    guildIds: [],
+    started: {
+      ...started,
+      question: "Which champion wins the most?",
+    },
+    surface: "voice",
+    originChannelId: null,
+  });
+  const applicationManager = new ExploreRunManager({ client: prisma });
+  const gate = Promise.withResolvers<null>();
+  exploreProvider.gate = gate.promise;
+  const execution = executeRecoveredExplore(
+    run,
+    new AbortController().signal,
+    prisma,
+    applicationManager,
+  );
+  await vi.waitFor(() => {
+    expect(applicationManager.list(ownerId)).toEqual([summary]);
+  });
+  await expect(
+    applicationManager.start(
+      { userId: ownerId },
+      {
+        conversationId: started.conversationId,
+        question: "Can I ask from the web too?",
+        attach: { kind: "leaf" },
+      },
+      [],
+    ),
+  ).rejects.toBeInstanceOf(ExploreConversationBusyError);
+  gate.resolve(null);
+  await expect(execution).resolves.toBe("succeeded");
+  expect(exploreProvider.calls).toBe(1);
+  expect(applicationManager.list(ownerId)).toEqual([]);
+  expect(gatewayManager.list(ownerId)).toEqual([summary]);
+  gatewayManager.settleDurablePlaceholder(runId, "succeeded");
+  expect(gatewayManager.list(ownerId)).toEqual([]);
+  expect(gatewayManager.outcome(runId, ownerId)).toBe("succeeded");
+  await expect(
+    prisma.exploreMessage.findFirstOrThrow({
+      where: {
+        conversationId: started.conversationId,
+        role: "assistant",
+      },
+    }),
+  ).resolves.toMatchObject({ content: "Recovered answer" });
+});
+
+describe("durable stop handling", () => {
   test("honors a persisted stop before claiming provider spend", async () => {
     const runId = globalThis.crypto.randomUUID();
     await prisma.scoutInteractiveRun.create({

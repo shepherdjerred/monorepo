@@ -63,8 +63,10 @@ Scout root, `mise run generate` does the same thing.
 
 The Explore agent's system prompt is a lean core — corpus honesty, answer
 shape, limits — plus an index of skills. Everything domain-specific (ScoutQL
-itself, visualization kinds, match cards, dares, challenges, creation, Bryan
-Bucks) is a Markdown file under `src/explore/skills/content/` that the model
+itself, visualization kinds, match cards, League references, Riot acquisition,
+game review, player tendencies, patch impact, champion pools, voice response,
+dares, challenges, creation, Bryan Bucks) is a Markdown file under
+`src/explore/skills/content/` that the model
 loads on demand with the `load_skill` tool, mirroring the Agent Skills
 pattern. Adding a skill is adding one `.md` file: the loader discovers files
 by directory listing, and frontmatter (`name`, `description`, `capability`,
@@ -390,14 +392,23 @@ bun run customs:anonymize -- \
 ## Hey Scout voice assistant (beta)
 
 `src/voice-assistant/` binds the shared `@shepherdjerred/voice-assistant`
-pipeline (wake-word cascade → one OpenAI Realtime turn per question) to the
-Discord bot. `/scout join` starts a per-guild session in the requester's voice
-channel; grounded answers come from read-only tools over the committed data
-package assets (`lookup_ability`, `lookup_champion`, `lookup_item`,
-`lookup_patch_notes`). Sessions end on `/scout leave`, after 45 minutes
-without an accepted wake, when the channel holds no non-bot members, or on
-connection loss. No transcript text or audio is ever persisted; PostHog gets
-only guild identity, outcome, the resolved champion/slot, and latency.
+wake-word pipeline to durable Explore. It transcribes accepted audio, starts a
+Voice-surface Explore turn, and synthesizes the saved answer. Explore owns the
+League reference, ScoutQL, and on-demand Riot-history tools; Voice owns only
+speech transport and session policy. Each speaker gets one private saved
+Explore conversation per `/scout join` session. Audio is not persisted.
+Sessions end on `/scout leave`, after 45 minutes without an accepted wake,
+when the channel holds no non-bot members, or on connection loss.
+
+A turn that takes more than two seconds receives a spoken acknowledgement and
+continues durably. Disconnecting stops later speech without cancelling the
+saved Explore run. A completed answer permits two same-speaker, wake-free
+follow-ups within 15 seconds.
+
+`explore_on_demand_riot_enabled` separately gates the acquisition tool on
+every Explore surface. It defaults off; the managed beta rollout enables it
+only for the configured Scout test guild while Riot cost and rate impact are
+measured.
 
 **Activation is one flag: `voice_assistant_enabled`.** It decides where the
 `/scout join`/`leave` subcommands register, whether a join may open a session,
@@ -580,6 +591,12 @@ ask` and the Dare commands execute the Explore agent in the process that
   skipping the login without saying so is a crash loop, not a missing feature.
 - **`gateway` runs a Temporal client with no workers.** Commands start Workflows
   they do not execute.
+- **Recovered Explore activities register with the application run manager.**
+  A voice or Discord turn starts on the gateway but executes on the
+  `interactive` worker; rehydrating it there holds the same per-conversation
+  lock used by web starts, so the two surfaces cannot advance one transcript
+  concurrently. Once the durable row becomes terminal, the gateway releases
+  its non-executing copy and local rate-limit ticket.
 - **`scout_temporal_workers`** reports 0 rather than going absent for a queue
   class this role does not run, and `/healthz` reports the running queue classes
   by name.

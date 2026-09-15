@@ -17,6 +17,8 @@ export const SCOUT_WORKFLOW_NAMES = {
   postMatchDiscovery: "scoutPostMatchDiscoveryWorkflow",
   matchIngestion: "scoutMatchIngestionWorkflow",
   initialHistory: "scoutInitialHistoryWorkflow",
+  exploreHistory: "scoutExploreHistoryWorkflow",
+  exploreTimeline: "scoutExploreTimelineWorkflow",
   ingestionReconciliation: "scoutIngestionReconciliationWorkflow",
   backgroundJob: "scoutBackgroundJobWorkflow",
   detachedWork: "scoutDetachedWorkWorkflow",
@@ -139,6 +141,23 @@ export function scoutInitialHistoryWorkflowId(
   puuid: string,
 ): string {
   return `scout-${stage}-history-${puuid}`;
+}
+
+export function scoutExploreHistoryWorkflowId(
+  stage: ScoutStage,
+  puuid: string,
+  acquisitionBucket: number,
+): string {
+  return `scout-${stage}-explore-history-${puuid}-${acquisitionBucket.toString()}`;
+}
+
+export function scoutExploreTimelineWorkflowId(
+  stage: ScoutStage,
+  matchIds: readonly string[],
+  acquisitionBucket: number,
+): string {
+  const stableIds = matchIds.toSorted().join("-");
+  return `scout-${stage}-explore-timeline-${stableIds}-${acquisitionBucket.toString()}`;
 }
 
 export function scoutDetachedWorkWorkflowId(

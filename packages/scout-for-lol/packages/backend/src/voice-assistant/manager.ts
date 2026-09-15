@@ -136,6 +136,14 @@ function defaultDeps(): VoiceAssistantManagerDeps {
             voiceOutputArbiter.assistantDuck(input.guildId),
             () => voiceOutputArbiter.reserveForAssistant(input.guildId),
           ),
+        resolveUserProfile: async (userId) => {
+          const discordClient = voiceManager.getClient();
+          if (discordClient === null) {
+            throw new Error("Discord client is unavailable for Voice Explore");
+          }
+          const user = await discordClient.users.fetch(userId);
+          return { username: user.username, avatar: user.avatar };
+        },
         onWakeAccepted: input.onWakeAccepted,
         onQuestionObserved: input.onQuestionObserved,
       }),

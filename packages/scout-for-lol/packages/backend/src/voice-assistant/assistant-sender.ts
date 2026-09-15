@@ -47,7 +47,7 @@ export function assistantAudioTransport(
   };
 }
 
-/** One paced, ducked reply sink per Realtime turn. */
+/** One paced, ducked reply sink per synthesized Explore answer. */
 export function createAssistantSender(
   connection: AssistantVoiceConnection,
   duck: DuckObserver,

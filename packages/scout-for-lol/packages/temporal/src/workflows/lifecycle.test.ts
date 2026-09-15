@@ -2,13 +2,15 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker } from "@temporalio/worker";
+import { Worker, type WorkerOptions } from "@temporalio/worker";
 import {
   requestInitialHistoryRunSignal,
   requestStopSignal,
 } from "#src/signals.ts";
 import {
   scoutInitialHistoryWorkflow,
+  scoutExploreHistoryWorkflow,
+  scoutExploreTimelineWorkflow,
   scoutIngestionReconciliationWorkflow,
   scoutInteractiveRunWorkflow,
   scoutPostMatchDiscoveryWorkflow,
@@ -27,6 +29,30 @@ function workflowWorker(): Promise<Worker> {
     workflowsPath: new URL("index.ts", import.meta.url).pathname,
     maxConcurrentWorkflowTaskExecutions: 4,
   });
+}
+
+async function startExploreAcquisitionWorkers(
+  phases: string[],
+  activities: NonNullable<WorkerOptions["activities"]>,
+): Promise<void> {
+  const workflow = await workflowWorker();
+  const background = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: "scout-dev-background",
+    activities,
+  });
+  const lake = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: "scout-dev-lake",
+    activities: {
+      runReportLakeJob: () => {
+        phases.push("fold");
+      },
+    },
+  });
+  await workers.start(workflow);
+  await workers.start(background);
+  await workers.start(lake);
 }
 
 beforeEach(async () => {
@@ -83,6 +109,86 @@ test("routes the queue canary through every workload queue", async () => {
       taskQueue: `scout-dev-${queueClass}`,
     })),
   );
+});
+
+test("imports Explore history before folding the report lake", async () => {
+  const phases: string[] = [];
+  await startExploreAcquisitionWorkers(phases, {
+    importExploreHistory: () => {
+      phases.push("import");
+      return {
+        requested: 100,
+        found: 87,
+        alreadyAvailable: 50,
+        ingested: 36,
+        skipped: 1,
+      };
+    },
+  });
+
+  const result = await environment.client.workflow.execute(
+    scoutExploreHistoryWorkflow,
+    {
+      taskQueue: "scout-dev",
+      workflowId: "explore-history",
+      args: [
+        {
+          stage: "dev",
+          puuid: "puuid_123",
+          region: "AMERICA_NORTH",
+          acquisitionBucket: 123,
+          requestedMatches: 100,
+        },
+      ],
+    },
+  );
+
+  expect(result).toEqual({
+    requested: 100,
+    found: 87,
+    alreadyAvailable: 50,
+    ingested: 36,
+    skipped: 1,
+  });
+  expect(phases).toEqual(["import", "fold"]);
+});
+
+test("imports Explore timelines before folding the report lake", async () => {
+  const phases: string[] = [];
+  await startExploreAcquisitionWorkers(phases, {
+    importExploreTimelines: () => {
+      phases.push("import");
+      return {
+        requested: 3,
+        alreadyAvailable: 1,
+        ingested: 2,
+        unavailable: 0,
+      };
+    },
+  });
+
+  const result = await environment.client.workflow.execute(
+    scoutExploreTimelineWorkflow,
+    {
+      taskQueue: "scout-dev",
+      workflowId: "explore-timeline",
+      args: [
+        {
+          stage: "dev",
+          matchIds: ["NA1_1", "NA1_2", "NA1_3"],
+          acquisitionBucket: 123,
+        },
+      ],
+    },
+  );
+
+  expect(result).toEqual({
+    requested: 3,
+    alreadyAvailable: 1,
+    ingested: 2,
+    unavailable: 0,
+  });
+  expect(phases).toEqual(["import", "fold"]);
 });
 
 describe("realtime workflows", () => {

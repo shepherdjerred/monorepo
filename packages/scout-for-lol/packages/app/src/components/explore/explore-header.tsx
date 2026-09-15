@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Download, Link2Off, Menu, Share2 } from "lucide-react";
+import { Download, Link2Off, Menu, Mic, Share2 } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Sheet,
@@ -15,6 +15,7 @@ import {
  */
 export function ExploreHeader(props: {
   title: string;
+  voiceConversation?: boolean;
   drawerOpen?: boolean;
   onDrawerOpenChange?: (open: boolean) => void;
   sidebar?: ReactNode;
@@ -66,6 +67,12 @@ export function ExploreHeader(props: {
         <h1 className="truncate text-xl font-semibold tracking-tight">
           {props.title}
         </h1>
+        {props.voiceConversation === true && (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-scout-hover px-2 py-0.5 text-xs font-medium text-scout-subtle">
+            <Mic className="size-3" aria-hidden="true" />
+            Voice
+          </span>
+        )}
       </div>
 
       {(props.actions !== undefined || props.extraActions !== undefined) && (

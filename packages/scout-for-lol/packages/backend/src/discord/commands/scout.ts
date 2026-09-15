@@ -118,6 +118,7 @@ export async function executeScout(
       userId: identity.userId,
       question: question.data,
       attach: { kind: "leaf" },
+      origin: "discord",
     });
     const started = { ...created, question: question.data };
     const transcript = await loadExploreTranscript(

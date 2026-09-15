@@ -7,6 +7,7 @@ import {
   ExploreTraceEntrySchema,
   ReportAiPreviewSummarySchema,
   type DiscordAccountId,
+  type DiscordChannelId,
   type ExploreActiveRun,
   type ExploreRunOutcome,
   type ExploreStreamEvent,
@@ -54,6 +55,7 @@ export async function reserveAndStartDurableExploreRun(input: {
    * the surface that started it rather than on a default.
    */
   surface: ExploreSurface;
+  originChannelId: DiscordChannelId | null;
 }): Promise<DurableExploreRejection | null> {
   const rejection = await reserveDurableExploreRun({
     id: input.summary.runId,
@@ -64,6 +66,7 @@ export async function reserveAndStartDurableExploreRun(input: {
       started: input.started,
       guildIds: input.guildIds,
       surface: input.surface,
+      originChannelId: input.originChannelId,
     }),
     database: input.database,
   });

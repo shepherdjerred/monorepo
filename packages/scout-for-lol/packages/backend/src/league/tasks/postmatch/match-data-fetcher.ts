@@ -6,6 +6,7 @@ import {
   type RawTimeline,
   RawMatchSchema,
   RawTimelineSchema,
+  type PlatformRoute,
   platformToRegionalRoute,
   isCustomMatchPayload,
   missingExpectedMatchFields,
@@ -105,7 +106,7 @@ export async function fetchMatchData(
  */
 export async function fetchMatchTimeline(
   matchId: MatchId,
-  playerRegion: Region,
+  playerRegion: Region | PlatformRoute,
   failureMode:
     | "return_undefined"
     | "return_undefined_on_404"

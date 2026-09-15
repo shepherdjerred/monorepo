@@ -9,6 +9,7 @@
 
 import { z } from "zod";
 import patchNotesData from "./assets/patch-notes.json" with { type: "json" };
+import patchNotesHistoryData from "./assets/patch-notes-history.json" with { type: "json" };
 import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 import { getItemInfo } from "#src/data-dragon/item.ts";
 import { type Lane } from "#src/model/riot/lane.ts";
@@ -70,6 +71,7 @@ export const PatchChangesetSchema = z.object({
   systems: z.array(PatchSystemChangeSchema).default([]),
 });
 export type PatchChangeset = z.infer<typeof PatchChangesetSchema>;
+export const PatchChangesetHistorySchema = z.array(PatchChangesetSchema);
 
 export type RelevantPatchChanges = {
   champions: PatchChampionChange[];
@@ -95,6 +97,10 @@ export function getPatchChangeset(): PatchChangeset | undefined {
     return undefined;
   }
   return parsed.data;
+}
+
+export function getPatchChangesets(): PatchChangeset[] {
+  return PatchChangesetHistorySchema.parse(patchNotesHistoryData);
 }
 
 const MAGNITUDE_ORDER: Record<PatchMagnitude, number> = {

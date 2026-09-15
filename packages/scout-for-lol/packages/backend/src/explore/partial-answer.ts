@@ -39,6 +39,7 @@ export async function persistPartialAnswer(
   }
   const answer = {
     answer: clampAnswer(trimmed),
+    spokenAnswer: null,
     title: null,
     queryText: null,
     includeVisualization: false,
