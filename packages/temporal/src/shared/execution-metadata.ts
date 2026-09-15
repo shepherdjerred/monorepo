@@ -56,6 +56,7 @@ export function executionDomainForTaskQueue(
       return "maintenance";
     case TASK_QUEUES.BACKUP:
     case TASK_QUEUES.BILLING:
+    case TASK_QUEUES.AGENT_CHAT_INGRESS:
       return "platform";
     case TASK_QUEUES.WORKFLOWS:
       return "platform";
@@ -159,6 +160,8 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   agentChatTurnReceiptWorkflow: "agent",
   agentChatCatalogWorkflow: "agent",
   scheduledAgentChatTurnWorkflow: "agent",
+  discordAgentChatWorkflow: "agent",
+  httpAgentChatWorkflow: "agent",
 
   // TASK_QUEUES.SCOUT / SCOUT_BETA / SCOUT_PROD (packages/temporal and
   // @scout-for-lol/temporal workflows)

@@ -50,6 +50,8 @@ import { miningResetActivities } from "./homelab/mining-reset.ts";
 import { agentChatActivities } from "./agent/chat/run-agent-chat-turn.ts";
 import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-turn.ts";
 import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
+import { discordAgentChatActivities } from "./agent/chat/discord-ingress.ts";
+import { httpAgentChatActivities } from "./agent/chat/http-ingress.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -142,4 +144,9 @@ export const backupWorkerActivities = {
 
 export const billingActivities = {
   ...llmBilledCostActivities,
+};
+
+export const agentChatIngressActivities = {
+  ...discordAgentChatActivities,
+  ...httpAgentChatActivities,
 };
