@@ -21,6 +21,20 @@ export async function ensureMapTable(db: Db): Promise<void> {
       "appliedAt"   ${db.timestampType()}
     )
   `);
+  // A source domain can be reused after a return cycle. Keep each applied edge
+  // when a later transition needs to reuse that same oldPuuid; the live map row
+  // then remains available for the current transition's unresolved delta.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS "PuuidKeyMapHistory" (
+      "oldPuuid"  TEXT NOT NULL,
+      "newPuuid"  TEXT NOT NULL,
+      "appliedAt" ${db.timestampType()} NOT NULL,
+      PRIMARY KEY ("oldPuuid", "appliedAt")
+    )
+  `);
+  await db.exec(
+    `CREATE INDEX IF NOT EXISTS "PuuidKeyMapHistory_oldPuuid_idx" ON "PuuidKeyMapHistory" ("oldPuuid")`,
+  );
   await db.exec(
     `CREATE INDEX IF NOT EXISTS "PuuidKeyMap_status_idx" ON "PuuidKeyMap" ("status")`,
   );

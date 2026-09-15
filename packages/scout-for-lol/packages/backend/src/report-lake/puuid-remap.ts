@@ -41,14 +41,20 @@ export async function loadPuuidRemap(
   // until another `apply`. The database-wide marker is already set by then, so
   // it cannot distinguish that row — and translating it would point historical
   // payloads at an identifier no account row carries.
-  const rows = await prisma.puuidKeyMap.findMany({
-    where: { newPuuid: { not: null }, appliedAt: { not: null } },
-    orderBy: [{ appliedAt: "asc" }, { oldPuuid: "asc" }],
-    select: { oldPuuid: true, newPuuid: true },
-  });
+  const [rows, history] = await Promise.all([
+    prisma.puuidKeyMap.findMany({
+      where: { newPuuid: { not: null }, appliedAt: { not: null } },
+      orderBy: [{ appliedAt: "asc" }, { oldPuuid: "asc" }],
+      select: { oldPuuid: true, newPuuid: true },
+    }),
+    prisma.puuidKeyMapHistory.findMany({
+      orderBy: [{ appliedAt: "asc" }, { oldPuuid: "asc" }],
+      select: { oldPuuid: true, newPuuid: true },
+    }),
+  ]);
 
   const map = new Map<string, string>();
-  for (const row of rows) {
+  for (const row of [...history, ...rows]) {
     if (row.newPuuid === null) {
       continue;
     }

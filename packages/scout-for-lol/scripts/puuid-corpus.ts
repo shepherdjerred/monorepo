@@ -120,9 +120,11 @@ async function loadAppliedMap(): Promise<Map<string, string>> {
   const db = await openDb();
   try {
     const rows = await db.query(
-      `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"
+      `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
         WHERE "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL
-        ORDER BY "appliedAt", "oldPuuid"`,
+        UNION ALL
+        SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMapHistory"
+        ORDER BY "appliedAt" ASC, "oldPuuid" ASC`,
     );
     const map = new Map(
       rows.map((row) => [

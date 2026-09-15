@@ -234,7 +234,7 @@ export async function importMap(
   }
   const existingRows = await db.query(
     `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
-      ORDER BY "appliedAt", "oldPuuid"`,
+      ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
   );
   const existing = new Map(
     existingRows.map((row) => [
@@ -242,9 +242,13 @@ export async function importMap(
       asOptionalString(row["newPuuid"]),
     ]),
   );
+  const historicalRows = await db.query(
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMapHistory"
+      ORDER BY "appliedAt" ASC, "oldPuuid" ASC`,
+  );
   const composedExisting = composePuuidRemap(
     new Map(
-      existingRows
+      [...historicalRows, ...existingRows]
         .filter((row) => row["appliedAt"] !== null)
         .flatMap((row) => {
           const replacement = asOptionalString(row["newPuuid"]);
@@ -294,20 +298,43 @@ export async function importMap(
       toSqlParam(row.status, "status"),
     ];
     if (existing.has(row.oldPuuid)) {
+      const existingRow = existingRows.find(
+        (candidate) => candidate["oldPuuid"] === row.oldPuuid,
+      );
+      const previousReplacement = asOptionalString(existingRow?.["newPuuid"]);
+      const previousAppliedAt = asOptionalString(existingRow?.["appliedAt"]);
+      if (
+        previousReplacement !== null &&
+        previousAppliedAt !== null &&
+        previousReplacement !== row.newPuuid
+      ) {
+        await db.exec(
+          `INSERT INTO "PuuidKeyMapHistory" ("oldPuuid", "newPuuid", "appliedAt")
+           VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)})
+           ON CONFLICT DO NOTHING`,
+          [row.oldPuuid, previousReplacement, previousAppliedAt],
+        );
+      }
       // COALESCE, not assignment: an incoming null leaves a replacement this
-      // database already holds standing. The status follows the same rule, so a
-      // row that stays resolved is not relabelled as lost.
+      // database already holds standing only while it is still unapplied. Once
+      // an applied source is reused, its old edge is archived above and the live
+      // row must carry the current unresolved decision instead.
       await db.exec(
         `UPDATE "PuuidKeyMap"
             SET "gameName" = COALESCE(${db.param(2)}, "gameName"),
                 "tagLine"  = COALESCE(${db.param(3)}, "tagLine"),
-                "status"   = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL
+                "status"   = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
                                   THEN "status" ELSE ${db.param(5)} END,
-                "newPuuid" = COALESCE(${db.param(4)}, "newPuuid"),
+                "newPuuid" = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
+                                  THEN "newPuuid" ELSE ${db.param(4)} END,
                 "appliedAt" = CASE
                   WHEN ${db.param(4)} IS NOT NULL
                    AND ("newPuuid" IS NULL OR "newPuuid" <> ${db.param(4)})
-                  THEN NULL ELSE "appliedAt" END
+                  THEN NULL
+                  WHEN ${db.param(4)} IS NULL
+                   AND "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL
+                  THEN NULL
+                  ELSE "appliedAt" END
           WHERE "oldPuuid" = ${db.param(1)}`,
         params,
       );

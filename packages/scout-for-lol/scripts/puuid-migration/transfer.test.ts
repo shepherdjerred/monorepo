@@ -203,6 +203,35 @@ test("import permits a new edge after a return transition and resets its applied
   await db.close();
 });
 
+test("import preserves an applied edge when a reused source is unresolved", async () => {
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "appliedAt") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved', datetime('now', '-1 day'))`,
+    [OLD_A, NEW_A],
+  );
+  const { importMap } = await import("./transfer.ts");
+  await importMap(db, [
+    {
+      oldPuuid: OLD_A,
+      gameName: null,
+      tagLine: null,
+      newPuuid: null,
+      status: "unresolved",
+    },
+  ]);
+  const current = await db.query(
+    `SELECT "newPuuid" AS n, "status" AS s, "appliedAt" AS a FROM "PuuidKeyMap"`,
+  );
+  expect(current[0]?.["n"]).toBeNull();
+  expect(current[0]?.["s"]).toBe("unresolved");
+  expect(current[0]?.["a"]).toBeNull();
+  const history = await db.query(
+    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMapHistory"`,
+  );
+  expect(history).toEqual([{ oldPuuid: OLD_A, newPuuid: NEW_A }]);
+  await db.close();
+});
+
 describe("a map file is parsed, not trusted", () => {
   // It crosses machines. `apply` rewrites every stored reference to whatever is
   // in it, and `verify` would pass afterwards because it only asks whether a

@@ -71,6 +71,7 @@ export const NEW_KEY_PUBLISHED = {
 /** Tables the migration owns or must never rewrite. */
 export const EXCLUDED_TABLES = new Set([
   "PuuidKeyMap",
+  "PuuidKeyMapHistory",
   "PuuidKeyMigration",
   "_prisma_migrations",
   "sqlite_sequence",

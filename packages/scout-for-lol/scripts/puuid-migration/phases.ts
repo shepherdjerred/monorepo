@@ -361,8 +361,10 @@ async function rewriteJsonColumn(
 
 async function loadMap(db: Db): Promise<Map<string, string>> {
   const rows = await db.query(
-    `SELECT "oldPuuid", "newPuuid" FROM "PuuidKeyMap"
+    `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
       WHERE "newPuuid" IS NOT NULL
+      UNION ALL
+      SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMapHistory"
       ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
   );
   const map = new Map(

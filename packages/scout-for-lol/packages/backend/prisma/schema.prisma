@@ -2633,6 +2633,18 @@ model PuuidKeyMap {
   @@index([status])
 }
 
+/// Applied remap edges retained when a source domain is reused by a later
+/// transition. The live PuuidKeyMap row then remains free to record the current
+/// transition's unresolved or resolved result.
+model PuuidKeyMapHistory {
+  oldPuuid  String
+  newPuuid  String
+  appliedAt DateTime @db.Timestamptz()
+
+  @@id([oldPuuid, appliedAt])
+  @@index([oldPuuid])
+}
+
 /// Whether this database has been rewritten to a new Riot key domain.
 ///
 /// A single row, deliberately separate from the mapping itself. It has to exist
