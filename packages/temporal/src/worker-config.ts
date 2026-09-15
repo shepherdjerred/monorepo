@@ -1,5 +1,7 @@
 import {
   agentActivities,
+  agentChatDispatchWorkerActivities,
+  agentChatReceiptWorkerActivities,
   glitterContextWorkerActivities,
   glitterCorpusWorkerActivities,
   homeActivities,
@@ -87,6 +89,20 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     role: "repo",
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     activities: repoActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "repo",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_DISPATCH,
+    activities: agentChatDispatchWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "repo",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_RECEIPTS,
+    activities: agentChatReceiptWorkerActivities,
     maxConcurrentActivityTaskExecutions: 1,
   },
   {

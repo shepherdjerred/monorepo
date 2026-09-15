@@ -120,6 +120,16 @@ describe("AI architecture compatibility exceptions", () => {
           path: "packages/temporal/src/lib/agent-runner/codex.ts",
           contents: 'delete environment["CODEX_ACCESS_TOKEN"]',
         },
+        {
+          path: "packages/temporal/src/activities/agent/chat/run-agent-chat-turn.ts",
+          contents:
+            "const claude = Bun.env.CLAUDE_CODE_OAUTH_TOKEN; const codex = Bun.env.CODEX_AUTH_JSON_B64;",
+        },
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts",
+          contents:
+            "CLAUDE_CODE_OAUTH_TOKEN: secret; CODEX_AUTH_JSON_B64: secret;",
+        },
       ]),
     ).toEqual([]);
 
