@@ -3,6 +3,35 @@ import {
   isProviderCredentialKey,
   PROVIDER_CREDENTIAL_KEYS,
 } from "#shared/agent/provider-credentials.ts";
+import { z } from "zod/v4";
+
+const CodexCredentialTokensSchema = z.object({
+  tokens: z.object({
+    access_token: z.string().min(1),
+    refresh_token: z.string().optional(),
+    id_token: z.string().optional(),
+  }),
+});
+
+export function agentTaskProviderSecretTokens(
+  environment: Readonly<Record<string, string | undefined>>,
+): string[] {
+  return Object.entries(environment).flatMap(([key, value]) => {
+    if (value === undefined || value === "" || !isProviderCredentialKey(key))
+      return [];
+    if (key !== "CODEX_AUTH_JSON_B64") return [value];
+    const decoded = Buffer.from(value, "base64").toString("utf8");
+    const parsed: unknown = JSON.parse(decoded);
+    const auth = CodexCredentialTokensSchema.parse(parsed);
+    return [
+      value,
+      decoded,
+      ...Object.values(auth.tokens).flatMap((token) =>
+        token === undefined || token === "" ? [] : [token],
+      ),
+    ];
+  });
+}
 
 const MOUNTED_SECRET_PATHS = [
   "/var/run/secrets/kubernetes.io/serviceaccount/token",
@@ -10,6 +39,7 @@ const MOUNTED_SECRET_PATHS = [
 ] as const;
 const AGENT_TASK_COMMON_ENVIRONMENT = new Set([
   "ALERT_DASHBOARD_URL",
+  "AGENT_PROVIDER_UID",
   "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
   "DISABLE_AUTOUPDATER",
   "LANG",
@@ -90,6 +120,12 @@ function compositeSecretTokens(value: string): readonly string[] {
   return tokens;
 }
 
+function encodedSecretTokens(key: string, value: string): readonly string[] {
+  if (key !== "CODEX_AUTH_JSON_B64") return [];
+  const decoded = Buffer.from(value, "base64").toString("utf8");
+  return compositeSecretTokens(decoded);
+}
+
 export async function readAgentTaskMountedSecretTokens(
   paths: readonly string[] = MOUNTED_SECRET_PATHS,
 ): Promise<readonly string[]> {
@@ -119,8 +155,10 @@ export function agentTaskSecretTokens(
   // Mounted service-account/Talos files are read into this same redaction set
   // by createAgentTaskSecretTokenState. Keeping them in the returned list is
   // what protects final-text excerpts when a provider violates its contract.
-  const environmentSecretTokens = Object.values(env).flatMap((value) =>
-    value === undefined ? [] : compositeSecretTokens(value),
+  const environmentSecretTokens = Object.entries(env).flatMap(([key, value]) =>
+    value === undefined
+      ? []
+      : [...compositeSecretTokens(value), ...encodedSecretTokens(key, value)],
   );
   const tokens: (string | undefined)[] = [
     ...environmentSecretTokens,
@@ -132,6 +170,7 @@ export function agentTaskSecretTokens(
 
 export type AgentTaskSecretTokenState = {
   tokens: (string | undefined)[];
+  mountedTokens: string[];
   refresh: () => Promise<void>;
 };
 
@@ -175,24 +214,25 @@ export async function createAgentTaskSecretTokenState(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
   paths: readonly string[] = MOUNTED_SECRET_PATHS,
 ): Promise<AgentTaskSecretTokenState> {
-  const tokens = [
-    ...agentTaskSecretTokens(
-      githubAppToken,
-      env,
-      await readAgentTaskMountedSecretTokens(paths),
-    ),
-  ];
+  const mountedTokens = [...(await readAgentTaskMountedSecretTokens(paths))];
+  const tokens = [...agentTaskSecretTokens(githubAppToken, env, mountedTokens)];
   let refreshInFlight: Promise<void> | undefined;
   const refresh = (): Promise<void> => {
     if (refreshInFlight !== undefined) {
       return refreshInFlight;
     }
     const refreshRun = (async (): Promise<void> => {
+      const nextMountedTokens = await readAgentTaskMountedSecretTokens(paths);
       const nextSecretTokens = agentTaskSecretTokens(
         githubAppToken,
         env,
-        await readAgentTaskMountedSecretTokens(paths),
+        nextMountedTokens,
       );
+      for (const token of nextMountedTokens) {
+        if (!mountedTokens.includes(token)) {
+          mountedTokens.push(token);
+        }
+      }
       for (const token of nextSecretTokens) {
         if (!tokens.includes(token)) {
           tokens.push(token);
@@ -208,7 +248,7 @@ export async function createAgentTaskSecretTokenState(
     })();
     return refreshInFlight;
   };
-  return { tokens, refresh };
+  return { tokens, mountedTokens, refresh };
 }
 
 export async function refreshAgentTaskSecretTokenStateInBackground(

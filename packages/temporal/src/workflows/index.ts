@@ -27,7 +27,6 @@ import type {
   ScoutImageGcResult,
 } from "#activities/scout/scout-image-gc.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./homelab/velero-orphan-audit.ts";
-import { runVeleroR2OrphanAuditWorkflow as _runVeleroR2OrphanAuditWorkflow } from "./homelab/velero-r2-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./scout/data-dragon.ts";
 import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./scout/lane-prior-refresh.ts";
 import type { DataDragonUpdateResult } from "#shared/data-dragon-types.ts";
@@ -58,6 +57,7 @@ import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/h
 import { runProtobufWatch as _runProtobufWatch } from "./ci/protobuf-watch.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
+import { runCiIoImpact as _runCiIoImpact } from "./ci/ci-io-impact.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
 import type { ReportDeliveryResult } from "#activities/reports/report-delivery.ts";
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
@@ -133,6 +133,17 @@ import type {
   OpsDigestKind,
   OpsPublishSummary,
 } from "#activities/ops/ops-publish.ts";
+import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
+import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
+import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
+import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
+import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
+import type {
+  AgentChatCatalogState,
+  AgentChatTurnResult,
+  AgentChatWorkflowInput,
+  ScheduledAgentChatTurnInput,
+} from "#shared/agent/agent-chat.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -264,10 +275,6 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
 }
 
-export async function runVeleroR2OrphanAuditWorkflow(): Promise<void> {
-  return _runVeleroR2OrphanAuditWorkflow();
-}
-
 export async function runScoutDataDragonVersionCheck(
   reportTaskQueue?: string,
 ): Promise<DataDragonUpdateResult | undefined> {
@@ -341,6 +348,10 @@ export async function runTasknotesCanary(): Promise<void> {
 
 export async function monitorReportFreshness(): Promise<void> {
   return _monitorReportFreshness();
+}
+
+export async function runCiIoImpact(): Promise<void> {
+  return _runCiIoImpact();
 }
 
 export async function deliverReportWorkflow(
@@ -433,4 +444,28 @@ export async function runOpsDigest(input: {
   kind: OpsDigestKind;
 }): Promise<{ kind: OpsDigestKind }> {
   return _runOpsDigest(input);
+}
+
+export async function agentChatWorkflow(
+  input: AgentChatWorkflowInput,
+): Promise<never> {
+  return _agentChatWorkflow(input);
+}
+
+export async function agentChatTurnReceiptWorkflow(
+  input: AgentChatReceiptInput,
+): Promise<never> {
+  return _agentChatTurnReceiptWorkflow(input);
+}
+
+export async function agentChatCatalogWorkflow(
+  state?: AgentChatCatalogState,
+): Promise<never> {
+  return _agentChatCatalogWorkflow(state);
+}
+
+export async function scheduledAgentChatTurnWorkflow(
+  input: ScheduledAgentChatTurnInput,
+): Promise<AgentChatTurnResult> {
+  return _scheduledAgentChatTurnWorkflow(input);
 }

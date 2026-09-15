@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { agentActivities, reportActivities } from "./activities/index.ts";
+import {
+  agentActivities,
+  agentChatDispatchWorkerActivities,
+  agentChatReceiptWorkerActivities,
+  reportActivities,
+} from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import {
   getWorkerRoleContract,
@@ -135,6 +140,38 @@ describe("Temporal worker role contracts", () => {
   it("dispatches GoLink cluster reads only through infra", () => {
     expect(activityNamesFor("infra")).toContain("listTailscaleIngresses");
     expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
+  });
+
+  it("dispatches CI I/O observability only through infra", () => {
+    expect(activityNamesFor("infra")).toContain("collectCiIoImpact");
+    expect(activityNamesFor("repo")).not.toContain("collectCiIoImpact");
+  });
+
+  it("isolates scheduled chat waiters from repo automation", () => {
+    const repoWorkers = getWorkerRoleContract("repo").workers;
+    expect(repoWorkers.map((worker) => worker.taskQueue)).toEqual([
+      TASK_QUEUES.REPO_AUTOMATION,
+      TASK_QUEUES.AGENT_CHAT_DISPATCH,
+      TASK_QUEUES.AGENT_CHAT_RECEIPTS,
+    ]);
+    const dispatchWorker = repoWorkers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.AGENT_CHAT_DISPATCH,
+    );
+    expect(dispatchWorker?.kind).toBe("activity");
+    if (dispatchWorker?.kind !== "activity") {
+      throw new Error("Missing scheduled agent chat dispatch worker");
+    }
+    expect(dispatchWorker.activities).toEqual(
+      agentChatDispatchWorkerActivities,
+    );
+    const receiptWorker = repoWorkers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.AGENT_CHAT_RECEIPTS,
+    );
+    expect(receiptWorker?.kind).toBe("activity");
+    if (receiptWorker?.kind !== "activity")
+      throw new Error("Missing agent chat receipt worker");
+    expect(receiptWorker.activities).toEqual(agentChatReceiptWorkerActivities);
+    expect(receiptWorker.maxConcurrentActivityTaskExecutions).toBe(1);
   });
 
   it("keeps report delivery capabilities separate from agent execution", () => {

@@ -31,6 +31,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-rbac.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -86,6 +87,22 @@ export function createTemporalWorkerDeployment(
       metadata: { name: "temporal-freshrss-sync" },
       spec: { itemPath: vaultItemPath("freshrss-sync") },
     },
+  );
+  const agentCodexCredentialItem = new OnePasswordItem(
+    chart,
+    "temporal-agent-codex-1p",
+    {
+      metadata: { name: "temporal-agent-codex" },
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/hwyhh64dyu3s7w37q7oj7r4qn4",
+      },
+    },
+  );
+  const agentCodexCredential = Secret.fromSecretName(
+    chart,
+    "temporal-agent-codex-secret",
+    agentCodexCredentialItem.name,
   );
   const freshRssCredential = Secret.fromSecretName(
     chart,
@@ -176,6 +193,7 @@ export function createTemporalWorkerDeployment(
       TELEMETRY_ENABLED: EnvValue.fromValue("true"),
       OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-agent-worker"),
+      ...llmArchiveEnvVars(),
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
@@ -183,6 +201,23 @@ export function createTemporalWorkerDeployment(
       OPENROUTER_API_KEY: EnvValue.fromSecretValue({
         secret,
         key: "OPENROUTER_API_KEY",
+      }),
+      CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
+        secret,
+        key: "CLAUDE_CODE_OAUTH_TOKEN",
+      }),
+      CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({
+        secret: agentCodexCredential,
+        key: "CODEX_AUTH_JSON_B64",
+      }),
+      S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
+      AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
+        secret,
+        key: "AWS_ACCESS_KEY_ID",
+      }),
+      AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
+        secret,
+        key: "AWS_SECRET_ACCESS_KEY",
       }),
       PROMETHEUS_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-prometheus.prometheus:9090",

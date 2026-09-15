@@ -166,6 +166,13 @@
       "reason": "LLM request and response archive"
     },
     {
+      "name": "agent-chat-sessions",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Durable Claude and Codex chat resume state"
+    },
+    {
       "name": "streambot-voice-captures",
       "mode": "excluded",
       "cadences": [],

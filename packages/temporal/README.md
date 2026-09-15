@@ -25,19 +25,19 @@ The central Scout worker also polls its unchanged `scout` queue in `beta` for
 the beta-owned Bryan Bucks analytics schedule; all other central queues are
 `prod` only.
 
-| Role              | Queue or surface        | Activity concurrency |
-| ----------------- | ----------------------- | -------------------: |
-| `control`         | schedules and HTTP APIs |                 none |
-| `home`            | `home`                  |                    4 |
-| `reports`         | `reports`               |                    4 |
-| `infra`           | `infra`                 |                    1 |
-| `repo`            | `repo-automation`       |                    1 |
-| `scout`           | `scout`                 |                    1 |
-| `agent`           | `agent-task`            |                    1 |
-| `glitter-corpus`  | `glitter-corpus`        |                    1 |
-| `glitter-context` | `glitter-context`       |                    1 |
-| `maintenance`     | `maintenance`           |                    1 |
-| `workflows`       | `monorepo-workflows`    |                 none |
+| Role              | Queue or surface                                                | Activity concurrency |
+| ----------------- | --------------------------------------------------------------- | -------------------: |
+| `control`         | schedules and HTTP APIs                                         |                 none |
+| `home`            | `home`                                                          |                    4 |
+| `reports`         | `reports`                                                       |                    4 |
+| `infra`           | `infra`                                                         |                    1 |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts` |          1 per queue |
+| `scout`           | `scout`                                                         |                    1 |
+| `agent`           | `agent-task`                                                    |                    1 |
+| `glitter-corpus`  | `glitter-corpus`                                                |                    1 |
+| `glitter-context` | `glitter-context`                                               |                    1 |
+| `maintenance`     | `maintenance`                                                   |                    1 |
+| `workflows`       | `monorepo-workflows`                                            |                 none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own

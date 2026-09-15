@@ -12,11 +12,11 @@ payloads are stored once.
 
 ## Coverage
 
-| Source                                                     | Cadence                   | Notes                                       |
-| ---------------------------------------------------------- | ------------------------- | ------------------------------------------- |
-| `homelab-tofu-state`, `relay-docs`                         | Every six hours and daily | Critical state                              |
-| `glitter-discord-corpus`, `llm-archive`, `temporal-worker` | Daily                     | All objects                                 |
-| `scout-prod`, `scout-beta`                                 | Daily                     | `.png` and `.svg` are excluded derived data |
+| Source                                                                            | Cadence                   | Notes                                       |
+| --------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------- |
+| `homelab-tofu-state`, `relay-docs`                                                | Every six hours and daily | Critical state                              |
+| `agent-chat-sessions`, `glitter-discord-corpus`, `llm-archive`, `temporal-worker` | Daily                     | All objects                                 |
+| `scout-prod`, `scout-beta`                                                        | Daily                     | `.png` and `.svg` are excluded derived data |
 
 Every other live bucket has an explicit excluded policy with a reason in
 `packages/seaweedfs-backup/policy.json`. An unclassified live bucket is coverage

@@ -297,6 +297,13 @@ resource "aws_s3_bucket" "llm_archive" {
   bucket = "llm-archive"
 }
 
+# Durable provider resume state for Temporal agent chats. Unlike the request
+# archive, these objects have no age-based lifecycle: an idle chat must remain
+# resumable until its catalog record is explicitly retired.
+resource "aws_s3_bucket" "agent_chat_sessions" {
+  bucket = "agent-chat-sessions"
+}
+
 resource "terraform_data" "llm_archive_lifecycle" {
   input = {
     bucket       = aws_s3_bucket.llm_archive.id
