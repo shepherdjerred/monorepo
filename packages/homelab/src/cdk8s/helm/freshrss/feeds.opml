@@ -37,6 +37,7 @@
       <outline text="Visual Studio Code - Code Editing. Redefined." type="rss" xmlUrl="https://code.visualstudio.com/feed.xml" htmlUrl="https://code.visualstudio.com/" frss:priority="hidden"/>
     </outline>
     <outline text="Repo Stack">
+      <outline text="Anthropic Engineering (community RSS)" type="rss" xmlUrl="https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_engineering.xml" htmlUrl="https://www.anthropic.com/engineering" description="Community-generated RSS feed for Anthropic's Engineering blog"/>
       <outline text="PostgreSQL News" type="rss" xmlUrl="https://www.postgresql.org/news/pgsql.rss" htmlUrl="https://www.postgresql.org/about/news/"/>
       <outline text="SQLite Releases" type="rss" xmlUrl="https://sqlite.org/src/timeline.rss?tag=release" htmlUrl="https://sqlite.org/changes.html"/>
       <outline text="DuckDB Blog" type="rss" xmlUrl="https://duckdb.org/feed.xml" htmlUrl="https://duckdb.org/news/"/>
@@ -81,6 +82,7 @@
       <outline text="PostHog Blog" type="rss" xmlUrl="https://posthog.com/rss.xml" htmlUrl="https://posthog.com/blog" description="PostHog engineering blog and product updates"/>
       <outline text="Buildkite Changelog" type="rss" xmlUrl="https://buildkite.com/changelog.atom" htmlUrl="https://buildkite.com/changelog"/>
       <outline text="FreshRSS Releases" type="rss" xmlUrl="https://github.com/FreshRSS/FreshRSS/releases.atom" htmlUrl="https://github.com/FreshRSS/FreshRSS/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
+      <outline text="OpenAI News" type="rss" xmlUrl="https://openai.com/news/rss.xml" htmlUrl="https://openai.com/news/" description="Official OpenAI news feed, including Engineering posts"/>
     </outline>
   </body>
 </opml>
