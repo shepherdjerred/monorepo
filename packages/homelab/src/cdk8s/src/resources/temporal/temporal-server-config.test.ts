@@ -28,6 +28,12 @@ const PodSpecSchema = z.object({
           z.object({
             image: z.string(),
             env: z.array(z.object({ name: z.string() }).loose()).optional(),
+            resources: z
+              .object({
+                requests: z.record(z.string(), z.string()),
+                limits: z.record(z.string(), z.string()),
+              })
+              .optional(),
           }),
         ),
       }),
@@ -148,5 +154,14 @@ describe("Temporal server configuration", () => {
     // Only the init container renders the credential; the long-running
     // server has no need of it.
     expect(names.has("POSTGRES_PWD")).toBe(false);
+  });
+
+  test("has enough memory headroom for the production schedule fleet", () => {
+    const containerResources = serverDeployment().containers[0]?.resources;
+
+    expect(containerResources).toEqual({
+      requests: { cpu: "100m", memory: "2048Mi" },
+      limits: { cpu: "1000m", memory: "4096Mi" },
+    });
   });
 });
