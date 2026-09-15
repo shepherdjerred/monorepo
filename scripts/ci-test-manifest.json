@@ -307,6 +307,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/justin-principal-engineer",
+      "directory": "packages/justin-principal-engineer",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/llm-models",
       "directory": "packages/llm-models",
       "steps": [

@@ -197,6 +197,8 @@ export type ReviewProvider = {
    * having to declare `review`.
    */
   botAuthoredPullRequestPolicy: "review" | "skip";
+  /** Optional allowlist when only specific bot-authored PRs are reviewable. */
+  botAuthorAllowlist?: readonly string[];
   /**
    * The complete GitHub login(s) this provider posts as (the GraphQL bare slug,
    * e.g. `greptile-apps` / `chatgpt-codex-connector`). Matched EXACTLY

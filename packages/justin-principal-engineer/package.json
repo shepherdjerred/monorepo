@@ -1,0 +1,35 @@
+{
+  "name": "@shepherdjerred/justin-principal-engineer",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "justin-principal-engineer": "./src/cli.ts"
+  },
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts src/container-entry.ts --outdir dist --target bun --external @openai/codex-sdk --external @shepherdjerred/llm-runtime --external zod",
+    "container": "bun src/container-entry.ts",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@openai/codex-sdk": "0.149.0",
+    "@shepherdjerred/llm-runtime": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "4.1.10",
+    "eslint": "^10.7.0",
+    "typescript": "^6.0.3",
+    "vitest": "4.1.10"
+  }
+}

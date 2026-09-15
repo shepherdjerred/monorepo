@@ -1,0 +1,35 @@
+{
+  "repository": {
+    "stableCheckout": "/Users/jerred/git/monorepo",
+    "slug": "shepherdjerred/monorepo",
+    "baseBranch": "main"
+  },
+  "linear": {
+    "team": "SJ",
+    "apiKey": "op://Automation/Linear/credential"
+  },
+  "buildkite": {
+    "apiToken": "op://Automation/Buildkite/credential"
+  },
+  "pinchtab": {
+    "configPath": "/Users/jerred/Library/Application Support/pinchtab/config.json"
+  },
+  "github": {
+    "appId": "op://Automation/justin-principal-engineer/app-id",
+    "installationId": "op://Automation/justin-principal-engineer/installation-id",
+    "privateKey": "op://Automation/justin-principal-engineer/private-key",
+    "approverLogin": "shepherdjerred",
+    "approverId": 3904778,
+    "botLogin": "justin-principal-engineer[bot]"
+  },
+  "agents": {
+    "codex": {
+      "openRouterApiKey": "op://Automation/OpenRouter/credential",
+      "model": "gpt-5.6-luna"
+    }
+  },
+  "docker": {
+    "platform": "linux/amd64",
+    "turnTimeoutMinutes": 45
+  }
+}

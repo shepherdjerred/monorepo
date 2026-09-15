@@ -116,6 +116,7 @@
     "packages/homelab",
     "packages/homelab/src/cdk8s",
     "packages/homelab/src/helm-types",
+    "packages/justin-principal-engineer",
     "packages/leetcode",
     "packages/llm-models",
     "packages/llm-observability",

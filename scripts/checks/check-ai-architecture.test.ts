@@ -66,6 +66,34 @@ describe("AI architecture guard", () => {
     ]);
   });
 
+  test("rejects the legacy Claude Agent SDK everywhere", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/justin-principal-engineer/package.json",
+          contents: '"@anthropic-ai/claude-agent-sdk": "0.3.270"',
+        },
+        {
+          path: "packages/justin-principal-engineer/src/agent/claude.ts",
+          contents:
+            'import { query } from "@anthropic-ai/claude-agent-sdk";\nconst token = Bun.env.CLAUDE_CODE_OAUTH_TOKEN;',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["legacy-agent-sdk", "legacy-agent-sdk", "provider-api-key"]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/justin-principal-engineer/src/agent/other.ts",
+          contents:
+            'import { query } from "@anthropic-ai/claude-agent-sdk";\nconst token = Bun.env.CLAUDE_CODE_OAUTH_TOKEN;',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["legacy-agent-sdk", "provider-api-key"]);
+  });
+});
+
+describe("AI architecture compatibility exceptions", () => {
   test("includes templated runtime configuration in the scanned file set", () => {
     expect(isTextArchitectureFile("packages/app/config.fish.tmpl")).toBe(true);
   });

@@ -13,14 +13,16 @@ import type { ReviewProvider } from "../types.ts";
  * Severity: Codex flags P0..P2 via shields.io badges (`![P2 Badge](…)`); the
  * docs claim P0/P1-only but live PRs show P2, so we keep the full P0..P3 range.
  *
- * Skip: Codex has no documented skip marker; a no-findings result is the 👍
- * clean signal, handled by the completion strategy rather than a skip.
+ * Bot PRs: only the local justin-principal-engineer runner requires Codex's
+ * review-at-head gate. Other bot PRs retain the skip behavior because Codex has
+ * no documented skip marker and may not review those producers.
  */
 export const codexProvider: ReviewProvider = {
   id: "codex",
   displayName: "Codex",
   startsReviewOnPush: false,
-  botAuthoredPullRequestPolicy: "skip",
+  botAuthoredPullRequestPolicy: "review",
+  botAuthorAllowlist: ["justin-principal-engineer[bot]"],
   authorLogins: ["chatgpt-codex-connector"],
   parseSeverity: parseCodexSeverity,
   // Codex posts each finding once, as an addressable thread, so there is

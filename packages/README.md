@@ -80,6 +80,7 @@ hold only scoped invariants that agents must keep in context.
 | [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                   |
 | [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …) |
 | [pr-fleet-controller](pr-fleet-controller/)               | AI SDK controller that drives the open-PR fleet with a live dashboard    |
+| [justin-principal-engineer](justin-principal-engineer/)   | Local Linear-to-PR queue with Docker coding turns and owner approval     |
 | [release-tools](release-tools/)                           | release-please wrapper for the release lane                              |
 | [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                 |
 | [fonts](fonts/)                                           | Berkeley Mono Nerd Fonts patcher                                         |

@@ -22,11 +22,17 @@ export function reviewGateSkipReasonForAuthor(input: {
   author: PullRequestAuthor;
   provider: ReviewProvider;
 }): "bot-author" | null {
-  if (input.provider.botAuthoredPullRequestPolicy === "review") {
+  if (input.author.type !== "Bot") return null;
+  if (
+    input.provider.botAuthoredPullRequestPolicy === "review" &&
+    (input.provider.botAuthorAllowlist === undefined ||
+      input.provider.botAuthorAllowlist.some(
+        (login) => login.toLowerCase() === input.author.login.toLowerCase(),
+      ))
+  ) {
     return null;
   }
-
-  return input.author.type === "Bot" ? "bot-author" : null;
+  return "bot-author";
 }
 
 /**

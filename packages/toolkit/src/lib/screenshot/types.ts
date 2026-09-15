@@ -29,4 +29,6 @@ export type PackageEntry = {
   readyPath?: string;
   /** Auth flow required before the target route is reachable, if any. */
   requiresAuth?: AuthFlow;
+  /** Environment needed only by the isolated server process. */
+  serverEnv?: Record<string, string>;
 };
