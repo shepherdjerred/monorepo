@@ -173,6 +173,25 @@ function formatItemVariants(entries: [string, ItemDataEntry][]): string {
     .join(", ");
 }
 
+function formatItemBuildNames(
+  itemId: string,
+  relation: "from" | "into",
+  ids: readonly string[] | undefined,
+): string {
+  if (ids === undefined || ids.length === 0) return "none";
+  return ids
+    .map((referencedId) => {
+      const referenced = items.data[referencedId];
+      if (referenced === undefined) {
+        throw new Error(
+          `Bundled item ${itemId} recipe ${relation} references unknown item ID ${referencedId}`,
+        );
+      }
+      return `${referenced.name} (${referencedId})`;
+    })
+    .join(", ");
+}
+
 export function lookupItemText(
   input: z.infer<typeof leagueReferenceSchemas.lookupItem>,
 ): string {
@@ -207,14 +226,12 @@ export function lookupItemText(
   lines.push(
     `Gold: ${String(found.gold.total)} total, ${String(found.gold.base)} combine, ${String(found.gold.sell)} sell; ${found.gold.purchasable ? "purchasable" : "not purchasable"}.`,
   );
-  const buildNames = (ids: readonly string[] | undefined): string =>
-    ids === undefined || ids.length === 0
-      ? "none"
-      : ids
-          .map((id) => `${items.data[id]?.name ?? "Unknown item"} (${id})`)
-          .join(", ");
-  lines.push(`Builds from: ${buildNames(found.from)}`);
-  lines.push(`Builds into: ${buildNames(found.into)}`);
+  lines.push(
+    `Builds from: ${formatItemBuildNames(foundId, "from", found.from)}`,
+  );
+  lines.push(
+    `Builds into: ${formatItemBuildNames(foundId, "into", found.into)}`,
+  );
   const enabledMaps = Object.entries(found.maps)
     .filter(([, enabled]) => enabled)
     .map(([enabledMapId]) => enabledMapId);

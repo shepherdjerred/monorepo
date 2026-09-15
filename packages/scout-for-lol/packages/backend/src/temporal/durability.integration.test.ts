@@ -66,12 +66,18 @@ import {
   runScoutInteractiveActivity,
 } from "#src/temporal/interactive-activities.ts";
 import { startExploreTurn } from "#src/explore/store.ts";
-import { ExploreRunManager } from "#src/explore/runs/run-manager.ts";
+import {
+  ExploreRunManager,
+  ExploreRunRateLimitedError,
+  ExploreRunUnavailableError,
+} from "#src/explore/runs/run-manager.ts";
 import { ExploreConversationBusyError } from "#src/explore/rate-limit.ts";
+import { setScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 
 const { prisma } = createTestDatabase("temporal-durability");
 
 beforeEach(async () => {
+  setScoutTemporalSupervisor(undefined);
   reportAiProvider.calls = 0;
   exploreProvider.calls = 0;
   exploreProvider.gate = null;
@@ -113,6 +119,33 @@ describe("durable interactive reservations", () => {
     expect(attempts.filter((result) => result === null)).toHaveLength(5);
     expect(attempts.filter((result) => result !== null)).toHaveLength(1);
     expect(await prisma.scoutInteractiveRun.count()).toBe(5);
+  });
+
+  test("allows only one active durable run per Explore conversation", async () => {
+    const ownerId = DiscordAccountIdSchema.parse("900000000000000010");
+    const conversationId = globalThis.crypto.randomUUID();
+    const attempts = await Promise.all(
+      [0, 1].map(
+        async () =>
+          await reserveDurableExploreRun({
+            id: globalThis.crypto.randomUUID(),
+            ownerId,
+            conversationId,
+            payload: "{}",
+            now: Date.parse("2026-08-24T12:00:00.000Z"),
+            database: prisma,
+          }),
+      ),
+    );
+
+    expect(attempts.filter((result) => result === null)).toHaveLength(1);
+    expect(attempts.filter((result) => result !== null)).toEqual([
+      {
+        reason: "This conversation already has an answer running.",
+        retryAfterSeconds: 30,
+      },
+    ]);
+    expect(await prisma.scoutInteractiveRun.count()).toBe(1);
   });
 
   test("allows only one active report edit per user and guild", async () => {
@@ -190,6 +223,41 @@ describe("durable interactive reservations", () => {
 });
 
 describe("durable interactive recovery", () => {
+  test("atomically rolls back a turn when Temporal is known unavailable", async () => {
+    const ownerId = DiscordAccountIdSchema.parse("900000000000000200");
+    await prisma.user.create({
+      data: { discordId: ownerId, discordUsername: "unavailable-explorer" },
+    });
+    const manager = new ExploreRunManager({ client: prisma });
+
+    await expect(
+      manager.start(
+        { userId: ownerId },
+        {
+          conversationId: null,
+          question: "Can this turn start?",
+          attach: { kind: "leaf" },
+        },
+        [],
+      ),
+    ).rejects.toBeInstanceOf(ExploreRunUnavailableError);
+
+    await expect(
+      prisma.scoutInteractiveRun.findFirstOrThrow({
+        where: { kind: "explore", ownerId },
+        select: { state: true, outcome: true, lastError: true },
+      }),
+    ).resolves.toEqual({
+      state: "FAILED",
+      outcome: "failed",
+      lastError: "Temporal is unavailable",
+    });
+    expect(
+      await prisma.exploreConversation.count({ where: { userId: ownerId } }),
+    ).toBe(0);
+    expect(await prisma.exploreMessage.count()).toBe(0);
+  });
+
   test("interrupts an ambiguous provider attempt without opening a runtime", async () => {
     const runId = globalThis.crypto.randomUUID();
     await prisma.scoutInteractiveRun.create({
@@ -362,6 +430,29 @@ test("rebuilds a pending Explore turn from its durable payload", async () => {
     originChannelId: null,
   });
   const applicationManager = new ExploreRunManager({ client: prisma });
+  const messagesBeforeRejectedStart = await prisma.exploreMessage.findMany({
+    where: { conversationId: started.conversationId },
+    select: { id: true, parentId: true, content: true },
+    orderBy: { createdAt: "asc" },
+  });
+  await expect(
+    applicationManager.start(
+      { userId: ownerId },
+      {
+        conversationId: started.conversationId,
+        question: "Can I ask before the voice activity starts?",
+        attach: { kind: "leaf" },
+      },
+      [],
+    ),
+  ).rejects.toBeInstanceOf(ExploreRunRateLimitedError);
+  await expect(
+    prisma.exploreMessage.findMany({
+      where: { conversationId: started.conversationId },
+      select: { id: true, parentId: true, content: true },
+      orderBy: { createdAt: "asc" },
+    }),
+  ).resolves.toEqual(messagesBeforeRejectedStart);
   const gate = Promise.withResolvers<null>();
   exploreProvider.gate = gate.promise;
   const execution = executeRecoveredExplore(

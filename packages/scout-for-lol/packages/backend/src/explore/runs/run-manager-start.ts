@@ -1,6 +1,7 @@
 import {
   ExploreActiveRunSchema,
   type ExploreActiveRun,
+  type ExploreMessage,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -15,9 +16,13 @@ import {
 import {
   ExploreNotFoundError,
   loadExploreTranscript,
+  type ExploreTurnStoreClient,
 } from "#src/explore/store.ts";
-import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
-import { reserveAndStartDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
+import { startReservedDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
+import {
+  createDurableExploreRunReservation,
+  durableExploreReservationRejection,
+} from "#src/temporal/durable-quota.ts";
 import {
   createActiveExploreRun,
   resolveTurnTarget,
@@ -26,6 +31,58 @@ import type {
   ActiveRun,
   StartedTurn,
 } from "#src/explore/runs/run-manager-types.ts";
+
+type PreparedExploreRun = {
+  started: StartedTurn;
+  history: ExploreMessage[];
+  summary: ExploreActiveRun;
+};
+
+async function prepareExploreRun(
+  input: {
+    identity: ExploreRateLimitIdentity;
+    request: ExploreTurnRequest;
+    conversationId: string;
+    ticket: ExploreRateLimitTicket;
+    surface: ExploreSurface;
+    assertAcceptingRuns: () => void;
+  },
+  client: ExploreTurnStoreClient,
+): Promise<PreparedExploreRun> {
+  const started = await resolveTurnTarget({
+    client,
+    request: input.request,
+    identity: input.identity,
+    newId: input.conversationId,
+    origin: input.surface,
+  });
+  const versionCountAtStart = await client.exploreMessage.count({
+    where: {
+      conversationId: started.conversationId,
+      parentId: started.messageId,
+      role: "assistant",
+    },
+  });
+  const transcript = await loadExploreTranscript(
+    client,
+    started.conversationId,
+    input.identity.userId,
+    started.messageId,
+  );
+  if (transcript === null) {
+    throw new ExploreNotFoundError("Conversation not found.");
+  }
+  input.assertAcceptingRuns();
+  const summary = ExploreActiveRunSchema.parse({
+    runId: input.ticket.runId,
+    conversationId: started.conversationId,
+    questionMessageId: started.messageId,
+    leafIdAtStart: started.expectedCurrentLeafId,
+    versionCountAtStart,
+    startedAt: new Date().toISOString(),
+  });
+  return { started, history: transcript.messages, summary };
+}
 
 export async function startExploreRun(input: {
   client: ExtendedPrismaClient;
@@ -44,50 +101,21 @@ export async function startExploreRun(input: {
   clearStartingConversation: () => void;
   createRateLimitedError: (rejection: ExploreRateLimitRejection) => Error;
   isDurableUnavailable: (error: unknown) => boolean;
-  isRateLimited: (error: unknown) => boolean;
   createUnavailableError: (error: unknown) => Error;
 }): Promise<ExploreActiveRun> {
-  const { client, identity, request, guildIds, conversationId, ticket } = input;
+  const { client, identity, guildIds, ticket } = input;
   try {
-    const started = await resolveTurnTarget({
-      client,
-      request,
-      identity,
-      newId: conversationId,
-      origin: input.surface,
-    });
-    const versionCountAtStart = await client.exploreMessage.count({
-      where: {
-        conversationId: started.conversationId,
-        parentId: started.messageId,
-        role: "assistant",
-      },
-    });
-    const transcript = await loadExploreTranscript(
-      client,
-      started.conversationId,
-      identity.userId,
-      started.messageId,
-    );
-    if (transcript === null) {
-      throw new ExploreNotFoundError("Conversation not found.");
-    }
-    input.assertAcceptingRuns();
-    const summary = ExploreActiveRunSchema.parse({
-      runId: ticket.runId,
-      conversationId: started.conversationId,
-      questionMessageId: started.messageId,
-      leafIdAtStart: started.expectedCurrentLeafId,
-      versionCountAtStart,
-      startedAt: new Date().toISOString(),
-    });
+    const prepared = input.inlineExecutionForTests
+      ? await prepareExploreRun(input, client)
+      : await prepareDurableExploreRun(input);
+    const { started, history, summary } = prepared;
     const run = createActiveExploreRun({
       summary,
       identity,
       guildIds,
       ticket,
       started,
-      history: transcript.messages,
+      history,
       surface: input.surface,
       originChannelId: input.originChannelId,
     });
@@ -107,46 +135,72 @@ async function startDurableRun(
   input: {
     client: ExtendedPrismaClient;
     identity: ExploreRateLimitIdentity;
-    guildIds: string[];
-    surface: ExploreSurface;
-    originChannelId: DiscordChannelId | null;
     removeRun: (summary: ExploreActiveRun) => void;
-    createRateLimitedError: (rejection: ExploreRateLimitRejection) => Error;
     isDurableUnavailable: (error: unknown) => boolean;
-    isRateLimited: (error: unknown) => boolean;
     createUnavailableError: (error: unknown) => Error;
   },
   summary: ExploreActiveRun,
   started: StartedTurn,
 ): Promise<void> {
   try {
-    const durableRejection = await reserveAndStartDurableExploreRun({
+    await startReservedDurableExploreRun({
       database: input.client,
       summary,
       ownerId: input.identity.userId,
       started,
-      guildIds: input.guildIds,
-      surface: input.surface,
-      originChannelId: input.originChannelId,
     });
-    if (durableRejection !== null) {
-      throw input.createRateLimitedError({
-        allowed: false,
-        quota: getExploreQuotaStatus(input.identity).quota,
-        ...durableRejection,
-      });
-    }
   } catch (error) {
-    if (input.isDurableUnavailable(error) || input.isRateLimited(error)) {
-      await rollbackUnstartedExploreTurn(input.client, {
-        ...started,
-        userId: input.identity.userId,
-      });
-    }
     input.removeRun(summary);
     if (input.isDurableUnavailable(error)) {
       throw input.createUnavailableError(error);
     }
     throw error;
   }
+}
+
+async function prepareDurableExploreRun(input: {
+  client: ExtendedPrismaClient;
+  identity: ExploreRateLimitIdentity;
+  request: ExploreTurnRequest;
+  conversationId: string;
+  ticket: ExploreRateLimitTicket;
+  guildIds: string[];
+  surface: ExploreSurface;
+  originChannelId: DiscordChannelId | null;
+  assertAcceptingRuns: () => void;
+  createRateLimitedError: (rejection: ExploreRateLimitRejection) => Error;
+}): Promise<PreparedExploreRun> {
+  const reservation = await input.client.$transaction(async (tx) => {
+    const rejection = await durableExploreReservationRejection({
+      database: tx,
+      ownerId: input.identity.userId,
+      conversationId: input.conversationId,
+    });
+    if (rejection !== null) {
+      return { status: "rejected", rejection } as const;
+    }
+    const prepared = await prepareExploreRun(input, tx);
+    await createDurableExploreRunReservation({
+      database: tx,
+      id: prepared.summary.runId,
+      ownerId: input.identity.userId,
+      conversationId: prepared.summary.conversationId,
+      payload: JSON.stringify({
+        summary: prepared.summary,
+        started: prepared.started,
+        guildIds: input.guildIds,
+        surface: input.surface,
+        originChannelId: input.originChannelId,
+      }),
+    });
+    return { status: "prepared", prepared } as const;
+  });
+  if (reservation.status === "rejected") {
+    throw input.createRateLimitedError({
+      allowed: false,
+      quota: getExploreQuotaStatus(input.identity).quota,
+      ...reservation.rejection,
+    });
+  }
+  return reservation.prepared;
 }
