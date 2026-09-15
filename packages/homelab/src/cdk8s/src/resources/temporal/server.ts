@@ -151,8 +151,8 @@ export function createTemporalServerDeployment(
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(512),
-          limit: Size.gibibytes(2),
+          request: Size.gibibytes(2),
+          limit: Size.gibibytes(4),
         },
       },
       liveness: Probe.fromTcpSocket({
