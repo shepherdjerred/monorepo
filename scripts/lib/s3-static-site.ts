@@ -331,7 +331,45 @@ export async function s3SyncStaticSite(opts: {
       return;
     }
     // Creds present — surface exactly what the sync would move via --dryrun.
+    if (forceMutableUpload) {
+      await run(
+        [
+          ...mutableSitePruneCommand({
+            source,
+            dest,
+            endpoint,
+            excludes: deletePassExcludes,
+          }),
+          "--dryrun",
+        ],
+        { cwd, env },
+      );
+      await run(
+        forceMutableUploadCommand({
+          source,
+          dest,
+          endpoint,
+          excludes: deletePassExcludes,
+          dryRun: true,
+        }),
+        { cwd, env },
+      );
+    }
     if (immutablePrefixes.length > 0) {
+      if (forceMutableUpload) {
+        await run(
+          forceMutableUploadCommand({
+            source,
+            dest,
+            endpoint,
+            excludes: ["*"],
+            includes: immutablePrefixes.map((prefix) => `${prefix}*`),
+            cacheControl: "public, max-age=31536000, immutable",
+            dryRun: true,
+          }),
+          { cwd, env },
+        );
+      }
       await run(
         [
           "aws",
@@ -351,35 +389,20 @@ export async function s3SyncStaticSite(opts: {
         { cwd, env },
       );
     }
-    if (forceMutableUpload) {
+    if (!forceMutableUpload) {
       await run(
-        forceMutableUploadCommand({
-          source,
-          dest,
-          endpoint,
-          excludes: deletePassExcludes,
-          dryRun: true,
-        }),
+        [
+          ...mutableSitePruneCommand({
+            source,
+            dest,
+            endpoint,
+            excludes: deletePassExcludes,
+          }),
+          "--dryrun",
+        ],
         { cwd, env },
       );
     }
-    await run(
-      [
-        "aws",
-        "s3",
-        "sync",
-        source,
-        dest,
-        "--endpoint-url",
-        endpoint,
-        ...deletePassExcludes.flatMap((p) => ["--exclude", p]),
-        "--cache-control",
-        "no-cache",
-        "--delete",
-        "--dryrun",
-      ],
-      { cwd, env },
-    );
     return;
   }
 
