@@ -26,11 +26,14 @@ import {
   startToCloseTimeoutMsOrUndefined,
 } from "#activities/agent/agent-task-runtime.ts";
 import {
-  createCodexAgentEventHandler,
-  createCodexSecretRefreshHandler,
-  CodexAgentSdkRunError,
-  runCodexAgentSdk,
-} from "#activities/agent/codex-agent-sdk-runner.ts";
+  createAgentSecretRefreshHandler,
+  createTemporalAgentEventHandler,
+} from "#lib/agent-runner/callbacks.ts";
+import { runCodexAgentTurn } from "#lib/agent-runner/codex.ts";
+import {
+  AgentTurnExecutionError,
+  nonRetryableGenerationFailure,
+} from "#lib/agent-runner/errors.ts";
 import {
   archiveAuditBody,
   archiveAuditMetadata,
@@ -81,19 +84,6 @@ export type HomelabAuditAgentInput = {
 
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function nonRetryableCodexFailure(
-  error: CodexAgentSdkRunError,
-): ApplicationFailure {
-  return ApplicationFailure.create({
-    message: error.message,
-    cause: error,
-    nonRetryable: true,
-    type: error.possiblyAppliedEffects
-      ? "HomelabAuditPossiblyAppliedFailure"
-      : "HomelabAuditBilledGenerationFailure",
-  });
 }
 
 async function runAuditAgent(
@@ -159,21 +149,28 @@ async function runAuditAgent(
 
   let result;
   try {
-    result = await runCodexAgentSdk({
+    result = await runCodexAgentTurn({
       service: "temporal",
       callSite: "homelab-audit",
       prompt,
       model,
       maxTurns,
+      turnBudgetKind: "turns",
       cwd: process.cwd(),
+      auth: { kind: "openrouter", apiKey: openRouterApiKey },
       env: envForTrustedAgent({
         OPENROUTER_API_KEY: openRouterApiKey,
         GH_TOKEN: githubTokenResult.token,
       }),
       signal,
+      sandboxPolicy: {
+        sandboxMode: "danger-full-access",
+        networkAccessEnabled: true,
+        webSearchMode: "live",
+      },
       redactTokens: secretState.tokens,
-      beforeEvent: createCodexSecretRefreshHandler(secretState.refresh),
-      onEvent: createCodexAgentEventHandler({
+      beforeEvent: createAgentSecretRefreshHandler(secretState.refresh),
+      onEvent: createTemporalAgentEventHandler({
         nextEventCount: () => {
           eventCount += 1;
           return eventCount;
@@ -186,23 +183,26 @@ async function runAuditAgent(
           });
         },
       }),
+      warn: (message) => {
+        jsonLog("warning", message, { phase: "llm-trace" });
+      },
     });
   } catch (error: unknown) {
     homelabAuditSubprocessExitTotal.inc({ exit_code: "sdk_failed" });
     const classified =
-      error instanceof CodexAgentSdkRunError && error.generationStarted
-        ? nonRetryableCodexFailure(error)
+      error instanceof AgentTurnExecutionError && error.generationStarted
+        ? nonRetryableGenerationFailure(error, "HomelabAudit")
         : error;
     captureWithContext(classified, {
       model,
       durationMs: Date.now() - startMs,
       runtime: "codex_sdk",
       generationStarted:
-        error instanceof CodexAgentSdkRunError
+        error instanceof AgentTurnExecutionError
           ? error.generationStarted
           : undefined,
       possiblyAppliedEffects:
-        error instanceof CodexAgentSdkRunError
+        error instanceof AgentTurnExecutionError
           ? error.possiblyAppliedEffects
           : undefined,
     });
@@ -214,7 +214,7 @@ async function runAuditAgent(
     }
   }
 
-  const markdown = result.resultText.trim();
+  const markdown = result.finalText?.trim() ?? "";
   if (markdown.length === 0) {
     const error = ApplicationFailure.nonRetryable(
       "Codex Agent SDK returned an empty homelab audit after a completed generation",
@@ -234,25 +234,25 @@ async function runAuditAgent(
   homelabAuditSubprocessExitTotal.inc({ exit_code: "sdk_success" });
   homelabAuditTokensTotal.inc(
     { model, direction: "input" },
-    result.usage.inputTokens,
+    result.usage.input_tokens,
   );
   homelabAuditTokensTotal.inc(
     { model, direction: "output" },
-    result.usage.outputTokens,
+    result.usage.output_tokens,
   );
   homelabAuditTokensTotal.inc(
     { model, direction: "cache_create" },
-    result.usage.cacheCreationInputTokens,
+    result.usage.cache_write_input_tokens,
   );
   homelabAuditTokensTotal.inc(
     { model, direction: "cache_read" },
-    result.usage.cacheReadInputTokens,
+    result.usage.cached_input_tokens,
   );
 
   jsonLog("info", "homelab audit agent completed", {
     runtime: "codex_sdk",
     durationMs: result.durationMs,
-    costUsd: result.costUsd,
+    costUsd: undefined,
     numTurns: result.numTurns,
     sessionId: result.sessionId,
     markdownLength: markdown.length,
@@ -262,7 +262,7 @@ async function runAuditAgent(
     markdown,
     durationMs: result.durationMs,
     numTurns: result.numTurns,
-    totalCostUsd: result.costUsd,
+    totalCostUsd: undefined,
     model,
   };
 }
