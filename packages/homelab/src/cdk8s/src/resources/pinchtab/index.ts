@@ -39,6 +39,11 @@ const HEALTHCHECK_COMMAND = [
   "-c",
   `wget -q -O /dev/null --header="Authorization: Bearer $PINCHTAB_TOKEN" http://localhost:${String(PINCHTAB_PORT)}/health`,
 ];
+const BROWSER_READINESS_COMMAND = [
+  "sh",
+  "-c",
+  String.raw`wget -q -O - --header="Authorization: Bearer $PINCHTAB_TOKEN" http://localhost:${String(PINCHTAB_PORT)}/instances | tr '}' '\n' | grep '"profileName":"default"' | grep -Eq '"status":"running"'`,
+];
 
 export function createPinchtabDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "pinchtab", {
@@ -140,6 +145,10 @@ ip6tables -L OUTPUT -n`,
       name: "pinchtab-config",
     },
     data: {
+      // PinchTab 0.15.1 uses this marker to detect containers. Kubernetes CRI
+      // does not supply Docker's marker, so Chrome otherwise tries a sandbox
+      // that cannot run with no_new_privs. Retain the existing pod firewall.
+      dockerenv: "",
       "config.json": JSON.stringify(
         {
           server: {
@@ -158,13 +167,27 @@ ip6tables -L OUTPUT -n`,
           instanceDefaults: {
             mode: "headless",
             noRestore: true,
+            stealthLevel: "full",
+            humanize: true,
           },
+          security: { allowEvaluate: true },
         },
         null,
         2,
       ),
     },
   });
+  deployment.podMetadata.addAnnotation(
+    "checksum/browser-config",
+    new Bun.CryptoHasher("sha256")
+      .update(JSON.stringify(config.data))
+      .digest("hex"),
+  );
+  const configVolume = Volume.fromConfigMap(
+    chart,
+    "pinchtab-config-volume",
+    config,
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -217,11 +240,17 @@ ip6tables -L OUTPUT -n`,
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      readiness: Probe.fromCommand(HEALTHCHECK_COMMAND, {
+      readiness: Probe.fromCommand(BROWSER_READINESS_COMMAND, {
         periodSeconds: Duration.seconds(10),
         failureThreshold: 3,
       }),
       volumeMounts: [
+        {
+          path: "/.dockerenv",
+          subPath: "dockerenv",
+          volume: configVolume,
+          readOnly: true,
+        },
         {
           path: "/data",
           volume: Volume.fromPersistentVolumeClaim(
@@ -232,7 +261,7 @@ ip6tables -L OUTPUT -n`,
         },
         {
           path: "/config",
-          volume: Volume.fromConfigMap(chart, "pinchtab-config-volume", config),
+          volume: configVolume,
         },
         {
           // Chrome needs far more shared memory than the container default 64Mi.

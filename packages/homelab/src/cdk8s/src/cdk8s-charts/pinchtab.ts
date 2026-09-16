@@ -28,7 +28,7 @@ export function createPinchtabChart(app: App) {
 
   createPinchtabDeployment(chart);
 
-  // NetworkPolicy: allow ingress from birmel (the only consumer) and Tailscale
+  // NetworkPolicy: allow ingress from birmel, Bazarr, and Tailscale
   // (dashboard/API access via TailscaleIngress) on the pinchtab port.
   new KubeNetworkPolicy(chart, "pinchtab-ingress-netpol", {
     metadata: { name: "pinchtab-ingress-netpol" },
@@ -38,6 +38,12 @@ export function createPinchtabChart(app: App) {
       ingress: [
         {
           from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: { matchLabels: { app: "bazarr" } },
+            },
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "birmel" },
