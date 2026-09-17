@@ -294,9 +294,19 @@ fi
 
 # Delta themes — managed by chezmoi (private_dot_config/delta/themes/catppuccin.gitconfig)
 
-# add fish to /etc/shells
-if ! grep -qx "/home/linuxbrew/.linuxbrew/bin/fish" /etc/shells; then
-    echo /home/linuxbrew/.linuxbrew/bin/fish | sudo tee -a /etc/shells >/dev/null
+# Add fish to /etc/shells and set as default
+if command -v fish >/dev/null 2>&1; then
+    FISH_PATH="$(command -v fish)"
+    if ! grep -qx "${FISH_PATH}" /etc/shells; then
+        log_info "Adding fish to /etc/shells"
+        echo "${FISH_PATH}" | sudo tee -a /etc/shells >/dev/null
+    fi
+    if [ "$SHELL" != "${FISH_PATH}" ]; then
+        log_info "Setting fish as default shell"
+        chsh -s "${FISH_PATH}" || log_warn "Failed to set fish as default shell"
+    fi
+else
+    log_warn "Skipping fish shell setup: fish not available"
 fi
 
 # git credential manager
