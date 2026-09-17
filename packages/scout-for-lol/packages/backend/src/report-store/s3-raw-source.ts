@@ -125,6 +125,24 @@ export async function readRawObjectText(
   return await response.Body.transformToString();
 }
 
+async function readRawObjectBytes(
+  client: S3Client,
+  bucket: string,
+  key: string,
+  options: S3ReadOptions = {},
+): Promise<Uint8Array> {
+  const response = await client.send(
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+    options.abortSignal === undefined
+      ? {}
+      : { abortSignal: options.abortSignal },
+  );
+  if (response.Body === undefined) {
+    throw new Error(`S3 object has no body: ${key}`);
+  }
+  return await response.Body.transformToByteArray();
+}
+
 /**
  * The archived object cannot serve as the snapshot its receipt attests, and no
  * retry will change that.
@@ -165,24 +183,27 @@ export class ArchivedObjectUnusableError extends Error {
  * that payload. Silently using it would let a resumed run stage rows and mint
  * notifications from content nothing attested to.
  *
- * The digest is taken over the UTF-8 encoding of the text, which is exactly
- * what `putContentAddressedObject` hashed on the way in.
+ * The digest is taken over exactly what `putContentAddressedObject` hashed on
+ * the way in: the stored bytes for a binary object, the UTF-8 encoding for a
+ * text one. The two readers below differ only in how the body is pulled off
+ * the response; the verification is one rule.
  */
-export async function readVerifiedRawObjectText(args: {
+type VerifiedReadArgs = {
   client: S3Client;
   bucket: string;
   key: string;
   expectedDigest: string;
   options?: S3ReadOptions;
-}): Promise<string> {
-  let text: string;
+};
+
+async function readVerified<Value>(
+  args: VerifiedReadArgs,
+  read: () => Promise<Value>,
+  bytesOf: (value: Value) => Uint8Array,
+): Promise<Value> {
+  let value: Value;
   try {
-    text = await readRawObjectText(
-      args.client,
-      args.bucket,
-      args.key,
-      args.options ?? {},
-    );
+    value = await read();
   } catch (error) {
     // The same distinction the spectator boundary draws, on the read side. A
     // missing object is a fact about storage that no retry can change; a
@@ -198,7 +219,7 @@ export async function readVerifiedRawObjectText(args: {
     }
     throw error;
   }
-  const digest = computeSha256Digest(new TextEncoder().encode(text));
+  const digest = computeSha256Digest(bytesOf(value));
   if (digest !== args.expectedDigest) {
     throw new ArchivedObjectUnusableError({
       key: args.key,
@@ -206,7 +227,34 @@ export async function readVerifiedRawObjectText(args: {
       detail: `expected ${args.expectedDigest}, read ${digest}`,
     });
   }
-  return text;
+  return value;
+}
+
+export async function readVerifiedRawObjectBytes(
+  args: VerifiedReadArgs,
+): Promise<Uint8Array> {
+  return await readVerified(
+    args,
+    () =>
+      readRawObjectBytes(
+        args.client,
+        args.bucket,
+        args.key,
+        args.options ?? {},
+      ),
+    (bytes) => bytes,
+  );
+}
+
+export async function readVerifiedRawObjectText(
+  args: VerifiedReadArgs,
+): Promise<string> {
+  return await readVerified(
+    args,
+    () =>
+      readRawObjectText(args.client, args.bucket, args.key, args.options ?? {}),
+    (text) => new TextEncoder().encode(text),
+  );
 }
 
 // A missing object surfaces as a NotFound / 404 error from HeadObject; anything

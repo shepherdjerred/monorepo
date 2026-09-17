@@ -5,7 +5,10 @@ import {
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
-import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  DiscordMessageIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   NotificationFailure,
   NotificationTarget,
@@ -25,7 +28,9 @@ import {
 import { ChannelSendError, send } from "#src/league/discord/channel.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
+import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import { readAttestedNotificationArtifactV2 } from "#src/temporal/v2/notification/notification-artifact.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -228,19 +233,24 @@ async function deliverToTarget(args: {
  *
  * This is the ambiguity boundary, drawn explicitly because getting it wrong is
  * expensive in both directions. Resolving the intent, looking up the guild,
- * fetching the Riot payload, building the report and checking that the target
- * can carry it are all decided before Discord is contacted: if any of them
- * fails, the message DEFINITELY did not go out. Treating that as ambiguous
- * would park a notification behind an operator resolution it does not need, and
- * the user simply never hears about their game.
+ * reading the attested artifact back, fetching the Riot payload, building the
+ * report around the artifact and checking that the target can carry it are
+ * all decided before Discord is contacted: if any of them fails, the message
+ * DEFINITELY did not go out. Treating that as ambiguous would park a
+ * notification behind an operator resolution it does not need, and the user
+ * simply never hears about their game.
  *
  * So every failure on this side of the line comes back as a `failed` result
  * rather than a throw, and the classification says what the caller should do.
- * Transient causes — Riot unreachable, the renderer falling over — are
+ * Transient causes — Riot unreachable, the object store timing out — are
  * `retryable`, which returns the intent to `ready` and lets the Workflow's send
- * loop try again. The DM attachment case is `terminal`: no retry teaches
- * `sendDM` to carry files, and the honest reading of the domain's vocabulary is
- * that this target cannot receive this notification.
+ * loop try again. Two causes are `terminal`. The DM attachment case: no retry
+ * teaches `sendDM` to carry files, and the honest reading of the domain's
+ * vocabulary is that this target cannot receive this notification. And an
+ * artifact whose receipt stands but whose bytes are gone or differ from the
+ * attested digest: that is a fact about storage, reported as
+ * `content-unavailable`, because sending anything else would attest bytes
+ * nobody rendered and retrying reads the same broken object again.
  *
  * The other side of the line is {@link deliverToTarget}, where `send` and
  * `sendDM` live. Only failures from there can be `unknown`.
@@ -259,6 +269,34 @@ const PRE_SEND_UNAVAILABLE: NotificationFailure = {
   reason: "service-unavailable",
 };
 
+const CONTENT_UNAVAILABLE: NotificationFailure = {
+  classification: "terminal",
+  reason: "content-unavailable",
+};
+
+/**
+ * The report message, built around the artifact the render Activity attested.
+ *
+ * The artifact is read back and verified against its receipt BEFORE the Riot
+ * payload is fetched, because it is the cheaper of the two reads and the one
+ * whose failure is a fact rather than a wait: a broken artifact ends the
+ * attempt without spending a Riot read on a message that will not be built.
+ * The verified bytes then go into `generateMatchReport` as its pre-rendered
+ * image, so the attachment on the message IS the attested object and the
+ * receipt's claim about what was delivered stays true by construction.
+ */
+async function buildAttestedReport(
+  riotMatchId: RiotMatchId,
+  guildId: DiscordGuildId | undefined,
+): Promise<MessageCreateOptions | undefined> {
+  const artifact = await readAttestedNotificationArtifactV2(riotMatchId);
+  const context = await resolveScoutV2MatchContext(riotMatchId);
+  return await generateMatchReport(context.matchData, context.trackedPlayers, {
+    targetGuildIds: guildId === undefined ? [] : [guildId],
+    prerenderedImage: artifact.bytes,
+  });
+}
+
 async function prepareNotificationSend(
   input: ScoutIntentAttemptRefV2,
 ): Promise<PreparedSend> {
@@ -273,17 +311,17 @@ async function prepareNotificationSend(
       ? await resolveDeliveryGuild(target.channelId)
       : undefined;
 
-  const context = await resolveScoutV2MatchContext(riotMatchId);
-  // This re-renders the report image that `renderNotificationArtifactV2`
-  // already committed and attested, because `generateMatchReport` renders
-  // internally and v1 offers no seam for handing one in. See that module's
-  // header for what closing it costs; it is a coordinated follow-up, not an
-  // oversight here.
-  const message = await generateMatchReport(
-    context.matchData,
-    context.trackedPlayers,
-    { targetGuildIds: guildId === undefined ? [] : [guildId] },
-  );
+  let message: MessageCreateOptions | undefined;
+  try {
+    message = await buildAttestedReport(riotMatchId, guildId);
+  } catch (error) {
+    if (!(error instanceof ArchivedObjectUnusableError)) throw error;
+    logger.error(
+      `The attested artifact for ${riotMatchId} cannot be delivered (${error.reason}); the receipt stands but its bytes do not`,
+      error,
+    );
+    return { phase: "failed", failure: CONTENT_UNAVAILABLE };
+  }
   if (message === undefined) {
     logger.error(
       `No report could be built for ${riotMatchId} despite an intent naming it`,

@@ -36,24 +36,27 @@ import {
  * match, every one of them starts a notification child, and only the first
  * should pay for the image they all deliver.
  *
- * ## The seam this does not close yet
+ * ## The other half of the split
  *
- * The artifact committed here is attested but UNCONSUMED. `deliverNotificationV2`
- * still builds its message through `generateMatchReport`, which renders the
- * image internally — so a delivered notification pays for the Satori pass a
- * second time, on `realtime`, which is the queue this split exists to keep it
- * off. Everything the receipt promises is true (the artifact is durable, it is
- * attested, and a second render Activity reuses it); what is missing is the
- * send reading it back.
+ * `deliverNotificationV2` READS this artifact back. It resolves the receipt,
+ * fetches the object, verifies the bytes against the attested digest and size
+ * (`notification/notification-artifact.ts`), and hands them to
+ * `generateMatchReport` as its pre-rendered image — so the attachment on the
+ * delivered message is the attested object, byte for byte, and the send never
+ * renders. The receipt's claim ("this is what this match's notifications
+ * deliver") is therefore true by construction rather than by coincidence,
+ * and the Satori pass stays on `background`, which is the whole point of the
+ * split.
  *
- * Closing it means giving v1's report path a seam for a pre-rendered image:
- * `createMatchImage` is where the render happens, and it is called from all
- * three of `processClassicMatch`, `processArenaMatch` and `processStandardMatch`,
- * so the image has to be threaded through `generateMatchReport` and each of
- * them. That is a change to the LIVE v1 report path rather than to this lane,
- * which is why it was deferred rather than folded in here — it is tracked as a
- * coordinated follow-up. Until it lands, treat the committed artifact as an
- * attested record of what was delivered, not as the source the send reads.
+ * ## Why there is no bucketless path
+ *
+ * `saveToS3` answers `undefined` when no bucket is configured, and on the v1
+ * path that is a harmless no-op because v1 sends what it just rendered. Here
+ * it would be a lie: a `rendered` result with nothing committed is an
+ * artifact the send cannot read back, and the split has no in-memory hand-off
+ * to fall back to — the two Activities share neither a process nor a queue.
+ * So a missing bucket fails this Activity (retryably, as the misconfiguration
+ * it is) instead of reporting a render that produced nothing durable.
  */
 
 /**
@@ -86,19 +89,17 @@ function reportImageBytes(
 /**
  * Commit the rendered bytes to the canonical store.
  *
- * `saveToS3` answers `undefined` only when no bucket is configured — the
- * dev/test no-op — and that is the one branch where there is nothing honest to
- * receipt, exactly as `archiveMatchArtifactsV2` records nothing on its own
- * no-bucket path. The key is v1's `report.png`, so the artifact this attests to
- * is the same object the existing report pipeline has always written rather
- * than a second copy under a V2-only name.
+ * The key is v1's `report.png`, so the artifact this attests to is the same
+ * object the existing report pipeline has always written rather than a second
+ * copy under a V2-only name. See the module doc for why a missing bucket is a
+ * failure here rather than the no-op it is on the v1 path.
  */
 async function commitReportImage(
   riotMatchId: RiotMatchId,
   image: Uint8Array,
   queueId: number,
-): Promise<StoredObject | undefined> {
-  return await saveToS3({
+): Promise<StoredObject> {
+  const stored = await saveToS3({
     matchId: MatchIdSchema.parse(riotMatchId),
     assetType: "report",
     extension: "png",
@@ -113,6 +114,12 @@ async function commitReportImage(
     logMessage: "Committing the V2 notification artifact",
     errorContext: "V2 notification artifact",
   });
+  if (stored === undefined) {
+    throw new Error(
+      `Rendered ${riotMatchId} but no S3 bucket is configured, so the V2 notification artifact cannot be committed for its delivery to read back`,
+    );
+  }
+  return stored;
 }
 
 /**
@@ -193,10 +200,5 @@ export async function renderNotificationArtifactV2(
     reportImageBytes(message, riotMatchId),
     context.matchData.info.queueId,
   );
-  if (stored === undefined) {
-    // The dev/test no-bucket path. Nothing was committed, so there is no claim
-    // to record — and the send still works, because it builds its own message.
-    return ScoutNotificationRenderV2ResultSchema.parse({ outcome: "rendered" });
-  }
   return await attestReportImage(riotMatchId, stored);
 }

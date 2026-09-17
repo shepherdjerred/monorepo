@@ -333,6 +333,7 @@ describe("a fence whose lock cannot outlast its effect", () => {
     const budget: ScoutEffectFenceBudget = {
       lockLifetimeMs: 30_000,
       slowEffectWarningMs: 50,
+      fenceAbortLeadMs: 1000,
     };
     let concurrent = 0;
     let overlapped = false;
@@ -389,6 +390,7 @@ describe("a fence whose lock cannot outlast its effect", () => {
     const budget: ScoutEffectFenceBudget = {
       lockLifetimeMs: 700,
       slowEffectWarningMs: 30_000,
+      fenceAbortLeadMs: 100,
     };
     let runs = 0;
 
@@ -474,5 +476,133 @@ describe("a fence whose lock cannot outlast its effect", () => {
       fact: { outcome: "already-applied" },
       effects: 0,
     });
+  }, 30_000);
+});
+
+/**
+ * A durable write an effect makes through a top-level connection, outside the
+ * fence's transaction — exactly what settlement's ledger writes and the fact
+ * receipt are from the fence's point of view.
+ */
+async function writeMarker(name: string): Promise<void> {
+  await prisma.scoutEffectClaim.create({
+    data: { key: `marker:${name}`, kind: "marker" },
+  });
+}
+
+async function markerLanded(name: string): Promise<boolean> {
+  return (await getScoutEffectClaim(`marker:${name}`, prisma)) !== null;
+}
+
+describe("a zombie effect whose fence lapsed", () => {
+  test("cannot write past the lapse while a rival applies", async () => {
+    // The interleaving the fence residual named: the effect outlives the lock
+    // lifetime, Postgres releases the lock underneath it, a rival enters and
+    // applies, and the zombie still has writes left. The zombie's write
+    // boundary must refuse — otherwise its second write lands beside the
+    // rival's and the effect is applied by two attempts at once.
+    //
+    // Mutation proof: make `assertHeld` a no-op and the zombie's marker "B"
+    // lands after the rival's "R", failing the assertions below.
+    const key = "fence:zombie-race";
+    const budget: ScoutEffectFenceBudget = {
+      lockLifetimeMs: 1200,
+      slowEffectWarningMs: 30_000,
+      fenceAbortLeadMs: 200,
+    };
+    let zombieSignalAborted = false;
+
+    const zombie = runGuardedEffectV2(
+      {
+        key,
+        kind: "v2-test",
+        apply: async (fence) => {
+          await fence.assertHeld();
+          await writeMarker("zombie-A");
+          // Outlive the lock: Prisma rolls the fence's transaction back at
+          // 1.2s and the rival takes the lock right after.
+          await sleep(2000);
+          zombieSignalAborted = fence.signal.aborted;
+          await fence.assertHeld();
+          await writeMarker("zombie-B");
+          return applied;
+        },
+      },
+      { database: prisma, budget },
+    );
+    // Enter once the zombie's lock is gone, before the zombie wakes up.
+    await sleep(1500);
+    const rival = runGuardedEffectV2(
+      {
+        key,
+        kind: "v2-test",
+        apply: async (fence) => {
+          await fence.assertHeld();
+          await writeMarker("rival-R");
+          return applied;
+        },
+      },
+      { database: prisma },
+    );
+
+    const zombieOutcome = await zombie.then(
+      () => "resolved",
+      (error: unknown) => error,
+    );
+    const rivalResult = await rival;
+
+    // The write the guard exists to stop, asserted first so a removed guard
+    // fails HERE rather than on the shape of whatever error Prisma raised.
+    expect(await markerLanded("zombie-B")).toBe(false);
+    expect(await markerLanded("zombie-A")).toBe(true);
+    expect(await markerLanded("rival-R")).toBe(true);
+    expect(zombieSignalAborted).toBe(true);
+    expect(zombieOutcome).toBeInstanceOf(Error);
+    expect(zombieOutcome).toMatchObject({
+      type: "EffectFenceLost",
+      nonRetryable: true,
+    });
+    expect(rivalResult).toEqual({
+      guard: { outcome: "already-applied" },
+      fact: { outcome: "applied" },
+      effects: 3,
+    });
+    const claim = await getScoutEffectClaim(key, prisma);
+    expect(claim?.state).toBe("COMPLETED");
+  }, 30_000);
+
+  test("aborts the signal ahead of the lock's own timer", async () => {
+    // The lead is what makes a boundary check just before the rollback
+    // refuse instead of pass: the signal fires at lifetime minus lead, and a
+    // check landing in that window sees it even though the transaction is
+    // technically still open.
+    const key = "fence:abort-lead";
+    const budget: ScoutEffectFenceBudget = {
+      lockLifetimeMs: 2000,
+      slowEffectWarningMs: 30_000,
+      fenceAbortLeadMs: 1200,
+    };
+    let abortedAtCheck: boolean | null = null;
+
+    await expect(
+      runGuardedEffectV2(
+        {
+          key,
+          kind: "v2-test",
+          apply: async (fence) => {
+            // Past the lead (0.8s), well short of the lock (2s).
+            await sleep(1200);
+            abortedAtCheck = fence.signal.aborted;
+            await fence.assertHeld();
+            return applied;
+          },
+        },
+        { database: prisma, budget },
+      ),
+    ).rejects.toThrow("refusing to write past it");
+
+    expect(abortedAtCheck).toBe(true);
+    const claim = await getScoutEffectClaim(key, prisma);
+    expect(claim?.state).toBe("AMBIGUOUS_OR_FAILED");
   }, 30_000);
 });

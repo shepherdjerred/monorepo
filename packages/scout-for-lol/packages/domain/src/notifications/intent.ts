@@ -73,6 +73,13 @@ export const NotificationTerminalFailureReasonSchema = z.enum([
   "dm-disabled",
   "budget-exhausted",
   "target-not-found",
+  /**
+   * The content this intent would deliver cannot be produced: the artifact
+   * its receipt attests to is missing or is not the bytes the receipt names.
+   * A fact about storage rather than about the target, and no retry reads a
+   * different object.
+   */
+  "content-unavailable",
 ]);
 
 export type NotificationFailure = z.infer<typeof NotificationFailureSchema>;

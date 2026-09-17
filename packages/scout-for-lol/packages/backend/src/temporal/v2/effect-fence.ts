@@ -65,17 +65,44 @@ import {
  * already rolled back fails the probe. It fails CLOSED, so the claim is not
  * completed and the next attempt re-enters under a lock it genuinely holds.
  *
+ * ## What the fence hands the effect, and why
+ *
+ * The lock is held by THIS module's transaction, but the effect's own writes
+ * go through top-level connections, so a lock that has lapsed does not stop
+ * them by itself: an effect that exceeds the lock lifetime is a ZOMBIE whose
+ * remaining writes race whatever rival entered after Postgres released the
+ * lock. Cooperative cancellation is what closes that, and it is the same
+ * AbortSignal discipline every other external wait in V2 already follows.
+ *
+ * `apply()` receives a {@link ScoutEffectFenceV2}: an `AbortSignal` that is
+ * aborted shortly BEFORE the lock's own timer would fire, and `assertHeld()`,
+ * which refuses once the signal is aborted and otherwise proves the
+ * lock-holding transaction is still open. An effect calls `assertHeld()` at
+ * every durable write boundary it owns — before it enters its domain commit
+ * and before it records its fact — so a write that would land after the fence
+ * lapsed is refused rather than raced. The fence itself makes the same check
+ * before completing the claim, which is the last write of all.
+ *
+ * The lead the signal has on the lock's timer is what makes a boundary check
+ * near the lapse honest: a probe that answered "held" one millisecond before
+ * the rollback would let a write land one millisecond after it. Aborting
+ * early by {@link ScoutEffectFenceBudget.fenceAbortLeadMs} turns that race
+ * into a refusal.
+ *
  * ## The residual, stated plainly
  *
- * One window remains and is accepted at this depth: an effect that exceeds the
- * 30-minute lock lifetime. Postgres then kills the fence's transaction, the
- * probe fails closed so nothing is completed on its behalf, and a rival that
- * enters afterwards reconciles through the takeover `alreadyApplied` probe —
- * which reads the durable fact the zombie committed rather than re-applying
- * on top of it. What is NOT closed is the zombie's own remaining writes racing
- * that rival. Closing it completely needs cooperative cancellation inside the
- * effects themselves or a fencing-token column, both of which are design
- * changes rather than fixes.
+ * The boundaries this closes are the ones V2 owns: the entry into each
+ * domain commit, the fact receipt, and the claim completion. The v1 code an
+ * effect calls BETWEEN two boundaries — settlement's ledger writes inside
+ * `settleBucksWithDareTimelineV2`, progression's writes under
+ * `withChallengeProgressionLock` — is not signal-aware, so a zombie that has
+ * already entered one of those calls when its fence lapses finishes that call.
+ * What bounds those writes is their own design: every ledger transition is
+ * state-gated, so a rival re-applying on top of them finds nothing left to do
+ * and its fact conflicts with the zombie's — visibly, as a `conflict` that
+ * fails the Activity, never as a silent double application. And the zombie
+ * itself cannot record a fact or complete the claim after the lapse, because
+ * both go through `assertHeld()`.
  *
  * A session-level `pg_advisory_lock` would have no timer at all, but Prisma
  * offers no way to pin a connection outside a transaction, and a session lock
@@ -84,9 +111,11 @@ import {
  * xact lock is the only pin Prisma can actually give, which is why its
  * lifetime is sized rather than extended.
  *
- * No fencing-token column is needed for the rest: Postgres already is the
- * shared lock manager a token would substitute for, and the claim row already
- * records the outcome the token would carry.
+ * No fencing-token column is needed: Postgres already is the shared lock
+ * manager a token would substitute for, the claim row already records the
+ * outcome the token would carry, and a token verified at the write itself
+ * would only close the boundaries this signal already closes — the v1 ledger
+ * writes between them are exactly as unaware of a token as of a signal.
  *
  * ## Connection pool
  *
@@ -116,8 +145,8 @@ const logger = createLogger("scout-v2-effect-fence");
 const SCOUT_V2_EFFECT_LOCK_NAMESPACE = "scout-v2-effect";
 
 /**
- * How long the fence guarantees the lock, and when a slow effect starts
- * screaming.
+ * How long the fence guarantees the lock, when a slow effect starts
+ * screaming, and how early the effect is told to stop writing.
  *
  * `slowEffectWarningMs` is TELEMETRY ONLY. It logs and it does not release:
  * releasing on a timer is the defect this design removed. It is set to the
@@ -125,17 +154,27 @@ const SCOUT_V2_EFFECT_LOCK_NAMESPACE = "scout-v2-effect";
  * anything past it has already exceeded every bound the effect itself
  * respects.
  *
- * Injectable so a test can shrink both and drive the slow and expired paths in
- * seconds rather than half an hour; nothing in production passes them.
+ * `fenceAbortLeadMs` is how far ahead of the lock's own timer the effect's
+ * `AbortSignal` fires. Prisma's rollback and the signal run on the same clock
+ * — both start when the transaction opens — so the lead is the window in
+ * which a boundary check refuses BEFORE the lock is actually gone, rather than
+ * racing the rollback. Five seconds dwarfs any single write's latency and is
+ * negligible against a thirty-minute lifetime.
+ *
+ * Injectable so a test can shrink all three and drive the slow, lapsed and
+ * zombie paths in seconds rather than half an hour; nothing in production
+ * passes them.
  */
 export type ScoutEffectFenceBudget = {
   readonly lockLifetimeMs: number;
   readonly slowEffectWarningMs: number;
+  readonly fenceAbortLeadMs: number;
 };
 
 export const SCOUT_V2_EFFECT_FENCE_BUDGET: ScoutEffectFenceBudget = {
   lockLifetimeMs: 1_800_000,
   slowEffectWarningMs: 120_000,
+  fenceAbortLeadMs: 5000,
 };
 
 const FENCE_LOCK_MAX_WAIT_MS = 15_000;
@@ -146,7 +185,28 @@ export type GuardedEffect = {
 };
 
 /**
+ * What an effect holds while it runs: proof, on demand, that it is still
+ * fenced.
+ *
+ * `signal` aborts once the fence can no longer be trusted, and is the value to
+ * hand to any wait that accepts one. `assertHeld()` is the check an effect
+ * makes at each durable write boundary it owns; it throws the non-retryable
+ * `EffectFenceLost` once the signal is aborted, and otherwise proves the
+ * lock-holding transaction is still open — which is the only way to observe a
+ * rollback Prisma performed underneath the effect.
+ */
+export type ScoutEffectFenceV2 = {
+  readonly signal: AbortSignal;
+  readonly assertHeld: () => Promise<void>;
+};
+
+/**
  * What one guarded effect is, from the fence's point of view.
+ *
+ * `apply` is handed the fence and is expected to consult it before every
+ * durable write it owns; an effect that never calls `assertHeld()` is still
+ * fenced at completion, but its own writes past a lapse are then bounded only
+ * by their state gates. See the module doc for what that residual is.
  *
  * `alreadyApplied` is the TAKEOVER reconcile, and it is supplied by the caller
  * rather than built into the fence because only the caller knows what its
@@ -158,7 +218,7 @@ export type GuardedEffect = {
 export type ScoutGuardedEffectV2 = {
   readonly key: string;
   readonly kind: string;
-  readonly apply: () => Promise<GuardedEffect>;
+  readonly apply: (fence: ScoutEffectFenceV2) => Promise<GuardedEffect>;
   readonly alreadyApplied?: () => Promise<GuardedEffect | null>;
 };
 
@@ -201,13 +261,15 @@ async function recordFenceFailure(
 /**
  * Run `apply` to settlement, holding the fence for exactly as long as it takes.
  *
- * The timer only ever LOGS. Returning early on it would unwind the
+ * The warning timer only ever LOGS. Returning early on it would unwind the
  * transaction, release the lock, and leave the effect running unfenced — the
  * one outcome this fence exists to prevent — so a slow effect is reported and
- * then waited for.
+ * then waited for. What a slow effect gets instead is the fence handle, whose
+ * signal tells it to stop writing once the lock is about to go.
  */
 async function applyHoldingTheFence(
-  apply: () => Promise<GuardedEffect>,
+  apply: ScoutGuardedEffectV2["apply"],
+  fence: ScoutEffectFenceV2,
   key: string,
   warningMs: number,
 ): Promise<GuardedEffect> {
@@ -217,29 +279,43 @@ async function applyHoldingTheFence(
     );
   }, warningMs);
   try {
-    return await apply();
+    return await apply(fence);
   } finally {
     clearTimeout(warning);
   }
 }
 
+function fenceLost(key: string, cause: unknown): ApplicationFailure {
+  return ApplicationFailure.nonRetryable(
+    `The fence for ${key} lapsed while its effect was running, so another attempt may have entered; refusing to write past it`,
+    "EffectFenceLost",
+    [cause],
+  );
+}
+
 /**
  * Prove the fence still holds before anything is allowed to depend on it.
  *
- * An advisory xact lock is held from acquisition until its transaction ends,
- * so a transaction that is still open has necessarily held the lock without
- * interruption. This query is the cheapest way to ask that question: if Prisma
- * already rolled the transaction back on its own timer, it throws.
+ * Two checks, and the order matters. The signal is consulted first because it
+ * fires AHEAD of the lock's timer: a probe alone could answer "held" an
+ * instant before the rollback and let the write that follows land after it.
+ * Then the transaction is probed, because an advisory xact lock is held from
+ * acquisition until its transaction ends, so a transaction that is still open
+ * has necessarily held the lock without interruption — and if Prisma already
+ * rolled it back on its own timer, or the connection died, the probe throws.
  */
-async function assertFenceStillHeld(tx: Db, key: string): Promise<void> {
+async function assertFenceStillHeld(
+  tx: Db,
+  key: string,
+  signal: AbortSignal,
+): Promise<void> {
+  if (signal.aborted) {
+    throw fenceLost(key, signal.reason);
+  }
   try {
     await tx.$queryRaw`SELECT 1`;
   } catch (error) {
-    throw ApplicationFailure.nonRetryable(
-      `The fence for ${key} lapsed while its effect was running, so another attempt may have entered; refusing to complete the claim`,
-      "EffectFenceLost",
-      [error],
-    );
+    throw fenceLost(key, error);
   }
 }
 
@@ -276,23 +352,47 @@ export async function runGuardedEffectV2(
 ): Promise<ScoutGuardedEffectV2Result> {
   const database = options.database ?? prisma;
   const budget = options.budget ?? SCOUT_V2_EFFECT_FENCE_BUDGET;
-  return await database.$transaction(
-    async (tx) => {
-      await tx.$executeRaw`
-        SELECT pg_advisory_xact_lock(
-          hashtext(${SCOUT_V2_EFFECT_LOCK_NAMESPACE}),
-          hashtext(${args.key})
-        )
-      `;
-      return await applyUnderFence(args, tx, database, budget);
+  // Armed BEFORE the transaction opens, on the same clock Prisma's own timer
+  // starts on, so the lead is measured against the lock's real lifetime
+  // rather than against whenever the lock happened to be acquired.
+  const controller = new AbortController();
+  const abortAhead = setTimeout(
+    () => {
+      controller.abort(
+        new Error(
+          `The V2 fence for ${args.key} is ${String(budget.fenceAbortLeadMs)}ms from lapsing`,
+        ),
+      );
     },
-    { maxWait: FENCE_LOCK_MAX_WAIT_MS, timeout: budget.lockLifetimeMs },
+    Math.max(0, budget.lockLifetimeMs - budget.fenceAbortLeadMs),
   );
+  try {
+    return await database.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`
+          SELECT pg_advisory_xact_lock(
+            hashtext(${SCOUT_V2_EFFECT_LOCK_NAMESPACE}),
+            hashtext(${args.key})
+          )
+        `;
+        const fence: ScoutEffectFenceV2 = {
+          signal: controller.signal,
+          assertHeld: async () => {
+            await assertFenceStillHeld(tx, args.key, controller.signal);
+          },
+        };
+        return await applyUnderFence(args, fence, database, budget);
+      },
+      { maxWait: FENCE_LOCK_MAX_WAIT_MS, timeout: budget.lockLifetimeMs },
+    );
+  } finally {
+    clearTimeout(abortAhead);
+  }
 }
 
 async function applyUnderFence(
   args: ScoutGuardedEffectV2,
-  tx: Db,
+  fence: ScoutEffectFenceV2,
   database: ExtendedPrismaClient,
   budget: ScoutEffectFenceBudget,
 ): Promise<ScoutGuardedEffectV2Result> {
@@ -339,6 +439,7 @@ async function applyUnderFence(
   try {
     applied = await applyHoldingTheFence(
       args.apply,
+      fence,
       args.key,
       budget.slowEffectWarningMs,
     );
@@ -356,7 +457,7 @@ async function applyUnderFence(
     throw conflict;
   }
 
-  await assertFenceStillHeld(tx, args.key);
+  await fence.assertHeld();
 
   try {
     await completeScoutEffect(args.key, database);
