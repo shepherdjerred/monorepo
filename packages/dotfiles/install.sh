@@ -207,6 +207,18 @@ fi
 
 # install Brewfile
 if command -v brew >/dev/null 2>&1; then
+    # Homebrew refuses to load formulae from third-party taps until they are
+    # trusted, which otherwise aborts the whole bundle (and every step below it).
+    log_info "Trusting third-party Homebrew formulae"
+    third_party_formulae=(
+        "rsteube/tap/carapace"
+    )
+    for formula in "${third_party_formulae[@]}"; do
+        tap="${formula%/*}"
+        retry 3 5 brew tap "$tap"
+        brew trust --formula "$formula"
+    done
+
     (cd ~ && retry 3 5 brew bundle --file=.Brewfile)
 else
     log_warn "Skipping brew bundle: brew not available"
@@ -233,7 +245,7 @@ if command -v nvim >/dev/null 2>&1; then
     log_info "Installing Neovim plugins"
     nvim --headless "+Lazy! sync" +qa
     log_info "Installing tree-sitter parsers"
-    nvim --headless "+TSUpdateSync" +qa
+    nvim --headless "+lua require('config.treesitter').install():wait(900000)" +qa
     log_success "Neovim setup complete"
 else
     log_warn "Skipping Neovim setup: nvim not available"
@@ -282,9 +294,19 @@ fi
 
 # Delta themes — managed by chezmoi (private_dot_config/delta/themes/catppuccin.gitconfig)
 
-# add fish to /etc/shells
-if ! grep -qx "/home/linuxbrew/.linuxbrew/bin/fish" /etc/shells; then
-    echo /home/linuxbrew/.linuxbrew/bin/fish | sudo tee -a /etc/shells >/dev/null
+# Add fish to /etc/shells and set as default
+if command -v fish >/dev/null 2>&1; then
+    FISH_PATH="$(command -v fish)"
+    if ! grep -qx "${FISH_PATH}" /etc/shells; then
+        log_info "Adding fish to /etc/shells"
+        echo "${FISH_PATH}" | sudo tee -a /etc/shells >/dev/null
+    fi
+    if [ "$SHELL" != "${FISH_PATH}" ]; then
+        log_info "Setting fish as default shell"
+        chsh -s "${FISH_PATH}" || log_warn "Failed to set fish as default shell"
+    fi
+else
+    log_warn "Skipping fish shell setup: fish not available"
 fi
 
 # git credential manager
