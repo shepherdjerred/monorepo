@@ -95,6 +95,9 @@ describe("passthrough registry", () => {
     const temporalEnv = buildPassthroughInvocation("temporal", ["workflow"], {
       TEMPORAL_ADDRESS: "temporal.example:7233",
     });
+    const linearEnv = buildPassthroughInvocation("linear", ["issue", "list"], {
+      LINEAR_API_KEY: "placeholder",
+    });
     const buildkiteEnv = buildPassthroughInvocation("bk", [], {
       BUILDKITE_ORGANIZATION_SLUG: "other-org",
     });
@@ -111,6 +114,7 @@ describe("passthrough registry", () => {
     ).toBeUndefined();
     expect(argocdFlag?.env["ARGOCD_SERVER"]).toBeUndefined();
     expect(temporalEnv?.args).toEqual(["workflow"]);
+    expect(linearEnv?.args).toEqual(["issue", "list"]);
     expect(buildkiteEnv?.env["BUILDKITE_ORGANIZATION_SLUG"]).toBe("other-org");
     expect(argocdEnv?.env["ARGOCD_SERVER"]).toBe("other.example");
   });
