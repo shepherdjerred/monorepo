@@ -96,6 +96,19 @@ const OPERATOR_DEAD_END_INTENT_STATES: readonly string[] = Object.entries(
   .map(([kind]) => kind);
 
 /**
+ * Every intent state, for the gauge that reports one series per state.
+ *
+ * Read off the classification table rather than typed out a second time, so
+ * the exhaustiveness the `satisfies` above already enforces carries to the
+ * metric: a state added to the domain union cannot reach production without a
+ * series, and no series can exist for a state the domain does not have. A
+ * gauge that quietly stopped covering a state would read as that state being
+ * empty, which is the one answer an operator must never be handed by accident.
+ */
+export const NOTIFICATION_INTENT_STATE_KINDS: readonly string[] =
+  Object.keys(INTENT_DRIVABILITY);
+
+/**
  * Which batch states still have a run's work left inside them.
  *
  * `complete` and `abandoned` are the two ends of the machine and nothing
@@ -120,6 +133,11 @@ const LIVE_RECOVERY_BATCH_STATES: readonly string[] = Object.entries(
 )
   .filter(([, liveness]) => liveness === "live")
   .map(([kind]) => kind);
+
+/** Every batch state, for the same reason as `NOTIFICATION_INTENT_STATE_KINDS`. */
+export const RECOVERY_BATCH_STATE_KINDS: readonly string[] = Object.keys(
+  RECOVERY_BATCH_LIVENESS,
+);
 
 /**
  * The two observation columns this sweep's first family is keyed by, in the

@@ -3,13 +3,20 @@ import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
 import { databaseMetricSweepsEnabled } from "#src/metrics/sweep-policy.ts";
-import { updateBettingMetrics } from "#src/metrics/betting/betting-sweep.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
 import "#src/metrics/product-analytics.ts";
 import "#src/metrics/platform/feature-flags.ts";
 import "#src/metrics/platform/discord-gateway-health.ts";
 import "#src/metrics/progression.ts";
+// The guild-health gauges live in their own module only because this file is at
+// its line cap, so they still have to be registered wherever these are. This
+// used to be done by importing `usage.ts` from the bottom of the file, which
+// reached them through their only consumer and dragged `usage.ts`'s import of
+// this module back in behind it. That pair was an eager cycle held open only by
+// a second, deferred edge that has since moved into `sweeps.ts`; importing the
+// leaf directly says what is actually needed and closes it.
+import "#src/metrics/guild-health.ts";
 
 const logger = createLogger("metrics");
 
@@ -17,12 +24,27 @@ logger.info("📊 Initializing Prometheus metrics");
 
 /**
  * Add default labels to all metrics
+ *
+ * `role` is what makes every series answer "which deployment shape emitted
+ * this". Before the runtime split one pod emitted everything, so an aggregate
+ * over `environment` was the whole story; split into roles, that same
+ * aggregate quietly mixes pods that own a subsystem with pods that
+ * deliberately do not. `discord_connection_status` is the sharp case: a
+ * gateway-less pod never starts a shard, so it reports 0 truthfully, and
+ * `min by (environment)` over that reads as a Discord outage. Carrying the
+ * role on every series is what lets an alert say which pods it is asking
+ * about.
+ *
+ * Bounded by construction — the value is the four-member `ScoutRuntimeRole`
+ * Zod enum, and `parseScoutRuntimeRole` throws at boot on anything else rather
+ * than letting an unrecognised role reach a label.
  */
 registry.setDefaultLabels({
   service: "scout-for-lol-backend",
   version: configuration.version,
   environment: configuration.environment,
   git_sha: configuration.gitSha,
+  role: configuration.runtimeRole,
 });
 
 // =======================
@@ -750,10 +772,6 @@ setInterval(() => {
 
 logger.info("✅ Prometheus metrics initialized successfully");
 
-// Import and initialize usage metrics collection
-// This must be after all metric definitions to avoid circular dependencies
-import "@scout-for-lol/backend/metrics/usage.ts";
-
 /**
  * Get all metrics as Prometheus-formatted text
  * Public API for exporting metrics to Prometheus
@@ -766,14 +784,8 @@ export async function getMetrics(): Promise<string> {
   updateUptimeMetric();
   if (databaseMetricSweepsEnabled()) {
     // Dynamic import to avoid circular dependency issues
-    const { updateUsageMetrics } = await import("./usage.js");
-    const { updateLimitMetrics } = await import("./limits.js");
-    await updateUsageMetrics();
-    await updateLimitMetrics();
-    await updateBettingMetrics();
-    const { updateScoutTemporalDurabilityMetrics } =
-      await import("#src/metrics/platform/temporal.ts");
-    await updateScoutTemporalDurabilityMetrics();
+    const { runDatabaseMetricSweeps } = await import("#src/metrics/sweeps.ts");
+    await runDatabaseMetricSweeps();
   }
   return await registry.metrics();
 }

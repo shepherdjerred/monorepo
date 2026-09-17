@@ -18,6 +18,7 @@ import { validateChampionAssets } from "#src/league/data-dragon/validate-assets.
 import { createLogger } from "#src/logger.ts";
 import { setDatabaseMetricSweepsEnabled } from "#src/metrics/sweep-policy.ts";
 import { setDiscordGatewayState } from "#src/metrics/platform/discord-gateway-health.ts";
+import { registerLakeStagingLagSweep } from "#src/report-lake/lake-staging-lag.ts";
 import type { ScoutRuntimeDependencies } from "#src/runtime/boot.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
 
@@ -47,7 +48,14 @@ export function scoutRuntimeSubsystems(
   let competitionWorker: CompetitionActivityWorker | undefined;
 
   return {
-    configureMetricSweeps: setDatabaseMetricSweepsEnabled,
+    configureMetricSweeps: (enabled) => {
+      setDatabaseMetricSweepsEnabled(enabled);
+      // The lake staging lag is swept by the layer that owns its receipt-kind
+      // vocabulary, because `metrics/` may not import `report-lake/`. Wiring it
+      // here keeps "which role computes it" beside every other role decision
+      // rather than making it a consequence of who imported what.
+      if (enabled) registerLakeStagingLagSweep();
+    },
 
     prepareDiscord: async ({ ownsGateway }) => {
       const { authorizeDiscordRest } =
