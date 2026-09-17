@@ -3,6 +3,7 @@ import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
+import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
@@ -86,18 +87,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
       // Use ClusterIP - mc-router handles external routing for Java Edition
       serviceType: "ClusterIP",
       extraPorts: [
-        {
-          service: {
-            enabled: true,
-            port: 8100,
-          },
-          protocol: "TCP",
-          containerPort: 8100,
-          name: "bluemap",
-          ingress: {
-            enabled: false,
-          },
-        },
+        getMinecraftBlueMapPort(),
         {
           // Bedrock port (UDP) - mc-router doesn't support UDP, so this needs NodePort
           // Note: Bedrock clients can only connect when server is running

@@ -1,7 +1,8 @@
 import { merge } from "lodash";
-import type { ContainerProps, Deployment } from "cdk8s-plus-31";
-import { EnvValue } from "cdk8s-plus-31";
-import { ApiObject, JsonPatch } from "cdk8s";
+import type { ContainerProps, DeploymentProps } from "cdk8s-plus-31";
+import { Deployment, EnvValue } from "cdk8s-plus-31";
+import { ApiObject, JsonPatch, type Chart } from "cdk8s";
+import { BURST_SERVICE_PRIORITY } from "./priority-classes.ts";
 
 export const ROOT_UID = 0;
 export const ROOT_GID = 0;
@@ -44,4 +45,14 @@ export function setDeploymentPriorityClass(
   ApiObject.of(deployment).addJsonPatch(
     JsonPatch.add("/spec/template/spec/priorityClassName", priorityClassName),
   );
+}
+
+export function createBurstDeployment(
+  chart: Chart,
+  name: string,
+  props: DeploymentProps,
+): Deployment {
+  const deployment = new Deployment(chart, name, props);
+  setDeploymentPriorityClass(deployment, BURST_SERVICE_PRIORITY);
+  return deployment;
 }

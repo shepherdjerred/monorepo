@@ -1,6 +1,5 @@
 import {
   Cpu,
-  Deployment,
   DeploymentStrategy,
   EmptyDirMedium,
   EnvValue,
@@ -14,7 +13,7 @@ import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
-  setDeploymentPriorityClass,
+  createBurstDeployment,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
@@ -24,7 +23,6 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 
 export function createPlexDeployment(
   chart: Chart,
@@ -43,7 +41,7 @@ export function createPlexDeployment(
     },
   });
 
-  const deployment = new Deployment(chart, "plex", {
+  const deployment = createBurstDeployment(chart, "plex", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
@@ -58,8 +56,6 @@ export function createPlexDeployment(
       },
     },
   });
-
-  setDeploymentPriorityClass(deployment, BURST_SERVICE_PRIORITY);
 
   const localPathVolume = new ZfsNvmeVolume(chart, "plex-pvc", {
     storage: Size.gibibytes(64),

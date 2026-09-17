@@ -482,7 +482,18 @@ describe("Burst-memory sharing policy", () => {
         requests: { cpu, memory: request },
         limits: { memory: limit },
       });
-      expect(values?.["minecraftServer"], name).toMatchObject({ memory: heap });
+      expect(values?.["minecraftServer"], name).toMatchObject({
+        memory: heap,
+        extraPorts: expect.arrayContaining([
+          {
+            service: { enabled: true, port: 8100 },
+            protocol: "TCP",
+            containerPort: 8100,
+            name: "bluemap",
+            ingress: { enabled: false },
+          },
+        ]),
+      });
     }
     const tempo = applications.find((app) => app.metadata.name === "tempo");
     expect(tempo).toBeDefined();

@@ -1,6 +1,5 @@
 import {
   Cpu,
-  Deployment,
   DeploymentStrategy,
   EnvValue,
   Protocol,
@@ -12,7 +11,7 @@ import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
-  setDeploymentPriorityClass,
+  createBurstDeployment,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
@@ -23,7 +22,6 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 
 // Headless Discord Plays Mario Kart 64: a patched N64Wasm core (parallel-n64 +
 // angrylion software RDP) runs in Bun, renders frames in software, and streams
@@ -40,7 +38,7 @@ const WEB_PORT = 8081;
 export function createMarioKartDeployment(chart: Chart) {
   const GID = 1000;
 
-  const deployment = new Deployment(chart, "mario-kart", {
+  const deployment = createBurstDeployment(chart, "mario-kart", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
@@ -55,8 +53,6 @@ export function createMarioKartDeployment(chart: Chart) {
       },
     },
   });
-
-  setDeploymentPriorityClass(deployment, BURST_SERVICE_PRIORITY);
 
   // Persists in-game saves (mempak/eeprom/flash written under saves/).
   const saveVolume = new ZfsNvmeVolume(chart, "mario-kart-volume", {

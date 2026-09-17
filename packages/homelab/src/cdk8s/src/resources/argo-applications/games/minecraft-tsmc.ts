@@ -4,6 +4,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
+import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
@@ -144,20 +145,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       ],
       // Skipped (no direct download URL): mcMMO (Spigot/Polymart only), LWCX (Spigot only)
 
-      extraPorts: [
-        {
-          service: {
-            enabled: true,
-            port: 8100,
-          },
-          protocol: "TCP",
-          containerPort: 8100,
-          name: "bluemap",
-          ingress: {
-            enabled: false,
-          },
-        },
-      ],
+      extraPorts: [getMinecraftBlueMapPort()],
 
       rcon: {
         enabled: true,

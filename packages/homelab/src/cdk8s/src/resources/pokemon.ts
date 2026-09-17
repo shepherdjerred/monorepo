@@ -1,6 +1,5 @@
 import {
   Cpu,
-  Deployment,
   DeploymentStrategy,
   EnvValue,
   Protocol,
@@ -12,7 +11,7 @@ import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
-  setDeploymentPriorityClass,
+  createBurstDeployment,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
@@ -25,7 +24,6 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 
 // Headless Discord Plays Pokemon: pokeemerald-wasm runs in Bun, renders frames
 // in software, and streams to a Discord voice channel via the voice UDP path.
@@ -40,7 +38,7 @@ const WEB_PORT = 8081;
 export function createPokemonDeployment(chart: Chart) {
   const GID = 1000;
 
-  const deployment = new Deployment(chart, "pokemon", {
+  const deployment = createBurstDeployment(chart, "pokemon", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
@@ -55,8 +53,6 @@ export function createPokemonDeployment(chart: Chart) {
       },
     },
   });
-
-  setDeploymentPriorityClass(deployment, BURST_SERVICE_PRIORITY);
 
   // Persists the flash save (save_path = "saves/pokeemerald.flash").
   const saveVolume = new ZfsNvmeVolume(chart, "pokemon-volume", {
