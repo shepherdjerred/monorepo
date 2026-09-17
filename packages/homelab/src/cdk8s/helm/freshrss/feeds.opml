@@ -42,34 +42,25 @@
       <outline text="SQLite Releases" type="rss" xmlUrl="https://sqlite.org/src/timeline.rss?tag=release" htmlUrl="https://sqlite.org/changes.html"/>
       <outline text="DuckDB Blog" type="rss" xmlUrl="https://duckdb.org/feed.xml" htmlUrl="https://duckdb.org/news/"/>
       <outline text="Prisma Blog" type="rss" xmlUrl="https://www.prisma.io/blog/rss.xml" htmlUrl="https://www.prisma.io/blog"/>
-      <outline text="Prisma Releases" type="rss" xmlUrl="https://github.com/prisma/orm/releases.atom" htmlUrl="https://github.com/prisma/orm/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="TypeScript Blog" type="rss" xmlUrl="https://devblogs.microsoft.com/typescript/feed/" htmlUrl="https://devblogs.microsoft.com/typescript/" description="The official blog of the TypeScript team."/>
-      <outline text="TypeScript Releases" type="rss" xmlUrl="https://github.com/microsoft/TypeScript/releases.atom" htmlUrl="https://github.com/microsoft/TypeScript/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Total TypeScript" type="rss" xmlUrl="https://www.totaltypescript.com/rss.xml" htmlUrl="https://www.totaltypescript.com/" description="Learn how to use TypeScript to level-up your applications as a web developer through exercise driven self-paced workshops and tutorials hosted by TypeScript wizard Matt Pocock."/>
       <outline text="ESLint Blog" type="rss" xmlUrl="https://eslint.org/feed.xml" htmlUrl="https://eslint.org/blog/" description="ESLint release notes and announcements"/>
       <outline text="Bun Blog" type="rss" xmlUrl="https://bun.sh/rss.xml" htmlUrl="https://bun.sh/blog"/>
-      <outline text="Bun Releases" type="rss" xmlUrl="https://github.com/oven-sh/bun/releases.atom" htmlUrl="https://github.com/oven-sh/bun/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Rust Blog" type="rss" xmlUrl="https://blog.rust-lang.org/feed.xml" htmlUrl="https://blog.rust-lang.org/"/>
       <outline text="Go Blog" type="rss" xmlUrl="https://go.dev/blog/feed.atom" htmlUrl="https://go.dev/blog/"/>
       <outline text="Swift Releases" type="rss" xmlUrl="https://github.com/swiftlang/swift/releases.atom" htmlUrl="https://github.com/swiftlang/swift/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Turborepo Releases" type="rss" xmlUrl="https://github.com/vercel/turborepo/releases.atom" htmlUrl="https://github.com/vercel/turborepo/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="React Blog" type="rss" xmlUrl="https://react.dev/rss.xml" htmlUrl="https://react.dev/blog"/>
-      <outline text="React Releases" type="rss" xmlUrl="https://github.com/react/react/releases.atom" htmlUrl="https://github.com/react/react/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Vite Blog" type="rss" xmlUrl="https://vite.dev/blog.rss" htmlUrl="https://vite.dev/blog" description="Next Generation Frontend Tooling"/>
-      <outline text="Vite Releases" type="rss" xmlUrl="https://github.com/vitejs/vite/releases.atom" htmlUrl="https://github.com/vitejs/vite/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Astro Blog" type="rss" xmlUrl="https://astro.build/rss.xml" htmlUrl="https://astro.build/" description="News and updates about Astro."/>
-      <outline text="Astro Releases" type="rss" xmlUrl="https://github.com/withastro/astro/releases.atom" htmlUrl="https://github.com/withastro/astro/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Hono Releases" type="rss" xmlUrl="https://github.com/honojs/hono/releases.atom" htmlUrl="https://github.com/honojs/hono/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Zod Releases" type="rss" xmlUrl="https://github.com/colinhacks/zod/releases.atom" htmlUrl="https://github.com/colinhacks/zod/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
-      <outline text="Home Assistant Releases" type="rss" xmlUrl="https://github.com/home-assistant/core/releases.atom" htmlUrl="https://github.com/home-assistant/core/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b|b\d+/i"/>
       <outline text="Temporal TypeScript SDK Releases" type="rss" xmlUrl="https://github.com/temporalio/sdk-typescript/releases.atom" htmlUrl="https://github.com/temporalio/sdk-typescript/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
-      <outline text="Vercel AI SDK Releases" type="rss" xmlUrl="https://github.com/vercel/ai/releases.atom" htmlUrl="https://github.com/vercel/ai/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="OpenTelemetry Blog" type="rss" xmlUrl="https://opentelemetry.io/blog/index.xml" htmlUrl="https://opentelemetry.io/blog/"/>
       <outline text="Kubernetes Blog" type="rss" xmlUrl="https://kubernetes.io/feed.xml" htmlUrl="https://kubernetes.io/blog/"/>
       <outline text="Argo CD Releases" type="rss" xmlUrl="https://github.com/argoproj/argo-cd/releases.atom" htmlUrl="https://github.com/argoproj/argo-cd/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Helm Blog" type="rss" xmlUrl="https://helm.sh/blog/index.xml" htmlUrl="https://helm.sh/blog/"/>
       <outline text="OpenTofu Blog" type="rss" xmlUrl="https://opentofu.org/blog/rss.xml" htmlUrl="https://opentofu.org/blog/"/>
-      <outline text="OpenTofu Releases" type="rss" xmlUrl="https://github.com/opentofu/opentofu/releases.atom" htmlUrl="https://github.com/opentofu/opentofu/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Talos Releases" type="rss" xmlUrl="https://github.com/siderolabs/talos/releases.atom" htmlUrl="https://github.com/siderolabs/talos/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Flipt Releases" type="rss" xmlUrl="https://github.com/flipt-io/flipt/releases.atom" htmlUrl="https://github.com/flipt-io/flipt/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Tailscale Blog" type="rss" xmlUrl="https://tailscale.com/blog/index.xml" htmlUrl="https://tailscale.com/blog/"/>
@@ -82,6 +73,7 @@
       <outline text="PostHog Blog" type="rss" xmlUrl="https://posthog.com/rss.xml" htmlUrl="https://posthog.com/blog" description="PostHog engineering blog and product updates"/>
       <outline text="Buildkite Changelog" type="rss" xmlUrl="https://buildkite.com/changelog.atom" htmlUrl="https://buildkite.com/changelog"/>
       <outline text="FreshRSS Releases" type="rss" xmlUrl="https://github.com/FreshRSS/FreshRSS/releases.atom" htmlUrl="https://github.com/FreshRSS/FreshRSS/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
+      <outline text="Vercel News — AI SDK" type="rss" xmlUrl="https://vercel.com/atom" htmlUrl="https://vercel.com/ai-sdk" description="Official Vercel News filtered to AI SDK announcements" frss:filtersActionRead="!intitle:/\bAI SDK\b/i"/>
       <outline text="OpenAI News" type="rss" xmlUrl="https://openai.com/news/rss.xml" htmlUrl="https://openai.com/news/" description="Official OpenAI news feed, including Engineering posts"/>
     </outline>
   </body>

@@ -10,19 +10,23 @@ const feedsOpml = await Bun.file(
 ).text();
 
 describe("FreshRSS OPML", () => {
-  test("extracts exactly 46 managed feeds and preserves prerelease filters", () => {
+  test("extracts exactly 38 managed feeds and preserves feed filters", () => {
     const manifest = parseFreshRssOpml(feedsOpml);
 
     expect(manifest.category).toBe("Repo Stack");
-    expect(manifest.feeds).toHaveLength(46);
+    expect(manifest.feeds).toHaveLength(38);
     expect(
-      manifest.feeds.find((feed) => feed.title === "TypeScript Releases")
+      manifest.feeds.find((feed) => feed.title === "Hono Releases")
         ?.filtersActionRead,
     ).toBe(FRESHRSS_PRERELEASE_FILTER);
     expect(
       manifest.feeds.find((feed) => feed.title === "SQLite Releases")
         ?.filtersActionRead,
     ).toBeUndefined();
+    expect(
+      manifest.feeds.find((feed) => feed.title === "Vercel News — AI SDK")
+        ?.filtersActionRead,
+    ).toBe(String.raw`!intitle:/\bAI SDK\b/i`);
   });
 
   test("builds a managed-only OPML document that round-trips", () => {
