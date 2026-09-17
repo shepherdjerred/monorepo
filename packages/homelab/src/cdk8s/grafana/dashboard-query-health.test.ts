@@ -87,16 +87,16 @@ describe("dashboard query health", () => {
 
   test("expected-quiet Scout failure panels render zero instead of no data", () => {
     expect(dashboardJson).toContain(
-      String.raw`reports_failed_total{environment=~\"$environment\",instance=~\"$server\"}[5m])) * 60 or on() vector(0)`,
+      String.raw`reports_failed_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[5m])) * 60 or on() vector(0)`,
     );
     expect(dashboardJson).toContain(
-      String.raw`scheduled_reports_failed_total{environment=~\"$environment\",instance=~\"$server\"}[1h])) or on() vector(0)`,
+      String.raw`scheduled_reports_failed_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[1h])) or on() vector(0)`,
     );
     expect(dashboardJson).toContain(
-      String.raw`scheduled_report_budget_exceeded_total{environment=~\"$environment\",instance=~\"$server\"}[1h])) or on() vector(0)`,
+      String.raw`scheduled_report_budget_exceeded_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[1h])) or on() vector(0)`,
     );
     expect(dashboardJson).toContain(
-      String.raw`prematch_loading_screen_skin_fallback_total{environment=~\"$environment\",instance=~\"$server\"}[24h]))) or on() vector(0)`,
+      String.raw`prematch_loading_screen_skin_fallback_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[24h]))) or on() vector(0)`,
     );
   });
 

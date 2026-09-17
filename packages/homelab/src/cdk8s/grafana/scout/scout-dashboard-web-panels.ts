@@ -4,10 +4,12 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 
-type PrometheusDatasource = { type: string; uid: string };
+import {
+  buildScoutFilter,
+  type PrometheusDatasource,
+} from "./scout-dashboard-filter.ts";
 
-const FILTER = 'environment=~"$environment",instance=~"$server"';
-const buildFilter = () => FILTER;
+const buildFilter = buildScoutFilter;
 
 /**
  * "Web surface" rows: HTTP and tRPC health for the dashboard SPA's backend.

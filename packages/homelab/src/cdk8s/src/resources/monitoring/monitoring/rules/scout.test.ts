@@ -47,6 +47,29 @@ describe("Scout Temporal alert rules", () => {
     }
   });
 
+  test("alerts on a queue class that lost its poller, not on coverage", () => {
+    const rule = temporal?.rules?.find(
+      (candidate) => candidate.alert === "ScoutTemporalWorkerMissing",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutTemporalWorkerMissing rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    // The supervisor zero-fills every queue class on every role, so `max by
+    // (queue_class)` reads 1 when anything polls a class and 0 when nothing
+    // does — the same answer however the classes are shared across pods.
+    expect(expression).toContain("max by (environment, queue_class)");
+    // Pairing that with "something polled it recently" is what keeps a class
+    // no deployed role has ever polled from firing forever: which role owns
+    // which class is mid-amendment, and the activity-worker Deployment that
+    // would have carried two of them is deferred out of this wave.
+    expect(expression).toContain("max_over_time(");
+    // A count of workers per environment is a sum over pods: it survives a
+    // dead pod another replica covers for, and dips during rolling restarts.
+    expect(expression).not.toContain("count by (environment)");
+    expect(expression).not.toContain("< 5");
+  });
+
   test("uses live Temporal server labels and second-valued queue latency", () => {
     if (temporal?.rules === undefined) {
       throw new Error("Missing scout-temporal rule group");
@@ -129,6 +152,34 @@ describe("Scout bot-health alert rules", () => {
     expect(rule.labels?.["severity"]).toBe("critical");
     // Expr is rendered via PrometheusRuleSpecGroupsRulesExpr.fromString.
     expect(JSON.stringify(rule.expr)).toContain("discord_connection_status");
+  });
+
+  test("scopes the Discord gauge to each stage's gateway-owning role", () => {
+    const rule = botHealth?.rules?.find(
+      (candidate) => candidate.alert === "ScoutDiscordDisconnected",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutDiscordDisconnected rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    // Beta's gateway pod holds the shard; prod is still combined. A pod that
+    // never opens a shard exports the gauge as a truthful 0, so an unscoped
+    // aggregate pages on a correct deployment.
+    expect(expression).toContain(
+      String.raw`environment=\"beta\",role=\"gateway\"`,
+    );
+    expect(expression).toContain(
+      String.raw`environment=\"prod\",role=\"combined\"`,
+    );
+    // The deferred role owns no gateway and must never appear here.
+    expect(expression).not.toContain("activity-worker");
+    // Every read of the gauge must be scoped, not just the first.
+    const gaugeReads = expression.split("discord_connection_status").length - 1;
+    const scopedReads = expression.split(String.raw`role=\"`).length - 1;
+    expect(scopedReads).toBe(gaugeReads);
+    // Scoping to one role per stage means the rule goes quiet when that stage
+    // has no gateway-owning pod, which is the outage it exists to catch.
+    expect(expression).toContain("absent(");
   });
 
   test("warns 14 days before production season metadata expires", () => {
