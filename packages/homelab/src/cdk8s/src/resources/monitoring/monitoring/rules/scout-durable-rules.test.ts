@@ -42,8 +42,53 @@ describe("Scout durable pipeline alert rules", () => {
         "ScoutDurableRecoveryBacklogStale",
         "ScoutDurableLakeStagingLag",
         "ScoutDurableSweepMissing",
+        "ScoutDurableSweepFailing",
       ]),
     );
+  });
+
+  /**
+   * Every gauge whose sweep writes -1 rather than going absent on failure.
+   *
+   * This list is the contract between the two halves of the evidence. The
+   * backend integration tests prove a failing read really does leave -1 in
+   * these gauges; this proves some rule here actually looks for it. Either half
+   * alone is worthless: a sentinel nothing watches is a silent outage, and a
+   * rule watching for a sentinel nobody writes is decoration.
+   *
+   * Adding a gauge with a -1 catch and forgetting the alert fails here, which
+   * is the mutation this list exists to catch.
+   */
+  const SENTINEL_GAUGES = [
+    "scout_durable_backlog_oldest_age_seconds",
+    "scout_durable_lake_staging_lag_seconds",
+  ];
+
+  test.each(SENTINEL_GAUGES)("a -1 series on %s fires an alert", (metric) => {
+    // -1 is below every threshold in this group and its series is present, so
+    // it satisfies neither an above-bound test nor an absent() guard. Only an
+    // explicit negative test sees it.
+    const firing = (durable.rules ?? []).filter((rule) => {
+      const expression = JSON.stringify(rule.expr);
+      return expression.includes(metric) && expression.includes("< 0");
+    });
+    expect(firing.length).toBeGreaterThan(0);
+    // `min` is required, not incidental: with `max`, a single -1 sitting
+    // beside a genuinely backed-up family is masked by that family's value.
+    for (const rule of firing) {
+      expect(JSON.stringify(rule.expr)).toContain(
+        `min by (environment) (${metric})`,
+      );
+    }
+  });
+
+  test("never treats the -1 sentinel as a small backlog", () => {
+    // A threshold rule that also accepted negatives would report "no backlog"
+    // for a sweep that measured nothing at all.
+    for (const rule of durable.rules ?? []) {
+      if (rule.alert === "ScoutDurableSweepFailing") continue;
+      expect(JSON.stringify(rule.expr)).not.toContain("< 0");
+    }
   });
 
   test("reads only metrics the durable pipeline defines", () => {

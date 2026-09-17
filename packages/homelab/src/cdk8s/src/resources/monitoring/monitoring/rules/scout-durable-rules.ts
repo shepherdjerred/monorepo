@@ -23,9 +23,15 @@ import { escapePrometheusTemplate } from "./shared.ts";
  * `absent()` is also what catches a rule pointed at a metric no process emits —
  * see the same pattern in `scout-temporal-rules.ts`.
  *
- * The sweep writes -1 into the age gauges when it fails, so a broken sweep that
- * is still scraping trips the age alerts rather than reading as zero. `absent()`
- * covers the other half, where nothing is scraping at all.
+ * A sweep can fail in two shapes and they need two different rules, which is a
+ * correction to what this comment used to claim. `absent()` catches the shape
+ * where nothing publishes at all. It does NOT catch the shape where the sweep
+ * runs, fails its reads, and writes the -1 sentinel: that series is present and
+ * below every threshold, so it satisfies neither half of an ordinary rule.
+ * `ScoutDurableSweepFailing` is the rule for that, and the reason it is not
+ * folded into the threshold rules is that -1 does not mean "a small backlog",
+ * it means "no measurement" — an alert that conflated them would report a
+ * number it does not have.
  *
  * ## Why none of these name a role
  *
@@ -164,6 +170,40 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           absentInBothEnvironments("scout_durable_notification_intents"),
+        ),
+        for: "15m",
+        labels: { severity: "critical" },
+      },
+      {
+        // The other half of a broken sweep, and the half that was invisible.
+        //
+        // A failing sweep does not go quiet: it writes -1 into its age gauges
+        // to say "I could not read this". Every threshold rule above asks
+        // whether a value is ABOVE a bound, and -1 is below all of them, so a
+        // failing sweep satisfied none of them. Their `absent()` guards did not
+        // help either — the series is present, it is just lying low rather than
+        // missing.
+        //
+        // `ScoutDurableSweepMissing` covers only the durable sweep's failure,
+        // and then only incidentally, because that one clears the intent gauge
+        // on its way down. The lake sweep is a separate function with a
+        // separate catch: when it alone fails it writes -1 and clears nothing,
+        // so nothing above fires and the lake lag reads as perfectly current
+        // while being entirely unmeasured. That is the worst shape an
+        // observability gap can take, and it is the reason this rule exists.
+        //
+        // `min` rather than `max`: one -1 among healthy series is the signal,
+        // and `max` would be dominated by whichever family is genuinely backed
+        // up and hide it.
+        alert: "ScoutDurableSweepFailing",
+        annotations: {
+          summary: "A Scout durable metric sweep is failing its reads",
+          message: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} is publishing a durable gauge holding the -1 sentinel, which means a sweep ran and could not read the database. The backlog and lag numbers beside it are stale rather than low, so every threshold alert in this group is currently blind. Check the sweeping pod's logs for the failing query.",
+          ),
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "(min by (environment) (scout_durable_backlog_oldest_age_seconds) < 0) or (min by (environment) (scout_durable_lake_staging_lag_seconds) < 0)",
         ),
         for: "15m",
         labels: { severity: "critical" },

@@ -59,11 +59,19 @@ describe("Scout Temporal alert rules", () => {
     // (queue_class)` reads 1 when anything polls a class and 0 when nothing
     // does — the same answer however the classes are shared across pods.
     expect(expression).toContain("max by (environment, queue_class)");
-    // Pairing that with "something polled it recently" is what keeps a class
-    // no deployed role has ever polled from firing forever: which role owns
-    // which class is mid-amendment, and the activity-worker Deployment that
-    // would have carried two of them is deferred out of this wave.
+    // Pairing that with "something polled it before" is what keeps a class no
+    // deployed role has ever polled from firing forever: which role owns which
+    // class is mid-amendment, and the activity-worker Deployment that would
+    // have carried two of them is deferred out of this wave.
     expect(expression).toContain("max_over_time(");
+    // The memory window must OUTLIVE the outage it remembers. A short lookback
+    // lets an outage walk its own evidence out of the window, at which point
+    // the alert resolves itself while the queue is still dead — worse than
+    // never firing, because a resolved alert reads as a fixed problem.
+    expect(expression).toContain("[30d]");
+    for (const shortWindow of ["[5m]", "[30m]", "[1h]", "[6h]", "[24h]"]) {
+      expect(expression).not.toContain(shortWindow);
+    }
     // A count of workers per environment is a sum over pods: it survives a
     // dead pod another replica covers for, and dips during rolling restarts.
     expect(expression).not.toContain("count by (environment)");
@@ -162,17 +170,21 @@ describe("Scout bot-health alert rules", () => {
       throw new Error("Missing ScoutDiscordDisconnected rule");
     }
     const expression = JSON.stringify(rule.expr);
-    // Beta's gateway pod holds the shard; prod is still combined. A pod that
-    // never opens a shard exports the gauge as a truthful 0, so an unscoped
-    // aggregate pages on a correct deployment.
+    // Both stages run `combined` today. The selector has to describe the
+    // DEPLOYED topology, not the capability table: a role that is
+    // split-capable but has no Deployment produces no series, so naming it
+    // here would make the absent() guard fire continuously against a healthy
+    // stage. The split PR flips beta to `gateway` in the same diff that ships
+    // the pod, so the two change at one ArgoCD revision.
     expect(expression).toContain(
-      String.raw`environment=\"beta\",role=\"gateway\"`,
+      String.raw`environment=\"beta\",role=\"combined\"`,
     );
     expect(expression).toContain(
       String.raw`environment=\"prod\",role=\"combined\"`,
     );
-    // The deferred role owns no gateway and must never appear here.
+    // Neither the deferred role nor the not-yet-deployed one may appear.
     expect(expression).not.toContain("activity-worker");
+    expect(expression).not.toContain(String.raw`role=\"gateway\"`);
     // Every read of the gauge must be scoped, not just the first.
     const gaugeReads = expression.split("discord_connection_status").length - 1;
     const scopedReads = expression.split(String.raw`role=\"`).length - 1;
