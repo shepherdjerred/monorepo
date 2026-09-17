@@ -1,8 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import {
+  CI_NODE_HOSTNAME,
+  PROD_NODE_HOSTNAME,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { getResourceMonitoringRuleGroups } from "./resource-monitoring.ts";
 import { getBuildkitdRuleGroups } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkitd.ts";
 import { getFliptRuleGroups } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/flipt.ts";
+
+describe("production burst-memory headroom alerts", () => {
+  it.each([
+    ["ProductionNodeMemoryAvailableLow", 17_179_869_184, "5m", "warning"],
+    ["ProductionNodeMemoryAvailableCritical", 8_589_934_592, "1m", "critical"],
+  ] as const)(
+    "checks %s before host headroom is exhausted",
+    (name, threshold, duration, severity) => {
+      const alert = getResourceMonitoringRuleGroups()
+        .flatMap((group) => group.rules ?? [])
+        .find((rule) => rule.alert === name);
+      expect(alert).toBeDefined();
+      expect(alert?.expr.value).toBe(
+        `max by (node) (node_memory_MemAvailable_bytes{node="${PROD_NODE_HOSTNAME}"}) < ${String(threshold)}`,
+      );
+      expect(alert?.for).toBe(duration);
+      expect(alert?.labels?.["severity"]).toBe(severity);
+    },
+  );
+});
 
 describe("CriticalSystemLoad alert", () => {
   it("fires on node_load1, not the slower node_load15 UnusualSystemLoad uses", () => {

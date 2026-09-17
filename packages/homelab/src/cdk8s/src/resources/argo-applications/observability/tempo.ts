@@ -67,13 +67,13 @@ export function createTempoApp(chart: Chart) {
           path: "/var/tempo/metrics-generator-traces",
         },
       },
-      // Baseline request (no limits) so trace storage isn't BestEffort.
-      // 30d peak ~16m CPU / ~2.75Gi; the baseline covers batch compaction.
+      // Reserve the baseline and allow bounded compaction/query bursts.
       resources: {
         requests: {
           cpu: "1",
-          memory: "2Gi",
+          memory: "1Gi",
         },
+        limits: { memory: "4Gi" },
       },
     },
     // Persistence configuration

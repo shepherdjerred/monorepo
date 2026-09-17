@@ -42,14 +42,16 @@ function assertTempoAndLoki(documents: readonly unknown[]): void {
         resources: z.object({
           requests: z.object({
             cpu: z.literal("1"),
-            memory: z.literal("2Gi"),
+            memory: z.literal("1Gi"),
           }),
+          limits: z.object({ memory: z.literal("4Gi") }),
         }),
       }),
     })
     .parse(applicationValues(documents, "tempo"));
   expect(tempo.tempo.resources).toEqual({
-    requests: { cpu: "1", memory: "2Gi" },
+    requests: { cpu: "1", memory: "1Gi" },
+    limits: { memory: "4Gi" },
   });
 
   const loki = z

@@ -389,11 +389,11 @@ describe("Temporal domain worker isolation", () => {
     );
     expect(corpus.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "1", memory: "4096Mi" },
-      requests: { cpu: "250m", memory: "2048Mi" },
+      requests: { cpu: "250m", memory: "768Mi" },
     });
     expect(context.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "2", memory: "6144Mi" },
-      requests: { cpu: "750m", memory: "2560Mi" },
+      requests: { cpu: "750m", memory: "512Mi" },
     });
 
     const corpusEnv = envNames(corpus);
@@ -527,7 +527,7 @@ describe("Temporal operations worker isolation", () => {
     });
     expect(infra.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "1500m", memory: "6144Mi" },
-      requests: { cpu: "500m", memory: "2048Mi" },
+      requests: { cpu: "500m", memory: "768Mi" },
     });
     expect(repo.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "1500m", memory: "4096Mi" },

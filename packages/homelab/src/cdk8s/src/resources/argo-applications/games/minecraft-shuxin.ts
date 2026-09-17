@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
@@ -48,6 +49,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
     replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
     workloadAsStatefulSet: true,
+    extraPodSpec: { priorityClassName: BURST_SERVICE_PRIORITY },
     strategyType: "RollingUpdate",
     // mc-router annotation for hostname-based routing (must be top-level)
     serviceAnnotations: {

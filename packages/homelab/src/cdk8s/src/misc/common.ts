@@ -36,3 +36,12 @@ export function setRevisionHistoryLimit(deployment: Deployment, limit = 3) {
     JsonPatch.add("/spec/revisionHistoryLimit", limit),
   );
 }
+
+export function setDeploymentPriorityClass(
+  deployment: Deployment,
+  priorityClassName: string,
+) {
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add("/spec/template/spec/priorityClassName", priorityClassName),
+  );
+}

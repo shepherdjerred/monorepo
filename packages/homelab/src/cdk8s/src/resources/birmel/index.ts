@@ -118,14 +118,14 @@ done`,
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      // Baseline request (no limits) so the bot isn't BestEffort.
-      // 30d peak ~510m / ~1.6Gi; request covers the observed p95 plus margin.
+      // Reserve the baseline while bounding bursts independently.
       resources: {
         cpu: {
           request: Cpu.millis(50),
         },
         memory: {
-          request: Size.mebibytes(1280),
+          request: Size.mebibytes(768),
+          limit: Size.gibibytes(2),
         },
       },
       ports: [{ number: 8080, name: "health" }],

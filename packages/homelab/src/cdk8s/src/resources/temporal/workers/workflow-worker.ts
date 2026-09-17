@@ -20,7 +20,7 @@ function createWorkflowWorker(
     imageKey: `shepherdjerred/temporal-worker/workflows/${props.track}`,
     cpuRequest: Cpu.millis(250),
     cpuLimit: Cpu.millis(1000),
-    memoryRequest: Size.mebibytes(512),
+    memoryRequest: Size.mebibytes(1536),
     memoryLimit: Size.gibibytes(2),
     automountServiceAccountToken: false,
     // Unlike application secrets, Flipt reachability is not a credential —
