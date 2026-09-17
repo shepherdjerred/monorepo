@@ -1,5 +1,5 @@
 import { ArtifactKindSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
 import { oldestUnprojectedArchiveAt } from "#src/database/durable/pipeline-backlog.ts";
 import { createLogger } from "#src/logger.ts";
 import { scoutDurableLakeStagingLag } from "#src/metrics/durable-pipeline.ts";
@@ -37,12 +37,12 @@ const logger = createLogger("lake-staging-lag");
  * So the sweep stays with the vocabulary and is registered by the composition
  * root; see `metrics/sweep-registry.ts`.
  */
-export async function updateLakeStagingLagMetrics(): Promise<void> {
+export async function collectLakeStagingLagMetrics(db: Db): Promise<void> {
   const now = Date.now();
   try {
     await Promise.all(
       ArtifactKindSchema.options.map(async (artifact) => {
-        const archivedAt = await oldestUnprojectedArchiveAt(prisma, {
+        const archivedAt = await oldestUnprojectedArchiveAt(db, {
           archiveReceiptKind: rawArchiveReceiptKind(artifact),
           stagingReceiptKind: lakeStagingReceiptKind(artifact),
         });
@@ -60,6 +60,11 @@ export async function updateLakeStagingLagMetrics(): Promise<void> {
     }
     logger.error("Failed to update lake staging lag metrics", { error });
   }
+}
+
+/** Run the lag sweep against the process's own database; see the seam note in `durable-pipeline.ts`. */
+export async function updateLakeStagingLagMetrics(): Promise<void> {
+  await collectLakeStagingLagMetrics(prisma);
 }
 
 /**

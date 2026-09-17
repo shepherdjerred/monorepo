@@ -1,6 +1,7 @@
 import { Counter, Gauge } from "prom-client";
 import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
 import { SCOUT_V2_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
+import type { Db } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
 
@@ -150,9 +151,8 @@ function ageSeconds(oldest: Date | null, now: number): number {
  * could not answer" is not a count and -1 intents in `pending` would be a
  * stranger claim than no series at all. Their alert guards on `absent()`.
  */
-export async function updateDurablePipelineMetrics(): Promise<void> {
+export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
   try {
-    const { prisma } = await import("#src/database/index.ts");
     const { NOTIFICATION_INTENT_STATE_KINDS, RECOVERY_BATCH_STATE_KINDS } =
       await import("#src/database/durable/pipeline-scan.ts");
     const {
@@ -166,13 +166,13 @@ export async function updateDurablePipelineMetrics(): Promise<void> {
     const now = Date.now();
     const [intents, batches, stalledMatchAt, recoveryAt, workflowStartAt] =
       await Promise.all([
-        countNotificationIntentsByState(prisma),
-        countRecoveryBatchesByState(prisma),
-        oldestStalledMatchProcessingAt(prisma, {
+        countNotificationIntentsByState(db),
+        countRecoveryBatchesByState(db),
+        oldestStalledMatchProcessingAt(db, {
           observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
         }),
-        oldestLiveRecoveryBatchAt(prisma),
-        oldestUnacceptedWorkflowStartAt(prisma, {
+        oldestLiveRecoveryBatchAt(db),
+        oldestUnacceptedWorkflowStartAt(db, {
           workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
         }),
       ]);
@@ -203,4 +203,18 @@ export async function updateDurablePipelineMetrics(): Promise<void> {
     scoutDurableRecoveryBatches.reset();
     logger.error("Failed to update durable pipeline metrics", { error });
   }
+}
+
+/**
+ * Run the sweep against the process's own database.
+ *
+ * The client is a parameter on `collectDurablePipelineMetrics` rather than
+ * something it reaches for, so the six queries below can be executed against a
+ * real test database. Without that seam the only thing that would ever run them
+ * is a deployed pod, and "it typechecks" is not evidence that a `groupBy` or a
+ * three-table anti-join returns what the gauges claim.
+ */
+export async function updateDurablePipelineMetrics(): Promise<void> {
+  const { prisma } = await import("#src/database/index.ts");
+  await collectDurablePipelineMetrics(prisma);
 }
