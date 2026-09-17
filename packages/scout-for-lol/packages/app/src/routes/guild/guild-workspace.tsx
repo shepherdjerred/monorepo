@@ -149,16 +149,11 @@ export function GuildSectionIndex() {
     return (
       <PermissionLoadError message={Loaded.messageOf(access.errors[0].error)} />
     );
-  if (guildsQuery.isError) {
-    return (
-      <PermissionLoadError message={Loaded.messageOf(guildsQuery.error)} />
-    );
-  }
   const guild = guildsQuery.data?.find((candidate) => candidate.id === guildId);
   const first = resolveGuildWorkspaceLanding(
     (permission) => perms.can(permission.resource, permission.action),
-    guild?.customNightsEnabled ?? false,
-    guild?.hallOfFameEnabled ?? false,
+    guildsQuery.isError ? false : (guild?.customNightsEnabled ?? false),
+    guildsQuery.isError ? false : (guild?.hallOfFameEnabled ?? false),
   );
   if (first === undefined) {
     return (

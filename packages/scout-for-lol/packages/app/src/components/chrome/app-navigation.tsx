@@ -203,6 +203,7 @@ function ManageScoutSection(props: {
   manageableGuilds: readonly { id: string; name: string }[] | undefined;
 }) {
   const navigate = useNavigate();
+  const manageOverviewValue = "__manage_scout_overview__";
   const manageableGuilds = props.manageableGuilds ?? [];
   const directTarget = resolveManageScoutTarget(manageableGuilds);
 
@@ -240,15 +241,17 @@ function ManageScoutSection(props: {
         value={props.guildId ?? ""}
         onChange={(event) => {
           const guildId = event.target.value;
-          if (guildId.length === 0) {
+          if (guildId === manageOverviewValue) {
             void navigate("/manage");
             return;
           }
+          if (guildId.length === 0) return;
           void navigate(guildWorkspacePath(guildId));
         }}
         className="w-full rounded-lg border border-scout-border/60 bg-scout-canvas px-2.5 py-2 text-sm font-medium text-scout-ink outline-none transition-colors hover:bg-scout-hover focus-visible:ring-2 focus-visible:ring-scout-primary"
       >
         <option value="">Select a server</option>
+        <option value={manageOverviewValue}>Manage servers…</option>
         {manageableGuilds.map((guild) => (
           <option key={guild.id} value={guild.id}>
             {guild.name}
