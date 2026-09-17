@@ -1,4 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { z } from "zod";
 import {
   MatchIdSchema,
   RawMatchSchema,
@@ -183,7 +184,27 @@ async function verifyConcurrentReenqueueWins(): Promise<void> {
   await transactionReady.promise;
 
   const workerTick = runInitialHistoryImportTick(prisma, initialRequestAt);
-  await new Promise((resolve) => setTimeout(resolve, 25));
+  // The worker must already be blocked on the same advisory lock before we
+  // commit. A fixed sleep lets a slow claim start after the re-enqueue, so
+  // the tick legitimately advances the new job to `matches`.
+  await vi.waitFor(async () => {
+    const waiting = z
+      .array(z.object({ count: z.coerce.bigint() }))
+      .length(1)
+      .parse(
+        await prisma.$queryRaw`
+          SELECT count(*)::bigint AS count
+          FROM pg_locks
+          WHERE locktype = 'advisory'
+            AND NOT granted
+        `,
+      );
+    const count = waiting[0]?.count;
+    if (count === undefined) {
+      throw new Error("pg_locks did not return a waiter count");
+    }
+    expect(Number(count)).toBeGreaterThan(0);
+  }, 10_000);
   releaseTransaction.resolve(undefined);
   await Promise.all([accountCreation, workerTick]);
 
