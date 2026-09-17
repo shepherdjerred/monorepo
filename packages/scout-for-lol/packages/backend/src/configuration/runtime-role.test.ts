@@ -6,6 +6,7 @@ import {
   SCOUT_TEMPORAL_QUEUE_CLASSES,
   type ScoutRuntimeCapabilities,
   type ScoutRuntimeRole,
+  type ScoutTemporalQueueClass,
 } from "#src/configuration/runtime-role.ts";
 
 /**
@@ -39,12 +40,20 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: true,
-    temporalWorkers: ["workflow", "interactive", "lake"],
+    // Interim combined-minus-shard: realtime, background and the competition
+    // worker sit here until `activity-worker` becomes deployable.
+    temporalWorkers: [
+      "workflow",
+      "interactive",
+      "lake",
+      "realtime",
+      "background",
+    ],
     deferredTemporalWorkers: [],
     discordGateway: false,
     gatewayReadyReconciliation: false,
     httpSurface: "full",
-    competitionActivityWorker: false,
+    competitionActivityWorker: true,
     databaseMetricSweeps: true,
     databaseSeeding: true,
   },
@@ -109,10 +118,26 @@ describe("scout runtime roles", () => {
     ]);
   });
 
-  test("every worker runs on exactly one non-combined role", () => {
-    // The split has to be a partition, not an overlap: two pods polling the
-    // same activity queue would double every Riot poll and every delivery, and
-    // a queue nobody polls is work that silently never happens.
+  /**
+   * The end state is a partition: two pods polling one activity queue would
+   * double every Riot poll and every delivery, and a queue nobody polls is work
+   * that silently never happens.
+   *
+   * The interim is not a partition, and this pins exactly where it is not.
+   * `realtime` and `background` are declared by BOTH `application` (deployed)
+   * and `activity-worker` (not deployed, and undeployable until the report lake
+   * stops being a single-writer ReadWriteOnce volume). The overlap is safe only
+   * because the second role never runs, so it is written down here rather than
+   * waved through by loosening the check — any OTHER doubled queue still fails.
+   *
+   * When `activity-worker` ships this test fails; the fix is to delete
+   * INTERIM_DOUBLE_OWNED and restore the exact partition, not to extend it.
+   */
+  test("every worker is owned, and only the interim queues are double-owned", () => {
+    const INTERIM_DOUBLE_OWNED = new Set<ScoutTemporalQueueClass>([
+      "realtime",
+      "background",
+    ]);
     for (const queueClass of SCOUT_TEMPORAL_QUEUE_CLASSES) {
       const owners = SPLIT_ROLES.filter((role) => {
         const capabilities = scoutRuntimeCapabilities(role);
@@ -121,6 +146,10 @@ describe("scout runtime roles", () => {
           capabilities.deferredTemporalWorkers.includes(queueClass)
         );
       });
+      if (INTERIM_DOUBLE_OWNED.has(queueClass)) {
+        expect(owners).toEqual(["application", "activity-worker"]);
+        continue;
+      }
       expect(owners).toHaveLength(1);
     }
   });
@@ -154,7 +183,12 @@ describe("scout runtime roles", () => {
     expect(owners((c) => c.databaseMetricSweeps)).toEqual(["application"]);
     expect(owners((c) => c.databaseSeeding)).toEqual(["application"]);
     expect(owners((c) => c.httpSurface === "full")).toEqual(["application"]);
+    // Not a singleton during the interim, for the same reason as the realtime
+    // and background queues: `application` carries it so the split does not
+    // stop scheduled competition updates, and `activity-worker` still declares
+    // it for when it becomes deployable. Restore the single owner then.
     expect(owners((c) => c.competitionActivityWorker)).toEqual([
+      "application",
       "activity-worker",
     ]);
     expect(owners((c) => c.gatewayReadyReconciliation)).toEqual(["gateway"]);

@@ -40,6 +40,9 @@ describe("runtime boot order", () => {
       "report-lake",
       "temporal-core",
       "http-server",
+      // Interim: this role carries the competition activity worker, and the
+      // realtime/background queues, until `activity-worker` is deployable.
+      "competition-worker",
       "database-seeding",
     ]);
     // The Discord-before-HTTP ordering existed because web code read the live
@@ -156,6 +159,9 @@ describe("runtime shutdown order", () => {
   test("application drains without gateway or voice steps", () => {
     expect(shutdownStepsFor("application")).toEqual([
       "temporal",
+      // Interim, mirroring the boot plan: drained here until `activity-worker`
+      // is deployable and takes it back.
+      "competition-worker",
       "http-server",
       "dynamic-config",
       "product-analytics",
