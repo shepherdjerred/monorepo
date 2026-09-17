@@ -2,10 +2,12 @@ import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 
-type PrometheusDatasource = { type: string; uid: string };
+import {
+  buildScoutFilter,
+  type PrometheusDatasource,
+} from "./scout-dashboard-filter.ts";
 
-const FILTER = 'environment=~"$environment",instance=~"$server"';
-const buildFilter = () => FILTER;
+const buildFilter = buildScoutFilter;
 
 /**
  * Adds the "API Activity" and "Competition leaderboard chart" rows.

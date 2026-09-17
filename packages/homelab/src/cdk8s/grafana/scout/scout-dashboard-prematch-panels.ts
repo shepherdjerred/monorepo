@@ -5,9 +5,12 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as table from "@grafana/grafana-foundation-sdk/table";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 
-type PrometheusDatasource = { type: string; uid: string };
+import {
+  SCOUT_DASHBOARD_FILTER,
+  type PrometheusDatasource,
+} from "./scout-dashboard-filter.ts";
 
-const PREMATCH_FILTER = 'environment=~"$environment",instance=~"$server"';
+const PREMATCH_FILTER = SCOUT_DASHBOARD_FILTER;
 
 /**
  * Adds the entire "Pre-match" row to the dashboard — both the original

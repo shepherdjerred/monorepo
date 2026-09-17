@@ -474,7 +474,7 @@
     },
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
-      "tokens": 141
+      "tokens": 140
     },
     "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
       "clones": 1,

@@ -145,6 +145,48 @@ wrappers — `recordDurableWrite` and `recordReceiptFailOpen` — refuse to nest
 because both count a completed write and nesting them would report one fact
 twice.
 
+## Durable pipeline observability
+
+The dual-write counters above say what the pipeline _did_. Five more families in
+`src/metrics/durable-pipeline.ts` — likewise a single definition site — say what
+it is still _holding_, which is the half the V2 acceptance checklist asks about:
+
+- `scout_durable_notification_intents{state}` — intents per state of the domain
+  machine, zero-filled across all eight. `state="unknown-delivery"` is the
+  operator dead end and the unknown-delivery count in its own right.
+- `scout_durable_recovery_batches{state}` — batches per state, zero-filled
+  across all six.
+- `scout_durable_backlog_oldest_age_seconds{family}` — age of the oldest row in
+  `stalled-match-processing`, `live-recovery-batches`, and
+  `unaccepted-workflow-starts`. Only backlogs whose ordering column is a true
+  age are here; stalled notifications sort by freshness deadline, so their head
+  is the intent closest to expiring rather than the one waiting longest, and
+  their depth lives on the intent gauge instead.
+- `scout_durable_lake_staging_lag_seconds{artifact_kind}` — how long the
+  longest-unprojected archived artifact has waited for its staging receipt, per
+  artifact kind because the three fail independently.
+- `scout_durable_receipts_recorded_total{receipt_kind, outcome}` — incremented
+  in `recordReceipt`, the one funnel every receipt write passes through, so a
+  receipt kind added by a later wave is observable the day it is written.
+
+Every label draws from a closed vocabulary — the two state sets come from the
+exhaustive classification tables in `database/durable/pipeline-scan.ts`, so a
+state added to a domain union fails to compile until the sweep covers it. No
+match id, guild id, or intent key is ever a label.
+
+The first four are swept from the database at scrape time and so belong to the
+one role with `databaseMetricSweeps` (see the runtime roles section). The lake
+lag is swept by `report-lake/` instead, because its receipt-kind vocabulary
+lives there and `architecture.config.ts` forbids `metrics/` from importing that
+layer; it registers through `metrics/sweep-registry.ts`, which exists for
+exactly that inversion. `metrics/sweeps.ts` is the list of everything a
+sweep-owning scrape runs.
+
+Every metric also carries a `role` default label, from the runtime-role enum.
+That is what lets an alert say which pods it is asking about — most sharply for
+`discord_connection_status`, which a gateway-less pod reports as a truthful 0,
+so an unscoped `min by (environment)` reads a correct deployment as an outage.
+
 ## The V2 per-match core
 
 `src/temporal/v2/` holds the nine Activities `scoutMatchProcessingV2Workflow`
@@ -599,7 +641,15 @@ ask` and the Dare commands execute the Explore agent in the process that
   its non-executing copy and local rate-limit ticket.
 - **`scout_temporal_workers`** reports 0 rather than going absent for a queue
   class this role does not run, and `/healthz` reports the running queue classes
-  by name.
+  by name. `ScoutTemporalWorkerMissing` is built on that zero-fill, and asks
+  whether a queue class that WAS being polled has stopped being polled — not
+  whether every class has a poller, which would make a role nobody deploys a
+  permanent firing condition.
+- **Every metric carries a `role` label**, set as a registry default from this
+  role's name. An alert reading a gauge only some roles produce must scope to
+  those roles or it fires on a correct deployment; `ScoutDiscordDisconnected` is
+  the worked example, and it scopes per stage because the gateway owner differs
+  by stage.
 - The externally deployed stable/candidate Workflow Workers
   (`temporal/workflow-worker.ts`) are unaffected by any of this.
 

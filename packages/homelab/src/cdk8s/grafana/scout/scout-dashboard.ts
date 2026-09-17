@@ -13,10 +13,14 @@ import {
   addWebSurfaceRows,
 } from "./scout-dashboard-web-panels.ts";
 
-// Helper function to build filter expression
-function buildFilter() {
-  return 'environment=~"$environment",instance=~"$server"';
-}
+import {
+  buildGatewayOwnerFilter,
+  buildScoutFilter,
+  SCOUT_PROMETHEUS_DATASOURCE,
+  scoutDashboardVariables,
+} from "./scout-dashboard-filter.ts";
+
+const buildFilter = buildScoutFilter;
 
 /**
  * Creates a Grafana dashboard for Scout for LoL usage and performance metrics
@@ -24,30 +28,7 @@ function buildFilter() {
  */
 export function createScoutDashboard() {
   // Create Prometheus datasource reference
-  const prometheusDatasource = {
-    type: "prometheus",
-    uid: "Prometheus",
-  };
-
-  // Create environment variable for filtering
-  const environmentVariable = new dashboard.QueryVariableBuilder("environment")
-    .label("Environment")
-    .query("label_values(discord_guilds, environment)")
-    .datasource(prometheusDatasource)
-    .multi(true)
-    .includeAll(true)
-    .allValue(".*");
-
-  // Create server variable for optional filtering
-  const serverVariable = new dashboard.QueryVariableBuilder("server")
-    .label("Server")
-    .query(
-      'label_values(discord_guilds{environment=~"$environment"}, instance)',
-    )
-    .datasource(prometheusDatasource)
-    .multi(true)
-    .includeAll(true)
-    .allValue(".*");
+  const prometheusDatasource = SCOUT_PROMETHEUS_DATASOURCE;
 
   // Build the main dashboard
   const builder = new dashboard.DashboardBuilder(
@@ -58,9 +39,14 @@ export function createScoutDashboard() {
     .time({ from: "now-24h", to: "now" })
     .refresh("30s")
     .timezone("browser")
-    .editable()
-    .withVariable(environmentVariable)
-    .withVariable(serverVariable);
+    .editable();
+
+  // Environment / role / instance, defined once in `scout-dashboard-filter.ts`
+  // alongside the selector every panel filters by, so the variables a panel
+  // reads and the variables the dashboard declares cannot drift apart.
+  for (const variable of scoutDashboardVariables()) {
+    builder.withVariable(variable);
+  }
 
   const createStatPanel = (options: {
     title: string;
@@ -149,16 +135,22 @@ export function createScoutDashboard() {
     }),
   );
 
-  // Connection Status
+  // Connection Status — scoped to the gateway-owning role rather than to
+  // `$role`. Every pod exports this gauge, and a pod with no shard exports 0
+  // truthfully, so with `$role` on All the `min` reports the application pod
+  // and shows a disconnected bot while the gateway is connected. See
+  // `buildGatewayOwnerFilter`.
   builder.withPanel(
     new stat.PanelBuilder()
       .title("Connection Status")
-      .description("1 = Connected, 0 = Disconnected (min across servers)")
+      .description(
+        "1 = Connected, 0 = Disconnected. Reads only the runtime role that owns the Discord gateway; pods without a shard report 0 by design and are excluded regardless of the Runtime role selection.",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `min by (environment) (discord_connection_status{${buildFilter()}})`,
+            `min by (environment) (discord_connection_status{${buildGatewayOwnerFilter()}})`,
           )
           .legendFormat("{{environment}}"),
       )

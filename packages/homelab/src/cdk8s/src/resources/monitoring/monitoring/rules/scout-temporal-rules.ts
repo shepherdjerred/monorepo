@@ -24,14 +24,54 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
         labels: { severity: "critical" },
       },
       {
+        // Asks whether a queue class that WAS being polled has stopped being
+        // polled. Not "does this pod run five workers", and deliberately not
+        // "does every queue class have a poller" either.
+        //
+        // The old shape counted workers per environment and fired below five,
+        // which was the same question only while one pod ran all five. Split
+        // across roles that count is a sum over pods: it stays at five when a
+        // pod running two classes dies and another is scaled to two replicas,
+        // and it dips below five during any ordinary rolling restart.
+        //
+        // Requiring all five to be polled would be wrong in the other
+        // direction. Which role polls what is the capability table's business
+        // and it is mid-amendment — beta's `application` pod interim-carries
+        // the Discord-dependent classes while the `activity-worker` Deployment
+        // is deferred — so a coverage rule would turn a deliberate deferral
+        // into a permanently firing alert.
+        //
+        // The regression shape needs neither fact. `max by (queue_class)` is
+        // invariant under redistribution because the supervisor zero-fills
+        // every class on every role, and pairing "nothing polls it now" with
+        // "something polled it once" means a class no deployed role has ever
+        // polled never fires, while a class that lost its poller does.
+        //
+        // The lookback is 30 days, and the length is the whole correctness
+        // argument rather than a tuning choice. The memory window has to
+        // OUTLIVE the outage it is remembering: with a 6h window, an outage
+        // that lasts longer than 6h walks its own evidence out of the window,
+        // the "was polled recently" half goes false, and the alert RESOLVES
+        // while the queue is still dead — the one failure an operator would
+        // never think to re-check, because a resolved alert reads as a fixed
+        // problem.
+        //
+        // The trade-off that buys is retirement latency: a queue class
+        // deliberately removed from the code keeps alerting until 30 days of
+        // silence pass. That is the right way round — a noisy alert about a
+        // class someone just deleted gets fixed by deleting the class from
+        // `SCOUT_TEMPORAL_QUEUE_CLASSES`, which stops the zero-fill and the
+        // series with it, whereas a silent alert about a class that died on
+        // its own gets fixed by nothing.
         alert: "ScoutTemporalWorkerMissing",
         annotations: {
-          summary: "A Scout Temporal task-queue worker is missing",
-          message:
-            "Scout must expose workflow, realtime, interactive, background, and lake Workers after Discord readiness. Inspect the embedded Worker supervisor before changing concurrency.",
+          summary: "A Scout Temporal task-queue class lost its worker",
+          message: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has a pod polling nothing on the {{ $labels.queue_class }} task queue, and something was polling it within the last 30 days. Which role owns a queue class is the capability table's business, but a class that was being polled must not silently stop. Inspect the embedded Worker supervisor before changing concurrency or replica counts. If the class was retired on purpose, remove it from SCOUT_TEMPORAL_QUEUE_CLASSES so the gauge stops reporting it at all.",
+          ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          '(count by (environment) (scout_temporal_workers{environment=~"beta|prod"} == 1) < 5) or absent(scout_temporal_workers{environment="beta"}) or absent(scout_temporal_workers{environment="prod"})',
+          '((max by (environment, queue_class) (scout_temporal_workers{environment=~"beta|prod"}) == 0) and (max by (environment, queue_class) (max_over_time(scout_temporal_workers{environment=~"beta|prod"}[30d])) > 0)) or absent(scout_temporal_workers{environment="beta"}) or absent(scout_temporal_workers{environment="prod"})',
         ),
         for: "5m",
         labels: { severity: "warning" },

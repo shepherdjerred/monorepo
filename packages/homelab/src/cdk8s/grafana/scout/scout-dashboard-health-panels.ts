@@ -4,10 +4,12 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as table from "@grafana/grafana-foundation-sdk/table";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 
-type PrometheusDatasource = { type: string; uid: string };
+import {
+  buildScoutFilter,
+  type PrometheusDatasource,
+} from "./scout-dashboard-filter.ts";
 
-const FILTER = 'environment=~"$environment",instance=~"$server"';
-const buildFilter = () => FILTER;
+const buildFilter = buildScoutFilter;
 
 /**
  * "Guild health" row: surfaces servers that have the bot but where nothing is

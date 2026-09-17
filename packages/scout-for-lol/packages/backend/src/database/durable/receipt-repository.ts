@@ -5,6 +5,7 @@ import {
   matchProcessingReceiptRowToRecord,
   type MatchProcessingReceiptRecord,
 } from "#src/database/durable/receipt-row.ts";
+import { scoutDurableReceiptsRecorded } from "#src/metrics/durable-pipeline.ts";
 
 /**
  * Repository for MatchProcessingReceipt.
@@ -31,7 +32,33 @@ export type RecordReceiptResult =
   | { outcome: "already-applied" }
   | { outcome: "conflict"; reason: "receipt-evidence-mismatch" };
 
+/**
+ * Record a receipt, and count what the table said about it.
+ *
+ * This is the one place every receipt write passes through, which is why the
+ * counter is here rather than at each of the four modules that own receipt
+ * kinds: a kind added by a later wave is observable the day it is written,
+ * without anyone remembering to instrument it. The kind is safe as a label for
+ * the same reason — it can only ever be a literal one of those modules
+ * declared, never a value carried in from a match, a guild or a request.
+ *
+ * A throw is deliberately not counted. The read-back miss below is a broken
+ * invariant rather than an outcome, and giving it a series would file it
+ * alongside the three answers the table can legitimately give.
+ */
 export async function recordReceipt(
+  db: Db,
+  record: MatchProcessingReceiptRecord,
+): Promise<RecordReceiptResult> {
+  const result = await applyReceipt(db, record);
+  scoutDurableReceiptsRecorded.inc({
+    receipt_kind: record.receipt.kind,
+    outcome: result.outcome,
+  });
+  return result;
+}
+
+async function applyReceipt(
   db: Db,
   record: MatchProcessingReceiptRecord,
 ): Promise<RecordReceiptResult> {

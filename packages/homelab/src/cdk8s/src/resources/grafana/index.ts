@@ -3,6 +3,7 @@ import { ConfigMap } from "cdk8s-plus-31";
 import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai/ai-provider-dashboard.ts";
 import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
 import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout/scout-dashboard.ts";
+import { exportScoutDurableDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout/scout-durable-dashboard.ts";
 import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/smartctl-dashboard.ts";
 import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/velero-dashboard.ts";
 import { exportTasknotesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/tasknotes-dashboard.ts";
@@ -77,6 +78,13 @@ const SCOUT_DASHBOARD: DashboardConfig = {
   name: "scout-for-lol-dashboard",
   jsonFilename: "scout-for-lol.json",
   exportFn: exportScoutDashboardJson,
+};
+
+const SCOUT_DURABLE_DASHBOARD: DashboardConfig = {
+  id: "scout-durable-dashboard-configmap",
+  name: "scout-for-lol-durable-dashboard",
+  jsonFilename: "scout-for-lol-durable.json",
+  exportFn: exportScoutDurableDashboardJson,
 };
 
 const SMARTCTL_DASHBOARD: DashboardConfig = {
@@ -169,6 +177,7 @@ export const ALL_DASHBOARDS: DashboardConfig[] = [
   DISCORD_PLAYS_DASHBOARD,
   GITCKUP_DASHBOARD,
   SCOUT_DASHBOARD,
+  SCOUT_DURABLE_DASHBOARD,
   {
     id: "seaweedfs-backup-dashboard-configmap",
     name: "seaweedfs-backup-dashboard",
