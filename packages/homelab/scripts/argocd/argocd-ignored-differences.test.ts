@@ -178,6 +178,83 @@ describe("ArgoCD ignored differences", () => {
     ).toEqual([CLAIM_TEMPLATE_FINDING]);
   });
 
+  test("does not refuse Tempo PVC template label drift the sync will not apply", () => {
+    // Live tempo/tempo claim templates carry API-copied volumeMode/status and
+    // omit chart PVC labels. Re-rendering the Application for a pod-resource
+    // change (main 16061) made apply-safety refuse /spec/volumeClaimTemplates
+    // even though size, class, and access modes were unchanged.
+    const live = state({
+      spec: {
+        serviceName: "tempo",
+        selector: { matchLabels: { app: "tempo" } },
+        volumeClaimTemplates: [
+          {
+            metadata: { name: "storage" },
+            spec: {
+              accessModes: ["ReadWriteOnce"],
+              resources: { requests: { storage: "64Gi" } },
+              storageClassName: "zfs-ssd",
+              volumeMode: "Filesystem",
+            },
+            status: { phase: "Pending" },
+          },
+        ],
+      },
+    });
+    const target = state({
+      spec: {
+        serviceName: "tempo",
+        selector: { matchLabels: { app: "tempo" } },
+        volumeClaimTemplates: [
+          {
+            metadata: {
+              name: "storage",
+              labels: {
+                "velero.io/backup": "disabled",
+                "velero.io/exclude-from-backup": "true",
+              },
+            },
+            spec: {
+              accessModes: ["ReadWriteOnce"],
+              resources: { requests: { storage: "64Gi" } },
+              storageClassName: "zfs-ssd",
+            },
+          },
+        ],
+      },
+    });
+    const resource = {
+      group: "apps",
+      kind: "StatefulSet",
+      namespace: "tempo",
+      name: "tempo",
+      liveState: live,
+      targetState: target,
+    };
+    expect(analyzeApplySafety([resource])).toEqual([
+      "apps/StatefulSet tempo/tempo changes immutable /spec/volumeClaimTemplates",
+    ]);
+    expect(
+      analyzeApplySafety(
+        withIgnoredDifferencesApplied(
+          [resource],
+          application(
+            [
+              {
+                group: "apps",
+                kind: "StatefulSet",
+                name: "tempo",
+                namespace: "tempo",
+                jsonPointers: ["/spec/volumeClaimTemplates"],
+              },
+            ],
+            ["ServerSideApply=true", "RespectIgnoreDifferences=true"],
+          ),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
   test("leaves resources untouched when the app declares no rules", () => {
     const resources = [minecraftStatefulSet()];
     expect(

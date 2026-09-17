@@ -112,6 +112,23 @@ export function createTempoApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "tempo",
       },
+      // StatefulSet volume-claim templates are immutable after creation.
+      // Kubernetes copies API-defaulted fields (volumeMode, status) into the
+      // live template, and the chart's PVC labels never land on that field.
+      // Changing Tempo's pod resources (main 16061) re-rendered the
+      // Application and the apply-safety preflight refused the sync even
+      // though size, storage class, and access modes were unchanged. Ignore
+      // the whole field like Loki and Pyroscope. PVC backup labels on created
+      // claims are enforced by cluster admission, not this comparison.
+      ignoreDifferences: [
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          name: "tempo",
+          namespace: "tempo",
+          jsonPointers: ["/spec/volumeClaimTemplates"],
+        },
+      ],
       syncPolicy: {
         // selfHeal (velero/seaweedfs precedent): without it, automated sync
         // runs once per revision, so a renderer change under a fixed chart
@@ -122,7 +139,11 @@ export function createTempoApp(chart: Chart) {
         // ConfigMap render changed under 1.24.4 and nothing ever re-converged
         // it, pinning the root app at Progressing.
         automated: { enabled: true, selfHeal: true },
-        syncOptions: ["CreateNamespace=true", "Replace=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "RespectIgnoreDifferences=true",
+        ],
       },
     },
   });
