@@ -52,6 +52,13 @@ export function createTemporalIngressWorkers(
         secret: props.blueBubblesSecret,
         key: "password",
       }),
+      AGENT_CHAT_DISCORD_TOKEN: EnvValue.fromSecretValue(
+        {
+          secret: props.secret,
+          key: "AGENT_CHAT_DISCORD_TOKEN",
+        },
+        { optional: true },
+      ),
       ...sleepWebhookEnv(props.secret),
       XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
       XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
