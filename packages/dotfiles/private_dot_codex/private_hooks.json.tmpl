@@ -61,16 +61,16 @@
           }
         ],
         "matcher": ""
-      },
+      }{{ if eq .chezmoi.os "darwin" }},
       {
         "hooks": [
           {
-            "command": "/Users/jerred/.local/bin/plannotator",
+            "command": "{{ .chezmoi.homeDir }}/.local/bin/plannotator",
             "timeout": 345600,
             "type": "command"
           }
         ]
-      }
+      }{{ end }}
     ],
     "UserPromptSubmit": [
       {

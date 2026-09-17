@@ -19,6 +19,15 @@ annotate_ref="7c8f5a177b8285dc56efc471ef04f7ab44a2b4b6"
 # pipeline, because grep exits on the first match and herdr takes a SIGPIPE.
 installed_plugins="$(herdr plugin list)"
 
+# The stage plugin was linked in place from this repo. Deleting its source
+# leaves herdr's own registration under ~/.config/herdr/plugins pointing at a
+# manifest that no longer exists, and .chezmoiremove only reaches the helper
+# binaries in $HOME. Unlink it wherever that registration survives.
+if [[ $installed_plugins == *"jerred.herdr-stage"* ]]; then
+  herdr plugin unlink jerred.herdr-stage
+  installed_plugins="$(herdr plugin list)"
+fi
+
 if [[ $installed_plugins == *"github:${annotate_repo}@${annotate_ref}"* ]]; then
   printf 'Herdr Annotate already installed at %s\n' "$annotate_ref"
 else
