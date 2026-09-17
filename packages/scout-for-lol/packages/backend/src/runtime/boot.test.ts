@@ -117,6 +117,8 @@ describe("scout runtime boot", () => {
       "report-lake",
       "temporal-core",
       "http-server",
+      // Interim: carried here until `activity-worker` is deployable.
+      "competition-worker",
       "database-seeding",
     ]);
     // The bot token is used, but only to authorize REST — never to open a

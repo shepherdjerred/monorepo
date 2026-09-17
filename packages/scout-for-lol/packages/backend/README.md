@@ -569,19 +569,19 @@ one table in `configuration/runtime-role.ts`; `runtime/plan.ts` derives the boot
 and shutdown order from it, and `runtime/subsystems.ts` performs the steps. An
 unrecognised value throws at startup rather than falling back.
 
-| Subsystem                                        | `combined`                                                                     | `application`               | `gateway`          | `activity-worker`    |
-| ------------------------------------------------ | ------------------------------------------------------------------------------ | --------------------------- | ------------------ | -------------------- |
-| Champion asset verification                      | yes                                                                            | yes                         | yes                | yes                  |
-| Voice assistant (Hey Scout)                      | yes                                                                            | —                           | yes                | —                    |
-| Report lake mounted (reads + staging writes)     | yes                                                                            | yes                         | yes                | yes                  |
-| Report-lake fold / publish at boot               | yes                                                                            | yes                         | —                  | —                    |
-| Temporal workers                                 | workflow, interactive, lake (+ realtime, background once the gateway is ready) | workflow, interactive, lake | none (client only) | realtime, background |
-| Discord gateway login, commands, guild lifecycle | yes                                                                            | —                           | yes                | —                    |
-| Discord REST                                     | yes                                                                            | yes                         | yes                | yes                  |
-| HTTP surface                                     | full                                                                           | full                        | health + metrics   | health + metrics     |
-| Competition activity worker                      | yes                                                                            | —                           | —                  | yes                  |
-| Database-sweeping metric collectors              | yes                                                                            | yes                         | —                  | —                    |
-| Season / freshness-gauge seeding                 | yes                                                                            | yes                         | —                  | —                    |
+| Subsystem                                        | `combined`                                                                     | `application`                                               | `gateway`          | `activity-worker`    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------ | -------------------- |
+| Champion asset verification                      | yes                                                                            | yes                                                         | yes                | yes                  |
+| Voice assistant (Hey Scout)                      | yes                                                                            | —                                                           | yes                | —                    |
+| Report lake mounted (reads + staging writes)     | yes                                                                            | yes                                                         | yes                | yes                  |
+| Report-lake fold / publish at boot               | yes                                                                            | yes                                                         | —                  | —                    |
+| Temporal workers                                 | workflow, interactive, lake (+ realtime, background once the gateway is ready) | workflow, interactive, lake, realtime, background (interim) | none (client only) | realtime, background |
+| Discord gateway login, commands, guild lifecycle | yes                                                                            | —                                                           | yes                | —                    |
+| Discord REST                                     | yes                                                                            | yes                                                         | yes                | yes                  |
+| HTTP surface                                     | full                                                                           | full                                                        | health + metrics   | health + metrics     |
+| Competition activity worker                      | yes                                                                            | yes (interim)                                               | —                  | yes                  |
+| Database-sweeping metric collectors              | yes                                                                            | yes                                                         | —                  | —                    |
+| Season / freshness-gauge seeding                 | yes                                                                            | yes                                                         | —                  | —                    |
 
 Notes that are easy to get wrong:
 
@@ -618,6 +618,16 @@ ask` and the Dare commands execute the Explore agent in the process that
   and the cluster PVC is ReadWriteOnce — the two roles cannot both mount it as
   things stand. Splitting them needs the lake to become shareable (a remote
   store, or every reader moved behind the `lake` queue) first.
+- **So the deployed split is combined-minus-shard, not the four-way one.**
+  Because `activity-worker` cannot run yet, `application` carries `realtime`,
+  `background` and the competition activity worker in the interim — marked
+  `(interim)` in the table above. Moving the shard out without them would not
+  redistribute that work, it would stop it: Riot polling, prematch, match
+  ingest, report delivery and scheduled competition updates all live on those
+  queues. `activity-worker` still declares them, so the two roles overlap on
+  paper; that is safe only while exactly one of them is deployed, and the role
+  tests pin the overlap so it cannot widen unnoticed. Hand these back when the
+  lake becomes shareable.
 - **A lake-reading role that does not publish verifies instead.** An empty or
   unmounted lake is not an error for DuckDB — it scans zero parquet files and
   returns zero rows — so a worker would record every report run and dare

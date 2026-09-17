@@ -17,11 +17,18 @@
  *   booted it. This is the default and the only role Kubernetes runs today;
  *   splitting the deployment is a separate change. Local development uses it
  *   whenever it wants the Discord gateway.
- * - `application` — the web surface: HTTP/tRPC/OAuth/SSE, the `interactive` and
- *   `lake` Temporal workers, and the DuckDB report lake. No gateway
- *   connection, so it serves as soon as it is up rather than waiting on a
- *   shard. It owns the report-lake volume and the database-sweeping metric
- *   collectors.
+ * - `application` — the web surface: HTTP/tRPC/OAuth/SSE, every embedded
+ *   Temporal worker, and the DuckDB report lake. No gateway connection, so it
+ *   serves as soon as it is up rather than waiting on a shard. It owns the
+ *   report-lake volume and the database-sweeping metric collectors.
+ *
+ *   INTERIM: it also carries the `realtime` and `background` queues and the
+ *   competition activity worker — everything `combined` runs except the shard.
+ *   Those belong to `activity-worker`, which cannot be deployed until the
+ *   report lake stops being a single-writer ReadWriteOnce volume. Splitting the
+ *   shard off without them would stop Riot polling, ingest, report delivery and
+ *   scheduled competition updates, so the deployable split is
+ *   combined-minus-shard rather than the full four-way one.
  * - `gateway` — the Discord gateway connection: commands, guild lifecycle and
  *   the Hey Scout voice assistant. Voice is gateway-coupled by design (it reads
  *   an active voice connection's audio), which makes this role explicitly
@@ -201,12 +208,32 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: true,
-    temporalWorkers: ALWAYS_ON_WORKERS,
+    // INTERIM: combined-minus-shard, not the end state.
+    //
+    // `realtime` and `background` belong to `activity-worker`, but that role
+    // cannot be deployed while the report lake is a single-writer
+    // ReadWriteOnce volume (see the README's activity-worker note). Until it
+    // can be, moving the shard off `combined` without these would stop both
+    // queues outright — Riot polling, prematch, match ingest, report runs,
+    // parlay generation and Discord delivery — so this role carries them.
+    //
+    // They are always-on here rather than deferred: deferral exists to wait for
+    // `clientReady`, and this role never logs a shard in, so a deferred worker
+    // would simply never start. That is the shape `activity-worker` already
+    // uses, and it is sound for the same reason — the gatewayless sweep moved
+    // these Activities off the live guild cache and behind ports.
+    //
+    // Remove these and `competitionActivityWorker` below when `activity-worker`
+    // becomes deployable.
+    temporalWorkers: [...ALWAYS_ON_WORKERS, ...DISCORD_WORKERS],
     deferredTemporalWorkers: NO_WORKERS,
     discordGateway: false,
     gatewayReadyReconciliation: false,
     httpSurface: "full",
-    competitionActivityWorker: false,
+    // INTERIM, same reason as the two queues above: `combined` owns this and
+    // `activity-worker` would, so without it here the split silently stops
+    // scheduled competition updates.
+    competitionActivityWorker: true,
     databaseMetricSweeps: true,
     databaseSeeding: true,
   },
