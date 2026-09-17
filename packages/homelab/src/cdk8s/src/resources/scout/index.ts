@@ -4,7 +4,6 @@ import {
   DeploymentStrategy,
   EnvValue,
   type ISecret,
-  Probe,
   Protocol,
   Secret,
   Service,
@@ -38,6 +37,7 @@ import {
   createScoutGatewayDeployment,
   SPLIT_TOPOLOGY_STAGES,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 
 function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -435,21 +435,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           request: memoryRequest,
         },
       },
-      startup: Probe.fromHttpGet("/ping", {
-        port: 3000,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 240,
-      }),
-      liveness: Probe.fromHttpGet("/livez", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/healthz", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
+      ...scoutRuntimeProbes(),
       volumeMounts,
       envVariables: roleEnvVariables,
     }),

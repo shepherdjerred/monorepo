@@ -8,6 +8,10 @@ import {
   KubeNetworkPolicy,
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export async function createHomeChart(app: App) {
   const chart = new Chart(app, "home", {
@@ -100,24 +104,9 @@ export async function createHomeChart(app: App) {
       podSelector: { matchLabels: { app: "eufy-security-ws" } },
       policyTypes: ["Egress"],
       egress: [
-        // Allow DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        // Allow external HTTPS (Eufy cloud API)
-        {
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        dnsEgressRule(),
+        // External HTTPS (Eufy cloud API)
+        externalHttpsEgressRule(),
         // Allow all UDP egress (any port, any destination) for Eufy P2P.
         // Eufy stations perform NAT traversal with dynamic ephemeral ports on
         // both ends, so neither the destination IP nor port can be enumerated

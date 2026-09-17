@@ -10,6 +10,7 @@ import {
   BROADCAST_PORT,
   createOpenRouterBroadcastIngestDeployment,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/openrouter-broadcast-ingest/index.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createOpenRouterBroadcastIngestChart(app: App) {
   const chart = new Chart(app, "openrouter-broadcast-ingest", {
@@ -74,18 +75,7 @@ export function createOpenRouterBroadcastIngestChart(app: App) {
         },
       ],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         {
           to: [
             {
