@@ -141,8 +141,34 @@ export function visibleGuildNavigationItems(
   );
 }
 
+/** The section used when a server workspace opens at its index route. */
+export function resolveGuildWorkspaceLanding(
+  canRead: (permission: Permission) => boolean,
+  customNightsEnabled = false,
+  hallOfFameEnabled = false,
+): string | undefined {
+  return visibleGuildNavigationItems(
+    canRead,
+    customNightsEnabled,
+    hallOfFameEnabled,
+  )[0]?.to;
+}
+
 export function guildWorkspacePath(guildId: string): string {
   return `/g/${guildId}`;
+}
+
+/** The Manage Scout control selects directly only when there is one server. */
+export function resolveManageScoutTarget(
+  manageableGuilds: readonly { id: string }[],
+): string | undefined {
+  if (manageableGuilds.length === 0) return "/manage";
+  if (manageableGuilds.length === 1) {
+    const guild = manageableGuilds[0];
+    if (guild === undefined) throw new Error("manageable guild is missing");
+    return guildWorkspacePath(guild.id);
+  }
+  return undefined;
 }
 
 export type AppShellMode = "focused" | "workspace";

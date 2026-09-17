@@ -3,6 +3,8 @@ import {
   consumerNavigationItems,
   GUILD_NAVIGATION_ITEMS,
   guildWorkspacePath,
+  resolveManageScoutTarget,
+  resolveGuildWorkspaceLanding,
   resolveHallTo,
   visibleGuildNavigationItems,
 } from "#src/lib/routes/app-navigation.ts";
@@ -19,6 +21,15 @@ function canReadReports(permission: {
   action: string;
 }): boolean {
   return permission.resource === "reports";
+}
+
+function canReadCustomsAndSubscriptions(permission: {
+  resource: string;
+  action: string;
+}): boolean {
+  return (
+    permission.resource === "customs" || permission.resource === "subscriptions"
+  );
 }
 
 describe("consumer navigation", () => {
@@ -175,5 +186,25 @@ describe("guild navigation", () => {
 
   test("selecting a server targets its permission-aware index route", () => {
     expect(guildWorkspacePath("discord-123")).toBe("/g/discord-123");
+  });
+
+  test("uses a direct Manage Scout target for zero or one server", () => {
+    expect(resolveManageScoutTarget([])).toBe("/manage");
+    expect(resolveManageScoutTarget([{ id: "discord-123" }])).toBe(
+      "/g/discord-123",
+    );
+    expect(
+      resolveManageScoutTarget([{ id: "one" }, { id: "two" }]),
+    ).toBeUndefined();
+  });
+
+  test("lands on the first enabled server section", () => {
+    expect(resolveGuildWorkspaceLanding(canReadCustomsAndSubscriptions)).toBe(
+      "subscriptions",
+    );
+    expect(
+      resolveGuildWorkspaceLanding(canReadCustomsAndSubscriptions, true),
+    ).toBe("customs");
+    expect(resolveGuildWorkspaceLanding(canReadCustoms)).toBeUndefined();
   });
 });

@@ -14,7 +14,10 @@ import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { useGuildAnalyticsContext } from "#src/hooks/use-guild-analytics-context.ts";
 import { permissionsForGuildActionRoute } from "#src/lib/player/guild-route-permissions.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
-import { GUILD_NAVIGATION_ITEMS } from "#src/lib/routes/app-navigation.ts";
+import {
+  GUILD_NAVIGATION_ITEMS,
+  resolveGuildWorkspaceLanding,
+} from "#src/lib/routes/app-navigation.ts";
 import { analyticsContextRoute } from "#src/lib/analytics.ts";
 
 export function GuildWorkspace() {
@@ -133,15 +136,29 @@ export function GuildWorkspace() {
  */
 export function GuildSectionIndex() {
   const { guildId } = useParams();
+  const trpc = useTRPC();
+  const guildsQuery = useQuery(
+    trpc.guild.listManageable.queryOptions(undefined, {
+      staleTime: STALE_TIME_SLOW_LIST,
+    }),
+  );
   const { perms, access } = usePermissions(guildId);
 
-  if (access.status === "loading") return null;
+  if (access.status === "loading" || guildsQuery.isLoading) return null;
   if (access.status === "error")
     return (
       <PermissionLoadError message={Loaded.messageOf(access.errors[0].error)} />
     );
-  const first = GUILD_NAVIGATION_ITEMS.find((item) =>
-    perms.can(item.permission.resource, item.permission.action),
+  if (guildsQuery.isError) {
+    return (
+      <PermissionLoadError message={Loaded.messageOf(guildsQuery.error)} />
+    );
+  }
+  const guild = guildsQuery.data?.find((candidate) => candidate.id === guildId);
+  const first = resolveGuildWorkspaceLanding(
+    (permission) => perms.can(permission.resource, permission.action),
+    guild?.customNightsEnabled ?? false,
+    guild?.hallOfFameEnabled ?? false,
   );
   if (first === undefined) {
     return (
@@ -151,7 +168,7 @@ export function GuildSectionIndex() {
       />
     );
   }
-  return <Navigate to={first.to} replace />;
+  return <Navigate to={first} replace />;
 }
 
 /** Block a form route unless the caller holds every required permission. */
