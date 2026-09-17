@@ -202,8 +202,6 @@ cask "claude-code"
 cask "cleanshot"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
-# Claude code parallelisation
-cask "conductor"
 # Write, edit, and chat about your code with AI
 cask "cursor"
 # Disk space visualiser
@@ -238,8 +236,6 @@ cask "netnewswire"
 cask "obsidian"
 # Replacement for Docker Desktop
 cask "orbstack"
-# Self-hosted daemon for AI coding agents
-cask "paseo"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
 # Window snapping tool

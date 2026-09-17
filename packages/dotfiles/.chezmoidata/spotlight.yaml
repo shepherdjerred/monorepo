@@ -21,9 +21,7 @@ spotlight:
   excludedHomeDirs:
     # Agent worktrees and repo checkouts. The two largest contributors by far:
     # ~2.8M and ~2.1M files respectively, both under constant rewrite.
-    - conductor
     - git
-    - .conductor
 
     # Package manager and toolchain caches. These are pure derived state, and
     # several of them (.bun, .cargo, .cache) get deleted and recreated wholesale
@@ -45,8 +43,7 @@ spotlight:
     - .aspnet
     - .templateengine
 
-    # Agent and dev-tool state directories. .paseo alone is ~850k files.
-    - .paseo
+    # Agent and dev-tool state directories.
     - .codex
     - .cursor
     - .gemini
@@ -69,12 +66,9 @@ spotlight:
     - .kube
     - .toolkit
 
-    # Library subtrees. Caches and Xcode DerivedData are derived state;
-    # com.conductor.app holds multi-gigabyte SQLite databases that are written
-    # continuously, and Spotlight re-imports the whole file on every change.
+    # Library subtrees. Caches and Xcode DerivedData are derived state.
     - Library/Caches
     - Library/Developer
-    - Library/Application Support/com.conductor.app
 
   # Root-owned paths needing sudo. Kept separate because an unattended apply
   # cannot escalate and must skip these rather than block on a password prompt.
