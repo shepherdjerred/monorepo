@@ -1,6 +1,7 @@
 import { ApiObject, Chart, JsonPatch, type App } from "cdk8s";
 import { z } from "zod";
 import { releaseChartRevisions } from "./release-configuration.ts";
+import { BURST_SERVICE_PRIORITY } from "./misc/priority-classes.ts";
 
 export const APPLICATION_RESOURCES_FINALIZER =
   "resources-finalizer.argocd.argoproj.io";
@@ -21,6 +22,7 @@ export const APPLICATION_SYNC_WAVES = {
   certificate: "-2",
   // After the cluster CA so Alertmanager can require postal-smtp-ca.
   prometheus: "-1",
+  burstPriorityClass: "-1",
   temporal: "0",
   structural: "0",
   kueue: "1",
@@ -112,6 +114,12 @@ function applicationSyncWave(name: string): string {
 }
 
 function rootResourceSyncWave(resource: ApiObject): string {
+  if (
+    resource.kind === "PriorityClass" &&
+    resource.name === BURST_SERVICE_PRIORITY
+  ) {
+    return APPLICATION_SYNC_WAVES.burstPriorityClass;
+  }
   if (
     resource.kind === "MutatingAdmissionPolicy" ||
     resource.kind === "ValidatingAdmissionPolicy"

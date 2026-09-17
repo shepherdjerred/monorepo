@@ -685,8 +685,8 @@
       "tokens": 90
     },
     "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-sjerred.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts": {
-      "clones": 2,
-      "tokens": 170
+      "clones": 1,
+      "tokens": 108
     },
     "packages/homelab/src/cdk8s/src/resources/bugsink/index.ts|packages/homelab/src/cdk8s/src/resources/bugsink/index.ts": {
       "clones": 1,

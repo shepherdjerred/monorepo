@@ -5,6 +5,11 @@ import { App } from "cdk8s";
 import { rm } from "node:fs/promises";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import {
+  BATCH_PRIORITY,
+  BURST_SERVICE_PRIORITY,
+  SERVICE_PRIORITY,
+} from "./priority-classes.ts";
+import {
   BEST_EFFORT_CONTAINER_ALLOWLIST,
   PARTIAL_REQUEST_CONTAINER_ALLOWLIST,
 } from "./container-resource-allowlist.ts";
@@ -44,6 +49,7 @@ const ContainerSchema = z.object({
 });
 
 const PodSpecSchema = z.object({
+  priorityClassName: z.string().optional(),
   containers: z.array(ContainerSchema).optional(),
   initContainers: z.array(ContainerSchema).optional(),
 });
@@ -81,6 +87,7 @@ type FoundContainer = {
   init: boolean;
   hasRequests: boolean;
   resources: z.infer<typeof ContainerSchema>["resources"];
+  priorityClassName: string | undefined;
 };
 
 async function synthesizeApp(): Promise<string> {
@@ -131,6 +138,7 @@ function containersOf(
     init,
     hasRequests: hasRequests(container),
     resources: container.resources,
+    priorityClassName: podSpec.priorityClassName,
   });
   return [
     ...(podSpec.containers ?? []).map((c) => toFound(c, false)),
@@ -156,17 +164,23 @@ function collectContainers(yamlContent: string): {
 
 const SYNTH_OUTDIR = ".test-synth-container-resources";
 
+let collected: { all: FoundContainer[]; missing: FoundContainer[] };
+let documents: unknown[];
+
+beforeAll(async () => {
+  const yaml = await synthesizeApp();
+  collected = collectContainers(yaml);
+  documents = yaml
+    .split(/^---$/m)
+    .filter((doc) => doc.trim().length > 0)
+    .map((doc) => parseYaml(doc));
+});
+
+afterAll(async () => {
+  await rm(SYNTH_OUTDIR, { recursive: true, force: true });
+});
+
 describe("Container resource requests backstop", () => {
-  let collected: { all: FoundContainer[]; missing: FoundContainer[] };
-
-  beforeAll(async () => {
-    collected = collectContainers(await synthesizeApp());
-  });
-
-  afterAll(async () => {
-    await rm(SYNTH_OUTDIR, { recursive: true, force: true });
-  });
-
   it("synthesizes a meaningful number of containers (sanity check)", () => {
     expect(collected.all.length).toBeGreaterThan(50);
   });
@@ -221,7 +235,13 @@ describe("Container resource requests backstop", () => {
       string,
       z.infer<typeof ContainerSchema>["resources"]
     >([
-      ["birmel/main", { requests: { cpu: "50m", memory: "1280Mi" } }],
+      [
+        "birmel/main",
+        {
+          requests: { cpu: "50m", memory: "768Mi" },
+          limits: { memory: "2048Mi" },
+        },
+      ],
       [
         "buildkitd/buildkitd",
         {
@@ -248,7 +268,10 @@ describe("Container resource requests backstop", () => {
         "media-qbittorrent/qbittorrent-exporter",
         { requests: { cpu: "10m", memory: "64Mi" } },
       ],
-      ["media-plex/main", { requests: { memory: "8192Mi" }, limits: {} }],
+      [
+        "media-plex/main",
+        { requests: { memory: "4096Mi" }, limits: { memory: "12288Mi" } },
+      ],
       [
         "media-plex/plex-exporter",
         { requests: { cpu: "10m", memory: "32Mi" } },
@@ -269,23 +292,29 @@ describe("Container resource requests backstop", () => {
       ],
       [
         "scout-beta-scout-backend/main",
-        { requests: { cpu: "50m", memory: "3072Mi" } },
+        {
+          requests: { cpu: "50m", memory: "3072Mi" },
+          limits: { memory: "8192Mi" },
+        },
       ],
       [
         "scout-prod-scout-backend/main",
-        { requests: { cpu: "100m", memory: "2560Mi" } },
+        {
+          requests: { cpu: "100m", memory: "2560Mi" },
+          limits: { memory: "8192Mi" },
+        },
       ],
       [
         "temporal-temporal-workflows-stable/temporal-workflows-stable",
         {
-          requests: { cpu: "250m", memory: "512Mi" },
+          requests: { cpu: "250m", memory: "1536Mi" },
           limits: { cpu: "1000m", memory: "2048Mi" },
         },
       ],
       [
         "temporal-temporal-workflows-candidate/temporal-workflows-candidate",
         {
-          requests: { cpu: "250m", memory: "512Mi" },
+          requests: { cpu: "250m", memory: "1536Mi" },
           limits: { cpu: "1000m", memory: "2048Mi" },
         },
       ],
@@ -304,7 +333,7 @@ describe("Container resource requests backstop", () => {
       [
         "temporal-temporal-infra-worker/temporal-infra-worker",
         {
-          requests: { cpu: "500m", memory: "2048Mi" },
+          requests: { cpu: "500m", memory: "768Mi" },
           limits: { cpu: "1500m", memory: "6144Mi" },
         },
       ],
@@ -325,14 +354,14 @@ describe("Container resource requests backstop", () => {
       [
         "temporal-temporal-glitter-corpus-worker/temporal-glitter-corpus-worker",
         {
-          requests: { cpu: "250m", memory: "2048Mi" },
+          requests: { cpu: "250m", memory: "768Mi" },
           limits: { cpu: "1", memory: "4096Mi" },
         },
       ],
       [
         "temporal-temporal-glitter-context-worker/temporal-glitter-context-worker",
         {
-          requests: { cpu: "750m", memory: "2560Mi" },
+          requests: { cpu: "750m", memory: "512Mi" },
           limits: { cpu: "2", memory: "6144Mi" },
         },
       ],
@@ -352,5 +381,127 @@ describe("Container resource requests backstop", () => {
       expect(found, `missing ${key}`).toBeDefined();
       expect(found?.resources, key).toEqual(resources);
     }
+  });
+});
+
+describe("Burst-memory sharing policy", () => {
+  it("only lets interactive services preempt lower-priority batch workers", () => {
+    const schema = z.object({
+      kind: z.literal("PriorityClass"),
+      metadata: z.object({
+        name: z.string(),
+        annotations: z.record(z.string(), z.string()).optional(),
+      }),
+      value: z.number(),
+      globalDefault: z.boolean(),
+      preemptionPolicy: z.string(),
+    });
+    const classes = documents.flatMap((doc) => {
+      const result = schema.safeParse(doc);
+      return result.success ? [result.data] : [];
+    });
+    const burst = classes.find(
+      (item) => item.metadata.name === BURST_SERVICE_PRIORITY,
+    );
+    const standard = classes.find(
+      (item) => item.metadata.name === SERVICE_PRIORITY,
+    );
+    const batch = classes.find((item) => item.metadata.name === BATCH_PRIORITY);
+    expect(burst).toBeDefined();
+    expect(standard).toBeDefined();
+    expect(batch).toBeDefined();
+    expect(burst?.value).toBe(100_000);
+    expect(burst?.value).toBe(standard?.value);
+    expect(batch?.value).toBe(1000);
+    expect(burst?.globalDefault).toBe(false);
+    expect(burst?.preemptionPolicy).toBe("PreemptLowerPriority");
+    expect(burst?.metadata.annotations?.["argocd.argoproj.io/sync-wave"]).toBe(
+      "-1",
+    );
+    expect(standard?.globalDefault).toBe(true);
+    expect(standard?.preemptionPolicy).toBe("Never");
+    expect(batch?.preemptionPolicy).toBe("Never");
+
+    const expected = new Map([
+      ["media-plex", BURST_SERVICE_PRIORITY],
+      ["mario-kart", BURST_SERVICE_PRIORITY],
+      ["pokemon", BURST_SERVICE_PRIORITY],
+      ["temporal-temporal-glitter-corpus-worker", BATCH_PRIORITY],
+      ["temporal-temporal-glitter-context-worker", BATCH_PRIORITY],
+    ]);
+    for (const [name, priority] of expected) {
+      const containers = collected.all.filter(
+        (container) => container.workload === name,
+      );
+      expect(containers.length, name).toBeGreaterThan(0);
+      for (const container of containers) {
+        expect(container.priorityClassName, name).toBe(priority);
+      }
+    }
+    for (const name of [
+      "temporal-temporal-workflows-stable",
+      "temporal-temporal-workflows-candidate",
+      "temporal-temporal-infra-worker",
+      "temporal-temporal-backup-worker",
+      "temporal-temporal-billing-worker",
+    ]) {
+      const container = collected.all.find((item) => item.workload === name);
+      expect(container, name).toBeDefined();
+      expect(container?.priorityClassName, name).toBeUndefined();
+    }
+  });
+
+  it("keeps Minecraft heaps and reservations while enabling burst preemption", () => {
+    const schema = z.object({
+      kind: z.literal("Application"),
+      metadata: z.object({ name: z.string() }),
+      spec: z.object({
+        source: z.object({
+          helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
+        }),
+      }),
+    });
+    const applications = documents.flatMap((doc) => {
+      const result = schema.safeParse(doc);
+      return result.success ? [result.data] : [];
+    });
+    for (const [name, cpu, request, limit, heap] of [
+      ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G"],
+      ["minecraft-tsmc", "2", "6Gi", "8Gi", "6G"],
+      ["minecraft-sjerred", "500m", "3Gi", "4Gi", "3G"],
+    ] as const) {
+      const values = applications.find((app) => app.metadata.name === name)
+        ?.spec.source.helm.valuesObject;
+      expect(values, name).toBeDefined();
+      expect(values?.["extraPodSpec"], name).toEqual({
+        priorityClassName: BURST_SERVICE_PRIORITY,
+      });
+      expect(values?.["replicaCount"], name).toBe(0);
+      expect(values?.["workloadAsStatefulSet"], name).toBe(true);
+      expect(values?.["resources"], name).toEqual({
+        requests: { cpu, memory: request },
+        limits: { memory: limit },
+      });
+      expect(values?.["minecraftServer"], name).toMatchObject({
+        memory: heap,
+        extraPorts: expect.arrayContaining([
+          {
+            service: { enabled: true, port: 8100 },
+            protocol: "TCP",
+            containerPort: 8100,
+            name: "bluemap",
+            ingress: { enabled: false },
+          },
+        ]),
+      });
+    }
+    const tempo = applications.find((app) => app.metadata.name === "tempo");
+    expect(tempo).toBeDefined();
+    expect(tempo?.spec.source.helm.valuesObject["tempo"]).toMatchObject({
+      resources: {
+        requests: { cpu: "1", memory: "1Gi" },
+        limits: { memory: "4Gi" },
+      },
+    });
   });
 });

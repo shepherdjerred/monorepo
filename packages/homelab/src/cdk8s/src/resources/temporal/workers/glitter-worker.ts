@@ -12,11 +12,13 @@ import {
 } from "cdk8s-plus-31";
 import {
   setRevisionHistoryLimit,
+  setDeploymentPriorityClass,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
+import { BATCH_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 
 type GlitterWorkerDefinition = {
   name: "temporal-glitter-context-worker" | "temporal-glitter-corpus-worker";
@@ -55,6 +57,7 @@ function createGlitterWorker(
   });
 
   setRevisionHistoryLimit(deployment, 5);
+  setDeploymentPriorityClass(deployment, BATCH_PRIORITY);
 
   const container = deployment.addContainer(
     withCommonProps({
@@ -141,7 +144,7 @@ export function createTemporalGlitterWorkers(
       envVariables: props.corpusEnvVariables,
       cpuRequest: Cpu.millis(250),
       cpuLimit: Cpu.units(1),
-      memoryRequest: Size.gibibytes(2),
+      memoryRequest: Size.mebibytes(768),
       memoryLimit: Size.gibibytes(4),
     }),
     contextDeployment: createGlitterWorker(chart, {
@@ -150,7 +153,7 @@ export function createTemporalGlitterWorkers(
       envVariables: props.contextEnvVariables,
       cpuRequest: Cpu.millis(750),
       cpuLimit: Cpu.units(2),
-      memoryRequest: Size.mebibytes(2560),
+      memoryRequest: Size.mebibytes(512),
       memoryLimit: Size.gibibytes(6),
     }),
   };

@@ -75,7 +75,7 @@ export function createTemporalOperationsWorkers(
     automountServiceAccountToken: true,
     cpuRequest: Cpu.millis(500),
     cpuLimit: Cpu.millis(1500),
-    memoryRequest: Size.gibibytes(2),
+    memoryRequest: Size.mebibytes(768),
     memoryLimit: Size.gibibytes(6),
     envVariables: {
       ...temporalRuntimeEnv(

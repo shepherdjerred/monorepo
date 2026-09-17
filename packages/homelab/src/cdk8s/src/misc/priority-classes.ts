@@ -3,9 +3,18 @@ import { KubePriorityClass } from "@shepherdjerred/homelab/cdk8s/generated/impor
 
 export const INFRASTRUCTURE_PRIORITY = "infrastructure-critical";
 export const SERVICE_PRIORITY = "service-standard";
+export const BURST_SERVICE_PRIORITY = "service-burst";
 export const BATCH_PRIORITY = "batch-low";
 
 export function createPriorityClasses(chart: Chart) {
+  new KubePriorityClass(chart, "service-burst", {
+    metadata: { name: BURST_SERVICE_PRIORITY },
+    value: 100_000,
+    globalDefault: false,
+    preemptionPolicy: "PreemptLowerPriority",
+    description:
+      "Interactive services may reclaim batch reservations, but never preempt equal-priority normal services",
+  });
   new KubePriorityClass(chart, "infrastructure-critical", {
     metadata: { name: INFRASTRUCTURE_PRIORITY },
     value: 1_000_000,
@@ -28,6 +37,7 @@ export function createPriorityClasses(chart: Chart) {
     value: 1000,
     globalDefault: false,
     preemptionPolicy: "Never",
-    description: "Batch/ephemeral workloads: CI builds",
+    description:
+      "Retryable background workloads: CI builds and Glitter workers",
   });
 }

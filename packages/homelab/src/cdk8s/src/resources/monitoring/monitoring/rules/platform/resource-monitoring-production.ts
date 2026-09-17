@@ -9,6 +9,34 @@ export function getProductionResourceMonitoringRuleGroups(): PrometheusRuleSpecG
       name: "resource-memory-monitoring-production",
       rules: [
         {
+          alert: "ProductionNodeMemoryAvailableLow",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "Production node {{ $labels.node }} has {{ $value | humanize1024 }}B available. Shared memory bursts are exhausting host headroom; check heavy workloads before eviction starts.",
+            ),
+            summary: "Production node has less than 16 GiB available",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `max by (node) (node_memory_MemAvailable_bytes{node="${PROD_NODE_HOSTNAME}"}) < 17179869184`,
+          ),
+          for: "5m",
+          labels: { severity: "warning" },
+        },
+        {
+          alert: "ProductionNodeMemoryAvailableCritical",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "Production node {{ $labels.node }} has {{ $value | humanize1024 }}B available, below the soft eviction threshold. Check burst workloads, OOMs, and evictions immediately.",
+            ),
+            summary: "Production node has less than 8 GiB available",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `max by (node) (node_memory_MemAvailable_bytes{node="${PROD_NODE_HOSTNAME}"}) < 8589934592`,
+          ),
+          for: "1m",
+          labels: { severity: "critical" },
+        },
+        {
           alert: "ProductionNodeMemoryRequestsHigh",
           annotations: {
             description: escapePrometheusTemplate(

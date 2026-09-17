@@ -1,6 +1,5 @@
 import {
   Cpu,
-  Deployment,
   DeploymentStrategy,
   EmptyDirMedium,
   EnvValue,
@@ -14,6 +13,7 @@ import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
+  createBurstDeployment,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
@@ -22,6 +22,7 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
 export function createPlexDeployment(
   chart: Chart,
@@ -40,7 +41,7 @@ export function createPlexDeployment(
     },
   });
 
-  const deployment = new Deployment(chart, "plex", {
+  const deployment = createBurstDeployment(chart, "plex", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
@@ -63,7 +64,8 @@ export function createPlexDeployment(
   deployment.addContainer(
     withCommonProps({
       resources: {
-        memory: { request: Size.gibibytes(8) },
+        // Reserve the baseline; share spare RAM for transcoding bursts.
+        memory: { request: Size.gibibytes(4), limit: Size.gibibytes(12) },
       },
       image: `plexinc/pms-docker:${versions["plexinc/pms-docker"]}`,
       envVariables: {
@@ -263,9 +265,10 @@ export function createPlexDeployment(
   });
 
   ApiObject.of(deployment).addJsonPatch(
-    JsonPatch.add("/spec/template/spec/containers/0/resources/limits", {
-      "gpu.intel.com/i915": 1,
-    }),
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      Quantity.fromNumber(1),
+    ),
   );
 
   // Create ServiceMonitor for Prometheus to scrape Plex metrics

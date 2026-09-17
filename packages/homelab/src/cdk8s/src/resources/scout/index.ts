@@ -375,13 +375,15 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
-      // Stage-specific request-only baselines cover the observed 30d peaks.
+      // Keep stage-specific baselines; contain outliers instead of allowing
+      // one process to consume the node's shared burst memory.
       resources: {
         cpu: {
           request: cpuRequest,
         },
         memory: {
           request: memoryRequest,
+          limit: Size.gibibytes(8),
         },
       },
       startup: Probe.fromHttpGet("/ping", {

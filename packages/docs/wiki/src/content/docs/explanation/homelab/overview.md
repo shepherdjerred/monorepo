@@ -53,6 +53,27 @@ than pretending otherwise.
 GPU work (Intel i915 hardware acceleration) exists only on torvalds. liskov has
 no GPU workloads.
 
+## Memory is shared, not reserved for every possible peak
+
+Production workloads reserve their baseline memory and share spare RAM for bursts.
+Adding every application's independent peak would reserve memory that normally sits unused.
+Container limits bound selected bursty apps so one outlier cannot consume the whole pool.
+The [workload resource definitions](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/container-resources.test.ts) preserve these explicit decisions.
+
+Interactive games and Plex can reclaim reservations from the two background Glitter workers.
+They cannot preempt equal-priority normal services, including databases.
+The existing global service default remains non-preempting.
+The [priority classes](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/priority-classes.ts) define that boundary.
+
+Background work may wait, restart, or exhaust its existing finite retries during repeated pressure.
+That tradeoff favors a usable homelab over protecting every background occurrence.
+Priority influences node-pressure eviction; it does not guarantee protection from every OOM.
+The [Glitter deployments](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/workers/glitter-worker.ts) keep the existing shutdown and retry contracts.
+
+Host reservations and eviction floors still protect Talos, Kubernetes daemons, and ZFS memory.
+Available-memory alerts warn before pressure reaches those floors.
+Their sources are the [kubelet budget](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/talos/torvalds/patches/kubelet.yaml) and [production memory alerts](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring-production.ts).
+
 ## Typed infrastructure, not YAML
 
 Manifests come from cdk8s in strict TypeScript, and Helm values are typed
