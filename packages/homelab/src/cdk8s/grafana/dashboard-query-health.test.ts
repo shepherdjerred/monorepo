@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { SCOUT_GATEWAY_OWNER_ROLES } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
 import { createAiProviderDashboard } from "./ai/ai-provider-dashboard.ts";
 import { createAlertDashboardGrafanaDashboard } from "./alert-dashboard.ts";
 import { createBuildkiteDashboard } from "./buildkite/buildkite-dashboard.ts";
@@ -128,8 +129,18 @@ describe("dashboard query health", () => {
     // exports a truthful 0. With $role on All the min() reports the application
     // pod and paints the panel red while the bot is connected, so this panel
     // pins the gateway-owning role rather than inheriting the selection.
+    //
+    // The expected role set is DERIVED from the same constant the panel is
+    // built from rather than spelled out here. Hardcoding it is what made this
+    // assertion go stale when beta flipped to `gateway`: the panel had
+    // correctly followed the constant and only the test was left behind.
+    // Deriving keeps the real claim — the panel tracks the deployed owners —
+    // and survives the next stage's flip.
+    const ownerRoles = SCOUT_GATEWAY_OWNER_ROLES.join("|");
     expect(dashboardJson).toContain(
-      String.raw`min by (environment) (discord_connection_status{environment=~\"$environment\",role=~\"combined\",instance=~\"$instance\"})`,
+      String.raw`min by (environment) (discord_connection_status{environment=~\"$environment\",role=~\"` +
+        ownerRoles +
+        String.raw`\",instance=~\"$instance\"})`,
     );
     expect(dashboardJson).not.toContain(
       String.raw`min by (environment) (discord_connection_status{environment=~\"$environment\",role=~\"$role\"`,
