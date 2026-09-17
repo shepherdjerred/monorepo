@@ -75,7 +75,11 @@ export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
       {
         executable: "linear",
         defaultArgs: [
-          { args: ["--workspace", "sjerred"], overrideFlags: ["--workspace"] },
+          {
+            args: ["--workspace", "sjerred"],
+            overrideFlags: ["--workspace"],
+            overrideEnvironment: ["LINEAR_API_KEY"],
+          },
         ],
       },
     ],
