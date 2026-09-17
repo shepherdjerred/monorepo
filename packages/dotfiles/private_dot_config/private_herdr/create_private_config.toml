@@ -143,39 +143,6 @@ auto_switch = false
 # workspaces = "" # e.g. "ctrl+shift" makes ctrl+shift+1..9 switch workspaces directly
 # agents = ""     # e.g. "alt" makes alt+1..9 focus agent rows directly
 
-# Bound to the herdr-stage plugin (packages/dotfiles/herdr-stage-plugin) —
-# tags the focused workspace with a planning/impl/pr/blocked stage token,
-# shown via the $stage row in [ui.sidebar.spaces] below.
-[[keys.command]]
-key = "prefix+alt+1"
-type = "plugin_action"
-command = "jerred.herdr-stage.mark-planning"
-description = "stage: planning"
-
-[[keys.command]]
-key = "prefix+alt+2"
-type = "plugin_action"
-command = "jerred.herdr-stage.mark-impl"
-description = "stage: impl"
-
-[[keys.command]]
-key = "prefix+alt+3"
-type = "plugin_action"
-command = "jerred.herdr-stage.mark-pr"
-description = "stage: pr"
-
-[[keys.command]]
-key = "prefix+alt+4"
-type = "plugin_action"
-command = "jerred.herdr-stage.mark-blocked"
-description = "stage: blocked"
-
-[[keys.command]]
-key = "prefix+alt+0"
-type = "plugin_action"
-command = "jerred.herdr-stage.mark-clear"
-description = "stage: clear"
-
 # Size of the virtual terminal used when no client is attached.
 # Attached clients always use their own terminal size.
 [server]
@@ -296,9 +263,7 @@ status_indicators = "symbols"
 [ui.sidebar.agents]
 # Blank rows between agent entries. Set to 1 to restore the previous spacing.
 # row_gap = 0
-# $stage is set manually via `herdr-stage` (packages/dotfiles/dot_local/bin/executable_herdr-stage)
-# or the herdr-stage plugin keybindings — one of planning/impl/pr/blocked, or blank if untagged.
-rows = [["state_icon", "workspace", "tab"], ["agent"], ["$stage"]]
+rows = [["state_icon", "workspace", "tab"], ["agent"]]
 # Optional canonical agent IDs replace the default rows for matching agents.
 # [ui.sidebar.agents.rows_by_agent]
 # claude = [["state_icon", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
