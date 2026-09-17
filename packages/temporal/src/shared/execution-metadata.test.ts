@@ -22,6 +22,12 @@ describe("central Temporal execution metadata", () => {
     expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_DISPATCH)).toBe(
       "agent",
     );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_RECEIPTS)).toBe(
+      "agent",
+    );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_IMESSAGE)).toBe(
+      "platform",
+    );
     expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_INGRESS)).toBe(
       "platform",
     );

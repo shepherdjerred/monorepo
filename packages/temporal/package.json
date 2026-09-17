@@ -27,7 +27,7 @@
     "check:tracing-safety": "bun scripts/check-workflow-tracing-safety.ts",
     "test": "bun run scripts/homelab/ensure-ha-schema.ts && bun run test:bun && bun run test:workflows",
     "pretest": "bun --no-install run --cwd ../home-assistant build",
-    "test:bun": "bun --no-install --bun vitest --config ../../vitest.config.ts run src/activities src/event-bridge src/observability src/schedules src/shared src/lib src/workflows/agent-task.test.ts src/worker-config.test.ts",
+    "test:bun": "bun --no-install --bun vitest --config ../../vitest.config.ts run src/config src/activities src/event-bridge src/observability src/schedules src/shared src/lib src/workflows/agent-task.test.ts src/worker-config.test.ts",
     "test:workflows": "bun scripts/test-workflows.ts",
     "replay:candidate-histories": "bun scripts/replay/replay-candidate-histories.ts",
     "replay:scout-histories": "bun scripts/replay/replay-scout-histories.ts",
