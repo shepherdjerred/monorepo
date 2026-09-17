@@ -3,6 +3,7 @@
 class Video:
     name: str
     year: int | None
+    release_group: str | None
 
 class Episode(Video):
     series: str

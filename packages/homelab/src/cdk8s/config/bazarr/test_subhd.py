@@ -83,6 +83,18 @@ class ParserTests(unittest.TestCase):
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_renamed_video_keeps_refined_release_group_for_archive_selection(self) -> None:
+        video = Episode.fromname("The.Rehearsal.S01E03.1080p.WEBRip.x265-RARBG.mp4")
+        video.name = "The Rehearsal - S01E03 - Gold Digger WEBRip-1080p.mp4"
+        subtitle = subhd.SubhdSubtitle(subhd.parse_candidates(card())[0], "The.Rehearsal.S01.1080p.WEB", video)
+        names = ["show.S01E03-CAKES.chs.eng.ass", "show.S01E03-RARBG.chs.srt"]
+        self.assertEqual(subhd.pick_archive_member(names, 1, 3, subtitle.video_release), names[1])
+        provider = zimuku.ZimukuProvider()
+        zimuku_subtitle = zimuku.ZimukuSubtitle(Language("zho"), "https://example.test/sub", "show.S01", None, None)
+        with patch.object(provider, "query", return_value=[zimuku_subtitle]):
+            self.assertEqual(provider.list_subtitles(video, {Language("zho")}), [zimuku_subtitle])
+        self.assertEqual(zimuku_subtitle.target_release, subtitle.video_release)
+
     def test_exact_episode_and_simplified(self) -> None:
         names = ["show.S01E04.chs.srt", "show.S01E03.cht.eng.ass", "show.S01E03.eng.srt", "show.S01E03.chs.srt"]
         self.assertEqual(subhd.pick_archive_member(names, 1, 3), names[-1])

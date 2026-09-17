@@ -77,6 +77,13 @@ def is_season_pack(name: str, season: int) -> bool:
     return not episode_numbers(name) and bool(re.search(rf"(?i)s{season:02d}(?!\d)", name))
 
 
+def archive_release(video: Video) -> str:
+    name = os.path.splitext(os.path.basename(video.name))[0]
+    # Bazarr refines renamed files from Sonarr's sceneName. Retain that group
+    # instead of losing release compatibility when the physical name omits it.
+    return name + "-" + video.release_group if video.release_group else name
+
+
 def pick_archive_member(
     names: Iterable[str], season: int, episode: int, release: str = "", explicit_simplified: bool = False
 ) -> str:
@@ -216,7 +223,7 @@ class SubhdSubtitle(Subtitle):
         self.release_info = release_info
         self.season = video.season
         self.episode = video.episode
-        self.video_release = os.path.splitext(os.path.basename(video.name))[0]
+        self.video_release = archive_release(video)
         self.only_simplified = candidate["only_simplified"]
         self.pack = is_season_pack(candidate["version"], video.season)
         self.provenance = candidate["provenance"]

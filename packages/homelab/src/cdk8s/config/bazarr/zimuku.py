@@ -36,6 +36,7 @@ from .subhd import (
     MAX_SUBTITLE,
     SIMPLIFIED_NAME,
     TRADITIONAL_NAME,
+    archive_release,
     episode_numbers,
     pick_archive_member,
     validate_content,
@@ -331,7 +332,7 @@ class ZimukuProvider(Provider):
         for subtitle in subtitles:
             subtitle.target_season = video.season if isinstance(video, Episode) else None
             subtitle.target_episode = video.episode if isinstance(video, Episode) else None
-            subtitle.target_release = os.path.splitext(os.path.basename(video.name))[0]
+            subtitle.target_release = archive_release(video)
         return [s for s in subtitles if not AI_LABEL.search(s.release_info)]
 
     def download_subtitle(self, subtitle: ZimukuSubtitle) -> None:
