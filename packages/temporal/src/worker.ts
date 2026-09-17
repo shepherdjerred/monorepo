@@ -1,5 +1,6 @@
 import { Client, Connection } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
+import { sanitizeHttpCredentialBreadcrumb } from "./observability/http-credentials.ts";
 import { DefaultLogger, NativeConnection, Runtime } from "@temporalio/worker";
 import type { Worker } from "@temporalio/worker";
 import { registerSchedules } from "./schedules/register-schedules.ts";
@@ -126,6 +127,7 @@ function initSentry(): void {
   }
 
   Sentry.init({
+    beforeBreadcrumb: sanitizeHttpCredentialBreadcrumb,
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
     release: Bun.env["VERSION"],

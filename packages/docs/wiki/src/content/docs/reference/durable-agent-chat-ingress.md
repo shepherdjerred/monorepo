@@ -1,11 +1,11 @@
 ---
 title: Durable agent chat ingress
-description: HTTP and Discord contracts for starting, selecting, listing, and continuing Temporal-backed agent chats.
+description: BlueBubbles, HTTP, and Discord contracts for starting, selecting, listing, and continuing Temporal-backed agent chats.
 ---
 
-The Temporal gateway exposes one transport-neutral HTTP contract and one
-dedicated Discord slash command for durable Claude Code and Codex chats.
-iMessage automation uses the HTTP contract. The Discord adapter starts a
+The Temporal control worker owns BlueBubbles polling, a transport-neutral HTTP
+contract, and a dedicated Discord slash command for durable Claude Code and Codex chats.
+HTTP clients and BlueBubbles share the chat runtime. The Discord adapter starts a
 durable command Workflow that calls the same chat client; it does not create a
 separate conversation store. See the
 [HTTP adapter](https://github.com/shepherdjerred/monorepo/blob/fe62b26b0b0a306eee682e3f351bb9be47536d6d/packages/temporal/src/event-bridge/agent-chat-api.ts),
@@ -176,6 +176,39 @@ ambiguous send does not duplicate a recent message. Provider output is split at
 Discord's message limit and all user or role mentions are disabled. See the
 [delivery Workflow](https://github.com/shepherdjerred/monorepo/blob/995f3d3ced2de1040a150e15aeb467a636269b4c/packages/temporal/src/workflows/discord-agent-chat.ts)
 and [Discord delivery Activity](https://github.com/shepherdjerred/monorepo/blob/995f3d3ced2de1040a150e15aeb467a636269b4c/packages/temporal/src/activities/agent/chat/discord-ingress.ts).
+
+## BlueBubbles iMessage connector
+
+| Contract                | Value                                                                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Bootstrap               | Paired `BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD`; absent pair leaves the connector inactive; partial pair fails startup             |
+| Enable flag             | `temporal-agent-chat-imessage-enabled`; production default `false`                                                                     |
+| Owners flag             | `temporal-agent-chat-imessage-owners`; exact comma-separated incoming sender handles; default empty                                    |
+| Model defaults          | `temporal-agent-chat-imessage-claude-model` and `temporal-agent-chat-imessage-codex-model`; snapshotted when a chat is created         |
+| Accepted messages       | Incoming text direct messages from an exact owner handle                                                                               |
+| Ignored messages        | Outgoing echoes, groups, reactions, attachments without text, and unknown senders                                                      |
+| Commands                | `/new claude <prompt>`, `/new codex <prompt>`, `/chats`, `/use <chat-id>`, `/continue <chat-id> <prompt>`, `/help`                     |
+| Plain text              | Continues the conversation's selected chat                                                                                             |
+| Cross-ingress selection | Explicit ID can select any prior scheduled, iMessage, or Discord chat, including one evicted from the recent list                      |
+| Polling ownership       | Temporal Workflow; durable cursor and Continue-As-New; no webhook receiver or Mac-side polling daemon                                  |
+| Cursor                  | Original start timestamp and last processed BlueBubbles message ROWID                                                                  |
+| Disabled period         | Excluded from later activation backfill                                                                                                |
+| Bounds                  | 50 rows per batch, 4,000 prompt characters, 2 MiB response; a full 1,000-row server page fails without advancing the cursor            |
+| Ordering                | Each command settles before the next message resolves its binding                                                                      |
+| Activity ownership      | Control-only `agent-chat-imessage` queue for polling, preparation, and delivery; existing ingress queue for waiting on agent execution |
+| Reply                   | AppleScript send; response checkpointed before delivery; one send attempt                                                              |
+| Ambiguous send          | Terminal delivery failure; inspect the child execution; no automatic repeat of inference or delivery                                   |
+
+BlueBubbles password query authentication remains inside the Activity request.
+Credentials and authenticated URLs do not enter Workflow history or HTTP breadcrumbs.
+An allowed sender must produce an incoming direct message; messages sent by the
+BlueBubbles account itself are outgoing echoes.
+
+Sources: [connector bootstrap](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/event-bridge/imessage/start.ts),
+[polling Workflow](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/workflows/imessage/ingress.ts),
+[message Workflow](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/workflows/imessage/message.ts),
+[owner and model configuration](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/config/imessage.ts),
+and [bounded polling](https://github.com/shepherdjerred/monorepo/blob/72eaba71f8f0b7567fd6003f92c8ab9463cad4c4/packages/temporal/src/activities/agent/imessage/poll.ts).
 
 ## Error contract
 

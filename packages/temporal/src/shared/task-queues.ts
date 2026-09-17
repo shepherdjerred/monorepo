@@ -27,6 +27,8 @@ export const TASK_QUEUES = {
   AGENT_CHAT_INGRESS: "agent-chat-ingress",
   /** Latency-sensitive Discord delivery, isolated from long command waits. */
   AGENT_CHAT_DELIVERY: "agent-chat-delivery",
+  /** BlueBubbles polling, chat selection, and single-attempt response delivery. */
+  AGENT_CHAT_IMESSAGE: "agent-chat-imessage",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
   SCOUT_BETA: "scout-beta",
   /** Scout production activity worker, co-located with its database and Discord bot. */
@@ -63,6 +65,7 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.AGENT_CHAT_RECEIPTS,
   TASK_QUEUES.AGENT_CHAT_INGRESS,
   TASK_QUEUES.AGENT_CHAT_DELIVERY,
+  TASK_QUEUES.AGENT_CHAT_IMESSAGE,
   TASK_QUEUES.SCOUT_BETA,
   TASK_QUEUES.SCOUT_PROD,
   TASK_QUEUES.AGENT_TASK,
