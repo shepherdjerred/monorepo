@@ -19,11 +19,11 @@ afterAll(async () => {
 });
 
 describe("motionLight", () => {
-  test("turns on the room light and waits for inactivity before turning it off", async () => {
+  test("turns on the room light and turns it off after one inactive check", async () => {
     const calls: string[] = [];
     const motionStates = new Map<string, string[]>([
-      [MOTION_LIGHT_ROOMS.laundry.motionEntityId, ["on", "off", "off"]],
-      [MOTION_LIGHT_ROOMS.storage.motionEntityId, ["off", "off"]],
+      [MOTION_LIGHT_ROOMS.laundry.motionEntityId, ["on", "off"]],
+      [MOTION_LIGHT_ROOMS.storage.motionEntityId, ["off"]],
     ]);
 
     const worker = await Worker.create({
@@ -79,5 +79,53 @@ describe("motionLight", () => {
       "switch.turn_on:switch.storage_light",
       "switch.turn_off:switch.storage_light",
     ]);
+  }, 60_000);
+
+  test("replays histories recorded before the single inactive check", async () => {
+    const motionStates = new Map<string, string[]>([
+      [MOTION_LIGHT_ROOMS.storage.motionEntityId, ["off", "off"]],
+    ]);
+    const worker = await Worker.create({
+      connection: testEnv.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL(
+        "../replay-fixtures/motion-light-before-single-inactive-check.ts",
+        import.meta.url,
+      ).pathname,
+      activities: {
+        getEntityState: async (entityId: string) => {
+          const states = motionStates.get(entityId);
+          const state = states?.shift();
+          if (state === undefined) {
+            throw new Error(`Unexpected entity state read: ${entityId}`);
+          }
+          return {
+            entity_id: entityId,
+            state,
+            attributes: {},
+          } satisfies EntityState;
+        },
+        callService: () => Promise.resolve(),
+      },
+    });
+    const workflowId = crypto.randomUUID();
+
+    await worker.runUntil(
+      testEnv.client.workflow.execute("motionLight", {
+        args: ["storage"],
+        taskQueue: TASK_QUEUE,
+        workflowId,
+      }),
+    );
+    const history = await testEnv.client.workflow
+      .getHandle(workflowId)
+      .fetchHistory();
+
+    await Worker.runReplayHistory(
+      {
+        workflowsPath: new URL("motion-light.ts", import.meta.url).pathname,
+      },
+      history,
+    );
   }, 60_000);
 });
