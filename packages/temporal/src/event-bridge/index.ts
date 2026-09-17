@@ -1,4 +1,5 @@
 import type { Client } from "@temporalio/client";
+import { startBlueBubblesIngress } from "./imessage/start.ts";
 import {
   HomeAssistantEventClient,
   HomeAssistantRestClient,
@@ -21,7 +22,10 @@ export type EventBridgeHandle = {
   close: () => Promise<void>;
 };
 
-export function startHttpServers(client: Client): EventBridgeHandle {
+export async function startHttpServers(
+  client: Client,
+): Promise<EventBridgeHandle> {
+  await startBlueBubblesIngress(client);
   // GitHub webhook server is optional — only start when the secret is set.
   // Local dev / smoke tests can run the worker without webhook ingest.
   let webhook: WebhookHandle | undefined;

@@ -29,9 +29,9 @@ The central Scout worker also polls its unchanged `scout` queue in `beta` for
 the beta-owned Bryan Bucks analytics schedule; all other central queues are
 `prod` only.
 
-| Role              | Queue or surface                                                  | Activity concurrency |
-| ----------------- | ----------------------------------------------------------------- | -------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery` |          4 per queue |
+| Role              | Queue or surface                                                                         | Activity concurrency |
+| ----------------- | ---------------------------------------------------------------------------------------- | -------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage` |          4 per queue |
 | `home`            | `home`                                                            |                    4 |
 | `reports`         | `reports`                                                         |                    4 |
 | `infra`           | `infra`                                                           |                    1 |
