@@ -29,9 +29,6 @@ trust_level = "trusted"
 [projects."/Users/jerred/git/6422-workspace"]
 trust_level = "trusted"
 
-[projects."/Users/jerred/Library/Application Support/com.conductor.app/bin"]
-trust_level = "trusted"
-
 [projects."/Users/jerred/Downloads"]
 trust_level = "trusted"
 
