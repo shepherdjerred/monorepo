@@ -2,13 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import {
   Bell,
-  Check,
-  ChevronsUpDown,
   Coins,
   Compass,
   FileBarChart,
   KeyRound,
-  Server,
   Settings,
   ShieldCheck,
   SquarePen,
@@ -18,13 +15,6 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import {
   operationsNavVisible,
@@ -38,6 +28,7 @@ import {
   isExplorePath,
   resolveDuelsTo,
   resolveHallTo,
+  resolveManageScoutTarget,
   visibleGuildNavigationItems,
 } from "#src/lib/routes/app-navigation.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
@@ -207,81 +198,66 @@ function ServerManagementSection(props: {
   );
 }
 
-function WorkspaceSwitcherSection(props: {
+function ManageScoutSection(props: {
   guildId: string | undefined;
-  selectedGuild: { id: string; name: string } | undefined;
   manageableGuilds: readonly { id: string; name: string }[] | undefined;
 }) {
   const navigate = useNavigate();
+  const manageOverviewValue = "__manage_scout_overview__";
+  const manageableGuilds = props.manageableGuilds ?? [];
+  const directTarget = resolveManageScoutTarget(manageableGuilds);
 
-  const selectableGuilds = props.manageableGuilds ?? [];
-  if (selectableGuilds.length <= 1) {
-    return null;
+  if (directTarget !== undefined) {
+    return (
+      <section
+        className="scout-app-sidebar-section shrink-0 border-t border-scout-border/60 pt-2 space-y-0.5"
+        aria-label="Manage Scout"
+      >
+        <NavLink
+          to={directTarget}
+          className="scout-app-sidebar-link flex items-center gap-2.5 px-2.5 py-2 text-sm"
+        >
+          <Settings className="size-4 shrink-0 text-scout-subtle" />
+          <span>Manage Scout</span>
+        </NavLink>
+      </section>
+    );
   }
-
-  const selectedGuild = props.selectedGuild;
-  const serverInitials = selectedGuild
-    ? selectedGuild.name.slice(0, 2).toUpperCase()
-    : null;
-  const serverName = selectedGuild ? selectedGuild.name : "Switch server";
-  const serverSubtitle = selectedGuild ? "Active server" : "No server selected";
 
   return (
     <section
-      className="scout-app-sidebar-section mt-auto shrink-0 border-t border-scout-border/60 pt-2 space-y-0.5"
-      aria-label="Workspace"
+      className="scout-app-sidebar-section shrink-0 border-t border-scout-border/60 pt-2 space-y-0.5"
+      aria-label="Manage Scout"
     >
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="group flex w-full items-center justify-between gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm font-medium text-scout-ink transition-colors hover:bg-scout-hover"
-          >
-            <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-md border border-scout-border/60 bg-scout-canvas text-xs font-semibold text-scout-ink">
-                {serverInitials ?? (
-                  <Server className="size-3.5 text-scout-subtle" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium leading-tight text-scout-ink">
-                  {serverName}
-                </p>
-                <p className="truncate text-xs leading-tight text-scout-subtle">
-                  {serverSubtitle}
-                </p>
-              </div>
-            </div>
-            <ChevronsUpDown className="size-4 shrink-0 text-scout-subtle transition-colors group-hover:text-scout-ink" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuLabel>Servers</DropdownMenuLabel>
-          {selectableGuilds.map((guild) => (
-            <DropdownMenuItem
-              key={guild.id}
-              onClick={() => {
-                void navigate(guildWorkspacePath(guild.id));
-              }}
-              className={`flex items-center justify-between gap-2 text-sm ${
-                guild.id === props.guildId
-                  ? "bg-scout-hover/70 font-semibold text-scout-ink"
-                  : ""
-              }`}
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <div className="flex size-6 shrink-0 items-center justify-center rounded border border-scout-border/60 bg-scout-canvas text-xs font-semibold text-scout-ink">
-                  {guild.name.slice(0, 2).toUpperCase()}
-                </div>
-                <span className="truncate">{guild.name}</span>
-              </div>
-              {guild.id === props.guildId && (
-                <Check className="ml-1 size-4 shrink-0 text-scout-primary" />
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <label
+        htmlFor="manage-scout-server"
+        className="flex items-center gap-2.5 px-2.5 pt-1 text-sm font-medium text-scout-ink"
+      >
+        <Settings className="size-4 shrink-0 text-scout-subtle" />
+        <span>Manage Scout</span>
+      </label>
+      <select
+        id="manage-scout-server"
+        value={props.guildId ?? ""}
+        onChange={(event) => {
+          const guildId = event.target.value;
+          if (guildId === manageOverviewValue) {
+            void navigate("/manage");
+            return;
+          }
+          if (guildId.length === 0) return;
+          void navigate(guildWorkspacePath(guildId));
+        }}
+        className="w-full rounded-lg border border-scout-border/60 bg-scout-canvas px-2.5 py-2 text-sm font-medium text-scout-ink outline-none transition-colors hover:bg-scout-hover focus-visible:ring-2 focus-visible:ring-scout-primary"
+      >
+        <option value="">Select a server</option>
+        <option value={manageOverviewValue}>Manage servers…</option>
+        {manageableGuilds.map((guild) => (
+          <option key={guild.id} value={guild.id}>
+            {guild.name}
+          </option>
+        ))}
+      </select>
     </section>
   );
 }
@@ -394,13 +370,12 @@ export function AppNavigation() {
           guildItems={guildItems}
         />
       )}
-      {guildId !== undefined && (
-        <WorkspaceSwitcherSection
+      <div className="mt-auto shrink-0">
+        <ManageScoutSection
           guildId={guildId}
-          selectedGuild={selectedGuild}
           manageableGuilds={guildsQuery.data}
         />
-      )}
+      </div>
     </nav>
   );
 }

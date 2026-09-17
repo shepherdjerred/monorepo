@@ -1557,6 +1557,22 @@
           "thresholdRollouts": []
         },
         {
+          "key": "voice_assistant_enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "explore_creation_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "scoutql_relational_enabled",
           "type": "boolean",
           "default": false,

@@ -66,6 +66,16 @@ function dareExtendedContractsFlag(environment: string) {
   return flag;
 }
 
+function scoutPolicyFlag(environment: string, key: string) {
+  const flag = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    environment,
+    "scout",
+  ).find((candidate) => candidate.key === key);
+  if (flag === undefined) throw new Error(`Scout policy flag missing: ${key}`);
+  return flag;
+}
+
 describe("ManagedFlagInventorySchema", () => {
   test("uses Luna in both managed environments", () => {
     expect(exploreModel("beta")).toBe("gpt-5.6-luna");
@@ -114,6 +124,24 @@ describe("ManagedFlagInventorySchema", () => {
     const prodFlag = dareExtendedContractsFlag("prod");
     expect(prodFlag.default).toBe(false);
     expect(prodFlag.rollouts).toEqual([]);
+  });
+
+  test("enables Explore confirmations while keeping unavailable Scout surfaces off in prod", () => {
+    expect(scoutPolicyFlag("prod", "explore_creation_enabled")).toMatchObject({
+      default: true,
+      rollouts: [],
+    });
+
+    for (const key of [
+      "hall_of_fame_enabled",
+      "challenge_runs_enabled",
+      "voice_assistant_enabled",
+    ]) {
+      expect(scoutPolicyFlag("prod", key)).toMatchObject({
+        default: false,
+        rollouts: [],
+      });
+    }
   });
 
   test("keeps Birmel image generation off by default, on in beta, and ramped in prod", () => {
