@@ -1,4 +1,5 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
+import { SCOUT_GATEWAY_OWNER_ROLES } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
 
 export type PrometheusDatasource = { type: string; uid: string };
 
@@ -46,6 +47,23 @@ export const SCOUT_DASHBOARD_FILTER =
 
 export function buildScoutFilter(): string {
   return SCOUT_DASHBOARD_FILTER;
+}
+
+/**
+ * The filter for a panel reading a gauge only the gateway-owning role produces.
+ *
+ * Deliberately drops `$role` and pins the roles instead.
+ * `discord_connection_status` is a plain gauge, so prom-client exports it as 0
+ * from every pod that never opens a shard; with `$role` on All, a `min` over
+ * that takes the application pod's truthful 0 and paints the panel red while
+ * the bot is connected and posting. The panel is asking about the gateway, so
+ * it has to say so rather than inheriting whatever role the operator selected.
+ *
+ * `$environment` and `$instance` are preserved, so narrowing by stage or by pod
+ * still works. Only the role axis is overridden, and only here.
+ */
+export function buildGatewayOwnerFilter(): string {
+  return `environment=~"$environment",role=~"${SCOUT_GATEWAY_OWNER_ROLES.join("|")}",instance=~"$instance"`;
 }
 
 /**

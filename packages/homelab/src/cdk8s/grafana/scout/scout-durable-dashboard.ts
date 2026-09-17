@@ -34,9 +34,28 @@ import {
  * rollout is safe. `max` of two agreeing sweeps is the same number either of
  * them reported.
  *
+ * ## Zero-fill, and where it must not be used
+ *
  * Counters that are normally zero carry `or on() vector(0)`, so a healthy
  * pipeline draws a zero line rather than "No data" — the repo learned that
- * distinction the hard way and `dashboard-query-health.test.ts` pins it.
+ * distinction the hard way and `dashboard-query-health.test.ts` pins it. An
+ * `increase()` over a counter really is 0 when nothing happened, so the
+ * substitution states a fact.
+ *
+ * The gauge-backed panels deliberately do NOT carry it, and that difference is
+ * the point of this dashboard. Those gauges come from one sweeping role, so
+ * they are absent when that role is down, when the sweep has not run yet, or
+ * when the operator has narrowed `$role` to a pod that does not sweep. In every
+ * one of those cases the honest answer is "not measured", and
+ * `or on() vector(0)` would replace it with a green zero — an acceptance
+ * dashboard certifying a clean pipeline at the exact moment it can see nothing.
+ * Absence renders as No Data, which is the state it is actually in.
+ *
+ * For the same reason the age panels put their lowest threshold band in red at
+ * negative values: the sweep writes -1 when it ran and could not read, and -1
+ * sits below every "too old" bound, so a plain green-below-threshold scale
+ * would paint a failed measurement as the healthiest possible result.
+ * `ScoutDurableSweepFailing` alerts on that same sentinel.
  */
 
 const DURABLE_FILTER = buildScoutFilter();
@@ -157,7 +176,7 @@ function addDuplicateRows(builder: dashboard.DashboardBuilder): void {
       title: "Unknown deliveries",
       description:
         "Notification intents whose send left but whose response never arrived. The domain's operator dead end: nothing may retry one automatically, because a retry is exactly how a user gets told the same thing twice.",
-      query: `max(scout_durable_notification_intents{state="unknown-delivery",${DURABLE_FILTER}}) or on() vector(0)`,
+      query: `max(scout_durable_notification_intents{state="unknown-delivery",${DURABLE_FILTER}})`,
       legend: "intents",
       gridPos: { x: 18, y: 1, w: 6, h: 4 },
       steps: [
@@ -207,12 +226,13 @@ function addBacklogRows(builder: dashboard.DashboardBuilder): void {
       title: "Oldest unaccepted workflow start",
       description:
         "How long the longest-unacknowledged V2 start request has waited. A start is written before Temporal is called, so a climbing value means requests are being recorded and never accepted.",
-      query: `max(scout_durable_backlog_oldest_age_seconds{family="unaccepted-workflow-starts",${DURABLE_FILTER}}) or on() vector(0)`,
+      query: `max(scout_durable_backlog_oldest_age_seconds{family="unaccepted-workflow-starts",${DURABLE_FILTER}})`,
       legend: "age",
       gridPos: { x: 0, y: 14, w: 8, h: 4 },
       unit: "s",
       steps: [
-        { value: null, color: "green" },
+        { value: null, color: "red" },
+        { value: 0, color: "green" },
         { value: 900, color: "red" },
       ],
     }),
@@ -223,12 +243,13 @@ function addBacklogRows(builder: dashboard.DashboardBuilder): void {
       title: "Oldest stranded match",
       description:
         "Age of the oldest V2-owned match whose pipeline never reached both of its finishing facts — the observation receipt and the cursor advance.",
-      query: `max(scout_durable_backlog_oldest_age_seconds{family="stalled-match-processing",${DURABLE_FILTER}}) or on() vector(0)`,
+      query: `max(scout_durable_backlog_oldest_age_seconds{family="stalled-match-processing",${DURABLE_FILTER}})`,
       legend: "age",
       gridPos: { x: 8, y: 14, w: 8, h: 4 },
       unit: "s",
       steps: [
-        { value: null, color: "green" },
+        { value: null, color: "red" },
+        { value: 0, color: "green" },
         { value: 3600, color: "orange" },
       ],
     }),
@@ -239,12 +260,13 @@ function addBacklogRows(builder: dashboard.DashboardBuilder): void {
       title: "Oldest live recovery batch",
       description:
         "Age of the oldest recovery batch that has not reached `complete` or `abandoned`. A batch sitting in `scanning` since yesterday is the one an operator is waiting on.",
-      query: `max(scout_durable_backlog_oldest_age_seconds{family="live-recovery-batches",${DURABLE_FILTER}}) or on() vector(0)`,
+      query: `max(scout_durable_backlog_oldest_age_seconds{family="live-recovery-batches",${DURABLE_FILTER}})`,
       legend: "age",
       gridPos: { x: 16, y: 14, w: 8, h: 4 },
       unit: "s",
       steps: [
-        { value: null, color: "green" },
+        { value: null, color: "red" },
+        { value: 0, color: "green" },
         { value: 21_600, color: "orange" },
       ],
     }),

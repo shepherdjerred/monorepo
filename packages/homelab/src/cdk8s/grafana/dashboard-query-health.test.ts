@@ -5,6 +5,7 @@ import { createBuildkiteDashboard } from "./buildkite/buildkite-dashboard.ts";
 import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
 import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
 import { createScoutDashboard } from "./scout/scout-dashboard.ts";
+import { createScoutDurableDashboard } from "./scout/scout-durable-dashboard.ts";
 import { createSmartctlDashboard } from "./storage/smartctl-dashboard.ts";
 import { createTasknotesDashboard } from "./tasknotes-dashboard.ts";
 import { createTemporalDashboard } from "./temporal/temporal-dashboard.ts";
@@ -22,6 +23,7 @@ const dashboardJson = [
   createBuildkitdDashboard(),
   createDiscordPlaysDashboard(),
   createScoutDashboard(),
+  createScoutDurableDashboard(),
   createSmartctlDashboard(),
   createTasknotesDashboard(),
   createTemporalDashboard(),
@@ -97,6 +99,40 @@ describe("dashboard query health", () => {
     );
     expect(dashboardJson).toContain(
       String.raw`prematch_loading_screen_skin_fallback_total{environment=~\"$environment\",role=~\"$role\",instance=~\"$instance\"}[24h]))) or on() vector(0)`,
+    );
+  });
+
+  test("swept durable gauges show no-data rather than a green zero", () => {
+    // The inverse of the test above, and the distinction matters more here. An
+    // `increase()` over a counter is genuinely 0 when nothing happened. A gauge
+    // produced by one sweeping role is ABSENT when that role is down, when the
+    // sweep has not run yet, or when `$role` is narrowed to a pod that does not
+    // sweep — and substituting 0 there would have an acceptance dashboard
+    // certify a clean pipeline at the exact moment it can see nothing.
+    for (const selector of [
+      String.raw`state=\"unknown-delivery\"`,
+      String.raw`family=\"unaccepted-workflow-starts\"`,
+      String.raw`family=\"stalled-match-processing\"`,
+      String.raw`family=\"live-recovery-batches\"`,
+    ]) {
+      const index = dashboardJson.indexOf(selector);
+      expect(index).toBeGreaterThan(-1);
+      // The fallback, when present, is appended directly to the expression.
+      const expressionTail = dashboardJson.slice(index, index + 200);
+      expect(expressionTail).not.toContain("or on() vector(0)");
+    }
+  });
+
+  test("the Discord connection panel ignores the role variable", () => {
+    // Every pod exports discord_connection_status, and a pod with no shard
+    // exports a truthful 0. With $role on All the min() reports the application
+    // pod and paints the panel red while the bot is connected, so this panel
+    // pins the gateway-owning role rather than inheriting the selection.
+    expect(dashboardJson).toContain(
+      String.raw`min by (environment) (discord_connection_status{environment=~\"$environment\",role=~\"combined\",instance=~\"$instance\"})`,
+    );
+    expect(dashboardJson).not.toContain(
+      String.raw`min by (environment) (discord_connection_status{environment=~\"$environment\",role=~\"$role\"`,
     );
   });
 

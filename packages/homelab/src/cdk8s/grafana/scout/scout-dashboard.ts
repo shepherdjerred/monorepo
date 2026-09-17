@@ -14,6 +14,7 @@ import {
 } from "./scout-dashboard-web-panels.ts";
 
 import {
+  buildGatewayOwnerFilter,
   buildScoutFilter,
   SCOUT_PROMETHEUS_DATASOURCE,
   scoutDashboardVariables,
@@ -134,16 +135,22 @@ export function createScoutDashboard() {
     }),
   );
 
-  // Connection Status
+  // Connection Status — scoped to the gateway-owning role rather than to
+  // `$role`. Every pod exports this gauge, and a pod with no shard exports 0
+  // truthfully, so with `$role` on All the `min` reports the application pod
+  // and shows a disconnected bot while the gateway is connected. See
+  // `buildGatewayOwnerFilter`.
   builder.withPanel(
     new stat.PanelBuilder()
       .title("Connection Status")
-      .description("1 = Connected, 0 = Disconnected (min across servers)")
+      .description(
+        "1 = Connected, 0 = Disconnected. Reads only the runtime role that owns the Discord gateway; pods without a shard report 0 by design and are excluded regardless of the Runtime role selection.",
+      )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `min by (environment) (discord_connection_status{${buildFilter()}})`,
+            `min by (environment) (discord_connection_status{${buildGatewayOwnerFilter()}})`,
           )
           .legendFormat("{{environment}}"),
       )

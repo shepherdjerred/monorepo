@@ -41,3 +41,24 @@ export const SCOUT_GATEWAY_OWNER_BY_STAGE = [
   { environment: "beta", role: "combined" },
   { environment: "prod", role: "combined" },
 ];
+
+/**
+ * The same answer as a role set, for callers that cannot phrase a per-stage
+ * disjunction.
+ *
+ * A Grafana panel is filtered by template variables rather than by a fixed
+ * environment, so it cannot spell one term per stage without discarding the
+ * operator's environment selection. It can still refuse to look at pods that do
+ * not own a gateway, which is the part that matters: with `$role` set to All, a
+ * panel reading `discord_connection_status` unscoped takes the application
+ * pod's truthful 0 and shows a disconnected bot while the gateway is connected.
+ *
+ * Derived from the table rather than typed out, so the split PR's one-line flip
+ * moves the dashboards with the alert instead of leaving them a revision
+ * behind. It is a union across stages, which is exact while no stage runs two
+ * gateway-owning roles at once — true today, true after the flip, and untrue
+ * only during the rollout itself.
+ */
+export const SCOUT_GATEWAY_OWNER_ROLES = [
+  ...new Set(SCOUT_GATEWAY_OWNER_BY_STAGE.map((stage) => stage.role)),
+];
