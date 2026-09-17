@@ -30,6 +30,13 @@ names in the enabled list.
 `SUBHD_PINCHTAB_TOKEN` comes from the shared 1Password item mirrored into media.
 The token is never sent to SubHD or included in errors.
 
+The provider participates in Bazarr's existing wanted-subtitle searches and
+upgrades. It creates or resumes its dedicated profile on demand; no session-time
+download or manual sidecar installation is part of this integration. On an empty
+config volume the startup policy seeds a minimal private config owned by the
+LinuxServer user; Bazarr fills its remaining defaults at first start. Existing
+configuration errors fail startup instead of being replaced.
+
 Fixture verification uses the exact catalog-pinned Bazarr image and its vendor
 libraries, with no network access:
 
@@ -40,3 +47,30 @@ bun run --cwd packages/homelab/src/cdk8s test:bazarr
 This requires a running Docker engine. CDK integration tests run in the ordinary
 CDK8s test task. Production download and Plex playback are separate acceptance
 checks; fixture success does not establish either.
+
+The repeatable live smoke command uses the same provider in that pinned image.
+It accepts an actual video's release basename and episode identity, runs at
+least twice with fresh provider objects, and prints only identity, matches,
+content size, and hash. It never writes subtitle files. Supply a local browser
+endpoint reachable from Docker and an existing PinchTab bootstrap config:
+
+```sh
+bun run --cwd packages/homelab/src/cdk8s test:bazarr:live \
+  --browser-url "$SUBTITLE_SMOKE_BROWSER_URL" \
+  --browser-config "$PINCHTAB_CONFIG" \
+  --series "$SUBTITLE_SMOKE_SERIES" --season "$SUBTITLE_SMOKE_SEASON" \
+  --episode "$SUBTITLE_SMOKE_EPISODE" --release "$SUBTITLE_SMOKE_RELEASE"
+```
+
+An existing `PINCHTAB_TOKEN` environment credential takes precedence over the
+config token, matching PinchTab's CLI. Neither is printed or saved by the runner.
+
+Use the dedicated `subtitle-provider-smoke` profile for this validation. Add
+`--restart-browser` to stop that test profile between runs and verify recovery.
+Interactive challenges and source failures make the command fail; a passing
+search alone does not count as a successful smoke test.
+
+`typings/` declares the consumed Bazarr 1.6.0 vendor interfaces for the repository
+Python checker; `utils.pyi` describes the neighboring vendor utility module.
+These files are type-only contracts and are not mounted into Bazarr. Runtime
+fixtures use the native implementations, not substitute classes.

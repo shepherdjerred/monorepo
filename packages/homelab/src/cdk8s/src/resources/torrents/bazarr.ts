@@ -11,7 +11,11 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
+import {
+  LINUXSERVER_UID,
+  LINUXSERVER_GID,
+  withCommonLinuxServerProps,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
@@ -86,7 +90,11 @@ export function createBazarrDeployment(
     name: "configure-subtitle-providers",
     image: `ghcr.io/linuxserver/bazarr:${versions["linuxserver/bazarr"]}`,
     command: ["python3", "/providers/configure.py"],
-    envVariables: { PYTHONPATH: EnvValue.fromValue("/app/bazarr/bin/libs") },
+    envVariables: {
+      PYTHONPATH: EnvValue.fromValue("/app/bazarr/bin/libs"),
+      PUID: EnvValue.fromValue(String(LINUXSERVER_UID)),
+      PGID: EnvValue.fromValue(String(LINUXSERVER_GID)),
+    },
     securityContext: {
       ensureNonRoot: false,
       readOnlyRootFilesystem: true,
