@@ -9,7 +9,10 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
-import { createDnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   SCOUT_GATEWAY_APP_LABEL,
@@ -33,19 +36,7 @@ export type Stage = "prod" | "beta";
  */
 function scoutRuntimeEgressRules() {
   return [
-    // DNS
-    {
-      to: [
-        {
-          namespaceSelector: {},
-          podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-        },
-      ],
-      ports: [
-        { port: IntOrString.fromNumber(53), protocol: "UDP" },
-        { port: IntOrString.fromNumber(53), protocol: "TCP" },
-      ],
-    },
+    dnsEgressRule(),
     // OTLP trace gateway (alloy-gateway.alloy-gateway.svc.cluster.local:4318)
     {
       to: [
@@ -98,10 +89,7 @@ function scoutRuntimeEgressRules() {
       ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
     },
     // External HTTPS (Riot API, Discord, Sentry, OpenAI, Gemini, ElevenLabs)
-    {
-      to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-      ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-    },
+    externalHttpsEgressRule(),
   ];
 }
 
@@ -311,7 +299,7 @@ export function createScoutChart(
           },
         ],
         egress: [
-          createDnsEgressRule(),
+          dnsEgressRule(),
           {
             to: [
               {

@@ -26,6 +26,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-sata-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 const PORT = 9999;
 const LABELS = { app: "stash" };
@@ -54,21 +55,6 @@ fi
 printf 'username: "%s"\npassword: "%s"\n' "$STASH_USERNAME" "$STASH_PASSWORD_HASH" >> /state/config.yml.next
 mv /state/config.yml.next /state/config.yml
 chmod 600 /state/config.yml`;
-
-function createDnsEgress() {
-  return {
-    to: [
-      {
-        namespaceSelector: {},
-        podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-      },
-    ],
-    ports: [
-      { port: IntOrString.fromNumber(53), protocol: "UDP" },
-      { port: IntOrString.fromNumber(53), protocol: "TCP" },
-    ],
-  };
-}
 
 export function createStashDeployment(chart: Chart) {
   const credentialsItem = new OnePasswordItem(chart, "stash-credentials", {
@@ -266,7 +252,7 @@ export function createStashDeployment(chart: Chart) {
         },
       ],
       egress: [
-        createDnsEgress(),
+        dnsEgressRule(),
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [

@@ -4,7 +4,6 @@ import {
   DeploymentStrategy,
   EnvValue,
   type IPersistentVolumeClaim,
-  Probe,
   Protocol,
   Service,
   Volume,
@@ -24,6 +23,7 @@ import { ARGOCD_SYNC_WAVE_ANNOTATION } from "@shepherdjerred/homelab/cdk8s/src/a
 import { postgresImageDigests } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
+import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 
 /** Pod label every gateway-role resource selects on. */
 export const SCOUT_GATEWAY_APP_LABEL = "scout-gateway";
@@ -245,21 +245,7 @@ export function createScoutGatewayDeployment(
       // serves /ping, /livez, /healthz and /metrics on the same port 3000 as
       // the full server (backend src/http/admin-server.ts) — the surface that
       // is missing here is the product's, not the operator's.
-      startup: Probe.fromHttpGet("/ping", {
-        port: 3000,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 240,
-      }),
-      liveness: Probe.fromHttpGet("/livez", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/healthz", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
+      ...scoutRuntimeProbes(),
       volumeMounts: [
         {
           path: "/data",
