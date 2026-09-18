@@ -274,20 +274,22 @@ function isAmazonMerchant(name: string): boolean {
   return AMAZON_MERCHANT_PATTERNS.some((p) => lower.includes(p));
 }
 
+// A card bill, a balance transfer and card cash back all arrive as "Venmo",
+// and none of them is a payment to a person. Which field carries that signal
+// varies: Monarch often shows the merchant as a bare "Venmo" and keeps the
+// detail in the bank description ("Venmo Credit Card payment"), so both are
+// tested. Checking only the merchant name let 43 card payments, transfers and
+// cash-back rows into the P2P path, where the CSV could never describe them.
 export function isVenmoP2P(name: string, plaidName: string): boolean {
-  const lower = name.toLowerCase();
-  const plaidLower = plaidName.toLowerCase();
-  const hasVenmo = lower.includes("venmo") || plaidLower.includes("venmo");
-  if (!hasVenmo) return false;
-  return !lower.includes("credit card") && !lower.includes("cash back");
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  if (!combined.includes("venmo")) return false;
+  return !combined.includes("credit card") && !combined.includes("cash back");
 }
 
 export function isBiltTransaction(name: string, plaidName: string): boolean {
-  const lower = name.toLowerCase();
-  const plaidLower = plaidName.toLowerCase();
-  const hasBilt = lower.includes("bilt") || plaidLower.includes("bilt");
-  if (!hasBilt) return false;
-  return !lower.includes("credit card cash back");
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  if (!combined.includes("bilt")) return false;
+  return !combined.includes("credit card cash back");
 }
 
 export function isUsaaInsurance(name: string, plaidName: string): boolean {

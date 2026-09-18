@@ -209,6 +209,16 @@ describe("isVenmoP2P", () => {
   test("returns false for non-Venmo", () => {
     expect(isVenmoP2P("Target", "TARGET STORE")).toBe(false);
   });
+
+  // Monarch usually shows these as a bare "Venmo" merchant and keeps what
+  // they are in the bank description.
+  test("excludes a card payment named only in the bank description", () => {
+    expect(isVenmoP2P("Venmo", "Venmo Credit Card payment")).toBe(false);
+  });
+
+  test("excludes cash back named only in the bank description", () => {
+    expect(isVenmoP2P("Venmo", "Venmo Credit Card cash back")).toBe(false);
+  });
 });
 
 describe("isBiltTransaction", () => {
