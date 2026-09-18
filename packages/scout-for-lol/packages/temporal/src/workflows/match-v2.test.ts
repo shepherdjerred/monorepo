@@ -20,7 +20,11 @@ import {
   MATCH_ID,
   type ScoutV2MatchStore,
 } from "./match-v2.test-fixtures.ts";
-import { useScoutV2WorkflowHarness } from "./workflow-harness.test-fixtures.ts";
+import {
+  applicationFailureOf,
+  settleWorkflow,
+  useScoutV2WorkflowHarness,
+} from "./workflow-harness.test-fixtures.ts";
 
 const harness = useScoutV2WorkflowHarness();
 
@@ -239,6 +243,51 @@ describe("a contested archive attestation", () => {
     expect(store.observed).toBe(false);
   }, 60_000);
 
+  test("fails the run when a stage receipt is contested", async () => {
+    // The evidence a V2 stage receipt carries is derived from the match
+    // reference and the phase alone, so two runs can only disagree about it if
+    // something is producing evidence no rule here can produce. Advancing the
+    // cursor over that would let the NEXT execution skip the phase on the
+    // strength of a receipt this run never agreed with.
+    const store = createScoutV2MatchStore({ receiptsConflict: true });
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
+
+    await expect(processMatch("match-receipt-conflict")).rejects.toThrow();
+
+    expect(store.calls).toContain("recordMatchReceiptsV2");
+    expect(store.calls).not.toContain("advanceMatchCursorV2");
+    expect(store.calls).not.toContain("planMatchFanOutV2");
+  }, 60_000);
+
+  test("stays failed on the next execution instead of advancing past the drift", async () => {
+    // The failed run is not durable: under ALLOW_DUPLICATE_FAILED_ONLY the
+    // next discovery starts a fresh execution, whose resume read sees the
+    // contested kinds standing WITHOUT the outcome that contested them. What
+    // keeps it from skipping the phases and advancing the cursor over the
+    // same disagreement is the marker the Activity recorded — which the
+    // resume read surfaces and the Workflow refuses at, before any phase.
+    const store = createScoutV2MatchStore({ receiptsConflict: true });
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
+
+    await expect(
+      processMatch("match-receipt-conflict-first"),
+    ).rejects.toThrow();
+    const callsAfterFirst = store.calls.length;
+
+    const failure = applicationFailureOf(
+      await settleWorkflow(processMatch("match-receipt-conflict-retry")),
+    );
+    expect(failure?.type).toBe("DurableCommitConflict");
+    expect(failure?.nonRetryable).toBe(true);
+    expect(failure?.message).toMatch(/contested/);
+
+    expect(store.calls.slice(callsAfterFirst)).toEqual([
+      "readMatchPipelineStateV2",
+    ]);
+    expect(store.calls).not.toContain("advanceMatchCursorV2");
+    expect(store.applied).toEqual(["settlement", "progression"]);
+  }, 90_000);
+
   test("converges on the next attempt through the archive read gate", async () => {
     // The overlapping-identical-bytes race: the raw-archive evidence carries
     // `capturedAt`, stamped at put time, so two attempts over the same bytes
@@ -371,6 +420,7 @@ describe("V2 post-match discovery", () => {
       };
     await harness.startWorkers({
       discoverPostMatchIdsV2: () => ({
+        outcome: "scanned",
         riotMatchIds: [MATCH_ID, SECOND_MATCH_ID],
         complete: true,
       }),
@@ -391,6 +441,9 @@ describe("V2 post-match discovery", () => {
         await trace("cursor")(input);
         return { advanced: 0, alreadyAdvanced: 2 };
       },
+      runPostMatchMaintenance: () => {
+        log.push("maintenance");
+      },
       planMatchFanOutV2: async (input: { riotMatchId: string }) => {
         await trace("fan-out")(input);
         return { notificationIntentKeys: [], lakeProjection: false };
@@ -408,6 +461,8 @@ describe("V2 post-match discovery", () => {
       `${SECOND_MATCH_ID}:read`,
       `${SECOND_MATCH_ID}:cursor`,
       `${SECOND_MATCH_ID}:fan-out`,
+      // Maintenance closes the poll, and it closes it LAST.
+      "maintenance",
     ]);
     expect(result).toEqual(
       scoutPostMatchDiscoveryV2ResultCodec.serialize({
@@ -419,11 +474,103 @@ describe("V2 post-match discovery", () => {
     );
   }, 90_000);
 
+  test("closes the poll with maintenance on the success path", async () => {
+    const store = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => ({
+        outcome: "scanned",
+        riotMatchIds: [MATCH_ID],
+        complete: true,
+        evidenceWatermark: "2026-09-13T08:00:00.000Z",
+      }),
+    });
+
+    await discover("post-match-discovery-maintenance");
+
+    // v1's flags, preserved: the whole tail was seen and processed, so Dare
+    // deadlines may settle, and the watermark the scan computed travels with
+    // them because nothing downstream can recover it.
+    expect(store.maintenance).toEqual([
+      {
+        stage,
+        settleDareV2Deadlines: true,
+        evidenceWatermark: "2026-09-13T08:00:00.000Z",
+      },
+    ]);
+  }, 90_000);
+
+  test("still closes the poll when it stops early, without settling deadlines", async () => {
+    // `BotState.pollStatus` is what the next poll reads to decide whether one
+    // is already in flight, so a run that stopped early must still close it —
+    // but it saw an unprocessed tail, so it may not settle Dare deadlines.
+    const store = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => ({
+        outcome: "scanned",
+        riotMatchIds: [MATCH_ID],
+        complete: true,
+      }),
+    });
+    await processMatch(scoutMatchProcessingV2WorkflowId(stage, MATCH_ID));
+
+    await expect(
+      discover("post-match-discovery-early-stop"),
+    ).resolves.toMatchObject({ data: { complete: false } });
+
+    expect(store.maintenance).toEqual([
+      { stage, settleDareV2Deadlines: false },
+    ]);
+  }, 90_000);
+
+  test("resumes into maintenance without re-discovering", async () => {
+    // The crash window between the children and maintenance: the discovery
+    // result is already in history, so the retry resumes at the maintenance
+    // call rather than polling Riot again.
+    let discoveries = 0;
+    const store = createScoutV2MatchStore({ maintenanceFailures: 1 });
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => {
+        discoveries += 1;
+        return { outcome: "scanned", riotMatchIds: [], complete: true };
+      },
+    });
+
+    await discover("post-match-discovery-resume");
+
+    expect(discoveries).toBe(1);
+    expect(store.maintenance).toHaveLength(2);
+  }, 90_000);
+
+  test("withholds maintenance when discovery was skipped for a running poll", async () => {
+    // An operator run overlapping the scheduled one on the same worker: v1's
+    // discovery refuses to open a second poll. This run opened nothing, so it
+    // must close nothing — maintenance would mark the OTHER execution's poll
+    // complete under it while that poll is still live.
+    const store = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => ({ outcome: "skipped" }),
+    });
+
+    await expect(
+      discover("post-match-discovery-skipped"),
+    ).resolves.toMatchObject({
+      data: { status: "no-op", discovered: 0, childrenStarted: 0 },
+    });
+
+    expect(store.maintenance).toEqual([]);
+    expect(store.calls).not.toContain("runPostMatchMaintenance");
+  }, 60_000);
+
   test("stops at a match another execution already owns", async () => {
     const store: ScoutV2MatchStore = createScoutV2MatchStore();
     await harness.startWorkers({
       ...scoutV2MatchActivityStubs(store),
       discoverPostMatchIdsV2: () => ({
+        outcome: "scanned",
         riotMatchIds: [MATCH_ID],
         complete: true,
       }),

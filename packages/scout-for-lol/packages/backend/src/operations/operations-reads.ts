@@ -173,6 +173,8 @@ export async function readOperationsQueues(args: {
   ] = await Promise.all([
     listStalledV2MatchProcessing(prisma, {
       observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+      // The operator surface is where a contested match must be visible.
+      contested: { kind: "include" },
       limit,
       after: cursorFor("stalledMatchProcessing"),
     }),

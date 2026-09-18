@@ -1,7 +1,7 @@
 import { ApplicationFailure, startChild } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import type { ScoutArchiveV2Result } from "#src/activity-contracts-v2.ts";
+import type { ScoutDurableCommitV2 } from "#src/contracts-v2.ts";
 import type {
   MatchProcessingPolicy,
   PipelineOwner,
@@ -22,9 +22,15 @@ import {
   scoutMatchProcessingV2WorkflowId,
   scoutTaskQueues,
 } from "#src/identifiers.ts";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "#src/match-receipts-v2.ts";
+import {
+  SCOUT_V2_MATCH_RECEIPT_KINDS,
+  SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+} from "#src/match-receipts-v2.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
-import { realtimeV2Activities } from "./activity-options.ts";
+import {
+  realtimeActivities,
+  realtimeV2Activities,
+} from "./activity-options.ts";
 import {
   IMPLEMENTED_V2_FAN_OUT_WORKFLOWS,
   planMatchFanOutChildrenV2,
@@ -43,6 +49,12 @@ import {
  * Child IDs come from `scoutMatchProcessingV2WorkflowId`, so a rediscovered
  * match collapses onto the execution already processing it rather than
  * starting a second one.
+ *
+ * Maintenance runs last, on every exit from the loop. It is v1's Activity
+ * unchanged — closing the poll status, settling Dare deadlines, retrying
+ * pending earnings, clearing stale markets, recovering notifications — because
+ * none of that is per-match work the V2 core could absorb, and a V2-shaped
+ * copy would be a second implementation of one maintenance pass.
  */
 export async function scoutPostMatchDiscoveryV2Workflow(
   rawInput: ScoutPostMatchDiscoveryV2InputEnvelope,
@@ -52,21 +64,68 @@ export async function scoutPostMatchDiscoveryV2Workflow(
   const scan = await realtimeV2Activities(input.stage).discoverPostMatchIdsV2(
     input,
   );
+  if (scan.outcome === "skipped") {
+    // Another poll on the same worker is still running, and discovery refused
+    // to open a second one. This run opened nothing, so it closes nothing:
+    // running maintenance here would mark the OTHER execution's poll complete
+    // under it, flipping the shared poll status while that poll is live.
+    setWorkflowPhase("**Phase:** discovery skipped; a poll is already running");
+    return scoutPostMatchDiscoveryV2ResultCodec.serialize({
+      status: "no-op",
+      discovered: 0,
+      childrenStarted: 0,
+      complete: false,
+    });
+  }
 
   let childrenStarted = 0;
   let ownedWholeTail = true;
+  let childFailure: unknown;
   for (const riotMatchId of scan.riotMatchIds) {
     setWorkflowPhase(`**Phase:** processing match \`${riotMatchId}\``);
-    if (!(await processMatchAsChild(input.stage, riotMatchId))) {
-      // Another execution already owns this match's ID. Continuing past it
-      // would let a LATER match settle while an EARLIER one is still being
-      // processed elsewhere, which is exactly the chronology the serialization
-      // above exists to preserve — so this run stops and reports that it did
-      // not see the whole tail through. The next discovery rediscovers it.
-      ownedWholeTail = false;
+    try {
+      if (!(await processMatchAsChild(input.stage, riotMatchId))) {
+        // Another execution already owns this match's ID. Continuing past it
+        // would let a LATER match settle while an EARLIER one is still being
+        // processed elsewhere, which is exactly the chronology the
+        // serialization above exists to preserve — so this run stops and
+        // reports that it did not see the whole tail through. The next
+        // discovery rediscovers it.
+        ownedWholeTail = false;
+        break;
+      }
+    } catch (error) {
+      childFailure = error;
       break;
     }
     childrenStarted += 1;
+  }
+
+  // Maintenance closes the poll this run opened, and it runs on EVERY exit
+  // from the loop — success, an owned child ID, or a failed child — because
+  // `BotState.pollStatus` is what the next poll reads to decide whether one is
+  // already in flight. A run that failed without closing it would look like a
+  // poll still running. v1 orders it exactly here and for exactly this reason,
+  // and the flags below are v1's.
+  setWorkflowPhase("**Phase:** running post-match maintenance");
+  await realtimeActivities(input.stage).runPostMatchMaintenance({
+    stage: input.stage,
+    // Dare deadlines may only settle when the whole tail was seen AND
+    // processed: an unseen page, a match another execution still owns, or a
+    // failed child all mean evidence this pass cannot vouch for.
+    settleDareV2Deadlines:
+      scan.complete && ownedWholeTail && childFailure === undefined,
+    ...(scan.evidenceWatermark === undefined
+      ? {}
+      : { evidenceWatermark: scan.evidenceWatermark }),
+  });
+
+  if (childFailure !== undefined) {
+    if (childFailure instanceof Error) throw childFailure;
+    throw ApplicationFailure.nonRetryable(
+      `A V2 match child failed with a non-Error value during ${input.stage} post-match discovery`,
+      "MatchProcessingChildFailure",
+    );
   }
 
   return scoutPostMatchDiscoveryV2ResultCodec.serialize({
@@ -108,38 +167,42 @@ async function processMatchAsChild(
 }
 
 /**
- * Refuse to build on an artifact whose attestation is contested.
+ * Refuse to build on a durable commit that is contested.
  *
- * Each archived artifact reports its own receipt outcome, and a `conflict`
- * means a receipt for that identity already stands carrying DIFFERENT
- * evidence. Discarding it would let this run attest to the archive phase,
- * derive the observation's artifact identity from a receipt it never agreed
- * with, and advance the cursor over detected drift — the match would never be
- * looked at again. So any conflict fails the run, the same way a contested
- * settlement fact or a contested observation does.
+ * `conflict` means a row already stands for that identity carrying DIFFERENT
+ * evidence. Discarding it would let this run attest to the phase, derive the
+ * next step's inputs from a claim it never agreed with, and advance the cursor
+ * over detected drift — after which nothing looks at the match again. So any
+ * conflict fails the run, the same way a contested settlement fact or a
+ * contested observation does.
+ *
+ * One asserter rather than one per result shape: an archived artifact and a
+ * stage receipt carry the same `ScoutDurableCommitV2`, and the decision taken
+ * over it is identical.
  *
  * Two overlapping archives of the SAME bytes can reach here today, because the
  * raw-archive evidence includes `capturedAt`, which is stamped at put time.
  * That benign race now fails loudly rather than silently, and it self-heals:
  * the next attempt read-gates on the standing receipt and reports the match as
  * already archived without writing anything. Taking `capturedAt` out of the
- * evidence is the real fix and belongs to the receipted door, under a coordinated
- * evidence version bump — beta already holds rows written the old way.
+ * evidence is the real fix and belongs to the receipted door, under a
+ * coordinated evidence version bump — beta already holds rows written the old
+ * way.
  */
-function assertArtifactsUncontested(
-  archived: ScoutArchiveV2Result,
+function assertCommitsUncontested(
   riotMatchId: RiotMatchId,
+  subject: string,
+  commits: readonly { label: string; commit: ScoutDurableCommitV2 }[],
 ): void {
-  const contested = archived.artifacts.filter(
-    (artifact) => artifact.receipt.commit.outcome === "conflict",
+  const contested = commits.flatMap((entry) =>
+    entry.commit.outcome === "conflict"
+      ? [`${entry.label} (${entry.commit.reason})`]
+      : [],
   );
   if (contested.length === 0) return;
-  const detail = contested
-    .map((artifact) => `${artifact.receipt.kind} (${artifact.descriptor.key})`)
-    .join(", ");
   throw ApplicationFailure.nonRetryable(
-    `Archived artifacts for ${riotMatchId} disagree with the receipts already standing for them: ${detail}. Refusing to attest to the archive or advance the cursor over drift nothing has reconciled`,
-    "ArchiveReceiptConflict",
+    `The ${subject} for ${riotMatchId} disagree with what already stands for them: ${contested.join(", ")}. Refusing to attest to the phase or advance the cursor over drift nothing has reconciled`,
+    "DurableCommitConflict",
   );
 }
 
@@ -213,7 +276,23 @@ async function attestPhases(
 ): Promise<void> {
   if (kinds.length === 0) return;
   setWorkflowPhase("**Phase:** recording this run's match receipts");
-  await activities.recordMatchReceiptsV2({ ...ref, kinds });
+  const recorded = await activities.recordMatchReceiptsV2({ ...ref, kinds });
+  // A contested stage receipt is a broken contract: the evidence a V2 stage
+  // receipt carries is derived from the match reference and the phase alone,
+  // so two runs can only disagree about it if something is producing evidence
+  // no rule here can produce. Advancing the cursor over that would let the
+  // NEXT execution skip the phase on the strength of a receipt this run never
+  // agreed with — and the Activity has already recorded the durable marker
+  // that makes the next execution refuse at its resume point, so failing here
+  // stays failed until a person looks.
+  assertCommitsUncontested(
+    ref.riotMatchId,
+    "stage receipts",
+    recorded.receipts.map((receipt) => ({
+      label: receipt.kind,
+      commit: receipt.commit,
+    })),
+  );
 }
 
 /**
@@ -250,13 +329,29 @@ export async function scoutMatchProcessingV2Workflow(
   const resume = await activities.readMatchPipelineStateV2(ref);
   const observed = resume.kind === "present" ? resume.state : null;
   const attested = new Set<ReceiptKind>(observed?.receiptKinds);
+  if (attested.has(SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND)) {
+    // A previous execution met a contested stage receipt and recorded that
+    // it did. Without this gate the standing kinds below would read as phases
+    // already done, and this execution would skip them and advance the cursor
+    // over the very disagreement that failed the last one. The marker is an
+    // operator's to remove, after looking; nothing here may proceed past it.
+    throw ApplicationFailure.nonRetryable(
+      `A stage receipt for ${input.riotMatchId} is contested (${SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND} stands); refusing to resume past drift nothing has reconciled. An operator resolves the disagreement and removes the marker before this match is processed again`,
+      "DurableCommitConflict",
+    );
+  }
   const receiptKinds: ReceiptKind[] = [];
 
   if (!attested.has(SCOUT_V2_MATCH_RECEIPT_KINDS.archive)) {
     setWorkflowPhase("**Phase:** archiving the raw match artifacts");
-    assertArtifactsUncontested(
-      await activities.archiveMatchArtifactsV2(ref),
+    const archived = await activities.archiveMatchArtifactsV2(ref);
+    assertCommitsUncontested(
       input.riotMatchId,
+      "archived artifacts",
+      archived.artifacts.map((artifact) => ({
+        label: `${artifact.receipt.kind} (${artifact.descriptor.key})`,
+        commit: artifact.receipt.commit,
+      })),
     );
     receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.archive);
   }

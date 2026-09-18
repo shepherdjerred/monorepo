@@ -263,6 +263,90 @@ export async function observeMatch(
   );
 }
 
+/**
+ * The part of an observation's claim that a POLICY change may not touch.
+ *
+ * `observationClaim` deliberately includes `processingPolicy` and
+ * `promotedAt`, because for `observeMatch` a differing policy IS a differing
+ * claim. A caller asking the narrower question — "is the policy the ONLY thing
+ * that differs?" — needs those two out and everything else in, and it has to be
+ * the same rest-omission so a column added to the row joins this comparison
+ * automatically rather than being silently ignored.
+ */
+function policyAgnosticClaim(row: MatchObservationRow) {
+  const {
+    processingPolicy: _processingPolicy,
+    promotedAt: _promotedAt,
+    ...facts
+  } = observationClaim(row);
+  return facts;
+}
+
+/**
+ * Whether the stored observation asserts the same FACTS as this one, differing
+ * at most in policy and promotion.
+ *
+ * This is the question a promotion has to answer before it acts.
+ * `promoteObservation` moves ARCHIVE_ONLY to FULL and nothing else, so it is
+ * the right transition only when the policy is genuinely the sole
+ * disagreement. A run that promoted on any `observation-differs` would convert
+ * real drift — a different `gameCreatedAt`, say — into a FULL row and then let
+ * settlement, receipts and the cursor proceed over facts two producers never
+ * agreed on.
+ *
+ * The artifacts are part of the answer, under {@link reconcileArtifact}'s own
+ * rule rather than the claim's. `observationClaim` leaves the artifact
+ * columns out because silence about an artifact is not disagreement — but two
+ * DIFFERENT identities are, and they are exactly the drift `observeMatch`
+ * reports as `observation-differs`. A predicate that compared the claim alone
+ * would call an ARCHIVE_ONLY row naming artifact A and a FULL observation
+ * naming artifact B "the same facts" and promote, laundering canonical
+ * raw-artifact drift into a successful promotion.
+ *
+ * `false` for a match with no stored observation: there is nothing to agree
+ * with, and a caller reconciling a conflict against a row that has vanished is
+ * in no position to promote it.
+ */
+export async function observationAgreesExceptPolicy(
+  db: Db,
+  record: MatchObservationRecord,
+): Promise<boolean> {
+  const existing = await db.matchObservation.findUnique({
+    where: { riotMatchId: record.matchId },
+  });
+  if (existing === null) {
+    return false;
+  }
+  const storedRow = matchObservationRecordToRow(
+    matchObservationRowToRecord(existing),
+  );
+  const incomingRow = matchObservationRecordToRow(record);
+  return (
+    Bun.deepEquals(
+      policyAgnosticClaim(storedRow),
+      policyAgnosticClaim(incomingRow),
+      true,
+    ) && artifactsReconcile(storedRow, incomingRow)
+  );
+}
+
+/** Neither artifact family disagrees; silence and a first identity both pass. */
+function artifactsReconcile(
+  stored: MatchObservationRow,
+  incoming: MatchObservationRow,
+): boolean {
+  return (
+    reconcileArtifact(
+      { key: stored.matchObjectKey, digest: stored.matchDigest },
+      { key: incoming.matchObjectKey, digest: incoming.matchDigest },
+    ) !== "disagrees" &&
+    reconcileArtifact(
+      { key: stored.timelineObjectKey, digest: stored.timelineDigest },
+      { key: incoming.timelineObjectKey, digest: incoming.timelineDigest },
+    ) !== "disagrees"
+  );
+}
+
 export type PromoteObservationResult =
   | { outcome: "applied" }
   | { outcome: "already-applied" }

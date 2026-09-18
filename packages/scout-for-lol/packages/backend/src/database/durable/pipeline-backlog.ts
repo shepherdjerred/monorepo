@@ -79,6 +79,9 @@ export async function oldestStalledMatchProcessingAt(
 ): Promise<Date | null> {
   const [oldest] = await listStalledV2MatchProcessing(db, {
     observationReceiptKind: args.observationReceiptKind,
+    // A contested match is still unfinished work; the gauge must not read a
+    // backlog that an operator has to clear as a backlog that drained.
+    contested: { kind: "include" },
     limit: 1,
   });
   return oldest?.observedAt ?? null;
