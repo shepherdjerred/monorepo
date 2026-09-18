@@ -191,12 +191,26 @@ describe("affinityScore — aliases", () => {
     ).toBeGreaterThanOrEqual(4);
   });
 
-  test("Whole Foods matches an amazon sender", () => {
+  test("Whole Foods matches a Whole Foods sender through its bank name", () => {
     expect(
       affinityScore(
         makeTxn("Whole Foods", "WHOLEFDS MKT 123"),
-        makeEntry("Amazon <x@amazon.com>", "Your Whole Foods order"),
+        makeEntry(
+          "Whole Foods Market <x@wholefoodsmarket.com>",
+          "Your receipt",
+        ),
       ),
-    ).toBeGreaterThanOrEqual(4);
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  test("a Whole Foods charge is not pulled toward ordinary Amazon mail", () => {
+    // Amazon owns Whole Foods, but an amazon.com order email never documents a
+    // grocery charge. Shortlisting one costs a judgment to be told no.
+    expect(
+      affinityScore(
+        makeTxn("Whole Foods", "WHOLEFDS MKT 123"),
+        makeEntry("Amazon <x@amazon.com>", "Your order has shipped"),
+      ),
+    ).toBe(0);
   });
 });

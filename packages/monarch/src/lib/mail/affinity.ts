@@ -100,8 +100,12 @@ const DOMAIN_STOP_LABELS = new Set([
 // Merchant compact form -> domain label(s) that mean the same brand.
 const MERCHANT_ALIASES: Record<string, readonly string[]> = {
   ubereats: ["uber"],
-  wholefoods: ["wholefoods", "amazon"],
-  wholefoodsmarket: ["wholefoods", "amazon"],
+  // Amazon owns Whole Foods, but an amazon.com order email never documents a
+  // grocery charge: measured over 22 judged Whole Foods transactions, the
+  // alias shortlisted Amazon orders every time and matched none of them. The
+  // store does not email receipts, so paying to be told that is waste.
+  wholefoods: ["wholefoods"],
+  wholefoodsmarket: ["wholefoods"],
   amznmktpus: ["amazon"],
   amzn: ["amazon"],
   chatgpt: ["openai"],
