@@ -4,6 +4,7 @@ import type { SeparateDeepPathsResult } from "../monarch/client.ts";
 import type { TransactionEnrichment, EnrichedTransaction } from "./types.ts";
 import type { MerchantKnowledge } from "../knowledge/types.ts";
 import type { ProposedChange } from "../classifier/types.ts";
+import type { MonarchCategory } from "../monarch/types.ts";
 import { enrichAmazon } from "../amazon/enrich.ts";
 import { enrichVenmo } from "../venmo/enrich.ts";
 import { enrichBilt } from "../conservice/enrich.ts";
@@ -13,6 +14,7 @@ import { enrichApple } from "../apple/enrich.ts";
 import { enrichCostco } from "../costco/enrich.ts";
 import { enrichPaystub } from "../paystub/enrich.ts";
 import { enrichEquity } from "../equity/enrich.ts";
+import { enrichLoan } from "../loan/enrich.ts";
 import { assignTier } from "./router.ts";
 import { log } from "../logger.ts";
 
@@ -26,6 +28,7 @@ export type EnrichmentStats = {
   costco: { matched: number; total: number };
   paystub: { matched: number; total: number };
   equity: { matched: number; total: number };
+  loan: { matched: number; total: number };
   tier1Count: number;
   tier2Count: number;
   tier3Count: number;
@@ -48,6 +51,7 @@ export function alreadySplitCounts(
     costco: 0,
     paystub: 0,
     equity: 0,
+    loan: 0,
   };
   for (const [key, transactions] of deepPathBuckets(separated)) {
     counts[key] = transactions.filter((t) => t.isSplitTransaction).length;
@@ -71,7 +75,8 @@ type DeepPathKey =
   | "apple"
   | "costco"
   | "paystub"
-  | "equity";
+  | "equity"
+  | "loan";
 
 // What every vendor returns. Written once: the same shape used to be spelled
 // out inline in three places, so any new field cost three parallel edits.
@@ -111,6 +116,7 @@ type DeepPathSpec = {
 function deepPathSpecs(
   config: Config,
   separated: SeparateDeepPathsResult,
+  categories: MonarchCategory[],
 ): DeepPathSpec[] {
   return [
     {
@@ -174,14 +180,21 @@ function deepPathSpecs(
       skipped: config.skipEquity,
       run: () => enrichEquity(separated.equityTransactions),
     },
+    {
+      key: "loan",
+      transactions: separated.loanTransactions,
+      skipped: config.skipLoan,
+      run: () => enrichLoan(separated.loanTransactions, categories),
+    },
   ];
 }
 
 async function runDeepPathEnrichments(
   config: Config,
   separated: SeparateDeepPathsResult,
+  categories: MonarchCategory[],
 ): Promise<EnrichResult[]> {
-  const tasks = deepPathSpecs(config, separated)
+  const tasks = deepPathSpecs(config, separated, categories)
     .filter(
       (spec) =>
         !spec.skipped && spec.transactions.length > 0 && (spec.ready ?? true),
@@ -204,6 +217,7 @@ function deepPathBuckets(
     ["costco", separated.costcoTransactions],
     ["paystub", separated.paystubTransactions],
     ["equity", separated.equityTransactions],
+    ["loan", separated.loanTransactions],
   ];
 }
 
@@ -245,6 +259,7 @@ export async function runEnrichmentPipeline(
   config: Config,
   separated: SeparateDeepPathsResult,
   knowledgeBase: Map<string, MerchantKnowledge>,
+  categories: MonarchCategory[],
 ): Promise<EnrichmentResult> {
   const stats: EnrichmentStats = {
     amazon: { matched: 0, total: 0 },
@@ -256,6 +271,7 @@ export async function runEnrichmentPipeline(
     costco: { matched: 0, total: 0 },
     paystub: { matched: 0, total: 0 },
     equity: { matched: 0, total: 0 },
+    loan: { matched: 0, total: 0 },
     tier1Count: 0,
     tier2Count: 0,
     tier3Count: 0,
@@ -266,7 +282,7 @@ export async function runEnrichmentPipeline(
   // deep-path context, which is the fast path when only categories matter.
   const results = config.skipEnrich
     ? []
-    : await runDeepPathEnrichments(config, separated);
+    : await runDeepPathEnrichments(config, separated, categories);
   if (config.skipEnrich) {
     log.info("Skipping deep-path enrichment (--skip-enrich)");
   }

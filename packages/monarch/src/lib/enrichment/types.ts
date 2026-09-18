@@ -55,6 +55,15 @@ export type TransactionEnrichment = {
     taxes: number;
   };
 
+  // Loan: how a payment was actually applied, from the servicer's own
+  // balance statements rather than a model's arithmetic.
+  loan?: {
+    loanId: string;
+    principal: number;
+    interest: number;
+    balanceAfter: number;
+  };
+
   // Source tracking
   enrichmentSource: string;
 };
@@ -75,5 +84,6 @@ export type EnrichedTransaction = {
     | "costco"
     | "paystub"
     | "equity"
+    | "loan"
     | "regular";
 };

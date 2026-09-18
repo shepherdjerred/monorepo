@@ -362,6 +362,22 @@ function isEquityVest(
   return lower.includes("class a") && lower.includes("pinterest");
 }
 
+// Loan servicers whose statements the loan path can read. Upstart services
+// several loans at once and the bank records them all under one name, which is
+// why the loan is identified from the servicer's mail rather than from here.
+const LOAN_SERVICER_PATTERNS = ["upstart"];
+
+function isLoanPayment(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  // Money leaving only: a refund or disbursement is not a repayment.
+  if (amount >= 0) return false;
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  return LOAN_SERVICER_PATTERNS.some((p) => combined.includes(p));
+}
+
 const COSTCO_MERCHANT_PATTERNS = ["costco", "costco whse", "costco.com"];
 
 export function isCostcoMerchant(name: string, plaidName: string): boolean {
@@ -382,6 +398,7 @@ export type SeparateDeepPathsResult = {
   costcoTransactions: MonarchTransaction[];
   paystubTransactions: MonarchTransaction[];
   equityTransactions: MonarchTransaction[];
+  loanTransactions: MonarchTransaction[];
   regularTransactions: MonarchTransaction[];
 };
 
@@ -397,6 +414,7 @@ export function separateDeepPaths(
   const costcoTransactions: MonarchTransaction[] = [];
   const paystubTransactions: MonarchTransaction[] = [];
   const equityTransactions: MonarchTransaction[] = [];
+  const loanTransactions: MonarchTransaction[] = [];
   const regularTransactions: MonarchTransaction[] = [];
 
   for (const t of transactions) {
@@ -420,6 +438,8 @@ export function separateDeepPaths(
       paystubTransactions.push(t);
     } else if (isEquityVest(merchantName, t.plaidName, t.amount)) {
       equityTransactions.push(t);
+    } else if (isLoanPayment(merchantName, t.plaidName, t.amount)) {
+      loanTransactions.push(t);
     } else {
       regularTransactions.push(t);
     }
@@ -435,6 +455,7 @@ export function separateDeepPaths(
     costcoTransactions,
     paystubTransactions,
     equityTransactions,
+    loanTransactions,
     regularTransactions,
   };
 }

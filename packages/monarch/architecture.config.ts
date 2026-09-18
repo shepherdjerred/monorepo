@@ -26,6 +26,7 @@ const vendors = [
   "lib/conservice",
   "lib/costco",
   "lib/equity",
+  "lib/loan",
   "lib/paystub",
   "lib/scl",
   "lib/usaa",

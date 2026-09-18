@@ -163,6 +163,10 @@ const ENRICHMENT_RENDERERS: EnrichmentRenderer[] = [
       ? undefined
       : `RSU vest ${e.vest.vestDate}: ${String(e.vest.shares)} ${e.vest.symbol} shares released at $${e.vest.fairMarketValue.toFixed(2)}, ${String(e.vest.netShares)} deposited after tax withholding. No cash moved.`,
   (e) =>
+    e.loan === undefined
+      ? undefined
+      : `Loan ${e.loan.loanId}: $${e.loan.principal.toFixed(2)} principal + $${e.loan.interest.toFixed(2)} interest, $${e.loan.balanceAfter.toFixed(2)} still owed`,
+  (e) =>
     e.items === undefined || e.items.length === 0
       ? undefined
       : `Items: ${e.items.map((i) => `"${i.title}" ($${i.price.toFixed(2)})`).join(", ")}`,

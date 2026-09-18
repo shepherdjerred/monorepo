@@ -59,6 +59,7 @@ export function displayEnrichmentStats(
     ["Costco", stats.costco],
     ["Paystub", stats.paystub],
     ["Equity", stats.equity],
+    ["Loan", stats.loan],
   ];
 
   for (const [name, rate] of sources) {

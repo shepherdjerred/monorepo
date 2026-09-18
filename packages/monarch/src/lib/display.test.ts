@@ -12,6 +12,7 @@ const defaultStats: EnrichmentStats = {
   costco: { matched: 0, total: 0 },
   paystub: { matched: 0, total: 0 },
   equity: { matched: 0, total: 0 },
+  loan: { matched: 0, total: 0 },
   tier1Count: 0,
   tier2Count: 0,
   tier3Count: 0,

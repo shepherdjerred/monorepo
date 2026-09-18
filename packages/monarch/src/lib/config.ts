@@ -26,6 +26,7 @@ export type Config = {
   skipCostco: boolean;
   skipPaystub: boolean;
   skipEquity: boolean;
+  skipLoan: boolean;
   skipResearch: boolean;
   output: string | undefined;
   checkpointFile: string | undefined;
@@ -35,6 +36,7 @@ export type Config = {
   since: string;
   until: string;
   notesOnly: boolean;
+  derivedOnly: boolean;
 };
 
 const DateFlagSchema = z.iso.date();
@@ -75,6 +77,7 @@ export function getConfig(): Config {
       since: { type: "string" },
       until: { type: "string" },
       "notes-only": { type: "boolean", default: false },
+      "derived-only": { type: "boolean", default: false },
       "skip-amazon": { type: "boolean", default: false },
       "amazon-years": { type: "string" },
       "force-scrape": { type: "boolean", default: false },
@@ -93,6 +96,7 @@ export function getConfig(): Config {
       "skip-costco": { type: "boolean", default: false },
       "skip-paystub": { type: "boolean", default: false },
       "skip-equity": { type: "boolean", default: false },
+      "skip-loan": { type: "boolean", default: false },
       "skip-research": { type: "boolean", default: false },
       output: { type: "string" },
       "checkpoint-file": { type: "string" },
@@ -107,8 +111,9 @@ export function getConfig(): Config {
   // it makes no model call and needs no model credential. Demanding one would
   // make the cheapest mode the hardest to run.
   const notesOnly = values["notes-only"];
+  const derivedOnly = values["derived-only"];
   const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"] ?? "";
-  if (openRouterApiKey === "" && !notesOnly) {
+  if (openRouterApiKey === "" && !notesOnly && !derivedOnly) {
     throw new Error("OPENROUTER_API_KEY environment variable is required");
   }
 
@@ -145,6 +150,7 @@ export function getConfig(): Config {
     skipCostco: values["skip-costco"],
     skipPaystub: values["skip-paystub"],
     skipEquity: values["skip-equity"],
+    skipLoan: values["skip-loan"],
     skipResearch: values["skip-research"],
     output: values.output,
     checkpointFile: resolveCheckpointFile(
@@ -156,6 +162,7 @@ export function getConfig(): Config {
     suggest: values.suggest,
     ...resolveDateRange(values.since, values.until, new Date()),
     notesOnly,
+    derivedOnly,
   };
 }
 

@@ -135,6 +135,36 @@ async function runNotesOnly(
   );
 }
 
+// Applies only what a vendor derived from a source document, and the notes.
+// No tier runs, so no model is called and no existing categorization is
+// re-litigated — the cheap, repeatable way to keep splits current.
+async function runDerivedOnly(
+  enriched: EnrichedTransaction[],
+  derived: ProposedChange[],
+  categories: MonarchCategory[],
+  apply: boolean,
+): Promise<void> {
+  const { changes: guarded, demoted } = guardCrossGroupChanges(
+    derived,
+    categories,
+  );
+  displayChanges(guarded);
+  if (demoted > 0) {
+    log.warn(
+      `${String(demoted)} derived changes were demoted to review flags because their legs cross category groups`,
+    );
+  }
+  if (!apply) {
+    log.info(
+      `Derived-only dry run: ${String(guarded.length)} changes would be applied (pass --apply)`,
+    );
+    await writeEnrichmentNotes(enriched, true);
+    return;
+  }
+  await applyChanges(guarded, false);
+  await writeEnrichmentNotes(enriched);
+}
+
 async function main(): Promise<void> {
   const config = getConfig();
 
@@ -180,7 +210,7 @@ async function main(): Promise<void> {
   const separated = separateDeepPaths(transactions);
 
   log.info(
-    `${String(separated.regularTransactions.length)} regular, ${String(separated.amazonTransactions.length)} Amazon, ${String(separated.venmoTransactions.length)} Venmo, ${String(separated.biltTransactions.length)} Bilt, ${String(separated.usaaTransactions.length)} USAA, ${String(separated.sclTransactions.length)} SCL, ${String(separated.appleTransactions.length)} Apple, ${String(separated.costcoTransactions.length)} Costco, ${String(separated.paystubTransactions.length)} payroll, ${String(separated.equityTransactions.length)} equity`,
+    `${String(separated.regularTransactions.length)} regular, ${String(separated.amazonTransactions.length)} Amazon, ${String(separated.venmoTransactions.length)} Venmo, ${String(separated.biltTransactions.length)} Bilt, ${String(separated.usaaTransactions.length)} USAA, ${String(separated.sclTransactions.length)} SCL, ${String(separated.appleTransactions.length)} Apple, ${String(separated.costcoTransactions.length)} Costco, ${String(separated.paystubTransactions.length)} payroll, ${String(separated.equityTransactions.length)} equity, ${String(separated.loanTransactions.length)} loan`,
   );
 
   // === Phase 1: Enrichment ===
@@ -189,12 +219,22 @@ async function main(): Promise<void> {
     enrichedTransactions,
     stats: enrichmentStats,
     changes: derivedChanges,
-  } = await runEnrichmentPipeline(config, separated, knowledgeBase);
+  } = await runEnrichmentPipeline(config, separated, knowledgeBase, categories);
 
   displayEnrichmentStats(enrichmentStats, alreadySplitCounts(separated));
 
   if (config.notesOnly) {
     await runNotesOnly(enrichedTransactions, config.apply);
+    return;
+  }
+
+  if (config.derivedOnly) {
+    await runDerivedOnly(
+      enrichedTransactions,
+      derivedChanges,
+      categories,
+      config.apply,
+    );
     return;
   }
 

@@ -114,10 +114,20 @@ function vestNote(e: TransactionEnrichment): string | undefined {
   );
 }
 
+function loanNote(e: TransactionEnrichment): string | undefined {
+  const l = e.loan;
+  if (l === undefined) return undefined;
+  return (
+    `${NOTE_PREFIX}Loan ${l.loanId}: ${money(l.principal)} principal + ` +
+    `${money(l.interest)} interest; ${money(l.balanceAfter)} still owed`
+  );
+}
+
 export function buildEnrichmentNote(
   enrichment: TransactionEnrichment,
 ): string | undefined {
   return (
+    loanNote(enrichment) ??
     paystubNote(enrichment) ??
     vestNote(enrichment) ??
     itemsNote(enrichment) ??
