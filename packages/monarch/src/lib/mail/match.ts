@@ -58,9 +58,13 @@ ${categoryLines}
 Decide whether one candidate email documents THIS transaction (same purchase,
 same amount or clearly the same order). If none do, matchedIndex must be null.
 When matched:
-- note: one short line describing what was bought (items/service, no
-  marketing text), suitable as a transaction note. Null if the email adds
-  nothing beyond the merchant name.
+- note: one short line naming what the money actually bought — the restaurant
+  or shop the order came from, the items, the service, the subscription plan,
+  the billing period. Anything the email names that the bank line does not
+  belongs here; "DoorDash order from MOTO Pizza" is a note, "DoorDash order"
+  is not. No marketing text. Use null only when the email genuinely carries
+  nothing the merchant name already said, such as a bare charge alert with no
+  order details.
 - suggestedCategoryId: the best category id for this transaction given the
   email contents, or null if the current category is already correct.
 Never suggest a category whose group differs from the current category's

@@ -133,8 +133,18 @@ for (const item of withCandidates) {
   // *match* stays valid — the email it matched is still in the shortlist, which
   // only grew. A past "no match" is exactly the verdict a better shortlist
   // should overturn, so those are re-judged.
+  //
+  // A match that produced no note is re-judged too. It documents nothing, so
+  // reusing it costs a transaction its note forever — and it is precisely what
+  // a changed note instruction is meant to revisit. Keeping it would make the
+  // legacy entry pin the verdict, which is the staleness the fingerprinted key
+  // exists to prevent.
   const legacy = checkpoint[`${item.transaction.id}:${values.model}`];
-  if (legacy !== undefined && legacy.matchedIndex !== null) {
+  if (
+    legacy !== undefined &&
+    legacy.matchedIndex !== null &&
+    (legacy.note ?? "") !== ""
+  ) {
     results.set(item.transaction.id, legacy);
     checkpoint[checkpointKey(item)] = legacy;
     reusedLegacy++;
