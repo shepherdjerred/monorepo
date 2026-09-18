@@ -48,6 +48,10 @@ const { values } = parseArgs({
     model: { type: "string", default: "gpt-5.6-luna" },
     concurrency: { type: "string", default: "3" },
     "candidates-only": { type: "boolean", default: false },
+    // A note is additive: it documents a transaction and displaces nothing.
+    // A recategorization overwrites a decision that may have been made
+    // deliberately, so the two are separately appliable.
+    "notes-only": { type: "boolean", default: false },
   },
   strict: true,
 });
@@ -258,8 +262,11 @@ for (const m of noteWrites.slice(0, 10)) {
     `    ${m.item.transaction.date} ${m.item.transaction.merchant.name}: ${(m.result.note ?? "").slice(0, 90)}`,
   );
 }
-console.log("\n  Sample category changes:");
-for (const c of guardedChanges.slice(0, 10)) {
+// Every category change is listed, not a sample. A note is additive and
+// reversible by eye; a recategorization overwrites a decision that may have
+// been made deliberately, so all of them are worth reading before --apply.
+console.log("\n  Category changes:");
+for (const c of guardedChanges) {
   console.log(
     `    ${c.transactionDate} $${String(c.amount)} ${c.merchantName}: ${c.currentCategory} -> ${c.proposedCategory} [${c.type}]`,
   );
@@ -267,6 +274,7 @@ for (const c of guardedChanges.slice(0, 10)) {
 
 if (!values.apply) {
   console.log("\nDry run. Pass --apply to write notes and category changes.");
+  console.log("Pass --apply --notes-only to write only the notes.");
   process.exit(0);
 }
 
@@ -282,6 +290,13 @@ for (const m of noteWrites) {
     log.progress(notesWritten, noteWrites.length, "notes written");
   }
 }
+if (values["notes-only"]) {
+  console.log(
+    `Done. ${String(notesWritten)} notes written; ${String(guardedChanges.length)} category changes held back (--notes-only).`,
+  );
+  process.exit(0);
+}
+
 await applyChanges(guardedChanges, false);
 console.log(
   `Done. ${String(notesWritten)} notes written, ${String(guardedChanges.length)} category changes/flags applied.`,
