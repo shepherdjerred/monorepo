@@ -103,8 +103,11 @@ const PRICE = /\$(\d+(?:,\d{3})*\.\d{2})/g;
 // and matchAll would then inherit the advanced position.
 const FIRST_PRICE = /\$\d+(?:,\d{3})*\.\d{2}/;
 // A title runs until the first of these: everything after is receipt
-// furniture, not the name of what was bought.
-const TITLE_END = /\s+(?:Renews\b|In-App Purchase\b|Report a Problem\b)/i;
+// furniture, not the name of what was bought. "… App Jerred's MacBook Pro"
+// names the device the purchase was made on, which is not part of the item.
+// "App Store" is the section label, not that marker, so it is excluded.
+const TITLE_END =
+  /\s+(?:Renews\b|In-App Purchase\b|Report a Problem\b|(?:iOS\s+)?App\s+(?!Store\b)\S)/i;
 const SECTION_LABEL = /^(?:App|Mac App|iTunes|Apple|Book)\s*Store\s+/i;
 const SUBSCRIPTION = /\bRenews\b|\((?:Monthly|Yearly|Annual)\)/i;
 

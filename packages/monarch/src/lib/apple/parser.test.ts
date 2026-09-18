@@ -130,6 +130,20 @@ describe("parseAppleReceipt", () => {
     ]);
   });
 
+  test("stops the title before the device the purchase was made on", () => {
+    const appPurchase =
+      "Receipt APPLE ACCOUNT apple@example.com DATE Mar 20, 2026 " +
+      "ORDER ID MSSX11AAAA DOCUMENT NO. 1234 " +
+      "Dark Reader for Safari Dark Reader Ltd App Jerred\u{2019}s MacBook Pro " +
+      "Report a Problem $4.99 Subtotal $4.99 Tax $0.53 TOTAL $5.52 " +
+      "Get help with subscriptions. Apple Account \u{2022} Terms of Sale";
+    const receipt = parseAppleReceipt(appPurchase);
+    expect(receipt?.items[0]?.title).toBe(
+      "Dark Reader for Safari Dark Reader Ltd",
+    );
+    expect(receipt?.total).toBe(5.52);
+  });
+
   test("rejects mail that carries no order id", () => {
     expect(parseAppleReceipt("Your receipt from Apple. Thanks!")).toBeNull();
   });
