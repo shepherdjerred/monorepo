@@ -14,10 +14,13 @@ import { QueueTypeSchema, type QueueType } from "#src/model/core/state.ts";
  * Nothing infers this at runtime, and nothing may: an empty result is
  * indistinguishable from "nobody tracked has played it yet". That ambiguity
  * cuts both ways — it is why a user can spend hours on a competition that
- * could never fill, and why a quiet queue must never be marked `never` on the
- * strength of a miss. Only direct evidence that Riot publishes nothing counts.
- * The fact is declared with that evidence, and `Record<QueueType, …>` makes a
- * newly added queue a compile error rather than a silent `available`.
+ * could never fill, and why a quiet queue must never be marked `never` just
+ * for being quiet. The test that settles it is pre-match games observed
+ * against finished matches received: a queue Scout repeatedly watches start
+ * and never sees end is withholding results, and a queue with neither is
+ * merely unplayed. Each entry below records that count, and
+ * `Record<QueueType, …>` makes a newly added queue a compile error rather
+ * than a silent `available`.
  *
  * When a queue moves — Riot starts publishing results for a mode, or stops —
  * change it here and cite what you checked.
@@ -48,24 +51,25 @@ export const QUEUE_POST_MATCH_DATA: Record<QueueType, QueuePostMatchData> = {
    */
   classic: "never",
   /**
-   * Classic ARAM Mayhem publishes results despite sharing a name with League
-   * Classic and running on the same Classic asset pipeline: a real prod
-   * Match-V5 payload for queue 2450 is captured at
-   * `postmatch/testdata/match-classic-aram-mayhem-s3.json` (from
+   * Classic ARAM Mayhem publishes results, despite sitting between the two
+   * queues above that do not and sharing a name with both: 20 finished matches
+   * in prod and 4 in beta, plus a captured prod Match-V5 payload for queue
+   * 2450 at `postmatch/testdata/match-classic-aram-mayhem-s3.json` (from
    * `games/2026/07/29/BR1_3267199656/match.json`) with ten participants and
-   * full per-player stats.
+   * full per-player stats. Three confusable names, and the middle one is the
+   * exception — check the queue value, never the word "mayhem" or "classic".
    */
   "classic aram mayhem": "available",
   brawl: "available",
   /**
-   * ARAM: Mayhem (queues 2400/3200/3220/3270) publishes results like any other
-   * event mode. The marketing showcase records its post-match scan as a miss,
-   * but that scan is bounded — one tracked player over a limited window — so it
-   * shows that nobody tracked happened to play it, not that Riot withholds the
-   * payload. Do not promote that miss into a capability claim: `classic` below
-   * is the only queue here with direct prod verification.
+   * ARAM: Mayhem (queues 2400/3200/3220/3270). Scout watches these games start
+   * and never learns how they ended: measured against both report lakes, beta
+   * holds 964 pre-match observations of queue 2400 and 0 finished matches,
+   * and prod holds 16 (queues 3200 and 3220) and 0 finished matches. Nine
+   * hundred-odd coin flips do not all land the same way by chance — Riot
+   * publishes no Match-V5 payload for this queue.
    */
-  "aram mayhem": "available",
+  "aram mayhem": "never",
   normal: "available",
   "draft pick": "available",
   "easy doom bots": "available",

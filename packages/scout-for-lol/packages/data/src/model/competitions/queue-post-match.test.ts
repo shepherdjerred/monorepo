@@ -14,26 +14,25 @@ describe("QUEUE_POST_MATCH_DATA", () => {
     }
   });
 
-  test("League Classic is the only pre-match-only queue", () => {
-    // One entry, because one queue has direct evidence that Riot publishes
-    // nothing. Adding a queue here on the strength of "we have not seen one"
-    // tells users a mode cannot be scored when it simply has not been played.
-    expect(queuesWithoutPostMatchData()).toEqual(["classic"]);
+  test("the pre-match-only queues are the two the lakes prove", () => {
+    // Each earned its place by being watched starting and never seen ending:
+    // ARAM Mayhem at 964 pre-match observations and 0 finished matches in
+    // beta, League Classic at 0 post-match objects against 1,078 in prod.
+    expect(queuesWithoutPostMatchData()).toEqual(["aram mayhem", "classic"]);
   });
 
-  test("neither Mayhem queue is treated as pre-match-only", () => {
-    // Three confusable names, one of which is genuinely pre-match-only. Queue
-    // 2450 has a captured prod Match-V5 payload and 2400/3200/3220/3270 behave
-    // like any other event mode; only League Classic itself is the exception.
-    expect(queueHasPostMatchData("aram mayhem")).toBe(true);
+  test("Classic ARAM Mayhem is the exception between the two that are not", () => {
+    // Three confusable names and the middle one behaves oppositely: queue 2450
+    // produced 20 finished matches in prod. Matching on the word "mayhem" or
+    // "classic" instead of the queue value gets this backwards.
     expect(queueHasPostMatchData("classic aram mayhem")).toBe(true);
+    expect(queueHasPostMatchData("aram mayhem")).toBe(false);
     expect(queueHasPostMatchData("classic")).toBe(false);
   });
 
-  test("notes only the queue that cannot be scored", () => {
+  test("notes only the queues that cannot be scored", () => {
     expect(queuePostMatchNote("classic")).toContain("Pre-match only");
-    expect(queuePostMatchNote("classic")).toContain("cannot be scored");
-    expect(queuePostMatchNote("aram mayhem")).toBeUndefined();
+    expect(queuePostMatchNote("aram mayhem")).toContain("cannot be scored");
     expect(queuePostMatchNote("classic aram mayhem")).toBeUndefined();
     expect(queuePostMatchNote("aram")).toBeUndefined();
     expect(queuePostMatchNote("solo")).toBeUndefined();

@@ -62,8 +62,8 @@
       "rationale": "A report can rank players by losses even though a competition cannot. The honest answer redirects inside Scout rather than off it."
     },
     {
-      "id": "league-classic-results",
-      "question": "show me every league classic match and who won",
+      "id": "aram-mayhem-results",
+      "question": "show me every aram mayhem match and who won",
       "creationEnabled": true,
       "mustMentionAnyOf": [
         [
@@ -76,10 +76,10 @@
           "cannot be scored",
           "never receives"
         ],
-        ["classic"]
+        ["mayhem"]
       ],
       "mustNotMention": [],
-      "rationale": "Riot publishes no finished-match data for League Classic, so the answer is a capability limit, not an empty history a different date range would fill."
+      "rationale": "Riot publishes no finished-match data for ARAM Mayhem: beta watched 964 of them start and received no result for any. The answer is a capability limit, not an empty history a different date range would fill."
     },
     {
       "id": "competition-creation-disabled",

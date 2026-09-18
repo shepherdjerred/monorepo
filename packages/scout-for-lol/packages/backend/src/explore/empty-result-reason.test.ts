@@ -66,11 +66,12 @@ describe("emptyResultReason", () => {
     ).toBeNull();
   });
 
-  test("treats both Mayhem queues as ordinary, scorable modes", () => {
-    // Three confusable names; only League Classic itself withholds results.
-    // Marking a quiet event mode impossible would tell users a mode cannot be
-    // scored when nobody tracked has simply played it yet.
-    expect(reasonFor(`${COUNT_GAMES} WHERE queue = 'aram mayhem'`)).toBeNull();
+  test("explains ARAM Mayhem but not its Classic namesake", () => {
+    // Three confusable names, and the middle one is the exception: queue 2450
+    // produces finished matches while 2400/3200/3220/3270 never do.
+    expect(reasonFor(`${COUNT_GAMES} WHERE queue = 'aram mayhem'`)).toContain(
+      "can never return rows",
+    );
     expect(
       reasonFor(`${COUNT_GAMES} WHERE queue = 'classic aram mayhem'`),
     ).toBeNull();

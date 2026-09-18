@@ -60,11 +60,11 @@ describe("competition queue notes", () => {
     expect(markup.split("Pre-match only")).toHaveLength(2);
   });
 
-  test("annotates nothing in the modern queue list", () => {
-    // Every modern queue publishes results, ARAM Mayhem included. A warning
-    // here would tell users a live mode cannot be scored when it can.
+  test("warns on ARAM Mayhem in the modern queue list", () => {
+    // Live, popular and unscorable: beta watched 964 of these start and
+    // received no result for any of them.
     const markup = renderQueues("MODERN");
     expect(markup).toContain("<span>ARAM Mayhem</span>");
-    expect(markup).not.toContain("Pre-match only");
+    expect(markup.split("Pre-match only")).toHaveLength(2);
   });
 });
