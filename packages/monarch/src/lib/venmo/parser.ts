@@ -2,6 +2,7 @@ import { z } from "zod";
 import path from "node:path";
 import { homedir } from "node:os";
 import { log } from "../logger.ts";
+import { parseCsvRow } from "../csv/rows.ts";
 import type { VenmoTransaction } from "./types.ts";
 
 const CACHE_DIR = path.join(homedir(), ".monarch-cache");
@@ -20,32 +21,6 @@ const VenmoTransactionSchema = z.object({
   tax: z.number(),
   fee: z.number(),
 });
-
-function parseCSVRow(line: string): string[] {
-  const fields: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (const char of line) {
-    if (inQuotes) {
-      if (char === '"') {
-        inQuotes = false;
-      } else {
-        current += char;
-      }
-    } else if (char === '"') {
-      inQuotes = true;
-    } else if (char === ",") {
-      fields.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  fields.push(current.trim());
-  return fields;
-}
 
 function parseAmount(raw: string): number {
   const cleaned = raw
@@ -78,7 +53,7 @@ export async function parseVenmoCSV(
   const transactions: VenmoTransaction[] = [];
 
   for (const line of dataLines) {
-    const fields = parseCSVRow(line);
+    const fields = parseCsvRow(line);
     // Fields: [empty, ID, Datetime, Type, Status, Note, From, To, Amount, Tip, Tax, Fee, ...]
     const type = fields[3] ?? "";
     if (type !== "Payment") continue;

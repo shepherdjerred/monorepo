@@ -175,7 +175,7 @@ async function main(): Promise<void> {
   const separated = separateDeepPaths(transactions);
 
   log.info(
-    `${String(separated.regularTransactions.length)} regular, ${String(separated.amazonTransactions.length)} Amazon, ${String(separated.venmoTransactions.length)} Venmo, ${String(separated.biltTransactions.length)} Bilt, ${String(separated.usaaTransactions.length)} USAA, ${String(separated.sclTransactions.length)} SCL, ${String(separated.appleTransactions.length)} Apple, ${String(separated.costcoTransactions.length)} Costco`,
+    `${String(separated.regularTransactions.length)} regular, ${String(separated.amazonTransactions.length)} Amazon, ${String(separated.venmoTransactions.length)} Venmo, ${String(separated.biltTransactions.length)} Bilt, ${String(separated.usaaTransactions.length)} USAA, ${String(separated.sclTransactions.length)} SCL, ${String(separated.appleTransactions.length)} Apple, ${String(separated.costcoTransactions.length)} Costco, ${String(separated.paystubTransactions.length)} payroll, ${String(separated.equityTransactions.length)} equity`,
   );
 
   // === Phase 1: Enrichment ===

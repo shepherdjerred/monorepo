@@ -10,6 +10,8 @@ import { enrichUsaa } from "../usaa/enrich.ts";
 import { enrichScl } from "../scl/enrich.ts";
 import { enrichApple } from "../apple/enrich.ts";
 import { enrichCostco } from "../costco/enrich.ts";
+import { enrichPaystub } from "../paystub/enrich.ts";
+import { enrichEquity } from "../equity/enrich.ts";
 import { assignTier } from "./router.ts";
 import { log } from "../logger.ts";
 
@@ -21,6 +23,8 @@ export type EnrichmentStats = {
   scl: { matched: number; total: number };
   apple: { matched: number; total: number };
   costco: { matched: number; total: number };
+  paystub: { matched: number; total: number };
+  equity: { matched: number; total: number };
   tier1Count: number;
   tier2Count: number;
   tier3Count: number;
@@ -32,7 +36,15 @@ export type EnrichmentResult = {
 };
 
 type DeepPathKey =
-  "amazon" | "venmo" | "bilt" | "usaa" | "scl" | "apple" | "costco";
+  | "amazon"
+  | "venmo"
+  | "bilt"
+  | "usaa"
+  | "scl"
+  | "apple"
+  | "costco"
+  | "paystub"
+  | "equity";
 
 type EnrichResult = {
   enrichments: Map<string, TransactionEnrichment>;
@@ -51,64 +63,99 @@ async function enrichWithKey(
   return { ...r, key };
 }
 
-async function runDeepPathEnrichments(
+// Each vendor declares when it can run and how. A table keeps adding a
+// source to one entry instead of another branch in a growing if-chain.
+type DeepPathSpec = {
+  key: DeepPathKey;
+  transactions: MonarchTransaction[];
+  skipped: boolean;
+  // Some sources need an input path that may be absent.
+  ready?: boolean;
+  run: () => Promise<{
+    enrichments: Map<string, TransactionEnrichment>;
+    matchRate: { matched: number; total: number };
+  }>;
+};
+
+function deepPathSpecs(
   config: Config,
   separated: SeparateDeepPathsResult,
-): Promise<EnrichResult[]> {
-  const tasks: Promise<EnrichResult>[] = [];
-
-  if (!config.skipAmazon && separated.amazonTransactions.length > 0) {
-    tasks.push(
-      enrichWithKey(
+): DeepPathSpec[] {
+  return [
+    {
+      key: "amazon",
+      transactions: separated.amazonTransactions,
+      skipped: config.skipAmazon,
+      run: () =>
         enrichAmazon(
           config.amazonYears,
           config.forceScrape,
           separated.amazonTransactions,
         ),
-        "amazon",
-      ),
-    );
-  }
+    },
+    {
+      key: "venmo",
+      transactions: separated.venmoTransactions,
+      skipped: config.skipVenmo,
+      ready: config.venmoCsv !== undefined,
+      run: () => enrichVenmo(config, separated.venmoTransactions),
+    },
+    {
+      key: "bilt",
+      transactions: separated.biltTransactions,
+      skipped: config.skipBilt,
+      run: () => enrichBilt(separated.biltTransactions),
+    },
+    {
+      key: "usaa",
+      transactions: separated.usaaTransactions,
+      skipped: config.skipUsaa,
+      run: () => enrichUsaa(separated.usaaTransactions),
+    },
+    {
+      key: "scl",
+      transactions: separated.sclTransactions,
+      skipped: config.skipScl,
+      ready: config.sclCsv !== undefined,
+      run: () => enrichScl(config.sclCsv ?? "", separated.sclTransactions),
+    },
+    {
+      key: "apple",
+      transactions: separated.appleTransactions,
+      skipped: config.skipApple,
+      run: () => enrichApple(separated.appleTransactions),
+    },
+    {
+      key: "paystub",
+      transactions: separated.paystubTransactions,
+      skipped: config.skipPaystub,
+      run: () => enrichPaystub(separated.paystubTransactions),
+    },
+    {
+      key: "costco",
+      transactions: separated.costcoTransactions,
+      skipped: config.skipCostco,
+      run: () => enrichCostco(separated.costcoTransactions),
+    },
+    {
+      key: "equity",
+      transactions: separated.equityTransactions,
+      skipped: config.skipEquity,
+      run: () => enrichEquity(separated.equityTransactions),
+    },
+  ];
+}
 
-  if (
-    !config.skipVenmo &&
-    config.venmoCsv !== undefined &&
-    separated.venmoTransactions.length > 0
-  ) {
-    tasks.push(
-      enrichWithKey(enrichVenmo(config, separated.venmoTransactions), "venmo"),
-    );
-  }
-
-  if (!config.skipBilt && separated.biltTransactions.length > 0) {
-    tasks.push(enrichWithKey(enrichBilt(separated.biltTransactions), "bilt"));
-  }
-
-  if (!config.skipUsaa && separated.usaaTransactions.length > 0) {
-    tasks.push(enrichWithKey(enrichUsaa(separated.usaaTransactions), "usaa"));
-  }
-
-  if (
-    !config.skipScl &&
-    config.sclCsv !== undefined &&
-    separated.sclTransactions.length > 0
-  ) {
-    tasks.push(
-      enrichWithKey(enrichScl(config.sclCsv, separated.sclTransactions), "scl"),
-    );
-  }
-
-  if (!config.skipApple && separated.appleTransactions.length > 0) {
-    tasks.push(
-      enrichWithKey(enrichApple(separated.appleTransactions), "apple"),
-    );
-  }
-
-  if (!config.skipCostco && separated.costcoTransactions.length > 0) {
-    tasks.push(
-      enrichWithKey(enrichCostco(separated.costcoTransactions), "costco"),
-    );
-  }
+async function runDeepPathEnrichments(
+  config: Config,
+  separated: SeparateDeepPathsResult,
+): Promise<EnrichResult[]> {
+  const tasks = deepPathSpecs(config, separated)
+    .filter(
+      (spec) =>
+        !spec.skipped && spec.transactions.length > 0 && (spec.ready ?? true),
+    )
+    .map((spec) => enrichWithKey(spec.run(), spec.key));
 
   return Promise.all(tasks);
 }
@@ -128,6 +175,8 @@ function buildEnrichedList(
     ["scl", separated.sclTransactions],
     ["apple", separated.appleTransactions],
     ["costco", separated.costcoTransactions],
+    ["paystub", separated.paystubTransactions],
+    ["equity", separated.equityTransactions],
   ];
 
   for (const [deepPath, transactions] of deepPathMap) {
@@ -170,6 +219,8 @@ export async function runEnrichmentPipeline(
     scl: { matched: 0, total: 0 },
     apple: { matched: 0, total: 0 },
     costco: { matched: 0, total: 0 },
+    paystub: { matched: 0, total: 0 },
+    equity: { matched: 0, total: 0 },
     tier1Count: 0,
     tier2Count: 0,
     tier3Count: 0,

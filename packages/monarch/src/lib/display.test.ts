@@ -10,6 +10,8 @@ const defaultStats: EnrichmentStats = {
   scl: { matched: 0, total: 0 },
   apple: { matched: 0, total: 0 },
   costco: { matched: 0, total: 0 },
+  paystub: { matched: 0, total: 0 },
+  equity: { matched: 0, total: 0 },
   tier1Count: 0,
   tier2Count: 0,
   tier3Count: 0,

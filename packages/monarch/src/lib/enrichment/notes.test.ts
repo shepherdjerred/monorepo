@@ -7,6 +7,71 @@ import {
 import type { EnrichedTransaction } from "./types.ts";
 
 describe("buildEnrichmentNote", () => {
+  test("summarises an RSU vest, thousands separated", () => {
+    const note = buildEnrichmentNote({
+      vest: {
+        vestDate: "2026-06-20",
+        symbol: "PINS",
+        awardCount: 3,
+        shares: 2519,
+        fairMarketValue: 20.27,
+        grossValue: 51_060.13,
+        sharesWithheld: 1147,
+        netShares: 1372,
+        taxes: 23_249.69,
+      },
+      enrichmentSource: "equity",
+    });
+    expect(note).toBe(
+      `${NOTE_PREFIX}RSU vest 2026-06-20: 3 awards, 2,519 sh @ $20.27 = ` +
+        `$51,060.13 gross; 1,147 sh withheld for taxes ($23,249.69); ` +
+        `1,372 net shares`,
+    );
+  });
+
+  test("says award, not awards, for a single grant", () => {
+    const note = buildEnrichmentNote({
+      vest: {
+        vestDate: "2025-03-20",
+        symbol: "PINS",
+        awardCount: 1,
+        shares: 1077,
+        fairMarketValue: 31.42,
+        grossValue: 33_839.34,
+        sharesWithheld: 327,
+        netShares: 750,
+        taxes: 10_274.34,
+      },
+      enrichmentSource: "equity",
+    });
+    expect(note).toContain("1 award, 1,077 sh");
+  });
+
+  test("a paystub note names the unusual earnings and skips routine salary", () => {
+    const note = buildEnrichmentNote({
+      payslip: {
+        periodStart: "2026-09-01",
+        periodEnd: "2026-09-15",
+        grossPay: 12_345.67,
+        netPay: 6122.11,
+        employeeTaxes: 3456.78,
+        preTaxDeductions: 1200,
+        earnings: [
+          { label: "Regular Salary Pay", amount: 8000 },
+          { label: "Sign on Bonus", amount: 4345.67 },
+        ],
+        taxes: [],
+        deductions: [],
+        grossChangePercent: 8.1,
+      },
+      enrichmentSource: "paystub",
+    });
+    expect(note).toContain("gross $12,345.67 -> net $6,122.11");
+    expect(note).toContain("incl. Sign on Bonus $4,345.67");
+    expect(note).not.toContain("Regular Salary");
+    expect(note).toContain("gross +8.1% vs prior");
+  });
+
   test("formats Amazon items", () => {
     const note = buildEnrichmentNote({
       items: [
@@ -36,7 +101,7 @@ describe("buildEnrichmentNote", () => {
       ],
       enrichmentSource: "bilt",
     });
-    expect(note).toBe(`${NOTE_PREFIX}Bilt bill: Rent $4000.00; Water $55.50`);
+    expect(note).toBe(`${NOTE_PREFIX}Bilt bill: Rent $4,000.00; Water $55.50`);
   });
 
   test("formats USAA insurance lines", () => {

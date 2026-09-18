@@ -7,7 +7,10 @@ import { log } from "../logger.ts";
 export const NOTE_PREFIX = "🧾 ";
 
 function money(amount: number): string {
-  return `$${Math.abs(amount).toFixed(2)}`;
+  return `$${Math.abs(amount).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function itemsNote(e: TransactionEnrichment): string | undefined {
@@ -63,10 +66,60 @@ function venmoNote(e: TransactionEnrichment): string | undefined {
   return `${NOTE_PREFIX}Venmo ${direction} ${e.paymentCounterparty ?? "unknown"}: "${e.paymentNote}"`;
 }
 
+// Every paycheck carries base salary and a few dollars of imputed group-term
+// life; naming those on all of them says nothing. The note calls out what
+// makes a period unusual — a bonus, a stipend, an equity release.
+const ROUTINE_EARNING = /^(?:regular salary|gtl\b)/i;
+
+function notableEarnings(
+  earnings: { label: string; amount: number }[],
+): string[] {
+  return earnings
+    .filter((line) => !ROUTINE_EARNING.test(line.label) && line.amount > 0)
+    .map((line) => `${line.label} ${money(line.amount)}`);
+}
+
+function paystubNote(e: TransactionEnrichment): string | undefined {
+  const p = e.payslip;
+  if (p === undefined) return undefined;
+  const notable = notableEarnings(p.earnings);
+  const parts = [
+    `gross ${money(p.grossPay)} -> net ${money(p.netPay)}`,
+    `taxes ${money(p.employeeTaxes)}`,
+  ];
+  if (p.preTaxDeductions > 0)
+    parts.push(`pre-tax ${money(p.preTaxDeductions)}`);
+  if (notable.length > 0) parts.push(`incl. ${notable.join(", ")}`);
+  if (p.grossChangePercent !== undefined) {
+    parts.push(
+      `gross ${p.grossChangePercent > 0 ? "+" : ""}${p.grossChangePercent.toFixed(1)}% vs prior`,
+    );
+  }
+  return `${NOTE_PREFIX}Paystub ${p.periodStart}..${p.periodEnd}: ${parts.join("; ")}`;
+}
+
+function shares(count: number): string {
+  return count.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function vestNote(e: TransactionEnrichment): string | undefined {
+  const v = e.vest;
+  if (v === undefined) return undefined;
+  const awards = `${String(v.awardCount)} award${v.awardCount === 1 ? "" : "s"}`;
+  return (
+    `${NOTE_PREFIX}RSU vest ${v.vestDate}: ${awards}, ${shares(v.shares)} sh ` +
+    `@ ${money(v.fairMarketValue)} = ${money(v.grossValue)} gross; ` +
+    `${shares(v.sharesWithheld)} sh withheld for taxes (${money(v.taxes)}); ` +
+    `${shares(v.netShares)} net shares`
+  );
+}
+
 export function buildEnrichmentNote(
   enrichment: TransactionEnrichment,
 ): string | undefined {
   return (
+    paystubNote(enrichment) ??
+    vestNote(enrichment) ??
     itemsNote(enrichment) ??
     billNote(enrichment) ??
     insuranceNote(enrichment) ??

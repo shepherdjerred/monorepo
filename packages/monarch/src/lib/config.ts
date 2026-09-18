@@ -24,6 +24,8 @@ export type Config = {
   skipScl: boolean;
   skipApple: boolean;
   skipCostco: boolean;
+  skipPaystub: boolean;
+  skipEquity: boolean;
   skipResearch: boolean;
   output: string | undefined;
   checkpointFile: string | undefined;
@@ -89,6 +91,8 @@ export function getConfig(): Config {
       "skip-scl": { type: "boolean", default: false },
       "skip-apple": { type: "boolean", default: false },
       "skip-costco": { type: "boolean", default: false },
+      "skip-paystub": { type: "boolean", default: false },
+      "skip-equity": { type: "boolean", default: false },
       "skip-research": { type: "boolean", default: false },
       output: { type: "string" },
       "checkpoint-file": { type: "string" },
@@ -135,6 +139,8 @@ export function getConfig(): Config {
     skipScl: values["skip-scl"],
     skipApple: values["skip-apple"],
     skipCostco: values["skip-costco"],
+    skipPaystub: values["skip-paystub"],
+    skipEquity: values["skip-equity"],
     skipResearch: values["skip-research"],
     output: values.output,
     checkpointFile: resolveCheckpointFile(

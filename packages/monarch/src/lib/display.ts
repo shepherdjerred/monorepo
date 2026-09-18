@@ -54,6 +54,8 @@ export function displayEnrichmentStats(stats: EnrichmentStats): void {
     ["SCL", stats.scl],
     ["Apple", stats.apple],
     ["Costco", stats.costco],
+    ["Paystub", stats.paystub],
+    ["Equity", stats.equity],
   ];
 
   for (const [name, rate] of sources) {

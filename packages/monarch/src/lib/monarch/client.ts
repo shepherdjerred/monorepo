@@ -321,6 +321,34 @@ export function isAppleMerchant(name: string, plaidName: string): boolean {
   );
 }
 
+// Payroll deposits from the employer. The amount is part of the test: an
+// expense at the same merchant is not a paycheck.
+const PAYROLL_MERCHANT_PATTERNS = ["pinterest"];
+
+function isPayrollDeposit(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  if (amount <= 0) return false;
+  const lower = `${name} ${plaidName}`.toLowerCase();
+  if (lower.includes("class a")) return false; // brokerage, not payroll
+  return PAYROLL_MERCHANT_PATTERNS.some((p) => lower.includes(p));
+}
+
+// Restricted stock lapses in the equity brokerage account. They move no cash,
+// so a zero amount is part of the test — a sale of the same stock is not a
+// vest and this export cannot describe it.
+function isEquityVest(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  if (amount !== 0) return false;
+  const lower = `${name} ${plaidName}`.toLowerCase();
+  return lower.includes("class a") && lower.includes("pinterest");
+}
+
 const COSTCO_MERCHANT_PATTERNS = ["costco", "costco whse", "costco.com"];
 
 export function isCostcoMerchant(name: string, plaidName: string): boolean {
@@ -339,6 +367,8 @@ export type SeparateDeepPathsResult = {
   sclTransactions: MonarchTransaction[];
   appleTransactions: MonarchTransaction[];
   costcoTransactions: MonarchTransaction[];
+  paystubTransactions: MonarchTransaction[];
+  equityTransactions: MonarchTransaction[];
   regularTransactions: MonarchTransaction[];
 };
 
@@ -352,6 +382,8 @@ export function separateDeepPaths(
   const sclTransactions: MonarchTransaction[] = [];
   const appleTransactions: MonarchTransaction[] = [];
   const costcoTransactions: MonarchTransaction[] = [];
+  const paystubTransactions: MonarchTransaction[] = [];
+  const equityTransactions: MonarchTransaction[] = [];
   const regularTransactions: MonarchTransaction[] = [];
 
   for (const t of transactions) {
@@ -371,6 +403,10 @@ export function separateDeepPaths(
       appleTransactions.push(t);
     } else if (isCostcoMerchant(merchantName, t.plaidName)) {
       costcoTransactions.push(t);
+    } else if (isPayrollDeposit(merchantName, t.plaidName, t.amount)) {
+      paystubTransactions.push(t);
+    } else if (isEquityVest(merchantName, t.plaidName, t.amount)) {
+      equityTransactions.push(t);
     } else {
       regularTransactions.push(t);
     }
@@ -384,6 +420,8 @@ export function separateDeepPaths(
     sclTransactions,
     appleTransactions,
     costcoTransactions,
+    paystubTransactions,
+    equityTransactions,
     regularTransactions,
   };
 }

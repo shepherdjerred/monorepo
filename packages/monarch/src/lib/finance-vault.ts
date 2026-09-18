@@ -19,6 +19,9 @@ export const CONSERVICE_STATEMENTS_DIR = path.join(
 export const USAA_STATEMENTS_DIR = path.join(FINANCE_VAULT_DIR, "USAA");
 export const COSTCO_DIR = path.join(FINANCE_VAULT_DIR, "Costco");
 export const COSTCO_ORDERS_PATH = path.join(COSTCO_DIR, "costco-orders.json");
+export const PAYROLL_DIR = path.join(FINANCE_VAULT_DIR, "Payroll");
+export const PAYSLIPS_PATH = path.join(PAYROLL_DIR, "payslips.json");
+export const EQUITY_DIR = path.join(FINANCE_VAULT_DIR, "Equity");
 const VENMO_DIR = path.join(FINANCE_VAULT_DIR, "Venmo");
 const SCL_DIR = path.join(FINANCE_VAULT_DIR, "The Victor");
 
@@ -85,4 +88,9 @@ export function latestVenmoCsv(): string | undefined {
 
 export function latestSclCsv(): string | undefined {
   return latestVaultFile(SCL_DIR, "*Seattle_City_Light*.csv");
+}
+
+// Schwab names its Equity Award Center export with a YYYYMMDDHHMMSS suffix.
+export function latestEquityCsv(): string | undefined {
+  return latestVaultFile(EQUITY_DIR, "EquityAwardsCenter_Transactions_*.csv");
 }
