@@ -374,6 +374,18 @@ export function CompetitionCriteriaFields(props: {
           id="criteria-type-error"
           error={props.errors.criteriaType}
         />
+        {/*
+          Someone who came here to rank their friends by losses finds six
+          win-shaped options and no hint that Scout can measure what they
+          wanted at all. That dead end is what sent one person into a
+          three-hour Explore conversation, so the alternative is named where
+          the choice is made.
+        */}
+        <p className="text-xs text-scout-subtle">
+          These are the only scoring rules a competition has. To rank people by
+          losses, kills, deaths, KDA, damage or gold, use a scheduled report
+          instead.
+        </p>
       </div>
       {fields}
       <p className="text-xs text-scout-subtle">

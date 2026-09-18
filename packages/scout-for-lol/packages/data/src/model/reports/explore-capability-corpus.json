@@ -102,6 +102,27 @@
         "competitions do not exist"
       ],
       "rationale": "With creation off the honest answer is that preparing one is unavailable in this chat, never that the feature does not exist."
+    },
+    {
+      "id": "feature-request-goes-to-support",
+      "question": "can you add a most deaths competition type? that would be way funnier",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        ["discord.gg/qmrewyhxfe", "support discord", "support server"],
+        ["cannot", "can't", "can not", "does not", "doesn't", "no criterion"]
+      ],
+      "mustNotMention": [],
+      "rationale": "A request to build something is a feature request. Say no, then send it where feature requests are actually read, rather than leaving the user with nowhere to put it."
+    },
+    {
+      "id": "unanswerable-question-goes-to-support",
+      "question": "why did scout stop posting my match reports last week?",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        ["discord.gg/qmrewyhxfe", "support discord", "support server"]
+      ],
+      "mustNotMention": [],
+      "rationale": "Explore answers questions about match data, not about Scout's own delivery. A question it cannot answer from the corpus belongs in support, not in a guess."
     }
   ]
 }
