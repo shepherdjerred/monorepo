@@ -132,10 +132,11 @@ export const NotificationTerminalFailureReasonSchema = z.enum([
   "budget-exhausted",
   "target-not-found",
   /**
-   * The content this intent would deliver cannot be produced: the artifact
-   * its receipt attests to is missing or is not the bytes the receipt names.
-   * A fact about storage rather than about the target, and no retry reads a
-   * different object.
+   * The content this intent would deliver cannot be produced from what was
+   * attested: the artifact its receipt names is missing or is not the bytes
+   * the receipt names, or the receipt attests something this kind of
+   * notification cannot deliver at all. A fact about the persisted evidence
+   * rather than about the target, and no retry reads it differently.
    */
   "content-unavailable",
 ]);

@@ -19,15 +19,27 @@ import { saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
 
 const logger = createLogger("postmatch-match-report-image");
 
+/** The attachment name the report image travels under. */
+export function reportImageAttachmentName(matchId: MatchId): string {
+  return `${matchId}.png`;
+}
+
+/** The attachment name an AI review's image travels under. */
+export const AI_REVIEW_ATTACHMENT_NAME = "ai-review.png";
+
 /**
  * The message furniture for one report image: the attachment and the embed
  * that displays it.
+ *
+ * Exported for the V2 notification lane, whose delivery rebuilds the message
+ * around the bytes its render receipt attested and must attach them under
+ * exactly the name and embed v1 uses.
  */
-function attachReportImage(
+export function attachReportImage(
   image: Uint8Array,
   matchId: MatchId,
 ): [AttachmentBuilder, EmbedBuilder] {
-  const attachmentName = `${matchId}.png`;
+  const attachmentName = reportImageAttachmentName(matchId);
   const attachment = new AttachmentBuilder(Buffer.from(image)).setName(
     attachmentName,
   );
@@ -35,6 +47,13 @@ function attachReportImage(
     image: { url: `attachment://${attachmentName}` },
   });
   return [attachment, embed];
+}
+
+/** The AI review's image as v1 attaches it beside the report. */
+export function aiReviewAttachment(image: Uint8Array): AttachmentBuilder {
+  return new AttachmentBuilder(Buffer.from(image)).setName(
+    AI_REVIEW_ATTACHMENT_NAME,
+  );
 }
 
 /**

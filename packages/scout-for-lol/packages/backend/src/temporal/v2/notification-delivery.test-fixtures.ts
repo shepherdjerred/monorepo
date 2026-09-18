@@ -27,6 +27,8 @@ export function attemptRef(): ScoutIntentAttemptRefV2 {
 export function intentRecord(
   target: "channel" | "dm",
   kind: "postmatch" | "prematch" | "settlement" | "dare-summary" = "postmatch",
+  /** Overridden when a suite delivers one match's intent to two channels. */
+  channelId: string = CHANNEL_ID,
 ): unknown {
   return {
     matchId: "NA1_9301",
@@ -45,7 +47,7 @@ export function intentRecord(
         : {}),
       target:
         target === "channel"
-          ? { kind: "channel", channelId: CHANNEL_ID }
+          ? { kind: "channel", channelId }
           : { kind: "dm", accountId: ACCOUNT_ID },
     },
   };

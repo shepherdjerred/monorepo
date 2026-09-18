@@ -29,20 +29,13 @@ import {
   send,
 } from "#src/league/discord/channel.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
-import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
-import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
-import {
-  afterDareSummaryDeliveredV2,
-  buildDareSummaryNotificationMessageV2,
-} from "#src/temporal/v2/notification/dare-summary-notification.ts";
-import { readAttestedNotificationArtifactV2 } from "#src/temporal/v2/notification/notification-artifact.ts";
+import { afterDareSummaryDeliveredV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
+import { MalformedRenderReceiptError } from "#src/temporal/v2/notification/notification-artifact.ts";
+import { buildAttestedMessageV2 } from "#src/temporal/v2/notification/notification-message.ts";
 import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
-import { buildPrematchNotificationMessageV2 } from "#src/temporal/v2/notification/prematch-notification.ts";
-import { buildSettlementNotificationMessageV2 } from "#src/temporal/v2/notification/settlement-notification.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
 import { ANNOUNCEMENT_INTENT_KINDS } from "@scout-for-lol/domain/notifications/intent.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("scout-v2-notification-delivery");
@@ -112,13 +105,13 @@ export function classifyChannelSendFailure(
 /**
  * The guild a channel belongs to, when this role can see one.
  *
- * Worth the REST call for two reasons. `send` uses it to escalate a permission
- * revocation to the server owner, and the report generator uses it to evaluate
- * the per-guild feature flags that decide what the message contains — so
- * omitting it would quietly deliver a different message than v1 does. A
- * gatewayless role can legitimately resolve a channel with no guild attached,
- * and that is not a failure: the send is a REST post on the channel id and does
- * not need one.
+ * Worth the REST call because `send` uses it to escalate a permission
+ * revocation to the server owner. It does NOT shape the message: the
+ * per-guild flags the report generator evaluates were evaluated once, at
+ * render, against every guild the match's report goes to, and the message
+ * delivered here is the one the render attested. A gatewayless role can
+ * legitimately resolve a channel with no guild attached, and that is not a
+ * failure: the send is a REST post on the channel id and does not need one.
  */
 async function resolveDeliveryGuild(
   channelId: string,
@@ -270,24 +263,29 @@ async function deliverToTarget(args: {
  *
  * This is the ambiguity boundary, drawn explicitly because getting it wrong is
  * expensive in both directions. Resolving the intent, looking up the guild,
- * reading the attested artifact back, fetching the Riot payload, building the
- * report around the artifact and checking that the target can carry it are
- * all decided before Discord is contacted: if any of them fails, the message
- * DEFINITELY did not go out. Treating that as ambiguous would park a
- * notification behind an operator resolution it does not need, and the user
- * simply never hears about their game.
+ * reading the attested artifact back, rebuilding the message around it and
+ * checking that the target can carry it are all decided before Discord is
+ * contacted: if any of them fails, the message DEFINITELY did not go out.
+ * Treating that as ambiguous would park a notification behind an operator
+ * resolution it does not need, and the user simply never hears about their
+ * game.
  *
  * So every failure on this side of the line comes back as a `failed` result
  * rather than a throw, and the classification says what the caller should do.
- * Transient causes — Riot unreachable, the object store timing out — are
+ * Transient causes — the database or the object store timing out — are
  * `retryable`, which returns the intent to `ready` and lets the Workflow's send
- * loop try again. Two causes are `terminal`. The DM attachment case: no retry
- * teaches `sendDM` to carry files, and the honest reading of the domain's
- * vocabulary is that this target cannot receive this notification. And an
- * artifact whose receipt stands but whose bytes are gone or differ from the
- * attested digest: that is a fact about storage, reported as
+ * loop try again. Three causes are `terminal`. The DM attachment case: no
+ * retry teaches `sendDM` to carry files, and the honest reading of the
+ * domain's vocabulary is that this target cannot receive this notification.
+ * An artifact whose receipt stands but whose bytes are gone or differ from
+ * the attested digest: a fact about storage, reported as
  * `content-unavailable`, because sending anything else would attest bytes
- * nobody rendered and retrying reads the same broken object again.
+ * nobody rendered and retrying reads the same broken object again. And a
+ * receipt that attests something its kind cannot deliver — a post-match
+ * receipt attesting no image: persisted data violating the render/send
+ * contract, also `content-unavailable`, because the same row parses the same
+ * way on every read and a retry would re-drive the corrupt receipt forever
+ * instead of surfacing it.
  *
  * The other side of the line is {@link deliverToTarget}, where `send` and
  * `sendDM` live. Only failures from there can be `unknown`.
@@ -315,62 +313,6 @@ const CONTENT_UNAVAILABLE: NotificationFailure = {
   classification: "terminal",
   reason: "content-unavailable",
 };
-
-/**
- * The message this intent delivers, built around the artifact the render
- * Activity attested and shaped by the intent's KIND.
- *
- * The artifact is read back and verified against its receipt BEFORE any
- * payload is fetched, because it is the cheaper read and the one whose
- * failure is a fact rather than a wait: a broken artifact ends the attempt
- * without spending a Riot read on a message that will not be built. For a
- * `postmatch` intent the verified bytes go into `generateMatchReport` as its
- * pre-rendered image; for a `prematch` intent they become the loading screen
- * on v1's prematch payload, built from the archived spectator snapshot. In
- * both the attachment on the message IS the attested object, so the receipt's
- * claim about what was delivered stays true by construction — and a prematch
- * intent cannot be delivered as a post-match report, because its arm never
- * reads one.
- */
-async function buildAttestedMessage(
-  record: MatchNotificationIntentRecord,
-  guildId: DiscordGuildId | undefined,
-): Promise<MessageCreateOptions | undefined> {
-  const kind = record.intent.kind;
-  const riotMatchId = record.matchId;
-  switch (kind) {
-    // The two announcement kinds have no artifact: their render attested
-    // `text-only`, and their message is built from the intent's own payload.
-    case "settlement":
-      return await buildSettlementNotificationMessageV2(record);
-    case "dare-summary":
-      return buildDareSummaryNotificationMessageV2(record);
-    case "postmatch":
-    case "prematch":
-      break;
-  }
-  const artifact = await readAttestedNotificationArtifactV2(riotMatchId, kind);
-  switch (kind) {
-    case "postmatch": {
-      if (artifact.artifact === "none") {
-        throw new Error(
-          `The render receipt for ${riotMatchId} attests to no image, which a post-match report cannot be delivered without`,
-        );
-      }
-      const context = await resolveScoutV2MatchContext(riotMatchId);
-      return await generateMatchReport(
-        context.matchData,
-        context.trackedPlayers,
-        {
-          targetGuildIds: guildId === undefined ? [] : [guildId],
-          prerenderedImage: artifact.bytes,
-        },
-      );
-    }
-    case "prematch":
-      return await buildPrematchNotificationMessageV2(riotMatchId, artifact);
-  }
-}
 
 async function prepareNotificationSend(
   input: ScoutIntentAttemptRefV2,
@@ -405,30 +347,33 @@ async function prepareNotificationSend(
       failure: { classification: "terminal", reason: "target-not-found" },
     };
   }
-  // Resolved once and used twice: the report generator evaluates per-guild
-  // feature flags against it, and `send` escalates a permission revocation to
-  // that guild's owner. Two lookups would be two REST calls that can disagree.
   const guildId =
     target.kind === "channel"
       ? await resolveDeliveryGuild(target.channelId)
       : undefined;
 
-  let message: MessageCreateOptions | undefined;
+  let message: MessageCreateOptions;
   try {
-    message = await buildAttestedMessage(record, guildId);
+    message = await buildAttestedMessageV2(record);
   } catch (error) {
-    if (!(error instanceof ArchivedObjectUnusableError)) throw error;
-    logger.error(
-      `The attested artifact for ${riotMatchId} cannot be delivered (${error.reason}); the receipt stands but its bytes do not`,
-      error,
-    );
-    return { phase: "failed", failure: CONTENT_UNAVAILABLE };
-  }
-  if (message === undefined) {
-    logger.error(
-      `No report could be built for ${riotMatchId} despite an intent naming it`,
-    );
-    return { phase: "failed", failure: PRE_SEND_UNAVAILABLE };
+    if (error instanceof ArchivedObjectUnusableError) {
+      logger.error(
+        `The attested artifact for ${riotMatchId} cannot be delivered (${error.reason}); the receipt stands but its bytes do not`,
+        error,
+      );
+      return { phase: "failed", failure: CONTENT_UNAVAILABLE };
+    }
+    if (error instanceof MalformedRenderReceiptError) {
+      // Loud and terminal. The render wrote a receipt the send cannot
+      // honour; that is the producer's contract to fix, and no retry reads
+      // the row differently.
+      logger.error(
+        `The ${error.kind} render receipt for ${riotMatchId} is malformed and the intent cannot be delivered from it`,
+        error,
+      );
+      return { phase: "failed", failure: CONTENT_UNAVAILABLE };
+    }
+    throw error;
   }
   if (target.kind === "dm" && (message.files ?? []).length > 0) {
     logger.error(

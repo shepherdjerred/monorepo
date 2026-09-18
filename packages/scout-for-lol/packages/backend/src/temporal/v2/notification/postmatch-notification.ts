@@ -1,0 +1,230 @@
+import { AttachmentBuilder, type MessageCreateOptions } from "discord.js";
+import { ApplicationFailure } from "@temporalio/common";
+import {
+  MatchIdSchema,
+  resolveQueueTypeFromGame,
+  type MatchId,
+} from "@scout-for-lol/data";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
+import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
+import {
+  AI_REVIEW_ATTACHMENT_NAME,
+  aiReviewAttachment,
+  attachReportImage,
+  reportImageAttachmentName,
+} from "#src/league/tasks/postmatch/match-report-image.ts";
+import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
+import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import type { ScoutV2AttestedReportArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
+import type { ScoutV2ReportComponentsSchema } from "#src/temporal/v2/notification-receipts.ts";
+import type { z } from "zod";
+
+/**
+ * The post-match report: what a `postmatch` intent renders and delivers.
+ *
+ * v1's generator does everything in one pass — it refetches every tracked
+ * player's rank and writes this match's `MatchRankHistory`, decides whether
+ * the game earns the one AI review a match is allowed and spends it, renders
+ * the image, and assembles the message. Every one of those is a fact about
+ * the MATCH that must be established once, and two of them are effects on
+ * durable state: the rank upsert records the rank at the moment it ran, and
+ * the review marks its attempt globally before the model is called. So the
+ * generator runs exactly once per match, in the fenced render on the
+ * background queue, and what it produced is attested in the render receipt:
+ * the image, the review's image, the content line the review's text is part
+ * of, and which components were attached.
+ *
+ * The delivery never calls the generator. It rebuilds the message from the
+ * receipt and the verified bytes with the same furniture builders v1 uses —
+ * `attachReportImage`, `aiReviewAttachment`, `matchLinkComponents` — so the
+ * message every channel receives is the one the render attested, byte for
+ * byte and word for word, and a delivery re-driven after the player's next
+ * game rewrites no history and generates nothing. It also spends no Riot
+ * read and no model call inside the single-attempt, thirty-second send.
+ *
+ * ## The audience the render evaluates
+ *
+ * The AI review is gated per guild, and v1 evaluates that gate against every
+ * guild whose channel will receive the report, then sends the one message it
+ * built to all of them. The render resolves the same audience through the
+ * same derivation (`resolvePostmatchDeliveryChannels`) rather than through
+ * the intent's own channel: the artifact is per match, every intent on the
+ * match delivers it, and a review generated for one channel's guild and
+ * withheld from the next would be exactly the per-channel drift v1 does not
+ * have.
+ *
+ * ## Reaching into the message
+ *
+ * v1 renders and assembles in one step and has no seam for handing the parts
+ * back, so this takes the built message apart rather than duplicating the
+ * queue branching — Classic, Arena and Standard each render differently, and
+ * a second copy of that decision would drift from the one v1 delivers. The
+ * disassembly is strict: an attachment under a name this module does not
+ * know, an embed the delivery would not rebuild, or components other than
+ * the match link is a message the receipt could not describe truthfully, and
+ * that is a broken contract with v1's builders rather than a degraded mode.
+ */
+
+export type ScoutV2ReportComponents = z.infer<
+  typeof ScoutV2ReportComponentsSchema
+>;
+
+export type ScoutV2PostmatchRender = {
+  readonly image: Uint8Array;
+  readonly review: Uint8Array | undefined;
+  readonly content: string;
+  readonly components: ScoutV2ReportComponents;
+  /** The queue the report was rendered for, kept as object metadata. */
+  readonly queueId: number;
+};
+
+function bufferedAttachment(file: unknown): {
+  name: string;
+  bytes: Uint8Array;
+} {
+  if (!(file instanceof AttachmentBuilder)) {
+    throw new TypeError(
+      "The report message carried an attachment that is not an AttachmentBuilder, which the render receipt cannot describe",
+    );
+  }
+  const attachment: unknown = file.attachment;
+  if (!(attachment instanceof Uint8Array)) {
+    throw new TypeError(
+      `The report message's attachment ${file.name ?? "(unnamed)"} is not buffered bytes, which the render cannot commit`,
+    );
+  }
+  if (file.name === null) {
+    throw new Error(
+      "The report message carried an unnamed attachment, which the render receipt cannot describe",
+    );
+  }
+  return { name: file.name, bytes: attachment };
+}
+
+function classifyComponents(
+  message: MessageCreateOptions,
+  matchId: MatchId,
+): ScoutV2ReportComponents {
+  const components = message.components ?? [];
+  if (components.length === 0) return "none";
+  if (
+    JSON.stringify(components) === JSON.stringify(matchLinkComponents(matchId))
+  ) {
+    return "match-link";
+  }
+  throw new Error(
+    `The report message for ${matchId} carries components other than the match link, which the render receipt cannot describe`,
+  );
+}
+
+/** Take v1's built message apart into the parts the receipt attests. */
+function disassembleReport(
+  message: MessageCreateOptions,
+  matchId: MatchId,
+  queueId: number,
+): ScoutV2PostmatchRender {
+  const content = message.content;
+  if (content === undefined || content.length === 0) {
+    throw new Error(
+      `The report message for ${matchId} carries no content line, which every post-match report has`,
+    );
+  }
+  let image: Uint8Array | undefined;
+  let review: Uint8Array | undefined;
+  for (const file of message.files ?? []) {
+    const attachment = bufferedAttachment(file);
+    if (attachment.name === reportImageAttachmentName(matchId)) {
+      image = attachment.bytes;
+    } else if (attachment.name === AI_REVIEW_ATTACHMENT_NAME) {
+      review = attachment.bytes;
+    } else {
+      throw new Error(
+        `The report message for ${matchId} carries an attachment named ${attachment.name}, which the render receipt cannot describe`,
+      );
+    }
+  }
+  if (image === undefined) {
+    throw new Error(
+      `The report message for ${matchId} carried no report image, so there is nothing to commit`,
+    );
+  }
+  const [, expectedEmbed] = attachReportImage(image, matchId);
+  if (
+    JSON.stringify(message.embeds ?? []) !== JSON.stringify([expectedEmbed])
+  ) {
+    throw new Error(
+      `The report message for ${matchId} carries embeds other than the report image's, which the delivery would not rebuild`,
+    );
+  }
+  return {
+    image,
+    review,
+    content,
+    components: classifyComponents(message, matchId),
+    queueId,
+  };
+}
+
+export async function renderPostmatchNotificationV2(
+  riotMatchId: RiotMatchId,
+): Promise<ScoutV2PostmatchRender> {
+  const context = await resolveScoutV2MatchContext(riotMatchId);
+  const audience = await resolvePostmatchDeliveryChannels({
+    puuids: context.trackedPlayers.map(
+      (player) => player.league.leagueAccount.puuid,
+    ),
+    queueType: resolveQueueTypeFromGame(
+      context.matchData.info.queueId,
+      context.matchData.info.gameMode,
+      context.matchData.info.gameType,
+    ),
+  });
+  const message = await generateMatchReport(
+    context.matchData,
+    context.trackedPlayers,
+    { targetGuildIds: audience.guildIds },
+  );
+  if (message === undefined) {
+    // The report generator found no tracked player it could render. An intent
+    // exists for this match, so that is a disagreement between the producer
+    // that minted it and the renderer, and no retry resolves it.
+    throw ApplicationFailure.nonRetryable(
+      `No report could be rendered for ${riotMatchId} despite an intent naming it`,
+      "MissingDomainRecord",
+    );
+  }
+  return disassembleReport(
+    message,
+    context.matchId,
+    context.matchData.info.queueId,
+  );
+}
+
+/**
+ * The message a postmatch intent delivers, rebuilt from what the render
+ * attested. Pure over its inputs: nothing here reads a payload, a rank, a
+ * flag or a model.
+ */
+export function buildPostmatchNotificationMessageV2(
+  riotMatchId: RiotMatchId,
+  artifact: ScoutV2AttestedReportArtifact,
+): MessageCreateOptions {
+  const matchId = MatchIdSchema.parse(riotMatchId);
+  const [attachment, embed] = attachReportImage(artifact.image, matchId);
+  const files = [attachment];
+  if (artifact.review !== undefined) {
+    files.push(aiReviewAttachment(artifact.review));
+  }
+  const message: MessageCreateOptions = {
+    content: artifact.evidence.content,
+    files,
+    embeds: [embed],
+  };
+  switch (artifact.evidence.components) {
+    case "match-link":
+      return { ...message, components: matchLinkComponents(matchId) };
+    case "none":
+      return message;
+  }
+}

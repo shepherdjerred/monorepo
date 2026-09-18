@@ -15,7 +15,7 @@ import {
 } from "#src/league/tasks/prematch/prematch-notification.ts";
 import type { ScoutV2PrematchContext } from "#src/temporal/v2/prematch/prematch-context.ts";
 import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch/prematch-resume.ts";
-import type { ScoutV2AttestedNotificationArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
+import type { ScoutV2AttestedPrematchArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
 
 /**
  * The prematch-shaped notification: what a `prematch` intent renders and
@@ -131,7 +131,7 @@ function loadingScreenAttachment(
  */
 export async function buildPrematchNotificationMessageV2(
   riotMatchId: RiotMatchId,
-  artifact: ScoutV2AttestedNotificationArtifact,
+  artifact: ScoutV2AttestedPrematchArtifact,
 ): Promise<MessageCreateOptions> {
   const context = await requireArchivedPrematchContext(riotMatchId);
   const gameInfo = context.gameInfo;

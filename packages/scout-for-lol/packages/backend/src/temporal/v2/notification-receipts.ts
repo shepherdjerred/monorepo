@@ -11,7 +11,6 @@ import {
   ReceiptKindSchema,
   type ReceiptKind,
 } from "@scout-for-lol/domain/match-processing/states.ts";
-import { RECEIPT_VERSION } from "#src/report-lake/durable-receipts.ts";
 import { prisma } from "#src/database/index.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 
@@ -65,8 +64,7 @@ export function scoutV2NotificationRenderReceiptKind(
 }
 
 /**
- * What a render receipt claims: which bytes were committed, and where — or
- * that this match's notification has no image at all.
+ * One committed object, named by content and location.
  *
  * Deliberately NOT an `ArtifactDescriptor`, whose `capturedAt` is stamped at
  * put time. Two runs that render the same match would then record genuinely
@@ -78,16 +76,52 @@ export function scoutV2NotificationRenderReceiptKind(
  * The object key stays in the evidence because it is the only way a later
  * reader finds the bytes: the render Activity's own result is `rendered` or
  * `reused` and carries no descriptor, by contract.
+ */
+export type ScoutV2AttestedObject = z.infer<typeof ScoutV2AttestedObjectSchema>;
+export const ScoutV2AttestedObjectSchema = z.strictObject({
+  objectKey: S3ObjectKeySchema,
+  digest: Sha256DigestSchema,
+  bytes: z.int().positive(),
+  contentType: z.string().min(1),
+});
+
+/**
+ * Which message furniture v1's generator attached beside the report image.
+ * `match-link` is the Explore "View match" button of a standard-queue report;
+ * Arena and Classic reports attach nothing. Recorded as a closed name rather
+ * than as the component JSON so the receipt stays readable and a component
+ * v1 grows later cannot be attested under a name that misdescribes it.
+ */
+export const ScoutV2ReportComponentsSchema = z.enum(["match-link", "none"]);
+
+/**
+ * What a render receipt claims, by the KIND of notification it rendered.
  *
- * `none` is the prematch renderer's honest answer for a queue the loading
+ * `report` is a post-match report: the image v1's generator rendered, and
+ * everything else the message it built carried — the content line (with the
+ * AI review's text when one was generated), the review's image when one was,
+ * and which components were attached. The delivery rebuilds the message from
+ * exactly this, so every fact that shaped it was captured ONCE, on the
+ * background queue, at render time: the generator is what refetches ranks
+ * and writes `MatchRankHistory`, and what spends the single AI review a
+ * match is allowed, and neither may happen again per channel at the send.
+ *
+ * `image` is a loading screen: the prematch renderer's artifact, delivered
+ * around v1's prematch payload built from the archived snapshot.
+ *
+ * `none` is the honest answer when there is nothing to read back.
+ * `unsupported-queue` is the prematch renderer's for a queue the loading
  * screen does not support: v1 sends a text embed for those games, and the
- * V2 delivery does the same, but it can only do so if the render attested
- * that there is nothing to read back — otherwise a missing artifact and an
- * unsupported queue would be indistinguishable at the send.
+ * V2 delivery does the same, but only because the render attested that there
+ * is nothing to read — otherwise a missing artifact and an unsupported queue
+ * would be indistinguishable at the send. `text-only` is a kind whose message
+ * is text and embeds built at the send — settlement, dare summary — attested
+ * so the send can tell "nothing to render" from "never rendered".
  *
- * The union replaced the flat image shape in place rather than under a new
- * version because no `v2-notification-render` receipt exists anywhere: the
- * V2 workflows have no production caller yet.
+ * Which variants a kind may attest is the reader's contract
+ * (`notification/notification-artifact.ts`): a receipt attesting something
+ * its kind cannot deliver is malformed, and the delivery parks the intent
+ * rather than retrying a fact no re-read changes.
  */
 export type ScoutV2NotificationRenderEvidence = z.infer<
   typeof ScoutV2NotificationRenderEvidenceSchema
@@ -96,31 +130,40 @@ export const ScoutV2NotificationRenderEvidenceSchema = z.discriminatedUnion(
   "artifact",
   [
     z.strictObject({
+      artifact: z.literal("report"),
+      riotMatchId: RiotMatchIdSchema,
+      image: ScoutV2AttestedObjectSchema,
+      content: z.string().min(1),
+      components: ScoutV2ReportComponentsSchema,
+      review: ScoutV2AttestedObjectSchema.optional(),
+    }),
+    z.strictObject({
       artifact: z.literal("image"),
       riotMatchId: RiotMatchIdSchema,
-      objectKey: S3ObjectKeySchema,
-      digest: Sha256DigestSchema,
-      bytes: z.int().positive(),
-      contentType: z.string().min(1),
+      ...ScoutV2AttestedObjectSchema.shape,
     }),
     z.strictObject({
       artifact: z.literal("none"),
       riotMatchId: RiotMatchIdSchema,
-      /**
-       * `unsupported-queue`: a prematch game the loading screen cannot draw,
-       * delivered with v1's fallback embed. `text-only`: a kind whose message
-       * is text and embeds built at the send — settlement, dare summary —
-       * attested so the send can tell "nothing to render" from "never
-       * rendered".
-       */
       reason: z.enum(["unsupported-queue", "text-only"]),
     }),
   ],
 );
 
+/**
+ * Version 2 added the `report` variant. No migration is defined because
+ * none is honest: a version-1 receipt attested an image alone, and the
+ * content and components the report variant carries were never captured —
+ * inventing them would be exactly the in-place reinterpretation a version
+ * bump exists to refuse. A version-1 envelope therefore fails the parse
+ * loudly. No such envelope exists anywhere: the V2 workflows have no
+ * production caller.
+ */
+export const SCOUT_V2_NOTIFICATION_RENDER_EVIDENCE_VERSION = 2;
+
 export const scoutV2NotificationRenderEvidenceCodec = defineVersionedCodec({
   kind: "scout-v2-notification-render-evidence",
-  version: RECEIPT_VERSION,
+  version: SCOUT_V2_NOTIFICATION_RENDER_EVIDENCE_VERSION,
   schema: ScoutV2NotificationRenderEvidenceSchema,
 });
 

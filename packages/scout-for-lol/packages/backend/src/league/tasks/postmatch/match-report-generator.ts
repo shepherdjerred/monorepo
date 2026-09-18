@@ -21,10 +21,10 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
-import { AttachmentBuilder, type EmbedBuilder } from "discord.js";
+import type { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchLinkComponents } from "./match-report-components.ts";
 import { setItemMissHandler } from "@scout-for-lol/report";
-import { createMatchImage } from "./match-report-image.ts";
+import { aiReviewAttachment, createMatchImage } from "./match-report-image.ts";
 import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
@@ -299,11 +299,7 @@ async function processStandardMatch(
 
   // Add AI-generated image if available
   if (reviewImage) {
-    const aiBuffer = Buffer.from(reviewImage);
-    const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName(
-      "ai-review.png",
-    );
-    files.push(aiImageAttachment);
+    files.push(aiReviewAttachment(reviewImage));
     logger.info(`[generateMatchReport] ✨ Added AI-generated image to message`);
   }
 

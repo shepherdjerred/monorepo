@@ -1,5 +1,5 @@
-import { AttachmentBuilder } from "discord.js";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { MatchIdSchema } from "@scout-for-lol/data";
 import {
   IsoInstantSchema,
   NotificationIntentKeySchema,
@@ -49,20 +49,34 @@ const world = vi.hoisted(() => ({
 }));
 
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: () =>
+  resolveScoutV2MatchContext: (riotMatchId: string) =>
     Promise.resolve({
-      matchData: { info: { queueId: 420 } },
+      matchId: riotMatchId,
+      riotMatchId,
+      matchData: {
+        metadata: { matchId: riotMatchId },
+        info: { queueId: 420, gameMode: "CLASSIC", gameType: "MATCHED_GAME" },
+      },
       trackedPlayers: [],
     }),
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
-  generateMatchReport: async () => {
+  generateMatchReport: async (matchData: { metadata: { matchId: string } }) => {
+    // Built with v1's own furniture, so the render's disassembly is exercised
+    // against the message shape it must survive rather than one written here.
+    const { attachReportImage } =
+      await import("#src/league/tasks/postmatch/match-report-image.ts");
     world.renders += 1;
     const image = world.nextImage();
     await new Promise((done) => setTimeout(done, world.renderDelayMs));
+    const [attachment, embed] = attachReportImage(
+      image,
+      MatchIdSchema.parse(matchData.metadata.matchId),
+    );
     return {
-      files: [new AttachmentBuilder(Buffer.from(image)).setName("r.png")],
-      embeds: [],
+      content: "someone finished a game",
+      files: [attachment],
+      embeds: [embed],
     };
   },
 }));
@@ -232,13 +246,13 @@ describe("concurrent renders for one match and kind", () => {
       RiotMatchIdSchema.parse(matchId),
       "postmatch",
     );
-    if (evidence?.artifact !== "image") {
-      throw new Error("the render must have attested an image");
+    if (evidence?.artifact !== "report") {
+      throw new Error("the render must have attested a report");
     }
-    const stored = world.objects.get(evidence.objectKey);
+    const stored = world.objects.get(evidence.image.objectKey);
     expect(stored).toBeDefined();
     expect(computeSha256Digest(stored ?? new Uint8Array())).toBe(
-      evidence.digest,
+      evidence.image.digest,
     );
     const receipts = await listReceipts(prisma, {
       matchId: RiotMatchIdSchema.parse(matchId),

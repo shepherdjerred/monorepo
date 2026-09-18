@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
+import type * as NotificationArtifactModule from "#src/temporal/v2/notification/notification-artifact.ts";
 import {
   attemptRef,
   CHANNEL_ID,
@@ -25,7 +26,8 @@ const stubs = vi.hoisted(() => ({
   buildSettlementNotificationMessageV2: vi.fn(),
   buildDareSummaryNotificationMessageV2: vi.fn(),
   afterDareSummaryDeliveredV2: vi.fn(),
-  readAttestedNotificationArtifactV2: vi.fn(),
+  readAttestedReportArtifactV2: vi.fn(),
+  readAttestedPrematchArtifactV2: vi.fn(),
   resolveScoutV2MatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
   fetchChannelForDelivery: vi.fn(),
@@ -50,9 +52,18 @@ vi.mock("#src/temporal/v2/notification/dare-summary-notification.ts", () => ({
 vi.mock("#src/temporal/v2/notification/prematch-notification.ts", () => ({
   buildPrematchNotificationMessageV2: vi.fn(),
 }));
-vi.mock("#src/temporal/v2/notification/notification-artifact.ts", () => ({
-  readAttestedNotificationArtifactV2: stubs.readAttestedNotificationArtifactV2,
-}));
+vi.mock("#src/temporal/v2/notification/notification-artifact.ts", async () => {
+  // The readers are stubbed so an announcement that touched one is visible;
+  // the error class stays real because the delivery narrows on `instanceof`.
+  const actual = await vi.importActual<typeof NotificationArtifactModule>(
+    "#src/temporal/v2/notification/notification-artifact.ts",
+  );
+  return {
+    MalformedRenderReceiptError: actual.MalformedRenderReceiptError,
+    readAttestedReportArtifactV2: stubs.readAttestedReportArtifactV2,
+    readAttestedPrematchArtifactV2: stubs.readAttestedPrematchArtifactV2,
+  };
+});
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
   resolveScoutV2MatchContext: stubs.resolveScoutV2MatchContext,
 }));
@@ -123,7 +134,8 @@ describe("the settlement-shaped path", () => {
 
     expect(result).toMatchObject({ outcome: "delivered" });
     expect(stubs.buildSettlementNotificationMessageV2).toHaveBeenCalledTimes(1);
-    expect(stubs.readAttestedNotificationArtifactV2).not.toHaveBeenCalled();
+    expect(stubs.readAttestedReportArtifactV2).not.toHaveBeenCalled();
+    expect(stubs.readAttestedPrematchArtifactV2).not.toHaveBeenCalled();
     expect(stubs.generateMatchReport).not.toHaveBeenCalled();
     const sent = SentOptionsSchema.parse(stubs.send.mock.calls[0]?.[0]);
     expect(sent.reply).toEqual({

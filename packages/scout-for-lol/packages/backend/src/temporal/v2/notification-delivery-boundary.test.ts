@@ -1,6 +1,8 @@
 import { AttachmentBuilder } from "discord.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
+import type * as NotificationArtifactModule from "#src/temporal/v2/notification/notification-artifact.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   attemptRef,
   intentRecord,
@@ -12,8 +14,8 @@ import {
  * `deliverNotificationV2` runs with `maximumAttempts: 1`, so the Workflow
  * treats a THROW as an unobserved send and parks the intent in
  * `unknown-delivery` — a dead end only an operator leaves. That is right for a
- * request that may have reached Discord and wrong for everything else: a Riot
- * fetch that timed out or a renderer that fell over means the message
+ * request that may have reached Discord and wrong for everything else: an
+ * object store that timed out or a database that fell over means the message
  * definitely did not go out, and calling that ambiguous costs the user their
  * notification while an operator investigates a send that never happened.
  *
@@ -22,13 +24,23 @@ import {
  * flavour must come back as `failed`, must never be `unknown`, and must not
  * have touched Discord. They are also the mutation proof — move any of these
  * causes past the boundary and the matching case flips to `unknown` and fails.
+ *
+ * The second property they pin is what the delivery may do at all. It
+ * assembles the message from the render receipt and the objects it names, and
+ * nothing else: no Riot read, no report generator, no model call. Those ran
+ * once, on the background queue, when the artifact was rendered — the
+ * generator is what rewrites this match's `MatchRankHistory` and what spends
+ * the single AI review a match is allowed, and neither may happen again, per
+ * channel, inside a thirty-second single-attempt send.
  */
 
 const stubs = vi.hoisted(() => ({
   requireIntentRecordV2: vi.fn(),
   resolveScoutV2MatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
-  readAttestedNotificationArtifactV2: vi.fn(),
+  generateAiReviewIfEnabled: vi.fn(),
+  readAttestedReportArtifactV2: vi.fn(),
+  readAttestedPrematchArtifactV2: vi.fn(),
   resolveNotificationGateV2: vi.fn(),
   buildPrematchNotificationMessageV2: vi.fn(),
   fetchChannelForDelivery: vi.fn(),
@@ -45,9 +57,22 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
 vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
   generateMatchReport: stubs.generateMatchReport,
 }));
-vi.mock("#src/temporal/v2/notification/notification-artifact.ts", () => ({
-  readAttestedNotificationArtifactV2: stubs.readAttestedNotificationArtifactV2,
+vi.mock("#src/league/tasks/postmatch/match-report-ai-review.ts", () => ({
+  generateAiReviewIfEnabled: stubs.generateAiReviewIfEnabled,
 }));
+vi.mock("#src/temporal/v2/notification/notification-artifact.ts", async () => {
+  // The readers are stubbed; the error class is the real one, because the
+  // delivery narrows on `instanceof` and a fake class would let a routing
+  // regression pass here while production still mis-classified the throw.
+  const actual = await vi.importActual<typeof NotificationArtifactModule>(
+    "#src/temporal/v2/notification/notification-artifact.ts",
+  );
+  return {
+    MalformedRenderReceiptError: actual.MalformedRenderReceiptError,
+    readAttestedReportArtifactV2: stubs.readAttestedReportArtifactV2,
+    readAttestedPrematchArtifactV2: stubs.readAttestedPrematchArtifactV2,
+  };
+});
 vi.mock("#src/temporal/v2/notification/notification-policy.ts", () => ({
   resolveNotificationGateV2: stubs.resolveNotificationGateV2,
 }));
@@ -68,36 +93,49 @@ vi.mock("#src/league/discord/channel.ts", async () => {
 
 const { ArchivedObjectUnusableError } =
   await import("#src/report-store/s3-raw-source.ts");
+const { MalformedRenderReceiptError } =
+  await import("#src/temporal/v2/notification/notification-artifact.ts");
 const { deliverNotificationV2 } =
   await import("#src/temporal/v2/notification-delivery.ts");
 
 /** The bytes the render Activity attested, as the read-back hands them over. */
 const ARTIFACT_BYTES = new Uint8Array([137, 80, 78, 71, 7, 7, 7]);
+const REVIEW_BYTES = new Uint8Array([137, 80, 78, 71, 9, 9]);
+const REPORT_CONTENT = "jerred finished a solo game\n\nA clean carry.";
 
-/**
- * A report exactly as the generator builds one around a pre-rendered image:
- * the attachment carries the bytes it was handed.
- */
-function reportAround(image: Uint8Array | undefined): unknown {
+/** The report the render attested, as the post-match reader hands it over. */
+function attestedReport(review: Uint8Array | undefined): unknown {
   return {
-    files: [
-      new AttachmentBuilder(Buffer.from(image ?? [1, 2, 3])).setName("m.png"),
-    ],
-    embeds: [],
+    image: ARTIFACT_BYTES,
+    review,
+    evidence: {
+      artifact: "report",
+      riotMatchId: "NA1_9301",
+      image: {
+        objectKey: "games/2026/09/16/NA1_9301/report.png",
+        digest: "f".repeat(64),
+        bytes: ARTIFACT_BYTES.byteLength,
+        contentType: "image/png",
+      },
+      content: REPORT_CONTENT,
+      components: "match-link",
+      ...(review === undefined
+        ? {}
+        : {
+            review: {
+              objectKey: "games/2026/09/16/NA1_9301/ai-review.png",
+              digest: "e".repeat(64),
+              bytes: review.byteLength,
+              contentType: "image/png",
+            },
+          }),
+    },
   };
 }
-
-const GeneratorOptionsSchema = z.object({
-  prerenderedImage: z.instanceof(Uint8Array).optional(),
-});
 
 beforeEach(() => {
   vi.clearAllMocks();
   stubs.requireIntentRecordV2.mockResolvedValue(intentRecord("channel"));
-  stubs.resolveScoutV2MatchContext.mockResolvedValue({
-    matchData: { info: { queueId: 420 } },
-    trackedPlayers: [],
-  });
   stubs.resolveNotificationGateV2.mockResolvedValue({
     kind: "postmatch",
     target: "channel",
@@ -111,24 +149,21 @@ beforeEach(() => {
     ],
     embeds: [],
   });
-  stubs.readAttestedNotificationArtifactV2.mockResolvedValue({
+  stubs.readAttestedReportArtifactV2.mockResolvedValue(
+    attestedReport(REVIEW_BYTES),
+  );
+  stubs.readAttestedPrematchArtifactV2.mockResolvedValue({
     artifact: "image",
     bytes: ARTIFACT_BYTES,
     evidence: {
       artifact: "image",
       riotMatchId: "NA1_9301",
-      objectKey: "games/2026/09/16/NA1_9301/report.png",
+      objectKey: "games/2026/09/16/NA1_9301/loading-screen.png",
       digest: "f".repeat(64),
       bytes: ARTIFACT_BYTES.byteLength,
       contentType: "image/png",
     },
   });
-  stubs.generateMatchReport.mockImplementation(
-    (_match: unknown, _players: unknown, options: unknown) =>
-      Promise.resolve(
-        reportAround(GeneratorOptionsSchema.parse(options).prerenderedImage),
-      ),
-  );
   stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: undefined });
 });
 
@@ -141,22 +176,6 @@ describe("a failure before the request could have left", () => {
       },
     },
     {
-      name: "the Riot payload fetch",
-      arrange: () => {
-        stubs.resolveScoutV2MatchContext.mockRejectedValue(
-          new Error("riot timeout"),
-        );
-      },
-    },
-    {
-      name: "the report render",
-      arrange: () => {
-        stubs.generateMatchReport.mockRejectedValue(
-          new Error("satori blew up"),
-        );
-      },
-    },
-    {
       name: "the guild lookup",
       arrange: () => {
         stubs.fetchChannelForDelivery.mockRejectedValue(new Error("rest 500"));
@@ -165,7 +184,7 @@ describe("a failure before the request could have left", () => {
     {
       name: "the artifact read-back's transport",
       arrange: () => {
-        stubs.readAttestedNotificationArtifactV2.mockRejectedValue(
+        stubs.readAttestedReportArtifactV2.mockRejectedValue(
           new Error("seaweedfs timed out"),
         );
       },
@@ -173,8 +192,8 @@ describe("a failure before the request could have left", () => {
     {
       name: "a missing render receipt",
       arrange: () => {
-        stubs.readAttestedNotificationArtifactV2.mockRejectedValue(
-          new Error("No render receipt stands"),
+        stubs.readAttestedReportArtifactV2.mockRejectedValue(
+          new Error("No postmatch render receipt stands"),
         );
       },
     },
@@ -197,20 +216,6 @@ describe("a failure before the request could have left", () => {
     },
   );
 
-  test("reports an unbuildable report as retryable, never unknown", async () => {
-    // The generator answers `undefined` when it finds no tracked player it can
-    // render. Nothing was sent, so the intent stays retryable.
-    stubs.generateMatchReport.mockResolvedValue(undefined);
-
-    const result = await deliverNotificationV2(attemptRef());
-
-    expect(result).toMatchObject({
-      outcome: "failed",
-      failure: { classification: "retryable" },
-    });
-    expect(stubs.send).not.toHaveBeenCalled();
-  });
-
   test("refuses to send an intent its policy holds, without contacting Discord", async () => {
     // `beginNotificationSendV2` already refused a held intent before this
     // attempt was minted, so reaching here held is a broken contract — and
@@ -228,28 +233,36 @@ describe("a failure before the request could have left", () => {
       outcome: "failed",
       failure: { classification: "retryable", reason: "service-unavailable" },
     });
-    expect(stubs.readAttestedNotificationArtifactV2).not.toHaveBeenCalled();
+    expect(stubs.readAttestedReportArtifactV2).not.toHaveBeenCalled();
     expect(stubs.send).not.toHaveBeenCalled();
     expect(stubs.sendDM).not.toHaveBeenCalled();
   });
 
-  test("reports a post-match intent whose receipt attests no image as retryable", async () => {
-    // Only the prematch renderer can attest `none`; a post-match report has
-    // nothing to be delivered without. A broken contract, decided pre-send.
-    stubs.readAttestedNotificationArtifactV2.mockResolvedValue({
-      artifact: "none",
-      evidence: {
-        artifact: "none",
-        riotMatchId: "NA1_9301",
-        reason: "unsupported-queue",
-      },
-    });
+  test("reports a receipt its kind cannot deliver as terminal, not retryable", async () => {
+    // The finding this closes: the throw for a post-match receipt attesting
+    // no artifact was caught by the blanket preparation fallback and reported
+    // as retryable `service-unavailable`, which returns the intent to `ready`.
+    // Reconciliation then re-drove the same corrupt receipt every sweep,
+    // forever, because the row parses the same way on every read. A
+    // deterministic contract violation is terminal.
+    stubs.readAttestedReportArtifactV2.mockRejectedValue(
+      new MalformedRenderReceiptError({
+        riotMatchId: RiotMatchIdSchema.parse("NA1_9301"),
+        kind: "postmatch",
+        evidence: {
+          artifact: "none",
+          riotMatchId: RiotMatchIdSchema.parse("NA1_9301"),
+          reason: "unsupported-queue",
+        },
+        expected: "a report",
+      }),
+    );
 
     const result = await deliverNotificationV2(attemptRef());
 
-    expect(result).toMatchObject({
+    expect(result).toEqual({
       outcome: "failed",
-      failure: { classification: "retryable" },
+      failure: { classification: "terminal", reason: "content-unavailable" },
     });
     expect(stubs.send).not.toHaveBeenCalled();
   });
@@ -260,7 +273,7 @@ describe("a failure before the request could have left", () => {
       // The receipt stands and its bytes do not. That is a fact about
       // storage: retrying reads the same broken object, and sending a
       // freshly rendered image instead would attest bytes nobody attested.
-      stubs.readAttestedNotificationArtifactV2.mockRejectedValue(
+      stubs.readAttestedReportArtifactV2.mockRejectedValue(
         new ArchivedObjectUnusableError({
           key: "games/2026/09/16/NA1_9301/report.png",
           reason,
@@ -322,7 +335,7 @@ describe("the prematch-shaped path", () => {
     // The finding this closes: a prematch intent driven after its game ended
     // must never resolve a MatchV5 payload and send a post-match report. The
     // prematch arm reads only the archived spectator snapshot, so neither the
-    // Riot context nor the report generator is touched.
+    // Riot context nor the report artifact is touched.
     stubs.requireIntentRecordV2.mockResolvedValue(
       intentRecord("channel", "prematch"),
     );
@@ -341,6 +354,7 @@ describe("the prematch-shaped path", () => {
     expect(stubs.buildPrematchNotificationMessageV2.mock.calls[0]?.[0]).toBe(
       "NA1_9301",
     );
+    expect(stubs.readAttestedReportArtifactV2).not.toHaveBeenCalled();
     expect(stubs.generateMatchReport).not.toHaveBeenCalled();
     expect(stubs.resolveScoutV2MatchContext).not.toHaveBeenCalled();
     const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
@@ -348,48 +362,84 @@ describe("the prematch-shaped path", () => {
   });
 });
 
-describe("what the send attaches", () => {
-  test("delivers exactly the bytes the render receipt attested", async () => {
-    // The seam's whole promise: the artifact read back and verified against
-    // its receipt is the image on the message, so the receipt never attests
-    // bytes the send did not deliver. The generator is handed the verified
-    // bytes as its pre-rendered image and renders nothing.
+describe("what the send assembles", () => {
+  beforeEach(() => {
     stubs.send.mockResolvedValue({ id: "100000000000000777" });
-
-    await deliverNotificationV2(attemptRef());
-
-    expect(stubs.generateMatchReport).toHaveBeenCalledTimes(1);
-    const options = GeneratorOptionsSchema.parse(
-      stubs.generateMatchReport.mock.calls[0]?.[2],
-    );
-    expect(options.prerenderedImage).toBe(ARTIFACT_BYTES);
-
-    const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
-    const attachment = sent.files[0]?.attachment;
-    expect(attachment).toBeInstanceOf(Uint8Array);
-    expect(new Uint8Array(z.instanceof(Uint8Array).parse(attachment))).toEqual(
-      ARTIFACT_BYTES,
-    );
   });
 
-  test("reads the artifact before it spends a Riot read", async () => {
-    // A broken artifact ends the attempt without fetching the match: the
-    // cheaper read, and the one whose failure is a fact rather than a wait.
-    stubs.readAttestedNotificationArtifactV2.mockRejectedValue(
-      new ArchivedObjectUnusableError({
-        key: "games/2026/09/16/NA1_9301/report.png",
-        reason: "missing",
-        detail: "gone",
-      }),
+  test("delivers exactly the bytes and the words the render receipt attested", async () => {
+    // The seam's whole promise: what was read back and verified against the
+    // receipt is what the message carries, so the receipt never attests a
+    // message the send did not deliver.
+    await deliverNotificationV2(attemptRef());
+
+    const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
+    expect(sent.content).toBe(REPORT_CONTENT);
+    expect(sent.files[0]?.name).toBe("NA1_9301.png");
+    expect(attachmentBytes(sent.files[0]?.attachment)).toEqual(ARTIFACT_BYTES);
+  });
+
+  test("never runs the report generator, the Riot read or the model", async () => {
+    // The two findings this closes. Running the generator here refetched the
+    // player's CURRENT rank and upserted this older match's
+    // `MatchRankHistory` with it, so a delivery re-driven after the player's
+    // next game rewrote the rank captured at render; and it called the AI
+    // review inside the single-attempt thirty-second send, where a model call
+    // outliving the timeout turns a pre-send failure into an unknown delivery.
+    await deliverNotificationV2(attemptRef());
+
+    expect(stubs.generateMatchReport).not.toHaveBeenCalled();
+    expect(stubs.resolveScoutV2MatchContext).not.toHaveBeenCalled();
+    expect(stubs.generateAiReviewIfEnabled).not.toHaveBeenCalled();
+  });
+
+  test("carries the attested review to every channel, not just the first", async () => {
+    // `markAiAttempted` is global to the match, so a review generated inside
+    // the delivery was consumed by whichever channel was delivered first and
+    // silently missing from every later one. The review belongs to the
+    // artifact now, so each channel's send rebuilds the same message.
+    const deliveries = [];
+    for (const channelId of ["100000000000000001", "100000000000000002"]) {
+      stubs.requireIntentRecordV2.mockResolvedValue(
+        intentRecord("channel", "postmatch", channelId),
+      );
+      deliveries.push(await deliverNotificationV2(attemptRef()));
+    }
+
+    expect(deliveries).toMatchObject([
+      { outcome: "delivered" },
+      { outcome: "delivered" },
+    ]);
+    expect(stubs.send).toHaveBeenCalledTimes(2);
+    for (const call of stubs.send.mock.calls) {
+      const sent = SentMessageSchema.parse(call[0]);
+      expect(sent.files).toHaveLength(2);
+      expect(sent.files[1]?.name).toBe("ai-review.png");
+      expect(attachmentBytes(sent.files[1]?.attachment)).toEqual(REVIEW_BYTES);
+    }
+    expect(stubs.generateAiReviewIfEnabled).not.toHaveBeenCalled();
+  });
+
+  test("attaches only the report when the match earned no review", async () => {
+    stubs.readAttestedReportArtifactV2.mockResolvedValue(
+      attestedReport(undefined),
     );
 
     await deliverNotificationV2(attemptRef());
 
-    expect(stubs.resolveScoutV2MatchContext).not.toHaveBeenCalled();
+    const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
+    expect(sent.files).toHaveLength(1);
   });
 });
 
 const SentMessageSchema = z.object({
   content: z.string().optional(),
-  files: z.array(z.object({ attachment: z.unknown() })),
+  files: z.array(
+    z.object({ name: z.string().nullish(), attachment: z.unknown() }),
+  ),
 });
+
+/** The bytes a built attachment holds, normalized out of Node's Buffer. */
+function attachmentBytes(attachment: unknown): Uint8Array {
+  return Uint8Array.from(z.instanceof(Uint8Array).parse(attachment));
+}

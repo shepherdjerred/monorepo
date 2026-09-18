@@ -526,22 +526,39 @@ followed by v1's best-effort callout refresh. Both kinds refuse a DM target as
 terminal: v1's private settlement receipts are a separate, budgeted fan-out
 that is not ported, and is an explicit gap.
 
-### Delivery attaches exactly what the render attested
+### Delivery sends exactly what the render attested, and establishes nothing
 
-`renderNotificationArtifactV2` runs on `background`, commits the image
-(`report.png` for a post-match report, `loading-screen.png` for a prematch
-announcement, under v1's key layout) and attests to it with a
-`v2-notification-render` receipt naming the object key, digest and size — or
-attesting `none` for a prematch queue the loading screen cannot draw, which
-the send answers with v1's fallback embed. `deliverNotificationV2` runs on
-`realtime`, reads the artifact back through
-`notification/notification-artifact.ts`, verifies the bytes against the
-receipt, and hands them to the message builder as a pre-rendered image
-(`generateMatchReport`'s `prerenderedImage` seam). Nothing is rendered on the
-send, and the receipt's claim about what was delivered is true by
-construction. An artifact whose receipt stands but whose object is missing or
-hashes differently is the terminal failure `content-unavailable`: a fact about
-storage that no retry re-reads differently.
+`renderNotificationArtifactV2` runs on `background` under the effect fence and
+is the only place v1's report generator runs on the V2 lane. That matters
+beyond the Satori cost: the generator refetches every tracked player's rank and
+upserts this match's `MatchRankHistory`, and it spends the one AI review a
+match is allowed (`markAiAttempted` is global to the match). Both are facts
+about the MATCH, established once — so the render evaluates the review's
+per-guild gate against the whole audience the report will reach
+(`resolvePostmatchDeliveryChannels`, shared with v1's own delivery) rather than
+against one channel's guild.
+
+What the generator built is then committed and attested whole: the report image
+and, when the match earned one, the review's image as objects under v1's key
+layout, plus the content line and which components were attached
+(`v2-notification-render` evidence version 2, keyed per `(kind, match)`). A
+prematch render attests the loading screen, or `none` for a queue it cannot
+draw, which the send answers with v1's fallback embed; the announcement kinds
+attest `none` (`text-only`).
+
+`deliverNotificationV2` runs on `realtime` and only reassembles. It reads the
+receipt, fetches the objects it names, verifies each against its digest and
+size (`notification/notification-artifact.ts`, one reader per kind), and
+rebuilds the message with v1's own furniture builders. It runs no generator, no
+Riot read and no model call, so a delivery re-driven days later — a
+reconciliation sweep after the player's next game — rewrites no history, and
+every channel's message carries the same review rather than the first one
+consuming it. Two failures on that path are terminal, not retryable: an object
+that is missing or hashes differently, and a receipt attesting something its
+kind cannot deliver (`MalformedRenderReceiptError`). Both are deterministic
+facts about persisted evidence that parse the same way on every read, so both
+report `content-unavailable` instead of returning the intent to `ready` for
+reconciliation to re-drive forever.
 
 ### The recovery policy gates delivery
 
