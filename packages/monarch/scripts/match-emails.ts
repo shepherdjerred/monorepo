@@ -220,10 +220,24 @@ const noteWrites = matched.filter((m) => {
   );
 });
 
+// A note and a recategorization need different amounts of evidence. A
+// same-day receipt from the same merchant is worth documenting even when the
+// email does not state a total; it is not enough to overwrite a category.
+// Measured over 332 proposed changes, all 30 whose own stated reason admitted
+// the email showed no amount, or that the dates disagreed, were medium or low
+// confidence — none were high. Among them: eight sub-dollar `Deposit` rows
+// that are plainly posted interest, matched to amount-less "mobile check
+// deposit" mail, and a $0.07 row that would have left `Interest` for
+// `Other Income`.
 const categoryChanges: ProposedChange[] = [];
+let weaklyEvidenced = 0;
 for (const m of matched) {
   const suggested = m.result.suggestedCategoryId;
   if (suggested === null || suggested === m.item.transaction.category.id) {
+    continue;
+  }
+  if (m.result.confidence !== "high") {
+    weaklyEvidenced++;
     continue;
   }
   const target = categories.find((c) => c.id === suggested);
@@ -248,6 +262,11 @@ const { changes: guardedChanges, demoted } = guardCrossGroupChanges(
   categoryChanges,
   categories,
 );
+if (weaklyEvidenced > 0) {
+  log.info(
+    `${String(weaklyEvidenced)} category changes withheld: the match is real enough to note but not to recategorize`,
+  );
+}
 
 console.log("\n=== Email Match Report ===");
 console.log(`  Transactions with candidates: ${String(withCandidates.length)}`);
