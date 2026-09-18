@@ -30,6 +30,30 @@ export type EnrichmentStats = {
   tier3Count: number;
 };
 
+// Transactions a previous run already split. Every matcher skips them so it
+// cannot split them twice, which means they are not failures to match — but a
+// bare "0/24" reads exactly like one. Counting them keeps the report honest
+// about which paths still have work left.
+export function alreadySplitCounts(
+  separated: SeparateDeepPathsResult,
+): Record<DeepPathKey, number> {
+  const counts: Record<DeepPathKey, number> = {
+    amazon: 0,
+    venmo: 0,
+    bilt: 0,
+    usaa: 0,
+    scl: 0,
+    apple: 0,
+    costco: 0,
+    paystub: 0,
+    equity: 0,
+  };
+  for (const [key, transactions] of deepPathBuckets(separated)) {
+    counts[key] = transactions.filter((t) => t.isSplitTransaction).length;
+  }
+  return counts;
+}
+
 export type EnrichmentResult = {
   enrichedTransactions: EnrichedTransaction[];
   stats: EnrichmentStats;
@@ -160,14 +184,10 @@ async function runDeepPathEnrichments(
   return Promise.all(tasks);
 }
 
-function buildEnrichedList(
+function deepPathBuckets(
   separated: SeparateDeepPathsResult,
-  allEnrichments: Map<string, TransactionEnrichment>,
-  knowledgeBase: Map<string, MerchantKnowledge>,
-): EnrichedTransaction[] {
-  const enrichedTransactions: EnrichedTransaction[] = [];
-
-  const deepPathMap: [DeepPathKey, MonarchTransaction[]][] = [
+): [DeepPathKey, MonarchTransaction[]][] {
+  return [
     ["amazon", separated.amazonTransactions],
     ["venmo", separated.venmoTransactions],
     ["bilt", separated.biltTransactions],
@@ -178,8 +198,16 @@ function buildEnrichedList(
     ["paystub", separated.paystubTransactions],
     ["equity", separated.equityTransactions],
   ];
+}
 
-  for (const [deepPath, transactions] of deepPathMap) {
+function buildEnrichedList(
+  separated: SeparateDeepPathsResult,
+  allEnrichments: Map<string, TransactionEnrichment>,
+  knowledgeBase: Map<string, MerchantKnowledge>,
+): EnrichedTransaction[] {
+  const enrichedTransactions: EnrichedTransaction[] = [];
+
+  for (const [deepPath, transactions] of deepPathBuckets(separated)) {
     for (const txn of transactions) {
       const enrichment = allEnrichments.get(txn.id);
       const tier = assignTier(txn, enrichment, knowledgeBase);

@@ -11,7 +11,10 @@ import type {
   MonarchCategory,
   MonarchTransaction,
 } from "./lib/monarch/types.ts";
-import { runEnrichmentPipeline } from "./lib/enrichment/pipeline.ts";
+import {
+  runEnrichmentPipeline,
+  alreadySplitCounts,
+} from "./lib/enrichment/pipeline.ts";
 import { promptConfirm, applyChanges } from "./lib/apply.ts";
 import {
   initLlm,
@@ -185,7 +188,7 @@ async function main(): Promise<void> {
   const { enrichedTransactions, stats: enrichmentStats } =
     await runEnrichmentPipeline(config, separated, knowledgeBase);
 
-  displayEnrichmentStats(enrichmentStats);
+  displayEnrichmentStats(enrichmentStats, alreadySplitCounts(separated));
 
   if (config.notesOnly) {
     await runNotesOnly(enrichedTransactions, config.apply);

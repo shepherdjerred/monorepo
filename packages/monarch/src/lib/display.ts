@@ -43,7 +43,10 @@ export function displayTierBreakdown(
   console.log(`  Tier 3 (agentic):      ${bold(String(tier3))}`);
 }
 
-export function displayEnrichmentStats(stats: EnrichmentStats): void {
+export function displayEnrichmentStats(
+  stats: EnrichmentStats,
+  alreadySplit: Partial<Record<string, number>> = {},
+): void {
   console.log("\n=== Enrichment Stats ===\n");
 
   const sources: [string, { matched: number; total: number }][] = [
@@ -60,10 +63,16 @@ export function displayEnrichmentStats(stats: EnrichmentStats): void {
 
   for (const [name, rate] of sources) {
     if (rate.total === 0) continue;
+    // A transaction a previous run already split is skipped by every matcher
+    // so it cannot be split twice. Counting it as unmatched makes a finished
+    // path look broken, so it is named rather than folded into the rate.
+    const split = alreadySplit[name.toLowerCase()] ?? 0;
+    const eligible = rate.total - split;
     const pct =
-      rate.total > 0 ? ((rate.matched / rate.total) * 100).toFixed(0) : "0";
+      eligible > 0 ? ((rate.matched / eligible) * 100).toFixed(0) : "0";
+    const note = split > 0 ? ` — ${String(split)} already split` : "";
     console.log(
-      `  ${padRight(name, 8)} ${String(rate.matched)}/${String(rate.total)} matched (${pct}%)`,
+      `  ${padRight(name, 8)} ${String(rate.matched)}/${String(eligible)} matched (${pct}%)${note}`,
     );
   }
 }
