@@ -2,11 +2,13 @@
 
 `subhd.py` is discovered by Bazarr's vendor provider registry. `zimuku.py` is
 the Bazarr 1.6.0 provider with a local archive-selection correction. Its original
-SHA256 is recorded in the header. Both mount as individual read-only files;
-built-in providers remain visible. Source hashes restart Bazarr when either
-overlay or the startup policy changes.
+SHA256 is recorded in the header. `assrt.py` is the matching Bazarr provider
+with strict content validation. `chinese_script.py` verifies subtitle text
+against OpenCC's Apache-2.0 character tables. The overlays mount as individual
+read-only files; built-in providers remain visible. Source hashes restart Bazarr
+when an overlay or the startup policy changes.
 
-The Zimuku overlay derives from Bazarr's GPL-3.0 source and is covered by the
+The Zimuku and ASSRT overlays derive from Bazarr's GPL-3.0 source and are covered by the
 repository's [GPL-3.0 license](../../../../../../LICENSE).
 
 Bazarr's built-in Settings provider catalog does not contain a SubHD card.
@@ -14,17 +16,17 @@ SubHD is enabled by the repo startup policy; provider results use Bazarr's
 discovered backend registry. Existing Settings edits preserve unknown provider
 names in the enabled list.
 
-| Boundary       | Contract                                                                                                                                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Languages      | Generic `zh` and `zh-CN` requests accept explicitly Simplified SubHD results only. Bilingual alone does not establish script.                                                                           |
-| Provenance     | Official, original translation, or other source labels; AI and machine categories are excluded. Attribution inside downloaded text also vetoes acceptance. Labels are claims, not proof of authorship.  |
-| Matching       | Episode entries match exact season/episode. Season packs must yield an exact archive member. Release group precedes bilingual preference; tied archive choices fail.                                    |
-| Files          | SRT, ASS, SSA; UTF-8 output, 32 MiB download/expansion, 4 MiB subtitle, 200 archive members. Files are read in memory, never extracted onto disk.                                                       |
-| Browser        | Dedicated persistent `subhd` profile. Detail page prepares a short-lived ticket, browser navigates to the download page, then authorizes the CDN URL. Cookies and preparation tickets remain in Chrome. |
-| CDN            | HTTPS `dl.subhd.me` only; each redirect is revalidated before following. Credential-bearing browser session is separate from public HTTP requests.                                                      |
-| Failure        | Browser, source, challenge, missing episode, and ambiguity errors throttle the provider. No arbitrary archive fallback or automated CAPTCHA solver.                                                     |
-| Zimuku         | Simplified episode archives require both an exact episode and an explicit filename script marker. Other language/movie behavior retains upstream selection.                                             |
-| Startup policy | Idempotently enables SubHD, keeps ASSRT disabled, and excludes OpenSubtitles AI/machine translations. Existing profiles, scores, and embedded-subtitle policy are preserved.                            |
+| Boundary       | Contract                                                                                                                                                                                                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Languages      | Generic `zh` and `zh-CN` requests accept only text with at least five Simplified-only characters and no Traditional-only characters. Bilingual alone does not establish script.                                                                            |
+| Provenance     | Official, original translation, or other source labels; AI and machine categories are excluded. Attribution inside downloaded text also vetoes acceptance. Labels are claims, not proof of authorship.                                                     |
+| Matching       | Episode entries match exact season/episode. Season packs must yield an exact archive member. Release group precedes bilingual preference; tied archive choices fail.                                                                                       |
+| Files          | SRT, ASS, SSA; UTF-8 output, 32 MiB download/expansion, 4 MiB subtitle, 200 archive members. Files are read in memory, never extracted onto disk.                                                                                                          |
+| Browser        | Dedicated persistent `subhd` profile. Detail page prepares a short-lived ticket, browser navigates to the download page, then authorizes the CDN URL. Cookies and preparation tickets remain in Chrome.                                                    |
+| CDN            | HTTPS `dl.subhd.me` only; each redirect is revalidated before following. Credential-bearing browser session is separate from public HTTP requests.                                                                                                         |
+| Failure        | Browser, source, challenge, missing episode, and ambiguity errors throttle the provider. No arbitrary archive fallback or automated CAPTCHA solver.                                                                                                        |
+| Zimuku         | Simplified episode archives require both an exact episode and an explicit filename script marker. Other language/movie behavior retains upstream selection.                                                                                                |
+| Startup policy | Enables SubHD and ASSRT when its configured token is present. It creates Sonarr's `chinese` tag and maps it to Bazarr profile 2. All downloaded Chinese text passes the same strict script check. Existing scores and embedded-track policy are preserved. |
 
 `SUBHD_PINCHTAB_URL` and `SUBHD_PINCHTAB_PROFILE` supply browser bootstrap.
 `SUBHD_PINCHTAB_TOKEN` comes from the shared 1Password item mirrored into media.
@@ -36,6 +38,10 @@ download or manual sidecar installation is part of this integration. On an empty
 config volume the startup policy seeds a minimal private config owned by the
 LinuxServer user; Bazarr fills its remaining defaults at first start. Existing
 configuration errors fail startup instead of being replaced.
+
+OpenCC is used only to classify subtitle text. The policy does not convert
+Traditional Chinese or generate a translation. Text without enough unambiguous
+Simplified evidence remains wanted for a later source.
 
 Fixture verification uses the exact catalog-pinned Bazarr image and its vendor
 libraries, with no network access:

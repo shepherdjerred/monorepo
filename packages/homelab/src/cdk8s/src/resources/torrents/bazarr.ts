@@ -32,10 +32,18 @@ const policySource = await Bun.file(
 const zimukuSource = await Bun.file(
   new URL("../../../config/bazarr/zimuku.py", import.meta.url),
 ).text();
+const chineseScriptSource = await Bun.file(
+  new URL("../../../config/bazarr/chinese_script.py", import.meta.url),
+).text();
+const assrtSource = await Bun.file(
+  new URL("../../../config/bazarr/assrt.py", import.meta.url),
+).text();
 const providerRevision = new Bun.CryptoHasher("sha256")
   .update(providerSource)
   .update(policySource)
   .update(zimukuSource)
+  .update(chineseScriptSource)
+  .update(assrtSource)
   .digest("hex");
 
 export function createBazarrDeployment(
@@ -70,6 +78,8 @@ export function createBazarrDeployment(
       "subhd.py": providerSource,
       "configure.py": policySource,
       "zimuku.py": zimukuSource,
+      "chinese_script.py": chineseScriptSource,
+      "assrt.py": assrtSource,
     },
   });
   const providerVolume = Volume.fromConfigMap(
@@ -143,6 +153,18 @@ export function createBazarrDeployment(
         {
           path: "/app/bazarr/bin/custom_libs/subliminal_patch/providers/subhd.py",
           subPath: "subhd.py",
+          volume: providerVolume,
+          readOnly: true,
+        },
+        {
+          path: "/app/bazarr/bin/custom_libs/subliminal_patch/providers/chinese_script.py",
+          subPath: "chinese_script.py",
+          volume: providerVolume,
+          readOnly: true,
+        },
+        {
+          path: "/app/bazarr/bin/custom_libs/subliminal_patch/providers/assrt.py",
+          subPath: "assrt.py",
           volume: providerVolume,
           readOnly: true,
         },

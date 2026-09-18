@@ -12,16 +12,20 @@ preserves the application's embedded-track policy and adds provider overlays for
 
 ## Source labels and script
 
-SubHD's official and original-translation labels offer useful provenance signals.
-Other sources remain candidates because useful human translations may have been reuploaded.
-AI and machine labels exclude a candidate, including AI proofreading and polishing.
-These labels are claims, so newly downloaded files still need quality review.
+[SubHD's candidate parser](https://github.com/shepherdjerred/monorepo/blob/ebd4ce043157d4ff4728a0bec8e56d2c0feaed0a/packages/homelab/src/cdk8s/config/bazarr/subhd.py#L185-L214)
+accepts official and original-translation labels as provenance signals.
+[SubHD and ASSRT filters](https://github.com/shepherdjerred/monorepo/blob/ebd4ce043157d4ff4728a0bec8e56d2c0feaed0a/packages/homelab/src/cdk8s/config/bazarr/assrt.py#L250-L285)
+exclude AI and machine labels, including proofreading and polishing.
+Those labels remain claims, so newly downloaded files still need quality review.
 
 A bilingual label does not establish Simplified Chinese.
-The provider requires an explicit Simplified label and rejects an explicitly Traditional archive member.
+The provider requires unambiguous Simplified text and rejects any Traditional-only
+characters. It uses OpenCC's character tables to distinguish the scripts, then
+requires enough Simplified-only evidence to avoid treating shared Han characters
+as proof.
 It performs no script conversion or generated translation.
-The [startup policy in the Bazarr deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/torrents/bazarr.ts)
-also excludes OpenSubtitles AI and machine translations.
+The [global subtitle validator](https://github.com/shepherdjerred/monorepo/blob/ebd4ce043157d4ff4728a0bec8e56d2c0feaed0a/packages/homelab/src/cdk8s/config/bazarr/chinese_script.py#L263-L272)
+applies that check to downloaded Chinese text from every enabled provider.
 
 ## Season packs and timing
 
@@ -47,3 +51,13 @@ The [browser network policy](https://github.com/shepherdjerred/monorepo/blob/mai
 permits Bazarr as an explicit consumer.
 Interactive challenges and source failures throttle the provider and leave the gap wanted.
 There is no automated CAPTCHA solver.
+
+## Request selection
+
+The existing Seerr Advanced Requests tag selector gives authorized requesters a
+`chinese` choice for TV series. Sonarr preserves that tag when a request joins an
+existing series. Bazarr maps it to the dedicated Chinese language profile.
+
+That keeps the preference with the request instead of applying Chinese subtitle
+searches to the entire library. Existing series already assigned to the profile
+keep their assignment.

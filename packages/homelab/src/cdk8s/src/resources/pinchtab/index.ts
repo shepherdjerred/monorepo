@@ -226,21 +226,20 @@ ip6tables -L OUTPUT -n`,
           key: "PINCHTAB_TOKEN",
         }),
       },
-      // pinchtab 0.13.2 runs its "guard" with auth required on every route
-      // except `/` — `/health` returns 401 without the bearer token, so a plain
-      // httpGet probe fails. Use an exec probe that reads PINCHTAB_TOKEN from the
-      // container env (never the manifest) and calls /health. Two-stage readiness:
-      // the generous startup probe covers Chrome warm-up before liveness/readiness
-      // take over.
+      // PinchTab's guarded health route requires the bearer token, so probes read
+      // PINCHTAB_TOKEN from the container environment instead of the manifest.
+      // Keep the API ready if Chrome stops: clients need that endpoint to start a
+      // replacement browser. Liveness checks Chrome and restarts the pod when the
+      // browser does not recover.
       startup: Probe.fromCommand(HEALTHCHECK_COMMAND, {
         periodSeconds: Duration.seconds(5),
         failureThreshold: 24,
       }),
-      liveness: Probe.fromCommand(HEALTHCHECK_COMMAND, {
+      liveness: Probe.fromCommand(BROWSER_READINESS_COMMAND, {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      readiness: Probe.fromCommand(BROWSER_READINESS_COMMAND, {
+      readiness: Probe.fromCommand(HEALTHCHECK_COMMAND, {
         periodSeconds: Duration.seconds(10),
         failureThreshold: 3,
       }),

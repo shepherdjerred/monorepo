@@ -21,6 +21,17 @@ const DeploymentSchema = z.object({
       }),
       spec: z.object({
         automountServiceAccountToken: z.boolean(),
+        containers: z.array(
+          z.object({
+            name: z.string(),
+            livenessProbe: z.object({
+              exec: z.object({ command: z.array(z.string()) }),
+            }),
+            readinessProbe: z.object({
+              exec: z.object({ command: z.array(z.string()) }),
+            }),
+          }),
+        ),
         initContainers: z.array(
           z.object({
             name: z.string(),
@@ -114,5 +125,20 @@ describe("PinchTab network boundary", () => {
     const ports = policy.spec.egress.flatMap((entry) => entry.ports ?? []);
     expect(ports).toContainEqual({ port: 443, protocol: "TCP" });
     expect(ports).not.toContainEqual({ port: 80, protocol: "TCP" });
+  });
+
+  test("keeps the API available while liveness recovers Chrome", () => {
+    const deployment = resources().flatMap((resource) => {
+      const parsed = DeploymentSchema.safeParse(resource);
+      return parsed.success ? [parsed.data] : [];
+    })[0];
+    const pinchtab = deployment?.spec.template.spec.containers[0];
+    if (pinchtab == null) {
+      throw new Error("PinchTab container must be synthesized");
+    }
+    expect(pinchtab.livenessProbe.exec.command.join(" ")).toContain(
+      "/instances",
+    );
+    expect(pinchtab.readinessProbe.exec.command.join(" ")).toContain("/health");
   });
 });

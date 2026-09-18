@@ -27,6 +27,9 @@ const ContainerSchema = z.object({
   readinessProbe: z
     .object({ exec: z.object({ command: z.array(z.string()) }) })
     .optional(),
+  livenessProbe: z
+    .object({ exec: z.object({ command: z.array(z.string()) }) })
+    .optional(),
 });
 const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
@@ -90,7 +93,7 @@ describe("Chinese subtitle integration", () => {
     const container = bazarr.spec.template.spec.containers[0];
     if (!container) throw new Error("Bazarr container missing");
     const directory = "/app/bazarr/bin/custom_libs/subliminal_patch/providers";
-    for (const provider of ["subhd", "zimuku"]) {
+    for (const provider of ["subhd", "zimuku", "chinese_script", "assrt"]) {
       expect(container.volumeMounts).toContainEqual({
         mountPath: `${directory}/${provider}.py`,
         subPath: `${provider}.py`,
@@ -113,7 +116,7 @@ describe("Chinese subtitle integration", () => {
     ).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  test("detects Kubernetes containers and requires a running browser for readiness", () => {
+  test("keeps the browser API ready while liveness recovers a stopped browser", () => {
     const synthesized = resources();
     const config = synthesized.flatMap((resource) => {
       const parsed = ConfigSchema.safeParse(resource);
@@ -148,8 +151,11 @@ describe("Chinese subtitle integration", () => {
       subPath: "dockerenv",
       readOnly: true,
     });
-    expect(container.readinessProbe?.exec.command.join(" ")).toContain(
+    expect(container.livenessProbe?.exec.command.join(" ")).toContain(
       '"status":"running"',
+    );
+    expect(container.readinessProbe?.exec.command.join(" ")).toContain(
+      "/health",
     );
   });
 

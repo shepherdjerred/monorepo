@@ -30,6 +30,7 @@ from subliminal.subtitle import fix_line_ending
 from subliminal.video import Episode, Video
 from subliminal_patch.exceptions import APIThrottled
 from subliminal_patch.providers import Provider
+from subliminal_patch.providers.chinese_script import require_simplified
 from subliminal_patch.subtitle import Subtitle, guess_matches
 from subzero.language import Language
 
@@ -151,6 +152,7 @@ def validate_content(content: bytes) -> bytes:
         raise APIThrottled("subhd: subtitle contains an AI or machine attribution")
     if "-->" not in text and not re.search(r"(?im)^Dialogue:", text):
         raise APIThrottled("subhd: response is not a timed text subtitle")
+    require_simplified(text, "subhd")
     return fix_line_ending(text.encode("utf-8"))
 
 
