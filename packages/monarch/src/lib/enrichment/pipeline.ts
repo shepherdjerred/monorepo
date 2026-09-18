@@ -15,6 +15,7 @@ import { enrichCostco } from "../costco/enrich.ts";
 import { enrichPaystub } from "../paystub/enrich.ts";
 import { enrichEquity } from "../equity/enrich.ts";
 import { enrichLoan } from "../loan/enrich.ts";
+import { allVenmoCsvs } from "../finance-vault.ts";
 import { assignTier } from "./router.ts";
 import { log } from "../logger.ts";
 
@@ -134,7 +135,9 @@ function deepPathSpecs(
       key: "venmo",
       transactions: separated.venmoTransactions,
       skipped: config.skipVenmo,
-      ready: config.venmoCsv !== undefined,
+      // --venmo-csv names one export; otherwise the vault's are used, so the
+      // gate is "is there any export", not "was a flag passed".
+      ready: config.venmoCsv !== undefined || allVenmoCsvs().length > 0,
       run: () => enrichVenmo(config, separated.venmoTransactions),
     },
     {

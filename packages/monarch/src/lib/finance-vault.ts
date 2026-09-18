@@ -66,6 +66,15 @@ export async function resolveCachePath(
 
 // Vault exports are named with a leading date or date range, so the
 // lexicographically last match is the most recent export.
+export function allVaultFiles(dir: string, pattern: string): string[] {
+  const glob = new Glob(pattern);
+  try {
+    return [...glob.scanSync(dir)].sort().map((m) => path.join(dir, m));
+  } catch {
+    return [];
+  }
+}
+
 export function latestVaultFile(
   dir: string,
   pattern: string,
@@ -84,6 +93,13 @@ export function latestVaultFile(
 
 export function latestVenmoCsv(): string | undefined {
   return latestVaultFile(VENMO_DIR, "*Venmo*.csv");
+}
+
+// Every Venmo export in the vault. Each covers a fixed date range, so reading
+// only the newest silently drops whatever the earlier ones reach further back
+// to cover.
+export function allVenmoCsvs(): string[] {
+  return allVaultFiles(VENMO_DIR, "*Venmo*.csv");
 }
 
 export function latestSclCsv(): string | undefined {

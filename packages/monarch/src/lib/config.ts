@@ -1,6 +1,6 @@
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { latestSclCsv, latestVenmoCsv } from "./finance-vault.ts";
+import { latestSclCsv } from "./finance-vault.ts";
 
 export type Config = {
   openRouterApiKey: string;
@@ -138,7 +138,7 @@ export function getConfig(): Config {
     sample: Number(values.sample),
     verbose: values.verbose,
     interactive: values.interactive,
-    venmoCsv: values["venmo-csv"] ?? latestVenmoCsv(),
+    venmoCsv: values["venmo-csv"],
     skipVenmo: values["skip-venmo"],
     conserviceCookies:
       values["conservice-cookies"] ?? Bun.env["CONSERVICE_COOKIES"],
