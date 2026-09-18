@@ -17,8 +17,9 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/llm-runtime": "workspace:*",
+    "@duckdb/node-api": "1.5.4-r.1",
     "@shepherdjerred/llm-models": "workspace:*",
+    "@shepherdjerred/llm-runtime": "workspace:*",
     "ai": "7.0.77",
     "pdfjs-dist": "^6.2.108",
     "playwright": "1.62.1",

@@ -75,7 +75,6 @@ Per data source:
 | `--skip-usaa`                    | Skip USAA processing                                    |
 | `--scl-csv <path>`               | Path to Seattle City Light CSV export                   |
 | `--skip-scl`                     | Skip Seattle City Light processing                      |
-| `--apple-mail-dir <path>`        | MailMate messages directory (auto-detected if omitted)  |
 | `--skip-apple`                   | Skip Apple receipt processing                           |
 | `--skip-costco`                  | Skip Costco processing                                  |
 
@@ -91,14 +90,18 @@ enabled by default through OpenRouter and can be disabled with
 
 ## Data Sources
 
+Statement and receipt files live in the Obsidian vault
+(`~/Documents/Main Vault/Finances`, see `src/lib/finance-vault.ts`); the repo
+keeps no copies. Parsers read straight from these folders:
+
 - **Monarch Money** -- Transaction data via API.
 - **Amazon** -- Order history via Playwright scraper. Requires manual login for 2FA on first run; results are cached locally.
-- **Venmo** -- CSV export from `https://account.venmo.com/api/statement/download?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&csv=true`.
-- **Conservice** -- Utility charge data for Bilt rent/utility splits.
-- **USAA** -- Insurance PDF statements.
-- **Seattle City Light** -- CSV export (bimonthly bill splits).
-- **Apple** -- Receipt emails parsed from a local MailMate archive.
-- **Costco** -- Receipt parsing with per-item Claude classification.
+- **Venmo** -- CSV export from `https://account.venmo.com/api/statement/download?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&csv=true`, saved to `Venmo/`. The newest export is used unless `--venmo-csv` overrides it.
+- **Conservice** -- Statement PDFs (`*Conservice*.pdf`) in `The Victor/`, for Bilt rent/utility splits.
+- **USAA** -- Insurance statement PDFs (`*_Auto_and_Property_Insurance_Statement.pdf`) in `USAA/`.
+- **Seattle City Light** -- CSV export in `The Victor/` (bimonthly bill splits). The newest export is used unless `--scl-csv` overrides it.
+- **Apple** -- Receipt emails found via the shared MailMate email index (`src/lib/mail/`, all accounts and mailboxes, cached at `~/.monarch-cache/email-index.jsonl`).
+- **Costco** -- Receipt PDFs in `Costco/`, pre-parsed into `Costco/costco-orders.json` by `bun run scripts/build-costco-orders.ts`; the pipeline classifies per-item from that file. Rerun the script after adding receipts.
 
 Each deep source has its own classify/match/parse pipeline under `src/lib/<name>/`.
 
@@ -106,9 +109,25 @@ Each deep source has its own classify/match/parse pipeline under `src/lib/<name>
 
 Beyond fetch and classification, three stages persist context across runs: a merchant **knowledge base** (`src/lib/knowledge/`, rebuilt with `--rebuild-kb`), an **enrichment** pipeline that routes transactions to deep sources (`src/lib/enrichment/`, skipped with `--skip-enrich`), and a **verification** pass that checks classifications and emits suggestions (`src/lib/verification/`). See [ARCHITECTURE.md](ARCHITECTURE.md) for phases, matching tolerances, and caching.
 
+## Maintenance scripts
+
+- `bun run scripts/build-costco-orders.ts` -- rebuild the Costco order cache
+  from the receipt PDFs in the finance vault.
+- `bun run scripts/dedupe-transactions.ts [--apply]` -- find and (with
+  `--apply`, after writing a vault backup) delete duplicate transactions
+  created when an account re-link backfills history an earlier connection
+  already synced.
+- `OPENROUTER_API_KEY=... bun run scripts/match-emails.ts [--apply] [--limit N]
+[--rebuild-index]` -- match MailMate emails to transactions via the shared
+  email index (`src/lib/mail/`): a DuckDB date-window join plus token-affinity
+  scoring shortlists candidate emails per transaction, the model judges each
+  match, and `--apply` writes `🧾 Email:` notes and guard-checked category
+  changes back to Monarch. Judgments checkpoint to
+  `~/.monarch-cache/email-match-checkpoint.json` and resume across runs.
+
 ## hints.txt
 
-User-provided hints to override default categorization. Place the file at the package root. One hint per line, starting with `-`. Blank lines and `#` comments are supported.
+User-provided hints to override default categorization. Lives at the root of the finance vault (`~/Documents/Main Vault/Finances/hints.txt`). One hint per line, starting with `-`. Blank lines and `#` comments are supported.
 
 Example:
 

@@ -82,24 +82,22 @@ const Tier2ClassificationSchema = z.object({
       categoryName: z.string(),
       confidence: z.enum(["high", "medium", "low"]),
       shouldSplit: z.boolean(),
-      splits: z
-        .array(
-          z
-            .object({
-              itemName: z.string().optional(),
-              amount: z.number(),
-              categoryId: z.string(),
-              categoryName: z.string(),
-            })
-            .transform((s) => ({
-              ...s,
-              itemName:
-                s.itemName !== undefined && s.itemName !== ""
-                  ? s.itemName
-                  : s.categoryName,
-            })),
-        )
-        .optional(),
+      // OpenAI strict structured outputs reject optional properties, so the
+      // schema states the prompt's actual contract: every split carries all
+      // four fields and splits is [] when shouldSplit is false.
+      splits: z.array(
+        z
+          .object({
+            itemName: z.string(),
+            amount: z.number(),
+            categoryId: z.string(),
+            categoryName: z.string(),
+          })
+          .transform((s) => ({
+            ...s,
+            itemName: s.itemName === "" ? s.categoryName : s.itemName,
+          })),
+      ),
     }),
   ),
 });
@@ -275,9 +273,7 @@ function buildChangesFromResult(
     const txn = enriched.transaction;
 
     const isSplit =
-      classification.shouldSplit &&
-      classification.splits !== undefined &&
-      classification.splits.length > 1;
+      classification.shouldSplit && classification.splits.length > 1;
 
     if (isSplit) {
       changes.push(

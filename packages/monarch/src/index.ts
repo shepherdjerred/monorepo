@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { getConfig } from "./lib/config.ts";
+import { FINANCE_VAULT_DIR } from "./lib/finance-vault.ts";
 import {
   initMonarch,
   fetchAllTransactions,
@@ -25,6 +26,9 @@ import {
 } from "./lib/classifier/tier3.ts";
 import type { ProposedChange } from "./lib/classifier/types.ts";
 import { verifyClassifications } from "./lib/verification/verify.ts";
+import { guardCrossGroupChanges } from "./lib/verification/transfer-guard.ts";
+import { writeEnrichmentNotes } from "./lib/enrichment/notes.ts";
+import type { EnrichedTransaction } from "./lib/enrichment/types.ts";
 import {
   loadKnowledgeBase,
   saveKnowledgeBase,
@@ -50,17 +54,8 @@ import { log, setLogLevel } from "./lib/logger.ts";
 import { setUserHints } from "./lib/classifier/prompt.ts";
 import path from "node:path";
 
-function getDateRange(): { startDate: string; endDate: string } {
-  const endDate = new Date().toISOString().split("T")[0] ?? "";
-  const startDate =
-    new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0] ?? "";
-  return { startDate, endDate };
-}
-
 async function loadHints(): Promise<string> {
-  const hintsPath = path.join(import.meta.dirname, "..", "hints.txt");
+  const hintsPath = path.join(FINANCE_VAULT_DIR, "hints.txt");
   const hintsFile = Bun.file(hintsPath);
   if (await hintsFile.exists()) {
     const hints = await hintsFile.text();
@@ -122,6 +117,21 @@ async function saveChanges(
   log.info(`Saved ${String(changes.length)} proposed changes to ${outputPath}`);
 }
 
+// Enrichment and note-writing without classification: no model is called,
+// no knowledge base is learned from, and existing categorizations are left
+// exactly as they are. This is what makes a full-history pass safe to run.
+async function runNotesOnly(
+  enriched: EnrichedTransaction[],
+  apply: boolean,
+): Promise<void> {
+  const count = await writeEnrichmentNotes(enriched, !apply);
+  log.info(
+    apply
+      ? `Notes-only run complete: ${String(count)} notes written`
+      : `Notes-only dry run: ${String(count)} notes would be written (pass --apply)`,
+  );
+}
+
 async function main(): Promise<void> {
   const config = getConfig();
 
@@ -132,7 +142,7 @@ async function main(): Promise<void> {
   setWebSearchEnabled(!config.skipResearch);
   const hints = await loadHints();
 
-  const { startDate, endDate } = getDateRange();
+  const { since: startDate, until: endDate } = config;
   log.info(`Fetching transactions from ${startDate} to ${endDate}...`);
 
   const [categories, allTransactions] = await Promise.all([
@@ -174,6 +184,11 @@ async function main(): Promise<void> {
     await runEnrichmentPipeline(config, separated, knowledgeBase);
 
   displayEnrichmentStats(enrichmentStats);
+
+  if (config.notesOnly) {
+    await runNotesOnly(enrichedTransactions, config.apply);
+    return;
+  }
 
   // Filter out split transactions
   const classifiable = enrichedTransactions.filter(
@@ -219,10 +234,15 @@ async function main(): Promise<void> {
     suggestions,
   } = verifyClassifications(allChanges, enrichedTransactions, knowledgeBase);
 
-  const finalChanges = [...verifiedChanges, ...flagged];
+  const { changes: guardedChanges } = guardCrossGroupChanges(
+    [...verifiedChanges, ...flagged],
+    categories,
+  );
+  const finalChanges = guardedChanges;
 
-  // Learn from high-confidence classifications
-  for (const change of verifiedChanges) {
+  // Learn from high-confidence classifications (guarded list: demoted
+  // cross-group changes are flags there and must not teach the KB)
+  for (const change of guardedChanges) {
     if (change.confidence === "high" && change.type === "recategorize") {
       learnFromClassification(
         knowledgeBase,
@@ -280,6 +300,7 @@ async function main(): Promise<void> {
       }
     }
     await applyChanges(finalChanges, config.interactive);
+    await writeEnrichmentNotes(enrichedTransactions);
   } else {
     log.info(
       "Dry run complete. Use --apply to apply, or --output <path> to save to file.",

@@ -49,22 +49,30 @@ describe("matchAppleTransactions", () => {
     expect(result.unmatchedReceipts).toHaveLength(0);
   });
 
-  test("matches within 3-day window", () => {
-    const txns = [makeTxn({ date: "2022-03-06" })];
+  test("matches within 7-day window", () => {
+    const txns = [makeTxn({ date: "2022-03-10" })];
     const receipts = [makeReceipt({ date: "2022-03-04" })];
 
     const result = matchAppleTransactions(txns, receipts);
     expect(result.matched).toHaveLength(1);
   });
 
-  test("does not match beyond 3-day window", () => {
-    const txns = [makeTxn({ date: "2022-03-10" })];
+  test("does not match beyond 7-day window", () => {
+    const txns = [makeTxn({ date: "2022-03-15" })];
     const receipts = [makeReceipt({ date: "2022-03-04" })];
 
     const result = matchAppleTransactions(txns, receipts);
     expect(result.matched).toHaveLength(0);
     expect(result.unmatchedTransactions).toHaveLength(1);
     expect(result.unmatchedReceipts).toHaveLength(1);
+  });
+
+  test("skips receipts with unparseable dates instead of matching blindly", () => {
+    const txns = [makeTxn({ date: "2022-03-04" })];
+    const receipts = [makeReceipt({ date: "" })];
+
+    const result = matchAppleTransactions(txns, receipts);
+    expect(result.matched).toHaveLength(0);
   });
 
   test("does not match different amounts", () => {

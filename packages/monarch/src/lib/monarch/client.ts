@@ -6,6 +6,7 @@ import { MonarchTransactionSchema } from "./types.ts";
 import type { MonarchTransaction } from "./types.ts";
 import { log } from "../logger.ts";
 import {
+  deleteTransactionMutation,
   getCategories,
   getTransactions,
   updateTransaction,
@@ -169,6 +170,34 @@ export async function applyCategory(
       `Category update may have failed for ${transactionId}: expected ${categoryId}, got ${actualCategoryId}`,
     );
   }
+  await sleep(500);
+}
+
+export async function deleteTransaction(transactionId: string): Promise<void> {
+  const result = await withRetry(`deleteTransaction(${transactionId})`, () =>
+    deleteTransactionMutation(transactionId),
+  );
+  assertNoPayloadErrors(
+    `deleteTransaction(${transactionId})`,
+    result.deleteTransaction.errors,
+  );
+  if (!result.deleteTransaction.deleted) {
+    throw new Error(`Delete failed for transaction ${transactionId}`);
+  }
+  await sleep(500);
+}
+
+export async function setTransactionNotes(
+  transactionId: string,
+  notes: string,
+): Promise<void> {
+  const result = await withRetry(`setNotes(${transactionId})`, () =>
+    updateTransaction({ transactionId, notes }),
+  );
+  assertNoPayloadErrors(
+    `setNotes(${transactionId})`,
+    result.updateTransaction.errors,
+  );
   await sleep(500);
 }
 

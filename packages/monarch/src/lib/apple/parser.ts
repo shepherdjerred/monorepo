@@ -1,6 +1,6 @@
-import { Glob } from "bun";
-import path from "node:path";
 import type { AppleReceipt, AppleReceiptItem } from "./types.ts";
+import { loadEmailIndex } from "../mail/index.ts";
+import { extractTextBody } from "../mail/parse.ts";
 import { log } from "../logger.ts";
 
 const MONTHS: Record<string, string> = {
@@ -18,42 +18,20 @@ const MONTHS: Record<string, string> = {
   Dec: "12",
 };
 
+// Returns "" when the text carries no recognizable date so callers fail
+// closed instead of letting NaN date math pass a window check.
 export function parseAppleDate(text: string): string {
   const match = /(\w{3})\s+(\d{1,2}),\s+(\d{4})/.exec(text);
-  if (!match) return text;
+  if (!match) return "";
   const month = MONTHS[match[1] ?? ""];
-  if (month === undefined) return text;
+  if (month === undefined) return "";
   const day = (match[2] ?? "").padStart(2, "0");
   const year = match[3] ?? "";
   return `${year}-${month}-${day}`;
 }
 
-function extractPlainTextBody(emlContent: string): string {
-  const boundaryMatch = /boundary="([^"]+)"/.exec(emlContent);
-  if (!boundaryMatch) {
-    const headerEnd = emlContent.indexOf("\n\n");
-    return headerEnd === -1 ? emlContent : emlContent.slice(headerEnd + 2);
-  }
-
-  const boundary = boundaryMatch[1] ?? "";
-  const parts = emlContent.split(`--${boundary}`);
-
-  for (const part of parts) {
-    if (/Content-Type:\s*text\/plain/i.test(part)) {
-      const bodyStart = part.indexOf("\n\n");
-      if (bodyStart !== -1) {
-        return part.slice(bodyStart + 2);
-      }
-    }
-  }
-
-  const headerEnd = emlContent.indexOf("\n\n");
-  return headerEnd === -1 ? emlContent : emlContent.slice(headerEnd + 2);
-}
-
-export function parseAppleReceipt(emlContent: string): AppleReceipt | null {
-  const body = extractPlainTextBody(emlContent);
-
+// Parses an already-decoded plain-text receipt body.
+export function parseAppleReceipt(body: string): AppleReceipt | null {
   const orderMatch = /ORDER\s+ID:\s*(\S+)/i.exec(body);
   if (!orderMatch) return null;
 
@@ -98,32 +76,21 @@ function parseAppleItems(body: string): AppleReceiptItem[] {
   return items;
 }
 
-export async function findAppleEmails(mailDir: string): Promise<string[]> {
-  const results: string[] = [];
-  const glob = new Glob("**/*.eml");
+const APPLE_RECEIPT_SUBJECT = /your receipt from apple/i;
 
-  for await (const file of glob.scan(mailDir)) {
-    const filePath = path.join(mailDir, file);
-    const content = await Bun.file(filePath).text();
+// Loads Apple receipts from the shared MailMate index — every account and
+// mailbox, with decoded (quoted-printable etc.) bodies.
+export async function loadAppleReceipts(): Promise<AppleReceipt[]> {
+  const index = await loadEmailIndex();
+  const receiptEmails = index.filter((e) =>
+    APPLE_RECEIPT_SUBJECT.test(e.subject),
+  );
+  log.info(`Found ${String(receiptEmails.length)} Apple receipt emails`);
 
-    if (/Subject:.*Your receipt from Apple/i.test(content)) {
-      results.push(filePath);
-    }
-  }
-
-  log.info(`Found ${String(results.length)} Apple receipt emails`);
-  return results;
-}
-
-export async function loadAppleReceipts(
-  mailDir: string,
-): Promise<AppleReceipt[]> {
-  const emailPaths = await findAppleEmails(mailDir);
   const receipts: AppleReceipt[] = [];
-
-  for (const emailPath of emailPaths) {
-    const content = await Bun.file(emailPath).text();
-    const receipt = parseAppleReceipt(content);
+  for (const entry of receiptEmails) {
+    const raw = await Bun.file(entry.path).text();
+    const receipt = parseAppleReceipt(extractTextBody(raw));
     if (receipt) {
       receipts.push(receipt);
     }

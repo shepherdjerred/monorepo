@@ -764,22 +764,6 @@
       "clones": 1,
       "tokens": 192
     },
-    "packages/monarch/src/lib/amazon/classify.ts|packages/monarch/src/lib/costco/classify.ts": {
-      "clones": 1,
-      "tokens": 101
-    },
-    "packages/monarch/src/lib/amazon/enrich.ts|packages/monarch/src/lib/costco/enrich.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/monarch/src/lib/amazon/matcher.ts|packages/monarch/src/lib/costco/matcher.ts": {
-      "clones": 2,
-      "tokens": 190
-    },
-    "packages/monarch/src/lib/amazon/scraper.ts|packages/monarch/src/lib/costco/scraper.ts": {
-      "clones": 1,
-      "tokens": 84
-    },
     "packages/monarch/src/lib/apple/matcher.ts|packages/monarch/src/lib/costco/matcher.ts": {
       "clones": 1,
       "tokens": 71

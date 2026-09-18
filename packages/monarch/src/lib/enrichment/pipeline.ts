@@ -98,16 +98,9 @@ async function runDeepPathEnrichments(
     );
   }
 
-  if (
-    !config.skipApple &&
-    config.appleMailDir !== undefined &&
-    separated.appleTransactions.length > 0
-  ) {
+  if (!config.skipApple && separated.appleTransactions.length > 0) {
     tasks.push(
-      enrichWithKey(
-        enrichApple(config.appleMailDir, separated.appleTransactions),
-        "apple",
-      ),
+      enrichWithKey(enrichApple(separated.appleTransactions), "apple"),
     );
   }
 
@@ -183,7 +176,14 @@ export async function runEnrichmentPipeline(
   };
 
   const allEnrichments = new Map<string, TransactionEnrichment>();
-  const results = await runDeepPathEnrichments(config, separated);
+  // --skip-enrich routes every transaction through classification with no
+  // deep-path context, which is the fast path when only categories matter.
+  const results = config.skipEnrich
+    ? []
+    : await runDeepPathEnrichments(config, separated);
+  if (config.skipEnrich) {
+    log.info("Skipping deep-path enrichment (--skip-enrich)");
+  }
 
   for (const result of results) {
     for (const [id, enrichment] of result.enrichments) {

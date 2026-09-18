@@ -1,7 +1,6 @@
 import { parseArgs } from "node:util";
-import { homedir } from "node:os";
-import { Glob } from "bun";
-import path from "node:path";
+import { z } from "zod";
+import { latestSclCsv, latestVenmoCsv } from "./finance-vault.ts";
 
 export type Config = {
   openRouterApiKey: string;
@@ -23,7 +22,6 @@ export type Config = {
   skipUsaa: boolean;
   sclCsv: string | undefined;
   skipScl: boolean;
-  appleMailDir: string | undefined;
   skipApple: boolean;
   skipCostco: boolean;
   skipResearch: boolean;
@@ -32,7 +30,38 @@ export type Config = {
   rebuildKb: boolean;
   skipEnrich: boolean;
   suggest: boolean;
+  since: string;
+  until: string;
+  notesOnly: boolean;
 };
+
+const DateFlagSchema = z.iso.date();
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// The pipeline historically looked at a fixed trailing year. That default is
+// preserved exactly, but both ends are now addressable so history can be
+// enriched without re-running classification over it.
+export function resolveDateRange(
+  since: string | undefined,
+  until: string | undefined,
+  now: Date,
+): { since: string; until: string } {
+  const resolvedUntil =
+    until === undefined
+      ? (now.toISOString().split("T")[0] ?? "")
+      : DateFlagSchema.parse(until);
+  const resolvedSince =
+    since === undefined
+      ? (new Date(now.getTime() - 365 * DAY_MS).toISOString().split("T")[0] ??
+        "")
+      : DateFlagSchema.parse(since);
+  if (resolvedSince > resolvedUntil) {
+    throw new Error(
+      `--since ${resolvedSince} is after --until ${resolvedUntil}`,
+    );
+  }
+  return { since: resolvedSince, until: resolvedUntil };
+}
 
 export function getConfig(): Config {
   const { values } = parseArgs({
@@ -40,7 +69,10 @@ export function getConfig(): Config {
       apply: { type: "boolean", default: false },
       limit: { type: "string", default: "0" },
       "batch-size": { type: "string", default: "25" },
-      model: { type: "string", default: "claude-sonnet-5" },
+      model: { type: "string", default: "gpt-5.6-luna" },
+      since: { type: "string" },
+      until: { type: "string" },
+      "notes-only": { type: "boolean", default: false },
       "skip-amazon": { type: "boolean", default: false },
       "amazon-years": { type: "string" },
       "force-scrape": { type: "boolean", default: false },
@@ -55,7 +87,6 @@ export function getConfig(): Config {
       "skip-usaa": { type: "boolean", default: false },
       "scl-csv": { type: "string" },
       "skip-scl": { type: "boolean", default: false },
-      "apple-mail-dir": { type: "string" },
       "skip-apple": { type: "boolean", default: false },
       "skip-costco": { type: "boolean", default: false },
       "skip-research": { type: "boolean", default: false },
@@ -81,8 +112,6 @@ export function getConfig(): Config {
       ? amazonYearsRaw.split(",").map(Number)
       : defaultYears;
 
-  const appleMailDir = resolveAppleMailDir(values["apple-mail-dir"]);
-
   return {
     openRouterApiKey,
     apply: values.apply,
@@ -96,15 +125,14 @@ export function getConfig(): Config {
     sample: Number(values.sample),
     verbose: values.verbose,
     interactive: values.interactive,
-    venmoCsv: values["venmo-csv"],
+    venmoCsv: values["venmo-csv"] ?? latestVenmoCsv(),
     skipVenmo: values["skip-venmo"],
     conserviceCookies:
       values["conservice-cookies"] ?? Bun.env["CONSERVICE_COOKIES"],
     skipBilt: values["skip-bilt"],
     skipUsaa: values["skip-usaa"],
-    sclCsv: values["scl-csv"],
+    sclCsv: values["scl-csv"] ?? latestSclCsv(),
     skipScl: values["skip-scl"],
-    appleMailDir,
     skipApple: values["skip-apple"],
     skipCostco: values["skip-costco"],
     skipResearch: values["skip-research"],
@@ -116,6 +144,8 @@ export function getConfig(): Config {
     rebuildKb: values["rebuild-kb"],
     skipEnrich: values["skip-enrich"],
     suggest: values.suggest,
+    ...resolveDateRange(values.since, values.until, new Date()),
+    notesOnly: values["notes-only"],
   };
 }
 
@@ -137,56 +167,4 @@ export function resolveCheckpointFile(
     return checkpointFile;
   }
   return deriveCheckpointPath(outputPath);
-}
-
-export function autoDetectAppleMailDir(
-  mailmateRoots = getMailmateMessageRoots(),
-): string | undefined {
-  const archiveMessagesGlob = new Glob("**/Archive.mailbox/Messages");
-
-  for (const mailmateRoot of mailmateRoots) {
-    try {
-      for (const match of archiveMessagesGlob.scanSync({
-        cwd: mailmateRoot,
-        onlyFiles: false,
-      })) {
-        if (match.includes("/[Gmail].mailbox/Archive.mailbox/Messages")) {
-          return path.join(mailmateRoot, match);
-        }
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  return undefined;
-}
-
-export function resolveAppleMailDir(
-  explicitMailDir: string | undefined,
-  mailmateRoots = getMailmateMessageRoots(),
-): string | undefined {
-  return explicitMailDir ?? autoDetectAppleMailDir(mailmateRoots);
-}
-
-function getMailmateMessageRoots(): string[] {
-  return [
-    path.join(
-      homedir(),
-      "Library",
-      "Application Support",
-      "MailMate",
-      "Messages.noindex",
-      "IMAP",
-    ),
-    path.join(
-      homedir(),
-      "Library",
-      "Application Support",
-      "MailMate",
-      "Messages",
-      "IMAP",
-    ),
-    path.join(homedir(), "com.freron.MailMate", "Messages", "IMAP"),
-  ];
 }

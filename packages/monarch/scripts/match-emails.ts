@@ -1,0 +1,288 @@
+// Match MailMate emails to Monarch transactions: find the email documenting
+// each purchase, have the LLM suggest a note and (optionally) a better
+// category, and apply through the guard/notes machinery.
+//
+//   OPENROUTER_API_KEY=... bun run scripts/match-emails.ts \
+//     [--apply] [--limit N] [--rebuild-index] [--model <id>]
+//
+// Dry run by default: prints the match report and writes nothing.
+import { parseArgs } from "node:util";
+import path from "node:path";
+import { homedir } from "node:os";
+import {
+  initMonarch,
+  fetchAllTransactions,
+  fetchCategories,
+  setTransactionNotes,
+} from "../src/lib/monarch/client.ts";
+import { initLlm } from "../src/lib/classifier/llm.ts";
+import { loadEmailIndex } from "../src/lib/mail/index.ts";
+import {
+  findCandidates,
+  candidateFingerprint,
+  formatScoreHistogram,
+} from "../src/lib/mail/candidates.ts";
+import {
+  judgeEmailMatch,
+  EmailMatchSchema,
+  EMAIL_NOTE_PREFIX,
+  type EmailMatchResult,
+} from "../src/lib/mail/match.ts";
+import { guardCrossGroupChanges } from "../src/lib/verification/transfer-guard.ts";
+import { applyChanges } from "../src/lib/apply.ts";
+import type { ProposedChange } from "../src/lib/classifier/types.ts";
+import type { TransactionCandidates } from "../src/lib/mail/candidates.ts";
+import {
+  EMAIL_MATCH_CHECKPOINT_PATH,
+  LEGACY_EMAIL_MATCH_CHECKPOINT_PATH,
+  resolveCachePath,
+} from "../src/lib/finance-vault.ts";
+import { log } from "../src/lib/logger.ts";
+import { z } from "zod";
+
+const { values } = parseArgs({
+  options: {
+    apply: { type: "boolean", default: false },
+    limit: { type: "string", default: "0" },
+    "rebuild-index": { type: "boolean", default: false },
+    model: { type: "string", default: "gpt-5.6-luna" },
+    concurrency: { type: "string", default: "3" },
+    "candidates-only": { type: "boolean", default: false },
+  },
+  strict: true,
+});
+const LIMIT = Number(values.limit);
+const CONCURRENCY = Math.max(1, Number(values.concurrency));
+
+const apiKey = Bun.env["OPENROUTER_API_KEY"];
+if (apiKey === undefined || apiKey === "") {
+  throw new Error("OPENROUTER_API_KEY environment variable is required");
+}
+initLlm(apiKey, values.model);
+
+const CHECKPOINT_PATH = await resolveCachePath(
+  EMAIL_MATCH_CHECKPOINT_PATH,
+  LEGACY_EMAIL_MATCH_CHECKPOINT_PATH,
+);
+const CheckpointSchema = z.record(z.string(), EmailMatchSchema);
+
+async function loadCheckpoint(): Promise<Record<string, EmailMatchResult>> {
+  if (!(await Bun.file(CHECKPOINT_PATH).exists())) return {};
+  const raw: unknown = JSON.parse(await Bun.file(CHECKPOINT_PATH).text());
+  return CheckpointSchema.parse(raw);
+}
+
+await initMonarch();
+const categories = await fetchCategories();
+const groupTypeById = new Map(categories.map((c) => [c.id, c.group.type]));
+const today = new Date().toISOString().split("T")[0] ?? "";
+const allTxns = await fetchAllTransactions("2021-01-01", today, false);
+
+// Transfers and credit-card payments have no purchase emails; already-split
+// transactions are already itemized.
+const eligible = allTxns.filter(
+  (t) =>
+    !t.isSplitTransaction &&
+    !t.pending &&
+    groupTypeById.get(t.category.id) !== "transfer",
+);
+log.info(
+  `${String(eligible.length)}/${String(allTxns.length)} transactions eligible for email matching`,
+);
+
+const emails = await loadEmailIndex(values["rebuild-index"]);
+let withCandidates = await findCandidates(eligible, emails);
+if (LIMIT > 0) withCandidates = withCandidates.slice(0, LIMIT);
+
+// Measuring a shortlist change costs nothing; judging it costs money. This
+// exits before the first model call so an affinity change can be compared
+// against the previous build for free.
+if (values["candidates-only"]) {
+  console.log("\n=== Candidate Report (no judging) ===");
+  console.log(
+    `  Transactions with candidates: ${String(withCandidates.length)}/${String(eligible.length)}`,
+  );
+  console.log(
+    `  Candidate scores:             ${formatScoreHistogram(withCandidates)}`,
+  );
+  process.exit(0);
+}
+
+// A judgment is only reusable while the shortlist it was made against is
+// unchanged, so the checkpoint key carries a fingerprint of that shortlist.
+function checkpointKey(item: TransactionCandidates): string {
+  return `${item.transaction.id}:${values.model}:${candidateFingerprint(item.candidates)}`;
+}
+
+// LLM judgment with checkpoint resume
+const checkpoint = await loadCheckpoint();
+const results = new Map<string, EmailMatchResult>();
+const pending: TransactionCandidates[] = [];
+let reusedLegacy = 0;
+for (const item of withCandidates) {
+  const cached = checkpoint[checkpointKey(item)];
+  if (cached !== undefined) {
+    results.set(item.transaction.id, cached);
+    continue;
+  }
+  // Entries written before the key carried a shortlist fingerprint. A past
+  // *match* stays valid — the email it matched is still in the shortlist, which
+  // only grew. A past "no match" is exactly the verdict a better shortlist
+  // should overturn, so those are re-judged.
+  const legacy = checkpoint[`${item.transaction.id}:${values.model}`];
+  if (legacy !== undefined && legacy.matchedIndex !== null) {
+    results.set(item.transaction.id, legacy);
+    checkpoint[checkpointKey(item)] = legacy;
+    reusedLegacy++;
+    continue;
+  }
+  pending.push(item);
+}
+if (reusedLegacy > 0) {
+  log.info(
+    `Reused ${String(reusedLegacy)} prior matches from the pre-fingerprint checkpoint`,
+  );
+}
+log.info(
+  `Judging ${String(pending.length)} transactions (${String(results.size)} from checkpoint)...`,
+);
+
+async function judgeWithRetry(
+  item: TransactionCandidates,
+): Promise<EmailMatchResult> {
+  try {
+    return await judgeEmailMatch(item, categories);
+  } catch {
+    // Transient transport hiccups ("failed to process successful response")
+    // can hit a whole concurrency chunk at once; one retry clears them.
+    return judgeEmailMatch(item, categories);
+  }
+}
+
+let done = 0;
+const failedTransactionIds: string[] = [];
+for (let i = 0; i < pending.length; i += CONCURRENCY) {
+  const chunk = pending.slice(i, i + CONCURRENCY);
+  const settled = await Promise.allSettled(
+    chunk.map(async (item) => ({
+      id: item.transaction.id,
+      key: checkpointKey(item),
+      result: await judgeWithRetry(item),
+    })),
+  );
+  for (const [j, outcome] of settled.entries()) {
+    if (outcome.status === "fulfilled") {
+      results.set(outcome.value.id, outcome.value.result);
+      checkpoint[outcome.value.key] = outcome.value.result;
+    } else {
+      const id = chunk[j]?.transaction.id ?? "unknown";
+      failedTransactionIds.push(id);
+      log.warn(`Judgment failed for txn ${id}: ${String(outcome.reason)}`);
+    }
+  }
+  await Bun.write(EMAIL_MATCH_CHECKPOINT_PATH, JSON.stringify(checkpoint));
+  done += chunk.length;
+  if (done % 30 === 0 || done === pending.length) {
+    log.progress(done, pending.length, "transactions judged");
+  }
+}
+if (failedTransactionIds.length > 0) {
+  log.warn(
+    `${String(failedTransactionIds.length)} transactions failed judgment after retry; rerun to retry them`,
+  );
+}
+
+// Assemble outcomes
+const byId = new Map(withCandidates.map((c) => [c.transaction.id, c]));
+type Outcome = {
+  item: TransactionCandidates;
+  result: EmailMatchResult;
+};
+const matched: Outcome[] = [];
+for (const [id, result] of results) {
+  const item = byId.get(id);
+  if (!item) continue;
+  if (result.matchedIndex === null || result.confidence === "low") continue;
+  matched.push({ item, result });
+}
+
+const noteWrites = matched.filter((m) => {
+  if (m.result.note === null || m.result.note === "") return false;
+  const existing = m.item.transaction.notes;
+  const note = `${EMAIL_NOTE_PREFIX}${m.result.note}`;
+  return (
+    (existing === "" || existing.startsWith(EMAIL_NOTE_PREFIX)) &&
+    existing !== note
+  );
+});
+
+const categoryChanges: ProposedChange[] = [];
+for (const m of matched) {
+  const suggested = m.result.suggestedCategoryId;
+  if (suggested === null || suggested === m.item.transaction.category.id) {
+    continue;
+  }
+  const target = categories.find((c) => c.id === suggested);
+  if (!target) continue;
+  const t = m.item.transaction;
+  categoryChanges.push({
+    transactionId: t.id,
+    transactionDate: t.date,
+    merchantName: t.merchant.name,
+    amount: t.amount,
+    currentCategory: t.category.name,
+    currentCategoryId: t.category.id,
+    proposedCategory: target.name,
+    proposedCategoryId: target.id,
+    confidence: m.result.confidence,
+    type: "recategorize",
+    reason: m.result.reason,
+    enrichmentSource: "email",
+  });
+}
+const { changes: guardedChanges, demoted } = guardCrossGroupChanges(
+  categoryChanges,
+  categories,
+);
+
+console.log("\n=== Email Match Report ===");
+console.log(`  Transactions with candidates: ${String(withCandidates.length)}`);
+console.log(`  Confident email matches:      ${String(matched.length)}`);
+console.log(`  Notes to write:               ${String(noteWrites.length)}`);
+console.log(
+  `  Category changes:             ${String(guardedChanges.length)} (${String(demoted)} demoted to review flags)`,
+);
+console.log("\n  Sample notes:");
+for (const m of noteWrites.slice(0, 10)) {
+  console.log(
+    `    ${m.item.transaction.date} ${m.item.transaction.merchant.name}: ${(m.result.note ?? "").slice(0, 90)}`,
+  );
+}
+console.log("\n  Sample category changes:");
+for (const c of guardedChanges.slice(0, 10)) {
+  console.log(
+    `    ${c.transactionDate} $${String(c.amount)} ${c.merchantName}: ${c.currentCategory} -> ${c.proposedCategory} [${c.type}]`,
+  );
+}
+
+if (!values.apply) {
+  console.log("\nDry run. Pass --apply to write notes and category changes.");
+  process.exit(0);
+}
+
+log.info(`Writing ${String(noteWrites.length)} notes...`);
+let notesWritten = 0;
+for (const m of noteWrites) {
+  await setTransactionNotes(
+    m.item.transaction.id,
+    `${EMAIL_NOTE_PREFIX}${m.result.note ?? ""}`,
+  );
+  notesWritten++;
+  if (notesWritten % 25 === 0) {
+    log.progress(notesWritten, noteWrites.length, "notes written");
+  }
+}
+await applyChanges(guardedChanges, false);
+console.log(
+  `Done. ${String(notesWritten)} notes written, ${String(guardedChanges.length)} category changes/flags applied.`,
+);

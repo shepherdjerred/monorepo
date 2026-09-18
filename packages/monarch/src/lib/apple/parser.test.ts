@@ -10,8 +10,8 @@ describe("parseAppleDate", () => {
     expect(parseAppleDate("Dec 15, 2023")).toBe("2023-12-15");
   });
 
-  test("returns input for unparseable date", () => {
-    expect(parseAppleDate("invalid")).toBe("invalid");
+  test("returns empty string for unparseable date so matching fails closed", () => {
+    expect(parseAppleDate("invalid")).toBe("");
   });
 });
 
