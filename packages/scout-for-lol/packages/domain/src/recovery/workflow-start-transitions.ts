@@ -150,6 +150,57 @@ export function decideWorkflowStartRequest(
   return { outcome: "record" };
 }
 
+export type WorkflowStartLostInsertDecision =
+  /** The request that won the insert — in flight, or accepted since we read. */
+  | { outcome: "adopt"; record: ScoutWorkflowStartRecord }
+  | { outcome: "conflict"; reason: "request-differs" }
+  /** Nothing in the context explains the lost insert; read and try again. */
+  | { outcome: "retry" };
+
+/**
+ * Decide what a request does when its insert was refused as a duplicate.
+ *
+ * A refused insert means another request for this Workflow id was in flight
+ * at the instant of the write — a concurrent requester won the race for the
+ * same start. What the loser sees when it reads again depends on how far the
+ * winner got:
+ *
+ * - the winner is still in flight: adopt it (the ordinary race);
+ * - the winner was ACCEPTED between the loser's insert and its re-read, so no
+ *   request is in flight and `latestAccepted` is a request the loser had not
+ *   seen `before`: adopt that one. This does not contradict the lifecycle
+ *   table — `accepted` is terminal for a NEW request — because this is not a
+ *   new request. Two callers asked for the same start at the same time; the
+ *   winner's acceptance is the start both of them asked for, and recording a
+ *   second request now would claim a handoff that never happened;
+ * - nothing changed: the context cannot explain the refusal, so the caller
+ *   reads again. That is bounded by the caller, not here.
+ *
+ * In both adopt cases the Workflow id must still name the same start; a
+ * different type or input is a broken derivation, reported as a conflict.
+ */
+export function resolveWorkflowStartLostInsert(args: {
+  before: WorkflowStartRequestContext;
+  after: WorkflowStartRequestContext;
+  incoming: ScoutWorkflowStartRequest;
+}): WorkflowStartLostInsertDecision {
+  const { before, after, incoming } = args;
+  requireContextShape(before, incoming.requestedWorkflowId);
+  requireContextShape(after, incoming.requestedWorkflowId);
+  const winner =
+    after.inFlight ??
+    (after.latestAccepted !== null &&
+    after.latestAccepted.requestId !== before.latestAccepted?.requestId
+      ? after.latestAccepted
+      : null);
+  if (winner === null) {
+    return { outcome: "retry" };
+  }
+  return sameWorkflowStartIdentity(winner, incoming)
+    ? { outcome: "adopt", record: winner }
+    : { outcome: "conflict", reason: "request-differs" };
+}
+
 function sameAcceptance(
   a: WorkflowStartAcceptance,
   b: WorkflowStartAcceptance,

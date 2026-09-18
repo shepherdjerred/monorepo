@@ -3,6 +3,7 @@ import { IsoInstantSchema, WorkflowRunIdSchema } from "#src/identity/brands.ts";
 import {
   acceptWorkflowStart,
   decideWorkflowStartRequest,
+  resolveWorkflowStartLostInsert,
   sameWorkflowStartIdentity,
 } from "#src/recovery/workflow-start-transitions.ts";
 import {
@@ -168,6 +169,104 @@ describe("decideWorkflowStartRequest", () => {
         startRequest(),
       ),
     ).toThrow(/offered as accepted is unaccepted/u);
+  });
+});
+
+/** The same Workflow id asked to do different work: a broken derivation. */
+function differingStart() {
+  return startRequest({
+    inputPayload: {
+      kind: startRequest().workflowType,
+      version: 1,
+      data: { stage: "beta", trigger: "schedule" },
+    },
+  });
+}
+
+describe("resolveWorkflowStartLostInsert", () => {
+  test("adopts the winner still in flight", () => {
+    const winner = requestedRecord();
+    expect(
+      resolveWorkflowStartLostInsert({
+        before: EMPTY,
+        after: { inFlight: winner, latestAccepted: null },
+        incoming: startRequest(),
+      }),
+    ).toEqual({ outcome: "adopt", record: winner });
+  });
+
+  test("adopts a winner accepted between the lost insert and the re-read", () => {
+    // The loser read "nothing accepted", lost the insert, and now sees an
+    // acceptance it had not seen: the winner finished its handoff first. That
+    // is the loser's own start, not a predecessor to succeed.
+    const winner = acceptedRecord();
+    expect(
+      resolveWorkflowStartLostInsert({
+        before: EMPTY,
+        after: { inFlight: null, latestAccepted: winner },
+        incoming: startRequest(),
+      }),
+    ).toEqual({ outcome: "adopt", record: winner });
+  });
+
+  test("a newly accepted winner is one the loser had not seen before", () => {
+    const older = acceptedRecord();
+    const winner = acceptedRecord({ requestId: SECOND_REQUEST_ID });
+    expect(
+      resolveWorkflowStartLostInsert({
+        before: { inFlight: null, latestAccepted: older },
+        after: { inFlight: null, latestAccepted: winner },
+        incoming: startRequest(),
+      }),
+    ).toEqual({ outcome: "adopt", record: winner });
+  });
+
+  test("an unchanged context explains nothing: retry", () => {
+    const older = acceptedRecord();
+    expect(
+      resolveWorkflowStartLostInsert({
+        before: { inFlight: null, latestAccepted: older },
+        after: { inFlight: null, latestAccepted: older },
+        incoming: startRequest(),
+      }),
+    ).toEqual({ outcome: "retry" });
+    expect(
+      resolveWorkflowStartLostInsert({
+        before: EMPTY,
+        after: EMPTY,
+        incoming: startRequest(),
+      }),
+    ).toEqual({ outcome: "retry" });
+  });
+
+  test("a winner naming a different start conflicts, in flight or accepted", () => {
+    expect(
+      resolveWorkflowStartLostInsert({
+        before: EMPTY,
+        after: { inFlight: requestedRecord(), latestAccepted: null },
+        incoming: differingStart(),
+      }),
+    ).toEqual({ outcome: "conflict", reason: "request-differs" });
+    expect(
+      resolveWorkflowStartLostInsert({
+        before: EMPTY,
+        after: { inFlight: null, latestAccepted: acceptedRecord() },
+        incoming: differingStart(),
+      }),
+    ).toEqual({ outcome: "conflict", reason: "request-differs" });
+  });
+
+  test("refuses a context that belongs to another Workflow id", () => {
+    expect(() =>
+      resolveWorkflowStartLostInsert({
+        before: EMPTY,
+        after: {
+          inFlight: null,
+          latestAccepted: acceptedRecord({ requestedWorkflowId: "other-id" }),
+        },
+        incoming: startRequest(),
+      }),
+    ).toThrow(/belongs to other-id/u);
   });
 });
 

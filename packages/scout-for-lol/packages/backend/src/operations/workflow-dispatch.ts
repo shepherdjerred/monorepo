@@ -87,6 +87,10 @@ export type OperationsDispatchResult =
    * previous accepted request for this id recorded, which is how the join is
    * known. Reporting this as `started` would claim an effect that did not
    * happen.
+   *
+   * Also the answer when a concurrent confirmation of the identical start won
+   * the durable race and was accepted before this one could record itself:
+   * this request adopted that one, whose run is already running.
    */
   | {
       readonly outcome: "joined-running";
@@ -259,7 +263,28 @@ export async function dispatchOperationsWorkflowStart(
       `Workflow start ${planned.requestedWorkflowId} is already requested with a different input (${requested.reason})`,
     );
   }
-  const { requestId } = requested.record;
+  const { requestId, acceptance } = requested.record;
+
+  // Reachable only through the lost-insert race: an identical request was
+  // recorded AND accepted by a concurrent caller between this call's read and
+  // its insert, and the repository adopted it. That request is this one, and
+  // its run is Temporal's answer to it, so there is nothing to ask Temporal
+  // and nothing this call started. A null run id cannot occur here — only
+  // the v1 recorder records acceptances without one, and it never shares a
+  // V2 operator Workflow id — so it is a broken contract, not a case.
+  if (acceptance !== null) {
+    if (acceptance.runId === null) {
+      throw new Error(
+        `Adopted request ${requestId} for ${planned.requestedWorkflowId} was accepted without a run id`,
+      );
+    }
+    return {
+      outcome: "joined-running",
+      requestId,
+      requestedWorkflowId: planned.requestedWorkflowId,
+      runId: acceptance.runId,
+    };
+  }
 
   // The same predicate `operations.availability` reports, so the console's
   // enablement and the dispatch's answer can never disagree. A supervisor

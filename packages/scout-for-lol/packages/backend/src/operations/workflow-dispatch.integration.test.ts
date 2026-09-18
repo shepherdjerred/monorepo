@@ -11,6 +11,16 @@ import {
   fakeV2Temporal,
   type FakeV2Temporal,
 } from "#src/testing/fake-v2-temporal.ts";
+import {
+  IsoInstantSchema,
+  WorkflowRunIdSchema,
+  type WorkflowStartRequestId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  recordWorkflowStartAccepted,
+  requestWorkflowStart,
+} from "#src/database/durable/workflow-start-repository.ts";
+import { startScoutPipelineReconciliationV2 } from "#src/temporal/starts-v2.ts";
 
 /**
  * The operator dispatch against a real durable table and a modelled Temporal.
@@ -24,7 +34,30 @@ import {
  * imported dynamically below them.
  */
 
-const { prisma } = createTestDatabase("operations-workflow-dispatch");
+const { prisma: base } = createTestDatabase("operations-workflow-dispatch");
+/**
+ * Steps a test can run around the dispatcher's durable INSERT of its request,
+ * to place a concurrent confirmation exactly inside the race window. Consumed
+ * on first use so the winner's own writes are not intercepted.
+ */
+let aroundInsert: {
+  before: () => Promise<void>;
+  after: () => Promise<void>;
+} | null = null;
+const prisma = base.$extends({
+  query: {
+    scoutWorkflowStart: {
+      async createMany({ args, query }) {
+        const hooks = aroundInsert;
+        aroundInsert = null;
+        await hooks?.before();
+        const result = await query(args);
+        await hooks?.after();
+        return result;
+      },
+    },
+  },
+});
 vi.doMock("#src/database/index.ts", () => ({ ...databaseModule, prisma }));
 
 let temporal: FakeV2Temporal = fakeV2Temporal();
@@ -63,6 +96,10 @@ async function repair() {
   );
 }
 
+function now() {
+  return IsoInstantSchema.parse(new Date().toISOString());
+}
+
 async function rowsFor(requestedWorkflowId: string) {
   return await prisma.scoutWorkflowStart.findMany({
     where: { requestedWorkflowId },
@@ -74,6 +111,7 @@ beforeEach(async () => {
   await prisma.scoutWorkflowStart.deleteMany();
   temporal = fakeV2Temporal();
   available = true;
+  aroundInsert = null;
 });
 
 afterAll(async () => {
@@ -202,6 +240,66 @@ describe("Temporal unavailable", () => {
 });
 
 describe("simultaneous requests", () => {
+  test("a confirmation that loses the durable race to an already-accepted twin joins its run without a throw", async () => {
+    // The narrow window Codex named: the winner records its request while
+    // this call is between its read and its insert (so the insert is refused)
+    // and then starts and ACCEPTS before this call reads again. There is no
+    // in-flight row to adopt any more; the accepted one is this call's own
+    // start, and the answer is that run — not a second run, not a failure.
+    const input = { stage: STAGE, trigger: "operator" } as const;
+    let winnerRequestId: WorkflowStartRequestId | undefined;
+    aroundInsert = {
+      before: async () => {
+        const winner = await requestWorkflowStart(base, {
+          requestedWorkflowId: RECONCILE_ID,
+          workflowType: "scoutPipelineReconciliationV2Workflow",
+          requestedBy: OPERATOR,
+          requestSource: "operations:reconcile-pipeline",
+          inputPayload: {
+            kind: "scoutPipelineReconciliationV2Workflow",
+            version: 1,
+            data: input,
+          },
+          requestedAt: now(),
+        });
+        if (winner.outcome !== "applied")
+          throw new Error("winner not recorded");
+        winnerRequestId = winner.record.requestId;
+      },
+      after: async () => {
+        if (winnerRequestId === undefined) throw new Error("winner missing");
+        const started = await startScoutPipelineReconciliationV2(
+          temporal.client,
+          input,
+        );
+        const accepted = await recordWorkflowStartAccepted(base, {
+          requestId: winnerRequestId,
+          acceptedAt: now(),
+          runId: WorkflowRunIdSchema.parse(started.firstExecutionRunId),
+        });
+        if (accepted.outcome !== "applied")
+          throw new Error("winner not accepted");
+      },
+    };
+
+    const result = await reconcile();
+
+    expect(result).toEqual({
+      outcome: "joined-running",
+      requestId: winnerRequestId,
+      requestedWorkflowId: RECONCILE_ID,
+      runId: "run-1",
+    });
+    // Exactly one run, exactly one row, and the loser asked Temporal nothing.
+    expect(temporal.starts).toHaveLength(1);
+    const rows = await rowsFor(RECONCILE_ID);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      requestId: winnerRequestId,
+      runId: "run-1",
+    });
+  });
+
   test("two dispatches for one Workflow id yield exactly one run and one accepted start", async () => {
     const outcomes = await Promise.all([reconcile(), reconcile()]);
 

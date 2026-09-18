@@ -12,6 +12,7 @@ import {
 import {
   acceptWorkflowStart,
   decideWorkflowStartRequest,
+  resolveWorkflowStartLostInsert,
   type WorkflowStartRequestContext,
 } from "@scout-for-lol/domain/recovery/workflow-start-transitions.ts";
 import {
@@ -35,9 +36,11 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * The partial unique index over in-flight requests is what makes the
  * read-decide-insert safe without a lock: two simultaneous requests for one
  * workflow id both read "nothing in flight" and both try to insert, and the
- * index admits exactly one. The loser's insert is skipped, it re-reads the
- * winner's row, and the domain adopts it — the same answer it would have
- * given had the reads been serialised.
+ * index admits exactly one. The loser's insert is skipped, it re-reads, and
+ * the domain adopts the winner — whether that winner is still in flight or
+ * was accepted in the gap between the loser's insert and its re-read. Either
+ * way it is the same request the loser asked for, and the answer is the one a
+ * serialised read would have given.
  */
 
 export type RequestWorkflowStartResult =
@@ -79,66 +82,73 @@ async function workflowStartContext(
   };
 }
 
+/**
+ * How many times a refused insert is re-read and re-decided before the
+ * repository gives up. A lost insert is resolved by the domain from what the
+ * re-read shows — the winner in flight, or accepted meanwhile — and only a
+ * re-read that shows NEITHER sends this around again. That cannot happen
+ * through any write this repository makes, so exhausting the budget is a
+ * broken invariant rather than contention.
+ */
+const LOST_INSERT_ATTEMPTS = 3;
+
 export async function requestWorkflowStart(
   db: Db,
   request: ScoutWorkflowStartRequest,
 ): Promise<RequestWorkflowStartResult> {
-  const context = await workflowStartContext(db, request.requestedWorkflowId);
-  const decision = decideWorkflowStartRequest(context, request);
-  if (decision.outcome === "conflict") {
-    return decision;
-  }
-  if (decision.outcome === "adopt") {
-    return {
-      outcome: "adopted",
-      record: decision.record,
-      latestAccepted: context.latestAccepted,
-    };
-  }
-  const record = ScoutWorkflowStartRecordSchema.parse({
-    requestId: crypto.randomUUID(),
-    ...request,
-    acceptance: null,
-  });
-  const created = await db.scoutWorkflowStart.createMany({
-    data: [scoutWorkflowStartRecordToRow(record)],
-    skipDuplicates: true,
-  });
-  if (created.count === 1) {
-    return {
-      outcome: "applied",
-      record,
-      latestAccepted: context.latestAccepted,
-    };
-  }
-  // The in-flight key refused the insert: another request for this workflow
-  // id landed between the read and the write. Read it and let the domain
-  // decide about it exactly as it would have with a serialised read.
-  const raced = await workflowStartContext(db, request.requestedWorkflowId);
-  if (raced.inFlight === null) {
-    throw new Error(
-      `ScoutWorkflowStart insert for ${request.requestedWorkflowId} was refused as a duplicate, yet no request is in flight`,
-    );
-  }
-  const racedDecision = decideWorkflowStartRequest(raced, request);
-  switch (racedDecision.outcome) {
-    case "adopt":
+  for (let attempt = 0; attempt < LOST_INSERT_ATTEMPTS; attempt += 1) {
+    const context = await workflowStartContext(db, request.requestedWorkflowId);
+    const decision = decideWorkflowStartRequest(context, request);
+    if (decision.outcome === "conflict") {
+      return decision;
+    }
+    if (decision.outcome === "adopt") {
       return {
         outcome: "adopted",
-        record: racedDecision.record,
+        record: decision.record,
+        latestAccepted: context.latestAccepted,
+      };
+    }
+    const record = ScoutWorkflowStartRecordSchema.parse({
+      requestId: crypto.randomUUID(),
+      ...request,
+      acceptance: null,
+    });
+    const created = await db.scoutWorkflowStart.createMany({
+      data: [scoutWorkflowStartRecordToRow(record)],
+      skipDuplicates: true,
+    });
+    if (created.count === 1) {
+      return {
+        outcome: "applied",
+        record,
+        latestAccepted: context.latestAccepted,
+      };
+    }
+    // The in-flight key refused the insert: another request for this
+    // workflow id was in flight at the instant of the write. It may still be,
+    // or it may have been accepted since; both are the same request as ours,
+    // and the domain adopts whichever the re-read shows.
+    const raced = await workflowStartContext(db, request.requestedWorkflowId);
+    const resolved = resolveWorkflowStartLostInsert({
+      before: context,
+      after: raced,
+      incoming: request,
+    });
+    if (resolved.outcome === "conflict") {
+      return resolved;
+    }
+    if (resolved.outcome === "adopt") {
+      return {
+        outcome: "adopted",
+        record: resolved.record,
         latestAccepted: raced.latestAccepted,
       };
-    case "conflict":
-      return racedDecision;
-    case "record":
-      throw new Error(
-        `Domain asked to record a request for ${request.requestedWorkflowId} while ${raced.inFlight.requestId} is in flight`,
-      );
-    default: {
-      const _exhaustive: never = racedDecision;
-      return _exhaustive;
     }
   }
+  throw new Error(
+    `Gave up recording a start for ${request.requestedWorkflowId}: ${String(LOST_INSERT_ATTEMPTS)} inserts were each refused as a duplicate while the re-read showed no request in flight and no new acceptance`,
+  );
 }
 
 export type RecordWorkflowStartAcceptedResult =

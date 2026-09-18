@@ -222,6 +222,104 @@ describe("requestWorkflowStart", () => {
   });
 });
 
+/**
+ * A client whose `ScoutWorkflowStart.createMany` runs injected steps around
+ * the real insert, so a test can place a concurrent winner exactly where the
+ * race window is: in flight when the loser's insert runs, and accepted before
+ * the loser reads again. Prisma's query extension is the seam; the steps run
+ * against the plain client so they are not themselves intercepted.
+ */
+function withInsertHooks(hooks: {
+  beforeInsert?: () => Promise<void>;
+  afterInsert?: () => Promise<void>;
+}) {
+  let armed = true;
+  return prisma.$extends({
+    query: {
+      scoutWorkflowStart: {
+        async createMany({ args, query }) {
+          if (!armed) {
+            return await query(args);
+          }
+          armed = false;
+          await hooks.beforeInsert?.();
+          const result = await query(args);
+          await hooks.afterInsert?.();
+          return result;
+        },
+      },
+    },
+  });
+}
+
+describe("requestWorkflowStart under a lost insert", () => {
+  test("adopts a winner that was accepted between the lost insert and the re-read", async () => {
+    // Two operators confirm the same start at once. The winner records its
+    // request while the loser is between its read and its insert, so the
+    // loser's insert is refused; the winner then hears back from Temporal and
+    // records acceptance before the loser reads again. The loser must resolve
+    // to the winner's (now accepted) request — no throw, no second row.
+    let winner: ScoutWorkflowStartRecord | undefined;
+    const db = withInsertHooks({
+      beforeInsert: async () => {
+        winner = recorded(
+          await requestWorkflowStart(prisma, request("wf-lost-1")),
+        );
+      },
+      afterInsert: async () => {
+        if (winner === undefined) throw new Error("winner missing");
+        expect(await accept(winner)).toEqual({ outcome: "applied" });
+      },
+    });
+
+    const loser = await requestWorkflowStart(db, request("wf-lost-1"));
+
+    expect(loser.outcome).toBe("adopted");
+    if (loser.outcome !== "adopted") throw new Error("unreachable");
+    expect(loser.record.requestId).toBe(winner?.requestId);
+    expect(loser.record.acceptance).toEqual({
+      acceptedAt: ACCEPTED_AT,
+      runId: RUN_ID,
+    });
+    expect(loser.latestAccepted?.requestId).toBe(winner?.requestId);
+    expect(await rowsFor("wf-lost-1")).toHaveLength(1);
+  });
+
+  test("adopts a winner still in flight after the lost insert", async () => {
+    let winner: ScoutWorkflowStartRecord | undefined;
+    const db = withInsertHooks({
+      beforeInsert: async () => {
+        winner = recorded(
+          await requestWorkflowStart(prisma, request("wf-lost-2")),
+        );
+      },
+    });
+    const loser = await requestWorkflowStart(db, request("wf-lost-2"));
+    expect(loser.outcome).toBe("adopted");
+    if (loser.outcome !== "adopted") throw new Error("unreachable");
+    expect(loser.record).toEqual(winner);
+    expect(await rowsFor("wf-lost-2")).toHaveLength(1);
+  });
+
+  test("gives up loudly when refusals are never explained by the re-read", async () => {
+    // Only reachable if the insert is refused while nothing is in flight and
+    // nothing new was accepted — a broken invariant, not contention — and
+    // then only after the bounded retries, never by looping forever.
+    // Every attempt is refused, and nothing ever changes underneath.
+    const stubborn = prisma.$extends({
+      query: {
+        scoutWorkflowStart: {
+          createMany: () => Promise.resolve({ count: 0 }),
+        },
+      },
+    });
+    await expect(
+      requestWorkflowStart(stubborn, request("wf-lost-3")),
+    ).rejects.toThrow(/Gave up recording a start/u);
+    expect(await rowsFor("wf-lost-3")).toHaveLength(0);
+  });
+});
+
 describe("recordWorkflowStartAccepted", () => {
   test("accepts once, tolerates the identical retry, conflicts on drift", async () => {
     const record = recorded(
