@@ -112,7 +112,7 @@ export function OperationsConfirmationView(props: {
             <div
               className="space-y-2"
               // `effect` is what keeps a settled card honest: a replayed or
-              // already-accepted answer reads as `none` even though its status
+              // joined-running answer reads as `none` even though its status
               // is `confirmed`, because this confirmation did not do it.
               data-operations-effect={outcome.effect}
             >

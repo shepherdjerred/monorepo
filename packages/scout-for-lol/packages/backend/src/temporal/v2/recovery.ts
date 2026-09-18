@@ -536,6 +536,10 @@ async function recoverArchivedMatch(
       matchId: riotMatchId,
       platformRoute: platformRouteOf(riotMatchId),
       policy: "ARCHIVE_ONLY",
+      // A recovery batch surfaces a match the live pipeline missed, which is
+      // v1's silent-backfill case exactly: a gap being filled, not a live
+      // discovery, so no public delivery is owed for it.
+      deliveryMode: "silent-backfill",
       owner: { kind: "temporal-v2" },
       promotion: null,
       gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),

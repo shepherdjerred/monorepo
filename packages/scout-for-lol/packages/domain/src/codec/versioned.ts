@@ -28,6 +28,25 @@ export type VersionedCodec<Kind extends string, Schema extends z.ZodType> = {
 const CodecKindSchema = z.string().min(1);
 const CodecVersionSchema = z.number().int().min(1);
 
+/**
+ * A versioned envelope whose `data` is left opaque: the wire shape every
+ * versioned payload column must carry, structurally a {@link VersionedEnvelope}
+ * with the payload undecoded. The owning feature decodes `data` with its own
+ * codec; a value that is not even an envelope is broken persisted data and
+ * fails here rather than reaching that decode.
+ */
+export type VersionedPayloadEnvelope = {
+  readonly kind: string;
+  readonly version: number;
+  readonly data: unknown;
+};
+export const VersionedPayloadEnvelopeSchema: z.ZodType<VersionedPayloadEnvelope> =
+  z.strictObject({
+    kind: CodecKindSchema,
+    version: CodecVersionSchema,
+    data: z.unknown(),
+  });
+
 type Migration = (old: unknown) => unknown;
 
 /**

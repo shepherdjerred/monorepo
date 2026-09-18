@@ -18,6 +18,7 @@ import {
 import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
+  scoutLakeProjectionV2WorkflowId,
   scoutPipelineReconciliationV2WorkflowId,
 } from "@scout-for-lol/temporal";
 import {
@@ -31,7 +32,10 @@ import {
 } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { upsertIntent } from "#src/database/durable/intent-repository.ts";
-import { requestWorkflowStart } from "#src/database/durable/workflow-start-repository.ts";
+import {
+  recordWorkflowStartAccepted,
+  requestWorkflowStart,
+} from "#src/database/durable/workflow-start-repository.ts";
 import { SCOUT_OPERATOR_IDS } from "#src/operations/operator-allowlist.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
@@ -115,10 +119,66 @@ async function readStoredResult(intentId: string): Promise<unknown> {
   return row.resultJson === null ? null : JSON.parse(row.resultJson);
 }
 
+type OperationsQueuesRead = Awaited<
+  ReturnType<ReturnType<typeof caller>["operations"]["queues"]>
+>;
+
+/**
+ * Walk one queue two rows at a time until the read reports no more, returning
+ * the keys in the order the pages handed them back.
+ *
+ * `pageBudget` bounds the walk rather than driving it: paging that never
+ * reports the last page is itself the failure, and an unbounded loop would
+ * hang instead of failing. One page per seeded row is more than enough at two
+ * per page.
+ */
+async function pageThroughQueue(
+  queue: "stalledNotifications" | "unacceptedWorkflowStarts",
+  pageBudget: number,
+  keysOf: (queues: OperationsQueuesRead) => readonly string[],
+): Promise<string[]> {
+  const seen: string[] = [];
+  let cursor: string | null = null;
+  let budget = pageBudget;
+  while (budget > 0) {
+    budget -= 1;
+    const resume = cursor;
+    const queues = await caller().operations.queues({
+      limit: 2,
+      ...(resume === null ? {} : { after: { [queue]: resume } }),
+    });
+    seen.push(...keysOf(queues));
+    cursor = queues.pages[queue].cursor;
+    if (!queues.pages[queue].hasMore) {
+      // The last page carries no cursor: there is nothing to resume from.
+      expect(cursor).toBeNull();
+      break;
+    }
+    expect(cursor).not.toBeNull();
+  }
+  return seen;
+}
+
 const RECONCILE_WORKFLOW_ID = scoutPipelineReconciliationV2WorkflowId(
   configuration.environment,
   "operator",
 );
+
+/** The exact start the operator's reconcile derives, as a durable request. */
+function reconcileRequest() {
+  return {
+    requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+    workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+    requestedBy: null,
+    requestSource: "operations:reconcile-pipeline",
+    inputPayload: {
+      kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      version: 1,
+      data: { stage: configuration.environment, trigger: "operator" },
+    },
+    requestedAt: instant(-120_000),
+  };
+}
 
 beforeAll(async () => {
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
@@ -409,9 +469,14 @@ describe("workflow starts travel as post-commit durable requests", () => {
       },
     });
 
-    const start = await db.scoutWorkflowStart.findUniqueOrThrow({
+    const start = await db.scoutWorkflowStart.findFirstOrThrow({
       where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
     });
+    // The answer names the request it recorded, by the request's own key.
+    if (result.kind !== "executed" || result.dispatch === null) {
+      throw new Error("expected an executed result carrying a dispatch");
+    }
+    expect(result.dispatch.requestId).toBe(start.requestId);
     expect(start).toMatchObject({
       workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
       requestSource: "operations:reconcile-pipeline",
@@ -446,7 +511,6 @@ describe("workflow starts travel as post-commit durable requests", () => {
         data: { stage: configuration.environment, trigger: "schedule" },
       },
       requestedAt: instant(-120_000),
-      acceptance: null,
     });
     expect(seeded.outcome).toBe("applied");
 
@@ -469,26 +533,18 @@ describe("workflow starts travel as post-commit durable requests", () => {
     expect(await db.auditLog.count()).toBe(1);
     // The conflicting row was left exactly as it was.
     expect(await db.scoutWorkflowStart.count()).toBe(1);
-    const untouched = await db.scoutWorkflowStart.findUniqueOrThrow({
+    const untouched = await db.scoutWorkflowStart.findFirstOrThrow({
       where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
     });
     expect(untouched.requestSource).toBe("test:pre-existing");
   });
 
-  test("a request already accepted is reported rather than started again", async () => {
-    await requestWorkflowStart(db, {
-      requestedWorkflowId: RECONCILE_WORKFLOW_ID,
-      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
-      requestedBy: null,
-      requestSource: "operations:reconcile-pipeline",
-      inputPayload: {
-        kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
-        version: 1,
-        data: { stage: configuration.environment, trigger: "operator" },
-      },
-      requestedAt: instant(-120_000),
-      acceptance: { acceptedAt: instant(-119_000), runId: null },
-    });
+  test("a request while the previous one is in flight adopts it rather than adding a second", async () => {
+    const seeded = await requestWorkflowStart(db, reconcileRequest());
+    expect(seeded.outcome).toBe("applied");
+    if (seeded.outcome !== "applied") {
+      throw new Error("unreachable");
+    }
 
     const intentId = await prepare({
       kind: "ops_reconcile_pipeline",
@@ -500,9 +556,65 @@ describe("workflow starts travel as post-commit durable requests", () => {
     expect(result).toMatchObject({
       kind: "executed",
       dispatch: {
-        outcome: "already-accepted",
+        outcome: "unavailable",
+        requestId: seeded.record.requestId,
         requestedWorkflowId: RECONCILE_WORKFLOW_ID,
       },
+    });
+    expect(await db.scoutWorkflowStart.count()).toBe(1);
+  });
+
+  test("a request after the previous one was accepted is a new request, not a repeat refusal", async () => {
+    // Before SJ-205 the durable record held one request per workflow id, so a
+    // second operator reconcile was answered with the first acceptance and
+    // nothing was started. Now the accepted request is terminal and the
+    // second is recorded on its own key, ready for Temporal.
+    const seeded = await requestWorkflowStart(db, reconcileRequest());
+    if (seeded.outcome !== "applied") {
+      throw new Error("unreachable");
+    }
+    const acceptedAt = instant(-119_000);
+    const accepted = await recordWorkflowStartAccepted(db, {
+      requestId: seeded.record.requestId,
+      acceptedAt,
+      runId: null,
+    });
+    expect(accepted).toEqual({ outcome: "applied" });
+
+    const intentId = await prepare({
+      kind: "ops_reconcile_pipeline",
+      version: 1,
+    });
+
+    const result = await caller().operations.confirm({ intentId });
+
+    expect(result).toMatchObject({
+      kind: "executed",
+      dispatch: {
+        outcome: "unavailable",
+        requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+      },
+    });
+    if (result.kind !== "executed" || result.dispatch === null) {
+      throw new Error("expected an executed result carrying a dispatch");
+    }
+    expect(result.dispatch.requestId).not.toBe(seeded.record.requestId);
+
+    const rows = await db.scoutWorkflowStart.findMany({
+      where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
+      orderBy: { requestedAt: "asc" },
+    });
+    expect(rows).toHaveLength(2);
+    // The first acceptance is untouched evidence; the second is unaccepted
+    // because this harness has no Temporal to accept it.
+    expect(rows[0]).toMatchObject({
+      requestId: seeded.record.requestId,
+      acceptedAt: new Date(acceptedAt),
+    });
+    expect(rows[1]).toMatchObject({
+      requestId: result.dispatch.requestId,
+      requestedBy: OPERATOR,
+      acceptedAt: null,
     });
   });
 });
@@ -670,28 +782,11 @@ describe("operations reads", () => {
       }),
     );
 
-    const seen: string[] = [];
-    let cursor: string | null = null;
-    // A budget rather than an iteration: paging that never reports the last
-    // page is itself the failure, and an unbounded loop would hang instead of
-    // failing. One page per seeded row is more than enough at two per page.
-    let budget = seeded.length;
-    while (budget > 0) {
-      budget -= 1;
-      const resume = cursor;
-      const queues = await caller().operations.queues({
-        limit: 2,
-        ...(resume === null ? {} : { after: { stalledNotifications: resume } }),
-      });
-      seen.push(...queues.stalledNotifications.map((row) => row.intentKey));
-      cursor = queues.pages.stalledNotifications.cursor;
-      if (!queues.pages.stalledNotifications.hasMore) {
-        // The last page carries no cursor: there is nothing to resume from.
-        expect(cursor).toBeNull();
-        break;
-      }
-      expect(cursor).not.toBeNull();
-    }
+    const seen = await pageThroughQueue(
+      "stalledNotifications",
+      seeded.length,
+      (queues) => queues.stalledNotifications.map((row) => row.intentKey),
+    );
 
     // Every seeded row was reached exactly once, in the read's own order.
     expect(seen).toEqual(seeded);
@@ -732,5 +827,61 @@ describe("operations reads", () => {
     expect(
       await caller().operations.matchPipeline({ matchId: MATCH_ID }),
     ).toEqual({ kind: "not-found" });
+  });
+});
+
+describe("the workflow-start queue pages by request key", () => {
+  test("unaccepted starts sharing one millisecond page completely across the boundary", async () => {
+    // Five requests recorded at the SAME instant, so the read can only order
+    // them by its tie-break — the request key. The cursor must carry that key:
+    // a workflow id in its place would be compared against request keys on the
+    // next page and skip every row still sharing the boundary millisecond.
+    const requestedAt = instant(-60_000);
+    const seeded = await Promise.all(
+      Array.from({ length: 5 }, async (_unused, index) => {
+        const matchId = RiotMatchIdSchema.parse(
+          `NA1_53122798${(30 + index).toString()}`,
+        );
+        const requested = await requestWorkflowStart(db, {
+          requestedWorkflowId: scoutLakeProjectionV2WorkflowId(
+            configuration.environment,
+            matchId,
+          ),
+          workflowType: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+          requestedBy: null,
+          requestSource: "test:shared-millisecond",
+          inputPayload: {
+            kind: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+            version: 1,
+            data: { stage: configuration.environment, riotMatchId: matchId },
+          },
+          requestedAt,
+        });
+        if (requested.outcome !== "applied") {
+          throw new Error(`seed ${matchId} was not recorded`);
+        }
+        return requested.record.requestId;
+      }),
+    );
+
+    const seen = await pageThroughQueue(
+      "unacceptedWorkflowStarts",
+      seeded.length,
+      (queues) => queues.unacceptedWorkflowStarts.map((row) => row.requestId),
+    );
+
+    // Every seeded request reached exactly once, in the read's own tie-break
+    // order (request key ascending within the shared instant).
+    expect(seen).toEqual([...seeded].sort((a, b) => a.localeCompare(b)));
+  });
+
+  test("a workflow-start cursor carrying a workflow id instead of a request key is refused", async () => {
+    await expect(
+      caller().operations.queues({
+        after: {
+          unacceptedWorkflowStarts: `${instant(-60_000)}|${RECONCILE_WORKFLOW_ID}`,
+        },
+      }),
+    ).rejects.toThrow();
   });
 });

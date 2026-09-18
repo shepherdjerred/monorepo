@@ -48,6 +48,7 @@ function observation(
     pipelineOwner: string | null;
     promotedAt: Date | null;
     observedAt: Date;
+    deliveryMode: string;
     matchObjectKey: string | null;
     matchDigest: string | null;
   }> = {},
@@ -60,6 +61,7 @@ function observation(
     promotedAt: null,
     gameCreatedAt: AT,
     observedAt: LATER,
+    deliveryMode: "live",
     matchObjectKey: null,
     matchDigest: null,
     timelineObjectKey: null,
@@ -156,6 +158,33 @@ describe("observeMatch", () => {
       outcome: "conflict",
       reason: "observation-differs",
     });
+  });
+});
+
+describe("delivery mode", () => {
+  test("a silent-backfill observation is stored and read back as one", async () => {
+    const record = observation(140, { deliveryMode: "silent-backfill" });
+    expect(record.deliveryMode).toBe("silent-backfill");
+    expect(await observeMatch(prisma, record)).toEqual({ outcome: "applied" });
+    expect(await getObservation(prisma, { matchId: record.matchId })).toEqual(
+      record,
+    );
+  });
+
+  test("a live and a silent-backfill observation of one match conflict", async () => {
+    // The mode is a discovery-time decision and part of what the observation
+    // ASSERTS. Two producers deciding differently is disagreement, and the
+    // second must not quietly win — the row keeps the first decision.
+    const live = observation(141, { deliveryMode: "live" });
+    expect(await observeMatch(prisma, live)).toEqual({ outcome: "applied" });
+    expect(
+      await observeMatch(
+        prisma,
+        observation(141, { deliveryMode: "silent-backfill" }),
+      ),
+    ).toEqual({ outcome: "conflict", reason: "observation-differs" });
+    const stored = await getObservation(prisma, { matchId: live.matchId });
+    expect(stored?.deliveryMode).toBe("live");
   });
 });
 
@@ -336,6 +365,7 @@ describe("promoteObservation", () => {
       promotedAt: null,
       gameCreatedAt: new Date("2026-09-07T09:00:00.000Z"),
       observedAt: LATER,
+      deliveryMode: "live",
       matchObjectKey: null,
       matchDigest: null,
       timelineObjectKey: null,

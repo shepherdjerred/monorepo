@@ -31,6 +31,24 @@ export const DiscordMessageIdSchema = z
 export type WorkflowRunId = z.infer<typeof WorkflowRunIdSchema>;
 export const WorkflowRunIdSchema = z.string().min(1).brand<"WorkflowRunId">();
 
+/**
+ * The key of one recorded request to start a Temporal Workflow.
+ *
+ * Distinct from the Workflow id on purpose: every V2 Workflow id derives from
+ * identity alone (stage and trigger, stage and match, stage and intent key),
+ * so one Workflow is requested many times over its life and each request needs
+ * a key of its own. Minted by the application as a lowercase hyphenated UUID;
+ * the persistence CHECK pins the same shape, which is why this is narrower
+ * than a case-insensitive `z.uuid()`.
+ */
+export type WorkflowStartRequestId = z.infer<
+  typeof WorkflowStartRequestIdSchema
+>;
+export const WorkflowStartRequestIdSchema = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u)
+  .brand<"WorkflowStartRequestId">();
+
 export type RecoveryBatchId = z.infer<typeof RecoveryBatchIdSchema>;
 export const RecoveryBatchIdSchema = z
   .string()

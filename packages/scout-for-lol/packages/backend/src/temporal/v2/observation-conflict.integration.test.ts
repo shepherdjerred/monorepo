@@ -56,6 +56,7 @@ function observationOf(
     promotion: null,
     gameCreatedAt: CREATED_AT,
     observedAt: OBSERVED_AT,
+    deliveryMode: "live",
     artifacts: { match: null, timeline: null },
     ...overrides,
   };

@@ -61,6 +61,9 @@ export type ObserveMatchResult =
  * REST omission rather than an allowlist on purpose: a column added to the row
  * joins the claim automatically, so a new fact conflicts when producers
  * disagree instead of being silently ignored until someone notices.
+ * `deliveryMode` is the worked example: it joined the claim by being added to
+ * the row, so a live observation and a silent-backfill one of the same match
+ * are `observation-differs`, never a quiet overwrite.
  */
 type ObservationClaim = Omit<
   MatchObservationRow,

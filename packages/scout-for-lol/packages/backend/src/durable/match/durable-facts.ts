@@ -158,17 +158,24 @@ export function insideDurableWrite(): boolean {
  * counter reports. Identity parsing belongs INSIDE `write` so a malformed v1
  * value is counted as this write's failure rather than escaping to the
  * pipeline.
+ *
+ * The answer is handed back — `undefined` when the write failed and was
+ * reported — for the one caller that needs it: a later write in the same
+ * sequence may be keyed by what an earlier one recorded, and that key has to
+ * come from the repository's answer rather than be guessed.
  */
-export async function recordDurableWrite(
+export async function recordDurableWrite<T extends { outcome: string }>(
   facts: DurableFacts,
   kind: DurableWriteKind,
-  write: (db: Db) => Promise<{ outcome: string }>,
-): Promise<void> {
+  write: (db: Db) => Promise<T>,
+): Promise<T | undefined> {
   try {
     const result = await durableWriteScope.run(true, () => write(facts.db));
     countDurableWrite(kind, result.outcome);
+    return result;
   } catch (error) {
     reportDurableWriteFailure(kind, error);
+    return undefined;
   }
 }
 

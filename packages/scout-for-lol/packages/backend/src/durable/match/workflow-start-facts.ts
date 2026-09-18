@@ -51,30 +51,46 @@ export async function withRecordedWorkflowStart<T>(args: {
   runIdOf: (started: T) => string | undefined;
 }): Promise<T> {
   const requestedAt = toIsoInstant(args.facts.now());
-  await recordDurableWrite(args.facts, "workflow-start-requested", async (db) =>
-    requestWorkflowStart(db, {
-      requestedWorkflowId: args.request.requestedWorkflowId,
-      workflowType: args.request.workflowType,
-      requestedBy: args.request.requestedBy,
-      requestSource: args.request.requestSource,
-      inputPayload: {
-        kind: args.request.workflowType,
-        version: 1,
-        data: args.request.input,
-      },
-      requestedAt,
-      acceptance: null,
-    }),
+  const requested = await recordDurableWrite(
+    args.facts,
+    "workflow-start-requested",
+    async (db) =>
+      requestWorkflowStart(db, {
+        requestedWorkflowId: args.request.requestedWorkflowId,
+        workflowType: args.request.workflowType,
+        requestedBy: args.request.requestedBy,
+        requestSource: args.request.requestSource,
+        inputPayload: {
+          kind: args.request.workflowType,
+          version: 1,
+          data: args.request.input,
+        },
+        requestedAt,
+      }),
   );
 
   const started = await args.start();
 
-  await recordDurableWrite(args.facts, "workflow-start-accepted", async (db) =>
-    recordWorkflowStartAccepted(db, {
-      requestedWorkflowId: args.request.requestedWorkflowId,
-      acceptedAt: toIsoInstant(args.facts.now()),
-      runId: toRunId(args.runIdOf(started)),
-    }),
+  // Acceptance is keyed by the REQUEST the repository answered with — the one
+  // this call recorded, or the in-flight one it adopted — never by a key
+  // guessed here. A request that was not recorded (the write failed, or the
+  // workflow id already names a different start) has nothing to accept, and
+  // that is reported as this write's failure rather than quietly skipped.
+  await recordDurableWrite(
+    args.facts,
+    "workflow-start-accepted",
+    async (db) => {
+      if (requested === undefined || requested.outcome === "conflict") {
+        throw new Error(
+          `Cannot record acceptance for ${args.request.requestedWorkflowId}: its request was not recorded`,
+        );
+      }
+      return recordWorkflowStartAccepted(db, {
+        requestId: requested.record.requestId,
+        acceptedAt: toIsoInstant(args.facts.now()),
+        runId: toRunId(args.runIdOf(started)),
+      });
+    },
   );
   return started;
 }

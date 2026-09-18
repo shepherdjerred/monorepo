@@ -66,6 +66,7 @@ describe("MatchObservation constraints", () => {
     riotMatchId: "'NA1_1'",
     platformRoute: "'NA1'",
     processingPolicy: "'ARCHIVE_ONLY'",
+    deliveryMode: "'live'",
     gameCreatedAt: NOW,
     observedAt: NOW,
     updatedAt: NOW,
@@ -75,11 +76,30 @@ describe("MatchObservation constraints", () => {
     await prisma.$executeRawUnsafe(insertSql("MatchObservation", valid));
   });
 
+  test("accepts the silent-backfill delivery mode", async () => {
+    await prisma.$executeRawUnsafe(
+      insertSql("MatchObservation", {
+        ...valid,
+        riotMatchId: "'NA1_12'",
+        deliveryMode: "'silent-backfill'",
+      }),
+    );
+  });
+
   test.each([
     [
       "policy vocabulary",
       { ...valid, riotMatchId: "'NA1_2'", processingPolicy: "'PARTIAL'" },
       "MatchObservation_policy_check",
+    ],
+    [
+      "delivery mode vocabulary (v1's raw source label is not a mode)",
+      {
+        ...valid,
+        riotMatchId: "'NA1_13'",
+        deliveryMode: "'postmatch_silent_backfill'",
+      },
+      "MatchObservation_delivery_mode_check",
     ],
     [
       "owner vocabulary",
@@ -547,6 +567,7 @@ describe("MatchRecoveryBatch constraints", () => {
 
 describe("ScoutWorkflowStart constraints", () => {
   const valid: Record<string, string> = {
+    requestId: "'6f1e7f1a-2b3c-4d5e-8f90-0123456789ab'",
     requestedWorkflowId: "'wf-1'",
     workflowType: "'match-recovery'",
     requestSource: "'operator'",
@@ -554,35 +575,85 @@ describe("ScoutWorkflowStart constraints", () => {
     requestedAt: NOW,
     updatedAt: NOW,
   };
+  /** A fresh, valid request key per row: the key is the primary key now. */
+  function withKey(values: Record<string, string>): Record<string, string> {
+    return { ...values, requestId: `'${crypto.randomUUID()}'` };
+  }
 
   test("accepts a valid row", async () => {
     await prisma.$executeRawUnsafe(insertSql("ScoutWorkflowStart", valid));
   });
 
+  test("a workflow id can be requested again once the previous request was accepted", async () => {
+    // The old primary key made this a duplicate. Two rows for one workflow
+    // id — one accepted, one in flight — is the whole reason for the request
+    // key.
+    await prisma.$executeRawUnsafe(
+      insertSql(
+        "ScoutWorkflowStart",
+        withKey({
+          ...valid,
+          requestedWorkflowId: "'wf-repeat'",
+          acceptedAt: NOW,
+          runId: "'run-1'",
+        }),
+      ),
+    );
+    await prisma.$executeRawUnsafe(
+      insertSql(
+        "ScoutWorkflowStart",
+        withKey({ ...valid, requestedWorkflowId: "'wf-repeat'" }),
+      ),
+    );
+  });
+
   test.each([
     [
       "a run id without acceptance",
-      { ...valid, requestedWorkflowId: "'wf-2'", runId: "'run-1'" },
+      withKey({ ...valid, requestedWorkflowId: "'wf-2'", runId: "'run-1'" }),
       "ScoutWorkflowStart_run_id_check",
     ],
     [
       "an empty request source",
-      { ...valid, requestedWorkflowId: "'wf-3'", requestSource: "''" },
+      withKey({ ...valid, requestedWorkflowId: "'wf-3'", requestSource: "''" }),
       "ScoutWorkflowStart_text_shape_check",
     ],
     [
       "a requester that is not a Discord snowflake",
-      { ...valid, requestedWorkflowId: "'wf-4'", requestedBy: "'abc'" },
+      withKey({
+        ...valid,
+        requestedWorkflowId: "'wf-4'",
+        requestedBy: "'abc'",
+      }),
       "ScoutWorkflowStart_text_shape_check",
     ],
     [
       "an input payload whose kind is not the workflow type",
-      {
+      withKey({
         ...valid,
         requestedWorkflowId: "'wf-5'",
         inputPayload: `'{"kind":"hall-baseline","version":1,"data":{}}'`,
-      },
+      }),
       "ScoutWorkflowStart_input_payload_kind_check",
+    ],
+    [
+      "a request key that is not a lowercase UUID",
+      {
+        ...valid,
+        requestId: "'6F1E7F1A-2B3C-4D5E-8F90-0123456789AB'",
+        requestedWorkflowId: "'wf-6'",
+      },
+      "ScoutWorkflowStart_request_id_shape_check",
+    ],
+    [
+      "a request key that is not a UUID at all",
+      { ...valid, requestId: "'wf-7'", requestedWorkflowId: "'wf-7'" },
+      "ScoutWorkflowStart_request_id_shape_check",
+    ],
+    [
+      "a second in-flight request for a workflow id (the valid row is in flight)",
+      withKey(valid),
+      "ScoutWorkflowStart_in_flight_request_key",
     ],
   ])("rejects %s", async (_name, values, constraint) => {
     await expectRejected(insertSql("ScoutWorkflowStart", values), constraint);

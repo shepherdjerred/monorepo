@@ -76,6 +76,7 @@ describe("MatchObservation codec", () => {
     promotedAt: null,
     gameCreatedAt: AT,
     observedAt: LATER,
+    deliveryMode: "live",
     matchObjectKey: null,
     matchDigest: null,
     timelineObjectKey: null,
@@ -101,11 +102,22 @@ describe("MatchObservation codec", () => {
       "full born-full temporal-v2",
       { ...baseRow, processingPolicy: "FULL", pipelineOwner: "TEMPORAL_V2" },
     ],
+    ["silent backfill", { ...baseRow, deliveryMode: "silent-backfill" }],
   ] as const;
 
   test.each(variants)("round-trips %s", (_name, row) => {
     const record = matchObservationRowToRecord(row);
     expect(matchObservationRecordToRow(record)).toEqual(row);
+  });
+
+  test("rejects a delivery mode outside the domain enum", () => {
+    // v1's raw source label is the producer's input, never the stored mode.
+    expect(() =>
+      matchObservationRowToRecord({
+        ...baseRow,
+        deliveryMode: "postmatch_silent_backfill",
+      }),
+    ).toThrow(/deliveryMode/);
   });
 
   function observationRecord(artifacts: {
@@ -120,6 +132,7 @@ describe("MatchObservation codec", () => {
       promotion: null,
       gameCreatedAt: AT_ISO,
       observedAt: LATER_ISO,
+      deliveryMode: "live",
       artifacts,
     });
   }
@@ -511,6 +524,7 @@ describe("MatchRecoveryBatch codec", () => {
 
 describe("ScoutWorkflowStart codec", () => {
   const baseRow = {
+    requestId: "6f1e7f1a-2b3c-4d5e-8f90-0123456789ab",
     requestedWorkflowId: "scout-recovery-2026-09-07",
     workflowType: "match-recovery",
     requestedBy: null,
@@ -548,6 +562,18 @@ describe("ScoutWorkflowStart codec", () => {
     expect(() =>
       scoutWorkflowStartRowToRecord({ ...baseRow, runId: "run-abc-123" }),
     ).toThrow(/runId/);
+  });
+
+  test("rejects a request key that is not a lowercase UUID", () => {
+    expect(() =>
+      scoutWorkflowStartRowToRecord({
+        ...baseRow,
+        requestId: "6F1E7F1A-2B3C-4D5E-8F90-0123456789AB",
+      }),
+    ).toThrow(/requestId/);
+    expect(() =>
+      scoutWorkflowStartRowToRecord({ ...baseRow, requestId: "wf-1" }),
+    ).toThrow(/requestId/);
   });
 
   test("rejects an input payload whose kind is not the workflow type", () => {

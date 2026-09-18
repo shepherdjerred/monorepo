@@ -3,6 +3,7 @@ import {
   RecoveryBatchIdSchema,
   RiotMatchIdSchema,
   type RecoveryBatchId,
+  type WorkflowStartRequestId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   MatchProcessingPolicySchema,
@@ -12,10 +13,8 @@ import type { NotificationIntentState } from "@scout-for-lol/domain/notification
 import type { RecoveryBatchState } from "@scout-for-lol/domain/recovery/batch.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
 import type { Db } from "#src/database/index.ts";
-import {
-  scoutWorkflowStartRowToRecord,
-  type ScoutWorkflowStartRecord,
-} from "#src/database/durable/workflow-start-row.ts";
+import type { ScoutWorkflowStartRecord } from "@scout-for-lol/domain/recovery/workflow-start.ts";
+import { scoutWorkflowStartRowToRecord } from "#src/database/durable/workflow-start-row.ts";
 import {
   matchNotificationIntentRowToRecord,
   type MatchNotificationIntentRecord,
@@ -166,10 +165,17 @@ const FULL_POLICY_COLUMN = MatchProcessingPolicySchema.parse("FULL");
  * reconciliation sweep never pages — it always wants the front — so its
  * queries keep exactly the shape and plan they had, with the keyset predicate
  * composed in only when a caller actually supplies a cursor.
+ *
+ * `Id` names WHICH key breaks the tie, because the queues do not all break it
+ * on the same one: five are keyed by the row's natural id, and the
+ * workflow-start queue by the request key — a workflow id can name many
+ * requests, and only the request key orders them. A read whose tie-break is a
+ * branded key takes a branded position, so a caller cannot hand it the other
+ * column and have the comparison quietly skip every row past the boundary.
  */
-export type ScanPosition = {
+export type ScanPosition<Id extends string = string> = {
   readonly at: Date;
-  readonly id: string;
+  readonly id: Id;
 };
 
 /**
@@ -503,10 +509,13 @@ export async function listUnacceptedWorkflowStarts(
   args: {
     workflowTypes: readonly string[];
     limit: number;
-    after?: ScanPosition | undefined;
+    /** The tie-break is the REQUEST key; the position's type says so. */
+    after?: ScanPosition<WorkflowStartRequestId> | undefined;
   },
 ): Promise<ScoutWorkflowStartRecord[]> {
   const after = args.after;
+  // The keyset id is the REQUEST key, not the workflow id: a workflow id can
+  // name many requests over its life, and only the request key is unique.
   const rows = await db.scoutWorkflowStart.findMany({
     where: {
       workflowType: { in: [...args.workflowTypes] },
@@ -516,11 +525,11 @@ export async function listUnacceptedWorkflowStarts(
         : {
             OR: [
               { requestedAt: { gt: after.at } },
-              { requestedAt: after.at, requestedWorkflowId: { gt: after.id } },
+              { requestedAt: after.at, requestId: { gt: after.id } },
             ],
           }),
     },
-    orderBy: [{ requestedAt: "asc" }, { requestedWorkflowId: "asc" }],
+    orderBy: [{ requestedAt: "asc" }, { requestId: "asc" }],
     take: args.limit,
   });
   return rows.map((row) => scoutWorkflowStartRowToRecord(row));

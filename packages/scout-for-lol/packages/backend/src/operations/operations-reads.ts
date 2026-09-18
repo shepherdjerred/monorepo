@@ -1,4 +1,8 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  WorkflowStartRequestIdSchema,
+  type RiotMatchId,
+  type WorkflowStartRequestId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
 import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
 import { SCOUT_V2_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
@@ -17,6 +21,7 @@ import {
   type ScanPosition,
 } from "#src/database/durable/pipeline-scan.ts";
 import {
+  decodeKeyedQueueCursor,
   decodeQueueCursor,
   encodeQueueCursor,
   splitOverFetchedPage,
@@ -87,10 +92,10 @@ export type OperationsQueueCursors = Partial<
   Record<OperationsQueueName, string>
 >;
 
-function pageOf<T>(
+function pageOf<T, Id extends string>(
   rows: readonly T[],
   limit: number,
-  positionOf: (row: T) => ScanPosition,
+  positionOf: (row: T) => ScanPosition<Id>,
 ): { items: readonly T[]; page: OperationsQueuePage } {
   const { items, hasMore } = splitOverFetchedPage(rows, limit);
   const last = items.at(-1);
@@ -147,6 +152,7 @@ export async function readOperationsQueues(args: {
   unprojectedMatches: readonly RiotMatchId[];
   liveRecoveryBatches: readonly string[];
   unacceptedWorkflowStarts: readonly {
+    requestId: WorkflowStartRequestId;
     requestedWorkflowId: string;
     workflowType: string;
     requestedAt: string;
@@ -162,6 +168,16 @@ export async function readOperationsQueues(args: {
     const token = after[name];
     return token === undefined ? undefined : decodeQueueCursor(token);
   };
+  // The workflow-start queue breaks ties on the REQUEST key, and its read's
+  // position type says so; a token carrying a workflow id instead is refused
+  // by the brand rather than compared against the wrong column.
+  const startsCursor = after.unacceptedWorkflowStarts;
+  const startsAfter =
+    startsCursor === undefined
+      ? undefined
+      : decodeKeyedQueueCursor(startsCursor, (id) =>
+          WorkflowStartRequestIdSchema.parse(id),
+        );
 
   const [
     stalledMatchProcessing,
@@ -200,7 +216,7 @@ export async function readOperationsQueues(args: {
     listUnacceptedWorkflowStarts(prisma, {
       workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
       limit,
-      after: cursorFor("unacceptedWorkflowStarts"),
+      after: startsAfter,
     }),
   ]);
 
@@ -228,7 +244,10 @@ export async function readOperationsQueues(args: {
   }));
   const starts = pageOf(unacceptedStarts, args.limit, (record) => ({
     at: new Date(record.requestedAt),
-    id: record.requestedWorkflowId,
+    // The read orders ties by request key, so the cursor must carry it: a
+    // workflow id here would be compared against request keys on the next
+    // page and skip every row sharing the boundary millisecond.
+    id: record.requestId,
   }));
 
   return {
@@ -261,6 +280,7 @@ export async function readOperationsQueues(args: {
     unprojectedMatches: unprojected.items.map((row) => row.riotMatchId),
     liveRecoveryBatches: recovery.items.map((row) => row.recoveryBatchId),
     unacceptedWorkflowStarts: starts.items.map((start) => ({
+      requestId: start.requestId,
       requestedWorkflowId: start.requestedWorkflowId,
       workflowType: start.workflowType,
       requestedAt: start.requestedAt,

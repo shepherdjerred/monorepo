@@ -10,6 +10,7 @@ import {
   AccountIdSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/domain/identity/database-ids.ts";
+import type { MatchDeliveryMode } from "@scout-for-lol/domain/match-processing/states.ts";
 import { observeMatch } from "#src/database/durable/observation-repository.ts";
 import { recordTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import type { MatchTrackedAccountRecord } from "#src/database/durable/tracked-account-row.ts";
@@ -154,6 +155,25 @@ function artifactReference(
   };
 }
 
+/**
+ * v1's ingest source label, as the domain's delivery mode. The two labels are
+ * the whole vocabulary `match-history-polling-effects` produces; anything else
+ * is a broken contract and is refused inside the fail-open boundary, where it
+ * is counted as this write's failure rather than defaulted to `live`.
+ */
+export function deliveryModeFromSource(source: string): MatchDeliveryMode {
+  switch (source) {
+    case "postmatch_live":
+      return "live";
+    case "postmatch_silent_backfill":
+      return "silent-backfill";
+    default:
+      throw new Error(
+        `v1 ingest source ${source} has no delivery mode; expected postmatch_live or postmatch_silent_backfill`,
+      );
+  }
+}
+
 type ObservationArgs = {
   facts: DurableFacts;
   matchId: RiotMatchId;
@@ -172,6 +192,9 @@ async function recordObservation(args: ObservationArgs): Promise<void> {
       // policy is FULL even for a silent backfill: suppressing the Discord
       // report does not make the match archive-only.
       policy: "FULL",
+      // The discovery-time decision v1 already made, kept on the row because
+      // nothing downstream can re-derive it.
+      deliveryMode: deliveryModeFromSource(match.source),
       owner: { kind: "legacy-v1" },
       // Born FULL, so there is no promotion to record.
       promotion: null,

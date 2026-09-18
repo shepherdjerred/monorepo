@@ -30,6 +30,7 @@ import {
 } from "#src/metrics/durable.ts";
 import type { DurableFacts } from "#src/durable/match/durable-facts.ts";
 import {
+  deliveryModeFromSource,
   recordObservedMatch,
   requestMatchArchive,
 } from "#src/durable/match/archive-facts.ts";
@@ -308,6 +309,30 @@ describe("a v1 match-processing pass", () => {
     });
     // No archive ran this pass, so there is no artifact identity to stamp.
     expect(observation?.artifacts.match).toBeNull();
+    expect(observation?.deliveryMode).toBe("live");
+  });
+
+  test("keeps v1's silent-backfill decision on the observation", async () => {
+    // The mode is decided when v1 discovers the match and is not derivable
+    // from any other durable fact, so the source label is mapped once, here,
+    // and stored; a raw label that is not one of v1's two is refused.
+    const id = matchId(9006);
+    await recordObservedMatch({
+      facts,
+      match: {
+        matchId: id,
+        gameCreation: GAME_CREATION,
+        trackedPuuids: [REGISTERED_PUUID],
+        source: "postmatch_silent_backfill",
+      },
+    });
+    const observation = await getObservation(prisma, {
+      matchId: toRiotMatchId(id),
+    });
+    expect(observation?.deliveryMode).toBe("silent-backfill");
+    expect(() => deliveryModeFromSource("postmatch_replay")).toThrow(
+      /no delivery mode/u,
+    );
   });
 
   test("records the settlement receipt naming the ledger rows it moved", async () => {

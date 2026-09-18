@@ -1,6 +1,5 @@
 import {
   WorkflowIdConflictPolicy,
-  WorkflowIdReusePolicy,
   type WorkflowStartOptions,
 } from "@temporalio/client";
 import {
@@ -42,8 +41,9 @@ import configuration from "#src/configuration.ts";
  * start below joins it rather than racing a second one — an operator asking for
  * work already in flight wants that work, not a duplicate of it. The REUSE
  * policy governs an execution that has CLOSED, and it is per family rather than
- * uniform, taken from `SCOUT_V2_REUSE_POLICIES` — the same table the
- * reconciliation sweep's child starter reads.
+ * uniform, taken from `SCOUT_V2_REUSE_POLICIES` for every start here — the
+ * same table the reconciliation sweep's child starter reads, and the only
+ * place reconciliation's own terms are spelled.
  *
  * Sharing that table is the point. A notification run that completed by
  * recording `unknown-delivery` SUCCEEDED, so refusing to reuse its ID would
@@ -63,16 +63,6 @@ import configuration from "#src/configuration.ts";
 const JOIN_RUNNING_EXECUTION = {
   workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
 } as const;
-
-/**
- * Reconciliation is deliberately absent from the shared table: nothing
- * re-drives it, so it has no family policy to inherit. The trigger is part of
- * its ID, so an operator sweep already cannot collide with the scheduled one,
- * and `REJECT_DUPLICATE` keeps a closed operator sweep from being silently
- * re-run. That one-shot-per-trigger behaviour is the `ScoutWorkflowStart`
- * schema limitation tracked on SJ-205, not a policy to loosen here.
- */
-const RECONCILIATION_REUSE_POLICY = WorkflowIdReusePolicy.REJECT_DUPLICATE;
 
 /**
  * The slice of `Client` these starts need, and the handle field the caller
@@ -114,7 +104,8 @@ export async function startScoutPipelineReconciliationV2(
     SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
     {
       ...JOIN_RUNNING_EXECUTION,
-      workflowIdReusePolicy: RECONCILIATION_REUSE_POLICY,
+      workflowIdReusePolicy:
+        SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2],
       workflowId: scoutPipelineReconciliationV2WorkflowId(
         input.stage,
         input.trigger,

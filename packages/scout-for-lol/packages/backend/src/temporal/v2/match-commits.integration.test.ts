@@ -74,6 +74,7 @@ async function seedObservation(matchId: RiotMatchId): Promise<void> {
       promotion: null,
       gameCreatedAt: RECORDED_AT,
       observedAt: RECORDED_AT,
+      deliveryMode: "live",
       artifacts: { match: null, timeline: null },
     }),
   ).toEqual({ outcome: "applied" });
