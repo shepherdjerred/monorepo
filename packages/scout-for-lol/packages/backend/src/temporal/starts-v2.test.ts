@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  WorkflowExecutionAlreadyStartedError,
-  type WorkflowStartOptions,
-} from "@temporalio/client";
+import { WorkflowExecutionAlreadyStartedError } from "@temporalio/client";
 import {
   SCOUT_V2_REUSE_POLICIES,
   SCOUT_WORKFLOW_NAMES,
@@ -17,6 +14,7 @@ import {
   startScoutPipelineReconciliationV2,
   type ScoutV2WorkflowStarter,
 } from "#src/temporal/starts-v2.ts";
+import { fakeV2Temporal as fakeTemporal } from "#src/testing/fake-v2-temporal.ts";
 
 /**
  * What an operator start is allowed to re-run.
@@ -29,87 +27,9 @@ import {
  * success. Those are opposite answers, so a single uniform policy is wrong for
  * at least one of them whichever one is chosen.
  *
- * The fake below models Temporal's documented ID-reuse rule rather than calling
- * a server: closed executions are admitted or refused per the reuse policy, and
- * an open one is joined per the conflict policy. That is a MODEL, and it is
- * stated as one — it pins the policy this code sends and what that policy
- * means, not Temporal's implementation of it.
+ * The fake (`#src/testing/fake-v2-temporal.ts`) models Temporal's documented
+ * ID-reuse rule rather than calling a server.
  */
-
-type ExecutionStatus = "running" | "completed" | "failed";
-
-type RecordedStart = {
-  readonly workflowType: string;
-  readonly options: WorkflowStartOptions;
-  readonly runId: string;
-};
-
-function fakeTemporal() {
-  const executions = new Map<string, ExecutionStatus>();
-  const starts: RecordedStart[] = [];
-  let runSeq = 0;
-
-  function admitsClosedRun(
-    reuse: WorkflowStartOptions["workflowIdReusePolicy"],
-    closed: ExecutionStatus,
-  ): boolean {
-    if (reuse === "ALLOW_DUPLICATE") return true;
-    if (reuse === "ALLOW_DUPLICATE_FAILED_ONLY") return closed === "failed";
-    return false;
-  }
-
-  const client: ScoutV2WorkflowStarter = {
-    workflow: {
-      start: (workflowType, options) => {
-        const workflowId = options.workflowId;
-        const existing = executions.get(workflowId);
-        if (existing === "running") {
-          if (options.workflowIdConflictPolicy !== "USE_EXISTING") {
-            return Promise.reject(
-              new WorkflowExecutionAlreadyStartedError(
-                "Workflow execution already started",
-                workflowId,
-                workflowType,
-              ),
-            );
-          }
-          const joined = starts.findLast(
-            (start) => start.options.workflowId === workflowId,
-          );
-          if (joined === undefined) {
-            throw new Error(`no recorded run to join for ${workflowId}`);
-          }
-          return Promise.resolve({ firstExecutionRunId: joined.runId });
-        }
-        if (
-          existing !== undefined &&
-          !admitsClosedRun(options.workflowIdReusePolicy, existing)
-        ) {
-          return Promise.reject(
-            new WorkflowExecutionAlreadyStartedError(
-              "Workflow execution already started",
-              workflowId,
-              workflowType,
-            ),
-          );
-        }
-        runSeq += 1;
-        const runId = `run-${runSeq.toString()}`;
-        executions.set(workflowId, "running");
-        starts.push({ workflowType, options, runId });
-        return Promise.resolve({ firstExecutionRunId: runId });
-      },
-    },
-  };
-
-  return {
-    client,
-    starts,
-    close: (workflowId: string, as: "completed" | "failed") => {
-      executions.set(workflowId, as);
-    },
-  };
-}
 
 const INTENT_KEY = NotificationIntentKeySchema.parse(
   "notification:NA1_5312279829:channel:420003",
@@ -205,31 +125,41 @@ describe("notification and projection answer reuse differently", () => {
 });
 
 describe("operator reconciliation keeps its own reuse terms", () => {
-  test("a closed operator sweep is not silently re-run", async () => {
+  test("a closed operator sweep can be run again, and a running one is joined", async () => {
     // Reconciliation is absent from the shared table on purpose: nothing
-    // re-drives it, and its one-shot-per-trigger behaviour is the
-    // ScoutWorkflowStart schema limit tracked on SJ-205, not a policy to loosen.
+    // re-drives it. It was REJECT_DUPLICATE while ScoutWorkflowStart could hold
+    // one request per workflow id (SJ-205); a sweep is a re-runnable read of
+    // the durable state, so with one row per request nothing has to refuse it.
     const temporal = fakeTemporal();
-    await startScoutPipelineReconciliationV2(temporal.client, {
+    const first = await startScoutPipelineReconciliationV2(temporal.client, {
       stage: "beta",
       trigger: "operator",
     });
     const [start] = temporal.starts;
-    expect(start?.options.workflowIdReusePolicy).toBe("REJECT_DUPLICATE");
+    expect(start?.options.workflowIdReusePolicy).toBe("ALLOW_DUPLICATE");
+    expect(start?.options.workflowIdConflictPolicy).toBe("USE_EXISTING");
     expect(start?.options.workflowId).toBe(
       "scout-beta-pipeline-reconciliation-v2-operator",
     );
+
+    // Still running: joined, not duplicated.
+    const joined = await startScoutPipelineReconciliationV2(temporal.client, {
+      stage: "beta",
+      trigger: "operator",
+    });
+    expect(joined.firstExecutionRunId).toBe(first.firstExecutionRunId);
+    expect(temporal.starts).toHaveLength(1);
 
     temporal.close(
       "scout-beta-pipeline-reconciliation-v2-operator",
       "completed",
     );
 
-    await expect(
-      startScoutPipelineReconciliationV2(temporal.client, {
-        stage: "beta",
-        trigger: "operator",
-      }),
-    ).rejects.toBeInstanceOf(WorkflowExecutionAlreadyStartedError);
+    const again = await startScoutPipelineReconciliationV2(temporal.client, {
+      stage: "beta",
+      trigger: "operator",
+    });
+    expect(again.firstExecutionRunId).not.toBe(first.firstExecutionRunId);
+    expect(temporal.starts).toHaveLength(2);
   });
 });

@@ -166,6 +166,7 @@ describe("durable pipeline sweep against Postgres", () => {
     await prisma.scoutWorkflowStart.createMany({
       data: [
         {
+          requestId: crypto.randomUUID(),
           requestedWorkflowId: "wf-unaccepted",
           workflowType: "scoutMatchProcessingV2Workflow",
           requestedBy: null,
@@ -180,6 +181,7 @@ describe("durable pipeline sweep against Postgres", () => {
         {
           // Accepted, and older. Acceptance is the residual the read filters
           // on, so an accepted start must not be able to set the age.
+          requestId: crypto.randomUUID(),
           requestedWorkflowId: "wf-accepted",
           workflowType: "scoutMatchProcessingV2Workflow",
           requestedBy: null,

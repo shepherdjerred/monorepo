@@ -1,61 +1,36 @@
 import { z } from "zod";
 import {
-  IsoInstantSchema,
-  WorkflowRunIdSchema,
-} from "@scout-for-lol/domain/identity/brands.ts";
-import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+  ScoutWorkflowStartRecordSchema,
+  type ScoutWorkflowStartRecord,
+} from "@scout-for-lol/domain/recovery/workflow-start.ts";
 import {
   dateFromIsoInstant,
   parsePayloadEnvelopeColumn,
   serializePayloadEnvelope,
-  VersionedPayloadEnvelopeSchema,
 } from "#src/database/durable/row-values.ts";
 
 /**
  * Row codec for ScoutWorkflowStart.
  *
- * Acceptance is modelled as one nullable object because a run id is
- * acceptance evidence: it can never exist without `acceptedAt`, which the
- * migration CHECK also enforces. The domain has no brand for a Temporal
- * workflow id (only WorkflowRunId, the run id), so `requestedWorkflowId`
- * stays a plain non-empty string.
+ * The record contract is the domain's (`recovery/workflow-start`); this module
+ * only maps it onto the column shape and back.
  *
- * Starts are typed by `workflowType`, and the input envelope's kind IS that
- * type — the expected-kind contract. The schema and a migration CHECK both
- * enforce it, so an envelope of some other kind can never be stored in, or
- * read out of, a start row.
+ * Acceptance is one nullable object because a run id is acceptance evidence:
+ * it can never exist without `acceptedAt`, which the migration CHECK also
+ * enforces. The request key is the row's primary key and the workflow id is
+ * an ordinary indexed column; the domain has no brand for a Temporal workflow
+ * id (only WorkflowRunId, the run id), so `requestedWorkflowId` stays a plain
+ * non-empty string.
+ *
+ * The expected-kind contract — a start's input envelope kind IS its workflow
+ * type — is enforced by the domain schema on the way out and by a migration
+ * CHECK on the way in, so an envelope of some other kind can never be stored
+ * in, or read out of, a start row.
  */
-
-export type ScoutWorkflowStartRecord = z.infer<
-  typeof ScoutWorkflowStartRecordSchema
->;
-export const ScoutWorkflowStartRecordSchema = z
-  .strictObject({
-    requestedWorkflowId: z.string().min(1),
-    workflowType: z.string().min(1),
-    requestedBy: DiscordAccountIdSchema.nullable(),
-    requestSource: z.string().min(1),
-    inputPayload: VersionedPayloadEnvelopeSchema,
-    requestedAt: IsoInstantSchema,
-    acceptance: z
-      .strictObject({
-        acceptedAt: IsoInstantSchema,
-        runId: WorkflowRunIdSchema.nullable(),
-      })
-      .nullable(),
-  })
-  .superRefine((record, ctx) => {
-    if (record.inputPayload.kind !== record.workflowType) {
-      ctx.addIssue({
-        code: "custom",
-        message: `input payload kind ${record.inputPayload.kind} does not match workflowType ${record.workflowType}`,
-        path: ["inputPayload", "kind"],
-      });
-    }
-  });
 
 /** Column shape of a ScoutWorkflowStart row, minus DB-managed columns. */
 export type ScoutWorkflowStartRow = {
+  requestId: string;
   requestedWorkflowId: string;
   workflowType: string;
   requestedBy: string | null;
@@ -67,6 +42,7 @@ export type ScoutWorkflowStartRow = {
 };
 
 const RawWorkflowStartRowSchema = z.object({
+  requestId: z.string(),
   requestedWorkflowId: z.string(),
   workflowType: z.string(),
   requestedBy: z.string().nullable(),
@@ -83,10 +59,11 @@ export function scoutWorkflowStartRowToRecord(
   const raw = RawWorkflowStartRowSchema.parse(row);
   if (raw.acceptedAt === null && raw.runId !== null) {
     throw new Error(
-      `Workflow start ${raw.requestedWorkflowId} carries a runId without acceptedAt`,
+      `Workflow start request ${raw.requestId} carries a runId without acceptedAt`,
     );
   }
   return ScoutWorkflowStartRecordSchema.parse({
+    requestId: raw.requestId,
     requestedWorkflowId: raw.requestedWorkflowId,
     workflowType: raw.workflowType,
     requestedBy: raw.requestedBy,
@@ -104,6 +81,7 @@ export function scoutWorkflowStartRecordToRow(
   record: ScoutWorkflowStartRecord,
 ): ScoutWorkflowStartRow {
   return {
+    requestId: record.requestId,
     requestedWorkflowId: record.requestedWorkflowId,
     workflowType: record.workflowType,
     requestedBy: record.requestedBy,

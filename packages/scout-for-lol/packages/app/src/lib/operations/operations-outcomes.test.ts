@@ -57,14 +57,13 @@ describe("Workflow-start arms", () => {
     expect(result.facts).toContainEqual({ label: "Run", value: "run-1" });
   });
 
-  test("already-accepted is terminal and claims nothing was started", () => {
+  test("joined-running is settled and claims nothing new was started", () => {
     const result = classifyOperationsConfirmation(
       executed(
         { kind: "start-authorized", workflow: "repair-projection" },
         {
-          outcome: "already-accepted",
+          outcome: "joined-running",
           requestedWorkflowId: "scout-lake-beta-NA1_1234567890",
-          acceptedAt: "2026-09-13T10:00:00.000Z",
           runId: "run-first",
         },
       ),
@@ -74,12 +73,9 @@ describe("Workflow-start arms", () => {
     expect(result.status).toBe("confirmed");
     expect(result.effect).toBe("none");
     expect(result.heading).toBe("Already running");
-    expect(result.message).toContain("Nothing was started");
-    expect(result.reason).toBe("already-accepted");
-    expect(result.facts).toContainEqual({
-      label: "First accepted",
-      value: "2026-09-13T10:00:00.000Z",
-    });
+    expect(result.message).toContain("Nothing new was started");
+    expect(result.message).toContain("joined that run");
+    expect(result.reason).toBe("joined-running");
     expect(result.facts).toContainEqual({ label: "Run", value: "run-first" });
   });
 
@@ -125,29 +121,26 @@ describe("Workflow-start arms", () => {
     expect(projection.message).toContain("already ran to completion");
     expect(projection.message).toContain("Nothing was started");
 
-    // Reconciliation runs REJECT_DUPLICATE, which refuses a closed run whatever
-    // its outcome. Claiming success here would assert something unproven.
+    // Reconciliation and notification allow duplicates outright, so this
+    // answer contradicts the policy and is reported as a system fact, not an
+    // operator failure — and never as a completed sweep.
     const reconcile = alreadyRun("reconcile-pipeline");
-    expect(reconcile.message).toContain("succeeded or failed");
+    expect(reconcile.message).toContain("disagree");
     expect(reconcile.message).not.toContain("ran to completion");
     expect(reconcile.status).toBe("failed");
-
-    // Notification allows duplicates outright, so this answer contradicts the
-    // policy and is reported as a system fact, not an operator failure.
     expect(alreadyRun("retry-notification").message).toContain("disagree");
   });
 
   test("the three non-start outcomes never read the same", () => {
-    // All three moved nothing, and that is the only thing they share: our row
-    // already holds an acceptance, Temporal refused the id, or nothing was
+    // All three moved nothing, and that is the only thing they share: the run
+    // was already open and joined, Temporal refused the id, or nothing was
     // reachable at all. Each demands something different of the operator.
     const shared = { kind: "start-authorized", workflow: "repair-projection" };
     const all = [
       classifyOperationsConfirmation(
         executed(shared, {
-          outcome: "already-accepted",
+          outcome: "joined-running",
           requestedWorkflowId: "wf-1",
-          acceptedAt: "2026-09-13T10:00:00.000Z",
           runId: "run-first",
         }),
       ),
@@ -173,7 +166,7 @@ describe("Workflow-start arms", () => {
     expect(new Set(all.map((outcome) => outcome.reason)).size).toBe(3);
     expect(new Set(all.map((outcome) => outcome.message)).size).toBe(3);
 
-    expect(all[0]?.message).toContain("already been requested and accepted");
+    expect(all[0]?.message).toContain("joined that run");
     expect(all[1]?.message).toContain("already ran to completion");
     expect(all[2]?.message).toContain("is not running");
   });

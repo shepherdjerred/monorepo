@@ -32,8 +32,8 @@ import {
   listUnacceptedWorkflowStarts,
   listUnprojectedLakeMatches,
 } from "#src/database/durable/pipeline-scan.ts";
-import type { VersionedPayloadEnvelope } from "#src/database/durable/row-values.ts";
-import type { ScoutWorkflowStartRecord } from "#src/database/durable/workflow-start-row.ts";
+import type { VersionedPayloadEnvelope } from "@scout-for-lol/domain/codec/versioned.ts";
+import type { ScoutWorkflowStartRecord } from "@scout-for-lol/domain/recovery/workflow-start.ts";
 import {
   lakeStagingReceiptKind,
   rawArchiveReceiptKind,

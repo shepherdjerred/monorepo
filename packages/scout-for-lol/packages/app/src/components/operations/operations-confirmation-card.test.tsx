@@ -121,12 +121,13 @@ describe("the six arms' answers", () => {
         dispatch: {
           outcome: "started",
           requestedWorkflowId: "scout-notify-beta-key",
-          runId: null,
+          runId: "run-notify-1",
         },
       },
     });
     expect(markup).toContain("Notification retry started");
     expect(markup).toContain("scout-notify-beta-key");
+    expect(markup).toContain("run-notify-1");
   });
 
   test("a suppression the machine refuses as not-stale reads as a failure", () => {
@@ -212,26 +213,24 @@ describe("the six arms' answers", () => {
 });
 
 describe("terminal answers that moved nothing", () => {
-  test("already-accepted is final, detailed, and offers no retry", () => {
+  test("joined-running is final, detailed, and offers no retry", () => {
     const markup = render({
       draft: { kind: "ops_repair_projection", riotMatchId: MATCH_ID },
       result: {
         kind: "executed",
         outcome: { kind: "start-authorized", workflow: "repair-projection" },
         dispatch: {
-          outcome: "already-accepted",
+          outcome: "joined-running",
           requestedWorkflowId: "scout-lake-beta-NA1_1234567890",
-          acceptedAt: "2026-09-13T10:00:00.000Z",
           runId: "run-first",
         },
       },
     });
     expect(markup).toContain("Already running");
     expect(markup).toContain('data-operations-effect="none"');
-    expect(markup).toContain("Nothing was started");
-    // The first acceptance is the evidence the durable record kept, so it is
-    // shown rather than summarised away.
-    expect(markup).toContain("2026-09-13T10:00:00.000Z");
+    expect(markup).toContain("Nothing new was started");
+    // The run this request joined is the evidence, so it is shown rather than
+    // summarised away.
     expect(markup).toContain("run-first");
     // One control, and it dismisses. Nothing here invites asking again.
     expect(buttonCount(markup)).toBe(1);

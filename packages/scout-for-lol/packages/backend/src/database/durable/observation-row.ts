@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import {
+  MatchDeliveryModeSchema,
   MatchProcessingPolicySchema,
   PipelineOwnerSchema,
   type PipelineOwner,
@@ -19,8 +20,12 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * The row flattens the domain's processing facts: `pipelineOwner` NULL is the
  * `unowned` variant, and the promotion record is the nullable `promotedAt`
  * column (legal only under FULL, which both the CHECK constraint and this
- * codec's schema enforce). Receipts live in their own table; assembling a full
- * MatchProcessingState is the observation repository's job.
+ * codec's schema enforce). `deliveryMode` is the domain's closed enum stored
+ * as TEXT with a matching CHECK, per the string-state-column convention; it
+ * is part of what an observation asserts, so two producers naming different
+ * modes for one match conflict rather than one quietly winning. Receipts live
+ * in their own table; assembling a full MatchProcessingState is the
+ * observation repository's job.
  */
 
 const StoredArtifactReferenceSchema = z.strictObject({
@@ -39,6 +44,7 @@ export const MatchObservationRecordSchema = z
     matchId: RiotMatchIdSchema,
     platformRoute: PlatformRouteSchema,
     policy: MatchProcessingPolicySchema,
+    deliveryMode: MatchDeliveryModeSchema,
     owner: PipelineOwnerSchema,
     promotion: z.strictObject({ promotedAt: IsoInstantSchema }).nullable(),
     gameCreatedAt: IsoInstantSchema,
@@ -70,6 +76,7 @@ export type MatchObservationRow = {
   riotMatchId: string;
   platformRoute: string;
   processingPolicy: string;
+  deliveryMode: string;
   pipelineOwner: string | null;
   promotedAt: Date | null;
   gameCreatedAt: Date;
@@ -84,6 +91,7 @@ const RawObservationRowSchema = z.object({
   riotMatchId: z.string(),
   platformRoute: z.string(),
   processingPolicy: z.string(),
+  deliveryMode: z.string(),
   pipelineOwner: z.string().nullable(),
   promotedAt: z.date().nullable(),
   gameCreatedAt: z.date(),
@@ -141,6 +149,7 @@ export function matchObservationRowToRecord(
     matchId: raw.riotMatchId,
     platformRoute: raw.platformRoute,
     policy: raw.processingPolicy,
+    deliveryMode: raw.deliveryMode,
     owner: ownerFromColumn(raw.pipelineOwner),
     promotion:
       raw.promotedAt === null
@@ -162,6 +171,7 @@ export function matchObservationRecordToRow(
     riotMatchId: record.matchId,
     platformRoute: record.platformRoute,
     processingPolicy: record.policy,
+    deliveryMode: record.deliveryMode,
     pipelineOwner: ownerToColumn(record.owner),
     promotedAt:
       record.promotion === null

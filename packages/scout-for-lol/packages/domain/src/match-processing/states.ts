@@ -12,6 +12,17 @@ import { AccountIdSchema } from "#src/identity/database-ids.ts";
 export type MatchProcessingPolicy = z.infer<typeof MatchProcessingPolicySchema>;
 export const MatchProcessingPolicySchema = z.enum(["ARCHIVE_ONLY", "FULL"]);
 
+/**
+ * How a match was discovered, decided at discovery time and fixed on the
+ * observation: `live` is the ordinary post-match path; `silent-backfill` is a
+ * match surfaced late (a gap being filled) whose public delivery is withheld.
+ * It is not derivable from any other durable fact, which is why it is a
+ * column rather than a computation — a pipeline restarting a stalled match
+ * from its id alone reads it back from the observation.
+ */
+export type MatchDeliveryMode = z.infer<typeof MatchDeliveryModeSchema>;
+export const MatchDeliveryModeSchema = z.enum(["live", "silent-backfill"]);
+
 const UnownedPipelineOwnerSchema = z.strictObject({
   kind: z.literal("unowned"),
 });

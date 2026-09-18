@@ -256,6 +256,10 @@ export async function commitMatchObservationV2(input: {
     matchId: input.riotMatchId,
     platformRoute: platformRouteOf(input.riotMatchId),
     policy: "FULL",
+    // V2 post-match discovery has no backfill path of its own yet: every
+    // match it observes was discovered live. The mode travels with the
+    // Workflow input once discovery can decide otherwise.
+    deliveryMode: "live",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),

@@ -41,10 +41,10 @@ import {
   recordTrackedAccounts,
 } from "#src/database/durable/tracked-account-repository.ts";
 import {
+  recordWorkflowStartAccepted,
   requestWorkflowStart,
   type RequestWorkflowStartResult,
 } from "#src/database/durable/workflow-start-repository.ts";
-import { scoutWorkflowStartRowToRecord } from "#src/database/durable/workflow-start-row.ts";
 import { buildMatchReceipt } from "#src/durable/match/receipt-evidence.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 
@@ -149,6 +149,7 @@ async function seedObservation(args: {
       promotion: null,
       gameCreatedAt: GAME_CREATED_AT,
       observedAt: OBSERVED_AT,
+      deliveryMode: "live",
       artifacts: { match: null, timeline: null },
     }),
   ).toEqual({ outcome: "applied" });
@@ -339,24 +340,27 @@ async function seedWorkflowStart(args: {
   data: Record<string, unknown>;
   acceptedAt: Date | null;
 }): Promise<RequestWorkflowStartResult> {
-  return await requestWorkflowStart(
-    prisma,
-    scoutWorkflowStartRowToRecord({
-      requestedWorkflowId: args.requestedWorkflowId,
-      workflowType: args.workflowType,
-      requestedBy: null,
-      requestSource: "operator-command",
-      // The expected-kind contract: a start's input envelope kind IS its type.
-      inputPayload: JSON.stringify({
-        kind: args.workflowType,
-        version: 1,
-        data: { stage: STAGE, ...args.data },
-      }),
-      requestedAt: AT,
-      acceptedAt: args.acceptedAt,
+  const requested = await requestWorkflowStart(prisma, {
+    requestedWorkflowId: args.requestedWorkflowId,
+    workflowType: args.workflowType,
+    requestedBy: null,
+    requestSource: "operator-command",
+    // The expected-kind contract: a start's input envelope kind IS its type.
+    inputPayload: {
+      kind: args.workflowType,
+      version: 1,
+      data: { stage: STAGE, ...args.data },
+    },
+    requestedAt: IsoInstantSchema.parse(AT.toISOString()),
+  });
+  if (args.acceptedAt !== null && requested.outcome !== "conflict") {
+    await recordWorkflowStartAccepted(prisma, {
+      requestId: requested.record.requestId,
+      acceptedAt: IsoInstantSchema.parse(args.acceptedAt.toISOString()),
       runId: null,
-    }),
-  );
+    });
+  }
+  return requested;
 }
 
 async function seedMatchProcessingFamily(): Promise<void> {

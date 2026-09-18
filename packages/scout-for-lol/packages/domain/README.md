@@ -14,6 +14,24 @@ identity → codec → artifacts → match-processing → notifications → reco
 A later layer may import an earlier one, never the reverse. `identity` is the
 root: it may import zod and its own siblings, nothing else.
 
+## Workflow start requests
+
+`src/recovery/workflow-start.ts` is the contract for a recorded request to
+start a Temporal Workflow, and `workflow-start-transitions.ts` its pure
+transitions. One record per _request_, keyed by `WorkflowStartRequestId`: V2
+Workflow ids derive from identity alone, so one Workflow is requested many
+times over its life and the id is what those requests share.
+
+| Phase       | Lifecycle | On a new request for the same Workflow id |
+| ----------- | --------- | ----------------------------------------- |
+| `requested` | in-flight | adopted — the requester wants that start  |
+| `accepted`  | terminal  | succeeded — a new request is recorded     |
+
+`accepted` is terminal even while the Workflow runs: acceptance ends the
+handoff, and from then on Temporal's conflict and reuse policies govern the
+id. Persistence mirrors the in-flight half with a partial unique key, but the
+table above is defined here and applied only by the transition functions.
+
 ## Bryan Bucks money brands
 
 `src/identity/bucks-money.ts` is authoritative for what a Bryan Bucks quantity

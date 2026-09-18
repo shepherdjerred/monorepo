@@ -13,7 +13,7 @@ import { z } from "zod";
  * - `status` is how the shared confirmation card reads — the same
  *   confirmed/failed axis every Explore card uses.
  * - `effect` is whether THIS confirmation changed anything. It is separate
- *   because the two genuinely disagree: an already-accepted Workflow start and
+ *   because the two genuinely disagree: a Workflow start that joined a run and
  *   a replayed suppression both leave the world in the shape the operator asked
  *   for, and neither was done by the call being reported.
  *
@@ -126,13 +126,12 @@ const DispatchSchema = z.discriminatedUnion("outcome", [
   z.looseObject({
     outcome: z.literal("started"),
     requestedWorkflowId: z.string(),
-    runId: z.string().nullable(),
+    runId: z.string(),
   }),
   z.looseObject({
-    outcome: z.literal("already-accepted"),
+    outcome: z.literal("joined-running"),
     requestedWorkflowId: z.string(),
-    acceptedAt: z.string(),
-    runId: z.string().nullable(),
+    runId: z.string(),
   }),
   z.looseObject({
     outcome: z.literal("unavailable"),
@@ -235,13 +234,11 @@ const UNAVAILABLE_RECOVERY: Record<
  * - Lake projection runs `ALLOW_DUPLICATE_FAILED_ONLY`, which re-runs after a
  *   failure. A refusal therefore proves the previous run did NOT fail, so
  *   "already ran to completion" is a claim the outcome supports.
- * - Reconciliation runs `REJECT_DUPLICATE`, which refuses a closed run
- *   WHATEVER its outcome. It proves only that one ran and closed — it may have
- *   failed — so this must not report success. Its ID also carries the trigger,
- *   which makes the operator trigger one-shot per stage (SJ-205).
- * - Notification runs `ALLOW_DUPLICATE`, which never refuses a duplicate.
- *   Reaching this branch means the policy and this answer disagree, which is a
- *   fact about the system rather than about the operator's request.
+ * - Reconciliation and notification both run `ALLOW_DUPLICATE`, which never
+ *   refuses a duplicate. Reaching this branch means the policy and this answer
+ *   disagree, which is a fact about the system rather than about the
+ *   operator's request. (Reconciliation ran `REJECT_DUPLICATE` while the
+ *   durable record could hold one request per Workflow id; SJ-205 lifted that.)
  */
 const ALREADY_RUN: Record<
   z.infer<typeof WorkflowKindSchema>,
@@ -255,9 +252,9 @@ const ALREADY_RUN: Record<
   },
   "reconcile-pipeline": {
     status: "failed",
-    heading: "Already ran, outcome unknown",
+    heading: "Refused, and should not have been",
     message:
-      "Nothing was started. A pipeline reconciliation for this trigger has already run and closed, and its policy refuses a re-run whether that sweep succeeded or failed. Check the Workflow before assuming the pipeline was swept.",
+      "Nothing was started. Temporal refused to reuse this Workflow id, but reconciliation's policy allows a sweep to run again after any close — so this answer and that policy disagree. Check the Workflow rather than asking again.",
   },
   "retry-notification": {
     status: "failed",
@@ -299,30 +296,26 @@ function fromDispatch(
       message: `${label} is running.`,
       facts: [
         { label: "Workflow", value: dispatch.requestedWorkflowId },
-        ...(dispatch.runId === null
-          ? []
-          : [{ label: "Run", value: dispatch.runId }]),
+        { label: "Run", value: dispatch.runId },
       ],
       reason: null,
     };
   }
-  if (dispatch.outcome === "already-accepted") {
-    // Terminal, and deliberately not offered again anywhere: the durable
-    // record holds exactly one acceptance per Workflow id and already holds
-    // one, so a second request has nowhere to record a second acceptance.
+  if (dispatch.outcome === "joined-running") {
+    // The request was recorded and accepted, but the run it names was already
+    // open and the conflict policy joined it. Settled, and nothing to offer
+    // again: the work the operator wanted is running. Asking again once it
+    // closes is a new request, which the durable record now carries.
     return {
       status: "confirmed",
       effect: "none",
       heading: "Already running",
-      message: `Nothing was started. An identical ${label.toLowerCase()} had already been requested and accepted, and the durable record keeps that first acceptance.`,
+      message: `Nothing new was started. ${label} was already running, and this request joined that run.`,
       facts: [
         { label: "Workflow", value: dispatch.requestedWorkflowId },
-        { label: "First accepted", value: dispatch.acceptedAt },
-        ...(dispatch.runId === null
-          ? []
-          : [{ label: "Run", value: dispatch.runId }]),
+        { label: "Run", value: dispatch.runId },
       ],
-      reason: "already-accepted",
+      reason: "joined-running",
     };
   }
   if (dispatch.outcome === "already-run") {

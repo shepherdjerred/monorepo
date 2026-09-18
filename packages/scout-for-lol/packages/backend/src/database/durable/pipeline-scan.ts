@@ -12,10 +12,8 @@ import type { NotificationIntentState } from "@scout-for-lol/domain/notification
 import type { RecoveryBatchState } from "@scout-for-lol/domain/recovery/batch.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
 import type { Db } from "#src/database/index.ts";
-import {
-  scoutWorkflowStartRowToRecord,
-  type ScoutWorkflowStartRecord,
-} from "#src/database/durable/workflow-start-row.ts";
+import type { ScoutWorkflowStartRecord } from "@scout-for-lol/domain/recovery/workflow-start.ts";
+import { scoutWorkflowStartRowToRecord } from "#src/database/durable/workflow-start-row.ts";
 import {
   matchNotificationIntentRowToRecord,
   type MatchNotificationIntentRecord,
@@ -507,6 +505,8 @@ export async function listUnacceptedWorkflowStarts(
   },
 ): Promise<ScoutWorkflowStartRecord[]> {
   const after = args.after;
+  // The keyset id is the REQUEST key, not the workflow id: a workflow id can
+  // name many requests over its life, and only the request key is unique.
   const rows = await db.scoutWorkflowStart.findMany({
     where: {
       workflowType: { in: [...args.workflowTypes] },
@@ -516,11 +516,11 @@ export async function listUnacceptedWorkflowStarts(
         : {
             OR: [
               { requestedAt: { gt: after.at } },
-              { requestedAt: after.at, requestedWorkflowId: { gt: after.id } },
+              { requestedAt: after.at, requestId: { gt: after.id } },
             ],
           }),
     },
-    orderBy: [{ requestedAt: "asc" }, { requestedWorkflowId: "asc" }],
+    orderBy: [{ requestedAt: "asc" }, { requestId: "asc" }],
     take: args.limit,
   });
   return rows.map((row) => scoutWorkflowStartRowToRecord(row));

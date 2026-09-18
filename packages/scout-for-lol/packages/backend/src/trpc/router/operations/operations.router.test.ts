@@ -31,7 +31,10 @@ import {
 } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { upsertIntent } from "#src/database/durable/intent-repository.ts";
-import { requestWorkflowStart } from "#src/database/durable/workflow-start-repository.ts";
+import {
+  recordWorkflowStartAccepted,
+  requestWorkflowStart,
+} from "#src/database/durable/workflow-start-repository.ts";
 import { SCOUT_OPERATOR_IDS } from "#src/operations/operator-allowlist.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testAccountId, testChannelId } from "#src/testing/test-ids.ts";
@@ -119,6 +122,22 @@ const RECONCILE_WORKFLOW_ID = scoutPipelineReconciliationV2WorkflowId(
   configuration.environment,
   "operator",
 );
+
+/** The exact start the operator's reconcile derives, as a durable request. */
+function reconcileRequest() {
+  return {
+    requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+    workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+    requestedBy: null,
+    requestSource: "operations:reconcile-pipeline",
+    inputPayload: {
+      kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      version: 1,
+      data: { stage: configuration.environment, trigger: "operator" },
+    },
+    requestedAt: instant(-120_000),
+  };
+}
 
 beforeAll(async () => {
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
@@ -409,9 +428,14 @@ describe("workflow starts travel as post-commit durable requests", () => {
       },
     });
 
-    const start = await db.scoutWorkflowStart.findUniqueOrThrow({
+    const start = await db.scoutWorkflowStart.findFirstOrThrow({
       where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
     });
+    // The answer names the request it recorded, by the request's own key.
+    if (result.kind !== "executed" || result.dispatch === null) {
+      throw new Error("expected an executed result carrying a dispatch");
+    }
+    expect(result.dispatch.requestId).toBe(start.requestId);
     expect(start).toMatchObject({
       workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
       requestSource: "operations:reconcile-pipeline",
@@ -446,7 +470,6 @@ describe("workflow starts travel as post-commit durable requests", () => {
         data: { stage: configuration.environment, trigger: "schedule" },
       },
       requestedAt: instant(-120_000),
-      acceptance: null,
     });
     expect(seeded.outcome).toBe("applied");
 
@@ -469,26 +492,18 @@ describe("workflow starts travel as post-commit durable requests", () => {
     expect(await db.auditLog.count()).toBe(1);
     // The conflicting row was left exactly as it was.
     expect(await db.scoutWorkflowStart.count()).toBe(1);
-    const untouched = await db.scoutWorkflowStart.findUniqueOrThrow({
+    const untouched = await db.scoutWorkflowStart.findFirstOrThrow({
       where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
     });
     expect(untouched.requestSource).toBe("test:pre-existing");
   });
 
-  test("a request already accepted is reported rather than started again", async () => {
-    await requestWorkflowStart(db, {
-      requestedWorkflowId: RECONCILE_WORKFLOW_ID,
-      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
-      requestedBy: null,
-      requestSource: "operations:reconcile-pipeline",
-      inputPayload: {
-        kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
-        version: 1,
-        data: { stage: configuration.environment, trigger: "operator" },
-      },
-      requestedAt: instant(-120_000),
-      acceptance: { acceptedAt: instant(-119_000), runId: null },
-    });
+  test("a request while the previous one is in flight adopts it rather than adding a second", async () => {
+    const seeded = await requestWorkflowStart(db, reconcileRequest());
+    expect(seeded.outcome).toBe("applied");
+    if (seeded.outcome !== "applied") {
+      throw new Error("unreachable");
+    }
 
     const intentId = await prepare({
       kind: "ops_reconcile_pipeline",
@@ -500,9 +515,65 @@ describe("workflow starts travel as post-commit durable requests", () => {
     expect(result).toMatchObject({
       kind: "executed",
       dispatch: {
-        outcome: "already-accepted",
+        outcome: "unavailable",
+        requestId: seeded.record.requestId,
         requestedWorkflowId: RECONCILE_WORKFLOW_ID,
       },
+    });
+    expect(await db.scoutWorkflowStart.count()).toBe(1);
+  });
+
+  test("a request after the previous one was accepted is a new request, not a repeat refusal", async () => {
+    // Before SJ-205 the durable record held one request per workflow id, so a
+    // second operator reconcile was answered with the first acceptance and
+    // nothing was started. Now the accepted request is terminal and the
+    // second is recorded on its own key, ready for Temporal.
+    const seeded = await requestWorkflowStart(db, reconcileRequest());
+    if (seeded.outcome !== "applied") {
+      throw new Error("unreachable");
+    }
+    const acceptedAt = instant(-119_000);
+    const accepted = await recordWorkflowStartAccepted(db, {
+      requestId: seeded.record.requestId,
+      acceptedAt,
+      runId: null,
+    });
+    expect(accepted).toEqual({ outcome: "applied" });
+
+    const intentId = await prepare({
+      kind: "ops_reconcile_pipeline",
+      version: 1,
+    });
+
+    const result = await caller().operations.confirm({ intentId });
+
+    expect(result).toMatchObject({
+      kind: "executed",
+      dispatch: {
+        outcome: "unavailable",
+        requestedWorkflowId: RECONCILE_WORKFLOW_ID,
+      },
+    });
+    if (result.kind !== "executed" || result.dispatch === null) {
+      throw new Error("expected an executed result carrying a dispatch");
+    }
+    expect(result.dispatch.requestId).not.toBe(seeded.record.requestId);
+
+    const rows = await db.scoutWorkflowStart.findMany({
+      where: { requestedWorkflowId: RECONCILE_WORKFLOW_ID },
+      orderBy: { requestedAt: "asc" },
+    });
+    expect(rows).toHaveLength(2);
+    // The first acceptance is untouched evidence; the second is unaccepted
+    // because this harness has no Temporal to accept it.
+    expect(rows[0]).toMatchObject({
+      requestId: seeded.record.requestId,
+      acceptedAt: new Date(acceptedAt),
+    });
+    expect(rows[1]).toMatchObject({
+      requestId: result.dispatch.requestId,
+      requestedBy: OPERATOR,
+      acceptedAt: null,
     });
   });
 });

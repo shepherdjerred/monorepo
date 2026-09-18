@@ -2449,6 +2449,7 @@ model MatchObservation {
   riotMatchId      String    @id
   platformRoute    String
   processingPolicy String // MatchProcessingPolicy: ARCHIVE_ONLY | FULL
+  deliveryMode     String // MatchDeliveryMode: live | silent-backfill; decided at discovery, never derivable later
   pipelineOwner    String? // LEGACY_V1 | TEMPORAL_V2; NULL = unowned
   promotedAt       DateTime?
   gameCreatedAt    DateTime
@@ -2574,10 +2575,16 @@ model MatchRecoveryBatch {
 
 /// A requested Temporal workflow start and its acknowledgement. Deliberately
 /// separate from ScoutTemporalWork: this records only "start requested" /
-/// "start accepted" so a crashed requester can adopt its own request by
-/// requestedWorkflowId instead of starting a duplicate workflow.
+/// "start accepted". One row per REQUEST: every V2 workflow id derives from
+/// identity alone, so keying by the workflow id would limit each logical
+/// workflow to one request forever. A crashed requester adopts the in-flight
+/// (unaccepted) request for its workflow id — at most one exists, enforced by
+/// the migration's partial unique index — and a request made after the
+/// previous one was accepted is a new row. The domain's
+/// recovery/workflow-start module owns which phases are in flight vs terminal.
 model ScoutWorkflowStart {
-  requestedWorkflowId String    @id
+  requestId           String    @id // application-minted lowercase UUID; shape pinned by a migration CHECK
+  requestedWorkflowId String
   workflowType        String
   requestedBy         String? // operator/actor discord id; NULL for system requests
   requestSource       String
@@ -2589,6 +2596,7 @@ model ScoutWorkflowStart {
   updatedAt           DateTime  @updatedAt
 
   @@index([workflowType, requestedAt])
+  @@index([requestedWorkflowId, acceptedAt])
 }
 
 /// Append-only operator audit trail for the durable pipeline. No update path:

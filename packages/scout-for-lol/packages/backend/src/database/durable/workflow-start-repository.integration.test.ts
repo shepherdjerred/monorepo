@@ -3,17 +3,21 @@ import {
   IsoInstantSchema,
   RiotMatchIdSchema,
   WorkflowRunIdSchema,
+  WorkflowStartRequestIdSchema,
+  type IsoInstant,
+  type WorkflowRunId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import {
-  scoutWorkflowStartRowToRecord,
-  type ScoutWorkflowStartRecord,
-} from "#src/database/durable/workflow-start-row.ts";
+import type {
+  ScoutWorkflowStartRecord,
+  ScoutWorkflowStartRequest,
+} from "@scout-for-lol/domain/recovery/workflow-start.ts";
 import {
   getWorkflowStart,
   recordWorkflowStartAccepted,
   requestWorkflowStart,
+  type RequestWorkflowStartResult,
 } from "#src/database/durable/workflow-start-repository.ts";
 import {
   appendAuditEvent,
@@ -32,48 +36,96 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const AT = new Date("2026-09-07T10:00:00.000Z");
+const REQUESTED_AT = IsoInstantSchema.parse("2026-09-07T10:00:00.000Z");
 const ACCEPTED_AT = IsoInstantSchema.parse("2026-09-07T10:01:00.000Z");
 const RUN_ID = WorkflowRunIdSchema.parse("run-1");
 const OPERATOR = DiscordAccountIdSchema.parse("200000000000000001");
 
 function request(
   id: string,
-  overrides: Partial<{ workflowType: string }> = {},
-): ScoutWorkflowStartRecord {
+  overrides: Partial<{ workflowType: string; requestSource: string }> = {},
+): ScoutWorkflowStartRequest {
   const workflowType = overrides.workflowType ?? "match-recovery";
-  return scoutWorkflowStartRowToRecord({
+  return {
     requestedWorkflowId: id,
     workflowType,
     requestedBy: null,
-    requestSource: "operator-command",
+    requestSource: overrides.requestSource ?? "operator-command",
     // The expected-kind contract: a start's input envelope kind IS its type.
-    inputPayload: JSON.stringify({ kind: workflowType, version: 1, data: {} }),
-    requestedAt: AT,
-    acceptedAt: null,
-    runId: null,
+    inputPayload: { kind: workflowType, version: 1, data: {} },
+    requestedAt: REQUESTED_AT,
+  };
+}
+
+function recorded(
+  result: RequestWorkflowStartResult,
+): ScoutWorkflowStartRecord {
+  if (result.outcome === "conflict") {
+    throw new Error(
+      `Expected a recorded request, got ${JSON.stringify(result)}`,
+    );
+  }
+  return result.record;
+}
+
+async function accept(
+  record: ScoutWorkflowStartRecord,
+  overrides: Partial<{
+    runId: WorkflowRunId | null;
+    acceptedAt: IsoInstant;
+  }> = {},
+) {
+  return await recordWorkflowStartAccepted(prisma, {
+    requestId: record.requestId,
+    acceptedAt: overrides.acceptedAt ?? ACCEPTED_AT,
+    runId: overrides.runId === undefined ? RUN_ID : overrides.runId,
+  });
+}
+
+async function rowsFor(requestedWorkflowId: string) {
+  return await prisma.scoutWorkflowStart.findMany({
+    where: { requestedWorkflowId },
+    orderBy: { createdAt: "asc" },
   });
 }
 
 describe("requestWorkflowStart", () => {
-  test("inserts once and adopts the identical re-request", async () => {
-    const record = request("wf-req-1");
-    const first = await requestWorkflowStart(prisma, record);
+  test("records once and adopts the identical re-request while it is in flight", async () => {
+    const first = await requestWorkflowStart(prisma, request("wf-req-1"));
     expect(first.outcome).toBe("applied");
-    const second = await requestWorkflowStart(prisma, record);
-    expect(second).toEqual({ outcome: "adopted", record });
+    const record = recorded(first);
+    expect(record).toEqual({
+      requestId: record.requestId,
+      ...request("wf-req-1"),
+      acceptance: null,
+    });
+    expect(record.requestId).toMatch(/^[0-9a-f-]{36}$/u);
+
+    // Who re-requests, and from where, is not part of the start's identity.
+    const second = await requestWorkflowStart(
+      prisma,
+      request("wf-req-1", { requestSource: "test:retry" }),
+    );
+    expect(second).toEqual({
+      outcome: "adopted",
+      record,
+      latestAccepted: null,
+    });
+    expect(await rowsFor("wf-req-1")).toHaveLength(1);
   });
 
-  test("exactly one of two concurrent identical requests inserts, the other adopts", async () => {
-    const record = request("wf-req-2");
+  test("exactly one of two concurrent identical requests records; the other adopts it", async () => {
     const outcomes = await Promise.all([
-      requestWorkflowStart(prisma, record),
-      requestWorkflowStart(prisma, record),
+      requestWorkflowStart(prisma, request("wf-req-2")),
+      requestWorkflowStart(prisma, request("wf-req-2")),
     ]);
     expect(outcomes.map((result) => result.outcome).sort()).toEqual([
       "adopted",
       "applied",
     ]);
+    const [a, b] = outcomes.map((result) => recorded(result));
+    expect(a?.requestId).toBe(b?.requestId);
+    expect(await rowsFor("wf-req-2")).toHaveLength(1);
   });
 
   test("conflicts when the same id is re-requested with different work", async () => {
@@ -84,47 +136,101 @@ describe("requestWorkflowStart", () => {
         request("wf-req-3", { workflowType: "hall-baseline" }),
       ),
     ).toEqual({ outcome: "conflict", reason: "request-differs" });
+    expect(await rowsFor("wf-req-3")).toHaveLength(1);
   });
 
-  test("adoption returns the recorded acceptance", async () => {
-    const record = request("wf-req-4");
-    await requestWorkflowStart(prisma, record);
-    await recordWorkflowStartAccepted(prisma, {
-      requestedWorkflowId: record.requestedWorkflowId,
-      acceptedAt: ACCEPTED_AT,
-      runId: RUN_ID,
-    });
-    const adopted = await requestWorkflowStart(prisma, record);
-    expect(adopted.outcome).toBe("adopted");
-    if (adopted.outcome === "adopted") {
-      expect(adopted.record.acceptance).toEqual({
-        acceptedAt: ACCEPTED_AT,
-        runId: RUN_ID,
-      });
+  test("a request after the previous one was accepted is a new request", async () => {
+    const first = recorded(
+      await requestWorkflowStart(prisma, request("wf-req-4")),
+    );
+    expect(await accept(first)).toEqual({ outcome: "applied" });
+
+    const second = await requestWorkflowStart(prisma, request("wf-req-4"));
+    expect(second.outcome).toBe("applied");
+    if (second.outcome !== "applied") {
+      throw new Error("unreachable");
     }
+    expect(second.record.requestId).not.toBe(first.requestId);
+    expect(second.record.acceptance).toBeNull();
+    // The accepted predecessor travels with the answer, acceptance intact, so
+    // a caller can tell a joined execution from a new run.
+    expect(second.latestAccepted).toEqual({
+      ...first,
+      acceptance: { acceptedAt: ACCEPTED_AT, runId: RUN_ID },
+    });
+    expect(await rowsFor("wf-req-4")).toHaveLength(2);
+  });
+
+  test("a different start after an accepted one still conflicts", async () => {
+    const first = recorded(
+      await requestWorkflowStart(prisma, request("wf-req-4b")),
+    );
+    await accept(first);
+    expect(
+      await requestWorkflowStart(
+        prisma,
+        request("wf-req-4b", { workflowType: "hall-baseline" }),
+      ),
+    ).toEqual({ outcome: "conflict", reason: "request-differs" });
+    expect(await rowsFor("wf-req-4b")).toHaveLength(1);
+  });
+
+  test("two simultaneous requests after an accepted one yield exactly one new request", async () => {
+    const first = recorded(
+      await requestWorkflowStart(prisma, request("wf-req-5")),
+    );
+    await accept(first);
+
+    // Both read "nothing in flight" and both try to insert; the in-flight key
+    // admits one, and the other adopts it as if the reads had been serial.
+    const outcomes = await Promise.all([
+      requestWorkflowStart(prisma, request("wf-req-5")),
+      requestWorkflowStart(prisma, request("wf-req-5")),
+    ]);
+    expect(outcomes.map((result) => result.outcome).sort()).toEqual([
+      "adopted",
+      "applied",
+    ]);
+    const ids = new Set(outcomes.map((result) => recorded(result).requestId));
+    expect(ids.size).toBe(1);
+    expect(ids.has(first.requestId)).toBe(false);
+    for (const outcome of outcomes) {
+      if (outcome.outcome !== "conflict") {
+        expect(outcome.latestAccepted?.requestId).toBe(first.requestId);
+      }
+    }
+    expect(await rowsFor("wf-req-5")).toHaveLength(2);
+  });
+
+  test("two simultaneous requests with one acceptance each settle on exactly one accepted start", async () => {
+    // The race the dispatcher runs end to end: both requesters ask, both hear
+    // back from Temporal with the same run (the conflict policy joins), both
+    // record acceptance. One row, accepted once.
+    const outcomes = await Promise.all([
+      requestWorkflowStart(prisma, request("wf-req-6")),
+      requestWorkflowStart(prisma, request("wf-req-6")),
+    ]);
+    const records = outcomes.map((result) => recorded(result));
+    const accepted = await Promise.all(records.map((r) => accept(r)));
+    expect(accepted.map((result) => result.outcome).sort()).toEqual([
+      "already-applied",
+      "applied",
+    ]);
+    const rows = await rowsFor("wf-req-6");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.runId).toBe(RUN_ID);
   });
 });
 
 describe("recordWorkflowStartAccepted", () => {
   test("accepts once, tolerates the identical retry, conflicts on drift", async () => {
-    const record = request("wf-acc-1");
-    await requestWorkflowStart(prisma, record);
-    const args = {
-      requestedWorkflowId: record.requestedWorkflowId,
-      acceptedAt: ACCEPTED_AT,
-      runId: RUN_ID,
-    };
-    expect(await recordWorkflowStartAccepted(prisma, args)).toEqual({
-      outcome: "applied",
-    });
-    expect(await recordWorkflowStartAccepted(prisma, args)).toEqual({
-      outcome: "already-applied",
-    });
+    const record = recorded(
+      await requestWorkflowStart(prisma, request("wf-acc-1")),
+    );
+    expect(await accept(record)).toEqual({ outcome: "applied" });
+    expect(await accept(record)).toEqual({ outcome: "already-applied" });
     expect(
-      await recordWorkflowStartAccepted(prisma, {
-        ...args,
-        runId: WorkflowRunIdSchema.parse("run-2"),
-      }),
+      await accept(record, { runId: WorkflowRunIdSchema.parse("run-2") }),
     ).toEqual({ outcome: "conflict", reason: "acceptance-differs" });
     const stored = await getWorkflowStart(prisma, {
       requestedWorkflowId: record.requestedWorkflowId,
@@ -132,10 +238,12 @@ describe("recordWorkflowStartAccepted", () => {
     expect(stored?.acceptance?.runId).toBe(RUN_ID);
   });
 
-  test("accepting a start that was never requested fails loudly", async () => {
+  test("accepting a request that was never recorded fails loudly", async () => {
     await expect(
       recordWorkflowStartAccepted(prisma, {
-        requestedWorkflowId: "wf-ghost",
+        requestId: WorkflowStartRequestIdSchema.parse(
+          "00000000-0000-4000-8000-000000000000",
+        ),
         acceptedAt: ACCEPTED_AT,
         runId: null,
       }),
@@ -143,20 +251,15 @@ describe("recordWorkflowStartAccepted", () => {
   });
 
   test("exactly one of two concurrent acceptances applies", async () => {
-    const record = request("wf-acc-race");
-    await requestWorkflowStart(prisma, record);
+    const record = recorded(
+      await requestWorkflowStart(prisma, request("wf-acc-race")),
+    );
     const runIds = [
       WorkflowRunIdSchema.parse("run-x"),
       WorkflowRunIdSchema.parse("run-y"),
     ];
     const outcomes = await Promise.all(
-      runIds.map((runId) =>
-        recordWorkflowStartAccepted(prisma, {
-          requestedWorkflowId: record.requestedWorkflowId,
-          acceptedAt: ACCEPTED_AT,
-          runId,
-        }),
-      ),
+      runIds.map((runId) => accept(record, { runId })),
     );
     expect(outcomes.map((result) => result.outcome).sort()).toEqual([
       "applied",
@@ -171,6 +274,66 @@ describe("recordWorkflowStartAccepted", () => {
       requestedWorkflowId: record.requestedWorkflowId,
     });
     expect(stored?.acceptance?.runId).toBe(runIds[appliedIndex]);
+  });
+
+  test("a delayed acceptance for a superseded request lands on that request, never its successor", async () => {
+    const first = recorded(
+      await requestWorkflowStart(prisma, request("wf-acc-late")),
+    );
+    await accept(first);
+    const second = recorded(
+      await requestWorkflowStart(prisma, request("wf-acc-late")),
+    );
+
+    // A retry of the first acceptance arrives after the second request exists.
+    // Keyed by request, it replays against the first and leaves the second
+    // untouched; keyed by workflow id it would have accepted the wrong one.
+    expect(await accept(first)).toEqual({ outcome: "already-applied" });
+    expect(
+      await accept(first, { runId: WorkflowRunIdSchema.parse("run-other") }),
+    ).toEqual({ outcome: "conflict", reason: "acceptance-differs" });
+    const current = await getWorkflowStart(prisma, {
+      requestedWorkflowId: "wf-acc-late",
+    });
+    expect(current?.requestId).toBe(second.requestId);
+    expect(current?.acceptance).toBeNull();
+  });
+});
+
+describe("getWorkflowStart", () => {
+  test("answers the in-flight request, else the latest accepted, else null", async () => {
+    expect(
+      await getWorkflowStart(prisma, { requestedWorkflowId: "wf-get" }),
+    ).toBeNull();
+
+    const first = recorded(
+      await requestWorkflowStart(prisma, request("wf-get")),
+    );
+    await accept(first, {
+      runId: WorkflowRunIdSchema.parse("run-a"),
+      acceptedAt: IsoInstantSchema.parse("2026-09-07T10:01:00.000Z"),
+    });
+    const second = recorded(
+      await requestWorkflowStart(prisma, request("wf-get")),
+    );
+    await accept(second, {
+      runId: WorkflowRunIdSchema.parse("run-b"),
+      acceptedAt: IsoInstantSchema.parse("2026-09-07T10:02:00.000Z"),
+    });
+    const latest = await getWorkflowStart(prisma, {
+      requestedWorkflowId: "wf-get",
+    });
+    expect(latest?.requestId).toBe(second.requestId);
+    expect(latest?.acceptance?.runId).toBe("run-b");
+
+    const third = recorded(
+      await requestWorkflowStart(prisma, request("wf-get")),
+    );
+    const inFlight = await getWorkflowStart(prisma, {
+      requestedWorkflowId: "wf-get",
+    });
+    expect(inFlight?.requestId).toBe(third.requestId);
+    expect(inFlight?.acceptance).toBeNull();
   });
 });
 

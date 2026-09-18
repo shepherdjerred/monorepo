@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   AssignedPipelineOwnerSchema,
+  MatchDeliveryModeSchema,
   MatchProcessingStateSchema,
   matchProcessingStateCodec,
   matchProcessingReceiptIdentityKey,
@@ -222,6 +223,26 @@ describe("MatchProcessingStateSchema", () => {
         ...validStateInput,
         note: "extra",
       }),
+    ).toThrow();
+  });
+});
+
+describe("MatchDeliveryModeSchema", () => {
+  test("accepts exactly the two discovery-time modes", () => {
+    expect(MatchDeliveryModeSchema.options).toEqual([
+      "live",
+      "silent-backfill",
+    ]);
+    expect(MatchDeliveryModeSchema.parse("live")).toBe("live");
+    expect(MatchDeliveryModeSchema.parse("silent-backfill")).toBe(
+      "silent-backfill",
+    );
+  });
+
+  test("rejects v1's raw source labels; the mapping is the producer's job", () => {
+    expect(() => MatchDeliveryModeSchema.parse("postmatch_live")).toThrow();
+    expect(() =>
+      MatchDeliveryModeSchema.parse("postmatch_silent_backfill"),
     ).toThrow();
   });
 });

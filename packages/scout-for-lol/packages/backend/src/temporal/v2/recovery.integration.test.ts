@@ -169,6 +169,7 @@ async function seedLiveObservation(riotMatchId: RiotMatchId): Promise<void> {
       promotion: null,
       gameCreatedAt: LIVE_GAME_CREATED_AT,
       observedAt: LIVE_OBSERVED_AT,
+      deliveryMode: "live",
       artifacts: { match: null, timeline: null },
     }),
   ).toEqual({ outcome: "applied" });
