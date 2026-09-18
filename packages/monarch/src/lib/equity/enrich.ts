@@ -44,9 +44,11 @@ export async function enrichEquity(
   const enrichments = new Map<string, TransactionEnrichment>();
   for (const match of result.matched) {
     const totals = vestTotals(match.event);
-    // Every award in one lapse settles at the same price, so the event's fair
-    // market value is a fact about the day rather than an average.
-    const fairMarketValue = match.event.awards[0]?.fairMarketValue ?? 0;
+    // Derived from the totals rather than read off the first award. Every
+    // award in one lapse has settled at the same price so far, and this
+    // returns exactly that price when they do — without depending on it.
+    const fairMarketValue =
+      totals.shares === 0 ? 0 : totals.grossValue / totals.shares;
     for (const transaction of match.transactions) {
       enrichments.set(transaction.id, {
         vest: {
