@@ -309,18 +309,29 @@ export function isSclTransaction(name: string, plaidName: string): boolean {
   );
 }
 
-const APPLE_MERCHANT_PATTERNS = [
-  "apple services",
-  "apple.com",
-  "apple.com/bill",
+// Apple's emailed receipts cover purchases wherever they were made — the App
+// Store, apple.com, and the retail stores, which arrive as a bare "Apple"
+// merchant with the detail in the bank description. Matching only
+// "apple services" and "apple.com" reached 32 transactions while the mailbox
+// held 210 parsed receipts.
+//
+// The same name also appears on things no receipt can describe: paying the
+// Apple Card bill, Apple Cash transfers, and the daily interest postings in
+// the Apple Savings account. Those are excluded by name rather than by their
+// Monarch category, which the pipeline is meant to be free to change.
+const APPLE_NON_PURCHASE = [
+  "apple card, cash", // the card and savings account itself
+  "applecard gsbank", // paying the card bill
+  "apple gs savings",
+  "apple savings",
+  "apple cash",
+  "apple pay",
 ];
 
 export function isAppleMerchant(name: string, plaidName: string): boolean {
-  const lower = name.toLowerCase();
-  const plaidLower = plaidName.toLowerCase();
-  return APPLE_MERCHANT_PATTERNS.some(
-    (p) => lower.includes(p) || plaidLower.includes(p),
-  );
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  if (!combined.includes("apple")) return false;
+  return !APPLE_NON_PURCHASE.some((p) => combined.includes(p));
 }
 
 // Payroll deposits from the employer. The amount is part of the test: an
