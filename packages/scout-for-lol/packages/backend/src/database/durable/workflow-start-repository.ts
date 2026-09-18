@@ -8,6 +8,7 @@ import {
   ScoutWorkflowStartRecordSchema,
   type ScoutWorkflowStartRecord,
   type ScoutWorkflowStartRequest,
+  type WorkflowStartAcceptance,
 } from "@scout-for-lol/domain/recovery/workflow-start.ts";
 import {
   acceptWorkflowStart,
@@ -154,14 +155,21 @@ export async function requestWorkflowStart(
 export type RecordWorkflowStartAcceptedResult =
   | { outcome: "applied" }
   | { outcome: "already-applied" }
-  | { outcome: "conflict"; reason: "acceptance-differs" };
+  | {
+      outcome: "answered-by-another-run";
+      accepted: WorkflowStartAcceptance;
+    };
 
 /**
  * Record that Temporal accepted the start, on the request that asked for it.
- * Guarded on the not-yet-accepted row; when the guard matches nothing the
- * domain classifies what is there — a retry carrying the identical acceptance
- * is `already-applied`, and a different acceptance for a request that already
- * holds one is a conflict.
+ *
+ * Guarded on the not-yet-accepted row, so exactly one acceptance is ever
+ * written and it is never overwritten. When the guard matches nothing the
+ * domain classifies what is there: an answer naming the run already recorded
+ * is `already-applied`, and one naming a different run is
+ * `answered-by-another-run`, carrying the acceptance that stands. Both are
+ * reachable whenever a request has two drivers — the requester and whoever
+ * adopted it — and neither loses a write, so neither is suppressed.
  */
 export async function recordWorkflowStartAccepted(
   db: Db,
@@ -196,7 +204,7 @@ export async function recordWorkflowStartAccepted(
   switch (result.outcome) {
     case "already-applied":
       return { outcome: "already-applied" };
-    case "conflict":
+    case "answered-by-another-run":
       return result;
     case "applied":
       throw new Error(

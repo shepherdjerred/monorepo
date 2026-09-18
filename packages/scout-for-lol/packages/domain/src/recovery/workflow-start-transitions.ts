@@ -9,11 +9,13 @@ import {
 /**
  * Pure transitions over workflow start requests.
  *
- * As with the recovery batch machine, illegal transitions are expected
- * concurrency outcomes and return `conflict` with a closed reason; exceptions
- * are reserved for arguments that violate the module's own invariants — a
- * context whose records belong to some other Workflow id, or whose in-flight
- * record is not in flight.
+ * As with the recovery batch machine, what concurrency can produce is an
+ * OUTCOME rather than an exception: a Workflow id that already names a
+ * different start returns `conflict` with a closed reason, and a request
+ * whose handoff another driver already answered returns which answer stands.
+ * Exceptions are reserved for arguments that violate the module's own
+ * invariants — a context whose records belong to some other Workflow id, or
+ * whose in-flight record is not in flight.
  */
 
 /**
@@ -37,9 +39,19 @@ export type WorkflowStartRequestDecision =
   | { outcome: "conflict"; reason: "request-differs" };
 
 export type WorkflowStartAcceptanceResult =
+  /** The offered acceptance is now this request's evidence. */
   | { outcome: "applied"; next: ScoutWorkflowStartRecord }
+  /** The request already records this run; the offer adds nothing. */
   | { outcome: "already-applied" }
-  | { outcome: "conflict"; reason: "acceptance-differs" };
+  /**
+   * The request's handoff was already answered, and by a different run than
+   * the one offered. The recorded acceptance is returned and stands: the
+   * offered run is real, but it is not what this request records.
+   */
+  | {
+      outcome: "answered-by-another-run";
+      accepted: WorkflowStartAcceptance;
+    };
 
 /** Structural equality over JSON-shaped values, key order ignored. */
 function jsonEqual(a: unknown, b: unknown): boolean {
@@ -201,21 +213,41 @@ export function resolveWorkflowStartLostInsert(args: {
     : { outcome: "conflict", reason: "request-differs" };
 }
 
+/**
+ * Whether two acceptances are the same answer.
+ *
+ * An acceptance says which RUN Temporal gave this request; that is the whole
+ * of what it attests to. `acceptedAt` says when the answer was written down,
+ * which is observational metadata about the writer rather than part of the
+ * fact — the same rule the evidence shapes follow. It has to be, because ONE
+ * request can have more than one driver: an adopter drives the request it
+ * adopted, so two callers hear the same answer at two instants, and telling
+ * the second one that the record disagrees with it would be false.
+ */
 function sameAcceptance(
   a: WorkflowStartAcceptance,
   b: WorkflowStartAcceptance,
 ): boolean {
-  return (
-    new Date(a.acceptedAt).getTime() === new Date(b.acceptedAt).getTime() &&
-    a.runId === b.runId
-  );
+  return a.runId === b.runId;
 }
 
 /**
- * Record Temporal's acceptance on a request. A retry carrying the identical
- * acceptance is `already-applied`; a different acceptance for a request that
- * already holds one is a conflict, because overwriting it would destroy the
- * evidence the record exists to hold.
+ * Record Temporal's acceptance on a request.
+ *
+ * An unaccepted request takes the offered acceptance. An accepted one keeps
+ * the acceptance it holds — evidence is never overwritten — and the answer
+ * says how the offer relates to it: `already-applied` when it names the same
+ * run, `answered-by-another-run` when it names a different one.
+ *
+ * The second of those is a concurrency outcome, not a broken contract, and
+ * the difference is what adoption means. A request adopted while in flight
+ * has two drivers, each of which asks Temporal itself; normally the conflict
+ * policy hands both the same run, and they agree. But if the recorded run
+ * closes before the second driver's start lands, that start begins a NEW
+ * execution under the family's reuse policy. Both runs are real. The request
+ * records the first, because the handoff it names was answered by that one,
+ * and the second driver is told so rather than being told it broke an
+ * invariant or being allowed to claim an acceptance it did not make.
  */
 export function acceptWorkflowStart(
   record: ScoutWorkflowStartRecord,
@@ -234,7 +266,7 @@ export function acceptWorkflowStart(
       }
       return sameAcceptance(current, acceptance)
         ? { outcome: "already-applied" }
-        : { outcome: "conflict", reason: "acceptance-differs" };
+        : { outcome: "answered-by-another-run", accepted: current };
     }
     default: {
       const _exhaustive: never = phase;

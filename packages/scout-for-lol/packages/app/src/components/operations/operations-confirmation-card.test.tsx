@@ -89,22 +89,24 @@ describe("before an answer", () => {
 });
 
 describe("the six arms' answers", () => {
-  test("reconciliation reports the run it started", () => {
+  test("reconciliation reports the run it reached", () => {
     const markup = render({
       draft: RECONCILE,
       result: {
         kind: "executed",
         outcome: { kind: "start-authorized", workflow: "reconcile-pipeline" },
         dispatch: {
-          outcome: "started",
+          outcome: "reached-running",
           requestedWorkflowId: "scout-recon-beta-operator",
           runId: "run-1",
         },
       },
     });
     expect(markup).toContain('data-confirmation-state="confirmed"');
-    expect(markup).toContain('data-operations-effect="performed"');
-    expect(markup).toContain("Pipeline reconciliation started");
+    // Settled, and claiming nothing: the card reports the running run without
+    // telling the operator this confirmation produced it.
+    expect(markup).toContain('data-operations-effect="none"');
+    expect(markup).toContain("Pipeline reconciliation is running");
     expect(markup).toContain("run-1");
     // The recap promised "Nothing is running yet". Leaving it on a settled
     // card would have it contradicting the answer directly beneath it.
@@ -119,13 +121,13 @@ describe("the six arms' answers", () => {
         kind: "executed",
         outcome: { kind: "start-authorized", workflow: "retry-notification" },
         dispatch: {
-          outcome: "started",
+          outcome: "reached-running",
           requestedWorkflowId: "scout-notify-beta-key",
           runId: "run-notify-1",
         },
       },
     });
-    expect(markup).toContain("Notification retry started");
+    expect(markup).toContain("Notification retry is running");
     expect(markup).toContain("scout-notify-beta-key");
     expect(markup).toContain("run-notify-1");
   });
