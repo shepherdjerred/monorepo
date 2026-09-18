@@ -10,6 +10,7 @@ import type { RecoveryBatchState } from "@scout-for-lol/domain/recovery/batch.ts
 import type {
   ScoutIntentSummaryV2,
   ScoutNotificationDeliveryV2Result,
+  ScoutNotificationGateV2,
 } from "#src/activity-contracts-v2.ts";
 import type {
   ScoutIntentRefV2,
@@ -90,6 +91,29 @@ function notificationResult(
     intentKey: summary.intentKey,
     state: summary.state,
     attemptCount: summary.attemptCount,
+    disposition: { kind: "driven" },
+  });
+}
+
+/**
+ * A run that stopped at the policy gate.
+ *
+ * `no-op` rather than `completed`, because nothing was done to the intent:
+ * no render, no attempt, no transition. The disposition names the policy and
+ * the target so the history says why, and the intent stays exactly where the
+ * reconciliation sweep will find it once the batch is released — which is
+ * the only thing that can change this answer.
+ */
+function heldResult(
+  summary: ScoutIntentSummaryV2,
+  gate: ScoutNotificationGateV2,
+): ScoutNotificationV2ResultEnvelope {
+  return scoutNotificationV2ResultCodec.serialize({
+    status: "no-op",
+    intentKey: summary.intentKey,
+    state: summary.state,
+    attemptCount: summary.attemptCount,
+    disposition: { kind: "held", policy: gate.policy, target: gate.target },
   });
 }
 
@@ -213,6 +237,16 @@ async function attemptNotificationSend(
  * The render is one call before the send loop rather than one per attempt: it
  * reuses committed output, so a repeat would be a no-op that still costs a
  * background round trip on the retry path.
+ *
+ * ## The policy gate
+ *
+ * The opening read also answers whether the intent's recovery policy permits
+ * its target (`gate`). A held intent is left untouched — not readied, not
+ * rendered, no attempt minted — and the run reports `held`. The same
+ * decision is re-made by `beginNotificationSendV2` against the batch row
+ * before any nonce is committed, so a Workflow that skipped this check could
+ * still not send; this early exit exists so a held intent costs no render
+ * and no history beyond the read.
  */
 export async function scoutNotificationV2Workflow(
   rawInput: ScoutNotificationV2InputEnvelope,
@@ -233,6 +267,17 @@ export async function scoutNotificationV2Workflow(
     );
   }
   let summary = opening.intent;
+
+  if (
+    opening.gate.decision === "held" &&
+    !NOTIFICATION_TERMINAL_STATES.has(summary.state.kind) &&
+    summary.state.kind !== "sending"
+  ) {
+    // Settled and in-flight intents are reported and resolved as they always
+    // were: a hold governs whether a NEW send may begin, never what happened
+    // to one that already did.
+    return heldResult(summary, opening.gate);
+  }
 
   if (summary.state.kind === "sending") {
     return notificationResult(

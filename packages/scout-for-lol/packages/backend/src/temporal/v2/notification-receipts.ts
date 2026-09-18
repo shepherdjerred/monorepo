@@ -38,7 +38,8 @@ export const SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND: ReceiptKind =
   ReceiptKindSchema.parse("v2-notification-render");
 
 /**
- * What a render receipt claims: which bytes were committed, and where.
+ * What a render receipt claims: which bytes were committed, and where — or
+ * that this match's notification has no image at all.
  *
  * Deliberately NOT an `ArtifactDescriptor`, whose `capturedAt` is stamped at
  * put time. Two runs that render the same match would then record genuinely
@@ -50,17 +51,38 @@ export const SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND: ReceiptKind =
  * The object key stays in the evidence because it is the only way a later
  * reader finds the bytes: the render Activity's own result is `rendered` or
  * `reused` and carries no descriptor, by contract.
+ *
+ * `none` is the prematch renderer's honest answer for a queue the loading
+ * screen does not support: v1 sends a text embed for those games, and the
+ * V2 delivery does the same, but it can only do so if the render attested
+ * that there is nothing to read back — otherwise a missing artifact and an
+ * unsupported queue would be indistinguishable at the send.
+ *
+ * The union replaced the flat image shape in place rather than under a new
+ * version because no `v2-notification-render` receipt exists anywhere: the
+ * V2 workflows have no production caller yet.
  */
 export type ScoutV2NotificationRenderEvidence = z.infer<
   typeof ScoutV2NotificationRenderEvidenceSchema
 >;
-export const ScoutV2NotificationRenderEvidenceSchema = z.strictObject({
-  riotMatchId: RiotMatchIdSchema,
-  objectKey: S3ObjectKeySchema,
-  digest: Sha256DigestSchema,
-  bytes: z.int().positive(),
-  contentType: z.string().min(1),
-});
+export const ScoutV2NotificationRenderEvidenceSchema = z.discriminatedUnion(
+  "artifact",
+  [
+    z.strictObject({
+      artifact: z.literal("image"),
+      riotMatchId: RiotMatchIdSchema,
+      objectKey: S3ObjectKeySchema,
+      digest: Sha256DigestSchema,
+      bytes: z.int().positive(),
+      contentType: z.string().min(1),
+    }),
+    z.strictObject({
+      artifact: z.literal("none"),
+      riotMatchId: RiotMatchIdSchema,
+      reason: z.enum(["unsupported-queue"]),
+    }),
+  ],
+);
 
 export const scoutV2NotificationRenderEvidenceCodec = defineVersionedCodec({
   kind: "scout-v2-notification-render-evidence",

@@ -3,6 +3,7 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   NotificationIntentSchema,
   type NotificationIntent,
+  type NotificationIntentOrigin,
   type NotificationTarget,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import { notificationIntentCodec } from "@scout-for-lol/domain/notifications/intent-codec.ts";
@@ -13,7 +14,9 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  *
  * The NotificationIntentState union is flattened into the discriminant
  * `state` column plus one column per variant payload; the migration CHECKs
- * pin each column to exactly the states that carry it. The payload column is
+ * pin each column to exactly the states that carry it. The origin union is
+ * flattened the same way: `originKind` plus the batch reference a recovery
+ * origin carries, CHECKed present exactly then. The payload column is
  * the notificationIntentCodec envelope of the same intent — the versioned
  * wire form that survives schema evolution — and every read parses it
  * through the codec (kind and version verified, data validated) and
@@ -47,6 +50,9 @@ export type NotificationIntentStateColumns = {
 export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
   intentKey: string;
   riotMatchId: string;
+  kind: string;
+  originKind: string;
+  recoveryBatchId: string | null;
   targetKind: string;
   targetId: string;
   freshnessDeadline: Date;
@@ -57,6 +63,9 @@ export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
 const RawIntentRowSchema = z.object({
   intentKey: z.string(),
   riotMatchId: z.string(),
+  kind: z.string(),
+  originKind: z.string(),
+  recoveryBatchId: z.string().nullable(),
   targetKind: z.string(),
   targetId: z.string(),
   state: z.string(),
@@ -83,6 +92,17 @@ function targetCandidate(raw: RawIntentRow): Record<string, unknown> {
       return { kind: "dm", accountId: raw.targetId };
     default:
       throw new Error(`Unknown targetKind column value: ${raw.targetKind}`);
+  }
+}
+
+function originCandidate(raw: RawIntentRow): Record<string, unknown> {
+  switch (raw.originKind) {
+    case "live":
+      return { kind: "live" };
+    case "recovery":
+      return { kind: "recovery", recoveryBatchId: raw.recoveryBatchId };
+    default:
+      throw new Error(`Unknown originKind column value: ${raw.originKind}`);
   }
 }
 
@@ -146,6 +166,8 @@ export function matchNotificationIntentRowToRecord(
     matchId: raw.riotMatchId,
     intent: {
       key: raw.intentKey,
+      kind: raw.kind,
+      origin: originCandidate(raw),
       target: targetCandidate(raw),
       freshnessDeadline: raw.freshnessDeadline.toISOString(),
       createdAt: raw.createdAt.toISOString(),
@@ -172,6 +194,21 @@ function targetColumns(target: NotificationTarget): {
       return { targetKind: "channel", targetId: target.channelId };
     case "dm":
       return { targetKind: "dm", targetId: target.accountId };
+  }
+}
+
+function originColumns(origin: NotificationIntentOrigin): {
+  originKind: string;
+  recoveryBatchId: string | null;
+} {
+  switch (origin.kind) {
+    case "live":
+      return { originKind: "live", recoveryBatchId: null };
+    case "recovery":
+      return {
+        originKind: "recovery",
+        recoveryBatchId: origin.recoveryBatchId,
+      };
   }
 }
 
@@ -244,6 +281,8 @@ export function matchNotificationIntentRecordToRow(
   return {
     intentKey: record.intent.key,
     riotMatchId: record.matchId,
+    kind: record.intent.kind,
+    ...originColumns(record.intent.origin),
     ...targetColumns(record.intent.target),
     ...notificationIntentStateColumns(record.intent),
     freshnessDeadline: dateFromIsoInstant(record.intent.freshnessDeadline),

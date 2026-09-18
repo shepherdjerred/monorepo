@@ -15,14 +15,24 @@ import type { StoredObject } from "#src/storage/object-integrity.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
+import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
+import { renderPrematchNotificationV2 } from "#src/temporal/v2/notification/prematch-notification.ts";
 import {
   readNotificationArtifactV2,
   scoutV2NotificationRenderEvidenceCodec,
   SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND,
+  type ScoutV2NotificationRenderEvidence,
 } from "#src/temporal/v2/notification-receipts.ts";
 
 /**
- * Render this match's report once, commit it, and attest to it.
+ * Render this match's notification image once, commit it, and attest to it.
+ *
+ * Which image is the intent's KIND's decision: a `postmatch` intent renders
+ * v1's post-match report from the MatchV5 payload, a `prematch` intent
+ * renders the loading screen from the archived spectator snapshot (see
+ * `notification/prematch-notification.ts`). One receipt kind covers both,
+ * because a receipt is per match and a match has at most one image per
+ * kind of announcement in flight at a time.
  *
  * The expensive half of a notification is the Satori pass and the PNG encode,
  * which is why this Activity runs on `background` while the send runs on
@@ -87,29 +97,27 @@ function reportImageBytes(
 }
 
 /**
- * Commit the rendered bytes to the canonical store.
+ * Commit rendered bytes to the canonical store, under the asset name v1 uses
+ * for the same image.
  *
- * The key is v1's `report.png`, so the artifact this attests to is the same
- * object the existing report pipeline has always written rather than a second
- * copy under a V2-only name. See the module doc for why a missing bucket is a
- * failure here rather than the no-op it is on the v1 path.
+ * For a post-match report that is `report.png`, so the artifact this attests
+ * to is the object the existing report pipeline has always written rather
+ * than a second copy under a V2-only name; the loading screen is
+ * `loading-screen.png` beside it. See the module doc for why a missing
+ * bucket is a failure here rather than the no-op it is on the v1 path.
  */
-async function commitReportImage(
+async function commitNotificationImage(
   riotMatchId: RiotMatchId,
   image: Uint8Array,
-  queueId: number,
+  asset: { assetType: string; metadata: Record<string, string> },
 ): Promise<StoredObject> {
   const stored = await saveToS3({
     matchId: MatchIdSchema.parse(riotMatchId),
-    assetType: "report",
+    assetType: asset.assetType,
     extension: "png",
     body: image,
     contentType: "image/png",
-    metadata: {
-      matchId: riotMatchId,
-      queueId: String(queueId),
-      format: "png",
-    },
+    metadata: { matchId: riotMatchId, format: "png", ...asset.metadata },
     logEmoji: "🖼️",
     logMessage: "Committing the V2 notification artifact",
     errorContext: "V2 notification artifact",
@@ -123,7 +131,7 @@ async function commitReportImage(
 }
 
 /**
- * Attest to the committed artifact.
+ * Attest to the committed artifact — or to there being none.
  *
  * The evidence omits `capturedAt` on purpose — see `notification-receipts.ts` —
  * so a byte-identical repeat is `already-applied` and genuinely means another
@@ -137,9 +145,9 @@ async function commitReportImage(
  * one that lets the drift surface in the failure rather than be swallowed by a
  * result that claims a render nobody will deliver.
  */
-async function attestReportImage(
+async function attestNotificationArtifact(
   riotMatchId: RiotMatchId,
-  stored: StoredObject,
+  evidence: ScoutV2NotificationRenderEvidence,
 ): Promise<ScoutNotificationRenderV2Result> {
   const result = await recordReceipt(
     prisma,
@@ -147,13 +155,7 @@ async function attestReportImage(
       matchId: riotMatchId,
       kind: SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND,
       recordedAt: new Date(),
-      evidence: scoutV2NotificationRenderEvidenceCodec.serialize({
-        riotMatchId,
-        objectKey: stored.key,
-        digest: stored.digest,
-        bytes: stored.bytes,
-        contentType: stored.contentType,
-      }),
+      evidence: scoutV2NotificationRenderEvidenceCodec.serialize(evidence),
     }),
   );
   if (result.outcome === "conflict") {
@@ -166,16 +168,24 @@ async function attestReportImage(
   });
 }
 
-export async function renderNotificationArtifactV2(
-  input: ScoutIntentRefV2,
-): Promise<ScoutNotificationRenderV2Result> {
-  const record = await requireIntentRecordV2(input.intentKey);
-  const riotMatchId = record.matchId;
+function imageEvidence(
+  riotMatchId: RiotMatchId,
+  stored: StoredObject,
+): ScoutV2NotificationRenderEvidence {
+  return {
+    artifact: "image",
+    riotMatchId,
+    objectKey: stored.key,
+    digest: stored.digest,
+    bytes: stored.bytes,
+    contentType: stored.contentType,
+  };
+}
 
-  if ((await readNotificationArtifactV2(riotMatchId)) !== null) {
-    return ScoutNotificationRenderV2ResultSchema.parse({ outcome: "reused" });
-  }
-
+/** The post-match report image, rendered through v1's generator. */
+async function renderPostmatchArtifact(
+  riotMatchId: RiotMatchId,
+): Promise<ScoutV2NotificationRenderEvidence> {
   const context = await resolveScoutV2MatchContext(riotMatchId);
   const message = await generateMatchReport(
     context.matchData,
@@ -194,11 +204,64 @@ export async function renderNotificationArtifactV2(
       "MissingDomainRecord",
     );
   }
-
-  const stored = await commitReportImage(
+  const stored = await commitNotificationImage(
     riotMatchId,
     reportImageBytes(message, riotMatchId),
-    context.matchData.info.queueId,
+    {
+      assetType: "report",
+      metadata: { queueId: String(context.matchData.info.queueId) },
+    },
   );
-  return await attestReportImage(riotMatchId, stored);
+  return imageEvidence(riotMatchId, stored);
+}
+
+/** The loading screen, rendered from the archived spectator snapshot. */
+async function renderPrematchArtifact(
+  riotMatchId: RiotMatchId,
+): Promise<ScoutV2NotificationRenderEvidence> {
+  const rendered = await renderPrematchNotificationV2(riotMatchId);
+  if (rendered.artifact === "none") {
+    return { artifact: "none", riotMatchId, reason: rendered.reason };
+  }
+  const stored = await commitNotificationImage(riotMatchId, rendered.image, {
+    assetType: "loading-screen",
+    metadata: {},
+  });
+  return imageEvidence(riotMatchId, stored);
+}
+
+/**
+ * Render what the intent's KIND says it announces.
+ *
+ * The switch is exhaustive over `NotificationIntentKind`, so a kind added to
+ * the domain has to be given a renderer before this compiles — which is the
+ * property that keeps a prematch intent from ever being rendered as a
+ * post-match report: the prematch arm reads the archived spectator snapshot
+ * and nothing else.
+ */
+async function renderByKind(
+  kind: NotificationIntentKind,
+  riotMatchId: RiotMatchId,
+): Promise<ScoutV2NotificationRenderEvidence> {
+  switch (kind) {
+    case "postmatch":
+      return await renderPostmatchArtifact(riotMatchId);
+    case "prematch":
+      return await renderPrematchArtifact(riotMatchId);
+  }
+}
+
+export async function renderNotificationArtifactV2(
+  input: ScoutIntentRefV2,
+): Promise<ScoutNotificationRenderV2Result> {
+  const record = await requireIntentRecordV2(input.intentKey);
+  const riotMatchId = record.matchId;
+
+  if ((await readNotificationArtifactV2(riotMatchId)) !== null) {
+    return ScoutNotificationRenderV2ResultSchema.parse({ outcome: "reused" });
+  }
+  return await attestNotificationArtifact(
+    riotMatchId,
+    await renderByKind(record.intent.kind, riotMatchId),
+  );
 }

@@ -19,7 +19,14 @@ import type {
 import { prisma } from "#src/database/index.ts";
 import { transitionIntent } from "#src/database/durable/intent-repository.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
-import { notificationTransitionV2 } from "#src/temporal/v2/notification-reads.ts";
+import {
+  policyHeldCommit,
+  resolveNotificationGateV2,
+} from "#src/temporal/v2/notification/notification-policy.ts";
+import {
+  notificationTransitionV2,
+  requireIntentRecordV2,
+} from "#src/temporal/v2/notification-reads.ts";
 
 /**
  * The three durable steps of one send, as the intent machine defines them.
@@ -59,10 +66,25 @@ export async function markNotificationReadyV2(
  * nobody is still watching. v1's adoption path passes the instant a send REALLY
  * began because it is completing a record after the fact; this is a live send,
  * so the clock is the truth.
+ *
+ * The policy gate is asked FIRST, against the batch row as it stands now, and
+ * a held intent is refused with `policy-held` before any transition runs: no
+ * nonce is minted, the attempt count does not move, and the row is exactly as
+ * it was. The Workflow already stops on a hold at its opening read; this is
+ * the write boundary, and it does not rely on the caller having asked.
  */
 export async function beginNotificationSendV2(
   input: ScoutIntentAttemptRefV2,
 ): Promise<ScoutNotificationTransitionV2Result> {
+  const record = await requireIntentRecordV2(input.intentKey);
+  const gate = await resolveNotificationGateV2(record);
+  if (gate.decision === "held") {
+    return {
+      commit: policyHeldCommit(),
+      state: record.intent.state,
+      attemptCount: record.intent.attemptCount,
+    };
+  }
   const startedAt = toIsoInstant(new Date());
   return await notificationTransitionV2(
     input.intentKey,

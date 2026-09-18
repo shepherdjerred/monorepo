@@ -2,6 +2,7 @@ import {
   DiscordMessageIdSchema,
   IsoInstantSchema,
   NotificationIntentKeySchema,
+  RecoveryBatchIdSchema,
 } from "#src/identity/brands.ts";
 import {
   DiscordAccountIdSchema,
@@ -17,6 +18,9 @@ import {
 
 export const intentKey = NotificationIntentKeySchema.parse(
   "notify:match:NA1_1234567890:channel:123456789012345678",
+);
+export const recoveryBatchId = RecoveryBatchIdSchema.parse(
+  "0f8b4c2a-3d5e-4b6f-8a9c-1d2e3f405060",
 );
 export const channelId = DiscordChannelIdSchema.parse("123456789012345678");
 export const accountId = DiscordAccountIdSchema.parse("876543210987654321");
@@ -61,6 +65,8 @@ export function makeIntent(state: NotificationIntentState): NotificationIntent {
     state.kind === "sending" || state.kind === "unknown-delivery";
   return {
     key: intentKey,
+    kind: "postmatch",
+    origin: { kind: "live" },
     target: { kind: "channel", channelId },
     freshnessDeadline: exactDeadline,
     createdAt,

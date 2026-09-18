@@ -482,6 +482,63 @@ for its children and does not stop at a taken ID: live games have no chronology
 to protect, and the discovery Workflow ID is a per-stage singleton, so waiting
 would put the next poll behind the slowest game.
 
+## The V2 notification lane
+
+`scoutNotificationV2Workflow` drives one `MatchNotificationIntent` through the
+frozen domain machine. The Activities live in `src/temporal/v2/notification-*`
+and `src/temporal/v2/notification/`, and three facts about the lane are
+load-bearing for anyone extending it.
+
+### An intent says what it announces and where it came from
+
+Every intent carries a `kind` (`postmatch` | `prematch`) and an `origin`
+(`live`, or `recovery` naming the batch that minted it). Both are fixed at
+mint, mirrored into columns, and versioned in the payload envelope
+(`notificationIntentCodec` version 2; a version-1 payload derives its kind from
+the key prefix the two producers of that version used, and refuses any other
+prefix). The kind selects the renderer and the message builder: a `prematch`
+intent is rendered from the archived spectator snapshot and delivered as v1's
+game-start message, and nothing on that arm reads a MatchV5 payload — so a
+prematch intent re-driven after its game ended can never deliver a post-match
+report. The V2 prematch send carries no Bryan Bucks markets or buttons; v1
+opens pools during its send and records message references afterwards, and
+buttons on a message nothing recorded would be a market the bot could not
+later close. That is an explicit gap, not a silent one.
+
+### Delivery attaches exactly what the render attested
+
+`renderNotificationArtifactV2` runs on `background`, commits the image
+(`report.png` for a post-match report, `loading-screen.png` for a prematch
+announcement, under v1's key layout) and attests to it with a
+`v2-notification-render` receipt naming the object key, digest and size — or
+attesting `none` for a prematch queue the loading screen cannot draw, which
+the send answers with v1's fallback embed. `deliverNotificationV2` runs on
+`realtime`, reads the artifact back through
+`notification/notification-artifact.ts`, verifies the bytes against the
+receipt, and hands them to the message builder as a pre-rendered image
+(`generateMatchReport`'s `prerenderedImage` seam). Nothing is rendered on the
+send, and the receipt's claim about what was delivered is true by
+construction. An artifact whose receipt stands but whose object is missing or
+hashes differently is the terminal failure `content-unavailable`: a fact about
+storage that no retry re-reads differently.
+
+### The recovery policy gates delivery
+
+A recovery batch's `RecoveryPolicy` means something here and nowhere else. The
+policy is read off the BATCH row every time an intent is judged — never copied
+onto the intent — so `operatorReleasePolicy` on the batch reaches every intent
+born of it at their next read. `notificationDeliveryDecision`
+(`@scout-for-lol/domain/recovery/delivery-policy.ts`) is the rule: `normal`
+permits everything, `stale-private-only` permits DMs only (through `sendDM`'s
+own budget), `no-external` permits nothing. A held intent is neither failed nor
+suppressed: the Workflow's opening read returns `held` and the run ends `no-op`
+with a `disposition` naming the policy and target; `beginNotificationSendV2`
+refuses it with `policy-held` before any nonce is minted; the send itself
+refuses too; and the reconciliation sweep's stalled-intent read excludes it in
+SQL so it is not re-driven every minute until the batch is released. Nothing
+mints recovery-born intents yet — recovery commits `ARCHIVE_ONLY`
+observations — so the gate is the contract a later recovery lane delivers into.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client

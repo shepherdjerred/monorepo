@@ -106,6 +106,8 @@ export async function mintPrematchIntent(
       matchId: args.matchId,
       intent: {
         key,
+        kind: "prematch",
+        origin: { kind: "live" },
         target: {
           kind: "channel",
           channelId: DiscordChannelIdSchema.parse(args.channelId),

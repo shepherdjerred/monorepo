@@ -31,7 +31,10 @@ import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-ge
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 import { readAttestedNotificationArtifactV2 } from "#src/temporal/v2/notification/notification-artifact.ts";
+import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
+import { buildPrematchNotificationMessageV2 } from "#src/temporal/v2/notification/prematch-notification.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
+import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("scout-v2-notification-delivery");
@@ -275,26 +278,47 @@ const CONTENT_UNAVAILABLE: NotificationFailure = {
 };
 
 /**
- * The report message, built around the artifact the render Activity attested.
+ * The message this intent delivers, built around the artifact the render
+ * Activity attested and shaped by the intent's KIND.
  *
- * The artifact is read back and verified against its receipt BEFORE the Riot
- * payload is fetched, because it is the cheaper of the two reads and the one
- * whose failure is a fact rather than a wait: a broken artifact ends the
- * attempt without spending a Riot read on a message that will not be built.
- * The verified bytes then go into `generateMatchReport` as its pre-rendered
- * image, so the attachment on the message IS the attested object and the
- * receipt's claim about what was delivered stays true by construction.
+ * The artifact is read back and verified against its receipt BEFORE any
+ * payload is fetched, because it is the cheaper read and the one whose
+ * failure is a fact rather than a wait: a broken artifact ends the attempt
+ * without spending a Riot read on a message that will not be built. For a
+ * `postmatch` intent the verified bytes go into `generateMatchReport` as its
+ * pre-rendered image; for a `prematch` intent they become the loading screen
+ * on v1's prematch payload, built from the archived spectator snapshot. In
+ * both the attachment on the message IS the attested object, so the receipt's
+ * claim about what was delivered stays true by construction — and a prematch
+ * intent cannot be delivered as a post-match report, because its arm never
+ * reads one.
  */
-async function buildAttestedReport(
+async function buildAttestedMessage(
+  kind: NotificationIntentKind,
   riotMatchId: RiotMatchId,
   guildId: DiscordGuildId | undefined,
 ): Promise<MessageCreateOptions | undefined> {
   const artifact = await readAttestedNotificationArtifactV2(riotMatchId);
-  const context = await resolveScoutV2MatchContext(riotMatchId);
-  return await generateMatchReport(context.matchData, context.trackedPlayers, {
-    targetGuildIds: guildId === undefined ? [] : [guildId],
-    prerenderedImage: artifact.bytes,
-  });
+  switch (kind) {
+    case "postmatch": {
+      if (artifact.artifact === "none") {
+        throw new Error(
+          `The render receipt for ${riotMatchId} attests to no image, which a post-match report cannot be delivered without`,
+        );
+      }
+      const context = await resolveScoutV2MatchContext(riotMatchId);
+      return await generateMatchReport(
+        context.matchData,
+        context.trackedPlayers,
+        {
+          targetGuildIds: guildId === undefined ? [] : [guildId],
+          prerenderedImage: artifact.bytes,
+        },
+      );
+    }
+    case "prematch":
+      return await buildPrematchNotificationMessageV2(riotMatchId, artifact);
+  }
 }
 
 async function prepareNotificationSend(
@@ -303,6 +327,17 @@ async function prepareNotificationSend(
   const record = await requireIntentRecordV2(input.intentKey);
   const riotMatchId = record.matchId;
   const target = record.intent.target;
+  // The send boundary's own reading of the policy. `beginNotificationSendV2`
+  // already refused a held intent before minting this attempt, so reaching
+  // here held is a broken contract rather than a decision to make — but
+  // "no-external permits no external sends" is a property of the SEND, and
+  // it holds here without relying on the caller having asked.
+  const gate = await resolveNotificationGateV2(record);
+  if (gate.decision === "held") {
+    throw new Error(
+      `Intent ${input.intentKey} reached the send while held by policy ${gate.policy} for a ${gate.target} target; nothing was sent`,
+    );
+  }
   // Resolved once and used twice: the report generator evaluates per-guild
   // feature flags against it, and `send` escalates a permission revocation to
   // that guild's owner. Two lookups would be two REST calls that can disagree.
@@ -313,7 +348,11 @@ async function prepareNotificationSend(
 
   let message: MessageCreateOptions | undefined;
   try {
-    message = await buildAttestedReport(riotMatchId, guildId);
+    message = await buildAttestedMessage(
+      record.intent.kind,
+      riotMatchId,
+      guildId,
+    );
   } catch (error) {
     if (!(error instanceof ArchivedObjectUnusableError)) throw error;
     logger.error(

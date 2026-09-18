@@ -313,6 +313,8 @@ describe("MatchNotificationIntent constraints", () => {
   const valid: Record<string, string> = {
     intentKey: "'intent-1'",
     riotMatchId: "'NA1_1'",
+    kind: "'postmatch'",
+    originKind: "'live'",
     targetKind: "'channel'",
     targetId: "'300000000000000001'",
     state: "'pending'",
@@ -337,6 +339,26 @@ describe("MatchNotificationIntent constraints", () => {
       "an unknown target kind",
       { ...valid, intentKey: "'i3'", targetKind: "'webhook'" },
       "MatchNotificationIntent_target_kind_check",
+    ],
+    [
+      "an unknown notification kind",
+      { ...valid, intentKey: "'i3k'", kind: "'settlement'" },
+      "MatchNotificationIntent_kind_check",
+    ],
+    [
+      "an unknown origin kind",
+      { ...valid, intentKey: "'i3o'", originKind: "'operator'" },
+      "MatchNotificationIntent_origin_kind_check",
+    ],
+    [
+      "a recovery origin without its batch",
+      { ...valid, intentKey: "'i3r'", originKind: "'recovery'" },
+      "MatchNotificationIntent_origin_batch_check",
+    ],
+    [
+      "a live origin carrying a batch",
+      { ...valid, intentKey: "'i3l'", recoveryBatchId: "'batch-1'" },
+      "MatchNotificationIntent_origin_batch_check",
     ],
     [
       "a negative attempt count",

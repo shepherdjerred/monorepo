@@ -14,6 +14,7 @@ import {
   type NotificationAttemptNonce,
   type NotificationFailure,
   type NotificationIntent,
+  type NotificationIntentKind,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   beginSend,
@@ -142,6 +143,8 @@ export function deliveryIntentKey(
 type RecorderConfig = {
   facts: DurableFacts;
   matchId: RiotMatchId;
+  /** What the delivery announces; stamped on every intent the recorder mints. */
+  kind: NotificationIntentKind;
   /**
    * The shared prefix of the delivery's effect keys — `postmatch-discord:<id>`
    * or {@link prematchDeliveryKeyPrefix}. One intent key per channel is built
@@ -222,6 +225,10 @@ async function upsertPendingIntent(
       matchId: config.matchId,
       intent: {
         key,
+        kind: config.kind,
+        // Live by definition: this recorder runs beside a send the v1
+        // pipeline is performing for a game as it happens.
+        origin: { kind: "live" },
         target: {
           kind: "channel",
           channelId: DiscordChannelIdSchema.parse(channelId),
@@ -487,6 +494,7 @@ export function createChannelDeliveryRecorder(
 export function tryCreateChannelDeliveryRecorder(args: {
   facts: DurableFacts;
   matchId: string;
+  kind: NotificationIntentKind;
   keyPrefix: string;
   freshnessDeadline: Date;
 }): ChannelDeliveryRecorder | null {
@@ -495,6 +503,7 @@ export function tryCreateChannelDeliveryRecorder(args: {
   return createChannelDeliveryRecorder({
     facts: args.facts,
     matchId,
+    kind: args.kind,
     keyPrefix: args.keyPrefix,
     freshnessDeadline: args.freshnessDeadline,
   });

@@ -249,6 +249,8 @@ describe("MatchNotificationIntent codec", () => {
   ): NotificationIntent {
     return NotificationIntentSchema.parse({
       key: "intent-NA1_5312279829-post-match",
+      kind: "postmatch",
+      origin: { kind: "live" },
       target: { kind: "channel", channelId: CHANNEL_ID },
       freshnessDeadline: LATER_ISO,
       createdAt: AT_ISO,
@@ -323,9 +325,27 @@ describe("MatchNotificationIntent codec", () => {
       ),
     ],
     [
+      "prematch born of a recovery batch",
+      NotificationIntentSchema.parse({
+        key: "prematch-discord:NA1_5312279829:300000000000000001",
+        kind: "prematch",
+        origin: {
+          kind: "recovery",
+          recoveryBatchId: "0f8b4c2a-3d5e-4b6f-8a9c-1d2e3f405060",
+        },
+        target: { kind: "channel", channelId: CHANNEL_ID },
+        freshnessDeadline: LATER_ISO,
+        createdAt: AT_ISO,
+        attemptCount: 0,
+        state: { kind: "pending" },
+      }),
+    ],
+    [
       "dm target",
       NotificationIntentSchema.parse({
         key: "intent-dm",
+        kind: "postmatch",
+        origin: { kind: "live" },
         target: { kind: "dm", accountId: ACCOUNT_DISCORD_ID },
         freshnessDeadline: LATER_ISO,
         createdAt: AT_ISO,

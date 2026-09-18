@@ -35,6 +35,8 @@ const stubs = vi.hoisted(() => ({
   resolveScoutV2MatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
   readAttestedNotificationArtifactV2: vi.fn(),
+  resolveNotificationGateV2: vi.fn(),
+  buildPrematchNotificationMessageV2: vi.fn(),
   fetchChannelForDelivery: vi.fn(),
   send: vi.fn(),
   sendDM: vi.fn(),
@@ -51,6 +53,12 @@ vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
 }));
 vi.mock("#src/temporal/v2/notification/notification-artifact.ts", () => ({
   readAttestedNotificationArtifactV2: stubs.readAttestedNotificationArtifactV2,
+}));
+vi.mock("#src/temporal/v2/notification/notification-policy.ts", () => ({
+  resolveNotificationGateV2: stubs.resolveNotificationGateV2,
+}));
+vi.mock("#src/temporal/v2/notification/prematch-notification.ts", () => ({
+  buildPrematchNotificationMessageV2: stubs.buildPrematchNotificationMessageV2,
 }));
 vi.mock("#src/discord/utils/channel.ts", () => ({
   fetchChannelForDelivery: stubs.fetchChannelForDelivery,
@@ -82,11 +90,16 @@ function attemptRef(): ScoutIntentAttemptRefV2 {
   };
 }
 
-function intentRecord(target: "channel" | "dm"): unknown {
+function intentRecord(
+  target: "channel" | "dm",
+  kind: "postmatch" | "prematch" = "postmatch",
+): unknown {
   return {
     matchId: "NA1_9301",
     intent: {
       key: intentKey,
+      kind,
+      origin: { kind: "live" },
       target:
         target === "channel"
           ? { kind: "channel", channelId: CHANNEL_ID }
@@ -119,9 +132,24 @@ beforeEach(() => {
     matchData: { info: { queueId: 420 } },
     trackedPlayers: [],
   });
+  stubs.resolveNotificationGateV2.mockResolvedValue({
+    kind: "postmatch",
+    target: "channel",
+    policy: "normal",
+    decision: "permitted",
+  });
+  stubs.buildPrematchNotificationMessageV2.mockResolvedValue({
+    content: "someone started a game",
+    files: [
+      new AttachmentBuilder(Buffer.from(ARTIFACT_BYTES)).setName("l.png"),
+    ],
+    embeds: [],
+  });
   stubs.readAttestedNotificationArtifactV2.mockResolvedValue({
+    artifact: "image",
     bytes: ARTIFACT_BYTES,
     evidence: {
+      artifact: "image",
       riotMatchId: "NA1_9301",
       objectKey: "games/2026/09/16/NA1_9301/report.png",
       digest: "f".repeat(64),
@@ -217,6 +245,49 @@ describe("a failure before the request could have left", () => {
     expect(stubs.send).not.toHaveBeenCalled();
   });
 
+  test("refuses to send an intent its policy holds, without contacting Discord", async () => {
+    // `beginNotificationSendV2` already refused a held intent before this
+    // attempt was minted, so reaching here held is a broken contract — and
+    // still "no-external permits no external sends" holds at the send itself.
+    stubs.resolveNotificationGateV2.mockResolvedValue({
+      kind: "postmatch",
+      target: "channel",
+      policy: "no-external",
+      decision: "held",
+    });
+
+    const result = await deliverNotificationV2(attemptRef());
+
+    expect(result).toEqual({
+      outcome: "failed",
+      failure: { classification: "retryable", reason: "service-unavailable" },
+    });
+    expect(stubs.readAttestedNotificationArtifactV2).not.toHaveBeenCalled();
+    expect(stubs.send).not.toHaveBeenCalled();
+    expect(stubs.sendDM).not.toHaveBeenCalled();
+  });
+
+  test("reports a post-match intent whose receipt attests no image as retryable", async () => {
+    // Only the prematch renderer can attest `none`; a post-match report has
+    // nothing to be delivered without. A broken contract, decided pre-send.
+    stubs.readAttestedNotificationArtifactV2.mockResolvedValue({
+      artifact: "none",
+      evidence: {
+        artifact: "none",
+        riotMatchId: "NA1_9301",
+        reason: "unsupported-queue",
+      },
+    });
+
+    const result = await deliverNotificationV2(attemptRef());
+
+    expect(result).toMatchObject({
+      outcome: "failed",
+      failure: { classification: "retryable" },
+    });
+    expect(stubs.send).not.toHaveBeenCalled();
+  });
+
   test.each(["missing", "digest-mismatch"] as const)(
     "reports an artifact that is %s as terminal content-unavailable",
     async (reason) => {
@@ -280,6 +351,37 @@ describe("a failure once the request may have left", () => {
   });
 });
 
+describe("the prematch-shaped path", () => {
+  test("builds a prematch intent's message from the prematch arm, never the report", async () => {
+    // The finding this closes: a prematch intent driven after its game ended
+    // must never resolve a MatchV5 payload and send a post-match report. The
+    // prematch arm reads only the archived spectator snapshot, so neither the
+    // Riot context nor the report generator is touched.
+    stubs.requireIntentRecordV2.mockResolvedValue(
+      intentRecord("channel", "prematch"),
+    );
+    stubs.resolveNotificationGateV2.mockResolvedValue({
+      kind: "prematch",
+      target: "channel",
+      policy: "normal",
+      decision: "permitted",
+    });
+    stubs.send.mockResolvedValue({ id: "100000000000000778" });
+
+    const result = await deliverNotificationV2(attemptRef());
+
+    expect(result).toMatchObject({ outcome: "delivered" });
+    expect(stubs.buildPrematchNotificationMessageV2).toHaveBeenCalledTimes(1);
+    expect(stubs.buildPrematchNotificationMessageV2.mock.calls[0]?.[0]).toBe(
+      "NA1_9301",
+    );
+    expect(stubs.generateMatchReport).not.toHaveBeenCalled();
+    expect(stubs.resolveScoutV2MatchContext).not.toHaveBeenCalled();
+    const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
+    expect(sent.content).toBe("someone started a game");
+  });
+});
+
 describe("what the send attaches", () => {
   test("delivers exactly the bytes the render receipt attested", async () => {
     // The seam's whole promise: the artifact read back and verified against
@@ -322,5 +424,6 @@ describe("what the send attaches", () => {
 });
 
 const SentMessageSchema = z.object({
+  content: z.string().optional(),
   files: z.array(z.object({ attachment: z.unknown() })),
 });

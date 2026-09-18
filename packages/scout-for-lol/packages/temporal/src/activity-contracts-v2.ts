@@ -12,7 +12,9 @@ import {
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   NotificationFailureSchema,
+  NotificationIntentKindSchema,
   NotificationIntentStateSchema,
+  NotificationTargetKindSchema,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   RecoveryAbandonReasonSchema,
@@ -281,6 +283,27 @@ export type ScoutMatchPipelineStateV2Result = z.infer<
   typeof ScoutMatchPipelineStateV2ResultSchema
 >;
 
+/**
+ * Whether one intent may be sent right now, and why.
+ *
+ * `policy` is the recovery policy the intent is delivered under — `normal`
+ * for a live-born intent, the batch's own for a recovery-born one, read from
+ * the batch row at the moment of the read so an operator release on the
+ * batch is seen by the next run. `decision` is the pure domain rule
+ * (`notificationDeliveryDecision`) applied to that policy and the target's
+ * kind; `kind` says what the intent announces, which is what selects its
+ * renderer. All four travel so a Workflow history explains itself.
+ */
+export const ScoutNotificationGateV2Schema = z.strictObject({
+  kind: NotificationIntentKindSchema,
+  target: NotificationTargetKindSchema,
+  policy: RecoveryPolicySchema,
+  decision: z.enum(["permitted", "held"]),
+});
+export type ScoutNotificationGateV2 = z.infer<
+  typeof ScoutNotificationGateV2Schema
+>;
+
 export const ScoutNotificationIntentV2ResultSchema = z.discriminatedUnion(
   "kind",
   [
@@ -288,6 +311,7 @@ export const ScoutNotificationIntentV2ResultSchema = z.discriminatedUnion(
     z.strictObject({
       kind: z.literal("present"),
       intent: ScoutIntentSummaryV2Schema,
+      gate: ScoutNotificationGateV2Schema,
     }),
   ],
 );

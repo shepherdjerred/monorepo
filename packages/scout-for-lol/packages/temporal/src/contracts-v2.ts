@@ -147,6 +147,14 @@ export const ScoutDurableCommitConflictReasonV2Schema = z.enum([
   "intent-differs",
   "batch-differs",
   "workflow-adopted-by-another-batch",
+  /**
+   * The recovery policy governing a recovery-born intent does not permit its
+   * target, so the send was refused before an attempt was committed. Raised
+   * by the notification lane's Activities against the batch row rather than
+   * by a pure transition, because the policy lives on the batch and the
+   * frozen intent machine stays ignorant of who minted an intent.
+   */
+  "policy-held",
 ]);
 export type ScoutDurableCommitConflictReasonV2 = z.infer<
   typeof ScoutDurableCommitConflictReasonV2Schema

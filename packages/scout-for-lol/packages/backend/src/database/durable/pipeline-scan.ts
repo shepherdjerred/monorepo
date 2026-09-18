@@ -9,8 +9,14 @@ import {
   MatchProcessingPolicySchema,
   type ReceiptKind,
 } from "@scout-for-lol/domain/match-processing/states.ts";
-import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
-import type { RecoveryBatchState } from "@scout-for-lol/domain/recovery/batch.ts";
+import type {
+  NotificationIntentState,
+  NotificationTargetKind,
+} from "@scout-for-lol/domain/notifications/intent.ts";
+import type {
+  RecoveryBatchState,
+  RecoveryPolicy,
+} from "@scout-for-lol/domain/recovery/batch.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
 import type { Db } from "#src/database/index.ts";
 import type { ScoutWorkflowStartRecord } from "@scout-for-lol/domain/recovery/workflow-start.ts";
@@ -151,6 +157,15 @@ export const RECOVERY_BATCH_STATE_KINDS: readonly string[] = Object.keys(
  */
 const TEMPORAL_V2_OWNER_COLUMN = "TEMPORAL_V2";
 const FULL_POLICY_COLUMN = MatchProcessingPolicySchema.parse("FULL");
+
+/**
+ * The recovery policies and target kind the stalled-notification read holds
+ * on, in column vocabulary — which for both is the domain enum's own
+ * spelling, taken from the schemas so a renamed value fails here.
+ */
+const HELD_EVERYTHING_POLICY: RecoveryPolicy = "no-external";
+const HELD_CHANNELS_POLICY: RecoveryPolicy = "stale-private-only";
+const CHANNEL_TARGET_COLUMN: NotificationTargetKind = "channel";
 
 /**
  * Where a page stopped, in the vocabulary every read here already orders by.
@@ -329,27 +344,37 @@ export async function listStalledNotificationIntents(
   db: Db,
   args: { freshAt: Date; limit: number; after?: ScanPosition | undefined },
 ): Promise<MatchNotificationIntentRecord[]> {
-  const after = args.after;
-  const rows = await db.matchNotificationIntent.findMany({
-    where: {
-      state: { in: [...DRIVABLE_INTENT_STATES] },
-      freshnessDeadline: { gt: args.freshAt },
-      ...(after === undefined
-        ? {}
-        : {
-            OR: [
-              { freshnessDeadline: { gt: after.at } },
-              {
-                freshnessDeadline: after.at,
-                intentKey: { gt: after.id },
-              },
-            ],
-          }),
-    },
-    orderBy: [{ freshnessDeadline: "asc" }, { intentKey: "asc" }],
-    take: args.limit,
-  });
-  return rows.map((row) => matchNotificationIntentRowToRecord(row));
+  const keyset =
+    args.after === undefined
+      ? Prisma.empty
+      : Prisma.sql`AND (i."freshnessDeadline", i."intentKey") > (${args.after.at}::timestamp, ${args.after.id}::text)`;
+  // Held intents are not stalled: a recovery-born intent whose batch policy
+  // forbids its target is deliberately not being driven, and a sweep that
+  // started a child on it would find the gate closed every minute until the
+  // batch is released. This predicate is `notificationDeliveryDecision`
+  // (`@scout-for-lol/domain/recovery/delivery-policy.ts`) said in SQL, held
+  // to it by `reconciliation-scan.integration.test.ts`: `no-external` holds
+  // everything, `stale-private-only` holds channels. A live intent has no
+  // batch and passes; a recovery intent whose batch row is missing also
+  // passes, so the child that reads it fails loudly on the missing row.
+  const rows: unknown = await db.$queryRaw(Prisma.sql`
+    SELECT i.*
+      FROM "MatchNotificationIntent" AS i
+     WHERE i."state" IN (${Prisma.join([...DRIVABLE_INTENT_STATES])})
+       AND i."freshnessDeadline" > ${args.freshAt}::timestamp
+       AND NOT EXISTS (SELECT 1
+                         FROM "MatchRecoveryBatch" AS b
+                        WHERE b."recoveryBatchId" = i."recoveryBatchId"
+                          AND (b."policy" = ${HELD_EVERYTHING_POLICY}
+                               OR (b."policy" = ${HELD_CHANNELS_POLICY}
+                                   AND i."targetKind" = ${CHANNEL_TARGET_COLUMN})))
+       ${keyset}
+     ORDER BY i."freshnessDeadline" ASC, i."intentKey" ASC
+     LIMIT ${args.limit}::int`);
+  return z
+    .array(z.unknown())
+    .parse(rows)
+    .map((row) => matchNotificationIntentRowToRecord(row));
 }
 
 /**

@@ -26,7 +26,9 @@ import type {
   RecoveryBatch,
   RecoveryBatchState,
   RecoveryCounts,
+  RecoveryPolicy,
 } from "@scout-for-lol/domain/recovery/batch.ts";
+import { notificationDeliveryDecision } from "@scout-for-lol/domain/recovery/delivery-policy.ts";
 import {
   beginDigest,
   beginProcessing,
@@ -38,6 +40,7 @@ import {
 import type {
   ScoutLakeStagingV2Result,
   ScoutNotificationDeliveryV2Result,
+  ScoutNotificationGateV2,
   ScoutNotificationIntentV2Result,
   ScoutNotificationOutcomeV2Input,
   ScoutNotificationRenderV2Result,
@@ -98,6 +101,12 @@ export type ScriptedDelivery =
 
 export type ScoutV2NotificationStore = {
   intent: NotificationIntent | null;
+  /**
+   * The policy the intent is delivered under, as the read-side Activity would
+   * resolve it off the recovery batch row. `normal` is what a live intent
+   * gets; a test that models a recovery-born intent sets the batch's policy.
+   */
+  policy: RecoveryPolicy;
   renders: number;
   /** One entry per attempt that reached Discord, named by its nonce. */
   sends: NotificationAttemptNonce[];
@@ -111,6 +120,8 @@ export type ScoutV2NotificationStore = {
 export function pendingIntent(): NotificationIntent {
   return {
     key: INTENT_KEY,
+    kind: "postmatch",
+    origin: { kind: "live" },
     target: {
       kind: "channel",
       channelId: DiscordChannelIdSchema.parse("100000000000000001"),
@@ -129,6 +140,7 @@ export function createNotificationStore(
 ): ScoutV2NotificationStore {
   return {
     intent: pendingIntent(),
+    policy: "normal",
     renders: 0,
     sends: [],
     script: [{ outcome: "delivered", messageId: MESSAGE_ID }],
@@ -171,6 +183,18 @@ function applyIntentTransition(
   };
 }
 
+/** The gate the real read Activity computes, from the store's policy. */
+function gateFor(store: ScoutV2NotificationStore): ScoutNotificationGateV2 {
+  const intent = requireIntent(store);
+  const target = intent.target.kind;
+  return {
+    kind: intent.kind,
+    target,
+    policy: store.policy,
+    decision: notificationDeliveryDecision(store.policy, target),
+  };
+}
+
 function nextScripted(store: ScoutV2NotificationStore): ScriptedDelivery {
   const head = store.script.length > 1 ? store.script.shift() : store.script[0];
   if (head === undefined) throw new Error("the delivery script ran dry");
@@ -201,6 +225,7 @@ export function scoutV2NotificationStubs(store: ScoutV2NotificationStore) {
             ? {}
             : { lastFailure: store.intent.lastFailure }),
         },
+        gate: gateFor(store),
       };
     },
     markNotificationReadyV2: (): ScoutNotificationTransitionV2Result => {
@@ -217,6 +242,16 @@ export function scoutV2NotificationStubs(store: ScoutV2NotificationStore) {
       input: ScoutIntentAttemptRefV2,
     ): ScoutNotificationTransitionV2Result => {
       record("beginNotificationSendV2");
+      // The write boundary re-asks the gate, exactly as the real Activity
+      // does against the batch row: a held intent gets no nonce.
+      if (gateFor(store).decision === "held") {
+        const held = requireIntent(store);
+        return {
+          commit: { outcome: "conflict", reason: "policy-held" },
+          state: held.state,
+          attemptCount: held.attemptCount,
+        };
+      }
       return applyIntentTransition(
         store,
         beginSend(requireIntent(store), {

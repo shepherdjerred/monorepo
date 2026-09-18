@@ -213,6 +213,49 @@ describe("the V2 notification intent machine", () => {
     });
   }, 60_000);
 
+  test("stops at the policy gate without rendering or minting an attempt", async () => {
+    // A recovery-born intent under a batch policy that forbids its target.
+    // The run reads, sees the hold, and does nothing else: no ready
+    // transition, no render, no nonce. The result says `held` and names the
+    // policy and target, and the intent stays exactly where the sweep will
+    // find it once the batch is released.
+    const store = createNotificationStore({ policy: "no-external" });
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    const result = await notify("notification-held");
+
+    expect(store.calls).toEqual(["readNotificationIntentV2"]);
+    expect(store.sends).toEqual([]);
+    expect(store.renders).toBe(0);
+    expect(store.intent?.state).toEqual({ kind: "pending" });
+    expect(store.intent?.attemptCount).toBe(0);
+    expect(result).toMatchObject({
+      data: {
+        status: "no-op",
+        state: { kind: "pending" },
+        attemptCount: 0,
+        disposition: {
+          kind: "held",
+          policy: "no-external",
+          target: "channel",
+        },
+      },
+    });
+  }, 60_000);
+
+  test("reports an ordinary run as driven", async () => {
+    const store = createNotificationStore();
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    const result = await notify("notification-driven");
+
+    expect(result).toMatchObject({
+      data: { status: "completed", disposition: { kind: "driven" } },
+    });
+  }, 60_000);
+
   test.each([
     {
       name: "delivered",

@@ -2523,10 +2523,13 @@ model MatchProcessingReceipt {
 /// representation can silently drift. lastFailure is split into its two
 /// closed-vocabulary columns so a bad writer cannot brick the row.
 model MatchNotificationIntent {
-  intentKey   String @id
-  riotMatchId String
-  targetKind  String // NotificationTarget kind: channel | dm
-  targetId    String
+  intentKey       String  @id
+  riotMatchId     String
+  kind            String // NotificationIntentKind: postmatch | prematch
+  originKind      String // NotificationIntentOrigin kind: live | recovery
+  recoveryBatchId String? // recovery origin only: the batch whose policy governs delivery
+  targetKind      String // NotificationTarget kind: channel | dm
+  targetId        String
 
   state                     String    @default("pending") // NotificationIntentState kind
   attemptCount              Int       @default(0)
@@ -2546,6 +2549,7 @@ model MatchNotificationIntent {
 
   @@index([state, freshnessDeadline])
   @@index([riotMatchId])
+  @@index([recoveryBatchId])
 }
 
 /// One recovery batch (domain RecoveryBatch). Cursor and count columns mirror

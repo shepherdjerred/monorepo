@@ -161,6 +161,7 @@ export async function deliverPostmatchReport(input: {
       }),
     recordDelivery:
       tryCreateChannelDeliveryRecorder({
+        kind: "postmatch",
         facts,
         matchId,
         keyPrefix: effectKeyPrefix,

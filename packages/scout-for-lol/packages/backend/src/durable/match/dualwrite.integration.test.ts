@@ -101,6 +101,7 @@ function intentKey(
 
 function deliveryRecorderFor(id: string): ChannelDeliveryRecorder {
   return createChannelDeliveryRecorder({
+    kind: "postmatch",
     facts,
     matchId: toRiotMatchId(id),
     keyPrefix: `postmatch-discord:${id}`,
@@ -416,6 +417,7 @@ describe("the fail-open boundary", () => {
     const id = matchId(9011);
     const keyPrefix = `postmatch-discord:${id}`;
     const record = createChannelDeliveryRecorder({
+      kind: "postmatch",
       facts,
       matchId: toRiotMatchId(id),
       keyPrefix,
@@ -459,6 +461,7 @@ describe("notification intents", () => {
     const id = matchId(9020);
     const keyPrefix = `postmatch-discord:${id}`;
     const record = createChannelDeliveryRecorder({
+      kind: "postmatch",
       facts,
       matchId: toRiotMatchId(id),
       keyPrefix,
@@ -493,6 +496,7 @@ describe("notification intents", () => {
     const keyPrefix = `postmatch-discord:${id}`;
     const effectKey = `${keyPrefix}:${CHANNEL_ONE}`;
     const record = createChannelDeliveryRecorder({
+      kind: "postmatch",
       facts,
       matchId: toRiotMatchId(id),
       keyPrefix,
@@ -516,6 +520,7 @@ describe("notification intents", () => {
     const id = matchId(9022);
     const keyPrefix = `prematch-discord:${id}`;
     const record = createChannelDeliveryRecorder({
+      kind: "postmatch",
       facts,
       matchId: toRiotMatchId(id),
       keyPrefix,
@@ -544,6 +549,7 @@ describe("notification intents", () => {
     const id = matchId(9023);
     const keyPrefix = `postmatch-discord:${id}`;
     const record = createChannelDeliveryRecorder({
+      kind: "postmatch",
       facts,
       matchId: toRiotMatchId(id),
       keyPrefix,
@@ -631,6 +637,8 @@ describe("adopting a delivery an earlier pass proved", () => {
       matchId: toRiotMatchId(id),
       intent: {
         key: intentKey(keyPrefix, CHANNEL_ONE),
+        kind: "postmatch",
+        origin: { kind: "live" },
         target: {
           kind: "channel",
           channelId: DiscordChannelIdSchema.parse(CHANNEL_ONE),
