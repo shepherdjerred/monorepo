@@ -16,11 +16,17 @@ import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-ge
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
 import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
+import type { ScoutDurableCommitV2 } from "@scout-for-lol/temporal/contracts-v2";
+import {
+  runGuardedEffectV2,
+  type ScoutEffectFenceV2,
+} from "#src/temporal/v2/effect-fence.ts";
+import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
 import { renderPrematchNotificationV2 } from "#src/temporal/v2/notification/prematch-notification.ts";
 import {
   readNotificationArtifactV2,
   scoutV2NotificationRenderEvidenceCodec,
-  SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND,
+  scoutV2NotificationRenderReceiptKind,
   type ScoutV2NotificationRenderEvidence,
 } from "#src/temporal/v2/notification-receipts.ts";
 
@@ -57,6 +63,21 @@ import {
  * deliver") is therefore true by construction rather than by coincidence,
  * and the Satori pass stays on `background`, which is the whole point of the
  * split.
+ *
+ * ## One render per (match, kind), however many children ask
+ *
+ * The match fan-out starts one notification child per channel, and every one
+ * of them calls this Activity for the same match. Without serialization two
+ * of them can both read "no receipt", both render, both PUT the same key and
+ * then race to record one receipt — and the winner's receipt can attest the
+ * bytes the loser overwrote, after which every delivery digest-mismatches
+ * and terminates `content-unavailable`. So the read/render/PUT/receipt
+ * sequence runs under `runGuardedEffectV2`, keyed on the artifact identity
+ * `(match, kind)`: the leader renders with the PUT bounded by the fence's
+ * signal and the receipt recorded before the fence releases; a follower that
+ * acquires the fence afterwards finds the claim completed (or, on a takeover,
+ * the receipt standing) and reports `reused` without rendering. The read
+ * before the fence is only the cheap replay short-circuit.
  *
  * ## Why there is no bucketless path
  *
@@ -110,8 +131,14 @@ async function commitNotificationImage(
   riotMatchId: RiotMatchId,
   image: Uint8Array,
   asset: { assetType: string; metadata: Record<string, string> },
+  fence: ScoutEffectFenceV2,
 ): Promise<StoredObject> {
+  // The render above may have taken as long as Satori takes; the put must
+  // not start on a fence this attempt no longer holds, and once started it is
+  // cancelled — retries included — the moment the fence is about to lapse.
+  await fence.assertHeld();
   const stored = await saveToS3({
+    abortSignal: fence.signal,
     matchId: MatchIdSchema.parse(riotMatchId),
     assetType: asset.assetType,
     extension: "png",
@@ -138,34 +165,27 @@ async function commitNotificationImage(
  * run committed the same artifact. Reporting `reused` for that is the truth.
  *
  * A `conflict` is a different statement entirely: the bytes under this match's
- * render receipt are NOT the bytes this run just committed, and a strict V2
- * Activity never reports success over a durable write that came back in
- * conflict. So it throws. The retry re-reads the receipt, finds the artifact
- * that stands, and returns `reused` — which is both the honest answer and the
- * one that lets the drift surface in the failure rather than be swallowed by a
- * result that claims a render nobody will deliver.
+ * render receipt are NOT the bytes this run just committed. It is returned as
+ * the effect's fact rather than thrown, because the fence is what decides what
+ * a conflicting fact means — it fails the Activity non-retryably and leaves
+ * the claim open so the drift stays visible, exactly as it does for settlement.
  */
 async function attestNotificationArtifact(
   riotMatchId: RiotMatchId,
+  kind: NotificationIntentKind,
   evidence: ScoutV2NotificationRenderEvidence,
-): Promise<ScoutNotificationRenderV2Result> {
-  const result = await recordReceipt(
-    prisma,
-    buildReceipt({
-      matchId: riotMatchId,
-      kind: SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KIND,
-      recordedAt: new Date(),
-      evidence: scoutV2NotificationRenderEvidenceCodec.serialize(evidence),
-    }),
+): Promise<ScoutDurableCommitV2> {
+  return durableCommitV2(
+    await recordReceipt(
+      prisma,
+      buildReceipt({
+        matchId: riotMatchId,
+        kind: scoutV2NotificationRenderReceiptKind(kind),
+        recordedAt: new Date(),
+        evidence: scoutV2NotificationRenderEvidenceCodec.serialize(evidence),
+      }),
+    ),
   );
-  if (result.outcome === "conflict") {
-    throw new Error(
-      `Rendered ${riotMatchId} but its render receipt already attests to different bytes (${result.reason}); the committed artifact stands and this run reports nothing`,
-    );
-  }
-  return ScoutNotificationRenderV2ResultSchema.parse({
-    outcome: result.outcome === "applied" ? "rendered" : "reused",
-  });
 }
 
 function imageEvidence(
@@ -185,6 +205,7 @@ function imageEvidence(
 /** The post-match report image, rendered through v1's generator. */
 async function renderPostmatchArtifact(
   riotMatchId: RiotMatchId,
+  fence: ScoutEffectFenceV2,
 ): Promise<ScoutV2NotificationRenderEvidence> {
   const context = await resolveScoutV2MatchContext(riotMatchId);
   const message = await generateMatchReport(
@@ -211,6 +232,7 @@ async function renderPostmatchArtifact(
       assetType: "report",
       metadata: { queueId: String(context.matchData.info.queueId) },
     },
+    fence,
   );
   return imageEvidence(riotMatchId, stored);
 }
@@ -218,15 +240,18 @@ async function renderPostmatchArtifact(
 /** The loading screen, rendered from the archived spectator snapshot. */
 async function renderPrematchArtifact(
   riotMatchId: RiotMatchId,
+  fence: ScoutEffectFenceV2,
 ): Promise<ScoutV2NotificationRenderEvidence> {
   const rendered = await renderPrematchNotificationV2(riotMatchId);
   if (rendered.artifact === "none") {
     return { artifact: "none", riotMatchId, reason: rendered.reason };
   }
-  const stored = await commitNotificationImage(riotMatchId, rendered.image, {
-    assetType: "loading-screen",
-    metadata: {},
-  });
+  const stored = await commitNotificationImage(
+    riotMatchId,
+    rendered.image,
+    { assetType: "loading-screen", metadata: {} },
+    fence,
+  );
   return imageEvidence(riotMatchId, stored);
 }
 
@@ -237,18 +262,45 @@ async function renderPrematchArtifact(
  * the domain has to be given a renderer before this compiles — which is the
  * property that keeps a prematch intent from ever being rendered as a
  * post-match report: the prematch arm reads the archived spectator snapshot
- * and nothing else.
+ * and nothing else. The two announcement kinds have no image: their message
+ * is text and embeds built at the send from the intent's own payload, so
+ * they attest `none` and nothing is committed to the store.
  */
 async function renderByKind(
   kind: NotificationIntentKind,
   riotMatchId: RiotMatchId,
+  fence: ScoutEffectFenceV2,
 ): Promise<ScoutV2NotificationRenderEvidence> {
   switch (kind) {
     case "postmatch":
-      return await renderPostmatchArtifact(riotMatchId);
+      return await renderPostmatchArtifact(riotMatchId, fence);
     case "prematch":
-      return await renderPrematchArtifact(riotMatchId);
+      return await renderPrematchArtifact(riotMatchId, fence);
+    case "settlement":
+    case "dare-summary":
+      return { artifact: "none", riotMatchId, reason: "text-only" };
   }
+}
+
+/** The claim one (match, kind) render is guarded under; see the module doc. */
+export function notificationRenderEffectKey(
+  riotMatchId: RiotMatchId,
+  kind: NotificationIntentKind,
+): string {
+  return `v2-notification-render:${kind}:${riotMatchId}`;
+}
+
+const NOTIFICATION_RENDER_EFFECT_KIND = "v2-notification-render";
+
+/** The standing receipt as the fence's takeover probe reports it. */
+async function standingArtifact(
+  riotMatchId: RiotMatchId,
+  kind: NotificationIntentKind,
+): Promise<{ fact: ScoutDurableCommitV2; effects: number } | null> {
+  const standing = await readNotificationArtifactV2(riotMatchId, kind);
+  return standing === null
+    ? null
+    : { fact: { outcome: "already-applied" }, effects: 0 };
 }
 
 export async function renderNotificationArtifactV2(
@@ -256,12 +308,29 @@ export async function renderNotificationArtifactV2(
 ): Promise<ScoutNotificationRenderV2Result> {
   const record = await requireIntentRecordV2(input.intentKey);
   const riotMatchId = record.matchId;
+  const kind = record.intent.kind;
 
-  if ((await readNotificationArtifactV2(riotMatchId)) !== null) {
+  if ((await readNotificationArtifactV2(riotMatchId, kind)) !== null) {
     return ScoutNotificationRenderV2ResultSchema.parse({ outcome: "reused" });
   }
-  return await attestNotificationArtifact(
-    riotMatchId,
-    await renderByKind(record.intent.kind, riotMatchId),
-  );
+  const guarded = await runGuardedEffectV2({
+    key: notificationRenderEffectKey(riotMatchId, kind),
+    kind: NOTIFICATION_RENDER_EFFECT_KIND,
+    alreadyApplied: async () => await standingArtifact(riotMatchId, kind),
+    apply: async (fence) => {
+      const evidence = await renderByKind(kind, riotMatchId, fence);
+      // The receipt is the last write and lands before the fence releases; a
+      // follower that acquires the fence after this sees the completed claim.
+      await fence.assertHeld();
+      const fact = await attestNotificationArtifact(
+        riotMatchId,
+        kind,
+        evidence,
+      );
+      return { fact, effects: fact.outcome === "applied" ? 1 : 0 };
+    },
+  });
+  return ScoutNotificationRenderV2ResultSchema.parse({
+    outcome: guarded.fact.outcome === "applied" ? "rendered" : "reused",
+  });
 }

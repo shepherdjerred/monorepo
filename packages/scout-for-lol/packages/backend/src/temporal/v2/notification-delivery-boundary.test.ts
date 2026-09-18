@@ -1,10 +1,10 @@
 import { AttachmentBuilder } from "discord.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
-import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
-import type { ScoutIntentAttemptRefV2 } from "@scout-for-lol/temporal/contracts-v2";
-import type * as DiscordChannelModule from "#src/league/discord/channel.ts";
+import {
+  attemptRef,
+  intentRecord,
+} from "#src/temporal/v2/notification-delivery.test-fixtures.ts";
 
 /**
  * Which side of the send a failure happened on, and why the line is where it is.
@@ -23,12 +23,6 @@ import type * as DiscordChannelModule from "#src/league/discord/channel.ts";
  * have touched Discord. They are also the mutation proof — move any of these
  * causes past the boundary and the matching case flips to `unknown` and fails.
  */
-
-const intentKey = NotificationIntentKeySchema.parse(
-  "postmatch-discord:NA1_9301:100000000000000001",
-);
-const CHANNEL_ID = "100000000000000001";
-const ACCOUNT_ID = "200000000000000002";
 
 const stubs = vi.hoisted(() => ({
   requireIntentRecordV2: vi.fn(),
@@ -60,18 +54,16 @@ vi.mock("#src/temporal/v2/notification/notification-policy.ts", () => ({
 vi.mock("#src/temporal/v2/notification/prematch-notification.ts", () => ({
   buildPrematchNotificationMessageV2: stubs.buildPrematchNotificationMessageV2,
 }));
+
 vi.mock("#src/discord/utils/channel.ts", () => ({
   fetchChannelForDelivery: stubs.fetchChannelForDelivery,
 }));
 vi.mock("#src/discord/utils/dm.ts", () => ({ sendDM: stubs.sendDM }));
 vi.mock("#src/discord/client.ts", () => ({ client: {} }));
 vi.mock("#src/league/discord/channel.ts", async () => {
-  // The real error class, because the classifier narrows on `instanceof` and a
-  // fake one would make every send failure look unclassifiable.
-  const actual = await vi.importActual<typeof DiscordChannelModule>(
-    "#src/league/discord/channel.ts",
-  );
-  return { ChannelSendError: actual.ChannelSendError, send: stubs.send };
+  const { channelModuleWithSend } =
+    await import("#src/temporal/v2/notification-delivery.test-fixtures.ts");
+  return await channelModuleWithSend(stubs.send);
 });
 
 const { ArchivedObjectUnusableError } =
@@ -81,32 +73,6 @@ const { deliverNotificationV2 } =
 
 /** The bytes the render Activity attested, as the read-back hands them over. */
 const ARTIFACT_BYTES = new Uint8Array([137, 80, 78, 71, 7, 7, 7]);
-
-function attemptRef(): ScoutIntentAttemptRefV2 {
-  return {
-    stage: "dev",
-    intentKey,
-    attemptNonce: NotificationAttemptNonceSchema.parse("attempt-nonce-1"),
-  };
-}
-
-function intentRecord(
-  target: "channel" | "dm",
-  kind: "postmatch" | "prematch" = "postmatch",
-): unknown {
-  return {
-    matchId: "NA1_9301",
-    intent: {
-      key: intentKey,
-      kind,
-      origin: { kind: "live" },
-      target:
-        target === "channel"
-          ? { kind: "channel", channelId: CHANNEL_ID }
-          : { kind: "dm", accountId: ACCOUNT_ID },
-    },
-  };
-}
 
 /**
  * A report exactly as the generator builds one around a pre-rendered image:

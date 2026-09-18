@@ -12,6 +12,10 @@ import {
  *
  * ## Version 2
  *
+ * Version 3 added the optional `announcement` envelope for the two kinds that
+ * carry one; every version-2 payload is a report kind, which carries none, so
+ * the step is the identity and exists to say that the shape changed.
+ *
  * Version 1 carried neither `kind` (what the intent announces) nor `origin`
  * (where the decision came from). Every version-1 payload was minted by one
  * of two live producers — v1's delivery recorder and the V2 prematch capture
@@ -51,7 +55,7 @@ function migrateVersion1(old: unknown): unknown {
 
 export const notificationIntentCodec = defineVersionedCodec({
   kind: "notification-intent",
-  version: 2,
+  version: 3,
   schema: NotificationIntentSchema,
-  migrations: { 1: migrateVersion1 },
+  migrations: { 1: migrateVersion1, 2: (old) => old },
 });

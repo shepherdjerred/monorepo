@@ -31,6 +31,7 @@ import {
   deliveredMessagesByGuild,
   recordDeliveryReceipts,
   tryCreateChannelDeliveryRecorder,
+  postmatchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 
 const logger = createLogger("postmatch-report-delivery");
@@ -71,7 +72,7 @@ export async function deliverPostmatchReport(input: {
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
 }): Promise<Map<DiscordChannelId, string>> {
   const matchId = MatchIdSchema.parse(input.matchData.metadata.matchId);
-  const effectKeyPrefix = `postmatch-discord:${matchId}`;
+  const effectKeyPrefix = postmatchDeliveryKeyPrefix(matchId);
   // FIRST, and unconditionally. Every exit below is decided by whether a report
   // may still be SENT — the match's age, which players are tracked, which
   // channels are subscribed now, whether any survive their queue filter — and

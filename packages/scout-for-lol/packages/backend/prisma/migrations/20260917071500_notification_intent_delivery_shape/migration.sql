@@ -41,7 +41,7 @@ ALTER TABLE "MatchNotificationIntent" ALTER COLUMN "originKind" SET NOT NULL;
 
 ALTER TABLE "MatchNotificationIntent"
   ADD CONSTRAINT "MatchNotificationIntent_kind_check"
-    CHECK ("kind" IN ('postmatch', 'prematch'));
+    CHECK ("kind" IN ('postmatch', 'prematch', 'settlement', 'dare-summary'));
 ALTER TABLE "MatchNotificationIntent"
   ADD CONSTRAINT "MatchNotificationIntent_origin_kind_check"
     CHECK ("originKind" IN ('live', 'recovery'));

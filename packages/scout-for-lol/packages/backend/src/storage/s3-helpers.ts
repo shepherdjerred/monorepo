@@ -102,6 +102,9 @@ export async function saveToS3(
       ...(config.additionalLogDetails === undefined
         ? {}
         : { logDetails: config.additionalLogDetails }),
+      ...(config.abortSignal === undefined
+        ? {}
+        : { abortSignal: config.abortSignal }),
     });
 
     const uploadTime = Date.now() - startTime;

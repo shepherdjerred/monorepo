@@ -3,12 +3,10 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
+  type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
-import {
-  DiscordMessageIdSchema,
-  type RiotMatchId,
-} from "@scout-for-lol/domain/identity/brands.ts";
+import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   NotificationFailure,
   NotificationTarget,
@@ -25,16 +23,26 @@ import {
   isMissingChannelError,
   isPermissionError,
 } from "#src/discord/utils/permissions.ts";
-import { ChannelSendError, send } from "#src/league/discord/channel.ts";
+import {
+  ChannelSendError,
+  isReplyPermissionError,
+  send,
+} from "#src/league/discord/channel.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import {
+  afterDareSummaryDeliveredV2,
+  buildDareSummaryNotificationMessageV2,
+} from "#src/temporal/v2/notification/dare-summary-notification.ts";
 import { readAttestedNotificationArtifactV2 } from "#src/temporal/v2/notification/notification-artifact.ts";
 import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
 import { buildPrematchNotificationMessageV2 } from "#src/temporal/v2/notification/prematch-notification.ts";
+import { buildSettlementNotificationMessageV2 } from "#src/temporal/v2/notification/settlement-notification.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
-import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
+import { ANNOUNCEMENT_INTENT_KINDS } from "@scout-for-lol/domain/notifications/intent.ts";
+import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("scout-v2-notification-delivery");
@@ -141,27 +149,53 @@ async function sendToChannel(args: {
   guildId: DiscordGuildId | undefined;
 }): Promise<ScoutNotificationDeliveryV2Result> {
   const { message, channelId, attemptNonce, guildId } = args;
+  const options = {
+    ...message,
+    nonce: deliveryAttemptNonce(attemptNonce),
+    enforceNonce: true,
+  };
+  const target = DiscordChannelIdSchema.parse(channelId);
   try {
-    const sent = await send(
-      {
-        ...message,
-        nonce: deliveryAttemptNonce(attemptNonce),
-        enforceNonce: true,
-      },
-      DiscordChannelIdSchema.parse(channelId),
-      guildId,
-    );
+    const sent = await send(options, target, guildId);
     return {
       outcome: "delivered",
       messageId: DiscordMessageIdSchema.parse(sent.id),
     };
   } catch (error) {
-    if (error instanceof ChannelSendError) {
-      return classifyChannelSendFailure(error);
+    if (!(error instanceof ChannelSendError)) {
+      // Nothing else `send` raises is classifiable, and an unclassified
+      // failure around a request that may have left is the definition of
+      // ambiguous.
+      return { outcome: "unknown" };
     }
-    // Nothing else `send` raises is classifiable, and an unclassified failure
-    // around a request that may have left is the definition of ambiguous.
-    return { outcome: "unknown" };
+    if (options.reply !== undefined && isReplyPermissionError(error)) {
+      // v1's fallback for a settlement recap: a reply the bot may not make
+      // (no Read Message History, or Discord refused the reference) becomes
+      // one plain send. Safe to attempt because `isReplyPermissionError`
+      // names only failures `send` HANDLED — the reply never left — so the
+      // nonce is still unspent and a second request is a first send.
+      return await sendWithoutReply(options, target, guildId);
+    }
+    return classifyChannelSendFailure(error);
+  }
+}
+
+async function sendWithoutReply(
+  options: MessageCreateOptions,
+  channelId: DiscordChannelId,
+  guildId: DiscordGuildId | undefined,
+): Promise<ScoutNotificationDeliveryV2Result> {
+  const { reply: _reply, ...plain } = options;
+  try {
+    const sent = await send(plain, channelId, guildId);
+    return {
+      outcome: "delivered",
+      messageId: DiscordMessageIdSchema.parse(sent.id),
+    };
+  } catch (error) {
+    return error instanceof ChannelSendError
+      ? classifyChannelSendFailure(error)
+      : { outcome: "unknown" };
   }
 }
 
@@ -264,6 +298,11 @@ type PreparedSend =
       readonly message: MessageCreateOptions;
       readonly target: NotificationTarget;
       readonly guildId: DiscordGuildId | undefined;
+      /**
+       * Best-effort follow-up once Discord accepted the send — the Dare
+       * callout refresh. Never throws and never changes the outcome.
+       */
+      readonly afterDelivered: (() => Promise<void>) | undefined;
     }
   | { readonly phase: "failed"; readonly failure: NotificationFailure };
 
@@ -294,11 +333,23 @@ const CONTENT_UNAVAILABLE: NotificationFailure = {
  * reads one.
  */
 async function buildAttestedMessage(
-  kind: NotificationIntentKind,
-  riotMatchId: RiotMatchId,
+  record: MatchNotificationIntentRecord,
   guildId: DiscordGuildId | undefined,
 ): Promise<MessageCreateOptions | undefined> {
-  const artifact = await readAttestedNotificationArtifactV2(riotMatchId);
+  const kind = record.intent.kind;
+  const riotMatchId = record.matchId;
+  switch (kind) {
+    // The two announcement kinds have no artifact: their render attested
+    // `text-only`, and their message is built from the intent's own payload.
+    case "settlement":
+      return await buildSettlementNotificationMessageV2(record);
+    case "dare-summary":
+      return buildDareSummaryNotificationMessageV2(record);
+    case "postmatch":
+    case "prematch":
+      break;
+  }
+  const artifact = await readAttestedNotificationArtifactV2(riotMatchId, kind);
   switch (kind) {
     case "postmatch": {
       if (artifact.artifact === "none") {
@@ -338,6 +389,22 @@ async function prepareNotificationSend(
       `Intent ${input.intentKey} reached the send while held by policy ${gate.policy} for a ${gate.target} target; nothing was sent`,
     );
   }
+  if (
+    target.kind === "dm" &&
+    ANNOUNCEMENT_INTENT_KINDS.has(record.intent.kind)
+  ) {
+    // A settlement recap or a Dare result is a channel announcement: v1 has no
+    // DM shape for either — its private settlement receipts are a separate,
+    // budgeted fan-out this kind does not port — so a DM target is a producer
+    // contract that does not exist. Terminal, decided pre-send.
+    logger.error(
+      `Intent ${input.intentKey} is a ${record.intent.kind} intent targeting a DM, which that kind cannot deliver`,
+    );
+    return {
+      phase: "failed",
+      failure: { classification: "terminal", reason: "target-not-found" },
+    };
+  }
   // Resolved once and used twice: the report generator evaluates per-guild
   // feature flags against it, and `send` escalates a permission revocation to
   // that guild's owner. Two lookups would be two REST calls that can disagree.
@@ -348,11 +415,7 @@ async function prepareNotificationSend(
 
   let message: MessageCreateOptions | undefined;
   try {
-    message = await buildAttestedMessage(
-      record.intent.kind,
-      riotMatchId,
-      guildId,
-    );
+    message = await buildAttestedMessage(record, guildId);
   } catch (error) {
     if (!(error instanceof ArchivedObjectUnusableError)) throw error;
     logger.error(
@@ -376,7 +439,18 @@ async function prepareNotificationSend(
       failure: { classification: "terminal", reason: "target-not-found" },
     };
   }
-  return { phase: "ready", message, target, guildId };
+  return {
+    phase: "ready",
+    message,
+    target,
+    guildId,
+    afterDelivered:
+      record.intent.kind === "dare-summary"
+        ? async () => {
+            await afterDareSummaryDeliveredV2(record);
+          }
+        : undefined,
+  };
 }
 
 /**
@@ -416,7 +490,7 @@ export async function deliverNotificationV2(
     });
   }
 
-  return ScoutNotificationDeliveryV2ResultSchema.parse(
+  const delivery = ScoutNotificationDeliveryV2ResultSchema.parse(
     await deliverToTarget({
       message: prepared.message,
       target: prepared.target,
@@ -424,4 +498,22 @@ export async function deliverNotificationV2(
       guildId: prepared.guildId,
     }),
   );
+  if (
+    delivery.outcome === "delivered" &&
+    prepared.afterDelivered !== undefined
+  ) {
+    // Post-send and best-effort by construction: the outcome above is already
+    // decided, and a follow-up that failed must neither throw (a throw here
+    // reads as an unobserved send) nor turn a delivered result into anything
+    // else.
+    try {
+      await prepared.afterDelivered();
+    } catch (error) {
+      logger.error(
+        `The post-delivery step for ${input.intentKey} failed after a delivered send`,
+        error,
+      );
+    }
+  }
+  return delivery;
 }

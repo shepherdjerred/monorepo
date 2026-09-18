@@ -1,4 +1,5 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
 import configuration from "#src/configuration.ts";
 import { readVerifiedRawObjectBytes } from "#src/report-store/s3-raw-source.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -51,8 +52,9 @@ export type ScoutV2AttestedNotificationArtifact =
 
 export async function readAttestedNotificationArtifactV2(
   riotMatchId: RiotMatchId,
+  kind: NotificationIntentKind,
 ): Promise<ScoutV2AttestedNotificationArtifact> {
-  const evidence = await readNotificationArtifactV2(riotMatchId);
+  const evidence = await readNotificationArtifactV2(riotMatchId, kind);
   if (evidence === null) {
     throw new Error(
       `No render receipt stands for ${riotMatchId}, so there is no attested artifact for this send to deliver; the Workflow renders before it sends`,

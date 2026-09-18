@@ -16,7 +16,12 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * `state` column plus one column per variant payload; the migration CHECKs
  * pin each column to exactly the states that carry it. The origin union is
  * flattened the same way: `originKind` plus the batch reference a recovery
- * origin carries, CHECKed present exactly then. The payload column is
+ * origin carries, CHECKed present exactly then.
+ *
+ * The `announcement` envelope an announcement kind carries has no column of
+ * its own: it is presentation input, not machine state, nothing filters on
+ * it, and the payload column already holds it. It is taken from the parsed
+ * payload and the rest of the record is still cross-checked column by column. The payload column is
  * the notificationIntentCodec envelope of the same intent — the versioned
  * wire form that survives schema evolution — and every read parses it
  * through the codec (kind and version verified, data validated) and
@@ -162,6 +167,7 @@ export function matchNotificationIntentRowToRecord(
   row: unknown,
 ): MatchNotificationIntentRecord {
   const raw = RawIntentRowSchema.parse(row);
+  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
   const record = MatchNotificationIntentRecordSchema.parse({
     matchId: raw.riotMatchId,
     intent: {
@@ -173,10 +179,12 @@ export function matchNotificationIntentRowToRecord(
       createdAt: raw.createdAt.toISOString(),
       attemptCount: raw.attemptCount,
       ...failureCandidate(raw),
+      ...(payloadIntent.announcement === undefined
+        ? {}
+        : { announcement: payloadIntent.announcement }),
       state: stateCandidate(raw),
     },
   });
-  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
   if (!Bun.deepEquals(record.intent, payloadIntent, true)) {
     throw new Error(
       `Intent ${raw.intentKey}: the payload envelope disagrees with the row's columns`,

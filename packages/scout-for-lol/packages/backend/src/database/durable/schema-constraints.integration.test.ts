@@ -342,7 +342,7 @@ describe("MatchNotificationIntent constraints", () => {
     ],
     [
       "an unknown notification kind",
-      { ...valid, intentKey: "'i3k'", kind: "'settlement'" },
+      { ...valid, intentKey: "'i3k'", kind: "'newsletter'" },
       "MatchNotificationIntent_kind_check",
     ],
     [

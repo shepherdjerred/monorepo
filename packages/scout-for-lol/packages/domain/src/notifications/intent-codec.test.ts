@@ -8,7 +8,7 @@ import {
 describe("notificationIntentCodec", () => {
   test("declares its discriminator and current version", () => {
     expect(notificationIntentCodec.kind).toBe("notification-intent");
-    expect(notificationIntentCodec.version).toBe(2);
+    expect(notificationIntentCodec.version).toBe(3);
   });
 
   test.each(Object.entries(statesByKind()))(
@@ -18,7 +18,7 @@ describe("notificationIntentCodec", () => {
       const envelope = notificationIntentCodec.serialize(intent);
       expect(envelope).toEqual({
         kind: "notification-intent",
-        version: 2,
+        version: 3,
         data: intent,
       });
       expect(notificationIntentCodec.parse(envelope)).toEqual(intent);
@@ -53,7 +53,7 @@ describe("notificationIntentCodec", () => {
     expect(() =>
       notificationIntentCodec.parse({
         kind: "notification-intent",
-        version: 2,
+        version: 3,
         data: { state: { kind: "pending" } },
       }),
     ).toThrow();
@@ -72,10 +72,23 @@ describe("notificationIntentCodec", () => {
     expect(() =>
       notificationIntentCodec.parse({
         kind: "notification-intent",
-        version: 2,
+        version: 3,
         data: bare,
       }),
     ).toThrow();
+  });
+
+  test("migrates a version-2 report intent unchanged", () => {
+    // Every version-2 payload is a postmatch or prematch intent, which carry
+    // no announcement, so the step is the identity.
+    const intent = makeIntent({ kind: "ready" });
+    expect(
+      notificationIntentCodec.parse({
+        kind: "notification-intent",
+        version: 2,
+        data: intent,
+      }),
+    ).toEqual(intent);
   });
 });
 

@@ -341,6 +341,24 @@ describe("MatchNotificationIntent codec", () => {
       }),
     ],
     [
+      "settlement carrying its announcement",
+      NotificationIntentSchema.parse({
+        key: "settlement-discord:NA1_5312279829:300000000000000001",
+        kind: "settlement",
+        origin: { kind: "live" },
+        announcement: {
+          kind: "scout-settlement-announcement",
+          version: 1,
+          data: { summary: { matchId: "NA1_5312279829" } },
+        },
+        target: { kind: "channel", channelId: CHANNEL_ID },
+        freshnessDeadline: LATER_ISO,
+        createdAt: AT_ISO,
+        attemptCount: 0,
+        state: { kind: "pending" },
+      }),
+    ],
+    [
       "dm target",
       NotificationIntentSchema.parse({
         key: "intent-dm",

@@ -491,7 +491,8 @@ load-bearing for anyone extending it.
 
 ### An intent says what it announces and where it came from
 
-Every intent carries a `kind` (`postmatch` | `prematch`) and an `origin`
+Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
+`dare-summary`) and an `origin`
 (`live`, or `recovery` naming the batch that minted it). Both are fixed at
 mint, mirrored into columns, and versioned in the payload envelope
 (`notificationIntentCodec` version 2; a version-1 payload derives its kind from
@@ -504,6 +505,26 @@ report. The V2 prematch send carries no Bryan Bucks markets or buttons; v1
 opens pools during its send and records message references afterwards, and
 buttons on a message nothing recorded would be a market the bot could not
 later close. That is an explicit gap, not a silent one.
+
+### The announcement kinds carry their message on the intent
+
+A `settlement` intent is one guild channel's Bryan Bucks recap for one match
+and a `dare-summary` intent is one Dare's resolution. Neither has an image —
+their render attests `none` (`text-only`) — and their message is built at the
+send from an `announcement` envelope on the intent, parsed by the codecs in
+`notification/announcement-codecs.ts`: the settlement summary, parlay result
+and this guild's earnings exactly as settlement produced them, or v1's
+`DareSettlementSummary`. The intent carries those presentation inputs rather
+than the receipt's identities on purpose — the receipt names no amounts, and
+rebuilding pool totals and payouts from ledger rows would be a second
+implementation of settlement arithmetic. The arms compose v1's own builders
+(`prepareSettlementAnnouncement`, `dareResultMessage`) so budgets and mention
+safety exist once. A settlement recap replies to the delivered POSTMATCH
+intent's `messageId` for the same channel (`failIfNotExists: false`), with
+one plain send when the reply itself is refused; a delivered Dare result is
+followed by v1's best-effort callout refresh. Both kinds refuse a DM target as
+terminal: v1's private settlement receipts are a separate, budgeted fan-out
+that is not ported, and is an explicit gap.
 
 ### Delivery attaches exactly what the render attested
 

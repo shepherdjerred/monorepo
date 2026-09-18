@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OpaqueVersionedEnvelopeSchema } from "#src/codec/versioned.ts";
 import {
   DiscordMessageIdSchema,
   IsoInstantSchema,
@@ -27,14 +28,29 @@ import {
  * What the notification announces, which decides how it is rendered and
  * delivered. A `prematch` intent announces a game that has started and is
  * rendered from the archived spectator snapshot; a `postmatch` intent reports
- * a finished game from its MatchV5 payload. The kind is a property of the
+ * a finished game from its MatchV5 payload; a `settlement` intent tells one
+ * guild channel how its Bryan Bucks pool and parlay settled; a `dare-summary`
+ * intent tells a channel how one Dare resolved. The kind is a property of the
  * decision to notify, fixed at mint, so a consumer never has to infer it from
  * the key or from whatever payload happens to be available when it runs.
+ *
+ * The two announcement kinds carry their presentation inputs on the intent
+ * (see `announcement` below); the two report kinds carry nothing, because
+ * everything they deliver is derived from the match's own durable artifacts.
  */
 export type NotificationIntentKind = z.infer<
   typeof NotificationIntentKindSchema
 >;
-export const NotificationIntentKindSchema = z.enum(["postmatch", "prematch"]);
+export const NotificationIntentKindSchema = z.enum([
+  "postmatch",
+  "prematch",
+  "settlement",
+  "dare-summary",
+]);
+
+/** The kinds whose message is built from an `announcement` payload. */
+export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
+  new Set<NotificationIntentKind>(["settlement", "dare-summary"]);
 
 /**
  * Where the decision to notify came from.
@@ -205,6 +221,16 @@ export const NotificationIntentSchema = z
     attemptCount: z.int().nonnegative(),
     /** Most recent recorded failure, kept for diagnosis across retries. */
     lastFailure: NotificationFailureSchema.optional(),
+    /**
+     * What an announcement kind says, as a versioned envelope the delivery
+     * side re-parses with the codec that owns it. Opaque here on purpose:
+     * the presentation inputs are the betting slice's own types, and the
+     * domain must not mirror them. Present exactly for the kinds in
+     * `ANNOUNCEMENT_INTENT_KINDS`; the refinement below is what makes a
+     * settlement intent with nothing to say, or a report intent smuggling a
+     * payload, unrepresentable.
+     */
+    announcement: OpaqueVersionedEnvelopeSchema.optional(),
     state: NotificationIntentStateSchema,
   })
   .refine(
@@ -215,5 +241,14 @@ export const NotificationIntentSchema = z
     {
       message:
         "sending and unknown-delivery are only reachable after beginSend, so attemptCount must be at least 1",
+    },
+  )
+  .refine(
+    (intent) =>
+      ANNOUNCEMENT_INTENT_KINDS.has(intent.kind) ===
+      (intent.announcement !== undefined),
+    {
+      message:
+        "an announcement payload is carried by exactly the settlement and dare-summary kinds",
     },
   );

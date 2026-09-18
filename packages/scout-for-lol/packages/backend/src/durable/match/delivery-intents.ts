@@ -132,6 +132,16 @@ export function prematchDeliveryKeyPrefix(matchId: string): string {
   return `prematch-discord:${matchId}`;
 }
 
+/**
+ * The shared prefix of one match's POST-MATCH delivery keys: v1's effect key
+ * and intent key for the visible report, and — because the delivered
+ * post-match intent's `messageId` is what a later settlement announcement
+ * replies to — the key the V2 settlement arm looks that message up by.
+ */
+export function postmatchDeliveryKeyPrefix(matchId: string): string {
+  return `postmatch-discord:${matchId}`;
+}
+
 /** One channel's intent key under a delivery prefix. */
 export function deliveryIntentKey(
   keyPrefix: string,
