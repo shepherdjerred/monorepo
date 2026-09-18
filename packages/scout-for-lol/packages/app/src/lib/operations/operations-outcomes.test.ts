@@ -40,20 +40,24 @@ function unavailableMessage(workflow: string): string {
 }
 
 describe("Workflow-start arms", () => {
-  test("reports a started Workflow with the run it produced", () => {
+  test("reports the running Workflow without claiming this call began it", () => {
     const result = classifyOperationsConfirmation(
       executed(
         { kind: "start-authorized", workflow: "reconcile-pipeline" },
         {
-          outcome: "started",
+          outcome: "reached-running",
           requestedWorkflowId: "scout-recon-beta-operator",
           runId: "run-1",
         },
       ),
     );
     expect(result.status).toBe("confirmed");
-    expect(result.effect).toBe("performed");
-    expect(result.heading).toBe("Pipeline reconciliation started");
+    // The operator gets the run and no claim of authorship: Temporal joins an
+    // open run and does not report which happened, so `performed` here would
+    // be the console asserting something it cannot know.
+    expect(result.effect).toBe("none");
+    expect(result.heading).toBe("Pipeline reconciliation is running");
+    expect(result.message).toContain("does not claim");
     expect(result.facts).toContainEqual({ label: "Run", value: "run-1" });
   });
 

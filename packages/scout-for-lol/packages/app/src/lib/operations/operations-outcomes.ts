@@ -124,7 +124,7 @@ const OutcomeSchema = z.discriminatedUnion("kind", [
 
 const DispatchSchema = z.discriminatedUnion("outcome", [
   z.looseObject({
-    outcome: z.literal("started"),
+    outcome: z.literal("reached-running"),
     requestedWorkflowId: z.string(),
     runId: z.string(),
   }),
@@ -288,24 +288,36 @@ function fromDispatch(
       "missing-dispatch",
     );
   }
-  if (dispatch.outcome === "started") {
+  if (dispatch.outcome === "reached-running") {
+    // The operator's answer: the work they asked for is running, named by its
+    // run. What this deliberately does NOT say is that this confirmation began
+    // it. Temporal's conflict policy joins an execution that is already open
+    // and the client's start answer is the same either way, so a console that
+    // said "started" here would be claiming an effect it cannot establish —
+    // and these Workflow ids are also started by the sweep and the match
+    // fan-out, so the run shown genuinely may be one of theirs.
+    //
+    // `effect` is therefore `none`: it is the non-claiming value, and the
+    // alternative would assert authorship on a coin flip.
     return {
       status: "confirmed",
-      effect: "performed",
-      heading: `${label} started`,
-      message: `${label} is running.`,
+      effect: "none",
+      heading: `${label} is running`,
+      message: `${label} is running as the run below. Scout does not claim this confirmation began it: Temporal joins a run that is already open and does not report which happened.`,
       facts: [
         { label: "Workflow", value: dispatch.requestedWorkflowId },
         { label: "Run", value: dispatch.runId },
       ],
-      reason: null,
+      reason: "reached-running",
     };
   }
   if (dispatch.outcome === "joined-running") {
-    // The request was recorded and accepted, but the run it names was already
-    // open and the conflict policy joined it. Settled, and nothing to offer
-    // again: the work the operator wanted is running. Asking again once it
-    // closes is a new request, which the durable record now carries.
+    // The one case where the join is PROVEN rather than assumed: the run named
+    // here was recorded as accepted for this Workflow id before this
+    // confirmation asked Temporal anything, so this call cannot have begun it.
+    // Settled, and nothing to offer again: the work the operator wanted is
+    // running. Asking again once it closes is a new request, which the durable
+    // record now carries.
     return {
       status: "confirmed",
       effect: "none",

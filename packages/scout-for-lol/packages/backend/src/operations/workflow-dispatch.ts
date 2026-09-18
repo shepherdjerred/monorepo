@@ -62,6 +62,12 @@ import {
  * row. What Temporal then does with the id is its policies' business: the
  * conflict policy joins a running execution, the reuse policy decides whether
  * a closed one re-runs. Both are reported as what they are, below.
+ *
+ * What is NOT reported is which of those two happened when the client cannot
+ * tell them apart. `USE_EXISTING` makes "began it" and "joined it" the same
+ * answer on the wire, and this SDK does not carry the server's `started`
+ * flag, so the outcomes below state the accepted handoff and the running run
+ * and claim authorship only where the durable record proves the negative.
  */
 
 export type OperationsWorkflowStart =
@@ -73,24 +79,44 @@ export type OperationsWorkflowStart =
     };
 
 export type OperationsDispatchResult =
-  /** The request was recorded and Temporal began a NEW execution for it. */
+  /**
+   * The request was recorded and accepted, and the run named here is running.
+   *
+   * It is deliberately NOT a claim that this call began that run, because the
+   * client cannot know. `USE_EXISTING` joins an execution that is already
+   * open, and the SDK's answer is identical either way: the SERVER does say
+   * which happened — `StartWorkflowExecutionResponse.started`, "if true, a new
+   * workflow was started" — but `@temporalio/client` 1.22.0 reads that field
+   * in `_startWorkflowHandler` and returns only `{ runId, eagerlyStarted }`,
+   * so it reaches no supported surface. (`eagerlyStarted` is about eager task
+   * dispatch to a local worker, not about who created the execution.)
+   *
+   * Inferring creation from a run id the durable record has not seen is not a
+   * substitute, and that inference was this module's bug. These Workflow ids
+   * are also started from inside the Workflow sandbox — the reconciliation
+   * sweep's child starts and the match fan-out — where nothing can write a
+   * durable request row. So an unrecognised run is equally consistent with
+   * this call having begun it and with a sandbox starter having begun it a
+   * moment earlier and this start having joined it.
+   *
+   * What is true is what this says: the handoff was accepted, and this run is
+   * running. Authorship is left unclaimed.
+   */
   | {
-      readonly outcome: "started";
+      readonly outcome: "reached-running";
       readonly requestId: WorkflowStartRequestId;
       readonly requestedWorkflowId: string;
       readonly runId: string;
     }
   /**
-   * The request was recorded and accepted, but no new execution began: an
-   * execution for this Workflow id was still running, and the conflict policy
-   * joined it. The run reported is that execution's — the same one the
-   * previous accepted request for this id recorded, which is how the join is
-   * known. Reporting this as `started` would claim an effect that did not
-   * happen.
+   * No new execution began, and this one is PROVEN rather than inferred: the
+   * run Temporal answered with is the one a PREVIOUS accepted request for this
+   * Workflow id already recorded. That acceptance was written before this call
+   * asked Temporal anything, so the execution existed before this call and the
+   * conflict policy joined it. This call cannot have begun it.
    *
-   * Also the answer when a concurrent confirmation of the identical start won
-   * the durable race and was accepted before this one could record itself:
-   * this request adopted that one, whose run is already running.
+   * The negative is the only side of authorship a client can establish here,
+   * which is why it is the only one this union states.
    */
   | {
       readonly outcome: "joined-running";
@@ -234,9 +260,11 @@ async function startOrRefusal(
 /**
  * Record the operator's start request, then ask Temporal to run it.
  *
- * @throws when a durable write conflicts — a different start already claims
- * this Workflow id, or a different acceptance already claims this request.
- * Those are broken contracts rather than expected operator outcomes.
+ * @throws when a durable write conflicts: a different start already claims
+ * this Workflow id. That is a broken derivation rather than an expected
+ * operator outcome. A request that was already answered is NOT one of these —
+ * an adopted request has two drivers by design, and the driver that did not
+ * record the acceptance reports what it reached instead of failing.
  */
 export async function dispatchOperationsWorkflowStart(
   stage: ScoutStage,
@@ -306,23 +334,28 @@ export async function dispatchOperationsWorkflowStart(
     };
   }
   const runId = WorkflowRunIdSchema.parse(started.firstExecutionRunId);
-  const accepted = await recordWorkflowStartAccepted(prisma, {
+  // The acceptance is recorded for its own sake — it is the evidence the row
+  // exists to hold — and its outcome deliberately does not steer the answer
+  // below. Which driver's acceptance landed first says who WROTE the evidence,
+  // never who created the execution: a caller that truly began the run can
+  // still lose that write to an adopter that joined it.
+  await recordWorkflowStartAccepted(prisma, {
     requestId,
     acceptedAt: IsoInstantSchema.parse(new Date().toISOString()),
     runId,
   });
-  if (accepted.outcome === "conflict") {
-    throw new Error(
-      `Workflow start request ${requestId} for ${planned.requestedWorkflowId} was accepted as a different run (${accepted.reason})`,
-    );
-  }
-  // Run ids are unique per execution, so Temporal answering with the run the
-  // previous accepted request recorded means that execution is still running
-  // and the conflict policy joined it. Anything else is a run this request
-  // began.
-  const joined = requested.latestAccepted?.acceptance?.runId === runId;
+
+  // The one thing about authorship a client can PROVE, and only the negative
+  // half of it: a run that a previous accepted request for this Workflow id
+  // already recorded existed before this call asked Temporal anything, so this
+  // call did not begin it. Every other answer is consistent both with this
+  // call beginning the execution and with it joining one that a sandbox
+  // starter began a moment earlier, and the SDK does not carry the server's
+  // `started` flag that would settle it — so it claims neither.
+  const joinedRecordedRun =
+    requested.latestAccepted?.acceptance?.runId === runId;
   return {
-    outcome: joined ? "joined-running" : "started",
+    outcome: joinedRecordedRun ? "joined-running" : "reached-running",
     requestId,
     requestedWorkflowId: planned.requestedWorkflowId,
     runId,

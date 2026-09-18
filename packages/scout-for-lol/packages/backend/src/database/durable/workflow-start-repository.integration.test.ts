@@ -321,19 +321,33 @@ describe("requestWorkflowStart under a lost insert", () => {
 });
 
 describe("recordWorkflowStartAccepted", () => {
-  test("accepts once, tolerates the identical retry, conflicts on drift", async () => {
+  test("accepts once, answers the same run again, and never overwrites", async () => {
     const record = recorded(
       await requestWorkflowStart(prisma, request("wf-acc-1")),
     );
     expect(await accept(record)).toEqual({ outcome: "applied" });
     expect(await accept(record)).toEqual({ outcome: "already-applied" });
+    // A second driver of this request heard the same run a moment later. The
+    // instant it observed is not what the acceptance attests to.
+    expect(
+      await accept(record, {
+        acceptedAt: IsoInstantSchema.parse("2026-09-07T10:01:00.004Z"),
+      }),
+    ).toEqual({ outcome: "already-applied" });
+    // A DIFFERENT run is a different answer, and the recorded one stands.
     expect(
       await accept(record, { runId: WorkflowRunIdSchema.parse("run-2") }),
-    ).toEqual({ outcome: "conflict", reason: "acceptance-differs" });
+    ).toEqual({
+      outcome: "answered-by-another-run",
+      accepted: { acceptedAt: ACCEPTED_AT, runId: RUN_ID },
+    });
     const stored = await getWorkflowStart(prisma, {
       requestedWorkflowId: record.requestedWorkflowId,
     });
-    expect(stored?.acceptance?.runId).toBe(RUN_ID);
+    expect(stored?.acceptance).toEqual({
+      acceptedAt: ACCEPTED_AT,
+      runId: RUN_ID,
+    });
   });
 
   test("accepting a request that was never recorded fails loudly", async () => {
@@ -360,8 +374,8 @@ describe("recordWorkflowStartAccepted", () => {
       runIds.map((runId) => accept(record, { runId })),
     );
     expect(outcomes.map((result) => result.outcome).sort()).toEqual([
+      "answered-by-another-run",
       "applied",
-      "conflict",
     ]);
 
     // The stored run id is the one whose acceptance applied.
@@ -389,7 +403,10 @@ describe("recordWorkflowStartAccepted", () => {
     expect(await accept(first)).toEqual({ outcome: "already-applied" });
     expect(
       await accept(first, { runId: WorkflowRunIdSchema.parse("run-other") }),
-    ).toEqual({ outcome: "conflict", reason: "acceptance-differs" });
+    ).toEqual({
+      outcome: "answered-by-another-run",
+      accepted: { acceptedAt: ACCEPTED_AT, runId: RUN_ID },
+    });
     const current = await getWorkflowStart(prisma, {
       requestedWorkflowId: "wf-acc-late",
     });

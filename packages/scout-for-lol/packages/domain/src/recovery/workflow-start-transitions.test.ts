@@ -286,24 +286,39 @@ describe("acceptWorkflowStart", () => {
     });
   });
 
-  test("an equal instant spelled differently is still the same acceptance", () => {
-    expect(
-      acceptWorkflowStart(acceptedRecord(), {
-        ...acceptance,
-        acceptedAt: IsoInstantSchema.parse("2026-09-16T10:00:01Z"),
-      }),
-    ).toEqual({ outcome: "already-applied" });
+  test("the same run answered at another instant is the same acceptance", () => {
+    // An adopted request has two drivers, and each writes down when IT heard
+    // back. The instant is observational; the run is the answer. A driver
+    // told its answer disagreed with the record would be told something
+    // false, and SJ-205's dispatcher turned that falsehood into a throw.
+    for (const acceptedAt of [
+      IsoInstantSchema.parse("2026-09-16T10:00:01Z"),
+      IsoInstantSchema.parse("2026-09-16T10:00:01.001Z"),
+      IsoInstantSchema.parse("2026-09-16T09:59:00.000Z"),
+    ]) {
+      expect(
+        acceptWorkflowStart(acceptedRecord(), { ...acceptance, acceptedAt }),
+      ).toEqual({ outcome: "already-applied" });
+    }
   });
 
-  test("a different run id or instant conflicts", () => {
+  test("a different run is an answer this request does not record", () => {
+    // The recorded acceptance comes back intact: the offered run is real, but
+    // the handoff this request names was answered by the other one.
     expect(
       acceptWorkflowStart(acceptedRecord(), {
         ...acceptance,
         runId: WorkflowRunIdSchema.parse("run-2"),
       }),
-    ).toEqual({ outcome: "conflict", reason: "acceptance-differs" });
+    ).toEqual({
+      outcome: "answered-by-another-run",
+      accepted: { acceptedAt: ACCEPTED_AT, runId: RUN_ID },
+    });
     expect(
       acceptWorkflowStart(acceptedRecord({ runId: null }), acceptance),
-    ).toEqual({ outcome: "conflict", reason: "acceptance-differs" });
+    ).toEqual({
+      outcome: "answered-by-another-run",
+      accepted: { acceptedAt: ACCEPTED_AT, runId: null },
+    });
   });
 });
