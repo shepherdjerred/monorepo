@@ -61,16 +61,32 @@ function mergeCharges(
   }
 }
 
+function reason(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+// Reading the page can fail partway through because the history re-renders
+// under the locators we are holding, which detaches them. That is a property
+// of scraping someone else's page, not of the data: the charges gathered so
+// far are still correct, and the order scrape that precedes this is an hour
+// of work that should not be discarded because one page blinked. Stopping
+// early is reported, and `scrapeTransactionHistory`'s caller still throws if
+// the whole pass produced no charges at all.
 async function advanceToNextPage(page: Page): Promise<boolean> {
   const nextButton = page
     .locator('.a-button:has(.a-button-text:text-is("Next Page"))')
     .last();
-  if ((await nextButton.count()) === 0) return false;
-  const buttonClass = (await nextButton.getAttribute("class")) ?? "";
-  if (buttonClass.includes("a-button-disabled")) return false;
-  await nextButton.click();
-  await page.waitForLoadState("domcontentloaded");
-  return true;
+  try {
+    if ((await nextButton.count()) === 0) return false;
+    const buttonClass = (await nextButton.getAttribute("class")) ?? "";
+    if (buttonClass.includes("a-button-disabled")) return false;
+    await nextButton.click();
+    await page.waitForLoadState("domcontentloaded");
+    return true;
+  } catch (error: unknown) {
+    log.warn(`Stopped paging the transaction history: ${reason(error)}`);
+    return false;
+  }
 }
 
 async function extractRows(page: Page): Promise<TransactionRow[]> {
@@ -82,17 +98,26 @@ async function extractRows(page: Page): Promise<TransactionRow[]> {
 
   const rows: TransactionRow[] = [];
   for (const el of elements) {
-    const className = (await el.getAttribute("class")) ?? "";
-    if (className.includes("apx-transaction-date-container")) {
-      rows.push({ kind: "date", text: (await el.textContent()) ?? "" });
-      continue;
+    try {
+      const className = (await el.getAttribute("class")) ?? "";
+      if (className.includes("apx-transaction-date-container")) {
+        rows.push({ kind: "date", text: (await el.textContent()) ?? "" });
+        continue;
+      }
+      rows.push({
+        kind: "txn",
+        amountText: await textOrEmpty(el, ".a-text-right span"),
+        paymentMethod: await textOrEmpty(el, ".a-column.a-span9 span"),
+        orderText: await textOrEmpty(el, 'a[href*="orderID="]'),
+      });
+    } catch (error: unknown) {
+      // Once one row detaches the rest of this page's locators have too, so
+      // return what was read rather than waiting out a timeout per row.
+      log.warn(
+        `Read ${String(rows.length)}/${String(elements.length)} transaction rows on this page: ${reason(error)}`,
+      );
+      break;
     }
-    rows.push({
-      kind: "txn",
-      amountText: await textOrEmpty(el, ".a-text-right span"),
-      paymentMethod: await textOrEmpty(el, ".a-column.a-span9 span"),
-      orderText: await textOrEmpty(el, 'a[href*="orderID="]'),
-    });
   }
   return rows;
 }
