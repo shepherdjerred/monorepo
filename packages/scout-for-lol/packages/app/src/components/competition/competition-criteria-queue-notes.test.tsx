@@ -4,10 +4,11 @@ import { CompetitionCriteriaFields } from "#src/components/competition/competiti
 
 /**
  * The queue checkboxes are the last thing between someone and a competition
- * that can never score a game: ARAM Mayhem is live, so it is offered like any
- * other mode, but Riot publishes no results for it. A user already spent hours
- * discovering that by hand, so the warning is pinned here rather than reviewed
- * by eye.
+ * that can never score a game: League Classic is live and selectable, but Riot
+ * publishes no finished-match payload for it, so a competition scoped to it
+ * stays permanently empty. The warning is pinned here rather than reviewed by
+ * eye — and so is its absence everywhere else, since a mode that is merely
+ * quiet must not be labelled unscorable.
  */
 
 const noop = () => {
@@ -42,23 +43,28 @@ function renderQueues(gameVariant: "MODERN" | "CLASSIC"): string {
 }
 
 describe("competition queue notes", () => {
-  test("warns that ARAM Mayhem cannot be scored", () => {
-    const markup = renderQueues("MODERN");
+  test("warns that League Classic cannot be scored", () => {
+    const markup = renderQueues("CLASSIC");
     // The checkbox label is the picker's own wording, not the queue value.
-    expect(markup).toContain("<span>ARAM Mayhem</span>");
+    expect(markup).toContain("<span>League Classic</span>");
     expect(markup).toContain(
       "Pre-match only — Riot publishes no results for this mode, so it cannot be scored",
     );
   });
 
-  test("warns on League Classic under the Classic variant", () => {
-    expect(renderQueues("CLASSIC")).toContain("Pre-match only");
+  test("leaves Classic ARAM Mayhem unannotated beside it", () => {
+    // Same variant, adjacent checkbox, opposite answer: queue 2450 has a
+    // captured production Match-V5 payload. Exactly one note in this list.
+    const markup = renderQueues("CLASSIC");
+    expect(markup).toContain("<span>Classic ARAM Mayhem</span>");
+    expect(markup.split("Pre-match only")).toHaveLength(2);
   });
 
-  test("leaves scorable queues unannotated", () => {
+  test("annotates nothing in the modern queue list", () => {
+    // Every modern queue publishes results, ARAM Mayhem included. A warning
+    // here would tell users a live mode cannot be scored when it can.
     const markup = renderQueues("MODERN");
-    // One note for ARAM Mayhem and nothing else: ARAM, solo and the rest all
-    // produce results, and a blanket warning would train people to ignore it.
-    expect(markup.split("Pre-match only")).toHaveLength(2);
+    expect(markup).toContain("<span>ARAM Mayhem</span>");
+    expect(markup).not.toContain("Pre-match only");
   });
 });
