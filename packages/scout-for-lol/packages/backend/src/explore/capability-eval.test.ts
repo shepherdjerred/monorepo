@@ -54,6 +54,27 @@ describe("capabilityAnswerIssues", () => {
     expect(issues.length).toBeGreaterThan(0);
   });
 
+  test("accepts refusal wordings that match no single literal", () => {
+    // Three live runs failed on wording alone before the refusal vocabulary
+    // was shared; these are the exact answers they produced.
+    for (const answer of [
+      "Not as a competition type right now. Scout competitions only support games played, wins, champion wins, win rate, highest rank, and rank climb — not kills.",
+      "Competitions can score only games played, wins, win rate, rank, or rank climb, not kills.",
+      "Scoring by kills is not supported. Most wins is the nearest criterion.",
+    ]) {
+      expect(capabilityAnswerIssues({ answer, entry: mostKills })).toEqual([]);
+    }
+  });
+
+  test("names the missing concept, not the vocabulary, when a refusal is absent", () => {
+    const issues = capabilityAnswerIssues({
+      answer:
+        "Sure, I will set up a kills competition. Most wins is also available.",
+      entry: mostKills,
+    });
+    expect(issues).toEqual(["Said none of: any refusal wording"]);
+  });
+
   test("fails an answer that refuses but names no real criterion", () => {
     const issues = capabilityAnswerIssues({
       answer: "Scout cannot run a competition scored by kills.",

@@ -6,16 +6,7 @@
       "question": "Create a competition for most kills across 10 games",
       "creationEnabled": true,
       "mustMentionAnyOf": [
-        [
-          "cannot",
-          "can't",
-          "can not",
-          "does not",
-          "doesn't",
-          "no criterion",
-          "not a scoring",
-          "not one of"
-        ],
+        ["@refusal"],
         ["kill"],
         ["most wins", "win rate", "games played", "highest rank", "rank climb"]
       ],
@@ -26,19 +17,7 @@
       "id": "competition-most-losses",
       "question": "can you make a competition for the most losses on aram mayhem",
       "creationEnabled": true,
-      "mustMentionAnyOf": [
-        [
-          "cannot",
-          "can't",
-          "can not",
-          "does not",
-          "doesn't",
-          "no criterion",
-          "not a scoring",
-          "not one of"
-        ],
-        ["loss", "losses"]
-      ],
+      "mustMentionAnyOf": [["@refusal"], ["loss", "losses"]],
       "mustNotMention": [],
       "rationale": "The pivot that kept the real conversation alive for forty turns. Losses are not a criterion, and saying so is the whole answer."
     },
@@ -46,18 +25,7 @@
       "id": "competition-losses-offers-report",
       "question": "i want a leaderboard of who loses the most. help me set it up",
       "creationEnabled": true,
-      "mustMentionAnyOf": [
-        [
-          "cannot",
-          "can't",
-          "can not",
-          "does not",
-          "doesn't",
-          "no criterion",
-          "not a scoring"
-        ],
-        ["report", "query", "ask", "answer"]
-      ],
+      "mustMentionAnyOf": [["@refusal"], ["report", "query", "ask", "answer"]],
       "mustNotMention": [],
       "rationale": "A report can rank players by losses even though a competition cannot. The honest answer redirects inside Scout rather than off it."
     },
@@ -74,7 +42,12 @@
           "no post-match",
           "no post match",
           "cannot be scored",
-          "never receives"
+          "never receives",
+          "never learns",
+          "does not publish",
+          "doesn't publish",
+          "only sees games start",
+          "only sees the games start"
         ],
         ["mayhem"]
       ],
@@ -109,7 +82,7 @@
       "creationEnabled": true,
       "mustMentionAnyOf": [
         ["discord.gg/qmrewyhxfe", "support discord", "support server"],
-        ["cannot", "can't", "can not", "does not", "doesn't", "no criterion"]
+        ["@refusal"]
       ],
       "mustNotMention": [],
       "rationale": "A request to build something is a feature request. Say no, then send it where feature requests are actually read, rather than leaving the user with nowhere to put it."

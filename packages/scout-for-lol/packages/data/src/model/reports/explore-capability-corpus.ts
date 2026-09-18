@@ -65,6 +65,43 @@ export type ExploreCapabilityCorpus = z.infer<
   typeof ExploreCapabilityCorpusSchema
 >;
 
+/**
+ * Expanded wherever a case lists it, so every case shares one refusal
+ * vocabulary.
+ *
+ * A model has many honest ways to say no, and three separate runs failed this
+ * eval on wording alone — "Not as a competition type right now. Scout
+ * competitions only support …" is a clean refusal that matched none of the
+ * original literals. Each case restating its own list guaranteed that drift,
+ * so the list lives here once.
+ */
+export const EXPLORE_REFUSAL_TOKEN = "@refusal";
+
+export const EXPLORE_REFUSAL_PHRASES: readonly string[] = [
+  "cannot",
+  "can't",
+  "can not",
+  "can only",
+  "does not",
+  "doesn't",
+  "do not",
+  "don't",
+  "is not",
+  "isn't",
+  "no criterion",
+  "not a scoring",
+  "not one of",
+  "not supported",
+  "not as a",
+  "only support",
+  "only score",
+  // Both orderings: "can score only games played" is as much a refusal as
+  // "can only score games played", and matching one but not the other is how
+  // this list drifts back into testing paraphrase.
+  "score only",
+  "support only",
+];
+
 /** Phrases no capability answer may contain, shared by every case. */
 export const EXPLORE_OFF_PLATFORM_PHRASES: readonly string[] = [
   "challonge",

@@ -51,23 +51,32 @@ export const QUEUE_POST_MATCH_DATA: Record<QueueType, QueuePostMatchData> = {
    */
   classic: "never",
   /**
-   * Classic ARAM Mayhem publishes results, despite sitting between the two
-   * queues above that do not and sharing a name with both: 20 finished matches
-   * in prod and 4 in beta, plus a captured prod Match-V5 payload for queue
-   * 2450 at `postmatch/testdata/match-classic-aram-mayhem-s3.json` (from
+   * Classic ARAM Mayhem is the weakest entry in this table and the one to
+   * re-measure first.
+   *
+   * It demonstrably HAS published results: 20 finished matches in prod, 4 in
+   * beta, and a captured prod Match-V5 payload for queue 2450 at
+   * `postmatch/testdata/match-classic-aram-mayhem-s3.json` (from
    * `games/2026/07/29/BR1_3267199656/match.json`) with ten participants and
-   * full per-player stats. Three confusable names, and the middle one is the
-   * exception — check the queue value, never the word "mayhem" or "classic".
+   * full per-player stats. So `never` would be a false claim.
+   *
+   * But every one of those 20 landed on 2026-07-29 and 2026-07-30, the mode's
+   * first two days, and prod then observed 61 more games through 2026-08-24
+   * with no result for any of them. Either Riot stopped publishing after
+   * launch or Scout stopped ingesting; this table cannot tell which, and the
+   * distinction matters — the second would be a bug to fix rather than a fact
+   * to record. `available` is the honest reading of the evidence, and it is
+   * still a promise that has not held since 2026-07-30.
    */
   "classic aram mayhem": "available",
   brawl: "available",
   /**
    * ARAM: Mayhem (queues 2400/3200/3220/3270). Scout watches these games start
-   * and never learns how they ended: measured against both report lakes, beta
-   * holds 964 pre-match observations of queue 2400 and 0 finished matches,
-   * and prod holds 16 (queues 3200 and 3220) and 0 finished matches. Nine
-   * hundred-odd coin flips do not all land the same way by chance — Riot
-   * publishes no Match-V5 payload for this queue.
+   * and never learns how they ended. Measured against both report lakes:
+   * prod holds 4,686 pre-match observations (4,628 of queue 2400, 42 of 3270,
+   * 13 of 3200, 3 of 3220) and 0 finished matches; beta holds 964 and 0. The
+   * most recent pre-match sighting is hours old, so this is a live, popular
+   * mode whose results Riot simply does not publish — not a dormant one.
    */
   "aram mayhem": "never",
   normal: "available",

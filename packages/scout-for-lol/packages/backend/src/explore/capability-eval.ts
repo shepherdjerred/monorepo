@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
   EXPLORE_OFF_PLATFORM_PHRASES,
+  EXPLORE_REFUSAL_PHRASES,
+  EXPLORE_REFUSAL_TOKEN,
   type ExploreCapabilityCase,
 } from "@scout-for-lol/data";
 
@@ -23,6 +25,13 @@ function normalize(text: string): string {
   return text.toLowerCase().replaceAll("’", "'").replaceAll("—", "-");
 }
 
+/** Expand the shared refusal token into its vocabulary, in place. */
+function expandGroup(group: readonly string[]): readonly string[] {
+  return group.flatMap((phrase) =>
+    phrase === EXPLORE_REFUSAL_TOKEN ? EXPLORE_REFUSAL_PHRASES : [phrase],
+  );
+}
+
 /** Every reason this answer is not an honest capability answer. */
 export function capabilityAnswerIssues(input: {
   answer: string;
@@ -30,9 +39,12 @@ export function capabilityAnswerIssues(input: {
 }): readonly string[] {
   const answer = normalize(input.answer);
   const issues: string[] = [];
-  for (const group of input.entry.mustMentionAnyOf) {
+  for (const rawGroup of input.entry.mustMentionAnyOf) {
+    const group = expandGroup(rawGroup);
     if (!group.some((phrase) => answer.includes(normalize(phrase)))) {
-      issues.push(`Said none of: ${group.join(" / ")}`);
+      issues.push(
+        `Said none of: ${(rawGroup.includes(EXPLORE_REFUSAL_TOKEN) ? [...rawGroup.filter((phrase) => phrase !== EXPLORE_REFUSAL_TOKEN), "any refusal wording"] : rawGroup).join(" / ")}`,
+      );
     }
   }
   const forbidden = [
@@ -52,6 +64,8 @@ export const ExploreCapabilityEvalCaseSchema = z
     id: z.string().min(1),
     question: z.string().min(1),
     creationEnabled: z.boolean(),
+    /** How many model calls this case needed; >1 means the first decoded to nothing. */
+    attempts: z.number().int().positive(),
     passed: z.boolean(),
     answer: z.string().nullable(),
     issues: z.array(z.string()),

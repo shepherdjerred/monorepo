@@ -1,3 +1,4 @@
+import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
 import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
 import {
   enabledExploreSkills,
@@ -51,6 +52,14 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "It is NOT the full League ladder, a ranked ladder sample, or a patch-wide dataset.",
     "Say so whenever a question implies broader coverage than that — for example 'best ADC this patch' can only be answered for the players in this data.",
     "Rows identify accounts by Riot ID (GameName#TAG). There are no Discord names, servers, or teams in these answers.",
+    // Generated from the same table the queue picker reads, so the two cannot
+    // drift. Stated here rather than left to a zero-row result, which the model
+    // otherwise has to spend a query to discover and reads as thin history.
+    `Riot publishes no finished-match data for ${queuesWithoutPostMatchData()
+      .map((queue) => `'${queue}'`)
+      .join(
+        " and ",
+      )}. Scout watches those games start and never learns how they ended, so there is no winner, score, KDA or standing for them at ANY date range, and a competition cannot score them. Say that plainly when asked — do not query for it first, and never report it as "no matches recorded", which reads as thin history the user could fix by widening the dates.`,
     "",
     "## How to answer",
     "Load the scoutql skill before writing your first query of a turn — it is the complete language reference, and queries written without it will not compile.",
