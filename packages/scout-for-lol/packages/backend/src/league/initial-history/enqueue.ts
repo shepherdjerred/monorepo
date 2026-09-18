@@ -10,11 +10,69 @@ import type { Db } from "#src/database/index.ts";
 export const INITIAL_HISTORY_REFETCH_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const StoredMatchIdsSchema = z.array(MatchIdSchema).max(20);
 
+/**
+ * The namespace half of the initial-history advisory lock key.
+ *
+ * Named once and shared by the lock and by
+ * {@link initialMatchHistoryImportLockWaiters}, so a predicate about the lock
+ * can never come to describe a different lock than the one taken. A literal
+ * repeated in both places would drift silently, and a predicate that drifted
+ * would answer about a lock nobody holds.
+ */
+const INITIAL_HISTORY_LOCK_NAMESPACE = "scout-initial-history";
+
 export async function lockInitialMatchHistoryImport(
   db: Pick<Db, "$executeRaw">,
   puuid: LeaguePuuid,
 ): Promise<void> {
-  await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-initial-history'), hashtext(${puuid}))`;
+  await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${INITIAL_HISTORY_LOCK_NAMESPACE}), hashtext(${puuid}))`;
+}
+
+const LockWaiterRowsSchema = z
+  .array(z.object({ waiters: z.coerce.bigint() }))
+  .length(1);
+
+/**
+ * How many sessions are BLOCKED waiting for this puuid's initial-history lock.
+ *
+ * Every clause narrows the question to the one fact a caller wants to assert,
+ * because `pg_locks` is cluster-wide and the tests of this repository share a
+ * single Postgres server. An unqualified "is any advisory lock contended"
+ * counts waiters belonging to other suites, to other worktrees running their
+ * own suites against the same server, and to any `psql` session that happens
+ * to be waiting — so it reports "the worker is blocked" while the worker has
+ * not even started, and the caller proceeds into a race it meant to wait out.
+ *
+ * `database` excludes every other test database on the server; `objsubid = 2`
+ * selects the two-key form this lock uses; `classid` and `objid` pin the exact
+ * key. The keys are masked into unsigned 32 bits because `hashtext` returns a
+ * signed integer while `pg_locks` exposes the same bits as an OID: the raw
+ * values compare unequal whenever the hash is negative.
+ */
+export async function initialMatchHistoryImportLockWaiters(
+  db: Pick<Db, "$queryRaw">,
+  puuid: LeaguePuuid,
+): Promise<number> {
+  const rows = LockWaiterRowsSchema.parse(
+    await db.$queryRaw`
+      SELECT count(*)::bigint AS waiters
+      FROM pg_locks
+      WHERE locktype = 'advisory'
+        AND NOT granted
+        AND database = (
+          SELECT oid FROM pg_database WHERE datname = current_database()
+        )
+        AND objsubid = 2
+        AND classid::bigint
+          = (hashtext(${INITIAL_HISTORY_LOCK_NAMESPACE})::bigint & 4294967295)
+        AND objid::bigint = (hashtext(${puuid})::bigint & 4294967295)
+    `,
+  );
+  const waiters = rows[0]?.waiters;
+  if (waiters === undefined) {
+    throw new Error("pg_locks did not return an initial-history waiter count");
+  }
+  return Number(waiters);
 }
 
 async function installSharedCursor(input: {
