@@ -31,6 +31,7 @@ Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www
 | Costco    | `costco`, `costco whse`                  | Hardcoded JSON / receipt parser |
 | Paystub   | `pinterest` **and a positive amount**    | Workday payslip PDFs            |
 | Equity    | `pinterest ... class a` **and $0.00**    | Schwab Equity Award Center CSV  |
+| Loan      | `upstart` **and money leaving**          | Servicer emails                 |
 
 The last two test the amount as well as the merchant, because the same
 employer name appears on payroll deposits, on brokerage rows, and on the
@@ -44,8 +45,17 @@ Each deep path has its own parse/match/enrich pipeline under `src/lib/<name>/`, 
 enrich<Vendor>(transactions) => Promise<{
   enrichments: Map<transactionId, TransactionEnrichment>;
   matchRate: { matched: number; total: number };
+  changes?: ProposedChange[];
 }>;
 ```
+
+`changes` is for facts a vendor can state exactly rather than infer. A loan
+statement prints the principal and interest of a payment; no model should be
+asked to do that arithmetic. Those changes are merged with the tiers' proposals
+and still pass through verification and the cross-group guard -- a better
+producer, not a bypass. A transaction a vendor has decided is excluded from
+tier routing, because nothing downstream merges two proposals for one
+transaction: both would be applied.
 
 `enrichment/pipeline.ts` holds them in a table (`deepPathSpecs`) rather than an if-chain, so adding a source is one entry. They run concurrently; each contributes facts about a transaction, and classification happens afterwards in one place.
 
@@ -69,20 +79,24 @@ All matchers share a common pattern:
 | Bilt    | Same month   | $1.00                      | Groups charges by category          |
 | Paystub | +/-3 days    | $0.01 against net pay      | Second date-only pass reports drift |
 | Equity  | 0 to +7 days | None -- every row is $0.00 | Matched per vest date, not per row  |
+| Loan    | +/-6 days    | To the cent                | Payment attributed to a loan first  |
 
 Two of these depart from the shared shape on purpose:
 
 - **Paystub** runs a second pass that pairs a deposit to a same-day payslip whose net does _not_ equal it, and reports the pair instead of matching it. Surfacing a paycheck that differs from its payslip is the reason the vendor exists; it is not a fallback. Payslips that net to zero (an equity release, where withholding consumes the whole amount) are excluded, since no deposit can exist for them.
 - **Equity** cannot use an amount at all, and rows sharing a vest date are indistinguishable -- same merchant, same account, same $0.00. So awards are aggregated per vest date and every row of that date receives the same summary. The window is one-sided because shares settle after the vest, never before.
 
-#### Vendor-side classification
+#### When a vendor decides for itself
 
-Some vendors still decide their own splits, in `<vendor>/classify.ts`:
+The rule is that a vendor returns facts and lets the tiers decide: a matcher
+that also classifies is two things to replace instead of one. Five
+`<vendor>/classify.ts` files predating the enrichment contract were deleted
+once it turned out nothing imported them.
 
-- **Rule-based**: Bilt uses Conservice charge type IDs; USAA and SCL use fixed split ratios.
-- **Model-assisted**: Costco sends item lists for per-item classification; Venmo sends matched payments with their notes.
-
-Vendors added since the enrichment contract landed do not do this. They return facts and let the tiers decide, which is the direction the rest should move: a matcher that also classifies is two things to replace instead of one.
+The exception is arithmetic the source document states outright. `lib/loan`
+derives principal and interest from the servicer's own balance statements and
+returns them through `changes`. That is not a classification judgement, and a
+model asked to do it would be guessing at numbers that were published.
 
 ### Phase 3: Tiered Classification
 

@@ -51,6 +51,7 @@ General:
 | `--since <YYYY-MM-DD>`     | Start of the window (default: 365 days ago)          |
 | `--until <YYYY-MM-DD>`     | End of the window (default: today)                   |
 | `--notes-only`             | Write enrichment notes only; no model, no categories |
+| `--derived-only`           | Apply only what vendors derived from documents       |
 | `--limit <n>`              | Limit transactions to process                        |
 | `--batch-size <n>`         | Batch size for LLM calls (default: 25)               |
 | `--model <id>`             | Stable catalog model ID (default: `gpt-5.6-luna`)    |
@@ -82,6 +83,7 @@ Per data source:
 | `--skip-costco`                  | Skip Costco processing                                  |
 | `--skip-paystub`                 | Skip payslip matching                                   |
 | `--skip-equity`                  | Skip RSU vest matching                                  |
+| `--skip-loan`                    | Skip loan principal/interest splits                     |
 
 When `--output` is set, Tier 2 batch classifications are checkpointed next to
 the output file using `.checkpoint.json`. Re-running the same command resumes
@@ -108,6 +110,11 @@ keeps no copies. Parsers read straight from these folders:
 - **Apple** -- Receipt emails found via the shared MailMate email index (`src/lib/mail/`, all accounts and mailboxes, cached at `~/.monarch-cache/email-index.jsonl`).
 - **Costco** -- Receipt PDFs in `Costco/`, pre-parsed into `Costco/costco-orders.json` by `bun run scripts/build-costco-orders.ts`; the pipeline classifies per-item from that file. Rerun the script after adding receipts.
 - **Payroll** -- Workday payslip PDFs in `Payroll/` (Workday: Pay > Payslips > Print; a multi-payslip bundle is fine, one per page), pre-parsed into `Payroll/payslips.json` by `bun run scripts/build-payslips.ts`. Rerun the script after adding payslips. Only period and amount fields are extracted -- no name, address, employee ID or account number.
+- **Loans** -- Read from the servicer's own emails, with no file to supply.
+  Upstart states an outstanding principal in each monthly reminder and names
+  every payment in a confirmation; the drop between two balances is the
+  principal that payment retired. Audi, Edfinancial, Hyundai and PenFed state
+  neither, so those lenders need statements before they can be split.
 - **Equity** -- Schwab Equity Award Center transaction export in `Equity/` (Equity Awards > Transactions > Export). The newest export is used. Covers RSU vests; share _sales_ need a separate brokerage history export.
 
 Each deep source has its own classify/match/parse pipeline under `src/lib/<name>/`.
