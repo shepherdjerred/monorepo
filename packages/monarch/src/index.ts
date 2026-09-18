@@ -185,8 +185,11 @@ async function main(): Promise<void> {
 
   // === Phase 1: Enrichment ===
   log.info("\n--- Enrichment Phase ---");
-  const { enrichedTransactions, stats: enrichmentStats } =
-    await runEnrichmentPipeline(config, separated, knowledgeBase);
+  const {
+    enrichedTransactions,
+    stats: enrichmentStats,
+    changes: derivedChanges,
+  } = await runEnrichmentPipeline(config, separated, knowledgeBase);
 
   displayEnrichmentStats(enrichmentStats, alreadySplitCounts(separated));
 
@@ -195,9 +198,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  // Filter out split transactions
+  // Nothing downstream merges two proposals for one transaction — they would
+  // both be applied — so a transaction a vendor already decided from its
+  // source document does not also go to a tier to be guessed at.
+  const decided = new Set(derivedChanges.map((c) => c.transactionId));
   const classifiable = enrichedTransactions.filter(
-    (e) => !e.transaction.isSplitTransaction,
+    (e) => !e.transaction.isSplitTransaction && !decided.has(e.transaction.id),
   );
 
   // === Phase 2: Tiered Classification ===
@@ -229,7 +235,12 @@ async function main(): Promise<void> {
     knowledgeBase,
   });
 
-  const allChanges = [...tier1Changes, ...tier2Changes, ...tier3Changes];
+  const allChanges = [
+    ...derivedChanges,
+    ...tier1Changes,
+    ...tier2Changes,
+    ...tier3Changes,
+  ];
 
   // === Phase 3: Verification ===
   log.info("\n--- Verification Phase ---");

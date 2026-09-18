@@ -3,6 +3,7 @@ import type { MonarchTransaction } from "../monarch/types.ts";
 import type { SeparateDeepPathsResult } from "../monarch/client.ts";
 import type { TransactionEnrichment, EnrichedTransaction } from "./types.ts";
 import type { MerchantKnowledge } from "../knowledge/types.ts";
+import type { ProposedChange } from "../classifier/types.ts";
 import { enrichAmazon } from "../amazon/enrich.ts";
 import { enrichVenmo } from "../venmo/enrich.ts";
 import { enrichBilt } from "../conservice/enrich.ts";
@@ -57,6 +58,8 @@ export function alreadySplitCounts(
 export type EnrichmentResult = {
   enrichedTransactions: EnrichedTransaction[];
   stats: EnrichmentStats;
+  // Changes a vendor derived rather than a model proposing them.
+  changes: ProposedChange[];
 };
 
 type DeepPathKey =
@@ -70,17 +73,24 @@ type DeepPathKey =
   | "paystub"
   | "equity";
 
-type EnrichResult = {
+// What every vendor returns. Written once: the same shape used to be spelled
+// out inline in three places, so any new field cost three parallel edits.
+//
+// `changes` is for facts a vendor can state exactly rather than infer — an
+// amortization schedule prints the principal and interest of a payment, and no
+// model should be asked to do that arithmetic. They are merged with the tiers'
+// proposals and still pass through verification and the cross-group guard: a
+// better producer, not a bypass.
+export type VendorEnrichOutput = {
   enrichments: Map<string, TransactionEnrichment>;
   matchRate: { matched: number; total: number };
-  key: DeepPathKey;
+  changes?: ProposedChange[] | undefined;
 };
 
+type EnrichResult = VendorEnrichOutput & { key: DeepPathKey };
+
 async function enrichWithKey(
-  promise: Promise<{
-    enrichments: Map<string, TransactionEnrichment>;
-    matchRate: { matched: number; total: number };
-  }>,
+  promise: Promise<VendorEnrichOutput>,
   key: DeepPathKey,
 ): Promise<EnrichResult> {
   const r = await promise;
@@ -95,10 +105,7 @@ type DeepPathSpec = {
   skipped: boolean;
   // Some sources need an input path that may be absent.
   ready?: boolean;
-  run: () => Promise<{
-    enrichments: Map<string, TransactionEnrichment>;
-    matchRate: { matched: number; total: number };
-  }>;
+  run: () => Promise<VendorEnrichOutput>;
 };
 
 function deepPathSpecs(
@@ -264,11 +271,18 @@ export async function runEnrichmentPipeline(
     log.info("Skipping deep-path enrichment (--skip-enrich)");
   }
 
+  const changes: ProposedChange[] = [];
   for (const result of results) {
     for (const [id, enrichment] of result.enrichments) {
       allEnrichments.set(id, enrichment);
     }
     stats[result.key] = result.matchRate;
+    if (result.changes !== undefined) changes.push(...result.changes);
+  }
+  if (changes.length > 0) {
+    log.info(
+      `${String(changes.length)} changes derived from source documents rather than proposed by a model`,
+    );
   }
 
   log.info(
@@ -289,5 +303,5 @@ export async function runEnrichmentPipeline(
     `Tier routing: ${String(stats.tier1Count)} tier 1, ${String(stats.tier2Count)} tier 2, ${String(stats.tier3Count)} tier 3`,
   );
 
-  return { enrichedTransactions, stats };
+  return { enrichedTransactions, stats, changes };
 }
