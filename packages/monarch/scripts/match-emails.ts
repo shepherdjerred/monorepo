@@ -70,10 +70,29 @@ const CHECKPOINT_PATH = await resolveCachePath(
 );
 const CheckpointSchema = z.record(z.string(), EmailMatchSchema);
 
+// A key is `<txn>:<model>:<shortlist fingerprint>`. Entries written before the
+// fingerprint existed are dropped rather than reused: a verdict reached
+// against a different shortlist is exactly what the fingerprint exists to
+// re-open, and replaying one pinned 238 transactions to a match that said
+// nothing. They are cheap to re-earn and expensive to trust.
+function isFingerprinted(key: string): boolean {
+  return key.split(":").length >= 3;
+}
+
 async function loadCheckpoint(): Promise<Record<string, EmailMatchResult>> {
   if (!(await Bun.file(CHECKPOINT_PATH).exists())) return {};
   const raw: unknown = JSON.parse(await Bun.file(CHECKPOINT_PATH).text());
-  return CheckpointSchema.parse(raw);
+  const parsed = CheckpointSchema.parse(raw);
+  const kept = Object.fromEntries(
+    Object.entries(parsed).filter(([key]) => isFingerprinted(key)),
+  );
+  const dropped = Object.keys(parsed).length - Object.keys(kept).length;
+  if (dropped > 0) {
+    log.info(
+      `Dropped ${String(dropped)} checkpoint entries predating the shortlist fingerprint`,
+    );
+  }
+  return kept;
 }
 
 await initMonarch();
@@ -122,40 +141,13 @@ function checkpointKey(item: TransactionCandidates): string {
 const checkpoint = await loadCheckpoint();
 const results = new Map<string, EmailMatchResult>();
 const pending: TransactionCandidates[] = [];
-let reusedLegacy = 0;
 for (const item of withCandidates) {
   const cached = checkpoint[checkpointKey(item)];
   if (cached !== undefined) {
     results.set(item.transaction.id, cached);
     continue;
   }
-  // Entries written before the key carried a shortlist fingerprint. A past
-  // *match* stays valid — the email it matched is still in the shortlist, which
-  // only grew. A past "no match" is exactly the verdict a better shortlist
-  // should overturn, so those are re-judged.
-  //
-  // A match that produced no note is re-judged too. It documents nothing, so
-  // reusing it costs a transaction its note forever — and it is precisely what
-  // a changed note instruction is meant to revisit. Keeping it would make the
-  // legacy entry pin the verdict, which is the staleness the fingerprinted key
-  // exists to prevent.
-  const legacy = checkpoint[`${item.transaction.id}:${values.model}`];
-  if (
-    legacy !== undefined &&
-    legacy.matchedIndex !== null &&
-    (legacy.note ?? "") !== ""
-  ) {
-    results.set(item.transaction.id, legacy);
-    checkpoint[checkpointKey(item)] = legacy;
-    reusedLegacy++;
-    continue;
-  }
   pending.push(item);
-}
-if (reusedLegacy > 0) {
-  log.info(
-    `Reused ${String(reusedLegacy)} prior matches from the pre-fingerprint checkpoint`,
-  );
 }
 log.info(
   `Judging ${String(pending.length)} transactions (${String(results.size)} from checkpoint)...`,
