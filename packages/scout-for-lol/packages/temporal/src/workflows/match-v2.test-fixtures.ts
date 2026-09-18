@@ -87,6 +87,8 @@ export type ScoutV2MatchStore = {
   maintenance: {
     settleDareV2Deadlines: boolean;
     evidenceWatermark?: string;
+    /** Which poll the call may close, when discovery claimed one. */
+    pollOwner?: string;
   }[];
   /** Whether stage receipts come back contested by a standing receipt. */
   receiptsConflict: boolean;
@@ -337,6 +339,7 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
     runPostMatchMaintenance: (input: {
       settleDareV2Deadlines: boolean;
       evidenceWatermark?: string;
+      pollOwner?: string;
     }): void => {
       record("runPostMatchMaintenance");
       store.maintenance.push(input);
@@ -355,4 +358,64 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
       };
     },
   };
+}
+
+/**
+ * `BotState`'s poll columns, as the durable claim treats them.
+ *
+ * The Workflow tests have no database, but the question they have to answer is
+ * about a row two executions share: does the poll one run opened still hold
+ * when another run's discovery asks for it, and does the first run's close
+ * name the poll it opened. So the two statements the real repository makes —
+ * a claim that applies only while no live poll holds the row, and a close
+ * guarded on the claimed instant — are modelled here, and the Postgres
+ * versions of exactly these are proven against a real database in
+ * `post-match-poll-ownership.integration.test.ts`.
+ */
+export type ScoutV2PollRow = {
+  status: "idle" | "running";
+  startedAt: string | null;
+  /** Every close that landed, by the poll instant it landed on. */
+  closed: string[];
+  /** The next claim's instant; a counter so the tests read deterministically. */
+  claims: number;
+};
+
+export function createScoutV2PollRow(): ScoutV2PollRow {
+  return { status: "idle", startedAt: null, closed: [], claims: 0 };
+}
+
+export function claimScoutV2Poll(
+  row: ScoutV2PollRow,
+): { outcome: "claimed"; pollOwner: string } | { outcome: "held" } {
+  if (row.status === "running") return { outcome: "held" };
+  row.claims += 1;
+  const pollOwner = new Date(
+    Date.UTC(2026, 8, 17, 10, row.claims, 0),
+  ).toISOString();
+  row.status = "running";
+  row.startedAt = pollOwner;
+  return { outcome: "claimed", pollOwner };
+}
+
+/**
+ * Close the poll, guarded on the owner when one is presented.
+ *
+ * An unowned close overwrites whatever stands — v1's close, and what a V2 run
+ * that lost track of its claim would do. That is the defect: it lands on the
+ * poll of whichever run happens to be holding the row.
+ */
+export function closeScoutV2Poll(
+  row: ScoutV2PollRow,
+  pollOwner: string | undefined,
+): void {
+  if (pollOwner !== undefined && row.startedAt !== pollOwner) {
+    throw ApplicationFailure.nonRetryable(
+      `Refusing to close the post-match poll claimed at ${pollOwner}: the row names ${row.startedAt ?? "no poll"}`,
+      "PostMatchPollOwnershipError",
+    );
+  }
+  if (row.startedAt !== null) row.closed.push(row.startedAt);
+  row.status = "idle";
+  row.startedAt = null;
 }

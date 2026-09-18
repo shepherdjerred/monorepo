@@ -10,7 +10,6 @@ import type { ScoutDurableCommitV2 } from "@scout-for-lol/temporal/contracts-v2"
 import { prisma } from "#src/database/index.ts";
 import {
   getObservation,
-  observationAgreesExceptPolicy,
   observeMatch,
   promoteObservation,
 } from "#src/database/durable/observation-repository.ts";
@@ -136,6 +135,24 @@ export async function archiveMatchArtifactsV2(input: {
     // nothing here.
     return { artifacts: [] };
   }
+  if (result.status === "already_archived") {
+    // A rival writer archived this match between the receipt read above and
+    // the door's own gate. The door answered from the standing receipt without
+    // putting, so the canonical object is intact and this run has nothing to
+    // attest that is not already attested.
+    return {
+      artifacts: [
+        {
+          descriptor: result.artifact,
+          outcome: "already-stored",
+          receipt: {
+            kind: rawArchiveReceiptKind(result.artifact.kind),
+            commit: { outcome: "already-applied" },
+          },
+        },
+      ],
+    };
+  }
   const artifact: ScoutArchivedArtifactV2 = {
     descriptor: result.artifact,
     outcome: "stored",
@@ -167,22 +184,27 @@ function observationDrift(matchId: RiotMatchId, detail: string): never {
  *
  * The decision is DELEGATED to `promoteObservation` rather than re-derived
  * from the stored policy here, because that repository already mirrors the
- * domain transition and answers all three cases exactly: an archive-only row
- * promotes (`applied`), a row this pipeline already promoted answers
- * `already-applied` — which matters, since a plain Activity retry after a
- * promotion differs from the stored row in nothing but `promotedAt` and would
- * otherwise be read as fresh drift and wedge the match — and a row born FULL
- * answers `promotion-target-born-full`, meaning the disagreement is about the
- * facts rather than the policy.
+ * domain transition and answers every case exactly: an archive-only row that
+ * asserts the same facts promotes (`applied`), a row this pipeline already
+ * promoted answers `already-applied` — which matters, since a plain Activity
+ * retry after a promotion differs from the stored row in nothing but
+ * `promotedAt` and would otherwise be read as fresh drift and wedge the
+ * match — a row born FULL answers `promotion-target-born-full`, meaning the
+ * disagreement is about the facts rather than the policy, and a stored row
+ * whose FACTS differ — not merely its policy — answers `observation-differs`.
  *
- * A stored row whose FACTS differ — not merely its policy — fails too, which
- * is what {@link observationAgreesExceptPolicy} decides using the repository's
- * own claim discipline rather than a second opinion about which columns count.
+ * That last comparison is the repository's, decided in the same guarded
+ * statement that promotes, using its own claim discipline rather than a
+ * second opinion here about which columns count. It has to be one statement:
+ * a check here followed by a promotion there would leave a window in which a
+ * concurrent `observeMatch` backfills the artifact columns this run read as
+ * NULL, and the row would promote carrying an identity this run never agreed
+ * with — then settle, attest and advance the cursor over it.
  *
- * That case and a row this pipeline does not own both fail the Activity.
- * Continuing from the stored row would let the Workflow attest to a phase and
- * advance the cursor on facts it never checked, suppressing the disagreement
- * permanently instead of surfacing it.
+ * A differing row and a row this pipeline does not own both fail the
+ * Activity. Continuing from the stored row would let the Workflow attest to a
+ * phase and advance the cursor on facts it never checked, suppressing the
+ * disagreement permanently instead of surfacing it.
  */
 export async function reconcileObservationConflictV2(
   record: MatchObservationRecord,
@@ -205,26 +227,24 @@ export async function reconcileObservationConflictV2(
     );
   }
   // A promotion changes the POLICY and nothing else, so it is the right
-  // answer only when the policy is the only thing in dispute. Promoting on any
+  // answer only when the policy is the only thing in dispute. The repository
+  // compares the facts and promotes in one compare-and-set; promoting on any
   // `observation-differs` would launder real drift — a differing
-  // `gameCreatedAt`, say — into a FULL row that settlement, the receipts and
-  // the cursor then proceed over.
-  if (!(await observationAgreesExceptPolicy(prisma, record))) {
-    observationDrift(
-      matchId,
-      "this run disagrees with the stored observation about the match's own facts, not merely its policy",
-    );
-  }
+  // `gameCreatedAt`, or an artifact identity a rival backfilled under this
+  // run — into a FULL row that settlement, the receipts and the cursor then
+  // proceed over.
   const promoted = durableCommitV2(
     await promoteObservation(prisma, {
-      matchId,
+      observation: record,
       promotedAt: toIsoInstant(new Date()),
     }),
   );
   if (promoted.outcome === "conflict") {
     observationDrift(
       matchId,
-      `the stored observation was born FULL (${promoted.reason}), so this run differs from it in more than an archive-only promotion`,
+      promoted.reason === "observation-differs"
+        ? "this run disagrees with the stored observation about the match's own facts, not merely its policy"
+        : `the stored observation was born FULL (${promoted.reason}), so this run differs from it in more than an archive-only promotion`,
     );
   }
   return promoted;

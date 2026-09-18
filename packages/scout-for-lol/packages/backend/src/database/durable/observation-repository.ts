@@ -286,50 +286,27 @@ function policyAgnosticClaim(row: MatchObservationRow) {
 }
 
 /**
- * Whether the stored observation asserts the same FACTS as this one, differing
- * at most in policy and promotion.
- *
- * This is the question a promotion has to answer before it acts.
- * `promoteObservation` moves ARCHIVE_ONLY to FULL and nothing else, so it is
- * the right transition only when the policy is genuinely the sole
- * disagreement. A run that promoted on any `observation-differs` would convert
- * real drift — a different `gameCreatedAt`, say — into a FULL row and then let
- * settlement, receipts and the cursor proceed over facts two producers never
- * agreed on.
+ * Whether the stored row asserts the same FACTS as the incoming observation,
+ * differing at most in policy and promotion.
  *
  * The artifacts are part of the answer, under {@link reconcileArtifact}'s own
  * rule rather than the claim's. `observationClaim` leaves the artifact
  * columns out because silence about an artifact is not disagreement — but two
  * DIFFERENT identities are, and they are exactly the drift `observeMatch`
- * reports as `observation-differs`. A predicate that compared the claim alone
- * would call an ARCHIVE_ONLY row naming artifact A and a FULL observation
- * naming artifact B "the same facts" and promote, laundering canonical
- * raw-artifact drift into a successful promotion.
- *
- * `false` for a match with no stored observation: there is nothing to agree
- * with, and a caller reconciling a conflict against a row that has vanished is
- * in no position to promote it.
+ * reports as `observation-differs`. A comparison of the claim alone would call
+ * an ARCHIVE_ONLY row naming artifact A and a FULL observation naming
+ * artifact B "the same facts".
  */
-export async function observationAgreesExceptPolicy(
-  db: Db,
-  record: MatchObservationRecord,
-): Promise<boolean> {
-  const existing = await db.matchObservation.findUnique({
-    where: { riotMatchId: record.matchId },
-  });
-  if (existing === null) {
-    return false;
-  }
-  const storedRow = matchObservationRecordToRow(
-    matchObservationRowToRecord(existing),
-  );
-  const incomingRow = matchObservationRecordToRow(record);
+function agreesExceptPolicy(
+  stored: MatchObservationRow,
+  incoming: MatchObservationRow,
+): boolean {
   return (
     Bun.deepEquals(
-      policyAgnosticClaim(storedRow),
-      policyAgnosticClaim(incomingRow),
+      policyAgnosticClaim(stored),
+      policyAgnosticClaim(incoming),
       true,
-    ) && artifactsReconcile(storedRow, incomingRow)
+    ) && artifactsReconcile(stored, incoming)
   );
 }
 
@@ -350,43 +327,107 @@ function artifactsReconcile(
   );
 }
 
+const PROMOTE_ATTEMPTS = 3;
+
 export type PromoteObservationResult =
   | { outcome: "applied" }
   | { outcome: "already-applied" }
-  | { outcome: "conflict"; reason: "promotion-target-born-full" };
+  | {
+      outcome: "conflict";
+      reason: "promotion-target-born-full" | "observation-differs";
+    };
 
 /**
- * Promote an ARCHIVE_ONLY observation to FULL, at most once. Mirrors
- * promoteArchiveOnlyToFull: a retry on the promoted row is `already-applied`
- * and a row born FULL is a conflict. Promoting a match that was never
- * observed is a broken caller contract and throws.
+ * The columns a promotion's guarded update names, so the update applies
+ * only to the exact row the comparison read.
+ *
+ * Everything the comparison looked at is in the guard: the claim, the owner
+ * and all four artifact columns. `observedAt` is the one column left out,
+ * because it is in no comparison — it records when someone first looked and
+ * is never rewritten. The policy and promotion are pinned to the pre-
+ * promotion values by construction, which is what makes the transition
+ * at-most-once.
+ */
+function promotionGuard(stored: MatchObservationRow) {
+  return {
+    riotMatchId: stored.riotMatchId,
+    platformRoute: stored.platformRoute,
+    processingPolicy: "ARCHIVE_ONLY",
+    promotedAt: null,
+    pipelineOwner: stored.pipelineOwner,
+    gameCreatedAt: stored.gameCreatedAt,
+    matchObjectKey: stored.matchObjectKey,
+    matchDigest: stored.matchDigest,
+    timelineObjectKey: stored.timelineObjectKey,
+    timelineDigest: stored.timelineDigest,
+  };
+}
+
+/**
+ * Promote an ARCHIVE_ONLY observation to FULL, at most once, and only while
+ * the stored row asserts the same facts `observation` does.
+ *
+ * Mirrors promoteArchiveOnlyToFull: a retry on the promoted row is
+ * `already-applied` and a row born FULL is a conflict. Promoting a match that
+ * was never observed is a broken caller contract and throws.
+ *
+ * The fact comparison and the promotion are ONE compare-and-set, not a check
+ * followed by an update. A promotion changes the policy and nothing else, so
+ * it is the right transition only when the policy is genuinely the sole
+ * disagreement — promoting on any `observation-differs` would launder real
+ * drift into a FULL row that settlement, the receipts and the cursor then
+ * proceed over. But a comparison that merely preceded the update would leave
+ * a window: the artifact columns fill in at most once, from NULL, and a
+ * concurrent `observeMatch` can fill them between a read that accepted the
+ * NULLs as backfillable and an update guarded on the policy alone. The row
+ * would then promote carrying an artifact identity this observation never
+ * agreed with. So the update is guarded on every column the comparison read
+ * ({@link promotionGuard}); a guard that no longer matches sends the attempt
+ * back to compare against what stands NOW, where a different identity is
+ * `observation-differs` and an agreeing one promotes.
  */
 export async function promoteObservation(
   db: Db,
-  args: { matchId: RiotMatchId; promotedAt: IsoInstant },
+  args: { observation: MatchObservationRecord; promotedAt: IsoInstant },
 ): Promise<PromoteObservationResult> {
-  const promoted = await db.matchObservation.updateMany({
-    where: { riotMatchId: args.matchId, processingPolicy: "ARCHIVE_ONLY" },
-    data: {
-      processingPolicy: "FULL",
-      promotedAt: dateFromIsoInstant(args.promotedAt),
-    },
-  });
-  if (promoted.count === 1) {
-    return { outcome: "applied" };
-  }
-  const existing = await db.matchObservation.findUnique({
-    where: { riotMatchId: args.matchId },
-  });
-  if (existing === null) {
-    throw new Error(
-      `Cannot promote ${args.matchId}: the match was never observed`,
+  const incoming = matchObservationRecordToRow(args.observation);
+  for (let attempt = 0; attempt < PROMOTE_ATTEMPTS; attempt += 1) {
+    const existing = await db.matchObservation.findUnique({
+      where: { riotMatchId: incoming.riotMatchId },
+    });
+    if (existing === null) {
+      throw new Error(
+        `Cannot promote ${incoming.riotMatchId}: the match was never observed`,
+      );
+    }
+    const stored = matchObservationRecordToRow(
+      matchObservationRowToRecord(existing),
     );
+    if (!agreesExceptPolicy(stored, incoming)) {
+      return { outcome: "conflict", reason: "observation-differs" };
+    }
+    if (stored.processingPolicy !== "ARCHIVE_ONLY") {
+      return stored.promotedAt === null
+        ? { outcome: "conflict", reason: "promotion-target-born-full" }
+        : { outcome: "already-applied" };
+    }
+    const promoted = await db.matchObservation.updateMany({
+      where: promotionGuard(stored),
+      data: {
+        processingPolicy: "FULL",
+        promotedAt: dateFromIsoInstant(args.promotedAt),
+      },
+    });
+    if (promoted.count === 1) {
+      return { outcome: "applied" };
+    }
+    // The row changed between the read and the update — a rival promotion,
+    // a claimed owner or a backfilled artifact. Whatever stands now is what
+    // the next attempt compares against.
   }
-  const record = matchObservationRowToRecord(existing);
-  return record.promotion === null
-    ? { outcome: "conflict", reason: "promotion-target-born-full" }
-    : { outcome: "already-applied" };
+  throw new Error(
+    `Gave up promoting ${incoming.riotMatchId} after ${String(PROMOTE_ATTEMPTS)} contended attempts`,
+  );
 }
 
 export async function getObservation(

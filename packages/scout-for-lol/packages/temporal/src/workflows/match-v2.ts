@@ -50,11 +50,19 @@ import {
  * match collapses onto the execution already processing it rather than
  * starting a second one.
  *
- * Maintenance runs last, on every exit from the loop. It is v1's Activity
- * unchanged — closing the poll status, settling Dare deadlines, retrying
- * pending earnings, clearing stale markets, recovering notifications — because
- * none of that is per-match work the V2 core could absorb, and a V2-shaped
- * copy would be a second implementation of one maintenance pass.
+ * Maintenance runs last, on every exit from the loop. It is v1's Activity —
+ * closing the poll status, settling Dare deadlines, retrying pending earnings,
+ * clearing stale markets, recovering notifications — because none of that is
+ * per-match work the V2 core could absorb, and a V2-shaped copy would be a
+ * second implementation of one maintenance pass.
+ *
+ * The poll this run opened is held for the WHOLE run, discovery through
+ * maintenance, by a durable claim rather than a worker-local flag. That is
+ * what makes a second discovery starting mid-run — an operator's, say —
+ * observe the poll as held and open none of its own; before it, the flag was
+ * released when the discovery Activity returned, the second run opened a poll
+ * while this one was still awaiting children, and this run's maintenance then
+ * marked the SECOND run's poll complete underneath it.
  */
 export async function scoutPostMatchDiscoveryV2Workflow(
   rawInput: ScoutPostMatchDiscoveryV2InputEnvelope,
@@ -65,10 +73,10 @@ export async function scoutPostMatchDiscoveryV2Workflow(
     input,
   );
   if (scan.outcome === "skipped") {
-    // Another poll on the same worker is still running, and discovery refused
-    // to open a second one. This run opened nothing, so it closes nothing:
-    // running maintenance here would mark the OTHER execution's poll complete
-    // under it, flipping the shared poll status while that poll is live.
+    // A poll claimed by another run still holds the status, and discovery
+    // refused to open a second one. This run opened nothing, so it closes
+    // nothing: running maintenance here would mark the OTHER execution's poll
+    // complete under it, flipping the shared status while that poll is live.
     setWorkflowPhase("**Phase:** discovery skipped; a poll is already running");
     return scoutPostMatchDiscoveryV2ResultCodec.serialize({
       status: "no-op",
@@ -107,6 +115,13 @@ export async function scoutPostMatchDiscoveryV2Workflow(
   // already in flight. A run that failed without closing it would look like a
   // poll still running. v1 orders it exactly here and for exactly this reason,
   // and the flags below are v1's.
+  //
+  // `pollOwner` is what makes that close THIS run's. Discovery claims the poll
+  // durably and the claim stands across the children awaited above, so the
+  // close names the poll it opened: a second discovery that started meanwhile
+  // was told the poll was held and opened none, and a run whose claim was
+  // taken over closes nothing and fails here rather than marking a newer
+  // run's poll complete underneath it.
   setWorkflowPhase("**Phase:** running post-match maintenance");
   await realtimeActivities(input.stage).runPostMatchMaintenance({
     stage: input.stage,
@@ -115,6 +130,7 @@ export async function scoutPostMatchDiscoveryV2Workflow(
     // failed child all mean evidence this pass cannot vouch for.
     settleDareV2Deadlines:
       scan.complete && ownedWholeTail && childFailure === undefined,
+    pollOwner: scan.pollOwner,
     ...(scan.evidenceWatermark === undefined
       ? {}
       : { evidenceWatermark: scan.evidenceWatermark }),

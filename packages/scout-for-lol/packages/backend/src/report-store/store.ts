@@ -103,9 +103,15 @@ export async function ingestMatch(
     };
   }
   // Lake staging so the DuckDB report engine sees this match before the next
-  // compaction; a failure is reported, never thrown.
+  // compaction; a failure is reported, never thrown. The rows come from the
+  // bytes the receipt will NAME — see `ingestPrematch` for why that is not
+  // always this caller's own payload.
+  const canonical =
+    archived.status === "already_archived" ? archived.canonical : match;
   const staged = await stagedForV1(() =>
-    stageMatchReceipted(resolveLakeDir(), match, { source: archived.artifact }),
+    stageMatchReceipted(resolveLakeDir(), canonical, {
+      source: archived.artifact,
+    }),
   );
   return { staged, stored: true, artifact: archived.artifact };
 }
@@ -124,8 +130,10 @@ export async function ingestTimeline(
   if (archived.status === "skipped_no_bucket") {
     return await writeTimelineStagingFiles(lakeDir, timeline, new Date());
   }
+  const canonical =
+    archived.status === "already_archived" ? archived.canonical : timeline;
   return await stagedForV1(() =>
-    stageTimelineReceipted(lakeDir, timeline, new Date(), {
+    stageTimelineReceipted(lakeDir, canonical, new Date(), {
       source: archived.artifact,
     }),
   );

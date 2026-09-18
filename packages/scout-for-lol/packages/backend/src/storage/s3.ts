@@ -70,6 +70,7 @@ function archived(kind: ArtifactKind, stored: StoredObject): RawArchiveResult {
 export async function archiveMatchToS3(
   match: RawMatch,
   trackedPlayerAliases: string[],
+  abortSignal?: AbortSignal,
 ): Promise<RawArchiveResult> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const body = JSON.stringify(match, null, 2);
@@ -106,6 +107,7 @@ export async function archiveMatchToS3(
       gameMode: match.info.gameMode,
       gameDuration: match.info.gameDuration,
     },
+    ...(abortSignal === undefined ? {} : { abortSignal }),
   });
   return stored === undefined
     ? { status: "skipped_no_bucket" }
@@ -318,6 +320,7 @@ export async function archiveTimelineToS3(
   timeline: RawTimeline,
   trackedPlayerAliases: string[],
   gameCreatedAt: Date,
+  abortSignal?: AbortSignal,
 ): Promise<RawArchiveResult> {
   const matchId = MatchIdSchema.parse(timeline.metadata.matchId);
   const body = JSON.stringify(timeline, null, 2);
@@ -343,6 +346,7 @@ export async function archiveTimelineToS3(
       frameCount: timeline.info.frames.length,
       frameInterval: timeline.info.frameInterval,
     },
+    ...(abortSignal === undefined ? {} : { abortSignal }),
   });
   return stored === undefined
     ? { status: "skipped_no_bucket" }

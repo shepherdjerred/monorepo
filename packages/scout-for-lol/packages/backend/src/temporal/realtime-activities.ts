@@ -1,4 +1,5 @@
 import { Context } from "@temporalio/activity";
+import { ApplicationFailure } from "@temporalio/common";
 import type { ScoutTemporalActivityGroups } from "#src/temporal/connected-runtime.ts";
 import { heartbeatWhile, probeQueue } from "#src/temporal/activity-runtime.ts";
 import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
@@ -61,13 +62,29 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
       await heartbeatWhile({ phase: "postmatch-maintenance" }, async () => {
         const { runPostMatchMaintenance } =
           await import("#src/league/tasks/postmatch/index.ts");
-        await runPostMatchMaintenance({
-          settleDareV2Deadlines: input.settleDareV2Deadlines,
-          dareEvidenceWatermark:
-            input.evidenceWatermark === undefined
-              ? undefined
-              : new Date(input.evidenceWatermark),
-        });
+        const { PostMatchPollOwnershipError } =
+          await import("#src/league/tasks/recovery/app-state.ts");
+        try {
+          await runPostMatchMaintenance({
+            settleDareV2Deadlines: input.settleDareV2Deadlines,
+            dareEvidenceWatermark:
+              input.evidenceWatermark === undefined
+                ? undefined
+                : new Date(input.evidenceWatermark),
+            pollOwner:
+              input.pollOwner === undefined
+                ? undefined
+                : { startedAt: new Date(input.pollOwner) },
+          });
+        } catch (error) {
+          // A poll this run no longer owns is not a transient fault: the
+          // identity is gone and every retry meets the same standing row. Fail
+          // the run instead, where an operator sees which poll was taken over.
+          if (error instanceof PostMatchPollOwnershipError) {
+            throw ApplicationFailure.nonRetryable(error.message, error.name);
+          }
+          throw error;
+        }
       });
       Context.current().heartbeat({ phase: "complete" });
     },

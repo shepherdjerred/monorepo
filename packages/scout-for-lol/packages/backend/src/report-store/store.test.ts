@@ -21,7 +21,7 @@ import {
 const mocks = vi.hoisted(() => ({
   recordReceipt: vi.fn(),
   /**
-   * The receipts standing so far, which is what the prematch door's gate reads
+   * The receipts standing so far, which is what each door's gate reads
    * to decide whether a snapshot is already archived. Feeding real records back
    * rather than a fixed answer is what lets a second ingest of the same game
    * take the `already_archived` branch the way production would.

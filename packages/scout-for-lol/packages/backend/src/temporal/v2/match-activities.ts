@@ -1,3 +1,4 @@
+import { Context } from "@temporalio/activity";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
 
@@ -29,7 +30,15 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
       await heartbeatWhile({ phase: "discovering-post-match-v2" }, async () => {
         const { discoverPostMatchIdsV2 } =
           await import("#src/temporal/v2/match-reads.ts");
-        return await discoverPostMatchIdsV2();
+        // The poll claim is identified by an instant, and the FIRST-scheduled
+        // timestamp is the one instant every attempt of this Activity agrees
+        // on. An attempt that claimed the poll and then died therefore leaves
+        // a claim its own retry re-acquires, rather than one the retry reads
+        // as another run's and skips for — which would strand the poll until
+        // the staleness bound with no run left to close it.
+        return await discoverPostMatchIdsV2({
+          claimAt: new Date(Context.current().info.scheduledTimestampMs),
+        });
       }),
     readMatchPipelineStateV2: async (input) =>
       await heartbeatWhile(

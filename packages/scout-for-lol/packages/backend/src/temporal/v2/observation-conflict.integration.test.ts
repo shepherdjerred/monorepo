@@ -13,13 +13,46 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma } = createTestDatabase("scout-v2-observation-conflict");
 
+/**
+ * A rival writer that slips in behind one of the reconciliation's reads.
+ *
+ * The reconciliation reads the row to check the owner, and the promotion
+ * reads it once more to compare the facts before its guarded update. `after`
+ * names which read the rival runs behind, counted across a test; the rival
+ * runs against the raw client, exactly as a concurrent `observeMatch` on
+ * another worker would, and is cleared once it has run.
+ */
+type Rival = {
+  reads: number;
+  after: number;
+  run: (() => Promise<void>) | null;
+};
+const rival: Rival = vi.hoisted(() => ({ reads: 0, after: 0, run: null }));
+
 // The reconciliation reads and writes through the process client; the module
-// under test imports it directly, as every V2 Activity does.
+// under test imports it directly, as every V2 Activity does. The client it
+// gets here lets the test interleave a rival write behind a chosen read.
 vi.mock("#src/database/index.ts", async () => {
   const actual = await vi.importActual<typeof DatabaseModule>(
     "#src/database/index.ts",
   );
-  return { ...actual, prisma };
+  const interleaved = prisma.$extends({
+    query: {
+      matchObservation: {
+        async findUnique({ args, query }) {
+          const result = await query(args);
+          rival.reads += 1;
+          if (rival.run !== null && rival.reads === rival.after) {
+            const run = rival.run;
+            rival.run = null;
+            await run();
+          }
+          return result;
+        },
+      },
+    },
+  });
+  return { ...actual, prisma: interleaved };
 });
 
 const { observeMatch, getObservation } =
@@ -174,6 +207,77 @@ describe("reconciling a V2 observation conflict", () => {
 
     const stored = await getObservation(prisma, { matchId });
     expect(stored?.policy).toBe("ARCHIVE_ONLY");
+    expect(stored?.artifacts.match).toEqual(ARTIFACT_A);
+  });
+
+  test("refuses when a rival backfills a different artifact between the comparison and the promotion", async () => {
+    // The window a check-then-promote would leave open. The stored row's
+    // artifact columns are NULL, so the comparison accepts this run's
+    // artifact B as a backfill; a concurrent `observeMatch` then fills them
+    // with A before the promotion's update runs. A promotion guarded on the
+    // policy alone would still apply, and the run would settle, attest and
+    // advance the cursor over an identity it never agreed with.
+    const matchId = RiotMatchIdSchema.parse("NA1_6010");
+    await seedObservation(matchId, "ARCHIVE_ONLY", "temporal-v2");
+    rival.reads = 0;
+    // Read 1 is the reconciliation's owner check; read 2 is the promotion's
+    // comparison, and the rival lands between it and the guarded update.
+    rival.after = 2;
+    rival.run = async () => {
+      const backfilled = await observeMatch(
+        prisma,
+        observationOf(matchId, {
+          policy: "ARCHIVE_ONLY",
+          artifacts: { match: ARTIFACT_A, timeline: null },
+        }),
+      );
+      expect(backfilled).toEqual({ outcome: "applied" });
+    };
+
+    await expect(
+      reconcileObservationConflictV2(
+        observationOf(matchId, {
+          artifacts: { match: ARTIFACT_B, timeline: null },
+        }),
+        "observation-differs",
+      ),
+    ).rejects.toThrow("about the match's own facts");
+
+    expect(rival.run).toBeNull();
+    const stored = await getObservation(prisma, { matchId });
+    expect(stored?.policy).toBe("ARCHIVE_ONLY");
+    expect(stored?.promotion).toBeNull();
+    expect(stored?.artifacts.match).toEqual(ARTIFACT_A);
+  });
+
+  test("promotes over a rival backfill it agrees with", async () => {
+    // The same interleaving with an AGREEING rival: this run is silent about
+    // the artifact, so the identity the rival filled in is not a disagreement
+    // and the retried compare-and-set promotes over it.
+    const matchId = RiotMatchIdSchema.parse("NA1_6011");
+    await seedObservation(matchId, "ARCHIVE_ONLY", "temporal-v2");
+    rival.reads = 0;
+    rival.after = 2;
+    rival.run = async () => {
+      await observeMatch(
+        prisma,
+        observationOf(matchId, {
+          policy: "ARCHIVE_ONLY",
+          artifacts: { match: ARTIFACT_A, timeline: null },
+        }),
+      );
+    };
+
+    expect(
+      await reconcileObservationConflictV2(
+        observationOf(matchId),
+        "observation-differs",
+      ),
+    ).toEqual({ outcome: "applied" });
+
+    expect(rival.run).toBeNull();
+    const stored = await getObservation(prisma, { matchId });
+    expect(stored?.policy).toBe("FULL");
     expect(stored?.artifacts.match).toEqual(ARTIFACT_A);
   });
 

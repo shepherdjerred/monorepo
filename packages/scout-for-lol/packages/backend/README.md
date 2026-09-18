@@ -234,6 +234,40 @@ owner and stops before settlement rather than re-applying v1's effects. The V2
 guards are separate keys from v1's precisely so a shared key can never make one
 pipeline's completion suppress the other's work.
 
+### The post-match poll is owned for a whole V2 run
+
+`BotState.pollStatus` is one row two pipelines write, and it says whether a
+post-match poll is in flight. For v1 that question spans one Activity —
+discovery and the maintenance that closes the poll are the same call — so v1
+opens the poll unconditionally and guards itself with a worker-local flag and
+its Schedule's overlap policy. That is unchanged, deliberately: a durable claim
+v1 could not release would refuse the next Schedule tick after a worker died
+mid-pass, where today it simply runs again.
+
+A V2 poll spans a WORKFLOW: discovery, every match child it awaits in turn, and
+the maintenance that closes the poll at the end. A worker-local flag cannot
+span that, because it is released the moment the discovery Activity returns. A
+second discovery starting in that window — an operator's, against a scheduled
+run still working through its children — was therefore not told a poll was
+running; it opened one of its own, and the first run's maintenance then marked
+that NEWER poll complete underneath it, flipping the status while a live poll
+was still running and freeing a third run to start on top of it.
+
+So V2's discovery takes a DURABLE claim (`claimPostMatchPoll`), and the claim's
+identity — the instant it was claimed at — rides the scan result through the
+Workflow to the maintenance call, which closes only the poll that identity
+names. An overlapping discovery is told the poll is held and reports `skipped`,
+which the Workflow already treats as "opened nothing, so close nothing". A run
+whose claim was taken over closes nothing and fails the Activity
+non-retryably, because the poll it meant to close is someone else's and the
+identity cannot come back. Takeover needs the claim to have stood past a
+30-minute bound, which only a TERMINATED run can do: a worker that dies is
+replaced from history, its children keep running, and its maintenance still
+releases the claim. `post-match-poll-ownership.integration.test.ts` proves the
+claim and the guarded close against a real Postgres; `match-v2.test.ts` proves
+the overlap end to end, with the second discovery starting while the first is
+awaiting a child.
+
 `ScoutEffectClaim` keeps taking the top-level Prisma client, and
 `src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
 insert that expects to fail and then READS the existing row back, and in
@@ -304,61 +338,100 @@ per-match core's separation of archive from projection. It has nowhere to defer
 to: `scoutLakeProjectionV2Workflow` is keyed by a match id and projects the
 MatchV5 payload, which does not exist while the game is still being played.
 
-### The prematch archive door is fenced
+### The archive door is fenced, for every artifact family
 
-`archivePrematchReceipted` is the only one of the three archive doors that
-takes an advisory lock, and the asymmetry is in the data rather than in the
-pipeline. A prematch S3 key is deterministic but the spectator PAYLOAD is not —
-`gameLength` advances between fetches — so two captures of one game write
-different bytes to the same key. A match or timeline payload is immutable once
-the game is over, so a repeat put writes byte-identical content and only the
-descriptor's `capturedAt` differs; the key and digest an attestation names stay
-true of the object either way.
+All three archive doors — match, timeline and prematch — take an advisory lock,
+because all three share one hazard. Each family's S3 key is deterministic, one
+per (match, kind), but the BYTES under it are not guaranteed identical across
+two fetches. A prematch payload varies by construction, since `gameLength`
+advances between polls. A MatchV5 response is semantically stable once the game
+is over, but stability of meaning is not identity of bytes: serialization order
+and late corrections both produce a different body for the same match, and the
+v1-vs-V2 dual-run window archives one match from two independent fetches.
 
-Unfenced, the prematch race is not merely a duplicated put. The second attempt
+An earlier revision of this section claimed match and timeline payloads were
+immutable and left those doors unfenced. That was wrong, and the failure it
+allowed is the one below.
+
+Unfenced, the race is not merely a duplicated put. The second attempt
 overwrites the object and only THEN discovers the receipt mismatch, so S3 ends
 up holding the second capture's bytes under the first's attested digest — the
 object and its attestation permanently disagree, which is precisely what the
-receipt table exists to rule out.
+receipt table exists to rule out. What differs between the families is only how
+OFTEN the bytes vary; the fence costs one advisory lock around an infrequent
+write either way, so there is nothing to trade.
+
+The lock is keyed by (match, artifact kind), not by match alone: a match and
+its timeline are separate objects under separate keys with separate receipts,
+and making them wait for each other would buy nothing.
 
 Serializing alone would not fix that: an attempt that waited its turn and then
 put anyway would still overwrite, just in an orderly fashion. So the lock wraps
-the read-gate, the put and the attestation as one critical section, and a
-snapshot already archived is answered from its standing receipt with no put at
-all. The fence lives in the DOOR rather than in either caller because both
-pipelines enter through it — v1 via `ingestPrematch`, V2 via
-`archivePrematchSnapshotV2` — and a fence at one call site would serialize that
-caller against itself while leaving the cross-pipeline race open.
+the read-gate, the put and the attestation as one critical section, and an
+artifact already archived is answered from its standing receipt with no put at
+all. The fence lives in the DOOR rather than in any caller because several
+pipelines enter through it — v1's ingest paths and the V2 Activities — and a
+fence at one call site would serialize that caller against itself while leaving
+the cross-pipeline race open.
 
 The attestation is written through the fencing transaction so the arrangement
 fails closed: an advisory xact lock dies with its transaction, and Prisma ends
 one on its own timer as well as on its callback, so a put that outran the lock
 lifetime would be running unfenced — and an aborted transaction cannot record a
 receipt. No attestation is ever written for a put the fence could not vouch
-for. `prematch-archive-fence.integration.test.ts` proves the serialization
+for. `archive-fence.integration.test.ts` proves the serialization
 against a real Postgres rather than a double, since a double would serialize by
 construction and prove nothing.
 
-The put is also bounded strictly INSIDE the lock's lifetime, at 25 seconds
-against the lock's 45. The margin is not decoration: an S3 put is not one
-request, and the SDK's request timeout multiplied by the retry budget plus
-backoff can outlast the transaction on its own. Prisma releases the lock on
-rollback without cancelling anything in flight, so an unbounded put becomes a
-zombie — a rival takes the freed lock, writes and attests its own bytes, and the
-zombie then lands the older body over them. The deadline therefore both RACES
-the put (so the caller always settles inside the lifetime) and ABORTS it through
-an `AbortSignal` the SDK honours (so the request actually stops rather than
-being abandoned). A race alone would leave the zombie running. This mirrors the
-600/900 split `temporal/v2/effect-fence.ts` documents for the same hazard.
+The put — and the canonical read-back an `already_archived` answer needs — is
+also bounded strictly INSIDE the lock's lifetime. The margin is not decoration:
+an S3 put is not one request, and the SDK's request timeout multiplied by the
+retry budget plus backoff can outlast the transaction on its own. Prisma
+releases the lock on rollback without cancelling anything in flight, so an
+unbounded put becomes a zombie — a rival takes the freed lock, writes and
+attests its own bytes, and the zombie then lands the older body over them. The
+deadline therefore both RACES the put (so the caller always settles inside the
+lifetime) and ABORTS it through an `AbortSignal` the SDK honours (so the
+request actually stops rather than being abandoned). A race alone would leave
+the zombie running.
+
+The deadline is derived, not fixed, and it is derived at the moment the
+external work STARTS. The transaction's timer starts when it opens, before the
+advisory-lock wait, so a follower that queued behind a holder has less lifetime
+left than it started with — a fresh 25 seconds on 20 remaining is the zombie
+again. Nor is the lock acquisition the last thing that spends lifetime before
+the put: the read gate's receipt lookup sits between them, and it is a query on
+a database that may be slow or contended, so a deadline captured when the lock
+was acquired would hand the put a budget the lock can no longer cover. The door
+starts a clock before the transaction opens, and each external operation takes
+the smaller of the external deadline and the lifetime remaining WHEN IT BEGINS,
+minus a settle margin reserved for the receipt insert and the commit; a caller
+whose remainder fits no put fails closed before putting. Deriving inside the
+call makes an early capture unrepresentable rather than merely avoided. The
+wait itself is bounded by a `SET LOCAL lock_timeout` on the lock statement, so
+a starved follower fails at the lock rather than spending its lifetime waiting.
+All three are proved in `archive-fence.integration.test.ts` — a holder that
+leaves without a receipt for the wait, an injected slow receipt lookup for the
+derivation point. This mirrors the 600/900 split `temporal/v2/effect-fence.ts`
+documents for the same hazard.
+
+Two contracts the fence must not change. The RECEIPT is fail-open and the put's
+exclusivity is not: a receipt write that aborts the fencing transaction after
+the canonical put landed is reported as `archived` with `receipt: "failed"` —
+the object is in S3, the record of it is not, which is what that answer has
+always meant — so a bookkeeping outage cannot turn v1's live ingest into a
+failure, while a failure before the put still propagates. And with no bucket
+configured the door answers `skipped_no_bucket` before any transaction opens,
+so the documented dev/test no-op stays a storage no-op that needs no database.
 
 Because the door gates its put, it also hands back the CANONICAL payload with
-`already_archived`, not just a descriptor. A caller holding a fresher spectator
-payload — the two pipelines poll independently, and `gameLength` advances
+`already_archived`, not just a descriptor. A caller holding its own fetch of the
+same artifact — the two pipelines poll independently, and a payload can differ
 between polls — would otherwise stage lake rows derived from its own bytes
 while the staging receipt named the archived object they did not come from,
 leaving the lake disagreeing with both its receipt and canonical S3. Returning
 the verified archived contents makes staging the wrong bytes unrepresentable
-rather than merely discouraged, and both callers stage what they are given.
+rather than merely discouraged, and every caller stages what it is given.
 
 A receipt conflict is still never returned as a commit, and the fence does not
 make that redundant: it serializes captures that go through the door, so the
