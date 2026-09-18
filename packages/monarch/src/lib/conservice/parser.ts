@@ -178,6 +178,7 @@ async function parsePdf(
       chargeAmount: parsed.amount,
       paymentAmount: 0,
       monthTotal: 0,
+      billId: dueDate,
       postMonth: dueDate,
       transactionDate: dueDate,
       chargeTypeId: serviceTypeToChargeTypeId(parsed.serviceType),
