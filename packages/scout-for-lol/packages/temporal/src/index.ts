@@ -106,6 +106,7 @@ export {
 } from "./identifiers.ts";
 export type {
   ScoutV2RedrivableWorkflowName,
+  ScoutV2ReusePolicyWorkflowName,
   ScoutV2ReusePolicy,
   ScoutV2WorkflowName,
 } from "./identifiers.ts";

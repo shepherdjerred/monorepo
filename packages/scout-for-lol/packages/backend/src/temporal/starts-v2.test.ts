@@ -126,10 +126,11 @@ describe("notification and projection answer reuse differently", () => {
 
 describe("operator reconciliation keeps its own reuse terms", () => {
   test("a closed operator sweep can be run again, and a running one is joined", async () => {
-    // Reconciliation is absent from the shared table on purpose: nothing
-    // re-drives it. It was REJECT_DUPLICATE while ScoutWorkflowStart could hold
-    // one request per workflow id (SJ-205); a sweep is a re-runnable read of
-    // the durable state, so with one row per request nothing has to refuse it.
+    // The term comes from the shared SCOUT_V2_REUSE_POLICIES table, which is
+    // pinned in the temporal package's contracts test; this proves the
+    // operator start sends it. It was REJECT_DUPLICATE while ScoutWorkflowStart
+    // could hold one request per workflow id (SJ-205); with one row per
+    // request nothing has to refuse a repeat sweep.
     const temporal = fakeTemporal();
     const first = await startScoutPipelineReconciliationV2(temporal.client, {
       stage: "beta",

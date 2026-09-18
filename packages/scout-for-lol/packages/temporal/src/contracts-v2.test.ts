@@ -34,6 +34,11 @@ import {
   ScoutMatchPipelineStateV2ResultSchema,
   ScoutRecoveryBatchStateV2ResultSchema,
 } from "./activity-contracts-v2.ts";
+import {
+  SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES,
+  SCOUT_V2_REUSE_POLICIES,
+  SCOUT_WORKFLOW_NAMES,
+} from "./identifiers.ts";
 
 const riotMatchId = RiotMatchIdSchema.parse("NA1_5312279829");
 const intentKey = ScoutNotificationIntentKeySchema.parse(
@@ -168,6 +173,29 @@ describe("V2 identifiers stay usable as workflow ids", () => {
     expect(ScoutNotificationIntentKeySchema.parse("notify:NA1_1.guild-2")).toBe(
       "notify:NA1_1.guild-2",
     );
+  });
+});
+
+describe("V2 reuse policies", () => {
+  test("names exactly the re-drivable families plus operator reconciliation", () => {
+    expect(Object.keys(SCOUT_V2_REUSE_POLICIES).sort()).toEqual(
+      [
+        ...SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES,
+        SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      ].sort(),
+    );
+  });
+
+  test("reconciliation may be run again after any close", () => {
+    // Repeat operator reconciles are a beta acceptance requirement. Acceptance
+    // ends a request's handoff (ScoutWorkflowStart holds one row per request),
+    // so nothing durable has to refuse a repeat, and a running sweep is joined
+    // by the operator path's USE_EXISTING conflict policy rather than
+    // duplicated. The backend's operator start reads this entry — it does not
+    // spell its own — so this pin is the one place the term can change.
+    expect(
+      SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2],
+    ).toBe("ALLOW_DUPLICATE");
   });
 });
 
