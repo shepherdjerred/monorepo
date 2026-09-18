@@ -35,27 +35,47 @@ export type EnrichmentStats = {
   tier3Count: number;
 };
 
-// Transactions a previous run already split. Every matcher skips them so it
-// cannot split them twice, which means they are not failures to match — but a
-// bare "0/24" reads exactly like one. Counting them keeps the report honest
-// about which paths still have work left.
-export function alreadySplitCounts(
+// Transactions no matcher can reach, and why. Counting them keeps the report
+// honest about which paths still have work left: a bare "0/24" reads as a
+// broken vendor when in fact there is nothing left for it to do.
+//
+//  - `split`: a previous run already split it, and every matcher skips those
+//    so it cannot be split twice.
+//  - `movement`: money moving rather than being spent — a card bill payment,
+//    a transfer between accounts, cash back. No receipt or statement itemises
+//    one, so no vendor can ever document it. Venmo carries 105 of these
+//    against 22 real purchases, which is why its rate read as 17%.
+const MONEY_MOVEMENT = new Set([
+  "Credit Card Payment",
+  "Transfer",
+  "Rewards",
+  "Balance Adjustments",
+]);
+
+export type UnreachableCount = { split: number; movement: number };
+
+export function unreachableCounts(
   separated: SeparateDeepPathsResult,
-): Record<DeepPathKey, number> {
-  const counts: Record<DeepPathKey, number> = {
-    amazon: 0,
-    venmo: 0,
-    bilt: 0,
-    usaa: 0,
-    scl: 0,
-    apple: 0,
-    costco: 0,
-    paystub: 0,
-    equity: 0,
-    loan: 0,
+): Record<DeepPathKey, UnreachableCount> {
+  const counts: Record<DeepPathKey, UnreachableCount> = {
+    amazon: { split: 0, movement: 0 },
+    venmo: { split: 0, movement: 0 },
+    bilt: { split: 0, movement: 0 },
+    usaa: { split: 0, movement: 0 },
+    scl: { split: 0, movement: 0 },
+    apple: { split: 0, movement: 0 },
+    costco: { split: 0, movement: 0 },
+    paystub: { split: 0, movement: 0 },
+    equity: { split: 0, movement: 0 },
+    loan: { split: 0, movement: 0 },
   };
   for (const [key, transactions] of deepPathBuckets(separated)) {
-    counts[key] = transactions.filter((t) => t.isSplitTransaction).length;
+    counts[key] = {
+      split: transactions.filter((t) => t.isSplitTransaction).length,
+      movement: transactions.filter(
+        (t) => !t.isSplitTransaction && MONEY_MOVEMENT.has(t.category.name),
+      ).length,
+    };
   }
   return counts;
 }

@@ -13,7 +13,7 @@ import type {
 } from "./lib/monarch/types.ts";
 import {
   runEnrichmentPipeline,
-  alreadySplitCounts,
+  unreachableCounts,
 } from "./lib/enrichment/pipeline.ts";
 import { promptConfirm, applyChanges } from "./lib/apply.ts";
 import {
@@ -221,7 +221,7 @@ async function main(): Promise<void> {
     changes: derivedChanges,
   } = await runEnrichmentPipeline(config, separated, knowledgeBase, categories);
 
-  displayEnrichmentStats(enrichmentStats, alreadySplitCounts(separated));
+  displayEnrichmentStats(enrichmentStats, unreachableCounts(separated));
 
   if (config.notesOnly) {
     await runNotesOnly(enrichedTransactions, config.apply);

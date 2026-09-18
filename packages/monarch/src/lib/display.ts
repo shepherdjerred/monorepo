@@ -45,7 +45,9 @@ export function displayTierBreakdown(
 
 export function displayEnrichmentStats(
   stats: EnrichmentStats,
-  alreadySplit: Partial<Record<string, number>> = {},
+  unreachable: Partial<
+    Record<string, { split: number; movement: number }>
+  > = {},
 ): void {
   console.log("\n=== Enrichment Stats ===\n");
 
@@ -64,14 +66,17 @@ export function displayEnrichmentStats(
 
   for (const [name, rate] of sources) {
     if (rate.total === 0) continue;
-    // A transaction a previous run already split is skipped by every matcher
-    // so it cannot be split twice. Counting it as unmatched makes a finished
-    // path look broken, so it is named rather than folded into the rate.
-    const split = alreadySplit[name.toLowerCase()] ?? 0;
-    const eligible = rate.total - split;
+    // Rows no matcher can reach are named rather than folded into the rate:
+    // counting them as unmatched makes a finished path look broken.
+    const out = unreachable[name.toLowerCase()] ?? { split: 0, movement: 0 };
+    const eligible = rate.total - out.split - out.movement;
     const pct =
       eligible > 0 ? ((rate.matched / eligible) * 100).toFixed(0) : "0";
-    const note = split > 0 ? ` — ${String(split)} already split` : "";
+    const reasons = [
+      out.split > 0 ? `${String(out.split)} already split` : "",
+      out.movement > 0 ? `${String(out.movement)} money movement` : "",
+    ].filter((r) => r !== "");
+    const note = reasons.length > 0 ? ` — ${reasons.join(", ")}` : "";
     console.log(
       `  ${padRight(name, 8)} ${String(rate.matched)}/${String(eligible)} matched (${pct}%)${note}`,
     );
