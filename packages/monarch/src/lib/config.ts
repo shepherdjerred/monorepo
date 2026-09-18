@@ -103,8 +103,12 @@ export function getConfig(): Config {
     strict: true,
   });
 
-  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (openRouterApiKey === undefined || openRouterApiKey === "") {
+  // --notes-only renders already-gathered facts and never reaches a tier, so
+  // it makes no model call and needs no model credential. Demanding one would
+  // make the cheapest mode the hardest to run.
+  const notesOnly = values["notes-only"];
+  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"] ?? "";
+  if (openRouterApiKey === "" && !notesOnly) {
     throw new Error("OPENROUTER_API_KEY environment variable is required");
   }
 
@@ -151,7 +155,7 @@ export function getConfig(): Config {
     skipEnrich: values["skip-enrich"],
     suggest: values.suggest,
     ...resolveDateRange(values.since, values.until, new Date()),
-    notesOnly: values["notes-only"],
+    notesOnly,
   };
 }
 

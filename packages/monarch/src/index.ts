@@ -138,8 +138,10 @@ async function main(): Promise<void> {
   if (config.verbose) setLogLevel("debug");
 
   await initMonarch();
-  initLlm(config.openRouterApiKey, config.model);
-  setWebSearchEnabled(!config.skipResearch);
+  if (!config.notesOnly) {
+    initLlm(config.openRouterApiKey, config.model);
+    setWebSearchEnabled(!config.skipResearch);
+  }
   const hints = await loadHints();
 
   const { since: startDate, until: endDate } = config;

@@ -1,12 +1,12 @@
 # Monarch
 
-AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). Fetches transactions via the Monarch API, enriches them with data from external sources (Amazon, Venmo, Bilt/Conservice, USAA, Seattle City Light, Apple receipts, Costco), classifies them with stable catalog models through OpenRouter, and optionally applies the changes back. The full pipeline design lives in [ARCHITECTURE.md](ARCHITECTURE.md).
+AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). Fetches transactions via the Monarch API, enriches them with data from external sources (Amazon, Venmo, Bilt/Conservice, USAA, Seattle City Light, Apple receipts, Costco, Workday payslips, Schwab equity awards), classifies them with stable catalog models through OpenRouter, and optionally applies the changes back. The full pipeline design lives in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Setup
 
 Set the following environment variables:
 
-- `OPENROUTER_API_KEY` (required) -- service-specific OpenRouter API key
+- `OPENROUTER_API_KEY` (required, except for `--notes-only`) -- service-specific OpenRouter API key
 - `CONSERVICE_COOKIES` (optional) -- fallback for `--conservice-cookies`
 
 Authenticate to Monarch with a browser session:
@@ -48,9 +48,12 @@ General:
 | -------------------------- | ---------------------------------------------------- |
 | `--apply`                  | Apply changes to Monarch Money (default: dry run)    |
 | `--interactive`            | Approve each change individually                     |
+| `--since <YYYY-MM-DD>`     | Start of the window (default: 365 days ago)          |
+| `--until <YYYY-MM-DD>`     | End of the window (default: today)                   |
+| `--notes-only`             | Write enrichment notes only; no model, no categories |
 | `--limit <n>`              | Limit transactions to process                        |
 | `--batch-size <n>`         | Batch size for LLM calls (default: 25)               |
-| `--model <id>`             | Stable catalog model ID (default: `claude-sonnet-5`) |
+| `--model <id>`             | Stable catalog model ID (default: `gpt-5.6-luna`)    |
 | `--sample <n>`             | Sample N merchant groups for testing                 |
 | `--verbose`                | Enable debug logging                                 |
 | `--output <path>`          | Save proposed changes to JSON                        |
@@ -77,6 +80,8 @@ Per data source:
 | `--skip-scl`                     | Skip Seattle City Light processing                      |
 | `--skip-apple`                   | Skip Apple receipt processing                           |
 | `--skip-costco`                  | Skip Costco processing                                  |
+| `--skip-paystub`                 | Skip payslip matching                                   |
+| `--skip-equity`                  | Skip RSU vest matching                                  |
 
 When `--output` is set, Tier 2 batch classifications are checkpointed next to
 the output file using `.checkpoint.json`. Re-running the same command resumes
@@ -102,6 +107,8 @@ keeps no copies. Parsers read straight from these folders:
 - **Seattle City Light** -- CSV export in `The Victor/` (bimonthly bill splits). The newest export is used unless `--scl-csv` overrides it.
 - **Apple** -- Receipt emails found via the shared MailMate email index (`src/lib/mail/`, all accounts and mailboxes, cached at `~/.monarch-cache/email-index.jsonl`).
 - **Costco** -- Receipt PDFs in `Costco/`, pre-parsed into `Costco/costco-orders.json` by `bun run scripts/build-costco-orders.ts`; the pipeline classifies per-item from that file. Rerun the script after adding receipts.
+- **Payroll** -- Workday payslip PDFs in `Payroll/` (Workday: Pay > Payslips > Print; a multi-payslip bundle is fine, one per page), pre-parsed into `Payroll/payslips.json` by `bun run scripts/build-payslips.ts`. Rerun the script after adding payslips. Only period and amount fields are extracted -- no name, address, employee ID or account number.
+- **Equity** -- Schwab Equity Award Center transaction export in `Equity/` (Equity Awards > Transactions > Export). The newest export is used. Covers RSU vests; share _sales_ need a separate brokerage history export.
 
 Each deep source has its own classify/match/parse pipeline under `src/lib/<name>/`.
 
@@ -109,10 +116,32 @@ Each deep source has its own classify/match/parse pipeline under `src/lib/<name>
 
 Beyond fetch and classification, three stages persist context across runs: a merchant **knowledge base** (`src/lib/knowledge/`, rebuilt with `--rebuild-kb`), an **enrichment** pipeline that routes transactions to deep sources (`src/lib/enrichment/`, skipped with `--skip-enrich`), and a **verification** pass that checks classifications and emits suggestions (`src/lib/verification/`). See [ARCHITECTURE.md](ARCHITECTURE.md) for phases, matching tolerances, and caching.
 
+## Where derived data lives
+
+Source documents live in the vault, and so does anything expensive enough that
+losing it hurts: `Amazon/amazon-orders.json` (hours of headed scraping) and
+`cache/email-match-checkpoint.json` (dollars of model judgments). Cheap,
+regenerable scratch -- the transaction cache, email index, merchant knowledge
+base, and Tier 2 checkpoints -- stays in `~/.monarch-cache/`. A cache that
+moved keeps a one-time read of its old location so nothing is lost in the move.
+
+`--notes-only` is the safe way to document history. It enriches and writes
+notes without reaching a tier, so it calls no model, needs no API key, and
+cannot disturb categories that were decided by hand. Classification over a
+wide window is a different matter: Tier 2 checkpoints are keyed on batch
+composition, so widening the window invalidates every batch and re-spends the
+whole run. Classify history in fixed date slices if at all, and never pass
+`--rebuild-kb` on a wide run -- it would promote years-old categorizations
+into tier-1 defaults.
+
 ## Maintenance scripts
 
 - `bun run scripts/build-costco-orders.ts` -- rebuild the Costco order cache
   from the receipt PDFs in the finance vault.
+- `bun run scripts/build-payslips.ts [--dry-run]` -- parse the Workday payslip
+  PDFs in the vault into `Payroll/payslips.json`. Every page must reconcile
+  against its own printed section totals; a page that does not fails the run
+  rather than shipping a partly-read payslip.
 - `bun run scripts/dedupe-transactions.ts [--apply]` -- find and (with
   `--apply`, after writing a vault backup) delete duplicate transactions
   created when an account re-link backfills history an earlier connection
@@ -123,7 +152,11 @@ Beyond fetch and classification, three stages persist context across runs: a mer
   scoring shortlists candidate emails per transaction, the model judges each
   match, and `--apply` writes `🧾 Email:` notes and guard-checked category
   changes back to Monarch. Judgments checkpoint to
-  `~/.monarch-cache/email-match-checkpoint.json` and resume across runs.
+  `Finances/cache/email-match-checkpoint.json` in the vault and resume across
+  runs; the key includes a fingerprint of the candidate shortlist, so only
+  transactions whose shortlist actually changed are re-judged. `--candidates-only`
+  prints the shortlist size and score histogram and exits before spending
+  anything.
 
 ## hints.txt
 
