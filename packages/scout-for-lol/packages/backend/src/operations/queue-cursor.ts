@@ -22,9 +22,9 @@ import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
 
 const CURSOR_SEPARATOR = "|";
 
-export type QueuePosition = {
+export type QueuePosition<Id extends string = string> = {
   readonly at: Date;
-  readonly id: string;
+  readonly id: Id;
 };
 
 const QueueCursorSchema = z.strictObject({
@@ -45,6 +45,7 @@ export function encodeQueueCursor(position: QueuePosition): string {
  * the separator, so a token carrying more than one is ambiguous rather than
  * merely odd, and guessing which half was meant is how a cursor silently pages
  * the wrong queue position.
+ *
  */
 export function decodeQueueCursor(token: string): QueuePosition {
   const [at, id, ...extra] = token.split(CURSOR_SEPARATOR);
@@ -55,6 +56,24 @@ export function decodeQueueCursor(token: string): QueuePosition {
   }
   const parsed = QueueCursorSchema.parse({ at, id });
   return { at: new Date(parsed.at), id: parsed.id };
+}
+
+/**
+ * Decode a cursor for a queue that breaks ties on a BRANDED key.
+ *
+ * `parseId` is that key's brand parser. The position comes back typed with
+ * it, so the read it is handed to can demand the right key at compile time,
+ * and a token carrying some other column's value — a workflow id where a
+ * request key belongs — is refused here rather than compared against the
+ * wrong key and quietly paging past every row that shares the boundary
+ * instant.
+ */
+export function decodeKeyedQueueCursor<Id extends string>(
+  token: string,
+  parseId: (id: string) => Id,
+): QueuePosition<Id> {
+  const position = decodeQueueCursor(token);
+  return { at: position.at, id: parseId(position.id) };
 }
 
 /**

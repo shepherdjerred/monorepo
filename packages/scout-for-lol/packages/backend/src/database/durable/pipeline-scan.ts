@@ -3,6 +3,7 @@ import {
   RecoveryBatchIdSchema,
   RiotMatchIdSchema,
   type RecoveryBatchId,
+  type WorkflowStartRequestId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   MatchProcessingPolicySchema,
@@ -164,10 +165,17 @@ const FULL_POLICY_COLUMN = MatchProcessingPolicySchema.parse("FULL");
  * reconciliation sweep never pages — it always wants the front — so its
  * queries keep exactly the shape and plan they had, with the keyset predicate
  * composed in only when a caller actually supplies a cursor.
+ *
+ * `Id` names WHICH key breaks the tie, because the queues do not all break it
+ * on the same one: five are keyed by the row's natural id, and the
+ * workflow-start queue by the request key — a workflow id can name many
+ * requests, and only the request key orders them. A read whose tie-break is a
+ * branded key takes a branded position, so a caller cannot hand it the other
+ * column and have the comparison quietly skip every row past the boundary.
  */
-export type ScanPosition = {
+export type ScanPosition<Id extends string = string> = {
   readonly at: Date;
-  readonly id: string;
+  readonly id: Id;
 };
 
 /**
@@ -501,7 +509,8 @@ export async function listUnacceptedWorkflowStarts(
   args: {
     workflowTypes: readonly string[];
     limit: number;
-    after?: ScanPosition | undefined;
+    /** The tie-break is the REQUEST key; the position's type says so. */
+    after?: ScanPosition<WorkflowStartRequestId> | undefined;
   },
 ): Promise<ScoutWorkflowStartRecord[]> {
   const after = args.after;

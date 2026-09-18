@@ -18,6 +18,7 @@ import {
 import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
+  scoutLakeProjectionV2WorkflowId,
   scoutPipelineReconciliationV2WorkflowId,
 } from "@scout-for-lol/temporal";
 import {
@@ -803,5 +804,76 @@ describe("operations reads", () => {
     expect(
       await caller().operations.matchPipeline({ matchId: MATCH_ID }),
     ).toEqual({ kind: "not-found" });
+  });
+});
+
+describe("the workflow-start queue pages by request key", () => {
+  test("unaccepted starts sharing one millisecond page completely across the boundary", async () => {
+    // Five requests recorded at the SAME instant, so the read can only order
+    // them by its tie-break — the request key. The cursor must carry that key:
+    // a workflow id in its place would be compared against request keys on the
+    // next page and skip every row still sharing the boundary millisecond.
+    const requestedAt = instant(-60_000);
+    const seeded = await Promise.all(
+      Array.from({ length: 5 }, async (_unused, index) => {
+        const matchId = RiotMatchIdSchema.parse(
+          `NA1_53122798${(30 + index).toString()}`,
+        );
+        const requested = await requestWorkflowStart(db, {
+          requestedWorkflowId: scoutLakeProjectionV2WorkflowId(
+            configuration.environment,
+            matchId,
+          ),
+          workflowType: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+          requestedBy: null,
+          requestSource: "test:shared-millisecond",
+          inputPayload: {
+            kind: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+            version: 1,
+            data: { stage: configuration.environment, riotMatchId: matchId },
+          },
+          requestedAt,
+        });
+        if (requested.outcome !== "applied") {
+          throw new Error(`seed ${matchId} was not recorded`);
+        }
+        return requested.record.requestId;
+      }),
+    );
+
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    let budget = seeded.length;
+    while (budget > 0) {
+      budget -= 1;
+      const resume = cursor;
+      const queues = await caller().operations.queues({
+        limit: 2,
+        ...(resume === null
+          ? {}
+          : { after: { unacceptedWorkflowStarts: resume } }),
+      });
+      seen.push(...queues.unacceptedWorkflowStarts.map((row) => row.requestId));
+      cursor = queues.pages.unacceptedWorkflowStarts.cursor;
+      if (!queues.pages.unacceptedWorkflowStarts.hasMore) {
+        expect(cursor).toBeNull();
+        break;
+      }
+      expect(cursor).not.toBeNull();
+    }
+
+    // Every seeded request reached exactly once, in the read's own tie-break
+    // order (request key ascending within the shared instant).
+    expect(seen).toEqual([...seeded].sort((a, b) => a.localeCompare(b)));
+  });
+
+  test("a workflow-start cursor carrying a workflow id instead of a request key is refused", async () => {
+    await expect(
+      caller().operations.queues({
+        after: {
+          unacceptedWorkflowStarts: `${instant(-60_000)}|${RECONCILE_WORKFLOW_ID}`,
+        },
+      }),
+    ).rejects.toThrow();
   });
 });
