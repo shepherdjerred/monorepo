@@ -13,9 +13,9 @@ name = "catppuccin-latte"
 
 # Follow host terminal light/dark appearance and switch Herdr UI themes.
 # Existing manual behavior is unchanged unless this is true.
-auto_switch = false
-# dark_name = "catppuccin"
-# light_name = "catppuccin-latte"
+auto_switch = true
+dark_name = "catppuccin"
+light_name = "catppuccin-latte"
 
 # Override individual color tokens on top of the base theme.
 # Accepts: hex (#rrggbb), named colors, rgb(r,g,b), or panel_bg = "reset"
@@ -70,7 +70,8 @@ auto_switch = false
 # settings = "prefix+s"
 # detach = "prefix+q"
 # reload_config = "prefix+shift+r"
-# open_notification_target = "prefix+o"
+# Moved off the default prefix+o, which annotate.open uses below.
+open_notification_target = "prefix+ctrl+o"
 # workspace_picker = "prefix+w"
 # goto = "prefix+g"
 # new_workspace = "prefix+shift+n"
@@ -81,9 +82,9 @@ auto_switch = false
 # close_workspace = "prefix+shift+d"
 # previous_workspace = "" # optional, unset by default
 # next_workspace = ""     # optional, unset by default
-# previous_agent = ""     # optional, unset by default
-# next_agent = ""         # optional, unset by default
-# focus_agent = ""        # optional indexed binding, e.g. "prefix+alt+1..9"
+previous_agent = "prefix+alt+k"
+next_agent = "prefix+alt+j"
+focus_agent = "prefix+alt+1..9"
 # remote_image_paste = "ctrl+v" # only active in herdr --remote; empty disables raw-key image paste
 # new_tab = "prefix+c"
 # rename_tab = "prefix+shift+t"
@@ -92,7 +93,7 @@ auto_switch = false
 # move_tab_previous = ""   # optional, e.g. "alt+shift+left" moves the tab toward the front
 # move_tab_next = ""       # optional, e.g. "alt+shift+right" moves the tab toward the back
 # switch_tab = "prefix+1..9"
-# switch_workspace = ""   # optional indexed binding, e.g. "prefix+shift+1..9"
+switch_workspace = "prefix+shift+1..9"
 # close_tab = "prefix+shift+x"
 # rename_pane = "prefix+shift+p"
 # edit_scrollback = "prefix+e"
@@ -143,38 +144,46 @@ auto_switch = false
 # workspaces = "" # e.g. "ctrl+shift" makes ctrl+shift+1..9 switch workspaces directly
 # agents = ""     # e.g. "alt" makes alt+1..9 focus agent rows directly
 
-# Bound to the herdr-stage plugin (packages/dotfiles/herdr-stage-plugin) —
-# tags the focused workspace with a planning/impl/pr/blocked stage token,
-# shown via the $stage row in [ui.sidebar.spaces] below.
+# Bound to the Annotate plugin (plannotator/herdr-annotate), installed at a
+# pinned ref by run_onchange_after_install-herdr-plugins.sh.tmpl. Comment on
+# terminal selections, review documents and the agent's last reply, and send the
+# feedback back to the focused agent. Keys match the plugin's own documentation,
+# which is why open_notification_target moved to prefix+ctrl+o above.
 [[keys.command]]
-key = "prefix+alt+1"
+key = "prefix+a"
 type = "plugin_action"
-command = "jerred.herdr-stage.mark-planning"
-description = "stage: planning"
+command = "annotate.capture"
+description = "annotate text"
 
 [[keys.command]]
-key = "prefix+alt+2"
+key = "prefix+shift+a"
 type = "plugin_action"
-command = "jerred.herdr-stage.mark-impl"
-description = "stage: impl"
+command = "annotate.copy-context"
+description = "copy annotations as context"
 
 [[keys.command]]
-key = "prefix+alt+3"
+key = "prefix+ctrl+a"
 type = "plugin_action"
-command = "jerred.herdr-stage.mark-pr"
-description = "stage: pr"
+command = "annotate.copy-archive"
+description = "copy annotations as context and archive them"
 
 [[keys.command]]
-key = "prefix+alt+4"
+key = "prefix+m"
 type = "plugin_action"
-command = "jerred.herdr-stage.mark-blocked"
-description = "stage: blocked"
+command = "annotate.manage"
+description = "manage annotations"
 
 [[keys.command]]
-key = "prefix+alt+0"
+key = "prefix+o"
 type = "plugin_action"
-command = "jerred.herdr-stage.mark-clear"
-description = "stage: clear"
+command = "annotate.open"
+description = "review documents in this folder"
+
+[[keys.command]]
+key = "prefix+shift+o"
+type = "plugin_action"
+command = "annotate.last"
+description = "review the agent's last reply"
 
 # Size of the virtual terminal used when no client is attached.
 # Attached clients always use their own terminal size.
@@ -296,9 +305,7 @@ status_indicators = "symbols"
 [ui.sidebar.agents]
 # Blank rows between agent entries. Set to 1 to restore the previous spacing.
 # row_gap = 0
-# $stage is set manually via `herdr-stage` (packages/dotfiles/dot_local/bin/executable_herdr-stage)
-# or the herdr-stage plugin keybindings — one of planning/impl/pr/blocked, or blank if untagged.
-rows = [["state_icon", "workspace", "tab"], ["agent"], ["$stage"]]
+rows = [["state_icon", "workspace", "tab"], ["agent"]]
 # Optional canonical agent IDs replace the default rows for matching agents.
 # [ui.sidebar.agents.rows_by_agent]
 # claude = [["state_icon", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
