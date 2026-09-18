@@ -119,6 +119,46 @@ async function readStoredResult(intentId: string): Promise<unknown> {
   return row.resultJson === null ? null : JSON.parse(row.resultJson);
 }
 
+type OperationsQueuesRead = Awaited<
+  ReturnType<ReturnType<typeof caller>["operations"]["queues"]>
+>;
+
+/**
+ * Walk one queue two rows at a time until the read reports no more, returning
+ * the keys in the order the pages handed them back.
+ *
+ * `pageBudget` bounds the walk rather than driving it: paging that never
+ * reports the last page is itself the failure, and an unbounded loop would
+ * hang instead of failing. One page per seeded row is more than enough at two
+ * per page.
+ */
+async function pageThroughQueue(
+  queue: "stalledNotifications" | "unacceptedWorkflowStarts",
+  pageBudget: number,
+  keysOf: (queues: OperationsQueuesRead) => readonly string[],
+): Promise<string[]> {
+  const seen: string[] = [];
+  let cursor: string | null = null;
+  let budget = pageBudget;
+  while (budget > 0) {
+    budget -= 1;
+    const resume = cursor;
+    const queues = await caller().operations.queues({
+      limit: 2,
+      ...(resume === null ? {} : { after: { [queue]: resume } }),
+    });
+    seen.push(...keysOf(queues));
+    cursor = queues.pages[queue].cursor;
+    if (!queues.pages[queue].hasMore) {
+      // The last page carries no cursor: there is nothing to resume from.
+      expect(cursor).toBeNull();
+      break;
+    }
+    expect(cursor).not.toBeNull();
+  }
+  return seen;
+}
+
 const RECONCILE_WORKFLOW_ID = scoutPipelineReconciliationV2WorkflowId(
   configuration.environment,
   "operator",
@@ -742,28 +782,11 @@ describe("operations reads", () => {
       }),
     );
 
-    const seen: string[] = [];
-    let cursor: string | null = null;
-    // A budget rather than an iteration: paging that never reports the last
-    // page is itself the failure, and an unbounded loop would hang instead of
-    // failing. One page per seeded row is more than enough at two per page.
-    let budget = seeded.length;
-    while (budget > 0) {
-      budget -= 1;
-      const resume = cursor;
-      const queues = await caller().operations.queues({
-        limit: 2,
-        ...(resume === null ? {} : { after: { stalledNotifications: resume } }),
-      });
-      seen.push(...queues.stalledNotifications.map((row) => row.intentKey));
-      cursor = queues.pages.stalledNotifications.cursor;
-      if (!queues.pages.stalledNotifications.hasMore) {
-        // The last page carries no cursor: there is nothing to resume from.
-        expect(cursor).toBeNull();
-        break;
-      }
-      expect(cursor).not.toBeNull();
-    }
+    const seen = await pageThroughQueue(
+      "stalledNotifications",
+      seeded.length,
+      (queues) => queues.stalledNotifications.map((row) => row.intentKey),
+    );
 
     // Every seeded row was reached exactly once, in the read's own order.
     expect(seen).toEqual(seeded);
@@ -841,26 +864,11 @@ describe("the workflow-start queue pages by request key", () => {
       }),
     );
 
-    const seen: string[] = [];
-    let cursor: string | null = null;
-    let budget = seeded.length;
-    while (budget > 0) {
-      budget -= 1;
-      const resume = cursor;
-      const queues = await caller().operations.queues({
-        limit: 2,
-        ...(resume === null
-          ? {}
-          : { after: { unacceptedWorkflowStarts: resume } }),
-      });
-      seen.push(...queues.unacceptedWorkflowStarts.map((row) => row.requestId));
-      cursor = queues.pages.unacceptedWorkflowStarts.cursor;
-      if (!queues.pages.unacceptedWorkflowStarts.hasMore) {
-        expect(cursor).toBeNull();
-        break;
-      }
-      expect(cursor).not.toBeNull();
-    }
+    const seen = await pageThroughQueue(
+      "unacceptedWorkflowStarts",
+      seeded.length,
+      (queues) => queues.unacceptedWorkflowStarts.map((row) => row.requestId),
+    );
 
     // Every seeded request reached exactly once, in the read's own tie-break
     // order (request key ascending within the shared instant).
