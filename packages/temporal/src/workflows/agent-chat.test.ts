@@ -38,6 +38,7 @@ import {
   runAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
 import {
+  bindAgentChat,
   continueAgentChat,
   listAgentChats,
   getAgentChat,
@@ -303,6 +304,21 @@ async function testFreshCatalogRecovery(): Promise<void> {
     ).rejects.toThrow("immutable configuration");
     const recovered = await getAgentChat(client, CONFIG.chatId);
     expect(recovered?.config).toEqual(CONFIG);
+    const recoveredBinding = {
+      kind: "discord" as const,
+      channelId: "recovered-channel",
+    };
+    await bindAgentChat(
+      client,
+      recoveredBinding,
+      CONFIG.chatId,
+      "2026-09-14T16:00:30.000Z",
+    );
+    const resolvedRecovered = await resolveAgentChatBinding(
+      client,
+      recoveredBinding,
+    );
+    expect(resolvedRecovered?.config).toEqual(CONFIG);
     const result = await continueAgentChat({
       client,
       chatId: CONFIG.chatId,
