@@ -17,7 +17,13 @@ import {
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { settleBettingForMatch } from "#src/betting/settle.ts";
+import {
+  closeAndSettleBettingForMatch,
+  settleBettingForMatch,
+} from "#src/betting/settle.ts";
+import { announcingSettlementSink } from "#src/betting/notify/announcement-sink.ts";
+import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
 import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
@@ -1191,5 +1197,80 @@ describe("reconcileBucksBalances", () => {
         message: expect.stringContaining("does not match the pool result"),
       }),
     );
+  });
+});
+
+describe("the announcement instruction a settlement records", () => {
+  test("is written with the settling transaction's own handle", async () => {
+    // Proven by BEHAVIOUR rather than by identity: the Prisma transaction
+    // client is a proxy and re-extends, so comparing it to the ambient client
+    // tells you nothing. What does tell you is whether the write survives a
+    // rollback. This sink records for real and then throws, so the settling
+    // transaction aborts after the row was written.
+    //
+    // Inside the transaction, the row goes back with it and nothing survives.
+    // Written through the ambient client it would have committed on its own,
+    // leaving an instruction to announce a settlement that never happened.
+    await makeBalancedPool(10);
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: async (handle, item) => {
+          await recordSettlementAnnouncementItem(handle, {
+            matchId: RiotMatchIdSchema.parse(MATCH_ID),
+            item,
+          });
+          throw new Error("the settlement failed after recording");
+        },
+      }),
+    ).resolves.toMatchObject({ settlements: [] });
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: MATCH_ID },
+      }),
+    ).toEqual([]);
+  });
+
+  test("records exactly one instruction per settled pool", async () => {
+    await makeBalancedPool(10);
+    const recorded: { family: string; itemKey: string }[] = [];
+
+    const { settlements } = await closeAndSettleBettingForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: (_handle, item) => {
+        recorded.push({ family: item.family, itemKey: item.itemKey });
+        return Promise.resolve();
+      },
+    });
+
+    expect(settlements).toHaveLength(1);
+    expect(recorded).toEqual([
+      { family: "settlement", itemKey: settlements[0]?.serverId },
+    ]);
+  });
+
+  test("a settled pool always leaves its instruction behind", async () => {
+    // The pair of the first test: when the settlement DOES commit, so does
+    // the instruction, in the same transaction.
+    await makeBalancedPool(10);
+
+    const { settlements } = await closeAndSettleBettingForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: async (handle, item) => {
+        await recordSettlementAnnouncementItem(handle, {
+          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          item,
+        });
+      },
+    });
+
+    expect(settlements).toHaveLength(1);
+    const stored = await db.matchSettlementAnnouncement.findMany({
+      where: { riotMatchId: MATCH_ID },
+    });
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.family).toBe("settlement");
   });
 });

@@ -50,6 +50,9 @@ import {
   type TargetSpec,
 } from "#src/betting/dares/dare-integration-fixtures.ts";
 import { settleDaresForMatch } from "#src/betting/dares/settlement/dare-settle.ts";
+import { announcingSettlementSink } from "#src/betting/notify/announcement-sink.ts";
+import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { DarePartialSettlementError } from "#src/betting/dares/settlement/dare-settle-shared.ts";
 import {
   abandonExpiredDareProposals,
@@ -349,6 +352,74 @@ describe("contributions", () => {
       refundableBucksHeld(tx, account.id),
     );
     expect(releasedHeld).toBe(0n);
+  });
+});
+
+/** Where a settlement's announcement instruction is written, and when. */
+describe("dare announcement instructions", () => {
+  test("a Dare's announcement instruction is written with the settling transaction", async () => {
+    // Proven by BEHAVIOUR, not by comparing client identities: the Prisma
+    // transaction client is a proxy that re-extends, so identity says nothing.
+    // This sink records for real and then throws, aborting the settling
+    // transaction after the row was written. Inside the transaction the row
+    // goes back with it; written through the ambient client it would have
+    // committed on its own, leaving an instruction to announce a Dare
+    // resolution that was rolled back.
+    const dareId = await makeActive({ horizonKind: "next_game", amount: 5 });
+
+    await expect(
+      settleDaresForMatch(
+        winningMatch(ONE_TARGET),
+        db,
+        new Date(GAME_END + 1000),
+        {
+          ...announcingSettlementSink,
+          recordAnnouncementItem: async (handle, item) => {
+            await recordSettlementAnnouncementItem(handle, {
+              matchId: RiotMatchIdSchema.parse("NA1_9500"),
+              item,
+            });
+            throw new Error("the Dare settlement failed after recording");
+          },
+        },
+      ),
+    ).rejects.toThrow();
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: "NA1_9500" },
+      }),
+    ).toEqual([]);
+    // And the Dare itself is untouched, which is what makes the rollback the
+    // right outcome rather than a lost settlement.
+    expect(await dareState(dareId)).toBe("active");
+  });
+
+  test("a settled Dare leaves its instruction behind", async () => {
+    // The pair: when the settlement commits, so does the instruction.
+    const dareId = await makeActive({ horizonKind: "next_game", amount: 5 });
+
+    await settleDaresForMatch(
+      winningMatch(ONE_TARGET),
+      db,
+      new Date(GAME_END + 1000),
+      {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: async (handle, item) => {
+          await recordSettlementAnnouncementItem(handle, {
+            matchId: RiotMatchIdSchema.parse("NA1_9501"),
+            item,
+          });
+        },
+      },
+    );
+
+    expect(await dareState(dareId)).toBe("achieved");
+    const stored = await db.matchSettlementAnnouncement.findMany({
+      where: { riotMatchId: "NA1_9501" },
+    });
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.family).toBe("dare-summary");
   });
 
   test("a contribution racing settlement either lands in the pot or is too late", async () => {

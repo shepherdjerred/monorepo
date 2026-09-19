@@ -20,16 +20,35 @@ import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-s
  * one-shot and a retry can never reproduce them.
  */
 
+/** Which sink each settlement family was handed, in call order. */
+type HandedSink = { family: string; sink: unknown };
+const handed: HandedSink[] = vi.hoisted(() => []);
+
 const stubs = vi.hoisted(() => ({
   closeBettingWindowsForMatch: vi.fn(() => Promise.resolve([])),
-  closeAndSettleBettingForMatch: vi.fn(() =>
-    Promise.resolve({ closures: [], settlements: [] }),
+  closeAndSettleBettingForMatch: vi.fn(
+    (
+      _match: unknown,
+      _db: unknown,
+      sink: unknown,
+    ): Promise<{ closures: unknown[]; settlements: unknown[] }> => {
+      handed.push({ family: "settlement", sink });
+      return Promise.resolve({ closures: [], settlements: [] });
+    },
   ),
-  settleParlaysForMatch: vi.fn(() => Promise.resolve([])),
+  settleParlaysForMatch: vi.fn((): Promise<unknown[]> => Promise.resolve([])),
   awardBucksForMatch: vi.fn(() => Promise.resolve([])),
   settleDaresV2ForMatch: vi.fn(() => Promise.resolve(undefined)),
-  settleDaresForMatch: vi.fn((): Promise<DareSettlementSummary[]> =>
-    Promise.resolve([]),
+  settleDaresForMatch: vi.fn(
+    (
+      _match: unknown,
+      _db: unknown,
+      _now: unknown,
+      sink: unknown,
+    ): Promise<DareSettlementSummary[]> => {
+      handed.push({ family: "dare", sink });
+      return Promise.resolve([]);
+    },
   ),
   deliverDareSummaries: vi.fn(
     (_summaries: readonly DareSettlementSummary[], _db?: unknown) =>
@@ -136,6 +155,7 @@ function summary(dareId: number): DareSettlementSummary {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  handed.length = 0;
 });
 
 describe("v1 on the partial-settlement path", () => {
@@ -237,5 +257,53 @@ describe("a sink for a match owed no public delivery", () => {
 
     const dependencies = stubs.refreshPendingDareV2Callouts.mock.calls[0]?.[0];
     expect(dependencies?.mayPost?.()).toBe(true);
+  });
+});
+
+describe("v1 on the settlement and parlay paths", () => {
+  test("still receives each family's summaries, and records nothing", async () => {
+    // The sink now reaches inside both families' transactions. v1's sink
+    // records nothing — it announces from this call stack — so what
+    // `settleAndAwardBucks` returns must be exactly what it returned before,
+    // and no recovery instruction may be written on v1's behalf.
+    const settlement = {
+      matchId: "NA1_7001",
+      serverId: "guild-one",
+    };
+    const parlay = { matchId: "NA1_7001", serverId: "guild-two" };
+    stubs.closeAndSettleBettingForMatch.mockResolvedValueOnce({
+      closures: [],
+      settlements: [settlement],
+    });
+    stubs.settleParlaysForMatch.mockResolvedValueOnce([parlay]);
+    stubs.settleDaresForMatch.mockResolvedValueOnce([]);
+
+    const result = await settleAndAwardBucks(MATCH);
+
+    expect(result.settlements).toEqual([settlement]);
+    expect(result.parlaySettlements).toEqual([parlay]);
+    expect(announcingSettlementSink.mayPostDareCallout()).toBe(true);
+  });
+
+  test("hands the same sink to every family", async () => {
+    // One sink for the whole settlement, so a family cannot be threaded with
+    // a different answer than its neighbours — which is how a bypass is born.
+    // No per-call overrides here: each family's default stub records the sink
+    // it was handed, and an override would silence one of them.
+    await settleAndAwardBucks(MATCH, undefined, {
+      announcementSink: silentSettlementSink,
+    });
+
+    // Three families, one sink: a family threaded with a different answer
+    // than its neighbours is how a bypass is born.
+    // Parlay is not threaded yet and so records nothing; the families that
+    // ARE threaded must all have been handed the same sink.
+    expect(handed.map((entry) => entry.family).toSorted()).toEqual([
+      "dare",
+      "settlement",
+    ]);
+    expect(handed.every((entry) => entry.sink === silentSettlementSink)).toBe(
+      true,
+    );
   });
 });

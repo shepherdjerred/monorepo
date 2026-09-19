@@ -23,7 +23,7 @@ import {
 } from "#src/betting/settlement/settlement-dm.ts";
 import { shortTeamName } from "#src/betting/team.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";

@@ -14,7 +14,7 @@ import {
   prematchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { BucksPoolTotalSchema, RiotTeamIdSchema } from "@scout-for-lol/data";
 
 /**
@@ -570,6 +570,79 @@ describe("a settlement killed before its receipt", () => {
     expect(minted[0]?.intent.kind).toBe("dare-summary");
     // The same Dare, not merely some Dare.
     expect(recovered.dareSummaries).toEqual([settled]);
+  });
+
+  test("recovers a settlement recap the same way", async () => {
+    // Same shape as the Dare case, for the settlement family: the pool
+    // settled, its instruction committed with it, nothing downstream ran.
+    await observe(MATCH, "live");
+    prepared.kind = "message";
+    const settled = {
+      matchId: MATCH,
+      serverId: GUILD,
+      winningTeamId: undefined,
+      voidReason: undefined,
+      winnersPool: BucksPoolTotalSchema.parse(0),
+      losersPool: BucksPoolTotalSchema.parse(0),
+      houseCut: BucksPoolTotalSchema.parse(0),
+      bets: [],
+    };
+    await prisma.$transaction(async (tx) => {
+      await recordSettlementAnnouncementItem(tx, {
+        matchId: MATCH,
+        item: {
+          family: "settlement",
+          itemKey: GUILD,
+          payload: settled,
+        },
+      });
+    });
+
+    const recovered = recoveredAnnouncementsOf(
+      await listSettlementAnnouncementItems(prisma, { matchId: MATCH }),
+    );
+    await mintSettlementIntentsV2(prisma, {
+      matchId: MATCH,
+      announcements: recovered.settlements,
+      gameCreation: GAME_CREATED_AT,
+      createdAt: new Date("2026-09-19T10:00:00.000Z"),
+    });
+
+    const minted = await listIntentsForMatch(prisma, { matchId: MATCH });
+    expect(minted).toHaveLength(1);
+    expect(minted[0]?.intent.kind).toBe("settlement");
+    expect(recovered.settlements[0]?.summary).toEqual(settled);
+  });
+
+  test("recovers a parlay whose pool settled on an earlier tick", async () => {
+    // The parlay family, and deliberately the case with no settlement beside
+    // it: the fold is what carries it, so recovery must go through the fold
+    // rather than walking the stored items.
+    await observe(MATCH, "live");
+    prepared.kind = "message";
+    const parlay = {
+      matchId: MATCH,
+      serverId: GUILD,
+      yesResult: true,
+      voidReason: undefined,
+      legs: [],
+      messageRefs: [{ channelId: "c9", messageId: "m9" }],
+      bets: [],
+    };
+    await prisma.$transaction(async (tx) => {
+      await recordSettlementAnnouncementItem(tx, {
+        matchId: MATCH,
+        item: { family: "parlay", itemKey: GUILD, payload: parlay },
+      });
+    });
+
+    const recovered = recoveredAnnouncementsOf(
+      await listSettlementAnnouncementItems(prisma, { matchId: MATCH }),
+    );
+
+    // One announcement, carrying the parlay, with no settlement of its own.
+    expect(recovered.settlements).toHaveLength(1);
+    expect(recovered.settlements[0]?.parlay).toEqual(parlay);
   });
 
   test("an instruction cannot survive a settlement that rolled back", async () => {

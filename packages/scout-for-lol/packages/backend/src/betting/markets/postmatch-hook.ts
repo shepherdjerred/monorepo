@@ -4,10 +4,8 @@ import {
   awardBucksForMatch,
   type EarnedAward,
 } from "#src/betting/accounts/earnings.ts";
-import {
-  closeAndSettleBettingForMatch,
-  type SettlementSummary,
-} from "#src/betting/settle.ts";
+import { closeAndSettleBettingForMatch } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import {
   settleParlaysForMatch,
   type ParlaySettlementSummary,
@@ -119,7 +117,11 @@ export async function settleAndAwardBucks(
     matchData.metadata.matchId,
     prismaClient,
   );
-  const retry = await closeAndSettleBettingForMatch(matchData, prismaClient);
+  const retry = await closeAndSettleBettingForMatch(
+    matchData,
+    prismaClient,
+    sink,
+  );
   closures.push(...retry.closures);
   const parlaySettlements = await settleParlaysForMatch(
     matchData,

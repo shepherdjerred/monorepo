@@ -6,7 +6,7 @@ import {
 } from "@scout-for-lol/data";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";

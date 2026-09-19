@@ -123,3 +123,26 @@ export const silentSettlementSink: SettlementAnnouncementSink = {
   // Nothing may be announced, so nothing is recorded to announce later.
   recordAnnouncementItem: () => Promise.resolve(),
 };
+
+/**
+ * Record one announcement instruction through a sink, with the caller's own
+ * transaction handle.
+ *
+ * A one-liner at the call site on purpose: these calls sit inside settlement
+ * transactions that are already long, and the reasoning belongs with
+ * {@link SettlementAnnouncementSink.recordAnnouncementItem} rather than
+ * repeated at each of them.
+ */
+export async function recordAnnouncement(input: {
+  sink: SettlementAnnouncementSink;
+  db: Db;
+  family: SettlementAnnouncementFamily;
+  itemKey: string;
+  payload: unknown;
+}): Promise<void> {
+  await input.sink.recordAnnouncementItem(input.db, {
+    family: input.family,
+    itemKey: input.itemKey,
+    payload: input.payload,
+  });
+}

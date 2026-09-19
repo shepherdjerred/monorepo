@@ -27,7 +27,7 @@ import type {
   ParlaySettlementBet,
   ParlaySettlementSummary,
 } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 
 /**
