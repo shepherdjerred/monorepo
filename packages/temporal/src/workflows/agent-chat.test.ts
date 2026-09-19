@@ -850,14 +850,26 @@ describe("agent chat catalog and schedules", () => {
         args: [
           binding,
           CONFIG.chatId,
-          { updatedAt: "2026-09-14T16:06:00.000Z", sourceSequence: 100 },
+          { updatedAt: "2026-09-14T15:00:00.000Z", sourceSequence: 100 },
         ],
       });
+      const migratedSequenceSelection = await handle.query(
+        resolveAgentChatBindingQuery,
+        binding,
+      );
+      expect(migratedSequenceSelection?.config.chatId).toBe(CONFIG.chatId);
       await handle.executeUpdate(bindAgentChatUpdate, {
         args: [
           binding,
           secondEntry.config.chatId,
           { updatedAt: "2026-09-14T16:02:00.000Z", sourceSequence: 101 },
+        ],
+      });
+      await handle.executeUpdate(bindAgentChatUpdate, {
+        args: [
+          binding,
+          CONFIG.chatId,
+          { updatedAt: "2027-09-14T16:02:00.000Z" },
         ],
       });
       await handle.executeUpdate(recordAgentChatTurnUpdate, {
