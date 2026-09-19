@@ -123,6 +123,7 @@ export async function* handshakeResponse(input: {
         throw new Error("Codex resumed a different provider session");
       }
       yield { type: "thread.started", thread_id: input.state.threadId };
+      input.run.signal.throwIfAborted();
       // A lost turn/start response is ambiguous; mark generation before submitting it.
       input.onExecutionState(false);
       await input.send({

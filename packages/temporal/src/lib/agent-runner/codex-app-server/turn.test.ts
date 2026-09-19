@@ -20,6 +20,7 @@ async function withProvider(
     events: ReturnType<typeof runSubscriptionCodexEvents>;
     home: string;
     onExecutionState: ReturnType<typeof vi.fn>;
+    abort: () => void;
   }) => Promise<void>,
   resume = false,
   turnBudgetKind: "tool-steps" | "turns" = "tool-steps",
@@ -33,6 +34,7 @@ async function withProvider(
       id_token: "test-id-token",
     },
   });
+  const controller = new AbortController();
   const run: RunCodexAgentTurnInput = {
     service: "temporal",
     callSite: "agent-chat",
@@ -42,7 +44,7 @@ async function withProvider(
     cwd: home,
     env: {},
     auth: { kind: "chatgpt-subscription", authJson },
-    signal: new AbortController().signal,
+    signal: controller.signal,
     turnBudgetKind,
     sandboxPolicy: {
       sandboxMode: "workspace-write",
@@ -59,6 +61,7 @@ async function withProvider(
     await verify({
       home,
       onExecutionState,
+      abort: () => controller.abort(),
       events: runSubscriptionCodexEvents({
         excludedKeys: [],
         run,
@@ -84,6 +87,28 @@ async function withProvider(
 }
 
 describe("subscription App Server protocol", () => {
+  test("cancels between thread creation and turn submission", async () => {
+    await withProvider(
+      "success",
+      async ({ events, onExecutionState, abort, home }) => {
+        const iterator = events[Symbol.asyncIterator]();
+        await expect(iterator.next()).resolves.toEqual({
+          done: false,
+          value: { type: "thread.started", thread_id: "test-session" },
+        });
+
+        abort();
+        await expect(iterator.next()).rejects.toThrow(
+          "The operation was aborted",
+        );
+        expect(onExecutionState).not.toHaveBeenCalled();
+        expect(await Bun.file(path.join(home, "turn-submitted")).exists()).toBe(
+          false,
+        );
+      },
+    );
+  });
+
   test("submits the turn before a start-event observer can fail", async () => {
     await withProvider("success", async ({ events, home }) => {
       for await (const event of events) {
