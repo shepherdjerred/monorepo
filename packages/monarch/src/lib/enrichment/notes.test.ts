@@ -165,6 +165,23 @@ function enriched(
   };
 }
 
+describe("planEnrichmentNotes and Monarch's NFKC normalization", () => {
+  test("does not rewrite a note the server stored in a normalized form", () => {
+    // Monarch returns "Ryzen\u{2122}" as "RyzenTM" and a non-breaking hyphen
+    // as a plain one. Comparing raw text finds a difference every run and
+    // rewrites the same notes forever.
+    const items = [
+      { title: "AMD Ryzen\u{2122} 9 Multi\u{2011}Gig", price: 511.01 },
+    ];
+    const sent = buildEnrichmentNote({ items, enrichmentSource: "amazon" });
+    expect(sent).toContain("\u{2122}");
+
+    const asStored = (sent ?? "").normalize("NFKC");
+    expect(asStored).not.toBe(sent);
+    expect(planEnrichmentNotes([enriched(asStored, items)])).toHaveLength(0);
+  });
+});
+
 describe("planEnrichmentNotes", () => {
   test("plans a note for an unnoted transaction", () => {
     const planned = planEnrichmentNotes([enriched("")]);

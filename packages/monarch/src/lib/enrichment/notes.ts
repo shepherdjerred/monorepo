@@ -151,6 +151,14 @@ export type PlannedNote = {
 
 const EMAIL_NOTE_MARKER = `${NOTE_PREFIX}Email: `;
 
+// Monarch stores a note in NFKC, so what comes back is not always what was
+// sent: "Ryzen™" returns as "RyzenTM" and a non-breaking hyphen as a plain
+// one. Comparing the raw text finds a difference on every run and rewrites the
+// same notes forever — 12 of them, silently, against the live API.
+function sameNote(a: string, b: string): boolean {
+  return a.normalize("NFKC") === b.normalize("NFKC");
+}
+
 export function planEnrichmentNotes(
   enriched: EnrichedTransaction[],
 ): PlannedNote[] {
@@ -163,7 +171,7 @@ export function planEnrichmentNotes(
     const existing = e.transaction.notes;
     // A hand-written note is the owner's and is never touched.
     if (existing !== "" && !existing.startsWith(NOTE_PREFIX)) continue;
-    if (existing === note) continue;
+    if (sameNote(existing, note)) continue;
 
     planned.push({
       transactionId: e.transaction.id,
