@@ -1,6 +1,7 @@
 import { defineQuery, defineUpdate } from "@temporalio/workflow";
 import type {
   AgentChatBinding,
+  AgentChatBindingUpdate,
   AgentChatBindingUpdateInput,
   AgentChatCatalogEntry,
   AgentChatCatalogState,
