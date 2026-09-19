@@ -183,3 +183,40 @@ describe("release chain", () => {
     });
   });
 });
+
+/**
+ * Pins the release graph against the Buildkite pipeline it replaces.
+ *
+ * Transcribed edges are easy to drop silently, and a missing one does not
+ * fail -- it just lets a lane run too early. Two were in fact missing when
+ * this was first written: helm-push must wait on both toolchain refreshes
+ * because it embeds their pins, and argocd-sync must wait on the OpenTofu
+ * applies so it reconciles against the cluster the charts were built for.
+ */
+describe("release graph matches the pipeline it replaces", () => {
+  const expectedEdges: Readonly<Record<string, readonly string[]>> = {
+    "helm-push": [
+      "homelab-release-admission",
+      "images",
+      "ci-base-refresh",
+      "ci-playwright-refresh",
+    ],
+    "argocd-sync": [
+      "homelab-release-admission",
+      "images",
+      "helm-push",
+      "tofu-apply-arr",
+    ],
+    "tofu-apply-seaweedfs": ["homelab-release-admission", "helm-push"],
+    "tofu-apply-cloudflare": ["homelab-release-admission", "argocd-sync"],
+    "version-commit-back": ["images"],
+    "ci-base-refresh": ["verify"],
+    "ci-playwright-refresh": ["verify"],
+  };
+
+  for (const [key, expected] of Object.entries(expectedEdges)) {
+    test(`${key} depends on exactly its pipeline edges`, () => {
+      expect(new Set(step(key)?.dependsOn)).toEqual(new Set(expected));
+    });
+  }
+});
