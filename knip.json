@@ -230,7 +230,7 @@
       "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
     },
     "packages/monarch": {
-      "entry": ["src/**/*.test.ts", "src/lib/*/classify.ts", "scripts/**/*.ts"],
+      "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/stocks-sjer-red": {

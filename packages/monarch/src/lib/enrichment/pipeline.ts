@@ -80,6 +80,31 @@ export function unreachableCounts(
   return counts;
 }
 
+// One source of truth for the shape. Spelling these keys out a second time is
+// how the vendor list drifts, and every new vendor has to touch enough places
+// already.
+function zeroRate(): { matched: number; total: number } {
+  return { matched: 0, total: 0 };
+}
+
+export function emptyEnrichmentStats(): EnrichmentStats {
+  return {
+    amazon: zeroRate(),
+    venmo: zeroRate(),
+    bilt: zeroRate(),
+    usaa: zeroRate(),
+    scl: zeroRate(),
+    apple: zeroRate(),
+    costco: zeroRate(),
+    paystub: zeroRate(),
+    equity: zeroRate(),
+    loan: zeroRate(),
+    tier1Count: 0,
+    tier2Count: 0,
+    tier3Count: 0,
+  };
+}
+
 export type EnrichmentResult = {
   enrichedTransactions: EnrichedTransaction[];
   stats: EnrichmentStats;
@@ -284,21 +309,7 @@ export async function runEnrichmentPipeline(
   knowledgeBase: Map<string, MerchantKnowledge>,
   categories: MonarchCategory[],
 ): Promise<EnrichmentResult> {
-  const stats: EnrichmentStats = {
-    amazon: { matched: 0, total: 0 },
-    venmo: { matched: 0, total: 0 },
-    bilt: { matched: 0, total: 0 },
-    usaa: { matched: 0, total: 0 },
-    scl: { matched: 0, total: 0 },
-    apple: { matched: 0, total: 0 },
-    costco: { matched: 0, total: 0 },
-    paystub: { matched: 0, total: 0 },
-    equity: { matched: 0, total: 0 },
-    loan: { matched: 0, total: 0 },
-    tier1Count: 0,
-    tier2Count: 0,
-    tier3Count: 0,
-  };
+  const stats = emptyEnrichmentStats();
 
   const allEnrichments = new Map<string, TransactionEnrichment>();
   // --skip-enrich routes every transaction through classification with no

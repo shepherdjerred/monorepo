@@ -91,10 +91,6 @@ export function latestVaultFile(
   return latest === undefined ? undefined : path.join(dir, latest);
 }
 
-export function latestVenmoCsv(): string | undefined {
-  return latestVaultFile(VENMO_DIR, "*Venmo*.csv");
-}
-
 // Every Venmo export in the vault. Each covers a fixed date range, so reading
 // only the newest silently drops whatever the earlier ones reach further back
 // to cover.

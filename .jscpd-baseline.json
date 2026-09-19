@@ -780,18 +780,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/monarch/src/lib/display.test.ts|packages/monarch/src/lib/enrichment/pipeline.ts": {
-      "clones": 1,
-      "tokens": 102
-    },
-    "packages/monarch/src/lib/scl/parser.ts|packages/monarch/src/lib/venmo/parser.ts": {
-      "clones": 1,
-      "tokens": 110
-    },
-    "packages/monarch/src/lib/usaa/classify.ts|packages/monarch/src/lib/usaa/enrich.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
     "packages/openrouter-broadcast-ingest/test/app.test.ts|packages/openrouter-broadcast-ingest/test/app.test.ts": {
       "clones": 1,
       "tokens": 71

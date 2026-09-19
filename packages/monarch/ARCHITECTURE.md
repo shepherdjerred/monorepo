@@ -129,7 +129,7 @@ Output modes:
 - **`--apply`**: Apply via Monarch API with optional `--interactive` per-transaction approval
 - **`--notes-only`**: Write enrichment notes and stop before any tier runs. No model is called, so no model credential is needed and no category is touched -- the mode for documenting history without re-litigating its categories.
 
-Notes written by the pipeline begin with a `🧾 ` marker so a re-run refreshes its own notes and never overwrites one written by hand. Email-derived notes share that namespace and are deliberately replaced by vendor enrichment (a scraped item list beats a model's one-liner); the count of replacements is logged so a run stays auditable.
+Notes written by the pipeline begin with a `🧾` marker and a space so a re-run refreshes its own notes and never overwrites one written by hand. Email-derived notes share that namespace and are deliberately replaced by vendor enrichment (a scraped item list beats a model's one-liner); the count of replacements is logged so a run stays auditable.
 
 Mutations use the local Monarch GraphQL client with cookie/CSRF session authentication, retry logic (3 attempts, exponential backoff), and a 500ms throttle between API calls.
 
