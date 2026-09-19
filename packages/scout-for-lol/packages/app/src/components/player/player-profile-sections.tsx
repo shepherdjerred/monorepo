@@ -323,8 +323,8 @@ export function MatchHistoryList(props: {
           key={entry.matchId}
           className={`flex flex-wrap items-center gap-3 rounded-md border p-3 ${
             entry.win
-              ? "border-scout-success bg-scout-success/10"
-              : "border-scout-danger bg-scout-danger/10"
+              ? "border-scout-success-fill bg-scout-success-fill/10"
+              : "border-scout-danger-fill bg-scout-danger-fill/10"
           }`}
         >
           <ChampionIcon championName={entry.championName} size="md" />

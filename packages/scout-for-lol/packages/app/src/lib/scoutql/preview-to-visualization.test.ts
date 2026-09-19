@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   type ReportAiPreviewSummary,
   UNGROUPED_LABEL_COLUMN_LABEL,
-  VisualizationSnapshotSchema,
 } from "@scout-for-lol/data";
+import { winRateByPatchChart } from "#src/lib/storybook/story-fixtures.ts";
 import {
   isChartablePreview,
   plottableMetricColumns,
@@ -100,44 +100,15 @@ describe("preview-to-visualization", () => {
   });
 
   test("preview-built metrics do not retain stale persisted chart metadata", () => {
-    const persisted = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-14T12:00:30.000Z",
-      kind: "LINE_CHART",
+    const persisted = winRateByPatchChart({
       title: "Win rate by patch",
-      temporal: {
-        window: { kind: "relative", days: 30 },
-        bucket: "patch",
-        timezone: "UTC",
-      },
-      bucket: "patch",
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-        options: null,
-      },
-      series: [
+      points: [
         {
-          id: "win_rate",
-          label: "Win rate",
-          metric: "win_rate",
-          displayKind: "percent",
-          additive: false,
-          points: [
-            {
-              key: "26.15",
-              label: "26.15",
-              start: "2026-08-01T00:00:00.000Z",
-              end: "2026-08-14T00:00:00.000Z",
-              value: 0.54,
-              evidence: { sampleSize: 25 },
-            },
-          ],
+          patch: "26.15",
+          start: "2026-08-01T00:00:00.000Z",
+          end: "2026-08-14T00:00:00.000Z",
+          value: 0.54,
+          sampleSize: 25,
         },
       ],
       annotations: [

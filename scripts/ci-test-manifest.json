@@ -428,7 +428,8 @@
       "directory": "packages/scout-for-lol/packages/app",
       "steps": [
         {
-          "runner": "vitest"
+          "runner": "vitest",
+          "args": ["src"]
         }
       ]
     },

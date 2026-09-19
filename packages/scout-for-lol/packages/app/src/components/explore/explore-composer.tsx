@@ -275,46 +275,60 @@ export function ExploreComposer(props: {
           optionId={optionId}
           onSelect={choose}
         />
-        <form.AppField name="question">
-          {(field) => (
-            <field.TextareaField
-              id="explore-question"
-              label={<span className="sr-only">Question</span>}
-              fieldClassName="min-w-0 flex-1 py-1 !gap-0"
-              ref={textareaRef}
-              rows={1}
-              maxLength={2000}
-              className="max-h-[200px] !min-h-[24px] w-full !resize-none !border-0 !bg-transparent !p-0 text-sm sm:text-base leading-6 !shadow-none !outline-none focus:!border-0 focus:!outline-none focus:!ring-0 focus-visible:!ring-0"
-              onKeyDown={(event) => {
-                // Committing an IME candidate fires Enter with isComposing set;
-                // sending then would submit half-converted text.
-                if (event.nativeEvent.isComposing) return;
-                if (handlePickerKey(event)) return;
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  event.currentTarget.form?.requestSubmit();
-                }
-              }}
-              onKeyUp={(event) => {
-                syncCaret(event.currentTarget);
-              }}
-              onClick={(event) => {
-                syncCaret(event.currentTarget);
-              }}
-              role="combobox"
-              aria-expanded={open && candidates.length > 0}
-              aria-controls={listId}
-              aria-autocomplete="list"
-              {...(open && candidates.length > 0
-                ? { "aria-activedescendant": optionId(activeIndex) }
-                : {})}
-              placeholder="Ask a question about match data…"
-              autoComplete="off"
-              disabled={active || disabled}
-              required
-            />
-          )}
-        </form.AppField>
+        {/*
+          The combobox wrapper, rather than the textarea itself: ARIA allows
+          `role="combobox"` on a single-line input, not on a textarea, and
+          `aria-expanded` is not supported on the textarea's implicit `textbox`
+          either. Naming the container instead keeps the whole pattern legal —
+          the container owns the expanded state and points at the listbox,
+          while the textarea keeps the two attributes a textbox does support,
+          `aria-autocomplete` and `aria-activedescendant`.
+        */}
+        <div
+          className="min-w-0 flex-1"
+          role="combobox"
+          aria-label="Question"
+          aria-expanded={open && candidates.length > 0}
+          aria-controls={listId}
+        >
+          <form.AppField name="question">
+            {(field) => (
+              <field.TextareaField
+                id="explore-question"
+                label={<span className="sr-only">Question</span>}
+                fieldClassName="min-w-0 py-1 !gap-0"
+                ref={textareaRef}
+                rows={1}
+                maxLength={2000}
+                className="max-h-[200px] !min-h-[24px] w-full !resize-none !border-0 !bg-transparent !p-0 text-sm sm:text-base leading-6 !shadow-none !outline-none focus:!border-0 focus:!outline-none focus:!ring-0 focus-visible:!ring-0"
+                onKeyDown={(event) => {
+                  // Committing an IME candidate fires Enter with isComposing
+                  // set; sending then would submit half-converted text.
+                  if (event.nativeEvent.isComposing) return;
+                  if (handlePickerKey(event)) return;
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
+                onKeyUp={(event) => {
+                  syncCaret(event.currentTarget);
+                }}
+                onClick={(event) => {
+                  syncCaret(event.currentTarget);
+                }}
+                aria-autocomplete="list"
+                {...(open && candidates.length > 0
+                  ? { "aria-activedescendant": optionId(activeIndex) }
+                  : {})}
+                placeholder="Ask a question about match data…"
+                autoComplete="off"
+                disabled={active || disabled}
+                required
+              />
+            )}
+          </form.AppField>
+        </div>
 
         <div className="shrink-0 pb-0.5">
           {active ? (

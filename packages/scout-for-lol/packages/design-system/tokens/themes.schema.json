@@ -6,8 +6,12 @@
   "additionalProperties": false,
   "required": ["$schema", "version", "themes"],
   "properties": {
-    "$schema": { "const": "./themes.schema.json" },
-    "version": { "const": 1 },
+    "$schema": {
+      "const": "./themes.schema.json"
+    },
+    "version": {
+      "const": 1
+    },
     "themes": {
       "type": "object",
       "additionalProperties": false,
@@ -18,10 +22,18 @@
         "classic-dark"
       ],
       "properties": {
-        "modern-light": { "$ref": "#/$defs/theme" },
-        "modern-dark": { "$ref": "#/$defs/theme" },
-        "classic-light": { "$ref": "#/$defs/theme" },
-        "classic-dark": { "$ref": "#/$defs/theme" }
+        "modern-light": {
+          "$ref": "#/$defs/theme"
+        },
+        "modern-dark": {
+          "$ref": "#/$defs/theme"
+        },
+        "classic-light": {
+          "$ref": "#/$defs/theme"
+        },
+        "classic-dark": {
+          "$ref": "#/$defs/theme"
+        }
       }
     }
   },
@@ -55,10 +67,12 @@
             "focus",
             "success",
             "successText",
+            "successOnSurface",
             "warning",
             "warningText",
             "danger",
             "dangerText",
+            "dangerOnSurface",
             "info",
             "infoText",
             "overlay",
@@ -72,37 +86,105 @@
             "chart8"
           ],
           "properties": {
-            "canvas": { "$ref": "#/$defs/color" },
-            "surface": { "$ref": "#/$defs/color" },
-            "surfaceRaised": { "$ref": "#/$defs/color" },
-            "text": { "$ref": "#/$defs/color" },
-            "textMuted": { "$ref": "#/$defs/color" },
-            "primary": { "$ref": "#/$defs/color" },
-            "primaryText": { "$ref": "#/$defs/color" },
-            "accent": { "$ref": "#/$defs/color" },
-            "accentText": { "$ref": "#/$defs/color" },
-            "border": { "$ref": "#/$defs/color" },
-            "interactiveHover": { "$ref": "#/$defs/color" },
-            "interactiveActive": { "$ref": "#/$defs/color" },
-            "interactiveDisabled": { "$ref": "#/$defs/color" },
-            "focus": { "$ref": "#/$defs/color" },
-            "success": { "$ref": "#/$defs/color" },
-            "successText": { "$ref": "#/$defs/color" },
-            "warning": { "$ref": "#/$defs/color" },
-            "warningText": { "$ref": "#/$defs/color" },
-            "danger": { "$ref": "#/$defs/color" },
-            "dangerText": { "$ref": "#/$defs/color" },
-            "info": { "$ref": "#/$defs/color" },
-            "infoText": { "$ref": "#/$defs/color" },
-            "overlay": { "$ref": "#/$defs/color" },
-            "chart1": { "$ref": "#/$defs/color" },
-            "chart2": { "$ref": "#/$defs/color" },
-            "chart3": { "$ref": "#/$defs/color" },
-            "chart4": { "$ref": "#/$defs/color" },
-            "chart5": { "$ref": "#/$defs/color" },
-            "chart6": { "$ref": "#/$defs/color" },
-            "chart7": { "$ref": "#/$defs/color" },
-            "chart8": { "$ref": "#/$defs/color" }
+            "canvas": {
+              "$ref": "#/$defs/color"
+            },
+            "surface": {
+              "$ref": "#/$defs/color"
+            },
+            "surfaceRaised": {
+              "$ref": "#/$defs/color"
+            },
+            "text": {
+              "$ref": "#/$defs/color"
+            },
+            "textMuted": {
+              "$ref": "#/$defs/color"
+            },
+            "primary": {
+              "$ref": "#/$defs/color"
+            },
+            "primaryText": {
+              "$ref": "#/$defs/color"
+            },
+            "accent": {
+              "$ref": "#/$defs/color"
+            },
+            "accentText": {
+              "$ref": "#/$defs/color"
+            },
+            "border": {
+              "$ref": "#/$defs/color"
+            },
+            "interactiveHover": {
+              "$ref": "#/$defs/color"
+            },
+            "interactiveActive": {
+              "$ref": "#/$defs/color"
+            },
+            "interactiveDisabled": {
+              "$ref": "#/$defs/color"
+            },
+            "focus": {
+              "$ref": "#/$defs/color"
+            },
+            "success": {
+              "$ref": "#/$defs/color"
+            },
+            "successText": {
+              "$ref": "#/$defs/color"
+            },
+            "successOnSurface": {
+              "$ref": "#/$defs/color"
+            },
+            "warning": {
+              "$ref": "#/$defs/color"
+            },
+            "warningText": {
+              "$ref": "#/$defs/color"
+            },
+            "danger": {
+              "$ref": "#/$defs/color"
+            },
+            "dangerText": {
+              "$ref": "#/$defs/color"
+            },
+            "dangerOnSurface": {
+              "$ref": "#/$defs/color"
+            },
+            "info": {
+              "$ref": "#/$defs/color"
+            },
+            "infoText": {
+              "$ref": "#/$defs/color"
+            },
+            "overlay": {
+              "$ref": "#/$defs/color"
+            },
+            "chart1": {
+              "$ref": "#/$defs/color"
+            },
+            "chart2": {
+              "$ref": "#/$defs/color"
+            },
+            "chart3": {
+              "$ref": "#/$defs/color"
+            },
+            "chart4": {
+              "$ref": "#/$defs/color"
+            },
+            "chart5": {
+              "$ref": "#/$defs/color"
+            },
+            "chart6": {
+              "$ref": "#/$defs/color"
+            },
+            "chart7": {
+              "$ref": "#/$defs/color"
+            },
+            "chart8": {
+              "$ref": "#/$defs/color"
+            }
           }
         },
         "typography": {
@@ -110,9 +192,18 @@
           "additionalProperties": false,
           "required": ["display", "body", "mono"],
           "properties": {
-            "display": { "type": "string", "minLength": 1 },
-            "body": { "type": "string", "minLength": 1 },
-            "mono": { "type": "string", "minLength": 1 }
+            "display": {
+              "type": "string",
+              "minLength": 1
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mono": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         "shape": {
@@ -126,11 +217,21 @@
             "shadow"
           ],
           "properties": {
-            "radiusSmall": { "type": "string" },
-            "radiusMedium": { "type": "string" },
-            "radiusLarge": { "type": "string" },
-            "borderWidth": { "type": "string" },
-            "shadow": { "type": "string" }
+            "radiusSmall": {
+              "type": "string"
+            },
+            "radiusMedium": {
+              "type": "string"
+            },
+            "radiusLarge": {
+              "type": "string"
+            },
+            "borderWidth": {
+              "type": "string"
+            },
+            "shadow": {
+              "type": "string"
+            }
           }
         },
         "motion": {
@@ -138,9 +239,15 @@
           "additionalProperties": false,
           "required": ["durationFast", "durationNormal", "easing"],
           "properties": {
-            "durationFast": { "type": "string" },
-            "durationNormal": { "type": "string" },
-            "easing": { "type": "string" }
+            "durationFast": {
+              "type": "string"
+            },
+            "durationNormal": {
+              "type": "string"
+            },
+            "easing": {
+              "type": "string"
+            }
           }
         }
       }
