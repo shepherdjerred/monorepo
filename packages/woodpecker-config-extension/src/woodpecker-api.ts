@@ -20,6 +20,31 @@ const PipelineSummarySchema = z.looseObject({
 
 const PipelineListSchema = z.array(PipelineSummarySchema);
 
+/**
+ * A pipeline's detail view, which carries its individual workflows.
+ *
+ * Each generated step is its own workflow, so per-step outcomes are read from
+ * here rather than from the pipeline's overall status.
+ */
+/**
+ * Just enough of the list to address each pipeline's detail view.
+ *
+ * Deliberately narrower than PipelineSummarySchema: this path decides from
+ * per-workflow outcomes, so requiring an overall `status` it never reads would
+ * reject a perfectly valid response.
+ */
+const PipelineReferenceListSchema = z.array(
+  z.looseObject({ number: z.number() }),
+);
+
+const PipelineDetailSchema = z.looseObject({
+  commit: z.string(),
+  status: z.string(),
+  workflows: z
+    .array(z.looseObject({ name: z.string(), state: z.string() }))
+    .default([]),
+});
+
 export type WoodpeckerApiOptions = {
   readonly baseUrl: string;
   readonly token: string;
@@ -34,6 +59,78 @@ export type WoodpeckerApiOptions = {
  * nothing", which selects every lane. Returning a wrong-but-plausible base
  * would silently narrow CI instead.
  */
+async function getJson(
+  url: URL,
+  options: WoodpeckerApiOptions,
+): Promise<unknown> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const response = await fetchImpl(url, {
+    headers: { authorization: `Bearer ${options.token}` },
+  });
+  if (!response.ok) {
+    throw new Error(
+      `could not list Woodpecker pipelines (${response.status.toString()})`,
+    );
+  }
+  return response.json();
+}
+
+function pipelinesUrl(repoId: number, options: WoodpeckerApiOptions): URL {
+  return new URL(`/api/repos/${repoId.toString()}/pipelines`, options.baseUrl);
+}
+
+/**
+ * Newest commit on `branch` where every named workflow succeeded.
+ *
+ * Stricter than `lastSuccessfulCommit`, and deliberately so: the image lane's
+ * base must be a commit whose images were built, pushed, AND pinned, not
+ * merely one whose pipeline went green. A pipeline can pass overall with those
+ * workflows skipped, and treating such a commit as the base would make the
+ * next build believe images already exist for content that was never built.
+ *
+ * Returns undefined when no recent pipeline qualifies, which callers must read
+ * as "no base" -- building everything -- rather than as an error.
+ */
+export async function lastCommitWithSuccessfulWorkflows(
+  repoId: number,
+  branch: string,
+  workflowNames: readonly string[],
+  options: WoodpeckerApiOptions & { readonly scanLimit?: number },
+): Promise<string | undefined> {
+  const scanLimit = options.scanLimit ?? 20;
+  const listUrl = pipelinesUrl(repoId, options);
+  listUrl.searchParams.set("branch", branch);
+  listUrl.searchParams.set("event", "push");
+  listUrl.searchParams.set("perPage", scanLimit.toString());
+
+  const listed = PipelineReferenceListSchema.safeParse(
+    await getJson(listUrl, options),
+  );
+  if (!listed.success) {
+    throw new Error("unexpected Woodpecker pipeline list shape");
+  }
+
+  for (const summary of listed.data) {
+    const detailUrl = new URL(
+      `/api/repos/${repoId.toString()}/pipelines/${summary.number.toString()}`,
+      options.baseUrl,
+    );
+    const detail = PipelineDetailSchema.safeParse(
+      await getJson(detailUrl, options),
+    );
+    if (!detail.success) continue;
+    const succeeded = new Set(
+      detail.data.workflows
+        .filter((workflow) => workflow.state === "success")
+        .map((workflow) => workflow.name),
+    );
+    if (workflowNames.every((name) => succeeded.has(name))) {
+      return detail.data.commit;
+    }
+  }
+  return undefined;
+}
+
 export async function lastSuccessfulCommit(
   repoId: number,
   branch: string,
