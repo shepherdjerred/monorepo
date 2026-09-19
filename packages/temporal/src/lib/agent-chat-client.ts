@@ -116,9 +116,14 @@ export async function bindAgentChat(
   updatedAt: string,
 ): Promise<AgentChatCatalogEntry> {
   const binding = AgentChatBindingSchema.parse(rawBinding);
-  if ((await getAgentChat(client, chatId)) === undefined) {
+  const entry = await getAgentChat(client, chatId);
+  if (entry === undefined) {
     throw new AgentChatNotFoundError(chatId);
   }
+  await client.executeUpdateWithStart(registerAgentChatUpdate, {
+    args: [entry],
+    startWorkflowOperation: catalogStart(),
+  });
   const updateId = createHash("sha256")
     .update(JSON.stringify({ binding, chatId, updatedAt }))
     .digest("hex");
