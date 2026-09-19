@@ -352,6 +352,25 @@ describe("Discord channel conversations", () => {
     expect(content).toContain("more.");
   });
 
+  it("orders chats by timestamp instant across UTC offsets", () => {
+    const content = formatDiscordChatList([
+      {
+        ...ENTRY,
+        config: { ...ENTRY.config, chatId: "later", title: "Later chat" },
+        updatedAt: "2026-09-14T23:00:00-10:00",
+      },
+      {
+        ...ENTRY,
+        config: { ...ENTRY.config, chatId: "earlier", title: "Earlier chat" },
+        updatedAt: "2026-09-15T01:00:00+10:00",
+      },
+    ]);
+
+    expect(content.indexOf("Later chat")).toBeLessThan(
+      content.indexOf("Earlier chat"),
+    );
+  });
+
   it("denies non-owners even when Discord exposes the command", async () => {
     const deps = operations();
     const fake = fakeInteraction({

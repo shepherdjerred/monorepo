@@ -297,7 +297,13 @@ export function formatDiscordChatList(
   entries: readonly AgentChatCatalogEntry[],
 ): string {
   const selected = entries
-    .toSorted((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+    .toSorted((left, right) => {
+      const chronological =
+        Date.parse(right.updatedAt) - Date.parse(left.updatedAt);
+      return chronological === 0
+        ? left.config.chatId.localeCompare(right.config.chatId)
+        : chronological;
+    })
     .slice(0, 20);
   if (selected.length === 0) return "No durable agent chats exist yet.";
 

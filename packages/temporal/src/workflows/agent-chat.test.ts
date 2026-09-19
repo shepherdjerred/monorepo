@@ -259,6 +259,48 @@ test("settles a completed turn after its catalog entry was evicted", () => {
   expect(state.retiredChatIds).not.toContain(CONFIG.chatId);
 });
 
+test("repairs an evicted chat and binds it in one catalog mutation", () => {
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: Array.from(
+      { length: MAX_AGENT_CHAT_CATALOG_ENTRIES },
+      (_, index) => ({
+        schemaVersion: 1 as const,
+        config: {
+          ...CONFIG,
+          chatId: `resident-${String(index)}`,
+          createdAt: new Date(Date.UTC(2027, 0, 1) + index).toISOString(),
+        },
+        updatedAt: new Date(Date.UTC(2027, 0, 1) + index).toISOString(),
+        turnCount: 0,
+      }),
+    ),
+    bindings: [],
+    retiredChatIds: [CONFIG.chatId],
+  };
+  const binding = { kind: "discord" as const, channelId: "recovered-channel" };
+
+  const restored = registerAndBindAgentChatCatalogEntry(
+    state,
+    {
+      schemaVersion: 1,
+      config: CONFIG,
+      updatedAt: CONFIG.createdAt,
+      turnCount: 0,
+    },
+    binding,
+    "2027-02-01T00:00:00.000Z",
+  );
+
+  expect(restored.config.chatId).toBe(CONFIG.chatId);
+  expect(state.entries).toContainEqual(restored);
+  expect(state.bindings).toContainEqual({
+    binding,
+    chatId: CONFIG.chatId,
+    updatedAt: "2027-02-01T00:00:00.000Z",
+  });
+});
+
 async function testFreshCatalogRecovery(): Promise<void> {
   await withWorkers(async (environment) => {
     const client = environment.client.workflow;

@@ -35,10 +35,10 @@ import {
   type AgentChatReceiptInput,
 } from "#shared/agent/agent-chat-receipt.ts";
 import {
-  bindAgentChatUpdate,
   getAgentChatCatalogEntryQuery,
   getAgentChatStateQuery,
   listAgentChatsQuery,
+  registerAndBindAgentChatUpdate,
   registerAgentChatUpdate,
   resolveAgentChatBindingQuery,
   settleAgentChatTurnUpdate,
@@ -142,10 +142,6 @@ export async function bindAgentChat(
   if (entry === undefined) {
     throw new AgentChatNotFoundError(chatId);
   }
-  await client.executeUpdateWithStart(registerAgentChatUpdate, {
-    args: [entry],
-    startWorkflowOperation: catalogStart(),
-  });
   const updateId = createHash("sha256")
     .update(
       JSON.stringify({
@@ -157,8 +153,8 @@ export async function bindAgentChat(
       }),
     )
     .digest("hex");
-  return await client.executeUpdateWithStart(bindAgentChatUpdate, {
-    args: [binding, chatId, options.updatedAt],
+  return await client.executeUpdateWithStart(registerAndBindAgentChatUpdate, {
+    args: [entry, binding, options.updatedAt],
     updateId: `agent-chat-binding/${updateId}`,
     startWorkflowOperation: catalogStart(),
   });
