@@ -49,8 +49,28 @@ export type CiStep = {
   readonly key: string;
   /** Human-facing name shown in the Woodpecker UI. */
   readonly label: string;
-  /** Container image, digest-pinned. */
+  /**
+   * Container image, digest-pinned.
+   *
+   * On the local backend this names the SHELL rather than an image, because
+   * those steps run directly on the host with no container around them.
+   */
   readonly image: string;
+  /**
+   * Which agent backend runs this step. Defaults to Kubernetes.
+   *
+   * `local` steps run directly on a host agent -- the Mac, for the native
+   * Swift and Xcode lanes, which cannot run in a Linux container. They get no
+   * pod spec and no Kubernetes secret grants, because there is no pod.
+   */
+  readonly backend?: "kubernetes" | "local";
+  /**
+   * Agent labels this step requires.
+   *
+   * Woodpecker matches these against agent labels to pick a runner; it is the
+   * successor to Buildkite's `agents.queue`.
+   */
+  readonly agentLabels?: Readonly<Record<string, string>>;
   /** Shell commands, run in order. */
   readonly commands: readonly string[];
   /** Plain environment variables. Credentials go through `secrets`, never here. */

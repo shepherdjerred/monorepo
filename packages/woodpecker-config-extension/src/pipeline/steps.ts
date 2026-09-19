@@ -15,6 +15,7 @@ import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
+import { macosSteps } from "#src/pipeline/lanes/macos.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -144,5 +145,6 @@ export function buildPipelineSteps({
     ...ciImageSteps(images),
     ...scoutSteps(images),
     ...siteSteps(images),
+    ...macosSteps(),
   ];
 }
