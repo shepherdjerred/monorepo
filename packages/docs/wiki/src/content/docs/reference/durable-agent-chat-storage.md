@@ -17,7 +17,7 @@ Chat Workflows own immutable conversation identity; the catalog retains recent d
 | Provider Activity admission + execution  | 1 hour queued + 2 hours executing; one attempt     |
 | Chat command wait                        | 25 hours executing; 26 hours including queue delay |
 | Receipt Workflow execution               | 131 hours; admission closes 3 hours before expiry  |
-| Scheduled dispatch Activity              | 132 hours including queue delay                    |
+| Scheduled dispatch Activity              | 132 hours; provider admission closes after 129     |
 | Scheduled Workflow execution             | 133 hours including shutdown margin                |
 
 Sources: [shared contracts](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/agent/agent-chat.ts), [catalog retention](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat-catalog.ts), [turn execution](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat.ts), [receipt admission](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat-turn-receipt.ts), and [schedule dispatch](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/scheduled-agent-chat-turn.ts).

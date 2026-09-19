@@ -32,6 +32,12 @@ export const AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 export const AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// A scheduled dispatch must leave enough of its own Activity lifetime for the
+// provider to finish and for the retained result to propagate back.
+export const AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS =
+  AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS -
+  AGENT_CHAT_TURN_TIMEOUT_MS -
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 // Cover the globally queued dispatch Activity and leave shutdown margin.
 export const AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS =
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;

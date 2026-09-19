@@ -1,11 +1,10 @@
 import { proxyActivities, workflowInfo } from "@temporalio/workflow";
 import {
   AgentChatTurnResultSchema,
-  AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS,
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS,
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS,
+  AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS,
-  AGENT_CHAT_TURN_TIMEOUT_MS,
   ScheduledAgentChatTurnInputSchema,
   type AgentChatDispatchActivities,
   type AgentChatTurnResult,
@@ -34,9 +33,7 @@ export async function scheduledAgentChatTurnWorkflow(
   const info = workflowInfo();
   const submittedAt = info.startTime;
   const providerStartDeadline = new Date(
-    submittedAt.getTime() +
-      AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS -
-      AGENT_CHAT_TURN_TIMEOUT_MS,
+    submittedAt.getTime() + AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS,
   );
   return AgentChatTurnResultSchema.parse(
     await activities.dispatchScheduledAgentChatTurn({
