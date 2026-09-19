@@ -21,6 +21,10 @@ export const WOODPECKER_BUN_CACHE_CLAIM = "woodpecker-bun-cache";
 export const WOODPECKER_BUN_CACHE_PATH = "/woodpecker/bun-cache";
 export const WOODPECKER_UV_CACHE_CLAIM = "woodpecker-uv-cache";
 export const WOODPECKER_UV_CACHE_PATH = "/woodpecker/uv-cache";
+export const WOODPECKER_TOFU_PLUGIN_CACHE_CLAIM =
+  "woodpecker-tofu-plugin-cache";
+export const WOODPECKER_TOFU_PLUGIN_CACHE_PATH =
+  "/woodpecker/tofu-plugin-cache";
 
 const DISPOSABLE_CACHE_LABELS = {
   "velero.io/backup": "disabled",
@@ -65,5 +69,17 @@ export function createWoodpeckerCaches(chart: Chart): void {
     "woodpecker-uv-cache-pvc",
     WOODPECKER_UV_CACHE_CLAIM,
     "20Gi",
+  );
+
+  // OpenTofu provider archives are deterministic but expensive to download.
+  // The plugin-cache protocol has no concurrent-writer support, so lanes take
+  // an advisory lock in this directory before invoking tofu -- which is why it
+  // is ReadWriteMany even though only one writer is ever active. No state or
+  // build output is stored here.
+  createCacheClaim(
+    chart,
+    "woodpecker-tofu-plugin-cache-pvc",
+    WOODPECKER_TOFU_PLUGIN_CACHE_CLAIM,
+    "10Gi",
   );
 }

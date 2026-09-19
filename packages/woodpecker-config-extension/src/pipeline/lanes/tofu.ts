@@ -1,0 +1,136 @@
+import type { CiImages } from "#src/images.ts";
+import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
+import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
+import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
+
+/**
+ * OpenTofu plan lanes.
+ *
+ * Only the PR-side `plan` lanes are here. The `apply` lanes are main-only and
+ * gated on the homelab release admission token, so they belong with the
+ * release chain rather than with these.
+ *
+ * The stack whose name is conspicuously absent is `buildkite`: it manages the
+ * Buildkite cluster and queues, and has no successor. Woodpecker keeps all of
+ * its configuration in-cluster, so that stack is deleted rather than ported.
+ */
+
+/** Plugin cache claim, shared by every tofu lane. */
+const TOFU_PLUGIN_CACHE = {
+  claim: "woodpecker-tofu-plugin-cache",
+  path: "/woodpecker/tofu-plugin-cache",
+} as const;
+
+const GITHUB_DOWNLOAD: SecretGrant = {
+  secret: "ci-github-credentials",
+  key: "GITHUB_DOWNLOAD_TOKEN",
+  env: "GITHUB_DOWNLOAD_TOKEN",
+};
+
+/** Remote state lives in SeaweedFS, so every stack reads the state keys. */
+const STATE_BACKEND: SecretGrant[] = [
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
+    env: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
+  },
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+    env: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+  },
+];
+
+function grant(secret: string, key: string, env = key): SecretGrant {
+  return { secret, key, env };
+}
+
+/** Provider credentials, beyond the shared state-backend grants. */
+const STACK_SECRETS: Readonly<Record<string, readonly SecretGrant[]>> = {
+  seaweedfs: [
+    grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
+    grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
+  ],
+  tailscale: [
+    grant("ci-tailscale-credentials", "TAILSCALE_OAUTH_CLIENT_ID"),
+    grant("ci-tailscale-credentials", "TAILSCALE_OAUTH_CLIENT_SECRET"),
+  ],
+  arr: [
+    grant("ci-arr-credentials", "RADARR_API_KEY"),
+    grant("ci-arr-credentials", "SONARR_API_KEY"),
+    grant("ci-arr-credentials", "PROWLARR_API_KEY"),
+    grant("ci-arr-credentials", "QBITTORRENT_PASSWORD"),
+    grant("ci-arr-credentials", "PRIVATEHD_PASSWORD"),
+    grant("ci-arr-credentials", "PRIVATEHD_PID"),
+    grant("ci-arr-credentials", "AVISTAZ_PASSWORD"),
+    grant("ci-arr-credentials", "AVISTAZ_PID"),
+    grant("ci-arr-credentials", "ANIMEZ_PASSWORD"),
+    grant("ci-arr-credentials", "ANIMEZ_PID"),
+  ],
+  github: [grant("ci-github-credentials", "TOFU_GITHUB_TOKEN")],
+  cloudflare: [
+    grant("ci-cloudflare-credentials", "CLOUDFLARE_ACCOUNT_ID"),
+    grant("ci-cloudflare-credentials", "CLOUDFLARE_API_TOKEN"),
+  ],
+};
+
+/**
+ * Stacks whose plans run on a pull request, in order.
+ *
+ * They are chained rather than parallel because they share one plugin cache
+ * directory, whose download protocol has no concurrent-writer support. The
+ * command still takes an advisory lock; the chain keeps steps from queueing up
+ * behind that lock and burning their timeout waiting.
+ */
+const PLAN_STACKS = [
+  "seaweedfs",
+  "tailscale",
+  "arr",
+  "github",
+  "cloudflare",
+] as const;
+
+const TOFU_CHANGED = {
+  include: [
+    ...GLOBAL_SELECTOR_INPUTS,
+    "packages/homelab/scripts/tofu/**",
+    "packages/homelab/src/tofu/**",
+  ],
+} as const;
+
+function tofuCommands(stack: string, action: "plan" | "apply"): string[] {
+  return [
+    ". .buildkite/scripts/toolchain.sh",
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+    `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
+    // The plugin cache protocol has no concurrent-writer support, so take an
+    // advisory lock even though the lanes are chained: a rerun of one lane can
+    // still overlap another build's.
+    `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} ${action}`,
+  ];
+}
+
+export function tofuPlanSteps(images: CiImages): CiStep[] {
+  return PLAN_STACKS.map((stack, index) => {
+    const previous = PLAN_STACKS[index - 1];
+    return {
+      key: `tofu-plan-${stack}`,
+      label: `tofu plan ${stack}`,
+      image: images.base,
+      commands: tofuCommands(stack, "plan"),
+      timeoutMinutes: 30,
+      resources: MEDIUM_TIER,
+      events: ["pull_request"],
+      changed: TOFU_CHANGED,
+      secrets: [
+        GITHUB_DOWNLOAD,
+        ...STATE_BACKEND,
+        ...(STACK_SECRETS[stack] ?? []),
+      ],
+      volumes: [TOFU_PLUGIN_CACHE],
+      ...(previous === undefined
+        ? {}
+        : { dependsOn: [`tofu-plan-${previous}`] }),
+    };
+  });
+}
