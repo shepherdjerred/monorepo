@@ -18,6 +18,7 @@ import {
 import {
   AgentChatBindingNotFoundError,
   AgentChatNotFoundError,
+  bindAgentChat,
   getAgentChat,
   listAgentChats,
   resolveAgentChatBinding,
@@ -126,6 +127,12 @@ export type AgentChatDiscordOperations = {
     client: TemporalClient["workflow"],
     chatId: string,
   ) => Promise<AgentChatCatalogEntry | undefined>;
+  bind: (
+    client: TemporalClient["workflow"],
+    binding: DiscordAgentChatBinding,
+    chatId: string,
+    updatedAt: string,
+  ) => Promise<AgentChatCatalogEntry>;
   resolve: (
     client: TemporalClient["workflow"],
     binding: DiscordAgentChatBinding,
@@ -145,6 +152,7 @@ const defaultOperations: AgentChatDiscordOperations = {
   },
   list: listAgentChats,
   get: getAgentChat,
+  bind: bindAgentChat,
   resolve: resolveAgentChatBinding,
   defaultModel: discordAgentChatDefaultModel,
 };
@@ -241,6 +249,7 @@ async function handleContinue(
   if (chatId === undefined) {
     throw new AgentChatBindingNotFoundError();
   }
+  const timestamp = new Date().toISOString();
   await operations.start(
     temporal,
     DiscordAgentChatCommandSchema.parse({
@@ -250,9 +259,12 @@ async function handleContinue(
       ...(source.threadId === undefined ? {} : { threadId: source.threadId }),
       chatId,
       prompt: interaction.options.getString("prompt", true),
-      submittedAt: new Date().toISOString(),
+      submittedAt: timestamp,
     }),
   );
+  if (explicitChatId !== undefined) {
+    await operations.bind(temporal.workflow, source, chatId, timestamp);
+  }
   await interaction.editReply({
     content: "Queued. I’ll post the durable agent response in this channel.",
     allowedMentions: { parse: [] },
