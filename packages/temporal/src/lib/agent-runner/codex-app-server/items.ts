@@ -1,4 +1,5 @@
 import type { ThreadEvent, ThreadItem } from "@openai/codex-sdk";
+import { ContentBlockSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod/v4";
 
 const HeaderSchema = z.object({ id: z.string(), type: z.string() });
@@ -61,6 +62,15 @@ function mcpItem(value: unknown): ThreadItem {
     server: z.string(),
     tool: z.string(),
     arguments: z.unknown(),
+    result: z
+      .object({
+        content: z.array(ContentBlockSchema),
+        structuredContent: z.unknown().nullable(),
+        _meta: z.unknown().nullable(),
+      })
+      .nullable()
+      .optional(),
+    error: z.object({ message: z.string() }).nullable().optional(),
     status: StatusSchema,
   }).parse(value);
   return {
@@ -69,6 +79,16 @@ function mcpItem(value: unknown): ThreadItem {
     server: item.server,
     tool: item.tool,
     arguments: item.arguments,
+    ...(item.result == null
+      ? {}
+      : {
+          result: {
+            content: item.result.content,
+            structured_content: item.result.structuredContent,
+            ...(item.result._meta === null ? {} : { _meta: item.result._meta }),
+          },
+        }),
+    ...(item.error == null ? {} : { error: item.error }),
     status: normalizedStatus(item.status),
   };
 }
