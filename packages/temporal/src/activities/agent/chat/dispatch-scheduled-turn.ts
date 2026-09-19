@@ -22,12 +22,14 @@ export async function dispatchScheduledAgentChatTurn(
   const heartbeatTimer = setInterval(heartbeat, HEARTBEAT_INTERVAL_MS);
   try {
     const client = await createTemporalClient();
-    return AgentChatTurnResultSchema.parse(
-      await runAgentChatTurn({
-        client: client.workflow,
-        config: input.config,
-        request: input.request,
-      }),
+    return await client.withAbortSignal(context.cancellationSignal, async () =>
+      AgentChatTurnResultSchema.parse(
+        await runAgentChatTurn({
+          client: client.workflow,
+          config: input.config,
+          request: input.request,
+        }),
+      ),
     );
   } finally {
     clearInterval(heartbeatTimer);
