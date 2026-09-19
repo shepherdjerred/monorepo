@@ -3,7 +3,10 @@ import type {
   ScoutQlPredicate,
   ScoutQlScalarExpr,
 } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
-import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import type {
+  ScoutQlPlan,
+  ScoutQlSource,
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 
 /**
  * Why a query came back empty, when the plan itself already explains it.
@@ -15,10 +18,34 @@ import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.t
  * tries a narrower window, and the loop repeats. Where the plan pins the
  * cause, say the cause.
  *
- * Deliberately narrow: only filters that CONSTRAIN the query to pre-match-only
- * queues count. A negated or inequality comparison excludes rather than
- * selects, so it cannot be the reason nothing came back.
+ * The bar for saying so is high, because the claim is absolute: this query can
+ * never return a row, at any date, for any player. Two things must hold.
+ *
+ * The source must be finished matches. `prematch_participants` holds the
+ * observations of games STARTING, and those exist in quantity for exactly the
+ * queues this module calls unscorable — prod holds 4,686 pre-match ARAM Mayhem
+ * rows. An empty pre-match query is explained by its player or date filters,
+ * not by the queue.
+ *
+ * And the WHERE clause must genuinely confine every row to those queues. That
+ * is a narrower test than "an unscorable queue is mentioned somewhere":
+ * `queue = 'classic' OR kills > 50` mentions one and still admits rows from
+ * every other queue.
  */
+
+/** Sources whose rows are finished matches, where a result can be missing. */
+const FINISHED_MATCH_SOURCES: ReadonlySet<ScoutQlSource> =
+  new Set<ScoutQlSource>([
+    "match_participants",
+    "competition_match_participants",
+  ]);
+
+/**
+ * The queues a predicate confines `queue` to, or null when it confines
+ * nothing. Null is "any queue is still possible", which is why `or` collapses
+ * to it as soon as one branch stops constraining.
+ */
+type QueueConstraint = ReadonlySet<string> | null;
 
 function isQueueColumn(expr: ScoutQlScalarExpr): boolean {
   return expr.kind === "column" && expr.column === "queue";
@@ -30,38 +57,60 @@ function literalString(expr: ScoutQlScalarExpr): string | null {
     : null;
 }
 
-/** Queue values the WHERE clause restricts `queue` to, in plan order. */
-export function queueLiteralsInPredicate(
+function intersect(
+  left: QueueConstraint,
+  right: QueueConstraint,
+): QueueConstraint {
+  if (left === null) return right;
+  if (right === null) return left;
+  return new Set([...left].filter((queue) => right.has(queue)));
+}
+
+function union(left: QueueConstraint, right: QueueConstraint): QueueConstraint {
+  // One unconstrained branch is enough to admit any queue.
+  if (left === null || right === null) return null;
+  return new Set([...left, ...right]);
+}
+
+export function queueConstraintOf(
   predicate: ScoutQlPredicate | undefined,
-): readonly string[] {
-  if (predicate === undefined) return [];
+): QueueConstraint {
+  if (predicate === undefined) return null;
   switch (predicate.kind) {
     case "and":
+      // Every operand holds, so each one may narrow the set further.
+      return predicate.operands
+        .map((operand) => queueConstraintOf(operand))
+        .reduce((left, right) => intersect(left, right), null);
     case "or":
-      return predicate.operands.flatMap((operand) =>
-        queueLiteralsInPredicate(operand),
-      );
+      // Any operand may hold, so the set widens — and an unconstrained branch
+      // widens it to everything.
+      return predicate.operands
+        .map((operand) => queueConstraintOf(operand))
+        .reduce((left, right) => union(left, right));
     case "compare": {
-      if (predicate.op !== "=") return [];
+      if (predicate.op !== "=") return null;
       const value = isQueueColumn(predicate.left)
         ? literalString(predicate.right)
         : isQueueColumn(predicate.right)
           ? literalString(predicate.left)
           : null;
-      return value === null ? [] : [value];
+      return value === null ? null : new Set([value]);
     }
     case "in":
       return predicate.negated || !isQueueColumn(predicate.operand)
-        ? []
-        : predicate.items.flatMap((item) =>
-            typeof item === "string" ? [item] : [],
+        ? null
+        : new Set(
+            predicate.items.flatMap((item) =>
+              typeof item === "string" ? [item] : [],
+            ),
           );
     // `not` inverts the meaning, and the rest cannot pin a queue.
     case "not":
     case "between":
     case "is-null":
     case "player-ref":
-      return [];
+      return null;
   }
 }
 
@@ -71,16 +120,15 @@ export function queueLiteralsInPredicate(
  * other `message` strings the Explore tools hand back.
  */
 export function emptyResultReason(plan: ScoutQlPlan): string | null {
-  const queues = queueLiteralsInPredicate(plan.where);
-  if (queues.length === 0) return null;
-  const parsed = queues
+  if (!FINISHED_MATCH_SOURCES.has(plan.source)) return null;
+  const constraint = queueConstraintOf(plan.where);
+  if (constraint === null || constraint.size === 0) return null;
+  const queues = [...constraint]
     .map((queue) => QueueTypeSchema.safeParse(queue))
     .flatMap((result) => (result.success ? [result.data] : []));
-  // Every queue the query allows must be pre-match-only for this to be the
-  // reason: a query spanning `aram mayhem` and `aram` could still have been
-  // empty for ordinary reasons.
-  if (parsed.length !== queues.length || parsed.length === 0) return null;
-  if (parsed.some((queue) => queueHasPostMatchData(queue))) return null;
-  const names = parsed.map((queue) => `'${queue}'`).join(" and ");
-  return `This query can never return rows: Riot publishes no finished-match data for ${names}, so Scout only ever sees ${parsed.length === 1 ? "that mode" : "those modes"} pre-match. Tell the user that plainly — it is not a gap in Scout's history that a different date range or player would fill — and do not retry it narrower.`;
+  // An unrecognised literal could name anything, so it breaks the proof.
+  if (queues.length !== constraint.size) return null;
+  if (queues.some((queue) => queueHasPostMatchData(queue))) return null;
+  const names = queues.map((queue) => `'${queue}'`).join(" and ");
+  return `This query can never return rows: Riot publishes no finished-match data for ${names}, so Scout only ever sees ${queues.length === 1 ? "that mode" : "those modes"} pre-match. Tell the user that plainly — it is not a gap in Scout's history that a different date range or player would fill — and do not retry it narrower.`;
 }

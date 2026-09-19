@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import {
   emptyResultReason,
-  queueLiteralsInPredicate,
+  queueConstraintOf,
 } from "#src/explore/empty-result-reason.ts";
 
 /** Compile real ScoutQL so the walker is tested against genuine plans. */
@@ -10,31 +10,52 @@ function reasonFor(queryText: string): string | null {
   return emptyResultReason(compileScoutQl(queryText));
 }
 
-function queuesFor(queryText: string): readonly string[] {
-  return queueLiteralsInPredicate(compileScoutQl(queryText).where);
+function constraintFor(queryText: string): readonly string[] | null {
+  const constraint = queueConstraintOf(compileScoutQl(queryText).where);
+  return constraint === null ? null : [...constraint].sort();
 }
 
 const COUNT_GAMES = "SELECT COUNT(*) AS games FROM match_participants";
 
-describe("queueLiteralsInPredicate", () => {
+describe("queueConstraintOf", () => {
   test("reads an equality filter on queue", () => {
-    expect(queuesFor(`${COUNT_GAMES} WHERE queue = 'classic'`)).toEqual([
+    expect(constraintFor(`${COUNT_GAMES} WHERE queue = 'classic'`)).toEqual([
       "classic",
     ]);
   });
 
-  test("reads an IN list and keeps other conjuncts out of it", () => {
+  test("reads an IN list", () => {
     expect(
-      queuesFor(
-        `${COUNT_GAMES} WHERE queue IN ('classic', 'aram') AND kills > 5`,
+      constraintFor(`${COUNT_GAMES} WHERE queue IN ('classic', 'aram')`),
+    ).toEqual(["aram", "classic"]);
+  });
+
+  test("narrows across AND and ignores unrelated conjuncts", () => {
+    expect(
+      constraintFor(`${COUNT_GAMES} WHERE queue = 'classic' AND kills > 5`),
+    ).toEqual(["classic"]);
+  });
+
+  test("widens across OR", () => {
+    expect(
+      constraintFor(
+        `${COUNT_GAMES} WHERE queue = 'classic' OR queue = 'aram mayhem'`,
       ),
-    ).toEqual(["classic", "aram"]);
+    ).toEqual(["aram mayhem", "classic"]);
+  });
+
+  test("an OR branch that does not mention queue admits every queue", () => {
+    // The whole point: this predicate still matches an ARAM game with 51
+    // kills, so nothing about the queue is proven.
+    expect(
+      constraintFor(`${COUNT_GAMES} WHERE queue = 'classic' OR kills > 50`),
+    ).toBeNull();
   });
 
   test("ignores a negated filter, which excludes rather than selects", () => {
-    expect(queuesFor(`${COUNT_GAMES} WHERE queue NOT IN ('classic')`)).toEqual(
-      [],
-    );
+    expect(
+      constraintFor(`${COUNT_GAMES} WHERE queue NOT IN ('classic')`),
+    ).toBeNull();
   });
 });
 
@@ -43,35 +64,43 @@ describe("emptyResultReason", () => {
     const reason = reasonFor(`${COUNT_GAMES} WHERE queue = 'classic'`);
     expect(reason).toContain("can never return rows");
     expect(reason).toContain("'classic'");
-    expect(reason).toContain("that mode");
     expect(reason).toContain("do not retry it narrower");
   });
 
-  test("explains a single-queue IN list the same way", () => {
-    expect(reasonFor(`${COUNT_GAMES} WHERE queue IN ('classic')`)).toContain(
-      "can never return rows",
+  test("explains both pre-match-only queues when an OR covers only those", () => {
+    const reason = reasonFor(
+      `${COUNT_GAMES} WHERE queue = 'classic' OR queue = 'aram mayhem'`,
     );
+    expect(reason).toContain("those modes");
+  });
+
+  test("stays silent when an OR branch admits other queues", () => {
+    // Claiming impossibility here would be a new wrong answer, not a fix.
+    expect(
+      reasonFor(`${COUNT_GAMES} WHERE queue = 'classic' OR kills > 50`),
+    ).toBeNull();
+  });
+
+  test("stays silent on the pre-match source, which does hold those games", () => {
+    // Pre-match rows exist in quantity for exactly these queues — prod holds
+    // 4,686 ARAM Mayhem observations — so an empty result there is about the
+    // player or the dates, not the mode.
+    expect(
+      reasonFor(
+        "SELECT COUNT(*) AS games FROM prematch_participants WHERE queue = 'aram mayhem'",
+      ),
+    ).toBeNull();
   });
 
   test("stays silent when the query could legitimately have matched", () => {
     expect(reasonFor(`${COUNT_GAMES} WHERE queue = 'aram'`)).toBeNull();
     expect(reasonFor(COUNT_GAMES)).toBeNull();
-  });
-
-  test("stays silent when a scorable queue is also allowed", () => {
-    // Emptiness here has ordinary explanations, so claiming impossibility
-    // would be a new wrong answer rather than a fix for the old one.
     expect(
       reasonFor(`${COUNT_GAMES} WHERE queue IN ('classic', 'aram')`),
     ).toBeNull();
   });
 
-  test("explains ARAM Mayhem but not its Classic namesake", () => {
-    // Three confusable names, and the middle one is the exception: queue 2450
-    // produces finished matches while 2400/3200/3220/3270 never do.
-    expect(reasonFor(`${COUNT_GAMES} WHERE queue = 'aram mayhem'`)).toContain(
-      "can never return rows",
-    );
+  test("treats Classic ARAM Mayhem as the scorable one of the three", () => {
     expect(
       reasonFor(`${COUNT_GAMES} WHERE queue = 'classic aram mayhem'`),
     ).toBeNull();
