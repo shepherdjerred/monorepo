@@ -136,7 +136,7 @@ describe("durable BlueBubbles polling", () => {
     expect(mocks.request).toHaveBeenCalledWith(
       "/api/v1/message/query",
       expect.objectContaining({
-        where: [{ statement: "message.ROWID > :cursor", args: { cursor: 0 } }],
+        where: [{ statement: "message.ROWID > :cursor", args: { cursor: 10 } }],
       }),
     );
   });

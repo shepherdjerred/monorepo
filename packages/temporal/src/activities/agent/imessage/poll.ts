@@ -13,8 +13,10 @@ import {
 
 const BLUEBUBBLES_QUERY_LIMIT = 1000;
 
-async function initialBlueBubblesRowId(): Promise<number> {
-  let watermark = 0;
+async function initialBlueBubblesRowId(
+  initialWatermark: number,
+): Promise<number> {
+  let watermark = initialWatermark;
   for (;;) {
     const messages = z
       .array(BlueBubblesMessageSchema)
@@ -46,7 +48,7 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   const cursor = BlueBubblesCursorSchema.parse(rawCursor);
   const config = await imessageIngressConfig();
   if (!config.enabled || config.owners.length === 0) {
-    const latestRowId = await initialBlueBubblesRowId();
+    const latestRowId = await initialBlueBubblesRowId(cursor.lastRowId);
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
       initialized: true,
@@ -59,7 +61,7 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
       initialized: true,
-      lastRowId: await initialBlueBubblesRowId(),
+      lastRowId: await initialBlueBubblesRowId(0),
       commands: [],
     });
   }
