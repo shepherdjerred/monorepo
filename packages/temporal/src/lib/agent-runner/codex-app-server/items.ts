@@ -39,7 +39,7 @@ function fileItem(value: unknown): ThreadItem | undefined {
     changes: z.array(
       z.object({
         path: z.string(),
-        kind: z.object({ type: z.enum(["add", "delete", "update"]) }),
+        kind: z.enum(["add", "delete", "update"]),
       }),
     ),
     status: StatusSchema,
@@ -50,7 +50,7 @@ function fileItem(value: unknown): ThreadItem | undefined {
     type: "file_change",
     changes: item.changes.map((change) => ({
       path: change.path,
-      kind: change.kind.type,
+      kind: change.kind,
     })),
     status: item.status === "declined" ? "failed" : item.status,
   };
