@@ -120,6 +120,24 @@ describe("runCodexAgentTurn failure classification", () => {
       message: expect.stringContaining("restore failed"),
     });
   });
+  test.each([
+    { type: "turn.failed", error: { message: "failed with codex-secret" } },
+    { type: "error", message: "failed with codex-secret" },
+  ])("redacts terminal provider failures before propagation", async (event) => {
+    mocks.subscriptionEvents.mockReturnValue(
+      (async function* () {
+        yield event;
+      })(),
+    );
+
+    const failure = runSubscriptionTurn();
+    await expect(failure).rejects.toMatchObject({
+      name: "AgentTurnExecutionError",
+      generationStarted: true,
+      message: expect.stringContaining("failed with ***"),
+    });
+    await expect(failure).rejects.not.toThrow("codex-secret");
+  });
   test("cleanup failures retain billed generation classification", async () => {
     mocks.finishParser.mockImplementation(() => {
       throw new Error("cleanup failed");
@@ -346,6 +364,7 @@ async function runSubscriptionTurn(
         webSearchMode: "live",
       },
       resumeSessionId: "codex-session",
+      redactTokens: ["codex-secret"],
       beforeEvent,
       onEvent: vi.fn(),
     });

@@ -266,9 +266,9 @@ async function handleEvent(input: {
       input.state.numTurns += 1;
       break;
     case "turn.failed":
-      throw new Error(input.event.error.message);
+      throw new Error(redactSecrets(input.event.error.message, input.tokens));
     case "error":
-      throw new Error(input.event.message);
+      throw new Error(redactSecrets(input.event.message, input.tokens));
     case "item.completed":
       if (input.run.captureEvidenceEvents === true) {
         input.state.evidenceEvents.push(safeEvent);

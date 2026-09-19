@@ -129,6 +129,20 @@ describe("runClaudeAgentTurn", () => {
       message: expect.stringContaining("restore failed"),
     });
   });
+  test("treats a stream failure before first output as an ambiguous submission", async () => {
+    queryMock.mockReturnValue({
+      [Symbol.asyncIterator]: () => ({
+        next: () =>
+          Promise.reject(new Error("connection closed after submission")),
+      }),
+    });
+
+    await expect(runClaudeAgentTurn(input())).rejects.toMatchObject({
+      name: "AgentTurnExecutionError",
+      generationStarted: true,
+      message: expect.stringContaining("connection closed after submission"),
+    });
+  });
   test("resumes a subscription session and normalizes its result", async () => {
     queryMock.mockReturnValue(successfulMessages());
 
