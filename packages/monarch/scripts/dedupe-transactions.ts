@@ -33,9 +33,20 @@ const BACKFILL_DATE_CUTOFF = "2025-11-01";
 await initMonarch();
 const txns = await fetchAllTransactions("2021-01-01", "2026-12-31", true);
 
+// Account, date and amount alone do not identify a duplicate: two different
+// purchases of the same size on the same day collide, and if one of them has
+// a backfilled copy the arbitrary slice below could delete the *other*
+// transaction — a unique one — while leaving the real duplicate pair intact.
+// The merchant and the bank's own description are what distinguish them.
 const groups = new Map<string, MonarchTransaction[]>();
 for (const t of txns) {
-  const key = `${t.account.id}|${t.date}|${String(t.amount)}`;
+  const key = [
+    t.account.id,
+    t.date,
+    String(t.amount),
+    t.merchant.name.toLowerCase(),
+    t.plaidName.toLowerCase(),
+  ].join("|");
   groups.set(key, [...(groups.get(key) ?? []), t]);
 }
 
@@ -69,11 +80,19 @@ if (!APPLY) {
   process.exit(0);
 }
 
+// A date-stamped name lets a second run on the same day overwrite the first
+// run's backup with only what is left to delete — the records the first run
+// already deleted would lose their recovery copy exactly when it is needed.
+// The timestamp is to the second, and an existing file is never replaced.
+const stamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
 const backupPath = path.join(
   FINANCE_VAULT_DIR,
   "backups",
-  `monarch-duplicates-${new Date().toISOString().split("T")[0] ?? "unknown"}.json`,
+  `monarch-duplicates-${stamp}.json`,
 );
+if (await Bun.file(backupPath).exists()) {
+  throw new Error(`refusing to overwrite an existing backup at ${backupPath}`);
+}
 await Bun.write(backupPath, `${JSON.stringify(toDelete, null, 2)}\n`);
 console.log(
   `Backed up ${String(toDelete.length)} transactions to ${backupPath}`,

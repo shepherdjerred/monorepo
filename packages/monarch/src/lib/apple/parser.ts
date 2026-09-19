@@ -1,5 +1,5 @@
 import type { AppleReceipt, AppleReceiptItem } from "./types.ts";
-import { loadEmailIndex } from "../mail/index.ts";
+import { loadEmailIndex, readIndexedEmail } from "../mail/index.ts";
 import { extractTextBody } from "../mail/parse.ts";
 import { log } from "../logger.ts";
 
@@ -188,12 +188,22 @@ export async function loadAppleReceipts(): Promise<AppleReceipt[]> {
   log.info(`Found ${String(receiptEmails.length)} Apple receipt emails`);
 
   const receipts: AppleReceipt[] = [];
+  let moved = 0;
   for (const entry of receiptEmails) {
-    const raw = await Bun.file(entry.path).text();
+    const raw = await readIndexedEmail(entry);
+    if (raw === undefined) {
+      moved++;
+      continue;
+    }
     const receipt = parseAppleReceipt(extractTextBody(raw));
     if (receipt) {
       receipts.push(receipt);
     }
+  }
+  if (moved > 0) {
+    log.info(
+      `${String(moved)} indexed messages have moved since the index was built`,
+    );
   }
 
   log.info(`Parsed ${String(receipts.length)} Apple receipts`);

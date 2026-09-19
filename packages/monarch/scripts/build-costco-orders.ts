@@ -8,10 +8,10 @@
 // in the name select those layouts). Each warehouse receipt is validated:
 // the parsed item prices must sum to the printed SUBTOTAL, and the parsed
 // total must match the total encoded in the filename.
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import path from "node:path";
 import { Glob } from "bun";
 import { COSTCO_DIR, COSTCO_ORDERS_PATH } from "../src/lib/finance-vault.ts";
+import { readPdfPages } from "../src/lib/pdf/extract.ts";
 
 type Item = { title: string; price: number; quantity: number };
 type Order = {
@@ -22,37 +22,14 @@ type Order = {
   source: "online" | "warehouse";
 };
 
-type TextItem = { str: string; transform: number[] };
-
+// The shared extractor validates pdfjs's text items with Zod at the boundary
+// and groups them into lines. Asserting their shape here instead would bypass
+// the repo's no-assertions rule in a directory ESLint does not cover.
 async function extractLines(pdfPath: string): Promise<string[]> {
-  const data = new Uint8Array(await Bun.file(pdfPath).arrayBuffer());
-  const doc = await getDocument({ data }).promise;
-  const lines: string[] = [];
-  for (let p = 1; p <= doc.numPages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    // Group text runs by rounded y coordinate to reconstruct lines
-    const byY = new Map<number, { x: number; str: string }[]>();
-    for (const item of content.items as TextItem[]) {
-      if (!item.str.trim()) continue;
-      const y = Math.round(item.transform[5] ?? 0);
-      const x = item.transform[4] ?? 0;
-      const row = byY.get(y) ?? [];
-      row.push({ x, str: item.str });
-      byY.set(y, row);
-    }
-    const ys = [...byY.keys()].sort((a, b) => b - a);
-    for (const y of ys) {
-      const row = (byY.get(y) ?? []).sort((a, b) => a.x - b.x);
-      lines.push(
-        row
-          .map((r) => r.str)
-          .join(" ")
-          .trim(),
-      );
-    }
-  }
-  return lines.filter((l) => l !== "");
+  const pages = await readPdfPages(pdfPath);
+  return pages
+    .flatMap((page) => page.lines.map((line) => line.text))
+    .filter((line) => line !== "");
 }
 
 const ITEM_ROW = /^[EF]?\s*(\d{2,})\s+(\S.*?\S|\S)\s+(\d+\.\d{2})\s*[NYny]?$/;

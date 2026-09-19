@@ -1,4 +1,4 @@
-import { loadEmailIndex } from "../mail/index.ts";
+import { loadEmailIndex, readIndexedEmail } from "../mail/index.ts";
 import { extractTextBody } from "../mail/parse.ts";
 import { log } from "../logger.ts";
 import type { LoanBalance, LoanPayment } from "./types.ts";
@@ -84,7 +84,8 @@ export async function loadLoanMail(): Promise<LoanMail> {
   const balances: LoanBalance[] = [];
   const payments: LoanPayment[] = [];
   for (const entry of servicerMail) {
-    const raw = await Bun.file(entry.path).text();
+    const raw = await readIndexedEmail(entry);
+    if (raw === undefined) continue;
     const body = extractTextBody(raw).replaceAll(/\s+/g, " ");
     const parsed = parseLoanEmail(body, entry.date.slice(0, 10));
     if (parsed.balances) balances.push(...parsed.balances);
