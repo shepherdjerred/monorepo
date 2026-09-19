@@ -42,6 +42,7 @@ import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
 import { createLeagueExploreTools } from "#src/explore/tools/league-tools.ts";
 import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
 import {
   enabledExploreSkills,
   type ExploreSkillOptions,
@@ -458,6 +459,10 @@ function createExploreTools(options: ExploreToolsOptions) {
         }
 
         let source: ScoutQlSource | null = null;
+        // Held on an object rather than a bare `let`: the assignment happens
+        // inside `onPlan`, so a plain local narrows to `null` for the reader
+        // below and the comparison lints as always-true.
+        const planFacts: { emptyReason: string | null } = { emptyReason: null };
         const result = await executeReportQuery({
           prisma,
           scope: GLOBAL_SCOPE,
@@ -465,6 +470,7 @@ function createExploreTools(options: ExploreToolsOptions) {
           queryText: validation.formattedQueryText,
           onPlan: (plan) => {
             source = plan.source;
+            planFacts.emptyReason = emptyResultReason(plan);
           },
         });
         const preview = reportQueryPreviewSummary(result);
@@ -493,7 +499,12 @@ function createExploreTools(options: ExploreToolsOptions) {
           ok: true,
           message: [
             preview.rowsReturned === 0
-              ? `No rows matched after scanning ${preview.rowsScanned.toString()} rows. The data does not cover this — say so rather than estimating.`
+              ? [
+                  `No rows matched after scanning ${preview.rowsScanned.toString()} rows. The data does not cover this — say so rather than estimating.`,
+                  ...(planFacts.emptyReason === null
+                    ? []
+                    : [planFacts.emptyReason]),
+                ].join(" ")
               : `Returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
             state.lastMatchIds.size === 0
               ? "This query has no supported match cards. Set matchCards to []."

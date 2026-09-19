@@ -148,14 +148,19 @@ export function renderExploreSkillBody(
 }
 
 /**
- * The dare skill's rendered body, for the paraphrase eval script — which
- * hashes this exact text into its report, so it must be the same text
- * `load_skill('dares')` returns to the agent.
+ * One skill's rendered body, for eval scripts — which hash this exact text
+ * into their reports, so it must be the same text `load_skill(name)` returns
+ * to the agent.
  */
-export function dareSkillBody(): string {
-  const skill = EXPLORE_SKILLS.find((candidate) => candidate.name === "dares");
+export function exploreSkillBody(name: string): string {
+  const skill = EXPLORE_SKILLS.find((candidate) => candidate.name === name);
   if (skill === undefined) {
-    throw new Error("The 'dares' skill file is missing.");
+    throw new Error(`The '${name}' skill file is missing.`);
   }
   return renderExploreSkillBody(skill, { bucks: null, surface: "web" });
+}
+
+/** The dare skill's rendered body. See `exploreSkillBody`. */
+export function dareSkillBody(): string {
+  return exploreSkillBody("dares");
 }

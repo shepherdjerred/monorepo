@@ -7,6 +7,7 @@ import {
   QueueTypeSchema,
   competitionQueueTypeToString,
   isCompetitionQueueCurrentlyAvailable,
+  queuePostMatchNote,
   queueMatchesGameVariant,
 } from "@scout-for-lol/data";
 import { ChampionCombobox } from "#src/components/match/champion-combobox.tsx";
@@ -89,6 +90,11 @@ function QueueMultiselect(props: {
         {props.options.map((queue) => {
           const checked = props.value.includes(queue);
           const available = isCompetitionQueueCurrentlyAvailable(queue);
+          // A mode can be live and still never publish results. Scoring reads
+          // finished matches only, so picking one of these would build a
+          // competition that stays permanently empty.
+          const postMatchNote =
+            queue === "ALL" ? undefined : queuePostMatchNote(queue);
           return (
             <label
               key={queue}
@@ -123,6 +129,11 @@ function QueueMultiselect(props: {
                 {!available && (
                   <span className="text-xs text-scout-subtle">
                     Limited-time mode — not currently live
+                  </span>
+                )}
+                {postMatchNote !== undefined && (
+                  <span className="text-xs text-scout-subtle">
+                    {postMatchNote}
                   </span>
                 )}
               </span>
@@ -363,6 +374,18 @@ export function CompetitionCriteriaFields(props: {
           id="criteria-type-error"
           error={props.errors.criteriaType}
         />
+        {/*
+          Someone who came here to rank their friends by losses finds six
+          win-shaped options and no hint that Scout can measure what they
+          wanted at all. That dead end is what sent one person into a
+          three-hour Explore conversation, so the alternative is named where
+          the choice is made.
+        */}
+        <p className="text-xs text-scout-subtle">
+          These are the only scoring rules a competition has. To rank people by
+          losses, kills, deaths, KDA, damage or gold, use a scheduled report
+          instead.
+        </p>
       </div>
       {fields}
       <p className="text-xs text-scout-subtle">

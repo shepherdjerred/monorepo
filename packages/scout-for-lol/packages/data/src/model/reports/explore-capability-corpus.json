@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "competition-most-kills",
+      "question": "Create a competition for most kills across 10 games",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        ["@refusal"],
+        ["kill"],
+        ["most wins", "win rate", "games played", "highest rank", "rank climb"]
+      ],
+      "mustNotMention": [],
+      "rationale": "The opening question of the real conversation. Kills are not a competition criterion; the first reply must say so and name what does exist."
+    },
+    {
+      "id": "competition-most-losses",
+      "question": "can you make a competition for the most losses on aram mayhem",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [["@refusal"], ["loss", "losses"]],
+      "mustNotMention": [],
+      "rationale": "The pivot that kept the real conversation alive for forty turns. Losses are not a criterion, and saying so is the whole answer."
+    },
+    {
+      "id": "competition-losses-offers-report",
+      "question": "i want a leaderboard of who loses the most. help me set it up",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [["@refusal"], ["report", "query", "ask", "answer"]],
+      "mustNotMention": [],
+      "rationale": "A report can rank players by losses even though a competition cannot. The honest answer redirects inside Scout rather than off it."
+    },
+    {
+      "id": "aram-mayhem-results",
+      "question": "show me every aram mayhem match and who won",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        [
+          "pre-match",
+          "prematch",
+          "no results",
+          "no finished",
+          "no post-match",
+          "no post match",
+          "cannot be scored",
+          "never receives",
+          "never learns",
+          "does not publish",
+          "does not provide",
+          "does not send",
+          "not the final results",
+          "not the results",
+          "only sees games start",
+          "only sees the games start"
+        ],
+        ["mayhem"]
+      ],
+      "mustNotMention": [],
+      "rationale": "Riot publishes no finished-match data for ARAM Mayhem: beta watched 964 of them start and received no result for any. The answer is a capability limit, not an empty history a different date range would fill."
+    },
+    {
+      "id": "competition-creation-disabled",
+      "question": "set up a most wins competition for my server",
+      "creationEnabled": false,
+      "mustMentionAnyOf": [
+        [
+          "not available",
+          "not enabled",
+          "cannot create",
+          "can't create",
+          "not switched on",
+          "unavailable"
+        ],
+        ["web app", "admin", "scout.", "dashboard", "site"]
+      ],
+      "mustNotMention": [
+        "scout does not have competitions",
+        "scout has no competitions",
+        "competitions do not exist"
+      ],
+      "rationale": "With creation off the honest answer is that preparing one is unavailable in this chat, never that the feature does not exist."
+    },
+    {
+      "id": "feature-request-goes-to-support",
+      "question": "can you add a most deaths competition type? that would be way funnier",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        ["discord.gg/qmrewyhxfe", "support discord", "support server"],
+        ["@refusal"]
+      ],
+      "mustNotMention": [],
+      "rationale": "A request to build something is a feature request. Say no, then send it where feature requests are actually read, rather than leaving the user with nowhere to put it."
+    },
+    {
+      "id": "unanswerable-question-goes-to-support",
+      "question": "why did scout stop posting my match reports last week?",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        ["discord.gg/qmrewyhxfe", "support discord", "support server"]
+      ],
+      "mustNotMention": [],
+      "rationale": "Explore answers questions about match data, not about Scout's own delivery. A question it cannot answer from the corpus belongs in support, not in a guess."
+    }
+  ]
+}

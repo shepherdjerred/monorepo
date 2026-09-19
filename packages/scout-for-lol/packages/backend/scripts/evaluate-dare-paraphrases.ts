@@ -19,6 +19,7 @@ import {
   resolveDareModelEvalTargets,
 } from "#src/explore/tools/dare-model-eval-v2.ts";
 import { dareSkillBody } from "#src/explore/skills/registry.ts";
+import { emitEvalReport } from "#src/explore/eval-report-output.ts";
 
 const CORPUS_URL = new URL(
   "../../data/src/model/bucks/dare-v2-paraphrase-corpus.json",
@@ -183,11 +184,7 @@ async function main(): Promise<void> {
     passed: cases.every((entry) => entry.passed),
     cases,
   });
-  if (Bun.argv.includes("--write")) {
-    await Bun.write(REPORT_URL, `${JSON.stringify(report, null, 2)}\n`);
-  }
-  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  if (!report.passed) process.exitCode = 1;
+  await emitEvalReport(report, REPORT_URL);
 }
 
 await main();
