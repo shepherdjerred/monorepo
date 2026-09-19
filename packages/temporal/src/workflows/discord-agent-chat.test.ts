@@ -5,6 +5,7 @@ import type {
   DeliverDiscordAgentChatMessageInput,
   DiscordAgentChatCommand,
 } from "#shared/agent/agent-chat-discord.ts";
+import { DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS } from "#shared/agent/agent-chat-discord.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS } from "#shared/agent/agent-chat.ts";
 
@@ -64,6 +65,17 @@ describe("discordAgentChatWorkflow", () => {
             ?.startToCloseTimeout?.seconds,
         ),
       ).toBe(AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS / 1000);
+      const deliveryActivity = history.events?.find(
+        (event) =>
+          event.activityTaskScheduledEventAttributes?.activityType?.name ===
+          "deliverDiscordAgentChatMessage",
+      );
+      expect(
+        Number(
+          deliveryActivity?.activityTaskScheduledEventAttributes
+            ?.scheduleToCloseTimeout?.seconds,
+        ),
+      ).toBe(DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS / 1000);
     } finally {
       activityWorker.shutdown();
       await activityRun;
