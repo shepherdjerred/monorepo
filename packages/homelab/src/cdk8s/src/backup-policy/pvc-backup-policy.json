@@ -36,6 +36,12 @@
     "reason": "Disposable CI package cache - rebuildable from the lockfile"
   },
   {
+    "namespace": "woodpecker",
+    "name": "woodpecker-tofu-plugin-cache",
+    "backup": "disabled",
+    "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
+  },
+  {
     "namespace": "buildkitd",
     "name": "buildkitd-cache-liskov",
     "backup": "disabled",

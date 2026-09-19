@@ -324,6 +324,48 @@ describe("ported lanes", () => {
     ]);
   });
 
+  test("tofu plan lanes are chained and pull-request only", () => {
+    const keys = keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf"]);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "tofu-plan-seaweedfs",
+        "tofu-plan-tailscale",
+        "tofu-plan-arr",
+        "tofu-plan-github",
+        "tofu-plan-cloudflare",
+      ]),
+    );
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    expect(
+      steps.find((s) => s.key === "tofu-plan-tailscale")?.dependsOn,
+    ).toEqual(["tofu-plan-seaweedfs"]);
+    expect(
+      steps.find((s) => s.key === "tofu-plan-seaweedfs")?.dependsOn,
+    ).toBeUndefined();
+    expect(
+      keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf"], "main"),
+    ).not.toContain("tofu-plan-seaweedfs");
+  });
+
+  /** The Buildkite stack manages the thing being removed; it has no successor. */
+  test("no tofu lane exists for the buildkite stack", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    expect(steps.map((s) => s.key)).not.toContain("tofu-plan-buildkite");
+  });
+
+  /** Each stack gets only its own provider credentials. */
+  test("tofu lanes receive only their own provider grants", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const envs = (key: string) =>
+      (steps.find((s) => s.key === key)?.secrets ?? []).map((g) => g.env);
+    expect(envs("tofu-plan-tailscale")).toContain("TAILSCALE_OAUTH_CLIENT_ID");
+    expect(envs("tofu-plan-tailscale")).not.toContain("RADARR_API_KEY");
+    expect(envs("tofu-plan-github")).toContain("TOFU_GITHUB_TOKEN");
+    expect(envs("tofu-plan-github")).not.toContain("CLOUDFLARE_API_TOKEN");
+    // Every stack reads remote state from SeaweedFS.
+    expect(envs("tofu-plan-arr")).toContain("SEAWEEDFS_STATE_ACCESS_KEY_ID");
+  });
+
   test("alert dashboard runs for its own package", () => {
     expect(keysFor(["packages/alert-dashboard/src/db.ts"])).toContain(
       "alert-dashboard-sqlite",

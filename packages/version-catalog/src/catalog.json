@@ -1028,7 +1028,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "TL2024-historic"
+      "value": "TL2024-historic@sha256:7995b32f28e7d91c11fc8b222b97244949c58cb2b61c4705e2d3f39f97bc8c31"
     },
     {
       "name": "grafana/tempo",
@@ -1076,7 +1076,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "0.72.0"
+      "value": "0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f"
     },
     {
       "name": "semgrep/semgrep",
@@ -1088,7 +1088,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.170.0"
+      "value": "1.170.0@sha256:c98f8829eea377274ee4b10656458b078b88232469b2ff913f091c2317347c9d"
     },
     {
       "name": "woodpeckerci/woodpecker-server",
