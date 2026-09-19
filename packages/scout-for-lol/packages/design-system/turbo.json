@@ -4,6 +4,9 @@
   "tasks": {
     "build": {
       "dependsOn": ["generate", "^build"],
+      // Composition changes the emitted manager, so a composed build must not
+      // reuse a plain build's cache entry.
+      "env": ["SCOUT_STORYBOOK_COMPOSED"],
       "outputs": [
         "storybook-static/**",
         "src/generated/**",

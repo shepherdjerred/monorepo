@@ -67,6 +67,16 @@ resource "aws_s3_bucket" "wiki_sjer_red" {
   bucket = "wiki-sjer-red"
 }
 
+# Scout's Storybook catalogs: the design system at the root, the management
+# app's components under /app/. Deliberately absent from
+# `static_site_immutable_prefixes`: Storybook's hashed chunks share the
+# `assets/` prefix with the unhashed Scout game art, fonts, and theme bootstrap
+# that scoutAssetsPlugin copies in, so an immutable rule there would pin those
+# forever.
+resource "aws_s3_bucket" "scout_design_system" {
+  bucket = "scout-design-system"
+}
+
 resource "aws_s3_bucket" "glitter_boys_ppl" {
   bucket = "glitter-boys-ppl"
 }

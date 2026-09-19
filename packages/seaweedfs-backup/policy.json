@@ -89,6 +89,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "scout-design-system",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "glitter-boys-ppl",
       "mode": "excluded",
       "cadences": [],
