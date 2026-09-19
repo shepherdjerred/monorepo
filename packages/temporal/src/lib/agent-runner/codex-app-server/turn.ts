@@ -15,7 +15,7 @@ function safeErrorCause(
 ) {
   if (!(error instanceof Error)) return redactSecrets(String(error), secrets);
   return {
-    name: error.name,
+    name: "CodexAppServerError",
     message: redactSecrets(error.message, secrets),
     stack:
       error.stack === undefined

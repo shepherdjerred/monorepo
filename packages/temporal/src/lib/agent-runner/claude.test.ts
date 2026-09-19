@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdtemp, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -87,6 +87,15 @@ function input(resumeWorkspacePath: string | null = "/work/session") {
       PATH: "/bin",
       ANTHROPIC_API_KEY: "must-not-forward",
       CLAUDE_CODE_OAUTH_TOKEN: "stale-token",
+      CODEX_ACCESS_TOKEN: "must-not-forward",
+      CODEX_API_KEY: "must-not-forward",
+      CODEX_AUTH_JSON_B64: "must-not-forward",
+      GEMINI_API_KEY: "must-not-forward",
+      GOOGLE_GENERATIVE_AI_API_KEY: "must-not-forward",
+      GROQ_API_KEY: "must-not-forward",
+      OPENAI_API_KEY: "must-not-forward",
+      OPENROUTER_API_KEY: "must-not-forward",
+      XAI_API_KEY: "must-not-forward",
     },
     signal: new AbortController().signal,
     permissionPolicy: "bypassPermissions" as const,
@@ -163,6 +172,36 @@ describe("runClaudeAgentTurn", () => {
     expect(outcome.finalText).toBe("done ***");
     expect(JSON.stringify(tracedMessages)).not.toContain("rotated-secret");
   });
+
+  test("redacts provider failures before tracing and propagation", async () => {
+    const providerFailure = new Error(
+      "authentication failed for Bearer oauth-secret",
+    );
+    providerFailure.name = "oauth-secret";
+    queryMock.mockReturnValue({
+      [Symbol.asyncIterator]: () => ({
+        next: () => Promise.reject(providerFailure),
+      }),
+    });
+
+    const failure = runClaudeAgentTurn(input());
+
+    await expect(failure).rejects.toMatchObject({
+      name: "AgentTurnExecutionError",
+      generationStarted: true,
+      authOrQuotaFailure: true,
+      message:
+        "Claude Agent SDK run failed: authentication failed for Bearer ***",
+      cause: expect.objectContaining({
+        name: "Error",
+        message: "authentication failed for Bearer ***",
+      }),
+    });
+    await expect(failure).rejects.not.toHaveProperty(
+      "message",
+      expect.stringContaining("oauth-secret"),
+    );
+  });
 });
 
 describe("runClaudeAgentTurn", () => {
@@ -238,7 +277,19 @@ describe("runClaudeAgentTurn", () => {
         settings: {
           sandbox: {
             credentials: {
-              envVars: [{ name: "CLAUDE_CODE_OAUTH_TOKEN", mode: "deny" }],
+              envVars: [
+                { name: "ANTHROPIC_API_KEY", mode: "deny" },
+                { name: "CODEX_ACCESS_TOKEN", mode: "deny" },
+                { name: "CODEX_API_KEY", mode: "deny" },
+                { name: "CODEX_AUTH_JSON_B64", mode: "deny" },
+                { name: "GEMINI_API_KEY", mode: "deny" },
+                { name: "GOOGLE_GENERATIVE_AI_API_KEY", mode: "deny" },
+                { name: "GROQ_API_KEY", mode: "deny" },
+                { name: "OPENAI_API_KEY", mode: "deny" },
+                { name: "OPENROUTER_API_KEY", mode: "deny" },
+                { name: "XAI_API_KEY", mode: "deny" },
+                { name: "CLAUDE_CODE_OAUTH_TOKEN", mode: "deny" },
+              ],
             },
           },
         },
@@ -252,7 +303,51 @@ describe("runClaudeAgentTurn", () => {
     });
     expect(JSON.stringify(tracedMessages)).not.toContain("oauth-secret");
   });
+});
 
+describe("Claude structured output", () => {
+  test("returns the validated structured output for schema-constrained turns", async () => {
+    queryMock.mockReturnValue(
+      (async function* () {
+        yield {
+          type: "result",
+          subtype: "success",
+          session_id: "claude-session",
+          result: "plain text must not be returned",
+          structured_output: { answer: "oauth-secret", complete: true },
+          num_turns: 1,
+          usage: USAGE,
+        };
+      })(),
+    );
+
+    const outcome = await runClaudeAgentTurn({
+      ...input(),
+      outputSchema: {
+        type: "object",
+        properties: { answer: { type: "string" } },
+        required: ["answer"],
+      },
+    });
+
+    expect(outcome.finalText).toBe('{"answer":"***","complete":true}');
+    expect(queryMock).toHaveBeenCalledWith({
+      prompt: "continue",
+      options: expect.objectContaining({
+        outputFormat: {
+          type: "json_schema",
+          schema: {
+            type: "object",
+            properties: { answer: { type: "string" } },
+            required: ["answer"],
+          },
+        },
+      }),
+    });
+  });
+});
+
+describe("runClaudeAgentTurn", () => {
   test("redacts traced tool results and retains them as evidence", async () => {
     queryMock.mockReturnValue(
       (async function* () {
@@ -365,10 +460,20 @@ describe("runClaudeAgentTurn", () => {
 
 describe("Claude provider home isolation", () => {
   test("uses the worker provider uid for workspace and subprocess isolation", async () => {
-    queryMock.mockReturnValue(successfulMessages());
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
 
-    const home = await mkdtemp(path.join(os.tmpdir(), "claude-runner-home-"));
+    const lifecycleDirectory = await mkdtemp(
+      path.join(os.tmpdir(), "claude-runner-home-"),
+    );
+    await chmod(lifecycleDirectory, 0o700);
+    const home = path.join(lifecycleDirectory, "home");
+    queryMock.mockImplementation(() =>
+      (async function* () {
+        const preparedLifecycle = await stat(lifecycleDirectory);
+        expect(preparedLifecycle.mode & 0o777).toBe(0o711);
+        yield* successfulMessages();
+      })(),
+    );
     try {
       await runClaudeAgentTurn({
         ...input(),
@@ -383,8 +488,10 @@ describe("Claude provider home isolation", () => {
           }),
         }),
       );
+      const restoredLifecycle = await stat(lifecycleDirectory);
+      expect(restoredLifecycle.mode & 0o777).toBe(0o700);
     } finally {
-      await rm(home, { recursive: true, force: true });
+      await rm(lifecycleDirectory, { recursive: true, force: true });
     }
 
     expect(prepareProviderWorkspaceMock).toHaveBeenCalledWith(

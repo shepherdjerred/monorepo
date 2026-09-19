@@ -89,6 +89,7 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   "packages/llm-observability/src/redact.ts",
   "packages/scout-for-lol/packages/data/scripts/patch-analysis.ts",
   "packages/temporal/src/activities/agent/agent-task-env.ts",
+  "packages/temporal/src/shared/agent/provider-credentials.ts",
   "scripts/lib/release-refiner.ts",
 ]);
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([

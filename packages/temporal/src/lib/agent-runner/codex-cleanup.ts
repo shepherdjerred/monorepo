@@ -1,10 +1,13 @@
 import { rm } from "node:fs/promises";
 import { restoreProviderWorkspace } from "./provider-workspace.ts";
+import { restoreCodexSubscriptionParentMode } from "./codex-home.ts";
+import type { ProviderHomeParentMode } from "./provider-home.ts";
 
 export async function cleanupCodexRun(input: {
   workdir: string;
   subscriptionAuthPath: string | undefined;
   subscriptionHome?: string | undefined;
+  subscriptionParentMode?: ProviderHomeParentMode | undefined;
   providerWrapperDirectory: string | undefined;
   providerHomeDirectory?: string | undefined;
   parser: { finish: () => void };
@@ -19,6 +22,7 @@ export async function cleanupCodexRun(input: {
         await restoreProviderWorkspace(input.subscriptionHome);
       }
     },
+    () => restoreCodexSubscriptionParentMode(input.subscriptionParentMode),
     async () => {
       if (input.subscriptionAuthPath !== undefined) {
         await rm(input.subscriptionAuthPath, { force: true });

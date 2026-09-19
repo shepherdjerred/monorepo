@@ -146,6 +146,10 @@ describe("AI architecture compatibility exceptions", () => {
           contents: 'delete environment["ANTHROPIC_API_KEY"]',
         },
         {
+          path: "packages/temporal/src/shared/agent/provider-credentials.ts",
+          contents: 'const blocked = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]',
+        },
+        {
           path: "packages/app/src/provider.test.ts",
           contents: "expect(environment.OPENAI_API_KEY).toBeUndefined()",
         },

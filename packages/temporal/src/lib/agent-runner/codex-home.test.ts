@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
@@ -37,17 +37,21 @@ test("subscription home and restored session directories are writable without an
   try {
     const home = path.join(directory, "codex-home");
     await mkdir(path.join(home, "sessions"), { recursive: true });
-    await prepareCodexSubscriptionHome(home, uid);
-    const [homeStat, sessionStat] = await Promise.all([
+    await chmod(directory, 0o600);
+    const parentMode = await prepareCodexSubscriptionHome(home, uid);
+    const [directoryStat, homeStat, sessionStat] = await Promise.all([
+      stat(directory),
       stat(home),
       stat(path.join(home, "sessions")),
     ]);
+    expect(directoryStat.mode & 0o777).toBe(0o711);
     expect(homeStat.uid).toBe(uid);
     expect(sessionStat.uid).toBe(uid);
     const session = path.join(home, "sessions", "new-session.jsonl");
     await Bun.write(session, "test session");
     expect(await Bun.file(session).text()).toBe("test session");
     expect(await Bun.file(path.join(home, "auth.json")).exists()).toBe(false);
+    expect(parentMode).toEqual({ directory, mode: 0o600 });
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

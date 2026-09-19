@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { chmod, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -203,6 +203,63 @@ describe("runCodexAgentTurn failure classification", () => {
   });
 });
 
+describe("runCodexAgentTurn preparation", () => {
+  test("rolls back subscription preparation when launcher setup fails", async () => {
+    const lifecycleDirectory = path.join(
+      os.tmpdir(),
+      `codex-runner-lifecycle-${crypto.randomUUID()}`,
+    );
+    const codexHome = path.join(lifecycleDirectory, "home");
+    const invalidTemporaryDirectory = path.join(
+      lifecycleDirectory,
+      "not-a-directory",
+    );
+    await mkdir(lifecycleDirectory, { recursive: true, mode: 0o700 });
+    await chmod(lifecycleDirectory, 0o700);
+    await writeFile(invalidTemporaryDirectory, "file");
+    vi.stubEnv("AGENT_PROVIDER_UID", "1001");
+    vi.stubEnv("TMPDIR", invalidTemporaryDirectory);
+
+    try {
+      await expect(
+        runCodexAgentTurn({
+          service: "temporal",
+          callSite: "agent-chat",
+          prompt: "continue",
+          model: "gpt-5.4",
+          maxTurns: 4,
+          turnBudgetKind: "turns",
+          cwd: "/work/session",
+          auth: {
+            kind: "chatgpt-subscription",
+            authJson: JSON.stringify({
+              tokens: {
+                access_token: "test-token",
+                account_id: "test-account",
+              },
+            }),
+          },
+          env: { CODEX_HOME: codexHome },
+          signal: new AbortController().signal,
+          sandboxPolicy: {
+            sandboxMode: "danger-full-access",
+            networkAccessEnabled: true,
+            webSearchMode: "live",
+          },
+          beforeEvent: () => Promise.resolve(true),
+          onEvent: vi.fn(),
+        }),
+      ).rejects.toMatchObject({ name: "AgentTurnExecutionError" });
+
+      const restoredLifecycle = await stat(lifecycleDirectory);
+      expect(restoredLifecycle.mode & 0o777).toBe(0o700);
+      expect(mocks.restoreProviderWorkspace).toHaveBeenCalledWith(codexHome);
+    } finally {
+      await rm(lifecycleDirectory, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("runCodexAgentTurn", () => {
   test("resumes with explicit ChatGPT subscription auth hidden from tools", async () => {
     const onEvent = vi.fn();
@@ -232,7 +289,12 @@ describe("runCodexAgentTurn", () => {
         PATH: "/bin",
         CODEX_HOME: codexHome,
         CODEX_ACCESS_TOKEN: "must-not-forward",
+        GEMINI_API_KEY: "must-not-forward",
+        GOOGLE_GENERATIVE_AI_API_KEY: "must-not-forward",
+        GROQ_API_KEY: "must-not-forward",
+        OPENAI_API_KEY: "must-not-forward",
         OPENROUTER_API_KEY: "must-not-forward-either",
+        XAI_API_KEY: "must-not-forward",
       },
       signal: new AbortController().signal,
       sandboxPolicy: {
@@ -254,6 +316,7 @@ describe("runCodexAgentTurn", () => {
         authJson: expect.stringContaining("explicit-access-token"),
         environment: {
           PATH: "/bin",
+          HOME: codexHome,
           CODEX_HOME: codexHome,
         },
       }),

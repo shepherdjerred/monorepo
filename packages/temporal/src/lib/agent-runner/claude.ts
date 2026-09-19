@@ -16,7 +16,10 @@ import {
   type RunClaudeAgentTurnInput,
 } from "./contract.ts";
 import { agentTurnExecutionError } from "./errors.ts";
-import { prepareIsolatedProviderHome } from "./provider-home.ts";
+import {
+  prepareIsolatedProviderHome,
+  restoreProviderHomeParentMode,
+} from "./provider-home.ts";
 import { createAgentTurnProgress, type AgentTurnProgress } from "./progress.ts";
 import {
   prepareProviderWorkspace,
@@ -26,6 +29,10 @@ import {
   providerSubprocessCommand,
   providerSubprocessUid,
 } from "#shared/agent/agent-subprocess-identity.ts";
+import {
+  isProviderCredentialKey,
+  PROVIDER_CREDENTIAL_ENV_VARS,
+} from "#shared/agent/provider-credentials.ts";
 
 function emptyUsage(): AgentTurnUsage {
   return {
@@ -69,6 +76,30 @@ function redactedMessage(
   return clone;
 }
 
+function redactedError(
+  error: unknown,
+  tokens: readonly (string | undefined)[],
+): Error {
+  const message = error instanceof Error ? error.message : String(error);
+  const safeError = new Error(redactSecrets(message, tokens));
+  safeError.name = "Error";
+  return safeError;
+}
+
+async function* redactClaudeFailures(
+  messages: AsyncIterable<SDKMessage>,
+  tokens: () => readonly (string | undefined)[],
+): AsyncIterable<SDKMessage> {
+  try {
+    yield* messages;
+  } catch (error: unknown) {
+    // The tracing wrapper observes iterator failures before this runner's outer
+    // catch. Replace the exception here so provider credentials cannot reach
+    // either span exception fields or the eventual Temporal failure history.
+    throw redactedError(error, tokens());
+  }
+}
+
 function redactMessageValues(
   value: unknown,
   tokens: readonly (string | undefined)[],
@@ -101,10 +132,7 @@ function queryOptions(
     input.permissionPolicy,
   );
   const childEnvironment = Object.fromEntries(
-    Object.entries(input.env).filter(
-      ([key]) =>
-        key !== "CLAUDE_CODE_OAUTH_TOKEN" && key !== "ANTHROPIC_API_KEY",
-    ),
+    Object.entries(input.env).filter(([key]) => !isProviderCredentialKey(key)),
   );
   return {
     abortController: new AbortController(),
@@ -125,7 +153,10 @@ function queryOptions(
     settings: {
       sandbox: {
         credentials: {
-          envVars: [{ name: "CLAUDE_CODE_OAUTH_TOKEN", mode: "deny" }],
+          envVars: PROVIDER_CREDENTIAL_ENV_VARS.map((name) => ({
+            name,
+            mode: "deny" as const,
+          })),
         },
       },
     },
@@ -183,8 +214,20 @@ function markMessageExecutionState(
   state.possiblyAppliedEffects ||= messageMayApplyEffect(message);
 }
 
-function successfulResultText(result: SDKResultMessage): string {
-  if (result.subtype === "success") return result.result;
+function successfulResultText(
+  result: SDKResultMessage,
+  outputSchema: Record<string, unknown> | undefined,
+): string {
+  if (result.subtype === "success") {
+    if (outputSchema === undefined) return result.result;
+    if (result.structured_output === undefined) {
+      throw new Error(
+        "Claude returned no structured output for a schema-constrained turn",
+      );
+    }
+    const serialized = JSON.stringify(result.structured_output);
+    return serialized;
+  }
   const detail = result.errors.join("; ");
   throw new Error(
     detail === "" ? `Claude turn ended with ${result.subtype}` : detail,
@@ -232,7 +275,7 @@ function handleMessage(input: {
   input.state.usage = normalizedUsage(input.message);
   input.state.numTurns = input.message.num_turns;
   input.state.finalText = redactSecrets(
-    successfulResultText(input.message),
+    successfulResultText(input.message, input.run.outputSchema),
     input.tokens,
   );
 }
@@ -268,7 +311,7 @@ export async function runClaudeAgentTurn(
     evidenceEvents: [],
   };
   let failure: { cause: unknown } | undefined;
-  let providerHome: string | undefined;
+  let providerHome: Awaited<ReturnType<typeof prepareIsolatedProviderHome>>;
 
   try {
     if (
@@ -303,7 +346,8 @@ export async function runClaudeAgentTurn(
         metricsRegister: register,
         workload: input.callSite,
       },
-      () => query({ prompt: input.prompt, options }),
+      () =>
+        redactClaudeFailures(query({ prompt: input.prompt, options }), tokens),
       async (message) => {
         markMessageExecutionState(state, message);
         if (!(await input.beforeEvent())) {
@@ -327,19 +371,24 @@ export async function runClaudeAgentTurn(
       );
     }
   } catch (error: unknown) {
-    failure = { cause: error };
+    failure = { cause: redactedError(error, tokens()) };
   } finally {
     input.signal.removeEventListener("abort", abort);
   }
   for (const directory of [
     input.cwd,
-    ...(providerHome === undefined ? [] : [providerHome]),
+    ...(providerHome === undefined ? [] : [providerHome.directory]),
   ]) {
     try {
       await restoreProviderWorkspace(directory);
     } catch (error: unknown) {
-      failure ??= { cause: error };
+      failure ??= { cause: redactedError(error, tokens()) };
     }
+  }
+  try {
+    await restoreProviderHomeParentMode(providerHome?.parentMode);
+  } catch (error: unknown) {
+    failure ??= { cause: redactedError(error, tokens()) };
   }
   if (failure !== undefined) {
     throw agentTurnExecutionError({

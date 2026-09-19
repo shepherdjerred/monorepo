@@ -4,7 +4,6 @@ import {
   type ThreadEvent,
   type Usage,
 } from "@openai/codex-sdk";
-import { rm } from "node:fs/promises";
 import { createCodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { attachCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
 import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
@@ -20,14 +19,24 @@ import { SandboxPolicySchema, TurnBudgetKindSchema } from "./contract.ts";
 import { agentTurnExecutionError } from "./errors.ts";
 import { cleanupCodexRun } from "./codex-cleanup.ts";
 import {
-  createCodexProviderHome,
+  prepareCodexOpenRouterHome,
   prepareCodexSubscriptionHome,
+  rollbackCodexOpenRouterHome,
+  restoreCodexSubscriptionParentMode,
 } from "./codex-home.ts";
+import type { ProviderHomeParentMode } from "./provider-home.ts";
 import { runSubscriptionCodexEvents } from "./codex-app-server/turn.ts";
 import { codexSubscriptionTokens } from "./codex-app-server/protocol.ts";
 import { createAgentTurnProgress, type AgentTurnProgress } from "./progress.ts";
-import { prepareProviderWorkspace } from "./provider-workspace.ts";
+import {
+  prepareProviderWorkspace,
+  restoreProviderWorkspace,
+} from "./provider-workspace.ts";
 import { providerSubprocessUid } from "#shared/agent/agent-subprocess-identity.ts";
+import {
+  isProviderCredentialKey,
+  PROVIDER_CREDENTIAL_ENV_VARS,
+} from "#shared/agent/provider-credentials.ts";
 import { codexLauncherPath, providerPathOverride } from "./codex-launcher.ts";
 
 const CODEX_TOOL_ITEM_TYPES = new Set([
@@ -42,7 +51,7 @@ const CODEX_TOOL_ENVIRONMENT_CONFIG = {
   shell_environment_policy: {
     inherit: "all",
     ignore_default_excludes: false,
-    exclude: ["CODEX_ACCESS_TOKEN", "CODEX_API_KEY", "OPENROUTER_API_KEY"],
+    exclude: [...PROVIDER_CREDENTIAL_ENV_VARS],
     experimental_use_profile: false,
   },
 };
@@ -53,7 +62,32 @@ type PreparedCodex = {
   providerWrapperDirectory: string | undefined;
   providerHomeDirectory: string | undefined;
   subscriptionHome: string | undefined;
+  subscriptionParentMode: ProviderHomeParentMode | undefined;
 };
+
+async function rollbackCodexSubscriptionPreparation(input: {
+  codexHome: string;
+  parentMode: ProviderHomeParentMode | undefined;
+}): Promise<void> {
+  const failures: unknown[] = [];
+  for (const operation of [
+    () => restoreProviderWorkspace(input.codexHome),
+    () => restoreCodexSubscriptionParentMode(input.parentMode),
+  ]) {
+    try {
+      await operation();
+    } catch (error: unknown) {
+      failures.push(error);
+    }
+  }
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) {
+    throw new AggregateError(
+      failures,
+      "Codex subscription preparation rollback failed",
+    );
+  }
+}
 
 async function prepareCodex(
   input: RunCodexAgentTurnInput,
@@ -61,28 +95,22 @@ async function prepareCodex(
   const providerUid = providerSubprocessUid();
   await prepareProviderWorkspace(input.cwd, providerUid);
   const childEnvironment = Object.fromEntries(
-    Object.entries(input.env).filter(
-      ([key]) =>
-        ![
-          "OPENROUTER_API_KEY",
-          "CODEX_ACCESS_TOKEN",
-          "CODEX_API_KEY",
-          "CODEX_AUTH_JSON_B64",
-          "ANTHROPIC_API_KEY",
-          "CLAUDE_CODE_OAUTH_TOKEN",
-        ].includes(key),
-    ),
+    Object.entries(input.env).filter(([key]) => !isProviderCredentialKey(key)),
   );
   if (input.auth.kind === "openrouter") {
-    const providerHome =
-      providerUid === undefined
-        ? undefined
-        : await createCodexProviderHome(providerUid);
+    const providerHome = await prepareCodexOpenRouterHome({
+      environment: childEnvironment,
+      providerUid,
+      resumeSessionId: input.resumeSessionId,
+    });
     try {
       const openRouter = createOpenRouterCodexConfig({
         apiKey: input.auth.apiKey,
         modelId: input.model,
-        env: { ...childEnvironment, ...providerHome?.environment },
+        env: {
+          ...childEnvironment,
+          ...providerHome.environment,
+        },
       });
       const providerPath = await providerPathOverride(input);
       return {
@@ -93,12 +121,19 @@ async function prepareCodex(
         },
         model: openRouter.routeModelId,
         providerWrapperDirectory: providerPath.wrapperDirectory,
-        providerHomeDirectory: providerHome?.directory,
-        subscriptionHome: undefined,
+        providerHomeDirectory: providerHome.providerHomeDirectory,
+        subscriptionHome: providerHome.subscriptionHome,
+        subscriptionParentMode: providerHome.subscriptionParentMode,
       };
     } catch (error: unknown) {
-      if (providerHome !== undefined) {
-        await rm(providerHome.directory, { recursive: true, force: true });
+      try {
+        await rollbackCodexOpenRouterHome(providerHome);
+      } catch (cleanupError: unknown) {
+        throw new AggregateError(
+          [error],
+          "Codex OpenRouter setup cleanup failed",
+          { cause: cleanupError },
+        );
       }
       throw error;
     }
@@ -109,11 +144,31 @@ async function prepareCodex(
     throw new Error("CODEX_HOME is required for ChatGPT subscription auth");
   }
   codexSubscriptionTokens(input.auth.authJson);
-  await prepareCodexSubscriptionHome(codexHome, providerUid);
-  const providerPath = await providerPathOverride(input);
+  const subscriptionParentMode = await prepareCodexSubscriptionHome(
+    codexHome,
+    providerUid,
+  );
+  let providerPath: Awaited<ReturnType<typeof providerPathOverride>>;
+  try {
+    providerPath = await providerPathOverride(input);
+  } catch (error: unknown) {
+    try {
+      await rollbackCodexSubscriptionPreparation({
+        codexHome,
+        parentMode: subscriptionParentMode,
+      });
+    } catch (rollbackError: unknown) {
+      throw new AggregateError(
+        [error],
+        "Codex provider setup and subscription preparation rollback failed",
+        { cause: rollbackError },
+      );
+    }
+    throw error;
+  }
   return {
     options: {
-      env: childEnvironment,
+      env: { ...childEnvironment, HOME: codexHome },
       config: CODEX_TOOL_ENVIRONMENT_CONFIG,
       ...providerPath.pathOverride,
     },
@@ -121,6 +176,7 @@ async function prepareCodex(
     providerWrapperDirectory: providerPath.wrapperDirectory,
     providerHomeDirectory: undefined,
     subscriptionHome: codexHome,
+    subscriptionParentMode,
   };
 }
 
@@ -328,6 +384,7 @@ export async function runCodexAgentTurn(
   let providerWrapperDirectory: string | undefined;
   let providerHomeDirectory: string | undefined;
   let subscriptionHome: string | undefined;
+  let subscriptionParentMode: ProviderHomeParentMode | undefined;
   let runFailure: { cause: unknown } | undefined;
 
   try {
@@ -335,6 +392,7 @@ export async function runCodexAgentTurn(
     providerWrapperDirectory = prepared.providerWrapperDirectory;
     providerHomeDirectory = prepared.providerHomeDirectory;
     subscriptionHome = prepared.subscriptionHome;
+    subscriptionParentMode = prepared.subscriptionParentMode;
     if (input.auth.kind === "chatgpt-subscription") {
       const auth = codexSubscriptionTokens(input.auth.authJson);
       providerTokens.push(auth.access_token, auth.refresh_token, auth.id_token);
@@ -407,6 +465,7 @@ export async function runCodexAgentTurn(
     workdir: input.cwd,
     subscriptionAuthPath: undefined,
     subscriptionHome,
+    subscriptionParentMode,
     providerWrapperDirectory,
     providerHomeDirectory,
     parser,
