@@ -4,6 +4,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { describe, expect, test } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  AGENT_CHAT_DISPATCH_MAX_ATTEMPTS,
   agentChatWorkflowId,
   type AgentChatConfig,
   type AgentChatTurnRequest,
@@ -250,6 +251,25 @@ describe("durable chat turn receipts", () => {
               .getHandle(agentChatWorkflowId(CONFIG.chatId))
               .query(getAgentChatStateQuery);
             await rollover(env, state);
+          }
+          return dispatchPinnedAgentChatTurn(env.client.workflow, input);
+        },
+      },
+    );
+  }, 60_000);
+
+  test("retries transient dispatch exhaustion without sealing the receipt", async () => {
+    let dispatchAttempts = 0;
+    await withWorkers(
+      async (env) => {
+        expect(await runOriginalTurn(env)).toMatchObject({ turnNumber: 1 });
+        expect(dispatchAttempts).toBe(AGENT_CHAT_DISPATCH_MAX_ATTEMPTS + 1);
+      },
+      {
+        dispatch: async (env, input) => {
+          dispatchAttempts += 1;
+          if (dispatchAttempts <= AGENT_CHAT_DISPATCH_MAX_ATTEMPTS) {
+            throw new Error("Transient receipt transport failure");
           }
           return dispatchPinnedAgentChatTurn(env.client.workflow, input);
         },
