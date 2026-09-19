@@ -1,4 +1,8 @@
 import * as Sentry from "@sentry/bun";
+import {
+  announcingSettlementSink,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
 import { resolveQueueTypeFromGame, type RawMatch } from "@scout-for-lol/data";
 import { z } from "zod";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
@@ -233,6 +237,7 @@ export async function settleDaresForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
+  sink: SettlementAnnouncementSink = announcingSettlementSink,
 ): Promise<DareSettlementSummary[]> {
   const matchId = matchData.metadata.matchId;
   const queue = DareQueueSchema.safeParse(
@@ -304,6 +309,7 @@ export async function settleDaresForMatch(
         queueType: queue.data,
         prismaClient,
         now,
+        sink,
       });
       if (summary !== undefined) {
         summaries.push(summary);
@@ -358,6 +364,7 @@ async function settleOneDareForMatchWithRetry(
     queueType: string;
     prismaClient: ExtendedPrismaClient;
     now: Date;
+    sink: SettlementAnnouncementSink;
   },
 ): Promise<DareSettlementSummary | undefined> {
   return withBoundedRetry(
@@ -373,6 +380,7 @@ async function settleOneDareForMatch(
     queueType: string;
     prismaClient: ExtendedPrismaClient;
     now: Date;
+    sink: SettlementAnnouncementSink;
   },
 ): Promise<DareSettlementSummary | undefined> {
   const { matchData, prismaClient, now } = input;
@@ -416,16 +424,29 @@ async function settleOneDareForMatch(
   }
 
   try {
-    return await prismaClient.$transaction((tx) =>
-      captureAndSettleDare(tx, {
+    return await prismaClient.$transaction(async (tx) => {
+      const summary = await captureAndSettleDare(tx, {
         dare,
         matchData,
         queueType: input.queueType,
         leafHits: evaluation.leafHits,
         snapshot: evaluation.snapshot,
         now,
-      }),
-    );
+      });
+      // Inside the SAME transaction that settles the Dare, so the settlement
+      // and the instruction to announce it commit together. This summary is
+      // one-shot: a retry finds the Dare already terminal and returns nothing,
+      // so an instruction written after this transaction could be lost with no
+      // way to rebuild it.
+      if (summary !== undefined) {
+        await input.sink.recordAnnouncementItem(tx, {
+          family: "dare-summary",
+          itemKey: String(summary.dareId),
+          payload: summary,
+        });
+      }
+      return summary;
+    });
   } catch (error) {
     if (error instanceof BucksStorageOverflowError) {
       // A payout the wallet cannot hold rolled the capture back. Stranding

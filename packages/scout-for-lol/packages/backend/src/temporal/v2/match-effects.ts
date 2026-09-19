@@ -15,6 +15,11 @@ import {
 import { settlementEvidenceOf } from "#src/league/tasks/postmatch/settlement-evidence.ts";
 import { withChallengeProgressionLock } from "#src/progression/challenges/locking.ts";
 import { processCompetitiveProgressionMatch } from "#src/progression/postmatch.ts";
+import {
+  announcingSettlementSink,
+  silentSettlementSink,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
 import { runGuardedEffectV2 } from "#src/temporal/v2/effect-fence.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
 import {
@@ -23,17 +28,17 @@ import {
 } from "#src/temporal/v2/match-commits.ts";
 import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 import {
-  dareSummariesOf,
+  matchMayAnnounce,
   mintDareSummaryIntentsV2,
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
-  settlementAnnouncementInputsOf,
-  settlementCheckpointPayload,
+  recoveredAnnouncementsOf,
+  settlementAnnouncementItemsOf,
 } from "#src/temporal/v2/notification/match-intents.ts";
 import {
-  getSettlementAnnouncementCheckpoint,
-  recordSettlementAnnouncementCheckpoint,
-  type SettlementAnnouncementPayload,
+  listSettlementAnnouncementItems,
+  recordSettlementAnnouncementItem,
+  type SettlementAnnouncementItem,
 } from "#src/database/durable/settlement-announcement-repository.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -99,6 +104,44 @@ function settledRecordCount(evidence: SettlementEvidence): number {
  * the pipeline then failed to make durable.
  */
 /**
+ * V2's sink for a match that MAY announce.
+ *
+ * Announcing is deferred rather than immediate: V2 mints intents after the
+ * domain commit, so this sink sends nothing itself. What it does is record,
+ * inside each producing transaction, the instruction to announce that item —
+ * which is the only way a takeover can announce results a re-run would no
+ * longer produce.
+ *
+ * It keeps v1's direct-delivery behaviours OFF for V2, because a V2 match that
+ * delivered here would announce twice: once from the settlement call stack and
+ * once from the intent the mint creates.
+ */
+function checkpointingSettlementSink(
+  riotMatchId: RiotMatchId,
+): SettlementAnnouncementSink {
+  return {
+    ...silentSettlementSink,
+    // A live V2 match may still post a callout for a Dare that has none: that
+    // is v1's own pre-existing surface and the gate's promise permits it for a
+    // match a live discovery surfaced.
+    mayPostDareCallout: announcingSettlementSink.mayPostDareCallout,
+    recordAnnouncementItem: async (db, item) => {
+      const commit = durableCommitV2(
+        await recordSettlementAnnouncementItem(db, {
+          matchId: riotMatchId,
+          item,
+        }),
+      );
+      if (commit.outcome !== "conflict") return;
+      throw ApplicationFailure.nonRetryable(
+        `A settlement announcement already stands for ${riotMatchId} (${item.family}/${item.itemKey}) with different instructions (${commit.reason}); refusing to overwrite the only record of what that transition produced`,
+        "DurableCommitConflict",
+      );
+    },
+  };
+}
+
+/**
  * Mint both announcement families from the instructions one settlement
  * produced, as one transaction.
  *
@@ -114,21 +157,22 @@ function settledRecordCount(evidence: SettlementEvidence): number {
  */
 async function mintFromInstructions(
   riotMatchId: RiotMatchId,
-  instructions: SettlementAnnouncementPayload,
+  items: readonly SettlementAnnouncementItem[],
   gameCreation: number,
 ): Promise<void> {
+  const recovered = recoveredAnnouncementsOf(items);
   const createdAt = new Date();
   const { announced, dareSummaries } = await prisma.$transaction(
     async (tx) => ({
       announced: await mintSettlementIntentsV2(tx, {
         matchId: riotMatchId,
-        announcements: settlementAnnouncementInputsOf(instructions),
+        announcements: recovered.settlements,
         gameCreation,
         createdAt,
       }),
       dareSummaries: await mintDareSummaryIntentsV2(tx, {
         matchId: riotMatchId,
-        dareSettlements: dareSummariesOf(instructions),
+        dareSettlements: recovered.dareSummaries,
         gameCreation,
         createdAt,
       }),
@@ -170,14 +214,14 @@ export async function settleMatchMarketsV2(input: {
       // forever; the checkpoint is what that attempt left so this one can mint
       // from what actually happened. Read before settling, because settling
       // again is the thing it exists to prevent.
-      const recovered = await getSettlementAnnouncementCheckpoint(prisma, {
+      const recovered = await listSettlementAnnouncementItems(prisma, {
         matchId: input.riotMatchId,
       });
-      if (recovered !== null) {
+      if (recovered.length > 0) {
         await fence.assertHeld();
         await mintFromInstructions(
           input.riotMatchId,
-          recovered.payload,
+          recovered,
           context.matchData.info.gameCreation,
         );
         await fence.assertHeld();
@@ -196,10 +240,18 @@ export async function settleMatchMarketsV2(input: {
       // have lapsed while it ran, and the ledger must not be entered on a
       // lock this attempt no longer holds.
       await fence.assertHeld();
+      // The sink decides whether anything this settlement produces may be
+      // announced, and it is built from the COMMITTED delivery mode rather
+      // than from anything this run was handed. A backfilled match settles in
+      // full and announces nothing: no summaries delivered from the partial
+      // path, no Dare DMs drained from the outbox, no callout posted.
       const settled = await settleBucksWithDareTimelineV2({
         matchData: context.matchData,
         trackedPlayers: context.trackedPlayers,
         prismaClient: prisma,
+        announcementSink: (await matchMayAnnounce(prisma, input.riotMatchId))
+          ? checkpointingSettlementSink(input.riotMatchId)
+          : silentSettlementSink,
       });
       const evidence = settlementEvidenceOf(settled.bucks);
       // The checkpoint, written before anything else this attempt does with
@@ -209,24 +261,26 @@ export async function settleMatchMarketsV2(input: {
       // about what one settlement produced, and that fails the Activity rather
       // than overwriting what the first one recorded.
       await fence.assertHeld();
-      const instructions = settlementCheckpointPayload({
+      const instructions = settlementAnnouncementItemsOf({
         closures: settled.bucks.closures,
         settlements: settled.bucks.settlements,
         parlaySettlements: settled.bucks.parlaySettlements,
         earnings: settled.bucks.earnings,
         dareSettlements: settled.bucks.dareSettlements,
       });
-      const checkpoint = durableCommitV2(
-        await recordSettlementAnnouncementCheckpoint(prisma, {
-          matchId: input.riotMatchId,
-          payload: instructions,
-        }),
-      );
-      if (checkpoint.outcome === "conflict") {
-        throw ApplicationFailure.nonRetryable(
-          `A settlement announcement checkpoint already stands for ${input.riotMatchId} with different instructions (${checkpoint.reason}); refusing to overwrite the only record of what that settlement produced`,
-          "DurableCommitConflict",
+      for (const item of instructions) {
+        const checkpoint = durableCommitV2(
+          await recordSettlementAnnouncementItem(prisma, {
+            matchId: input.riotMatchId,
+            item,
+          }),
         );
+        if (checkpoint.outcome === "conflict") {
+          throw ApplicationFailure.nonRetryable(
+            `A settlement announcement already stands for ${input.riotMatchId} (${item.family}/${item.itemKey}) with different instructions (${checkpoint.reason}); refusing to overwrite the only record of what that transition produced`,
+            "DurableCommitConflict",
+          );
+        }
       }
       // Minted INSIDE the fence and before the receipt, because these intents
       // carry the summaries this settlement just produced and nothing else can

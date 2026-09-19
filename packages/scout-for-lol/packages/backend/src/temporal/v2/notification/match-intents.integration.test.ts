@@ -15,7 +15,7 @@ import {
 } from "#src/durable/match/delivery-intents.ts";
 import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
-import { BucksPoolTotalSchema } from "@scout-for-lol/data";
+import { BucksPoolTotalSchema, RiotTeamIdSchema } from "@scout-for-lol/data";
 
 /**
  * What a post-match match mints, against real rows.
@@ -92,14 +92,12 @@ const { listIntentsForMatch, upsertIntent } =
   await import("#src/database/durable/intent-repository.ts");
 const { planMatchFanOutV2 } = await import("#src/temporal/v2/match-reads.ts");
 const {
-  dareSummariesOf,
-  settlementAnnouncementInputsOf,
-  settlementCheckpointPayload,
+  recoveredAnnouncementsOf,
+  settlementAnnouncementInputs,
+  settlementAnnouncementItemsOf,
 } = await import("#src/temporal/v2/notification/match-intents.ts");
-const {
-  getSettlementAnnouncementCheckpoint,
-  recordSettlementAnnouncementCheckpoint,
-} = await import("#src/database/durable/settlement-announcement-repository.ts");
+const { listSettlementAnnouncementItems, recordSettlementAnnouncementItem } =
+  await import("#src/database/durable/settlement-announcement-repository.ts");
 
 const GAME_CREATED_AT = Date.parse("2026-09-19T09:00:00.000Z");
 
@@ -388,133 +386,214 @@ describe("what the post-match fan-out drives", () => {
   });
 });
 
-describe("recovering a settlement whose run died before its receipt", () => {
-  const settlement: SettlementSummary = {
-    matchId: MATCH,
-    serverId: GUILD,
-    winningTeamId: undefined,
-    voidReason: undefined,
-    winnersPool: BucksPoolTotalSchema.parse(0),
-    losersPool: BucksPoolTotalSchema.parse(0),
-    houseCut: BucksPoolTotalSchema.parse(0),
-    bets: [],
-  };
+describe("the fold a recovered settlement announces from", () => {
+  /**
+   * The set folded from checkpoints must equal the set folded live, or a
+   * takeover announces something the original run would not have.
+   *
+   * The data is chosen to discriminate rather than to pass. `buildAnnouncements`
+   * folds in two cases a naive per-item recovery drops: a CLOSURE carrying
+   * positions but no settlement of its own, which becomes a zero summary, and
+   * a PARLAY whose pool settled on an earlier tick, which has no settlement
+   * beside it. A recovery that walked the stored items one at a time would
+   * announce neither.
+   */
+  const SETTLED_GUILD = "guild-settled";
+  const CLOSURE_ONLY_GUILD = "guild-closure-only";
+  const PARLAY_ONLY_GUILD = "guild-parlay-only";
 
-  function instructions() {
-    return settlementCheckpointPayload({
-      closures: [],
-      settlements: [settlement],
-      parlaySettlements: [],
-      earnings: [],
+  function live() {
+    return {
+      closures: [
+        {
+          matchId: MATCH,
+          serverId: CLOSURE_ONLY_GUILD,
+          messageRefs: [{ channelId: "c1", messageId: "m1" }],
+          humanMatchedPerSide: 0,
+          houseFill: 0,
+          totalMatchedPerSide: 0,
+          // Positions with NO matched stake: the case that becomes a zero
+          // summary rather than being dropped.
+          positions: [
+            {
+              betId: 1,
+              discordId: "d1",
+              teamId: RiotTeamIdSchema.parse(100),
+              submittedStake: 10,
+              matchedStake: 0,
+              unmatchedStake: 10,
+            },
+          ],
+        },
+      ],
+      settlements: [
+        {
+          matchId: MATCH,
+          serverId: SETTLED_GUILD,
+          winningTeamId: 100,
+          voidReason: undefined,
+          winnersPool: BucksPoolTotalSchema.parse(10),
+          losersPool: BucksPoolTotalSchema.parse(5),
+          houseCut: BucksPoolTotalSchema.parse(1),
+          bets: [],
+        },
+      ],
+      parlaySettlements: [
+        {
+          matchId: MATCH,
+          serverId: PARLAY_ONLY_GUILD,
+          yesResult: true,
+          voidReason: undefined,
+          legs: [],
+          messageRefs: [{ channelId: "c2", messageId: "m2" }],
+          bets: [],
+        },
+      ],
+      earnings: [
+        {
+          serverId: SETTLED_GUILD,
+          discordId: "d9",
+          alias: "nine",
+          reasons: ["played" as const],
+          total: 3,
+        },
+      ],
       dareSettlements: [dareSummary({})],
-    });
+    };
   }
 
-  test("a takeover mints the same intents from the checkpoint", async () => {
-    // The kill: settlement committed and its checkpoint landed, then the
-    // worker died before anything was minted and before the receipt. The
-    // takeover cannot re-run settlement — its steps are one-shot and would
-    // return nothing — so it must mint from what the dead attempt recorded.
-    await observe(MATCH, "live");
-    prepared.kind = "message";
-    expect(
-      await recordSettlementAnnouncementCheckpoint(prisma, {
-        matchId: MATCH,
-        payload: instructions(),
-      }),
-    ).toEqual({ outcome: "applied" });
-
-    // What the takeover does: read the checkpoint, mint from it.
-    const recovered = await getSettlementAnnouncementCheckpoint(prisma, {
-      matchId: MATCH,
-    });
-    expect(recovered).not.toBeNull();
-    if (recovered === null) return;
-    await mintSettlementIntentsV2(prisma, {
-      matchId: MATCH,
-      announcements: settlementAnnouncementInputsOf(recovered.payload),
-      gameCreation: GAME_CREATED_AT,
-      createdAt: new Date("2026-09-19T10:00:00.000Z"),
-    });
-    await mintDareSummaryIntentsV2(prisma, {
-      matchId: MATCH,
-      dareSettlements: dareSummariesOf(recovered.payload),
-      gameCreation: GAME_CREATED_AT,
-      createdAt: new Date("2026-09-19T10:00:00.000Z"),
+  test("folding from stored items equals folding live", async () => {
+    const source = live();
+    const foldedLive = settlementAnnouncementInputs({
+      closures: source.closures,
+      settlements: source.settlements,
+      parlaySettlements: source.parlaySettlements,
+      earnings: source.earnings,
     });
 
-    const minted = await listIntentsForMatch(prisma, { matchId: MATCH });
-    expect(minted.map((record) => record.intent.kind).toSorted()).toEqual([
-      "dare-summary",
-      "settlement",
-    ]);
+    for (const item of settlementAnnouncementItemsOf(source)) {
+      expect(
+        await recordSettlementAnnouncementItem(prisma, {
+          matchId: MATCH,
+          item,
+        }),
+      ).toEqual({ outcome: "applied" });
+    }
+    const stored = await listSettlementAnnouncementItems(prisma, {
+      matchId: MATCH,
+    });
+    const recovered = recoveredAnnouncementsOf(stored);
+
+    // Identical, not merely overlapping: same guilds, same order, same inputs.
+    expect(recovered.settlements).toEqual(foldedLive);
+    expect(recovered.dareSummaries).toEqual(source.dareSettlements);
   });
 
-  test("the recovered instructions are the ones settlement produced", async () => {
-    // Round-tripping through the checkpoint must not change what is minted,
-    // or the recovery path would announce something the live path would not.
-    const payload = instructions();
-    await recordSettlementAnnouncementCheckpoint(prisma, {
-      matchId: MATCH,
-      payload,
+  test("the fold really does carry the two cases a per-item walk would drop", async () => {
+    // Guards the test above from passing for the wrong reason. If the fold
+    // ever stopped folding these in, the equality could hold while both
+    // sides lost them together.
+    const source = live();
+    const foldedLive = settlementAnnouncementInputs({
+      closures: source.closures,
+      settlements: source.settlements,
+      parlaySettlements: source.parlaySettlements,
+      earnings: source.earnings,
     });
-    const recovered = await getSettlementAnnouncementCheckpoint(prisma, {
-      matchId: MATCH,
-    });
-    if (recovered === null) throw new Error("expected a checkpoint");
 
-    expect(settlementAnnouncementInputsOf(recovered.payload)).toEqual(
-      settlementAnnouncementInputsOf(payload),
+    const guilds = foldedLive.map((input) => input.summary.serverId).toSorted();
+    expect(guilds).toEqual(
+      [SETTLED_GUILD, CLOSURE_ONLY_GUILD, PARLAY_ONLY_GUILD].toSorted(),
     );
-    expect(dareSummariesOf(recovered.payload)).toEqual([dareSummary({})]);
   });
 
-  test("a retry re-presenting the same instructions is already-applied", async () => {
-    await recordSettlementAnnouncementCheckpoint(prisma, {
+  test("a differing payload for a standing item conflicts", async () => {
+    const [first] = settlementAnnouncementItemsOf(live());
+    if (first === undefined) throw new Error("expected an item");
+    await recordSettlementAnnouncementItem(prisma, {
       matchId: MATCH,
-      payload: instructions(),
+      item: first,
     });
 
     expect(
-      await recordSettlementAnnouncementCheckpoint(prisma, {
+      await recordSettlementAnnouncementItem(prisma, {
         matchId: MATCH,
-        payload: instructions(),
-      }),
-    ).toEqual({ outcome: "already-applied" });
-  });
-
-  test("a second settlement offering different announcements conflicts", async () => {
-    // Write-once. The row is the only surviving record of output nothing can
-    // recompute, so a differing one is two producers disagreeing about what
-    // ONE settlement produced — surfaced, never overwritten.
-    await recordSettlementAnnouncementCheckpoint(prisma, {
-      matchId: MATCH,
-      payload: instructions(),
-    });
-
-    const differing = settlementCheckpointPayload({
-      closures: [],
-      settlements: [settlement],
-      parlaySettlements: [],
-      earnings: [],
-      dareSettlements: [dareSummary({ dareId: 99 })],
-    });
-    expect(
-      await recordSettlementAnnouncementCheckpoint(prisma, {
-        matchId: MATCH,
-        payload: differing,
+        item: { ...first, payload: { ...live().closures[0], houseFill: 99 } },
       }),
     ).toEqual({
       outcome: "conflict",
       reason: "settlement-announcement-differs",
     });
+  });
+});
 
-    // And the first settlement's record still stands, unmodified.
-    const standing = await getSettlementAnnouncementCheckpoint(prisma, {
-      matchId: MATCH,
+describe("a settlement killed before its receipt", () => {
+  /**
+   * The acceptance criterion. A Dare settles, its instruction commits with it,
+   * and the worker dies before anything downstream runs. The takeover cannot
+   * re-settle — `settleDaresForMatch` returns a summary only for the
+   * transition that committed it — so it must announce from what the dead
+   * attempt recorded, and end with the same intents standing.
+   */
+  test("the takeover mints the same intents from the recorded instructions", async () => {
+    await observe(MATCH, "live");
+    prepared.kind = "message";
+    const settled = dareSummary({});
+
+    // What the dying attempt got as far as: the Dare settled and its
+    // instruction committed in the same transaction. Nothing downstream ran.
+    await prisma.$transaction(async (tx) => {
+      await recordSettlementAnnouncementItem(tx, {
+        matchId: MATCH,
+        item: {
+          family: "dare-summary",
+          itemKey: String(settled.dareId),
+          payload: settled,
+        },
+      });
     });
-    expect(dareSummariesOf(standing?.payload ?? instructions())).toEqual([
-      dareSummary({}),
-    ]);
+    expect(await listIntentsForMatch(prisma, { matchId: MATCH })).toEqual([]);
+
+    // The takeover: read what stands, announce from it.
+    const recovered = recoveredAnnouncementsOf(
+      await listSettlementAnnouncementItems(prisma, { matchId: MATCH }),
+    );
+    await mintDareSummaryIntentsV2(prisma, {
+      matchId: MATCH,
+      dareSettlements: recovered.dareSummaries,
+      gameCreation: GAME_CREATED_AT,
+      createdAt: new Date("2026-09-19T10:00:00.000Z"),
+    });
+
+    const minted = await listIntentsForMatch(prisma, { matchId: MATCH });
+    expect(minted).toHaveLength(1);
+    expect(minted[0]?.intent.kind).toBe("dare-summary");
+    // The same Dare, not merely some Dare.
+    expect(recovered.dareSummaries).toEqual([settled]);
+  });
+
+  test("an instruction cannot survive a settlement that rolled back", async () => {
+    // The other half of "inside the transaction": if the settling transaction
+    // fails, its instruction must go with it. An instruction for a Dare that
+    // never settled would announce a result nobody reached.
+    const settled = dareSummary({ dareId: 4242 });
+
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await recordSettlementAnnouncementItem(tx, {
+          matchId: MATCH,
+          item: {
+            family: "dare-summary",
+            itemKey: String(settled.dareId),
+            payload: settled,
+          },
+        });
+        throw new Error("the settling transaction failed after recording");
+      }),
+    ).rejects.toThrow("the settling transaction failed");
+
+    expect(
+      await listSettlementAnnouncementItems(prisma, { matchId: MATCH }),
+    ).toEqual([]);
   });
 });
