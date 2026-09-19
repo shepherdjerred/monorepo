@@ -13,8 +13,7 @@ import type {
 } from "#shared/agent/agent-chat-receipt.ts";
 import {
   AGENT_CHAT_CATALOG_WORKFLOW_ID,
-  AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS,
-  AGENT_CHAT_TURN_TIMEOUT_MS,
+  AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS,
   MAX_AGENT_CHAT_CATALOG_BINDINGS,
   MAX_AGENT_CHAT_CATALOG_ENTRIES,
   MAX_AGENT_CHAT_CATALOG_STATE_BYTES,
@@ -564,8 +563,7 @@ describe("agent chat catalog and schedules", () => {
           attempts += 1;
           expect(Date.parse(input.request.providerStartDeadline ?? "")).toBe(
             Date.parse(input.request.submittedAt) +
-              AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS -
-              AGENT_CHAT_TURN_TIMEOUT_MS,
+              AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS,
           );
           if (attempts === 1) throw new Error("transient dispatch failure");
           return Promise.resolve({
