@@ -30,7 +30,10 @@ export async function prepareImessageCommand(rawCommand: ImessageCommand) {
   if (action.kind === "list") {
     const chats = await listAgentChats(client);
     const recent = chats
-      .toSorted((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+      .toSorted(
+        (left, right) =>
+          Date.parse(right.updatedAt) - Date.parse(left.updatedAt),
+      )
       .slice(0, 20);
     return message(
       recent.length === 0
@@ -49,7 +52,10 @@ export async function prepareImessageCommand(rawCommand: ImessageCommand) {
       return message(
         `Unknown chat: ${action.chatId}. Use /chats to list recent chats.`,
       );
-    await bindAgentChat(client, source, action.chatId, input.submittedAt);
+    await bindAgentChat(client, source, action.chatId, {
+      updatedAt: input.submittedAt,
+      sourceSequence: input.sourceSequence,
+    });
     return message(
       `Selected ${action.chatId}. Send ordinary text to continue.`,
     );
@@ -62,6 +68,7 @@ export async function prepareImessageCommand(rawCommand: ImessageCommand) {
     prompt: action.prompt,
     submittedAt: input.submittedAt,
     source,
+    sourceSequence: input.sourceSequence,
   };
   if (action.kind === "new") {
     const config = await imessageIngressConfig();

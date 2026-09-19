@@ -22,6 +22,7 @@ export const ImessageCommandSchema = z.strictObject({
   messageId: z.string().min(1).max(200),
   conversationId: z.string().min(1).max(200),
   submittedAt: z.iso.datetime(),
+  sourceSequence: z.number().int().positive(),
   action: ImessageActionSchema,
 });
 export type ImessageCommand = z.infer<typeof ImessageCommandSchema>;

@@ -377,11 +377,11 @@ export async function agentChatCatalogWorkflow(
   setHandler(settleAgentChatTurnUpdate, (entry, turnCount, updatedAt) =>
     settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
   );
-  setHandler(registerAndBindAgentChatUpdate, (entry, binding, updatedAt) =>
-    registerAndBindAgentChatCatalogEntry(state, entry, binding, updatedAt),
+  setHandler(registerAndBindAgentChatUpdate, (entry, binding, update) =>
+    registerAndBindAgentChatCatalogEntry(state, entry, binding, update),
   );
-  setHandler(bindAgentChatUpdate, (binding, chatId, updatedAt) =>
-    bind(state, binding, chatId, updatedAt),
+  setHandler(bindAgentChatUpdate, (binding, chatId, update) =>
+    bind(state, binding, chatId, update),
   );
   setHandler(resolveAgentChatBindingQuery, (binding) =>
     resolve(state, binding),

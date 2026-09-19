@@ -36,10 +36,27 @@ describe("durable BlueBubbles polling", () => {
     expect(mocks.request).toHaveBeenCalledWith(
       "/api/v1/message/query",
       expect.objectContaining({
-        after: Date.parse(CURSOR.startedAt),
         where: [{ statement: "message.ROWID > :cursor", args: { cursor: 10 } }],
       }),
     );
+    expect(mocks.request.mock.calls[0]?.[1]).not.toHaveProperty("after");
+  });
+  test("establishes an initial ROWID watermark without replaying history", async () => {
+    mocks.request.mockResolvedValue([message(50)]);
+    const result = await pollBlueBubblesMessages({
+      ...CURSOR,
+      lastRowId: 0,
+    });
+    expect(result).toEqual({
+      startedAt: CURSOR.startedAt,
+      lastRowId: 50,
+      commands: [],
+    });
+    expect(mocks.request).toHaveBeenCalledWith("/api/v1/message/query", {
+      with: ["chats"],
+      limit: 1,
+      sort: "DESC",
+    });
   });
   test("caps the durable batch at fifty without skipping the remainder", async () => {
     mocks.request.mockResolvedValue(
@@ -69,9 +86,7 @@ describe("durable BlueBubbles polling", () => {
       lastRowId: 10,
       commands: [],
     });
-    expect(Date.parse(result.startedAt)).toBeGreaterThan(
-      Date.parse(CURSOR.startedAt),
-    );
+    expect(result.startedAt).toBe(CURSOR.startedAt);
     expect(mocks.request).not.toHaveBeenCalled();
   });
 });

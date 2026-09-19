@@ -292,7 +292,7 @@ test("repairs an evicted chat and binds it in one catalog mutation", () => {
       turnCount: 0,
     },
     binding,
-    "2027-02-01T00:00:00.000Z",
+    { updatedAt: "2027-02-01T00:00:00.000Z" },
   );
 
   expect(restored.config.chatId).toBe(CONFIG.chatId);
@@ -817,16 +817,51 @@ describe("agent chat catalog and schedules", () => {
       });
       const binding = { kind: "imessage" as const, conversationId: "guid-1" };
       await handle.executeUpdate(bindAgentChatUpdate, {
-        args: [binding, CONFIG.chatId, "2026-09-14T16:04:00.000Z"],
+        args: [
+          binding,
+          CONFIG.chatId,
+          { updatedAt: "2026-09-14T16:04:00.000Z" },
+        ],
       });
       await handle.executeUpdate(bindAgentChatUpdate, {
-        args: [binding, secondEntry.config.chatId, "2026-09-14T16:05:00.000Z"],
+        args: [
+          binding,
+          secondEntry.config.chatId,
+          { updatedAt: "2026-09-14T16:05:00.000Z" },
+        ],
       });
       await handle.executeUpdate(bindAgentChatUpdate, {
-        args: [binding, CONFIG.chatId, "2026-09-14T16:05:00.000Z"],
+        args: [
+          binding,
+          CONFIG.chatId,
+          { updatedAt: "2026-09-14T16:05:00.000Z" },
+        ],
       });
       await handle.executeUpdate(bindAgentChatUpdate, {
-        args: [binding, secondEntry.config.chatId, "2026-09-14T16:04:30.000Z"],
+        args: [
+          binding,
+          secondEntry.config.chatId,
+          { updatedAt: "2026-09-14T16:04:30.000Z" },
+        ],
+      });
+      const equalTimestampSelection = await handle.query(
+        resolveAgentChatBindingQuery,
+        binding,
+      );
+      expect(equalTimestampSelection?.config.chatId).toBe(CONFIG.chatId);
+      await handle.executeUpdate(bindAgentChatUpdate, {
+        args: [
+          binding,
+          CONFIG.chatId,
+          { updatedAt: "2026-09-14T16:06:00.000Z", sourceSequence: 100 },
+        ],
+      });
+      await handle.executeUpdate(bindAgentChatUpdate, {
+        args: [
+          binding,
+          secondEntry.config.chatId,
+          { updatedAt: "2026-09-14T16:02:00.000Z", sourceSequence: 101 },
+        ],
       });
       await handle.executeUpdate(recordAgentChatTurnUpdate, {
         args: [CONFIG.chatId, 3, "2026-09-14T16:06:00.000Z"],
@@ -841,7 +876,7 @@ describe("agent chat catalog and schedules", () => {
         resolveAgentChatBindingQuery,
         binding,
       );
-      expect(resolved?.config.chatId).toBe(CONFIG.chatId);
+      expect(resolved?.config.chatId).toBe(secondEntry.config.chatId);
       const updated = await handle.query(
         getAgentChatCatalogEntryQuery,
         CONFIG.chatId,
