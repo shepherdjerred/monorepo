@@ -38,8 +38,8 @@ import {
   getAgentChatStateQuery,
   listAgentChatsQuery,
   registerAgentChatUpdate,
-  recordAgentChatTurnUpdate,
   resolveAgentChatBindingQuery,
+  settleAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
 
 type AgentChatCatalogWorkflow = (
@@ -188,7 +188,7 @@ export async function runAgentChatTurn(input: {
 }): Promise<AgentChatTurnResult> {
   const config = AgentChatConfigSchema.parse(input.config);
   const request = AgentChatTurnRequestSchema.parse(input.request);
-  await registerAgentChat(input.client, config);
+  const catalogEntry = await registerAgentChat(input.client, config);
   if (
     input.bindSource === true &&
     (request.source.kind === "imessage" || request.source.kind === "discord")
@@ -242,8 +242,8 @@ export async function runAgentChatTurn(input: {
   const result = AgentChatTurnResultSchema.parse(rawResult);
   await input.client
     .getHandle(AGENT_CHAT_CATALOG_WORKFLOW_ID)
-    .executeUpdate(recordAgentChatTurnUpdate, {
-      args: [config.chatId, result.turnNumber, result.completedAt],
+    .executeUpdate(settleAgentChatTurnUpdate, {
+      args: [catalogEntry, result.turnNumber, result.completedAt],
     });
   return result;
 }

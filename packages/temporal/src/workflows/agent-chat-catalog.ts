@@ -27,6 +27,7 @@ import {
   recordAgentChatTurnUpdate,
   registerAgentChatUpdate,
   resolveAgentChatBindingQuery,
+  settleAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
 
 function catalogStateBytes(state: AgentChatCatalogState): number {
@@ -201,6 +202,16 @@ function recordTurn(
   return next;
 }
 
+export function settleAgentChatCatalogTurn(
+  state: AgentChatCatalogState,
+  rawEntry: AgentChatCatalogEntry,
+  turnCount: number,
+  updatedAt: string,
+): AgentChatCatalogEntry {
+  const entry = registerAgentChatCatalogEntry(state, rawEntry);
+  return recordTurn(state, entry.config.chatId, turnCount, updatedAt);
+}
+
 function bind(
   state: AgentChatCatalogState,
   rawBinding: AgentChatBinding,
@@ -265,6 +276,9 @@ export async function agentChatCatalogWorkflow(
   );
   setHandler(recordAgentChatTurnUpdate, (chatId, turnCount, updatedAt) =>
     recordTurn(state, chatId, turnCount, updatedAt),
+  );
+  setHandler(settleAgentChatTurnUpdate, (entry, turnCount, updatedAt) =>
+    settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
   );
   setHandler(bindAgentChatUpdate, (binding, chatId, updatedAt) =>
     bind(state, binding, chatId, updatedAt),
