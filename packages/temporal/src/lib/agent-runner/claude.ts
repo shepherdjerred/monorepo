@@ -283,6 +283,7 @@ export async function runClaudeAgentTurn(
       providerUid,
     );
     await prepareProviderWorkspace(input.cwd, providerUid);
+    input.signal.throwIfAborted();
     const messages = traceClaudeAgent<SDKMessage>(
       {
         service: input.service,
