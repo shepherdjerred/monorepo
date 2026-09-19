@@ -17,6 +17,14 @@ export type AppOptions = {
     repoId: number,
     branch: string,
   ) => Promise<string | undefined>;
+  /**
+   * Resolves the newest commit whose images were built, pushed and pinned --
+   * a stricter question than "last green", answered from per-workflow outcomes.
+   */
+  readonly imageReleaseBase: (
+    repoId: number,
+    branch: string,
+  ) => Promise<string | undefined>;
 };
 
 export function createApp(options: AppOptions): Hono {
@@ -50,16 +58,20 @@ export function createApp(options: AppOptions): Hono {
     }
 
     const { repo, pipeline } = parsed.data;
-    const [images, changedBase] = await Promise.all([
+    const [images, changedBase, imageReleaseBase] = await Promise.all([
       resolveCiImages(pipeline.commit, options.imageFetcher),
       options.changedBase(repo.id, repo.default_branch),
+      options.imageReleaseBase(repo.id, repo.default_branch),
     ]);
-    const selected = selectSteps(buildPipelineSteps({ images, changedBase }), {
-      event: pipeline.event,
-      branch: pipeline.branch,
-      defaultBranch: repo.default_branch,
-      changedFiles: pipeline.changed_files,
-    });
+    const selected = selectSteps(
+      buildPipelineSteps({ images, changedBase, imageReleaseBase }),
+      {
+        event: pipeline.event,
+        branch: pipeline.branch,
+        defaultBranch: repo.default_branch,
+        changedFiles: pipeline.changed_files,
+      },
+    );
 
     return context.json({ configs: emitWorkflows(selected) });
   });
