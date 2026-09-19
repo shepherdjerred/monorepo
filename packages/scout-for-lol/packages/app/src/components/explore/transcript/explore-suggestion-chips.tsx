@@ -5,9 +5,9 @@ import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   EXPLORE_SUGGESTIONS,
   PERSISTENT_EXPLORE_SUGGESTION,
-  pickDiverseSuggestions,
   type ExploreFeatureContext,
-} from "#src/components/explore/transcript/explore-suggestions.ts";
+} from "@scout-for-lol/data";
+import { pickDiverseSuggestions } from "#src/components/explore/transcript/explore-suggestions.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function ExploreSuggestionChips(props: {
