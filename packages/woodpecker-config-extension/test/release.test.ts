@@ -220,3 +220,91 @@ describe("release graph matches the pipeline it replaces", () => {
     });
   }
 });
+
+/**
+ * Every artifact a lane restores must be published by a lane it depends on.
+ *
+ * This is the invariant the Buildkite artifact store enforced implicitly by
+ * scoping downloads to a named producing step. Nothing enforces it now, and a
+ * mismatch would surface as a deploy that publishes whatever happens to be on
+ * disk rather than as an error.
+ */
+describe("artifact producers and consumers line up", () => {
+  const producedBy = new Map<string, string>();
+  const consumedBy: { key: string; artifact: string }[] = [];
+
+  for (const candidate of allSteps()) {
+    for (const command of candidate.commands) {
+      const put = /ci-artifact\.ts put (?<name>[\w-]+)/u.exec(command);
+      if (put?.groups?.["name"] !== undefined) {
+        producedBy.set(put.groups["name"], candidate.key);
+      }
+      const get = /ci-artifact\.ts get (?<name>[\w-]+)/u.exec(command);
+      if (get?.groups?.["name"] !== undefined) {
+        consumedBy.push({ key: candidate.key, artifact: get.groups["name"] });
+      }
+    }
+  }
+
+  test("at least one artifact is exchanged", () => {
+    expect(consumedBy.length).toBeGreaterThan(0);
+  });
+
+  test("each consumed artifact has a producer upstream of it", () => {
+    for (const { key, artifact } of consumedBy) {
+      const producer = producedBy.get(artifact);
+      expect(producer, `${artifact} has no producer`).toBeDefined();
+      if (producer === undefined) continue;
+      expect(
+        dependsTransitivelyOn(allSteps(), key, producer),
+        `${key} consumes ${artifact} but does not depend on ${producer}`,
+      ).toBe(true);
+    }
+  });
+});
+
+/**
+ * Handoffs published from inside a script rather than by a lane command.
+ *
+ * bake-images.ts writes these three itself, so they are invisible to a scan
+ * of the lane commands. Declaring them keeps the upstream-dependency check
+ * meaningful and records the coupling: if that script stops publishing one,
+ * this list is where the consumers are named.
+ */
+const SCRIPT_PUBLISHED_HANDOFFS: Readonly<Record<string, string>> = {
+  "image-digests": "images",
+  "version-catalog": "images",
+  "pin-candidates": "images",
+};
+
+/** Same invariant for the JSON handoff store. */
+describe("handoff producers and consumers line up", () => {
+  test("each required handoff read has a producer upstream of it", () => {
+    const steps = allSteps();
+    const producedBy = new Map<string, string>(
+      Object.entries(SCRIPT_PUBLISHED_HANDOFFS),
+    );
+    for (const candidate of steps) {
+      for (const command of candidate.commands) {
+        const put = /write-ci-handoff\.ts (?<name>[\w-]+)/u.exec(command);
+        if (put?.groups?.["name"] !== undefined) {
+          producedBy.set(put.groups["name"], candidate.key);
+        }
+      }
+    }
+    for (const candidate of steps) {
+      for (const command of candidate.commands) {
+        const get = /read-ci-handoff\.ts (?<name>[\w-]+)/u.exec(command);
+        const artifact = get?.groups?.["name"];
+        if (artifact === undefined) continue;
+        const producer = producedBy.get(artifact);
+        expect(producer, `${artifact} has no producer`).toBeDefined();
+        if (producer === undefined) continue;
+        expect(
+          dependsTransitivelyOn(steps, candidate.key, producer),
+          `${candidate.key} reads ${artifact} but does not depend on ${producer}`,
+        ).toBe(true);
+      }
+    }
+  });
+});

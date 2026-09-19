@@ -118,6 +118,39 @@ export async function writeJsonHandoff(
  * on the producing step, and that step writes them on both its build and its
  * skip path, so an absent key means the contract broke and must fail loudly.
  */
+/**
+ * Read a handoff value that the producing step may legitimately not have
+ * published.
+ *
+ * Use this ONLY where an absent value is a real outcome rather than a broken
+ * contract -- a producer that ran and correctly decided there was nothing to
+ * hand off. Everything else must use `readRequiredHandoff`, because a
+ * defaulted value turns a producer regression into a green build that did
+ * nothing.
+ *
+ * A missing object returns undefined; any other failure still throws, so a
+ * credential or network problem is never mistaken for "nothing to do".
+ */
+export async function readOptionalHandoff(
+  key: string,
+  config: CiHandoffConfig = ciHandoffConfigFromEnv(),
+  fetchImpl: HandoffFetch = fetch,
+): Promise<string | undefined> {
+  const objectKey = handoffObjectKey(config.pipelineNumber, key);
+  const request = createSignedS3Request(signingConfig(config), {
+    method: "GET",
+    key: objectKey,
+  });
+  const response = await fetchImpl(request);
+  if (response.status === 404) return undefined;
+  if (!response.ok) {
+    throw new Error(
+      `could not read CI handoff ${key} (${response.status.toString()})`,
+    );
+  }
+  return response.text();
+}
+
 export async function readRequiredHandoff(
   key: string,
   config: CiHandoffConfig = ciHandoffConfigFromEnv(),

@@ -13,6 +13,8 @@ import {
 } from "#src/pipeline/lanes/tofu-apply.ts";
 import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
+import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
+import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -66,6 +68,10 @@ function verifyCommands(): string[] {
     // stay local-only to avoid large transfers over weak links.
     'export TURBO_CACHE="local:rw,remote:rw"',
     "bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=4 --output-logs=errors-only --summarize",
+    "bun --no-install packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated",
+    // The image lane smoke-tests Caddy against this. It travels as a JSON
+    // string because each Woodpecker workflow gets its own workspace.
+    "jq -Rs . < caddyfile.generated | bun --no-install scripts/ci/write-ci-handoff.ts caddyfile",
   ];
 }
 
@@ -136,5 +142,7 @@ export function buildPipelineSteps({
     ...tofuApplySteps(images),
     ...releaseChainSteps(images, sharedEnvironment),
     ...ciImageSteps(images),
+    ...scoutSteps(images),
+    ...siteSteps(images),
   ];
 }

@@ -3,6 +3,7 @@ import {
   CI_HANDOFF_BUCKET,
   CI_HANDOFF_REGION,
   handoffObjectKey,
+  readOptionalHandoff,
   readRequiredHandoff,
   writeJsonHandoff,
   type CiHandoffConfig,
@@ -119,4 +120,24 @@ test("rejects malformed JSON in the producing step", () => {
 
 test("accepts a well-formed document", () => {
   expect(parseHandoffPayload('{"a":1}\n', "version-catalog")).toEqual({ a: 1 });
+});
+
+test("an optional read returns undefined when nothing was published", async () => {
+  const value = await readOptionalHandoff(
+    "scout-release-state",
+    CONFIG,
+    async () => new Response("", { status: 404 }),
+  );
+  expect(value).toBeUndefined();
+});
+
+/** A credential problem must never read as "nothing to do". */
+test("an optional read still fails on a non-404 error", async () => {
+  await expect(
+    readOptionalHandoff(
+      "scout-release-state",
+      CONFIG,
+      async () => new Response("denied", { status: 403 }),
+    ),
+  ).rejects.toThrow(/could not read CI handoff scout-release-state \(403\)/u);
 });
