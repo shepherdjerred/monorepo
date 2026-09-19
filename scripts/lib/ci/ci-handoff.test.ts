@@ -7,6 +7,7 @@ import {
   writeJsonHandoff,
   type CiHandoffConfig,
 } from "./ci-handoff.ts";
+import { parseHandoffPayload } from "../../ci/write-ci-handoff.ts";
 
 const CONFIG: CiHandoffConfig = {
   accessKeyId: "test-access-key",
@@ -102,4 +103,20 @@ test("fails loudly when publishing is rejected", async () => {
       async () => new Response("denied", { status: 403 }),
     ),
   ).rejects.toThrow(/could not publish CI handoff image-digests \(403\)/u);
+});
+
+test("rejects an empty payload rather than publishing nothing", () => {
+  expect(() => parseHandoffPayload("  \n", "image-digests")).toThrow(
+    /refusing to publish an empty CI handoff for image-digests/u,
+  );
+});
+
+test("rejects malformed JSON in the producing step", () => {
+  expect(() => parseHandoffPayload("{not json", "pin-candidates")).toThrow(
+    /CI handoff pin-candidates is not valid JSON/u,
+  );
+});
+
+test("accepts a well-formed document", () => {
+  expect(parseHandoffPayload('{"a":1}\n', "version-catalog")).toEqual({ a: 1 });
 });

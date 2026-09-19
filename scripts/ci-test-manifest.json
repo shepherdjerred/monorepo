@@ -389,6 +389,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/woodpecker-config-extension",
+      "directory": "packages/woodpecker-config-extension",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/monarch",
       "directory": "packages/monarch",
       "steps": [
