@@ -40,35 +40,23 @@ type ReceiptOutcome =
   | { status: "completed"; result: AgentChatTurnResult }
   | { status: "failed"; message: string };
 
-function isSettledTurnFailure(error: unknown): boolean {
-  if (!(error instanceof ActivityFailure)) return false;
-  const cause = error.cause;
-  return (
-    cause instanceof ApplicationFailure &&
-    cause.type === "AgentChatTurnPreviouslyFailed"
-  );
-}
+const TERMINAL_RECEIPT_FAILURE_TYPES = new Set([
+  "AgentChatTurnPreviouslyFailed",
+  "AgentChatConfigConflict",
+  "AgentChatNotRunning",
+  "AgentChatPinnedRunUnavailable",
+  "AgentChatAdmissionUnavailable",
+]);
 
-async function executeReceipt(
-  input: AgentChatReceiptInput,
-): Promise<AgentChatTurnResult> {
-  for (
-    let attempt = 0;
-    attempt < AGENT_CHAT_DISPATCH_MAX_ATTEMPTS;
-    attempt += 1
-  ) {
-    // The run pin is recorded in Workflow history before a turn can be admitted.
-    const runId = await locateActivities.locateAgentChatRun(input);
-    const outcome = AgentChatPinnedResultSchema.parse(
-      await dispatchActivities.dispatchPinnedAgentChatTurn({ ...input, runId }),
-    );
-    if (outcome.status === "completed")
-      return AgentChatTurnResultSchema.parse(outcome.result);
-    // Redirection is allowed only when the old run closed without accepting this update.
-  }
-  throw ApplicationFailure.nonRetryable(
-    "Agent chat kept rolling over before turn admission",
-    "AgentChatAdmissionUnavailable",
+function isTerminalReceiptFailure(error: unknown): boolean {
+  const failure =
+    error instanceof ActivityFailure &&
+    error.cause instanceof ApplicationFailure
+      ? error.cause
+      : error;
+  return (
+    failure instanceof ApplicationFailure &&
+    TERMINAL_RECEIPT_FAILURE_TYPES.has(failure.type ?? "")
   );
 }
 
@@ -77,6 +65,8 @@ export async function agentChatTurnReceiptWorkflow(
 ): Promise<never> {
   const input = AgentChatReceiptInputSchema.parse(rawInput);
   let outcome: ReceiptOutcome | undefined;
+  let pinnedRunId: string | undefined;
+  let redirects = 0;
   setHandler(getAgentChatReceiptInputQuery, () => input);
   setHandler(awaitAgentChatReceiptUpdate, async () => {
     await condition(() => outcome !== undefined);
@@ -92,17 +82,40 @@ export async function agentChatTurnReceiptWorkflow(
   });
   while (outcome === undefined) {
     try {
-      outcome = { status: "completed", result: await executeReceipt(input) };
+      // Once selected, retain the run pin across exhausted Activity retries.
+      // A redirect is safe only after the pinned run explicitly reports that it
+      // continued as new without admitting this update.
+      pinnedRunId ??= await locateActivities.locateAgentChatRun(input);
+      const pinned = AgentChatPinnedResultSchema.parse(
+        await dispatchActivities.dispatchPinnedAgentChatTurn({
+          ...input,
+          runId: pinnedRunId,
+        }),
+      );
+      if (pinned.status === "completed") {
+        outcome = {
+          status: "completed",
+          result: AgentChatTurnResultSchema.parse(pinned.result),
+        };
+        continue;
+      }
+      pinnedRunId = undefined;
+      redirects += 1;
+      if (redirects >= AGENT_CHAT_DISPATCH_MAX_ATTEMPTS) {
+        throw ApplicationFailure.nonRetryable(
+          "Agent chat kept rolling over before turn admission",
+          "AgentChatAdmissionUnavailable",
+        );
+      }
     } catch (error: unknown) {
-      if (isSettledTurnFailure(error)) {
+      if (isTerminalReceiptFailure(error)) {
         outcome = {
           status: "failed",
           message: boundAgentChatFailureMessage(collectErrorMessages(error)),
         };
       } else {
-        // The pinned update ID makes another dispatch safe after transport,
-        // Temporal-client, or rollover exhaustion. Keep the durable receipt
-        // retryable until the owner confirms a terminal turn outcome.
+        // The pinned update ID and retained run ID make another dispatch safe
+        // after transport or Temporal-client exhaustion.
         await sleep("30 seconds");
       }
     }
