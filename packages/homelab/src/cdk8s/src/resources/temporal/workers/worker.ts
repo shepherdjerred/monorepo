@@ -194,9 +194,7 @@ export function createTemporalWorkerDeployment(
       OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-agent-worker"),
       ...llmArchiveEnvVars(),
-      NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
-        "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-      ),
+      NODE_EXTRA_CA_CERTS: EnvValue.fromValue("/etc/kubernetes/ca.crt"),
       // Codex SDK receives the service-scoped OpenRouter key directly.
       OPENROUTER_API_KEY: EnvValue.fromSecretValue({
         secret,

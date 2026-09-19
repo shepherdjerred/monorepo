@@ -5,6 +5,7 @@ import {
   WorkflowNotFoundError,
   type WorkflowClient,
 } from "@temporalio/client";
+import { createHash } from "node:crypto";
 import {
   AGENT_CHAT_CATALOG_WORKFLOW_ID,
   AgentChatBindingSchema,
@@ -99,8 +100,12 @@ export async function bindAgentChat(
   updatedAt: string,
 ): Promise<AgentChatCatalogEntry> {
   const binding = AgentChatBindingSchema.parse(rawBinding);
+  const updateId = createHash("sha256")
+    .update(JSON.stringify({ binding, chatId, updatedAt }))
+    .digest("hex");
   return await client.executeUpdateWithStart(bindAgentChatUpdate, {
     args: [binding, chatId, updatedAt],
+    updateId: `agent-chat-binding/${updateId}`,
     startWorkflowOperation: catalogStart(),
   });
 }
