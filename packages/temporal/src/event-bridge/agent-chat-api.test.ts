@@ -161,7 +161,7 @@ describe("submitHttpAgentChatCommand", () => {
     return client;
   }
 
-  it("accepts a semantic retry with a later server timestamp", async () => {
+  it("rejects a retry that changes the caller timestamp", async () => {
     const retry: HttpAgentChatCommand = {
       ...accepted,
       request: { ...accepted.request, submittedAt: NOW },
@@ -169,7 +169,7 @@ describe("submitHttpAgentChatCommand", () => {
 
     await expect(
       submitHttpAgentChatCommand(clientWithAcceptedCommand(accepted), retry),
-    ).resolves.toEqual(RECEIPT);
+    ).rejects.toBeInstanceOf(AgentChatTurnConflictError);
   });
 
   it("rejects reuse of a turn id for another command", async () => {
