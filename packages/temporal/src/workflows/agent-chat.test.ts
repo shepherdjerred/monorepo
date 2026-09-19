@@ -423,6 +423,9 @@ describe("agent chat workflows", () => {
       await handle.terminate("test complete");
     });
   }, 60_000);
+});
+
+describe("agent chat admission", () => {
   test("rejects an expired turn before provider activity admission", async () => {
     const runTurn = vi.fn((input: RunAgentChatTurnInput) =>
       Promise.resolve(turnResult(input)),
@@ -454,7 +457,9 @@ describe("agent chat workflows", () => {
     );
     expect(runTurn).not.toHaveBeenCalled();
   }, 60_000);
+});
 
+describe("agent chat workflow bounds", () => {
   test("rejects excess pending turns with explicit backpressure", async () => {
     const firstStarted = Promise.withResolvers<undefined>();
     const releaseFirst = Promise.withResolvers<undefined>();

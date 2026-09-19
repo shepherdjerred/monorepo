@@ -336,6 +336,35 @@ describe("buildAgentChatApiRoutes", () => {
       existing.config.createdAt,
     );
   });
+
+  it("returns a conflict when another request races registration", async () => {
+    const operations = makeOperations();
+    const conflicting = {
+      ...EMPTY_CHAT_ENTRY,
+      config: { ...EMPTY_CHAT_ENTRY.config, model: "different-model" },
+    };
+    operations.get = vi
+      .fn<AgentChatApiOperations["get"]>()
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(conflicting);
+    operations.register = vi.fn(() =>
+      Promise.reject(new Error("owner already exists")),
+    );
+
+    const response = await appWith(operations).fetch(
+      request("/agent-chats", {
+        method: "POST",
+        token: TOKEN,
+        body: EMPTY_CHAT_REQUEST,
+      }),
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.text()).toContain(
+      "reused with different configuration",
+    );
+    expect(operations.bind).not.toHaveBeenCalled();
+  });
 });
 
 describe("prompted chat registration", () => {

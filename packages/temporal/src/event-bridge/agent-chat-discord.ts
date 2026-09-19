@@ -346,16 +346,17 @@ export async function handleAgentChatDiscordCommand(
   operations: AgentChatDiscordOperations = defaultOperations,
 ): Promise<void> {
   if (interaction.commandName !== "agent") return;
-  const subcommand = interaction.options.getSubcommand();
-  if (interaction.guild?.ownerId !== interaction.user.id) {
-    await interaction.reply({
-      content: "Only the server owner can use durable agent chats.",
-      flags: MessageFlags.Ephemeral,
-      allowedMentions: { parse: [] },
-    });
-    return;
-  }
+  let subcommand: string | undefined;
   try {
+    subcommand = interaction.options.getSubcommand();
+    if (interaction.guild?.ownerId !== interaction.user.id) {
+      await interaction.reply({
+        content: "Only the server owner can use durable agent chats.",
+        flags: MessageFlags.Ephemeral,
+        allowedMentions: { parse: [] },
+      });
+      return;
+    }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (subcommand === "new") {
       await handleNew(temporal, interaction, operations);
@@ -382,10 +383,30 @@ export async function handleAgentChatDiscordCommand(
     });
     const message =
       error instanceof Error ? error.message : "The agent chat request failed.";
-    await interaction.editReply({
-      content: message,
-      allowedMentions: { parse: [] },
-    });
+    try {
+      await interaction.editReply({
+        content: message,
+        allowedMentions: { parse: [] },
+      });
+    } catch (responseError: unknown) {
+      Sentry.withScope((scope) => {
+        scope.setTag("component", COMPONENT);
+        scope.setTag("operation", "report-command-failure");
+        scope.setContext("discordInteraction", {
+          interactionId: interaction.id,
+          channelId: interaction.channelId,
+          subcommand,
+        });
+        Sentry.captureException(responseError);
+      });
+      jsonLog("error", "Failed to report Discord agent chat error", {
+        interactionId: interaction.id,
+        error:
+          responseError instanceof Error
+            ? responseError.message
+            : String(responseError),
+      });
+    }
   }
 }
 
@@ -415,6 +436,21 @@ export async function registerAgentChatDiscordCommand(
   }
 }
 
+async function handleDiscordInteractionSafely(
+  temporal: TemporalClient,
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
+  try {
+    await handleAgentChatDiscordCommand(temporal, interaction);
+  } catch (error: unknown) {
+    Sentry.captureException(error);
+    jsonLog("error", "Unhandled Discord agent chat command failure", {
+      interactionId: interaction.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 export async function startAgentChatDiscordBot(
   temporal: TemporalClient,
 ): Promise<AgentChatDiscordHandle | undefined> {
@@ -429,7 +465,7 @@ export async function startAgentChatDiscordBot(
   const discord = new Client({ intents: [GatewayIntentBits.Guilds] });
   discord.on(Events.InteractionCreate, (interaction) => {
     if (interaction.isChatInputCommand()) {
-      void handleAgentChatDiscordCommand(temporal, interaction);
+      void handleDiscordInteractionSafely(temporal, interaction);
     }
   });
   const ready = new Promise<Client<true>>((resolve) => {
