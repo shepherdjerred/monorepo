@@ -7,18 +7,20 @@ Chat Workflows own immutable conversation identity; the catalog retains recent d
 
 ## Catalog and execution limits
 
-| Contract                                 | Limit                                       |
-| ---------------------------------------- | ------------------------------------------- |
-| Recent chat entries                      | 500                                         |
-| Ingress bindings                         | 500                                         |
-| Recent retired IDs                       | 500                                         |
-| Serialized catalog state                 | 1,000,000 UTF-8 bytes                       |
-| Pending turns per chat, including active | 8                                           |
-| Provider Activity execution              | 2 hours; one attempt                        |
-| Command dispatch wait                    | 17 hours per attempt; five attempts         |
-| Scheduled Workflow execution             | 86 hours; all dispatch attempts plus margin |
+| Contract                                 | Limit                                              |
+| ---------------------------------------- | -------------------------------------------------- |
+| Recent chat entries                      | 500                                                |
+| Ingress bindings                         | 500                                                |
+| Recent retired IDs                       | 500                                                |
+| Serialized catalog state                 | 1,000,000 UTF-8 bytes                              |
+| Pending turns per chat, including active | 8                                                  |
+| Provider Activity admission + execution  | 1 hour queued + 2 hours executing; one attempt     |
+| Chat command wait                        | 25 hours executing; 26 hours including queue delay |
+| Receipt Workflow execution               | 131 hours; admission closes 3 hours before expiry  |
+| Scheduled dispatch Activity              | 132 hours including queue delay                    |
+| Scheduled Workflow execution             | 133 hours including shutdown margin                |
 
-Sources: [shared contracts](https://github.com/shepherdjerred/monorepo/blob/b6d771ba44aabb3673872a35653668ad3bceabb0/packages/temporal/src/shared/agent/agent-chat.ts), [catalog retention](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/workflows/agent-chat-catalog.ts), [turn execution](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/workflows/agent-chat.ts), and [schedule dispatch](https://github.com/shepherdjerred/monorepo/blob/6233897e0956e4a22ccdee583dfa8b0b0a54ae0d/packages/temporal/src/workflows/scheduled-agent-chat-turn.ts).
+Sources: [shared contracts](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/agent/agent-chat.ts), [catalog retention](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat-catalog.ts), [turn execution](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat.ts), [receipt admission](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat-turn-receipt.ts), and [schedule dispatch](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/scheduled-agent-chat-turn.ts).
 
 Catalog eviction removes discovery metadata and associated bindings, not the chat Workflow or its session objects. An explicit chat ID recovers the original configuration. A reused ID with different immutable configuration is rejected against the chat Workflow.
 
@@ -38,7 +40,7 @@ Source: [chat identity and lookup](https://github.com/shepherdjerred/monorepo/bl
 | Expired receipt history             | A reused turn ID can create a new receipt and repeat provider effects |
 | Receipt Activity queue              | `agent-chat-receipts`; repo role; concurrency 1                       |
 
-Sources: [receipt Workflow](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/workflows/agent-chat-turn-receipt.ts), [run-pinned dispatch](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/lib/agent-chat-receipts.ts), [client input validation](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/lib/agent-chat-client.ts), and [namespace retention](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/namespace-init.ts).
+Sources: [receipt Workflow](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat-turn-receipt.ts), [run-pinned dispatch](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/lib/agent-chat-receipts.ts), [client input validation](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/lib/agent-chat-client.ts), and [namespace retention](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/namespace-init.ts).
 
 ## Provider checkpoints
 
