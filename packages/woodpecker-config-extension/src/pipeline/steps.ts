@@ -3,6 +3,23 @@ import type { CiStep } from "#src/pipeline/model.ts";
 import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
 
 /**
+ * Shared cache claims mounted by step pods.
+ *
+ * These names are a contract with the cluster: the claims are created in
+ * `packages/homelab/src/cdk8s/src/resources/woodpecker/caches.ts`, and a step
+ * that names a claim which does not exist stays Pending rather than failing,
+ * so a rename on either side must change both.
+ */
+const BUN_CACHE = {
+  claim: "woodpecker-bun-cache",
+  path: "/woodpecker/bun-cache",
+} as const;
+const UV_CACHE = {
+  claim: "woodpecker-uv-cache",
+  path: "/woodpecker/uv-cache",
+} as const;
+
+/**
  * The CI graph, as data.
  *
  * Ported from the Buildkite pipeline one lane at a time. Each step keeps its
@@ -83,10 +100,7 @@ export function buildPipelineSteps({
           env: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
         },
       ],
-      volumes: [
-        { claim: "woodpecker-bun-cache", path: "/woodpecker/bun-cache" },
-        { claim: "woodpecker-uv-cache", path: "/woodpecker/uv-cache" },
-      ],
+      volumes: [BUN_CACHE, UV_CACHE],
     },
   ];
 }

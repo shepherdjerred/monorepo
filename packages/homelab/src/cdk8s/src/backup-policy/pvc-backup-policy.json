@@ -24,6 +24,18 @@
     "reason": "Woodpecker CI database - pipeline history and the last-green-main record the release lanes read back"
   },
   {
+    "namespace": "woodpecker",
+    "name": "woodpecker-bun-cache",
+    "backup": "disabled",
+    "reason": "Disposable CI package cache - rebuildable from the lockfile"
+  },
+  {
+    "namespace": "woodpecker",
+    "name": "woodpecker-uv-cache",
+    "backup": "disabled",
+    "reason": "Disposable CI package cache - rebuildable from the lockfile"
+  },
+  {
     "namespace": "buildkitd",
     "name": "buildkitd-cache-liskov",
     "backup": "disabled",
