@@ -42,14 +42,14 @@
       "buildNumber": 11934
     },
     "shepherdjerred/scout-evals": {
-      "version": "2.0.0-16110",
-      "digest": "sha256:24e959a4b41b26acc3b60565007bc91a53c144ff8801d65ce9db9f61fa6ef4a6",
-      "buildNumber": 16110
+      "buildNumber": 16132,
+      "version": "2.0.0-16132",
+      "digest": "sha256:d388417af697608e7c78c5aa0fe37bcc7284102e67de0058e33ed15c43a1f2b5"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 16117,
-      "version": "2.0.0-16117",
-      "digest": "sha256:100b2f6037f86a4b6487ccc8d11ea4e0be1ec135287676772fde46aea704331b"
+      "buildNumber": 16133,
+      "version": "2.0.0-16133",
+      "digest": "sha256:925ca782ae8688ee6ef046c12d13c70db42fcb86e52501fb004da0763ec14bed"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -73,9 +73,9 @@
       "buildNumber": 15874
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 16117,
-      "version": "2.0.0-16117",
-      "digest": "sha256:f0d1537df5cf782b9a403454a5201e1883a8ef12de1af543e8e3796fe99f5000"
+      "buildNumber": 16132,
+      "version": "2.0.0-16132",
+      "digest": "sha256:3adb1e8ba10d88bbb64a27f71c95f688a3cabfd8335baf1635a0b7bd53bc606f"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
