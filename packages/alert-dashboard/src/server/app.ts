@@ -107,6 +107,13 @@ export function createApp(options: AppOptions): Hono {
     options.metrics.gauge("alert_dashboard_open_alerts", summary.info, {
       severity: "info",
     });
+    // Outbox depth and age alone cannot tell a stuck sender from a sender that
+    // is switched off, and the rows keep their original timestamps either way.
+    // Publishing the switch lets the alert rules separate the two.
+    options.metrics.gauge(
+      "alert_dashboard_email_enabled",
+      status.emailEnabled ? 1 : 0,
+    );
     options.metrics.gauge(
       "alert_dashboard_email_outbox_depth",
       status.pendingEmails,

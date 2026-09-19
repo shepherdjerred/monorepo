@@ -11,6 +11,9 @@ import {
 
 const ArgsSchema = z.object({
   database: z.string().startsWith("file:"),
+  // Omit to cancel every pending row in the window. Required to reach rows
+  // carrying no occurrences, which no alertname can select.
+  alertname: z.string().min(1).optional(),
   from: InstantTextSchema,
   to: InstantTextSchema,
   operator: z.string().min(1),
@@ -23,6 +26,7 @@ function parseCliArgs(): z.infer<typeof ArgsSchema> {
     args: Bun.argv.slice(2),
     options: {
       database: { type: "string" },
+      alertname: { type: "string" },
       from: { type: "string" },
       to: { type: "string" },
       operator: { type: "string" },
@@ -38,7 +42,7 @@ const args = parseCliArgs();
 const repository = await createPrismaRepository(args.database);
 try {
   const result = await repository.cancelPendingEmails({
-    alertname: "TemporalWorkflowFailed",
+    alertname: args.alertname,
     fromNs: instantTextToEpochNanoseconds(args.from),
     toNs: instantTextToEpochNanoseconds(args.to),
     canceledAtNs: systemClock.now().epochNanoseconds,
@@ -50,7 +54,7 @@ try {
     Bun.stdout,
     JSON.stringify({
       mode: args.confirm ? "confirmed" : "dry-run",
-      alertname: "TemporalWorkflowFailed",
+      alertname: args.alertname ?? "(all pending in window)",
       matched: result.matched,
       canceled: result.canceled,
       ids: result.ids,

@@ -90,6 +90,43 @@ describe("SQLite email cancellation", () => {
     );
   });
 
+  it("cancels every pending row in the window when no alertname is given", async () => {
+    await repository.ingestWebhook(
+      input(
+        temporalFailureWebhook("fingerprint-temporal"),
+        "2026-08-08T18:00:01Z",
+      ),
+    );
+    await repository.ingestWebhook(
+      input(webhook("fingerprint-unrelated", "firing"), "2026-08-08T18:00:02Z"),
+    );
+    const window = {
+      fromNs: nanoseconds("2026-08-08T18:00:00Z"),
+      toNs: nanoseconds("2026-08-08T18:01:00Z"),
+      canceledAtNs: nanoseconds("2026-08-08T18:02:00Z"),
+      canceledBy: "incident-operator",
+      reason: "draining a stranded outbox",
+    };
+
+    // Targeting one alertname reaches only its own row, which is what leaves
+    // everything else stranded.
+    expect(
+      await repository.cancelPendingEmails({
+        ...window,
+        alertname: "TemporalWorkflowFailed",
+        confirm: false,
+      }),
+    ).toMatchObject({ matched: 1 });
+
+    // Omitting it reaches both.
+    expect(
+      await repository.cancelPendingEmails({ ...window, confirm: true }),
+    ).toMatchObject({ matched: 2, canceled: 2 });
+    expect(
+      await repository.pendingEmails(nanoseconds("2026-08-08T18:03:00Z"), 10),
+    ).toHaveLength(0);
+  });
+
   it("does not cancel an email after the sender claims it", async () => {
     const incident = temporalFailureWebhook("fingerprint-claimed");
     await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
