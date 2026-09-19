@@ -31,6 +31,11 @@ export const recordAgentChatTurnUpdate = defineUpdate<
   [string, number, string]
 >("recordAgentChatTurn");
 
+export const settleAgentChatTurnUpdate = defineUpdate<
+  AgentChatCatalogEntry,
+  [AgentChatCatalogEntry, number, string]
+>("settleAgentChatTurn");
+
 export const resolveAgentChatBindingQuery = defineQuery<
   AgentChatCatalogEntry | undefined,
   [AgentChatBinding]

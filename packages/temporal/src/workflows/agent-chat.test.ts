@@ -46,6 +46,7 @@ import {
 import {
   compactAgentChatCatalogState,
   registerAgentChatCatalogEntry,
+  settleAgentChatCatalogTurn,
 } from "./agent-chat-catalog.ts";
 
 const CONFIG: AgentChatConfig = {
@@ -230,6 +231,29 @@ test("retires the oldest catalog records before payload limits", () => {
   expect(
     new TextEncoder().encode(JSON.stringify(state)).byteLength,
   ).toBeLessThanOrEqual(MAX_AGENT_CHAT_CATALOG_STATE_BYTES);
+});
+
+test("settles a completed turn after its catalog entry was evicted", () => {
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [],
+    bindings: [],
+    retiredChatIds: [CONFIG.chatId],
+  };
+  const restored = settleAgentChatCatalogTurn(
+    state,
+    {
+      schemaVersion: 1,
+      config: CONFIG,
+      updatedAt: CONFIG.createdAt,
+      turnCount: 0,
+    },
+    3,
+    "2026-09-14T16:06:00.000Z",
+  );
+  expect(restored.turnCount).toBe(3);
+  expect(restored.updatedAt).toBe("2026-09-14T16:06:00.000Z");
+  expect(state.retiredChatIds).not.toContain(CONFIG.chatId);
 });
 
 describe("agent chat workflows", () => {
