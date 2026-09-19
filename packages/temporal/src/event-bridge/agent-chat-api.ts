@@ -374,14 +374,18 @@ export function buildAgentChatApiRoutes(
         client.workflow,
         input,
       );
+      const timestamp = now();
       const receipt = await operations.submit(
         client,
         HttpAgentChatCommandSchema.parse({
           kind: "continue",
           chatId,
-          request: requestForIngress(input, now()),
+          request: requestForIngress(input, timestamp),
         }),
       );
+      if (input.chatId !== undefined) {
+        await operations.bind(client.workflow, input.source, chatId, timestamp);
+      }
       return c.json({ turn: receipt }, 202);
     } catch (error: unknown) {
       if (error instanceof SyntaxError) return c.text("bad json\n", 400);

@@ -504,6 +504,15 @@ describe("durable agent chat turns and bindings", () => {
         source: { kind: "discord", channelId: "channel-1" },
       },
     });
+    expect(operations.bind).toHaveBeenCalledWith(
+      expect.anything(),
+      { kind: "discord", channelId: "channel-1" },
+      "chat-existing",
+      NOW,
+    );
+    expect(
+      vi.mocked(operations.submit).mock.invocationCallOrder[0],
+    ).toBeLessThan(vi.mocked(operations.bind).mock.invocationCallOrder[0] ?? 0);
   });
 
   it("rejects an unknown explicit chat before durable submission", async () => {
@@ -574,8 +583,11 @@ describe("durable agent chat turns and bindings", () => {
         chatId: COMPLETED_ENTRY.config.chatId,
       }),
     );
+    expect(operations.bind).not.toHaveBeenCalled();
   });
+});
 
+describe("durable agent chat turn status and direct bindings", () => {
   it("polls a durable turn to completion", async () => {
     const operations = makeOperations();
     const app = appWith(operations);
