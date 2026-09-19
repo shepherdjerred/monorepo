@@ -118,6 +118,7 @@ export function emitWorkflow(step: CiStep): string {
                 (volume) => `${volume.claim}:${volume.path}`,
               ),
             }),
+        ...(step.allowFailure === true ? { failure: "ignore" } : {}),
         backend_options: backendOptions(step),
       },
     ],

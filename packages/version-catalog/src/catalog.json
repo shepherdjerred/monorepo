@@ -863,6 +863,30 @@
       "value": "0.50.0@sha256:9d0d052f73362fe28143faa9b0a5ee3fdefedc93e2d7ad9ab8f65b15d50ca4bd"
     },
     {
+      "name": "aquasec/trivy",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "0.72.0"
+    },
+    {
+      "name": "semgrep/semgrep",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.170.0"
+    },
+    {
       "name": "woodpeckerci/woodpecker-server",
       "category": "upstream",
       "artifactType": "image",

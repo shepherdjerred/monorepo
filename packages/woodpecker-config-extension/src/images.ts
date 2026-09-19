@@ -11,7 +11,24 @@
  * The repository is public, so this needs no credentials.
  */
 
+import { z } from "zod";
+
 import type { FetchLike } from "#src/http.ts";
+
+const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
+
+/**
+ * Third-party images used by individual lanes.
+ *
+ * Read from the version catalog rather than pinned here so Renovate stays the
+ * single owner of the version, and read at the pipeline's own commit for the
+ * same reason the toolchain digests are: a value baked into this service would
+ * outlive the commit that changed it.
+ */
+const CATALOG_IMAGES = {
+  trivy: "aquasec/trivy",
+  semgrep: "semgrep/semgrep",
+} as const;
 
 const DIGEST_PATHS = {
   base: ".buildkite/ci-image/DIGEST",
@@ -28,6 +45,8 @@ const DIGEST_PATTERN = /^sha256:[\da-f]{64}$/u;
 export type CiImages = {
   readonly base: string;
   readonly playwright: string;
+  readonly trivy: string;
+  readonly semgrep: string;
 };
 
 export type ImageFetcher = (path: string, commit: string) => Promise<string>;
@@ -65,16 +84,52 @@ function requireDigest(value: string, path: string): string {
   return value;
 }
 
+/**
+ * The slice of the version catalog this service reads.
+ *
+ * Loose so an added field does not break CI, but `name` and `value` are
+ * required: a malformed entry must fail rather than be skipped, since a
+ * skipped entry reads as "no such image" and would take a lane down with a
+ * confusing error.
+ */
+const CatalogSchema = z.looseObject({
+  entries: z.array(z.looseObject({ name: z.string(), value: z.string() })),
+});
+
+/**
+ * Look one image up in the catalog.
+ *
+ * Throws on a missing entry rather than falling back to a default tag: a lane
+ * silently running an unpinned `latest` scanner is exactly the drift the
+ * catalog exists to prevent.
+ */
+function catalogVersion(catalog: string, name: string): string {
+  const parsed = CatalogSchema.safeParse(JSON.parse(catalog));
+  if (!parsed.success) {
+    throw new TypeError("version catalog has an unexpected shape");
+  }
+  const entry = parsed.data.entries.find(
+    (candidate) => candidate.name === name,
+  );
+  if (entry === undefined || entry.value.length === 0) {
+    throw new Error(`version catalog has no entry named ${name}`);
+  }
+  return entry.value;
+}
+
 export async function resolveCiImages(
   commit: string,
   fetcher: ImageFetcher,
 ): Promise<CiImages> {
-  const [base, playwright] = await Promise.all([
+  const [base, playwright, catalog] = await Promise.all([
     fetcher(DIGEST_PATHS.base, commit),
     fetcher(DIGEST_PATHS.playwright, commit),
+    fetcher(CATALOG_PATH, commit),
   ]);
   return {
     base: `${IMAGE_REPOS.base}@${requireDigest(base, DIGEST_PATHS.base)}`,
     playwright: `${IMAGE_REPOS.playwright}@${requireDigest(playwright, DIGEST_PATHS.playwright)}`,
+    trivy: `${CATALOG_IMAGES.trivy}:${catalogVersion(catalog, CATALOG_IMAGES.trivy)}`,
+    semgrep: `${CATALOG_IMAGES.semgrep}:${catalogVersion(catalog, CATALOG_IMAGES.semgrep)}`,
   };
 }

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { selectSteps } from "#src/pipeline/select.ts";
 import { emitWorkflow, shellQuote, wrapCommands } from "#src/pipeline/emit.ts";
+import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
 
@@ -220,5 +221,75 @@ describe("emission", () => {
       emitWorkflow(step("a", { changed: { include: ["**"] } })),
     );
     expect(parsed).not.toHaveProperty("when");
+  });
+});
+
+describe("ported lanes", () => {
+  const IMAGES = {
+    base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
+    playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
+    trivy: "aquasec/trivy:0.72.0",
+    semgrep: "semgrep/semgrep:1.170.0",
+  };
+
+  function keysFor(changedFiles: string[], branch = "feature") {
+    return selectSteps(
+      buildPipelineSteps({ images: IMAGES, changedBase: "x" }),
+      {
+        event: branch === "main" ? "push" : "pull_request",
+        branch,
+        defaultBranch: "main",
+        changedFiles,
+      },
+    ).map((s) => s.key);
+  }
+
+  test("a lockfile change selects the scanners", () => {
+    expect(keysFor(["bun.lock"])).toContain("trivy");
+  });
+
+  test("a docs-only change selects neither scanner", () => {
+    const keys = keysFor(["packages/docs/wiki/src/content/docs/index.md"]);
+    expect(keys).not.toContain("trivy");
+    expect(keys).not.toContain("semgrep");
+  });
+
+  /**
+   * A change to the generator itself must not be filtered out by any lane's
+   * narrower guard — the thing deciding what runs changed.
+   */
+  test("a change to the generator selects every lane", () => {
+    const keys = keysFor([
+      "packages/woodpecker-config-extension/src/pipeline/steps.ts",
+    ]);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "verify",
+        "trivy",
+        "semgrep",
+        "alert-dashboard-sqlite",
+      ]),
+    );
+  });
+
+  test("scanners are pull-request only", () => {
+    expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
+  });
+
+  test("alert dashboard runs for its own package", () => {
+    expect(keysFor(["packages/alert-dashboard/src/db.ts"])).toContain(
+      "alert-dashboard-sqlite",
+    );
+  });
+
+  /** Findings must exit 0; a crashed scanner must still propagate. */
+  test("scanner commands distinguish findings from a crash", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const trivy = steps.find((s) => s.key === "trivy");
+    const joined = trivy?.commands.join("\n") ?? "";
+    expect(joined).toContain("-eq 7");
+    expect(joined).toContain("exit 0");
+    expect(joined).toContain('exit "$trivy_status"');
+    expect(trivy?.allowFailure).toBeUndefined();
   });
 });

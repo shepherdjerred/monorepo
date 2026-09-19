@@ -7,6 +7,8 @@ import { emitWorkflow } from "#src/pipeline/emit.ts";
 const IMAGES = {
   base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
   playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
+  trivy: "aquasec/trivy:0.72.0",
+  semgrep: "semgrep/semgrep:1.170.0",
 };
 
 function jsonResponse(body: unknown): Response {
