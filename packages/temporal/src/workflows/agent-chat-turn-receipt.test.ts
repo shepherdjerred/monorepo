@@ -68,6 +68,7 @@ async function withWorkers(
   verify: (env: TestWorkflowEnvironment) => Promise<void>,
   overrides: {
     runTurn?: (input: RunAgentChatTurnInput) => AgentChatTurnResult;
+    locate?: (input: AgentChatReceiptInput) => Promise<string>;
     dispatch?: (
       env: TestWorkflowEnvironment,
       input: AgentChatPinnedTurn,
@@ -93,7 +94,9 @@ async function withWorkers(
     taskQueue: TASK_QUEUES.AGENT_CHAT_RECEIPTS,
     activities: {
       locateAgentChatRun: (input: AgentChatReceiptInput) =>
-        locateAgentChatRun(env.client.workflow, input),
+        overrides.locate === undefined
+          ? locateAgentChatRun(env.client.workflow, input)
+          : overrides.locate(input),
       dispatchPinnedAgentChatTurn: (input: AgentChatPinnedTurn) =>
         overrides.dispatch === undefined
           ? dispatchPinnedAgentChatTurn(env.client.workflow, input)
@@ -258,16 +261,29 @@ describe("durable chat turn receipts", () => {
     );
   }, 60_000);
 
-  test("retries transient dispatch exhaustion without sealing the receipt", async () => {
+  test("retains the run pin after transient dispatch exhaustion", async () => {
     let dispatchAttempts = 0;
+    let calls = 0;
+    const pins: string[] = [];
     await withWorkers(
       async (env) => {
         expect(await runOriginalTurn(env)).toMatchObject({ turnNumber: 1 });
         expect(dispatchAttempts).toBe(AGENT_CHAT_DISPATCH_MAX_ATTEMPTS + 1);
+        expect(new Set(pins).size).toBe(1);
+        expect(calls).toBe(101);
       },
       {
+        runTurn: (input) => {
+          calls += 1;
+          return result(input);
+        },
         dispatch: async (env, input) => {
           dispatchAttempts += 1;
+          pins.push(input.runId);
+          if (dispatchAttempts === 1) {
+            await dispatchPinnedAgentChatTurn(env.client.workflow, input);
+            await rollover(env, await compactLedger(env));
+          }
           if (dispatchAttempts <= AGENT_CHAT_DISPATCH_MAX_ATTEMPTS) {
             throw new Error("Transient receipt transport failure");
           }
@@ -276,6 +292,37 @@ describe("durable chat turn receipts", () => {
       },
     );
   }, 60_000);
+
+  test.each(["AgentChatNotRunning", "AgentChatConfigConflict"])(
+    "settles permanent owner failure %s",
+    async (failureType) => {
+      let locateAttempts = 0;
+      let dispatchAttempts = 0;
+      await withWorkers(
+        async (env) => {
+          await expect(runOriginalTurn(env)).rejects.toThrow(
+            "Workflow Update failed",
+          );
+          expect(locateAttempts).toBe(1);
+          expect(dispatchAttempts).toBe(0);
+        },
+        {
+          locate: () => {
+            locateAttempts += 1;
+            throw ApplicationFailure.nonRetryable(
+              "permanent owner failure",
+              failureType,
+            );
+          },
+          dispatch: () => {
+            dispatchAttempts += 1;
+            throw new Error("dispatch must not run");
+          },
+        },
+      );
+    },
+    60_000,
+  );
 
   test("settled failures remain terminal after the chat forgets their ledger entry", async () => {
     let calls = 0;
