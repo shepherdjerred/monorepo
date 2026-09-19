@@ -99,7 +99,14 @@ function fakeClient(): Client {
 
 function makeOperations(): AgentChatApiOperations {
   return {
-    register: vi.fn(async () => ENTRY),
+    register: vi.fn<AgentChatApiOperations["register"]>(
+      async (_client, config) => ({
+        schemaVersion: 1,
+        config,
+        updatedAt: config.createdAt,
+        turnCount: 0,
+      }),
+    ),
     bind: vi.fn(async () => ENTRY),
     get: vi.fn(async (_client, chatId) =>
       chatId === COMPLETED_ENTRY.config.chatId ? COMPLETED_ENTRY : undefined,
@@ -223,13 +230,19 @@ describe("buildAgentChatApiRoutes", () => {
           source: { kind: "imessage", conversationId: "chat123" },
           prompt: "Inspect the homelab.",
           turnId: RECEIPT.turnId,
+          submittedAt: SUBMITTED_AT,
         },
       }),
     );
 
     expect(response.status).toBe(202);
-    expect(operations.register).not.toHaveBeenCalled();
-    expect(operations.bind).not.toHaveBeenCalled();
+    expect(operations.register).toHaveBeenCalledOnce();
+    expect(operations.bind).toHaveBeenCalledWith(
+      expect.anything(),
+      { kind: "imessage", conversationId: "chat123" },
+      expect.stringMatching(/^chat-http-/),
+      SUBMITTED_AT,
+    );
     expect(operations.submit).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
@@ -240,6 +253,14 @@ describe("buildAgentChatApiRoutes", () => {
         }),
       }),
     );
+    expect(
+      vi.mocked(operations.submit).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(operations.register).mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(
+      vi.mocked(operations.register).mock.invocationCallOrder[0],
+    ).toBeLessThan(vi.mocked(operations.bind).mock.invocationCallOrder[0] ?? 0);
     expect(await response.json()).toEqual({
       chatId:
         "chat-http-390d9274a759cef6304caee4885239a27f98af3eeb1ccf0a93f72dea9f7cb86b",
@@ -337,6 +358,7 @@ describe("prompted chat registration", () => {
             ...EMPTY_CHAT_REQUEST,
             prompt: "Inspect the homelab.",
             turnId: RECEIPT.turnId,
+            submittedAt: SUBMITTED_AT,
             ...conflict,
           },
         }),
@@ -359,6 +381,7 @@ describe("prompted chat registration", () => {
           ...EMPTY_CHAT_REQUEST,
           prompt: "Inspect the homelab.",
           turnId: RECEIPT.turnId,
+          submittedAt: SUBMITTED_AT,
         },
       }),
     );
@@ -367,8 +390,16 @@ describe("prompted chat registration", () => {
       expect.anything(),
       expect.objectContaining({ kind: "new", config: EMPTY_CHAT_ENTRY.config }),
     );
-    expect(operations.register).not.toHaveBeenCalled();
-    expect(operations.bind).not.toHaveBeenCalled();
+    expect(operations.register).toHaveBeenCalledWith(
+      expect.anything(),
+      EMPTY_CHAT_ENTRY.config,
+    );
+    expect(operations.bind).toHaveBeenCalledWith(
+      expect.anything(),
+      EMPTY_CHAT_REQUEST.source,
+      EMPTY_CHAT_REQUEST.chatId,
+      SUBMITTED_AT,
+    );
   });
 
   it("rejects a byte-oversized prompt before catalog side effects", async () => {
@@ -409,6 +440,7 @@ describe("prompted chat registration", () => {
           model: "claude-opus-5",
           source: { kind: "imessage", conversationId: "chat123" },
           prompt: "Inspect the homelab.",
+          submittedAt: SUBMITTED_AT,
         },
       }),
     );
@@ -416,6 +448,23 @@ describe("prompted chat registration", () => {
     expect(response.status).toBe(400);
     expect(operations.register).not.toHaveBeenCalled();
     expect(operations.bind).not.toHaveBeenCalled();
+    expect(operations.submit).not.toHaveBeenCalled();
+  });
+
+  it("requires a caller-stable timestamp for a prompted create", async () => {
+    const operations = makeOperations();
+    const response = await appWith(operations).fetch(
+      request("/agent-chats", {
+        method: "POST",
+        token: TOKEN,
+        body: {
+          ...EMPTY_CHAT_REQUEST,
+          prompt: "Inspect the homelab.",
+          turnId: RECEIPT.turnId,
+        },
+      }),
+    );
+    expect(response.status).toBe(400);
     expect(operations.submit).not.toHaveBeenCalled();
   });
 });
