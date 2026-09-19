@@ -27,6 +27,7 @@ import { discordAgentChatDefaultModel } from "#config/agent-chat.ts";
 import type {
   AgentChatCatalogEntry,
   AgentChatBinding,
+  AgentChatBindingUpdate,
   AgentChatProvider,
 } from "#shared/agent/agent-chat.ts";
 import { AgentChatIdSchema } from "#shared/agent/agent-chat.ts";
@@ -131,7 +132,7 @@ export type AgentChatDiscordOperations = {
     client: TemporalClient["workflow"],
     binding: DiscordAgentChatBinding,
     chatId: string,
-    updatedAt: string,
+    update: AgentChatBindingUpdate,
   ) => Promise<AgentChatCatalogEntry>;
   resolve: (
     client: TemporalClient["workflow"],
@@ -263,7 +264,9 @@ async function handleContinue(
     }),
   );
   if (explicitChatId !== undefined) {
-    await operations.bind(temporal.workflow, source, chatId, timestamp);
+    await operations.bind(temporal.workflow, source, chatId, {
+      updatedAt: timestamp,
+    });
   }
   await interaction.editReply({
     content: "Queued. I’ll post the durable agent response in this channel.",

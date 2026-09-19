@@ -17,6 +17,7 @@ import {
   AgentChatPromptSchema,
   AgentChatProviderSchema,
   type AgentChatBinding,
+  type AgentChatBindingUpdate,
   type AgentChatCatalogEntry,
   type AgentChatConfig,
   type AgentChatTurnRequest,
@@ -80,7 +81,7 @@ export type AgentChatApiOperations = {
     client: WorkflowClient,
     binding: AgentChatBinding,
     chatId: string,
-    updatedAt: string,
+    update: AgentChatBindingUpdate,
   ) => Promise<AgentChatCatalogEntry>;
   get: (
     client: WorkflowClient,
@@ -322,12 +323,9 @@ export function buildAgentChatApiRoutes(
           client.workflow,
           config,
         );
-        await operations.bind(
-          client.workflow,
-          input.source,
-          config.chatId,
-          entry.config.createdAt,
-        );
+        await operations.bind(client.workflow, input.source, config.chatId, {
+          updatedAt: entry.config.createdAt,
+        });
         return c.json({ chat: entry }, 201);
       }
       const turnId = HttpAgentChatTurnIdSchema.parse(input.turnId);
@@ -384,12 +382,9 @@ export function buildAgentChatApiRoutes(
         }),
       );
       if (input.chatId !== undefined) {
-        await operations.bind(
-          client.workflow,
-          input.source,
-          chatId,
-          input.submittedAt,
-        );
+        await operations.bind(client.workflow, input.source, chatId, {
+          updatedAt: input.submittedAt,
+        });
       }
       return c.json({ turn: receipt }, 202);
     } catch (error: unknown) {
@@ -440,7 +435,7 @@ export function buildAgentChatApiRoutes(
         client.workflow,
         input.binding,
         chatId,
-        input.submittedAt,
+        { updatedAt: input.submittedAt },
       );
       return c.json(entry);
     } catch (error: unknown) {

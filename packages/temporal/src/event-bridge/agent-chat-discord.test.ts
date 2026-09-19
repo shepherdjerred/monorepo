@@ -225,7 +225,7 @@ describe("agent chat Discord ingress", () => {
       expect.anything(),
       { kind: "discord", channelId: CHANNEL_ID },
       "scheduled-chat",
-      expect.any(String),
+      { updatedAt: expect.any(String) },
     );
     expect(vi.mocked(deps.start).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(deps.bind).mock.invocationCallOrder[0] ?? 0,

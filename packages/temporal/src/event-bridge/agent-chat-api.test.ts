@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AgentChatNotFoundError } from "#lib/agent-chat-client.ts";
 import type {
   AgentChatBinding,
+  AgentChatBindingUpdate,
   AgentChatCatalogEntry,
   AgentChatTurnResult,
 } from "#shared/agent/agent-chat.ts";
@@ -312,7 +313,7 @@ describe("buildAgentChatApiRoutes", () => {
       expect.anything(),
       EMPTY_CHAT_REQUEST.source,
       EMPTY_CHAT_REQUEST.chatId,
-      existing.config.createdAt,
+      { updatedAt: existing.config.createdAt },
     );
   });
 });
@@ -428,7 +429,7 @@ describe("durable agent chat binding retries", () => {
         _client: Client["workflow"],
         _binding: AgentChatBinding,
         _chatId: string,
-        _submittedAt: string,
+        _update: AgentChatBindingUpdate,
       ) => ENTRY,
     );
     operations.bind = bind;
@@ -452,7 +453,7 @@ describe("durable agent chat binding retries", () => {
     expect(retry.status).toBe(200);
     expect(bind).toHaveBeenCalledTimes(2);
     for (const call of bind.mock.calls) {
-      expect(call[3]).toBe(NOW);
+      expect(call[3]).toEqual({ updatedAt: NOW });
     }
     expect(now).not.toHaveBeenCalled();
   });
@@ -510,7 +511,7 @@ describe("durable agent chat turns and bindings", () => {
       expect.anything(),
       { kind: "discord", channelId: "channel-1" },
       "chat-existing",
-      SUBMITTED_AT,
+      { updatedAt: SUBMITTED_AT },
     );
     expect(
       vi.mocked(operations.submit).mock.invocationCallOrder[0],
@@ -678,7 +679,7 @@ describe("durable agent chat turn status and direct bindings", () => {
       expect.anything(),
       { kind: "discord", channelId: "channel-1" },
       "chat-existing",
-      NOW,
+      { updatedAt: NOW },
     );
   });
 

@@ -51,6 +51,9 @@ import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-tur
 import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
 import { discordAgentChatActivities } from "./agent/chat/discord-ingress.ts";
 import { httpAgentChatActivities } from "./agent/chat/http-ingress.ts";
+import { pollBlueBubblesMessages } from "./agent/imessage/poll.ts";
+import { prepareImessageCommand } from "./agent/imessage/prepare.ts";
+import { deliverImessageResponse } from "./agent/imessage/deliver.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -144,4 +147,9 @@ export const billingActivities = {
 export const agentChatIngressActivities = {
   ...discordAgentChatActivities,
   ...httpAgentChatActivities,
+};
+export const imessageAgentChatActivities = {
+  pollBlueBubblesMessages,
+  prepareImessageCommand,
+  deliverImessageResponse,
 };

@@ -88,6 +88,7 @@ export const AgentChatTurnRequestSchema = z.strictObject({
   prompt: AgentChatPromptSchema,
   submittedAt: z.iso.datetime({ offset: true }),
   source: AgentChatOriginSchema,
+  sourceSequence: z.number().int().nonnegative().optional(),
 });
 export type AgentChatTurnRequest = z.infer<typeof AgentChatTurnRequestSchema>;
 
@@ -258,11 +259,20 @@ export const AgentChatCatalogEntrySchema = z.strictObject({
 });
 export type AgentChatCatalogEntry = z.infer<typeof AgentChatCatalogEntrySchema>;
 
-export const AgentChatCatalogBindingSchema = z.strictObject({
-  binding: AgentChatBindingSchema,
-  chatId: AgentChatIdSchema,
+export const AgentChatBindingUpdateSchema = z.strictObject({
   updatedAt: z.iso.datetime({ offset: true }),
+  sourceSequence: z.number().int().nonnegative().optional(),
 });
+export type AgentChatBindingUpdate = z.infer<
+  typeof AgentChatBindingUpdateSchema
+>;
+export type AgentChatBindingUpdateInput = AgentChatBindingUpdate | string;
+
+export const AgentChatCatalogBindingSchema =
+  AgentChatBindingUpdateSchema.extend({
+    binding: AgentChatBindingSchema,
+    chatId: AgentChatIdSchema,
+  });
 
 export const AgentChatCatalogStateSchema = z
   .strictObject({

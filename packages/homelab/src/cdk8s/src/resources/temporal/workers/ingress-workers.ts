@@ -8,7 +8,11 @@ import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
 
 export function createTemporalIngressWorkers(
   chart: Chart,
-  props: { serverServiceName: string; secret: ISecret },
+  props: {
+    serverServiceName: string;
+    secret: ISecret;
+    blueBubblesSecret: ISecret;
+  },
 ) {
   const gatewayDeployment = createTemporalDomainWorker(chart, {
     name: "temporal-gateway",
@@ -42,6 +46,11 @@ export function createTemporalIngressWorkers(
       AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "AGENT_TASK_API_TOKEN",
+      }),
+      BLUEBUBBLES_URL: EnvValue.fromValue("https://jobs.tailnet-1a49.ts.net"),
+      BLUEBUBBLES_PASSWORD: EnvValue.fromSecretValue({
+        secret: props.blueBubblesSecret,
+        key: "password",
       }),
       ...sleepWebhookEnv(props.secret),
       XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
