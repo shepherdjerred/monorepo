@@ -2,6 +2,7 @@ import type { KeyObject } from "node:crypto";
 import { createApp } from "#src/app.ts";
 import { fetchPublicKey } from "#src/signature.ts";
 import { createRawFetcher } from "#src/images.ts";
+import { lastSuccessfulCommit } from "#src/woodpecker-api.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -13,6 +14,7 @@ function requireEnv(name: string): string {
 
 const serverUrl = requireEnv("WOODPECKER_SERVER_URL");
 const repoSlug = requireEnv("CI_REPO_SLUG");
+const apiToken = requireEnv("WOODPECKER_API_TOKEN");
 const port = Number(Bun.env["PORT"] ?? "3000");
 
 /**
@@ -33,6 +35,11 @@ async function publicKey(): Promise<KeyObject> {
 const app = createApp({
   publicKey,
   imageFetcher: createRawFetcher(repoSlug),
+  changedBase: (repoId, branch) =>
+    lastSuccessfulCommit(repoId, branch, {
+      baseUrl: serverUrl,
+      token: apiToken,
+    }),
 });
 
 export default { port, fetch: app.fetch };

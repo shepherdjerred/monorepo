@@ -1,3 +1,4 @@
+import type { FetchLike } from "#src/http.ts";
 import { createHash, createPublicKey, type KeyObject } from "node:crypto";
 import { createVerifier, httpbis } from "http-message-signatures";
 
@@ -68,7 +69,7 @@ export function contentDigestMatches(
  */
 export async function fetchPublicKey(
   serverUrl: string,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: FetchLike = fetch,
 ): Promise<KeyObject> {
   const response = await fetchImpl(`${serverUrl}${PUBLIC_KEY_PATH}`);
   if (!response.ok) {

@@ -53,6 +53,8 @@ export type CiStep = {
   readonly image: string;
   /** Shell commands, run in order. */
   readonly commands: readonly string[];
+  /** Plain environment variables. Credentials go through `secrets`, never here. */
+  readonly environment?: Readonly<Record<string, string>>;
   /** Keys of steps that must finish first. */
   readonly dependsOn?: readonly string[];
   /**

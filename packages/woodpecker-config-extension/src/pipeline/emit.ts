@@ -107,6 +107,10 @@ export function emitWorkflow(step: CiStep): string {
         name: step.key,
         image: step.image,
         commands: wrapCommands(step),
+        ...(step.environment === undefined ||
+        Object.keys(step.environment).length === 0
+          ? {}
+          : { environment: { ...step.environment } }),
         ...(step.volumes === undefined || step.volumes.length === 0
           ? {}
           : {
