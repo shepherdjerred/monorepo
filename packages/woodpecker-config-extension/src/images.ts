@@ -18,17 +18,25 @@ import type { FetchLike } from "#src/http.ts";
 const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 
 /**
- * Third-party images used by individual lanes.
+ * Third-party images individual lanes run in.
  *
  * Read from the version catalog rather than pinned here so Renovate stays the
  * single owner of the version, and read at the pipeline's own commit for the
  * same reason the toolchain digests are: a value baked into this service would
  * outlive the commit that changed it.
+ *
+ * Catalog values already carry their tag and digest, so the reference is the
+ * repository name joined to the value with a colon.
  */
-const CATALOG_IMAGES = {
-  trivy: "aquasec/trivy",
-  semgrep: "semgrep/semgrep",
-} as const;
+export type CatalogImageName =
+  | "aquasec/trivy"
+  | "semgrep/semgrep"
+  | "texlive/texlive"
+  | "trmnl/trmnlp"
+  | "grafana/tempo"
+  | "mikefarah/yq"
+  | "minio/mc"
+  | "minio/minio";
 
 const DIGEST_PATHS = {
   base: ".buildkite/ci-image/DIGEST",
@@ -43,10 +51,12 @@ const IMAGE_REPOS = {
 const DIGEST_PATTERN = /^sha256:[\da-f]{64}$/u;
 
 export type CiImages = {
+  /** Digest-pinned toolchain image, shared with developer machines. */
   readonly base: string;
+  /** Digest-pinned browser toolchain image. */
   readonly playwright: string;
-  readonly trivy: string;
-  readonly semgrep: string;
+  /** Third-party images, keyed by their version-catalog name. */
+  readonly catalog: Readonly<Record<CatalogImageName, string>>;
 };
 
 export type ImageFetcher = (path: string, commit: string) => Promise<string>;
@@ -117,6 +127,11 @@ function catalogVersion(catalog: string, name: string): string {
   return entry.value;
 }
 
+/** Full image reference for one catalogued name. */
+function reference(catalog: string, name: CatalogImageName): string {
+  return `${name}:${catalogVersion(catalog, name)}`;
+}
+
 export async function resolveCiImages(
   commit: string,
   fetcher: ImageFetcher,
@@ -129,7 +144,15 @@ export async function resolveCiImages(
   return {
     base: `${IMAGE_REPOS.base}@${requireDigest(base, DIGEST_PATHS.base)}`,
     playwright: `${IMAGE_REPOS.playwright}@${requireDigest(playwright, DIGEST_PATHS.playwright)}`,
-    trivy: `${CATALOG_IMAGES.trivy}:${catalogVersion(catalog, CATALOG_IMAGES.trivy)}`,
-    semgrep: `${CATALOG_IMAGES.semgrep}:${catalogVersion(catalog, CATALOG_IMAGES.semgrep)}`,
+    catalog: {
+      "aquasec/trivy": reference(catalog, "aquasec/trivy"),
+      "semgrep/semgrep": reference(catalog, "semgrep/semgrep"),
+      "texlive/texlive": reference(catalog, "texlive/texlive"),
+      "trmnl/trmnlp": reference(catalog, "trmnl/trmnlp"),
+      "grafana/tempo": reference(catalog, "grafana/tempo"),
+      "mikefarah/yq": reference(catalog, "mikefarah/yq"),
+      "minio/mc": reference(catalog, "minio/mc"),
+      "minio/minio": reference(catalog, "minio/minio"),
+    },
   };
 }
