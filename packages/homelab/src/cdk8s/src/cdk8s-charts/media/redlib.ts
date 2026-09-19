@@ -6,6 +6,10 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createRedlibDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/frontends/redlib.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createRedlibChart(app: App) {
   const chart = new Chart(app, "redlib", {
@@ -60,24 +64,9 @@ export function createRedlibChart(app: App) {
       podSelector: {},
       policyTypes: ["Egress"],
       egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // HTTPS only (Reddit API and all CDNs use HTTPS)
-        {
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        externalHttpsEgressRule(),
       ],
     },
   });

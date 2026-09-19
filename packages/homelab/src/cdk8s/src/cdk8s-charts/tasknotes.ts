@@ -6,6 +6,7 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTasknotesDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/tasknotes/index.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createTasknotesChart(app: App) {
   const chart = new Chart(app, "tasknotes", {
@@ -61,18 +62,7 @@ export function createTasknotesChart(app: App) {
       policyTypes: ["Egress"],
       egress: [
         // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // External HTTPS (api.obsidian.md, sync-N.obsidian.md WebSocket)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
