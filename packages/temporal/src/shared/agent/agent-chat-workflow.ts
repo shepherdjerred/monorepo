@@ -26,6 +26,11 @@ export const bindAgentChatUpdate = defineUpdate<
   [AgentChatBinding, string, string]
 >("bindAgentChat");
 
+export const registerAndBindAgentChatUpdate = defineUpdate<
+  AgentChatCatalogEntry,
+  [AgentChatCatalogEntry, AgentChatBinding, string]
+>("registerAndBindAgentChat");
+
 export const recordAgentChatTurnUpdate = defineUpdate<
   AgentChatCatalogEntry,
   [string, number, string]
