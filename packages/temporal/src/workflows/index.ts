@@ -63,12 +63,12 @@ import type { ReportDeliveryResult } from "#activities/reports/report-delivery.t
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab/homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./ci/cancel-buildkite-builds.ts";
+import { cancelCiPipelinesWorkflow as _cancelCiPipelinesWorkflow } from "./ci/cancel-ci-pipelines.ts";
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./ci/check-pr-merge-conflicts.ts";
 import { pollWorkflowFailuresWorkflow as _pollWorkflowFailuresWorkflow } from "./workflow-failure-watch.ts";
 import type { PollWorkflowFailuresResult } from "#activities/maintenance/workflow-failure/workflow-failure-watch.ts";
 import type {
-  CancelBuildkiteBuildsInput,
+  CancelCiPipelinesInput,
   CheckPrMergeConflictsInput,
 } from "#shared/schemas.ts";
 import type { AgentTaskInput } from "#shared/agent/agent-task.ts";
@@ -353,10 +353,10 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
 }
 
-export async function cancelBuildkiteBuildsWorkflow(
-  input: CancelBuildkiteBuildsInput,
+export async function cancelCiPipelinesWorkflow(
+  input: CancelCiPipelinesInput,
 ): Promise<void> {
-  return _cancelBuildkiteBuildsWorkflow(input);
+  return _cancelCiPipelinesWorkflow(input);
 }
 
 export async function checkPrMergeConflictsWorkflow(

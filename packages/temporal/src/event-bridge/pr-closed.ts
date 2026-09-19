@@ -4,15 +4,13 @@ import { WorkflowIdReusePolicy } from "@temporalio/common";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
-  CancelBuildkiteBuildsInputSchema,
-  type CancelBuildkiteBuildsInput,
+  CancelCiPipelinesInputSchema,
+  type CancelCiPipelinesInput,
 } from "#shared/schemas.ts";
 
 const COMPONENT = "pr-webhook";
 
-export type CancelStartFn = (
-  input: CancelBuildkiteBuildsInput,
-) => Promise<void>;
+export type CancelStartFn = (input: CancelCiPipelinesInput) => Promise<void>;
 
 /** Minimal shape this module consumes from a parsed `pull_request` payload. */
 export type ClosedPrPayload = {
@@ -34,21 +32,19 @@ function jsonLog(
   );
 }
 
-function cancelBuildkiteWorkflowIdFor(
-  input: CancelBuildkiteBuildsInput,
-): string {
+function cancelBuildkiteWorkflowIdFor(input: CancelCiPipelinesInput): string {
   return `cancel-bk-builds-${input.owner}-${input.repo}-${String(input.prNumber)}-${input.commitSha}`;
 }
 
 export async function startCancelBuildkiteBuilds(
   client: Client,
-  input: CancelBuildkiteBuildsInput,
+  input: CancelCiPipelinesInput,
 ): Promise<void> {
   // REJECT_DUPLICATE so a redelivered `closed` webhook for the same head sha
   // no-ops at the Temporal server. The already-started error is the expected
   // idempotent path — surface it as an info log, not a failure.
   try {
-    await client.workflow.start("cancelBuildkiteBuildsWorkflow", {
+    await client.workflow.start("cancelCiPipelinesWorkflow", {
       taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowId: cancelBuildkiteWorkflowIdFor(input),
       workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
@@ -79,8 +75,8 @@ export async function handleClosedPr(
   deliveryId: string,
   startCancel: CancelStartFn,
 ): Promise<Response> {
-  const cancelInput: CancelBuildkiteBuildsInput =
-    CancelBuildkiteBuildsInputSchema.parse({
+  const cancelInput: CancelCiPipelinesInput =
+    CancelCiPipelinesInputSchema.parse({
       owner: parsed.repository.owner.login,
       repo: parsed.repository.name,
       prNumber: parsed.pull_request.number,

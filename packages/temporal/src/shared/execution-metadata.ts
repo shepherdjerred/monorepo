@@ -104,7 +104,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   generateDependencySummary: "repo",
   runProtobufWatch: "repo",
   runPokeemeraldDataRefresh: "repo",
-  cancelBuildkiteBuildsWorkflow: "repo",
+  cancelCiPipelinesWorkflow: "repo",
   checkPrMergeConflictsWorkflow: "repo",
 
   // TASK_QUEUES.REPORTS
