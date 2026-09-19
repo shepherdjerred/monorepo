@@ -283,6 +283,17 @@ template:
 
 prometheus:
   namespace: homeassistant
+  filter:
+    # Stateless HA entity types have no durable value. Exporting them as
+    # unavailable inflates homeassistant:unavailable_entities_total without
+    # changing any named availability alert.
+    exclude_domains:
+      - button
+      - event
+      - scene
+      - conversation
+      - stt
+      - tts
 
 light:
   - platform: group
