@@ -127,6 +127,20 @@ export function emitWorkflow(step: CiStep): string {
           : { backend_options: backendOptions(step) }),
       },
     ],
+    ...(step.services === undefined || step.services.length === 0
+      ? {}
+      : {
+          services: step.services.map((service) => ({
+            name: service.name,
+            image: service.image,
+            ...(service.commands === undefined
+              ? {}
+              : { commands: [...service.commands] }),
+            ...(service.environment === undefined
+              ? {}
+              : { environment: { ...service.environment } }),
+          })),
+        }),
     ...(step.dependsOn === undefined || step.dependsOn.length === 0
       ? {}
       : { depends_on: [...step.dependsOn] }),

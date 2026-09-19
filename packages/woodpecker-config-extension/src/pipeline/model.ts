@@ -39,6 +39,21 @@ export type ChangedPathGuard = {
 
 export type StepEvent = "push" | "pull_request";
 
+/**
+ * A long-running container beside the step, reachable over localhost.
+ *
+ * Woodpecker starts services before the step and stops them after, and they
+ * share the step's workspace -- which is how a service can read a config file
+ * committed to the repository instead of needing a mounted ConfigMap.
+ */
+export type StepService = {
+  readonly name: string;
+  readonly image: string;
+  /** Shell commands replacing the image entrypoint. */
+  readonly commands?: readonly string[];
+  readonly environment?: Readonly<Record<string, string>>;
+};
+
 export type StepVolume = {
   readonly claim: string;
   readonly path: string;
@@ -96,6 +111,8 @@ export type CiStep = {
   readonly secrets?: readonly SecretGrant[];
   /** Pre-provisioned PVCs mounted by name, e.g. the shared bun and uv caches. */
   readonly volumes?: readonly StepVolume[];
+  /** Containers started beside the step and reachable on localhost. */
+  readonly services?: readonly StepService[];
   /** Restrict to these events. Defaults to both push and pull_request. */
   readonly events?: readonly StepEvent[];
   /** Run only when matching files changed. */
