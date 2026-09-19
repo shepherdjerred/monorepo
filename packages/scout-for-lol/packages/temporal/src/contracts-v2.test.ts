@@ -228,6 +228,11 @@ describe("V2 durable commit outcomes", () => {
       "observation-differs",
       "intent-differs",
       "batch-differs",
+      // Omitting this one made the settlement sink's conflict branch
+      // unreachable: `durableCommitV2` parses the repository's answer, so a
+      // reason missing here threw a ZodError before the branch was read, and
+      // the broad handler below it logged that as an ordinary pool failure.
+      "settlement-announcement-differs",
       "workflow-adopted-by-another-batch",
     ]) {
       expect(

@@ -5,6 +5,83 @@ import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dar
 import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 
 /**
+ * A settlement could not record the durable instruction to announce what it
+ * just produced, so the transaction that produced it rolled back.
+ *
+ * ## Why this is its own class
+ *
+ * Settlement's callers already catch broadly, and for good reason: one guild's
+ * corrupt pool must not cost every other guild its settlement. Those handlers
+ * were written when the only thing a pool could do was fail in isolation, and
+ * they answer by logging, paging and continuing.
+ *
+ * Checkpointing broke that assumption. A checkpoint failure is not one pool's
+ * misfortune, it is this match's settlement failing to become recoverable, and
+ * a handler that absorbs it lets the caller record a settlement receipt over a
+ * pool whose bettors were never paid — which no retry then revisits, because
+ * the receipt says the effect is done. So the failure carries a type its
+ * callers can recognise, and every broad handler between here and the Activity
+ * rethrows it explicitly.
+ *
+ * The rule this encodes, which has now cost this program three findings: when
+ * a function acquires a new failure mode, its existing catches silently
+ * acquire a meaning nobody chose. Give the new mode a name the old handlers
+ * can be taught, rather than hoping they were written for it.
+ */
+export class SettlementCheckpointError extends Error {
+  readonly family: SettlementAnnouncementFamily;
+  readonly itemKey: string;
+  /**
+   * Whether re-running the Activity could plausibly succeed.
+   *
+   * False means two producers disagree about what ONE settlement produced,
+   * which is drift no retry resolves; the Activity surfaces that as a
+   * non-retryable failure rather than looping on it.
+   */
+  readonly retryable: boolean;
+
+  constructor(input: {
+    family: SettlementAnnouncementFamily;
+    itemKey: string;
+    retryable: boolean;
+    message: string;
+    cause: unknown;
+  }) {
+    super(input.message, { cause: input.cause });
+    this.name = "SettlementCheckpointError";
+    this.family = input.family;
+    this.itemKey = input.itemKey;
+    this.retryable = input.retryable;
+  }
+}
+
+/**
+ * The checkpoint failure inside this error, if there is one.
+ *
+ * Not every handler between the sink and the Activity rethrows the original:
+ * the Dare batch collects the first per-dare failure and reports it as a
+ * `DarePartialSettlementError` so the summaries that DID commit are not
+ * discarded, which is correct and must stay. A plain `instanceof` at the
+ * Activity boundary would then miss a checkpoint conflict arriving inside
+ * that wrapper and retry a failure no retry resolves.
+ *
+ * Bounded rather than recursive without limit: the chain is a handful of
+ * links by construction, and a depth cap means a self-referential `cause`
+ * cannot hang the settlement path.
+ */
+export function checkpointFailureIn(
+  error: unknown,
+): SettlementCheckpointError | undefined {
+  let current = error;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (current instanceof SettlementCheckpointError) return current;
+    if (!(current instanceof Error)) return undefined;
+    current = current.cause;
+  }
+  return undefined;
+}
+
+/**
  * Who, if anyone, may announce what a settlement produced.
  *
  * Settlement moves money and then tells people about it, and those are

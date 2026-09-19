@@ -17,6 +17,8 @@ import { withChallengeProgressionLock } from "#src/progression/challenges/lockin
 import { processCompetitiveProgressionMatch } from "#src/progression/postmatch.ts";
 import {
   announcingSettlementSink,
+  checkpointFailureIn,
+  SettlementCheckpointError,
   silentSettlementSink,
   type SettlementAnnouncementSink,
 } from "#src/betting/notify/announcement-sink.ts";
@@ -126,17 +128,43 @@ function checkpointingSettlementSink(
     // match a live discovery surfaced.
     mayPostDareCallout: announcingSettlementSink.mayPostDareCallout,
     recordAnnouncementItem: async (db, item) => {
-      const commit = durableCommitV2(
-        await recordSettlementAnnouncementItem(db, {
-          matchId: riotMatchId,
-          item,
-        }),
-      );
+      // EVERY failure leaves here as a `SettlementCheckpointError`, not just
+      // the conflict. A connection blip writing this row loses the settlement
+      // the same way a conflicting row does — the producing transaction rolls
+      // back and its caller, which catches broadly, would otherwise record a
+      // receipt over a pool nobody was paid from. The type is what the
+      // handlers between here and the Activity recognise.
+      const commit = await (async () => {
+        try {
+          return durableCommitV2(
+            await recordSettlementAnnouncementItem(db, {
+              matchId: riotMatchId,
+              item,
+            }),
+          );
+        } catch (error) {
+          throw new SettlementCheckpointError({
+            family: item.family,
+            itemKey: item.itemKey,
+            // A write that failed outright may well succeed next time; the
+            // transaction rolled back, so the retry re-settles from scratch.
+            retryable: true,
+            message: `Could not checkpoint the ${item.family} announcement ${item.itemKey} for ${riotMatchId}, so the settlement that produced it rolled back`,
+            cause: error,
+          });
+        }
+      })();
       if (commit.outcome !== "conflict") return;
-      throw ApplicationFailure.nonRetryable(
-        `A settlement announcement already stands for ${riotMatchId} (${item.family}/${item.itemKey}) with different instructions (${commit.reason}); refusing to overwrite the only record of what that transition produced`,
-        "DurableCommitConflict",
-      );
+      throw new SettlementCheckpointError({
+        family: item.family,
+        itemKey: item.itemKey,
+        // Two producers disagreeing about what ONE settlement produced. No
+        // retry resolves that, and overwriting would destroy the only record
+        // of what the first one did.
+        retryable: false,
+        message: `A settlement announcement already stands for ${riotMatchId} (${item.family}/${item.itemKey}) with different instructions (${commit.reason}); refusing to overwrite the only record of what that transition produced`,
+        cause: undefined,
+      });
     },
   };
 }
@@ -181,6 +209,33 @@ async function mintFromInstructions(
   logger.info(
     `🔔 Settlement notifications for ${riotMatchId}: ${String(announced.minted)} recap(s) and ${String(dareSummaries.minted)} Dare summary(ies) minted, ${String(announced.silent + dareSummaries.silent)} withheld as silent-backfill, ${String(announced.undeliverable)} undeliverable`,
   );
+}
+
+/**
+ * Run the settlement, giving a checkpoint failure the retryability it needs.
+ *
+ * A checkpoint failure reaches here as a {@link SettlementCheckpointError}
+ * rather than as an `ApplicationFailure`, because the type has to travel
+ * through the betting slice's broad handlers first and those recognise it by
+ * class. Temporal decides retries from what the ACTIVITY throws, so the
+ * translation happens at that boundary: drift between two producers is
+ * non-retryable and pages, while a failed write is left retryable, since its
+ * transaction rolled back and the next attempt settles from scratch.
+ */
+async function settledWithCheckpointFailuresSurfaced<T>(
+  riotMatchId: RiotMatchId,
+  settle: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await settle();
+  } catch (error) {
+    const checkpoint = checkpointFailureIn(error);
+    if (checkpoint === undefined || checkpoint.retryable) throw error;
+    throw ApplicationFailure.nonRetryable(
+      `${checkpoint.message} (settling ${riotMatchId})`,
+      "DurableCommitConflict",
+    );
+  }
 }
 
 export async function settleMatchMarketsV2(input: {
@@ -245,14 +300,21 @@ export async function settleMatchMarketsV2(input: {
       // than from anything this run was handed. A backfilled match settles in
       // full and announces nothing: no summaries delivered from the partial
       // path, no Dare DMs drained from the outbox, no callout posted.
-      const settled = await settleBucksWithDareTimelineV2({
-        matchData: context.matchData,
-        trackedPlayers: context.trackedPlayers,
-        prismaClient: prisma,
-        announcementSink: (await matchMayAnnounce(prisma, input.riotMatchId))
-          ? checkpointingSettlementSink(input.riotMatchId)
-          : silentSettlementSink,
-      });
+      const settled = await settledWithCheckpointFailuresSurfaced(
+        input.riotMatchId,
+        async () =>
+          await settleBucksWithDareTimelineV2({
+            matchData: context.matchData,
+            trackedPlayers: context.trackedPlayers,
+            prismaClient: prisma,
+            announcementSink: (await matchMayAnnounce(
+              prisma,
+              input.riotMatchId,
+            ))
+              ? checkpointingSettlementSink(input.riotMatchId)
+              : silentSettlementSink,
+          }),
+      );
       const evidence = settlementEvidenceOf(settled.bucks);
       // The checkpoint, written before anything else this attempt does with
       // the settlement's output. It is the only durable record of results no

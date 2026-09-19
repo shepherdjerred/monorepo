@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/bun";
 import {
   announcingSettlementSink,
+  checkpointFailureIn,
   type SettlementAnnouncementSink,
 } from "#src/betting/notify/announcement-sink.ts";
 import {
@@ -116,10 +117,22 @@ export async function closeAndSettleBettingForMatch(
           recordSettlementObservations(summary, pool.id);
         }
       } catch (error) {
+        // This handler exists for one guild's pool failing in isolation, and
+        // it answers by logging and moving on. A checkpoint failure is not
+        // that: the pool rolled back AND the settlement never became
+        // recoverable, so absorbing it here lets the caller record a
+        // settlement receipt over bettors who were never paid — which no
+        // retry revisits, because the receipt says the effect is done.
+        if (checkpointFailureIn(error) !== undefined) throw error;
         reportPoolSettlementFailure(error, pool, matchId);
       }
     }
   } catch (error) {
+    // The same exemption, one level out: the per-pool rethrow above lands
+    // here, and this handler's promise — that Bryan Bucks never blocks the
+    // match cursor — must not extend to a settlement that failed to become
+    // recoverable.
+    if (checkpointFailureIn(error) !== undefined) throw error;
     logger.error(`❌ Could not settle Bryan Bucks for ${matchId}:`, error);
     Sentry.captureException(error, {
       tags: { source: "betting-settle", matchId },

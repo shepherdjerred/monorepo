@@ -21,7 +21,10 @@ import {
   closeAndSettleBettingForMatch,
   settleBettingForMatch,
 } from "#src/betting/settle.ts";
-import { announcingSettlementSink } from "#src/betting/notify/announcement-sink.ts";
+import {
+  announcingSettlementSink,
+  SettlementCheckpointError,
+} from "#src/betting/notify/announcement-sink.ts";
 import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
@@ -1249,6 +1252,73 @@ describe("the announcement instruction a settlement records", () => {
     expect(recorded).toEqual([
       { family: "settlement", itemKey: settlements[0]?.serverId },
     ]);
+  });
+
+  test("a checkpoint failure escapes instead of being logged as one pool's", async () => {
+    // The money path. `reportPoolSettlementFailure` exists so one guild's
+    // corrupt pool cannot cost every other guild its settlement, and it
+    // answers by logging, paging and returning normally. A checkpoint failure
+    // is a different class of thing: the pool rolled back AND this
+    // settlement never became recoverable. Absorbed here, the caller records
+    // a settlement receipt, every retry then reads that receipt and skips
+    // settlement, and these bettors are never paid.
+    const { pool } = await makeBalancedPool(10);
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: (_handle, item) =>
+          Promise.reject(
+            new SettlementCheckpointError({
+              family: item.family,
+              itemKey: item.itemKey,
+              retryable: true,
+              message: "the checkpoint row could not be written",
+              cause: new Error("connection reset"),
+            }),
+          ),
+      }),
+    ).rejects.toBeInstanceOf(SettlementCheckpointError);
+
+    // And the pool is left exactly as a retry needs to find it: still closed
+    // and matched, with its bets unresolved, so the next attempt settles it.
+    const standing = await db.bucksMatchPool.findUniqueOrThrow({
+      where: { id: pool.id },
+    });
+    expect(standing.poolState).toBe("closed");
+    expect(standing.matchedAt).not.toBeNull();
+    const bets = await db.bucksBet.findMany({ where: { poolId: pool.id } });
+    expect(bets).not.toHaveLength(0);
+    expect(bets.map((bet) => bet.betOutcome)).toEqual(
+      bets.map(() => "pending"),
+    );
+  });
+
+  test("an ordinary pool failure is still absorbed, one guild at a time", async () => {
+    // The exemption is narrow on purpose. Everything that is NOT a checkpoint
+    // failure keeps the per-pool isolation this handler was written for, so
+    // widening the escape is a visible change rather than a silent one.
+    //
+    // Asserted on the per-pool REPORT rather than only on the return value:
+    // the outer handler also returns normally, so a rethrow that skipped past
+    // this one would still resolve and prove nothing.
+    await makeBalancedPool(10);
+    captureException.mockClear();
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: () =>
+          Promise.reject(new Error("an ordinary pool failure")),
+      }),
+    ).resolves.toMatchObject({ settlements: [] });
+
+    expect(captureException).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        tags: expect.objectContaining({ source: "betting-settle-pool" }),
+      }),
+    );
   });
 
   test("a settled pool always leaves its instruction behind", async () => {
