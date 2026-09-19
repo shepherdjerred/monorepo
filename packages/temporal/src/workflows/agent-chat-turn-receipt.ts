@@ -1,6 +1,7 @@
 import {
   ActivityFailure,
   ApplicationFailure,
+  allHandlersFinished,
   condition,
   proxyActivities,
   setHandler,
@@ -62,7 +63,7 @@ function isTerminalReceiptFailure(error: unknown): boolean {
 
 export async function agentChatTurnReceiptWorkflow(
   rawInput: AgentChatReceiptInput,
-): Promise<never> {
+): Promise<AgentChatTurnResult> {
   const input = AgentChatReceiptInputSchema.parse(rawInput);
   let outcome: ReceiptOutcome | undefined;
   let pinnedRunId: string | undefined;
@@ -120,7 +121,15 @@ export async function agentChatTurnReceiptWorkflow(
       }
     }
   }
-  // Remain open: completed-history retention must not expire idempotency receipts.
-  await condition(() => false);
-  throw new Error("Agent chat receipt must remain open");
+  // Finish any update that was admitted by a worker running the prior client
+  // before closing. Completed-history retention provides a bounded durable
+  // deduplication window without one permanently open Workflow per turn.
+  await condition(allHandlersFinished);
+  if (outcome.status === "failed") {
+    throw ApplicationFailure.nonRetryable(
+      outcome.message,
+      "AgentChatTurnPreviouslyFailed",
+    );
+  }
+  return outcome.result;
 }

@@ -1,5 +1,6 @@
 import {
   WithStartWorkflowOperation,
+  WorkflowExecutionAlreadyStartedError,
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
   WorkflowNotFoundError,
@@ -12,6 +13,7 @@ import {
   AgentChatCatalogEntrySchema,
   AgentChatConfigSchema,
   AgentChatTurnRequestSchema,
+  AgentChatTurnResultSchema,
   AgentChatWorkflowStateSchema,
   agentChatWorkflowId,
   type AgentChatBinding,
@@ -26,8 +28,8 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { agentChatReceiptWorkflowId } from "./agent-chat-receipts.ts";
 import {
   AgentChatReceiptInputSchema,
-  getAgentChatReceiptInputQuery,
   awaitAgentChatReceiptUpdate,
+  getAgentChatReceiptInputQuery,
   type AgentChatReceiptInput,
 } from "#shared/agent/agent-chat-receipt.ts";
 import {
@@ -46,7 +48,7 @@ type AgentChatCatalogWorkflow = (
 type AgentChatWorkflow = (input: AgentChatWorkflowInput) => Promise<never>;
 type AgentChatReceiptWorkflow = (
   input: AgentChatReceiptInput,
-) => Promise<never>;
+) => Promise<AgentChatTurnResult>;
 
 function catalogStart(): WithStartWorkflowOperation<AgentChatCatalogWorkflow> {
   return new WithStartWorkflowOperation<AgentChatCatalogWorkflow>(
@@ -199,16 +201,27 @@ export async function runAgentChatTurn(input: {
     );
   }
 
-  const receipt = await input.client.start<AgentChatReceiptWorkflow>(
-    "agentChatTurnReceiptWorkflow",
-    {
-      workflowId: agentChatReceiptWorkflowId(config.chatId, request.turnId),
-      workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
-      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      args: [{ config, request }],
-    },
+  const receiptWorkflowId = agentChatReceiptWorkflowId(
+    config.chatId,
+    request.turnId,
   );
+  let receipt;
+  try {
+    receipt = await input.client.start<AgentChatReceiptWorkflow>(
+      "agentChatTurnReceiptWorkflow",
+      {
+        workflowId: receiptWorkflowId,
+        workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
+        workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        args: [{ config, request }],
+      },
+    );
+  } catch (error: unknown) {
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    receipt =
+      input.client.getHandle<AgentChatReceiptWorkflow>(receiptWorkflowId);
+  }
   const owner = AgentChatReceiptInputSchema.parse(
     await receipt.query(getAgentChatReceiptInputQuery),
   );
@@ -217,9 +230,16 @@ export async function runAgentChatTurn(input: {
       `Agent chat turn ID ${request.turnId} was reused with a different request`,
     );
   }
-  const result = await receipt.executeUpdate(awaitAgentChatReceiptUpdate, {
-    updateId: "result",
-  });
+  let rawResult: AgentChatTurnResult;
+  try {
+    rawResult = await receipt.executeUpdate(awaitAgentChatReceiptUpdate, {
+      updateId: "result",
+    });
+  } catch (error: unknown) {
+    if (!(error instanceof WorkflowNotFoundError)) throw error;
+    rawResult = await receipt.result();
+  }
+  const result = AgentChatTurnResultSchema.parse(rawResult);
   await input.client
     .getHandle(AGENT_CHAT_CATALOG_WORKFLOW_ID)
     .executeUpdate(recordAgentChatTurnUpdate, {

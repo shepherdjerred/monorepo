@@ -170,6 +170,11 @@ describe("durable chat turn receipts", () => {
           request: request("original"),
         };
         const first = await runAgentChatTurn(input);
+        const receipt = env.client.workflow.getHandle(
+          agentChatReceiptWorkflowId(CONFIG.chatId, "original"),
+        );
+        const description = await receipt.describe();
+        expect(description.status.name).toBe("COMPLETED");
         const state = await compactLedger(env);
         await rollover(env, state);
         expect(await runAgentChatTurn(input)).toEqual(first);
@@ -181,9 +186,6 @@ describe("durable chat turn receipts", () => {
           }),
         ).rejects.toThrow("different request");
         expect(calls).toBe(101);
-        const receipt = env.client.workflow.getHandle(
-          agentChatReceiptWorkflowId(CONFIG.chatId, "original"),
-        );
         const history = await receipt.fetchHistory();
         await Worker.runReplayHistory(
           { workflowsPath: new URL("index.ts", import.meta.url).pathname },

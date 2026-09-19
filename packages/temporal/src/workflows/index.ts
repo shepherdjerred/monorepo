@@ -436,7 +436,7 @@ export async function agentChatWorkflow(
 
 export async function agentChatTurnReceiptWorkflow(
   input: AgentChatReceiptInput,
-): Promise<never> {
+): Promise<AgentChatTurnResult> {
   return _agentChatTurnReceiptWorkflow(input);
 }
 

@@ -168,7 +168,10 @@ describe("Temporal agent provider network boundary", () => {
     expect(worker.securityContext).toMatchObject({
       runAsUser: 0,
       allowPrivilegeEscalation: false,
-      capabilities: { add: ["CHOWN", "DAC_OVERRIDE", "SETUID"], drop: ["ALL"] },
+      capabilities: {
+        add: ["CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID"],
+        drop: ["ALL"],
+      },
     });
     expect(deployment.spec.template.spec.automountServiceAccountToken).toBe(
       false,
