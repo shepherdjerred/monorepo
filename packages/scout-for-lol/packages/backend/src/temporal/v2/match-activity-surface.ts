@@ -31,5 +31,6 @@ export type ScoutV2MatchActivities = Pick<
   | "finalizeTournamentResultV2"
   | "recordMatchReceiptsV2"
   | "advanceMatchCursorV2"
+  | "mintPostmatchNotificationIntentsV2"
   | "planMatchFanOutV2"
 >;

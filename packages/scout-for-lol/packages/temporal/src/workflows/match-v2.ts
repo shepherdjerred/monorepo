@@ -663,6 +663,34 @@ export async function scoutMatchProcessingV2Workflow(
 
   await attestPhases(activities, ref, receiptKinds);
 
+  // Minted BEFORE the cursor moves, and the order is the whole point.
+  //
+  // Every domain fact this match asserts is already durable here: the
+  // observation, the guarded effects and the stage receipts all committed
+  // above, so an intent minted now cannot promise a report for something the
+  // run then failed to commit. The cursor is not one of those facts. It is
+  // what stops the match being rediscovered at all, so it must be the LAST
+  // thing that moves.
+  //
+  // Minting after it was a permanent-loss path. A mint that exhausted its
+  // retries or failed non-retryably left every tracked-account cursor already
+  // past the match, its observation receipt standing and no association
+  // unadvanced — so the reconciliation scan reads the match as finished, and
+  // with no intent row there is nothing for the notification scan to recover.
+  // Nobody would ever be told the game happened, and nothing would say so.
+  // Minting first means a failure leaves the cursor where it was and the next
+  // discovery surfaces the match again.
+  //
+  // REPLAY: this is a ScheduleActivityTask that histories recorded before it
+  // existed do not contain, so inserting it is safe only while no such history
+  // is still open or replayable. V2 had no production executions when it was
+  // added. Anyone changing this sequence must confirm that again rather than
+  // assume it, and introduce the change behind a patch if any history predates
+  // it.
+  setWorkflowPhase("**Phase:** minting the post-match report intents");
+  await activities.mintPostmatchNotificationIntentsV2(ref);
+
+  // Last, because it is what stops rediscovery.
   setWorkflowPhase("**Phase:** advancing tracked-account cursors");
   await activities.advanceMatchCursorV2(ref);
 
