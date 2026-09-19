@@ -52,6 +52,13 @@ export function createTemporalIngressWorkers(
         secret: props.blueBubblesSecret,
         key: "password",
       }),
+      AGENT_CHAT_DISCORD_TOKEN: EnvValue.fromSecretValue(
+        {
+          secret: props.secret,
+          key: "AGENT_CHAT_DISCORD_TOKEN",
+        },
+        { optional: true },
+      ),
       ...sleepWebhookEnv(props.secret),
       XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
       XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
@@ -63,6 +70,14 @@ export function createTemporalIngressWorkers(
       ),
     },
   });
+  // The Discord token is optional so this Deployment can land before the
+  // dedicated application credential exists. Restart the gateway when the
+  // 1Password Operator later adds or rotates any referenced secret value so
+  // the process observes the new environment without a manual rollout.
+  gatewayDeployment.metadata.addAnnotation(
+    "operator.1password.io/auto-restart",
+    "true",
+  );
   createTemporalWorkerHttpServices(
     chart,
     Pods.select(chart, "temporal-gateway-http-selector", {
