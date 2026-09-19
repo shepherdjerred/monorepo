@@ -7,7 +7,10 @@ import type {
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
 import type { StoredObject } from "#src/storage/object-integrity.ts";
-import { savePrematchToS3 } from "#src/storage/s3-prematch.ts";
+import {
+  prematchObjectResourceId,
+  savePrematchToS3,
+} from "#src/storage/s3-prematch.ts";
 import {
   prematchSpectatorPayloadSavesTotal,
   prematchSpectatorPayloadSaveDurationSeconds,
@@ -194,17 +197,18 @@ export async function saveSvgToS3(
  * (src/index.ts) prevents that from ever happening in beta/prod.
  */
 export async function savePrematchDataToS3(
-  gameId: number,
   gameInfo: RawCurrentGameInfo,
   trackedPlayerAliases: string[],
   abortSignal?: AbortSignal,
 ): Promise<PrematchPayloadSaveResult> {
+  const gameId = gameInfo.gameId;
   const body = JSON.stringify(gameInfo, null, 2);
   const startTime = Date.now();
 
   try {
     const stored = await savePrematchToS3({
       gameId,
+      resourceId: prematchObjectResourceId(gameInfo.platformId, gameId),
       assetType: "spectator-data",
       extension: "json",
       body,
@@ -244,16 +248,28 @@ export async function savePrematchDataToS3(
 }
 
 /**
+ * The two fields every prematch asset is keyed by. A spectator payload carries
+ * both; the loading-screen writers take just these so a caller cannot hand
+ * them a game id without the platform that makes it unique.
+ */
+export type PrematchGameIdentity = {
+  readonly platformId: string;
+  readonly gameId: number;
+};
+
+/**
  * Save a loading screen PNG image to S3.
  */
 export async function savePrematchImageToS3(
-  gameId: number,
+  game: PrematchGameIdentity,
   imageBuffer: Uint8Array,
   queueType: string,
   trackedPlayerAliases: string[],
 ): Promise<string | undefined> {
+  const gameId = game.gameId;
   const stored = await savePrematchToS3({
     gameId,
+    resourceId: prematchObjectResourceId(game.platformId, gameId),
     assetType: "loading-screen",
     extension: "png",
     body: imageBuffer,
@@ -275,13 +291,15 @@ export async function savePrematchImageToS3(
  * Save a loading screen SVG to S3.
  */
 export async function savePrematchSvgToS3(
-  gameId: number,
+  game: PrematchGameIdentity,
   svgContent: string,
   queueType: string,
   trackedPlayerAliases: string[],
 ): Promise<string | undefined> {
+  const gameId = game.gameId;
   const stored = await savePrematchToS3({
     gameId,
+    resourceId: prematchObjectResourceId(game.platformId, gameId),
     assetType: "loading-screen",
     extension: "svg",
     body: svgContent,

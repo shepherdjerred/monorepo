@@ -1,4 +1,6 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { MatchDeliveryModeSchema } from "@scout-for-lol/domain/match-processing/states.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { ReceiptKind } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   ScoutFanOutV2ResultSchema,
@@ -54,7 +56,9 @@ export const DRIVABLE_INTENT_STATES: ReadonlySet<string> = new Set([
  * active Dares, orders what it finds by game end, and reports incompleteness
  * rather than guessing when a target or timestamp is unavailable. V2 narrows
  * the result to the identifiers — the per-match Workflow resolves everything
- * else from the match id, so nothing else needs to cross into a history.
+ * else from the match id, so nothing else needs to cross into a history —
+ * plus the account whose history surfaced each match, which only this pass
+ * knows and which the per-match core needs for v1's source precondition.
  *
  * `complete` folds two different incompletenesses together on purpose, because
  * the caller does the same thing with both: discovery could not see the whole
@@ -98,14 +102,23 @@ export async function discoverPostMatchIdsV2(options?: {
       "V2 discovery polled without a durable poll claim; refusing to report a scan whose poll has no owner to close it",
     );
   }
-  const riotMatchIds = discovery.matches.map((intent) =>
-    RiotMatchIdSchema.parse(intent.matchId),
-  );
+  const matches = discovery.matches
+    .map((intent) => ({
+      riotMatchId: RiotMatchIdSchema.parse(intent.matchId),
+      sourcePuuid: LeaguePuuidSchema.parse(intent.sourcePuuid),
+      // v1's own per-match call, carried rather than re-derived: a match it
+      // surfaced while filling a gap announces nothing, and this pass is the
+      // only place that knows which kind of pass found it.
+      deliveryMode: MatchDeliveryModeSchema.parse(intent.delivery),
+    }))
+    .slice(0, SCOUT_V2_PAGE_MAX);
   return ScoutPostMatchScanV2ResultSchema.parse({
     outcome: "scanned",
-    riotMatchIds: riotMatchIds.slice(0, SCOUT_V2_PAGE_MAX),
+    riotMatchIds: matches.map((match) => match.riotMatchId),
+    matches,
     complete:
-      discovery.evidenceComplete && riotMatchIds.length <= SCOUT_V2_PAGE_MAX,
+      discovery.evidenceComplete &&
+      discovery.matches.length <= SCOUT_V2_PAGE_MAX,
     // The claim this pass opened; maintenance closes exactly this poll.
     pollOwner: discovery.pollOwner.startedAt.toISOString(),
     // v1's own watermark, passed through unchanged: post-match maintenance
@@ -161,6 +174,10 @@ export async function readMatchPipelineStateV2(input: {
       riotMatchId: aggregate.processing.matchId,
       owner: aggregate.processing.owner,
       policy: aggregate.processing.policy,
+      // The committed mode. A resumed run reads delivery from here rather
+      // than re-deciding it, which is how a silent backfill stays silent
+      // across a restart that has no discovery pass behind it.
+      deliveryMode: aggregate.deliveryMode,
       promoted: aggregate.processing.promotion !== null,
       receiptKinds,
       intents: aggregate.intents.map((record) => intentSummaryV2(record)),

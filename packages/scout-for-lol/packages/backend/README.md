@@ -109,6 +109,15 @@ belong to the receipted lake projection in `report-lake/`, which records them
 from the writer that knows the artifact's key and digest; the two vocabularies
 are disjoint, so no receipt identity carries two evidence shapes.
 
+Raw-archive evidence is at version 2 and names the artifact by identity alone:
+kind, key, digest, byte count and content type. The capture instant is
+observational and travels as the receipt's own `recordedAt`, so two
+attestations of the same bytes agree however far apart they were stamped.
+Version-1 rows — beta and production hold them — carried the whole descriptor,
+and `rawArchiveDescriptorOf` reads each row's capture instant the way its own
+version wrote it rather than re-dating old artifacts from a column that meant
+something slightly different at the time.
+
 `MatchObservation`'s artifact columns are stamped from that same archive.
 `report-store/store.ts` runs live ingest through the receipted doors and passes
 the descriptor back up through `recordMatchForReportStore` to
@@ -233,6 +242,17 @@ answers `ownership-held-by-another-owner`, and the Workflow reports the stored
 owner and stops before settlement rather than re-applying v1's effects. The V2
 guards are separate keys from v1's precisely so a shared key can never make one
 pipeline's completion suppress the other's work.
+
+Two places where the core and v1 were compared and a decision recorded. v1
+refuses a match whose discovering account is no longer tracked; V2's platform
+check is weaker, not equivalent, so that precondition is restored — discovery
+carries the source account into the per-match input and
+`commitMatchObservationV2` fails non-retryably before any effect unless it is
+still tracked and in the match. A run started without a source, which is what
+a reconciliation restart is, resumes an observation that already passed it.
+And v1 advances the account cursor inside its progression lock while V2 keeps
+it as the last Activity, after the stage receipts; that is a ruling, not an
+omission, and `match-v2.ts` records the three facts behind it.
 
 ### The post-match poll is owned for a whole V2 run
 
@@ -364,6 +384,16 @@ write either way, so there is nothing to trade.
 The lock is keyed by (match, artifact kind), not by match alone: a match and
 its timeline are separate objects under separate keys with separate receipts,
 and making them wait for each other would buy nothing.
+
+The prematch S3 key is keyed by the same identity as its lock and receipt: the
+platform-qualified game id, `{platformId}_{gameId}`. A numeric game id is only
+unique per platform, so a key built from the number alone let two platforms'
+captures of one number on one day resolve to one object — the later put
+overwrote the earlier platform's canonical bytes while the fence and the
+receipt, keyed by the qualified id, saw two artifacts and let both through.
+Objects written before the qualification sit under the bare number;
+`report-store/s3-raw-source.ts` and the lake rebuild read both spellings and
+take a prematch object's identity from its payload, never from its key.
 
 Serializing alone would not fix that: an attempt that waited its turn and then
 put anyway would still overwrite, just in an orderly fashion. So the lock wraps

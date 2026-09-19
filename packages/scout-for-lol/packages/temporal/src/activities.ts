@@ -46,6 +46,7 @@ import type {
   ScoutGuardedEffectV2Result,
   ScoutLakeStagingV2Result,
   ScoutMatchCursorV2Result,
+  ScoutMatchObservationV2Input,
   ScoutMatchObservationV2Result,
   ScoutMatchPipelineStateV2Result,
   ScoutMatchReceiptsV2Input,
@@ -157,7 +158,7 @@ export type ScoutTemporalV2Activities = {
     input: ScoutMatchRefV2,
   ) => Promise<ScoutArchiveV2Result>;
   commitMatchObservationV2: (
-    input: ScoutMatchRefV2,
+    input: ScoutMatchObservationV2Input,
   ) => Promise<ScoutMatchObservationV2Result>;
   settleMatchMarketsV2: (
     input: ScoutMatchRefV2,

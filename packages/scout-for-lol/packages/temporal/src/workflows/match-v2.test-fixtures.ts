@@ -4,6 +4,7 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
+  MatchDeliveryMode,
   MatchProcessingPolicy,
   PipelineOwner,
   ReceiptKind,
@@ -18,6 +19,7 @@ import type {
   ScoutFanOutV2Result,
   ScoutGuardedEffectV2Result,
   ScoutMatchCursorV2Result,
+  ScoutMatchObservationV2Input,
   ScoutMatchObservationV2Result,
   ScoutMatchPipelineStateV2Result,
   ScoutMatchReceiptsV2Input,
@@ -75,6 +77,8 @@ export type ScoutV2MatchStore = {
   completedClaims: Set<string>;
   /** Whether this match belongs to a tournament-code custom game. */
   tournamentMatch: boolean;
+  /** The committed delivery mode the resume point and the commit report. */
+  deliveryMode: MatchDeliveryMode;
   /**
    * Whether the FIRST archive attempt meets a receipt already standing for
    * the same artifact identity with different evidence — the overlapping-
@@ -83,6 +87,10 @@ export type ScoutV2MatchStore = {
    */
   archiveConflictsOnce: boolean;
   archiveConflicted: boolean;
+  /** The `sourcePuuid` each observation commit was handed, in call order. */
+  observationSources: (string | undefined)[];
+  /** The `deliveryMode` each observation commit was handed, in call order. */
+  observationDeliveryModes: (MatchDeliveryMode | undefined)[];
   /** Every post-match maintenance call, with the flags v1 gives it. */
   maintenance: {
     settleDareV2Deadlines: boolean;
@@ -118,8 +126,11 @@ export function createScoutV2MatchStore(
     calls: [],
     completedClaims: new Set<string>(),
     tournamentMatch: false,
+    deliveryMode: "live",
     archiveConflictsOnce: false,
     archiveConflicted: false,
+    observationSources: [],
+    observationDeliveryModes: [],
     maintenance: [],
     maintenanceFailures: 0,
     receiptsConflict: false,
@@ -172,6 +183,7 @@ export function attestedPipelineState(
       riotMatchId,
       owner: { kind: "temporal-v2" },
       policy: "FULL",
+      deliveryMode: "live",
       promoted: false,
       receiptKinds: phases.map((phase) => SCOUT_V2_MATCH_RECEIPT_KINDS[phase]),
       intents: [],
@@ -206,6 +218,7 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
           riotMatchId: MATCH_ID,
           owner: store.owner,
           policy: store.policy,
+          deliveryMode: store.deliveryMode,
           promoted: false,
           receiptKinds: [...store.receiptKinds],
           intents: [],
@@ -256,8 +269,12 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
       // it is not a second effect and is deliberately not recorded as one.
       return { artifacts: [] };
     },
-    commitMatchObservationV2: (): ScoutMatchObservationV2Result => {
+    commitMatchObservationV2: (
+      input: ScoutMatchObservationV2Input,
+    ): ScoutMatchObservationV2Result => {
       record("commitMatchObservationV2");
+      store.observationSources.push(input.sourcePuuid);
+      store.observationDeliveryModes.push(input.deliveryMode);
       const commit: ScoutDurableCommitV2 = {
         outcome: store.observed ? "already-applied" : "applied",
       };
@@ -266,6 +283,10 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
         commit,
         owner: store.owner,
         policy: store.policy,
+        // The stub mirrors the real Activity: the mode comes back from the
+        // stored row, so an input that carried none still gets the committed
+        // one and a restart cannot invent a different answer.
+        deliveryMode: store.deliveryMode,
         promoted: false,
       };
     },

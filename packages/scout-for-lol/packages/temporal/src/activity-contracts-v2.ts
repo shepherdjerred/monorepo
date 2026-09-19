@@ -5,7 +5,9 @@ import {
   IsoInstantSchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
+  MatchDeliveryModeSchema,
   MatchProcessingPolicySchema,
   PipelineOwnerSchema,
   ReceiptKindSchema,
@@ -45,6 +47,33 @@ import {
  */
 
 /**
+ * One discovered match and the tracked account whose history surfaced it.
+ *
+ * The source travels with the id because the per-match core needs it for
+ * v1's precondition (see `ScoutMatchProcessingV2InputSchema`), and only the
+ * discovery pass knows it: v1's intents carry it, and nothing downstream can
+ * recover which of a match's tracked participants was the one polled.
+ */
+export const ScoutDiscoveredMatchV2Schema = z.strictObject({
+  riotMatchId: RiotMatchIdSchema,
+  sourcePuuid: LeaguePuuidSchema,
+  /**
+   * Whether this match is owed a public delivery, decided by the pass that
+   * found it and by nothing downstream.
+   *
+   * v1 decides it per discovered match — a match surfaced while filling a gap
+   * is `silent-backfill` and announces nothing — and only the discovery pass
+   * holds the evidence for that call. Carried so the per-match run commits the
+   * mode as a durable fact instead of re-deciding it, and so a restart reads
+   * back what was decided rather than guessing.
+   */
+  deliveryMode: MatchDeliveryModeSchema,
+});
+export type ScoutDiscoveredMatchV2 = z.infer<
+  typeof ScoutDiscoveredMatchV2Schema
+>;
+
+/**
  * What a post-match discovery pass did, and it is a closed union on purpose.
  *
  * `skipped` is discovery refusing to run because a poll already holds
@@ -53,15 +82,23 @@ import {
  * scan — an empty scan opened a poll, saw nothing, and owes the maintenance
  * that closes it — and a boolean could not keep the two apart at the call site
  * that has to.
+ *
+ * A scan carries `matches` beside `riotMatchIds`: additive, since older
+ * histories recorded the ids alone, and the refinement keeps the two from
+ * ever disagreeing about which matches this page holds or in what order.
  */
-export const ScoutPostMatchScanV2ResultSchema = z.discriminatedUnion(
-  "outcome",
-  [
+export const ScoutPostMatchScanV2ResultSchema = z
+  .discriminatedUnion("outcome", [
     z.strictObject({ outcome: z.literal("skipped") }),
     z.strictObject({
       outcome: z.literal("scanned"),
       riotMatchIds: z
         .array(RiotMatchIdSchema)
+        .max(SCOUT_V2_PAGE_MAX)
+        .readonly(),
+      /** The same page, with each match's discovering account. */
+      matches: z
+        .array(ScoutDiscoveredMatchV2Schema)
         .max(SCOUT_V2_PAGE_MAX)
         .readonly(),
       /** False when the scan hit its page budget before the tail was exhausted. */
@@ -90,8 +127,20 @@ export const ScoutPostMatchScanV2ResultSchema = z.discriminatedUnion(
        */
       evidenceWatermark: IsoInstantSchema.optional(),
     }),
-  ],
-);
+  ])
+  .refine(
+    (scan) =>
+      scan.outcome === "skipped" ||
+      (scan.matches.length === scan.riotMatchIds.length &&
+        scan.matches.every(
+          (match, index) => match.riotMatchId === scan.riotMatchIds[index],
+        )),
+    {
+      message:
+        "`matches` must name exactly the matches in `riotMatchIds`, in the same order",
+      path: ["matches"],
+    },
+  );
 export type ScoutPostMatchScanV2Result = z.infer<
   typeof ScoutPostMatchScanV2ResultSchema
 >;
@@ -133,10 +182,32 @@ export type ScoutPrematchArchiveV2Result = z.infer<
   typeof ScoutPrematchArchiveV2ResultSchema
 >;
 
+/**
+ * The observation commit's input: the match, plus the discovering account and
+ * the delivery mode when the run has them. See
+ * `ScoutMatchProcessingV2InputSchema` for why both are optional and what their
+ * absence means.
+ */
+export const ScoutMatchObservationV2InputSchema = ScoutMatchRefV2Schema.extend({
+  sourcePuuid: LeaguePuuidSchema.optional(),
+  deliveryMode: MatchDeliveryModeSchema.optional(),
+});
+export type ScoutMatchObservationV2Input = z.infer<
+  typeof ScoutMatchObservationV2InputSchema
+>;
+
 export const ScoutMatchObservationV2ResultSchema = z.strictObject({
   commit: ScoutDurableCommitV2Schema,
   owner: PipelineOwnerSchema,
   policy: MatchProcessingPolicySchema,
+  /**
+   * The mode now STANDING on the row, read back after the commit, exactly as
+   * `owner` and `policy` are. A run whose input disagreed with the stored mode
+   * never reaches here — a differing mode is part of the observation claim and
+   * comes back `observation-differs` — so this is the committed fact and the
+   * only thing downstream may decide delivery from.
+   */
+  deliveryMode: MatchDeliveryModeSchema,
   promoted: z.boolean(),
 });
 export type ScoutMatchObservationV2Result = z.infer<
@@ -254,6 +325,8 @@ export const ScoutMatchPipelineStateV2Schema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
   owner: PipelineOwnerSchema,
   policy: MatchProcessingPolicySchema,
+  /** The committed delivery mode, so a restart takes it instead of deciding. */
+  deliveryMode: MatchDeliveryModeSchema,
   promoted: z.boolean(),
   receiptKinds: z.array(ReceiptKindSchema).readonly(),
   intents: z

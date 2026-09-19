@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
+  MatchDeliveryModeSchema,
   MatchProcessingPolicySchema,
   PipelineOwnerSchema,
   ReceiptKindSchema,
@@ -45,10 +47,32 @@ export type ScoutPostMatchDiscoveryV2Input = z.infer<
  * Spelled out rather than aliased to `ScoutMatchRefV2Schema`: the Workflow
  * input and the Activity reference happen to agree today, and a frozen
  * Workflow contract must not change because an Activity reference did.
+ *
+ * `sourcePuuid` is the tracked account whose match history surfaced this
+ * match, when the run was started by discovery. It restores v1's
+ * precondition — `ingestDiscoveredMatch` refuses a match whose discovering
+ * account is no longer tracked — which `commitMatchObservationV2` checks
+ * before any downstream effect. It is optional because not every starter has
+ * one: a reconciliation restart resumes an already-observed match from its
+ * durable state, where the precondition was checked when the observation
+ * was committed, so its absence there is handled explicitly and is not a
+ * fallback. Additive on a frozen envelope, so an input recorded without it
+ * still replays.
+ *
+ * `deliveryMode` is optional for the same reason and answers to the same
+ * rule. Only the discovery pass knows whether a match is owed a public
+ * delivery, so a discovery-started run carries the mode and the observation
+ * commits it as a durable fact. A run started WITHOUT one — a reconciliation
+ * restart — takes the mode the observation already standing for the match
+ * recorded, because re-deciding it is precisely how a silent backfill would
+ * come to announce itself. A run with neither an input mode nor a stored
+ * observation has no evidence either way and fails rather than choosing.
  */
 export const ScoutMatchProcessingV2InputSchema = z.strictObject({
   stage: ScoutStageSchema,
   riotMatchId: RiotMatchIdSchema,
+  sourcePuuid: LeaguePuuidSchema.optional(),
+  deliveryMode: MatchDeliveryModeSchema.optional(),
 });
 export type ScoutMatchProcessingV2Input = z.infer<
   typeof ScoutMatchProcessingV2InputSchema
@@ -197,6 +221,15 @@ export const ScoutMatchProcessingV2ResultSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
   owner: PipelineOwnerSchema,
   policy: MatchProcessingPolicySchema,
+  /**
+   * The committed delivery mode this run operated under, read from the
+   * durable observation rather than from the run's input.
+   *
+   * Reported because it governs what the run was allowed to do — a
+   * silent-backfill match announces nothing — so a history that omitted it
+   * could not explain why a run minted no visible delivery.
+   */
+  deliveryMode: MatchDeliveryModeSchema,
   /** Which facts this run attested to, in the order it recorded them. */
   receiptKinds: z.array(ReceiptKindSchema).readonly(),
   childrenStarted: z.strictObject({
