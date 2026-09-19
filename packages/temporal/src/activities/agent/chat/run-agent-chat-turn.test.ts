@@ -9,12 +9,58 @@ import {
 } from "./test-support.ts";
 
 const temporaryDirectories = temporaryDirectoryTracker("agent-chat-turn-test-");
+const providerMustNotRun: typeof runAgentTurn = () =>
+  Promise.reject(new Error("provider must not run"));
 
 afterEach(async () => {
   await temporaryDirectories.cleanup();
 });
 
 describe("runAgentChatTurnWithDependencies", () => {
+  test("rejects expired work before preparing or invoking the provider", async () => {
+    const baseDirectory = await temporaryDirectories.create();
+
+    await expect(
+      runAgentChatTurnWithDependencies(
+        {
+          config: {
+            chatId: "expired-chat",
+            title: "Expired chat",
+            provider: "codex",
+            model: "gpt-5.4",
+            origin: { kind: "schedule", scheduleId: "expired-schedule" },
+            createdAt: "2026-09-14T20:00:00.000Z",
+            maxTurnsPerMessage: 8,
+          },
+          request: {
+            turnId: "expired-turn",
+            prompt: "do not run",
+            submittedAt: "2026-09-14T20:01:00.000Z",
+            providerStartDeadline: "2026-09-14T20:02:00.000Z",
+            source: { kind: "schedule", scheduleId: "expired-schedule" },
+          },
+          turnNumber: 1,
+        },
+        {
+          store: memoryAgentChatStore(),
+          bundlePrefix: "agent-chats",
+          baseDirectory,
+          sourceEnv: {},
+          signal: new AbortController().signal,
+          redactTokens: [],
+          forbiddenSessionTokens: [],
+          beforeEvent: () => Promise.resolve(true),
+          heartbeat: vi.fn(),
+          now: () => new Date("2026-09-14T20:03:00.000Z"),
+          runTurn: providerMustNotRun,
+        },
+      ),
+    ).rejects.toThrow("provider admission deadline");
+    expect(
+      await Array.fromAsync(new Bun.Glob("**/*").scan(baseDirectory)),
+    ).toEqual([]);
+  });
+
   test.each([false, true])(
     "hydrates fresh workspaces and rejects leaked provider auth (%s)",
     async (leakCredential) => {

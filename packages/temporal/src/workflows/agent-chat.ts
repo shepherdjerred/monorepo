@@ -13,6 +13,7 @@ import {
   AgentChatWorkflowInputSchema,
   AgentChatWorkflowStateSchema,
   MAX_AGENT_CHAT_PENDING_TURNS,
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS,
   AGENT_CHAT_TURN_TIMEOUT_MS,
   type AgentChatActivities,
   type AgentChatSettledTurn,
@@ -34,6 +35,7 @@ const MAX_RECENT_TURNS_BYTES = 1_000_000;
 const activities = proxyActivities<AgentChatActivities>({
   taskQueue: TASK_QUEUES.AGENT_TASK,
   startToCloseTimeout: AGENT_CHAT_TURN_TIMEOUT_MS,
+  scheduleToCloseTimeout: AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS,
   heartbeatTimeout: "1 minute",
   retry: { maximumAttempts: 1 },
 });
@@ -174,6 +176,15 @@ async function executeTurn(
   const turnNumber = state.nextTurnNumber;
 
   try {
+    if (
+      request.providerStartDeadline !== undefined &&
+      Date.now() >= Date.parse(request.providerStartDeadline)
+    ) {
+      throw ApplicationFailure.nonRetryable(
+        `Agent chat turn ${request.turnId} exceeded its provider admission deadline`,
+        "AgentChatTurnExpired",
+      );
+    }
     const result = AgentChatTurnResultSchema.parse(
       await activities.runAgentChatTurn({
         config: state.config,

@@ -9,6 +9,7 @@ import {
 import { createHash } from "node:crypto";
 import {
   AGENT_CHAT_CATALOG_WORKFLOW_ID,
+  AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS,
   AgentChatBindingSchema,
   AgentChatCatalogEntrySchema,
   AgentChatConfigSchema,
@@ -214,6 +215,7 @@ export async function runAgentChatTurn(input: {
         workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
         workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
         taskQueue: TASK_QUEUES.WORKFLOWS,
+        workflowExecutionTimeout: AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS,
         args: [{ config, request }],
       },
     );

@@ -1,7 +1,8 @@
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { collectErrorMessages } from "#shared/error-cause.ts";
 import {
   locateAgentChatRun,
   dispatchPinnedAgentChatTurn,
@@ -12,6 +13,8 @@ import type {
 } from "#shared/agent/agent-chat-receipt.ts";
 import {
   AGENT_CHAT_CATALOG_WORKFLOW_ID,
+  AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS,
+  AGENT_CHAT_TURN_TIMEOUT_MS,
   MAX_AGENT_CHAT_CATALOG_BINDINGS,
   MAX_AGENT_CHAT_CATALOG_ENTRIES,
   MAX_AGENT_CHAT_CATALOG_STATE_BYTES,
@@ -341,6 +344,37 @@ describe("agent chat workflows", () => {
       await handle.terminate("test complete");
     });
   }, 60_000);
+  test("rejects an expired turn before provider activity admission", async () => {
+    const runTurn = vi.fn((input: RunAgentChatTurnInput) =>
+      Promise.resolve(turnResult(input)),
+    );
+    await withWorkers(
+      async (environment) => {
+        await registerAgentChat(environment.client.workflow, CONFIG);
+        const handle = environment.client.workflow.getHandle(
+          agentChatWorkflowId(CONFIG.chatId),
+        );
+        let failure: unknown;
+        try {
+          await handle.executeUpdate(runAgentChatTurnUpdate, {
+            args: [
+              {
+                ...request("expired-message", "do not run"),
+                providerStartDeadline: "2000-01-01T00:00:00.000Z",
+              },
+            ],
+          });
+        } catch (error: unknown) {
+          failure = error;
+        }
+        expect(collectErrorMessages(failure)).toContain(
+          "provider admission deadline",
+        );
+      },
+      { runAgentChatTurn: runTurn },
+    );
+    expect(runTurn).not.toHaveBeenCalled();
+  }, 60_000);
 
   test("rejects excess pending turns with explicit backpressure", async () => {
     const firstStarted = Promise.withResolvers<undefined>();
@@ -528,6 +562,11 @@ describe("agent chat catalog and schedules", () => {
       {
         dispatchScheduledAgentChatTurn: (input) => {
           attempts += 1;
+          expect(Date.parse(input.request.providerStartDeadline ?? "")).toBe(
+            Date.parse(input.request.submittedAt) +
+              AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS -
+              AGENT_CHAT_TURN_TIMEOUT_MS,
+          );
           if (attempts === 1) throw new Error("transient dispatch failure");
           return Promise.resolve({
             turnId: input.request.turnId,

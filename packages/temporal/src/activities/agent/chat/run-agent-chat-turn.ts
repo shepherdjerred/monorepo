@@ -138,6 +138,15 @@ export async function runAgentChatTurnWithDependencies(
   dependencies: RunAgentChatTurnDependencies,
 ): Promise<AgentChatTurnResult> {
   const input = RunAgentChatTurnInputSchema.parse(rawInput);
+  if (
+    input.request.providerStartDeadline !== undefined &&
+    dependencies.now().getTime() >=
+      Date.parse(input.request.providerStartDeadline)
+  ) {
+    throw new Error(
+      `Agent chat turn ${input.request.turnId} exceeded its provider admission deadline`,
+    );
+  }
   const paths = sessionPaths(dependencies.baseDirectory, input.config.chatId);
   await rm(paths.root, { recursive: true, force: true });
   await Promise.all([
