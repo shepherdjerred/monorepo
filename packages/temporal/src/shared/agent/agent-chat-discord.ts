@@ -7,6 +7,9 @@ import {
 } from "./agent-chat.ts";
 
 export const DISCORD_MESSAGE_LIMIT = 2000;
+// Discord only guarantees nonce uniqueness over the preceding few minutes.
+// Keep every retry attempt inside a conservative two-minute window.
+export const DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS = 2 * 60 * 1000;
 
 const DiscordSnowflakeSchema = z.string().regex(/^\d{17,20}$/);
 
