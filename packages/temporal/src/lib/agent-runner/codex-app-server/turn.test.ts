@@ -6,6 +6,14 @@ import { describe, expect, test, vi } from "vitest";
 import { runSubscriptionCodexEvents } from "./turn.ts";
 import type { RunCodexAgentTurnInput } from "#lib/agent-runner/contract.ts";
 
+async function waitForFile(filePath: string): Promise<void> {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    if (await Bun.file(filePath).exists()) return;
+    await Bun.sleep(10);
+  }
+  throw new Error(`Timed out waiting for ${filePath}`);
+}
+
 async function withProvider(
   scenario: string,
   verify: (input: {
@@ -80,9 +88,7 @@ describe("subscription App Server protocol", () => {
       for await (const event of events) {
         if (event.type !== "turn.started") continue;
         // Flush proves pipe submission; allow the child to process it before inspection.
-        await expect
-          .poll(() => Bun.file(path.join(home, "turn-submitted")).exists())
-          .toBe(true);
+        await waitForFile(path.join(home, "turn-submitted"));
         break;
       }
     });
