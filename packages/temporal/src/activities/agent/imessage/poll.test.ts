@@ -6,7 +6,11 @@ vi.mock("#lib/bluebubbles/client.ts", () => ({
 vi.mock("#config/imessage.ts", () => ({ imessageIngressConfig: mocks.config }));
 import { pollBlueBubblesMessages } from "./poll.ts";
 
-const CURSOR = { startedAt: "2026-09-17T00:00:00.000Z", lastRowId: 10 };
+const CURSOR = {
+  startedAt: "2026-09-17T00:00:00.000Z",
+  initialized: true,
+  lastRowId: 10,
+};
 const message = (row: number) => ({
   originalROWID: row,
   guid: `guid-${row.toString()}`,
@@ -45,10 +49,12 @@ describe("durable BlueBubbles polling", () => {
     mocks.request.mockResolvedValue([message(50), message(75), message(60)]);
     const result = await pollBlueBubblesMessages({
       ...CURSOR,
+      initialized: false,
       lastRowId: 0,
     });
     expect(result).toEqual({
       startedAt: CURSOR.startedAt,
+      initialized: true,
       lastRowId: 75,
       commands: [],
     });
@@ -66,7 +72,11 @@ describe("durable BlueBubbles polling", () => {
       )
       .mockResolvedValueOnce([message(1500), message(1200)]);
 
-    const result = await pollBlueBubblesMessages({ ...CURSOR, lastRowId: 0 });
+    const result = await pollBlueBubblesMessages({
+      ...CURSOR,
+      initialized: false,
+      lastRowId: 0,
+    });
 
     expect(result.lastRowId).toBe(1500);
     expect(mocks.request).toHaveBeenLastCalledWith(
@@ -87,6 +97,21 @@ describe("durable BlueBubbles polling", () => {
     const result = await pollBlueBubblesMessages(CURSOR);
     expect(result.lastRowId).toBe(60);
     expect(result.commands).toHaveLength(50);
+  });
+  test("processes the first message after an empty initialization", async () => {
+    mocks.request.mockResolvedValue([message(1)]);
+
+    const result = await pollBlueBubblesMessages({
+      ...CURSOR,
+      initialized: true,
+      lastRowId: 0,
+    });
+
+    expect(result).toMatchObject({
+      initialized: true,
+      lastRowId: 1,
+      commands: [{ messageId: "guid-1" }],
+    });
   });
   test("fails a full time-sorted page without advancing past unseen ROWIDs", async () => {
     mocks.request.mockResolvedValue(

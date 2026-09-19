@@ -84,8 +84,13 @@ describe("iMessage chat preparation", () => {
       }),
     ).toMatchObject({ kind: "turn", command: { chatId: "discord-chat" } });
   });
-  test("selects an existing chat using the original message timestamp", async () => {
-    mocks.get.mockResolvedValue({ config: { chatId: "scheduled-chat" } });
+  test("selects a recovered chat without resetting its catalog metadata", async () => {
+    mocks.get.mockResolvedValue({
+      schemaVersion: 1,
+      config: { chatId: "scheduled-chat" },
+      updatedAt: "2026-09-16T00:00:00.000Z",
+      turnCount: 17,
+    });
     expect(
       await prepareImessageCommand({
         ...BASE,
@@ -101,12 +106,7 @@ describe("iMessage chat preparation", () => {
         sourceSequence: BASE.sourceSequence,
       },
     );
-    expect(mocks.register).toHaveBeenCalledWith(
-      {},
-      {
-        chatId: "scheduled-chat",
-      },
-    );
+    expect(mocks.register).not.toHaveBeenCalled();
   });
   test("sorts recent chats by instant across timestamp offsets", async () => {
     mocks.list.mockResolvedValue([
