@@ -21,18 +21,21 @@ import {
   bindAgentChat,
   getAgentChat,
   listAgentChats,
+  registerAgentChat,
   resolveAgentChatBinding,
 } from "#lib/agent-chat-client.ts";
 import { discordAgentChatDefaultModel } from "#config/agent-chat.ts";
 import type {
   AgentChatCatalogEntry,
   AgentChatBinding,
+  AgentChatConfig,
   AgentChatProvider,
 } from "#shared/agent/agent-chat.ts";
 import { AgentChatIdSchema } from "#shared/agent/agent-chat.ts";
 import {
   DISCORD_MESSAGE_LIMIT,
   DiscordAgentChatCommandSchema,
+  discordAgentChatConfig,
   type DiscordAgentChatCommand,
 } from "#shared/agent/agent-chat-discord.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -127,6 +130,10 @@ export type AgentChatDiscordOperations = {
     client: TemporalClient["workflow"],
     chatId: string,
   ) => Promise<AgentChatCatalogEntry | undefined>;
+  register: (
+    client: TemporalClient["workflow"],
+    config: AgentChatConfig,
+  ) => Promise<AgentChatCatalogEntry>;
   bind: (
     client: TemporalClient["workflow"],
     binding: DiscordAgentChatBinding,
@@ -152,6 +159,7 @@ const defaultOperations: AgentChatDiscordOperations = {
   },
   list: listAgentChats,
   get: getAgentChat,
+  register: registerAgentChat,
   bind: bindAgentChat,
   resolve: resolveAgentChatBinding,
   defaultModel: discordAgentChatDefaultModel,
@@ -193,6 +201,13 @@ function generatedTitle(prompt: string): string {
   return `${title}...`;
 }
 
+function discordInteractionTimestamp(interactionId: string): string {
+  const discordEpoch = 1_420_070_400_000n;
+  return new Date(
+    Number((BigInt(interactionId) >> 22n) + discordEpoch),
+  ).toISOString();
+}
+
 async function handleNew(
   temporal: TemporalClient,
   interaction: ChatInputCommandInteraction,
@@ -207,21 +222,28 @@ async function handleNew(
   const model =
     interaction.options.getString("model") ??
     (await operations.defaultModel(provider));
-  const timestamp = new Date().toISOString();
+  const timestamp = discordInteractionTimestamp(interaction.id);
   const source = discordBinding(interaction);
-  await operations.start(
-    temporal,
-    DiscordAgentChatCommandSchema.parse({
-      kind: "new",
-      interactionId: interaction.id,
-      channelId: source.channelId,
-      ...(source.threadId === undefined ? {} : { threadId: source.threadId }),
-      provider,
-      prompt,
-      title: interaction.options.getString("title") ?? generatedTitle(prompt),
-      model,
-      submittedAt: timestamp,
-    }),
+  const command = DiscordAgentChatCommandSchema.parse({
+    kind: "new",
+    interactionId: interaction.id,
+    channelId: source.channelId,
+    ...(source.threadId === undefined ? {} : { threadId: source.threadId }),
+    provider,
+    prompt,
+    title: interaction.options.getString("title") ?? generatedTitle(prompt),
+    model,
+    submittedAt: timestamp,
+  });
+  if (command.kind !== "new") throw new Error("Expected a new chat command");
+  await operations.start(temporal, command);
+  const config = discordAgentChatConfig(command);
+  await operations.register(temporal.workflow, config);
+  await operations.bind(
+    temporal.workflow,
+    source,
+    config.chatId,
+    command.submittedAt,
   );
   await interaction.editReply({
     content: "Queued. I’ll post the durable agent response in this channel.",

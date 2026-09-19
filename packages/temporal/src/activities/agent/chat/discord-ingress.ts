@@ -8,6 +8,8 @@ import {
   DeliverDiscordAgentChatMessageInputSchema,
   DiscordAgentChatCommandResultSchema,
   DiscordAgentChatCommandSchema,
+  discordAgentChatConfig,
+  discordAgentChatSource,
   type DeliverDiscordAgentChatMessageInput,
   type DiscordAgentChatCommand,
   type DiscordAgentChatCommandResult,
@@ -44,14 +46,6 @@ export function chunkDiscordAgentChatText(text: string): string[] {
   return chunks;
 }
 
-function sourceFor(command: DiscordAgentChatCommand) {
-  return {
-    kind: "discord" as const,
-    channelId: command.channelId,
-    ...(command.threadId === undefined ? {} : { threadId: command.threadId }),
-  };
-}
-
 export async function executeDiscordAgentChatCommand(
   rawCommand: DiscordAgentChatCommand,
 ): Promise<DiscordAgentChatCommandResult> {
@@ -67,7 +61,7 @@ export async function executeDiscordAgentChatCommand(
   const heartbeatTimer = setInterval(heartbeat, HEARTBEAT_INTERVAL_MS);
   try {
     const client = await createTemporalClient();
-    const source = sourceFor(command);
+    const source = discordAgentChatSource(command);
     const request = {
       turnId: `discord-${command.interactionId}`,
       prompt: command.prompt,
@@ -78,15 +72,7 @@ export async function executeDiscordAgentChatCommand(
       command.kind === "new"
         ? await runAgentChatTurn({
             client: client.workflow,
-            config: {
-              chatId: `chat-discord-${command.interactionId}`,
-              title: command.title,
-              provider: command.provider,
-              model: command.model,
-              origin: source,
-              createdAt: command.submittedAt,
-              maxTurnsPerMessage: 24,
-            },
+            config: discordAgentChatConfig(command),
             request,
             bindSource: true,
           })

@@ -77,7 +77,8 @@ Create a chat from iMessage:
     "conversationId": "bluebubbles-chat-guid"
   },
   "prompt": "Inspect the current alerts and summarize the likely cause.",
-  "turnId": "bluebubbles-message-01J8ABCDEF"
+  "turnId": "bluebubbles-message-01J8ABCDEF",
+  "submittedAt": "2026-09-14T21:59:00.000Z"
 }
 ```
 
@@ -102,8 +103,8 @@ active for the requesting ingress.
 Every prompt-bearing HTTP request requires a globally unique, stable `turnId`.
 Use the source message or delivery ID when it fits the accepted
 letters/digits/underscore/dot/colon/hyphen format (200 characters maximum).
-Continuation requests also require the source delivery's stable ISO-8601
-`submittedAt`. Retry the same delivery with the same ID and timestamp. Temporal
+Prompted create and continuation requests also require the source delivery's
+stable ISO-8601 `submittedAt`. Retry the same delivery with the same ID and timestamp. Temporal
 rejects a second execution after the first settles and reuses an in-flight
 execution, so a network retry does not execute another provider turn. The
 stable timestamp also prevents a delayed retry from replacing a newer active

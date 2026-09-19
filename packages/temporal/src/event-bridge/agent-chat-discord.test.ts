@@ -44,6 +44,7 @@ function operations(): AgentChatDiscordOperations {
     start: vi.fn(() => Promise.resolve()),
     list: vi.fn(async () => [ENTRY]),
     get: vi.fn(async () => ENTRY),
+    register: vi.fn(async () => ENTRY),
     bind: vi.fn(async () => ENTRY),
     resolve: vi.fn(async () => ENTRY),
     defaultModel: vi.fn(async (provider) =>
@@ -168,6 +169,19 @@ describe("agent chat Discord ingress", () => {
       allowedMentions: { parse: [] },
     });
     expect(deps.defaultModel).toHaveBeenCalledWith("codex");
+    expect(deps.register).toHaveBeenCalledOnce();
+    expect(deps.bind).toHaveBeenCalledWith(
+      expect.anything(),
+      { kind: "discord", channelId: CHANNEL_ID },
+      `chat-discord-${INTERACTION_ID}`,
+      expect.any(String),
+    );
+    expect(vi.mocked(deps.start).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(deps.register).mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(vi.mocked(deps.register).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(deps.bind).mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it("keeps an explicit model override", async () => {
