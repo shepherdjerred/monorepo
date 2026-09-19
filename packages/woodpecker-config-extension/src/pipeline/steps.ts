@@ -11,6 +11,7 @@ import {
   releaseAdmissionStep,
   tofuApplySteps,
 } from "#src/pipeline/lanes/tofu-apply.ts";
+import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -74,13 +75,22 @@ export type PipelineInputs = {
    * when the branch has never gone green.
    */
   readonly changedBase: string | undefined;
+  /**
+   * Newest commit whose images were built, pushed, AND pinned. Stricter than
+   * `changedBase`, and undefined when no recent build qualifies.
+   */
+  readonly imageReleaseBase?: string | undefined;
 };
 
 export function buildPipelineSteps({
   images,
   changedBase,
+  imageReleaseBase,
 }: PipelineInputs): CiStep[] {
-  const sharedEnvironment = { CI_CHANGED_BASE: changedBase ?? "" };
+  const sharedEnvironment = {
+    CI_CHANGED_BASE: changedBase ?? "",
+    CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase ?? "",
+  };
 
   return [
     {
@@ -123,5 +133,6 @@ export function buildPipelineSteps({
     ...playwrightSteps(images),
     releaseAdmissionStep(images),
     ...tofuApplySteps(images),
+    ...releaseChainSteps(images, sharedEnvironment),
   ];
 }

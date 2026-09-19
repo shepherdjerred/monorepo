@@ -2,7 +2,10 @@ import type { KeyObject } from "node:crypto";
 import { createApp } from "#src/app.ts";
 import { fetchPublicKey } from "#src/signature.ts";
 import { createRawFetcher } from "#src/images.ts";
-import { lastSuccessfulCommit } from "#src/woodpecker-api.ts";
+import {
+  lastCommitWithSuccessfulWorkflows,
+  lastSuccessfulCommit,
+} from "#src/woodpecker-api.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -40,6 +43,15 @@ const app = createApp({
       baseUrl: serverUrl,
       token: apiToken,
     }),
+  // The image lane's base must be a commit whose images were built, pushed
+  // AND pinned -- the two workflows named here.
+  imageReleaseBase: (repoId, branch) =>
+    lastCommitWithSuccessfulWorkflows(
+      repoId,
+      branch,
+      ["images", "version-commit-back"],
+      { baseUrl: serverUrl, token: apiToken },
+    ),
 });
 
 export default { port, fetch: app.fetch };
