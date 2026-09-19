@@ -318,7 +318,13 @@ describe("realtime workflows", () => {
       },
     ]);
   });
+});
 
+// Child IDs are one-per-match and permanent, so a rediscovered match always
+// collides with whatever execution already owns it. Whether that collision is a
+// fault depends entirely on what the owning execution did, which is what these
+// cover.
+describe("post-match discovery child ownership", () => {
   test("restarts a failed match child without duplicating a successful child", async () => {
     let attempts = 0;
     let failIngestion = true;
@@ -393,6 +399,66 @@ describe("realtime workflows", () => {
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
     expect(attempts).toBe(2);
+  });
+
+  test("completes without settling when discovery re-surfaces an already-ingested match", async () => {
+    // A stalled account cursor keeps re-reporting a match whose child already
+    // COMPLETED. `ALLOW_DUPLICATE_FAILED_ONLY` refuses to reuse a succeeded ID,
+    // so the start is rejected. That rejection is an answer, not a fault: the
+    // run must finish rather than fail, or every later poll fails identically
+    // and the cursor can never move past the match.
+    let attempts = 0;
+    const maintenanceDeadlineSettlement: boolean[] = [];
+    const workflow = await workflowWorker();
+    const activities = await Worker.create({
+      connection: environment.nativeConnection,
+      taskQueue: "scout-dev-realtime",
+      activities: {
+        discoverPostMatchIds: () => ({
+          evidenceComplete: true,
+          matches: [
+            {
+              matchId: "NA1_300",
+              sourcePuuid: "puuid-NA1_300",
+              region: "AMERICA_NORTH",
+              delivery: "live",
+            },
+          ],
+        }),
+        ingestMatch: () => {
+          attempts += 1;
+        },
+        runPostMatchMaintenance: (input: {
+          settleDareV2Deadlines: boolean;
+        }) => {
+          maintenanceDeadlineSettlement.push(input.settleDareV2Deadlines);
+        },
+      },
+      maxConcurrentActivityTaskExecutions: 1,
+    });
+    await workers.start(workflow);
+    await workers.start(activities);
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: "postmatch-discovery-ingested-first",
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: "postmatch-discovery-ingested-again",
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
+
+    // Re-ingestion must not happen, and the second pass must withhold
+    // settlement because it did not own the whole tail.
+    expect(attempts).toBe(1);
+    expect(maintenanceDeadlineSettlement).toEqual([true, false]);
   });
 });
 

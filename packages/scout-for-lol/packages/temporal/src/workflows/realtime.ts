@@ -2,6 +2,7 @@ import { startChild, workflowInfo } from "@temporalio/workflow";
 import {
   defineSearchAttributeKey,
   SearchAttributeType,
+  WorkflowExecutionAlreadyStartedError,
 } from "@temporalio/common";
 import {
   ScoutMatchIngestionInputSchema,
@@ -60,6 +61,7 @@ export async function scoutPostMatchDiscoveryWorkflow(
     await realtimeActivities(input.stage).discoverPostMatchIds(input),
   );
   let childrenStarted = 0;
+  let ownedWholeTail = true;
   let childFailure: unknown;
   for (const match of discovered.matches) {
     try {
@@ -76,10 +78,19 @@ export async function scoutPostMatchDiscoveryWorkflow(
       // every frozen account in an active Dare, globally orders their completed
       // matches, and fails the batch if any target or timestamp is unavailable.
       // Do not allow a later child to capture evidence and settle while an
-      // earlier child is still ingesting. If an older run already owns this child
-      // ID, startChild fails and the next poll rediscovers the unprocessed tail.
+      // earlier child is still ingesting.
       await child.result();
     } catch (error) {
+      if (error instanceof WorkflowExecutionAlreadyStartedError) {
+        // This match's ID is already owned by another execution, so this run did
+        // not see the whole tail through. Stopping preserves the chronology the
+        // serialization above exists to protect, and withholding settlement is
+        // the honest report of a partial pass — but it is an answer, not a
+        // fault, so the run completes rather than failing. Mirrors
+        // `ownedWholeTail` in `scoutPostMatchDiscoveryV2Workflow`.
+        ownedWholeTail = false;
+        break;
+      }
       childFailure = error;
       break;
     }
@@ -88,7 +99,9 @@ export async function scoutPostMatchDiscoveryWorkflow(
   await realtimeActivities(input.stage).runPostMatchMaintenance({
     ...input,
     settleDareV2Deadlines:
-      discovered.evidenceComplete && childFailure === undefined,
+      discovered.evidenceComplete &&
+      ownedWholeTail &&
+      childFailure === undefined,
     evidenceWatermark: discovered.evidenceWatermark,
   });
   if (childFailure !== undefined) {
