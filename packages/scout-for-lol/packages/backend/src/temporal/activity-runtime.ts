@@ -24,6 +24,31 @@ export function probeQueue(
   return Promise.resolve({ ...input, taskQueue });
 }
 
+/**
+ * How often to beat, as a fraction of the Activity's own heartbeat timeout.
+ *
+ * A fixed interval equal to the timeout is a race the Activity loses about
+ * half the time: the server's timer fires at `last heartbeat + timeout`, and
+ * the next beat is issued at exactly that instant. A live Activity killed that
+ * way reaches its Workflow as a bare timeout — which, for the notification
+ * send, is indistinguishable from a Discord request that went unanswered and
+ * is recorded as `unknown-delivery`. A third of the timeout leaves room for
+ * two missed beats before the server gives up; the SDK throttles what actually
+ * reaches the server to 80% of the timeout, so beating more often is free.
+ */
+const HEARTBEAT_INTERVAL_DIVISOR = 3;
+const MINIMUM_HEARTBEAT_INTERVAL_MS = 1000;
+/** For an Activity whose options set no heartbeat timeout: nothing can lapse. */
+const UNTIMED_HEARTBEAT_INTERVAL_MS = 10_000;
+
+function heartbeatIntervalMs(heartbeatTimeoutMs: number | undefined): number {
+  if (heartbeatTimeoutMs === undefined) return UNTIMED_HEARTBEAT_INTERVAL_MS;
+  return Math.max(
+    MINIMUM_HEARTBEAT_INTERVAL_MS,
+    Math.floor(heartbeatTimeoutMs / HEARTBEAT_INTERVAL_DIVISOR),
+  );
+}
+
 export async function heartbeatWhile<T>(
   details: Record<string, unknown>,
   action: () => Promise<T>,
@@ -32,7 +57,7 @@ export async function heartbeatWhile<T>(
   context.heartbeat(details);
   const timer = setInterval(() => {
     context.heartbeat(details);
-  }, 10_000);
+  }, heartbeatIntervalMs(context.info.heartbeatTimeoutMs));
   try {
     return await action();
   } finally {
