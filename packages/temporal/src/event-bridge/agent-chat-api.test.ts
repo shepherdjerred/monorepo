@@ -254,12 +254,12 @@ describe("buildAgentChatApiRoutes", () => {
       }),
     );
     expect(
-      vi.mocked(operations.submit).mock.invocationCallOrder[0],
+      vi.mocked(operations.register).mock.invocationCallOrder[0],
     ).toBeLessThan(
-      vi.mocked(operations.register).mock.invocationCallOrder[0] ?? 0,
+      vi.mocked(operations.submit).mock.invocationCallOrder[0] ?? 0,
     );
     expect(
-      vi.mocked(operations.register).mock.invocationCallOrder[0],
+      vi.mocked(operations.submit).mock.invocationCallOrder[0],
     ).toBeLessThan(vi.mocked(operations.bind).mock.invocationCallOrder[0] ?? 0);
     expect(await response.json()).toEqual({
       chatId:
@@ -368,6 +368,48 @@ describe("buildAgentChatApiRoutes", () => {
 });
 
 describe("prompted chat registration", () => {
+  it("adopts a matching raced owner before durable submission", async () => {
+    const operations = makeOperations();
+    const raced = {
+      ...EMPTY_CHAT_ENTRY,
+      config: {
+        ...EMPTY_CHAT_ENTRY.config,
+        createdAt: "2026-09-14T20:00:00.000Z",
+      },
+    };
+    operations.get = vi
+      .fn<AgentChatApiOperations["get"]>()
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(raced);
+    operations.register = vi.fn(() =>
+      Promise.reject(new Error("owner already exists")),
+    );
+
+    const response = await appWith(operations).fetch(
+      request("/agent-chats", {
+        method: "POST",
+        token: TOKEN,
+        body: {
+          ...EMPTY_CHAT_REQUEST,
+          prompt: "Inspect the homelab.",
+          turnId: RECEIPT.turnId,
+          submittedAt: SUBMITTED_AT,
+        },
+      }),
+    );
+
+    expect(response.status).toBe(202);
+    expect(operations.submit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ kind: "new", config: raced.config }),
+    );
+    expect(
+      vi.mocked(operations.register).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(operations.submit).mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
   it.each([
     { title: "Another title" },
     { provider: "claude" },

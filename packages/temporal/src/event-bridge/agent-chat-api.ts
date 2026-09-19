@@ -340,7 +340,7 @@ export function buildAgentChatApiRoutes(
         return c.json({ chat: entry }, 201);
       }
       const turnId = HttpAgentChatTurnIdSchema.parse(input.turnId);
-      const existing = await findMatchingRegistration(
+      const entry = await registerIdempotently(
         operations,
         client.workflow,
         config,
@@ -349,17 +349,12 @@ export function buildAgentChatApiRoutes(
         client,
         HttpAgentChatCommandSchema.parse({
           kind: "new",
-          config: existing?.config ?? config,
+          config: entry.config,
           request: requestForIngress(
             { source: input.source, prompt: input.prompt, turnId },
             timestamp,
           ),
         }),
-      );
-      const entry = await registerIdempotently(
-        operations,
-        client.workflow,
-        existing?.config ?? config,
       );
       await operations.bind(
         client.workflow,
