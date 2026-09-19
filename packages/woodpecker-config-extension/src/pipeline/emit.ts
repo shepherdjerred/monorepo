@@ -119,12 +119,20 @@ export function emitWorkflow(step: CiStep): string {
               ),
             }),
         ...(step.allowFailure === true ? { failure: "ignore" } : {}),
-        backend_options: backendOptions(step),
+        // A local-backend step runs on a host with no pod around it, so a pod
+        // spec would be meaningless -- and Kubernetes secret grants would
+        // silently deliver nothing.
+        ...(step.backend === "local"
+          ? {}
+          : { backend_options: backendOptions(step) }),
       },
     ],
     ...(step.dependsOn === undefined || step.dependsOn.length === 0
       ? {}
       : { depends_on: [...step.dependsOn] }),
+    ...(step.agentLabels === undefined
+      ? {}
+      : { labels: { ...step.agentLabels } }),
     ...(step.concurrency === undefined
       ? {}
       : {
