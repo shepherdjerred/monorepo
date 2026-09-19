@@ -349,17 +349,29 @@ export async function handleAgentChatDiscordCommand(
   }
 }
 
-async function registerDiscordCommand(ready: Client<true>): Promise<void> {
+type DiscordCommandApplication = {
+  id: string;
+  commands: {
+    set: (
+      commands: readonly (typeof agentChatDiscordCommand)[],
+    ) => Promise<unknown>;
+  };
+};
+
+export async function registerAgentChatDiscordCommand(
+  application: DiscordCommandApplication,
+): Promise<void> {
   try {
-    await ready.application.commands.set([agentChatDiscordCommand]);
+    await application.commands.set([agentChatDiscordCommand]);
     jsonLog("info", "Registered global /agent command", {
-      applicationId: ready.application.id,
+      applicationId: application.id,
     });
   } catch (error: unknown) {
     Sentry.captureException(error);
     jsonLog("error", "Failed to register global /agent command", {
       error: error instanceof Error ? error.message : String(error),
     });
+    throw error;
   }
 }
 
@@ -380,10 +392,17 @@ export async function startAgentChatDiscordBot(
       void handleAgentChatDiscordCommand(temporal, interaction);
     }
   });
-  discord.once(Events.ClientReady, (ready) => {
-    void registerDiscordCommand(ready);
+  const ready = new Promise<Client<true>>((resolve) => {
+    discord.once(Events.ClientReady, resolve);
   });
-  await discord.login(token);
+  try {
+    await discord.login(token);
+    const readyClient = await ready;
+    await registerAgentChatDiscordCommand(readyClient.application);
+  } catch (error: unknown) {
+    await discord.destroy();
+    throw error;
+  }
   jsonLog("info", "Dedicated durable agent Discord ingress connected");
   return {
     async close() {
