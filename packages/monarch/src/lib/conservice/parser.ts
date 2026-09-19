@@ -4,14 +4,7 @@ import { Glob } from "bun";
 import { log } from "../logger.ts";
 import type { ConserviceCharge } from "./types.ts";
 
-const DATA_DIR = path.join(
-  import.meta.dirname,
-  "..",
-  "..",
-  "..",
-  "data",
-  "conservice",
-);
+import { CONSERVICE_STATEMENTS_DIR } from "../finance-vault.ts";
 
 const SUMMARY_PREFIXES = [
   "rent and leasing charges due",
@@ -185,6 +178,7 @@ async function parsePdf(
       chargeAmount: parsed.amount,
       paymentAmount: 0,
       monthTotal: 0,
+      billId: dueDate,
       postMonth: dueDate,
       transactionDate: dueDate,
       chargeTypeId: serviceTypeToChargeTypeId(parsed.serviceType),
@@ -196,9 +190,9 @@ async function parsePdf(
 }
 
 export async function loadConserviceFromPdfs(
-  dataDir = DATA_DIR,
+  dataDir = CONSERVICE_STATEMENTS_DIR,
 ): Promise<ConserviceCharge[]> {
-  const glob = new Glob("ConserviceBill*.pdf");
+  const glob = new Glob("*Conservice*.pdf");
 
   const files: string[] = [];
   try {

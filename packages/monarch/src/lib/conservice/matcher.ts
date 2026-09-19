@@ -21,24 +21,27 @@ function categorizeCharge(charge: ConserviceCharge): string {
   return "rent";
 }
 
+// One summary per bill. Grouping by calendar month instead would merge a
+// move-out final statement into that month's regular bill and report their sum
+// as the amount due, which no single payment can match.
 export function groupByMonth(
   charges: ConserviceCharge[],
 ): ConserviceMonthSummary[] {
-  const monthMap = new Map<string, ConserviceCharge[]>();
+  const billMap = new Map<string, ConserviceCharge[]>();
 
   for (const charge of charges) {
-    const month = charge.postMonth.slice(0, 7);
-    const existing = monthMap.get(month);
+    const existing = billMap.get(charge.billId);
     if (existing) {
       existing.push(charge);
     } else {
-      monthMap.set(month, [charge]);
+      billMap.set(charge.billId, [charge]);
     }
   }
 
   const summaries: ConserviceMonthSummary[] = [];
 
-  for (const [month, monthCharges] of monthMap) {
+  for (const [billId, monthCharges] of billMap) {
+    const month = (monthCharges[0]?.postMonth ?? billId).slice(0, 7);
     let rent = 0;
     let pets = 0;
     let waterSewer = 0;
@@ -77,6 +80,7 @@ export function groupByMonth(
     const total = monthTotal ?? rent + pets + waterSewer + electric + trash;
 
     summaries.push({
+      billId,
       month,
       total,
       rent,
@@ -88,7 +92,7 @@ export function groupByMonth(
     });
   }
 
-  summaries.sort((a, b) => a.month.localeCompare(b.month));
+  summaries.sort((a, b) => a.billId.localeCompare(b.billId));
   return summaries;
 }
 
@@ -106,12 +110,17 @@ export function matchBiltTransactions(
 ): BiltMatch[] {
   const eligible = monarchTxns.filter((t) => !t.isSplitTransaction);
   const matches: BiltMatch[] = [];
+  // One bill documents one payment. Two bills can now survive in the same
+  // month, and within the $1 tolerance both transactions would otherwise take
+  // the first one's breakdown while the second bill went unused.
+  const usedBillIds = new Set<string>();
 
   for (const txn of eligible) {
     const txnMonth = txn.date.slice(0, 7);
     const txnAmount = Math.abs(txn.amount);
 
     for (const month of months) {
+      if (usedBillIds.has(month.billId)) continue;
       if (txnMonth !== month.month) continue;
       if (Math.abs(txnAmount - month.total) > 1) continue;
 
@@ -138,6 +147,7 @@ export function matchBiltTransactions(
         month,
         splits,
       });
+      usedBillIds.add(month.billId);
       break;
     }
   }

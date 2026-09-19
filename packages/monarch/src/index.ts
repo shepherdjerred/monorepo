@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { getConfig } from "./lib/config.ts";
+import { FINANCE_VAULT_DIR } from "./lib/finance-vault.ts";
 import {
   initMonarch,
   fetchAllTransactions,
@@ -10,7 +11,10 @@ import type {
   MonarchCategory,
   MonarchTransaction,
 } from "./lib/monarch/types.ts";
-import { runEnrichmentPipeline } from "./lib/enrichment/pipeline.ts";
+import {
+  runEnrichmentPipeline,
+  unreachableCounts,
+} from "./lib/enrichment/pipeline.ts";
 import { promptConfirm, applyChanges } from "./lib/apply.ts";
 import {
   initLlm,
@@ -25,6 +29,9 @@ import {
 } from "./lib/classifier/tier3.ts";
 import type { ProposedChange } from "./lib/classifier/types.ts";
 import { verifyClassifications } from "./lib/verification/verify.ts";
+import { guardCrossGroupChanges } from "./lib/verification/transfer-guard.ts";
+import { writeEnrichmentNotes } from "./lib/enrichment/notes.ts";
+import type { EnrichedTransaction } from "./lib/enrichment/types.ts";
 import {
   loadKnowledgeBase,
   saveKnowledgeBase,
@@ -50,17 +57,8 @@ import { log, setLogLevel } from "./lib/logger.ts";
 import { setUserHints } from "./lib/classifier/prompt.ts";
 import path from "node:path";
 
-function getDateRange(): { startDate: string; endDate: string } {
-  const endDate = new Date().toISOString().split("T")[0] ?? "";
-  const startDate =
-    new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0] ?? "";
-  return { startDate, endDate };
-}
-
 async function loadHints(): Promise<string> {
-  const hintsPath = path.join(import.meta.dirname, "..", "hints.txt");
+  const hintsPath = path.join(FINANCE_VAULT_DIR, "hints.txt");
   const hintsFile = Bun.file(hintsPath);
   if (await hintsFile.exists()) {
     const hints = await hintsFile.text();
@@ -122,17 +120,67 @@ async function saveChanges(
   log.info(`Saved ${String(changes.length)} proposed changes to ${outputPath}`);
 }
 
+// Enrichment and note-writing without classification: no model is called,
+// no knowledge base is learned from, and existing categorizations are left
+// exactly as they are. This is what makes a full-history pass safe to run.
+async function runNotesOnly(
+  enriched: EnrichedTransaction[],
+  apply: boolean,
+): Promise<void> {
+  const count = await writeEnrichmentNotes(enriched, !apply);
+  log.info(
+    apply
+      ? `Notes-only run complete: ${String(count)} notes written`
+      : `Notes-only dry run: ${String(count)} notes would be written (pass --apply)`,
+  );
+}
+
+// Applies only what a vendor derived from a source document, and the notes.
+// No tier runs, so no model is called and no existing categorization is
+// re-litigated — the cheap, repeatable way to keep splits current.
+async function runDerivedOnly(
+  enriched: EnrichedTransaction[],
+  derived: ProposedChange[],
+  categories: MonarchCategory[],
+  apply: boolean,
+): Promise<void> {
+  const { changes: guarded, demoted } = guardCrossGroupChanges(
+    derived,
+    categories,
+  );
+  displayChanges(guarded);
+  if (demoted > 0) {
+    log.warn(
+      `${String(demoted)} derived changes were demoted to review flags because their legs cross category groups`,
+    );
+  }
+  if (!apply) {
+    log.info(
+      `Derived-only dry run: ${String(guarded.length)} changes would be applied (pass --apply)`,
+    );
+    await writeEnrichmentNotes(enriched, true);
+    return;
+  }
+  if ((await applyChanges(guarded, false)) === "quit") return;
+  await writeEnrichmentNotes(enriched);
+}
+
 async function main(): Promise<void> {
   const config = getConfig();
 
   if (config.verbose) setLogLevel("debug");
 
   await initMonarch();
-  initLlm(config.openRouterApiKey, config.model);
-  setWebSearchEnabled(!config.skipResearch);
+  // Both model-free modes are allowed to run without OPENROUTER_API_KEY
+  // (see config.ts), so neither may reach initLlm with an empty key.
+  const usesModel = !config.notesOnly && !config.derivedOnly;
+  if (usesModel) {
+    initLlm(config.openRouterApiKey, config.model);
+    setWebSearchEnabled(!config.skipResearch);
+  }
   const hints = await loadHints();
 
-  const { startDate, endDate } = getDateRange();
+  const { since: startDate, until: endDate } = config;
   log.info(`Fetching transactions from ${startDate} to ${endDate}...`);
 
   const [categories, allTransactions] = await Promise.all([
@@ -153,31 +201,58 @@ async function main(): Promise<void> {
   // Build category definitions for prompts
   const categoryDefinitions = buildCategoryDefinitions(categories);
 
-  // Build or load the knowledge base
-  const knowledgeBase = await buildKnowledgeBase(
-    categories,
-    allTransactions,
-    hints,
-    config.rebuildKb,
-  );
+  // Build or load the knowledge base. The model-free modes never classify, so
+  // a knowledge base learned and persisted during one of them would be a pure
+  // side effect of a run that promised to change nothing but notes and splits.
+  // They read the stored one — still needed for tier assignment — and add
+  // nothing to it.
+  const knowledgeBase = usesModel
+    ? await buildKnowledgeBase(
+        categories,
+        allTransactions,
+        hints,
+        config.rebuildKb,
+      )
+    : await loadKnowledgeBase();
 
   // Separate transactions by deep path
   const separated = separateDeepPaths(transactions);
 
   log.info(
-    `${String(separated.regularTransactions.length)} regular, ${String(separated.amazonTransactions.length)} Amazon, ${String(separated.venmoTransactions.length)} Venmo, ${String(separated.biltTransactions.length)} Bilt, ${String(separated.usaaTransactions.length)} USAA, ${String(separated.sclTransactions.length)} SCL, ${String(separated.appleTransactions.length)} Apple, ${String(separated.costcoTransactions.length)} Costco`,
+    `${String(separated.regularTransactions.length)} regular, ${String(separated.amazonTransactions.length)} Amazon, ${String(separated.venmoTransactions.length)} Venmo, ${String(separated.biltTransactions.length)} Bilt, ${String(separated.usaaTransactions.length)} USAA, ${String(separated.sclTransactions.length)} SCL, ${String(separated.appleTransactions.length)} Apple, ${String(separated.costcoTransactions.length)} Costco, ${String(separated.paystubTransactions.length)} payroll, ${String(separated.equityTransactions.length)} equity, ${String(separated.loanTransactions.length)} loan`,
   );
 
   // === Phase 1: Enrichment ===
   log.info("\n--- Enrichment Phase ---");
-  const { enrichedTransactions, stats: enrichmentStats } =
-    await runEnrichmentPipeline(config, separated, knowledgeBase);
+  const {
+    enrichedTransactions,
+    stats: enrichmentStats,
+    changes: derivedChanges,
+  } = await runEnrichmentPipeline(config, separated, knowledgeBase, categories);
 
-  displayEnrichmentStats(enrichmentStats);
+  displayEnrichmentStats(enrichmentStats, unreachableCounts(separated));
 
-  // Filter out split transactions
+  if (config.notesOnly) {
+    await runNotesOnly(enrichedTransactions, config.apply);
+    return;
+  }
+
+  if (config.derivedOnly) {
+    await runDerivedOnly(
+      enrichedTransactions,
+      derivedChanges,
+      categories,
+      config.apply,
+    );
+    return;
+  }
+
+  // Nothing downstream merges two proposals for one transaction — they would
+  // both be applied — so a transaction a vendor already decided from its
+  // source document does not also go to a tier to be guessed at.
+  const decided = new Set(derivedChanges.map((c) => c.transactionId));
   const classifiable = enrichedTransactions.filter(
-    (e) => !e.transaction.isSplitTransaction,
+    (e) => !e.transaction.isSplitTransaction && !decided.has(e.transaction.id),
   );
 
   // === Phase 2: Tiered Classification ===
@@ -209,7 +284,12 @@ async function main(): Promise<void> {
     knowledgeBase,
   });
 
-  const allChanges = [...tier1Changes, ...tier2Changes, ...tier3Changes];
+  const allChanges = [
+    ...derivedChanges,
+    ...tier1Changes,
+    ...tier2Changes,
+    ...tier3Changes,
+  ];
 
   // === Phase 3: Verification ===
   log.info("\n--- Verification Phase ---");
@@ -219,10 +299,15 @@ async function main(): Promise<void> {
     suggestions,
   } = verifyClassifications(allChanges, enrichedTransactions, knowledgeBase);
 
-  const finalChanges = [...verifiedChanges, ...flagged];
+  const { changes: guardedChanges } = guardCrossGroupChanges(
+    [...verifiedChanges, ...flagged],
+    categories,
+  );
+  const finalChanges = guardedChanges;
 
-  // Learn from high-confidence classifications
-  for (const change of verifiedChanges) {
+  // Learn from high-confidence classifications (guarded list: demoted
+  // cross-group changes are flags there and must not teach the KB)
+  for (const change of guardedChanges) {
     if (change.confidence === "high" && change.type === "recategorize") {
       learnFromClassification(
         knowledgeBase,
@@ -279,7 +364,13 @@ async function main(): Promise<void> {
         return;
       }
     }
-    await applyChanges(finalChanges, config.interactive);
+    // Quitting the interactive review is a request to stop mutating the
+    // account, not just to stop applying categories.
+    if ((await applyChanges(finalChanges, config.interactive)) === "quit") {
+      log.info("Stopped before writing enrichment notes.");
+      return;
+    }
+    await writeEnrichmentNotes(enrichedTransactions);
   } else {
     log.info(
       "Dry run complete. Use --apply to apply, or --output <path> to save to file.",

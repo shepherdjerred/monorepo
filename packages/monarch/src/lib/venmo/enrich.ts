@@ -2,6 +2,7 @@ import type { Config } from "../config.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { TransactionEnrichment } from "../enrichment/types.ts";
 import { parseVenmoCSV } from "./parser.ts";
+import { allVenmoCsvs } from "../finance-vault.ts";
 import { matchVenmoTransactions } from "./matcher.ts";
 import { log } from "../logger.ts";
 
@@ -14,12 +15,26 @@ export async function enrichVenmo(
   config: Config,
   venmoTransactions: MonarchTransaction[],
 ): Promise<VenmoEnrichResult> {
-  if (config.venmoCsv === undefined) {
+  // --venmo-csv names one file; otherwise every export in the vault is read.
+  // Each covers a fixed date range, so the newest alone leaves a hole wherever
+  // an earlier export was the only one reaching back that far.
+  const paths =
+    config.venmoCsv === undefined ? allVenmoCsvs() : [config.venmoCsv];
+  if (paths.length === 0) {
     return { enrichments: new Map(), matchRate: { matched: 0, total: 0 } };
   }
 
-  const venmoTxns = await parseVenmoCSV(config.venmoCsv);
-  log.info(`Parsed ${String(venmoTxns.length)} Venmo payments`);
+  const byId = new Map<
+    string,
+    Awaited<ReturnType<typeof parseVenmoCSV>>[number]
+  >();
+  for (const csvPath of paths) {
+    for (const txn of await parseVenmoCSV(csvPath)) byId.set(txn.id, txn);
+  }
+  const venmoTxns = [...byId.values()];
+  log.info(
+    `Parsed ${String(venmoTxns.length)} Venmo payments from ${String(paths.length)} export${paths.length === 1 ? "" : "s"}`,
+  );
 
   const matchResult = matchVenmoTransactions(venmoTransactions, venmoTxns);
   log.info(

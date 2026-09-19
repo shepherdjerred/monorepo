@@ -31,16 +31,24 @@ const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CacheSchema = z.object({
   cachedAt: z.string(),
   charges: z.array(
-    z.object({
-      rowNumber: z.number(),
-      description: z.string(),
-      chargeAmount: z.number(),
-      paymentAmount: z.number(),
-      monthTotal: z.number(),
-      postMonth: z.string(),
-      transactionDate: z.string(),
-      chargeTypeId: z.number(),
-    }),
+    z
+      .object({
+        // A cache written before charges carried a bill identity: the API
+        // path's bill is the post month, so that is what it would have been.
+        billId: z.string().optional(),
+        rowNumber: z.number(),
+        description: z.string(),
+        chargeAmount: z.number(),
+        paymentAmount: z.number(),
+        monthTotal: z.number(),
+        postMonth: z.string(),
+        transactionDate: z.string(),
+        chargeTypeId: z.number(),
+      })
+      .transform((charge) => ({
+        ...charge,
+        billId: charge.billId ?? charge.postMonth.slice(0, 7),
+      })),
   ),
 });
 
@@ -130,6 +138,7 @@ export async function fetchConserviceCharges(
         chargeAmount: record.ChargeAmount,
         paymentAmount: record.PaymentAmount,
         monthTotal: record.MonthTotal,
+        billId: parseNetDate(record.PostMonth).slice(0, 7),
         postMonth: parseNetDate(record.PostMonth),
         transactionDate: parseNetDate(record.TransactionDate),
         chargeTypeId: record.ChargeTypeID,

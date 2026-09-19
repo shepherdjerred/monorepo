@@ -26,7 +26,7 @@ export async function enrichAmazon(
 
   for (const match of matchResult.matched) {
     enrichments.set(match.transaction.id, {
-      items: match.order.items.map((item) => ({
+      items: match.items.map((item) => ({
         title: item.title,
         price: item.price,
       })),

@@ -209,6 +209,16 @@ describe("isVenmoP2P", () => {
   test("returns false for non-Venmo", () => {
     expect(isVenmoP2P("Target", "TARGET STORE")).toBe(false);
   });
+
+  // Monarch usually shows these as a bare "Venmo" merchant and keeps what
+  // they are in the bank description.
+  test("excludes a card payment named only in the bank description", () => {
+    expect(isVenmoP2P("Venmo", "Venmo Credit Card payment")).toBe(false);
+  });
+
+  test("excludes cash back named only in the bank description", () => {
+    expect(isVenmoP2P("Venmo", "Venmo Credit Card cash back")).toBe(false);
+  });
 });
 
 describe("isBiltTransaction", () => {
@@ -240,6 +250,29 @@ describe("isAppleMerchant", () => {
 
   test("returns false for non-Apple", () => {
     expect(isAppleMerchant("Target", "TARGET STORE")).toBe(false);
+  });
+
+  // A retail or App Store purchase arrives as a bare "Apple" merchant with
+  // the detail in the bank description. These are what the receipts document.
+  test.each([
+    ["Apple", "Apple"],
+    ["Apple", "Apple Store"],
+    ["Apple", "Apple Online Store"],
+    ["Apple University Village", "Apple University Village"],
+  ])("routes the purchase %s / %s", (name, plaid) => {
+    expect(isAppleMerchant(name, plaid)).toBe(true);
+  });
+
+  // No receipt describes paying the card bill, moving Apple Cash, or the
+  // daily interest posted in the savings account.
+  test.each([
+    ["Apple", "APPLECARD GSBANK"],
+    ["Apple Card, Cash, and Savings", "Deposit"],
+    ["Apple Card, Cash, and Savings", "Interest"],
+    ["Apple Savings", "APPLE GS SAVINGS"],
+    ["Apple Pay", "APPLE CASH"],
+  ])("leaves out the non-purchase %s / %s", (name, plaid) => {
+    expect(isAppleMerchant(name, plaid)).toBe(false);
   });
 });
 

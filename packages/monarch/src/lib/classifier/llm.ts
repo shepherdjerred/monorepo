@@ -6,19 +6,8 @@ import {
   openRouterWebSearchTool,
   type OpenRouterRuntime,
 } from "@shepherdjerred/llm-runtime";
-import { z } from "zod";
-import type { MonarchCategory } from "../monarch/types.ts";
-import type {
-  AmazonBatchResponse,
-  AmazonOrderInput,
-  VenmoClassificationResponse,
-} from "./types.ts";
-import {
-  buildSystemPrompt,
-  buildAmazonBatchPrompt,
-  buildVenmoClassificationPrompt,
-} from "./prompt.ts";
-import type { VenmoMatch } from "../venmo/matcher.ts";
+import type { z } from "zod";
+import { buildSystemPrompt } from "./prompt.ts";
 import type { UsageSummary } from "../usage.ts";
 import { createUsageTracker } from "../usage.ts";
 
@@ -64,23 +53,6 @@ export function isWebSearchEnabled(): boolean {
   return webSearchEnabled;
 }
 
-const AmazonBatchSchema = z.object({
-  orders: z.array(
-    z.object({
-      orderIndex: z.number(),
-      items: z.array(
-        z.object({
-          title: z.string(),
-          price: z.number(),
-          categoryId: z.string(),
-          categoryName: z.string(),
-        }),
-      ),
-      needsSplit: z.boolean(),
-    }),
-  ),
-});
-
 type LlmResponse = {
   usage: { inputTokens: number; outputTokens: number };
 };
@@ -115,14 +87,6 @@ async function researchPrompt(userPrompt: string): Promise<{
   return { evidence: result.text.slice(-40_000), usage };
 }
 
-export async function callLlmAndParse<T>(
-  prompt: string,
-  schema: z.ZodType<T>,
-): Promise<T> {
-  const { result } = await callLlmAndParseWithUsage(prompt, schema);
-  return result;
-}
-
 export async function callLlmAndParseWithUsage<T>(
   prompt: string,
   schema: z.ZodType<T>,
@@ -155,34 +119,6 @@ export async function callLlmAndParseWithUsage<T>(
   };
   tracker?.record(finalized.usage.tokens.input, finalized.usage.tokens.output);
   return { result: finalized.object, usage };
-}
-
-const VenmoClassificationSchema = z.object({
-  payments: z.array(
-    z.object({
-      note: z.string(),
-      amount: z.number(),
-      categoryId: z.string(),
-      categoryName: z.string(),
-      confidence: z.enum(["high", "medium", "low"]),
-    }),
-  ),
-});
-
-export async function classifyVenmoPayments(
-  categories: MonarchCategory[],
-  matches: VenmoMatch[],
-): Promise<VenmoClassificationResponse> {
-  const prompt = buildVenmoClassificationPrompt(categories, matches);
-  return callLlmAndParse(prompt, VenmoClassificationSchema);
-}
-
-export async function classifyAmazonBatch(
-  categories: MonarchCategory[],
-  orders: AmazonOrderInput[],
-): Promise<AmazonBatchResponse> {
-  const prompt = buildAmazonBatchPrompt(categories, orders);
-  return callLlmAndParse(prompt, AmazonBatchSchema);
 }
 
 type SplitItem = {

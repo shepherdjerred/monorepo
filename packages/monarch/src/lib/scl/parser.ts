@@ -1,5 +1,6 @@
 import type { SclBill } from "./types.ts";
 import { log } from "../logger.ts";
+import { parseCsvRow } from "../csv/rows.ts";
 
 function parseDate(dateStr: string): string {
   const parts = dateStr.split("/");
@@ -22,28 +23,7 @@ export function parseSclCSV(text: string): SclBill[] {
   const bills: SclBill[] = [];
 
   for (const line of dataLines) {
-    // CSV with quoted fields
-    const fields: string[] = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (const char of line) {
-      if (inQuotes) {
-        if (char === '"') {
-          inQuotes = false;
-        } else {
-          current += char;
-        }
-      } else if (char === '"') {
-        inQuotes = true;
-      } else if (char === ",") {
-        fields.push(current.trim());
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-    fields.push(current.trim());
+    const fields = parseCsvRow(line);
 
     const accountNumber = fields[0] ?? "";
     const billDateRaw = fields[2] ?? "";

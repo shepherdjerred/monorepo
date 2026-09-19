@@ -6,6 +6,7 @@ import { MonarchTransactionSchema } from "./types.ts";
 import type { MonarchTransaction } from "./types.ts";
 import { log } from "../logger.ts";
 import {
+  deleteTransactionMutation,
   getCategories,
   getTransactions,
   updateTransaction,
@@ -172,6 +173,34 @@ export async function applyCategory(
   await sleep(500);
 }
 
+export async function deleteTransaction(transactionId: string): Promise<void> {
+  const result = await withRetry(`deleteTransaction(${transactionId})`, () =>
+    deleteTransactionMutation(transactionId),
+  );
+  assertNoPayloadErrors(
+    `deleteTransaction(${transactionId})`,
+    result.deleteTransaction.errors,
+  );
+  if (!result.deleteTransaction.deleted) {
+    throw new Error(`Delete failed for transaction ${transactionId}`);
+  }
+  await sleep(500);
+}
+
+export async function setTransactionNotes(
+  transactionId: string,
+  notes: string,
+): Promise<void> {
+  const result = await withRetry(`setNotes(${transactionId})`, () =>
+    updateTransaction({ transactionId, notes }),
+  );
+  assertNoPayloadErrors(
+    `setNotes(${transactionId})`,
+    result.updateTransaction.errors,
+  );
+  await sleep(500);
+}
+
 export async function flagForReview(transactionId: string): Promise<void> {
   const result = await withRetry(`flagForReview(${transactionId})`, () =>
     updateTransaction({ transactionId, needsReview: true }),
@@ -245,20 +274,22 @@ function isAmazonMerchant(name: string): boolean {
   return AMAZON_MERCHANT_PATTERNS.some((p) => lower.includes(p));
 }
 
+// A card bill, a balance transfer and card cash back all arrive as "Venmo",
+// and none of them is a payment to a person. Which field carries that signal
+// varies: Monarch often shows the merchant as a bare "Venmo" and keeps the
+// detail in the bank description ("Venmo Credit Card payment"), so both are
+// tested. Checking only the merchant name let 43 card payments, transfers and
+// cash-back rows into the P2P path, where the CSV could never describe them.
 export function isVenmoP2P(name: string, plaidName: string): boolean {
-  const lower = name.toLowerCase();
-  const plaidLower = plaidName.toLowerCase();
-  const hasVenmo = lower.includes("venmo") || plaidLower.includes("venmo");
-  if (!hasVenmo) return false;
-  return !lower.includes("credit card") && !lower.includes("cash back");
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  if (!combined.includes("venmo")) return false;
+  return !combined.includes("credit card") && !combined.includes("cash back");
 }
 
 export function isBiltTransaction(name: string, plaidName: string): boolean {
-  const lower = name.toLowerCase();
-  const plaidLower = plaidName.toLowerCase();
-  const hasBilt = lower.includes("bilt") || plaidLower.includes("bilt");
-  if (!hasBilt) return false;
-  return !lower.includes("credit card cash back");
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  if (!combined.includes("bilt")) return false;
+  return !combined.includes("credit card cash back");
 }
 
 export function isUsaaInsurance(name: string, plaidName: string): boolean {
@@ -278,18 +309,98 @@ export function isSclTransaction(name: string, plaidName: string): boolean {
   );
 }
 
-const APPLE_MERCHANT_PATTERNS = [
-  "apple services",
-  "apple.com",
-  "apple.com/bill",
+// Apple's emailed receipts cover purchases wherever they were made — the App
+// Store, apple.com, and the retail stores, which arrive as a bare "Apple"
+// merchant with the detail in the bank description. Matching only
+// "apple services" and "apple.com" reached 32 transactions while the mailbox
+// held 210 parsed receipts.
+//
+// The same name also appears on things no receipt can describe: paying the
+// Apple Card bill, Apple Cash transfers, and the daily interest postings in
+// the Apple Savings account. Those are excluded by name rather than by their
+// Monarch category, which the pipeline is meant to be free to change.
+const APPLE_NON_PURCHASE = [
+  "apple card, cash", // the card and savings account itself
+  "applecard gsbank", // paying the card bill
+  "apple gs savings",
+  "apple savings",
+  "apple cash",
+  "apple pay",
 ];
 
 export function isAppleMerchant(name: string, plaidName: string): boolean {
-  const lower = name.toLowerCase();
-  const plaidLower = plaidName.toLowerCase();
-  return APPLE_MERCHANT_PATTERNS.some(
-    (p) => lower.includes(p) || plaidLower.includes(p),
-  );
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  if (!combined.includes("apple")) return false;
+  return !APPLE_NON_PURCHASE.some((p) => combined.includes(p));
+}
+
+// Payroll deposits from the employer. The amount is part of the test: an
+// expense at the same merchant is not a paycheck.
+const PAYROLL_MERCHANT_PATTERNS = ["pinterest"];
+
+function isPayrollDeposit(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  if (amount <= 0) return false;
+  const lower = `${name} ${plaidName}`.toLowerCase();
+  if (lower.includes("class a")) return false; // brokerage, not payroll
+  return PAYROLL_MERCHANT_PATTERNS.some((p) => lower.includes(p));
+}
+
+// Restricted stock lapses in the equity brokerage account. They move no cash,
+// so a zero amount is part of the test — a sale of the same stock is not a
+// vest and this export cannot describe it.
+function isEquityVest(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  if (amount !== 0) return false;
+  const lower = `${name} ${plaidName}`.toLowerCase();
+  return lower.includes("class a") && lower.includes("pinterest");
+}
+
+// Loan servicers whose statements the loan path can read. Upstart services
+// several loans at once and the bank records them all under one name, which is
+// why the loan is identified from the servicer's mail rather than from here.
+// A servicer's merchant also covers non-loan spending — Audi bills parts and a
+// down payment under the same name — so an unmatched row here is expected and
+// is reported rather than guessed at.
+const LOAN_SERVICER_PATTERNS = [
+  "upstart",
+  "audi financial",
+  "audi fin",
+  "edfinancial",
+  "dept of education",
+  "department of education",
+];
+
+function isLoanPayment(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  // Money leaving only: a refund or disbursement is not a repayment.
+  if (amount >= 0) return false;
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  return LOAN_SERVICER_PATTERNS.some((p) => combined.includes(p));
+}
+
+// Cash arriving from the brokerage. "Les Schwab" is a tire shop and shares
+// nothing with the broker but a surname, so the match is on the full name.
+const BROKERAGE_PATTERNS = ["charles schwab", "schwab brokerage"];
+
+function isBrokerageTransfer(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  // Money in only: a purchase at this merchant is not a sale's proceeds.
+  if (amount <= 0) return false;
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  return BROKERAGE_PATTERNS.some((p) => combined.includes(p));
 }
 
 const COSTCO_MERCHANT_PATTERNS = ["costco", "costco whse", "costco.com"];
@@ -310,6 +421,10 @@ export type SeparateDeepPathsResult = {
   sclTransactions: MonarchTransaction[];
   appleTransactions: MonarchTransaction[];
   costcoTransactions: MonarchTransaction[];
+  paystubTransactions: MonarchTransaction[];
+  equityTransactions: MonarchTransaction[];
+  loanTransactions: MonarchTransaction[];
+  brokerageTransactions: MonarchTransaction[];
   regularTransactions: MonarchTransaction[];
 };
 
@@ -323,6 +438,10 @@ export function separateDeepPaths(
   const sclTransactions: MonarchTransaction[] = [];
   const appleTransactions: MonarchTransaction[] = [];
   const costcoTransactions: MonarchTransaction[] = [];
+  const paystubTransactions: MonarchTransaction[] = [];
+  const equityTransactions: MonarchTransaction[] = [];
+  const loanTransactions: MonarchTransaction[] = [];
+  const brokerageTransactions: MonarchTransaction[] = [];
   const regularTransactions: MonarchTransaction[] = [];
 
   for (const t of transactions) {
@@ -342,6 +461,14 @@ export function separateDeepPaths(
       appleTransactions.push(t);
     } else if (isCostcoMerchant(merchantName, t.plaidName)) {
       costcoTransactions.push(t);
+    } else if (isPayrollDeposit(merchantName, t.plaidName, t.amount)) {
+      paystubTransactions.push(t);
+    } else if (isEquityVest(merchantName, t.plaidName, t.amount)) {
+      equityTransactions.push(t);
+    } else if (isLoanPayment(merchantName, t.plaidName, t.amount)) {
+      loanTransactions.push(t);
+    } else if (isBrokerageTransfer(merchantName, t.plaidName, t.amount)) {
+      brokerageTransactions.push(t);
     } else {
       regularTransactions.push(t);
     }
@@ -355,6 +482,10 @@ export function separateDeepPaths(
     sclTransactions,
     appleTransactions,
     costcoTransactions,
+    paystubTransactions,
+    equityTransactions,
+    loanTransactions,
+    brokerageTransactions,
     regularTransactions,
   };
 }

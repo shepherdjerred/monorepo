@@ -1,96 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import {
-  autoDetectAppleMailDir,
   deriveCheckpointPath,
-  resolveAppleMailDir,
   resolveCheckpointFile,
+  resolveDateRange,
 } from "./config.ts";
-
-describe("autoDetectAppleMailDir", () => {
-  test("returns undefined when candidate roots are missing", () => {
-    const root = makeTempDir();
-    expect(
-      autoDetectAppleMailDir([path.join(root, "missing")]),
-    ).toBeUndefined();
-  });
-
-  test("detects the standard MailMate Messages.noindex Gmail archive", async () => {
-    const root = makeTempDir();
-    const messages = path.join(
-      root,
-      "Messages.noindex",
-      "IMAP",
-      "user%40example.com@imap.gmail.com",
-      "[Gmail].mailbox",
-      "Archive.mailbox",
-      "Messages",
-    );
-    await writeDirectoryMarker(messages);
-
-    try {
-      expect(
-        autoDetectAppleMailDir([
-          path.join(root, "missing"),
-          path.join(root, "Messages.noindex", "IMAP"),
-        ]),
-      ).toBe(messages);
-    } finally {
-      await removeDir(root);
-    }
-  });
-
-  test("detects the legacy com.freron MailMate Gmail archive", async () => {
-    const root = makeTempDir();
-    const legacyRoot = path.join(
-      root,
-      "com.freron.MailMate",
-      "Messages",
-      "IMAP",
-    );
-    const messages = path.join(
-      legacyRoot,
-      "user%40example.com@imap.gmail.com",
-      "[Gmail].mailbox",
-      "Archive.mailbox",
-      "Messages",
-    );
-    await writeDirectoryMarker(messages);
-
-    try {
-      expect(autoDetectAppleMailDir([legacyRoot])).toBe(messages);
-    } finally {
-      await removeDir(root);
-    }
-  });
-});
-
-describe("resolveAppleMailDir", () => {
-  test("prefers an explicit mail directory over auto-detection", async () => {
-    const root = makeTempDir();
-    const detected = path.join(
-      root,
-      "Messages.noindex",
-      "IMAP",
-      "user%40example.com@imap.gmail.com",
-      "[Gmail].mailbox",
-      "Archive.mailbox",
-      "Messages",
-    );
-    await writeDirectoryMarker(detected);
-
-    try {
-      expect(
-        resolveAppleMailDir("/custom/apple/messages", [
-          path.join(root, "Messages.noindex", "IMAP"),
-        ]),
-      ).toBe("/custom/apple/messages");
-    } finally {
-      await removeDir(root);
-    }
-  });
-});
 
 describe("deriveCheckpointPath", () => {
   test("returns undefined without an output path", () => {
@@ -125,14 +38,27 @@ describe("resolveCheckpointFile", () => {
   });
 });
 
-function makeTempDir(): string {
-  return path.join(tmpdir(), `monarch-config-test-${crypto.randomUUID()}`);
-}
+describe("resolveDateRange", () => {
+  const now = new Date("2026-09-17T12:00:00Z");
 
-async function writeDirectoryMarker(dir: string): Promise<void> {
-  await Bun.write(path.join(dir, ".keep"), "");
-}
+  test("defaults to the trailing year, preserving prior behavior", () => {
+    const range = resolveDateRange(undefined, undefined, now);
+    expect(range.until).toBe("2026-09-17");
+    expect(range.since).toBe("2025-09-17");
+  });
 
-async function removeDir(dir: string): Promise<void> {
-  await Bun.spawn(["rm", "-rf", dir]).exited;
-}
+  test("accepts explicit bounds", () => {
+    const range = resolveDateRange("2021-01-01", "2026-01-31", now);
+    expect(range).toEqual({ since: "2021-01-01", until: "2026-01-31" });
+  });
+
+  test("rejects a malformed date", () => {
+    expect(() => resolveDateRange("01/02/2021", undefined, now)).toThrow();
+  });
+
+  test("rejects an inverted range", () => {
+    expect(() => resolveDateRange("2026-05-01", "2026-01-01", now)).toThrow(
+      /after/,
+    );
+  });
+});

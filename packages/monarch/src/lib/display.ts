@@ -43,7 +43,12 @@ export function displayTierBreakdown(
   console.log(`  Tier 3 (agentic):      ${bold(String(tier3))}`);
 }
 
-export function displayEnrichmentStats(stats: EnrichmentStats): void {
+export function displayEnrichmentStats(
+  stats: EnrichmentStats,
+  unreachable: Partial<
+    Record<string, { split: number; movement: number }>
+  > = {},
+): void {
   console.log("\n=== Enrichment Stats ===\n");
 
   const sources: [string, { matched: number; total: number }][] = [
@@ -54,14 +59,27 @@ export function displayEnrichmentStats(stats: EnrichmentStats): void {
     ["SCL", stats.scl],
     ["Apple", stats.apple],
     ["Costco", stats.costco],
+    ["Paystub", stats.paystub],
+    ["Equity", stats.equity],
+    ["Loan", stats.loan],
+    ["Brokerage", stats.brokerage],
   ];
 
   for (const [name, rate] of sources) {
     if (rate.total === 0) continue;
+    // Rows no matcher can reach are named rather than folded into the rate:
+    // counting them as unmatched makes a finished path look broken.
+    const out = unreachable[name.toLowerCase()] ?? { split: 0, movement: 0 };
+    const eligible = rate.total - out.split - out.movement;
     const pct =
-      rate.total > 0 ? ((rate.matched / rate.total) * 100).toFixed(0) : "0";
+      eligible > 0 ? ((rate.matched / eligible) * 100).toFixed(0) : "0";
+    const reasons = [
+      out.split > 0 ? `${String(out.split)} already split` : "",
+      out.movement > 0 ? `${String(out.movement)} money movement` : "",
+    ].filter((r) => r !== "");
+    const note = reasons.length > 0 ? ` — ${reasons.join(", ")}` : "";
     console.log(
-      `  ${padRight(name, 8)} ${String(rate.matched)}/${String(rate.total)} matched (${pct}%)`,
+      `  ${padRight(name, 9)} ${String(rate.matched)}/${String(eligible)} matched (${pct}%)${note}`,
     );
   }
 }

@@ -1,11 +1,7 @@
 import { z } from "zod";
-import path from "node:path";
-import { homedir } from "node:os";
 import { log } from "../logger.ts";
+import { parseCsvRow } from "../csv/rows.ts";
 import type { VenmoTransaction } from "./types.ts";
-
-const CACHE_DIR = path.join(homedir(), ".monarch-cache");
-const CACHE_FILE = path.join(CACHE_DIR, "venmo.json");
 
 const VenmoTransactionSchema = z.object({
   id: z.string(),
@@ -21,32 +17,6 @@ const VenmoTransactionSchema = z.object({
   fee: z.number(),
 });
 
-function parseCSVRow(line: string): string[] {
-  const fields: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (const char of line) {
-    if (inQuotes) {
-      if (char === '"') {
-        inQuotes = false;
-      } else {
-        current += char;
-      }
-    } else if (char === '"') {
-      inQuotes = true;
-    } else if (char === ",") {
-      fields.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  fields.push(current.trim());
-  return fields;
-}
-
 function parseAmount(raw: string): number {
   const cleaned = raw
     .replaceAll("$", "")
@@ -57,18 +27,16 @@ function parseAmount(raw: string): number {
   return Number.isNaN(value) ? 0 : value;
 }
 
+// Reads one Venmo statement export.
+//
+// This used to cache its result to a single file keyed on nothing and with no
+// expiry, so the first export ever parsed was returned for every later one —
+// dropping a new export into the vault changed nothing until the cache was
+// deleted by hand. Reading a local CSV costs milliseconds; the cache bought
+// nothing and silently discarded new data.
 export async function parseVenmoCSV(
   csvPath: string,
-  options: { cacheFile?: string | undefined } = {},
 ): Promise<VenmoTransaction[]> {
-  const cacheFile = options.cacheFile ?? CACHE_FILE;
-  const cached = Bun.file(cacheFile);
-  if (await cached.exists()) {
-    log.info("Using cached Venmo data");
-    const data: unknown = await cached.json();
-    return z.array(VenmoTransactionSchema).parse(data);
-  }
-
   const text = await Bun.file(csvPath).text();
   const lines = text.split("\n").filter((line) => line.trim().length > 0);
 
@@ -78,7 +46,7 @@ export async function parseVenmoCSV(
   const transactions: VenmoTransaction[] = [];
 
   for (const line of dataLines) {
-    const fields = parseCSVRow(line);
+    const fields = parseCsvRow(line);
     // Fields: [empty, ID, Datetime, Type, Status, Note, From, To, Amount, Tip, Tax, Fee, ...]
     const type = fields[3] ?? "";
     if (type !== "Payment") continue;
@@ -102,11 +70,5 @@ export async function parseVenmoCSV(
 
   log.info(`Parsed ${String(transactions.length)} Venmo payment transactions`);
 
-  try {
-    await Bun.write(cacheFile, JSON.stringify(transactions, undefined, 2));
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    log.warn(`Failed to write Venmo cache (${cacheFile}): ${message}`);
-  }
   return transactions;
 }

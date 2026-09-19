@@ -82,24 +82,22 @@ const Tier2ClassificationSchema = z.object({
       categoryName: z.string(),
       confidence: z.enum(["high", "medium", "low"]),
       shouldSplit: z.boolean(),
-      splits: z
-        .array(
-          z
-            .object({
-              itemName: z.string().optional(),
-              amount: z.number(),
-              categoryId: z.string(),
-              categoryName: z.string(),
-            })
-            .transform((s) => ({
-              ...s,
-              itemName:
-                s.itemName !== undefined && s.itemName !== ""
-                  ? s.itemName
-                  : s.categoryName,
-            })),
-        )
-        .optional(),
+      // OpenAI strict structured outputs reject optional properties, so the
+      // schema states the prompt's actual contract: every split carries all
+      // four fields and splits is [] when shouldSplit is false.
+      splits: z.array(
+        z
+          .object({
+            itemName: z.string(),
+            amount: z.number(),
+            categoryId: z.string(),
+            categoryName: z.string(),
+          })
+          .transform((s) => ({
+            ...s,
+            itemName: s.itemName === "" ? s.categoryName : s.itemName,
+          })),
+      ),
     }),
   ),
 });
@@ -137,64 +135,71 @@ type Tier2BatchWork = {
   checkpointKey: string;
 };
 
+// One renderer per enrichment field. A list keeps a new source to one entry
+// rather than another branch in a function every source has to grow.
+type EnrichmentRenderer = (e: TransactionEnrichment) => string | undefined;
+
+function labelledAmounts<T extends { amount: number }>(
+  label: string,
+  lines: T[] | undefined,
+  name: (line: T) => string,
+): string | undefined {
+  if (lines === undefined || lines.length === 0) return undefined;
+  const rendered = lines
+    .map((line) => `${name(line)}: $${line.amount.toFixed(2)}`)
+    .join(", ");
+  return `${label}: ${rendered}`;
+}
+
+const ENRICHMENT_RENDERERS: EnrichmentRenderer[] = [
+  // Period and totals only: no employer identifiers or line-item detail
+  // reach the model.
+  (e) =>
+    e.payslip === undefined
+      ? undefined
+      : `Payroll ${e.payslip.periodStart}..${e.payslip.periodEnd}: gross $${e.payslip.grossPay.toFixed(2)}, net $${e.payslip.netPay.toFixed(2)}`,
+  (e) =>
+    e.vest === undefined
+      ? undefined
+      : `RSU vest ${e.vest.vestDate}: ${String(e.vest.shares)} ${e.vest.symbol} shares released at $${e.vest.fairMarketValue.toFixed(2)}, ${String(e.vest.netShares)} deposited after tax withholding. No cash moved.`,
+  (e) =>
+    e.loan === undefined
+      ? undefined
+      : `Loan ${e.loan.loanId}: $${e.loan.principal.toFixed(2)} principal + $${e.loan.interest.toFixed(2)} interest, $${e.loan.balanceAfter.toFixed(2)} still owed`,
+  (e) =>
+    e.items === undefined || e.items.length === 0
+      ? undefined
+      : `Items: ${e.items.map((i) => `"${i.title}" ($${i.price.toFixed(2)})`).join(", ")}`,
+  (e) =>
+    e.paymentNote === undefined || e.paymentNote === ""
+      ? undefined
+      : `Venmo ${e.paymentDirection ?? "unknown"} ${e.paymentCounterparty ?? "unknown"}: "${e.paymentNote}"`,
+  (e) =>
+    labelledAmounts("Bill breakdown", e.billBreakdown, (b) => b.serviceType),
+  (e) =>
+    e.receiptItems === undefined || e.receiptItems.length === 0
+      ? undefined
+      : `Receipt items: ${e.receiptItems
+          .map(
+            (i) =>
+              `"${i.title}" ($${i.price.toFixed(2)}${i.isSubscription ? ", subscription" : ""})`,
+          )
+          .join(", ")}`,
+  (e) => labelledAmounts("Insurance", e.insuranceLines, (l) => l.policyType),
+  (e) => labelledAmounts("Billing periods", e.billingPeriods, (p) => p.period),
+  (e) =>
+    e.merchantDescription === undefined || e.merchantDescription === ""
+      ? undefined
+      : `Merchant: ${e.merchantDescription}`,
+];
+
 function formatEnrichmentContext(
   enrichment: TransactionEnrichment | undefined,
 ): string {
   if (!enrichment) return "";
-
-  const parts: string[] = [];
-
-  if (enrichment.items && enrichment.items.length > 0) {
-    const itemList = enrichment.items
-      .map((i) => `"${i.title}" ($${i.price.toFixed(2)})`)
-      .join(", ");
-    parts.push(`Items: ${itemList}`);
-  }
-
-  if (enrichment.paymentNote !== undefined && enrichment.paymentNote !== "") {
-    const dir = enrichment.paymentDirection ?? "unknown";
-    const party = enrichment.paymentCounterparty ?? "unknown";
-    parts.push(`Venmo ${dir} ${party}: "${enrichment.paymentNote}"`);
-  }
-
-  if (enrichment.billBreakdown && enrichment.billBreakdown.length > 0) {
-    const breakdown = enrichment.billBreakdown
-      .map((b) => `${b.serviceType}: $${b.amount.toFixed(2)}`)
-      .join(", ");
-    parts.push(`Bill breakdown: ${breakdown}`);
-  }
-
-  if (enrichment.receiptItems && enrichment.receiptItems.length > 0) {
-    const items = enrichment.receiptItems
-      .map(
-        (i) =>
-          `"${i.title}" ($${i.price.toFixed(2)}${i.isSubscription ? ", subscription" : ""})`,
-      )
-      .join(", ");
-    parts.push(`Receipt items: ${items}`);
-  }
-
-  if (enrichment.insuranceLines && enrichment.insuranceLines.length > 0) {
-    const lines = enrichment.insuranceLines
-      .map((l) => `${l.policyType}: $${l.amount.toFixed(2)}`)
-      .join(", ");
-    parts.push(`Insurance: ${lines}`);
-  }
-
-  if (enrichment.billingPeriods && enrichment.billingPeriods.length > 0) {
-    const periods = enrichment.billingPeriods
-      .map((p) => `${p.period}: $${p.amount.toFixed(2)}`)
-      .join(", ");
-    parts.push(`Billing periods: ${periods}`);
-  }
-
-  if (
-    enrichment.merchantDescription !== undefined &&
-    enrichment.merchantDescription !== ""
-  ) {
-    parts.push(`Merchant: ${enrichment.merchantDescription}`);
-  }
-
+  const parts = ENRICHMENT_RENDERERS.map((render) => render(enrichment)).filter(
+    (part) => part !== undefined,
+  );
   if (parts.length === 0) return "";
   return ` | Enrichment: ${parts.join(" | ")}`;
 }
@@ -275,9 +280,7 @@ function buildChangesFromResult(
     const txn = enriched.transaction;
 
     const isSplit =
-      classification.shouldSplit &&
-      classification.splits !== undefined &&
-      classification.splits.length > 1;
+      classification.shouldSplit && classification.splits.length > 1;
 
     if (isSplit) {
       changes.push(

@@ -2,7 +2,6 @@ import type { MonarchCategory } from "../monarch/types.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { WeekWindow, WeekGroup } from "../monarch/weeks.ts";
 import type { ResolvedTransaction } from "../enrichment.ts";
-import type { VenmoMatch } from "../venmo/matcher.ts";
 
 let userHints = "";
 
@@ -166,80 +165,4 @@ ${sections.join("\n\n")}
 
 Respond with JSON. Use the numeric index from each [CLASSIFY #N] line as the transactionIndex.
 { "transactions": [{ "transactionIndex": 0, "categoryId": "...", "categoryName": "...", "confidence": "high"|"medium"|"low" }] }`;
-}
-
-export function buildAmazonBatchPrompt(
-  categories: MonarchCategory[],
-  orders: { orderIndex: number; items: { title: string; price: number }[] }[],
-): string {
-  const categoryList = buildCategoryList(categories);
-  const orderList = orders
-    .map((order) => {
-      const items = order.items
-        .map((item) => `    - "${item.title}" ($${item.price.toFixed(2)})`)
-        .join("\n");
-      return `  Order #${String(order.orderIndex)}:\n${items}`;
-    })
-    .join("\n\n");
-
-  return `Classify each item in each Amazon order into the most appropriate category.
-
-Available categories:
-${categoryList}
-
-Orders to classify:
-${orderList}
-
-For each order, set needsSplit to true ONLY if its items belong to different categories.
-
-Respond with JSON:
-{
-  "orders": [
-    {
-      "orderIndex": 0,
-      "items": [{ "title": "...", "price": ..., "categoryId": "...", "categoryName": "..." }],
-      "needsSplit": true | false
-    }
-  ]
-}`;
-}
-
-export function buildVenmoClassificationPrompt(
-  categories: MonarchCategory[],
-  matches: VenmoMatch[],
-): string {
-  const categoryList = buildCategoryList(categories);
-  const matchList = matches
-    .map((m) => {
-      const direction =
-        m.venmoTransaction.amount > 0 ? "received from" : "sent to";
-      const other =
-        m.venmoTransaction.amount > 0
-          ? m.venmoTransaction.from
-          : m.venmoTransaction.to;
-      const date = m.venmoTransaction.datetime.split("T")[0] ?? "";
-      return `  - $${Math.abs(m.venmoTransaction.amount).toFixed(2)} ${direction} ${other} | Note: "${m.venmoTransaction.note}" | Date: ${date}`;
-    })
-    .join("\n");
-
-  return `Classify each Venmo payment based on the payment note and context. The note describes what the payment was for.
-
-Available categories:
-${categoryList}
-
-Venmo payments to classify:
-${matchList}
-
-Respond with JSON:
-{
-  "payments": [
-    {
-      "note": "...",
-      "amount": ...,
-      "categoryId": "...",
-      "categoryName": "...",
-      "confidence": "high" | "medium" | "low"
-    }
-  ]
-}`;
 }

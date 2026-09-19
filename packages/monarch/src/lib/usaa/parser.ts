@@ -4,14 +4,7 @@ import { Glob } from "bun";
 import { log } from "../logger.ts";
 import type { UsaaStatement } from "./types.ts";
 
-const DATA_DIR = path.join(
-  import.meta.dirname,
-  "..",
-  "..",
-  "..",
-  "data",
-  "usaa",
-);
+import { USAA_STATEMENTS_DIR } from "../finance-vault.ts";
 
 const MONTH_MAP: Record<string, string> = {
   Jan: "01",
@@ -144,7 +137,7 @@ async function parsePdf(filePath: string): Promise<UsaaStatement> {
 }
 
 export async function loadUsaaStatements(
-  dataDir = DATA_DIR,
+  dataDir = USAA_STATEMENTS_DIR,
 ): Promise<UsaaStatement[]> {
   const statements: UsaaStatement[] = [];
   const glob = new Glob("*_Auto_and_Property_Insurance_Statement.pdf");

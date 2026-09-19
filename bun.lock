@@ -1041,6 +1041,7 @@
         "monarch-classify": "./src/index.ts",
       },
       "dependencies": {
+        "@duckdb/node-api": "1.5.4-r.1",
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "ai": "7.0.77",

@@ -1,107 +1,155 @@
 import { describe, expect, test } from "vitest";
-import { parseAppleReceipt, parseAppleDate } from "./parser.ts";
+import { parseAppleDate, parseAppleReceipt } from "./parser.ts";
+
+// Apple has shipped three receipt layouts. Each is represented here as the
+// text the mail parser actually hands over, so a fourth layout arriving with
+// no date or no total fails a test rather than silently matching nothing.
+
+// The original: every field labelled with a colon, one item per line.
+const LABELLED = `Apple Receipt
+
+APPLE ACCOUNT
+apple@example.com
+
+ORDER ID:              MSSTXJ2GLT
+DOCUMENT NO.:        139849103930
+DATE:                Sep 10, 2024
+TOTAL:                      $2.99
+
+iCloud+
+iCloud+ with 200 GB of Storage                     $2.99
+Monthly
+Renews Oct 10, 2024
+`;
+
+// The HTML store receipt: colons gone, whole body on one line.
+const FLAT_STORE =
+  "Receipt APPLE ACCOUNT apple@example.com BILLED TO Apple Card " +
+  "Jerred Shepherd 345 N 137th St Seattle, WA 98133 USA DATE Aug 11, 2026 " +
+  "ORDER ID MSSX19Z3SM DOCUMENT NO. 746174418884 App Store Telegram Messenger " +
+  "750 Telegram Stars In-App Purchase jerred-iphone Report a Problem $14.99 " +
+  "Subtotal $14.99 Tax $1.58 TOTAL $16.57 Get help with subscriptions. " +
+  "Apple Account • Terms of Sale • Privacy Policy";
+
+// The subscription renewal: no total row at all, and the date is printed as
+// part of the word "Receipt".
+const FLAT_RENEWAL =
+  "Receipt August 30, 2026 Order ID: MSSX2LX696 Document: 800183420200 " +
+  "Apple Account: apple@example.com HelloChinese - Learn Chinese " +
+  "HelloChinese Premium (Monthly) Renews September 20, 2026 $11.99 " +
+  "Billing and Payment Jerred Shepherd 345 N 137th St Seattle WA 98133 " +
+  "United States Subtotal $11.99 Tax $1.26 Apple Card $13.25 " +
+  "Apple Account • Terms of Sale";
+
+// No subtotal: the item is followed straight by the total, and "Apple Account"
+// appears again in the footer.
+const FLAT_NO_SUBTOTAL =
+  "Receipt APPLE ACCOUNT apple@example.com BILLED TO Apple Card " +
+  "DATE Nov 10, 2024 ORDER ID MSSV2F6H5J DOCUMENT NO. 133873156928 " +
+  "iCloud+ iCloud+ with 200 GB of Storage Monthly Renews Dec 10, 2024 $2.99 " +
+  "TOTAL $2.99 If you have any questions about your bill, contact support. " +
+  "Apple Account • Purchase History • Terms of Sale";
 
 describe("parseAppleDate", () => {
-  test("parses standard Apple date", () => {
-    expect(parseAppleDate("Mar 4, 2022")).toBe("2022-03-04");
+  test("reads an abbreviated month", () => {
+    expect(parseAppleDate("Sep 10, 2024")).toBe("2024-09-10");
   });
 
-  test("parses date with double-digit day", () => {
-    expect(parseAppleDate("Dec 15, 2023")).toBe("2023-12-15");
+  test("reads a month spelled out", () => {
+    expect(parseAppleDate("August 30, 2026")).toBe("2026-08-30");
   });
 
-  test("returns input for unparseable date", () => {
-    expect(parseAppleDate("invalid")).toBe("invalid");
+  test("reads a four-letter abbreviation", () => {
+    expect(parseAppleDate("Sept 3, 2026")).toBe("2026-09-03");
+  });
+
+  test("returns empty for text with no date, so callers fail closed", () => {
+    expect(parseAppleDate("Renews soon")).toBe("");
   });
 });
 
 describe("parseAppleReceipt", () => {
-  test("parses a receipt with items", () => {
-    const eml = [
-      "Subject: Your receipt from Apple.",
-      "Content-Type: text/plain",
-      "",
-      "ORDER ID:              MSSN309W58",
-      "DATE:                 Mar 4, 2022",
-      "TOTAL:                     $14.32",
-      "",
-      "App Store",
-      "-----------",
-      "Headspace: Mindful Meditation    $12.99",
-      "Monthly Subscription (Monthly)",
-      "Renews Apr 1, 2022",
-      "",
-      "Tax    $1.33",
-    ].join("\n");
+  test("reads the original labelled layout", () => {
+    const receipt = parseAppleReceipt(LABELLED);
+    expect(receipt?.orderId).toBe("MSSTXJ2GLT");
+    expect(receipt?.date).toBe("2024-09-10");
+    expect(receipt?.total).toBe(2.99);
+    expect(receipt?.items).toEqual([
+      {
+        title: "iCloud+ with 200 GB of Storage",
+        price: 2.99,
+        isSubscription: true,
+      },
+    ]);
+  });
 
-    const receipt = parseAppleReceipt(eml);
-    expect(receipt).not.toBeNull();
-    expect(receipt?.orderId).toBe("MSSN309W58");
-    expect(receipt?.date).toBe("2022-03-04");
-    expect(receipt?.total).toBe(14.32);
+  test("reads the flat store layout whose labels lost their colons", () => {
+    const receipt = parseAppleReceipt(FLAT_STORE);
+    expect(receipt?.orderId).toBe("MSSX19Z3SM");
+    expect(receipt?.date).toBe("2026-08-11");
+    // The charge is the total, not the $14.99 subtotal.
+    expect(receipt?.total).toBe(16.57);
+    expect(receipt?.items).toEqual([
+      {
+        title: "Telegram Messenger 750 Telegram Stars",
+        price: 14.99,
+        isSubscription: false,
+      },
+    ]);
+  });
+
+  test("adds tax to the subtotal when the renewal prints no total", () => {
+    const receipt = parseAppleReceipt(FLAT_RENEWAL);
+    expect(receipt?.orderId).toBe("MSSX2LX696");
+    expect(receipt?.date).toBe("2026-08-30");
+    expect(receipt?.total).toBeCloseTo(13.25, 2);
     expect(receipt?.items).toHaveLength(1);
-    expect(receipt?.items[0]?.title).toBe("Headspace: Mindful Meditation");
-    expect(receipt?.items[0]?.price).toBe(12.99);
+    expect(receipt?.items[0]?.title).toContain(
+      "HelloChinese Premium (Monthly)",
+    );
+    expect(receipt?.items[0]?.price).toBe(11.99);
     expect(receipt?.items[0]?.isSubscription).toBe(true);
   });
 
-  test("parses multiple items", () => {
-    const eml = [
-      "Subject: Your receipt from Apple.",
-      "",
-      "ORDER ID:              ABC123",
-      "DATE:                 Jan 15, 2023",
-      "TOTAL:                     $25.97",
-      "",
-      "iCloud+ 200GB    $2.99",
-      "Monthly Subscription",
-      "Apple Music    $10.99",
-      "Monthly Subscription",
-      "Apple TV+    $6.99",
-      "Monthly Subscription",
-      "Some App    $4.99",
-      "One-time purchase",
-    ].join("\n");
-
-    const receipt = parseAppleReceipt(eml);
-    expect(receipt).not.toBeNull();
-    expect(receipt?.items).toHaveLength(4);
-    expect(receipt?.items[0]?.title).toBe("iCloud+ 200GB");
-    expect(receipt?.items[1]?.title).toBe("Apple Music");
-    expect(receipt?.items[2]?.title).toBe("Apple TV+");
-    expect(receipt?.items[3]?.title).toBe("Some App");
+  test("takes the receipt date, not the renewal date printed beside it", () => {
+    // "Renews September 20, 2026" sits in the same line as the receipt date.
+    expect(parseAppleReceipt(FLAT_RENEWAL)?.date).toBe("2026-08-30");
   });
 
-  test("returns null for non-receipt email", () => {
-    const eml = ["Subject: Hello", "", "This is not a receipt."].join("\n");
-
-    expect(parseAppleReceipt(eml)).toBeNull();
+  test("finds the item when no subtotal separates it from the total", () => {
+    const receipt = parseAppleReceipt(FLAT_NO_SUBTOTAL);
+    expect(receipt?.total).toBe(2.99);
+    // "Apple Account" recurs in the footer; a header marker found after the
+    // prices must not become the start of the item region.
+    expect(receipt?.items).toEqual([
+      {
+        title: "iCloud+ iCloud+ with 200 GB of Storage Monthly",
+        price: 2.99,
+        isSubscription: true,
+      },
+    ]);
   });
 
-  test("handles MIME multipart", () => {
-    const eml = [
-      'Content-Type: multipart/alternative; boundary="boundary123"',
-      "",
-      "--boundary123",
-      "Content-Type: text/plain; charset=UTF-8",
-      "",
-      "ORDER ID:              MIME001",
-      "DATE:                 Feb 1, 2024",
-      "TOTAL:                     $9.99",
-      "",
-      "iCloud+ 50GB    $0.99",
-      "Monthly Subscription",
-      "",
-      "--boundary123",
-      "Content-Type: text/html; charset=UTF-8",
-      "",
-      "<html>stuff</html>",
-      "--boundary123--",
-    ].join("\n");
+  test("stops the title before the device the purchase was made on", () => {
+    const appPurchase =
+      "Receipt APPLE ACCOUNT apple@example.com DATE Mar 20, 2026 " +
+      "ORDER ID MSSX11AAAA DOCUMENT NO. 1234 " +
+      "Dark Reader for Safari Dark Reader Ltd App Jerred\u{2019}s MacBook Pro " +
+      "Report a Problem $4.99 Subtotal $4.99 Tax $0.53 TOTAL $5.52 " +
+      "Get help with subscriptions. Apple Account \u{2022} Terms of Sale";
+    const receipt = parseAppleReceipt(appPurchase);
+    expect(receipt?.items[0]?.title).toBe(
+      "Dark Reader for Safari Dark Reader Ltd",
+    );
+    expect(receipt?.total).toBe(5.52);
+  });
 
-    const receipt = parseAppleReceipt(eml);
-    expect(receipt).not.toBeNull();
-    expect(receipt?.orderId).toBe("MIME001");
-    expect(receipt?.items).toHaveLength(1);
+  test("rejects mail that carries no order id", () => {
+    expect(parseAppleReceipt("Your receipt from Apple. Thanks!")).toBeNull();
+  });
+
+  test("never reports a total read from the subtotal label", () => {
+    const receipt = parseAppleReceipt(FLAT_STORE);
+    expect(receipt?.total).not.toBe(14.99);
   });
 });

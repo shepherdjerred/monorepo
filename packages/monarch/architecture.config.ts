@@ -23,8 +23,12 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
 const vendors = [
   "lib/amazon",
   "lib/apple",
+  "lib/brokerage",
   "lib/conservice",
   "lib/costco",
+  "lib/equity",
+  "lib/loan",
+  "lib/paystub",
   "lib/scl",
   "lib/usaa",
   "lib/venmo",

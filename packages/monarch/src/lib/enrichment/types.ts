@@ -25,6 +25,62 @@ export type TransactionEnrichment = {
   merchantDescription?: string;
   merchantType?: string;
 
+  // Paystub: payroll period breakdown (notes + verification only; payroll
+  // is never split because only net pay reaches the account)
+  payslip?: {
+    periodStart: string;
+    periodEnd: string;
+    grossPay: number;
+    netPay: number;
+    employeeTaxes: number;
+    preTaxDeductions: number;
+    earnings: { label: string; amount: number }[];
+    taxes: { label: string; amount: number }[];
+    deductions: { label: string; amount: number }[];
+    grossChangePercent?: number | undefined;
+  };
+
+  // Equity: RSU vest, aggregated over every award releasing that day. Monarch
+  // books one zero-amount row per award and they are indistinguishable, so
+  // each row of a vest date carries the same event summary.
+  vest?: {
+    vestDate: string;
+    symbol: string;
+    awardCount: number;
+    shares: number;
+    fairMarketValue: number;
+    grossValue: number;
+    sharesWithheld: number;
+    netShares: number;
+    taxes: number;
+  };
+
+  // Loan: how a payment was actually applied, from the servicer's own
+  // statements rather than a model's arithmetic. `origin` says whether the
+  // servicer printed the split or it was reconstructed from a balance series.
+  loan?: {
+    loanId: string;
+    principal: number;
+    interest: number;
+    balanceAfter: number;
+    origin: "stated" | "derived";
+  };
+
+  // Brokerage: what a transfer out of the broker actually was. The bank line
+  // says only that cash arrived; the sale that funded it carries the shares,
+  // the price, and the basis that makes it a gain or a loss.
+  brokerage?: {
+    kind: "transfer" | "interest";
+    symbol?: string;
+    soldDate?: string;
+    quantity?: number;
+    price?: number;
+    proceeds?: number;
+    costBasis?: number;
+    gainLoss?: number;
+    cashSwept: number;
+  };
+
   // Source tracking
   enrichmentSource: string;
 };
@@ -43,5 +99,9 @@ export type EnrichedTransaction = {
     | "scl"
     | "apple"
     | "costco"
+    | "paystub"
+    | "equity"
+    | "loan"
+    | "brokerage"
     | "regular";
 };
