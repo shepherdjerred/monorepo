@@ -26,18 +26,19 @@ Source: [chat identity and lookup](https://github.com/shepherdjerred/monorepo/bl
 
 ## Turn receipts
 
-| Contract                            | Value                                                              |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| Receipt identity                    | `agent-chat/<chat-id>/turn/<sha256(turn-id)>`                      |
-| Retention                           | Open permanent Workflow; one immutable request and settled outcome |
-| Chat dispatch                       | Exact run ID and stable Update ID                                  |
-| Ambiguous admission or result       | Retry only the original pinned run                                 |
-| Run replacement                     | Only after proving the original run closed without admission       |
-| Reused turn ID with different input | Rejected before returning a cached outcome                         |
-| Lost original history               | Fails; does not repeat effects in a replacement run                |
-| Receipt Activity queue              | `agent-chat-receipts`; repo role; concurrency 1                    |
+| Contract                            | Value                                                                 |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| Receipt identity                    | `agent-chat/<chat-id>/turn/<sha256(turn-id)>`                         |
+| Retention                           | Completed Workflow history; 30 days in production and beta            |
+| Idempotency window                  | While the receipt history remains available                           |
+| Chat dispatch                       | Exact run ID and stable Update ID                                     |
+| Ambiguous admission or result       | Retry only the original pinned run                                    |
+| Run replacement                     | Only after proving the original run closed without admission          |
+| Reused turn ID with different input | Rejected before returning a retained outcome                          |
+| Expired receipt history             | A reused turn ID can create a new receipt and repeat provider effects |
+| Receipt Activity queue              | `agent-chat-receipts`; repo role; concurrency 1                       |
 
-Sources: [receipt Workflow](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/workflows/agent-chat-turn-receipt.ts), [run-pinned dispatch](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/lib/agent-chat-receipts.ts), and [client input validation](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/lib/agent-chat-client.ts).
+Sources: [receipt Workflow](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/workflows/agent-chat-turn-receipt.ts), [run-pinned dispatch](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/lib/agent-chat-receipts.ts), [client input validation](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/lib/agent-chat-client.ts), and [namespace retention](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/namespace-init.ts).
 
 ## Provider checkpoints
 

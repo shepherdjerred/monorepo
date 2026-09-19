@@ -18,7 +18,7 @@ flowchart TB
   I[iMessage] --> C[Chat catalog]
   D[Discord] --> C
   S[Temporal Schedule] --> C
-  C --> R[Permanent turn receipt]
+  C --> R[Retained turn receipt]
   R --> W[Long-lived chat Workflow]
   W --> A[Agent Activity]
   A --> P[Claude Code or Codex]
@@ -43,13 +43,16 @@ Each chat has a stable Workflow ID. Workflow updates serialize turns and return
 the completed response to the caller. A bounded recent-turn ledger deduplicates
 ordinary transport retries inside the current execution.
 
-Each submitted turn also owns a permanent
+Each submitted turn also owns a completed
 [receipt Workflow](https://github.com/shepherdjerred/monorepo/blob/b3f2db6bbbba3838b516c5a40648d4ee5d82e7ee/packages/temporal/src/workflows/agent-chat-turn-receipt.ts).
 It keeps the original request and settled outcome after the chat compacts its
-ledger or continues as new. Receipt dispatch pins one chat execution before
+ledger or continues as new, while the receipt history remains within Temporal's
+30-day production retention. Receipt dispatch pins one chat execution before
 submission. An ambiguous result retries that same execution, never a newer one.
-Only proven non-admission permits selecting a replacement execution.
-This prevents a delayed transport retry from repeating provider tool effects.
+Only proven non-admission permits selecting a replacement execution. This
+prevents a delayed transport retry from repeating provider tool effects during
+the retention window. Reusing a turn ID after its receipt expires can repeat
+those effects.
 
 The selected provider and model are immutable chat configuration. Continuing a
 chat never silently changes Claude to Codex or chooses a newer model. A
