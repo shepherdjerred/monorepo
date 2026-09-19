@@ -1,13 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { sign } from "@octokit/webhooks-methods";
 import { buildWebhookApp } from "./github-webhook.ts";
-import type { CancelBuildkiteBuildsInput } from "#shared/schemas.ts";
+import type { CancelCiPipelinesInput } from "#shared/schemas.ts";
 
 const SECRET = "test-webhook-secret-do-not-use-anywhere";
 
 const RESOLVED: Promise<void> = Promise.resolve();
-const noopCancel = (_input: CancelBuildkiteBuildsInput): Promise<void> =>
-  RESOLVED;
+const noopCancel = (_input: CancelCiPipelinesInput): Promise<void> => RESOLVED;
 type ConflictMainArgs = { owner: string; repo: string; mainSha: string };
 type ConflictPrArgs = {
   owner: string;
@@ -19,7 +18,7 @@ type ConflictPrArgs = {
 const noopConflictMain = (_args: ConflictMainArgs): Promise<void> => RESOLVED;
 const noopConflictPr = (_args: ConflictPrArgs): Promise<void> => RESOLVED;
 
-type CancelCall = [CancelBuildkiteBuildsInput];
+type CancelCall = [CancelCiPipelinesInput];
 type ConflictMainCall = [ConflictMainArgs];
 type ConflictPrCall = [ConflictPrArgs];
 
@@ -79,7 +78,7 @@ async function postWebhook(
 
 async function closedPrScenario(merged: boolean) {
   const cancelCalls: CancelCall[] = [];
-  const cancel = vi.fn(async (input: CancelBuildkiteBuildsInput) => {
+  const cancel = vi.fn(async (input: CancelCiPipelinesInput) => {
     cancelCalls.push([input]);
   });
   const app = buildWebhookApp(SECRET, { startCancel: cancel });
@@ -331,11 +330,9 @@ describe("buildWebhookApp PR closed", () => {
   });
 
   it("returns 500 when the cancel start function throws", async () => {
-    const cancel = vi.fn(
-      (_input: CancelBuildkiteBuildsInput): Promise<void> => {
-        throw new Error("Temporal unavailable");
-      },
-    );
+    const cancel = vi.fn((_input: CancelCiPipelinesInput): Promise<void> => {
+      throw new Error("Temporal unavailable");
+    });
     const app = buildWebhookApp(SECRET, { startCancel: cancel });
     const res = await postWebhook(
       app,

@@ -1,10 +1,10 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { CancelBuildkiteBuildsActivities } from "#activities/cancel-buildkite-builds.ts";
-import type { CancelBuildkiteBuildsInput } from "#shared/schemas.ts";
+import type { CancelCiPipelinesActivities } from "#activities/cancel-ci-pipelines.ts";
+import type { CancelCiPipelinesInput } from "#shared/schemas.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
-const { cancelBuildkiteBuildsForBranch } =
-  proxyActivities<CancelBuildkiteBuildsActivities>({
+const { cancelCiPipelinesForBranch } =
+  proxyActivities<CancelCiPipelinesActivities>({
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     startToCloseTimeout: "2 minutes",
     retry: {
@@ -20,8 +20,8 @@ const { cancelBuildkiteBuildsForBranch } =
  * Started by the GitHub webhook on the `closed` action — see
  * src/event-bridge/github-webhook.ts.
  */
-export async function cancelBuildkiteBuildsWorkflow(
-  input: CancelBuildkiteBuildsInput,
+export async function cancelCiPipelinesWorkflow(
+  input: CancelCiPipelinesInput,
 ): Promise<void> {
-  await cancelBuildkiteBuildsForBranch(input);
+  await cancelCiPipelinesForBranch(input);
 }

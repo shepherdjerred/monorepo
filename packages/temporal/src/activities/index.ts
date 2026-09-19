@@ -17,7 +17,7 @@ import { lanePriorActivities } from "./lane-prior-refresh.ts";
 import { scoutSeasonRefreshActivities } from "./scout/scout-season-refresh.ts";
 import { veleroOrphanAuditActivities } from "./homelab/velero-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
-import { cancelBuildkiteBuildsActivities } from "./cancel-buildkite-builds.ts";
+import { cancelCiPipelinesActivities } from "./cancel-ci-pipelines.ts";
 import { checkPrMergeConflictsActivities } from "./maintenance/check-pr-merge-conflicts.ts";
 import { llmCatalogRefreshActivities } from "./agent/llm-catalog-refresh.ts";
 import { scoutImageGcActivities } from "./scout/scout-image-gc.ts";
@@ -81,7 +81,7 @@ export const repoActivities = {
   ...depsSummaryActivities,
   ...depsSummaryLegacyActivities,
   ...golinkSyncActivities,
-  ...cancelBuildkiteBuildsActivities,
+  ...cancelCiPipelinesActivities,
   ...checkPrMergeConflictsActivities,
   ...llmCatalogRefreshActivities,
   ...pokeemeraldDataRefreshActivities,
