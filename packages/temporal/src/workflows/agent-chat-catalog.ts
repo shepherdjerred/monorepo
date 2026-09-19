@@ -25,6 +25,7 @@ import {
   getAgentChatCatalogStateQuery,
   listAgentChatsQuery,
   recordAgentChatTurnUpdate,
+  registerAndBindAgentChatUpdate,
   registerAgentChatUpdate,
   resolveAgentChatBindingQuery,
   settleAgentChatTurnUpdate,
@@ -264,6 +265,16 @@ function bind(
   return entry;
 }
 
+export function registerAndBindAgentChatCatalogEntry(
+  state: AgentChatCatalogState,
+  rawEntry: AgentChatCatalogEntry,
+  rawBinding: AgentChatBinding,
+  updatedAt: string,
+): AgentChatCatalogEntry {
+  const entry = registerAgentChatCatalogEntry(state, rawEntry);
+  return bind(state, rawBinding, entry.config.chatId, updatedAt);
+}
+
 function resolve(
   state: AgentChatCatalogState,
   rawBinding: AgentChatBinding,
@@ -289,6 +300,9 @@ export async function agentChatCatalogWorkflow(
   );
   setHandler(settleAgentChatTurnUpdate, (entry, turnCount, updatedAt) =>
     settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
+  );
+  setHandler(registerAndBindAgentChatUpdate, (entry, binding, updatedAt) =>
+    registerAndBindAgentChatCatalogEntry(state, entry, binding, updatedAt),
   );
   setHandler(bindAgentChatUpdate, (binding, chatId, updatedAt) =>
     bind(state, binding, chatId, updatedAt),
