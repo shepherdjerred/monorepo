@@ -10,6 +10,7 @@ import {
   agentChatDiscordCommand,
   formatDiscordChatList,
   handleAgentChatDiscordCommand,
+  registerAgentChatDiscordCommand,
   type AgentChatDiscordOperations,
 } from "./agent-chat-discord.ts";
 
@@ -87,6 +88,19 @@ function fakeInteraction(input: {
 }
 
 describe("agent chat Discord ingress", () => {
+  it("fails startup when slash-command registration fails", async () => {
+    const failure = new Error("Discord unavailable");
+    const set = vi.fn(() => Promise.reject(failure));
+
+    await expect(
+      registerAgentChatDiscordCommand({
+        id: "application-1",
+        commands: { set },
+      }),
+    ).rejects.toBe(failure);
+    expect(set).toHaveBeenCalledWith([agentChatDiscordCommand]);
+  });
+
   it("preserves emoji at generated title truncation boundaries", async () => {
     const deps = operations();
     const prefix = "a".repeat(76);

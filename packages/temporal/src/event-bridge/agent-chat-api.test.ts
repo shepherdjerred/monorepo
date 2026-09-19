@@ -2,6 +2,7 @@ import type { Client } from "@temporalio/client";
 import { describe, expect, it, vi } from "vitest";
 import { AgentChatNotFoundError } from "#lib/agent-chat-client.ts";
 import type {
+  AgentChatBinding,
   AgentChatCatalogEntry,
   AgentChatTurnResult,
 } from "#shared/agent/agent-chat.ts";
@@ -289,6 +290,7 @@ describe("buildAgentChatApiRoutes", () => {
     const operations = makeOperations();
     const existing = EMPTY_CHAT_ENTRY;
     operations.get = vi.fn(async () => existing);
+    operations.register = vi.fn(async () => existing);
     const app = appWith(operations);
 
     const response = await app.fetch(
@@ -300,7 +302,10 @@ describe("buildAgentChatApiRoutes", () => {
     );
 
     expect(response.status).toBe(201);
-    expect(operations.register).not.toHaveBeenCalled();
+    expect(operations.register).toHaveBeenCalledWith(
+      expect.anything(),
+      existing.config,
+    );
     expect(await response.json()).toEqual({ chat: existing });
     expect(operations.bind).toHaveBeenCalledWith(
       expect.anything(),
@@ -417,6 +422,15 @@ describe("prompted chat registration", () => {
 describe("durable agent chat binding retries", () => {
   it("preserves the binding operation timestamp across delayed retries", async () => {
     const operations = makeOperations();
+    const bind = vi.fn(
+      async (
+        _client: Client["workflow"],
+        _binding: AgentChatBinding,
+        _chatId: string,
+        _submittedAt: string,
+      ) => ENTRY,
+    );
+    operations.bind = bind;
     const now = vi.fn(() => "2026-09-15T23:00:00.000Z");
     const app = buildAgentChatApiRoutes(TOKEN, fakeClient(), {
       operations,
@@ -435,8 +449,8 @@ describe("durable agent chat binding retries", () => {
     const retry = await app.fetch(bindRequest());
     expect(first.status).toBe(200);
     expect(retry.status).toBe(200);
-    expect(operations.bind).toHaveBeenCalledTimes(2);
-    for (const call of vi.mocked(operations.bind).mock.calls) {
+    expect(bind).toHaveBeenCalledTimes(2);
+    for (const call of bind.mock.calls) {
       expect(call[3]).toBe(NOW);
     }
     expect(now).not.toHaveBeenCalled();

@@ -210,9 +210,11 @@ async function registerIdempotently(
   config: AgentChatConfig,
 ): Promise<AgentChatCatalogEntry> {
   const existing = await findMatchingRegistration(operations, client, config);
-  if (existing !== undefined) return existing;
+  const registrationConfig = existing?.config ?? config;
   try {
-    return await operations.register(client, config);
+    // Registration is idempotent and repairs the catalog when get() found the
+    // owner Workflow directly after a partial create.
+    return await operations.register(client, registrationConfig);
   } catch (error: unknown) {
     const raced = await operations.get(client, config.chatId);
     if (raced === undefined || !requestedConfigMatches(raced.config, config)) {
