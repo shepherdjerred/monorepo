@@ -224,7 +224,7 @@ function bind(
   });
   if (
     existing !== undefined &&
-    Date.parse(existing.updatedAt) >= Date.parse(next.updatedAt)
+    Date.parse(existing.updatedAt) > Date.parse(next.updatedAt)
   ) {
     const selected = entryFor(state, existing.chatId);
     if (selected === undefined) {

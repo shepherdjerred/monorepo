@@ -15,7 +15,16 @@ describe("provider subprocess identity", () => {
       providerSubprocessCommand(["claude", "-p", "prompt"], {
         AGENT_PROVIDER_UID: "1001",
       }),
-    ).toEqual(["setpriv", "--reuid=1001", "--", "claude", "-p", "prompt"]);
+    ).toEqual([
+      "setpriv",
+      "--reuid=1001",
+      "--regid=1001",
+      "--clear-groups",
+      "--",
+      "claude",
+      "-p",
+      "prompt",
+    ]);
   });
 
   test("leaves local commands unwrapped", () => {
