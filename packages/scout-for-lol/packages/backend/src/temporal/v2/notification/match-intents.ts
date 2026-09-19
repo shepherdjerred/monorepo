@@ -28,22 +28,33 @@ import {
   type SettlementAnnouncementInput,
 } from "#src/betting/notify/announce-prepare.ts";
 import { buildAnnouncements } from "#src/betting/notify/announce.ts";
-import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
 import { postmatchReportFreshnessDeadline } from "#src/league/tasks/postmatch/match-report-delivery.ts";
 import { createLogger } from "#src/logger.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
+import { z } from "zod";
+import { RiotTeamIdSchema } from "@scout-for-lol/data";
+import type {
+  ClosedPool,
+  ClosedPosition,
+} from "#src/betting/settlement/sweep-types.ts";
 import {
+  DareSummaryAnnouncementSchema,
+  EarnedAwardSchema,
+  ParlaySettlementSummarySchema,
+  SettlementSummarySchema,
   dareSettlementSummaryOf,
-  dareSummaryAnnouncementCodec,
+  parlaySummaryOf,
+  settlementSummaryOf,
   dareSummaryAnnouncementEnvelope,
-  settlementAnnouncementCodec,
   settlementAnnouncementEnvelope,
-  settlementAnnouncementInputOf,
 } from "#src/temporal/v2/notification/announcement-codecs.ts";
-import type { SettlementAnnouncementPayload } from "#src/database/durable/settlement-announcement-repository.ts";
+import type {
+  SettlementAnnouncementFamily,
+  SettlementAnnouncementItem,
+} from "#src/database/durable/settlement-announcement-repository.ts";
 
 const logger = createLogger("scout-v2-match-intents");
 
@@ -122,7 +133,7 @@ function countMint(
  * because the two possible defaults are "announce a backfill" and "silence a
  * live match" and neither is recoverable from here.
  */
-async function matchMayAnnounce(
+export async function matchMayAnnounce(
   db: Db,
   matchId: RiotMatchId,
 ): Promise<boolean> {
@@ -293,45 +304,139 @@ export function settlementAnnouncementInputs(input: {
 }
 
 /**
- * The checkpoint payload for one settlement's announcements.
+ * A closed pool, as the fold reads it.
  *
- * Stored as the SAME versioned envelopes the intents carry, parsed back with
- * the same codecs, so the recovery note and the row it will become cannot
- * drift apart: a change to either shape fails the other's parse.
+ * Spelled in full rather than projected to the two fields `buildAnnouncements`
+ * happens to read today, because a projection would silently drop whatever it
+ * reads tomorrow and the fold-equivalence test would only notice if its data
+ * exercised that field. `satisfies` pins it to v1's own type, so a field added
+ * there fails this module's typecheck.
  */
-export function settlementCheckpointPayload(input: {
+const ClosedPositionSchema = z.strictObject({
+  betId: z.number().int(),
+  discordId: z.string().min(1),
+  teamId: RiotTeamIdSchema,
+  submittedStake: z.number().int(),
+  matchedStake: z.number().int(),
+  unmatchedStake: z.number().int(),
+}) satisfies z.ZodType<ClosedPosition>;
+
+const ClosedPoolSchema = z.strictObject({
+  matchId: z.string().min(1),
+  serverId: z.string().min(1),
+  messageRefs: z.array(
+    z.strictObject({
+      channelId: z.string().min(1),
+      messageId: z.string().min(1),
+    }),
+  ),
+  humanMatchedPerSide: z.number().int(),
+  houseFill: z.number().int(),
+  totalMatchedPerSide: z.number().int(),
+  positions: z.array(ClosedPositionSchema),
+}) satisfies z.ZodType<ClosedPool>;
+
+/**
+ * The items one settlement produced, each ready to be recorded on its own.
+ *
+ * One entry per thing that committed separately, because that is the unit the
+ * checkpoint has to survive at: a match whose third Dare fails after two
+ * settled keeps those two. Earnings are keyed by guild for the same reason the
+ * fold filters them by guild — a guild's awards are only that guild's business.
+ */
+export function settlementAnnouncementItemsOf(input: {
   closures: readonly ClosedPool[];
   settlements: readonly SettlementSummary[];
   parlaySettlements: readonly ParlaySettlementSummary[];
   earnings: readonly EarnedAward[];
   dareSettlements: readonly DareSettlementSummary[];
-}): SettlementAnnouncementPayload {
+}): readonly SettlementAnnouncementItem[] {
+  const earningsByGuild = new Map<string, EarnedAward[]>();
+  for (const award of input.earnings) {
+    earningsByGuild.set(award.serverId, [
+      ...(earningsByGuild.get(award.serverId) ?? []),
+      award,
+    ]);
+  }
+  return [
+    ...input.closures.map((closure) => ({
+      family: "closure" as const,
+      itemKey: closure.serverId,
+      payload: closure,
+    })),
+    ...input.settlements.map((settlement) => ({
+      family: "settlement" as const,
+      itemKey: settlement.serverId,
+      payload: settlement,
+    })),
+    ...input.parlaySettlements.map((parlay) => ({
+      family: "parlay" as const,
+      itemKey: parlay.serverId,
+      payload: parlay,
+    })),
+    ...[...earningsByGuild].map(([serverId, awards]) => ({
+      family: "earnings" as const,
+      itemKey: serverId,
+      payload: awards,
+    })),
+    ...input.dareSettlements.map((dare) => ({
+      family: "dare-summary" as const,
+      itemKey: String(dare.dareId),
+      payload: dare,
+    })),
+  ];
+}
+
+function payloadsOfFamily(
+  items: readonly SettlementAnnouncementItem[],
+  family: SettlementAnnouncementFamily,
+): readonly unknown[] {
+  return items
+    .filter((item) => item.family === family)
+    .map((item) => item.payload);
+}
+
+/**
+ * Rebuild the announcement instructions from recovered items.
+ *
+ * The SAME fold the live path runs, over the same four families, so a takeover
+ * announces what the original run would have announced. It has to be the same
+ * fold rather than a per-item reconstruction: `buildAnnouncements` folds in a
+ * closure carrying positions but no settlement, and a parlay whose pool
+ * settled on an earlier tick, and a recovery that walked the items one at a
+ * time would drop exactly those.
+ */
+export function recoveredAnnouncementsOf(
+  items: readonly SettlementAnnouncementItem[],
+): {
+  readonly settlements: readonly SettlementAnnouncementInput[];
+  readonly dareSummaries: readonly DareSettlementSummary[];
+} {
   return {
-    settlements: settlementAnnouncementInputs(input).map((announcement) =>
-      settlementAnnouncementEnvelope(announcement),
-    ),
-    dareSummaries: input.dareSettlements.map((dare) =>
-      dareSummaryAnnouncementEnvelope(dare),
+    settlements: settlementAnnouncementInputs({
+      closures: payloadsOfFamily(items, "closure").map((payload): ClosedPool =>
+        ClosedPoolSchema.parse(payload),
+      ),
+      // Through the module's own mappers, which is also what the live
+      // announcement path parses with: the v1 types require these keys
+      // present-but-undefined where the schema makes them optional, and one
+      // normalisation for both paths is what keeps them identical.
+      settlements: payloadsOfFamily(items, "settlement").map(
+        (payload): SettlementSummary =>
+          settlementSummaryOf(SettlementSummarySchema.parse(payload)),
+      ),
+      parlaySettlements: payloadsOfFamily(items, "parlay").map(
+        (payload): ParlaySettlementSummary =>
+          parlaySummaryOf(ParlaySettlementSummarySchema.parse(payload)),
+      ),
+      earnings: payloadsOfFamily(items, "earnings").flatMap((payload) =>
+        z.array(EarnedAwardSchema).parse(payload),
+      ),
+    }),
+    dareSummaries: payloadsOfFamily(items, "dare-summary").map((payload) =>
+      dareSettlementSummaryOf(DareSummaryAnnouncementSchema.parse(payload)),
     ),
   };
-}
-
-/** The settlement instructions a checkpoint holds, back in v1's own shape. */
-export function settlementAnnouncementInputsOf(
-  payload: SettlementAnnouncementPayload,
-): readonly SettlementAnnouncementInput[] {
-  return payload.settlements.map((envelope) =>
-    settlementAnnouncementInputOf(settlementAnnouncementCodec.parse(envelope)),
-  );
-}
-
-/** The Dare summaries a checkpoint holds, back in v1's own shape. */
-export function dareSummariesOf(
-  payload: SettlementAnnouncementPayload,
-): readonly DareSettlementSummary[] {
-  return payload.dareSummaries.map((envelope) =>
-    dareSettlementSummaryOf(dareSummaryAnnouncementCodec.parse(envelope)),
-  );
 }
 
 /**

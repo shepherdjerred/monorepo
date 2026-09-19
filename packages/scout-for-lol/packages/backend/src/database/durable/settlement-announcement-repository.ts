@@ -1,133 +1,124 @@
 import { z } from "zod";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
-import {
-  RiotMatchIdSchema,
-  type RiotMatchId,
-} from "@scout-for-lol/domain/identity/brands.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { Db } from "#src/database/index.ts";
 
 /**
- * The announcement instructions one completed settlement produced.
+ * One item a completed settlement produced, stored so a takeover can announce
+ * it without re-running a settlement whose steps are one-shot.
  *
- * Stored so a takeover can mint from what settlement DID produce instead of
- * re-running a settlement whose steps are one-shot and would return nothing.
- * It attests nothing and nothing derives a fact from it; see the model doc in
- * `schema.prisma` for why a recovery note may carry amounts the attested
- * receipt deliberately refuses.
+ * A row is written INSIDE the transaction that produces its item, so the item
+ * and the instruction to announce it commit together or not at all. That is
+ * what distinguishes this from a note written afterwards, which can always be
+ * lost in the gap between the commit and the note.
  *
- * The payload is opaque here on purpose. The instructions are the betting
- * slice's own announcement inputs, already given a shape by the codecs the
- * minter and the delivery arm share, and mirroring them in the persistence
- * layer would be a second definition of the same wire format.
+ * The payload is opaque here on purpose. What a `settlement` item means is the
+ * betting slice's own summary shape, and mirroring five of those in the
+ * persistence layer would be a second definition of each. The notification
+ * module owns the parsing; this module owns durability and the write-once rule.
  */
-const SettlementAnnouncementPayloadSchema = z.strictObject({
-  settlements: z.array(z.unknown()).readonly(),
-  dareSummaries: z.array(z.unknown()).readonly(),
-});
+export const SETTLEMENT_ANNOUNCEMENT_FAMILIES = [
+  "closure",
+  "settlement",
+  "parlay",
+  "earnings",
+  "dare-summary",
+] as const;
 
-export type SettlementAnnouncementPayload = z.infer<
-  typeof SettlementAnnouncementPayloadSchema
->;
+export type SettlementAnnouncementFamily =
+  (typeof SETTLEMENT_ANNOUNCEMENT_FAMILIES)[number];
 
-export const settlementAnnouncementCheckpointCodec = defineVersionedCodec({
-  kind: "scout-v2-settlement-announcement",
-  version: 1,
-  schema: SettlementAnnouncementPayloadSchema,
-});
+export const SettlementAnnouncementFamilySchema = z.enum(
+  SETTLEMENT_ANNOUNCEMENT_FAMILIES,
+);
 
-/**
- * The row, as the domain sees it. No Prisma type crosses this boundary: the
- * caller receives the parsed payload and the match it belongs to, never the
- * record Prisma returned.
- */
-export type SettlementAnnouncementCheckpoint = {
-  readonly matchId: RiotMatchId;
-  readonly payload: SettlementAnnouncementPayload;
+/** One stored instruction: its family, which item it is, and its body. */
+export type SettlementAnnouncementItem = {
+  readonly family: SettlementAnnouncementFamily;
+  /** The item's identity within its family: a guild id, or a Dare id. */
+  readonly itemKey: string;
+  readonly payload: unknown;
 };
 
+const settlementAnnouncementItemCodec = defineVersionedCodec({
+  kind: "scout-v2-settlement-announcement",
+  version: 1,
+  schema: z.unknown(),
+});
+
 /**
- * What one attempt to record a checkpoint did.
+ * What one attempt to record an item did.
  *
  * `conflict` is the case the write-once rule exists for: a standing row whose
- * payload differs is two producers disagreeing about what ONE settlement
- * produced, which cannot both be true. It is reported rather than thrown so
- * the caller decides — the same shape every other durable commit in this lane
- * uses — and the caller here fails the Activity on it.
+ * payload differs is two producers disagreeing about what ONE transition
+ * produced, which cannot both be true. It is reported rather than thrown, the
+ * shape every durable commit in this lane uses, and the caller decides.
  */
 export type RecordSettlementAnnouncementResult =
   | { outcome: "applied" }
   | { outcome: "already-applied" }
   | { outcome: "conflict"; reason: "settlement-announcement-differs" };
 
-function rowToCheckpoint(row: {
-  riotMatchId: string;
-  version: number;
-  payload: string;
-}): SettlementAnnouncementCheckpoint {
-  return {
-    matchId: RiotMatchIdSchema.parse(row.riotMatchId),
-    // The stored envelope carries its own kind and version; the column
-    // mirrors the version only so the CHECK and the index can see it.
-    payload: settlementAnnouncementCheckpointCodec.parse(
-      JSON.parse(row.payload),
-    ),
-  };
-}
-
 /**
- * Record what this settlement produced, at most once.
+ * Record one item, at most once.
  *
  * Insert-only. A byte-identical re-presentation is `already-applied`, which is
- * what lets the attempt that crashed between this write and the receipt run
- * again; anything else is a conflict and nothing is overwritten, because the
- * row is the only surviving record of output that cannot be recomputed.
+ * what lets a retried transaction proceed; anything else is a conflict and
+ * nothing is overwritten, because the row is the only surviving record of a
+ * result no retry can recompute.
+ *
+ * Takes whatever client the caller holds, and that is the point: the producing
+ * step passes its own transaction handle, so this row commits with its item.
  */
-export async function recordSettlementAnnouncementCheckpoint(
+export async function recordSettlementAnnouncementItem(
   db: Db,
-  input: {
-    matchId: RiotMatchId;
-    payload: SettlementAnnouncementPayload;
-  },
+  input: { matchId: RiotMatchId; item: SettlementAnnouncementItem },
 ): Promise<RecordSettlementAnnouncementResult> {
-  const envelope = settlementAnnouncementCheckpointCodec.serialize(
-    input.payload,
+  const envelope = settlementAnnouncementItemCodec.serialize(
+    input.item.payload,
   );
   const serialized = JSON.stringify(envelope);
+  const identity = {
+    riotMatchId: input.matchId,
+    family: input.item.family,
+    itemKey: input.item.itemKey,
+  };
   const created = await db.matchSettlementAnnouncement.createMany({
-    data: [
-      {
-        riotMatchId: input.matchId,
-        version: envelope.version,
-        payload: serialized,
-      },
-    ],
+    data: [{ ...identity, version: envelope.version, payload: serialized }],
     skipDuplicates: true,
   });
   if (created.count === 1) return { outcome: "applied" };
   const existing = await db.matchSettlementAnnouncement.findUnique({
-    where: { riotMatchId: input.matchId },
+    where: { riotMatchId_family_itemKey: identity },
   });
   if (existing === null) {
     throw new Error(
-      `The settlement announcement checkpoint for ${input.matchId} was neither inserted nor found; the row vanished between the insert and the read-back`,
+      `The settlement announcement for ${input.matchId} (${input.item.family}/${input.item.itemKey}) was neither inserted nor found; the row vanished between the insert and the read-back`,
     );
   }
-  if (
-    existing.version === envelope.version &&
-    existing.payload === serialized
-  ) {
-    return { outcome: "already-applied" };
-  }
-  return { outcome: "conflict", reason: "settlement-announcement-differs" };
+  return existing.payload === serialized
+    ? { outcome: "already-applied" }
+    : { outcome: "conflict", reason: "settlement-announcement-differs" };
 }
 
-/** The checkpoint standing for this match, or `null` when none does. */
-export async function getSettlementAnnouncementCheckpoint(
+/**
+ * Every instruction standing for this match, in a stable order.
+ *
+ * Ordered by family then item so a recovered fold is deterministic. The live
+ * fold sees settlement's own ordering; a recovery that varied between runs
+ * could announce the same match differently twice.
+ */
+export async function listSettlementAnnouncementItems(
   db: Db,
   args: { matchId: RiotMatchId },
-): Promise<SettlementAnnouncementCheckpoint | null> {
-  const row = await db.matchSettlementAnnouncement.findUnique({
+): Promise<readonly SettlementAnnouncementItem[]> {
+  const rows = await db.matchSettlementAnnouncement.findMany({
     where: { riotMatchId: args.matchId },
+    orderBy: [{ family: "asc" }, { itemKey: "asc" }],
   });
-  return row === null ? null : rowToCheckpoint(row);
+  return rows.map((row) => ({
+    family: SettlementAnnouncementFamilySchema.parse(row.family),
+    itemKey: row.itemKey,
+    payload: settlementAnnouncementItemCodec.parse(JSON.parse(row.payload)),
+  }));
 }

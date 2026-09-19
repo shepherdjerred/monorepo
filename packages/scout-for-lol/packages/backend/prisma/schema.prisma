@@ -2552,54 +2552,61 @@ model MatchNotificationIntent {
   @@index([recoveryBatchId])
 }
 
-/// What one COMPLETED settlement produced, kept only so a takeover need not
+/// One item a completed settlement produced, kept so a takeover need not
 /// reproduce it.
 ///
-/// Settlement is a sequence of independently committing steps whose summaries
-/// are one-shot: each returns results only for the transition that committed
-/// them, so a re-run settles nothing and returns nothing. Without this row, a
-/// death between the settlement commit and the settlement receipt left the
-/// announcements unmintable forever — the retry could not rebuild them and no
-/// evidence recorded that anything was missing.
+/// Settlement is a sequence of independently committing steps whose results
+/// are one-shot: each returns a summary only for the transition that committed
+/// it, so a re-run settles nothing and returns nothing. A row here is written
+/// INSIDE the same transaction that produces its item, so the item and the
+/// instruction to announce it commit together or not at all.
+///
+/// One row per item rather than one per match, because the steps commit
+/// separately: a match whose third Dare fails after two settled must keep
+/// those two instructions, and a single per-match row could not be written
+/// until every step had finished — which is the window this closes.
 ///
 /// ## Why this row carries amounts when the receipt deliberately does not
 ///
 /// A MatchProcessingReceipt names identities and no amounts on purpose, and
 /// the notification lane relied on that when it decided presentation inputs
 /// travel on the intent rather than the receipt. That discipline is about
-/// ATTESTED EVIDENCE: a receipt is proof a phase happened, and proof that
-/// restated payouts would be a second, divergent source of truth for
-/// settlement arithmetic.
+/// ATTESTED EVIDENCE: a receipt is proof a phase happened, and restated
+/// payouts on it would be a second, divergent source of truth for settlement
+/// arithmetic.
 ///
 /// This row attests nothing. It is a recovery note addressed to the next
-/// attempt of one Activity, saying "settlement already produced these
-/// instructions; mint from them rather than re-settling". Nothing downstream
-/// reads it as proof, no reader derives a fact from it, and it is consumed by
-/// the mint rather than published. Amounts are here because the instructions
-/// are the announcement's presentation inputs and the point of the row is to
-/// avoid recomputing them — which is the same reason the intent carries them.
+/// attempt of one Activity, saying "settlement already produced this; announce
+/// from it rather than re-settling". Nothing downstream reads it as proof and
+/// nothing derives a fact from it.
 ///
 /// ## Write-once
 ///
-/// Insert-only, with no updatedAt. A second settlement offering DIFFERENT
-/// announcements for a standing checkpoint is two producers disagreeing about
-/// what one settlement produced, and it surfaces as a durable-write conflict
-/// rather than overwriting the first. An identical payload re-presented is
-/// already-applied, which is what lets a retry after a crash between this
-/// write and the receipt proceed.
+/// Insert-only, with no updatedAt. A second settlement offering a DIFFERENT
+/// payload for a standing (match, family, item) is two producers disagreeing
+/// about what one transition produced, and it surfaces as a durable-write
+/// conflict rather than overwriting. An identical payload re-presented is
+/// already-applied, which is what lets a retry proceed.
 ///
 /// ## Retention
 ///
 /// Bounded by deletion once the work it protects is finished, never in the hot
-/// path before the receipt exists — deleting earlier would only move the
-/// window it closes. A row whose match carries a settlement receipt has served
-/// its purpose and is sweepable; see SJ-203.
+/// path before the receipt exists. A match carrying a settlement receipt has
+/// had its announcements minted and its rows are sweepable; see SJ-203.
 model MatchSettlementAnnouncement {
-  riotMatchId String   @id
+  riotMatchId String
+  /// closure | settlement | parlay | earnings | dare-summary
+  family      String
+  /// The item's identity within its family: a guild id, or a Dare id.
+  itemKey     String
   version     Int
-  payload     String // JSON envelope of the announcement instructions
+  payload     String
   createdAt   DateTime @default(now())
+
+  @@id([riotMatchId, family, itemKey])
+  @@index([riotMatchId])
 }
+
 
 /// One recovery batch (domain RecoveryBatch). Cursor and count columns mirror
 /// the state union's per-variant payloads, so they are nullable and CHECKed

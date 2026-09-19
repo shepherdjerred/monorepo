@@ -13,6 +13,7 @@ import { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
 import { dareV2MatchNeedsTimeline } from "#src/betting/dares/evaluation/dare-match-timeline-need.ts";
 import { dareTimelineEvidenceFromRawV2 } from "#src/betting/dares/presentation/dare-timeline-evidence-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import type { SettlementAnnouncementSink } from "#src/betting/notify/announcement-sink.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
 import { fetchTimelineForDareV2 } from "#src/league/tasks/postmatch/match-report-standard.ts";
 
@@ -36,6 +37,8 @@ export async function settleBucksWithDareTimelineV2(
     matchData: RawMatch;
     trackedPlayers: PlayerConfigEntry[];
     prismaClient?: ExtendedPrismaClient | undefined;
+    /** Passed straight through; see `settleAndAwardBucks`. */
+    announcementSink?: SettlementAnnouncementSink | undefined;
   },
   dependencies: DarePostmatchTimelineV2Dependencies = DEFAULT_DEPENDENCIES,
 ): Promise<{
@@ -69,6 +72,9 @@ export async function settleBucksWithDareTimelineV2(
     ...(timeline === undefined
       ? {}
       : { dareTimeline: dareTimelineEvidenceFromRawV2(timeline) }),
+    ...(input.announcementSink === undefined
+      ? {}
+      : { announcementSink: input.announcementSink }),
   });
   return {
     bucks,

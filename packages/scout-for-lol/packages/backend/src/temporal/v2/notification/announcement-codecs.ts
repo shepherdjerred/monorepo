@@ -65,7 +65,7 @@ const EarnedAwardReasonSchema = z.enum([
   "mvp",
 ]) satisfies z.ZodType<EarnedAwardReason>;
 
-const EarnedAwardSchema = z.strictObject({
+export const EarnedAwardSchema = z.strictObject({
   serverId: z.string().min(1),
   discordId: z.string().min(1),
   alias: z.string(),
@@ -91,7 +91,7 @@ const SettlementBetSchema = z.strictObject({
   subjectPuuid: LeaguePuuidSchema,
 }) satisfies z.ZodType<SettlementBet>;
 
-const SettlementSummarySchema = z.strictObject({
+export const SettlementSummarySchema = z.strictObject({
   matchId: z.string().min(1),
   serverId: z.string().min(1),
   winningTeamId: z.number().int().optional(),
@@ -116,7 +116,7 @@ const MessageRefSchema = z.strictObject({
   messageId: z.string().min(1),
 });
 
-const ParlaySettlementSummarySchema = z.strictObject({
+export const ParlaySettlementSummarySchema = z.strictObject({
   matchId: z.string().min(1),
   serverId: z.string().min(1),
   yesResult: z.boolean().optional(),
@@ -143,7 +143,7 @@ export const settlementAnnouncementCodec = defineVersionedCodec({
   schema: SettlementAnnouncementSchema,
 });
 
-function settlementSummaryOf(
+export function settlementSummaryOf(
   parsed: SettlementAnnouncement["summary"],
 ): SettlementSummary {
   return {
@@ -158,7 +158,7 @@ function settlementSummaryOf(
   };
 }
 
-function parlaySummaryOf(
+export function parlaySummaryOf(
   parsed: NonNullable<SettlementAnnouncement["parlay"]>,
 ): ParlaySettlementSummary {
   return {
