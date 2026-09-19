@@ -188,14 +188,14 @@ send. Models cannot select the status or subject.
 
 ## Durable agent chats
 
-| Workflow                  | Trigger                    | Brain                           | Output                            |
-| ------------------------- | -------------------------- | ------------------------------- | --------------------------------- |
-| agent-chat                | ingress or schedule update | Claude Code or Codex App Server | cataloged resumable turn          |
-| agent-chat-turn-receipt   | shared chat client         | deterministic                   | retained run-pinned turn outcome  |
-| agent-chat-catalog        | client update              | deterministic                   | chat metadata + active bindings   |
-| scheduled-agent-chat-turn | declared Temporal Schedule | deterministic dispatcher        | update to a cataloged chat        |
-| HTTP agent chat           | HTTP POST                  | deterministic dispatcher        | durable pollable turn result      |
-| Discord agent chat        | Discord slash command      | deterministic dispatcher        | durable channel delivery          |
+| Workflow                  | Trigger                    | Brain                           | Output                           |
+| ------------------------- | -------------------------- | ------------------------------- | -------------------------------- |
+| agent-chat                | ingress or schedule update | Claude Code or Codex App Server | cataloged resumable turn         |
+| agent-chat-turn-receipt   | shared chat client         | deterministic                   | retained run-pinned turn outcome |
+| agent-chat-catalog        | client update              | deterministic                   | chat metadata + active bindings  |
+| scheduled-agent-chat-turn | declared Temporal Schedule | deterministic dispatcher        | update to a cataloged chat       |
+| HTTP agent chat           | HTTP POST                  | deterministic dispatcher        | durable pollable turn result     |
+| Discord agent chat        | Discord slash command      | deterministic dispatcher        | durable channel delivery         |
 
 Agent chat Activities run on `agent-task`. Scheduled dispatch waits on its own
 `agent-chat-dispatch` queue inside the repo worker process, so it occupies
