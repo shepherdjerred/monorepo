@@ -43,9 +43,8 @@ export function classify(
   );
   const hardFailure = evidence.checks.some(
     (check) =>
-      !check.softFail &&
-      (check.bucket.toLowerCase() === "fail" ||
-        check.state.toLowerCase() === "failure"),
+      check.bucket.toLowerCase() === "fail" ||
+      check.state.toLowerCase() === "failure",
   );
   if (blockingReview || hardFailure) {
     return identity.crossRepository && !identity.maintainerCanModify
@@ -58,7 +57,7 @@ export function classify(
       ["pending", "queued", "in_progress"].includes(check.bucket.toLowerCase()),
     );
   return pendingCheck ||
-    !evidence.buildkiteCurrentHead ||
+    !evidence.ciCurrentHead ||
     !evidence.hostedReviewComplete
     ? "pending"
     : "green";
