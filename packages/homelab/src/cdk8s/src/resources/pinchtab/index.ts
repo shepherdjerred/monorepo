@@ -39,6 +39,11 @@ const HEALTHCHECK_COMMAND = [
   "-c",
   `wget -q -O /dev/null --header="Authorization: Bearer $PINCHTAB_TOKEN" http://localhost:${String(PINCHTAB_PORT)}/health`,
 ];
+const BROWSER_READINESS_COMMAND = [
+  "sh",
+  "-c",
+  String.raw`wget -q -O - --header="Authorization: Bearer $PINCHTAB_TOKEN" http://localhost:${String(PINCHTAB_PORT)}/instances | tr '}' '\n' | grep '"profileName":"default"' | grep -Eq '"status":"running"'`,
+];
 
 export function createPinchtabDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "pinchtab", {
@@ -140,6 +145,10 @@ ip6tables -L OUTPUT -n`,
       name: "pinchtab-config",
     },
     data: {
+      // PinchTab 0.15.1 uses this marker to detect containers. Kubernetes CRI
+      // does not supply Docker's marker, so Chrome otherwise tries a sandbox
+      // that cannot run with no_new_privs. Retain the existing pod firewall.
+      dockerenv: "",
       "config.json": JSON.stringify(
         {
           server: {
@@ -158,13 +167,27 @@ ip6tables -L OUTPUT -n`,
           instanceDefaults: {
             mode: "headless",
             noRestore: true,
+            stealthLevel: "full",
+            humanize: true,
           },
+          security: { allowEvaluate: true },
         },
         null,
         2,
       ),
     },
   });
+  deployment.podMetadata.addAnnotation(
+    "checksum/browser-config",
+    new Bun.CryptoHasher("sha256")
+      .update(JSON.stringify(config.data))
+      .digest("hex"),
+  );
+  const configVolume = Volume.fromConfigMap(
+    chart,
+    "pinchtab-config-volume",
+    config,
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -203,17 +226,16 @@ ip6tables -L OUTPUT -n`,
           key: "PINCHTAB_TOKEN",
         }),
       },
-      // pinchtab 0.13.2 runs its "guard" with auth required on every route
-      // except `/` — `/health` returns 401 without the bearer token, so a plain
-      // httpGet probe fails. Use an exec probe that reads PINCHTAB_TOKEN from the
-      // container env (never the manifest) and calls /health. Two-stage readiness:
-      // the generous startup probe covers Chrome warm-up before liveness/readiness
-      // take over.
+      // PinchTab's guarded health route requires the bearer token, so probes read
+      // PINCHTAB_TOKEN from the container environment instead of the manifest.
+      // Keep the API ready if Chrome stops: clients need that endpoint to start a
+      // replacement browser. Liveness checks Chrome and restarts the pod when the
+      // browser does not recover.
       startup: Probe.fromCommand(HEALTHCHECK_COMMAND, {
         periodSeconds: Duration.seconds(5),
         failureThreshold: 24,
       }),
-      liveness: Probe.fromCommand(HEALTHCHECK_COMMAND, {
+      liveness: Probe.fromCommand(BROWSER_READINESS_COMMAND, {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
@@ -222,6 +244,12 @@ ip6tables -L OUTPUT -n`,
         failureThreshold: 3,
       }),
       volumeMounts: [
+        {
+          path: "/.dockerenv",
+          subPath: "dockerenv",
+          volume: configVolume,
+          readOnly: true,
+        },
         {
           path: "/data",
           volume: Volume.fromPersistentVolumeClaim(
@@ -232,7 +260,7 @@ ip6tables -L OUTPUT -n`,
         },
         {
           path: "/config",
-          volume: Volume.fromConfigMap(chart, "pinchtab-config-volume", config),
+          volume: configVolume,
         },
         {
           // Chrome needs far more shared memory than the container default 64Mi.

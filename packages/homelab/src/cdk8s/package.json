@@ -11,6 +11,8 @@
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
+    "test:bazarr": "bun run scripts/test-bazarr-providers.ts",
+    "test:bazarr:live": "bun run scripts/test-bazarr-providers.ts --live",
     "clear": "rm -rf dist/",
     "build-app": "bun run src/app.ts",
     "patch": "bun run scripts/patch.ts",
