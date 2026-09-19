@@ -1,7 +1,7 @@
 import { defineQuery, defineUpdate } from "@temporalio/workflow";
 import type {
   AgentChatBinding,
-  AgentChatBindingUpdate,
+  AgentChatBindingUpdateInput,
   AgentChatCatalogEntry,
   AgentChatCatalogState,
   AgentChatTurnRequest,
@@ -24,7 +24,7 @@ export const registerAgentChatUpdate = defineUpdate<
 
 export const bindAgentChatUpdate = defineUpdate<
   AgentChatCatalogEntry,
-  [AgentChatBinding, string, AgentChatBindingUpdate]
+  [AgentChatBinding, string, AgentChatBindingUpdateInput]
 >("bindAgentChat");
 
 export const recordAgentChatTurnUpdate = defineUpdate<

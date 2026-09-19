@@ -266,6 +266,7 @@ export const AgentChatBindingUpdateSchema = z.strictObject({
 export type AgentChatBindingUpdate = z.infer<
   typeof AgentChatBindingUpdateSchema
 >;
+export type AgentChatBindingUpdateInput = AgentChatBindingUpdate | string;
 
 export const AgentChatCatalogBindingSchema =
   AgentChatBindingUpdateSchema.extend({

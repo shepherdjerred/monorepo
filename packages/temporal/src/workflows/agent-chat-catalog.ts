@@ -17,7 +17,7 @@ import {
   MAX_AGENT_CHAT_CATALOG_STATE_BYTES,
   agentChatBindingKey,
   type AgentChatBinding,
-  type AgentChatBindingUpdate,
+  type AgentChatBindingUpdateInput,
   type AgentChatCatalogEntry,
   type AgentChatCatalogState,
 } from "#shared/agent/agent-chat.ts";
@@ -207,10 +207,12 @@ function bind(
   state: AgentChatCatalogState,
   rawBinding: AgentChatBinding,
   rawChatId: string,
-  rawUpdate: AgentChatBindingUpdate,
+  rawUpdate: AgentChatBindingUpdateInput,
 ): AgentChatCatalogEntry {
   const binding = AgentChatBindingSchema.parse(rawBinding);
-  const update = AgentChatBindingUpdateSchema.parse(rawUpdate);
+  const update = AgentChatBindingUpdateSchema.parse(
+    typeof rawUpdate === "string" ? { updatedAt: rawUpdate } : rawUpdate,
+  );
   const chatId = AgentChatIdSchema.parse(rawChatId);
   const entry = entryFor(state, chatId);
   if (entry === undefined) {

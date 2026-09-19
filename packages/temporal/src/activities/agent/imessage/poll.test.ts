@@ -42,21 +42,41 @@ describe("durable BlueBubbles polling", () => {
     expect(mocks.request.mock.calls[0]?.[1]).not.toHaveProperty("after");
   });
   test("establishes an initial ROWID watermark without replaying history", async () => {
-    mocks.request.mockResolvedValue([message(50)]);
+    mocks.request.mockResolvedValue([message(50), message(75), message(60)]);
     const result = await pollBlueBubblesMessages({
       ...CURSOR,
       lastRowId: 0,
     });
     expect(result).toEqual({
       startedAt: CURSOR.startedAt,
-      lastRowId: 50,
+      lastRowId: 75,
       commands: [],
     });
     expect(mocks.request).toHaveBeenCalledWith("/api/v1/message/query", {
       with: ["chats"],
-      limit: 1,
+      limit: 1000,
       sort: "DESC",
+      where: [{ statement: "message.ROWID > :cursor", args: { cursor: 0 } }],
     });
+  });
+  test("walks full initialization pages to the highest ROWID", async () => {
+    mocks.request
+      .mockResolvedValueOnce(
+        Array.from({ length: 1000 }, (_, index) => message(index + 1)),
+      )
+      .mockResolvedValueOnce([message(1500), message(1200)]);
+
+    const result = await pollBlueBubblesMessages({ ...CURSOR, lastRowId: 0 });
+
+    expect(result.lastRowId).toBe(1500);
+    expect(mocks.request).toHaveBeenLastCalledWith(
+      "/api/v1/message/query",
+      expect.objectContaining({
+        where: [
+          { statement: "message.ROWID > :cursor", args: { cursor: 1000 } },
+        ],
+      }),
+    );
   });
   test("caps the durable batch at fifty without skipping the remainder", async () => {
     mocks.request.mockResolvedValue(
