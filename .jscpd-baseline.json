@@ -1452,13 +1452,9 @@
       "clones": 1,
       "tokens": 105
     },
-    "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/temporal/src/event-bridge/sleep-webhook.ts|packages/temporal/src/event-bridge/xcode-cloud-webhook.ts": {
       "clones": 1,
-      "tokens": 74
+      "tokens": 72
     },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,
