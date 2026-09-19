@@ -69,3 +69,18 @@ export const SCANNER_TIER: ResourceTier = {
   ephemeralStorageRequest: "1Gi",
   ephemeralStorageLimit: "10Gi",
 };
+
+/**
+ * Bounded steps: a single tool doing one job in a third-party image.
+ *
+ * Tighter limits than MEDIUM because these lanes have a known, small working
+ * set and no turbo graph behind them.
+ */
+export const CONTAINED_TIER: ResourceTier = {
+  cpuRequest: "1",
+  cpuLimit: "2",
+  memoryRequest: "2Gi",
+  memoryLimit: "4Gi",
+  ephemeralStorageRequest: "2Gi",
+  ephemeralStorageLimit: "8Gi",
+};

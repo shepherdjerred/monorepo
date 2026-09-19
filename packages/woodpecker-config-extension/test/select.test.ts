@@ -298,6 +298,32 @@ describe("ported lanes", () => {
     expect(steps.filter((s) => s.key.startsWith("resume"))).toHaveLength(1);
   });
 
+  /** Publishing mutates one external dashboard, so it must not race itself. */
+  test("trmnl publish is serialized and main-only", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const publish = steps.find((s) => s.key === "trmnl-publish");
+    expect(publish?.concurrency).toEqual({ limit: 1, group: "trmnl-publish" });
+    expect(publish?.defaultBranchOnly).toBe(true);
+    const keys = keysFor(["packages/trmnl-dashboard/views/index.liquid"]);
+    expect(keys).toContain("trmnl-validate");
+    expect(keys).not.toContain("trmnl-publish");
+  });
+
+  /** Only the publishing lane may hold the API key. */
+  test("only trmnl publish carries the credential", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    expect(
+      steps.find((s) => s.key === "trmnl-validate")?.secrets,
+    ).toBeUndefined();
+    expect(steps.find((s) => s.key === "trmnl-publish")?.secrets).toEqual([
+      {
+        secret: "ci-trmnl-credentials",
+        key: "TRMNL_API_KEY",
+        env: "TRMNL_API_KEY",
+      },
+    ]);
+  });
+
   test("alert dashboard runs for its own package", () => {
     expect(keysFor(["packages/alert-dashboard/src/db.ts"])).toContain(
       "alert-dashboard-sqlite",
