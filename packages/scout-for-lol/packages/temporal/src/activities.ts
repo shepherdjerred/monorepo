@@ -46,6 +46,7 @@ import type {
   ScoutGuardedEffectV2Result,
   ScoutLakeStagingV2Result,
   ScoutMatchCursorV2Result,
+  ScoutMintedIntentsV2Result,
   ScoutMatchObservationV2Input,
   ScoutMatchObservationV2Result,
   ScoutMatchPipelineStateV2Result,
@@ -175,6 +176,9 @@ export type ScoutTemporalV2Activities = {
   advanceMatchCursorV2: (
     input: ScoutMatchRefV2,
   ) => Promise<ScoutMatchCursorV2Result>;
+  mintPostmatchNotificationIntentsV2: (
+    input: ScoutMatchRefV2,
+  ) => Promise<ScoutMintedIntentsV2Result>;
   planMatchFanOutV2: (input: ScoutMatchRefV2) => Promise<ScoutFanOutV2Result>;
 
   // Prematch — spectator fetch and S3 write, realtime.

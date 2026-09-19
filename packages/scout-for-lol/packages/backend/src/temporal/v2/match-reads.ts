@@ -213,8 +213,33 @@ export async function planMatchFanOutV2(input: {
     getObservation(prisma, { matchId }),
   ]);
   return ScoutFanOutV2ResultSchema.parse({
+    // Every drivable intent for this match EXCEPT a prematch one.
+    //
+    // Kind is not a routing decision here: the notification child is started
+    // from an intent key and the delivery arm selects its renderer from the
+    // row's own `kind`, so excluding a kind does not send it differently — it
+    // leaves it unstarted. That is why the announcement kinds are included.
+    // They are minted inside the fenced settlement effect, which commits
+    // before this Activity runs, so they are already standing here, and
+    // dropping them would strand rows the operator backlog gauge counts.
+    //
+    // `prematch` is the one kind that must be left alone, and the reason is
+    // this Activity's timing rather than its routing. A prematch intent
+    // announces a game STARTING, and a post-match fan-out runs at the one
+    // moment the pipeline knows the game ended. The freshness deadline does
+    // not cover this: it is the game's own three-hour TTL, and a match
+    // discovered minutes after it ended is still comfortably inside it, so a
+    // prematch row left `pending` by a failed prematch child would pass
+    // `beginSend` and post "game starting" after the result was already known.
+    // A delivered one is settled and was never drivable; this is only about
+    // the ones an outage left behind. The prematch lane's own fan-out drives
+    // them while the game is live, which is the only time they are true.
     notificationIntentKeys: intents
-      .filter((record) => DRIVABLE_INTENT_STATES.has(record.intent.state.kind))
+      .filter(
+        (record) =>
+          record.intent.kind !== "prematch" &&
+          DRIVABLE_INTENT_STATES.has(record.intent.state.kind),
+      )
       .map((record) => record.intent.key),
     lakeProjection:
       observation !== null && observation.artifacts.match !== null,
