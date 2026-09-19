@@ -117,9 +117,12 @@ describe("durable BlueBubbles polling", () => {
     mocks.request.mockResolvedValue(
       Array.from({ length: 1000 }, (_, index) => message(index + 11)),
     );
-    await expect(pollBlueBubblesMessages(CURSOR)).rejects.toThrow(
-      "cursor was not advanced",
-    );
+    await expect(pollBlueBubblesMessages(CURSOR)).rejects.toMatchObject({
+      message:
+        "BlueBubbles backlog exceeds 999 messages; cursor was not advanced",
+      nonRetryable: true,
+      type: "BlueBubblesBacklogExceeded",
+    });
   });
   test.each([
     { enabled: false, owners: ["owner"] },

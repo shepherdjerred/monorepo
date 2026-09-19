@@ -1,3 +1,4 @@
+import { ApplicationFailure } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { imessageIngressConfig } from "#config/imessage.ts";
 import { blueBubblesRequest } from "#lib/bluebubbles/client.ts";
@@ -83,8 +84,9 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
     );
   // The API sorts by message time, not ROWID. A full page cannot safely advance a ROWID cursor.
   if (messages.length === BLUEBUBBLES_QUERY_LIMIT)
-    throw new Error(
+    throw ApplicationFailure.nonRetryable(
       "BlueBubbles backlog exceeds 999 messages; cursor was not advanced",
+      "BlueBubblesBacklogExceeded",
     );
   const batch = messages
     .toSorted((left, right) => left.originalROWID - right.originalROWID)
