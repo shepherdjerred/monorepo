@@ -64,9 +64,6 @@ export function createTemporalAgentWorker(
     },
     serviceAccount: props.serviceAccount,
     automountServiceAccountToken: false,
-    securityContext: {
-      fsGroup: AGENT_WORKER_UID,
-    },
     podMetadata: {
       annotations: {
         "ci.sjer.red/pod-security-enforcement":
@@ -191,8 +188,9 @@ ip6tables -L OUTPUT -n`,
   container.mount("/etc/kubernetes", publicClusterCa, { readOnly: true });
 
   // The root poller needs read-only Kubernetes evidence, but provider code runs
-  // as uid/gid 1001 with supplementary groups cleared. Project the token at
-  // owner-only mode instead of using Kubernetes' world-readable automount.
+  // as uid/gid 1001 with supplementary groups cleared. This pod deliberately
+  // has no fsGroup, so kubelet cannot grant the provider group access to the
+  // owner-only projected token.
   const hiddenServiceAccountVolume = "provider-hidden-service-account";
   ApiObject.of(deployment).addJsonPatch(
     JsonPatch.add("/spec/template/spec/volumes/-", {
