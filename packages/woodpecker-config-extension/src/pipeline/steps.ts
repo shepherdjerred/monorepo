@@ -12,6 +12,7 @@ import {
   tofuApplySteps,
 } from "#src/pipeline/lanes/tofu-apply.ts";
 import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
+import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -134,5 +135,6 @@ export function buildPipelineSteps({
     releaseAdmissionStep(images),
     ...tofuApplySteps(images),
     ...releaseChainSteps(images, sharedEnvironment),
+    ...ciImageSteps(images),
   ];
 }

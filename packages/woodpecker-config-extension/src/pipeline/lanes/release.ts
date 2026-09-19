@@ -130,7 +130,14 @@ export function releaseChainSteps(
         "bun --no-install scripts/ci/write-ci-handoff.ts argocd-release-expected < argocd-release-expected.json",
         "bun --no-install scripts/ci/write-ci-handoff.ts helm-release-plan < helm-release-plan.json",
       ],
-      dependsOn: ["homelab-release-admission", "images"],
+      // The refresh lanes rewrite the toolchain image pins this publish
+      // embeds, so the charts must not be built from a stale pin.
+      dependsOn: [
+        "homelab-release-admission",
+        "images",
+        "ci-base-refresh",
+        "ci-playwright-refresh",
+      ],
       timeoutMinutes: 60,
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
@@ -159,7 +166,14 @@ export function releaseChainSteps(
         // request-ownership checks; it must not be replaced with a bare sync.
         "bun --no-install packages/homelab/scripts/argocd/argocd.ts release-root apps argocd-release-expected.json",
       ],
-      dependsOn: ["homelab-release-admission", "images", "helm-push"],
+      // Infrastructure is applied before ArgoCD reconciles against it, so
+      // the sync sees the cluster the charts were built for.
+      dependsOn: [
+        "homelab-release-admission",
+        "images",
+        "helm-push",
+        "tofu-apply-arr",
+      ],
       timeoutMinutes: 60,
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
