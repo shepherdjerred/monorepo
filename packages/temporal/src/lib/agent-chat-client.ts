@@ -13,6 +13,7 @@ import {
   AgentChatBindingSchema,
   AgentChatCatalogEntrySchema,
   AgentChatConfigSchema,
+  agentChatTurnRequestsMatch,
   AgentChatTurnRequestSchema,
   AgentChatTurnResultSchema,
   AgentChatWorkflowStateSchema,
@@ -227,7 +228,10 @@ export async function runAgentChatTurn(input: {
   const owner = AgentChatReceiptInputSchema.parse(
     await receipt.query(getAgentChatReceiptInputQuery),
   );
-  if (JSON.stringify(owner) !== JSON.stringify({ config, request })) {
+  if (
+    JSON.stringify(owner.config) !== JSON.stringify(config) ||
+    !agentChatTurnRequestsMatch(owner.request, request)
+  ) {
     throw new Error(
       `Agent chat turn ID ${request.turnId} was reused with a different request`,
     );

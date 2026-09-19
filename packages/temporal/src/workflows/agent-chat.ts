@@ -12,6 +12,7 @@ import {
   AgentChatTurnResultSchema,
   AgentChatWorkflowInputSchema,
   AgentChatWorkflowStateSchema,
+  agentChatTurnRequestsMatch,
   MAX_AGENT_CHAT_PENDING_TURNS,
   AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS,
   AGENT_CHAT_TURN_TIMEOUT_MS,
@@ -78,18 +79,11 @@ function settledResult(turn: AgentChatSettledTurn): AgentChatTurnResult {
   );
 }
 
-function requestsMatch(
-  previous: AgentChatTurnRequest,
-  incoming: AgentChatTurnRequest,
-): boolean {
-  return JSON.stringify(previous) === JSON.stringify(incoming);
-}
-
 function requireMatchingRequest(
   previous: AgentChatTurnRequest,
   incoming: AgentChatTurnRequest,
 ): void {
-  if (!requestsMatch(previous, incoming)) {
+  if (!agentChatTurnRequestsMatch(previous, incoming)) {
     throw ApplicationFailure.nonRetryable(
       `Agent chat turn ID ${incoming.turnId} was reused with a different request`,
       "AgentChatTurnIdConflict",

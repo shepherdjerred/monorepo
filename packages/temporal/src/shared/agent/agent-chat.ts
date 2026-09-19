@@ -112,6 +112,31 @@ export const AgentChatTurnRequestSchema = z.strictObject({
 });
 export type AgentChatTurnRequest = z.infer<typeof AgentChatTurnRequestSchema>;
 
+export function agentChatTurnRequestsMatch(
+  previous: AgentChatTurnRequest,
+  incoming: AgentChatTurnRequest,
+): boolean {
+  const sourcesMatch =
+    previous.source.kind === incoming.source.kind &&
+    ((previous.source.kind === "imessage" &&
+      incoming.source.kind === "imessage" &&
+      previous.source.conversationId === incoming.source.conversationId) ||
+      (previous.source.kind === "discord" &&
+        incoming.source.kind === "discord" &&
+        previous.source.channelId === incoming.source.channelId &&
+        previous.source.threadId === incoming.source.threadId) ||
+      (previous.source.kind === "schedule" &&
+        incoming.source.kind === "schedule" &&
+        previous.source.scheduleId === incoming.source.scheduleId));
+
+  return (
+    previous.turnId === incoming.turnId &&
+    previous.prompt === incoming.prompt &&
+    previous.submittedAt === incoming.submittedAt &&
+    sourcesMatch
+  );
+}
+
 export const AgentChatUsageSchema = z.strictObject({
   inputTokens: z.number().int().nonnegative(),
   cachedInputTokens: z.number().int().nonnegative(),
