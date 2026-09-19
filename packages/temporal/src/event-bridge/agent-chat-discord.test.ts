@@ -103,6 +103,23 @@ describe("agent chat Discord ingress", () => {
     expect(set).toHaveBeenCalledWith([agentChatDiscordCommand]);
   });
 
+  it("contains a second Discord failure while reporting a command error", async () => {
+    const deps = operations();
+    const fake = fakeInteraction({ subcommand: "list" });
+    fake.deferReply.mockRejectedValueOnce(new Error("Discord unavailable"));
+    fake.editReply.mockRejectedValueOnce(new Error("No acknowledgement"));
+
+    await expect(
+      handleAgentChatDiscordCommand(
+        fakeTemporalClient(),
+        fake.interaction,
+        deps,
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(fake.editReply).toHaveBeenCalledOnce();
+  });
+
   it("preserves emoji at generated title truncation boundaries", async () => {
     const deps = operations();
     const prefix = "a".repeat(76);
