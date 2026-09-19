@@ -18,6 +18,7 @@ import {
   type ExploreSkillOptions,
 } from "#src/explore/skills/registry.ts";
 import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
+import { emitEvalReport } from "#src/explore/eval-report-output.ts";
 
 /**
  * Does Explore say "Scout does not do that" when Scout does not do that?
@@ -191,11 +192,7 @@ async function main(): Promise<void> {
     passed: cases.every((entry) => entry.passed),
     cases,
   });
-  if (Bun.argv.includes("--write")) {
-    await Bun.write(REPORT_URL, `${JSON.stringify(report, null, 2)}\n`);
-  }
-  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  if (!report.passed) process.exitCode = 1;
+  await emitEvalReport(report, REPORT_URL);
 }
 
 await main();
