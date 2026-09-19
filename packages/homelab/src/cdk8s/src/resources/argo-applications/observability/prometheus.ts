@@ -59,6 +59,49 @@ const ALERTMANAGER_GLOBAL = {
   smtp_tls_config: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_tls_config,
 };
 
+const OPERATOR_EMAIL_CONFIGS = [
+  {
+    send_resolved: false,
+    to: "claude@sjer.red",
+  },
+];
+
+function alertmanagerReceivers(alertDashboardSecretName: string) {
+  return [
+    {
+      name: "null",
+    },
+    {
+      name: "alerts",
+      webhook_configs: [
+        {
+          send_resolved: true,
+          max_alerts: 100,
+          url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
+          http_config: {
+            authorization: {
+              type: "Bearer",
+              credentials_file: `/etc/alertmanager/secrets/${alertDashboardSecretName}/WEBHOOK_TOKEN`,
+            },
+          },
+        },
+      ],
+      // The ledger is the place to work alerts, but it is a page the operator
+      // has to remember to open. Only the null routes and the fallback matchers
+      // divert anything ahead of this receiver, so it sees exactly the critical
+      // and warning alerts worth interrupting someone for. Delivery is
+      // additive: the webhook above still records every alert whether or not
+      // the mail succeeds.
+      email_configs: OPERATOR_EMAIL_CONFIGS,
+    },
+    {
+      // Reports on the webhook, so it must not depend on the webhook.
+      name: "postal-fallback",
+      email_configs: OPERATOR_EMAIL_CONFIGS,
+    },
+  ];
+}
+
 function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
   return new OnePasswordItem(chart, "alertmanager-postal-smtp-onepassword", {
     spec: {
@@ -282,36 +325,7 @@ export async function createPrometheusApp(chart: Chart) {
           },
         ],
         templates: ["/etc/alertmanager/config/*.tmpl"],
-        receivers: [
-          {
-            name: "null",
-          },
-          {
-            name: "alerts",
-            webhook_configs: [
-              {
-                send_resolved: true,
-                max_alerts: 100,
-                url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
-                http_config: {
-                  authorization: {
-                    type: "Bearer",
-                    credentials_file: `/etc/alertmanager/secrets/${alertDashboardSecrets.name}/WEBHOOK_TOKEN`,
-                  },
-                },
-              },
-            ],
-          },
-          {
-            name: "postal-fallback",
-            email_configs: [
-              {
-                send_resolved: false,
-                to: "claude@sjer.red",
-              },
-            ],
-          },
-        ],
+        receivers: alertmanagerReceivers(alertDashboardSecrets.name),
         route: {
           group_by: ["namespace", "alertname"],
           group_wait: "30s",

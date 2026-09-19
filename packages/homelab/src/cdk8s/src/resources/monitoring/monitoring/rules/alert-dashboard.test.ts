@@ -37,4 +37,32 @@ describe("AlertDashboardDown", () => {
     );
     expect(alert.for).toBe("5m");
   });
+
+  it("separates a stuck sender from a switched-off one", () => {
+    const rules =
+      getAlertDashboardRuleGroups().find(
+        (candidate) => candidate.name === "alert-dashboard-health",
+      )?.rules ?? [];
+    const stuck = rules.find(
+      (candidate) => candidate.alert === "AlertDashboardOutboxStuck",
+    );
+    const stranded = rules.find(
+      (candidate) => candidate.alert === "AlertDashboardOutboxStranded",
+    );
+    if (stuck === undefined || stranded === undefined)
+      throw new Error("expected both outbox rules");
+
+    // Neither may fire in the other's state, or the pair is just one noisy
+    // rule wearing two names.
+    expect(stuck.expr.value).toContain("alert_dashboard_email_enabled == 1");
+    expect(stranded.expr.value).toContain("alert_dashboard_email_enabled == 0");
+
+    // A backlog nobody intends to send is not an outage.
+    expect(stuck.labels?.["severity"]).toBe("critical");
+    expect(stranded.labels?.["severity"]).toBe("warning");
+
+    // Both diagnose the dashboard's own delivery path, so both need the
+    // independent email route rather than the webhook they are reporting on.
+    expect(stranded.labels?.["alert_dashboard_fallback"]).toBe("true");
+  });
 });

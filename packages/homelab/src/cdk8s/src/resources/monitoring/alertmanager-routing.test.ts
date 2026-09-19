@@ -54,6 +54,43 @@ async function renderApps(): Promise<string> {
   return result;
 }
 
+/**
+ * Receivers are addressed by name because more than one now carries the same
+ * kind of config. Matching on the presence of a config key instead would make
+ * every such assertion ambiguous the moment a second receiver grows one.
+ */
+function findReceiverNamed(
+  rendered: string,
+  name: string,
+): Record<string, unknown> {
+  const found: Record<string, unknown>[] = [];
+  const visit = (node: unknown) => {
+    if (Array.isArray(node)) {
+      node.forEach((child) => visit(child));
+      return;
+    }
+    const record = RecordSchema.safeParse(node);
+    if (!record.success) return;
+    if (
+      record.data["name"] === name &&
+      (Array.isArray(record.data["email_configs"]) ||
+        Array.isArray(record.data["webhook_configs"]))
+    ) {
+      found.push(record.data);
+    }
+    Object.values(record.data).forEach((value) => visit(value));
+  };
+  parseAllDocuments(rendered).forEach((document) => visit(document.toJS()));
+  if (found.length !== 1) {
+    throw new Error(
+      `expected one receiver named ${name}, found ${String(found.length)}`,
+    );
+  }
+  const receiver = found[0];
+  if (receiver === undefined) throw new Error(`receiver ${name} missing`);
+  return receiver;
+}
+
 function findReceiver(rendered: string, key: string): Record<string, unknown> {
   const found: Record<string, unknown>[] = [];
   const visit = (node: unknown) => {
@@ -205,7 +242,26 @@ describe("rendered Alerts receiver", () => {
   });
 
   it("keeps an independent Postal fallback for dashboard health alerts", () => {
-    const receiver = findReceiver(renderedApps, "email_configs");
+    const receiver = findReceiverNamed(renderedApps, "postal-fallback");
+    expect(receiver["email_configs"]).toEqual([
+      { send_resolved: false, to: "claude@sjer.red" },
+    ]);
+    // The whole point of this receiver: it reports on the webhook, so it must
+    // not depend on the webhook to be delivered.
+    expect(receiver["webhook_configs"]).toBeUndefined();
+  });
+
+  it("delivers ordinary alerts to both the ledger and email", () => {
+    const receiver = findReceiverNamed(renderedApps, "alerts");
+    // The ledger must keep receiving everything; email is additive, not a
+    // replacement, or a mail outage silently stops recording alerts.
+    expect(receiver["webhook_configs"]).toEqual([
+      expect.objectContaining({
+        url: expect.stringContaining(
+          "/internal/v1/alertmanager/events",
+        ) as unknown,
+      }),
+    ]);
     expect(receiver["email_configs"]).toEqual([
       { send_resolved: false, to: "claude@sjer.red" },
     ]);
