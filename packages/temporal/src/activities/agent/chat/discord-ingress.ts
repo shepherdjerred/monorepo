@@ -1,5 +1,6 @@
-import { Context } from "@temporalio/activity";
+import { ApplicationFailure, Context } from "@temporalio/activity";
 import { REST } from "discord.js";
+import { z } from "zod/v4";
 import { createTemporalClient } from "#client";
 import { continueAgentChat, runAgentChatTurn } from "#lib/agent-chat-client.ts";
 import {
@@ -13,6 +14,9 @@ import {
 } from "#shared/agent/agent-chat-discord.ts";
 
 const HEARTBEAT_INTERVAL_MS = 20_000;
+const DiscordRestErrorSchema = z.object({
+  status: z.number().int().min(400).max(599),
+});
 
 function requiredEnvironment(name: string): string {
   const value = Bun.env[name];
@@ -106,14 +110,31 @@ export async function deliverDiscordAgentChatMessage(
   const rest = new REST({ version: "10" }).setToken(
     requiredEnvironment("AGENT_CHAT_DISCORD_TOKEN"),
   );
-  await rest.post(`/channels/${input.channelId}/messages`, {
-    body: {
-      content: input.content,
-      allowed_mentions: { parse: [] },
-      nonce: input.nonce,
-      enforce_nonce: true,
-    },
-  });
+  try {
+    await rest.post(`/channels/${input.channelId}/messages`, {
+      body: {
+        content: input.content,
+        allowed_mentions: { parse: [] },
+        nonce: input.nonce,
+        enforce_nonce: true,
+      },
+    });
+  } catch (error: unknown) {
+    const parsed = DiscordRestErrorSchema.safeParse(error);
+    if (
+      parsed.success &&
+      parsed.data.status >= 400 &&
+      parsed.data.status < 500 &&
+      parsed.data.status !== 408 &&
+      parsed.data.status !== 429
+    ) {
+      throw ApplicationFailure.nonRetryable(
+        `Discord permanently rejected agent chat delivery with HTTP ${String(parsed.data.status)}`,
+        "DiscordAgentChatDeliveryRejected",
+      );
+    }
+    throw error;
+  }
 }
 
 export const discordAgentChatActivities = {

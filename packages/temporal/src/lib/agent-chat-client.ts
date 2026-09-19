@@ -138,9 +138,14 @@ export async function bindAgentChat(
   // restore used the same input and was subsequently compacted away.
   const restorationAttempt =
     purpose === "restore" ? crypto.randomUUID() : undefined;
-  if ((await getAgentChat(client, chatId)) === undefined) {
+  const entry = await getAgentChat(client, chatId);
+  if (entry === undefined) {
     throw new AgentChatNotFoundError(chatId);
   }
+  await client.executeUpdateWithStart(registerAgentChatUpdate, {
+    args: [entry],
+    startWorkflowOperation: catalogStart(),
+  });
   const updateId = createHash("sha256")
     .update(
       JSON.stringify({
