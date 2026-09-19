@@ -47,9 +47,9 @@ export const TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT = "privileged";
  * distinct uid. A NET_ADMIN init container
  * installs owner-matched firewall rules that reject Temporal gRPC and UI
  * traffic for that uid while the capability-minimal root poller keeps its
- * server connection and uses setpriv for the uid transition.
- * The provider cannot inherit SETUID across exec because privilege escalation
- * is disabled. These controls make the runtime enforce the report-only
+ * server connection and uses setpriv for the uid/gid transition.
+ * The provider cannot inherit SETUID or SETGID across exec because privilege
+ * escalation is disabled. These controls make the runtime enforce the report-only
  * boundary even if a provider disregards its prompt.
  */
 export function createTemporalAgentWorker(
@@ -146,7 +146,12 @@ ip6tables -L OUTPUT -n`,
         readOnlyRootFilesystem: false,
         capabilities: {
           drop: [Capability.ALL],
-          add: [Capability.CHOWN, Capability.DAC_OVERRIDE, Capability.SETUID],
+          add: [
+            Capability.CHOWN,
+            Capability.DAC_OVERRIDE,
+            Capability.SETGID,
+            Capability.SETUID,
+          ],
         },
       },
       resources: {

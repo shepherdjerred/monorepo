@@ -10,6 +10,7 @@ import { agentChatCatalogWorkflow as catalog } from "#workflows/agent-chat-catal
 import { agentChatTurnReceiptWorkflow as receipt } from "#workflows/agent-chat-turn-receipt.ts";
 import {
   AgentChatWorkflowInputSchema,
+  type AgentChatTurnResult,
   type AgentChatWorkflowInput,
   type AgentChatCatalogState,
 } from "#shared/agent/agent-chat.ts";
@@ -41,6 +42,6 @@ export async function agentChatCatalogWorkflow(
 }
 export async function agentChatTurnReceiptWorkflow(
   input: AgentChatReceiptInput,
-): Promise<never> {
+): Promise<AgentChatTurnResult> {
   return receipt(input);
 }
