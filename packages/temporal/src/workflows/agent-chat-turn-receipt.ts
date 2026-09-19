@@ -6,11 +6,13 @@ import {
   proxyActivities,
   setHandler,
   sleep,
+  workflowInfo,
 } from "@temporalio/workflow";
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS,
   AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS,
+  AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS,
   AgentChatTurnResultSchema,
   boundAgentChatFailureMessage,
@@ -69,6 +71,19 @@ export async function agentChatTurnReceiptWorkflow(
   rawInput: AgentChatReceiptInput,
 ): Promise<AgentChatTurnResult> {
   const input = AgentChatReceiptInputSchema.parse(rawInput);
+  const receiptDeadline =
+    workflowInfo().startTime.getTime() +
+    AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS;
+  const requestedDeadline = input.request.providerStartDeadline;
+  const providerStartDeadline = new Date(
+    requestedDeadline === undefined
+      ? receiptDeadline
+      : Math.min(receiptDeadline, Date.parse(requestedDeadline)),
+  ).toISOString();
+  const dispatchInput = AgentChatReceiptInputSchema.parse({
+    ...input,
+    request: { ...input.request, providerStartDeadline },
+  });
   let outcome: ReceiptOutcome | undefined;
   let pinnedRunId: string | undefined;
   let redirects = 0;
@@ -90,10 +105,10 @@ export async function agentChatTurnReceiptWorkflow(
       // Once selected, retain the run pin across exhausted Activity retries.
       // A redirect is safe only after the pinned run explicitly reports that it
       // continued as new without admitting this update.
-      pinnedRunId ??= await locateActivities.locateAgentChatRun(input);
+      pinnedRunId ??= await locateActivities.locateAgentChatRun(dispatchInput);
       const pinned = AgentChatPinnedResultSchema.parse(
         await dispatchActivities.dispatchPinnedAgentChatTurn({
-          ...input,
+          ...dispatchInput,
           runId: pinnedRunId,
         }),
       );

@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS,
+  AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS,
   agentChatWorkflowId,
   type AgentChatConfig,
   type AgentChatTurnRequest,
@@ -158,6 +159,51 @@ async function runOriginalTurn(env: TestWorkflowEnvironment) {
     request: request("original"),
   });
 }
+
+describe("durable chat turn receipt lifecycle", () => {
+  test.each([false, true])(
+    "bounds provider admission within receipt lifetime (caller deadline: %s)",
+    async (withCallerDeadline) => {
+      let dispatched: AgentChatPinnedTurn | undefined;
+      const callerDeadline = new Date(
+        Date.now() + 60 * 60 * 1000,
+      ).toISOString();
+      await withWorkers(
+        async (env) => {
+          await runAgentChatTurn({
+            client: env.client.workflow,
+            config: CONFIG,
+            request: {
+              ...request("bounded-receipt"),
+              ...(withCallerDeadline
+                ? { providerStartDeadline: callerDeadline }
+                : {}),
+            },
+          });
+          const description = await env.client.workflow
+            .getHandle(
+              agentChatReceiptWorkflowId(CONFIG.chatId, "bounded-receipt"),
+            )
+            .describe();
+          const receiptDeadline = new Date(
+            description.startTime.getTime() +
+              AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS,
+          ).toISOString();
+          expect(dispatched?.request.providerStartDeadline).toBe(
+            withCallerDeadline ? callerDeadline : receiptDeadline,
+          );
+        },
+        {
+          dispatch: async (env, input) => {
+            dispatched = input;
+            return dispatchPinnedAgentChatTurn(env.client.workflow, input);
+          },
+        },
+      );
+    },
+    60_000,
+  );
+});
 
 describe("durable chat turn receipts", () => {
   test("retries after ledger compaction and rollover return the original result without new effects", async () => {
