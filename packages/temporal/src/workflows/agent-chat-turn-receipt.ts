@@ -10,6 +10,8 @@ import {
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS,
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS,
+  AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS,
   AgentChatTurnResultSchema,
   boundAgentChatFailureMessage,
   type AgentChatTurnResult,
@@ -28,11 +30,13 @@ import {
 const locateActivities = proxyActivities<AgentChatReceiptActivities>({
   taskQueue: TASK_QUEUES.AGENT_CHAT_RECEIPTS,
   startToCloseTimeout: "1 minute",
+  scheduleToCloseTimeout: AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS,
   retry: { maximumAttempts: AGENT_CHAT_DISPATCH_MAX_ATTEMPTS },
 });
 const dispatchActivities = proxyActivities<AgentChatReceiptActivities>({
   taskQueue: TASK_QUEUES.AGENT_CHAT_RECEIPTS,
   startToCloseTimeout: AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+  scheduleToCloseTimeout: AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS,
   heartbeatTimeout: "1 minute",
   retry: { maximumAttempts: AGENT_CHAT_DISPATCH_MAX_ATTEMPTS },
 });

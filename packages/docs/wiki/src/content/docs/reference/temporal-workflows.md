@@ -201,6 +201,12 @@ neither the provider queue nor unrelated `repo-automation`. Provider session
 slices are stored in SeaweedFS; the workspace is fresh for each turn.
 Receipt dispatch uses a separate `agent-chat-receipts` queue in the repo process,
 so a scheduled dispatcher waiting for a receipt cannot occupy its executor.
+Every global Activity queue has a schedule-to-close admission bound in addition
+to its execution timeout. Scheduled turns carry the occurrence's provider-start
+deadline through the receipt and chat update; both the chat Workflow and the
+provider Activity reject an expired turn before creating a workspace or invoking
+Claude Code or Codex. This prevents a backed-up global queue from applying a
+scheduled turn after its originating Workflow has timed out.
 
 Source: [receipt dispatch contract](/reference/durable-agent-chat-storage/#turn-receipts).
 

@@ -7,14 +7,28 @@ export const MAX_AGENT_CHAT_CATALOG_STATE_BYTES = 1_000_000;
 export const MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES = 16_000;
 export const MAX_AGENT_CHAT_PENDING_TURNS = 8;
 export const AGENT_CHAT_TURN_TIMEOUT_MS = 2 * 60 * 60 * 1000;
-// A full serialized queue, plus headroom for catalog and session persistence.
+// Queue time is part of the safety budget: the provider worker is deliberately
+// global and serial, so start-to-close alone cannot prevent stale work from
+// beginning after its caller has stopped waiting.
+export const AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS = 60 * 60 * 1000;
+export const AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS =
+  AGENT_CHAT_TURN_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// A full per-chat queue, plus headroom for receipt and session persistence.
 export const AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS =
-  MAX_AGENT_CHAT_PENDING_TURNS * AGENT_CHAT_TURN_TIMEOUT_MS + 60 * 60 * 1000;
+  MAX_AGENT_CHAT_PENDING_TURNS *
+    AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS +
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 export const AGENT_CHAT_DISPATCH_MAX_ATTEMPTS = 5;
-// Cover every dispatch attempt plus retry backoff and Workflow scheduling margin.
+export const AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS =
+  AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+export const AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS =
+  AGENT_CHAT_DISPATCH_MAX_ATTEMPTS * AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS +
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+export const AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS =
+  AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// Cover the globally queued dispatch Activity and leave shutdown margin.
 export const AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS =
-  AGENT_CHAT_DISPATCH_MAX_ATTEMPTS * AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS +
-  60 * 60 * 1000;
+  AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 
 export function boundAgentChatFailureMessage(message: string): string {
   const encoded = new TextEncoder().encode(message);
@@ -87,6 +101,7 @@ export const AgentChatTurnRequestSchema = z.strictObject({
   turnId: z.string().min(1).max(512),
   prompt: AgentChatPromptSchema,
   submittedAt: z.iso.datetime({ offset: true }),
+  providerStartDeadline: z.iso.datetime({ offset: true }).optional(),
   source: AgentChatOriginSchema,
 });
 export type AgentChatTurnRequest = z.infer<typeof AgentChatTurnRequestSchema>;
