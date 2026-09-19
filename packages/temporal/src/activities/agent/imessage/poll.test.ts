@@ -99,14 +99,28 @@ describe("durable BlueBubbles polling", () => {
   test.each([
     { enabled: false, owners: ["owner"] },
     { enabled: true, owners: [] },
-  ])("does not contact the server when disabled or unowned", async (config) => {
+  ])("advances the watermark when disabled or unowned", async (config) => {
     mocks.config.mockResolvedValue(config);
+    mocks.request.mockResolvedValue([message(50), message(75)]);
     const result = await pollBlueBubblesMessages(CURSOR);
     expect(result).toMatchObject({
-      lastRowId: 10,
+      lastRowId: 75,
       commands: [],
     });
     expect(result.startedAt).toBe(CURSOR.startedAt);
-    expect(mocks.request).not.toHaveBeenCalled();
+    expect(mocks.request).toHaveBeenCalledWith(
+      "/api/v1/message/query",
+      expect.objectContaining({
+        where: [{ statement: "message.ROWID > :cursor", args: { cursor: 0 } }],
+      }),
+    );
+  });
+  test("never moves the disabled watermark backwards", async () => {
+    mocks.config.mockResolvedValue({ enabled: false, owners: ["owner"] });
+    mocks.request.mockResolvedValue([]);
+
+    const result = await pollBlueBubblesMessages(CURSOR);
+
+    expect(result.lastRowId).toBe(CURSOR.lastRowId);
   });
 });
