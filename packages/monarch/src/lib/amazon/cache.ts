@@ -13,20 +13,25 @@ import { log } from "../logger.ts";
 // alongside the other durable finance data rather than in scratch. Writes are
 // merges: a scrape covering one year must never discard the others.
 
+// What an order has always carried. The charge list is the only thing the two
+// cache versions disagree about, so it is the only thing either schema adds.
+const OrderSchema = z.object({
+  orderId: z.string(),
+  date: z.string(),
+  total: z.number(),
+  items: z.array(
+    PurchasedItemSchema.extend({
+      orderDate: z.string(),
+      orderId: z.string(),
+    }),
+  ),
+});
+
 export const AmazonCacheSchema = z.object({
   version: z.literal(2),
   scrapedAt: z.string(),
   orders: z.array(
-    z.object({
-      orderId: z.string(),
-      date: z.string(),
-      total: z.number(),
-      items: z.array(
-        PurchasedItemSchema.extend({
-          orderDate: z.string(),
-          orderId: z.string(),
-        }),
-      ),
+    OrderSchema.extend({
       charges: z.array(
         z.object({
           date: z.string(),
@@ -38,26 +43,14 @@ export const AmazonCacheSchema = z.object({
   ),
 });
 
-// The pre-charge cache: the same orders, written before card charges were
-// scraped. Read rather than discarded — a default scrape only covers the
-// current and previous years, so throwing this away silently loses every
-// older order that was already paid for in scraping time.
+// The pre-charge cache, written before card charges were scraped. Read rather
+// than discarded — a default scrape only covers the current and previous
+// years, so throwing this away silently loses every older order that was
+// already paid for in scraping time.
 const LegacyAmazonCacheSchema = z.object({
   version: z.literal(1),
   scrapedAt: z.string(),
-  orders: z.array(
-    z.object({
-      orderId: z.string(),
-      date: z.string(),
-      total: z.number(),
-      items: z.array(
-        PurchasedItemSchema.extend({
-          orderDate: z.string(),
-          orderId: z.string(),
-        }),
-      ),
-    }),
-  ),
+  orders: z.array(OrderSchema),
 });
 
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
