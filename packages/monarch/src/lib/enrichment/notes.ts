@@ -117,9 +117,34 @@ function vestNote(e: TransactionEnrichment): string | undefined {
 function loanNote(e: TransactionEnrichment): string | undefined {
   const l = e.loan;
   if (l === undefined) return undefined;
+  // A reconstructed split is worth marking as one: it is arithmetic across
+  // two statements, not a figure the servicer printed.
+  const qualifier = l.origin === "derived" ? " (derived)" : "";
   return (
     `${NOTE_PREFIX}Loan ${l.loanId}: ${money(l.principal)} principal + ` +
-    `${money(l.interest)} interest; ${money(l.balanceAfter)} still owed`
+    `${money(l.interest)} interest${qualifier}; ${money(l.balanceAfter)} still owed`
+  );
+}
+
+function brokerageNote(e: TransactionEnrichment): string | undefined {
+  const b = e.brokerage;
+  if (b === undefined) return undefined;
+  if (b.kind === "interest") return `${NOTE_PREFIX}Brokerage interest`;
+  if (b.symbol === undefined || b.quantity === undefined) {
+    return `${NOTE_PREFIX}Transfer from the brokerage`;
+  }
+  // The gain is the part no bank line can carry: the same cash arriving can be
+  // a profit or a loss depending on what the shares cost.
+  const gain = b.gainLoss ?? 0;
+  const outcome = gain >= 0 ? "gain" : "loss";
+  const swept =
+    b.cashSwept > 0.005
+      ? `; ${money(b.cashSwept)} idle cash swept with it`
+      : "";
+  return (
+    `${NOTE_PREFIX}Sold ${String(b.quantity)} ${b.symbol} at ${money(b.price ?? 0)} ` +
+    `on ${b.soldDate ?? "?"}: ${money(b.proceeds ?? 0)} proceeds against ` +
+    `${money(b.costBasis ?? 0)} basis, a ${money(Math.abs(gain))} ${outcome}${swept}`
   );
 }
 
@@ -127,6 +152,7 @@ export function buildEnrichmentNote(
   enrichment: TransactionEnrichment,
 ): string | undefined {
   return (
+    brokerageNote(enrichment) ??
     loanNote(enrichment) ??
     paystubNote(enrichment) ??
     vestNote(enrichment) ??

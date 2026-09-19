@@ -26,6 +26,7 @@ export type Config = {
   skipCostco: boolean;
   skipPaystub: boolean;
   skipEquity: boolean;
+  skipBrokerage: boolean;
   skipLoan: boolean;
   skipResearch: boolean;
   output: string | undefined;
@@ -96,6 +97,7 @@ export function getConfig(): Config {
       "skip-costco": { type: "boolean", default: false },
       "skip-paystub": { type: "boolean", default: false },
       "skip-equity": { type: "boolean", default: false },
+      "skip-brokerage": { type: "boolean", default: false },
       "skip-loan": { type: "boolean", default: false },
       "skip-research": { type: "boolean", default: false },
       output: { type: "string" },
@@ -150,6 +152,7 @@ export function getConfig(): Config {
     skipCostco: values["skip-costco"],
     skipPaystub: values["skip-paystub"],
     skipEquity: values["skip-equity"],
+    skipBrokerage: values["skip-brokerage"],
     skipLoan: values["skip-loan"],
     skipResearch: values["skip-research"],
     output: values.output,

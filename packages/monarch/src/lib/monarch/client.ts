@@ -365,7 +365,17 @@ function isEquityVest(
 // Loan servicers whose statements the loan path can read. Upstart services
 // several loans at once and the bank records them all under one name, which is
 // why the loan is identified from the servicer's mail rather than from here.
-const LOAN_SERVICER_PATTERNS = ["upstart"];
+// A servicer's merchant also covers non-loan spending — Audi bills parts and a
+// down payment under the same name — so an unmatched row here is expected and
+// is reported rather than guessed at.
+const LOAN_SERVICER_PATTERNS = [
+  "upstart",
+  "audi financial",
+  "audi fin",
+  "edfinancial",
+  "dept of education",
+  "department of education",
+];
 
 function isLoanPayment(
   name: string,
@@ -376,6 +386,21 @@ function isLoanPayment(
   if (amount >= 0) return false;
   const combined = `${name} ${plaidName}`.toLowerCase();
   return LOAN_SERVICER_PATTERNS.some((p) => combined.includes(p));
+}
+
+// Cash arriving from the brokerage. "Les Schwab" is a tire shop and shares
+// nothing with the broker but a surname, so the match is on the full name.
+const BROKERAGE_PATTERNS = ["charles schwab", "schwab brokerage"];
+
+function isBrokerageTransfer(
+  name: string,
+  plaidName: string,
+  amount: number,
+): boolean {
+  // Money in only: a purchase at this merchant is not a sale's proceeds.
+  if (amount <= 0) return false;
+  const combined = `${name} ${plaidName}`.toLowerCase();
+  return BROKERAGE_PATTERNS.some((p) => combined.includes(p));
 }
 
 const COSTCO_MERCHANT_PATTERNS = ["costco", "costco whse", "costco.com"];
@@ -399,6 +424,7 @@ export type SeparateDeepPathsResult = {
   paystubTransactions: MonarchTransaction[];
   equityTransactions: MonarchTransaction[];
   loanTransactions: MonarchTransaction[];
+  brokerageTransactions: MonarchTransaction[];
   regularTransactions: MonarchTransaction[];
 };
 
@@ -415,6 +441,7 @@ export function separateDeepPaths(
   const paystubTransactions: MonarchTransaction[] = [];
   const equityTransactions: MonarchTransaction[] = [];
   const loanTransactions: MonarchTransaction[] = [];
+  const brokerageTransactions: MonarchTransaction[] = [];
   const regularTransactions: MonarchTransaction[] = [];
 
   for (const t of transactions) {
@@ -440,6 +467,8 @@ export function separateDeepPaths(
       equityTransactions.push(t);
     } else if (isLoanPayment(merchantName, t.plaidName, t.amount)) {
       loanTransactions.push(t);
+    } else if (isBrokerageTransfer(merchantName, t.plaidName, t.amount)) {
+      brokerageTransactions.push(t);
     } else {
       regularTransactions.push(t);
     }
@@ -456,6 +485,7 @@ export function separateDeepPaths(
     paystubTransactions,
     equityTransactions,
     loanTransactions,
+    brokerageTransactions,
     regularTransactions,
   };
 }

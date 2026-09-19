@@ -24,6 +24,12 @@ export type LoanSplit = {
   interest: number;
   // What was still owed after this payment, for the note.
   balanceAfter: number;
+  // Whether the servicer printed this split or it was reconstructed. Upstart
+  // states only a running balance, so its splits are differences between two
+  // statements; Audi and Edfinancial print principal and interest per payment.
+  // The distinction belongs in the note: one is a reading, the other is a
+  // reconstruction that could be wrong in ways a reading cannot.
+  origin: "stated" | "derived";
 };
 
 // A payment that could not be split, and why. Reported rather than guessed at.

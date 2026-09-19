@@ -56,12 +56,29 @@ export type TransactionEnrichment = {
   };
 
   // Loan: how a payment was actually applied, from the servicer's own
-  // balance statements rather than a model's arithmetic.
+  // statements rather than a model's arithmetic. `origin` says whether the
+  // servicer printed the split or it was reconstructed from a balance series.
   loan?: {
     loanId: string;
     principal: number;
     interest: number;
     balanceAfter: number;
+    origin: "stated" | "derived";
+  };
+
+  // Brokerage: what a transfer out of the broker actually was. The bank line
+  // says only that cash arrived; the sale that funded it carries the shares,
+  // the price, and the basis that makes it a gain or a loss.
+  brokerage?: {
+    kind: "transfer" | "interest";
+    symbol?: string;
+    soldDate?: string;
+    quantity?: number;
+    price?: number;
+    proceeds?: number;
+    costBasis?: number;
+    gainLoss?: number;
+    cashSwept: number;
   };
 
   // Source tracking
@@ -85,5 +102,6 @@ export type EnrichedTransaction = {
     | "paystub"
     | "equity"
     | "loan"
+    | "brokerage"
     | "regular";
 };

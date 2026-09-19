@@ -84,6 +84,8 @@ Per data source:
 | `--skip-paystub`                 | Skip payslip matching                                   |
 | `--skip-equity`                  | Skip RSU vest matching                                  |
 | `--skip-loan`                    | Skip loan principal/interest splits                     |
+| `--skip-brokerage`               | Skip Schwab share-sale documentation                    |
+| `--skip-brokerage`               | Skip the Schwab brokerage path                          |
 
 When `--output` is set, Tier 2 batch classifications are checkpointed next to
 the output file using `.checkpoint.json`. Re-running the same command resumes

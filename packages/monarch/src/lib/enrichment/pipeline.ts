@@ -14,6 +14,7 @@ import { enrichApple } from "../apple/enrich.ts";
 import { enrichCostco } from "../costco/enrich.ts";
 import { enrichPaystub } from "../paystub/enrich.ts";
 import { enrichEquity } from "../equity/enrich.ts";
+import { enrichBrokerage } from "../brokerage/enrich.ts";
 import { enrichLoan } from "../loan/enrich.ts";
 import { allVenmoCsvs } from "../finance-vault.ts";
 import { assignTier } from "./router.ts";
@@ -29,6 +30,7 @@ export type EnrichmentStats = {
   costco: { matched: number; total: number };
   paystub: { matched: number; total: number };
   equity: { matched: number; total: number };
+  brokerage: { matched: number; total: number };
   loan: { matched: number; total: number };
   tier1Count: number;
   tier2Count: number;
@@ -67,6 +69,7 @@ export function unreachableCounts(
     costco: { split: 0, movement: 0 },
     paystub: { split: 0, movement: 0 },
     equity: { split: 0, movement: 0 },
+    brokerage: { split: 0, movement: 0 },
     loan: { split: 0, movement: 0 },
   };
   for (const [key, transactions] of deepPathBuckets(separated)) {
@@ -98,6 +101,7 @@ export function emptyEnrichmentStats(): EnrichmentStats {
     costco: zeroRate(),
     paystub: zeroRate(),
     equity: zeroRate(),
+    brokerage: zeroRate(),
     loan: zeroRate(),
     tier1Count: 0,
     tier2Count: 0,
@@ -122,6 +126,7 @@ type DeepPathKey =
   | "costco"
   | "paystub"
   | "equity"
+  | "brokerage"
   | "loan";
 
 // What every vendor returns. Written once: the same shape used to be spelled
@@ -234,6 +239,12 @@ function deepPathSpecs(
       skipped: config.skipLoan,
       run: () => enrichLoan(separated.loanTransactions, categories),
     },
+    {
+      key: "brokerage",
+      transactions: separated.brokerageTransactions,
+      skipped: config.skipBrokerage,
+      run: () => enrichBrokerage(separated.brokerageTransactions),
+    },
   ];
 }
 
@@ -266,6 +277,7 @@ function deepPathBuckets(
     ["paystub", separated.paystubTransactions],
     ["equity", separated.equityTransactions],
     ["loan", separated.loanTransactions],
+    ["brokerage", separated.brokerageTransactions],
   ];
 }
 

@@ -1,8 +1,7 @@
 import type { MonarchTransaction, MonarchCategory } from "../monarch/types.ts";
 import type { TransactionEnrichment } from "../enrichment/types.ts";
 import type { ProposedChange, ProposedSplit } from "../classifier/types.ts";
-import { loadLoanMail } from "./parser.ts";
-import { deriveLoanSchedule } from "./schedule.ts";
+import { loadLoanSplits } from "./sources.ts";
 import { matchLoanPayments } from "./matcher.ts";
 import type { LoanMatch } from "./matcher.ts";
 import { log } from "../logger.ts";
@@ -61,7 +60,10 @@ function buildSplitChange(
     confidence: "high",
     type: "split",
     splits,
-    reason: `Loan ${split.loanId}: the servicer's balance fell ${split.principal.toFixed(2)} against a ${split.amount.toFixed(2)} payment, so the remaining ${split.interest.toFixed(2)} is interest`,
+    reason:
+      split.origin === "stated"
+        ? `Loan ${split.loanId}: the servicer's statement applies ${split.principal.toFixed(2)} of this ${split.amount.toFixed(2)} payment to principal and ${split.interest.toFixed(2)} to interest`
+        : `Loan ${split.loanId}: the servicer's balance fell ${split.principal.toFixed(2)} against a ${split.amount.toFixed(2)} payment, so the remaining ${split.interest.toFixed(2)} is interest`,
     enrichmentSource: "loan",
   };
 }
@@ -87,11 +89,7 @@ export async function enrichLoan(
     return empty;
   }
 
-  const { balances, payments } = await loadLoanMail();
-  const { splits, gaps } = deriveLoanSchedule(balances, payments);
-  log.info(
-    `Derived ${String(splits.length)} principal/interest splits from the servicer's statements`,
-  );
+  const { splits, gaps } = await loadLoanSplits();
   for (const gap of gaps) {
     log.warn(`  ${gap.loanId} ${gap.from}..${gap.to}: ${gap.reason}`);
   }
@@ -119,6 +117,7 @@ export async function enrichLoan(
         principal: match.split.principal,
         interest: match.split.interest,
         balanceAfter: match.split.balanceAfter,
+        origin: match.split.origin,
       },
       enrichmentSource: "loan",
     });

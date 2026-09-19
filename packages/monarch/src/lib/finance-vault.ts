@@ -22,6 +22,9 @@ export const COSTCO_ORDERS_PATH = path.join(COSTCO_DIR, "costco-orders.json");
 export const PAYROLL_DIR = path.join(FINANCE_VAULT_DIR, "Payroll");
 export const PAYSLIPS_PATH = path.join(PAYROLL_DIR, "payslips.json");
 export const EQUITY_DIR = path.join(FINANCE_VAULT_DIR, "Equity");
+export const BROKERAGE_DIR = path.join(FINANCE_VAULT_DIR, "Schwab");
+export const AUDI_DIR = path.join(FINANCE_VAULT_DIR, "Audi");
+export const EDFINANCIAL_DIR = path.join(FINANCE_VAULT_DIR, "Edfinancial");
 const VENMO_DIR = path.join(FINANCE_VAULT_DIR, "Venmo");
 const SCL_DIR = path.join(FINANCE_VAULT_DIR, "The Victor");
 

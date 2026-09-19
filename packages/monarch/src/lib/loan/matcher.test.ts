@@ -16,6 +16,7 @@ function split(
     principal,
     interest: amount - principal,
     balanceAfter: 10_000,
+    origin: "derived",
   };
 }
 

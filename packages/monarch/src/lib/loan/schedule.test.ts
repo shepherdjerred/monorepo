@@ -38,6 +38,7 @@ describe("deriveLoanSchedule", () => {
         principal: 252.06,
         interest: 274.68,
         balanceAfter: 21_247.94,
+        origin: "derived",
       },
       {
         loanId: "L1025211",
@@ -46,6 +47,7 @@ describe("deriveLoanSchedule", () => {
         principal: 247.22,
         interest: 279.52,
         balanceAfter: 21_000.72,
+        origin: "derived",
       },
     ]);
   });

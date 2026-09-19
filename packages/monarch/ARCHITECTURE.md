@@ -20,22 +20,25 @@ Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www
 
 `src/index.ts` fetches transactions for the window given by `--since`/`--until` (default: the past 365 days; paginated, 4-hour cache) and all active categories from Monarch Money. Transactions are then separated by merchant name into **deep paths**:
 
-| Deep Path | Merchant Patterns                        | Data Source                     |
-| --------- | ---------------------------------------- | ------------------------------- |
-| Amazon    | `amazon`, `amzn`, `amzn mktp`            | Playwright scraper + 1Password  |
-| Venmo     | `venmo` (excludes credit card/cash back) | CSV export                      |
-| Bilt      | `bilt` (excludes cash back)              | Conservice PDFs or API          |
-| USAA      | `usaa`                                   | PDF statements                  |
-| SCL       | `seattle city light`, `scl`              | CSV export                      |
-| Apple     | `apple services`, `apple.com`            | MailMate email parsing          |
-| Costco    | `costco`, `costco whse`                  | Hardcoded JSON / receipt parser |
-| Paystub   | `pinterest` **and a positive amount**    | Workday payslip PDFs            |
-| Equity    | `pinterest ... class a` **and $0.00**    | Schwab Equity Award Center CSV  |
-| Loan      | `upstart` **and money leaving**          | Servicer emails                 |
+| Deep Path | Merchant Patterns                                      | Data Source                     |
+| --------- | ------------------------------------------------------ | ------------------------------- |
+| Amazon    | `amazon`, `amzn`, `amzn mktp`                          | Playwright scraper + 1Password  |
+| Venmo     | `venmo` (excludes credit card/cash back)               | CSV export                      |
+| Bilt      | `bilt` (excludes cash back)                            | Conservice PDFs or API          |
+| USAA      | `usaa`                                                 | PDF statements                  |
+| SCL       | `seattle city light`, `scl`                            | CSV export                      |
+| Apple     | `apple services`, `apple.com`                          | MailMate email parsing          |
+| Costco    | `costco`, `costco whse`                                | Hardcoded JSON / receipt parser |
+| Paystub   | `pinterest` **and a positive amount**                  | Workday payslip PDFs            |
+| Equity    | `pinterest ... class a` **and $0.00**                  | Schwab Equity Award Center CSV  |
+| Loan      | `upstart`, `audi`, `edfinancial` **and money leaving** | Servicer emails and statements  |
+| Brokerage | `charles schwab` **and money arriving**                | Schwab CSV exports              |
 
-The last two test the amount as well as the merchant, because the same
+The last four test the amount as well as the merchant, because the same
 employer name appears on payroll deposits, on brokerage rows, and on the
-occasional expense. Everything else goes to **regular transactions**.
+occasional expense -- and a servicer's merchant also covers non-loan spending,
+so Audi bills parts and a down payment under the name it bills the loan with.
+An unmatched row on those paths is expected and is reported, not guessed at. Everything else goes to **regular transactions**.
 
 ### Phase 2: Deep-Path Enrichment
 
@@ -70,21 +73,29 @@ All matchers share a common pattern:
 3. Match by date window + amount tolerance
 4. Return `{ matched[], unmatchedTransactions[], unmatchedOrders[] }`
 
-| Matcher | Date Window  | Amount Tolerance           | Special Logic                       |
-| ------- | ------------ | -------------------------- | ----------------------------------- |
-| Amazon  | +/-3 days    | $0.02 or single-item price | Flexible: total OR first item       |
-| Venmo   | +/-2 days    | $0.02                      | Filters Transfer category           |
-| Costco  | +/-5 days    | $1.00                      | Loose tolerance for tax             |
-| Apple   | +/-3 days    | $0.01                      | Stricter for digital purchases      |
-| Bilt    | Same month   | $1.00                      | Groups charges by category          |
-| Paystub | +/-3 days    | $0.01 against net pay      | Second date-only pass reports drift |
-| Equity  | 0 to +7 days | None -- every row is $0.00 | Matched per vest date, not per row  |
-| Loan    | +/-6 days    | To the cent                | Payment attributed to a loan first  |
+| Matcher   | Date Window  | Amount Tolerance           | Special Logic                          |
+| --------- | ------------ | -------------------------- | -------------------------------------- |
+| Amazon    | +/-3 days    | $0.02 or single-item price | Flexible: total OR first item          |
+| Venmo     | +/-2 days    | $0.02                      | Filters Transfer category              |
+| Costco    | +/-5 days    | $1.00                      | Loose tolerance for tax                |
+| Apple     | +/-3 days    | $0.01                      | Stricter for digital purchases         |
+| Bilt      | Same month   | $1.00                      | Groups charges by category             |
+| Paystub   | +/-3 days    | $0.01 against net pay      | Second date-only pass reports drift    |
+| Equity    | 0 to +7 days | None -- every row is $0.00 | Matched per vest date, not per row     |
+| Loan      | +/-6 days    | To the cent                | Payment attributed to a loan first     |
+| Brokerage | 0 to +3 days | To the cent                | Transfer linked to the sale funding it |
 
-Two of these depart from the shared shape on purpose:
+Three of these depart from the shared shape on purpose:
 
 - **Paystub** runs a second pass that pairs a deposit to a same-day payslip whose net does _not_ equal it, and reports the pair instead of matching it. Surfacing a paycheck that differs from its payslip is the reason the vendor exists; it is not a fallback. Payslips that net to zero (an equity release, where withholding consumes the whole amount) are excluded, since no deposit can exist for them.
 - **Equity** cannot use an amount at all, and rows sharing a vest date are indistinguishable -- same merchant, same account, same $0.00. So awards are aggregated per vest date and every row of that date receives the same summary. The window is one-sided because shares settle after the vest, never before.
+- **Brokerage** matches the cash movement the bank saw, then reaches past it to the sale that funded it. A transfer empties the account, so it can exceed the sale's proceeds by whatever idle cash sat alongside them; a sweep of up to a dollar is attached and named in the note, and anything larger is left unexplained rather than attributed to a sale it does not match.
+
+Loan splits carry an `origin`. Upstart states only a running balance, so its
+splits are the difference between consecutive statements; Audi and Edfinancial
+print principal and interest per payment, so theirs are read directly. The note
+says `(derived)` for the first kind only -- a reconstruction and a reading
+should not look alike.
 
 #### When a vendor decides for itself
 
@@ -208,7 +219,9 @@ src/
 │   ├── apple/                      # Receipt emails
 │   ├── costco/                     # Orders and receipts
 │   ├── paystub/                    # Workday payslips: parse-payslip.ts, matcher.ts
-│   └── equity/                     # Schwab RSU vests: parser.ts, matcher.ts
+│   ├── equity/                     # Schwab RSU vests: parser.ts, matcher.ts
+│   ├── loan/                       # Servicer splits: audi.ts, edfinancial.ts, schedule.ts
+│   └── brokerage/                  # Schwab share sales: parser.ts, matcher.ts
 └── scripts/
     ├── build-payslips.ts           # Vault PDFs -> payslips.json
     ├── build-costco-orders.ts      # Vault PDFs -> costco-orders.json

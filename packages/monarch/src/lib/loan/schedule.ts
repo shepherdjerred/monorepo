@@ -86,6 +86,7 @@ function deriveWindow(
       // legs still sum to the payment exactly.
       interest: Math.max(0, interest),
       balanceAfter: after.outstandingPrincipal,
+      origin: "derived",
     },
   };
 }
