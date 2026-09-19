@@ -1,7 +1,11 @@
 import { lstat, mkdir, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod/v4";
-import type { AgentChatProvider } from "#shared/agent/agent-chat.ts";
+import {
+  AgentChatTurnResultSchema,
+  type AgentChatProvider,
+  type AgentChatTurnResult,
+} from "#shared/agent/agent-chat.ts";
 import {
   MAX_SESSION_BUNDLE_BYTES,
   SessionCheckpointSchema,
@@ -14,17 +18,28 @@ const BundleFileSchema = SessionCheckpointSchema.safeExtend({
   path: z.string().min(1),
 });
 
+const AgentChatSessionManifestFields = {
+  chatId: z.string().min(1),
+  provider: z.enum(["claude", "codex"]),
+  turnNumber: z.number().int().positive(),
+  turnId: z.string().min(1),
+  providerSessionId: z.string().min(1),
+  workspacePath: z.string().min(1),
+  files: z.array(BundleFileSchema).min(1).max(1000),
+};
+
 export const AgentChatSessionManifestSchema = z
-  .strictObject({
-    schemaVersion: z.literal(2),
-    chatId: z.string().min(1),
-    provider: z.enum(["claude", "codex"]),
-    turnNumber: z.number().int().positive(),
-    turnId: z.string().min(1),
-    providerSessionId: z.string().min(1),
-    workspacePath: z.string().min(1),
-    files: z.array(BundleFileSchema).min(1).max(1000),
-  })
+  .discriminatedUnion("schemaVersion", [
+    z.strictObject({
+      schemaVersion: z.literal(2),
+      ...AgentChatSessionManifestFields,
+    }),
+    z.strictObject({
+      schemaVersion: z.literal(3),
+      ...AgentChatSessionManifestFields,
+      turnResult: AgentChatTurnResultSchema,
+    }),
+  ])
   .refine(
     (manifest) =>
       manifest.files.reduce((bytes, file) => bytes + file.bytes, 0) <=
@@ -112,6 +127,25 @@ async function existingFiles(
   return files.sort();
 }
 
+async function existingProviderFiles(
+  targetPath: string,
+  sessionHome: string,
+  resolvedSessionHome: string,
+): Promise<string[]> {
+  try {
+    return await existingFiles(targetPath, sessionHome, resolvedSessionHome);
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      Reflect.get(error, "code") === "ENOENT"
+    ) {
+      return [];
+    }
+    throw error;
+  }
+}
+
 function sessionRoot(prefix: string, chatId: string): string {
   return `${prefix}/sessions/${chatId}`;
 }
@@ -123,6 +157,24 @@ function turnRoot(
   turnId: string,
 ): string {
   return `${sessionRoot(prefix, chatId)}/turns/${String(turnNumber)}/attempts/${sha256(new TextEncoder().encode(turnId))}`;
+}
+
+export function agentChatSessionManifestKey(input: {
+  prefix: string;
+  chatId: string;
+  turnNumber: number;
+  turnId: string;
+}): string {
+  return `${turnRoot(input.prefix, input.chatId, input.turnNumber, input.turnId)}/manifest.json`;
+}
+
+export function agentChatProviderAdmissionKey(input: {
+  prefix: string;
+  chatId: string;
+  turnNumber: number;
+  turnId: string;
+}): string {
+  return `${turnRoot(input.prefix, input.chatId, input.turnNumber, input.turnId)}/provider-admitted`;
 }
 
 function sha256(bytes: Uint8Array): string {
@@ -148,6 +200,83 @@ function requireBundleBudget(bytes: number, fileCount: number): void {
   }
 }
 
+async function cleanupCreatedChunks(
+  store: AgentChatObjectStore,
+  keys: ReadonlySet<string>,
+): Promise<unknown[]> {
+  const errors: unknown[] = [];
+  for (const key of keys) {
+    try {
+      await store.delete(key);
+    } catch (error: unknown) {
+      errors.push(error);
+    }
+  }
+  return errors;
+}
+
+function bytesEqual(left: Uint8Array, right: Uint8Array): boolean {
+  return (
+    left.byteLength === right.byteLength &&
+    left.every((value, index) => value === right[index])
+  );
+}
+
+class AmbiguousManifestPublicationError extends Error {
+  override readonly name = "AmbiguousManifestPublicationError";
+}
+
+async function publishManifest(input: {
+  store: AgentChatObjectStore;
+  key: string;
+  body: Uint8Array;
+}): Promise<void> {
+  try {
+    await input.store.put(input.key, input.body);
+    return;
+  } catch (publicationError: unknown) {
+    // A lost PUT response is ambiguous: the manifest may already reference
+    // these chunks. Preserve them unless absence is positively confirmed.
+    let manifestExists: boolean;
+    try {
+      manifestExists = await input.store.has(input.key);
+    } catch (verificationError: unknown) {
+      throw new AmbiguousManifestPublicationError(
+        "Session manifest publication status could not be verified",
+        {
+          cause: new AggregateError(
+            [publicationError, verificationError],
+            "Manifest publication and verification failed",
+            { cause: publicationError },
+          ),
+        },
+      );
+    }
+    if (!manifestExists) throw publicationError;
+    let publishedBytes: Uint8Array;
+    try {
+      publishedBytes = await input.store.get(input.key);
+    } catch (verificationError: unknown) {
+      throw new AmbiguousManifestPublicationError(
+        "Committed session manifest could not be verified",
+        {
+          cause: new AggregateError(
+            [publicationError, verificationError],
+            "Manifest publication and readback failed",
+            { cause: publicationError },
+          ),
+        },
+      );
+    }
+    if (!bytesEqual(publishedBytes, input.body)) {
+      throw new AmbiguousManifestPublicationError(
+        "Committed session manifest does not match the attempted publication",
+        { cause: publicationError },
+      );
+    }
+  }
+}
+
 export async function pushAgentChatSessionBundle(input: {
   store: AgentChatObjectStore;
   prefix: string;
@@ -159,81 +288,131 @@ export async function pushAgentChatSessionBundle(input: {
   workspacePath: string;
   sessionHome: string;
   forbiddenTokens: readonly string[];
+  turnResult: AgentChatTurnResult;
 }): Promise<{
   manifest: AgentChatSessionManifest;
   manifestKey: string;
 }> {
   const files: AgentChatSessionManifest["files"] = [];
-  const root = turnRoot(
-    input.prefix,
-    input.chatId,
-    input.turnNumber,
-    input.turnId,
-  );
-  const resolvedSessionHome = await realpath(input.sessionHome);
-  let bundleBytes = 0;
-  for (const sliceRoot of providerSliceRoots(
-    input.provider,
-    input.sessionHome,
-  )) {
-    let paths: string[];
-    try {
-      paths = await existingFiles(
+  const createdChunkKeys = new Set<string>();
+  try {
+    const resolvedSessionHome = await realpath(input.sessionHome);
+    let bundleBytes = 0;
+    for (const sliceRoot of providerSliceRoots(
+      input.provider,
+      input.sessionHome,
+    )) {
+      const paths = await existingProviderFiles(
         sliceRoot,
         input.sessionHome,
         resolvedSessionHome,
       );
-    } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        Reflect.get(error, "code") === "ENOENT"
-      ) {
-        continue;
+      for (const filePath of paths) {
+        if (EXCLUDED_BASENAMES.has(filePath.split(path.sep).at(-1) ?? "")) {
+          continue;
+        }
+        await rejectSymbolicLinkComponents(input.sessionHome, filePath);
+        const file = await lstat(filePath);
+        if (file.isSymbolicLink() || !file.isFile()) {
+          throw new Error(
+            `Provider session file is not a regular file: ${filePath}`,
+          );
+        }
+        const resolvedFilePath = await realpath(filePath);
+        assertWithinSessionHome(resolvedSessionHome, resolvedFilePath);
+        const relativePath = path.relative(input.sessionHome, filePath);
+        bundleBytes += file.size;
+        requireBundleBudget(bundleBytes, files.length);
+        const checkpoint = await pushSessionCheckpoint({
+          store: input.store,
+          filePath: resolvedFilePath,
+          blobsPrefix: `${sessionRoot(input.prefix, input.chatId)}/blobs/`,
+          forbiddenTokens: input.forbiddenTokens,
+          onChunkCreated: (key) => createdChunkKeys.add(key),
+        });
+        files.push({
+          path: relativePath,
+          ...checkpoint,
+        });
       }
-      throw error;
     }
-    for (const filePath of paths) {
-      if (EXCLUDED_BASENAMES.has(filePath.split(path.sep).at(-1) ?? "")) {
-        continue;
-      }
-      await rejectSymbolicLinkComponents(input.sessionHome, filePath);
-      const file = await lstat(filePath);
-      if (file.isSymbolicLink() || !file.isFile()) {
-        throw new Error(
-          `Provider session file is not a regular file: ${filePath}`,
-        );
-      }
-      const resolvedFilePath = await realpath(filePath);
-      assertWithinSessionHome(resolvedSessionHome, resolvedFilePath);
-      const relativePath = path.relative(input.sessionHome, filePath);
-      bundleBytes += file.size;
-      requireBundleBudget(bundleBytes, files.length);
-      const checkpoint = await pushSessionCheckpoint({
-        store: input.store,
-        filePath: resolvedFilePath,
-        blobsPrefix: `${sessionRoot(input.prefix, input.chatId)}/blobs/`,
-        forbiddenTokens: input.forbiddenTokens,
-      });
-      files.push({
-        path: relativePath,
-        ...checkpoint,
-      });
+    const manifestKey = agentChatSessionManifestKey(input);
+    const turnResult = AgentChatTurnResultSchema.parse(input.turnResult);
+    if (
+      turnResult.turnId !== input.turnId ||
+      turnResult.turnNumber !== input.turnNumber ||
+      turnResult.providerSessionId !== input.providerSessionId ||
+      turnResult.sessionManifestKey !== manifestKey
+    ) {
+      throw new Error("Session manifest result does not match its turn");
     }
+    const manifest = AgentChatSessionManifestSchema.parse({
+      schemaVersion: 3,
+      chatId: input.chatId,
+      provider: input.provider,
+      turnNumber: input.turnNumber,
+      turnId: input.turnId,
+      providerSessionId: input.providerSessionId,
+      workspacePath: input.workspacePath,
+      files,
+      turnResult,
+    });
+    const manifestBytes = jsonBytes(manifest);
+    await publishManifest({
+      store: input.store,
+      key: manifestKey,
+      body: manifestBytes,
+    });
+    return { manifest, manifestKey };
+  } catch (error: unknown) {
+    if (error instanceof AmbiguousManifestPublicationError) throw error;
+    const cleanupErrors = await cleanupCreatedChunks(
+      input.store,
+      createdChunkKeys,
+    );
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        cleanupErrors,
+        "Session bundle publication and orphan cleanup both failed",
+        { cause: error },
+      );
+    }
+    throw error;
   }
-  const manifest = AgentChatSessionManifestSchema.parse({
-    schemaVersion: 2,
-    chatId: input.chatId,
-    provider: input.provider,
-    turnNumber: input.turnNumber,
-    turnId: input.turnId,
-    providerSessionId: input.providerSessionId,
-    workspacePath: input.workspacePath,
-    files,
-  });
-  const manifestKey = `${root}/manifest.json`;
-  await input.store.put(manifestKey, jsonBytes(manifest));
-  return { manifest, manifestKey };
+}
+
+export async function recoverPublishedAgentChatTurn(input: {
+  store: AgentChatObjectStore;
+  prefix: string;
+  chatId: string;
+  provider: AgentChatProvider;
+  turnNumber: number;
+  turnId: string;
+  workspacePath: string;
+}): Promise<AgentChatTurnResult | undefined> {
+  const manifestKey = agentChatSessionManifestKey(input);
+  if (!(await input.store.has(manifestKey))) return undefined;
+  const manifest = AgentChatSessionManifestSchema.parse(
+    await jsonObject(input.store, manifestKey),
+  );
+  if (manifest.schemaVersion !== 3) {
+    throw new Error("Published session manifest is missing its turn result");
+  }
+  const result = AgentChatTurnResultSchema.parse(manifest.turnResult);
+  if (
+    manifest.chatId !== input.chatId ||
+    manifest.provider !== input.provider ||
+    manifest.turnNumber !== input.turnNumber ||
+    manifest.turnId !== input.turnId ||
+    manifest.workspacePath !== input.workspacePath ||
+    manifest.providerSessionId !== result.providerSessionId ||
+    result.turnId !== input.turnId ||
+    result.turnNumber !== input.turnNumber ||
+    result.sessionManifestKey !== manifestKey
+  ) {
+    throw new Error("Published session manifest does not match its turn");
+  }
+  return result;
 }
 
 function safeDestination(sessionHome: string, pathname: string): string {

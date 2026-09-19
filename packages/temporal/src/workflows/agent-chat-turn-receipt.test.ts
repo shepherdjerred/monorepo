@@ -6,6 +6,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS,
   AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS,
+  MAX_AGENT_CHAT_CATALOG_BINDINGS,
   agentChatWorkflowId,
   type AgentChatConfig,
   type AgentChatTurnRequest,
@@ -27,7 +28,11 @@ import {
   dispatchPinnedAgentChatTurn,
   locateAgentChatRun,
 } from "#lib/agent-chat-receipts.ts";
-import { runAgentChatTurn } from "#lib/agent-chat-client.ts";
+import {
+  bindAgentChat,
+  resolveAgentChatBinding,
+  runAgentChatTurn,
+} from "#lib/agent-chat-client.ts";
 import { rolloverChatFixtureSignal } from "./replay-fixtures/agent-chat-receipt.ts";
 
 const CONFIG: AgentChatConfig = {
@@ -160,6 +165,27 @@ async function runOriginalTurn(env: TestWorkflowEnvironment) {
   });
 }
 
+async function evictIngressBinding(
+  env: TestWorkflowEnvironment,
+  binding: { kind: "discord"; channelId: string },
+): Promise<void> {
+  for (let index = 0; index < MAX_AGENT_CHAT_CATALOG_BINDINGS; index += 1) {
+    await bindAgentChat(
+      env.client.workflow,
+      { kind: "discord", channelId: `compaction-${String(index)}` },
+      CONFIG.chatId,
+      {
+        updatedAt: new Date(
+          Date.parse(CONFIG.createdAt) + 120_000 + index,
+        ).toISOString(),
+      },
+    );
+  }
+  expect(await resolveAgentChatBinding(env.client.workflow, binding)).toBe(
+    undefined,
+  );
+}
+
 describe("durable chat turn receipt lifecycle", () => {
   test.each([false, true])(
     "bounds provider admission within receipt lifetime (caller deadline: %s)",
@@ -203,6 +229,74 @@ describe("durable chat turn receipt lifecycle", () => {
     },
     60_000,
   );
+});
+
+describe("durable chat catalog recovery", () => {
+  test("restores an ingress binding evicted while its turn was running", async () => {
+    const binding = { kind: "discord", channelId: "channel-1" } as const;
+    await withWorkers(
+      async (env) => {
+        await runAgentChatTurn({
+          client: env.client.workflow,
+          config: CONFIG,
+          request: { ...request("binding-recovery"), source: binding },
+          bindSource: true,
+        });
+        expect(
+          await resolveAgentChatBinding(env.client.workflow, binding),
+        ).toMatchObject({ config: { chatId: CONFIG.chatId }, turnCount: 1 });
+      },
+      {
+        dispatch: async (env, input) => {
+          const outcome = await dispatchPinnedAgentChatTurn(
+            env.client.workflow,
+            input,
+          );
+          await evictIngressBinding(env, binding);
+          return outcome;
+        },
+      },
+    );
+  }, 60_000);
+
+  test("restores an ingress binding after a failed turn", async () => {
+    const binding = { kind: "discord", channelId: "channel-failed" } as const;
+    let evicted = false;
+    await withWorkers(
+      async (env) => {
+        await expect(
+          runAgentChatTurn({
+            client: env.client.workflow,
+            config: CONFIG,
+            request: { ...request("failed-binding-recovery"), source: binding },
+            bindSource: true,
+          }),
+        ).rejects.toThrow("Workflow Update failed");
+        expect(
+          await resolveAgentChatBinding(env.client.workflow, binding),
+        ).toMatchObject({ config: { chatId: CONFIG.chatId } });
+      },
+      {
+        runTurn: () => {
+          throw ApplicationFailure.nonRetryable("weekly limit", "AuthQuota");
+        },
+        dispatch: async (env, input) => {
+          try {
+            return await dispatchPinnedAgentChatTurn(
+              env.client.workflow,
+              input,
+            );
+          } catch (error: unknown) {
+            if (!evicted) {
+              evicted = true;
+              await evictIngressBinding(env, binding);
+            }
+            throw error;
+          }
+        },
+      },
+    );
+  }, 60_000);
 });
 
 describe("durable chat turn receipts", () => {

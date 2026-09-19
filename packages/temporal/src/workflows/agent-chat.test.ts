@@ -258,53 +258,67 @@ test("settles a completed turn after its catalog entry was evicted", () => {
   expect(state.retiredChatIds).not.toContain(CONFIG.chatId);
 });
 
-describe("agent chat workflows", () => {
-  test("fresh catalogs return empty results and evicted chats retain immutable ownership", async () => {
-    await withWorkers(async (environment) => {
-      const client = environment.client.workflow;
-      expect(await listAgentChats(client)).toEqual([]);
-      expect(await getAgentChat(client, CONFIG.chatId)).toBeUndefined();
-      expect(
-        await resolveAgentChatBinding(client, {
-          kind: "discord",
-          channelId: "channel-1",
-        }),
-      ).toBeUndefined();
-      const chat = await client.start("agentChatWorkflow", {
-        workflowId: agentChatWorkflowId(CONFIG.chatId),
-        taskQueue: TASK_QUEUES.WORKFLOWS,
-        args: [{ config: CONFIG }],
-      });
-      await client.start("agentChatCatalogWorkflow", {
-        workflowId: AGENT_CHAT_CATALOG_WORKFLOW_ID,
-        taskQueue: TASK_QUEUES.WORKFLOWS,
-        args: [
-          {
-            schemaVersion: 1,
-            entries: [],
-            bindings: [],
-            retiredChatIds: [CONFIG.chatId],
-          },
-        ],
-      });
-      await expect(
-        registerAgentChat(client, {
-          ...CONFIG,
-          provider: "claude",
-          model: "claude-opus-5",
-        }),
-      ).rejects.toThrow("immutable configuration");
-      const recovered = await getAgentChat(client, CONFIG.chatId);
-      expect(recovered?.config).toEqual(CONFIG);
-      const result = await continueAgentChat({
-        client,
-        chatId: CONFIG.chatId,
-        request: request("after-eviction", "resume"),
-      });
-      expect(result.finalText).toBe("reply:resume");
-      await chat.terminate("test complete");
+async function testFreshCatalogRecovery(): Promise<void> {
+  await withWorkers(async (environment) => {
+    const client = environment.client.workflow;
+    expect(await listAgentChats(client)).toEqual([]);
+    expect(await getAgentChat(client, CONFIG.chatId)).toBeUndefined();
+    expect(
+      await resolveAgentChatBinding(client, {
+        kind: "discord",
+        channelId: "channel-1",
+      }),
+    ).toBeUndefined();
+    const chat = await client.start("agentChatWorkflow", {
+      workflowId: agentChatWorkflowId(CONFIG.chatId),
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      args: [{ config: CONFIG }],
     });
-  }, 60_000);
+    const preCatalogTurn = await chat.executeUpdate(runAgentChatTurnUpdate, {
+      args: [request("before-catalog", "preserve metadata")],
+    });
+    await client.start("agentChatCatalogWorkflow", {
+      workflowId: AGENT_CHAT_CATALOG_WORKFLOW_ID,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      args: [
+        {
+          schemaVersion: 1,
+          entries: [],
+          bindings: [],
+          retiredChatIds: [CONFIG.chatId],
+        },
+      ],
+    });
+    const registered = await registerAgentChat(client, CONFIG);
+    expect(registered).toMatchObject({
+      turnCount: 1,
+      updatedAt: preCatalogTurn.completedAt,
+    });
+    await expect(
+      registerAgentChat(client, {
+        ...CONFIG,
+        provider: "claude",
+        model: "claude-opus-5",
+      }),
+    ).rejects.toThrow("immutable configuration");
+    const recovered = await getAgentChat(client, CONFIG.chatId);
+    expect(recovered?.config).toEqual(CONFIG);
+    const result = await continueAgentChat({
+      client,
+      chatId: CONFIG.chatId,
+      request: request("after-eviction", "resume"),
+    });
+    expect(result.finalText).toBe("reply:resume");
+    await chat.terminate("test complete");
+  });
+}
+
+describe("agent chat workflows", () => {
+  test(
+    "fresh catalogs return empty results and evicted chats retain immutable ownership",
+    testFreshCatalogRecovery,
+    60_000,
+  );
   test("serializes resumable turns and deduplicates transport retries", async () => {
     await withWorkers(async (environment) => {
       const firstRequest = request("message-1", "first");
@@ -316,8 +330,16 @@ describe("agent chat workflows", () => {
       const handle = environment.client.workflow.getHandle(
         agentChatWorkflowId(CONFIG.chatId),
       );
+      const acceptedState = await handle.query(getAgentChatStateQuery);
+      const acceptedFirstRequest = acceptedState.recentTurns.find(
+        (turn) => turn.request.turnId === firstRequest.turnId,
+      )?.request;
+      expect(acceptedFirstRequest).toBeDefined();
+      if (acceptedFirstRequest === undefined) {
+        throw new Error("Settled first turn is missing from workflow state");
+      }
       const duplicate = await handle.executeUpdate(runAgentChatTurnUpdate, {
-        args: [firstRequest],
+        args: [acceptedFirstRequest],
       });
       const second = await continueAgentChat({
         client: environment.client.workflow,

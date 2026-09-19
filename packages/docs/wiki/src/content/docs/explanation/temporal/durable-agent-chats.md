@@ -107,9 +107,11 @@ it remains available for interactive continuation between later occurrences.
 
 ## Failure posture
 
-Agent turns use one Activity attempt because a provider may already have
-performed tool effects before a connection or result failure. Automatic replay
-would risk repeating those effects.
+Agent turns allow two Activity attempts but at most one provider invocation.
+Before launch, the Activity writes a durable per-turn admission marker. A
+second attempt can retry preparation while that marker is absent, return an
+already-published turn result, or fail closed when admission was recorded but
+publication was not. It never replays the provider after ambiguous execution.
 
 The chat records a failed turn ID and returns the failure. A retry with the same
 ID observes that settled failure. A caller can submit a new turn after deciding

@@ -26,7 +26,9 @@ export async function dispatchPinnedAgentChatTurn(input: AgentChatPinnedTurn) {
   const timer = setInterval(heartbeat, 20_000);
   try {
     const client = await createTemporalClient();
-    return await dispatchPinned(client.workflow, input);
+    return await client.withAbortSignal(context.cancellationSignal, async () =>
+      dispatchPinned(client.workflow, input),
+    );
   } finally {
     clearInterval(timer);
   }

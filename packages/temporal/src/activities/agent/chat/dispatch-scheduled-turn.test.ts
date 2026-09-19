@@ -1,8 +1,10 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { dispatchScheduledAgentChatTurn } from "./dispatch-scheduled-turn.ts";
+import { dispatchPinnedAgentChatTurn } from "./turn-receipt.ts";
 
 const activityMocks = vi.hoisted(() => ({
   cancellation: new AbortController(),
+  dispatchPinned: vi.fn(() => Promise.withResolvers<never>().promise),
   heartbeat: vi.fn(),
   runTurn: vi.fn(() => Promise.withResolvers<never>().promise),
   withAbortSignal: vi.fn(
@@ -41,6 +43,16 @@ vi.mock("#lib/agent-chat-client.ts", () => ({
   runAgentChatTurn: activityMocks.runTurn,
 }));
 
+vi.mock("#lib/agent-chat-receipts.ts", () => ({
+  dispatchPinnedAgentChatTurn: activityMocks.dispatchPinned,
+  locateAgentChatRun: vi.fn(),
+}));
+
+beforeEach(() => {
+  activityMocks.cancellation = new AbortController();
+  vi.clearAllMocks();
+});
+
 describe("scheduled agent chat dispatch", () => {
   test("stops waiting for the receipt when the Activity is canceled", async () => {
     const dispatch = dispatchScheduledAgentChatTurn({
@@ -68,6 +80,38 @@ describe("scheduled agent chat dispatch", () => {
     activityMocks.cancellation.abort(new Error("activity canceled"));
 
     await expect(dispatch).rejects.toThrow("activity canceled");
+    expect(activityMocks.withAbortSignal).toHaveBeenCalledWith(
+      activityMocks.cancellation.signal,
+      expect.any(Function),
+    );
+  });
+
+  test("stops a pinned turn dispatch when its receipt is canceled", async () => {
+    const dispatch = dispatchPinnedAgentChatTurn({
+      runId: "00000000-0000-4000-8000-000000000001",
+      config: {
+        chatId: "receipt-chat",
+        title: "Receipt chat",
+        provider: "claude",
+        model: "claude-opus-5",
+        origin: { kind: "imessage", conversationId: "chat-123" },
+        createdAt: "2026-09-14T20:00:00.000Z",
+        maxTurnsPerMessage: 8,
+      },
+      request: {
+        turnId: "receipt-turn",
+        prompt: "Continue the investigation.",
+        submittedAt: "2026-09-14T20:01:00.000Z",
+        source: { kind: "imessage", conversationId: "chat-123" },
+      },
+    });
+    await vi.waitFor(() => {
+      expect(activityMocks.dispatchPinned).toHaveBeenCalledOnce();
+    });
+
+    activityMocks.cancellation.abort(new Error("receipt canceled"));
+
+    await expect(dispatch).rejects.toThrow("receipt canceled");
     expect(activityMocks.withAbortSignal).toHaveBeenCalledWith(
       activityMocks.cancellation.signal,
       expect.any(Function),

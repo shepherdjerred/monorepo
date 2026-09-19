@@ -65,6 +65,23 @@ function catalogStart(): WithStartWorkflowOperation<AgentChatCatalogWorkflow> {
   );
 }
 
+function catalogEntryFromWorkflowState(
+  state: ReturnType<typeof AgentChatWorkflowStateSchema.parse>,
+): AgentChatCatalogEntry {
+  const last = state.recentTurns.at(-1);
+  return AgentChatCatalogEntrySchema.parse({
+    schemaVersion: 1,
+    config: state.config,
+    turnCount: state.nextTurnNumber - 1,
+    updatedAt:
+      last === undefined
+        ? state.config.createdAt
+        : last.status === "completed"
+          ? last.result.completedAt
+          : last.failedAt,
+  });
+}
+
 export async function registerAgentChat(
   client: WorkflowClient,
   rawConfig: AgentChatConfig,
@@ -85,12 +102,7 @@ export async function registerAgentChat(
       `Agent chat ${config.chatId} is already owned by different immutable configuration`,
     );
   }
-  const entry = AgentChatCatalogEntrySchema.parse({
-    schemaVersion: 1,
-    config,
-    updatedAt: config.createdAt,
-    turnCount: 0,
-  });
+  const entry = catalogEntryFromWorkflowState(state);
   return await client.executeUpdateWithStart(registerAgentChatUpdate, {
     args: [entry],
     startWorkflowOperation: catalogStart(),
@@ -101,14 +113,25 @@ export async function bindAgentChat(
   client: WorkflowClient,
   rawBinding: AgentChatBinding,
   chatId: string,
-  updatedAt: string,
+  options: {
+    updatedAt: string;
+    purpose?: "initial" | "restore";
+  },
 ): Promise<AgentChatCatalogEntry> {
   const binding = AgentChatBindingSchema.parse(rawBinding);
+  const purpose = options.purpose ?? "initial";
   const updateId = createHash("sha256")
-    .update(JSON.stringify({ binding, chatId, updatedAt }))
+    .update(
+      JSON.stringify({
+        binding,
+        chatId,
+        updatedAt: options.updatedAt,
+        purpose,
+      }),
+    )
     .digest("hex");
   return await client.executeUpdateWithStart(bindAgentChatUpdate, {
-    args: [binding, chatId, updatedAt],
+    args: [binding, chatId, options.updatedAt],
     updateId: `agent-chat-binding/${updateId}`,
     startWorkflowOperation: catalogStart(),
   });
@@ -150,18 +173,7 @@ export async function getAgentChat(
         .getHandle(agentChatWorkflowId(chatId))
         .query(getAgentChatStateQuery),
     );
-    const last = state.recentTurns.at(-1);
-    return AgentChatCatalogEntrySchema.parse({
-      schemaVersion: 1,
-      config: state.config,
-      turnCount: state.nextTurnNumber - 1,
-      updatedAt:
-        last === undefined
-          ? state.config.createdAt
-          : last.status === "completed"
-            ? last.result.completedAt
-            : last.failedAt,
-    });
+    return catalogEntryFromWorkflowState(state);
   } catch (error: unknown) {
     if (error instanceof WorkflowNotFoundError) return undefined;
     throw error;
@@ -182,6 +194,41 @@ export async function listAgentChats(
   }
 }
 
+async function bindTurnSource(input: {
+  client: WorkflowClient;
+  config: AgentChatConfig;
+  request: AgentChatTurnRequest;
+  enabled: boolean;
+  purpose: "initial" | "restore";
+}): Promise<void> {
+  if (
+    input.enabled &&
+    (input.request.source.kind === "imessage" ||
+      input.request.source.kind === "discord")
+  ) {
+    await bindAgentChat(
+      input.client,
+      input.request.source,
+      input.config.chatId,
+      {
+        updatedAt: input.request.submittedAt,
+        purpose: input.purpose,
+      },
+    );
+  }
+}
+
+async function restoreTurnSource(input: {
+  client: WorkflowClient;
+  config: AgentChatConfig;
+  request: AgentChatTurnRequest;
+  enabled: boolean;
+}): Promise<void> {
+  if (!input.enabled) return;
+  await registerAgentChat(input.client, input.config);
+  await bindTurnSource({ ...input, purpose: "restore" });
+}
+
 export async function runAgentChatTurn(input: {
   client: WorkflowClient;
   config: AgentChatConfig;
@@ -191,17 +238,7 @@ export async function runAgentChatTurn(input: {
   const config = AgentChatConfigSchema.parse(input.config);
   const request = AgentChatTurnRequestSchema.parse(input.request);
   const catalogEntry = await registerAgentChat(input.client, config);
-  if (
-    input.bindSource === true &&
-    (request.source.kind === "imessage" || request.source.kind === "discord")
-  ) {
-    await bindAgentChat(
-      input.client,
-      request.source,
-      config.chatId,
-      request.submittedAt,
-    );
-  }
+  const shouldBindSource = input.bindSource === true;
 
   const receiptWorkflowId = agentChatReceiptWorkflowId(
     config.chatId,
@@ -236,22 +273,53 @@ export async function runAgentChatTurn(input: {
       `Agent chat turn ID ${request.turnId} was reused with a different request`,
     );
   }
+  await bindTurnSource({
+    client: input.client,
+    config,
+    request,
+    enabled: shouldBindSource,
+    purpose: "initial",
+  });
   let rawResult: AgentChatTurnResult;
   try {
-    rawResult = await receipt.executeUpdate(awaitAgentChatReceiptUpdate, {
-      updateId: "result",
+    try {
+      rawResult = await receipt.executeUpdate(awaitAgentChatReceiptUpdate, {
+        updateId: "result",
+      });
+    } catch (error: unknown) {
+      if (!(error instanceof WorkflowNotFoundError)) throw error;
+      rawResult = await receipt.result();
+    }
+    const result = AgentChatTurnResultSchema.parse(rawResult);
+    await input.client
+      .getHandle(AGENT_CHAT_CATALOG_WORKFLOW_ID)
+      .executeUpdate(settleAgentChatTurnUpdate, {
+        args: [catalogEntry, result.turnNumber, result.completedAt],
+      });
+    await restoreTurnSource({
+      client: input.client,
+      config,
+      request,
+      enabled: shouldBindSource,
     });
+    return result;
   } catch (error: unknown) {
-    if (!(error instanceof WorkflowNotFoundError)) throw error;
-    rawResult = await receipt.result();
+    try {
+      await restoreTurnSource({
+        client: input.client,
+        config,
+        request,
+        enabled: shouldBindSource,
+      });
+    } catch (restorationError: unknown) {
+      throw new AggregateError(
+        [error, restorationError],
+        "Agent chat turn failed and its source binding could not be restored",
+        { cause: restorationError },
+      );
+    }
+    throw error;
   }
-  const result = AgentChatTurnResultSchema.parse(rawResult);
-  await input.client
-    .getHandle(AGENT_CHAT_CATALOG_WORKFLOW_ID)
-    .executeUpdate(settleAgentChatTurnUpdate, {
-      args: [catalogEntry, result.turnNumber, result.completedAt],
-    });
-  return result;
 }
 
 export async function continueAgentChat(input: {

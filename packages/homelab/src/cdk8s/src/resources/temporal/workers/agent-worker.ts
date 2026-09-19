@@ -146,6 +146,7 @@ ip6tables -L OUTPUT -n`,
           add: [
             Capability.CHOWN,
             Capability.DAC_OVERRIDE,
+            Capability.KILL,
             Capability.SETGID,
             Capability.SETUID,
           ],

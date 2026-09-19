@@ -40,6 +40,8 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "iptables", args: ["iptables", "--version"] },
   { name: "ip6tables", args: ["ip6tables", "--version"] },
   { name: "setpriv", args: ["setpriv", "--version"] },
+  { name: "pkill", args: ["pkill", "--version"] },
+  { name: "pgrep", args: ["pgrep", "--version"] },
   { name: "bwrap", args: ["bwrap", "--version"] },
   { name: "toolkit", args: ["toolkit", "--version"] },
   { name: "toolkit gh", args: ["toolkit", "gh", "--version"] },
