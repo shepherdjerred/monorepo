@@ -37,18 +37,43 @@ type Candidate<T> = {
   orderId: string;
 };
 
-function isBetter<T>(c: Candidate<T>, best: Candidate<T>): boolean {
-  if (c.dateDiff !== best.dateDiff) return c.dateDiff < best.dateDiff;
-  if (c.amountDiff !== best.amountDiff) return c.amountDiff < best.amountDiff;
-  return c.orderId < best.orderId;
+type Pairing<T> = {
+  transaction: MonarchTransaction;
+  candidate: Candidate<T>;
+};
+
+function comparePairings<T>(a: Pairing<T>, b: Pairing<T>): number {
+  const { candidate: x } = a;
+  const { candidate: y } = b;
+  if (x.dateDiff !== y.dateDiff) return x.dateDiff - y.dateDiff;
+  if (x.amountDiff !== y.amountDiff) return x.amountDiff - y.amountDiff;
+  return (
+    a.transaction.date.localeCompare(b.transaction.date) ||
+    x.orderId.localeCompare(y.orderId) ||
+    a.transaction.id.localeCompare(b.transaction.id)
+  );
 }
 
-function pickBest<T>(candidates: Candidate<T>[]): Candidate<T> | undefined {
-  let best: Candidate<T> | undefined;
-  for (const c of candidates) {
-    if (best === undefined || isBetter(c, best)) best = c;
+// Assign globally rather than one transaction at a time. Taking each
+// transaction's local best and consuming it lets an approximate pair steal the
+// target of an exact one: with charges on Jan 13 and Jan 15 and transactions
+// on Jan 14 and Jan 15, the Jan 14 transaction ties between both charges and
+// can take the Jan 15 one, forcing the Jan 15 transaction onto Jan 13 and
+// attaching the wrong items to both. Ordering every viable pair by closeness
+// and sweeping once settles the exact pairs first.
+function assignBestFirst<T>(
+  transactions: MonarchTransaction[],
+  candidatesFor: (transaction: MonarchTransaction) => Candidate<T>[],
+  claim: (pairing: Pairing<T>) => void,
+): void {
+  const pairings: Pairing<T>[] = [];
+  for (const transaction of transactions) {
+    for (const candidate of candidatesFor(transaction)) {
+      pairings.push({ transaction, candidate });
+    }
   }
-  return best;
+  pairings.sort(comparePairings);
+  for (const pairing of pairings) claim(pairing);
 }
 
 // A Monarch expense is negative and pairs with a positive charge; a positive
@@ -145,20 +170,26 @@ export function matchAmazonOrders(
     order.charges.map((charge) => ({ order, charge, used: false })),
   );
 
-  for (const transaction of eligible) {
-    const best = pickBest(chargeCandidatesFor(transaction, chargeSlots));
-    if (!best) continue;
-
-    best.target.used = true;
-    chargeMatchedOrderIds.add(best.target.order.orderId);
-    matchedTransactionIds.add(transaction.id);
-    matched.push({
-      transaction,
-      order: best.target.order,
-      matchType: "charge",
-      items: selectItemsForCharge(best.target.order, best.target.charge),
-    });
-  }
+  assignBestFirst(
+    eligible,
+    (transaction) => chargeCandidatesFor(transaction, chargeSlots),
+    ({ transaction, candidate }) => {
+      if (matchedTransactionIds.has(transaction.id)) return;
+      if (candidate.target.used) return;
+      candidate.target.used = true;
+      chargeMatchedOrderIds.add(candidate.target.order.orderId);
+      matchedTransactionIds.add(transaction.id);
+      matched.push({
+        transaction,
+        order: candidate.target.order,
+        matchType: "charge",
+        items: selectItemsForCharge(
+          candidate.target.order,
+          candidate.target.charge,
+        ),
+      });
+    },
+  );
 
   // Pass 2: orders without charge data fall back to order-total and
   // single-item-price matching. Orders with charges never fall back — their
@@ -166,22 +197,27 @@ export function matchAmazonOrders(
   // order absorb a second transaction.
   const chargelessOrders = orders.filter((o) => o.charges.length === 0);
 
-  for (const transaction of eligible) {
-    if (matchedTransactionIds.has(transaction.id)) continue;
-    const best = pickBest(
+  assignBestFirst(
+    eligible.filter((t) => !matchedTransactionIds.has(t.id)),
+    (transaction) =>
       fallbackCandidatesFor(transaction, chargelessOrders, usedOrderIds),
-    );
-    if (!best) continue;
+    ({ transaction, candidate }) => {
+      if (matchedTransactionIds.has(transaction.id)) return;
+      if (usedOrderIds.has(candidate.target.order.orderId)) return;
+      usedOrderIds.add(candidate.target.order.orderId);
+      matchedTransactionIds.add(transaction.id);
+      matched.push({
+        transaction,
+        order: candidate.target.order,
+        matchType: candidate.target.matchType,
+        items: candidate.target.order.items,
+      });
+    },
+  );
 
-    usedOrderIds.add(best.target.order.orderId);
-    matchedTransactionIds.add(transaction.id);
-    matched.push({
-      transaction,
-      order: best.target.order,
-      matchType: best.target.matchType,
-      items: best.target.order.items,
-    });
-  }
+  // Best-first assignment produces matches in closeness order; restore
+  // transaction order so downstream output reads chronologically.
+  matched.sort((a, b) => a.transaction.date.localeCompare(b.transaction.date));
 
   const unmatchedTransactions = eligible.filter(
     (t) => !matchedTransactionIds.has(t.id),

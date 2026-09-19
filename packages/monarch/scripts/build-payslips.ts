@@ -42,14 +42,22 @@ for (const pdfPath of pdfPaths) {
   const pages = await readPdfPages(pdfPath);
   log.info(`${name}: ${String(pages.length)} pages`);
 
+  let recognized = 0;
   for (const page of pages) {
     if (!isPayslipPage(page.lines)) continue;
+    recognized++;
     try {
       payslips.push(parsePayslipPage(payslipColumns(page.lines), page.page));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push(`${name} p${String(page.page)}: ${message}`);
     }
+  }
+  // A payslip PDF with no recognized page means Workday moved the marker this
+  // script keys on, not that the file is empty. Left unreported it would write
+  // an empty cache over a good one and silently drop all payroll enrichment.
+  if (recognized === 0) {
+    failures.push(`${name}: no page was recognized as a payslip`);
   }
 }
 
@@ -67,10 +75,10 @@ if (payslips.length > 0) {
   );
 }
 if (failures.length > 0) {
-  console.log(`\n${String(failures.length)} pages failed to parse:`);
+  console.log(`\n${String(failures.length)} parser failures:`);
   for (const failure of failures) console.log(`  ${failure}`);
   throw new Error(
-    `${String(failures.length)} payslip pages failed to parse; fix the parser rather than shipping partial payroll data`,
+    `${String(failures.length)} payslip pages failed to parse or were not recognized; fix the parser rather than shipping partial payroll data`,
   );
 }
 

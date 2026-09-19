@@ -141,3 +141,24 @@ describe("grossChangePercent", () => {
     ).toBeUndefined();
   });
 });
+
+describe("matchPayslips — two payslips on one pay date", () => {
+  test("matches both deposits, keying the claim on the payslip not the date", () => {
+    // Workday issues a regular and a supplemental payslip on the same day and
+    // each is deposited separately. Retiring the pay date on the first match
+    // left the second deposit unmatched even though its net agreed exactly.
+    const result = matchPayslips(
+      [deposit("2026-09-15", 6122.11), deposit("2026-09-15", 1840.5)],
+      [
+        payslip("2026-09-15", 6122.11),
+        { ...payslip("2026-09-15", 1840.5, 2500), sourcePage: 2 },
+      ],
+    );
+
+    expect(
+      result.matched.map((m) => m.transaction.amount).sort((a, b) => a - b),
+    ).toEqual([1840.5, 6122.11]);
+    expect(result.unmatchedTransactions).toHaveLength(0);
+    expect(result.unmatchedPayslips).toHaveLength(0);
+  });
+});

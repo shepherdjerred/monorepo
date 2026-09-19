@@ -37,11 +37,14 @@ export async function loadPayslips(
   payslipsPath = PAYSLIPS_PATH,
 ): Promise<Payslip[]> {
   const file = Bun.file(payslipsPath);
+  // Payroll deposits reached this path because they were selected for it, and
+  // the promise of the path is that they get real payslip evidence. Returning
+  // nothing would let them be classified and reported as a successful run
+  // without it; --skip-paystub is the way to opt out on purpose.
   if (!(await file.exists())) {
-    log.warn(
-      `No payslips.json at ${payslipsPath}; run "bun run scripts/build-payslips.ts" after saving Workday payslip PDFs to ${PAYROLL_DIR}`,
+    throw new Error(
+      `No payslips.json at ${payslipsPath}; run "bun run scripts/build-payslips.ts" after saving Workday payslip PDFs to ${PAYROLL_DIR}, or pass --skip-paystub`,
     );
-    return [];
   }
   const cache = PayslipCacheSchema.parse(JSON.parse(await file.text()));
   log.info(`Loaded ${String(cache.payslips.length)} payslips`);

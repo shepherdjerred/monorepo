@@ -21,6 +21,15 @@ export async function enrichEquity(
   }
 
   const events = parseEquityAwardsCsv(await Bun.file(csvPath).text());
+  // An export that parses to nothing is a changed layout or a truncated
+  // download, not an account with no vests — these transactions were selected
+  // because they are vests. Reporting 0/N matched as success would hand them
+  // to classification without the evidence this path exists to supply.
+  if (events.length === 0) {
+    throw new Error(
+      `No vest events parsed from ${csvPath}. The export is empty or its layout changed; re-download it from Schwab (Equity Awards > Transactions > Export), or pass --skip-equity`,
+    );
+  }
   const result = matchVestEvents(equityTransactions, events);
   const matchedRows = result.matched.reduce(
     (sum, m) => sum + m.transactions.length,

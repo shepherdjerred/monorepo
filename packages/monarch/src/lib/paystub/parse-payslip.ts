@@ -215,7 +215,17 @@ function assertSection(
   summaryValue: number,
 ): void {
   assertAgrees(ref, `the ${what} section total`, section.total, summaryValue);
-  if (section.total === undefined) return;
+  // A section the summary says is nonzero must have been found. Accepting an
+  // absent total here would write a payslip missing its earnings, taxes or
+  // deductions and call the reconciliation satisfied.
+  if (section.total === undefined) {
+    if (Math.abs(summaryValue) > IDENTITY_TOLERANCE) {
+      throw new Error(
+        `payslip page ${String(ref.page)} (${ref.payDate}): the summary reports ${summaryValue.toFixed(2)} of ${what} but no ${what} section was found`,
+      );
+    }
+    return;
+  }
   assertAgrees(
     ref,
     `the sum of ${what} rows`,

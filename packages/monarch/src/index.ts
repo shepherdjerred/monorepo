@@ -161,7 +161,7 @@ async function runDerivedOnly(
     await writeEnrichmentNotes(enriched, true);
     return;
   }
-  await applyChanges(guarded, false);
+  if ((await applyChanges(guarded, false)) === "quit") return;
   await writeEnrichmentNotes(enriched);
 }
 
@@ -171,7 +171,10 @@ async function main(): Promise<void> {
   if (config.verbose) setLogLevel("debug");
 
   await initMonarch();
-  if (!config.notesOnly) {
+  // Both model-free modes are allowed to run without OPENROUTER_API_KEY
+  // (see config.ts), so neither may reach initLlm with an empty key.
+  const usesModel = !config.notesOnly && !config.derivedOnly;
+  if (usesModel) {
     initLlm(config.openRouterApiKey, config.model);
     setWebSearchEnabled(!config.skipResearch);
   }
@@ -198,13 +201,19 @@ async function main(): Promise<void> {
   // Build category definitions for prompts
   const categoryDefinitions = buildCategoryDefinitions(categories);
 
-  // Build or load the knowledge base
-  const knowledgeBase = await buildKnowledgeBase(
-    categories,
-    allTransactions,
-    hints,
-    config.rebuildKb,
-  );
+  // Build or load the knowledge base. The model-free modes never classify, so
+  // a knowledge base learned and persisted during one of them would be a pure
+  // side effect of a run that promised to change nothing but notes and splits.
+  // They read the stored one — still needed for tier assignment — and add
+  // nothing to it.
+  const knowledgeBase = usesModel
+    ? await buildKnowledgeBase(
+        categories,
+        allTransactions,
+        hints,
+        config.rebuildKb,
+      )
+    : await loadKnowledgeBase();
 
   // Separate transactions by deep path
   const separated = separateDeepPaths(transactions);
@@ -355,7 +364,12 @@ async function main(): Promise<void> {
         return;
       }
     }
-    await applyChanges(finalChanges, config.interactive);
+    // Quitting the interactive review is a request to stop mutating the
+    // account, not just to stop applying categories.
+    if ((await applyChanges(finalChanges, config.interactive)) === "quit") {
+      log.info("Stopped before writing enrichment notes.");
+      return;
+    }
     await writeEnrichmentNotes(enrichedTransactions);
   } else {
     log.info(

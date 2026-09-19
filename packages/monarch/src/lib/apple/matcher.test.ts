@@ -91,3 +91,37 @@ describe("matchAppleTransactions", () => {
     expect(result.matched).toHaveLength(0);
   });
 });
+
+describe("matchAppleTransactions — recurring charges of equal price", () => {
+  // Measured against the live mail store: the first-found rule attached eight
+  // $33.09 Apple One charges to the previous week's receipt, and two to a
+  // receipt issued days after the charge.
+  test("takes the nearest receipt, not the first one in the list", () => {
+    const txns = [
+      makeTxn({ id: "t-mar-19", date: "2025-03-19", amount: -33.09 }),
+      makeTxn({ id: "t-mar-26", date: "2025-03-26", amount: -33.09 }),
+    ];
+    const receipts = [
+      makeReceipt({ orderId: "r-mar-19", date: "2025-03-19", total: 33.09 }),
+      makeReceipt({ orderId: "r-mar-26", date: "2025-03-26", total: 33.09 }),
+    ];
+
+    const result = matchAppleTransactions(txns, receipts);
+
+    expect(
+      result.matched.map((m) => [m.transaction.id, m.receipt.orderId]),
+    ).toEqual([
+      ["t-mar-19", "r-mar-19"],
+      ["t-mar-26", "r-mar-26"],
+    ]);
+  });
+
+  test("never attaches a receipt issued after the charge posted", () => {
+    const txns = [makeTxn({ date: "2025-03-19", amount: -33.09 })];
+    const receipts = [
+      makeReceipt({ orderId: "r-later", date: "2025-03-26", total: 33.09 }),
+    ];
+
+    expect(matchAppleTransactions(txns, receipts).matched).toEqual([]);
+  });
+});

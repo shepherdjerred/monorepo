@@ -29,11 +29,11 @@ function daysBetween(a: string, b: string): number {
 function nearestExactPayslip(
   transaction: MonarchTransaction,
   payslips: Payslip[],
-  usedPayDates: Set<string>,
+  used: Set<Payslip>,
 ): { payslip: Payslip; dateDiff: number } | undefined {
   let best: { payslip: Payslip; dateDiff: number } | undefined;
   for (const payslip of payslips) {
-    if (usedPayDates.has(payslip.payDate)) continue;
+    if (used.has(payslip)) continue;
     const dateDiff = daysBetween(transaction.date, payslip.payDate);
     if (dateDiff > DATE_WINDOW_DAYS) continue;
     if (Math.abs(transaction.amount - payslip.netPay) > AMOUNT_TOLERANCE) {
@@ -52,7 +52,11 @@ export function matchPayslips(
 ): PaystubMatchResult {
   const matched: PaystubMatch[] = [];
   const amountMismatches: PaystubMatch[] = [];
-  const usedPayDates = new Set<string>();
+  // Claimed payslips, by record rather than by pay date: Workday can issue a
+  // regular and a supplemental payslip on the same day, and each has its own
+  // deposit. Retiring the date would leave the second deposit unmatched even
+  // when its net agrees to the cent.
+  const used = new Set<Payslip>();
   const matchedTransactionIds = new Set<string>();
 
   // A supplemental payslip for an equity release nets to zero — the shares are
@@ -67,9 +71,9 @@ export function matchPayslips(
     .sort((a, b) => a.date.localeCompare(b.date));
 
   for (const transaction of eligible) {
-    const best = nearestExactPayslip(transaction, payslips, usedPayDates);
+    const best = nearestExactPayslip(transaction, payslips, used);
     if (best) {
-      usedPayDates.add(best.payslip.payDate);
+      used.add(best.payslip);
       matchedTransactionIds.add(transaction.id);
       matched.push({ transaction, payslip: best.payslip });
     }
@@ -82,11 +86,11 @@ export function matchPayslips(
     if (matchedTransactionIds.has(transaction.id)) continue;
     const payslip = payslips.find(
       (p) =>
-        !usedPayDates.has(p.payDate) &&
+        !used.has(p) &&
         daysBetween(transaction.date, p.payDate) <= MISMATCH_WINDOW_DAYS,
     );
     if (payslip === undefined) continue;
-    usedPayDates.add(payslip.payDate);
+    used.add(payslip);
     matchedTransactionIds.add(transaction.id);
     amountMismatches.push({ transaction, payslip });
   }
@@ -97,7 +101,7 @@ export function matchPayslips(
     unmatchedTransactions: eligible.filter(
       (t) => !matchedTransactionIds.has(t.id),
     ),
-    unmatchedPayslips: payslips.filter((p) => !usedPayDates.has(p.payDate)),
+    unmatchedPayslips: payslips.filter((p) => !used.has(p)),
   };
 }
 

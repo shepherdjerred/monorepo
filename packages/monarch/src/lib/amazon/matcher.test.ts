@@ -286,3 +286,40 @@ describe("matchAmazonOrders charge matching", () => {
     expect(result.matched[0]?.order.orderId).toBe("near");
   });
 });
+
+describe("matchAmazonOrders — competing charges of equal amount", () => {
+  test("settles the exact pair first rather than in transaction order", () => {
+    // Taking each transaction's local best in turn lets Jan 14 tie onto the
+    // Jan 15 charge and pushes Jan 15 onto Jan 13, attaching the wrong items
+    // to both.
+    const txns = [
+      makeTxn({ id: "t-14", date: "2025-01-14", amount: -29.99 }),
+      makeTxn({ id: "t-15", date: "2025-01-15", amount: -29.99 }),
+    ];
+    const orders = [
+      makeOrder({
+        orderId: "o-13",
+        date: "2025-01-13",
+        charges: [
+          { date: "2025-01-13", amount: 29.99, description: "AMZN Mktp" },
+        ],
+      }),
+      makeOrder({
+        orderId: "o-15",
+        date: "2025-01-15",
+        charges: [
+          { date: "2025-01-15", amount: 29.99, description: "AMZN Mktp" },
+        ],
+      }),
+    ];
+
+    const result = matchAmazonOrders(txns, orders);
+
+    expect(
+      result.matched.map((m) => [m.transaction.id, m.order.orderId]),
+    ).toEqual([
+      ["t-14", "o-13"],
+      ["t-15", "o-15"],
+    ]);
+  });
+});

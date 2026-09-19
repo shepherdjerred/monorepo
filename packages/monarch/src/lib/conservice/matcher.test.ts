@@ -243,3 +243,41 @@ describe("matchBiltTransactions", () => {
     ]);
   });
 });
+
+function marchBill(
+  billId: string,
+  total: number,
+  rent: number,
+): ConserviceMonthSummary {
+  return {
+    billId,
+    month: "2026-03",
+    total,
+    rent,
+    pets: 0,
+    waterSewer: 0,
+    electric: 0,
+    trash: 0,
+    charges: [],
+  };
+}
+
+describe("matchBiltTransactions — two bills in one month", () => {
+  test("claims each bill once instead of giving both payments the first", () => {
+    // Within the $1 tolerance both transactions used to select the first
+    // sorted bill and take its breakdown, leaving the second bill unused.
+    const matches = matchBiltTransactions(
+      [
+        makeTxn({ id: "txn-a", amount: -4900 }),
+        makeTxn({ id: "txn-b", amount: -4900.5 }),
+      ],
+      [
+        marchBill("2026-03-a", 4900, 4900),
+        marchBill("2026-03-b", 4900.5, 4900.5),
+      ],
+    );
+
+    expect(matches).toHaveLength(2);
+    expect(new Set(matches.map((m) => m.month.billId)).size).toBe(2);
+  });
+});

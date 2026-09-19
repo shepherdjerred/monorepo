@@ -110,12 +110,17 @@ export function matchBiltTransactions(
 ): BiltMatch[] {
   const eligible = monarchTxns.filter((t) => !t.isSplitTransaction);
   const matches: BiltMatch[] = [];
+  // One bill documents one payment. Two bills can now survive in the same
+  // month, and within the $1 tolerance both transactions would otherwise take
+  // the first one's breakdown while the second bill went unused.
+  const usedBillIds = new Set<string>();
 
   for (const txn of eligible) {
     const txnMonth = txn.date.slice(0, 7);
     const txnAmount = Math.abs(txn.amount);
 
     for (const month of months) {
+      if (usedBillIds.has(month.billId)) continue;
       if (txnMonth !== month.month) continue;
       if (Math.abs(txnAmount - month.total) > 1) continue;
 
@@ -142,6 +147,7 @@ export function matchBiltTransactions(
         month,
         splits,
       });
+      usedBillIds.add(month.billId);
       break;
     }
   }
