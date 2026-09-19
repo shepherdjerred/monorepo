@@ -249,6 +249,7 @@ describe("V2 workflow results", () => {
       riotMatchId,
       owner: { kind: "temporal-v2" },
       policy: "FULL",
+      deliveryMode: "live",
       receiptKinds: [ReceiptKindSchema.parse("raw-archive-match")],
       childrenStarted: { notifications: 2, lakeProjections: 1 },
     } as const;
@@ -423,6 +424,7 @@ describe("V2 resume-point read", () => {
         riotMatchId,
         owner: { kind: "temporal-v2" },
         policy: "FULL",
+        deliveryMode: "silent-backfill",
         promoted: false,
         receiptKinds: [ReceiptKindSchema.parse("lake-staging-match")],
         intents: [{ intentKey, state: { kind: "ready" }, attemptCount: 0 }],

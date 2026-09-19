@@ -77,8 +77,12 @@ Bun.env["DATABASE_URL"] = testDatabase.dbUrl;
 const { prisma } = testDatabase;
 
 const { prisma: activityPrisma } = await import("#src/database/index.ts");
-const { buildReceipt, rawArchiveEvidenceCodec, rawArchiveReceiptKind } =
-  await import("#src/report-lake/durable-receipts.ts");
+const {
+  buildReceipt,
+  rawArchiveEvidenceCodec,
+  rawArchiveEvidenceOf,
+  rawArchiveReceiptKind,
+} = await import("#src/report-lake/durable-receipts.ts");
 const {
   closeRecoveryBatchV2,
   digestRecoveryBatchV2,
@@ -150,7 +154,9 @@ async function seedArchiveReceipt(
       buildReceipt({
         matchId: riotMatchId,
         kind: rawArchiveReceiptKind("match"),
-        evidence: rawArchiveEvidenceCodec.serialize(descriptor),
+        evidence: rawArchiveEvidenceCodec.serialize(
+          rawArchiveEvidenceOf(descriptor),
+        ),
         recordedAt,
       }),
     ),

@@ -65,6 +65,7 @@ describe("discoverPostMatchIdsV2", () => {
     expect(await discoverPostMatchIdsV2()).toEqual({
       outcome: "scanned",
       riotMatchIds: [],
+      matches: [],
       complete: true,
       pollOwner: POLL_CLAIMED_AT.toISOString(),
       evidenceWatermark: "2026-09-16T08:00:00.000Z",
@@ -72,6 +73,9 @@ describe("discoverPostMatchIdsV2", () => {
   });
 
   test("carries the discovered ids and v1's incompleteness through a scan", async () => {
+    // Both delivery modes in one page, because v1 decides it per match: a
+    // scan that collapsed them would hand a backfilled match to a child that
+    // then announced it.
     discovery.discoverPostMatchIntents.mockResolvedValueOnce({
       outcome: "polled",
       matches: [
@@ -81,6 +85,12 @@ describe("discoverPostMatchIdsV2", () => {
           region: "AMERICA_NORTH",
           delivery: "live",
         },
+        {
+          matchId: "NA1_2",
+          sourcePuuid: "q".repeat(78),
+          region: "AMERICA_NORTH",
+          delivery: "silent-backfill",
+        },
       ],
       evidenceComplete: false,
       pollOwner: { startedAt: POLL_CLAIMED_AT },
@@ -88,7 +98,19 @@ describe("discoverPostMatchIdsV2", () => {
 
     expect(await discoverPostMatchIdsV2()).toEqual({
       outcome: "scanned",
-      riotMatchIds: ["NA1_1"],
+      riotMatchIds: ["NA1_1", "NA1_2"],
+      matches: [
+        {
+          riotMatchId: "NA1_1",
+          sourcePuuid: "p".repeat(78),
+          deliveryMode: "live",
+        },
+        {
+          riotMatchId: "NA1_2",
+          sourcePuuid: "q".repeat(78),
+          deliveryMode: "silent-backfill",
+        },
+      ],
       complete: false,
       pollOwner: POLL_CLAIMED_AT.toISOString(),
     });

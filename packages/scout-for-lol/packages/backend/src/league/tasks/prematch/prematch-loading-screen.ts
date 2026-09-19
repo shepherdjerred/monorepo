@@ -90,17 +90,12 @@ export async function renderPrematchLoadingScreen(input: {
       try {
         await Promise.all([
           savePrematchImageToS3(
-            gameInfo.gameId,
+            gameInfo,
             image,
             queueType ?? "unknown",
             aliases,
           ),
-          savePrematchSvgToS3(
-            gameInfo.gameId,
-            svg,
-            queueType ?? "unknown",
-            aliases,
-          ),
+          savePrematchSvgToS3(gameInfo, svg, queueType ?? "unknown", aliases),
         ]);
       } catch (s3Error) {
         logger.error(

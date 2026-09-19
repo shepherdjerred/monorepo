@@ -14,6 +14,7 @@ import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import {
   buildReceipt,
   rawArchiveEvidenceCodec,
+  rawArchiveEvidenceOf,
   rawArchiveReceiptKind,
 } from "#src/report-lake/durable-receipts.ts";
 import { computeSha256Digest } from "#src/storage/object-integrity.ts";
@@ -97,7 +98,9 @@ async function standingArchiveReceipt(args: {
     buildReceipt({
       matchId: RiotMatchIdSchema.parse(args.matchId),
       kind: rawArchiveReceiptKind("prematch"),
-      evidence: rawArchiveEvidenceCodec.serialize(descriptor),
+      evidence: rawArchiveEvidenceCodec.serialize(
+        rawArchiveEvidenceOf(descriptor),
+      ),
       recordedAt: new Date("2026-09-13T00:00:00.000Z"),
     }),
   );
