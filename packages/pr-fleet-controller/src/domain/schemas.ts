@@ -47,7 +47,6 @@ export const CheckEvidenceSchema = z.object({
   state: z.string(),
   bucket: z.string(),
   link: z.url().nullable(),
-  softFail: z.boolean(),
 });
 
 export const ReviewFindingSchema = z.object({
@@ -59,8 +58,14 @@ export const ReviewFindingSchema = z.object({
   outdated: z.boolean(),
 });
 
-export const BuildkiteFailureSchema = z.object({
-  jobId: z.string(),
+/**
+ * The failing workflow a fleet agent is asked to repair.
+ *
+ * Woodpecker's unit is a named workflow inside a pipeline, not a job with its
+ * own id, so the pipeline number plus the workflow name is what identifies it.
+ */
+export const CiFailureSchema = z.object({
+  pipelineNumber: z.number(),
   name: z.string(),
   state: z.string(),
   webUrl: z.url(),
@@ -68,11 +73,27 @@ export const BuildkiteFailureSchema = z.object({
   log: z.string(),
 });
 
+/** A Woodpecker pipeline as returned by its API. */
+export const CiPipelineSchema = z.object({
+  number: z.number(),
+  commit: z.string(),
+  status: z.string(),
+  workflows: z
+    .array(
+      z.object({
+        name: z.string(),
+        state: z.string(),
+        started: z.number().optional(),
+      }),
+    )
+    .default([]),
+});
+
 export const ReadinessEvidenceSchema = z.object({
   headSha: z.string().regex(/^[0-9a-f]{40}$/),
   checks: z.array(CheckEvidenceSchema),
-  buildkiteCurrentHead: z.boolean(),
-  buildkiteFailure: BuildkiteFailureSchema.nullable(),
+  ciCurrentHead: z.boolean(),
+  ciFailure: CiFailureSchema.nullable(),
   conflict: z.boolean(),
   reviewFindings: z.array(ReviewFindingSchema),
   hostedReviewComplete: z.boolean(),
@@ -296,7 +317,8 @@ export type PrIdentity = z.infer<typeof PrIdentitySchema>;
 export type CheckEvidence = z.infer<typeof CheckEvidenceSchema>;
 export type Classification = z.infer<typeof ClassificationSchema>;
 export type ReviewFinding = z.infer<typeof ReviewFindingSchema>;
-export type BuildkiteFailure = z.infer<typeof BuildkiteFailureSchema>;
+export type CiFailure = z.infer<typeof CiFailureSchema>;
+export type CiPipeline = z.infer<typeof CiPipelineSchema>;
 export type ReadinessEvidence = z.infer<typeof ReadinessEvidenceSchema>;
 export type OperatorQuestionOption = z.infer<
   typeof OperatorQuestionOptionSchema
