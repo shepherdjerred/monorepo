@@ -159,7 +159,7 @@ inheriting the worker environment.
 | Public GitHub repository credential         | absent; the throwaway clone is unauthenticated           |
 | `HOME`                                      | the throwaway workdir, not the worker image home         |
 | Prometheus and alert-dashboard URLs         | present without API credentials                          |
-| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC |
+| Kubernetes service address and mounted SA   | address present; owner-only token unreadable by provider |
 | Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the reports worker queue    |
 | ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                   |
 
@@ -169,9 +169,10 @@ because their prompts are code rather than user input; even there the bot's own
 GitHub credentials, every report-delivery credential, and every inference
 credential other than their own provider's are removed.
 
-This lets generic investigations query the public repository, read-only
-Kubernetes API, Prometheus, and alert ledger without crossing the delivery or
-operational-credential boundaries. See
+This lets generic investigations query the public repository, Prometheus, and
+alert ledger without crossing the delivery or operational-credential
+boundaries. Direct Kubernetes access remains outside the provider subprocess.
+See
 [the agent task boundary](/explanation/temporal/agent-task-boundary/) for what
 that means.
 

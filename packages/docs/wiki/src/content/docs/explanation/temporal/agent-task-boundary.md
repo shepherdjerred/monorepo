@@ -22,8 +22,7 @@ flowchart TD
   DIS -->|runAt| WF[Workflow run]
   SCH --> WF
   WF --> I[Investigation agent<br>over a repo clone]
-  I -->|ephemeral bearer| BKR[Parent-owned<br>provider broker]
-  BKR -->|long-lived auth| PAPI[Fixed provider<br>inference API]
+  I -->|service-scoped key| PAPI[Fixed provider<br>inference API]
   I --> R[Redacted evidence<br>receipt catalog]
   R --> FNL[Receipt-only<br>finalization agent]
   FNL --> CQ[Reports worker queue]
@@ -37,18 +36,19 @@ The run gets `Bash`, a throwaway clone of the public repository, and an
 allowlisted environment. The runtime boundary consists of:
 
 - a hard read-only prompt prefix,
-- an ephemeral non-root pod and per-run clone,
+- an ephemeral pod, per-run clone, and non-root provider subprocess,
 - `HOME` redirected into that clone so provider config is also disposable,
 - no GitHub credential, so the clone cannot push,
-- exactly one provider subscription credential and nothing else from the
+- exactly one service-scoped inference credential and nothing else from the
   worker's own environment,
 - no Postal, S3, ArgoCD, Grafana, Buildkite, Home Assistant, Bugsink, or
   Cloudflare credential,
 - a dedicated Kubernetes service account with read-only audit RBAC and no
-  `pods/exec` permission,
-- a provider-only uid, for the deterministic evidence collectors, whose
-  pod-local firewall rejects Temporal gRPC and UI traffic while leaving the
-  worker poller connected,
+  `pods/exec` permission, whose owner-only token is readable by the root poller
+  but not by provider subprocesses,
+- a provider-only uid and gid for both native SDKs and deterministic command
+  collectors, whose pod-local firewall rejects Temporal gRPC and UI traffic
+  while leaving the worker poller connected,
 - email delivery dispatched to the reports worker queue, outside the agent pod.
 
 What does **not** constrain it is a schema that makes mutation unrepresentable,
@@ -58,32 +58,38 @@ Codex's own sandbox needs. (A finalization thread is the exception: it drops
 network, web search, and write access, because it may only reason over evidence
 that was already captured.)
 
-The agent itself now runs inside the native provider SDK, as the worker's own
-uid, because neither SDK exposes a spawn hook the worker could wrap. The
-`setpriv` uid-1001 transition and the firewall rules matched to it therefore
-constrain the deterministic evidence collectors rather than the agent; see
-`packages/docs/todos/agent-sdk-provider-isolation.md`. The poller runs as root
-with every capability dropped except the `SETUID` capability that transition
-needs. Privilege escalation is disabled. Before the worker
-starts, a short-lived `NET_ADMIN` init container installs owner-matched rules
-that reject uid-1001 traffic to Temporal gRPC (`7233`) and the Temporal UI
-(`8080`), including their resolved Tailscale ingress addresses on `443`. The
-current homelab CNI is Flannel without a NetworkPolicy controller,
+The native provider SDKs and deterministic command collectors are launched
+through `setpriv` as uid/gid 1001 with supplementary groups cleared. The root
+poller retains only `CHOWN`, `DAC_OVERRIDE`, `KILL`, `SETGID`, and `SETUID`:
+enough to prepare per-run directories, perform that identity transition, and
+terminate detached uid-1001 processes before the shared provider identity is
+reused. Because privilege escalation is disabled, provider processes do not
+inherit those capabilities. The pod has no `fsGroup`, so the projected
+service-account token remains root-owned and owner-readable; uid 1001 cannot
+use it.
+
+Before the worker starts, a short-lived `NET_ADMIN` init container installs
+owner-matched rules that reject uid-1001 traffic to Temporal gRPC (`7233`) and
+the Temporal UI (`8080`), including their resolved Tailscale ingress addresses
+on `443`. The current homelab CNI is Flannel without a NetworkPolicy controller,
 so this pod-local firewall is the enforcement mechanism. The separate
 agent-worker `NetworkPolicy` documents the same narrower topology for a future
 policy-capable CNI; it is not counted as an active control today.
 
 Pod Security Admission has no pod-scoped capability exception. The `temporal`
-namespace therefore enforces the `privileged` profile so this explicit
-`NET_ADMIN`/`SETUID` design can start, while retaining `baseline` audit and warn
-labels for every workload. This does not make the containers privileged: their
-security contexts still drop all capabilities and add only the two named above,
-with privilege escalation disabled. The synthesized namespace labels and both
-container capability sets are tested together so the admission contract cannot
-drift away from the runtime boundary. The enforcement value is also copied to
-the agent Deployment's pod-template annotation. Changing that admission
-contract therefore starts a fresh ReplicaSet after the Namespace update rather
-than retaining a rollout failure created under the old policy.
+namespace therefore enforces the `privileged` profile so this explicit init-
+container `NET_ADMIN` and main-container identity transition can start, while
+retaining `baseline` audit and warn labels for every workload. This does not
+make either container privileged: both drop all capabilities first, the init
+container adds `NET_ADMIN`, and the main container adds only `CHOWN`,
+`DAC_OVERRIDE`, `KILL`, `SETGID`, and `SETUID`, with privilege escalation
+disabled. The synthesized namespace labels and both container capability sets
+are tested together so the admission contract cannot drift away from the
+runtime boundary.
+The enforcement value is also copied to the agent Deployment's pod-template
+annotation. Changing that admission contract therefore starts a fresh
+ReplicaSet after the Namespace update rather than retaining a rollout failure
+created under the old policy.
 
 So local filesystem writes are still possible. A sufficiently confused or
 prompt-injected run can corrupt only its disposable workdir; it does not receive
@@ -98,14 +104,14 @@ the shared sender without restoring delivery secrets to the agent pod.
 
 ## Why it is built this way anyway
 
-Novel investigations can still inspect the public repository, Prometheus, the
-alert ledger, and the Kubernetes API. The mounted service-account token is the
-only operational identity available to the provider, and Kubernetes enforces
-its read-only verbs. The environment the agent receives is an allowlist, not a
-filtered copy of the worker's: basic process and TLS settings, the read-only
-Kubernetes identity, the non-secret evidence endpoints, and the one
-subscription credential its own provider needs. A deviating run can spend that
-provider's quota, but there is no second credential in its environment to find.
+Novel investigations can still inspect the public repository, Prometheus, and
+the alert ledger. Direct Kubernetes access stays in the root parent boundary:
+the provider and its command collectors cannot read the projected token. The
+environment the agent receives is an allowlist, not a filtered copy of the
+worker's: basic process and TLS settings, non-secret evidence endpoints, and
+the one service-scoped inference credential its provider needs. A deviating run
+can spend that provider's quota, but there is no second provider or operational
+credential in its environment to find.
 
 Investigations that need ArgoCD, Buildkite, Home Assistant, or another
 authenticated source must become a typed deterministic collector. Stable
@@ -123,14 +129,14 @@ Codex subscription token, and vice versa.
 ## The blast radius, stated plainly
 
 A deviating or prompt-injected run can spend the selected provider quota, read
-the public repository and exposed evidence, query the read-only Kubernetes API,
-and alter its disposable clone. It cannot push that clone, send mail directly,
-write report state, or use the omitted operational APIs.
+the public repository and exposed evidence, and alter its disposable clone. It
+cannot read the Kubernetes service-account token, push that clone, send mail
+directly, write report state, or use the omitted operational APIs.
 
 This is still not an OS sandbox. Network egress and local process execution are
-available except for the blocked Temporal frontend/UI ports, and Kubernetes
-data readable by the audit role can be exfiltrated. The boundary limits
-authority; it does not make untrusted prompts safe.
+available except for the blocked Temporal frontend/UI ports, and any evidence
+exposed to the provider can be exfiltrated. The boundary limits authority; it
+does not make untrusted prompts safe.
 
 Anything that genuinely must change the repo is a
 [deterministic scheduled workflow](/reference/temporal-schedules/) instead —

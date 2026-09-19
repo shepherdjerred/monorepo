@@ -9,6 +9,15 @@ export function memoryAgentChatStore(): AgentChatObjectStore & {
   const objects = new Map<string, Uint8Array>();
   return {
     objects,
+    create: (key, body) => {
+      if (objects.has(key)) return Promise.resolve(false);
+      objects.set(key, body);
+      return Promise.resolve(true);
+    },
+    delete: (key) => {
+      objects.delete(key);
+      return Promise.resolve();
+    },
     has: (key) => Promise.resolve(objects.has(key)),
     get: (key) => {
       const value = objects.get(key);

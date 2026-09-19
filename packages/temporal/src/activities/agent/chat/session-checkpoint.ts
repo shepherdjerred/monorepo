@@ -69,6 +69,7 @@ export async function pushSessionCheckpoint(input: {
   filePath: string;
   blobsPrefix: string;
   forbiddenTokens: readonly string[];
+  onChunkCreated?: (key: string) => void;
 }): Promise<SessionCheckpoint> {
   const file = Bun.file(input.filePath);
   if (file.size > MAX_SESSION_FILE_BYTES)
@@ -112,8 +113,10 @@ export async function pushSessionCheckpoint(input: {
     const expected = ChunkSchema.parse(checkpoint.chunks[index]);
     if (sha256(chunk) !== expected.sha256)
       throw new Error("Provider session file changed during checkpoint");
-    if (!(await input.store.has(expected.key)))
+    if (!(await input.store.has(expected.key))) {
+      input.onChunkCreated?.(expected.key);
       await input.store.put(expected.key, chunk);
+    }
     index += 1;
   }
   if (index !== checkpoint.chunks.length)

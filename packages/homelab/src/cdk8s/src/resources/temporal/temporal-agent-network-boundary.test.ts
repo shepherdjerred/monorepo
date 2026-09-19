@@ -172,7 +172,7 @@ describe("Temporal agent provider network boundary", () => {
       runAsUser: 0,
       allowPrivilegeEscalation: false,
       capabilities: {
-        add: ["CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID"],
+        add: ["CHOWN", "DAC_OVERRIDE", "KILL", "SETGID", "SETUID"],
         drop: ["ALL"],
       },
     });

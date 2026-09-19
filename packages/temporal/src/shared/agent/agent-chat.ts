@@ -6,13 +6,21 @@ export const MAX_AGENT_CHAT_CATALOG_BINDINGS = 500;
 export const MAX_AGENT_CHAT_CATALOG_STATE_BYTES = 1_000_000;
 export const MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES = 16_000;
 export const MAX_AGENT_CHAT_PENDING_TURNS = 8;
-export const AGENT_CHAT_TURN_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+export const AGENT_CHAT_PROVIDER_EXECUTION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+// Session hydration and durable publication run outside the provider budget.
+// Reserve enough Activity lifetime for both sides of a maximum-length turn.
+export const AGENT_CHAT_SESSION_IO_MARGIN_MS = 30 * 60 * 1000;
+export const AGENT_CHAT_TURN_TIMEOUT_MS =
+  AGENT_CHAT_PROVIDER_EXECUTION_TIMEOUT_MS + AGENT_CHAT_SESSION_IO_MARGIN_MS;
 // Queue time is part of the safety budget: the provider worker is deliberately
 // global and serial, so start-to-close alone cannot prevent stale work from
 // beginning after its caller has stopped waiting.
 export const AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS = 60 * 60 * 1000;
 export const AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS =
   AGENT_CHAT_TURN_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// Completion still has to reach the chat Workflow, settle its Update, and
+// propagate through a receipt or scheduled dispatch after provider execution.
+export const AGENT_CHAT_SETTLEMENT_MARGIN_MS = 15 * 60 * 1000;
 // A full per-chat queue, plus headroom for receipt and session persistence.
 export const AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS =
   MAX_AGENT_CHAT_PENDING_TURNS *
@@ -28,16 +36,16 @@ export const AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS =
 // before the receipt itself can expire.
 export const AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS -
-  AGENT_CHAT_TURN_TIMEOUT_MS -
-  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
+  AGENT_CHAT_SETTLEMENT_MARGIN_MS;
 export const AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 // A scheduled dispatch must leave enough of its own Activity lifetime for the
 // provider to finish and for the retained result to propagate back.
 export const AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS -
-  AGENT_CHAT_TURN_TIMEOUT_MS -
-  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
+  AGENT_CHAT_SETTLEMENT_MARGIN_MS;
 // Cover the globally queued dispatch Activity and leave shutdown margin.
 export const AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS =
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
@@ -139,6 +147,7 @@ export function agentChatTurnRequestsMatch(
     previous.turnId === incoming.turnId &&
     previous.prompt === incoming.prompt &&
     previous.submittedAt === incoming.submittedAt &&
+    previous.providerStartDeadline === incoming.providerStartDeadline &&
     sourcesMatch
   );
 }

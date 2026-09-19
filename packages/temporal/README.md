@@ -45,8 +45,10 @@ credentials, concurrency, health, and metrics boundary.
 
 The agent worker keeps the Temporal poller at UID 0 and launches provider
 subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.
-The worker retains only `SETUID`, `CHOWN`, and `DAC_OVERRIDE`: it must transfer
-fresh checkouts, then read and clean up private provider-owned session files.
+The worker retains only `SETUID`, `SETGID`, `CHOWN`, `DAC_OVERRIDE`, and
+`KILL`: it must set the provider identity, transfer fresh checkouts, read and
+clean up private provider-owned session files, and terminate detached
+provider-UID processes before that shared identity is reused.
 Provider subprocesses lose these capabilities when their UID changes, and
 `allowPrivilegeEscalation: false` prevents regaining them.
 

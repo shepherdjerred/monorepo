@@ -4,6 +4,7 @@ import {
   AgentChatTurnRequestSchema,
   AgentChatWorkflowStateSchema,
   MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES,
+  agentChatTurnRequestsMatch,
   agentChatBindingKey,
   agentChatWorkflowId,
   boundAgentChatFailureMessage,
@@ -85,5 +86,22 @@ describe("agent chat contract", () => {
       MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES,
     );
     expect(bounded.endsWith("🧪")).toBe(true);
+  });
+
+  test("treats caller deadlines as part of stable turn identity", () => {
+    const original = AgentChatTurnRequestSchema.parse({
+      turnId: "stable-turn",
+      prompt: "inspect",
+      submittedAt: "2026-09-14T16:01:00.000Z",
+      providerStartDeadline: "2026-09-14T17:01:00.000Z",
+      source: { kind: "discord", channelId: "channel-1" },
+    });
+
+    expect(
+      agentChatTurnRequestsMatch(original, {
+        ...original,
+        providerStartDeadline: "2026-09-14T18:01:00.000Z",
+      }),
+    ).toBe(false);
   });
 });

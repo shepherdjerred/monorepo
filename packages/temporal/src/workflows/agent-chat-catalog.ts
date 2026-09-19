@@ -175,7 +175,17 @@ export function registerAgentChatCatalogEntry(
       `Agent chat ${entry.config.chatId} is already registered with different configuration`,
     );
   }
-  return existing;
+  const refreshed = AgentChatCatalogEntrySchema.parse({
+    ...existing,
+    turnCount: Math.max(existing.turnCount, entry.turnCount),
+    updatedAt:
+      Date.parse(entry.updatedAt) > Date.parse(existing.updatedAt)
+        ? entry.updatedAt
+        : existing.updatedAt,
+  });
+  state.entries[state.entries.indexOf(existing)] = refreshed;
+  compactAgentChatCatalogState(state, { chatId: entry.config.chatId });
+  return refreshed;
 }
 
 function recordTurn(

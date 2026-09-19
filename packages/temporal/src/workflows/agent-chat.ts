@@ -13,6 +13,7 @@ import {
   AgentChatWorkflowInputSchema,
   AgentChatWorkflowStateSchema,
   agentChatTurnRequestsMatch,
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS,
   MAX_AGENT_CHAT_PENDING_TURNS,
   AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS,
   AGENT_CHAT_TURN_TIMEOUT_MS,
@@ -35,10 +36,11 @@ const MAX_RECENT_TURNS_BYTES = 1_000_000;
 
 const activities = proxyActivities<AgentChatActivities>({
   taskQueue: TASK_QUEUES.AGENT_TASK,
+  scheduleToStartTimeout: AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS,
   startToCloseTimeout: AGENT_CHAT_TURN_TIMEOUT_MS,
   scheduleToCloseTimeout: AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS,
   heartbeatTimeout: "1 minute",
-  retry: { maximumAttempts: 1 },
+  retry: { maximumAttempts: 2 },
 });
 
 function restoredState(input: AgentChatWorkflowInput): AgentChatWorkflowState {
@@ -219,9 +221,15 @@ export async function agentChatWorkflow(
   setHandler(getAgentChatStateQuery, () =>
     AgentChatWorkflowStateSchema.parse(state),
   );
-  setHandler(runAgentChatTurnUpdate, (request) =>
-    executeTurn(state, pendingRequests, request),
-  );
+  setHandler(runAgentChatTurnUpdate, (request) => {
+    if (workflowInfo().continueAsNewSuggested) {
+      throw ApplicationFailure.nonRetryable(
+        "Agent chat is draining for workflow rollover",
+        "AgentChatRollover",
+      );
+    }
+    return executeTurn(state, pendingRequests, request);
+  });
 
   await condition(
     () =>
