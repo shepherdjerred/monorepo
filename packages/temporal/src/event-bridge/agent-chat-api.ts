@@ -33,6 +33,10 @@ import {
   pollHttpAgentChatCommand,
   submitHttpAgentChatCommand,
 } from "./agent-chat-turns.ts";
+import {
+  AgentChatTimestampInFutureError,
+  validateAgentChatIngressTimestamp,
+} from "./agent-chat-timestamp.ts";
 import { bearerMatches, bearerToken } from "./http-auth.ts";
 
 const COMPONENT = "agent-chat-api";
@@ -323,7 +327,9 @@ export function buildAgentChatApiRoutes(
     }
     try {
       const input = CreateAgentChatSchema.parse(await parseBody(c.req.raw));
-      const timestamp = input.submittedAt ?? now();
+      const currentTime = now();
+      const timestamp = input.submittedAt ?? currentTime;
+      validateAgentChatIngressTimestamp(timestamp, currentTime);
       const config = configForIngress(input, timestamp);
       if (input.prompt === undefined) {
         const entry = await registerIdempotently(
@@ -374,6 +380,9 @@ export function buildAgentChatApiRoutes(
       if (error instanceof AgentChatRegistrationConflictError) {
         return c.text(`${error.message}\n`, 409);
       }
+      if (error instanceof AgentChatTimestampInFutureError) {
+        return c.json({ error: error.message }, 400);
+      }
       captureFailure(error, "create");
       return c.text("create failed\n", 500);
     }
@@ -385,6 +394,7 @@ export function buildAgentChatApiRoutes(
     }
     try {
       const input = ContinueAgentChatSchema.parse(await parseBody(c.req.raw));
+      validateAgentChatIngressTimestamp(input.submittedAt, now());
       const chatId = await resolveIngressChatId(
         operations,
         client.workflow,
@@ -421,6 +431,9 @@ export function buildAgentChatApiRoutes(
       if (error instanceof AgentChatTurnConflictError) {
         return c.text(`${error.message}\n`, 409);
       }
+      if (error instanceof AgentChatTimestampInFutureError) {
+        return c.json({ error: error.message }, 400);
+      }
       captureFailure(error, "continue");
       return c.text("turn failed\n", 500);
     }
@@ -451,6 +464,7 @@ export function buildAgentChatApiRoutes(
     try {
       const chatId = AgentChatIdSchema.parse(c.req.param("chatId"));
       const input = BindAgentChatSchema.parse(await parseBody(c.req.raw));
+      validateAgentChatIngressTimestamp(input.submittedAt, now());
       const entry = await operations.bind(
         client.workflow,
         input.binding,
@@ -465,6 +479,9 @@ export function buildAgentChatApiRoutes(
       }
       if (error instanceof AgentChatNotFoundError) {
         return c.text(`${error.message}\n`, 404);
+      }
+      if (error instanceof AgentChatTimestampInFutureError) {
+        return c.json({ error: error.message }, 400);
       }
       captureFailure(error, "bind");
       return c.text("bind failed\n", 500);

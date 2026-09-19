@@ -558,7 +558,7 @@ describe("durable agent chat binding retries", () => {
     for (const call of bind.mock.calls) {
       expect(call[3]).toBe(NOW);
     }
-    expect(now).not.toHaveBeenCalled();
+    expect(now).toHaveBeenCalledTimes(2);
   });
 
   it("requires a stable timestamp for an explicit binding operation", async () => {
@@ -571,6 +571,26 @@ describe("durable agent chat binding retries", () => {
       }),
     );
     expect(response.status).toBe(400);
+    expect(operations.bind).not.toHaveBeenCalled();
+  });
+
+  it("rejects a binding timestamp beyond the allowed clock skew", async () => {
+    const operations = makeOperations();
+    const response = await appWith(operations).fetch(
+      request("/agent-chats/chat-existing/bindings", {
+        method: "POST",
+        token: TOKEN,
+        body: {
+          binding: { kind: "discord", channelId: "channel-1" },
+          submittedAt: "2099-01-01T00:00:00.000Z",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "submittedAt is too far in the future",
+    });
     expect(operations.bind).not.toHaveBeenCalled();
   });
 });
