@@ -347,6 +347,22 @@ export type IngestionReconciliationResult = z.infer<
   typeof IngestionReconciliationResultSchema
 >;
 
+/**
+ * Whether a rediscovered match's ingestion could be confirmed from durable
+ * state, and its discovering account's cursor therefore moved past it.
+ *
+ * `reconciled` means a tracked-account association for the pair exists, which
+ * only ingestion writes — so the match's evidence is captured and the run may
+ * carry on. `not-ingested` means no such proof, so some other execution may
+ * still be mid-ingest and the caller must not advance anything or settle on it.
+ */
+export const IngestedMatchCursorReconciliationSchema = z.object({
+  outcome: z.enum(["reconciled", "not-ingested"]),
+});
+export type IngestedMatchCursorReconciliation = z.infer<
+  typeof IngestedMatchCursorReconciliationSchema
+>;
+
 export const PostMatchDiscoveryResultSchema = z.object({
   matches: z.array(ScoutMatchIngestionInputSchema.omit({ stage: true })),
   // Old activity completions predate this field and only returned after a

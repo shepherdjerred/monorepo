@@ -1,5 +1,6 @@
 import type {
   InitialHistoryPageResult,
+  IngestedMatchCursorReconciliation,
   IngestionReconciliationResult,
   InteractiveOutcome,
   PostMatchDiscoveryResult,
@@ -81,6 +82,9 @@ export type ScoutTemporalActivities = {
     input: ScoutPostMatchMaintenanceInput,
   ) => Promise<void>;
   ingestMatch: (input: ScoutMatchIngestionInput) => Promise<void>;
+  reconcileIngestedMatchCursor: (
+    input: ScoutMatchIngestionInput,
+  ) => Promise<IngestedMatchCursorReconciliation>;
   fetchInitialHistoryPage: (
     input: ScoutInitialHistoryInput,
   ) => Promise<InitialHistoryPageResult>;

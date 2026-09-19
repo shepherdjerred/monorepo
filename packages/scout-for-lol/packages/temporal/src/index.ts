@@ -34,6 +34,7 @@ export {
   ScoutDuelSeriesInputSchema,
   ScoutDuelSeriesRefreshResultSchema,
   ScoutDuelSeriesChangeSchema,
+  IngestedMatchCursorReconciliationSchema,
 } from "./contracts.ts";
 export type {
   InitialHistoryPageResult,
@@ -70,6 +71,7 @@ export type {
   ScoutDuelSeriesInput,
   ScoutDuelSeriesRefreshResult,
   ScoutDuelSeriesChange,
+  IngestedMatchCursorReconciliation,
 } from "./contracts.ts";
 export {
   SCOUT_WORKFLOW_NAMES,

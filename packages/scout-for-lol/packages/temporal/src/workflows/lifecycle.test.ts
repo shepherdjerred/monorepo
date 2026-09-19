@@ -55,6 +55,53 @@ async function startExploreAcquisitionWorkers(
   await workers.start(lake);
 }
 
+/**
+ * A stalled account cursor keeps re-reporting a match whose child already
+ * COMPLETED. `ALLOW_DUPLICATE_FAILED_ONLY` refuses to reuse a succeeded ID,
+ * so the start is rejected forever. What the run does with that rejection is
+ * the difference between ending the stall and hiding it.
+ */
+async function startRediscoveryWorkers(
+  outcome: "reconciled" | "not-ingested",
+  observed: {
+    attempts: string[];
+    reconciled: string[];
+    settlement: boolean[];
+  },
+): Promise<void> {
+  const workflow = await workflowWorker();
+  const activities = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: "scout-dev-realtime",
+    activities: {
+      discoverPostMatchIds: () => ({
+        evidenceComplete: true,
+        matches: [
+          {
+            matchId: "NA1_300",
+            sourcePuuid: "puuid-NA1_300",
+            region: "AMERICA_NORTH",
+            delivery: "live",
+          },
+        ],
+      }),
+      ingestMatch: (input: { matchId: string }) => {
+        observed.attempts.push(input.matchId);
+      },
+      reconcileIngestedMatchCursor: (input: { matchId: string }) => {
+        observed.reconciled.push(input.matchId);
+        return { outcome };
+      },
+      runPostMatchMaintenance: (input: { settleDareV2Deadlines: boolean }) => {
+        observed.settlement.push(input.settleDareV2Deadlines);
+      },
+    },
+    maxConcurrentActivityTaskExecutions: 1,
+  });
+  await workers.start(workflow);
+  await workers.start(activities);
+}
+
 beforeEach(async () => {
   environment = await TestWorkflowEnvironment.createTimeSkipping();
 }, 60_000);
@@ -401,48 +448,14 @@ describe("post-match discovery child ownership", () => {
     expect(attempts).toBe(2);
   });
 
-  test("completes without settling when discovery re-surfaces an already-ingested match", async () => {
-    // A stalled account cursor keeps re-reporting a match whose child already
-    // COMPLETED. `ALLOW_DUPLICATE_FAILED_ONLY` refuses to reuse a succeeded ID,
-    // so the start is rejected. That rejection is an answer, not a fault: the
-    // run must finish rather than fail, or every later poll fails identically
-    // and the cursor can never move past the match.
-    let attempts = 0;
-    const maintenanceDeadlineSettlement: boolean[] = [];
-    const workflow = await workflowWorker();
-    const activities = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: "scout-dev-realtime",
-      activities: {
-        discoverPostMatchIds: () => ({
-          evidenceComplete: true,
-          matches: [
-            {
-              matchId: "NA1_300",
-              sourcePuuid: "puuid-NA1_300",
-              region: "AMERICA_NORTH",
-              delivery: "live",
-            },
-          ],
-        }),
-        ingestMatch: () => {
-          attempts += 1;
-        },
-        runPostMatchMaintenance: (input: {
-          settleDareV2Deadlines: boolean;
-        }) => {
-          maintenanceDeadlineSettlement.push(input.settleDareV2Deadlines);
-        },
-      },
-      maxConcurrentActivityTaskExecutions: 1,
-    });
-    await workers.start(workflow);
-    await workers.start(activities);
+  test("advances the stale cursor when a rediscovered match is confirmed ingested", async () => {
+    const observed = { attempts: [], reconciled: [], settlement: [] };
+    await startRediscoveryWorkers("reconciled", observed);
 
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
         taskQueue: "scout-dev",
-        workflowId: "postmatch-discovery-ingested-first",
+        workflowId: "postmatch-rediscovery-first",
         args: [{ stage: "dev" }],
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
@@ -450,15 +463,46 @@ describe("post-match discovery child ownership", () => {
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
         taskQueue: "scout-dev",
-        workflowId: "postmatch-discovery-ingested-again",
+        workflowId: "postmatch-rediscovery-reconciled",
         args: [{ stage: "dev" }],
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
 
-    // Re-ingestion must not happen, and the second pass must withhold
-    // settlement because it did not own the whole tail.
-    expect(attempts).toBe(1);
-    expect(maintenanceDeadlineSettlement).toEqual([true, false]);
+    // Durable progress, not a quiet no-op: the cursor was reconciled rather
+    // than the collision merely swallowed.
+    expect(observed.reconciled).toEqual(["NA1_300"]);
+    // Ingestion ran once, for the child that actually started.
+    expect(observed.attempts).toEqual(["NA1_300"]);
+    // The match's evidence IS captured, so the second pass may still settle —
+    // withholding it here would starve deadlines for a match already ingested.
+    expect(observed.settlement).toEqual([true, true]);
+  });
+
+  test("stops without settling when a rediscovered match cannot be confirmed", async () => {
+    const observed = { attempts: [], reconciled: [], settlement: [] };
+    await startRediscoveryWorkers("not-ingested", observed);
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: "postmatch-rediscovery-unconfirmed-first",
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: "postmatch-rediscovery-unconfirmed",
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
+
+    // Another execution may still be mid-ingest, so nothing advances and the
+    // run reports a partial pass instead of settling on unproven evidence.
+    expect(observed.reconciled).toEqual(["NA1_300"]);
+    expect(observed.attempts).toEqual(["NA1_300"]);
+    expect(observed.settlement).toEqual([true, false]);
   });
 });
 

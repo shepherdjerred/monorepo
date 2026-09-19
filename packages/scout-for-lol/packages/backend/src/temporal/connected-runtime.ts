@@ -122,6 +122,7 @@ type RealtimeActivities = Pick<
   | "discoverPostMatchIds"
   | "runPostMatchMaintenance"
   | "ingestMatch"
+  | "reconcileIngestedMatchCursor"
   | "probeQueue"
 > &
   ScoutV2MatchActivities &

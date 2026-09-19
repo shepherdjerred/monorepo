@@ -82,12 +82,27 @@ export async function scoutPostMatchDiscoveryWorkflow(
       await child.result();
     } catch (error) {
       if (error instanceof WorkflowExecutionAlreadyStartedError) {
-        // This match's ID is already owned by another execution, so this run did
-        // not see the whole tail through. Stopping preserves the chronology the
-        // serialization above exists to protect, and withholding settlement is
-        // the honest report of a partial pass — but it is an answer, not a
-        // fault, so the run completes rather than failing. Mirrors
-        // `ownedWholeTail` in `scoutPostMatchDiscoveryV2Workflow`.
+        // Another execution owns this match's ID. Match IDs are permanent, so
+        // if that execution already finished, no future run can start this
+        // child either — the account that rediscovered it would be pinned here
+        // forever, starving every later match. Completing the run without
+        // moving anything would swap a loud failure for a silent stall, so
+        // confirm the ingestion from durable state and move that account's
+        // cursor past the match before carrying on.
+        const reconciliation = await realtimeActivities(
+          input.stage,
+        ).reconcileIngestedMatchCursor({ stage: input.stage, ...match });
+        if (reconciliation.outcome === "reconciled") {
+          // The match is ingested and its evidence captured, so this run has
+          // seen it through as surely as if it had run the child itself.
+          continue;
+        }
+        // No proof of ingestion: the owning execution may still be mid-flight.
+        // Stopping preserves the chronology the serialization above exists to
+        // protect, and withholding settlement is the honest report of a partial
+        // pass — but it is an answer, not a fault, so the run completes rather
+        // than failing. Mirrors `ownedWholeTail` in
+        // `scoutPostMatchDiscoveryV2Workflow`.
         ownedWholeTail = false;
         break;
       }
