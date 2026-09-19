@@ -19,10 +19,37 @@ import {
 
 export const EXPLORE_CAPABILITY_EVAL_MODEL = "gpt-5.6-luna";
 
+/**
+ * Contractions are expanded on both sides so one phrase covers both forms.
+ *
+ * Enumerating them instead is how this grader kept failing correct answers:
+ * "cannot be scored" was listed, the model wrote "can't be scored", and a
+ * true sentence was scored as a lie. Expanding is one rule; listing every
+ * pair is a rule per phrase, forever.
+ */
+const CONTRACTIONS: readonly (readonly [RegExp, string])[] = [
+  [/\bcan't\b/g, "cannot"],
+  [/\bwon't\b/g, "will not"],
+  [/\bdoesn't\b/g, "does not"],
+  [/\bdon't\b/g, "do not"],
+  [/\bdidn't\b/g, "did not"],
+  [/\bisn't\b/g, "is not"],
+  [/\baren't\b/g, "are not"],
+  [/\bwasn't\b/g, "was not"],
+  [/\bcouldn't\b/g, "could not"],
+  [/\bwouldn't\b/g, "would not"],
+  [/\bhasn't\b/g, "has not"],
+  [/\bhaven't\b/g, "have not"],
+];
+
 function normalize(text: string): string {
   // Curly apostrophes are what the model actually emits in "can't", and a
   // straight-quote corpus would silently never match them.
-  return text.toLowerCase().replaceAll("’", "'").replaceAll("—", "-");
+  const plain = text.toLowerCase().replaceAll("’", "'").replaceAll("—", "-");
+  return CONTRACTIONS.reduce(
+    (result, [pattern, expansion]) => result.replaceAll(pattern, expansion),
+    plain,
+  );
 }
 
 /** Expand the shared refusal token into its vocabulary, in place. */

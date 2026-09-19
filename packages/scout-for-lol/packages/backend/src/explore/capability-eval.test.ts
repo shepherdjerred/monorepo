@@ -35,6 +35,19 @@ describe("capabilityAnswerIssues", () => {
     ).toEqual([]);
   });
 
+  test("reads a contraction as the phrase it expands to", () => {
+    // The live answer "these matches can't be scored" failed against the
+    // listed "cannot be scored" until both sides were expanded.
+    const entry = caseById("aram-mayhem-results");
+    expect(
+      capabilityAnswerIssues({
+        answer:
+          "Scout can’t show winners for ARAM Mayhem: Riot sends the game start, but not the final results or player stats, so these matches can’t be scored.",
+        entry,
+      }),
+    ).toEqual([]);
+  });
+
   test("accepts the curly apostrophe the model actually emits", () => {
     expect(
       capabilityAnswerIssues({
