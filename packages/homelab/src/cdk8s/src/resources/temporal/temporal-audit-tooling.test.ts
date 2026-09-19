@@ -500,6 +500,9 @@ describe("Temporal domain worker isolation", () => {
       key: "AGENT_CHAT_DISCORD_TOKEN",
       optional: true,
     });
+    expect(gateway.metadata.annotations).toMatchObject({
+      "operator.1password.io/auto-restart": "true",
+    });
     for (const required of ["HA_URL", "HA_TOKEN"]) {
       expect(homeEnv).toContain(required);
       expect(gatewayEnv).not.toContain(required);
