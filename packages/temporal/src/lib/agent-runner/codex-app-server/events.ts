@@ -24,6 +24,7 @@ const UsageParamsSchema = z.object({
   threadId: z.string(),
   tokenUsage: z.object({
     total: TokenUsageBreakdownSchema,
+    last: TokenUsageBreakdownSchema,
   }),
 });
 const TurnParamsSchema = z.object({
@@ -102,13 +103,17 @@ export function appServerNotification(
       const params = UsageParamsSchema.parse(message.params);
       if (params.threadId !== state.threadId)
         throw new Error("Codex usage thread mismatch");
-      const total = params.tokenUsage.total;
+      const last = params.tokenUsage.last;
       state.usage = {
-        input_tokens: total.inputTokens,
-        cached_input_tokens: total.cachedInputTokens,
-        cache_write_input_tokens: total.cacheWriteInputTokens ?? 0,
-        output_tokens: total.outputTokens,
-        reasoning_output_tokens: total.reasoningOutputTokens,
+        input_tokens: state.usage.input_tokens + last.inputTokens,
+        cached_input_tokens:
+          state.usage.cached_input_tokens + last.cachedInputTokens,
+        cache_write_input_tokens:
+          state.usage.cache_write_input_tokens +
+          (last.cacheWriteInputTokens ?? 0),
+        output_tokens: state.usage.output_tokens + last.outputTokens,
+        reasoning_output_tokens:
+          state.usage.reasoning_output_tokens + last.reasoningOutputTokens,
       };
       return undefined;
     }

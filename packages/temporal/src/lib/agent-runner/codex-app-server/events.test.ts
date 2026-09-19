@@ -13,7 +13,7 @@ function emptyUsage(): Usage {
 }
 
 describe("Codex App Server notifications", () => {
-  test("uses cumulative protocol usage across model calls", () => {
+  test("accumulates only this turn's model-call usage", () => {
     const state: AppServerEventState = {
       threadId: "thread-1",
       usage: emptyUsage(),
@@ -48,11 +48,11 @@ describe("Codex App Server notifications", () => {
 
     notify(
       {
-        totalTokens: 14,
-        inputTokens: 10,
-        cachedInputTokens: 2,
-        outputTokens: 4,
-        reasoningOutputTokens: 1,
+        totalTokens: 114,
+        inputTokens: 90,
+        cachedInputTokens: 22,
+        outputTokens: 24,
+        reasoningOutputTokens: 11,
       },
       {
         totalTokens: 14,
@@ -64,11 +64,11 @@ describe("Codex App Server notifications", () => {
     );
     notify(
       {
-        totalTokens: 34,
-        inputTokens: 25,
-        cachedInputTokens: 7,
-        outputTokens: 9,
-        reasoningOutputTokens: 3,
+        totalTokens: 134,
+        inputTokens: 105,
+        cachedInputTokens: 27,
+        outputTokens: 29,
+        reasoningOutputTokens: 13,
       },
       {
         totalTokens: 20,
