@@ -1019,6 +1019,30 @@
       "value": "0.48.0@sha256:cf79363dc08db9b0d2e849a484a25e95a4c63765779fd9ecbe38be927545d417"
     },
     {
+      "name": "woodpeckerci/woodpecker-server",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v3.18.1@sha256:58dafbe56bb3529d78b48ee8d56a1f4b0886748763fd04ac23c01cc06c3dd24e"
+    },
+    {
+      "name": "woodpeckerci/woodpecker-agent",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v3.18.1@sha256:73ee7cc63161b40bfefa4a26eae45c518a09124ab34f7e3c5e781df85e1ba4ac"
+    },
+    {
       "name": "ducktors/turborepo-remote-cache",
       "category": "upstream",
       "artifactType": "image",

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: woodpecker
+description: Woodpecker CI - self-hosted pipelines for the monorepo
+type: application
+version: "$version"
+appVersion: "$appVersion"
