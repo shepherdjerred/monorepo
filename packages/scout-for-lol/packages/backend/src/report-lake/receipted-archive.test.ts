@@ -28,15 +28,21 @@ import {
 
 const mocks = vi.hoisted(() => ({
   recordReceipt: vi.fn(),
-  /** No receipt stands, so the prematch door's gate falls through to its put. */
+  /** No receipt stands, so every door's gate falls through to its put. */
   listReceipts: vi.fn(() => []),
+  /** Whether the database can open a transaction at all. */
+  database: { available: true },
 }));
 
 // These tests are about which receipts each artifact produces, so the door's
 // transaction is only scaffolding here; see `fenced-door-doubles.ts`.
 vi.mock("#src/database/index.ts", async () => {
   const doubles = await import("#src/testing/fenced-door-doubles.ts");
-  return { prisma: doubles.transactionRunningPrismaDouble() };
+  return {
+    prisma: doubles.transactionRunningPrismaDouble({
+      available: () => mocks.database.available,
+    }),
+  };
 });
 vi.mock("#src/database/durable/receipt-repository.ts", () => ({
   recordReceipt: mocks.recordReceipt,
@@ -82,7 +88,47 @@ beforeEach(() => {
   mocks.recordReceipt.mockResolvedValue({ outcome: "applied" });
 });
 
-afterEach(resetS3TestState);
+afterEach(() => {
+  mocks.database.available = true;
+  resetS3TestState();
+});
+
+describe("the no-bucket path", () => {
+  test.each([
+    {
+      family: "match",
+      archive: async () =>
+        await archiveMatchReceipted(await loadRawMatchFixture(), []),
+    },
+    {
+      family: "timeline",
+      archive: async () =>
+        await archiveTimelineReceipted(
+          rawTimelineFixture("NA1_5370969615"),
+          [],
+          new Date(),
+        ),
+    },
+    {
+      family: "prematch",
+      archive: async () =>
+        await archivePrematchReceipted(rawCurrentGameInfoFixture(), []),
+    },
+  ])(
+    "answers $family archival as skipped without opening a transaction",
+    async ({ archive }) => {
+      // The documented dev/test no-op: nothing can be archived, so nothing is
+      // read, locked or written. Proved against a database that refuses to
+      // open a transaction, not one that quietly would have.
+      setS3TestBucket(undefined);
+      mocks.database.available = false;
+
+      await expect(archive()).resolves.toEqual({ status: "skipped_no_bucket" });
+      expect(mocks.listReceipts).not.toHaveBeenCalled();
+      expect(mocks.recordReceipt).not.toHaveBeenCalled();
+    },
+  );
+});
 
 describe("receipted match archival", () => {
   test("records a raw-archive receipt carrying the stored descriptor", async () => {

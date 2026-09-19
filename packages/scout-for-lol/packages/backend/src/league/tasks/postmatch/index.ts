@@ -21,6 +21,7 @@ import { deliverPendingDareNotifications } from "#src/betting/dares/presentation
 import {
   markPostMatchPollCompleted,
   markPostMatchPollFailed,
+  type PostMatchPollOwner,
 } from "#src/league/tasks/recovery/app-state.ts";
 import { prisma } from "#src/database/index.ts";
 
@@ -94,9 +95,20 @@ export async function checkPostMatch(): Promise<{
   }
 }
 
+/**
+ * Run the post-match clocks and close the poll.
+ *
+ * `pollOwner` is the poll this pass may close, present only when the caller
+ * claimed one durably — a V2 discovery, whose poll spans the Workflow rather
+ * than one Activity. The close is then guarded on that identity: a run whose
+ * claim was taken over closes nothing and fails loudly, rather than marking a
+ * LATER run's poll complete underneath it. Without it the close overwrites
+ * whatever stands, which is v1's behaviour and stays v1's behaviour.
+ */
 export async function runPostMatchMaintenance(options?: {
   settleDareV2Deadlines: boolean;
   dareEvidenceWatermark?: Date | undefined;
+  pollOwner?: PostMatchPollOwner | undefined;
 }): Promise<{
   dareSummaries: DareSettlementSummary[];
 }> {
@@ -187,6 +199,8 @@ export async function runPostMatchMaintenance(options?: {
       },
     );
   }
+  const pollOwner = options?.pollOwner;
+  const close = pollOwner === undefined ? {} : { owner: pollOwner };
   // Isolated per step, then re-thrown: a persistently failing recovery path
   // cannot starve the remaining clocks while money stays escrowed.
   try {
@@ -195,9 +209,22 @@ export async function runPostMatchMaintenance(options?: {
       completedAt: new Date(),
       evidenceComplete: settleDareV2Deadlines,
       evidenceWatermark: options?.dareEvidenceWatermark,
+      ...close,
     });
   } catch (error) {
-    await markPostMatchPollFailed(error, new Date());
+    try {
+      await markPostMatchPollFailed(error, new Date(), close);
+    } catch (closeError) {
+      // Both facts matter and neither may hide the other: the clocks failed,
+      // AND the poll this run meant to close was no longer its own. Reporting
+      // only the first would lose a durable-write conflict; reporting only the
+      // second would lose why maintenance failed at all.
+      throw new AggregateError(
+        [error, closeError],
+        "Post-match maintenance failed and its poll was no longer this run's to close",
+        { cause: closeError },
+      );
+    }
     throw error;
   }
   return { dareSummaries };

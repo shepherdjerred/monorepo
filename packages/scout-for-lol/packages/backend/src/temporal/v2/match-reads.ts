@@ -62,14 +62,41 @@ export const DRIVABLE_INTENT_STATES: ReadonlySet<string> = new Set([
  * either case the next run rediscovers what is left.
  *
  * `skipped` is NOT a third incompleteness and is kept apart from both. It is
- * v1's discovery refusing to run because a poll is already in progress on
- * this worker — it opened nothing, so the Workflow closes nothing — whereas an
- * incomplete scan opened a poll and owes the maintenance that closes it.
+ * discovery refusing to run because a poll already holds the status — it
+ * opened nothing, so the Workflow closes nothing — whereas an incomplete scan
+ * opened a poll and owes the maintenance that closes it.
+ *
+ * The poll is claimed DURABLY here rather than held by the in-process flag v1
+ * uses. A V2 poll spans a Workflow — this Activity, the children it awaits,
+ * and the maintenance that closes it — and an in-process flag is released the
+ * moment this Activity returns, which left a second discovery free to open a
+ * poll of its own while the first was still awaiting children; the first run's
+ * maintenance then marked the SECOND run's poll complete underneath it. The
+ * claim's identity rides the result so the close can present it.
  */
-export async function discoverPostMatchIdsV2(): Promise<ScoutPostMatchScanV2Result> {
-  const discovery = await discoverPostMatchIntents();
+export async function discoverPostMatchIdsV2(options?: {
+  /**
+   * The instant to claim the poll at. The Activity passes its FIRST-scheduled
+   * timestamp, which is stable across its retries, so an attempt that claimed
+   * the poll and then died leaves a claim its own retry re-acquires rather
+   * than one the retry reads as another run's — which would leave the poll
+   * standing with no run left to close it.
+   */
+  claimAt?: Date;
+}): Promise<ScoutPostMatchScanV2Result> {
+  const discovery = await discoverPostMatchIntents({
+    ownership: "durable",
+    ...(options?.claimAt === undefined ? {} : { startedAt: options.claimAt }),
+  });
   if (discovery.outcome === "skipped") {
     return ScoutPostMatchScanV2ResultSchema.parse({ outcome: "skipped" });
+  }
+  if (discovery.pollOwner === undefined) {
+    // A durable pass that polled holds a claim by construction. Reporting a
+    // scan without one would hand the Workflow a poll nothing can close.
+    throw new Error(
+      "V2 discovery polled without a durable poll claim; refusing to report a scan whose poll has no owner to close it",
+    );
   }
   const riotMatchIds = discovery.matches.map((intent) =>
     RiotMatchIdSchema.parse(intent.matchId),
@@ -79,6 +106,8 @@ export async function discoverPostMatchIdsV2(): Promise<ScoutPostMatchScanV2Resu
     riotMatchIds: riotMatchIds.slice(0, SCOUT_V2_PAGE_MAX),
     complete:
       discovery.evidenceComplete && riotMatchIds.length <= SCOUT_V2_PAGE_MAX,
+    // The claim this pass opened; maintenance closes exactly this poll.
+    pollOwner: discovery.pollOwner.startedAt.toISOString(),
     // v1's own watermark, passed through unchanged: post-match maintenance
     // settles Dare deadlines against it, and only this pass can compute it.
     ...(discovery.evidenceWatermark === undefined

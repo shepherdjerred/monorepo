@@ -11,7 +11,6 @@ import {
   processMatchForPlayer,
   type ProcessMatchUpdateOptions,
 } from "#src/league/tasks/postmatch/match-processing.ts";
-import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/notify/announce.ts";
 import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
@@ -25,8 +24,14 @@ import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import {
   markPostMatchPollCompleted,
   markPostMatchPollFailed,
-  markPostMatchPollStarted,
 } from "#src/league/tasks/recovery/app-state.ts";
+import {
+  beginPollingRun,
+  endPollingRun,
+  openPostMatchPoll,
+  type PostMatchPollOwnership,
+} from "#src/league/tasks/postmatch/poll-ownership.ts";
+import type { PostMatchPollOwner } from "#src/league/tasks/recovery/app-state.ts";
 import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
 import {
@@ -59,17 +64,6 @@ import { settlementEvidenceOf } from "#src/league/tasks/postmatch/settlement-evi
 
 const logger = createLogger("postmatch-match-history-polling");
 
-let isPollingInProgress = false;
-let pollingStartTime: number | undefined;
-
-export const isMatchHistoryPollingInProgress = (): boolean =>
-  isPollingInProgress;
-
-export function resetPollingState(): void {
-  isPollingInProgress = false;
-  pollingStartTime = undefined;
-}
-
 type BucksPostmatchResult = Awaited<ReturnType<typeof settleAndAwardBucks>>;
 
 export function shouldAnnounceBucks(input: {
@@ -84,37 +78,6 @@ export function shouldAnnounceBucks(input: {
     ) ||
     input.bucks.parlaySettlements.some((summary) => summary.bets.length > 0)
   );
-}
-
-function shouldSkipPollingRun(): boolean {
-  if (!isPollingInProgress) {
-    return false;
-  }
-
-  const elapsed =
-    pollingStartTime === undefined ? 0 : Date.now() - pollingStartTime;
-
-  // Check if the lock is stale (stuck for over 5 minutes)
-  if (elapsed > 5 * 60 * 1000) {
-    logger.error(
-      `⚠️  Polling lock timeout detected after ${Math.round(elapsed / 1000).toString()}s, force-resetting stale lock`,
-    );
-    matchHistoryPollingSkipsTotal.inc({ reason: "timeout_reset" });
-    Sentry.captureMessage("Match history polling lock timeout - force reset", {
-      level: "warning",
-      tags: { source: "match-history-polling" },
-      extra: { elapsedMs: elapsed },
-    });
-    isPollingInProgress = false;
-    pollingStartTime = undefined;
-    return false;
-  }
-
-  logger.info(
-    `⏸️  Match history polling already in progress (${Math.round(elapsed / 1000).toString()}s elapsed), skipping this run`,
-  );
-  matchHistoryPollingSkipsTotal.inc({ reason: "concurrent_run" });
-  return true;
 }
 
 /**
@@ -401,47 +364,82 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
 /**
  * Whether a discovery pass ran at all.
  *
- * `skipped` means another poll on this worker was still in progress and this
- * call refused to open a second one: it called `markPostMatchPollStarted` for
- * nothing and owns no `BotState.pollStatus` to close. A caller that runs
- * post-match maintenance on that answer marks the OTHER poll complete under
- * it. `polled` covers every pass that opened a poll, complete or not — an
- * incomplete pass still owes the maintenance that closes what it opened.
+ * `skipped` means another poll was still in progress and this call refused to
+ * open a second one: it opened nothing and owns no `BotState.pollStatus` to
+ * close. A caller that runs post-match maintenance on that answer marks the
+ * OTHER poll complete under it. `polled` covers every pass that opened a poll,
+ * complete or not — an incomplete pass still owes the maintenance that closes
+ * what it opened.
  */
 export type PostMatchDiscoveryOutcome = "polled" | "skipped";
 
-export async function discoverPostMatchIntents(): Promise<{
+export async function discoverPostMatchIntents(options?: {
+  ownership?: PostMatchPollOwnership;
+  /**
+   * The instant this pass claims the poll at, when the caller has one that is
+   * stable across its own retries. Defaults to now.
+   */
+  startedAt?: Date;
+}): Promise<{
   outcome: PostMatchDiscoveryOutcome;
   matches: DiscoveredMatchIntent[];
   evidenceComplete: boolean;
   evidenceWatermark?: string;
+  /**
+   * The claim this pass holds, under `durable` ownership only. The caller owes
+   * the close that releases it, presenting this identity.
+   */
+  pollOwner?: PostMatchPollOwner;
 }> {
-  if (shouldSkipPollingRun()) {
+  const startedAt = options?.startedAt ?? new Date();
+  if (!beginPollingRun(startedAt)) {
     return { outcome: "skipped", matches: [], evidenceComplete: false };
   }
-  isPollingInProgress = true;
-  pollingStartTime = Date.now();
   try {
-    await markPostMatchPollStarted(new Date(pollingStartTime));
-    const discovery = await collectMatchDiscovery();
-    if (!discovery.complete) {
-      logger.warn(
-        "Match discovery evidence is incomplete; maintenance may proceed without advancing ingestion cursors",
+    const opened = await openPostMatchPoll(
+      options?.ownership ?? "process",
+      startedAt,
+    );
+    if (opened.outcome === "held") {
+      logger.info(
+        `⏸️  A post-match poll claimed at ${opened.since?.toISOString() ?? "an unknown time"} still holds the poll; skipping this run`,
       );
-      return { outcome: "polled", matches: [], evidenceComplete: false };
+      matchHistoryPollingSkipsTotal.inc({ reason: "poll_claim_held" });
+      return { outcome: "skipped", matches: [], evidenceComplete: false };
     }
-    return {
-      outcome: "polled",
-      matches: discovery.intents,
-      evidenceComplete: true,
-      evidenceWatermark: discovery.evidenceWatermark.toISOString(),
-    };
-  } catch (error) {
-    await markPostMatchPollFailed(error, new Date());
-    throw error;
+    const owner = opened.owner;
+    const held = owner === undefined ? {} : { pollOwner: owner };
+    const close = owner === undefined ? {} : { owner };
+    try {
+      const discovery = await collectMatchDiscovery();
+      if (!discovery.complete) {
+        logger.warn(
+          "Match discovery evidence is incomplete; maintenance may proceed without advancing ingestion cursors",
+        );
+        return {
+          outcome: "polled",
+          matches: [],
+          evidenceComplete: false,
+          ...held,
+        };
+      }
+      return {
+        outcome: "polled",
+        matches: discovery.intents,
+        evidenceComplete: true,
+        evidenceWatermark: discovery.evidenceWatermark.toISOString(),
+        ...held,
+      };
+    } catch (error) {
+      // Closed as failed by whoever opened it: v1 overwrites whatever stands,
+      // and a durable claimant closes only its own poll. Either way the poll
+      // is released here rather than left standing for a caller that will
+      // never reach maintenance, because this pass is throwing past it.
+      await markPostMatchPollFailed(error, new Date(), close);
+      throw error;
+    }
   } finally {
-    isPollingInProgress = false;
-    pollingStartTime = undefined;
+    endPollingRun();
   }
 }
 
@@ -454,17 +452,16 @@ export async function checkMatchHistory(): Promise<{
 }> {
   // Prevent concurrent runs to avoid race conditions where two cron runs
   // could process the same match before lastProcessedMatchId is updated
-  if (shouldSkipPollingRun()) {
+  const pollStartedAt = new Date();
+  if (!beginPollingRun(pollStartedAt)) {
     return { evidenceComplete: false };
   }
 
-  isPollingInProgress = true;
-  pollingStartTime = Date.now();
   logger.info("🔍 Starting match history polling check");
   const startTime = Date.now();
 
   try {
-    await markPostMatchPollStarted(new Date(pollingStartTime));
+    await openPostMatchPoll("process", pollStartedAt);
     const discovery = await collectMatchDiscovery();
     if (!discovery.complete) {
       logger.warn(
@@ -542,7 +539,6 @@ export async function checkMatchHistory(): Promise<{
     await markPostMatchPollFailed(error, new Date());
     throw error;
   } finally {
-    isPollingInProgress = false;
-    pollingStartTime = undefined;
+    endPollingRun();
   }
 }

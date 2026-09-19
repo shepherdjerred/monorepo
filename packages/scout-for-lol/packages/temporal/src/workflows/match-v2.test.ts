@@ -15,7 +15,10 @@ import {
 import {
   attested,
   attestedPipelineState,
+  claimScoutV2Poll,
+  closeScoutV2Poll,
   createScoutV2MatchStore,
+  createScoutV2PollRow,
   scoutV2MatchActivityStubs,
   MATCH_ID,
   type ScoutV2MatchStore,
@@ -30,6 +33,9 @@ const harness = useScoutV2WorkflowHarness();
 
 const stage = "dev" as const;
 const SECOND_MATCH_ID = RiotMatchIdSchema.parse("NA1_9002");
+// The poll a scan claimed, by the instant it was claimed at. Maintenance
+// closes exactly this poll, so it travels from the scan to the close.
+const POLL_OWNER = "2026-09-13T07:59:00.000Z";
 const SERIAL_CORE = [
   "readMatchPipelineStateV2",
   "archiveMatchArtifactsV2",
@@ -423,6 +429,7 @@ describe("V2 post-match discovery", () => {
         outcome: "scanned",
         riotMatchIds: [MATCH_ID, SECOND_MATCH_ID],
         complete: true,
+        pollOwner: POLL_OWNER,
       }),
       readMatchPipelineStateV2: async (input: { riotMatchId: string }) => {
         // The first match is slow on purpose: a second child that started
@@ -482,6 +489,7 @@ describe("V2 post-match discovery", () => {
         outcome: "scanned",
         riotMatchIds: [MATCH_ID],
         complete: true,
+        pollOwner: POLL_OWNER,
         evidenceWatermark: "2026-09-13T08:00:00.000Z",
       }),
     });
@@ -495,6 +503,9 @@ describe("V2 post-match discovery", () => {
       {
         stage,
         settleDareV2Deadlines: true,
+        // The close names the poll the scan opened, so it cannot land on a
+        // poll some later run claimed after this one started.
+        pollOwner: POLL_OWNER,
         evidenceWatermark: "2026-09-13T08:00:00.000Z",
       },
     ]);
@@ -511,6 +522,7 @@ describe("V2 post-match discovery", () => {
         outcome: "scanned",
         riotMatchIds: [MATCH_ID],
         complete: true,
+        pollOwner: POLL_OWNER,
       }),
     });
     await processMatch(scoutMatchProcessingV2WorkflowId(stage, MATCH_ID));
@@ -520,7 +532,7 @@ describe("V2 post-match discovery", () => {
     ).resolves.toMatchObject({ data: { complete: false } });
 
     expect(store.maintenance).toEqual([
-      { stage, settleDareV2Deadlines: false },
+      { stage, settleDareV2Deadlines: false, pollOwner: POLL_OWNER },
     ]);
   }, 90_000);
 
@@ -534,7 +546,12 @@ describe("V2 post-match discovery", () => {
       ...scoutV2MatchActivityStubs(store),
       discoverPostMatchIdsV2: () => {
         discoveries += 1;
-        return { outcome: "scanned", riotMatchIds: [], complete: true };
+        return {
+          outcome: "scanned",
+          riotMatchIds: [],
+          complete: true,
+          pollOwner: POLL_OWNER,
+        };
       },
     });
 
@@ -544,11 +561,76 @@ describe("V2 post-match discovery", () => {
     expect(store.maintenance).toHaveLength(2);
   }, 90_000);
 
+  test("holds the poll across the children it awaits, so an overlapping run is skipped", async () => {
+    // The overlap the durable claim exists for. The scheduled run's discovery
+    // Activity has RETURNED and the run is away awaiting a child, which is
+    // where an operator-triggered discovery lands. Ownership has to span that
+    // whole stretch: the second run must be told the poll is held, and the
+    // first run's maintenance must close the poll IT opened. Before it, the
+    // second run opened a poll of its own and the first run's maintenance
+    // marked that newer poll complete underneath it.
+    const row = createScoutV2PollRow();
+    const store = createScoutV2MatchStore();
+    const childReached = Promise.withResolvers<true>();
+    const releaseChild = Promise.withResolvers<true>();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => {
+        const claim = claimScoutV2Poll(row);
+        return claim.outcome === "held"
+          ? { outcome: "skipped" }
+          : {
+              outcome: "scanned",
+              riotMatchIds: [MATCH_ID],
+              complete: true,
+              pollOwner: claim.pollOwner,
+            };
+      },
+      readMatchPipelineStateV2: async (input: { riotMatchId: string }) => {
+        // The child the first run is awaiting when the second run starts.
+        childReached.resolve(true);
+        await releaseChild.promise;
+        return attestedPipelineState(
+          RiotMatchIdSchema.parse(input.riotMatchId),
+          "archive",
+          "observation",
+          "settlement",
+          "progression",
+          "tournament",
+        );
+      },
+      runPostMatchMaintenance: (input: {
+        settleDareV2Deadlines: boolean;
+        pollOwner?: string;
+      }) => {
+        store.maintenance.push(input);
+        closeScoutV2Poll(row, input.pollOwner);
+      },
+    });
+
+    const scheduled = discover("post-match-discovery-overlap-scheduled");
+    await childReached.promise;
+    const operator = await discover("post-match-discovery-overlap-operator");
+    releaseChild.resolve(true);
+    await scheduled;
+
+    // The operator run found the poll held, so it opened nothing and closed
+    // nothing.
+    expect(operator).toMatchObject({
+      data: { status: "no-op", discovered: 0, childrenStarted: 0 },
+    });
+    expect(row.claims).toBe(1);
+    // Exactly one close, naming the poll the scheduled run claimed.
+    expect(store.maintenance).toHaveLength(1);
+    expect(row.closed).toEqual([row.closed[0]]);
+    expect(store.maintenance[0]?.pollOwner).toBe(row.closed[0]);
+  }, 90_000);
+
   test("withholds maintenance when discovery was skipped for a running poll", async () => {
-    // An operator run overlapping the scheduled one on the same worker: v1's
-    // discovery refuses to open a second poll. This run opened nothing, so it
-    // must close nothing — maintenance would mark the OTHER execution's poll
-    // complete under it while that poll is still live.
+    // An operator run overlapping the scheduled one: discovery refuses to open
+    // a second poll. This run opened nothing, so it must close nothing —
+    // maintenance would mark the OTHER execution's poll complete under it
+    // while that poll is still live.
     const store = createScoutV2MatchStore();
     await harness.startWorkers({
       ...scoutV2MatchActivityStubs(store),
@@ -573,6 +655,7 @@ describe("V2 post-match discovery", () => {
         outcome: "scanned",
         riotMatchIds: [MATCH_ID],
         complete: true,
+        pollOwner: POLL_OWNER,
       }),
     });
     // A completed execution owns this match's child ID, so `startChild` is

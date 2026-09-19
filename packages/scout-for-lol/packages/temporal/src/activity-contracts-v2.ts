@@ -45,12 +45,12 @@ import {
 /**
  * What a post-match discovery pass did, and it is a closed union on purpose.
  *
- * `skipped` is v1's discovery refusing to run because another poll on the
- * same worker is still in progress. It opened NO poll: `BotState.pollStatus`
- * still belongs to the other execution, and nothing this run does may close
- * it. It is not an empty scan — an empty scan opened a poll, saw nothing, and
- * owes the maintenance that closes it — and a boolean could not keep the two
- * apart at the call site that has to.
+ * `skipped` is discovery refusing to run because a poll already holds
+ * `BotState.pollStatus`. It opened NO poll: the status still belongs to the
+ * other execution, and nothing this run does may close it. It is not an empty
+ * scan — an empty scan opened a poll, saw nothing, and owes the maintenance
+ * that closes it — and a boolean could not keep the two apart at the call site
+ * that has to.
  */
 export const ScoutPostMatchScanV2ResultSchema = z.discriminatedUnion(
   "outcome",
@@ -64,6 +64,18 @@ export const ScoutPostMatchScanV2ResultSchema = z.discriminatedUnion(
         .readonly(),
       /** False when the scan hit its page budget before the tail was exhausted. */
       complete: z.boolean(),
+      /**
+       * The poll claim this scan opened, by the instant it was claimed at.
+       *
+       * Required on this branch because a scan that ran holds a claim by
+       * construction, and the Workflow owes the close that releases it. The
+       * value travels to maintenance and guards the close there, so a run
+       * whose claim was taken over closes nothing and fails loudly instead of
+       * marking a LATER run's poll complete underneath it. The instant is the
+       * identity because it is the one value the claim and the close both
+       * already carry.
+       */
+      pollOwner: IsoInstantSchema,
       /**
        * How far Dare evidence is known-complete, when the scan could
        * establish it.

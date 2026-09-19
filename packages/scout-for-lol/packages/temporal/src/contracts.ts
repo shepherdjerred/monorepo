@@ -365,6 +365,18 @@ export const ScoutPostMatchMaintenanceInputSchema =
   ScoutPostMatchDiscoveryInputSchema.extend({
     settleDareV2Deadlines: z.boolean(),
     evidenceWatermark: z.iso.datetime().optional(),
+    /**
+     * Which poll this maintenance may close, by the instant it was claimed at.
+     *
+     * Present only for a V2 discovery, whose poll is claimed durably and spans
+     * the whole Workflow: the close is guarded on this identity, so a run
+     * whose claim was taken over fails loudly instead of marking a later run's
+     * poll complete. Absent for v1, whose poll and maintenance are one
+     * Activity and whose close overwrites whatever stands, exactly as it
+     * always has — optional rather than required so an in-flight v1 history
+     * that recorded no such field still parses.
+     */
+    pollOwner: z.iso.datetime().optional(),
   });
 export type ScoutPostMatchMaintenanceInput = z.infer<
   typeof ScoutPostMatchMaintenanceInputSchema

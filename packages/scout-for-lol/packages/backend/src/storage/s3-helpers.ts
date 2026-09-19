@@ -50,6 +50,8 @@ type SaveToS3Config = {
   errorContext: string;
   additionalLogDetails?: Record<string, unknown>;
   keyDate?: Date;
+  /** Cancels the upload and any retry still to come; see putContentAddressedObject. */
+  abortSignal?: AbortSignal;
 };
 
 /**
@@ -94,6 +96,9 @@ export async function saveToS3(
       metadata: config.metadata,
       errorContext: config.errorContext,
       retryContext: `${config.errorContext} ${config.matchId}`,
+      ...(config.abortSignal === undefined
+        ? {}
+        : { abortSignal: config.abortSignal }),
       ...(config.additionalLogDetails === undefined
         ? {}
         : { logDetails: config.additionalLogDetails }),

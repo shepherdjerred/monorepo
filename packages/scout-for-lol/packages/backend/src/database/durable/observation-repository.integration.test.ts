@@ -273,13 +273,13 @@ describe("promoteObservation", () => {
     await observeMatch(prisma, record);
     expect(
       await promoteObservation(prisma, {
-        matchId: record.matchId,
+        observation: record,
         promotedAt: PROMOTED_AT,
       }),
     ).toEqual({ outcome: "applied" });
     expect(
       await promoteObservation(prisma, {
-        matchId: record.matchId,
+        observation: record,
         promotedAt: PROMOTED_AT,
       }),
     ).toEqual({ outcome: "already-applied" });
@@ -288,17 +288,36 @@ describe("promoteObservation", () => {
     await observeMatch(prisma, bornFull);
     expect(
       await promoteObservation(prisma, {
-        matchId: bornFull.matchId,
+        observation: bornFull,
         promotedAt: PROMOTED_AT,
       }),
     ).toEqual({ outcome: "conflict", reason: "promotion-target-born-full" });
+  });
+
+  test("refuses to promote a row whose facts differ, not merely its policy", async () => {
+    // The promotion is the right transition only when the policy is the sole
+    // disagreement. A different artifact identity is two producers disagreeing
+    // about which bytes are canonical, and promoting over it would launder
+    // that drift into a FULL row.
+    const stored = observation(116, matchArtifact(116, "a"));
+    await observeMatch(prisma, stored);
+
+    expect(
+      await promoteObservation(prisma, {
+        observation: observation(116, matchArtifact(116, "b")),
+        promotedAt: PROMOTED_AT,
+      }),
+    ).toEqual({ outcome: "conflict", reason: "observation-differs" });
+    const after = await getObservation(prisma, { matchId: stored.matchId });
+    expect(after?.policy).toBe("ARCHIVE_ONLY");
+    expect(after?.artifacts.match?.digest).toBe("a".repeat(64));
   });
 
   test("promoting an unobserved match fails loudly", async () => {
     const ghost = observation(112);
     await expect(
       promoteObservation(prisma, {
-        matchId: ghost.matchId,
+        observation: ghost,
         promotedAt: PROMOTED_AT,
       }),
     ).rejects.toThrow(/never observed/);
@@ -310,11 +329,11 @@ describe("promoteObservation", () => {
     const otherPromotedAt = IsoInstantSchema.parse("2026-09-07T12:30:00.000Z");
     const outcomes = await Promise.all([
       promoteObservation(prisma, {
-        matchId: record.matchId,
+        observation: record,
         promotedAt: PROMOTED_AT,
       }),
       promoteObservation(prisma, {
-        matchId: record.matchId,
+        observation: record,
         promotedAt: otherPromotedAt,
       }),
     ]);
@@ -333,7 +352,7 @@ describe("promoteObservation", () => {
     const original = observation(114);
     await observeMatch(prisma, original);
     await promoteObservation(prisma, {
-      matchId: original.matchId,
+      observation: original,
       promotedAt: PROMOTED_AT,
     });
 
@@ -350,7 +369,7 @@ describe("promoteObservation", () => {
     const original = observation(115);
     await observeMatch(prisma, original);
     await promoteObservation(prisma, {
-      matchId: original.matchId,
+      observation: original,
       promotedAt: PROMOTED_AT,
     });
 
