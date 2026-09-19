@@ -308,3 +308,102 @@ describe("handoff producers and consumers line up", () => {
     }
   });
 });
+
+/**
+ * Every Buildkite step is accounted for.
+ *
+ * Kept as an explicit list rather than a count so that dropping a lane during
+ * a later refactor names the lane, and so the two steps with NO successor have
+ * to be justified in writing rather than silently missing.
+ */
+describe("coverage of the Buildkite pipeline", () => {
+  /** Buildkite key -> the ported lane that covers it. */
+  const COVERAGE: Readonly<Record<string, string>> = {
+    verify: "verify",
+    "alert-dashboard-sqlite": "alert-dashboard-sqlite",
+    trivy: "trivy",
+    semgrep: "semgrep",
+    "resume-build-pr": "resume-build",
+    "resume-build-main": "resume-build",
+    "trmnl-validate-pr": "trmnl-validate",
+    "trmnl-publish": "trmnl-publish",
+    "playwright-e2e-pr": "playwright-e2e",
+    "playwright-e2e-main": "playwright-e2e",
+    "docker-e2e-pr": "docker-e2e",
+    "docker-e2e-main": "docker-e2e",
+    "pr-dryrun": "pr-dryrun",
+    "codex-review-gate": "codex-review-gate",
+    "tofu-plan-seaweedfs": "tofu-plan-seaweedfs",
+    "tofu-plan-tailscale": "tofu-plan-tailscale",
+    "tofu-plan-arr": "tofu-plan-arr",
+    "tofu-plan-github": "tofu-plan-github",
+    "tofu-plan-cloudflare": "tofu-plan-cloudflare",
+    "tofu-platforms-validate": "tofu-platforms-validate",
+    "tofu-posthog-plan": "tofu-posthog-plan",
+    "homelab-release-admission": "homelab-release-admission",
+    images: "images",
+    "images-pr": "pr-dryrun",
+    "helm-push": "helm-push",
+    "argocd-sync": "argocd-sync",
+    "tofu-apply-seaweedfs": "tofu-apply-seaweedfs",
+    "tofu-apply-tailscale": "tofu-apply-tailscale",
+    "tofu-apply-arr": "tofu-apply-arr",
+    "tofu-apply-github": "tofu-apply-github",
+    "tofu-apply-cloudflare": "tofu-apply-cloudflare",
+    "tofu-posthog": "tofu-posthog",
+    "tofu-platform-openai": "tofu-platform-openai",
+    "tofu-platform-anthropic": "tofu-platform-anthropic",
+    "tofu-platform-discord": "tofu-platform-discord",
+    "tofu-platform-openrouter": "tofu-platform-openrouter",
+    "tofu-platform-cloudflare-tokens": "tofu-platform-cloudflare-tokens",
+    sites: "sites",
+    publish: "publish",
+    "release-please": "release-please",
+    "version-commit-back": "version-commit-back",
+    "ci-base-refresh": "ci-base-refresh",
+    "ci-playwright-refresh": "ci-playwright-refresh",
+    "scout-beta-release": "scout-beta-release",
+    "scout-tag-release": "scout-tag-release",
+    "scout-prod-reconcile": "scout-prod-reconcile",
+    "quotabar-macos-pr": "quotabar-macos",
+    "quotabar-macos-main": "quotabar-macos",
+    "hkctl-native-pr": "hkctl-native",
+    "hkctl-native-main": "hkctl-native",
+    "tasknotes-native-pr": "tasknotes-native",
+    "tasknotes-native-main": "tasknotes-native",
+  };
+
+  /** Buildkite steps deliberately left with no successor, and why. */
+  const RETIRED: Readonly<Record<string, string>> = {
+    "build-summary": "produced only the build annotation this migration drops",
+    "macos-native-dispatch":
+      "watchdog polling Buildkite job state; Woodpecker queues the workflow itself",
+    "tofu-plan-buildkite":
+      "plans the Buildkite cluster stack, which is deleted rather than ported",
+    "tofu-apply-buildkite":
+      "applies the Buildkite cluster stack, which is deleted rather than ported",
+  };
+
+  test("accounts for all 56 Buildkite steps", () => {
+    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(56);
+  });
+
+  test("every claimed successor actually exists", () => {
+    const emitted = new Set(allSteps().map((s) => s.key));
+    for (const [buildkiteKey, lane] of Object.entries(COVERAGE)) {
+      expect(emitted.has(lane), `${buildkiteKey} -> missing lane ${lane}`).toBe(
+        true,
+      );
+    }
+  });
+
+  test("every emitted lane is claimed by something", () => {
+    const claimed = new Set(Object.values(COVERAGE));
+    for (const emitted of allSteps()) {
+      expect(
+        claimed.has(emitted.key),
+        `${emitted.key} is emitted but unclaimed`,
+      ).toBe(true);
+    }
+  });
+});

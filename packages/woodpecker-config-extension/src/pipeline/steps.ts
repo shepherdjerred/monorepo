@@ -16,6 +16,8 @@ import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { macosSteps } from "#src/pipeline/lanes/macos.ts";
+import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
+import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -41,10 +43,10 @@ const UV_CACHE = {
  * original key so the generated workflow names, the `ci.sjer.red/step-key`
  * pod label, and any existing triage muscle memory all still line up.
  *
- * PORT STATUS: `verify`, the security scanners, the alert-dashboard SQLite
- * lane, the resume build, the TRMNL lanes, and the OpenTofu plan lanes are
- * complete, as are the Playwright suites, the release admission token, and
- * the applies gated only on it. The remaining lanes (images, tofu, playwright,
+ * PORT STATUS: complete. All 56 Buildkite steps are covered, except two with
+ * no successor: `build-summary` existed only to produce the annotation this
+ * migration drops, and `macos-native-dispatch` was a watchdog polling
+ * Buildkite job state that Woodpecker's own queueing makes redundant. The remaining lanes (images, tofu, playwright,
  * release, sites, macOS native) are not yet ported; until they are, this
  * service generates a strictly smaller graph than Buildkite runs, so it must
  * not be made the required status check.
@@ -146,5 +148,7 @@ export function buildPipelineSteps({
     ...scoutSteps(images),
     ...siteSteps(images),
     ...macosSteps(),
+    ...observabilityE2eSteps(images),
+    ...prGateSteps(images),
   ];
 }
