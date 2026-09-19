@@ -62,6 +62,7 @@ const ContinueAgentChatSchema = z.strictObject({
   prompt: AgentChatPromptSchema,
   chatId: AgentChatIdSchema.optional(),
   turnId: HttpAgentChatTurnIdSchema,
+  submittedAt: z.iso.datetime({ offset: true }),
 });
 type ContinueAgentChatInput = z.infer<typeof ContinueAgentChatSchema>;
 
@@ -374,17 +375,21 @@ export function buildAgentChatApiRoutes(
         client.workflow,
         input,
       );
-      const timestamp = now();
       const receipt = await operations.submit(
         client,
         HttpAgentChatCommandSchema.parse({
           kind: "continue",
           chatId,
-          request: requestForIngress(input, timestamp),
+          request: requestForIngress(input, input.submittedAt),
         }),
       );
       if (input.chatId !== undefined) {
-        await operations.bind(client.workflow, input.source, chatId, timestamp);
+        await operations.bind(
+          client.workflow,
+          input.source,
+          chatId,
+          input.submittedAt,
+        );
       }
       return c.json({ turn: receipt }, 202);
     } catch (error: unknown) {

@@ -23,6 +23,7 @@ import {
 
 const TOKEN = "test-agent-chat-token";
 const NOW = "2026-09-14T22:00:00.000Z";
+const SUBMITTED_AT = "2026-09-14T21:59:00.000Z";
 const EMPTY_CHAT_REQUEST = {
   chatId: "empty-chat",
   title: "Empty chat",
@@ -484,6 +485,7 @@ describe("durable agent chat turns and bindings", () => {
           source: { kind: "discord", channelId: "channel-1" },
           prompt: "Continue that investigation.",
           turnId: RECEIPT.turnId,
+          submittedAt: SUBMITTED_AT,
         },
       }),
     );
@@ -500,7 +502,7 @@ describe("durable agent chat turns and bindings", () => {
       request: {
         turnId: RECEIPT.turnId,
         prompt: "Continue that investigation.",
-        submittedAt: NOW,
+        submittedAt: SUBMITTED_AT,
         source: { kind: "discord", channelId: "channel-1" },
       },
     });
@@ -508,7 +510,7 @@ describe("durable agent chat turns and bindings", () => {
       expect.anything(),
       { kind: "discord", channelId: "channel-1" },
       "chat-existing",
-      NOW,
+      SUBMITTED_AT,
     );
     expect(
       vi.mocked(operations.submit).mock.invocationCallOrder[0],
@@ -528,6 +530,7 @@ describe("durable agent chat turns and bindings", () => {
           source: { kind: "discord", channelId: "channel-1" },
           prompt: "Continue that investigation.",
           turnId: RECEIPT.turnId,
+          submittedAt: SUBMITTED_AT,
         },
       }),
     );
@@ -547,6 +550,25 @@ describe("durable agent chat turns and bindings", () => {
         body: {
           source: { kind: "imessage", conversationId: "unbound" },
           prompt: "Continue.",
+          submittedAt: SUBMITTED_AT,
+        },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(operations.submit).not.toHaveBeenCalled();
+  });
+
+  it("requires a caller-stable timestamp before accepting a continuation", async () => {
+    const operations = makeOperations();
+    const response = await appWith(operations).fetch(
+      request("/agent-chat-turns", {
+        method: "POST",
+        token: TOKEN,
+        body: {
+          source: { kind: "imessage", conversationId: "unbound" },
+          prompt: "Continue.",
+          turnId: RECEIPT.turnId,
         },
       }),
     );
@@ -567,6 +589,7 @@ describe("durable agent chat turns and bindings", () => {
           source: { kind: "imessage", conversationId: "active-chat" },
           prompt: "Continue.",
           turnId: RECEIPT.turnId,
+          submittedAt: SUBMITTED_AT,
         },
       }),
     );
