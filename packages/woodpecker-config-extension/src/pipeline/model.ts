@@ -82,4 +82,13 @@ export type CiStep = {
   readonly changed?: ChangedPathGuard;
   /** Run only on the default branch. */
   readonly defaultBranchOnly?: boolean;
+  /**
+   * Treat a non-zero exit as advisory rather than failing the build.
+   *
+   * Reserved for optional scanners whose FINDINGS must not block a merge.
+   * Note this also swallows scanner crashes, which the Buildkite lanes
+   * deliberately distinguished by exit code inside the command itself — port
+   * that logic with the step rather than relying on this flag alone.
+   */
+  readonly allowFailure?: boolean;
 };

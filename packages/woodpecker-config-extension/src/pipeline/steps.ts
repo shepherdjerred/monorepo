@@ -1,6 +1,8 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
+import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -26,8 +28,9 @@ const UV_CACHE = {
  * original key so the generated workflow names, the `ci.sjer.red/step-key`
  * pod label, and any existing triage muscle memory all still line up.
  *
- * PORT STATUS: `verify` is complete. The remaining lanes (images, tofu,
- * playwright, release, macOS native) are not yet ported; until they are, this
+ * PORT STATUS: `verify`, the security scanners, and the alert-dashboard
+ * SQLite lane are complete. The remaining lanes (images, tofu, playwright,
+ * release, sites, macOS native) are not yet ported; until they are, this
  * service generates a strictly smaller graph than Buildkite runs, so it must
  * not be made the required status check.
  */
@@ -102,5 +105,7 @@ export function buildPipelineSteps({
       ],
       volumes: [BUN_CACHE, UV_CACHE],
     },
+    ...scannerSteps(images),
+    ...alertDashboardSteps(images),
   ];
 }

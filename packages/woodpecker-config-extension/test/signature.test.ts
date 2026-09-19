@@ -52,11 +52,22 @@ describe("content digest", () => {
 describe("ci image resolution", () => {
   const digest = "sha256:" + "b".repeat(64);
 
+  const catalog = JSON.stringify({
+    entries: [
+      { name: "aquasec/trivy", value: "0.72.0" },
+      { name: "semgrep/semgrep", value: "1.170.0" },
+    ],
+  });
+
+  function fetchFixture(path: string): string {
+    return path.endsWith("catalog.json") ? catalog : digest;
+  }
+
   test("pins both images by digest at the given commit", async () => {
     const seen: string[] = [];
     const images = await resolveCiImages("abc123", async (path, commit) => {
       seen.push(`${path}@${commit}`);
-      return digest;
+      return fetchFixture(path);
     });
     expect(images.base).toBe(`ghcr.io/shepherdjerred/ci-base@${digest}`);
     expect(images.playwright).toBe(
@@ -65,10 +76,31 @@ describe("ci image resolution", () => {
     expect(seen).toContain(".buildkite/ci-image/DIGEST@abc123");
   });
 
+  test("reads scanner versions from the catalog at that commit", async () => {
+    const images = await resolveCiImages("abc123", async (path) =>
+      fetchFixture(path),
+    );
+    expect(images.trivy).toBe("aquasec/trivy:0.72.0");
+    expect(images.semgrep).toBe("semgrep/semgrep:1.170.0");
+  });
+
   /** A malformed digest would be interpolated straight into an image ref. */
   test("rejects a malformed digest", async () => {
     await expect(
-      resolveCiImages("abc123", async () => "latest"),
+      resolveCiImages("abc123", async (path) =>
+        path.endsWith("catalog.json") ? catalog : "latest",
+      ),
     ).rejects.toThrow(/invalid CI image digest/u);
+  });
+
+  /** A missing entry must fail, not silently fall back to an unpinned tag. */
+  test("rejects a catalog with no entry for a scanner", async () => {
+    await expect(
+      resolveCiImages("abc123", async (path) =>
+        path.endsWith("catalog.json")
+          ? JSON.stringify({ entries: [] })
+          : digest,
+      ),
+    ).rejects.toThrow(/no entry named aquasec\/trivy/u);
   });
 });

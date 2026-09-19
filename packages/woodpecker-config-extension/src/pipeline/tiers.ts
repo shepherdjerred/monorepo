@@ -39,3 +39,33 @@ export const LIGHT_TIER: ResourceTier = {
   ephemeralStorageRequest: "1Gi",
   ephemeralStorageLimit: "20Gi",
 };
+
+/**
+ * Medium steps: a single package's build and test on a cold cache.
+ *
+ * Between LIGHT and VERIFY — enough memory to compile one workspace without
+ * reserving the whole node for it.
+ */
+export const MEDIUM_TIER: ResourceTier = {
+  cpuRequest: "1",
+  cpuLimit: "7",
+  memoryRequest: "2Gi",
+  memoryLimit: "12Gi",
+  ephemeralStorageRequest: "2Gi",
+  ephemeralStorageLimit: "40Gi",
+};
+
+/**
+ * Scanner steps: third-party images that read the tree and exit.
+ *
+ * Deliberately small and bounded — these lanes are advisory, so they must
+ * never crowd out a blocking lane on the CI node.
+ */
+export const SCANNER_TIER: ResourceTier = {
+  cpuRequest: "250m",
+  cpuLimit: "2",
+  memoryRequest: "512Mi",
+  memoryLimit: "4Gi",
+  ephemeralStorageRequest: "1Gi",
+  ephemeralStorageLimit: "10Gi",
+};
