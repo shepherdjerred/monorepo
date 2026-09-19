@@ -38,6 +38,7 @@ function requestIdentity(request: z.infer<typeof AgentChatTurnRequestSchema>) {
   return {
     turnId: request.turnId,
     prompt: request.prompt,
+    submittedAt: request.submittedAt,
     source: request.source,
   };
 }
