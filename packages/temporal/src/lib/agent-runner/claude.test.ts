@@ -107,6 +107,37 @@ beforeEach(() => {
 });
 
 describe("runClaudeAgentTurn", () => {
+  test("keeps cancellation before provider submission retry-safe", async () => {
+    const controller = new AbortController();
+    controller.abort(new Error("cancelled before submission"));
+
+    await expect(
+      runClaudeAgentTurn({ ...input(), signal: controller.signal }),
+    ).rejects.toMatchObject({
+      generationStarted: false,
+      message: expect.stringContaining("cancelled before submission"),
+    });
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
+  test("keeps cancellation during workspace preparation retry-safe", async () => {
+    const controller = new AbortController();
+    prepareProviderWorkspaceMock.mockImplementationOnce(() => {
+      controller.abort(new Error("cancelled during preparation"));
+      return Promise.resolve();
+    });
+
+    await expect(
+      runClaudeAgentTurn({ ...input(), signal: controller.signal }),
+    ).rejects.toMatchObject({
+      generationStarted: false,
+      message: expect.stringContaining("cancelled during preparation"),
+    });
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("runClaudeAgentTurn", () => {
   test.each([null, "/work/another-session"])(
     "rejects resume with an unverified workspace %s",
     async (resumeWorkspacePath) => {
