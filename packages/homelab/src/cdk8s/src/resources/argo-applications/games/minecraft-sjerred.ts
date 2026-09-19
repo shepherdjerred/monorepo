@@ -98,9 +98,7 @@ export function createMinecraftSjerredApp(chart: Chart) {
       version: versions.paper,
       type: "PAPER",
       motd: "Jerred's Really Cool Minecraft Server",
-      // ops: "RiotShielder",
       whitelist: [
-        "RiotShielder",
         "lolopToaster",
         "gexboy8",
         "Virmel",
