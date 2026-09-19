@@ -40,6 +40,9 @@ const DeploymentSchema = z.object({
       }),
       spec: z.object({
         automountServiceAccountToken: z.boolean(),
+        securityContext: z
+          .object({ fsGroup: z.number().optional() })
+          .optional(),
         containers: z.array(ContainerSchema),
         initContainers: z.array(ContainerSchema),
         volumes: z.array(z.looseObject({ name: z.string() })),
@@ -176,6 +179,9 @@ describe("Temporal agent provider network boundary", () => {
     expect(deployment.spec.template.spec.automountServiceAccountToken).toBe(
       false,
     );
+    expect(
+      deployment.spec.template.spec.securityContext?.fsGroup,
+    ).toBeUndefined();
     expect(
       deployment.spec.template.spec.volumes.find(
         (volume) => volume.name === "provider-hidden-service-account",

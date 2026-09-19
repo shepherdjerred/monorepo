@@ -1,6 +1,5 @@
 import { Context } from "@temporalio/activity";
-import { chmod, mkdir, rm, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod/v4";
 import { runAgentTurn } from "#lib/agent-runner/run.ts";
@@ -15,10 +14,7 @@ import {
   agentTaskProviderSecretTokens,
   envForEvidenceCollector,
 } from "#activities/agent/agent-task-env.ts";
-import {
-  providerSubprocessCommand,
-  providerSubprocessUid,
-} from "#shared/agent/agent-subprocess-identity.ts";
+import { providerSubprocessUid } from "#shared/agent/agent-subprocess-identity.ts";
 import {
   pullLatestAgentChatSessionBundle,
   pushAgentChatSessionBundle,
@@ -85,19 +81,14 @@ function providerEnvironment(input: {
   return environment;
 }
 
-function shellQuote(value: string): string {
-  return `'${value.replaceAll("'", `'"'"'`)}'`;
-}
-
 async function prepareProviderRuntime(input: {
   provider: "claude" | "codex";
-  root: string;
   sessionHome: string;
   workspacePath: string;
   sourceEnv: Readonly<Record<string, string | undefined>>;
-}): Promise<string | undefined> {
+}): Promise<void> {
   const uid = providerSubprocessUid(input.sourceEnv);
-  if (uid === undefined) return undefined;
+  if (uid === undefined) return;
 
   await mkdir(
     path.join(
@@ -106,21 +97,6 @@ async function prepareProviderRuntime(input: {
     ),
     { recursive: true },
   );
-
-  let codexPathOverride: string | undefined;
-  if (input.provider === "codex") {
-    const sdkEntry = fileURLToPath(import.meta.resolve("@openai/codex-sdk"));
-    const codexCli = path.resolve(
-      path.dirname(sdkEntry),
-      "../../codex/bin/codex.js",
-    );
-    codexPathOverride = path.join(input.root, "codex-provider");
-    const command = providerSubprocessCommand([codexCli], input.sourceEnv)
-      .map((argument) => shellQuote(argument))
-      .join(" ");
-    await writeFile(codexPathOverride, `#!/bin/sh\nexec ${command} "$@"\n`);
-    await chmod(codexPathOverride, 0o755);
-  }
 
   const gid = process.getgid?.() ?? uid;
   const processHandle = Bun.spawn(
@@ -140,7 +116,6 @@ async function prepareProviderRuntime(input: {
       `Failed to prepare provider-owned chat directories: ${detail.trim()}`,
     );
   }
-  return codexPathOverride;
 }
 
 export type RunAgentChatTurnDependencies = {
@@ -206,9 +181,8 @@ export async function runAgentChatTurnWithDependencies(
       sessionHome: paths.sessionHome,
       sourceEnv: dependencies.sourceEnv,
     });
-    const codexPathOverride = await prepareProviderRuntime({
+    await prepareProviderRuntime({
       provider: input.config.provider,
-      root: paths.root,
       sessionHome: paths.sessionHome,
       workspacePath: paths.workspacePath,
       sourceEnv: dependencies.sourceEnv,
@@ -267,7 +241,6 @@ export async function runAgentChatTurnWithDependencies(
             },
             turnBudgetKind: "tool-steps",
             skipGitRepoCheck: true,
-            ...(codexPathOverride === undefined ? {} : { codexPathOverride }),
           })
         : await dependencies.runTurn({
             provider: "claude",

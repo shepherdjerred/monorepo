@@ -21,9 +21,13 @@ describe("runAgentChatTurnWithDependencies", () => {
       const baseDirectory = await temporaryDirectories.create();
       const store = memoryAgentChatStore();
       const resumes: (string | undefined)[] = [];
+      const codexPathOverrides: (string | undefined)[] = [];
       const workspaceWasFresh: boolean[] = [];
       const mockedRunTurn: typeof runAgentTurn = async (input) => {
         resumes.push(input.resumeSessionId);
+        if (input.provider === "codex") {
+          codexPathOverrides.push(input.codexPathOverride);
+        }
         workspaceWasFresh.push(
           !(await Bun.file(path.join(input.cwd, "turn-marker")).exists()),
         );
@@ -129,6 +133,7 @@ describe("runAgentChatTurnWithDependencies", () => {
       expect(second.finalText).toBe("second");
       expect(second.sessionManifestKey).toContain("/turns/2/attempts/");
       expect(resumes).toEqual([undefined, "provider-session-1"]);
+      expect(codexPathOverrides).toEqual([undefined, undefined]);
       expect(workspaceWasFresh).toEqual([true, true]);
       expect(heartbeat.mock.calls.length).toBeGreaterThan(6);
       expect(
