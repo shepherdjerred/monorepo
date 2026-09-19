@@ -31,12 +31,15 @@ vi.mock("#src/configuration.ts", () => ({
 }));
 
 const {
+  InconsistentAttestedObjectError,
   MalformedRenderReceiptError,
   readAttestedPrematchArtifactV2,
   readAttestedReportArtifactV2,
 } = await import("#src/temporal/v2/notification/notification-artifact.ts");
 
 const MATCH = RiotMatchIdSchema.parse("NA1_9301");
+/** The delivery's pre-send budget, standing open for these reads. */
+const NEVER_ABORTED = new AbortController().signal;
 const IMAGE = new Uint8Array([137, 80, 78, 71, 1]);
 const REVIEW = new Uint8Array([137, 80, 78, 71, 2, 2]);
 
@@ -79,7 +82,7 @@ describe("the post-match reader", () => {
   test("reads the report image and the review the receipt names", async () => {
     stubs.readNotificationArtifactV2.mockResolvedValue(REPORT);
 
-    const artifact = await readAttestedReportArtifactV2(MATCH);
+    const artifact = await readAttestedReportArtifactV2(MATCH, NEVER_ABORTED);
 
     expect(artifact.image).toBe(IMAGE);
     expect(artifact.review).toBe(REVIEW);
@@ -95,7 +98,7 @@ describe("the post-match reader", () => {
     const { review: _review, ...withoutReview } = REPORT;
     stubs.readNotificationArtifactV2.mockResolvedValue(withoutReview);
 
-    const artifact = await readAttestedReportArtifactV2(MATCH);
+    const artifact = await readAttestedReportArtifactV2(MATCH, NEVER_ABORTED);
 
     expect(artifact.review).toBeUndefined();
     expect(stubs.readVerifiedRawObjectBytes).toHaveBeenCalledTimes(1);
@@ -119,22 +122,28 @@ describe("the post-match reader", () => {
       // intent went back to `ready` and re-drove the same row forever.
       stubs.readNotificationArtifactV2.mockResolvedValue(scenario.evidence);
 
-      await expect(readAttestedReportArtifactV2(MATCH)).rejects.toBeInstanceOf(
-        MalformedRenderReceiptError,
-      );
+      await expect(
+        readAttestedReportArtifactV2(MATCH, NEVER_ABORTED),
+      ).rejects.toBeInstanceOf(MalformedRenderReceiptError);
       expect(stubs.readVerifiedRawObjectBytes).not.toHaveBeenCalled();
     },
   );
 
   test("refuses a report whose review bytes do not match their attested size", async () => {
+    // Typed, and therefore terminal at the send. A plain error here was
+    // laundered into a retryable failure by the delivery's pre-send boundary,
+    // and reconciliation re-drove the same self-contradictory receipt every
+    // sweep — the digest matched, so every re-read reproduces it exactly.
     stubs.readNotificationArtifactV2.mockResolvedValue({
       ...REPORT,
       review: { ...REPORT.review, bytes: REVIEW.byteLength + 1 },
     });
 
-    await expect(readAttestedReportArtifactV2(MATCH)).rejects.toThrow(
-      /attested size/u,
+    const outcome = readAttestedReportArtifactV2(MATCH, NEVER_ABORTED);
+    await expect(outcome).rejects.toBeInstanceOf(
+      InconsistentAttestedObjectError,
     );
+    await expect(outcome).rejects.toThrow(/contradicts itself/u);
   });
 
   test("a missing receipt is a plain error, not a malformed one", async () => {
@@ -142,7 +151,7 @@ describe("the post-match reader", () => {
     // ordering violation the delivery keeps retryable.
     stubs.readNotificationArtifactV2.mockResolvedValue(null);
 
-    const outcome = readAttestedReportArtifactV2(MATCH);
+    const outcome = readAttestedReportArtifactV2(MATCH, NEVER_ABORTED);
     await expect(outcome).rejects.toThrow(/No postmatch render receipt/u);
     await expect(outcome).rejects.not.toBeInstanceOf(
       MalformedRenderReceiptError,
@@ -154,7 +163,7 @@ describe("the prematch reader", () => {
   test("reads the loading screen the receipt names", async () => {
     stubs.readNotificationArtifactV2.mockResolvedValue(LOADING_SCREEN);
 
-    const artifact = await readAttestedPrematchArtifactV2(MATCH);
+    const artifact = await readAttestedPrematchArtifactV2(MATCH, NEVER_ABORTED);
 
     expect(artifact).toMatchObject({ artifact: "image", bytes: IMAGE });
     expect(stubs.readNotificationArtifactV2).toHaveBeenCalledWith(
@@ -168,7 +177,7 @@ describe("the prematch reader", () => {
       NONE("unsupported-queue"),
     );
 
-    const artifact = await readAttestedPrematchArtifactV2(MATCH);
+    const artifact = await readAttestedPrematchArtifactV2(MATCH, NEVER_ABORTED);
 
     expect(artifact).toMatchObject({ artifact: "none" });
     expect(stubs.readVerifiedRawObjectBytes).not.toHaveBeenCalled();
@@ -183,7 +192,7 @@ describe("the prematch reader", () => {
       stubs.readNotificationArtifactV2.mockResolvedValue(scenario.evidence);
 
       await expect(
-        readAttestedPrematchArtifactV2(MATCH),
+        readAttestedPrematchArtifactV2(MATCH, NEVER_ABORTED),
       ).rejects.toBeInstanceOf(MalformedRenderReceiptError);
     },
   );

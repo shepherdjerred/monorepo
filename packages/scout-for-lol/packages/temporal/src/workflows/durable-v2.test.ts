@@ -113,12 +113,53 @@ describe("the V2 notification intent machine", () => {
       "beginNotificationSendV2",
       "deliverNotificationV2",
       "recordNotificationOutcomeV2",
+      "afterNotificationDeliveredV2",
     ]);
     expect(store.sends).toHaveLength(1);
     expect(store.renders).toBe(1);
     expect(result).toMatchObject({
       data: { state: { kind: "delivered" }, attemptCount: 1 },
     });
+  }, 60_000);
+
+  test("runs the post-delivery follow-up only after the outcome is recorded", async () => {
+    // The follow-up used to run inside the send Activity, where a Discord
+    // edit that outlived the heartbeat timeout killed the Activity before its
+    // decided `delivered` result could be returned — and the Workflow recorded
+    // a message Discord had accepted as an ambiguous send. Out here the
+    // outcome is already durable before the refresh is even attempted.
+    const store = createNotificationStore();
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    await notify("notification-follow-up-order");
+
+    expect(store.calls.indexOf("recordNotificationOutcomeV2")).toBeLessThan(
+      store.calls.indexOf("afterNotificationDeliveredV2"),
+    );
+  }, 60_000);
+
+  test("a follow-up that never answers leaves the delivery delivered", async () => {
+    const store = createNotificationStore({ followUp: "throws" });
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    const result = await notify("notification-follow-up-fails");
+
+    expect(result).toMatchObject({
+      data: { state: { kind: "delivered" }, attemptCount: 1 },
+    });
+    expect(store.sends).toHaveLength(1);
+  }, 60_000);
+
+  test("skips the follow-up when nothing was delivered", async () => {
+    const store = createNotificationStore({ script: [{ outcome: "unknown" }] });
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    await notify("notification-follow-up-skipped");
+
+    expect(store.calls).not.toContain("afterNotificationDeliveredV2");
   }, 60_000);
 
   test("commits the attempt nonce before the send and the outcome after it", async () => {

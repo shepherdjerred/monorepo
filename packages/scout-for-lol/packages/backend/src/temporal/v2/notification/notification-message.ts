@@ -26,10 +26,13 @@ import { buildSettlementNotificationMessageV2 } from "#src/temporal/v2/notificat
  *
  * Nothing here contacts Discord: every failure it raises is decided before the
  * send, which is what lets `notification-delivery.ts` classify them rather than
- * calling them ambiguous.
+ * calling them ambiguous. The signal is the delivery's pre-send budget, so a
+ * slow object store is answered by the Activity rather than by the timeout
+ * that would otherwise answer for it.
  */
 export async function buildAttestedMessageV2(
   record: MatchNotificationIntentRecord,
+  abortSignal: AbortSignal,
 ): Promise<MessageCreateOptions> {
   const riotMatchId = record.matchId;
   switch (record.intent.kind) {
@@ -42,12 +45,12 @@ export async function buildAttestedMessageV2(
     case "postmatch":
       return buildPostmatchNotificationMessageV2(
         riotMatchId,
-        await readAttestedReportArtifactV2(riotMatchId),
+        await readAttestedReportArtifactV2(riotMatchId, abortSignal),
       );
     case "prematch":
       return await buildPrematchNotificationMessageV2(
         riotMatchId,
-        await readAttestedPrematchArtifactV2(riotMatchId),
+        await readAttestedPrematchArtifactV2(riotMatchId, abortSignal),
       );
   }
 }

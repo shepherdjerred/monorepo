@@ -386,12 +386,49 @@ export type ScoutNotificationDeliveryV2Result = z.infer<
   typeof ScoutNotificationDeliveryV2ResultSchema
 >;
 
+/**
+ * The delivery Activity's timing contract, in one place because three things
+ * depend on it agreeing with itself: the Workflow's Activity options, the
+ * Activity's own pre-send budget, and the reasoning that says a timeout means
+ * an ambiguous send.
+ *
+ * `deliverNotificationV2` runs with `maximumAttempts: 1` because a retry can
+ * double-deliver, so any failure the Workflow cannot attribute is recorded as
+ * `unknown-delivery` — an operator dead end. That is the right answer for the
+ * Discord request itself and the wrong answer for everything the Activity does
+ * BEFORE it: a receipt read, an object fetch and a guild lookup provably send
+ * nothing, and a server-side timeout during them would park a notification
+ * that never left.
+ *
+ * So the Activity decides its own pre-send failures inside a budget strictly
+ * shorter than the timeouts that would otherwise decide them for it. Whatever
+ * has not finished preparing by then comes back as a definite, retryable
+ * non-send while the Activity is still alive to say so, and only the Discord
+ * call is ever left to the server's clock.
+ */
+export const NOTIFICATION_DELIVERY_START_TO_CLOSE_MS = 30_000;
+export const NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS = 10_000;
+export const NOTIFICATION_PRE_SEND_BUDGET_MS = 6000;
+
 export const ScoutNotificationOutcomeV2InputSchema =
   ScoutIntentAttemptRefV2Schema.extend({
     delivery: ScoutNotificationDeliveryV2ResultSchema,
   });
 export type ScoutNotificationOutcomeV2Input = z.infer<
   typeof ScoutNotificationOutcomeV2InputSchema
+>;
+
+/**
+ * What the post-delivery follow-up did. Best-effort by construction: it runs
+ * only after the delivery outcome is durably recorded, so nothing it reports
+ * can change what was delivered — `failed` is a log line with a return type,
+ * not a signal to retry the send.
+ */
+export const ScoutNotificationFollowUpV2ResultSchema = z.strictObject({
+  outcome: z.enum(["completed", "skipped", "failed"]),
+});
+export type ScoutNotificationFollowUpV2Result = z.infer<
+  typeof ScoutNotificationFollowUpV2ResultSchema
 >;
 
 export const ScoutLakeStagingV2ResultSchema = z.strictObject({

@@ -39,6 +39,7 @@ export type ScoutV2NotificationActivities = Pick<
   | "beginNotificationSendV2"
   | "deliverNotificationV2"
   | "recordNotificationOutcomeV2"
+  | "afterNotificationDeliveredV2"
 >;
 
 export type ScoutV2BackgroundActivities = Pick<

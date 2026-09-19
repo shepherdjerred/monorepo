@@ -3,6 +3,7 @@ import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications
 import configuration from "#src/configuration.ts";
 import { readVerifiedRawObjectBytes } from "#src/report-store/s3-raw-source.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
 import {
   readNotificationArtifactV2,
   type ScoutV2AttestedObject,
@@ -48,7 +49,19 @@ import {
  * the object and propagates untouched, which keeps it retryable.
  */
 
-export class MalformedRenderReceiptError extends Error {
+/**
+ * A render receipt that cannot be honoured, for a reason no retry changes.
+ *
+ * Both subclasses are statements about PERSISTED evidence: the same row parses
+ * the same way on every read, so returning the intent to `ready` would re-drive
+ * the violation every sweep forever.
+ */
+export abstract class RenderReceiptViolationError extends UndeliverableContentError {
+  abstract readonly riotMatchId: RiotMatchId;
+}
+
+/** The receipt attests a shape its own kind of notification cannot deliver. */
+export class MalformedRenderReceiptError extends RenderReceiptViolationError {
   readonly riotMatchId: RiotMatchId;
   readonly kind: NotificationIntentKind;
   readonly attested: ScoutV2NotificationRenderEvidence["artifact"];
@@ -66,6 +79,34 @@ export class MalformedRenderReceiptError extends Error {
     this.riotMatchId = args.riotMatchId;
     this.kind = args.kind;
     this.attested = args.evidence.artifact;
+  }
+}
+
+/**
+ * The receipt's two claims about one object disagree with each other.
+ *
+ * SHA-256 covers length, so bytes that match the digest and not the attested
+ * size mean the RECEIPT is self-contradictory — the writer recorded a digest
+ * and a size that never described the same object. That is a defect in what
+ * was persisted, not in what is stored: the object is intact and re-reading it
+ * produces the same contradiction, so this is terminal rather than retryable.
+ */
+export class InconsistentAttestedObjectError extends RenderReceiptViolationError {
+  readonly riotMatchId: RiotMatchId;
+  readonly objectKey: string;
+
+  constructor(args: {
+    riotMatchId: RiotMatchId;
+    objectKey: string;
+    attestedBytes: number;
+    readBytes: number;
+  }) {
+    super(
+      `The artifact ${args.objectKey} for ${args.riotMatchId} matched its digest but not its attested size (${String(args.readBytes)} bytes read, ${String(args.attestedBytes)} attested), so the receipt contradicts itself`,
+    );
+    this.name = "InconsistentAttestedObjectError";
+    this.riotMatchId = args.riotMatchId;
+    this.objectKey = args.objectKey;
   }
 }
 
@@ -120,6 +161,7 @@ async function requireRenderEvidence(
 async function readAttestedObject(
   riotMatchId: RiotMatchId,
   attested: ScoutV2AttestedObject,
+  abortSignal: AbortSignal,
 ): Promise<Uint8Array> {
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
@@ -135,20 +177,27 @@ async function readAttestedObject(
     bucket,
     key: attested.objectKey,
     expectedDigest: attested.digest,
+    options: { abortSignal },
   });
   if (bytes.byteLength !== attested.bytes) {
     // Unreachable once the digest matched — SHA-256 covers the length — but
     // the receipt makes two claims and a reader that checked one of them
-    // would be trusting the other.
-    throw new Error(
-      `The artifact ${attested.objectKey} for ${riotMatchId} matched its digest but not its attested size (${String(bytes.byteLength)} bytes read, ${String(attested.bytes)} attested)`,
-    );
+    // would be trusting the other. Typed, because a plain error here would be
+    // laundered into a retryable failure by the delivery's pre-send boundary
+    // and re-drive this same deterministic contradiction every sweep.
+    throw new InconsistentAttestedObjectError({
+      riotMatchId,
+      objectKey: attested.objectKey,
+      attestedBytes: attested.bytes,
+      readBytes: bytes.byteLength,
+    });
   }
   return bytes;
 }
 
 export async function readAttestedReportArtifactV2(
   riotMatchId: RiotMatchId,
+  abortSignal: AbortSignal,
 ): Promise<ScoutV2AttestedReportArtifact> {
   const evidence = await requireRenderEvidence(riotMatchId, "postmatch");
   if (evidence.artifact !== "report") {
@@ -159,20 +208,25 @@ export async function readAttestedReportArtifactV2(
       expected: "a report",
     });
   }
-  const image = await readAttestedObject(riotMatchId, evidence.image);
+  const image = await readAttestedObject(
+    riotMatchId,
+    evidence.image,
+    abortSignal,
+  );
   const review =
     evidence.review === undefined
       ? undefined
-      : await readAttestedObject(riotMatchId, evidence.review);
+      : await readAttestedObject(riotMatchId, evidence.review, abortSignal);
   return { image, review, evidence };
 }
 
 export async function readAttestedPrematchArtifactV2(
   riotMatchId: RiotMatchId,
+  abortSignal: AbortSignal,
 ): Promise<ScoutV2AttestedPrematchArtifact> {
   const evidence = await requireRenderEvidence(riotMatchId, "prematch");
   if (evidence.artifact === "image") {
-    const bytes = await readAttestedObject(riotMatchId, evidence);
+    const bytes = await readAttestedObject(riotMatchId, evidence, abortSignal);
     return { artifact: "image", bytes, evidence };
   }
   if (evidence.artifact === "none" && evidence.reason === "unsupported-queue") {

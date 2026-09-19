@@ -40,6 +40,7 @@ import {
 import type {
   ScoutLakeStagingV2Result,
   ScoutNotificationDeliveryV2Result,
+  ScoutNotificationFollowUpV2Result,
   ScoutNotificationGateV2,
   ScoutNotificationIntentV2Result,
   ScoutNotificationOutcomeV2Input,
@@ -115,6 +116,12 @@ export type ScoutV2NotificationStore = {
   calls: string[];
   /** The call this worker dies on, modelling a crash right after the last. */
   failAt: string | null;
+  /**
+   * How the post-delivery follow-up behaves. `throws` models the real hazard
+   * it was moved out of the send for: a Discord edit that outlives its
+   * Activity's timeout. Out here that must cost the refresh and nothing else.
+   */
+  followUp: "completes" | "throws";
 };
 
 export function pendingIntent(): NotificationIntent {
@@ -146,6 +153,7 @@ export function createNotificationStore(
     script: [{ outcome: "delivered", messageId: MESSAGE_ID }],
     calls: [],
     failAt: null,
+    followUp: "completes",
     ...overrides,
   };
 }
@@ -276,6 +284,16 @@ export function scoutV2NotificationStubs(store: ScoutV2NotificationStore) {
         );
       }
       return scripted;
+    },
+    afterNotificationDeliveredV2: (): ScoutNotificationFollowUpV2Result => {
+      record("afterNotificationDeliveredV2");
+      if (store.followUp === "throws") {
+        throw ApplicationFailure.nonRetryable(
+          "the callout refresh never answered",
+          "InjectedCrash",
+        );
+      }
+      return { outcome: "completed" };
     },
     recordNotificationOutcomeV2: (
       input: ScoutNotificationOutcomeV2Input,

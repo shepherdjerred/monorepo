@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import type * as NotificationArtifactModule from "#src/temporal/v2/notification/notification-artifact.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { NOTIFICATION_PRE_SEND_BUDGET_MS } from "@scout-for-lol/temporal/activity-contracts-v2";
 import {
   attemptRef,
   intentRecord,
@@ -68,7 +69,9 @@ vi.mock("#src/temporal/v2/notification/notification-artifact.ts", async () => {
     "#src/temporal/v2/notification/notification-artifact.ts",
   );
   return {
+    RenderReceiptViolationError: actual.RenderReceiptViolationError,
     MalformedRenderReceiptError: actual.MalformedRenderReceiptError,
+    InconsistentAttestedObjectError: actual.InconsistentAttestedObjectError,
     readAttestedReportArtifactV2: stubs.readAttestedReportArtifactV2,
     readAttestedPrematchArtifactV2: stubs.readAttestedPrematchArtifactV2,
   };
@@ -93,7 +96,7 @@ vi.mock("#src/league/discord/channel.ts", async () => {
 
 const { ArchivedObjectUnusableError } =
   await import("#src/report-store/s3-raw-source.ts");
-const { MalformedRenderReceiptError } =
+const { InconsistentAttestedObjectError, MalformedRenderReceiptError } =
   await import("#src/temporal/v2/notification/notification-artifact.ts");
 const { deliverNotificationV2 } =
   await import("#src/temporal/v2/notification-delivery.ts");
@@ -255,6 +258,85 @@ describe("a failure before the request could have left", () => {
           reason: "unsupported-queue",
         },
         expected: "a report",
+      }),
+    );
+
+    const result = await deliverNotificationV2(attemptRef());
+
+    expect(result).toEqual({
+      outcome: "failed",
+      failure: { classification: "terminal", reason: "content-unavailable" },
+    });
+    expect(stubs.send).not.toHaveBeenCalled();
+  });
+
+  test("answers a pre-send phase that outruns its budget, rather than hanging", async () => {
+    // The finding this closes: the artifact read happens inside an Activity
+    // with a ten-second heartbeat timeout and a thirty-second start-to-close,
+    // and `maximumAttempts: 1`. A slow object store therefore used to be
+    // decided by the server's clock, reaching the Workflow as a bare Activity
+    // failure — indistinguishable from a Discord request that went unanswered,
+    // and recorded as `unknown-delivery`, which only an operator leaves. A
+    // read that provably contacted nobody must be answered by the Activity,
+    // while it is still alive to answer.
+    vi.useFakeTimers();
+    try {
+      stubs.readAttestedReportArtifactV2.mockReturnValue(
+        new Promise(() => {
+          // The object store that never answers.
+        }),
+      );
+
+      const outcome = deliverNotificationV2(attemptRef());
+      await vi.advanceTimersByTimeAsync(NOTIFICATION_PRE_SEND_BUDGET_MS);
+
+      expect(await outcome).toEqual({
+        outcome: "failed",
+        failure: { classification: "retryable", reason: "service-unavailable" },
+      });
+      expect(stubs.send).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("cancels the object-store read it walked away from", async () => {
+    // Answering within the budget is only half of it: the read must actually
+    // be cancelled, or the Activity would return while an abandoned fetch kept
+    // running against a worker that has moved on.
+    vi.useFakeTimers();
+    try {
+      let observed: AbortSignal | undefined;
+      stubs.readAttestedReportArtifactV2.mockImplementation(
+        (_matchId: unknown, abortSignal: AbortSignal) => {
+          observed = abortSignal;
+          return new Promise(() => {
+            // Still nothing.
+          });
+        },
+      );
+
+      const outcome = deliverNotificationV2(attemptRef());
+      await vi.advanceTimersByTimeAsync(NOTIFICATION_PRE_SEND_BUDGET_MS);
+      await outcome;
+
+      expect(observed?.aborted).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("reports a receipt that contradicts itself as terminal", async () => {
+    // SHA-256 covers length, so bytes that match the digest and not the
+    // attested size mean the RECEIPT disagrees with itself. Deterministic:
+    // every re-read reproduces it, so a retryable failure would return the
+    // intent to `ready` and re-drive the same contradiction forever.
+    stubs.readAttestedReportArtifactV2.mockRejectedValue(
+      new InconsistentAttestedObjectError({
+        riotMatchId: RiotMatchIdSchema.parse("NA1_9301"),
+        objectKey: "games/2026/09/16/NA1_9301/report.png",
+        attestedBytes: 11,
+        readBytes: 12,
       }),
     );
 

@@ -8,6 +8,10 @@ import type {
   ScoutTemporalActivities,
   ScoutTemporalV2Activities,
 } from "#src/activities.ts";
+import {
+  NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS,
+  NOTIFICATION_DELIVERY_START_TO_CLOSE_MS,
+} from "#src/activity-contracts-v2.ts";
 import type { ScoutStage } from "#src/contracts.ts";
 import { DETACHED_WORK_MAX_ATTEMPTS } from "#src/contracts.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
@@ -151,6 +155,13 @@ export function lakeV2Activities(stage: ScoutStage) {
  * looked. Retrying here would trade a visible stall for an invisible
  * duplicate.
  *
+ * The timeouts are stated in `activity-contracts-v2.ts` rather than here,
+ * because the Activity derives its own pre-send budget from them: everything
+ * it does before contacting Discord is answered inside that budget, so a
+ * server-side timeout can only ever mean the Discord request itself went
+ * unanswered. Splitting the two numbers across two files is what let a slow
+ * object-store read be recorded as an ambiguous send.
+ *
  * `WAIT_CANCELLATION_COMPLETED` closes the same hole from the other side: a
  * cancelled Workflow must not walk away from a send whose outcome is still
  * unobserved. The timeouts are Discord's, not the shared realtime budget — a
@@ -159,9 +170,9 @@ export function lakeV2Activities(stage: ScoutStage) {
  * Workflow cannot say what happened.
  */
 export const NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS = {
-  startToCloseTimeout: "30 seconds",
+  startToCloseTimeout: NOTIFICATION_DELIVERY_START_TO_CLOSE_MS,
   scheduleToCloseTimeout: "2 minutes",
-  heartbeatTimeout: "10 seconds",
+  heartbeatTimeout: NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS,
   cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
   retry: {
     maximumAttempts: 1,

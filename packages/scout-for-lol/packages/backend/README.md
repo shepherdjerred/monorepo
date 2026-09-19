@@ -560,6 +560,41 @@ facts about persisted evidence that parse the same way on every read, so both
 report `content-unavailable` instead of returning the intent to `ready` for
 reconciliation to re-drive forever.
 
+### Only the Discord request may be ambiguous
+
+`deliverNotificationV2` runs with `maximumAttempts: 1`, because a retry can
+post a second message, so any failure the Workflow cannot attribute is recorded
+as `unknown-delivery` — a dead end only an operator leaves. That is the right
+answer for the Discord request and the wrong answer for everything around it,
+so two boundaries keep the rest out of it.
+
+Before the send, the Activity works under a pre-send budget
+(`notification/pre-send-budget.ts`) that is strictly shorter than its own
+heartbeat and start-to-close timeouts, which are stated once in
+`activity-contracts-v2.ts` so the two cannot drift. The receipt read, object
+fetch, policy gate and guild lookup provably contact nobody, so whatever has
+not finished by then is answered by the Activity as a definite, retryable
+non-send while it is still alive to answer — rather than by the server's clock,
+which reaches the Workflow as a bare timeout indistinguishable from an
+unanswered send. The object read takes the budget's `AbortSignal` and is
+genuinely cancelled.
+
+After the send, nothing runs in that Activity at all. The Dare callout refresh
+is `afterNotificationDeliveredV2`, its own Activity, called by the Workflow
+only once the outcome is durably recorded: a best-effort Discord edit that
+outlived the heartbeat timeout used to kill the delivery Activity before its
+decided `delivered` result could be returned, turning a message Discord had
+accepted into an ambiguous send.
+
+Deterministic content violations are terminal rather than retryable, because
+the row parses the same way on every read and reconciliation would otherwise
+re-drive it every sweep forever. `UndeliverableContentError` is the shared type
+the send narrows on: a receipt attesting a shape its kind cannot deliver, a
+receipt whose digest and size contradict each other, or an announcement payload
+that cannot produce a message. Evidence that is merely unreachable — a timed-out
+object store, a database that did not answer — stays retryable, because the next
+attempt genuinely may succeed.
+
 ### The recovery policy gates delivery
 
 A recovery batch's `RecoveryPolicy` means something here and nowhere else. The

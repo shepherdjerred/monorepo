@@ -30,9 +30,12 @@ import {
 } from "#src/league/discord/channel.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
-import { afterDareSummaryDeliveredV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
-import { MalformedRenderReceiptError } from "#src/temporal/v2/notification/notification-artifact.ts";
+import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
 import { buildAttestedMessageV2 } from "#src/temporal/v2/notification/notification-message.ts";
+import {
+  PreSendBudgetExpiredError,
+  withPreSendBudget,
+} from "#src/temporal/v2/notification/pre-send-budget.ts";
 import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
 import { ANNOUNCEMENT_INTENT_KINDS } from "@scout-for-lol/domain/notifications/intent.ts";
@@ -296,11 +299,6 @@ type PreparedSend =
       readonly message: MessageCreateOptions;
       readonly target: NotificationTarget;
       readonly guildId: DiscordGuildId | undefined;
-      /**
-       * Best-effort follow-up once Discord accepted the send — the Dare
-       * callout refresh. Never throws and never changes the outcome.
-       */
-      readonly afterDelivered: (() => Promise<void>) | undefined;
     }
   | { readonly phase: "failed"; readonly failure: NotificationFailure };
 
@@ -316,6 +314,7 @@ const CONTENT_UNAVAILABLE: NotificationFailure = {
 
 async function prepareNotificationSend(
   input: ScoutIntentAttemptRefV2,
+  abortSignal: AbortSignal,
 ): Promise<PreparedSend> {
   const record = await requireIntentRecordV2(input.intentKey);
   const riotMatchId = record.matchId;
@@ -354,7 +353,7 @@ async function prepareNotificationSend(
 
   let message: MessageCreateOptions;
   try {
-    message = await buildAttestedMessageV2(record);
+    message = await buildAttestedMessageV2(record, abortSignal);
   } catch (error) {
     if (error instanceof ArchivedObjectUnusableError) {
       logger.error(
@@ -363,12 +362,13 @@ async function prepareNotificationSend(
       );
       return { phase: "failed", failure: CONTENT_UNAVAILABLE };
     }
-    if (error instanceof MalformedRenderReceiptError) {
-      // Loud and terminal. The render wrote a receipt the send cannot
-      // honour; that is the producer's contract to fix, and no retry reads
-      // the row differently.
+    if (error instanceof UndeliverableContentError) {
+      // Loud and terminal: a receipt attesting a shape this kind cannot
+      // deliver, a receipt contradicting itself about one object, or an
+      // announcement payload that cannot produce a message. Every one is a
+      // producer's contract to fix, and no retry reads the row differently.
       logger.error(
-        `The ${error.kind} render receipt for ${riotMatchId} is malformed and the intent cannot be delivered from it`,
+        `The evidence for ${riotMatchId} cannot be delivered from (${error.name}); the intent is parked rather than re-driven`,
         error,
       );
       return { phase: "failed", failure: CONTENT_UNAVAILABLE };
@@ -384,18 +384,7 @@ async function prepareNotificationSend(
       failure: { classification: "terminal", reason: "target-not-found" },
     };
   }
-  return {
-    phase: "ready",
-    message,
-    target,
-    guildId,
-    afterDelivered:
-      record.intent.kind === "dare-summary"
-        ? async () => {
-            await afterDareSummaryDeliveredV2(record);
-          }
-        : undefined,
-  };
+  return { phase: "ready", message, target, guildId };
 }
 
 /**
@@ -413,8 +402,21 @@ export async function deliverNotificationV2(
 ): Promise<ScoutNotificationDeliveryV2Result> {
   let prepared: PreparedSend;
   try {
-    prepared = await prepareNotificationSend(input);
+    prepared = await withPreSendBudget(
+      input.intentKey,
+      async (abortSignal) => await prepareNotificationSend(input, abortSignal),
+    );
   } catch (error) {
+    if (error instanceof PreSendBudgetExpiredError) {
+      // The one failure this Activity raises about ITSELF, and the reason the
+      // budget exists: reported as a definite non-send rather than left to a
+      // server-side timeout that the Workflow could only read as ambiguous.
+      logger.error(error.message);
+      return ScoutNotificationDeliveryV2ResultSchema.parse({
+        outcome: "failed",
+        failure: PRE_SEND_UNAVAILABLE,
+      });
+    }
     // Nothing above has contacted Discord, so a failure here is definite
     // whatever it was. Reporting it as `failed` keeps the intent retryable
     // instead of stranding it in the operator dead end that exists for sends
@@ -435,7 +437,14 @@ export async function deliverNotificationV2(
     });
   }
 
-  const delivery = ScoutNotificationDeliveryV2ResultSchema.parse(
+  // The send, and nothing after it. A best-effort follow-up that ran here
+  // would hold the Activity open past the outcome it has already established:
+  // a Dare callout refresh waiting behind its serialized queue can outlive the
+  // heartbeat timeout, and the timeout fires OUTSIDE any try/catch — so a
+  // message Discord accepted would reach the Workflow as an ambiguous send.
+  // `afterNotificationDeliveredV2` runs it in its own Activity, after this
+  // outcome is durably recorded.
+  return ScoutNotificationDeliveryV2ResultSchema.parse(
     await deliverToTarget({
       message: prepared.message,
       target: prepared.target,
@@ -443,22 +452,4 @@ export async function deliverNotificationV2(
       guildId: prepared.guildId,
     }),
   );
-  if (
-    delivery.outcome === "delivered" &&
-    prepared.afterDelivered !== undefined
-  ) {
-    // Post-send and best-effort by construction: the outcome above is already
-    // decided, and a follow-up that failed must neither throw (a throw here
-    // reads as an unobserved send) nor turn a delivered result into anything
-    // else.
-    try {
-      await prepared.afterDelivered();
-    } catch (error) {
-      logger.error(
-        `The post-delivery step for ${input.intentKey} failed after a delivered send`,
-        error,
-      );
-    }
-  }
-  return delivery;
 }

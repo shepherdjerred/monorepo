@@ -15,6 +15,7 @@ import {
   postmatchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 import {
+  MalformedAnnouncementIntentError,
   settlementAnnouncementCodec,
   settlementAnnouncementInputOf,
 } from "#src/temporal/v2/notification/announcement-codecs.ts";
@@ -56,9 +57,10 @@ export function requireAnnouncementV2(
     // Unrepresentable through the domain schema, which requires an
     // announcement on exactly these kinds; reaching here means a row was
     // written around it.
-    throw new Error(
-      `Intent ${record.intent.key} is a ${record.intent.kind} intent with no announcement payload`,
-    );
+    throw new MalformedAnnouncementIntentError({
+      intentKey: record.intent.key,
+      detail: `a ${record.intent.kind} intent was minted with no announcement payload`,
+    });
   }
   return announcement;
 }

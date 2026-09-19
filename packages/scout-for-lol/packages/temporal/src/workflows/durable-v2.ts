@@ -217,11 +217,42 @@ async function attemptNotificationSend(
     attemptNonce,
     delivery,
   });
+  if (delivery.outcome === "delivered") {
+    await runPostDeliveryFollowUp(activities, ref, attemptNonce);
+  }
   return {
     intentKey: ref.intentKey,
     state: recorded.state,
     attemptCount: recorded.attemptCount,
   };
+}
+
+/**
+ * The best-effort step that follows a delivered send — today, the Dare callout
+ * refresh — in its own Activity and strictly after the outcome above is
+ * durably recorded.
+ *
+ * It used to run at the tail of `deliverNotificationV2`, where a refresh that
+ * outlived the delivery Activity's heartbeat timeout killed the Activity
+ * before its already-decided `delivered` result could be returned, and the
+ * catch above recorded a message Discord had accepted as an ambiguous send.
+ * Out here the outcome is already written, so the worst a failure costs is the
+ * refresh itself — which is what "best-effort" was always supposed to mean.
+ */
+async function runPostDeliveryFollowUp(
+  activities: NotificationActivities,
+  ref: ScoutIntentRefV2,
+  attemptNonce: NotificationAttemptNonce,
+): Promise<void> {
+  setWorkflowPhase("**Phase:** running the post-delivery follow-up");
+  try {
+    await activities.afterNotificationDeliveredV2({ ...ref, attemptNonce });
+  } catch (error) {
+    // A cancellation is still the caller's decision. Anything else is a
+    // follow-up that did not happen after a delivery that did, and failing the
+    // run over it would misreport a notification the user received.
+    if (isCancellation(error)) throw error;
+  }
 }
 
 /**

@@ -5,6 +5,7 @@ import type { MatchNotificationIntentRecord } from "#src/database/durable/intent
 import {
   dareSettlementSummaryOf,
   dareSummaryAnnouncementCodec,
+  MalformedAnnouncementIntentError,
 } from "#src/temporal/v2/notification/announcement-codecs.ts";
 import { requireAnnouncementV2 } from "#src/temporal/v2/notification/settlement-notification.ts";
 
@@ -32,9 +33,10 @@ export function buildDareSummaryNotificationMessageV2(
   );
   const message = dareResultMessage(summary);
   if (message === undefined) {
-    throw new Error(
-      `Dare-summary intent ${record.intent.key} resolves as ${summary.resolution}, which produces no result message and must not be minted`,
-    );
+    throw new MalformedAnnouncementIntentError({
+      intentKey: record.intent.key,
+      detail: `it resolves as ${summary.resolution}, which produces no result message and must not be minted`,
+    });
   }
   return {
     content: message.content,

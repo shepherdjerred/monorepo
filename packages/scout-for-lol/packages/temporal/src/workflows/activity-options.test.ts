@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { ActivityCancellationType } from "@temporalio/workflow";
+import {
+  NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS,
+  NOTIFICATION_DELIVERY_START_TO_CLOSE_MS,
+  NOTIFICATION_PRE_SEND_BUDGET_MS,
+} from "#src/activity-contracts-v2.ts";
 import type { ScoutStage } from "#src/contracts.ts";
 import { SCOUT_V2_ACTIVITY_QUEUE_CLASSES } from "#src/identifiers.ts";
 import {
@@ -92,7 +97,7 @@ describe("frozen V2 activity budgets", () => {
     // waiting out the realtime window only widens the window in which the
     // Workflow cannot say what happened.
     expect(NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS.startToCloseTimeout).toBe(
-      "30 seconds",
+      NOTIFICATION_DELIVERY_START_TO_CLOSE_MS,
     );
     expect(NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS.scheduleToCloseTimeout).toBe(
       "2 minutes",
@@ -100,6 +105,22 @@ describe("frozen V2 activity budgets", () => {
     expect(
       NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS.scheduleToCloseTimeout,
     ).not.toBe(REALTIME_ACTIVITY_OPTIONS.scheduleToCloseTimeout);
+  });
+
+  test("leaves the Activity room to answer its own pre-send failures", () => {
+    // The budget is what keeps a slow receipt read, object fetch or guild
+    // lookup from being decided by the server's clock instead of by the
+    // Activity — a timeout there is indistinguishable from an unanswered
+    // Discord request, and this lane never retries one of those.
+    expect(NOTIFICATION_PRE_SEND_BUDGET_MS).toBeLessThan(
+      NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS,
+    );
+    expect(NOTIFICATION_PRE_SEND_BUDGET_MS).toBeLessThan(
+      NOTIFICATION_DELIVERY_START_TO_CLOSE_MS,
+    );
+    expect(NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS.heartbeatTimeout).toBe(
+      NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS,
+    );
   });
 
   test("heartbeats lake staging through long projections", () => {

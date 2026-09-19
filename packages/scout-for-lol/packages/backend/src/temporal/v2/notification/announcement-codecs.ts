@@ -11,6 +11,7 @@ import {
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
+import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
 import type {
   EarnedAward,
   EarnedAwardReason,
@@ -329,4 +330,26 @@ export function dareSummaryAnnouncementEnvelope(
       ? {}
       : { leafCounts: summary.leafCounts }),
   });
+}
+
+/**
+ * The announcement payload this intent carries cannot produce its message.
+ *
+ * The same class of defect as a malformed render receipt, on the other kind of
+ * persisted evidence: an announcement-kind intent minted with no payload, one
+ * whose envelope fails its codec, or one describing a resolution that has no
+ * message to send. All three are fixed at mint and re-read identically
+ * forever, so the delivery parks the intent instead of asking reconciliation
+ * to re-drive it every sweep.
+ */
+export class MalformedAnnouncementIntentError extends UndeliverableContentError {
+  readonly intentKey: string;
+
+  constructor(args: { intentKey: string; detail: string }) {
+    super(
+      `The announcement payload on intent ${args.intentKey} cannot produce a message: ${args.detail}`,
+    );
+    this.name = "MalformedAnnouncementIntentError";
+    this.intentKey = args.intentKey;
+  }
 }

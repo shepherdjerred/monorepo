@@ -406,6 +406,7 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   beginNotificationSendV2: "realtime",
   deliverNotificationV2: "realtime",
   recordNotificationOutcomeV2: "realtime",
+  afterNotificationDeliveredV2: "realtime",
   stageLakeProjectionV2: "lake",
   scanRecoveryPageV2: "background",
   processRecoveryPageV2: "background",

@@ -4,6 +4,7 @@ import type * as NotificationArtifactModule from "#src/temporal/v2/notification/
 import {
   attemptRef,
   CHANNEL_ID,
+  intentKey,
   intentRecord,
 } from "#src/temporal/v2/notification-delivery.test-fixtures.ts";
 
@@ -82,6 +83,8 @@ vi.mock("#src/league/discord/channel.ts", async () => {
 
 const { ChannelSendError, markReplyPermissionError } =
   await import("#src/league/discord/channel.ts");
+const { MalformedAnnouncementIntentError } =
+  await import("#src/temporal/v2/notification/announcement-codecs.ts");
 const { deliverNotificationV2 } =
   await import("#src/temporal/v2/notification-delivery.ts");
 
@@ -204,8 +207,41 @@ describe("the settlement-shaped path", () => {
   );
 });
 
+describe("an announcement whose payload cannot produce a message", () => {
+  test.each(["settlement", "dare-summary"] as const)(
+    "parks a malformed %s intent as terminal, not retryable",
+    async (kind) => {
+      // The same laundering the render-receipt finding named, on the other
+      // kind of persisted evidence. An announcement minted with no payload, or
+      // one describing a resolution that has no message, is fixed at mint and
+      // re-reads identically forever — so a retryable failure would hand it
+      // back to reconciliation to re-drive every sweep with nobody told.
+      gateFor(kind, "channel");
+      const malformed = new MalformedAnnouncementIntentError({
+        intentKey,
+        detail: "the test says so",
+      });
+      if (kind === "settlement") {
+        stubs.buildSettlementNotificationMessageV2.mockRejectedValue(malformed);
+      } else {
+        stubs.buildDareSummaryNotificationMessageV2.mockImplementation(() => {
+          throw malformed;
+        });
+      }
+
+      const result = await deliverNotificationV2(attemptRef());
+
+      expect(result).toEqual({
+        outcome: "failed",
+        failure: { classification: "terminal", reason: "content-unavailable" },
+      });
+      expect(stubs.send).not.toHaveBeenCalled();
+    },
+  );
+});
+
 describe("the dare-summary-shaped path", () => {
-  test("delivers the result with its mention allowlist and then refreshes the callout", async () => {
+  test("delivers the result with its mention allowlist", async () => {
     gateFor("dare-summary", "channel");
     stubs.send.mockResolvedValue({ id: "100000000000000780" });
 
@@ -218,26 +254,20 @@ describe("the dare-summary-shaped path", () => {
       parse: [],
       users: ["200000000000000002"],
     });
-    expect(stubs.afterDareSummaryDeliveredV2).toHaveBeenCalledTimes(1);
     expect(stubs.generateMatchReport).not.toHaveBeenCalled();
   });
 
-  test("skips the callout refresh when nothing was delivered", async () => {
-    gateFor("dare-summary", "channel");
-    stubs.send.mockRejectedValue(new Error("socket hang up"));
-
-    const result = await deliverNotificationV2(attemptRef());
-
-    expect(result).toEqual({ outcome: "unknown" });
-    expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
-  });
-
-  test("a failed callout refresh never changes a delivered outcome", async () => {
+  test("refreshes no callout of its own, whatever the send did", async () => {
+    // The finding this closes: the refresh ran at the tail of THIS Activity,
+    // where it waits behind its serialized queue and then edits a Discord
+    // message. Either wait can outlive the ten-second heartbeat timeout, and
+    // that timeout fires at the Temporal server — outside every try/catch this
+    // process can write — so the already-decided `delivered` result never
+    // reached the Workflow and a message Discord accepted was recorded as an
+    // ambiguous send. It is `afterNotificationDeliveredV2`'s work now, after
+    // the outcome is durably recorded.
     gateFor("dare-summary", "channel");
     stubs.send.mockResolvedValue({ id: "100000000000000781" });
-    stubs.afterDareSummaryDeliveredV2.mockRejectedValue(
-      new Error("edit failed"),
-    );
 
     const result = await deliverNotificationV2(attemptRef());
 
@@ -245,6 +275,7 @@ describe("the dare-summary-shaped path", () => {
       outcome: "delivered",
       messageId: "100000000000000781",
     });
+    expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
   });
 });
 
