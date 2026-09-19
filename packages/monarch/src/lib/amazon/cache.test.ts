@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { mergeOrders, AmazonCacheSchema } from "./cache.ts";
+import { mergeOrders, parseAmazonCache, AmazonCacheSchema } from "./cache.ts";
 import type { AmazonOrder } from "./types.ts";
 
 function order(
@@ -102,5 +102,45 @@ describe("mergeOrders", () => {
       [order("new", "2026-01-01")],
     );
     expect(merged.map((o) => o.orderId)).toEqual(["new", "old"]);
+  });
+});
+
+describe("parseAmazonCache", () => {
+  const legacy = {
+    version: 1,
+    scrapedAt: "2025-12-30T00:00:00.000Z",
+    orders: [
+      {
+        orderId: "112-7044975-8414647",
+        date: "2025-12-30",
+        total: 9.92,
+        items: [
+          {
+            title: "Chestnut Cutter",
+            price: 8.99,
+            quantity: 1,
+            orderDate: "2025-12-30",
+            orderId: "112-7044975-8414647",
+          },
+        ],
+      },
+    ],
+  };
+
+  test("migrates a pre-charge cache instead of discarding its history", () => {
+    // Discarding it lost every order outside the two years a default scrape
+    // covers, and the merge then wrote that loss back to the vault.
+    const cache = parseAmazonCache(legacy);
+
+    expect(cache.version).toBe(2);
+    expect(cache.orders).toHaveLength(1);
+    expect(cache.orders[0]?.charges).toEqual([]);
+    expect(cache.orders[0]?.items[0]?.title).toBe("Chestnut Cutter");
+  });
+
+  test("the migrated cache satisfies the schema the loader enforces", () => {
+    expect(() =>
+      AmazonCacheSchema.parse(parseAmazonCache(legacy)),
+    ).not.toThrow();
   });
 });

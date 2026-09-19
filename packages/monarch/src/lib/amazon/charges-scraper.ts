@@ -38,7 +38,13 @@ export async function scrapeTransactionHistory(
     const reachedCutoff =
       folded.oldestDate !== undefined && folded.oldestDate < sinceDate;
     if (reachedCutoff) break;
-    if (!(await advanceToNextPage(page))) break;
+    const advance = await advanceToNextPage(page);
+    if (advance === "end-of-history") break;
+    if (advance === "failed") {
+      throw new Error(
+        `Transaction history paging failed on page ${String(pageNum)} before reaching ${sinceDate}; the charges read so far cover only back to ${folded.oldestDate ?? "an unknown date"}. Re-run the scrape rather than caching a truncated charge set.`,
+      );
+    }
   }
 
   const chargeCount = [...byOrder.values()].reduce(
@@ -65,27 +71,29 @@ function reason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-// Reading the page can fail partway through because the history re-renders
-// under the locators we are holding, which detaches them. That is a property
-// of scraping someone else's page, not of the data: the charges gathered so
-// far are still correct, and the order scrape that precedes this is an hour
-// of work that should not be discarded because one page blinked. Stopping
-// early is reported, and `scrapeTransactionHistory`'s caller still throws if
-// the whole pass produced no charges at all.
-async function advanceToNextPage(page: Page): Promise<boolean> {
+// Running out of pages and failing to turn one look identical from the caller
+// unless they are named apart. The history re-renders under the locators we
+// hold and detaches them, so a click can throw on a page that does have a
+// successor — and treating that as the end of the history caches a charge set
+// that stops partway through, which is worse than no charges at all: the
+// orders below the cut match on order total instead, attaching a whole order
+// to one partial-shipment transaction.
+type PageAdvance = "advanced" | "end-of-history" | "failed";
+
+async function advanceToNextPage(page: Page): Promise<PageAdvance> {
   const nextButton = page
     .locator('.a-button:has(.a-button-text:text-is("Next Page"))')
     .last();
   try {
-    if ((await nextButton.count()) === 0) return false;
+    if ((await nextButton.count()) === 0) return "end-of-history";
     const buttonClass = (await nextButton.getAttribute("class")) ?? "";
-    if (buttonClass.includes("a-button-disabled")) return false;
+    if (buttonClass.includes("a-button-disabled")) return "end-of-history";
     await nextButton.click();
     await page.waitForLoadState("domcontentloaded");
-    return true;
+    return "advanced";
   } catch (error: unknown) {
-    log.warn(`Stopped paging the transaction history: ${reason(error)}`);
-    return false;
+    log.warn(`Could not page the transaction history: ${reason(error)}`);
+    return "failed";
   }
 }
 

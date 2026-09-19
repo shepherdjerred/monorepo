@@ -190,36 +190,46 @@ function parseOnline(name: string, lines: string[]): Order {
   if (tm?.[1] === undefined) throw new Error(`${name}: no Order Total`);
   const orderIdLine = lines.find((l) => /^\d{9,}\s/.test(l));
   const om = /^(\d{9,})/.exec(orderIdLine ?? "");
-  // Item row: "<title start> <qty> <status> $<price>", continuing until "Item #"
-  const itemIdx = lines.findIndex((l) => /\s\d+\s+\w+\s+\$\d+\.\d{2}$/.test(l));
-  if (itemIdx < 0) throw new Error(`${name}: no item row`);
-  const row = lines[itemIdx] ?? "";
-  const rm = /^(.*?)\s+(\d+)\s+\w+\s+\$(\d+\.\d{2})$/.exec(row);
-  if (
-    !rm ||
-    rm[1] === undefined ||
-    rm[2] === undefined ||
-    rm[3] === undefined
-  ) {
-    throw new Error(`${name}: bad item row: ${row}`);
-  }
-  const continuation: string[] = [];
-  for (let i = itemIdx + 1; i < lines.length; i++) {
-    const l = lines[i] ?? "";
-    if (l.startsWith("Item #") || l.startsWith("$")) break;
-    continuation.push(l);
-  }
+  // Item row: "<title start> <qty> <status> $<price>", its title continuing on
+  // the following lines until "Item #", a price line, or the next item row.
+  // Every row is read: taking only the first described a mixed-category order
+  // by one product, and left computeSplits nothing to split it over.
+  const itemRow = /^(.*?)\s+(\d+)\s+\w+\s+\$(\d+\.\d{2})$/;
+  const itemIndexes = lines
+    .map((l, i) => (itemRow.test(l) ? i : -1))
+    .filter((i) => i >= 0);
+  if (itemIndexes.length === 0) throw new Error(`${name}: no item row`);
+
+  const items = itemIndexes.map((itemIdx, n) => {
+    const row = lines[itemIdx] ?? "";
+    const rm = itemRow.exec(row);
+    if (
+      !rm ||
+      rm[1] === undefined ||
+      rm[2] === undefined ||
+      rm[3] === undefined
+    ) {
+      throw new Error(`${name}: bad item row: ${row}`);
+    }
+    const stop = itemIndexes[n + 1] ?? lines.length;
+    const continuation: string[] = [];
+    for (let i = itemIdx + 1; i < stop; i++) {
+      const l = lines[i] ?? "";
+      if (l.startsWith("Item #") || l.startsWith("$")) break;
+      continuation.push(l);
+    }
+    return {
+      title: [rm[1], ...continuation].join(" "),
+      price: Number(rm[3]),
+      quantity: Number(rm[2]),
+    };
+  });
+
   return {
     orderId: om?.[1] ?? name.replace(/\.pdf$/, ""),
     date: name.slice(0, 10),
     total: Number(tm[1]),
-    items: [
-      {
-        title: [rm[1], ...continuation].join(" "),
-        price: Number(rm[3]),
-        quantity: Number(rm[2]),
-      },
-    ],
+    items,
     source: "online",
   };
 }

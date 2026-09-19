@@ -24,6 +24,7 @@ import {
 } from "../src/lib/mail/candidates.ts";
 import {
   judgeEmailMatch,
+  transactionFingerprint,
   EmailMatchSchema,
   EMAIL_NOTE_PREFIX,
   type EmailMatchResult,
@@ -131,10 +132,17 @@ if (values["candidates-only"]) {
   process.exit(0);
 }
 
-// A judgment is only reusable while the shortlist it was made against is
-// unchanged, so the checkpoint key carries a fingerprint of that shortlist.
+// A judgment is only reusable while everything it was made against is
+// unchanged: the shortlist of candidate emails, and the transaction facts the
+// prompt states. Both are fingerprinted into the key, so an edited category or
+// a re-merchanted row is re-judged rather than replayed.
 function checkpointKey(item: TransactionCandidates): string {
-  return `${item.transaction.id}:${values.model}:${candidateFingerprint(item.candidates)}`;
+  return [
+    item.transaction.id,
+    values.model,
+    candidateFingerprint(item.candidates),
+    transactionFingerprint(item),
+  ].join(":");
 }
 
 // LLM judgment with checkpoint resume
@@ -205,11 +213,30 @@ type Outcome = {
   result: EmailMatchResult;
 };
 const matched: Outcome[] = [];
+let malformedIndexes = 0;
 for (const [id, result] of results) {
   const item = byId.get(id);
   if (!item) continue;
   if (result.matchedIndex === null || result.confidence === "low") continue;
+  // The schema accepts any number. An index that does not name one of this
+  // transaction's own candidates refers to an email that was never read, so
+  // the note and category that came with it describe nothing — reject rather
+  // than write them.
+  const index = result.matchedIndex;
+  if (
+    index < 0 ||
+    index >= item.candidates.length ||
+    !Number.isInteger(index)
+  ) {
+    malformedIndexes++;
+    continue;
+  }
   matched.push({ item, result });
+}
+if (malformedIndexes > 0) {
+  log.warn(
+    `${String(malformedIndexes)} judgments named a candidate index outside their own shortlist and were discarded`,
+  );
 }
 
 const noteWrites = matched.filter((m) => {

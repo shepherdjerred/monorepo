@@ -38,6 +38,28 @@ export const AmazonCacheSchema = z.object({
   ),
 });
 
+// The pre-charge cache: the same orders, written before card charges were
+// scraped. Read rather than discarded — a default scrape only covers the
+// current and previous years, so throwing this away silently loses every
+// older order that was already paid for in scraping time.
+const LegacyAmazonCacheSchema = z.object({
+  version: z.literal(1),
+  scrapedAt: z.string(),
+  orders: z.array(
+    z.object({
+      orderId: z.string(),
+      date: z.string(),
+      total: z.number(),
+      items: z.array(
+        PurchasedItemSchema.extend({
+          orderDate: z.string(),
+          orderId: z.string(),
+        }),
+      ),
+    }),
+  ),
+});
+
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UNKNOWN_ITEM_TITLE = "Unknown Amazon Purchase";
 
@@ -49,15 +71,27 @@ async function readCacheFile(): Promise<AmazonCache | null> {
   const file = Bun.file(cachePath);
   if (!(await file.exists())) return null;
 
-  const parsed: unknown = JSON.parse(await file.text());
-  // A cache written before charges existed is an expected old format, not
-  // corruption: treat it as absent so the next scrape repopulates it.
+  return parseAmazonCache(JSON.parse(await file.text()));
+}
+
+// Reads either schema. A v1 cache is migrated, not discarded: returning null
+// for it dropped every order already scraped, and the default scrape that
+// followed only covers the current and previous years, so the merge wrote a
+// cache with the older history missing.
+export function parseAmazonCache(parsed: unknown): AmazonCache {
   const versionProbe = z
     .object({ version: z.number().optional() })
     .parse(parsed);
-  if (versionProbe.version !== 2) {
-    log.info("Amazon cache has pre-charge schema, will re-scrape");
-    return null;
+  if (versionProbe.version === 1) {
+    const legacy = LegacyAmazonCacheSchema.parse(parsed);
+    log.info(
+      `Migrating ${String(legacy.orders.length)} orders from the pre-charge Amazon cache`,
+    );
+    return {
+      version: 2,
+      scrapedAt: legacy.scrapedAt,
+      orders: legacy.orders.map((order) => ({ ...order, charges: [] })),
+    };
   }
   return AmazonCacheSchema.parse(parsed);
 }

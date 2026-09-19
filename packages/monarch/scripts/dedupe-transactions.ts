@@ -27,8 +27,12 @@ const prefixArgIndex = process.argv.indexOf("--batch-prefix");
 const BATCH_PREFIX =
   prefixArgIndex >= 0 ? (process.argv[prefixArgIndex + 1] ?? "2295") : "2295";
 // The Dec 2025 re-link backfilled history dated up to Dec 8; live sync
-// resumed Dec 9. Anything dated before this is unambiguous backfill.
-const BACKFILL_DATE_CUTOFF = "2025-11-01";
+// resumed Dec 9. Anything dated before that boundary is unambiguous backfill,
+// so the cutoff is the day sync resumed — a narrower one leaves the tail of
+// the backfill window double-counted. A row still has to carry the backfill
+// batch prefix and have a synced twin to be deleted, so the date only bounds
+// the window, it does not identify duplicates on its own.
+const BACKFILL_DATE_CUTOFF = "2025-12-09";
 
 await initMonarch();
 const txns = await fetchAllTransactions("2021-01-01", "2026-12-31", true);

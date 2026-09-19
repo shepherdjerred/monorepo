@@ -213,15 +213,20 @@ async function extractOrderSummary(
     )
       return null;
 
+    // The order id is the cache's merge key, and no substitute for it is
+    // unique: a content-derived one collides whenever two orders share a date
+    // and total, and saveMergedCache would then fold them together and drop
+    // one permanently. A card without an id is parse drift — report it and let
+    // the caller's all-cards-failed check decide whether the markup moved.
     const rawId = orderIdText?.trim();
+    if (rawId === undefined || rawId === "") {
+      log.warn(
+        `Order card dated ${date} for ${total} rendered no order id; skipping`,
+      );
+      return null;
+    }
     return {
-      orderId:
-        rawId !== undefined && rawId !== ""
-          ? rawId
-          : // Derived from the order's own content, not the clock: a
-            // wall-clock id would be a new key on every scrape and would
-            // accumulate duplicates through the cache merge forever.
-            `unknown-${parseAmazonDate(date)}-${parsePrice(total).toFixed(2)}`,
+      orderId: rawId,
       date: parseAmazonDate(date),
       total: parsePrice(total),
     };
@@ -261,6 +266,11 @@ async function fetchOrderDetails(
   log.info(
     `Charges joined for ${String(withCharges)}/${String(orders.length)} orders`,
   );
+  if (withCharges === 0 && orders.length > 0 && chargesByOrder.size > 0) {
+    throw new Error(
+      `Scraped ${String(orders.length)} orders and ${String(chargesByOrder.size)} charged orders but joined none of them; the order ids on the transaction-history page no longer match the order summaries. Fix the parse rather than caching chargeless orders, which would silently fall back to order-total matching.`,
+    );
+  }
 
   return orders;
 }

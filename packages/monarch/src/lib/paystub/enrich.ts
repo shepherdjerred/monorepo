@@ -36,19 +36,25 @@ export async function enrichPaystub(
     );
   }
 
-  const byPayDate = [...payslips].sort((a, b) =>
-    a.payDate.localeCompare(b.payDate),
-  );
+  // Regular payroll only, for the same reason matchPayslips uses it: a
+  // supplemental equity release nets to zero and its gross is the whole share
+  // value, so comparing an $8,000 paycheck against a $51,000 equity slip
+  // reports a spurious -84% change. Sorted by pay date, then by page so two
+  // slips on one date still order deterministically.
+  const priorSeries = payslips
+    .filter((p) => p.netPay > 0)
+    .sort(
+      (a, b) =>
+        a.payDate.localeCompare(b.payDate) || a.sourcePage - b.sourcePage,
+    );
   const enrichments = new Map<string, TransactionEnrichment>();
   for (const match of result.matched) {
-    const index = byPayDate.findIndex(
-      (p) => p.payDate === match.payslip.payDate,
-    );
+    const index = priorSeries.indexOf(match.payslip);
     const change = grossChangePercent(
       match.payslip,
       // index 0 reads past the start and yields undefined: the first payslip
       // has no prior period to compare against.
-      byPayDate[index - 1],
+      priorSeries[index - 1],
     );
     enrichments.set(match.transaction.id, {
       payslip: {

@@ -71,6 +71,23 @@ Never suggest a category whose group differs from the current category's
 group. Set confidence to how certain the email-transaction match is.`;
 }
 
+// The transaction inputs `buildEmailMatchPrompt` puts in front of the model,
+// as one string. A checkpoint keyed only on the transaction id and its
+// shortlist replays a judgment made against different facts — most damagingly
+// a category the operator has since corrected by hand, which the cached
+// `suggestedCategoryId` would then overwrite on the next --apply. Keep this in
+// step with the prompt above.
+export function transactionFingerprint(item: TransactionCandidates): string {
+  const t = item.transaction;
+  return [
+    t.date,
+    t.amount.toFixed(2),
+    t.merchant.name,
+    t.plaidName,
+    t.category.id,
+  ].join("|");
+}
+
 export async function judgeEmailMatch(
   item: TransactionCandidates,
   categories: MonarchCategory[],
