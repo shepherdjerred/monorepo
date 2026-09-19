@@ -30,7 +30,13 @@ test("admits one stable ingress without placing bootstrap credentials in history
       taskQueue: "monorepo-workflows",
       workflowIdConflictPolicy: "USE_EXISTING",
       workflowIdReusePolicy: "REJECT_DUPLICATE",
-      args: [{ startedAt: expect.any(String), lastRowId: 0 }],
+      args: [
+        {
+          startedAt: expect.any(String),
+          initialized: false,
+          lastRowId: 0,
+        },
+      ],
     }),
   );
   expect(JSON.stringify(start.mock.calls)).not.toContain("test-secret");

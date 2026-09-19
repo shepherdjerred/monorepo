@@ -191,7 +191,7 @@ and [Discord delivery Activity](https://github.com/shepherdjerred/monorepo/blob/
 | Plain text              | Continues the conversation's selected chat                                                                                             |
 | Cross-ingress selection | Explicit ID can select any prior scheduled, iMessage, or Discord chat, including one evicted from the recent list                      |
 | Polling ownership       | Temporal Workflow; durable cursor and Continue-As-New; no webhook receiver or Mac-side polling daemon                                  |
-| Cursor                  | Original start timestamp and last processed BlueBubbles message ROWID                                                                  |
+| Cursor                  | Explicit initialization marker, original start timestamp, and last processed BlueBubbles message ROWID                                 |
 | Disabled period         | Excluded from later activation backfill                                                                                                |
 | Bounds                  | 50 rows per batch, 4,000 prompt characters, 2 MiB response; a full 1,000-row server page fails without advancing the cursor            |
 | Ordering                | Each command settles before the next message resolves its binding                                                                      |

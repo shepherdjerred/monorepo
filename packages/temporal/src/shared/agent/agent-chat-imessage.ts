@@ -28,11 +28,13 @@ export const ImessageCommandSchema = z.strictObject({
 export type ImessageCommand = z.infer<typeof ImessageCommandSchema>;
 export const BlueBubblesCursorSchema = z.strictObject({
   startedAt: z.iso.datetime(),
+  initialized: z.boolean(),
   lastRowId: z.number().int().nonnegative(),
 });
 export type BlueBubblesCursor = z.infer<typeof BlueBubblesCursorSchema>;
 export const BlueBubblesPollResultSchema = z.strictObject({
   startedAt: z.iso.datetime(),
+  initialized: z.boolean(),
   lastRowId: z.number().int().nonnegative(),
   commands: z.array(ImessageCommandSchema).max(50),
 });

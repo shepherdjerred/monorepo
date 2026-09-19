@@ -20,6 +20,12 @@ export async function startBlueBubblesIngress(client: {
     taskQueue: TASK_QUEUES.WORKFLOWS,
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
     workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
-    args: [{ startedAt: new Date().toISOString(), lastRowId: 0 }],
+    args: [
+      {
+        startedAt: new Date().toISOString(),
+        initialized: false,
+        lastRowId: 0,
+      },
+    ],
   });
 }
