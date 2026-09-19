@@ -30,12 +30,13 @@ function splitKey(split: LoanSplit): string {
 // not first found: the same amount recurs every month, so first-fit would pair
 // a payment with an adjacent month's.
 //
-// A tie is refused rather than broken. Up to five Upstart loans ran at once
+// Any tie is refused rather than broken. Up to five Upstart loans ran at once
 // with identical payment amounts, so two splits can sit the same distance from
-// one transaction; picking either writes a loan id, a principal and an
-// interest figure that belong to the other loan. An unmatched payment is
-// reported and stays whole, which is recoverable; a confidently wrong split is
-// not.
+// one transaction — and two payments on a single loan can do the same at the
+// edges of the window. Either way the bank row cannot say which is which, and
+// picking one writes a loan id, a principal and an interest figure that belong
+// to the other payment. An unmatched payment is reported and stays whole,
+// which is recoverable; a confidently wrong split is not.
 function nearestSplit(
   transaction: MonarchTransaction,
   splits: LoanSplit[],
@@ -52,10 +53,7 @@ function nearestSplit(
     if (best === undefined || distance < best.distance) {
       best = { split, distance };
       tied = false;
-    } else if (
-      distance === best.distance &&
-      split.loanId !== best.split.loanId
-    ) {
+    } else if (distance === best.distance) {
       tied = true;
     }
   }

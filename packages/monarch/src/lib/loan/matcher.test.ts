@@ -110,3 +110,22 @@ describe("matchLoanPayments — concurrent loans of equal payment", () => {
     ]);
   });
 });
+
+describe("matchLoanPayments — two payments on one loan", () => {
+  test("refuses a transaction sitting equidistant between them", () => {
+    // Not only concurrent loans tie: the same loan can take an extra payment
+    // that happens to equal its monthly amount, and at the edges of the window
+    // both sit the same distance away. Their principal and interest differ, so
+    // choosing either is a guess with a number attached.
+    const result = matchLoanPayments(
+      [payment("t-mid", "2026-09-07", 526.74)],
+      [
+        split("L1025211", "2026-09-01", 526.74, 250),
+        split("L1025211", "2026-09-13", 526.74, 260),
+      ],
+    );
+
+    expect(result.matched).toHaveLength(0);
+    expect(result.unmatched.map((t) => t.id)).toEqual(["t-mid"]);
+  });
+});
