@@ -84,3 +84,19 @@ export const CONTAINED_TIER: ResourceTier = {
   ephemeralStorageRequest: "2Gi",
   ephemeralStorageLimit: "8Gi",
 };
+
+/**
+ * Browser steps: headless Chromium plus the app under test.
+ *
+ * The large memory REQUEST is the point -- browsers are not bursty, they hold
+ * their working set, so a small request would let the scheduler overcommit the
+ * node and get the lane OOM-killed mid-suite.
+ */
+export const BROWSER_TIER: ResourceTier = {
+  cpuRequest: "1",
+  cpuLimit: "8",
+  memoryRequest: "9Gi",
+  memoryLimit: "12Gi",
+  ephemeralStorageRequest: "2Gi",
+  ephemeralStorageLimit: "20Gi",
+};
