@@ -51,6 +51,8 @@ If the user wants to rank people by anything else — most losses, most kills, m
 
 Tell the user these in their own words — "most wins", "highest win rate" — not the code names.
 
+Entrants are players Scout already tracks on that server, named by their Scout alias; `initialPlayerIds` takes those players. A Riot ID and region are what adding a NEW tracked player needs, not what entering an existing one needs — do not ask for a Riot ID when the user has given you an alias, and do not tell them an alias cannot be an entrant.
+
 `gameVariant` is `MODERN` or `CLASSIC`, and it constrains the rest: `CLASSIC` forbids `HIGHEST_RANK` and `MOST_RANK_CLIMB` entirely, and every queue must belong to the chosen variant. `queues` must be non-empty and unique; `ALL` cannot be combined with another queue.
 Dates are either `SEASON` (a season id, no duration cap) or `FIXED_DATES` (ISO-8601 timestamps, must start before they end, at most 90 days). Ask for the exact window; do not invent one.
 Before proposing a competition scoped to one queue, check that Riot actually sends Scout results for that queue — a mode Scout only ever sees start can never score a game. Say so instead of preparing a competition that stays empty forever.
