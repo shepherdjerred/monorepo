@@ -45,12 +45,14 @@ async function initialBlueBubblesRowId(): Promise<number> {
 export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   const cursor = BlueBubblesCursorSchema.parse(rawCursor);
   const config = await imessageIngressConfig();
-  if (!config.enabled || config.owners.length === 0)
-    return {
+  if (!config.enabled || config.owners.length === 0) {
+    const latestRowId = await initialBlueBubblesRowId();
+    return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
-      lastRowId: cursor.lastRowId,
+      lastRowId: Math.max(cursor.lastRowId, latestRowId),
       commands: [],
-    };
+    });
+  }
   const initializing = cursor.lastRowId === 0;
   if (initializing) {
     return BlueBubblesPollResultSchema.parse({

@@ -275,12 +275,9 @@ describe("agent chat workflows", () => {
         kind: "discord" as const,
         channelId: "recovered-channel",
       };
-      await bindAgentChat(
-        client,
-        recoveredBinding,
-        CONFIG.chatId,
-        "2026-09-14T16:00:30.000Z",
-      );
+      await bindAgentChat(client, recoveredBinding, CONFIG.chatId, {
+        updatedAt: "2026-09-14T16:00:30.000Z",
+      });
       const resolvedRecovered = await resolveAgentChatBinding(
         client,
         recoveredBinding,
