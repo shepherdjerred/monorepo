@@ -12,6 +12,11 @@ export type AppOptions = {
   readonly publicKey: () => Promise<KeyObject>;
   /** Reads a committed file at a given commit. */
   readonly imageFetcher: ImageFetcher;
+  /** Resolves the newest green commit on a branch. */
+  readonly changedBase: (
+    repoId: number,
+    branch: string,
+  ) => Promise<string | undefined>;
 };
 
 export function createApp(options: AppOptions): Hono {
@@ -45,8 +50,11 @@ export function createApp(options: AppOptions): Hono {
     }
 
     const { repo, pipeline } = parsed.data;
-    const images = await resolveCiImages(pipeline.commit, options.imageFetcher);
-    const selected = selectSteps(buildPipelineSteps(images), {
+    const [images, changedBase] = await Promise.all([
+      resolveCiImages(pipeline.commit, options.imageFetcher),
+      options.changedBase(repo.id, repo.default_branch),
+    ]);
+    const selected = selectSteps(buildPipelineSteps({ images, changedBase }), {
       event: pipeline.event,
       branch: pipeline.branch,
       defaultBranch: repo.default_branch,

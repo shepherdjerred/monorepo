@@ -26,9 +26,9 @@ function verifyCommands(): string[] {
   return [
     ". .buildkite/scripts/toolchain.sh",
     ".buildkite/scripts/bun-install.sh --frozen-lockfile",
-    // The last known-good base for change detection. Read fails loudly when
-    // the producing step did not publish it.
-    'export CI_CHANGED_BASE="$(bun --no-install scripts/ci/read-ci-handoff.ts ci-changed-base)"',
+    // CI_CHANGED_BASE arrives in the environment, resolved before this step
+    // was generated. It is empty when the branch has never gone green, which
+    // correctly makes turbo compare against nothing and build everything.
     'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
     // CI is the cross-machine cache producer and consumer; developer shells
     // stay local-only to avoid large transfers over weak links.
@@ -37,13 +37,28 @@ function verifyCommands(): string[] {
   ];
 }
 
-export function buildPipelineSteps(images: CiImages): CiStep[] {
+export type PipelineInputs = {
+  readonly images: CiImages;
+  /**
+   * Newest commit on the default branch whose pipeline succeeded, or undefined
+   * when the branch has never gone green.
+   */
+  readonly changedBase: string | undefined;
+};
+
+export function buildPipelineSteps({
+  images,
+  changedBase,
+}: PipelineInputs): CiStep[] {
+  const sharedEnvironment = { CI_CHANGED_BASE: changedBase ?? "" };
+
   return [
     {
       key: "verify",
       label: "verify",
       image: images.base,
       commands: verifyCommands(),
+      environment: sharedEnvironment,
       timeoutMinutes: 30,
       resources: VERIFY_TIER,
       secrets: [

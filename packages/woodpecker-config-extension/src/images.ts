@@ -11,6 +11,8 @@
  * The repository is public, so this needs no credentials.
  */
 
+import type { FetchLike } from "#src/http.ts";
+
 const DIGEST_PATHS = {
   base: ".buildkite/ci-image/DIGEST",
   playwright: ".buildkite/ci-playwright/DIGEST",
@@ -36,7 +38,7 @@ function rawUrl(repoSlug: string, commit: string, path: string): string {
 
 export function createRawFetcher(
   repoSlug: string,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: FetchLike = fetch,
 ): ImageFetcher {
   return async (path, commit) => {
     const response = await fetchImpl(rawUrl(repoSlug, commit, path));
