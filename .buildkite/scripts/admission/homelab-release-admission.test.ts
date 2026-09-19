@@ -5,7 +5,7 @@ import {
   parseHomelabReleaseAdmission,
   parseOriginMainLsRemote,
   resolveOriginMainCommit,
-} from "./homelab-release-admission.ts";
+} from "../../../scripts/lib/ci/homelab-release-admission-core.ts";
 
 const buildCommit = "a".repeat(40);
 const newerMainCommit = "b".repeat(40);

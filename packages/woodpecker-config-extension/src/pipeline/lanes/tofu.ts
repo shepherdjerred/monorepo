@@ -16,19 +16,19 @@ import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
  */
 
 /** Plugin cache claim, shared by every tofu lane. */
-const TOFU_PLUGIN_CACHE = {
+export const TOFU_PLUGIN_CACHE = {
   claim: "woodpecker-tofu-plugin-cache",
   path: "/woodpecker/tofu-plugin-cache",
 } as const;
 
-const GITHUB_DOWNLOAD: SecretGrant = {
+export const GITHUB_DOWNLOAD: SecretGrant = {
   secret: "ci-github-credentials",
   key: "GITHUB_DOWNLOAD_TOKEN",
   env: "GITHUB_DOWNLOAD_TOKEN",
 };
 
 /** Remote state lives in SeaweedFS, so every stack reads the state keys. */
-const STATE_BACKEND: SecretGrant[] = [
+export const STATE_BACKEND: SecretGrant[] = [
   {
     secret: "ci-seaweedfs-credentials",
     key: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
@@ -41,7 +41,7 @@ const STATE_BACKEND: SecretGrant[] = [
   },
 ];
 
-function grant(secret: string, key: string, env = key): SecretGrant {
+export function grant(secret: string, key: string, env = key): SecretGrant {
   return { secret, key, env };
 }
 

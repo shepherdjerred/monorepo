@@ -224,6 +224,16 @@ describe("emission", () => {
   });
 });
 
+/**
+ * `tofu-platforms-validate` is deliberately excluded: it is a pull-request
+ * lane that validates configuration shape and applies nothing, so it holds
+ * no admission and no provider credentials.
+ */
+const isApplyLane = (key: string) =>
+  key.startsWith("tofu-apply-") ||
+  key.startsWith("tofu-platform-") ||
+  key === "tofu-posthog";
+
 describe("ported lanes", () => {
   const IMAGES = {
     base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
@@ -239,6 +249,12 @@ describe("ported lanes", () => {
       "minio/minio": "minio/minio:RELEASE",
     },
   };
+
+  const allSteps = () =>
+    buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+
+  const secretEnvs = (key: string) =>
+    (allSteps().find((s) => s.key === key)?.secrets ?? []).map((g) => g.env);
 
   function keysFor(changedFiles: string[], branch = "feature") {
     return selectSteps(
@@ -383,6 +399,57 @@ describe("ported lanes", () => {
       steps.find((s) => s.key === "tofu-platforms-validate")?.secrets ?? []
     ).map((g) => g.env);
     expect(envs).toEqual(["GITHUB_DOWNLOAD_TOKEN"]);
+  });
+
+  describe("release applies", () => {
+    test("every apply is gated on the admission token", () => {
+      const applies = allSteps().filter((s) => isApplyLane(s.key));
+      expect(applies.length).toBeGreaterThan(0);
+      for (const applyStep of applies) {
+        expect(applyStep.dependsOn).toContain("homelab-release-admission");
+        // A superseded build must stop, and an unexpected verdict must fail.
+        const joined = applyStep.commands.join("\n");
+        expect(joined).toContain('"$release_admission" = "superseded"');
+        expect(joined).toContain("exit 1");
+      }
+    });
+
+    test("applies are default-branch only", () => {
+      const keys = keysFor(["packages/homelab/src/tofu/github/rulesets.tf"]);
+      expect(keys).not.toContain("tofu-apply-github");
+      expect(
+        keysFor(["packages/homelab/src/tofu/github/rulesets.tf"], "main"),
+      ).toEqual(
+        expect.arrayContaining([
+          "homelab-release-admission",
+          "tofu-apply-github",
+        ]),
+      );
+    });
+
+    /** They write to one shared destination, so they must not race. */
+    test("platform credential applies share one serialization group", () => {
+      const groups = allSteps()
+        .filter((s) => s.key.startsWith("tofu-platform-"))
+        .map((s) => s.concurrency?.group);
+      expect(groups).toHaveLength(5);
+      expect(new Set(groups)).toEqual(new Set(["tofu-platform-credentials"]));
+    });
+
+    test("each platform apply gets only its own provider credentials", () => {
+      expect(secretEnvs("tofu-platform-anthropic")).toContain(
+        "ANTHROPIC_ADMIN_API_KEY",
+      );
+      expect(secretEnvs("tofu-platform-anthropic")).not.toContain(
+        "OPENAI_ADMIN_KEY",
+      );
+      expect(secretEnvs("tofu-platform-discord")).toContain(
+        "DISCORD_SCOUT_PROD_BOT_TOKEN",
+      );
+      expect(secretEnvs("tofu-platform-openai")).not.toContain(
+        "DISCORD_SCOUT_PROD_BOT_TOKEN",
+      );
+    });
   });
 
   test("alert dashboard runs for its own package", () => {
