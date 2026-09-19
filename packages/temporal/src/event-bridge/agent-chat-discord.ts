@@ -271,7 +271,7 @@ async function handleContinue(
   if (chatId === undefined) {
     throw new AgentChatBindingNotFoundError();
   }
-  const timestamp = new Date().toISOString();
+  const timestamp = discordInteractionTimestamp(interaction.id);
   await operations.start(
     temporal,
     DiscordAgentChatCommandSchema.parse({
