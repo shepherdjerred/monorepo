@@ -15,6 +15,7 @@
     "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/release-tools": "workspace:*",
+    "@shepherdjerred/s3-signed-request": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
     "@temporalio/client": "1.22.0",
     "@temporalio/worker": "1.22.0",
