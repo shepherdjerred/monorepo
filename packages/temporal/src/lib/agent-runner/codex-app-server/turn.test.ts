@@ -137,7 +137,7 @@ describe("subscription App Server protocol", () => {
             usage: {
               input_tokens: 13,
               cached_input_tokens: 5,
-              cache_write_input_tokens: 3,
+              cache_write_input_tokens: 0,
               output_tokens: 8,
               reasoning_output_tokens: 2,
             },

@@ -75,10 +75,17 @@ function emitTurn() {
     params: {
       threadId: "test-session",
       tokenUsage: {
-        last: {
+        total: {
+          totalTokens: 21,
           inputTokens: 13,
           cachedInputTokens: 5,
-          cacheWriteInputTokens: 3,
+          outputTokens: 8,
+          reasoningOutputTokens: 2,
+        },
+        last: {
+          totalTokens: 21,
+          inputTokens: 13,
+          cachedInputTokens: 5,
           outputTokens: 8,
           reasoningOutputTokens: 2,
         },

@@ -12,16 +12,18 @@ export const ThreadResultSchema = z.object({
   thread: z.object({ id: z.string().min(1) }),
 });
 const ItemParamsSchema = z.object({ threadId: z.string(), item: z.unknown() });
+const TokenUsageBreakdownSchema = z.object({
+  totalTokens: z.number().nonnegative(),
+  inputTokens: z.number().nonnegative(),
+  cachedInputTokens: z.number().nonnegative(),
+  cacheWriteInputTokens: z.number().nonnegative().optional(),
+  outputTokens: z.number().nonnegative(),
+  reasoningOutputTokens: z.number().nonnegative(),
+});
 const UsageParamsSchema = z.object({
   threadId: z.string(),
   tokenUsage: z.object({
-    last: z.object({
-      inputTokens: z.number().nonnegative(),
-      cachedInputTokens: z.number().nonnegative(),
-      cacheWriteInputTokens: z.number().nonnegative(),
-      outputTokens: z.number().nonnegative(),
-      reasoningOutputTokens: z.number().nonnegative(),
-    }),
+    total: TokenUsageBreakdownSchema,
   }),
 });
 const TurnParamsSchema = z.object({
@@ -100,12 +102,13 @@ export function appServerNotification(
       const params = UsageParamsSchema.parse(message.params);
       if (params.threadId !== state.threadId)
         throw new Error("Codex usage thread mismatch");
+      const total = params.tokenUsage.total;
       state.usage = {
-        input_tokens: params.tokenUsage.last.inputTokens,
-        cached_input_tokens: params.tokenUsage.last.cachedInputTokens,
-        cache_write_input_tokens: params.tokenUsage.last.cacheWriteInputTokens,
-        output_tokens: params.tokenUsage.last.outputTokens,
-        reasoning_output_tokens: params.tokenUsage.last.reasoningOutputTokens,
+        input_tokens: total.inputTokens,
+        cached_input_tokens: total.cachedInputTokens,
+        cache_write_input_tokens: total.cacheWriteInputTokens ?? 0,
+        output_tokens: total.outputTokens,
+        reasoning_output_tokens: total.reasoningOutputTokens,
       };
       return undefined;
     }
