@@ -420,6 +420,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/temporal \
   packages/temporal-observability \
+  packages/config \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
