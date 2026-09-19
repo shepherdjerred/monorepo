@@ -41,7 +41,7 @@ describe("ErrorPanel", () => {
       "Couldn&#x27;t reach Discord, try again in a moment.",
     );
     expect(markup).toContain("Network timeout");
-    expect(markup).toContain("border-scout-danger/40");
+    expect(markup).toContain("border-scout-danger-fill/40");
   });
 
   test("renders retry button and custom action", () => {

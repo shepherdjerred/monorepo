@@ -28,6 +28,8 @@
     "./satori/colors": "./src/satori/colors.ts",
     "./satori/file-assets": "./src/satori/file-assets.ts",
     "./satori/fonts": "./src/satori/fonts.ts",
+    "./storybook/e2e": "./src/storybook/e2e.ts",
+    "./storybook/preview": "./src/storybook/preview.ts",
     "./styles.css": "./styles/index.css",
     "./themes": "./src/generated/tokens.ts"
   },

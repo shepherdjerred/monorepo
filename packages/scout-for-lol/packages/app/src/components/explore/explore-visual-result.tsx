@@ -184,7 +184,7 @@ function ExploreChartControls(props: {
             }
           }}
         >
-          <SelectTrigger className="h-7 text-xs">
+          <SelectTrigger aria-label="Chart type" className="h-7 text-xs">
             <SelectValue placeholder="Chart Type" />
           </SelectTrigger>
           <SelectContent>
@@ -202,7 +202,7 @@ function ExploreChartControls(props: {
             value={selectedMetricKey ?? plottableCols[0]?.key ?? ""}
             onValueChange={onMetricChange}
           >
-            <SelectTrigger className="h-7 text-xs">
+            <SelectTrigger aria-label="Metric" className="h-7 text-xs">
               <SelectValue placeholder="Metric" />
             </SelectTrigger>
             <SelectContent>
