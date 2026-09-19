@@ -402,12 +402,6 @@
     "reason": "Replicated Syncthing bulk data"
   },
   {
-    "namespace": "scout-evals",
-    "name": "scout-evals-data",
-    "backup": "enabled",
-    "reason": "Scout review evals SQLite \u2014 human ratings live only here"
-  },
-  {
     "namespace": "tasknotes",
     "name": "tasknotes-vault-pvc",
     "backup": "enabled",

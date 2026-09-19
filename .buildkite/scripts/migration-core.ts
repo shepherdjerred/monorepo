@@ -337,7 +337,6 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/scout-for-lol/packages/docs-site",
     "packages/scout-for-lol/packages/design-audit",
     "packages/scout-for-lol/packages/design-system",
-    "packages/scout-for-lol/packages/evals",
     "packages/scout-for-lol/packages/temporal",
     "packages/scout-for-lol/package.json",
     "packages/scout-for-lol/scripts/dev/dev-web.ts",

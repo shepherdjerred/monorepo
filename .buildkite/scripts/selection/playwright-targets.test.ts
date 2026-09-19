@@ -64,13 +64,6 @@ const workspaces = new Map<string, WorkspacePackage>([
     },
   ],
   [
-    "@scout-for-lol/evals",
-    {
-      dir: "packages/scout-for-lol/packages/evals/",
-      workspaceDependencies: ["@scout-for-lol/data"],
-    },
-  ],
-  [
     "@scout-for-lol/data",
     {
       dir: "packages/scout-for-lol/packages/data/",
@@ -108,7 +101,6 @@ describe("Playwright target selection", () => {
       "@scout-for-lol/activity",
       "@scout-for-lol/app",
       "@scout-for-lol/design-system",
-      "@scout-for-lol/evals",
     ]);
   });
 

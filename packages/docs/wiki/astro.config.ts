@@ -89,10 +89,12 @@ export default defineConfig({
     "/homelab/alerts": "/explanation/homelab/alerts/",
     "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
     "/homelab/releases": "/explanation/homelab/release-safety/",
-    "/homelab/scout-evals-tailnet-boundary":
-      "/explanation/homelab/scout-evals-trust-boundary/",
+    "/homelab/scout-evals-tailnet-boundary": "/explanation/homelab/overview/",
     "/homelab/tracker-tracker": "/explanation/homelab/overview/",
+    "/explanation/homelab/scout-evals-trust-boundary/":
+      "/explanation/homelab/overview/",
     "/explanation/homelab/tracker-tracker/": "/explanation/homelab/overview/",
+    "/how-to/operate-scout-evals/": "/explanation/homelab/overview/",
     "/how-this-wiki-works": "/explanation/how-this-wiki-works/",
     "/pr-fleet-controller": "/explanation/pr-fleet-authority-boundary/",
     "/scout-analysis": "/explanation/scout-temporal-analysis/",

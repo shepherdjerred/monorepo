@@ -480,16 +480,6 @@
       "steps": [{ "runner": "vitest", "args": ["src"] }]
     },
     {
-      "package": "@scout-for-lol/evals",
-      "directory": "packages/scout-for-lol/packages/evals",
-      "steps": [
-        {
-          "runner": "vitest",
-          "args": ["src"]
-        }
-      ]
-    },
-    {
       "package": "@scout-for-lol/frontend",
       "directory": "packages/scout-for-lol/packages/frontend",
       "steps": [
