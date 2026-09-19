@@ -23,6 +23,13 @@ bun run dev    # http://localhost:6006
 bun run build  # static catalog in storybook-static/
 ```
 
+The built catalog deploys to its own bucket, with the management app's
+components composed under `/app/`. `packages/scout-for-lol` assembles both
+into one site with `bun run build:storybook-site`, and the Buildkite `sites`
+lane deploys it from main. The hostname isn't documented here yet — it isn't
+live until the DNS, OpenTofu, and ArgoCD changes that create it land and
+reconcile; add it once it answers 200.
+
 The toolbar carries two Scout globals, **Skin** (`modern` / `classic`) and
 **Mode** (`light` / `dark` / `system`). They are applied by the decorator in
 `.storybook/preview.tsx`, which wraps every story in `ScoutThemeProvider` and
