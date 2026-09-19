@@ -234,7 +234,7 @@ type CodexRunState = {
 async function handleEvent(input: {
   run: RunCodexAgentTurnInput;
   event: ThreadEvent;
-  tokens: readonly (string | undefined)[];
+  tokens: () => readonly (string | undefined)[];
   parser: ReturnType<typeof createCodexJsonlParser>;
   progress: AgentTurnProgress;
   state: CodexRunState;
@@ -244,7 +244,8 @@ async function handleEvent(input: {
   if (!(await input.run.beforeEvent())) {
     throw new Error("secret redaction refresh failed before Codex SDK event");
   }
-  const safeEvent = redactedEvent(input.event, input.tokens);
+  const tokens = input.tokens();
+  const safeEvent = redactedEvent(input.event, tokens);
   input.parser.push(`${JSON.stringify(safeEvent)}\n`);
   input.state.stepsStarted = enforceTurnBudget({
     kind: TurnBudgetKindSchema.parse(input.run.turnBudgetKind),
@@ -266,18 +267,15 @@ async function handleEvent(input: {
       input.state.numTurns += 1;
       break;
     case "turn.failed":
-      throw new Error(redactSecrets(input.event.error.message, input.tokens));
+      throw new Error(redactSecrets(input.event.error.message, tokens));
     case "error":
-      throw new Error(redactSecrets(input.event.message, input.tokens));
+      throw new Error(redactSecrets(input.event.message, tokens));
     case "item.completed":
       if (input.run.captureEvidenceEvents === true) {
         input.state.evidenceEvents.push(safeEvent);
       }
       if (input.event.item.type === "agent_message") {
-        input.state.finalText = redactSecrets(
-          input.event.item.text,
-          input.tokens,
-        );
+        input.state.finalText = redactSecrets(input.event.item.text, tokens);
       }
       break;
     case "turn.started":
@@ -293,11 +291,14 @@ export async function runCodexAgentTurn(
   const sandboxPolicy = SandboxPolicySchema.parse(input.sandboxPolicy);
   const startedAtMs = Date.now();
   const progress = createAgentTurnProgress(startedAtMs, input.onEvent);
-  const tokens = [
-    ...(input.redactTokens ?? []),
+  const providerTokens: (string | undefined)[] = [
     ...(input.auth.kind === "chatgpt-subscription"
       ? [input.auth.authJson]
       : [input.auth.apiKey]),
+  ];
+  const tokens = (): readonly (string | undefined)[] => [
+    ...(input.redactTokens ?? []),
+    ...providerTokens,
   ];
   const parser =
     input.warn === undefined
@@ -336,7 +337,7 @@ export async function runCodexAgentTurn(
     subscriptionHome = prepared.subscriptionHome;
     if (input.auth.kind === "chatgpt-subscription") {
       const auth = codexSubscriptionTokens(input.auth.authJson);
-      tokens.push(auth.access_token, auth.refresh_token, auth.id_token);
+      providerTokens.push(auth.access_token, auth.refresh_token, auth.id_token);
     }
     const threadOptions = {
       approvalPolicy: "never",

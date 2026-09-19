@@ -142,6 +142,7 @@ for await (const message of readRpcMessages(Bun.stdin.stream())) {
           approvalPolicy: z.literal("never"),
           config: z.object({
             cli_auth_credentials_store: z.literal("ephemeral"),
+            skip_git_repo_check: z.literal(true),
           }),
           threadId: z.literal("test-session").optional(),
         })

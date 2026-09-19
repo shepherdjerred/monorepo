@@ -30,6 +30,7 @@ function threadParams(input: RunCodexAgentTurnInput) {
       "sandbox_workspace_write.network_access":
         input.sandboxPolicy.networkAccessEnabled,
       cli_auth_credentials_store: "ephemeral",
+      skip_git_repo_check: input.skipGitRepoCheck ?? false,
     },
     ...(input.resumeSessionId === undefined
       ? {}

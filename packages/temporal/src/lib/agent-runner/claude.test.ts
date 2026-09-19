@@ -135,6 +135,34 @@ describe("runClaudeAgentTurn", () => {
     });
     expect(queryMock).not.toHaveBeenCalled();
   });
+
+  test("redacts credentials added during a stream refresh", async () => {
+    const redactTokens = ["oauth-secret"];
+    queryMock.mockReturnValue(
+      (async function* () {
+        yield {
+          type: "result",
+          subtype: "success",
+          session_id: "claude-session",
+          result: "done rotated-secret",
+          num_turns: 1,
+          usage: USAGE,
+        };
+      })(),
+    );
+
+    const outcome = await runClaudeAgentTurn({
+      ...input(),
+      redactTokens,
+      beforeEvent: () => {
+        redactTokens.push("rotated-secret");
+        return Promise.resolve(true);
+      },
+    });
+
+    expect(outcome.finalText).toBe("done ***");
+    expect(JSON.stringify(tracedMessages)).not.toContain("rotated-secret");
+  });
 });
 
 describe("runClaudeAgentTurn", () => {

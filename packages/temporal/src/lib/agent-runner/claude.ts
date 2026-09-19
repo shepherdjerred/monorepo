@@ -242,7 +242,10 @@ export async function runClaudeAgentTurn(
 ): Promise<AgentTurnOutcome> {
   const startedAtMs = Date.now();
   const progress = createAgentTurnProgress(startedAtMs, input.onEvent);
-  const tokens = [...(input.redactTokens ?? []), input.auth.oauthToken];
+  const tokens = (): readonly (string | undefined)[] => [
+    ...(input.redactTokens ?? []),
+    input.auth.oauthToken,
+  ];
   const providerUid = providerSubprocessUid();
   const options = queryOptions(input, providerUid);
   const abortController = options.abortController;
@@ -290,7 +293,7 @@ export async function runClaudeAgentTurn(
         callSite: input.callSite,
         request: {
           model: input.model,
-          prompt: redactSecrets(input.prompt, tokens),
+          prompt: redactSecrets(input.prompt, tokens()),
           options: {
             maxTurns: input.maxTurns,
             permissionMode: input.permissionPolicy,
@@ -308,7 +311,7 @@ export async function runClaudeAgentTurn(
             "secret redaction refresh failed before Claude Agent SDK event",
           );
         }
-        return redactedMessage(message, tokens);
+        return redactedMessage(message, tokens());
       },
     );
 
@@ -316,7 +319,7 @@ export async function runClaudeAgentTurn(
     // this point may follow acceptance even when no output message arrives.
     state.generationStarted = true;
     for await (const message of messages) {
-      handleMessage({ run: input, message, tokens, progress, state });
+      handleMessage({ run: input, message, tokens: tokens(), progress, state });
     }
     if (state.finalText === undefined && input.requireFinalText === true) {
       throw new Error(
