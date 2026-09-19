@@ -174,6 +174,33 @@ describe("runCodexAgentTurn failure classification", () => {
       possiblyAppliedEffects: true,
     });
   });
+
+  test("redacts credentials added during a stream refresh", async () => {
+    const redactTokens = ["codex-secret"];
+    mocks.subscriptionEvents.mockReturnValue(
+      (async function* () {
+        yield {
+          type: "item.completed",
+          item: {
+            id: "message",
+            type: "agent_message",
+            text: "done rotated-secret",
+          },
+        };
+      })(),
+    );
+
+    const outcome = await runSubscriptionTurn(
+      () => {
+        redactTokens.push("rotated-secret");
+        return Promise.resolve(true);
+      },
+      undefined,
+      redactTokens,
+    );
+
+    expect(outcome.finalText).toBe("done ***");
+  });
 });
 
 describe("runCodexAgentTurn", () => {
@@ -336,6 +363,7 @@ describe("runCodexAgentTurn", () => {
 async function runSubscriptionTurn(
   beforeEvent = () => Promise.resolve(true),
   afterRun?: () => Promise<void>,
+  redactTokens: string[] = ["codex-secret"],
 ) {
   const codexHome = path.join(
     os.tmpdir(),
@@ -364,7 +392,7 @@ async function runSubscriptionTurn(
         webSearchMode: "live",
       },
       resumeSessionId: "codex-session",
-      redactTokens: ["codex-secret"],
+      redactTokens,
       beforeEvent,
       onEvent: vi.fn(),
     });

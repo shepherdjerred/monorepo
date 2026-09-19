@@ -51,6 +51,7 @@ async function withProvider(
     },
     beforeEvent: () => Promise.resolve(true),
     onEvent: vi.fn(),
+    skipGitRepoCheck: true,
     ...(resume ? { resumeSessionId: "test-session" } : {}),
   };
   const onExecutionState = vi.fn();
