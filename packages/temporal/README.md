@@ -128,7 +128,7 @@ Behavior uses the typed `temporal-agent-chat-imessage-*` flags, not environment
 variables. Production defaults off with an empty sender allowlist.
 
 The durable cursor excludes historical messages. Disabled or unowned polling
-advances the start timestamp, so activation does not backfill the disabled period.
+advances the ROWID watermark, so activation does not backfill the disabled period.
 It advances by Messages database ROWID only after each command settles,
 and survives worker restarts and Continue-As-New. Incoming commands are processed
 in ROWID order so chat selection cannot race a following message. BlueBubbles
