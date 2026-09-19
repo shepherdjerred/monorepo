@@ -47,6 +47,7 @@ describe("BlueBubbles message normalization", () => {
       messageId: "message-guid",
       conversationId: "iMessage;-;owner",
       submittedAt: new Date(MESSAGE.dateCreated).toISOString(),
+      sourceSequence: MESSAGE.originalROWID,
       action: { kind: "continue", prompt: "hello" },
     });
   });

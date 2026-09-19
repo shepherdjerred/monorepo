@@ -59,6 +59,7 @@ export function blueBubblesCommand(
     messageId: message.guid,
     conversationId: chat.guid,
     submittedAt: new Date(message.dateCreated).toISOString(),
+    sourceSequence: message.originalROWID,
     action: parseImessageAction(message.text),
   };
 }

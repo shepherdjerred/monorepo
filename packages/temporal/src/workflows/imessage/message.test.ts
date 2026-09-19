@@ -10,6 +10,7 @@ const INPUT = {
   messageId: "incoming-guid",
   conversationId: "owner-dm",
   submittedAt: "2026-09-17T00:00:00.000Z",
+  sourceSequence: 1,
   action: { kind: "continue", prompt: "continue" },
 } as const;
 const TURN: z.infer<typeof PreparedImessageCommandSchema> = {
@@ -22,6 +23,7 @@ const TURN: z.infer<typeof PreparedImessageCommandSchema> = {
       prompt: "continue",
       submittedAt: INPUT.submittedAt,
       source: { kind: "imessage", conversationId: INPUT.conversationId },
+      sourceSequence: INPUT.sourceSequence,
     },
   },
 };
