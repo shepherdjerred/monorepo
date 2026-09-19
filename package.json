@@ -172,6 +172,7 @@
     "packages/voice-assistant",
     "packages/webring",
     "packages/windows-cross-compiler",
+    "packages/woodpecker-config-extension",
     "scripts"
   ],
   "overrides": {
