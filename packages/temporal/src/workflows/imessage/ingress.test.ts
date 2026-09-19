@@ -36,12 +36,14 @@ describe("BlueBubbles durable cursor", () => {
                       messageId: "selection",
                       conversationId: "dm",
                       submittedAt: cursor.startedAt,
+                      sourceSequence: 1,
                       action: { kind: "use", chatId: "scheduled-chat" },
                     },
                     {
                       messageId: "next-turn",
                       conversationId: "dm",
                       submittedAt: cursor.startedAt,
+                      sourceSequence: 2,
                       action: { kind: "continue", prompt: "continue" },
                     },
                   ]

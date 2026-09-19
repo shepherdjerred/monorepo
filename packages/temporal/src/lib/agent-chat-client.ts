@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import {
   AGENT_CHAT_CATALOG_WORKFLOW_ID,
   AgentChatBindingSchema,
+  AgentChatBindingUpdateSchema,
   AgentChatCatalogEntrySchema,
   AgentChatConfigSchema,
   AgentChatTurnRequestSchema,
@@ -17,6 +18,7 @@ import {
   AgentChatWorkflowStateSchema,
   agentChatWorkflowId,
   type AgentChatBinding,
+  type AgentChatBindingUpdate,
   type AgentChatCatalogEntry,
   type AgentChatCatalogState,
   type AgentChatConfig,
@@ -113,9 +115,10 @@ export async function bindAgentChat(
   client: WorkflowClient,
   rawBinding: AgentChatBinding,
   chatId: string,
-  updatedAt: string,
+  rawUpdate: AgentChatBindingUpdate,
 ): Promise<AgentChatCatalogEntry> {
   const binding = AgentChatBindingSchema.parse(rawBinding);
+  const update = AgentChatBindingUpdateSchema.parse(rawUpdate);
   const entry = await getAgentChat(client, chatId);
   if (entry === undefined) {
     throw new AgentChatNotFoundError(chatId);
@@ -125,10 +128,10 @@ export async function bindAgentChat(
     startWorkflowOperation: catalogStart(),
   });
   const updateId = createHash("sha256")
-    .update(JSON.stringify({ binding, chatId, updatedAt }))
+    .update(JSON.stringify({ binding, chatId, update }))
     .digest("hex");
   return await client.executeUpdateWithStart(bindAgentChatUpdate, {
-    args: [binding, chatId, updatedAt],
+    args: [binding, chatId, update],
     updateId: `agent-chat-binding/${updateId}`,
     startWorkflowOperation: catalogStart(),
   });
@@ -215,12 +218,10 @@ export async function runAgentChatTurn(input: {
     input.bindSource === true &&
     (request.source.kind === "imessage" || request.source.kind === "discord")
   ) {
-    await bindAgentChat(
-      input.client,
-      request.source,
-      config.chatId,
-      request.submittedAt,
-    );
+    await bindAgentChat(input.client, request.source, config.chatId, {
+      updatedAt: request.submittedAt,
+      sourceSequence: request.sourceSequence,
+    });
   }
 
   const receiptWorkflowId = agentChatReceiptWorkflowId(

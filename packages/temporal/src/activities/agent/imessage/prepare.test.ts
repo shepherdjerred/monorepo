@@ -22,6 +22,7 @@ const BASE = {
   messageId: "message-guid",
   conversationId: "owner-dm",
   submittedAt: "2026-09-17T00:00:00.000Z",
+  sourceSequence: 42,
 };
 beforeEach(() => {
   vi.resetAllMocks();
@@ -93,8 +94,31 @@ describe("iMessage chat preparation", () => {
       {},
       { kind: "imessage", conversationId: "owner-dm" },
       "scheduled-chat",
-      BASE.submittedAt,
+      {
+        updatedAt: BASE.submittedAt,
+        sourceSequence: BASE.sourceSequence,
+      },
     );
+  });
+  test("sorts recent chats by instant across timestamp offsets", async () => {
+    mocks.list.mockResolvedValue([
+      {
+        config: { chatId: "older", provider: "claude", title: "Older" },
+        updatedAt: "2026-01-01T00:00:00+05:00",
+      },
+      {
+        config: { chatId: "newer", provider: "codex", title: "Newer" },
+        updatedAt: "2025-12-31T20:00:00Z",
+      },
+    ]);
+    const result = await prepareImessageCommand({
+      ...BASE,
+      action: { kind: "list" },
+    });
+    expect(result).toMatchObject({
+      kind: "message",
+      content: "newer — codex: Newer\nolder — claude: Older",
+    });
   });
   test("returns useful user errors without executing or rebinding unknown chats", async () => {
     mocks.get.mockResolvedValue(undefined);

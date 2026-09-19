@@ -16,27 +16,38 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   const config = await imessageIngressConfig();
   if (!config.enabled || config.owners.length === 0)
     return {
-      startedAt: new Date().toISOString(),
+      startedAt: cursor.startedAt,
       lastRowId: cursor.lastRowId,
       commands: [],
     };
+  const initializing = cursor.lastRowId === 0;
   const messages = z
     .array(BlueBubblesMessageSchema)
     .max(1000)
     .parse(
       await blueBubblesRequest("/api/v1/message/query", {
-        after: Date.parse(cursor.startedAt),
         with: ["chats"],
-        limit: 1000,
-        sort: "ASC",
-        where: [
-          {
-            statement: "message.ROWID > :cursor",
-            args: { cursor: cursor.lastRowId },
-          },
-        ],
+        limit: initializing ? 1 : 1000,
+        sort: initializing ? "DESC" : "ASC",
+        ...(initializing
+          ? {}
+          : {
+              where: [
+                {
+                  statement: "message.ROWID > :cursor",
+                  args: { cursor: cursor.lastRowId },
+                },
+              ],
+            }),
       }),
     );
+  if (initializing) {
+    return BlueBubblesPollResultSchema.parse({
+      startedAt: cursor.startedAt,
+      lastRowId: messages[0]?.originalROWID ?? 0,
+      commands: [],
+    });
+  }
   // The API sorts by message time, not ROWID. A full page cannot safely advance a ROWID cursor.
   if (messages.length === 1000)
     throw new Error(
