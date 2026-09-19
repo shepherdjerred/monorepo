@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ApplicationFailure, startChild } from "@temporalio/workflow";
+import { ApplicationFailure, patched, startChild } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type {
   IsoInstant,
@@ -507,6 +507,17 @@ async function commitObservation(
 }
 
 /**
+ * The marker that says a history was recorded by a run that minted its
+ * postmatch intents from the Workflow.
+ *
+ * Named once so the gate and its pin cannot drift apart, and never reused: a
+ * patch id identifies ONE change to one Workflow's command sequence for the
+ * life of that Workflow, so changing this string would silently re-run the
+ * decision for every execution that already made it.
+ */
+export const SCOUT_V2_MATCH_MINT_INTENTS_PATCH = "scout-v2-match-mint-intents";
+
+/**
  * The per-match core, V2.
  *
  * Phases, in order: archive the raw artifacts, commit the observation, settle
@@ -681,14 +692,31 @@ export async function scoutMatchProcessingV2Workflow(
   // Minting first means a failure leaves the cursor where it was and the next
   // discovery surfaces the match again.
   //
-  // REPLAY: this is a ScheduleActivityTask that histories recorded before it
-  // existed do not contain, so inserting it is safe only while no such history
-  // is still open or replayable. V2 had no production executions when it was
-  // added. Anyone changing this sequence must confirm that again rather than
-  // assume it, and introduce the change behind a patch if any history predates
-  // it.
-  setWorkflowPhase("**Phase:** minting the post-match report intents");
-  await activities.mintPostmatchNotificationIntentsV2(ref);
+  // Gated, because this is an inserted COMMAND rather than a changed payload.
+  //
+  // A history recorded before this Activity existed has `advanceMatchCursorV2`
+  // where replay would now schedule the mint. That is nondeterminism, and it
+  // wedges the execution rather than failing it — no retry clears it, and the
+  // match is stuck with its cursor unmoved forever.
+  //
+  // Everywhere else in this file the pre-change generation is told apart by
+  // the recorded payload, which is the better instrument because the payload
+  // IS that execution's fact. A command sequence leaves no payload to read:
+  // nothing in the history says which generation wrote it except a marker put
+  // there for the purpose. So this one is a patch, and the difference is not
+  // stylistic — it is which fact exists to be read.
+  //
+  // The old branch mints nothing, and that is exactly what that generation
+  // did: no per-match Activity minted postmatch intents before this one, so
+  // an execution replaying past this point already behaves as its own code
+  // wrote it. Nothing is lost that that execution ever had.
+  //
+  // Retire with `deprecatePatch` once no execution predating it can still
+  // replay, not before.
+  if (patched(SCOUT_V2_MATCH_MINT_INTENTS_PATCH)) {
+    setWorkflowPhase("**Phase:** minting the post-match report intents");
+    await activities.mintPostmatchNotificationIntentsV2(ref);
+  }
 
   // Last, because it is what stops rediscovery.
   setWorkflowPhase("**Phase:** advancing tracked-account cursors");
