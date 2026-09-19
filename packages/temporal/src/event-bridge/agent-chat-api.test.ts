@@ -143,6 +143,22 @@ function request(
   });
 }
 
+function promptedCreateRequest(
+  overrides: Record<string, unknown> = {},
+): Request {
+  return request("/agent-chats", {
+    method: "POST",
+    token: TOKEN,
+    body: {
+      ...EMPTY_CHAT_REQUEST,
+      prompt: "Inspect the homelab.",
+      turnId: RECEIPT.turnId,
+      submittedAt: SUBMITTED_AT,
+      ...overrides,
+    },
+  });
+}
+
 describe("submitHttpAgentChatCommand", () => {
   const accepted: HttpAgentChatCommand = {
     kind: "continue",
@@ -385,18 +401,7 @@ describe("prompted chat registration", () => {
       Promise.reject(new Error("owner already exists")),
     );
 
-    const response = await appWith(operations).fetch(
-      request("/agent-chats", {
-        method: "POST",
-        token: TOKEN,
-        body: {
-          ...EMPTY_CHAT_REQUEST,
-          prompt: "Inspect the homelab.",
-          turnId: RECEIPT.turnId,
-          submittedAt: SUBMITTED_AT,
-        },
-      }),
-    );
+    const response = await appWith(operations).fetch(promptedCreateRequest());
 
     expect(response.status).toBe(202);
     expect(operations.submit).toHaveBeenCalledWith(
@@ -422,17 +427,7 @@ describe("prompted chat registration", () => {
       const operations = makeOperations();
       operations.get = vi.fn(async () => EMPTY_CHAT_ENTRY);
       const response = await appWith(operations).fetch(
-        request("/agent-chats", {
-          method: "POST",
-          token: TOKEN,
-          body: {
-            ...EMPTY_CHAT_REQUEST,
-            prompt: "Inspect the homelab.",
-            turnId: RECEIPT.turnId,
-            submittedAt: SUBMITTED_AT,
-            ...conflict,
-          },
-        }),
+        promptedCreateRequest(conflict),
       );
       expect(response.status).toBe(409);
       expect(operations.submit).not.toHaveBeenCalled();
@@ -444,18 +439,7 @@ describe("prompted chat registration", () => {
   it("preserves the original chat configuration on matching prompted retries", async () => {
     const operations = makeOperations();
     operations.get = vi.fn(async () => EMPTY_CHAT_ENTRY);
-    const response = await appWith(operations).fetch(
-      request("/agent-chats", {
-        method: "POST",
-        token: TOKEN,
-        body: {
-          ...EMPTY_CHAT_REQUEST,
-          prompt: "Inspect the homelab.",
-          turnId: RECEIPT.turnId,
-          submittedAt: SUBMITTED_AT,
-        },
-      }),
-    );
+    const response = await appWith(operations).fetch(promptedCreateRequest());
     expect(response.status).toBe(202);
     expect(operations.submit).toHaveBeenCalledWith(
       expect.anything(),
