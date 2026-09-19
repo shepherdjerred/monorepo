@@ -139,7 +139,7 @@ export function scannerSteps(images: CiImages): CiStep[] {
     {
       key: "trivy",
       label: "trivy",
-      image: images.trivy,
+      image: images.catalog["aquasec/trivy"],
       commands: trivyCommands(),
       timeoutMinutes: 20,
       resources: SCANNER_TIER,
@@ -152,7 +152,7 @@ export function scannerSteps(images: CiImages): CiStep[] {
     {
       key: "semgrep",
       label: "semgrep",
-      image: images.semgrep,
+      image: images.catalog["semgrep/semgrep"],
       commands: semgrepCommands(),
       timeoutMinutes: 20,
       resources: SCANNER_TIER,

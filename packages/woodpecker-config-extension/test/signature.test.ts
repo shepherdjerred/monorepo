@@ -56,6 +56,12 @@ describe("ci image resolution", () => {
     entries: [
       { name: "aquasec/trivy", value: "0.72.0" },
       { name: "semgrep/semgrep", value: "1.170.0" },
+      { name: "texlive/texlive", value: "TL2024-historic" },
+      { name: "trmnl/trmnlp", value: "v0.11.0" },
+      { name: "grafana/tempo", value: "3.0.3" },
+      { name: "mikefarah/yq", value: "latest" },
+      { name: "minio/mc", value: "RELEASE" },
+      { name: "minio/minio", value: "RELEASE" },
     ],
   });
 
@@ -80,8 +86,8 @@ describe("ci image resolution", () => {
     const images = await resolveCiImages("abc123", async (path) =>
       fetchFixture(path),
     );
-    expect(images.trivy).toBe("aquasec/trivy:0.72.0");
-    expect(images.semgrep).toBe("semgrep/semgrep:1.170.0");
+    expect(images.catalog["aquasec/trivy"]).toBe("aquasec/trivy:0.72.0");
+    expect(images.catalog["semgrep/semgrep"]).toBe("semgrep/semgrep:1.170.0");
   });
 
   /** A malformed digest would be interpolated straight into an image ref. */

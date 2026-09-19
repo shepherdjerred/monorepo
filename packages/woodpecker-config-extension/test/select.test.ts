@@ -228,8 +228,16 @@ describe("ported lanes", () => {
   const IMAGES = {
     base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
     playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
-    trivy: "aquasec/trivy:0.72.0",
-    semgrep: "semgrep/semgrep:1.170.0",
+    catalog: {
+      "aquasec/trivy": "aquasec/trivy:0.72.0",
+      "semgrep/semgrep": "semgrep/semgrep:1.170.0",
+      "texlive/texlive": "texlive/texlive:TL2024-historic",
+      "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
+      "grafana/tempo": "grafana/tempo:3.0.3",
+      "mikefarah/yq": "mikefarah/yq:latest",
+      "minio/mc": "minio/mc:RELEASE",
+      "minio/minio": "minio/minio:RELEASE",
+    },
   };
 
   function keysFor(changedFiles: string[], branch = "feature") {
@@ -274,6 +282,20 @@ describe("ported lanes", () => {
 
   test("scanners are pull-request only", () => {
     expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
+  });
+
+  /**
+   * Buildkite needed a -pr and a -main step because the main variant carried a
+   * precomputed metadata gate. Selection now happens before generation, so one
+   * step covers both events.
+   */
+  test("the resume lane is one step covering both events", () => {
+    expect(keysFor(["packages/resume/resume.tex"])).toContain("resume-build");
+    expect(keysFor(["packages/resume/resume.tex"], "main")).toContain(
+      "resume-build",
+    );
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    expect(steps.filter((s) => s.key.startsWith("resume"))).toHaveLength(1);
   });
 
   test("alert dashboard runs for its own package", () => {
