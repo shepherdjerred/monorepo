@@ -46,6 +46,9 @@ import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
 import { openAiComplimentaryUsageActivities } from "./agent/openai-complimentary-usage.ts";
+import { agentChatActivities } from "./agent/chat/run-agent-chat-turn.ts";
+import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-turn.ts";
+import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -90,6 +93,14 @@ export const repoActivities = {
   ...fliptFlagInventoryActivities,
 };
 
+export const agentChatDispatchWorkerActivities = {
+  ...agentChatDispatchActivities,
+};
+
+export const agentChatReceiptWorkerActivities = {
+  ...agentChatReceiptActivities,
+};
+
 export const scoutActivities = {
   ...dataDragonActivities,
   ...lanePriorActivities,
@@ -103,6 +114,7 @@ export const scoutActivities = {
 
 export const agentActivities = {
   ...agentTaskActivities,
+  ...agentChatActivities,
 };
 
 export const glitterCorpusWorkerActivities = {

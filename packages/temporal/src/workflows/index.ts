@@ -125,6 +125,17 @@ import {
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
 import { runOpenAiComplimentaryUsageReconciliation as _runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
 import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";
+import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
+import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
+import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
+import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
+import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
+import type {
+  AgentChatCatalogState,
+  AgentChatTurnResult,
+  AgentChatWorkflowInput,
+  ScheduledAgentChatTurnInput,
+} from "#shared/agent/agent-chat.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -415,4 +426,28 @@ export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
 
 export async function runOpenAiComplimentaryUsageReconciliation(): Promise<OpenAiComplimentaryUsageResult> {
   return _runOpenAiComplimentaryUsageReconciliation();
+}
+
+export async function agentChatWorkflow(
+  input: AgentChatWorkflowInput,
+): Promise<never> {
+  return _agentChatWorkflow(input);
+}
+
+export async function agentChatTurnReceiptWorkflow(
+  input: AgentChatReceiptInput,
+): Promise<AgentChatTurnResult> {
+  return _agentChatTurnReceiptWorkflow(input);
+}
+
+export async function agentChatCatalogWorkflow(
+  state?: AgentChatCatalogState,
+): Promise<never> {
+  return _agentChatCatalogWorkflow(state);
+}
+
+export async function scheduledAgentChatTurnWorkflow(
+  input: ScheduledAgentChatTurnInput,
+): Promise<AgentChatTurnResult> {
+  return _scheduledAgentChatTurnWorkflow(input);
 }
