@@ -1,9 +1,7 @@
 import {
-  DiscordGuildIdSchema,
   MatchIdSchema,
   resolveQueueTypeFromGame,
   type DiscordChannelId,
-  type DiscordGuildId,
   type LeaguePuuid,
   type Player,
   type PlayerConfigEntry,
@@ -11,10 +9,8 @@ import {
   type RawTimeline,
 } from "@scout-for-lol/data";
 import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
-import { uniqueBy } from "remeda";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { decorateWithFeatureTip } from "#src/tips/index.ts";
-import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
@@ -22,8 +18,8 @@ import {
   recordPostmatchMessageIds,
 } from "#src/league/tasks/prematch/active-game-queries.ts";
 import {
-  channelsPassingQueueFilter,
   deliverToChannels,
+  resolvePostmatchDeliveryChannels,
 } from "#src/league/tasks/notification-filters.ts";
 import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
 import { recoverCompletedPostmatchDeliveries } from "#src/league/tasks/postmatch/postmatch-delivery-recovery.ts";
@@ -31,6 +27,7 @@ import {
   deliveredMessagesByGuild,
   recordDeliveryReceipts,
   tryCreateChannelDeliveryRecorder,
+  postmatchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 
 const logger = createLogger("postmatch-report-delivery");
@@ -71,7 +68,7 @@ export async function deliverPostmatchReport(input: {
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
 }): Promise<Map<DiscordChannelId, string>> {
   const matchId = MatchIdSchema.parse(input.matchData.metadata.matchId);
-  const effectKeyPrefix = `postmatch-discord:${matchId}`;
+  const effectKeyPrefix = postmatchDeliveryKeyPrefix(matchId);
   // FIRST, and unconditionally. Every exit below is decided by whether a report
   // may still be SENT — the match's age, which players are tracked, which
   // channels are subscribed now, whether any survive their queue filter — and
@@ -107,25 +104,22 @@ export async function deliverPostmatchReport(input: {
   const puuids: LeaguePuuid[] = playersInMatch.map(
     (player) => player.league.leagueAccount.puuid,
   );
-  const channels = await getChannelsSubscribedToPlayers(puuids);
   const queueType = resolveQueueTypeFromGame(
     input.matchData.info.queueId,
     input.matchData.info.gameMode,
     input.matchData.info.gameType,
   );
-  const deliverChannels = channelsPassingQueueFilter(channels, queueType);
+  const {
+    subscribed: channels,
+    deliverable: deliverChannels,
+    guildIds: targetGuildIds,
+  } = await resolvePostmatchDeliveryChannels({ puuids, queueType });
   if (deliverChannels.length === 0) {
     logger.info(
       `[processMatch] 🔕 No delivery channels for match ${matchId} (queue ${queueType ?? "unknown"}, ${channels.length.toString()} subscribed)`,
     );
     return new Map();
   }
-  const targetGuildIds: DiscordGuildId[] = uniqueBy(
-    deliverChannels.map((channel) =>
-      DiscordGuildIdSchema.parse(channel.serverId),
-    ),
-    (id) => id,
-  );
   const message = await generateMatchReport(
     input.matchData,
     input.trackedPlayers,
@@ -161,6 +155,7 @@ export async function deliverPostmatchReport(input: {
       }),
     recordDelivery:
       tryCreateChannelDeliveryRecorder({
+        kind: "postmatch",
         facts,
         matchId,
         keyPrefix: effectKeyPrefix,

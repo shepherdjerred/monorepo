@@ -151,11 +151,6 @@
       "count": 1
     }
   },
-  "src/betting/notify/announce.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/betting/parlays/model/parlay-pricing.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

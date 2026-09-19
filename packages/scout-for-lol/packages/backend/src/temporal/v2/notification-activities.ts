@@ -2,7 +2,7 @@ import type { ScoutV2NotificationActivities } from "#src/temporal/v2/durable-act
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
 /**
- * The five V2 notification Activities that run on the realtime queue, as the
+ * The six V2 notification Activities that run on the realtime queue, as the
  * Activity Worker sees them.
  *
  * Rendering is deliberately NOT among them. `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`
@@ -69,6 +69,19 @@ export function createScoutV2NotificationActivities(): ScoutV2NotificationActivi
           const { recordNotificationOutcomeV2 } =
             await import("#src/temporal/v2/notification-transitions.ts");
           return await recordNotificationOutcomeV2(input);
+        },
+      ),
+    // Runs only after the delivery outcome is durably recorded, which is the
+    // whole point of it being its own Activity: a best-effort Discord edit
+    // that outlives a timeout can no longer take an answered send down with
+    // it.
+    afterNotificationDeliveredV2: async (input) =>
+      await heartbeatWhile(
+        { intentKey: input.intentKey, phase: "post-delivery-follow-up-v2" },
+        async () => {
+          const { afterNotificationDeliveredV2 } =
+            await import("#src/temporal/v2/notification/notification-follow-up.ts");
+          return await afterNotificationDeliveredV2(input);
         },
       ),
   };

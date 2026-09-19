@@ -113,12 +113,53 @@ describe("the V2 notification intent machine", () => {
       "beginNotificationSendV2",
       "deliverNotificationV2",
       "recordNotificationOutcomeV2",
+      "afterNotificationDeliveredV2",
     ]);
     expect(store.sends).toHaveLength(1);
     expect(store.renders).toBe(1);
     expect(result).toMatchObject({
       data: { state: { kind: "delivered" }, attemptCount: 1 },
     });
+  }, 60_000);
+
+  test("runs the post-delivery follow-up only after the outcome is recorded", async () => {
+    // The follow-up used to run inside the send Activity, where a Discord
+    // edit that outlived the heartbeat timeout killed the Activity before its
+    // decided `delivered` result could be returned — and the Workflow recorded
+    // a message Discord had accepted as an ambiguous send. Out here the
+    // outcome is already durable before the refresh is even attempted.
+    const store = createNotificationStore();
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    await notify("notification-follow-up-order");
+
+    expect(store.calls.indexOf("recordNotificationOutcomeV2")).toBeLessThan(
+      store.calls.indexOf("afterNotificationDeliveredV2"),
+    );
+  }, 60_000);
+
+  test("a follow-up that never answers leaves the delivery delivered", async () => {
+    const store = createNotificationStore({ followUp: "throws" });
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    const result = await notify("notification-follow-up-fails");
+
+    expect(result).toMatchObject({
+      data: { state: { kind: "delivered" }, attemptCount: 1 },
+    });
+    expect(store.sends).toHaveLength(1);
+  }, 60_000);
+
+  test("skips the follow-up when nothing was delivered", async () => {
+    const store = createNotificationStore({ script: [{ outcome: "unknown" }] });
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    await notify("notification-follow-up-skipped");
+
+    expect(store.calls).not.toContain("afterNotificationDeliveredV2");
   }, 60_000);
 
   test("commits the attempt nonce before the send and the outcome after it", async () => {
@@ -210,6 +251,49 @@ describe("the V2 notification intent machine", () => {
     expect(store.sends).toHaveLength(1);
     expect(result).toMatchObject({
       data: { state: { kind: "permission-denied" } },
+    });
+  }, 60_000);
+
+  test("stops at the policy gate without rendering or minting an attempt", async () => {
+    // A recovery-born intent under a batch policy that forbids its target.
+    // The run reads, sees the hold, and does nothing else: no ready
+    // transition, no render, no nonce. The result says `held` and names the
+    // policy and target, and the intent stays exactly where the sweep will
+    // find it once the batch is released.
+    const store = createNotificationStore({ policy: "no-external" });
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    const result = await notify("notification-held");
+
+    expect(store.calls).toEqual(["readNotificationIntentV2"]);
+    expect(store.sends).toEqual([]);
+    expect(store.renders).toBe(0);
+    expect(store.intent?.state).toEqual({ kind: "pending" });
+    expect(store.intent?.attemptCount).toBe(0);
+    expect(result).toMatchObject({
+      data: {
+        status: "no-op",
+        state: { kind: "pending" },
+        attemptCount: 0,
+        disposition: {
+          kind: "held",
+          policy: "no-external",
+          target: "channel",
+        },
+      },
+    });
+  }, 60_000);
+
+  test("reports an ordinary run as driven", async () => {
+    const store = createNotificationStore();
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    const result = await notify("notification-driven");
+
+    expect(result).toMatchObject({
+      data: { status: "completed", disposition: { kind: "driven" } },
     });
   }, 60_000);
 

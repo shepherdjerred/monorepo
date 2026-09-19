@@ -75,7 +75,7 @@ function formatPlayerList(names: string[]): string {
  * Mirrors post-match's `formatGameCompletionMessage`: short, unformatted content
  * that renders above the image embed.
  */
-function formatPrematchMessage(
+export function formatPrematchMessage(
   trackedPlayers: PlayerConfigEntry[],
   queueType: QueueType | undefined,
   gameMode: string,
@@ -95,7 +95,7 @@ function formatPrematchMessage(
  * Rich text embed used as a fallback when the loading-screen image cannot
  * be generated. Preserves the prior text-only notification experience.
  */
-function buildFallbackPrematchEmbed(
+export function buildFallbackPrematchEmbed(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
 ): EmbedBuilder {
@@ -152,7 +152,7 @@ function buildFallbackPrematchEmbed(
  * within the complexity budget, and because "what does this message look like"
  * is a separate question from "where does it go".
  */
-function buildPrematchPayload(input: {
+export function buildPrematchPayload(input: {
   betsOpen: boolean;
   bucks: BucksPrematchAttachment;
   baseContent: string;
@@ -499,6 +499,7 @@ export async function sendPrematchNotification(
       tryCreateChannelDeliveryRecorder({
         facts,
         matchId: prematchMatchId,
+        kind: "prematch",
         keyPrefix: prematchDeliveryKeyPrefix(prematchMatchId),
         // The ActiveGame row's own lifetime: past it the game is no longer
         // tracked, so a pre-match send would be about a game already over.

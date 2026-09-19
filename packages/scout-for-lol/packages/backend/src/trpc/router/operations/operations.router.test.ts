@@ -89,6 +89,8 @@ function intentRecord(args: {
     matchId: MATCH_ID,
     intent: {
       key: NotificationIntentKeySchema.parse(args.key),
+      kind: "postmatch",
+      origin: { kind: "live" },
       target: { kind: "channel", channelId: CHANNEL },
       freshnessDeadline: instant(args.deadlineOffsetMs),
       createdAt: instant(-60_000),

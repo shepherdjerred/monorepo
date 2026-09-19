@@ -482,6 +482,136 @@ for its children and does not stop at a taken ID: live games have no chronology
 to protect, and the discovery Workflow ID is a per-stage singleton, so waiting
 would put the next poll behind the slowest game.
 
+## The V2 notification lane
+
+`scoutNotificationV2Workflow` drives one `MatchNotificationIntent` through the
+frozen domain machine. The Activities live in `src/temporal/v2/notification-*`
+and `src/temporal/v2/notification/`, and three facts about the lane are
+load-bearing for anyone extending it.
+
+### An intent says what it announces and where it came from
+
+Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
+`dare-summary`) and an `origin`
+(`live`, or `recovery` naming the batch that minted it). Both are fixed at
+mint, mirrored into columns, and versioned in the payload envelope
+(`notificationIntentCodec` version 2; a version-1 payload derives its kind from
+the key prefix the two producers of that version used, and refuses any other
+prefix). The kind selects the renderer and the message builder: a `prematch`
+intent is rendered from the archived spectator snapshot and delivered as v1's
+game-start message, and nothing on that arm reads a MatchV5 payload — so a
+prematch intent re-driven after its game ended can never deliver a post-match
+report. The V2 prematch send carries no Bryan Bucks markets or buttons; v1
+opens pools during its send and records message references afterwards, and
+buttons on a message nothing recorded would be a market the bot could not
+later close. That is an explicit gap, not a silent one.
+
+### The announcement kinds carry their message on the intent
+
+A `settlement` intent is one guild channel's Bryan Bucks recap for one match
+and a `dare-summary` intent is one Dare's resolution. Neither has an image —
+their render attests `none` (`text-only`) — and their message is built at the
+send from an `announcement` envelope on the intent, parsed by the codecs in
+`notification/announcement-codecs.ts`: the settlement summary, parlay result
+and this guild's earnings exactly as settlement produced them, or v1's
+`DareSettlementSummary`. The intent carries those presentation inputs rather
+than the receipt's identities on purpose — the receipt names no amounts, and
+rebuilding pool totals and payouts from ledger rows would be a second
+implementation of settlement arithmetic. The arms compose v1's own builders
+(`prepareSettlementAnnouncement`, `dareResultMessage`) so budgets and mention
+safety exist once. A settlement recap replies to the delivered POSTMATCH
+intent's `messageId` for the same channel (`failIfNotExists: false`), with
+one plain send when the reply itself is refused; a delivered Dare result is
+followed by v1's best-effort callout refresh. Both kinds refuse a DM target as
+terminal: v1's private settlement receipts are a separate, budgeted fan-out
+that is not ported, and is an explicit gap.
+
+### Delivery sends exactly what the render attested, and establishes nothing
+
+`renderNotificationArtifactV2` runs on `background` under the effect fence and
+is the only place v1's report generator runs on the V2 lane. That matters
+beyond the Satori cost: the generator refetches every tracked player's rank and
+upserts this match's `MatchRankHistory`, and it spends the one AI review a
+match is allowed (`markAiAttempted` is global to the match). Both are facts
+about the MATCH, established once — so the render evaluates the review's
+per-guild gate against the whole audience the report will reach
+(`resolvePostmatchDeliveryChannels`, shared with v1's own delivery) rather than
+against one channel's guild.
+
+What the generator built is then committed and attested whole: the report image
+and, when the match earned one, the review's image as objects under v1's key
+layout, plus the content line and which components were attached
+(`v2-notification-render` evidence version 2, keyed per `(kind, match)`). A
+prematch render attests the loading screen, or `none` for a queue it cannot
+draw, which the send answers with v1's fallback embed; the announcement kinds
+attest `none` (`text-only`).
+
+`deliverNotificationV2` runs on `realtime` and only reassembles. It reads the
+receipt, fetches the objects it names, verifies each against its digest and
+size (`notification/notification-artifact.ts`, one reader per kind), and
+rebuilds the message with v1's own furniture builders. It runs no generator, no
+Riot read and no model call, so a delivery re-driven days later — a
+reconciliation sweep after the player's next game — rewrites no history, and
+every channel's message carries the same review rather than the first one
+consuming it. Two failures on that path are terminal, not retryable: an object
+that is missing or hashes differently, and a receipt attesting something its
+kind cannot deliver (`MalformedRenderReceiptError`). Both are deterministic
+facts about persisted evidence that parse the same way on every read, so both
+report `content-unavailable` instead of returning the intent to `ready` for
+reconciliation to re-drive forever.
+
+### Only the Discord request may be ambiguous
+
+`deliverNotificationV2` runs with `maximumAttempts: 1`, because a retry can
+post a second message, so any failure the Workflow cannot attribute is recorded
+as `unknown-delivery` — a dead end only an operator leaves. That is the right
+answer for the Discord request and the wrong answer for everything around it,
+so two boundaries keep the rest out of it.
+
+Before the send, the Activity works under a pre-send budget
+(`notification/pre-send-budget.ts`) that is strictly shorter than its own
+heartbeat and start-to-close timeouts, which are stated once in
+`activity-contracts-v2.ts` so the two cannot drift. The receipt read, object
+fetch, policy gate and guild lookup provably contact nobody, so whatever has
+not finished by then is answered by the Activity as a definite, retryable
+non-send while it is still alive to answer — rather than by the server's clock,
+which reaches the Workflow as a bare timeout indistinguishable from an
+unanswered send. The object read takes the budget's `AbortSignal` and is
+genuinely cancelled.
+
+After the send, nothing runs in that Activity at all. The Dare callout refresh
+is `afterNotificationDeliveredV2`, its own Activity, called by the Workflow
+only once the outcome is durably recorded: a best-effort Discord edit that
+outlived the heartbeat timeout used to kill the delivery Activity before its
+decided `delivered` result could be returned, turning a message Discord had
+accepted into an ambiguous send.
+
+Deterministic content violations are terminal rather than retryable, because
+the row parses the same way on every read and reconciliation would otherwise
+re-drive it every sweep forever. `UndeliverableContentError` is the shared type
+the send narrows on: a receipt attesting a shape its kind cannot deliver, a
+receipt whose digest and size contradict each other, or an announcement payload
+that cannot produce a message. Evidence that is merely unreachable — a timed-out
+object store, a database that did not answer — stays retryable, because the next
+attempt genuinely may succeed.
+
+### The recovery policy gates delivery
+
+A recovery batch's `RecoveryPolicy` means something here and nowhere else. The
+policy is read off the BATCH row every time an intent is judged — never copied
+onto the intent — so `operatorReleasePolicy` on the batch reaches every intent
+born of it at their next read. `notificationDeliveryDecision`
+(`@scout-for-lol/domain/recovery/delivery-policy.ts`) is the rule: `normal`
+permits everything, `stale-private-only` permits DMs only (through `sendDM`'s
+own budget), `no-external` permits nothing. A held intent is neither failed nor
+suppressed: the Workflow's opening read returns `held` and the run ends `no-op`
+with a `disposition` naming the policy and target; `beginNotificationSendV2`
+refuses it with `policy-held` before any nonce is minted; the send itself
+refuses too; and the reconciliation sweep's stalled-intent read excludes it in
+SQL so it is not re-driven every minute until the batch is released. Nothing
+mints recovery-born intents yet — recovery commits `ARCHIVE_ONLY`
+observations — so the gate is the contract a later recovery lane delivers into.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client

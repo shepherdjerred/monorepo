@@ -39,6 +39,17 @@ import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
  * make one pipeline's completion silently suppress the other's work. Ownership
  * — not the claim — is what keeps the two pipelines off the same match, and
  * `commitMatchObservationV2` is where that is decided.
+ *
+ * ## The write boundaries each effect owns
+ *
+ * Both effects call `fence.assertHeld()` at exactly two points: before they
+ * enter their domain commit, and before they record the fact that attests to
+ * it. Those are the durable writes V2 owns on these paths; between them runs
+ * v1 code — settlement's ledger writes, progression's writes under its own
+ * advisory lock — that takes no signal, and a check on either side of it is
+ * what keeps a zombie attempt from entering a commit after its fence lapsed,
+ * or attesting to one afterwards. See `effect-fence.ts` for the discipline
+ * and for the residual it leaves.
  */
 
 /** How many ledger rows one settlement moved, by the identities it names. */
@@ -87,16 +98,21 @@ export async function settleMatchMarketsV2(input: {
         effects: settledRecordCount(settlementEvidenceCodec.parse(standing)),
       };
     },
-    apply: async () => {
+    apply: async (fence) => {
       // Resolved inside the guard so a replay whose claim is already complete
       // costs no Riot read at all.
       const context = await resolveScoutV2MatchContext(input.riotMatchId);
+      // The Riot read above can take as long as Riot takes; the fence may
+      // have lapsed while it ran, and the ledger must not be entered on a
+      // lock this attempt no longer holds.
+      await fence.assertHeld();
       const settled = await settleBucksWithDareTimelineV2({
         matchData: context.matchData,
         trackedPlayers: context.trackedPlayers,
         prismaClient: prisma,
       });
       const evidence = settlementEvidenceOf(settled.bucks);
+      await fence.assertHeld();
       return {
         fact: await recordMatchReceiptV2({
           matchId: input.riotMatchId,
@@ -142,12 +158,13 @@ export async function applyMatchProgressionV2(input: {
         effects: progressionEvidenceCodec.parse(standing).trackedAccountCount,
       };
     },
-    apply: async () => {
+    apply: async (fence) => {
       const context = await resolveScoutV2MatchContext(input.riotMatchId);
       const evidence = {
         participantCount: context.matchData.metadata.participants.length,
         trackedAccountCount: context.trackedPlayers.length,
       };
+      await fence.assertHeld();
       await withChallengeProgressionLock(
         context.matchData.metadata.participants,
         async () => {
@@ -158,6 +175,7 @@ export async function applyMatchProgressionV2(input: {
           });
         },
       );
+      await fence.assertHeld();
       return {
         fact: await recordMatchReceiptV2({
           matchId: input.riotMatchId,

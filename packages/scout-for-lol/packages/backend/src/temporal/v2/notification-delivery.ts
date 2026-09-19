@@ -3,6 +3,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
+  type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
@@ -22,11 +23,22 @@ import {
   isMissingChannelError,
   isPermissionError,
 } from "#src/discord/utils/permissions.ts";
-import { ChannelSendError, send } from "#src/league/discord/channel.ts";
+import {
+  ChannelSendError,
+  isReplyPermissionError,
+  send,
+} from "#src/league/discord/channel.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
-import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
-import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
+import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
+import { buildAttestedMessageV2 } from "#src/temporal/v2/notification/notification-message.ts";
+import {
+  PreSendBudgetExpiredError,
+  withPreSendBudget,
+} from "#src/temporal/v2/notification/pre-send-budget.ts";
+import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
+import { ANNOUNCEMENT_INTENT_KINDS } from "@scout-for-lol/domain/notifications/intent.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("scout-v2-notification-delivery");
@@ -96,13 +108,13 @@ export function classifyChannelSendFailure(
 /**
  * The guild a channel belongs to, when this role can see one.
  *
- * Worth the REST call for two reasons. `send` uses it to escalate a permission
- * revocation to the server owner, and the report generator uses it to evaluate
- * the per-guild feature flags that decide what the message contains — so
- * omitting it would quietly deliver a different message than v1 does. A
- * gatewayless role can legitimately resolve a channel with no guild attached,
- * and that is not a failure: the send is a REST post on the channel id and does
- * not need one.
+ * Worth the REST call because `send` uses it to escalate a permission
+ * revocation to the server owner. It does NOT shape the message: the
+ * per-guild flags the report generator evaluates were evaluated once, at
+ * render, against every guild the match's report goes to, and the message
+ * delivered here is the one the render attested. A gatewayless role can
+ * legitimately resolve a channel with no guild attached, and that is not a
+ * failure: the send is a REST post on the channel id and does not need one.
  */
 async function resolveDeliveryGuild(
   channelId: string,
@@ -133,27 +145,53 @@ async function sendToChannel(args: {
   guildId: DiscordGuildId | undefined;
 }): Promise<ScoutNotificationDeliveryV2Result> {
   const { message, channelId, attemptNonce, guildId } = args;
+  const options = {
+    ...message,
+    nonce: deliveryAttemptNonce(attemptNonce),
+    enforceNonce: true,
+  };
+  const target = DiscordChannelIdSchema.parse(channelId);
   try {
-    const sent = await send(
-      {
-        ...message,
-        nonce: deliveryAttemptNonce(attemptNonce),
-        enforceNonce: true,
-      },
-      DiscordChannelIdSchema.parse(channelId),
-      guildId,
-    );
+    const sent = await send(options, target, guildId);
     return {
       outcome: "delivered",
       messageId: DiscordMessageIdSchema.parse(sent.id),
     };
   } catch (error) {
-    if (error instanceof ChannelSendError) {
-      return classifyChannelSendFailure(error);
+    if (!(error instanceof ChannelSendError)) {
+      // Nothing else `send` raises is classifiable, and an unclassified
+      // failure around a request that may have left is the definition of
+      // ambiguous.
+      return { outcome: "unknown" };
     }
-    // Nothing else `send` raises is classifiable, and an unclassified failure
-    // around a request that may have left is the definition of ambiguous.
-    return { outcome: "unknown" };
+    if (options.reply !== undefined && isReplyPermissionError(error)) {
+      // v1's fallback for a settlement recap: a reply the bot may not make
+      // (no Read Message History, or Discord refused the reference) becomes
+      // one plain send. Safe to attempt because `isReplyPermissionError`
+      // names only failures `send` HANDLED — the reply never left — so the
+      // nonce is still unspent and a second request is a first send.
+      return await sendWithoutReply(options, target, guildId);
+    }
+    return classifyChannelSendFailure(error);
+  }
+}
+
+async function sendWithoutReply(
+  options: MessageCreateOptions,
+  channelId: DiscordChannelId,
+  guildId: DiscordGuildId | undefined,
+): Promise<ScoutNotificationDeliveryV2Result> {
+  const { reply: _reply, ...plain } = options;
+  try {
+    const sent = await send(plain, channelId, guildId);
+    return {
+      outcome: "delivered",
+      messageId: DiscordMessageIdSchema.parse(sent.id),
+    };
+  } catch (error) {
+    return error instanceof ChannelSendError
+      ? classifyChannelSendFailure(error)
+      : { outcome: "unknown" };
   }
 }
 
@@ -228,19 +266,29 @@ async function deliverToTarget(args: {
  *
  * This is the ambiguity boundary, drawn explicitly because getting it wrong is
  * expensive in both directions. Resolving the intent, looking up the guild,
- * fetching the Riot payload, building the report and checking that the target
- * can carry it are all decided before Discord is contacted: if any of them
- * fails, the message DEFINITELY did not go out. Treating that as ambiguous
- * would park a notification behind an operator resolution it does not need, and
- * the user simply never hears about their game.
+ * reading the attested artifact back, rebuilding the message around it and
+ * checking that the target can carry it are all decided before Discord is
+ * contacted: if any of them fails, the message DEFINITELY did not go out.
+ * Treating that as ambiguous would park a notification behind an operator
+ * resolution it does not need, and the user simply never hears about their
+ * game.
  *
  * So every failure on this side of the line comes back as a `failed` result
  * rather than a throw, and the classification says what the caller should do.
- * Transient causes — Riot unreachable, the renderer falling over — are
+ * Transient causes — the database or the object store timing out — are
  * `retryable`, which returns the intent to `ready` and lets the Workflow's send
- * loop try again. The DM attachment case is `terminal`: no retry teaches
- * `sendDM` to carry files, and the honest reading of the domain's vocabulary is
- * that this target cannot receive this notification.
+ * loop try again. Three causes are `terminal`. The DM attachment case: no
+ * retry teaches `sendDM` to carry files, and the honest reading of the
+ * domain's vocabulary is that this target cannot receive this notification.
+ * An artifact whose receipt stands but whose bytes are gone or differ from
+ * the attested digest: a fact about storage, reported as
+ * `content-unavailable`, because sending anything else would attest bytes
+ * nobody rendered and retrying reads the same broken object again. And a
+ * receipt that attests something its kind cannot deliver — a post-match
+ * receipt attesting no image: persisted data violating the render/send
+ * contract, also `content-unavailable`, because the same row parses the same
+ * way on every read and a retry would re-drive the corrupt receipt forever
+ * instead of surfacing it.
  *
  * The other side of the line is {@link deliverToTarget}, where `send` and
  * `sendDM` live. Only failures from there can be `unknown`.
@@ -259,36 +307,73 @@ const PRE_SEND_UNAVAILABLE: NotificationFailure = {
   reason: "service-unavailable",
 };
 
+const CONTENT_UNAVAILABLE: NotificationFailure = {
+  classification: "terminal",
+  reason: "content-unavailable",
+};
+
 async function prepareNotificationSend(
   input: ScoutIntentAttemptRefV2,
+  abortSignal: AbortSignal,
 ): Promise<PreparedSend> {
   const record = await requireIntentRecordV2(input.intentKey);
   const riotMatchId = record.matchId;
   const target = record.intent.target;
-  // Resolved once and used twice: the report generator evaluates per-guild
-  // feature flags against it, and `send` escalates a permission revocation to
-  // that guild's owner. Two lookups would be two REST calls that can disagree.
+  // The send boundary's own reading of the policy. `beginNotificationSendV2`
+  // already refused a held intent before minting this attempt, so reaching
+  // here held is a broken contract rather than a decision to make — but
+  // "no-external permits no external sends" is a property of the SEND, and
+  // it holds here without relying on the caller having asked.
+  const gate = await resolveNotificationGateV2(record);
+  if (gate.decision === "held") {
+    throw new Error(
+      `Intent ${input.intentKey} reached the send while held by policy ${gate.policy} for a ${gate.target} target; nothing was sent`,
+    );
+  }
+  if (
+    target.kind === "dm" &&
+    ANNOUNCEMENT_INTENT_KINDS.has(record.intent.kind)
+  ) {
+    // A settlement recap or a Dare result is a channel announcement: v1 has no
+    // DM shape for either — its private settlement receipts are a separate,
+    // budgeted fan-out this kind does not port — so a DM target is a producer
+    // contract that does not exist. Terminal, decided pre-send.
+    logger.error(
+      `Intent ${input.intentKey} is a ${record.intent.kind} intent targeting a DM, which that kind cannot deliver`,
+    );
+    return {
+      phase: "failed",
+      failure: { classification: "terminal", reason: "target-not-found" },
+    };
+  }
   const guildId =
     target.kind === "channel"
       ? await resolveDeliveryGuild(target.channelId)
       : undefined;
 
-  const context = await resolveScoutV2MatchContext(riotMatchId);
-  // This re-renders the report image that `renderNotificationArtifactV2`
-  // already committed and attested, because `generateMatchReport` renders
-  // internally and v1 offers no seam for handing one in. See that module's
-  // header for what closing it costs; it is a coordinated follow-up, not an
-  // oversight here.
-  const message = await generateMatchReport(
-    context.matchData,
-    context.trackedPlayers,
-    { targetGuildIds: guildId === undefined ? [] : [guildId] },
-  );
-  if (message === undefined) {
-    logger.error(
-      `No report could be built for ${riotMatchId} despite an intent naming it`,
-    );
-    return { phase: "failed", failure: PRE_SEND_UNAVAILABLE };
+  let message: MessageCreateOptions;
+  try {
+    message = await buildAttestedMessageV2(record, abortSignal);
+  } catch (error) {
+    if (error instanceof ArchivedObjectUnusableError) {
+      logger.error(
+        `The attested artifact for ${riotMatchId} cannot be delivered (${error.reason}); the receipt stands but its bytes do not`,
+        error,
+      );
+      return { phase: "failed", failure: CONTENT_UNAVAILABLE };
+    }
+    if (error instanceof UndeliverableContentError) {
+      // Loud and terminal: a receipt attesting a shape this kind cannot
+      // deliver, a receipt contradicting itself about one object, or an
+      // announcement payload that cannot produce a message. Every one is a
+      // producer's contract to fix, and no retry reads the row differently.
+      logger.error(
+        `The evidence for ${riotMatchId} cannot be delivered from (${error.name}); the intent is parked rather than re-driven`,
+        error,
+      );
+      return { phase: "failed", failure: CONTENT_UNAVAILABLE };
+    }
+    throw error;
   }
   if (target.kind === "dm" && (message.files ?? []).length > 0) {
     logger.error(
@@ -317,8 +402,21 @@ export async function deliverNotificationV2(
 ): Promise<ScoutNotificationDeliveryV2Result> {
   let prepared: PreparedSend;
   try {
-    prepared = await prepareNotificationSend(input);
+    prepared = await withPreSendBudget(
+      input.intentKey,
+      async (abortSignal) => await prepareNotificationSend(input, abortSignal),
+    );
   } catch (error) {
+    if (error instanceof PreSendBudgetExpiredError) {
+      // The one failure this Activity raises about ITSELF, and the reason the
+      // budget exists: reported as a definite non-send rather than left to a
+      // server-side timeout that the Workflow could only read as ambiguous.
+      logger.error(error.message);
+      return ScoutNotificationDeliveryV2ResultSchema.parse({
+        outcome: "failed",
+        failure: PRE_SEND_UNAVAILABLE,
+      });
+    }
     // Nothing above has contacted Discord, so a failure here is definite
     // whatever it was. Reporting it as `failed` keeps the intent retryable
     // instead of stranding it in the operator dead end that exists for sends
@@ -339,6 +437,13 @@ export async function deliverNotificationV2(
     });
   }
 
+  // The send, and nothing after it. A best-effort follow-up that ran here
+  // would hold the Activity open past the outcome it has already established:
+  // a Dare callout refresh waiting behind its serialized queue can outlive the
+  // heartbeat timeout, and the timeout fires OUTSIDE any try/catch — so a
+  // message Discord accepted would reach the Workflow as an ambiguous send.
+  // `afterNotificationDeliveredV2` runs it in its own Activity, after this
+  // outcome is durably recorded.
   return ScoutNotificationDeliveryV2ResultSchema.parse(
     await deliverToTarget({
       message: prepared.message,

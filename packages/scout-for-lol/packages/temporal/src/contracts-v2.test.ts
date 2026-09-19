@@ -16,6 +16,7 @@ import {
   ScoutRecoveryBatchIdSchema,
 } from "./contracts-v2.ts";
 import {
+  SCOUT_NOTIFICATION_V2_RESULT_VERSION,
   ScoutMatchProcessingV2InputSchema,
   ScoutRecoveryBatchV2ResultSchema,
   scoutRecoveryBatchV2ResultCodec,
@@ -271,12 +272,48 @@ describe("V2 workflow results", () => {
         observedAt: IsoInstantSchema.parse("2026-09-11T16:00:00.000Z"),
       },
       attemptCount: 1,
+      disposition: { kind: "driven" },
     } as const;
     expect(
       scoutNotificationV2ResultCodec.parse(
         scoutNotificationV2ResultCodec.serialize(result),
       ),
     ).toEqual(result);
+  });
+
+  test("lets a notification report that it was held by policy", () => {
+    // A held run did nothing to the intent, and its result has to say so
+    // rather than present an unattempted send as a completed one.
+    const result = {
+      status: "no-op",
+      intentKey,
+      state: { kind: "ready" },
+      attemptCount: 0,
+      disposition: { kind: "held", policy: "no-external", target: "channel" },
+    } as const;
+    const envelope = scoutNotificationV2ResultCodec.serialize(result);
+    expect(envelope.version).toBe(SCOUT_NOTIFICATION_V2_RESULT_VERSION);
+    expect(scoutNotificationV2ResultCodec.parse(envelope)).toEqual(result);
+  });
+
+  test("migrates a version-1 notification result as driven", () => {
+    // Version-1 results were written by runs with no policy gate, so the
+    // only disposition they could have had is the one the migration stamps.
+    const migrated = scoutNotificationV2ResultCodec.parse({
+      kind: "scout-notification-v2-result",
+      version: 1,
+      data: {
+        status: "completed",
+        intentKey,
+        state: { kind: "delivered", deliveredAt: "2026-09-11T16:00:00.000Z" },
+        attemptCount: 1,
+      },
+    });
+    expect(migrated.disposition).toEqual({ kind: "driven" });
+    expect(migrated.state).toEqual({
+      kind: "delivered",
+      deliveredAt: "2026-09-11T16:00:00.000Z",
+    });
   });
 });
 

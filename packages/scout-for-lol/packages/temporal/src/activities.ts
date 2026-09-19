@@ -50,6 +50,7 @@ import type {
   ScoutMatchPipelineStateV2Result,
   ScoutMatchReceiptsV2Input,
   ScoutNotificationDeliveryV2Result,
+  ScoutNotificationFollowUpV2Result,
   ScoutNotificationIntentV2Result,
   ScoutNotificationOutcomeV2Input,
   ScoutNotificationRenderV2Result,
@@ -199,6 +200,9 @@ export type ScoutTemporalV2Activities = {
   recordNotificationOutcomeV2: (
     input: ScoutNotificationOutcomeV2Input,
   ) => Promise<ScoutNotificationTransitionV2Result>;
+  afterNotificationDeliveredV2: (
+    input: ScoutIntentAttemptRefV2,
+  ) => Promise<ScoutNotificationFollowUpV2Result>;
 
   // Lake — receipted staging on the lake queue, heartbeating.
   stageLakeProjectionV2: (

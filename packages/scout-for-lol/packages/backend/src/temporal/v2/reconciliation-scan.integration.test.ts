@@ -13,9 +13,13 @@ import {
 import {
   NotificationAttemptNonceSchema,
   NotificationIntentSchema,
+  type NotificationIntentOrigin,
   type NotificationIntentState,
+  type NotificationTarget,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { PipelineOwner } from "@scout-for-lol/domain/match-processing/states.ts";
+import type { RecoveryPolicy } from "@scout-for-lol/domain/recovery/batch.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { ScoutStageSchema } from "@scout-for-lol/temporal/contracts";
 import { SCOUT_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
 import {
@@ -129,6 +133,13 @@ function intentKey(name: string): NotificationIntentKey {
   );
 }
 
+const HELD_DEADLINE = "2099-01-01T03:00:00.000Z";
+const RELEASED_DEADLINE = "2099-01-01T04:00:00.000Z";
+const NO_EXTERNAL_BATCH = RecoveryBatchIdSchema.parse("recon-no-external");
+const STALE_PRIVATE_BATCH = RecoveryBatchIdSchema.parse("recon-stale-private");
+const HELD_NO_EXTERNAL_INTENT = intentKey("held-no-external");
+const HELD_STALE_CHANNEL_INTENT = intentKey("held-stale-channel");
+const RELEASED_DM_INTENT = intentKey("released-dm");
 const PENDING_INTENT = intentKey("pending");
 const READY_INTENT = intentKey("ready");
 const SENDING_INTENT = intentKey("sending");
@@ -293,13 +304,20 @@ async function seedIntent(args: {
   state: NotificationIntentState;
   attemptCount: number;
   freshnessDeadline: string;
+  origin?: NotificationIntentOrigin;
+  target?: NotificationTarget;
 }): Promise<void> {
   expect(
     await upsertIntent(prisma, {
       matchId: RiotMatchIdSchema.parse("NA1_870000"),
       intent: NotificationIntentSchema.parse({
         key: args.key,
-        target: { kind: "channel", channelId: testChannelId("8700") },
+        kind: "postmatch",
+        origin: args.origin ?? { kind: "live" },
+        target: args.target ?? {
+          kind: "channel",
+          channelId: testChannelId("8700"),
+        },
         freshnessDeadline: args.freshnessDeadline,
         createdAt: "2026-09-12T09:00:00.000Z",
         attemptCount: args.attemptCount,
@@ -313,12 +331,13 @@ async function seedBatch(
   recoveryBatchId: RecoveryBatchId,
   state: string,
   abandonReason: string | null,
+  policy: RecoveryPolicy = "normal",
 ): Promise<CreateRecoveryBatchResult> {
   return await createRecoveryBatch(
     prisma,
     matchRecoveryBatchRowToRecord({
       recoveryBatchId,
-      policy: "normal",
+      policy,
       state,
       cursorPosition: null,
       pagesScanned: null,
@@ -454,6 +473,48 @@ async function seedNotificationFamily(): Promise<void> {
     state: { kind: "pending" },
     attemptCount: 0,
     freshnessDeadline: PASSED_DEADLINE,
+  });
+
+  // Recovery-born intents under the two policies that hold. The batch rows
+  // are terminal so they never reach the recovery family's own page, and the
+  // policy is what the sweep must read: a held intent is deliberately not
+  // being driven, and a sweep that surfaced it would start a child on it
+  // every minute until the batch is released.
+  expect(
+    await seedBatch(NO_EXTERNAL_BATCH, "complete", null, "no-external"),
+  ).toEqual({ outcome: "applied" });
+  expect(
+    await seedBatch(
+      STALE_PRIVATE_BATCH,
+      "complete",
+      null,
+      "stale-private-only",
+    ),
+  ).toEqual({ outcome: "applied" });
+  await seedIntent({
+    key: HELD_NO_EXTERNAL_INTENT,
+    state: { kind: "ready" },
+    attemptCount: 0,
+    freshnessDeadline: HELD_DEADLINE,
+    origin: { kind: "recovery", recoveryBatchId: NO_EXTERNAL_BATCH },
+  });
+  await seedIntent({
+    key: HELD_STALE_CHANNEL_INTENT,
+    state: { kind: "ready" },
+    attemptCount: 0,
+    freshnessDeadline: HELD_DEADLINE,
+    origin: { kind: "recovery", recoveryBatchId: STALE_PRIVATE_BATCH },
+  });
+  await seedIntent({
+    key: RELEASED_DM_INTENT,
+    state: { kind: "ready" },
+    attemptCount: 0,
+    freshnessDeadline: RELEASED_DEADLINE,
+    origin: { kind: "recovery", recoveryBatchId: STALE_PRIVATE_BATCH },
+    target: {
+      kind: "dm",
+      accountId: DiscordAccountIdSchema.parse("200000000000000002"),
+    },
   });
 
   const settled: {
@@ -606,8 +667,20 @@ describe("the notification family", () => {
       PENDING_INTENT,
       READY_INTENT,
       SENDING_INTENT,
+      RELEASED_DM_INTENT,
       REQUESTED_INTENT,
     ]);
+  });
+
+  test("leaves intents their batch policy holds off the page", () => {
+    // `notificationDeliveryDecision` said in SQL: `no-external` holds every
+    // target and `stale-private-only` holds channels, while the DM under
+    // stale-private-only is exactly what a release lets proceed — and it is
+    // on the page above. A held intent is not stalled; it is waiting on an
+    // operator, and re-driving it would find the gate closed every time.
+    expect(page.pending.notifications).not.toContain(HELD_NO_EXTERNAL_INTENT);
+    expect(page.pending.notifications).not.toContain(HELD_STALE_CHANNEL_INTENT);
+    expect(page.pending.notifications).toContain(RELEASED_DM_INTENT);
   });
 
   test("excludes every settled state and the operator dead end by name", () => {

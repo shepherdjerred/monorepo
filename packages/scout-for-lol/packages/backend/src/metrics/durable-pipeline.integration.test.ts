@@ -58,6 +58,8 @@ async function seedIntent(state: string, key: string): Promise<void> {
     data: {
       intentKey: key,
       riotMatchId: MATCH_ID,
+      kind: "postmatch",
+      originKind: "live",
       targetKind: "channel",
       targetId: "300000000000000001",
       state,

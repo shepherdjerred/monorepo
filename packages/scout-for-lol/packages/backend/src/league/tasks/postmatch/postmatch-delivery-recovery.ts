@@ -78,6 +78,7 @@ export async function recoverCompletedPostmatchDeliveries(args: {
     if (completed.length === 0) return;
 
     const record = tryCreateChannelDeliveryRecorder({
+      kind: "postmatch",
       facts: liveDurableFacts(),
       matchId: args.matchId,
       keyPrefix: args.effectKeyPrefix,

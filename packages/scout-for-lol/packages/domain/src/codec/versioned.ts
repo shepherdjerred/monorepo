@@ -11,6 +11,20 @@ export type VersionedEnvelope<Kind extends string, Data> = {
 };
 
 /**
+ * An envelope whose payload this layer does not interpret: a schema that
+ * carries another codec's output opaquely, to be re-parsed by the codec that
+ * owns it. Strict, so the three envelope keys are all that can travel.
+ */
+export type OpaqueVersionedEnvelope = z.infer<
+  typeof OpaqueVersionedEnvelopeSchema
+>;
+export const OpaqueVersionedEnvelopeSchema = z.strictObject({
+  kind: z.string().min(1),
+  version: z.number().int().min(1),
+  data: z.unknown(),
+});
+
+/**
  * A codec for one payload kind. `parse` accepts an envelope at any supported
  * version, migrates it forward step by step, and validates the result against
  * the current schema. `serialize` re-validates the value and wraps it in a

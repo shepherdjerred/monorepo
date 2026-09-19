@@ -1,26 +1,21 @@
 import * as Sentry from "@sentry/bun";
 import type { MessageCreateOptions } from "discord.js";
 import {
-  BucksMessageRefsSchema,
-  BucksPoolRosterSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  RiotTeamIdSchema,
   sumToPoolTotal,
   type BucksMessageRefs,
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
-import { buildSettlementMessage } from "#src/betting/notify/outcome-message.ts";
-import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
+import {
+  outcomeIsVisible,
+  prepareSettlementAnnouncement,
+} from "#src/betting/notify/announce-prepare.ts";
 import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { deliverSettlementDms } from "#src/betting/settlement/settlement-dm-delivery.ts";
-import {
-  bettingSettlementSuppressedTotal,
-  bettingSettlementUndeliverableTotal,
-} from "#src/metrics/betting/betting.ts";
+import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
@@ -57,43 +52,6 @@ export type SettlementDeliveryDependencies = {
   ) => Promise<unknown>;
   sleep: (milliseconds: number) => Promise<void>;
 };
-
-type StoredUnmatchedPosition = {
-  id: number;
-  bucksAccount: { discordId: string };
-  predictedTeamId: number;
-  stake: number;
-  humanMatchedStake: number | null;
-  houseMatchedStake: number | null;
-  matchedStake: number | null;
-  unmatchedStake: number | null;
-};
-
-function storedUnmatchedPosition(
-  row: StoredUnmatchedPosition,
-): ClosedPool["positions"][number] {
-  const allocation = requireValidBucksAllocation({
-    betId: row.id,
-    submittedStake: row.stake,
-    humanMatchedStake: row.humanMatchedStake,
-    houseMatchedStake: row.houseMatchedStake,
-    matchedStake: row.matchedStake,
-    unmatchedStake: row.unmatchedStake,
-  });
-  if (allocation.matchedStake !== 0) {
-    throw new Error(
-      `Outcome receipt query returned matched bet ${row.id.toString()} as unmatched`,
-    );
-  }
-  return {
-    betId: row.id,
-    discordId: row.bucksAccount.discordId,
-    teamId: RiotTeamIdSchema.parse(row.predictedTeamId),
-    submittedStake: row.stake,
-    matchedStake: allocation.matchedStake,
-    unmatchedStake: allocation.unmatchedStake,
-  };
-}
 
 const defaultSettlementDeliveryDependencies: SettlementDeliveryDependencies = {
   sendMessage: async (options, channelId, guildId) =>
@@ -299,27 +257,6 @@ function zeroSummary(matchId: string, serverId: string): SettlementSummary {
 }
 
 /**
- * Whether a settlement's outcome section would say anything a player can see.
- *
- * A settled pool whose only bets were the house's own fills, with no earning
- * and no refund to report, renders a title and nothing else. Deciding this
- * needs the pool's stored refunds as well as the summary, because a pool that
- * closed on an earlier tick reaches settlement with an empty `bets` list and
- * its refunds recorded only in the database.
- */
-function outcomeIsVisible(input: {
-  summary: SettlementSummary;
-  unmatchedCount: number;
-  earnings: readonly EarnedAward[];
-}): boolean {
-  return (
-    input.summary.bets.some((bet) => !bet.isHouse) ||
-    input.unmatchedCount > 0 ||
-    input.earnings.some((award) => award.serverId === input.summary.serverId)
-  );
-}
-
-/**
  * A settled pool with no recorded message has no destination and no second
  * chance: it has committed as settled, so a later pass returns no summary. A
  * pool that owed nobody anything is not worth reporting.
@@ -439,87 +376,14 @@ export async function announceSettlements(
 
   for (const { summary, includeOutcome, parlay } of announcements) {
     try {
-      const pool = await prismaClient.bucksMatchPool.findUnique({
-        where: {
-          matchId_serverId: {
-            matchId: summary.matchId,
-            serverId: summary.serverId,
-          },
-        },
-        select: {
-          messageRefs: true,
-          roster: true,
-          queueType: true,
-          bets: {
-            where: {
-              betOutcome: "refunded",
-              matchedStake: 0,
-              bucksAccount: { isHouse: false },
-            },
-            orderBy: { id: "asc" },
-            select: {
-              id: true,
-              bucksAccount: { select: { discordId: true } },
-              predictedTeamId: true,
-              stake: true,
-              humanMatchedStake: true,
-              houseMatchedStake: true,
-              matchedStake: true,
-              unmatchedStake: true,
-            },
-          },
-        },
-      });
-      if (pool === null) {
-        bettingSettlementUndeliverableTotal.inc({ reason: "pool_missing" });
-        continue;
-      }
-      const settledBetIds = new Set(summary.bets.map((bet) => bet.betId));
-      const unmatchedPositions = includeOutcome
-        ? pool.bets
-            .filter((bet) => !settledBetIds.has(bet.id))
-            .map((bet) => storedUnmatchedPosition(bet))
-        : [];
-      // A pool whose only bets were house fills settles with nothing a player
-      // can read, and a title-only embed is worse than silence. The refunds
-      // are only knowable here, which is why the carrier is built first and
-      // its outcome section decided second.
-      const showOutcome =
-        includeOutcome &&
-        outcomeIsVisible({
-          summary,
-          unmatchedCount: unmatchedPositions.length,
-          earnings: input.earnings,
-        });
-      if (!showOutcome && parlay === undefined) {
-        bettingSettlementSuppressedTotal.inc({ reason: "nothing_to_report" });
-        continue;
-      }
-
-      const roster = BucksPoolRosterSchema.parse(
-        JSON.parse(pool.roster),
-      ).participants;
-      const anchor = bettingAnchor(roster);
-      const message = buildSettlementMessage({
-        summary,
-        includeOutcome: showOutcome,
-        parlay,
-        framing: anchor === undefined ? undefined : subjectFraming(anchor),
-        earnings: input.earnings,
-        unmatchedPositions,
-      });
-      const poolRefs = BucksMessageRefsSchema.parse(
-        JSON.parse(pool.messageRefs),
+      const prepared = await prepareSettlementAnnouncement(
+        { summary, includeOutcome, parlay, earnings: input.earnings },
+        prismaClient,
       );
-      // The parlay carries its own durable refs, derived from the pool's at
-      // publish time and normally a subset of them. Falling back to them here
-      // is what stops a parlay-only carrier being silently dropped in the case
-      // the pool's own refs are ever empty or the pool row itself cannot be
-      // resolved by the time this defensive branch is reached — today that
-      // never happens on the happy path, but the data is already on hand, so
-      // there is no reason to prefer "no destination" over it.
-      const refs = poolRefs.length > 0 ? poolRefs : (parlay?.messageRefs ?? []);
-      if (refs.length === 0) {
+      if (prepared.kind !== "message") {
+        continue;
+      }
+      if (prepared.refs.length === 0) {
         // No recorded message means no destination, and there is no second
         // chance: the pool has committed as settled, so a later pass returns no
         // summary for it. Whoever was owed something here was paid and will
@@ -535,15 +399,15 @@ export async function announceSettlements(
         reportUndeliverableSettlement({
           summary,
           parlay,
-          unmatchedCount: unmatchedPositions.length,
+          unmatchedCount: prepared.unmatchedPositions.length,
           earnings: input.earnings,
         });
       } else {
         await sendSettlementMessages({
-          refs,
-          message,
+          refs: prepared.refs,
+          message: prepared.message,
           summary,
-          includeOutcome: showOutcome,
+          includeOutcome: prepared.showOutcome,
           postmatchMessageIds: input.postmatchMessageIds,
           dependencies: deliveryDependencies,
         });
@@ -555,11 +419,11 @@ export async function announceSettlements(
       try {
         await deliverSettlementDms({
           summary,
-          includeOutcome: showOutcome,
+          includeOutcome: prepared.showOutcome,
           parlay,
-          unmatchedPositions,
-          roster,
-          queueType: pool.queueType,
+          unmatchedPositions: prepared.unmatchedPositions,
+          roster: prepared.roster,
+          queueType: prepared.queueType,
           earnings: input.earnings,
           prismaClient,
         });

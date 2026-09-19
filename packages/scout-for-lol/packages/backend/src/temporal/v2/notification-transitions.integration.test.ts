@@ -1,7 +1,9 @@
 import { afterAll, describe, expect, test } from "vitest";
 import {
   DiscordMessageIdSchema,
+  IsoInstantSchema,
   NotificationIntentKeySchema,
+  RecoveryBatchIdSchema,
   RiotMatchIdSchema,
   type NotificationIntentKey,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -9,7 +11,9 @@ import {
   NotificationAttemptNonceSchema,
   NotificationIntentSchema,
   type NotificationAttemptNonce,
+  type NotificationIntentOrigin,
 } from "@scout-for-lol/domain/notifications/intent.ts";
+import { operatorReleasePolicy } from "@scout-for-lol/domain/recovery/batch-transitions.ts";
 import { ScoutStageSchema } from "@scout-for-lol/temporal/contracts";
 import type {
   ScoutIntentAttemptRefV2,
@@ -22,6 +26,10 @@ import {
   upsertIntent,
 } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import {
+  createRecoveryBatch,
+  transitionRecoveryBatch,
+} from "#src/database/durable/recovery-repository.ts";
 
 /**
  * The V2 notification lane's three durable steps, against real rows.
@@ -88,13 +96,18 @@ function attemptRef(
   return { stage: STAGE, intentKey, attemptNonce };
 }
 
+const LIVE: NotificationIntentOrigin = { kind: "live" };
+
 function intentRecord(
   intentKey: NotificationIntentKey,
+  origin: NotificationIntentOrigin = LIVE,
 ): MatchNotificationIntentRecord {
   return {
     matchId: MATCH_ID,
     intent: NotificationIntentSchema.parse({
       key: intentKey,
+      kind: "postmatch",
+      origin,
       target: { kind: "channel", channelId: testChannelId("8200") },
       freshnessDeadline: FRESHNESS_DEADLINE,
       createdAt: CREATED_AT,
@@ -374,5 +387,59 @@ describe("the unknown-delivery dead end", () => {
     // Not one of the five attempts changed a column — nonce, attempt count or
     // state.
     expect(await getIntent(prisma, { intentKey })).toEqual(parked);
+  });
+});
+
+describe("the policy gate at the write boundary", () => {
+  test("refuses to mint an attempt for an intent its batch policy holds", async () => {
+    // A recovery-born intent under `no-external`. The refusal has to come
+    // BEFORE the transition: no nonce, no attempt count, the row untouched —
+    // otherwise a held intent would accumulate attempts it never made.
+    const recoveryBatchId = RecoveryBatchIdSchema.parse("transitions-held");
+    expect(
+      await createRecoveryBatch(prisma, {
+        batch: {
+          id: recoveryBatchId,
+          policy: "no-external",
+          createdAt: IsoInstantSchema.parse(CREATED_AT),
+          state: { kind: "planned" },
+        },
+        workflowId: null,
+      }),
+    ).toEqual({ outcome: "applied" });
+    const intentKey = NotificationIntentKeySchema.parse(
+      `postmatch-discord:${MATCH_ID}:held`,
+    );
+    await upsertIntent(
+      prisma,
+      intentRecord(intentKey, { kind: "recovery", recoveryBatchId }),
+    );
+    await markNotificationReadyV2(intentRef(intentKey));
+
+    const refused = await beginNotificationSendV2(
+      attemptRef(intentKey, NONCE_A),
+    );
+
+    expect(refused).toEqual({
+      commit: { outcome: "conflict", reason: "policy-held" },
+      state: { kind: "ready" },
+      attemptCount: 0,
+    });
+    const stored = await getIntent(prisma, { intentKey });
+    expect(stored?.intent.state).toEqual({ kind: "ready" });
+    expect(stored?.intent.attemptCount).toBe(0);
+
+    // A release to stale-private-only frees DMs only; this is a channel, so
+    // it stays held — the batch can never be released to `normal`.
+    expect(
+      await transitionRecoveryBatch(prisma, {
+        recoveryBatchId,
+        transition: (batch) =>
+          operatorReleasePolicy(batch, { to: "stale-private-only" }),
+      }),
+    ).toMatchObject({ outcome: "applied" });
+    expect(
+      await beginNotificationSendV2(attemptRef(intentKey, NONCE_A)),
+    ).toMatchObject({ commit: { outcome: "conflict", reason: "policy-held" } });
   });
 });

@@ -1,8 +1,10 @@
 import { z } from "zod";
+import { OpaqueVersionedEnvelopeSchema } from "#src/codec/versioned.ts";
 import {
   DiscordMessageIdSchema,
   IsoInstantSchema,
   NotificationIntentKeySchema,
+  RecoveryBatchIdSchema,
 } from "#src/identity/brands.ts";
 import {
   DiscordAccountIdSchema,
@@ -22,14 +24,70 @@ import {
  *   retry may double-deliver.
  */
 
+/**
+ * What the notification announces, which decides how it is rendered and
+ * delivered. A `prematch` intent announces a game that has started and is
+ * rendered from the archived spectator snapshot; a `postmatch` intent reports
+ * a finished game from its MatchV5 payload; a `settlement` intent tells one
+ * guild channel how its Bryan Bucks pool and parlay settled; a `dare-summary`
+ * intent tells a channel how one Dare resolved. The kind is a property of the
+ * decision to notify, fixed at mint, so a consumer never has to infer it from
+ * the key or from whatever payload happens to be available when it runs.
+ *
+ * The two announcement kinds carry their presentation inputs on the intent
+ * (see `announcement` below); the two report kinds carry nothing, because
+ * everything they deliver is derived from the match's own durable artifacts.
+ */
+export type NotificationIntentKind = z.infer<
+  typeof NotificationIntentKindSchema
+>;
+export const NotificationIntentKindSchema = z.enum([
+  "postmatch",
+  "prematch",
+  "settlement",
+  "dare-summary",
+]);
+
+/** The kinds whose message is built from an `announcement` payload. */
+export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
+  new Set<NotificationIntentKind>(["settlement", "dare-summary"]);
+
+/**
+ * Where the decision to notify came from.
+ *
+ * A `live` intent was minted by the pipeline processing the game as it
+ * happened. A `recovery` intent was minted by a recovery batch replaying an
+ * outage, and names that batch: the batch's `RecoveryPolicy` governs whether
+ * and where the intent may be delivered, and an operator widens that policy
+ * on the BATCH (`operatorReleasePolicy`), so carrying the reference rather
+ * than a copy of the policy is what lets a release reach every intent born of
+ * the batch without rewriting them.
+ */
+export type NotificationIntentOrigin = z.infer<
+  typeof NotificationIntentOriginSchema
+>;
+export const NotificationIntentOriginSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("live") }),
+  z.strictObject({
+    kind: z.literal("recovery"),
+    recoveryBatchId: RecoveryBatchIdSchema,
+  }),
+]);
+
+/** The target discriminant on its own, for contracts that carry only it. */
+export type NotificationTargetKind = z.infer<
+  typeof NotificationTargetKindSchema
+>;
+export const NotificationTargetKindSchema = z.enum(["channel", "dm"]);
+
 export type NotificationTarget = z.infer<typeof NotificationTargetSchema>;
 export const NotificationTargetSchema = z.discriminatedUnion("kind", [
   z.strictObject({
-    kind: z.literal("channel"),
+    kind: z.literal(NotificationTargetKindSchema.enum.channel),
     channelId: DiscordChannelIdSchema,
   }),
   z.strictObject({
-    kind: z.literal("dm"),
+    kind: z.literal(NotificationTargetKindSchema.enum.dm),
     accountId: DiscordAccountIdSchema,
   }),
 ]);
@@ -73,6 +131,14 @@ export const NotificationTerminalFailureReasonSchema = z.enum([
   "dm-disabled",
   "budget-exhausted",
   "target-not-found",
+  /**
+   * The content this intent would deliver cannot be produced from what was
+   * attested: the artifact its receipt names is missing or is not the bytes
+   * the receipt names, or the receipt attests something this kind of
+   * notification cannot deliver at all. A fact about the persisted evidence
+   * rather than about the target, and no retry reads it differently.
+   */
+  "content-unavailable",
 ]);
 
 export type NotificationFailure = z.infer<typeof NotificationFailureSchema>;
@@ -146,6 +212,8 @@ export type NotificationIntent = z.infer<typeof NotificationIntentSchema>;
 export const NotificationIntentSchema = z
   .strictObject({
     key: NotificationIntentKeySchema,
+    kind: NotificationIntentKindSchema,
+    origin: NotificationIntentOriginSchema,
     target: NotificationTargetSchema,
     /** Sending after this instant is a conflict; the intent must be suppressed. */
     freshnessDeadline: IsoInstantSchema,
@@ -154,6 +222,16 @@ export const NotificationIntentSchema = z
     attemptCount: z.int().nonnegative(),
     /** Most recent recorded failure, kept for diagnosis across retries. */
     lastFailure: NotificationFailureSchema.optional(),
+    /**
+     * What an announcement kind says, as a versioned envelope the delivery
+     * side re-parses with the codec that owns it. Opaque here on purpose:
+     * the presentation inputs are the betting slice's own types, and the
+     * domain must not mirror them. Present exactly for the kinds in
+     * `ANNOUNCEMENT_INTENT_KINDS`; the refinement below is what makes a
+     * settlement intent with nothing to say, or a report intent smuggling a
+     * payload, unrepresentable.
+     */
+    announcement: OpaqueVersionedEnvelopeSchema.optional(),
     state: NotificationIntentStateSchema,
   })
   .refine(
@@ -164,5 +242,14 @@ export const NotificationIntentSchema = z
     {
       message:
         "sending and unknown-delivery are only reachable after beginSend, so attemptCount must be at least 1",
+    },
+  )
+  .refine(
+    (intent) =>
+      ANNOUNCEMENT_INTENT_KINDS.has(intent.kind) ===
+      (intent.announcement !== undefined),
+    {
+      message:
+        "an announcement payload is carried by exactly the settlement and dare-summary kinds",
     },
   );

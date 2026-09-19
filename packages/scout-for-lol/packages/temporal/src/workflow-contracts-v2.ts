@@ -6,10 +6,14 @@ import {
   PipelineOwnerSchema,
   ReceiptKindSchema,
 } from "@scout-for-lol/domain/match-processing/states.ts";
-import { NotificationIntentStateSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import {
+  NotificationIntentStateSchema,
+  NotificationTargetKindSchema,
+} from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   RecoveryBatchStateSchema,
   RecoveryCountsSchema,
+  RecoveryPolicySchema,
 } from "@scout-for-lol/domain/recovery/batch.ts";
 import { ScoutStageSchema, ScoutWorkflowStatusSchema } from "./contracts.ts";
 import {
@@ -228,19 +232,50 @@ export type ScoutPrematchGameV2Result = z.infer<
 >;
 
 /**
+ * What a notification run did with the intent it was given.
+ *
+ * `driven` is the ordinary run: the machine was stepped as far as it would
+ * go. `held` is a run that read the intent, found its recovery policy does
+ * not permit its target, and stopped before rendering or committing an
+ * attempt — the intent is untouched, and the run's result says so rather
+ * than presenting an unattempted send as a completed one.
+ */
+export const ScoutNotificationDispositionV2Schema = z.discriminatedUnion(
+  "kind",
+  [
+    z.strictObject({ kind: z.literal("driven") }),
+    z.strictObject({
+      kind: z.literal("held"),
+      policy: RecoveryPolicySchema,
+      target: NotificationTargetKindSchema,
+    }),
+  ],
+);
+export type ScoutNotificationDispositionV2 = z.infer<
+  typeof ScoutNotificationDispositionV2Schema
+>;
+
+/**
  * The intent's state when the Workflow stopped driving it. `unknown-delivery`
  * is a legitimate stopping point and NOT a failure: the machine leaves it only
  * through an operator resolution, because a retry could double-deliver.
+ *
+ * Version 2 adds `disposition`. Version-1 results were written by runs that
+ * had no policy gate and so could only ever have driven the machine, which is
+ * what the migration records for them.
  */
 export const ScoutNotificationV2ResultSchema = z.strictObject({
   status: ScoutWorkflowStatusSchema,
   intentKey: ScoutNotificationIntentKeySchema,
   state: NotificationIntentStateSchema,
   attemptCount: z.int().nonnegative(),
+  disposition: ScoutNotificationDispositionV2Schema,
 });
 export type ScoutNotificationV2Result = z.infer<
   typeof ScoutNotificationV2ResultSchema
 >;
+
+export const SCOUT_NOTIFICATION_V2_RESULT_VERSION = 2;
 
 export const ScoutLakeProjectionV2ResultSchema = z.strictObject({
   status: ScoutWorkflowStatusSchema,
@@ -331,8 +366,14 @@ export const scoutPrematchGameV2ResultCodec = defineVersionedCodec({
 });
 export const scoutNotificationV2ResultCodec = defineVersionedCodec({
   kind: "scout-notification-v2-result",
-  version: SCOUT_V2_CONTRACT_VERSION,
+  version: SCOUT_NOTIFICATION_V2_RESULT_VERSION,
   schema: ScoutNotificationV2ResultSchema,
+  migrations: {
+    1: (old) => ({
+      ...z.record(z.string(), z.unknown()).parse(old),
+      disposition: { kind: "driven" },
+    }),
+  },
 });
 export const scoutLakeProjectionV2ResultCodec = defineVersionedCodec({
   kind: "scout-lake-projection-v2-result",

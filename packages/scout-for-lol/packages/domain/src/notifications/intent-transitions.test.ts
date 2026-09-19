@@ -352,6 +352,7 @@ describe("recordFailure", () => {
     "dm-disabled",
     "budget-exhausted",
     "target-not-found",
+    "content-unavailable",
   ] as const)(
     "terminal reason %s deliberately collapses into the permission-denied state",
     (reason) => {

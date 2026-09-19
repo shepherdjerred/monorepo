@@ -20,6 +20,7 @@ import {
   type UpsertIntentResult,
 } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
 
 /**
  * The V2 notification lane's reads, and the two translations every one of its
@@ -42,6 +43,11 @@ import type { MatchNotificationIntentRecord } from "#src/database/durable/intent
  * the lane is driving an intent it was told exists, so a missing row means a
  * child was started for a decision nobody made — and no retry makes a row
  * appear.
+ *
+ * The gate travels with the intent so the Workflow learns in one read both
+ * where the machine stands and whether it may be moved: a recovery-born
+ * intent under a policy that forbids its target is reported `held`, and the
+ * Workflow stops there without rendering or minting an attempt.
  */
 export async function readNotificationIntentV2(input: {
   intentKey: NotificationIntentKey;
@@ -53,6 +59,7 @@ export async function readNotificationIntentV2(input: {
   return ScoutNotificationIntentV2ResultSchema.parse({
     kind: "present",
     intent: intentSummaryV2(record.intent),
+    gate: await resolveNotificationGateV2(record),
   });
 }
 

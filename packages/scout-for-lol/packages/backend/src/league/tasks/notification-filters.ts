@@ -15,9 +15,14 @@ import {
   DiscordGuildIdSchema,
   type DiscordChannelId,
   type DiscordGuildId,
+  type LeaguePuuid,
   type QueueType,
 } from "@scout-for-lol/data/index.ts";
-import type { SubscribedChannel } from "#src/database/index.ts";
+import { uniqueBy } from "remeda";
+import {
+  getChannelsSubscribedToPlayers,
+  type SubscribedChannel,
+} from "#src/database/index.ts";
 import {
   send,
   ChannelSendError,
@@ -45,6 +50,35 @@ export function channelsPassingQueueFilter(
         filtersPass(subscription.filters, { queueType }),
     ),
   );
+}
+
+/**
+ * Where one finished match's report goes: the channels subscribed to its
+ * tracked players that pass their queue filter, and the guilds those channels
+ * belong to.
+ *
+ * One derivation for both consumers on purpose. v1 delivers to `deliverable`
+ * and generates the report against `guildIds`; the V2 notification lane
+ * renders its attested report against the same `guildIds`, because the
+ * per-guild feature flags the generator evaluates (the AI review) must see
+ * the same audience whichever pipeline sends. `subscribed` is the unfiltered
+ * set, kept for the log line that explains an empty delivery.
+ */
+export async function resolvePostmatchDeliveryChannels(args: {
+  puuids: LeaguePuuid[];
+  queueType: QueueType | undefined;
+}): Promise<{
+  subscribed: SubscribedChannel[];
+  deliverable: SubscribedChannel[];
+  guildIds: DiscordGuildId[];
+}> {
+  const subscribed = await getChannelsSubscribedToPlayers(args.puuids);
+  const deliverable = channelsPassingQueueFilter(subscribed, args.queueType);
+  const guildIds = uniqueBy(
+    deliverable.map((channel) => DiscordGuildIdSchema.parse(channel.serverId)),
+    (id) => id,
+  );
+  return { subscribed, deliverable, guildIds };
 }
 
 /** No durable record kept for this delivery; the send is unchanged either way. */

@@ -58,6 +58,8 @@ function intentFor(
     matchId,
     intent: NotificationIntentSchema.parse({
       key,
+      kind: "postmatch",
+      origin: { kind: "live" },
       target: { kind: "channel", channelId },
       freshnessDeadline: "2026-09-12T12:00:00.000Z",
       createdAt: OBSERVED_AT,

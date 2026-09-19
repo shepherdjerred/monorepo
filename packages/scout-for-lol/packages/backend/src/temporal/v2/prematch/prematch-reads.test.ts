@@ -27,6 +27,8 @@ function intentRecord(
     matchId: MATCH_ID,
     intent: NotificationIntentSchema.parse({
       key: NotificationIntentKeySchema.parse(key),
+      kind: "prematch",
+      origin: { kind: "live" },
       target: {
         kind: "channel",
         channelId: DiscordChannelIdSchema.parse(CHANNEL),
