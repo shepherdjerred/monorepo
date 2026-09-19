@@ -890,7 +890,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
-      "value": "2.0.0-10760@sha256:59ede53611cb036939bdce730c4b8341b159f41a9f774d719b6c03a2ad04f1f0"
+      "value": "2.0.0-16009@sha256:dc7e81105fca37a6ddcdb739d0bf7e219ea241f444e9005f061c3d91d7998555"
     },
     {
       "name": "shepherdjerred/birmel",
