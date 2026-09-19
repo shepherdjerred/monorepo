@@ -1,5 +1,16 @@
 import { describe, expect, test } from "vitest";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  IsoInstantSchema,
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import type { MatchDeliveryMode } from "@scout-for-lol/domain/match-processing/states.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import type {
+  ScoutDiscoveredMatchV2,
+  ScoutMatchObservationV2Input,
+  ScoutPostMatchScanV2Result,
+} from "#src/activity-contracts-v2.ts";
 import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "#src/match-receipts-v2.ts";
 import {
   scoutMatchProcessingV2InputCodec,
@@ -35,7 +46,16 @@ const stage = "dev" as const;
 const SECOND_MATCH_ID = RiotMatchIdSchema.parse("NA1_9002");
 // The poll a scan claimed, by the instant it was claimed at. Maintenance
 // closes exactly this poll, so it travels from the scan to the close.
-const POLL_OWNER = "2026-09-13T07:59:00.000Z";
+const POLL_OWNER = IsoInstantSchema.parse("2026-09-13T07:59:00.000Z");
+const SOURCE_PUUID = LeaguePuuidSchema.parse("s".repeat(78));
+
+/** One discovered match, as the scan reports it: the id and who surfaced it. */
+function discovered(
+  riotMatchId: RiotMatchId,
+  deliveryMode: MatchDeliveryMode = "live",
+): ScoutDiscoveredMatchV2 {
+  return { riotMatchId, sourcePuuid: SOURCE_PUUID, deliveryMode };
+}
 const SERIAL_CORE = [
   "readMatchPipelineStateV2",
   "archiveMatchArtifactsV2",
@@ -78,12 +98,29 @@ async function discover(workflowId: string): Promise<unknown> {
     });
 }
 
+/** A scan of one live match, with the claim maintenance closes it by. */
+function scanOf(
+  ...matches: readonly ScoutDiscoveredMatchV2[]
+): ScoutPostMatchScanV2Result {
+  return {
+    outcome: "scanned",
+    riotMatchIds: matches.map((match) => match.riotMatchId),
+    matches,
+    complete: true,
+    pollOwner: POLL_OWNER,
+  };
+}
+
 describe("the V2 per-match core", () => {
   test("runs the serial core in order and attests to every phase", async () => {
     const store = createScoutV2MatchStore();
     await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
     const result = await processMatch("match-core-happy");
+
+    // Started without a discovering account — the reconciliation shape — the
+    // run commits its observation with no source to check, explicitly.
+    expect(store.observationSources).toEqual([undefined]);
 
     expect(store.calls).toEqual(SERIAL_CORE);
     expect(result).toEqual(
@@ -92,6 +129,7 @@ describe("the V2 per-match core", () => {
         riotMatchId: MATCH_ID,
         owner: { kind: "temporal-v2" },
         policy: "FULL",
+        deliveryMode: "live",
         receiptKinds: [
           SCOUT_V2_MATCH_RECEIPT_KINDS.archive,
           SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
@@ -225,6 +263,43 @@ describe("the V2 per-match core", () => {
   }, 60_000);
 });
 
+describe("the delivery mode a run operates under", () => {
+  test("a restart with no mode of its own reports the committed one", async () => {
+    // The reconciliation restart: no discovery pass behind it, so no mode in
+    // its input. It must take what the observation already recorded, because
+    // deciding afresh is exactly how a silent backfill comes to announce
+    // itself on a restart nobody meant as a live discovery.
+    const store = createScoutV2MatchStore({
+      deliveryMode: "silent-backfill",
+      observed: true,
+      receiptKinds: [
+        SCOUT_V2_MATCH_RECEIPT_KINDS.archive,
+        SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+      ],
+    });
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
+
+    const result = await processMatch("match-core-restart-delivery-mode");
+
+    // The resume point answered; the commit was not re-run for it.
+    expect(store.observationDeliveryModes).toEqual([]);
+    expect(result).toMatchObject({
+      data: { deliveryMode: "silent-backfill" },
+    });
+  }, 60_000);
+
+  test("a run that commits the observation reports the mode it committed", async () => {
+    const store = createScoutV2MatchStore({ deliveryMode: "silent-backfill" });
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
+
+    const result = await processMatch("match-core-commit-delivery-mode");
+
+    expect(result).toMatchObject({
+      data: { deliveryMode: "silent-backfill" },
+    });
+  }, 60_000);
+});
+
 describe("a contested archive attestation", () => {
   test("fails the run before the observation, the receipts or the cursor", async () => {
     // A conflicting receipt means one already stands for this artifact
@@ -295,10 +370,10 @@ describe("a contested archive attestation", () => {
   }, 90_000);
 
   test("converges on the next attempt through the archive read gate", async () => {
-    // The overlapping-identical-bytes race: the raw-archive evidence carries
-    // `capturedAt`, stamped at put time, so two attempts over the same bytes
-    // disagree. The first fails loudly; the next reads the standing receipt,
-    // reports the match as already archived, and the pipeline proceeds.
+    // A rival attested different bytes under this artifact's identity. The
+    // first attempt fails loudly; the next reads the standing receipt, reports
+    // the match as already archived, and the pipeline proceeds on the
+    // attested artifact rather than on the one it never agreed with.
     const store = createScoutV2MatchStore({ archiveConflictsOnce: true });
     await harness.startWorkers(scoutV2MatchActivityStubs(store));
 
@@ -415,6 +490,62 @@ describe("a V2 per-match run killed mid-pipeline", () => {
   }, 60_000);
 });
 
+describe("a per-match history recorded before deliveryMode existed", () => {
+  // The two recorded Activity results that gained the field. Each is the
+  // Workflow's ONLY source for it on its path, and the value is spread into a
+  // codec that requires it — so a run replaying either from before the change
+  // fails its Workflow task forever rather than failing the execution.
+
+  test("resumes from a pre-change pipeline state", async () => {
+    // The resumable path: an observation receipt already stands, so the state
+    // this run read at its resume point is where the mode comes from.
+    const store = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      readMatchPipelineStateV2: (input: { riotMatchId: string }) => {
+        const present = attestedPipelineState(
+          RiotMatchIdSchema.parse(input.riotMatchId),
+          "archive",
+          "observation",
+        );
+        if (present.kind !== "present") return present;
+        const { deliveryMode: _dropped, ...legacy } = present.state;
+        return { kind: "present", state: legacy };
+      },
+    });
+
+    const result = await processMatch("match-legacy-resume-state");
+
+    expect(result).toMatchObject({
+      data: { status: "completed", deliveryMode: "live" },
+    });
+    // And it genuinely resumed: the observation was not committed again.
+    expect(store.calls).not.toContain("commitMatchObservationV2");
+  }, 90_000);
+
+  test("commits against a pre-change observation result", async () => {
+    // The other path: nothing stands yet, so the commit's own read-back is
+    // where the mode comes from.
+    const store = createScoutV2MatchStore();
+    const stubs = scoutV2MatchActivityStubs(store);
+    await harness.startWorkers({
+      ...stubs,
+      commitMatchObservationV2: (input: ScoutMatchObservationV2Input) => {
+        const { deliveryMode: _dropped, ...legacy } =
+          stubs.commitMatchObservationV2(input);
+        return legacy;
+      },
+    });
+
+    const result = await processMatch("match-legacy-observation-result");
+
+    expect(result).toMatchObject({
+      data: { status: "completed", deliveryMode: "live" },
+    });
+    expect(store.calls).toContain("commitMatchObservationV2");
+  }, 90_000);
+});
+
 describe("V2 post-match discovery", () => {
   test("processes discovered matches one at a time, in discovery order", async () => {
     const log: string[] = [];
@@ -428,6 +559,7 @@ describe("V2 post-match discovery", () => {
       discoverPostMatchIdsV2: () => ({
         outcome: "scanned",
         riotMatchIds: [MATCH_ID, SECOND_MATCH_ID],
+        matches: [discovered(MATCH_ID), discovered(SECOND_MATCH_ID)],
         complete: true,
         pollOwner: POLL_OWNER,
       }),
@@ -488,6 +620,7 @@ describe("V2 post-match discovery", () => {
       discoverPostMatchIdsV2: () => ({
         outcome: "scanned",
         riotMatchIds: [MATCH_ID],
+        matches: [discovered(MATCH_ID)],
         complete: true,
         pollOwner: POLL_OWNER,
         evidenceWatermark: "2026-09-13T08:00:00.000Z",
@@ -518,12 +651,7 @@ describe("V2 post-match discovery", () => {
     const store = createScoutV2MatchStore();
     await harness.startWorkers({
       ...scoutV2MatchActivityStubs(store),
-      discoverPostMatchIdsV2: () => ({
-        outcome: "scanned",
-        riotMatchIds: [MATCH_ID],
-        complete: true,
-        pollOwner: POLL_OWNER,
-      }),
+      discoverPostMatchIdsV2: () => scanOf(discovered(MATCH_ID)),
     });
     await processMatch(scoutMatchProcessingV2WorkflowId(stage, MATCH_ID));
 
@@ -549,6 +677,7 @@ describe("V2 post-match discovery", () => {
         return {
           outcome: "scanned",
           riotMatchIds: [],
+          matches: [],
           complete: true,
           pollOwner: POLL_OWNER,
         };
@@ -561,6 +690,62 @@ describe("V2 post-match discovery", () => {
     expect(store.maintenance).toHaveLength(2);
   }, 90_000);
 
+  test("keeps the poll claim a result recorded before `matches` existed", async () => {
+    // The generation immediately before this one: it recorded `pollOwner`
+    // but no `matches`. Reading the page off a single "is this the newest
+    // shape" flag put those histories on the legacy branch and dropped the
+    // claim from their close, taking the ownership guard off a poll that
+    // HAD one — so maintenance could mark a newer run's poll complete.
+    const store = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => ({
+        outcome: "scanned",
+        riotMatchIds: [MATCH_ID],
+        complete: true,
+        pollOwner: POLL_OWNER,
+      }),
+    });
+
+    await discover("post-match-discovery-pre-matches");
+
+    expect(store.maintenance).toEqual([
+      { stage, settleDareV2Deadlines: true, pollOwner: POLL_OWNER },
+    ]);
+    // And the child is started with the arguments that generation sent: the
+    // id alone. The mode is resolved inside the observation commit, which the
+    // backend's own integration test pins.
+    expect(store.observationDeliveryModes).toEqual([undefined]);
+  }, 90_000);
+
+  test("drives a bare-ids result, closing a poll it has no claim for", async () => {
+    // The oldest generation: `riotMatchIds` and nothing else. There is no
+    // claim to forward, so the close is unguarded exactly as it was then —
+    // and the run must still process its page rather than fail every replay.
+    const store = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => ({
+        outcome: "scanned",
+        riotMatchIds: [MATCH_ID],
+        complete: true,
+      }),
+    });
+
+    await discover("post-match-discovery-bare-ids");
+
+    expect(store.maintenance).toEqual([{ stage, settleDareV2Deadlines: true }]);
+    // Neither field reaches the child, because neither was in the command
+    // that generation recorded.
+    expect(store.observationDeliveryModes).toEqual([undefined]);
+    expect(store.observationSources).toEqual([undefined]);
+  }, 90_000);
+});
+
+/**
+ * Who owns the poll while a discovery run is in flight, and who may close it.
+ */
+describe("the V2 post-match poll's ownership", () => {
   test("holds the poll across the children it awaits, so an overlapping run is skipped", async () => {
     // The overlap the durable claim exists for. The scheduled run's discovery
     // Activity has RETURNED and the run is away awaiting a child, which is
@@ -582,6 +767,7 @@ describe("V2 post-match discovery", () => {
           : {
               outcome: "scanned",
               riotMatchIds: [MATCH_ID],
+              matches: [discovered(MATCH_ID)],
               complete: true,
               pollOwner: claim.pollOwner,
             };
@@ -646,17 +832,52 @@ describe("V2 post-match discovery", () => {
     expect(store.maintenance).toEqual([]);
     expect(store.calls).not.toContain("runPostMatchMaintenance");
   }, 60_000);
+});
 
-  test("stops at a match another execution already owns", async () => {
-    const store: ScoutV2MatchStore = createScoutV2MatchStore();
+/** What a discovery run hands its children, and when it stops starting them. */
+describe("the V2 post-match child handoff", () => {
+  test("hands each child the account that surfaced its match", async () => {
+    // v1's source precondition lives in the observation commit, and only the
+    // discovery pass knows which tracked account's history surfaced the
+    // match — so the id alone is not enough for the child to carry.
+    const store = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => scanOf(discovered(MATCH_ID)),
+    });
+
+    await discover("post-match-discovery-source");
+
+    expect(store.observationSources).toEqual([SOURCE_PUUID]);
+  }, 90_000);
+
+  test("hands each child the delivery mode its discovery decided", async () => {
+    // Only the discovery pass knows whether it was following live history or
+    // filling a gap, and v1 makes that call per discovered match. A child that
+    // had to decide for itself would have nothing to decide from, and the
+    // wrong answer is the one that announces a backfill publicly.
+    const store = createScoutV2MatchStore({ deliveryMode: "silent-backfill" });
     await harness.startWorkers({
       ...scoutV2MatchActivityStubs(store),
       discoverPostMatchIdsV2: () => ({
         outcome: "scanned",
         riotMatchIds: [MATCH_ID],
+        matches: [discovered(MATCH_ID, "silent-backfill")],
         complete: true,
         pollOwner: POLL_OWNER,
       }),
+    });
+
+    await discover("post-match-discovery-delivery-mode");
+
+    expect(store.observationDeliveryModes).toEqual(["silent-backfill"]);
+  }, 90_000);
+
+  test("stops at a match another execution already owns", async () => {
+    const store: ScoutV2MatchStore = createScoutV2MatchStore();
+    await harness.startWorkers({
+      ...scoutV2MatchActivityStubs(store),
+      discoverPostMatchIdsV2: () => scanOf(discovered(MATCH_ID)),
     });
     // A completed execution owns this match's child ID, so `startChild` is
     // refused. Continuing past it would let a LATER match settle while this one

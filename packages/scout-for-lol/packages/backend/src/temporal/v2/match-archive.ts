@@ -1,19 +1,22 @@
 import { ApplicationFailure } from "@temporalio/common";
 import type { ArtifactDescriptor } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type { MatchDeliveryMode } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
   ScoutArchivedArtifactV2,
   ScoutArchiveV2Result,
+  ScoutMatchObservationV2Input,
   ScoutMatchObservationV2Result,
 } from "@scout-for-lol/temporal/activity-contracts-v2";
 import type { ScoutDurableCommitV2 } from "@scout-for-lol/temporal/contracts-v2";
 import { prisma } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   getObservation,
   observeMatch,
   promoteObservation,
 } from "#src/database/durable/observation-repository.ts";
-import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import type { MatchObservationRecord } from "#src/database/durable/observation-row.ts";
 import { recordTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import { trackedAccountRecords } from "#src/durable/match/archive-facts.ts";
@@ -23,13 +26,18 @@ import {
   toIsoInstant,
 } from "#src/durable/match/match-identity.ts";
 import {
-  rawArchiveEvidenceCodec,
   rawArchiveReceiptKind,
+  storedRawArchiveDescriptor,
   type ReceiptRecordOutcome,
 } from "#src/report-lake/durable-receipts.ts";
 import { archiveMatchReceipted } from "#src/report-lake/receipted-archive.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
-import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import {
+  resolveScoutV2MatchContext,
+  type ScoutV2MatchContext,
+} from "#src/temporal/v2/match-context.ts";
+
+const logger = createLogger("scout-v2-match-archive");
 
 /**
  * The V2 core's capture step and the observation it hangs off.
@@ -49,21 +57,16 @@ import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
  * back from its own receipt.
  *
  * The receipt is the hand-off between two Activities that cannot share memory:
- * `raw-archive-match`'s evidence IS the `ArtifactDescriptor`, so the run that
- * commits the observation can stamp the artifact identity the run that
- * archived it reported, rather than reconstructing a key from the layout
- * convention — which would be evidence of nothing.
+ * `raw-archive-match` names the `ArtifactDescriptor`, so the run that commits
+ * the observation can stamp the artifact identity the run that archived it
+ * reported, rather than reconstructing a key from the layout convention —
+ * which would be evidence of nothing. The read is the door's own, so the two
+ * cannot disagree about which evidence version names what.
  */
 export async function readArchivedMatchArtifactV2(
   matchId: RiotMatchId,
 ): Promise<ArtifactDescriptor | null> {
-  const kind = rawArchiveReceiptKind("match");
-  const receipts = await listReceipts(prisma, { matchId });
-  const archived = receipts.find((record) => record.receipt.kind === kind);
-  if (archived?.evidence == null) {
-    return null;
-  }
-  return rawArchiveEvidenceCodec.parse(JSON.parse(archived.evidence));
+  return await storedRawArchiveDescriptor(prisma, matchId, "match");
 }
 
 /**
@@ -102,11 +105,10 @@ function archiveReceiptCommitV2(
  * Archive one match's raw payload, at most once, and attest to it.
  *
  * The replay gate is the receipt rather than an effect claim, and that is
- * deliberate: `ArtifactDescriptor.capturedAt` is stamped at put time, so a
- * second archive of the same match records genuinely different evidence and
- * would be answered `receipt-evidence-mismatch` — a drift signal raised by the
- * system working correctly. Reading the receipt first means a replay reports
- * the first run's descriptor and writes nothing.
+ * deliberate: the receipt is what names the artifact, so a replay that reads
+ * it first reports the first run's descriptor and spends no Riot read and no
+ * put at all. The door gates again under its own fence, which is what catches
+ * a rival that archived between this read and the put.
  */
 export async function archiveMatchArtifactsV2(input: {
   riotMatchId: RiotMatchId;
@@ -251,6 +253,83 @@ export async function reconcileObservationConflictV2(
 }
 
 /**
+ * v1's source precondition, restored rather than proven equivalent.
+ *
+ * `ingestDiscoveredMatch` refuses a match whose discovering account is no
+ * longer tracked in its region. V2's own check — some tracked account plays
+ * on the match's platform — is weaker: a source deregistered between
+ * discovery and this commit would leave v1 refusing the match while V2
+ * processed it for the remaining tracked participants, or for none. So the
+ * v1 condition is checked here, in the one Activity that decides who this
+ * match is for, before any downstream effect. Non-retryable because no retry
+ * changes which accounts are tracked; the next discovery, if any tracked
+ * participant remains, surfaces the match again under that account.
+ *
+ * The source must also have PLAYED in the match. Discovery guarantees it —
+ * the match came from that account's own history — so a source that is
+ * tracked but absent from the participants is a broken contract, not a race.
+ */
+function requireDiscoverySourceTracked(
+  context: ScoutV2MatchContext,
+  sourcePuuid: LeaguePuuid,
+): void {
+  const tracked = context.trackedPlayers.some(
+    (player) => player.league.leagueAccount.puuid === sourcePuuid,
+  );
+  if (tracked) return;
+  throw ApplicationFailure.nonRetryable(
+    `The account that surfaced ${context.riotMatchId} (${sourcePuuid}) is no longer tracked in it, so the match is not this pipeline's to process on its behalf`,
+    "MissingDomainRecord",
+  );
+}
+
+/**
+ * The delivery mode this observation commits, and where it may come from.
+ *
+ * Only a discovery pass can DECIDE the mode: it is the pass that knows whether
+ * it was following live match history or filling a gap, and v1 makes the same
+ * call per discovered match. So a discovery-started run carries the mode in
+ * and this commit records it.
+ *
+ * A run started without one is a reconciliation restart, which resumes a match
+ * some earlier run already observed. It takes the mode from that standing
+ * observation rather than choosing, because choosing is exactly how a silent
+ * backfill would come to announce itself on a restart nobody meant as a live
+ * discovery. This is resume semantics, not a fallback: the value is read from
+ * the durable record of the decision, never invented.
+ *
+ * Neither available is a broken caller contract — no evidence of the mode
+ * exists anywhere — and it fails before any effect rather than guessing. A
+ * caller whose input DISAGREES with the stored mode is not handled here at
+ * all: the mode is part of the observation claim, so the commit below answers
+ * `observation-differs` and the reconciliation refuses it.
+ */
+async function resolveDeliveryMode(
+  input: Pick<ScoutMatchObservationV2Input, "riotMatchId" | "deliveryMode">,
+): Promise<MatchDeliveryMode> {
+  if (input.deliveryMode !== undefined) return input.deliveryMode;
+  const stored = await getObservation(prisma, { matchId: input.riotMatchId });
+  if (stored !== null) return stored.deliveryMode;
+  // A child whose own input recorded no mode, for a match nothing has
+  // observed. Only one starter produces that: a per-match run begun from a
+  // pre-change discovery, whose input was serialized before the field
+  // existed and cannot now be changed. Every current starter carries the
+  // mode, and a reconciliation restart resumes a match that HAS an
+  // observation, so neither reaches here.
+  //
+  // `live` is not a choice about an unknown. The generation that started
+  // those children stamped `live` unconditionally in this very commit, so
+  // this reads what that execution already did — the same reasoning the
+  // version-1 result migration uses, and the same value the row-level
+  // migration backfilled. Refusing instead would kill the child after it had
+  // archived and take its parent discovery down with it.
+  logger.warn(
+    `⚠️  Observing ${input.riotMatchId} with no delivery mode in its input and no standing observation; treating it as a pre-change run, which recorded live unconditionally`,
+  );
+  return "live";
+}
+
+/**
  * Claim the match for the V2 pipeline and record what it saw in it.
  *
  * The observation is the claim `scoutMatchProcessingV2Workflow` needs before
@@ -267,19 +346,23 @@ export async function reconcileObservationConflictV2(
  * reports the promoted policy, so the Workflow runs the downstream effects
  * instead of skipping them on a stale policy.
  */
-export async function commitMatchObservationV2(input: {
-  riotMatchId: RiotMatchId;
-}): Promise<ScoutMatchObservationV2Result> {
+export async function commitMatchObservationV2(
+  input: Pick<
+    ScoutMatchObservationV2Input,
+    "riotMatchId" | "sourcePuuid" | "deliveryMode"
+  >,
+): Promise<ScoutMatchObservationV2Result> {
   const context = await resolveScoutV2MatchContext(input.riotMatchId);
+  if (input.sourcePuuid !== undefined) {
+    requireDiscoverySourceTracked(context, input.sourcePuuid);
+  }
+  const deliveryMode = await resolveDeliveryMode(input);
   const archived = await readArchivedMatchArtifactV2(input.riotMatchId);
   const record: MatchObservationRecord = {
     matchId: input.riotMatchId,
     platformRoute: platformRouteOf(input.riotMatchId),
     policy: "FULL",
-    // V2 post-match discovery has no backfill path of its own yet: every
-    // match it observes was discovered live. The mode travels with the
-    // Workflow input once discovery can decide otherwise.
-    deliveryMode: "live",
+    deliveryMode,
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),
@@ -317,6 +400,7 @@ export async function commitMatchObservationV2(input: {
     commit,
     owner: stored.owner,
     policy: stored.policy,
+    deliveryMode: stored.deliveryMode,
     promoted: stored.promotion !== null,
   };
 }

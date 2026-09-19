@@ -74,9 +74,7 @@ describe("savePrematchDataToS3", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await savePrematchDataToS3(gameInfo.gameId, gameInfo, [
-      "Player",
-    ]);
+    const result = await savePrematchDataToS3(gameInfo, ["Player"]);
 
     expect(result.status).toBe("saved");
     expect(typeof result.durationSeconds).toBe("number");
@@ -84,6 +82,13 @@ describe("savePrematchDataToS3", () => {
 
     const command = s3Mock.call(0)?.args?.[0];
     expect(command).toBeInstanceOf(PutObjectCommand);
+    if (!(command instanceof PutObjectCommand)) throw new Error("not a put");
+    // The object is keyed by the platform-qualified game id — the identity
+    // its lock and receipt use — so two platforms' games with one number on
+    // one day cannot resolve to the same object.
+    expect(command.input.Key).toMatch(
+      /^prematch\/\d{4}\/\d{2}\/\d{2}\/NA1_5500000001\/spectator-data\.json$/u,
+    );
 
     const metricsAfter = await getMetrics();
     expect(
@@ -126,9 +131,9 @@ describe("savePrematchDataToS3", () => {
 
     // S3 is now authoritative: a failed write throws (it no longer returns an
     // "error" status) so the ingest path can fail loud and not lose the game.
-    await expect(
-      savePrematchDataToS3(gameInfo.gameId, gameInfo, ["Player"]),
-    ).rejects.toThrow("upload failed");
+    await expect(savePrematchDataToS3(gameInfo, ["Player"])).rejects.toThrow(
+      "upload failed",
+    );
 
     // Retried MAX_PUT_ATTEMPTS (3) times before throwing.
     expect(s3Mock.calls()).toHaveLength(3);

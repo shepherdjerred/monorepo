@@ -1,8 +1,13 @@
 import { afterAll, describe, expect, test } from "vitest";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  IsoInstantSchema,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   getIntent,
   listIntentsForMatch,
+  upsertIntent,
 } from "#src/database/durable/intent-repository.ts";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
@@ -73,6 +78,44 @@ describe("mintPrematchIntent", () => {
     // The first attempt's row stands, unmoved.
     expect(stored?.intent.createdAt).toBe(OBSERVED_AT.toISOString());
     expect(stored?.intent.state).toEqual({ kind: "pending" });
+  });
+
+  test("refuses a standing row under this key that names another game", async () => {
+    // The key is derived from the match and the channel, but every reader
+    // uses the row's own columns: the fan-out selects by match, the send goes
+    // to the target. A row under this key naming a different match would be
+    // accepted as "already minted" and then never found for this game — the
+    // channel silently never told. That is a broken contract, and it fails.
+    const channel = "100000000000000009";
+    const key = NotificationIntentKeySchema.parse(
+      deliveryIntentKey(prematchDeliveryKeyPrefix(MATCH_ID), channel),
+    );
+    expect(
+      await upsertIntent(prisma, {
+        matchId: RiotMatchIdSchema.parse("NA1_9199"),
+        intent: {
+          key,
+          // The rival row is a well-formed prematch intent in every respect
+          // but the match it names; that is the whole point of the test.
+          kind: "prematch",
+          origin: { kind: "live" },
+          target: {
+            kind: "channel",
+            channelId: DiscordChannelIdSchema.parse(channel),
+          },
+          freshnessDeadline: IsoInstantSchema.parse(
+            FRESHNESS_DEADLINE.toISOString(),
+          ),
+          createdAt: IsoInstantSchema.parse(OBSERVED_AT.toISOString()),
+          attemptCount: 0,
+          state: { kind: "pending" },
+        },
+      }),
+    ).toEqual({ outcome: "applied" });
+
+    await expect(mint(channel, OBSERVED_AT)).rejects.toThrow(
+      /refusing to treat it as this game's instruction/,
+    );
   });
 
   test("keeps one row per channel for one game", async () => {

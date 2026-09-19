@@ -21,10 +21,8 @@ import type {
   ArtifactKind,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import {
-  rawArchiveReceiptKind,
-  buildReceipt,
   prematchReceiptMatchId,
-  rawArchiveEvidenceCodec,
+  rawArchiveReceiptRecord,
   receiptMatchId,
   recordReceiptFailOpen,
   storedRawArchiveDescriptor,
@@ -100,8 +98,6 @@ export type ReceiptedArchiveResult<T> =
 type ReceiptOptions = {
   /** Supply a transaction client to record the receipt atomically with others. */
   db?: Db;
-  /** Injectable so tests need no wall clock; defaults to now. */
-  now?: Date;
   /**
    * Shrinks every part of the fence's budget so a test can drive the expiry,
    * the starved-follower and the bounded-wait paths in milliseconds; nothing
@@ -128,11 +124,9 @@ async function receiptArchived<T>(args: {
   options: ReceiptOptions;
 }): Promise<ArchivedResult<T>> {
   const receipt = await recordReceiptFailOpen({
-    record: buildReceipt({
+    record: rawArchiveReceiptRecord({
       matchId: receiptMatchId(args.matchId),
-      kind: rawArchiveReceiptKind(args.artifact.kind),
-      evidence: rawArchiveEvidenceCodec.serialize(args.artifact),
-      recordedAt: args.options.now ?? new Date(),
+      artifact: args.artifact,
     }),
     writeKind: "raw-archive",
     ...(args.options.db === undefined ? {} : { db: args.options.db }),
@@ -595,7 +589,6 @@ export async function archivePrematchReceipted(
     options,
     put: async (abortSignal) => {
       const result = await savePrematchDataToS3(
-        gameInfo.gameId,
         gameInfo,
         trackedPlayerAliases,
         abortSignal,

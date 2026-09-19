@@ -23,6 +23,7 @@ import {
   scoutLakeProjectionV2InputCodec,
   scoutMatchProcessingV2InputCodec,
   scoutMatchProcessingV2ResultCodec,
+  SCOUT_MATCH_PROCESSING_V2_RESULT_VERSION,
   scoutNotificationV2InputCodec,
   scoutNotificationV2ResultCodec,
   scoutPipelineReconciliationV2InputCodec,
@@ -249,6 +250,7 @@ describe("V2 workflow results", () => {
       riotMatchId,
       owner: { kind: "temporal-v2" },
       policy: "FULL",
+      deliveryMode: "live",
       receiptKinds: [ReceiptKindSchema.parse("raw-archive-match")],
       childrenStarted: { notifications: 2, lakeProjections: 1 },
     } as const;
@@ -423,6 +425,7 @@ describe("V2 resume-point read", () => {
         riotMatchId,
         owner: { kind: "temporal-v2" },
         policy: "FULL",
+        deliveryMode: "silent-backfill",
         promoted: false,
         receiptKinds: [ReceiptKindSchema.parse("lake-staging-match")],
         intents: [{ intentKey, state: { kind: "ready" }, attemptCount: 0 }],
@@ -430,6 +433,46 @@ describe("V2 resume-point read", () => {
       },
     } as const;
     expect(ScoutMatchPipelineStateV2ResultSchema.parse(state)).toEqual(state);
+  });
+
+  test("still parses a match result recorded before deliveryMode existed", () => {
+    // The replay hazard the version bump exists for. A version-1 result
+    // predates the field, and a codec that advertised version 1 while its
+    // schema demanded the field would have failed every historical parse.
+    const version1 = {
+      kind: "scout-match-processing-v2-result",
+      version: 1,
+      data: {
+        status: "completed",
+        riotMatchId,
+        owner: { kind: "temporal-v2" },
+        policy: "FULL",
+        receiptKinds: [ReceiptKindSchema.parse("raw-archive-match")],
+        childrenStarted: { notifications: 0, lakeProjections: 0 },
+      },
+    };
+
+    const parsed = scoutMatchProcessingV2ResultCodec.parse(version1);
+
+    // Migrated, not rejected, and to the mode that run actually operated
+    // under: the observation commit recorded `live` unconditionally then.
+    expect(parsed.deliveryMode).toBe("live");
+    expect(parsed.status).toBe("completed");
+  });
+
+  test("serializes new results at version 2", () => {
+    const envelope = scoutMatchProcessingV2ResultCodec.serialize({
+      status: "completed",
+      riotMatchId,
+      owner: { kind: "temporal-v2" },
+      policy: "FULL",
+      deliveryMode: "silent-backfill",
+      receiptKinds: [],
+      childrenStarted: { notifications: 0, lakeProjections: 0 },
+    });
+
+    expect(envelope.version).toBe(SCOUT_MATCH_PROCESSING_V2_RESULT_VERSION);
+    expect(SCOUT_MATCH_PROCESSING_V2_RESULT_VERSION).toBe(2);
   });
 
   test("refuses a batch id the workflow id builder could not carry", () => {

@@ -20,7 +20,15 @@ import { computeSha256Digest } from "#src/storage/object-integrity.ts";
  *
  *   games/{yyyy}/{MM}/{dd}/{matchId}/match.json
  *   games/{yyyy}/{MM}/{dd}/{matchId}/timeline.json
- *   prematch/{yyyy}/{MM}/{dd}/{gameId}/spectator-data.json
+ *   prematch/{yyyy}/{MM}/{dd}/{platformId}_{gameId}/spectator-data.json
+ *   prematch/{yyyy}/{MM}/{dd}/{gameId}/spectator-data.json   (pre-qualification)
+ *
+ * Prematch objects have two spellings. Objects written before the key was
+ * platform-qualified sit under the bare numeric game id; everything since
+ * sits under `{platformId}_{gameId}` (see `storage/s3-prematch.ts`). Every
+ * reader here decides by prefix and suffix, never by the shape of the identity
+ * segment, so both spellings are read alike — and a prematch object's identity
+ * always comes from its parsed payload, never from its key.
  */
 
 export const MATCH_PREFIX = "games/";
@@ -57,8 +65,9 @@ export function timelineObjectKey(matchId: string, keyDate: Date): string {
   return `${MATCH_PREFIX}${datePath(keyDate)}/${matchId}/timeline.json`;
 }
 
-export function prematchObjectKey(gameId: string, keyDate: Date): string {
-  return `${PREMATCH_PREFIX}${datePath(keyDate)}/${gameId}/spectator-data.json`;
+/** The current spelling; `resourceId` is `storage/s3-prematch.ts`'s. */
+export function prematchObjectKey(resourceId: string, keyDate: Date): string {
+  return `${PREMATCH_PREFIX}${datePath(keyDate)}/${resourceId}/spectator-data.json`;
 }
 
 export type RawObjectRef = {

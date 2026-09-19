@@ -1,8 +1,15 @@
+import { z } from "zod";
 import { ApplicationFailure, startChild } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type {
+  IsoInstant,
+  RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type { ScoutDiscoveredMatchV2 } from "#src/activity-contracts-v2.ts";
 import type { ScoutDurableCommitV2 } from "#src/contracts-v2.ts";
 import type {
+  MatchDeliveryMode,
   MatchProcessingPolicy,
   PipelineOwner,
   ReceiptKind,
@@ -31,11 +38,132 @@ import {
   realtimeActivities,
   realtimeV2Activities,
 } from "./activity-options.ts";
+import { ScoutDiscoveredMatchV2Schema } from "#src/activity-contracts-v2.ts";
 import {
   IMPLEMENTED_V2_FAN_OUT_WORKFLOWS,
   planMatchFanOutChildrenV2,
   type ScoutMatchFanOutChildV2,
 } from "./match-fan-out-v2.ts";
+
+/**
+ * One discovered match as the loop consumes it: the id always, and the fields
+ * a pre-change history never recorded only when they are there.
+ */
+const ScoutDiscoveredMatchesSchema = z
+  .array(ScoutDiscoveredMatchV2Schema)
+  .readonly();
+
+type ScoutDiscoveredMatchV2Ref = {
+  readonly riotMatchId: RiotMatchId;
+  readonly sourcePuuid?: ScoutDiscoveredMatchV2["sourcePuuid"] | undefined;
+  readonly deliveryMode?: ScoutDiscoveredMatchV2["deliveryMode"] | undefined;
+};
+
+/**
+ * The page this run processes, from whichever result shape its history holds.
+ *
+ * ## Why this reads the payload rather than a patch flag
+ *
+ * There is more than one pre-change generation in play, and they differ in
+ * DIFFERENT fields: the oldest recorded bare `riotMatchIds`, the generation
+ * before this one recorded `pollOwner` as well, and the current one records
+ * `matches` too. A single boolean meaning "not the newest" cannot tell those
+ * apart, and using one made the legacy branch drop `pollOwner` from a history
+ * that had recorded it — silently removing the ownership guard from a close
+ * that already had one.
+ *
+ * Each field's presence in the recorded result is the fact, and it is the
+ * fact for that execution forever: a completed Activity's payload never
+ * changes, so branching on it decides identically on every replay. That is
+ * the determinism a patch would have bought, drawn at the boundary of the
+ * change it protects against rather than at the newest shape.
+ *
+ * The legacy branch yields the id and nothing else, because that is all those
+ * results recorded AND all their child-start commands carried. Anything this
+ * added would travel into a recorded command's arguments; `live` is supplied
+ * where it is still unrecorded, inside the child.
+ */
+export function discoveredMatchesOf(scan: {
+  riotMatchIds: readonly RiotMatchId[];
+  matches?: unknown;
+}): readonly ScoutDiscoveredMatchV2Ref[] {
+  if (scan.matches === undefined) {
+    // The id ALONE, which is all that generation recorded.
+    //
+    // `live` is the right answer for such a match, but supplying it here
+    // would be the new code's answer rather than the old code's: the child
+    // start is a recorded command, and adding a field to its input makes
+    // replay emit different arguments than history holds. A legacy branch has
+    // to reproduce what the old code SENT, not what the new code considers a
+    // sensible default — a default is exactly the helpful instinct that
+    // breaks determinism.
+    //
+    // The fact is still supplied, one layer down and where nothing has been
+    // recorded yet: a child started with no mode resolves `live` in
+    // `resolveDeliveryMode`, for the same reason and from the same evidence.
+    return scan.riotMatchIds.map((riotMatchId) => ({ riotMatchId }));
+  }
+  return ScoutDiscoveredMatchesSchema.parse(scan.matches);
+}
+
+/**
+ * The poll claim a recorded discovery result holds, if it recorded one.
+ *
+ * `pollOwner` is REQUIRED on the scanned branch of the current contract, so
+ * the type alone says it is always there. History disagrees: the oldest
+ * generation recorded bare ids and no claim, and those executions replay
+ * against this code. The parameter is widened here, at the one place that
+ * reads the field, so the absence is expressible rather than asserted away —
+ * and so the omission is a value this can be tested on.
+ *
+ * Absent means absent. There is no claim to guess at, and the close then
+ * degrades to the unguarded close that generation always did. Inventing one
+ * would make maintenance refuse to close a poll that is genuinely open.
+ */
+export function pollClaimOf(scan: { pollOwner?: IsoInstant | undefined }): {
+  pollOwner?: IsoInstant;
+} {
+  return scan.pollOwner === undefined ? {} : { pollOwner: scan.pollOwner };
+}
+
+/**
+ * The delivery mode a recorded observation reports, on either resume path.
+ *
+ * ## Why this is read off the payload rather than trusted to be there
+ *
+ * `deliveryMode` was added as a REQUIRED field to two recorded Activity
+ * results at once — `commitMatchObservationV2`'s and
+ * `readMatchPipelineStateV2`'s. An execution that recorded either before that
+ * replays against this code with the field absent, and the value is spread
+ * straight into `scoutMatchProcessingV2ResultCodec.serialize`, which requires
+ * it. That throws on every replayed Workflow task: a stuck execution rather
+ * than a failed one, which no retry clears.
+ *
+ * As with the discovery page, the fact is the payload's own shape and it is
+ * that execution's fact forever, so branching on it decides identically on
+ * every replay.
+ *
+ * `live` is what the generation that recorded those results observed: its
+ * observation commit stamped `live` unconditionally. It is the same value the
+ * version-1 result migration fills and the same value the row-level migration
+ * backfilled, so this reads history rather than choosing.
+ *
+ * ## What this value does, and does not, decide
+ *
+ * Nothing. It is REPORTED and never acted on: no consumer of the per-match
+ * result reads it, and every gate that decides whether a match may be
+ * announced reads the committed observation row itself rather than this. So a
+ * legacy history whose standing row says `silent-backfill` — a match v1 owns,
+ * or one a recovery batch observed ARCHIVE_ONLY — reports `live` here while
+ * still announcing nothing. That mis-report is the residual this leaves; it
+ * cannot become a delivery.
+ */
+export function observedDeliveryModeOf(observation: {
+  deliveryMode?: MatchDeliveryMode | undefined;
+}): MatchDeliveryMode {
+  if (observation.deliveryMode !== undefined) return observation.deliveryMode;
+  return "live";
+}
 
 /**
  * Post-match discovery, V2.
@@ -86,13 +214,26 @@ export async function scoutPostMatchDiscoveryV2Workflow(
     });
   }
 
+  // `matches`, `pollOwner` and each match's `sourcePuuid` and `deliveryMode`
+  // were all added to this Activity's result as REQUIRED fields. A field being
+  // new is not the same as it being safe: an execution that recorded an
+  // earlier result replays against this code with `riotMatchIds` and nothing
+  // else, so iterating `scan.matches` would read `undefined` and fail the
+  // Workflow task on every replay, forever — a stuck execution rather than a
+  // failed one, which no retry clears.
+  //
+  // Each field is therefore read where it is consumed, off the recorded
+  // payload; see {@link discoveredMatchesOf} for why the payload itself is
+  // the deterministic fact and a patch flag was the wrong boundary.
+  const discovered = discoveredMatchesOf(scan);
+
   let childrenStarted = 0;
   let ownedWholeTail = true;
   let childFailure: unknown;
-  for (const riotMatchId of scan.riotMatchIds) {
-    setWorkflowPhase(`**Phase:** processing match \`${riotMatchId}\``);
+  for (const match of discovered) {
+    setWorkflowPhase(`**Phase:** processing match \`${match.riotMatchId}\``);
     try {
-      if (!(await processMatchAsChild(input.stage, riotMatchId))) {
+      if (!(await processMatchAsChild(input.stage, match))) {
         // Another execution already owns this match's ID. Continuing past it
         // would let a LATER match settle while an EARLIER one is still being
         // processed elsewhere, which is exactly the chronology the
@@ -130,7 +271,12 @@ export async function scoutPostMatchDiscoveryV2Workflow(
     // failed child all mean evidence this pass cannot vouch for.
     settleDareV2Deadlines:
       scan.complete && ownedWholeTail && childFailure === undefined,
-    pollOwner: scan.pollOwner,
+    // Forwarded whenever the history recorded one, which the generation
+    // before this one already did. Tying it to the `matches` branch dropped it
+    // from those histories and took the ownership guard off their close; only
+    // the OLDEST generation recorded no claim at all, and for those there is
+    // nothing to forward.
+    ...pollClaimOf(scan),
     ...(scan.evidenceWatermark === undefined
       ? {}
       : { evidenceWatermark: scan.evidenceWatermark }),
@@ -162,16 +308,29 @@ export async function scoutPostMatchDiscoveryV2Workflow(
  */
 async function processMatchAsChild(
   stage: ScoutStage,
-  riotMatchId: RiotMatchId,
+  match: ScoutDiscoveredMatchV2Ref,
 ): Promise<boolean> {
   try {
     const child = await startChild(scoutMatchProcessingV2Workflow, {
-      workflowId: scoutMatchProcessingV2WorkflowId(stage, riotMatchId),
+      workflowId: scoutMatchProcessingV2WorkflowId(stage, match.riotMatchId),
       workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
       taskQueue: scoutTaskQueues(stage).workflow,
       parentClosePolicy: "ABANDON",
       args: [
-        scoutMatchProcessingV2InputCodec.serialize({ stage, riotMatchId }),
+        scoutMatchProcessingV2InputCodec.serialize({
+          stage,
+          riotMatchId: match.riotMatchId,
+          // Both omitted on a pre-change history. The input makes them
+          // optional and the child handles their absence explicitly: the
+          // source precondition is skipped, and the delivery mode is taken
+          // from the observation already standing for the match.
+          ...(match.sourcePuuid === undefined
+            ? {}
+            : { sourcePuuid: match.sourcePuuid }),
+          ...(match.deliveryMode === undefined
+            ? {}
+            : { deliveryMode: match.deliveryMode }),
+        }),
       ],
     });
     await child.result();
@@ -196,14 +355,17 @@ async function processMatchAsChild(
  * stage receipt carry the same `ScoutDurableCommitV2`, and the decision taken
  * over it is identical.
  *
- * Two overlapping archives of the SAME bytes can reach here today, because the
- * raw-archive evidence includes `capturedAt`, which is stamped at put time.
- * That benign race now fails loudly rather than silently, and it self-heals:
- * the next attempt read-gates on the standing receipt and reports the match as
- * already archived without writing anything. Taking `capturedAt` out of the
- * evidence is the real fix and belongs to the receipted door, under a
- * coordinated evidence version bump — beta already holds rows written the old
- * way.
+ * A conflict here is never the system racing itself. The raw-archive evidence
+ * names the artifact by identity alone — kind, key, digest, bytes, content
+ * type — with the capture instant kept as the receipt's own `recordedAt`, so
+ * two attestations of the same bytes agree however far apart they were
+ * stamped (evidence version 2 in `report-lake/durable-receipts.ts`; the
+ * version-1 rows beta holds are read as version 1 wrote them). And the door
+ * answers a rival writer from the standing receipt under its fence, so a
+ * conflict that survives both is genuinely different bytes attested under one
+ * identity. It self-heals only in the sense that the next attempt read-gates
+ * on whichever receipt stands; the disagreement itself is a person's to look
+ * at.
  */
 function assertCommitsUncontested(
   riotMatchId: RiotMatchId,
@@ -312,6 +474,39 @@ async function attestPhases(
 }
 
 /**
+ * Commit the observation this run needs, carrying whatever its starter knew.
+ *
+ * `sourcePuuid` and `deliveryMode` are spread only when present because the
+ * envelope is strict and their ABSENCE is meaningful: a reconciliation restart
+ * has neither, and the Activity answers each from the standing observation
+ * rather than inventing one. Extracted from the core so the two conditional
+ * spreads do not spend the core's complexity budget.
+ */
+async function commitObservation(
+  activities: ReturnType<typeof realtimeV2Activities>,
+  ref: { stage: ScoutStage; riotMatchId: RiotMatchId },
+  input: {
+    sourcePuuid?: LeaguePuuid | undefined;
+    deliveryMode?: MatchDeliveryMode | undefined;
+  },
+): Promise<{
+  owner: PipelineOwner;
+  policy: MatchProcessingPolicy;
+  deliveryMode: MatchDeliveryMode;
+}> {
+  setWorkflowPhase("**Phase:** committing the match observation");
+  return await activities.commitMatchObservationV2({
+    ...ref,
+    ...(input.sourcePuuid === undefined
+      ? {}
+      : { sourcePuuid: input.sourcePuuid }),
+    ...(input.deliveryMode === undefined
+      ? {}
+      : { deliveryMode: input.deliveryMode }),
+  });
+}
+
+/**
  * The per-match core, V2.
  *
  * Phases, in order: archive the raw artifacts, commit the observation, settle
@@ -333,6 +528,35 @@ async function attestPhases(
  * guarded by an at-most-once claim or is idempotent by construction, while a
  * run killed after the receipts skips them. The cursor advance is last because
  * it is what stops the match being rediscovered at all.
+ *
+ * ## Where this deliberately differs from v1
+ *
+ * v1 advances the account cursor INSIDE `withChallengeProgressionLock`, as the
+ * tail of its progression section. V2 does not, and the ruling was made on
+ * evidence rather than by omission. Three facts decided it. The phase order
+ * here runs tournament finalization and the stage receipts between
+ * progression and the cursor, and v1 itself finalizes tournaments before its
+ * lock so "a failure leaves the cursors in place"; advancing inside
+ * progression's fence would move the cursor past an unfinalized tournament
+ * match. A run that dies inside the fence after progression's receipt is
+ * reconciled on the next attempt by the fence's takeover probe, which
+ * completes the claim from the standing receipt WITHOUT re-running the
+ * effect — so an in-fence cursor advance would never run on that path and the
+ * separate Activity would be needed anyway. And the hazard v1's placement
+ * guards — an unconditional cursor write reordered by a rival — is closed
+ * here by `advanceAccountCursor`'s monotonic guard and by discovery running
+ * its children serially, while nothing under the progression lock reads the
+ * cursor. The cursor therefore stays the last Activity, after the receipts.
+ *
+ * v1 also refuses a match whose discovering account is no longer tracked
+ * (`ingestDiscoveredMatch`). V2's platform check is NOT equivalent — a
+ * deregistered source makes v1 refuse the match while V2 would process it for
+ * the remaining tracked participants, or with none — so the precondition is
+ * RESTORED rather than proven equivalent: discovery carries `sourcePuuid`
+ * into the input, and `commitMatchObservationV2` fails non-retryably before
+ * any effect unless that account is still tracked and played in the match.
+ * A run with no source — a reconciliation restart — resumes an observation
+ * that already passed the check when it was committed.
  */
 export async function scoutMatchProcessingV2Workflow(
   rawInput: ScoutMatchProcessingV2InputEnvelope,
@@ -372,21 +596,24 @@ export async function scoutMatchProcessingV2Workflow(
     receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.archive);
   }
 
-  let owner: PipelineOwner;
-  let policy: MatchProcessingPolicy;
-  if (
-    observed !== null &&
-    attested.has(SCOUT_V2_MATCH_RECEIPT_KINDS.observation)
-  ) {
-    owner = observed.owner;
-    policy = observed.policy;
-  } else {
-    setWorkflowPhase("**Phase:** committing the match observation");
-    const observation = await activities.commitMatchObservationV2(ref);
-    owner = observation.owner;
-    policy = observation.policy;
+  const resumable =
+    observed !== null && attested.has(SCOUT_V2_MATCH_RECEIPT_KINDS.observation)
+      ? observed
+      : null;
+  const observation =
+    resumable ?? (await commitObservation(activities, ref, input));
+  if (resumable === null) {
     receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.observation);
   }
+  const owner: PipelineOwner = observation.owner;
+  const policy: MatchProcessingPolicy = observation.policy;
+  // Whether this match is owed a public delivery. It is read from the durable
+  // observation on both paths — the resume point when one already stands, the
+  // commit's own read-back otherwise — and never from this run's input, so a
+  // restart that carries no mode cannot turn a silent backfill into an
+  // announcement, and a run that carried a disagreeing one has already failed
+  // in the commit rather than reaching here.
+  const deliveryMode: MatchDeliveryMode = observedDeliveryModeOf(observation);
 
   if (owner.kind !== "temporal-v2") {
     // Another pipeline holds this match. Capture and observation are
@@ -401,6 +628,7 @@ export async function scoutMatchProcessingV2Workflow(
       riotMatchId: input.riotMatchId,
       owner,
       policy,
+      deliveryMode,
       receiptKinds,
       childrenStarted: { notifications: 0, lakeProjections: 0 },
     });
@@ -454,6 +682,7 @@ export async function scoutMatchProcessingV2Workflow(
     riotMatchId: input.riotMatchId,
     owner,
     policy,
+    deliveryMode,
     receiptKinds,
     childrenStarted,
   });

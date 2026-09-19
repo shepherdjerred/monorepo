@@ -164,16 +164,36 @@ function timelineWriterRows(writers: TimelineRebuildWriters): number {
  * Both are day-resolution approximations of when the timeline was seen, which
  * is all this value is used for.
  */
-function timelineObservedAt(key: string, lastModified: Date | undefined): Date {
+function rawObjectObservedAt(
+  key: string,
+  lastModified: Date | undefined,
+): Date {
   if (lastModified !== undefined) return lastModified;
-  const keyDate = /games\/(\d{4})\/(\d{2})\/(\d{2})\//.exec(key);
+  const keyDate = /\/(\d{4})\/(\d{2})\/(\d{2})\//.exec(key);
   const year = keyDate?.at(1);
   const month = keyDate?.at(2);
   const day = keyDate?.at(3);
   if (year === undefined || month === undefined || day === undefined) {
-    throw new Error(`Timeline object key has no stable date: ${key}`);
+    throw new Error(`Raw object key has no stable date: ${key}`);
   }
   return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+}
+
+/**
+ * Newest first, with the key breaking ties.
+ *
+ * The tiebreak is what makes a rebuild reproducible: two objects S3 stamped
+ * at the same instant would otherwise be ordered by enumeration order, which
+ * is the very thing cutover deduplication exists to stop mattering.
+ */
+function newestFirst(
+  left: { key: string; observedAt: Date },
+  right: { key: string; observedAt: Date },
+): number {
+  return (
+    right.observedAt.getTime() - left.observedAt.getTime() ||
+    left.key.localeCompare(right.key)
+  );
 }
 
 /**
@@ -197,7 +217,7 @@ function timelineKeyMatchId(key: string): string {
  * set a query saw would depend on file order. Newest wins: a retry exists
  * because something about the first attempt was unsatisfactory.
  *
- * Ranking uses the same instant as {@link timelineObservedAt}, so an object S3
+ * Ranking uses the same instant as {@link rawObjectObservedAt}, so an object S3
  * gives no `LastModified` for is ranked by the day its key files it under
  * rather than being dropped. Ties break on the key so the result is a total
  * order and the rebuild is reproducible.
@@ -218,11 +238,7 @@ function dedupeTimelineCandidates(
       newestByMatch.set(matchId, candidate);
     }
   }
-  return [...newestByMatch.values()].toSorted(
-    (left, right) =>
-      right.observedAt.getTime() - left.observedAt.getTime() ||
-      left.key.localeCompare(right.key),
-  );
+  return [...newestByMatch.values()].toSorted(newestFirst);
 }
 
 /** Replay only already-retained timeline objects into the normalized lake. */
@@ -313,7 +329,7 @@ export async function populateTimelinesFromS3(options: {
     if (classifyRawObjectKey(ref.key) !== "timeline") continue;
     candidates.push({
       key: ref.key,
-      observedAt: timelineObservedAt(ref.key, ref.lastModified),
+      observedAt: rawObjectObservedAt(ref.key, ref.lastModified),
     });
   }
 
@@ -360,14 +376,27 @@ export async function populatePrematchFromS3(
         reportLakeCompactionSkippedTotal.inc({ table: "prematch" });
         continue;
       }
+      const stagingId = stagingIdForPrematch(
+        `${result.gameInfo.platformId}:${result.gameInfo.gameId.toString()}`,
+      );
+      // The cutover's duplicate, resolved. A game captured under the bare
+      // numeric key and recaptured under the platform-qualified one has TWO
+      // surviving objects, both valid snapshots of the same game; replaying
+      // both emits two row sets and which one a query sees depends on file
+      // order. Candidates arrive newest-first, so the first identity wins and
+      // the older spelling is passed over — the same newest-wins rule the
+      // timeline cutover uses.
+      //
+      // The identity comes from the PAYLOAD rather than the key, which is why
+      // this decides here and not in the enumeration: the two spellings share
+      // no key segment, and a bare `12345` does not say which platform it
+      // belongs to. That is exactly the ambiguity qualification removed, so
+      // grouping on the key would have to guess it back.
+      if (foldedIds.has(stagingId)) continue;
       for (const row of flattenPrematch(result.gameInfo, result.observedAt)) {
         writer.write(row);
       }
-      foldedIds.add(
-        stagingIdForPrematch(
-          `${result.gameInfo.platformId}:${result.gameInfo.gameId.toString()}`,
-        ),
-      );
+      foldedIds.add(stagingId);
     }
     options.onProgress?.({
       files: foldedIds.size + skipped,
@@ -376,6 +405,10 @@ export async function populatePrematchFromS3(
     });
   };
 
+  // Enumerate the whole prefix before fetching anything, as the timeline
+  // rebuild does, so the cutover's duplicates can be ordered against each
+  // other rather than raced. The listing is metadata-only.
+  const candidates: { key: string; observedAt: Date }[] = [];
   for await (const ref of enumerateRawObjects(
     client,
     bucket,
@@ -385,7 +418,17 @@ export async function populatePrematchFromS3(
     if (classifyRawObjectKey(ref.key) !== "prematch") {
       continue;
     }
-    batch.push({ key: ref.key, observedAt: ref.lastModified ?? new Date() });
+    candidates.push({
+      key: ref.key,
+      // Derived from the key when S3 supplies no LastModified, never from the
+      // current clock: a wall-clock fallback would rank every such object
+      // newest and make the rebuild's output depend on when it ran.
+      observedAt: rawObjectObservedAt(ref.key, ref.lastModified),
+    });
+  }
+
+  for (const candidate of candidates.toSorted(newestFirst)) {
+    batch.push(candidate);
     if (batch.length >= REBUILD_S3_CONCURRENCY) {
       await flush();
     }

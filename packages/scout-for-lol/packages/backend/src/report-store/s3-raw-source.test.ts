@@ -42,8 +42,23 @@ describe("deterministic key builders (must mirror the live write paths)", () => 
   });
 
   test("prematch key mirrors storage/s3-prematch generatePrematchS3Key", () => {
-    expect(prematchObjectKey("456", keyDate)).toBe(
-      "prematch/2026/07/12/456/spectator-data.json",
+    expect(prematchObjectKey("NA1_456", keyDate)).toBe(
+      "prematch/2026/07/12/NA1_456/spectator-data.json",
     );
+  });
+
+  test.each([
+    {
+      spelling: "platform-qualified",
+      key: "prematch/2026/07/12/NA1_456/spectator-data.json",
+    },
+    {
+      spelling: "pre-qualification numeric",
+      key: "prematch/2026/07/12/456/spectator-data.json",
+    },
+  ])("classifies the $spelling prematch key as prematch", ({ key }) => {
+    // Both spellings exist in the store, and the classifier must not care
+    // which one it is looking at: identity comes from the payload.
+    expect(classifyRawObjectKey(key)).toBe("prematch");
   });
 });
