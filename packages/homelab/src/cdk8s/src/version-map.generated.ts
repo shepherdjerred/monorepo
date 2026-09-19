@@ -73,6 +73,8 @@ export const VersionMapSchema = z
     "oven/bun": z.string(),
     "pinchtab/pinchtab": z.string(),
     "agent-stack-k8s": z.string(),
+    "woodpeckerci/woodpecker-server": z.string(),
+    "woodpeckerci/woodpecker-agent": z.string(),
     "ducktors/turborepo-remote-cache": z.string(),
     kueue: z.string(),
     "tonistiigi/binfmt": z.string(),
