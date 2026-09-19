@@ -10,6 +10,9 @@ export const MANAGED_NAMESPACES = [
   "trmnl-dashboard",
   "temporal",
   "alert-dashboard",
+  "the-storm",
+  "the-storm-companion",
+  "storm",
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
@@ -20,43 +23,43 @@ export const SCOUT_FLAG_KEYS = [
   "ai_reviews_enabled",
   "betting_enabled",
   "betting_player_bet_outcome_dm_enabled",
-  "bucks_dares_enabled",
-  "dare_v2",
-  "bucks_transfers_enabled",
-  "dare_extended_contracts_enabled",
-  "dare_notifications_enabled",
-  "scoutql_relational_enabled",
   "betting_settlement_dm_enabled",
-  "competition_builder_v2_enabled",
-  "custom_nights_enabled",
-  "mvp_votes_enabled",
-  "hall_of_fame_enabled",
+  "bucks_dares_enabled",
+  "bucks_transfers_enabled",
   "challenge_runs_enabled",
   "clash_surface",
-  "duels_enabled",
+  "competition_builder_v2_enabled",
+  "custom_nights_enabled",
+  "dare_extended_contracts_enabled",
+  "dare_notifications_enabled",
+  "dare_v2",
   "debug",
-  "initial_match_history_import_enabled",
-  "scout-consumer-player-profiles-enabled",
-  "scout_client_ingestion",
-  "explore_on_demand_riot_enabled",
-  "voice_assistant_enabled",
-  "feature_tips_enabled",
-  "scout-betting-parlay-ai-model",
-  "scout-bucks-ask-model",
-  "scout-explore-model",
-  "scout-explore-quota-limits",
-  "scout-report-ai-model",
-  "scout-feature-tip-percent",
-  "scout-feature-tip-cooldown-hours",
-  "scout-temporal-call-graph-tracing",
+  "duels_enabled",
   "explore-guild-allowlist",
   "explore_creation_enabled",
+  "explore_on_demand_riot_enabled",
+  "feature_tips_enabled",
+  "hall_of_fame_enabled",
+  "initial_match_history_import_enabled",
+  "llm-daily-token-budget",
+  "llm-hourly-token-budget",
+  "mvp_votes_enabled",
+  "scout-betting-parlay-ai-model",
+  "scout-bucks-ask-model",
+  "scout-consumer-player-profiles-enabled",
+  "scout-explore-model",
+  "scout-explore-quota-limits",
+  "scout-feature-tip-cooldown-hours",
+  "scout-feature-tip-percent",
+  "scout-report-ai-model",
+  "scout-temporal-call-graph-tracing",
+  "scout_client_ingestion",
   "scout_operations_console_enabled",
   "scout_v2_postmatch_ownership_enabled",
   "scout_v2_prematch_ownership_enabled",
   "scout_v2_progression_notifications_enabled",
-  "llm-daily-token-budget",
-  "llm-hourly-token-budget",
+  "scoutql_relational_enabled",
+  "voice_assistant_enabled",
 ] as const;
 
 export type ScoutFlagKey = (typeof SCOUT_FLAG_KEYS)[number];
@@ -67,57 +70,57 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "ai_reviews_enabled",
   "betting_enabled",
   "betting_player_bet_outcome_dm_enabled",
-  "bucks_dares_enabled",
-  "dare_v2",
-  "bucks_transfers_enabled",
-  "dare_extended_contracts_enabled",
-  "dare_notifications_enabled",
-  "scoutql_relational_enabled",
   "betting_settlement_dm_enabled",
-  "competition_builder_v2_enabled",
-  "custom_nights_enabled",
-  "mvp_votes_enabled",
-  "hall_of_fame_enabled",
+  "bucks_dares_enabled",
+  "bucks_transfers_enabled",
   "challenge_runs_enabled",
   "clash_surface",
-  "duels_enabled",
+  "competition_builder_v2_enabled",
+  "custom_nights_enabled",
+  "dare_extended_contracts_enabled",
+  "dare_notifications_enabled",
+  "dare_v2",
   "debug",
-  "initial_match_history_import_enabled",
-  "scout-consumer-player-profiles-enabled",
-  "scout_client_ingestion",
-  "explore_on_demand_riot_enabled",
-  "voice_assistant_enabled",
-  "feature_tips_enabled",
-  "scout-temporal-call-graph-tracing",
+  "duels_enabled",
   "explore_creation_enabled",
+  "explore_on_demand_riot_enabled",
+  "feature_tips_enabled",
+  "hall_of_fame_enabled",
+  "initial_match_history_import_enabled",
+  "mvp_votes_enabled",
+  "scout-consumer-player-profiles-enabled",
+  "scout-temporal-call-graph-tracing",
+  "scout_client_ingestion",
   "scout_operations_console_enabled",
   "scout_v2_postmatch_ownership_enabled",
   "scout_v2_prematch_ownership_enabled",
   "scout_v2_progression_notifications_enabled",
+  "scoutql_relational_enabled",
+  "voice_assistant_enabled",
 ] as const;
 
 export type ScoutBooleanFlagKey = (typeof SCOUT_BOOLEAN_FLAG_KEYS)[number];
 
 export const SCOUT_VARIANT_FLAG_KEYS = [
+  "explore-guild-allowlist",
+  "llm-daily-token-budget",
+  "llm-hourly-token-budget",
   "scout-betting-parlay-ai-model",
   "scout-bucks-ask-model",
   "scout-explore-model",
   "scout-explore-quota-limits",
-  "scout-report-ai-model",
-  "scout-feature-tip-percent",
   "scout-feature-tip-cooldown-hours",
-  "explore-guild-allowlist",
-  "llm-daily-token-budget",
-  "llm-hourly-token-budget",
+  "scout-feature-tip-percent",
+  "scout-report-ai-model",
 ] as const;
 
 export type ScoutVariantFlagKey = (typeof SCOUT_VARIANT_FLAG_KEYS)[number];
 
 export const BIRMEL_FLAG_KEYS = [
   "birmel-activity-tracking-enabled",
+  "birmel-agent-auxiliary-timeout-ms",
   "birmel-agent-max-steps",
   "birmel-agent-response-timeout-ms",
-  "birmel-agent-auxiliary-timeout-ms",
   "birmel-birthdays-enabled",
   "birmel-daily-posts-enabled",
   "birmel-elections-enabled",
@@ -152,9 +155,9 @@ export const BIRMEL_BOOLEAN_FLAG_KEYS = [
 export type BirmelBooleanFlagKey = (typeof BIRMEL_BOOLEAN_FLAG_KEYS)[number];
 
 export const BIRMEL_VARIANT_FLAG_KEYS = [
+  "birmel-agent-auxiliary-timeout-ms",
   "birmel-agent-max-steps",
   "birmel-agent-response-timeout-ms",
-  "birmel-agent-auxiliary-timeout-ms",
   "birmel-llm-classifier-model",
   "birmel-llm-embedding-model",
   "birmel-llm-image-model",
@@ -173,10 +176,10 @@ export type BirmelVariantFlagKey = (typeof BIRMEL_VARIANT_FLAG_KEYS)[number];
 export const STREAMBOT_FLAG_KEYS = [
   "player-card-enabled",
   "streambot-assistant-v2-enabled",
-  "streambot-music-over-voice-enabled",
   "streambot-history-enabled",
   "streambot-sports-streaming-enabled",
   "streambot-idle-timeout-seconds",
+  "streambot-music-over-voice-enabled",
   "streambot-player-card-repost-after-messages",
   "streambot-player-card-tick-ms",
   "streambot-playlist-limit",
@@ -193,9 +196,9 @@ export type StreambotFlagKey = (typeof STREAMBOT_FLAG_KEYS)[number];
 export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "player-card-enabled",
   "streambot-assistant-v2-enabled",
-  "streambot-music-over-voice-enabled",
   "streambot-history-enabled",
   "streambot-sports-streaming-enabled",
+  "streambot-music-over-voice-enabled",
   "streambot-reconnect-enabled",
   "streambot-subtitles-include-auto-generated",
   "subtitles-enabled",
@@ -301,6 +304,64 @@ export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [] as const;
 export type AlertDashboardVariantFlagKey =
   (typeof ALERT_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
+export const THE_STORM_FLAG_KEYS = [
+  "the-storm-crier-enabled",
+  "the-storm-merchant-enabled",
+] as const;
+
+export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
+
+export const THE_STORM_BOOLEAN_FLAG_KEYS = [
+  "the-storm-crier-enabled",
+  "the-storm-merchant-enabled",
+] as const;
+
+export type TheStormBooleanFlagKey =
+  (typeof THE_STORM_BOOLEAN_FLAG_KEYS)[number];
+
+export const THE_STORM_VARIANT_FLAG_KEYS = [] as const;
+
+export type TheStormVariantFlagKey =
+  (typeof THE_STORM_VARIANT_FLAG_KEYS)[number];
+
+export const THE_STORM_COMPANION_FLAG_KEYS = [
+  "the-storm-companion-pilot-enabled",
+] as const;
+
+export type TheStormCompanionFlagKey =
+  (typeof THE_STORM_COMPANION_FLAG_KEYS)[number];
+
+export const THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS = [
+  "the-storm-companion-pilot-enabled",
+] as const;
+
+export type TheStormCompanionBooleanFlagKey =
+  (typeof THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS)[number];
+
+export const THE_STORM_COMPANION_VARIANT_FLAG_KEYS = [] as const;
+
+export type TheStormCompanionVariantFlagKey =
+  (typeof THE_STORM_COMPANION_VARIANT_FLAG_KEYS)[number];
+
+export const STORM_FLAG_KEYS = [
+  "storm-brain-classify-enabled",
+  "storm-brain-triage-enabled",
+  "storm-brain-model",
+] as const;
+
+export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
+
+export const STORM_BOOLEAN_FLAG_KEYS = [
+  "storm-brain-classify-enabled",
+  "storm-brain-triage-enabled",
+] as const;
+
+export type StormBooleanFlagKey = (typeof STORM_BOOLEAN_FLAG_KEYS)[number];
+
+export const STORM_VARIANT_FLAG_KEYS = ["storm-brain-model"] as const;
+
+export type StormVariantFlagKey = (typeof STORM_VARIANT_FLAG_KEYS)[number];
+
 export const MANAGED_FLAG_KEYS = [
   ...SCOUT_FLAG_KEYS,
   ...BIRMEL_FLAG_KEYS,
@@ -309,6 +370,9 @@ export const MANAGED_FLAG_KEYS = [
   ...TRMNL_DASHBOARD_FLAG_KEYS,
   ...TEMPORAL_FLAG_KEYS,
   ...ALERT_DASHBOARD_FLAG_KEYS,
+  ...THE_STORM_FLAG_KEYS,
+  ...THE_STORM_COMPANION_FLAG_KEYS,
+  ...STORM_FLAG_KEYS,
 ] as const;
 
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
@@ -321,6 +385,9 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS,
   ...TEMPORAL_BOOLEAN_FLAG_KEYS,
   ...ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS,
+  ...THE_STORM_BOOLEAN_FLAG_KEYS,
+  ...THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS,
+  ...STORM_BOOLEAN_FLAG_KEYS,
 ] as const;
 
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
@@ -333,6 +400,9 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   ...TRMNL_DASHBOARD_VARIANT_FLAG_KEYS,
   ...TEMPORAL_VARIANT_FLAG_KEYS,
   ...ALERT_DASHBOARD_VARIANT_FLAG_KEYS,
+  ...THE_STORM_VARIANT_FLAG_KEYS,
+  ...THE_STORM_COMPANION_VARIANT_FLAG_KEYS,
+  ...STORM_VARIANT_FLAG_KEYS,
 ] as const;
 
 export type ManagedVariantFlagKey = (typeof MANAGED_VARIANT_FLAG_KEYS)[number];
