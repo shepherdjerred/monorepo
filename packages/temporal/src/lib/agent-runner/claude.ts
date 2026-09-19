@@ -311,6 +311,9 @@ export async function runClaudeAgentTurn(
       },
     );
 
+    // Iterating the SDK stream submits the provider request. Any failure from
+    // this point may follow acceptance even when no output message arrives.
+    state.generationStarted = true;
     for await (const message of messages) {
       handleMessage({ run: input, message, tokens, progress, state });
     }
