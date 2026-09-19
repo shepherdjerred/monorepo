@@ -226,8 +226,9 @@ async function registerIdempotently(
     return await operations.register(client, registrationConfig);
   } catch (error: unknown) {
     const raced = await operations.get(client, config.chatId);
-    if (raced === undefined || !requestedConfigMatches(raced.config, config)) {
-      throw error;
+    if (raced === undefined) throw error;
+    if (!requestedConfigMatches(raced.config, config)) {
+      throw new AgentChatRegistrationConflictError(config.chatId);
     }
     return raced;
   }
