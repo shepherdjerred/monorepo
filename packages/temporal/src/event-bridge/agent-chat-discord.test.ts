@@ -16,6 +16,7 @@ import {
 
 const NOW = "2026-09-14T22:00:00.000Z";
 const INTERACTION_ID = "123456789012345678";
+const INTERACTION_TIMESTAMP = "2015-12-07T16:13:12.216Z";
 const CHANNEL_ID = "223456789012345678";
 const OWNER_ID = "323456789012345678";
 const ENTRY: AgentChatCatalogEntry = {
@@ -248,6 +249,7 @@ describe("agent chat Discord ingress", () => {
         chatId: "scheduled-chat",
         channelId: CHANNEL_ID,
         prompt: "Follow that thread.",
+        submittedAt: INTERACTION_TIMESTAMP,
       }),
     );
     expect(deps.resolve).not.toHaveBeenCalled();
@@ -256,7 +258,7 @@ describe("agent chat Discord ingress", () => {
       expect.anything(),
       { kind: "discord", channelId: CHANNEL_ID },
       "scheduled-chat",
-      expect.any(String),
+      INTERACTION_TIMESTAMP,
     );
     expect(vi.mocked(deps.start).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(deps.bind).mock.invocationCallOrder[0] ?? 0,
