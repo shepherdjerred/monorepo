@@ -4,6 +4,9 @@ import {
   type ImessageCommand,
 } from "#shared/agent/agent-chat-imessage.ts";
 
+// BlueBubbles/macOS chat.db uses 43 for groups and 45 for direct messages.
+const BLUEBUBBLES_DIRECT_CHAT_STYLE = 45;
+
 export const BlueBubblesMessageSchema = z.object({
   originalROWID: z.number().int().positive(),
   guid: z.string().min(1).max(200),
@@ -54,7 +57,7 @@ export function blueBubblesCommand(
     return;
   const chat = message.chats.length === 1 ? message.chats[0] : undefined;
   // A group can expose agent output to non-owners; only the owner's direct conversations are accepted.
-  if (chat?.style !== 45) return;
+  if (chat?.style !== BLUEBUBBLES_DIRECT_CHAT_STYLE) return;
   return {
     messageId: message.guid,
     conversationId: chat.guid,

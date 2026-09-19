@@ -59,7 +59,7 @@ describe("BlueBubbles message normalization", () => {
     { text: " " },
     { itemType: 1 },
     { associatedMessageType: 2000 },
-    { chats: [{ guid: "group", style: 43 }] },
+    { chats: [{ guid: "group-style-43", style: 43 }] },
     { chats: [] },
     { chats: [...MESSAGE.chats, ...MESSAGE.chats] },
   ])(
