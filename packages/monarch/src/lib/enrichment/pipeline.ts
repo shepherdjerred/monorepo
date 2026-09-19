@@ -75,9 +75,17 @@ export function unreachableCounts(
   for (const [key, transactions] of deepPathBuckets(separated)) {
     counts[key] = {
       split: transactions.filter((t) => t.isSplitTransaction).length,
-      movement: transactions.filter(
-        (t) => !t.isSplitTransaction && MONEY_MOVEMENT.has(t.category.name),
-      ).length,
+      // Money movement is unreachable everywhere except the brokerage path,
+      // where a transfer is precisely what the vendor documents: the export
+      // names the sale that funded it. Excluding those would report seven
+      // matches against a total of one.
+      movement:
+        key === "brokerage"
+          ? 0
+          : transactions.filter(
+              (t) =>
+                !t.isSplitTransaction && MONEY_MOVEMENT.has(t.category.name),
+            ).length,
     };
   }
   return counts;

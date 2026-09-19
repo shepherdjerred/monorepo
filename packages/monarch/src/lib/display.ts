@@ -79,7 +79,7 @@ export function displayEnrichmentStats(
     ].filter((r) => r !== "");
     const note = reasons.length > 0 ? ` — ${reasons.join(", ")}` : "";
     console.log(
-      `  ${padRight(name, 8)} ${String(rate.matched)}/${String(eligible)} matched (${pct}%)${note}`,
+      `  ${padRight(name, 9)} ${String(rate.matched)}/${String(eligible)} matched (${pct}%)${note}`,
     );
   }
 }
