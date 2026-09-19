@@ -6,6 +6,7 @@ import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 import { resumeSteps } from "#src/pipeline/lanes/resume.ts";
 import { trmnlSteps } from "#src/pipeline/lanes/trmnl.ts";
 import { tofuPlanSteps } from "#src/pipeline/lanes/tofu.ts";
+import { playwrightSteps } from "#src/pipeline/lanes/playwright.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -33,7 +34,7 @@ const UV_CACHE = {
  *
  * PORT STATUS: `verify`, the security scanners, the alert-dashboard SQLite
  * lane, the resume build, the TRMNL lanes, and the OpenTofu plan lanes are
- * complete. The remaining lanes (images, tofu, playwright,
+ * complete, as are the Playwright suites. The remaining lanes (images, tofu, playwright,
  * release, sites, macOS native) are not yet ported; until they are, this
  * service generates a strictly smaller graph than Buildkite runs, so it must
  * not be made the required status check.
@@ -114,5 +115,6 @@ export function buildPipelineSteps({
     ...resumeSteps(images),
     ...trmnlSteps(images),
     ...tofuPlanSteps(images),
+    ...playwrightSteps(images),
   ];
 }

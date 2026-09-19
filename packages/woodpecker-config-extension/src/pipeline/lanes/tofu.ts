@@ -90,6 +90,20 @@ const PLAN_STACKS = [
   "cloudflare",
 ] as const;
 
+/**
+ * Platform stacks: credentials for external AI and messaging control planes.
+ *
+ * Only validated on a pull request. Their applies are main-only and share a
+ * serialization group, so they live with the release chain.
+ */
+const PLATFORM_STACKS = [
+  "openai",
+  "anthropic",
+  "discord",
+  "openrouter",
+  "cloudflare-tokens",
+] as const;
+
 const TOFU_CHANGED = {
   include: [
     ...GLOBAL_SELECTOR_INPUTS,
@@ -110,8 +124,65 @@ function tofuCommands(stack: string, action: "plan" | "apply"): string[] {
   ];
 }
 
+/**
+ * Additional pull-request lanes that validate rather than plan.
+ *
+ * `validate` needs no provider credentials -- it checks configuration shape,
+ * not live state -- so these carry only the download token and, for posthog,
+ * its state keys.
+ */
+function tofuValidateSteps(images: CiImages): CiStep[] {
+  return [
+    {
+      key: "tofu-platforms-validate",
+      label: "tofu validate platforms",
+      image: images.base,
+      commands: [
+        ". .buildkite/scripts/toolchain.sh",
+        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+        `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
+        `for stack in ${PLATFORM_STACKS.join(" ")}; do`,
+        `  flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts "$stack" validate`,
+        "done",
+      ],
+      timeoutMinutes: 30,
+      resources: MEDIUM_TIER,
+      events: ["pull_request"],
+      changed: TOFU_CHANGED,
+      secrets: [GITHUB_DOWNLOAD],
+      volumes: [TOFU_PLUGIN_CACHE],
+    },
+    {
+      key: "tofu-posthog-plan",
+      label: "tofu validate posthog",
+      image: images.base,
+      commands: [
+        ". .buildkite/scripts/toolchain.sh",
+        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+        `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
+        `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts posthog validate`,
+      ],
+      timeoutMinutes: 60,
+      resources: MEDIUM_TIER,
+      events: ["pull_request"],
+      // The Buildkite lane re-derived a merge base and re-ran the changed-file
+      // check inside the step. Selection now happens before generation, so the
+      // guard is the step's changed-path list.
+      changed: {
+        include: [
+          ...GLOBAL_SELECTOR_INPUTS,
+          "packages/homelab/scripts/tofu/**",
+          "packages/homelab/src/tofu/posthog/**",
+        ],
+      },
+      secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND],
+      volumes: [TOFU_PLUGIN_CACHE],
+    },
+  ];
+}
+
 export function tofuPlanSteps(images: CiImages): CiStep[] {
-  return PLAN_STACKS.map((stack, index) => {
+  const planned: CiStep[] = PLAN_STACKS.map((stack, index) => {
     const previous = PLAN_STACKS[index - 1];
     return {
       key: `tofu-plan-${stack}`,
@@ -133,4 +204,5 @@ export function tofuPlanSteps(images: CiImages): CiStep[] {
         : { dependsOn: [`tofu-plan-${previous}`] }),
     };
   });
+  return [...planned, ...tofuValidateSteps(images)];
 }

@@ -366,6 +366,25 @@ describe("ported lanes", () => {
     expect(envs("tofu-plan-arr")).toContain("SEAWEEDFS_STATE_ACCESS_KEY_ID");
   });
 
+  test("playwright depends on verify and uses the browser image", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const playwright = steps.find((s) => s.key === "playwright-e2e");
+    expect(playwright?.dependsOn).toEqual(["verify"]);
+    expect(playwright?.image).toBe(IMAGES.playwright);
+    // Selecting it must pull verify in, or it could never become runnable.
+    expect(keysFor(["packages/sjer.red/src/pages/index.astro"])).toEqual(
+      expect.arrayContaining(["verify", "playwright-e2e"]),
+    );
+  });
+
+  test("tofu validate lanes carry no provider credentials", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const envs = (
+      steps.find((s) => s.key === "tofu-platforms-validate")?.secrets ?? []
+    ).map((g) => g.env);
+    expect(envs).toEqual(["GITHUB_DOWNLOAD_TOKEN"]);
+  });
+
   test("alert dashboard runs for its own package", () => {
     expect(keysFor(["packages/alert-dashboard/src/db.ts"])).toContain(
       "alert-dashboard-sqlite",
