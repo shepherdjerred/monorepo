@@ -1,8 +1,10 @@
 import {
+  ActivityFailure,
   ApplicationFailure,
   condition,
   proxyActivities,
   setHandler,
+  sleep,
 } from "@temporalio/workflow";
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
@@ -37,6 +39,15 @@ const dispatchActivities = proxyActivities<AgentChatReceiptActivities>({
 type ReceiptOutcome =
   | { status: "completed"; result: AgentChatTurnResult }
   | { status: "failed"; message: string };
+
+function isSettledTurnFailure(error: unknown): boolean {
+  if (!(error instanceof ActivityFailure)) return false;
+  const cause = error.cause;
+  return (
+    cause instanceof ApplicationFailure &&
+    cause.type === "AgentChatTurnPreviouslyFailed"
+  );
+}
 
 async function executeReceipt(
   input: AgentChatReceiptInput,
@@ -79,13 +90,22 @@ export async function agentChatTurnReceiptWorkflow(
     }
     return outcome.result;
   });
-  try {
-    outcome = { status: "completed", result: await executeReceipt(input) };
-  } catch (error: unknown) {
-    outcome = {
-      status: "failed",
-      message: boundAgentChatFailureMessage(collectErrorMessages(error)),
-    };
+  while (outcome === undefined) {
+    try {
+      outcome = { status: "completed", result: await executeReceipt(input) };
+    } catch (error: unknown) {
+      if (isSettledTurnFailure(error)) {
+        outcome = {
+          status: "failed",
+          message: boundAgentChatFailureMessage(collectErrorMessages(error)),
+        };
+      } else {
+        // The pinned update ID makes another dispatch safe after transport,
+        // Temporal-client, or rollover exhaustion. Keep the durable receipt
+        // retryable until the owner confirms a terminal turn outcome.
+        await sleep("30 seconds");
+      }
+    }
   }
   // Remain open: completed-history retention must not expire idempotency receipts.
   await condition(() => false);
