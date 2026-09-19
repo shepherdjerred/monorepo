@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
-import { lastSuccessfulCommit } from "#src/woodpecker-api.ts";
+import {
+  lastCommitWithSuccessfulWorkflows,
+  lastSuccessfulCommit,
+} from "#src/woodpecker-api.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
 
@@ -94,5 +97,86 @@ describe("changed base injection", () => {
     expect(parsed).toMatchObject({
       steps: [{ environment: { CI_CHANGED_BASE: "" } }],
     });
+  });
+});
+
+function server(
+  pipelines: { number: number; commit: string }[],
+  workflows: Record<number, { name: string; state: string }[]>,
+) {
+  return async (input: string | URL | Request) => {
+    const url = new URL(input instanceof Request ? input.url : input);
+    const match = /\/pipelines\/(?<number>\d+)$/u.exec(url.pathname);
+    const number = match?.groups?.["number"];
+    if (number === undefined) return jsonResponse(pipelines);
+    const parsed = Number(number);
+    return jsonResponse({
+      commit: pipelines.find((p) => p.number === parsed)?.commit ?? "unknown",
+      status: "success",
+      workflows: workflows[parsed] ?? [],
+    });
+  };
+}
+
+describe("last commit with successful workflows", () => {
+  const options = {
+    baseUrl: "https://woodpecker.example.com",
+    token: "t",
+  };
+
+  test("returns the newest commit where every named workflow succeeded", async () => {
+    const commit = await lastCommitWithSuccessfulWorkflows(
+      7,
+      "main",
+      ["images", "version-commit-back"],
+      {
+        ...options,
+        fetchImpl: server(
+          [
+            { number: 3, commit: "newest" },
+            { number: 2, commit: "older" },
+          ],
+          {
+            3: [{ name: "images", state: "success" }],
+            2: [
+              { name: "images", state: "success" },
+              { name: "version-commit-back", state: "success" },
+            ],
+          },
+        ),
+      },
+    );
+    // Pipeline 3 is newer but never pinned, so it cannot be the base.
+    expect(commit).toBe("older");
+  });
+
+  /**
+   * A pipeline can go green overall with these workflows skipped. Treating
+   * such a commit as the base would make the next build believe images exist
+   * for content that was never built.
+   */
+  test("ignores a green pipeline whose workflows were skipped", async () => {
+    const commit = await lastCommitWithSuccessfulWorkflows(
+      7,
+      "main",
+      ["images"],
+      {
+        ...options,
+        fetchImpl: server([{ number: 5, commit: "green" }], {
+          5: [{ name: "images", state: "skipped" }],
+        }),
+      },
+    );
+    expect(commit).toBeUndefined();
+  });
+
+  test("returns undefined when nothing qualifies", async () => {
+    const commit = await lastCommitWithSuccessfulWorkflows(
+      7,
+      "main",
+      ["images"],
+      { ...options, fetchImpl: server([], {}) },
+    );
+    expect(commit).toBeUndefined();
   });
 });
