@@ -62,7 +62,11 @@ export async function blueBubblesIngressWorkflow(
     }
     // Advance only after every qualifying command has been durably admitted.
     const progressed = batch.lastRowId > cursor.lastRowId;
-    cursor = { startedAt: batch.startedAt, lastRowId: batch.lastRowId };
+    cursor = {
+      startedAt: batch.startedAt,
+      initialized: batch.initialized,
+      lastRowId: batch.lastRowId,
+    };
     await sleep(progressed ? "1 second" : "30 seconds");
   }
   return await continueAsNew<typeof blueBubblesIngressWorkflow>(cursor);

@@ -49,14 +49,16 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
     const latestRowId = await initialBlueBubblesRowId();
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
+      initialized: true,
       lastRowId: Math.max(cursor.lastRowId, latestRowId),
       commands: [],
     });
   }
-  const initializing = cursor.lastRowId === 0;
+  const initializing = !cursor.initialized;
   if (initializing) {
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
+      initialized: true,
       lastRowId: await initialBlueBubblesRowId(),
       commands: [],
     });
@@ -93,6 +95,7 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   });
   return BlueBubblesPollResultSchema.parse({
     startedAt: cursor.startedAt,
+    initialized: true,
     lastRowId: batch.at(-1)?.originalROWID ?? cursor.lastRowId,
     commands,
   });

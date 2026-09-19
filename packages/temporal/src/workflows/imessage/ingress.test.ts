@@ -28,6 +28,7 @@ describe("BlueBubbles durable cursor", () => {
           lastCursor = cursor;
           return {
             startedAt: cursor.startedAt,
+            initialized: true,
             lastRowId: 2,
             commands:
               cursor.lastRowId === 0
@@ -69,7 +70,13 @@ describe("BlueBubbles durable cursor", () => {
           {
             workflowId: `bb-cursor-${crypto.randomUUID()}`,
             taskQueue: TASK_QUEUES.WORKFLOWS,
-            args: [{ startedAt: "2026-09-17T00:00:00.000Z", lastRowId: 0 }],
+            args: [
+              {
+                startedAt: "2026-09-17T00:00:00.000Z",
+                initialized: true,
+                lastRowId: 0,
+              },
+            ],
           },
         );
         const first = await handle.describe();
@@ -78,6 +85,7 @@ describe("BlueBubbles durable cursor", () => {
         const state = BlueBubblesCursorSchema.parse(lastCursor);
         expect(state).toEqual({
           startedAt: "2026-09-17T00:00:00.000Z",
+          initialized: true,
           lastRowId: 2,
         });
         const currentDescription = await current.describe();

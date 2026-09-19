@@ -4,7 +4,6 @@ import {
   bindAgentChat,
   getAgentChat,
   listAgentChats,
-  registerAgentChat,
   resolveAgentChatBinding,
 } from "#lib/agent-chat-client.ts";
 import {
@@ -53,7 +52,6 @@ export async function prepareImessageCommand(rawCommand: ImessageCommand) {
       return message(
         `Unknown chat: ${action.chatId}. Use /chats to list recent chats.`,
       );
-    await registerAgentChat(client, chat.config);
     await bindAgentChat(client, source, action.chatId, {
       updatedAt: input.submittedAt,
       sourceSequence: input.sourceSequence,
