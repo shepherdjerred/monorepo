@@ -9,16 +9,15 @@ import {
   type GateStatus,
 } from "#lib/review/harvest.ts";
 
-const JOB = "01a00a5b-1c30-4310-8a10-20ddaaddca65";
+/** Woodpecker restarts at pipeline granularity, so the retry unit is a number. */
+const JOB = "9633";
 const failed: GateStatus = {
   state: "failure",
-  targetUrl: `https://buildkite.com/sjerred/monorepo/builds/9633#${JOB}`,
+  targetUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${JOB}`,
 };
 
 test("declares the required Codex gate context", () => {
-  expect(CODEX_GATE_CONTEXT).toBe(
-    "buildkite/monorepo/pr/robot-face-codex-review-gate-required",
-  );
+  expect(CODEX_GATE_CONTEXT).toBe("ci/woodpecker/pr/codex-review-gate");
   expect(REQUIRED_REVIEW_GATES).toEqual([
     { providerId: "codex", context: CODEX_GATE_CONTEXT },
   ]);
