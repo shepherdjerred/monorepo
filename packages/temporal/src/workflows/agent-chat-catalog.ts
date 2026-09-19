@@ -416,19 +416,19 @@ export async function agentChatCatalogWorkflow(
   setHandler(settleAgentChatTurnUpdate, (entry, turnCount, updatedAt) =>
     settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
   );
-  setHandler(registerAndBindAgentChatUpdate, (entry, binding, updatedAt) =>
+  setHandler(registerAndBindAgentChatUpdate, (entry, binding, update) =>
     registerAndBindAgentChatCatalogEntry(state, entry, binding, {
-      update: updatedAt,
+      update,
       sourceEpochTimestampOrdering: patched(
         SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
       ),
     }),
   );
-  setHandler(bindAgentChatUpdate, (binding, chatId, updatedAt) =>
+  setHandler(bindAgentChatUpdate, (binding, chatId, update) =>
     bind(state, {
       binding,
       chatId,
-      update: updatedAt,
+      update,
       sourceEpochTimestampOrdering: patched(
         SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
       ),
