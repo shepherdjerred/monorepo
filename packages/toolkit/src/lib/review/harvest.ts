@@ -12,8 +12,13 @@ import { z } from "zod";
 
 const GITHUB_API = "https://api.github.com";
 
-export const CODEX_GATE_CONTEXT =
-  "buildkite/monorepo/pr/robot-face-codex-review-gate-required";
+/**
+ * Status context the review gate posts.
+ *
+ * Woodpecker names a per-workflow status `ci/woodpecker/<event>/<workflow>`,
+ * so this follows the generated lane's key rather than a hand-written label.
+ */
+export const CODEX_GATE_CONTEXT = "ci/woodpecker/pr/codex-review-gate";
 
 /** The provider gate that must be harvested for a PR. */
 export const REQUIRED_REVIEW_GATES = [
@@ -37,24 +42,20 @@ export type GateStatus = {
 };
 
 /**
- * The Buildkite job id a gate status points at.
+ * The pipeline a gate status points at.
  *
- * Buildkite writes the job into the URL fragment (`…/builds/9633#<uuid>`), so
- * retrying the failed job — rather than rebuilding everything — means reading
- * it back out of there.
+ * Buildkite wrote the failed JOB into the URL fragment, so a retry could
+ * target that one job. Woodpecker links a status at `…/pipeline/<number>` and
+ * restarts at pipeline granularity, so this returns the pipeline number and
+ * the retry re-runs the gate rather than one job inside it.
  */
 export function jobIdFromTargetUrl(targetUrl: string | null): string | null {
   if (targetUrl === null) return null;
-  const fragment = targetUrl.split("#")[1];
-  if (fragment === undefined || fragment === "") return null;
-  // Matched as a UUID rather than as 36 hex-or-hyphen characters: the loose
-  // form accepted strings like 36 hyphens, and every non-null id here is
-  // reported as retryable and handed to `bk job retry`.
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(
-    fragment,
-  )
-    ? fragment
-    : null;
+  // Woodpecker links a status at .../pipeline/<number>, so the retry unit is
+  // the pipeline rather than one job inside it. Matched strictly: every
+  // non-null value here is reported as retryable and acted on.
+  const match = /\/pipeline\/(?<number>\d+)(?:$|[/?#])/u.exec(targetUrl);
+  return match?.groups?.["number"] ?? null;
 }
 
 /** The `rel="next"` URL of a GitHub `Link` header, or null on the last page. */

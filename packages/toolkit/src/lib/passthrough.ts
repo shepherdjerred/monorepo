@@ -1,6 +1,6 @@
 export const PASSTHROUGH_COMMANDS = [
   "gh",
-  "bk",
+  "woodpecker",
   "git-spice",
   "linear",
   "posthog",
@@ -60,15 +60,9 @@ export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
         ],
       },
     ],
-    [
-      "bk",
-      {
-        executable: "bk",
-        defaultEnvironment: [
-          { name: "BUILDKITE_ORGANIZATION_SLUG", value: "sjerred" },
-        ],
-      },
-    ],
+    // The CLI reads its server and token from the environment; both are
+    // operator-provided, so nothing is defaulted here.
+    ["woodpecker", { executable: "woodpecker-cli" }],
     ["git-spice", { executable: "git-spice" }],
     [
       "linear",
