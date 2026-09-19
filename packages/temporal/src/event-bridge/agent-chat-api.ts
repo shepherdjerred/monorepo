@@ -46,12 +46,20 @@ const CreateAgentChatSchema = z
     source: AgentChatBindingSchema,
     prompt: AgentChatPromptSchema.optional(),
     turnId: HttpAgentChatTurnIdSchema.optional(),
+    submittedAt: z.iso.datetime({ offset: true }).optional(),
     maxTurnsPerMessage: z.number().int().positive().max(100).default(24),
   })
   .refine((input) => input.prompt === undefined || input.turnId !== undefined, {
     message: "turnId is required when prompt is present",
     path: ["turnId"],
   })
+  .refine(
+    (input) => input.prompt === undefined || input.submittedAt !== undefined,
+    {
+      message: "submittedAt is required when prompt is present",
+      path: ["submittedAt"],
+    },
+  )
   .refine((input) => input.prompt !== undefined || input.chatId !== undefined, {
     message: "chatId is required when prompt is absent",
     path: ["chatId"],
@@ -314,7 +322,7 @@ export function buildAgentChatApiRoutes(
     }
     try {
       const input = CreateAgentChatSchema.parse(await parseBody(c.req.raw));
-      const timestamp = now();
+      const timestamp = input.submittedAt ?? now();
       const config = configForIngress(input, timestamp);
       if (input.prompt === undefined) {
         const entry = await registerIdempotently(
@@ -346,6 +354,17 @@ export function buildAgentChatApiRoutes(
             timestamp,
           ),
         }),
+      );
+      const entry = await registerIdempotently(
+        operations,
+        client.workflow,
+        existing?.config ?? config,
+      );
+      await operations.bind(
+        client.workflow,
+        input.source,
+        entry.config.chatId,
+        timestamp,
       );
       return c.json({ chatId: config.chatId, turn: receipt }, 202);
     } catch (error: unknown) {

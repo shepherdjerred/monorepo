@@ -3,6 +3,7 @@ import {
   AgentChatIdSchema,
   AgentChatPromptSchema,
   AgentChatProviderSchema,
+  type AgentChatConfig,
 } from "./agent-chat.ts";
 
 export const DISCORD_MESSAGE_LIMIT = 2000;
@@ -38,6 +39,33 @@ export const DiscordAgentChatCommandSchema = z.discriminatedUnion("kind", [
 export type DiscordAgentChatCommand = z.infer<
   typeof DiscordAgentChatCommandSchema
 >;
+export type DiscordAgentChatNewCommand = Extract<
+  DiscordAgentChatCommand,
+  { kind: "new" }
+>;
+
+export function discordAgentChatSource(command: DiscordAgentChatCommand) {
+  return {
+    kind: "discord" as const,
+    channelId: command.channelId,
+    ...(command.threadId === undefined ? {} : { threadId: command.threadId }),
+  };
+}
+
+export function discordAgentChatConfig(
+  command: DiscordAgentChatNewCommand,
+): AgentChatConfig {
+  const source = discordAgentChatSource(command);
+  return {
+    chatId: `chat-discord-${command.interactionId}`,
+    title: command.title,
+    provider: command.provider,
+    model: command.model,
+    origin: source,
+    createdAt: command.submittedAt,
+    maxTurnsPerMessage: 24,
+  };
+}
 
 export const DiscordAgentChatCommandResultSchema = z.strictObject({
   messages: z
