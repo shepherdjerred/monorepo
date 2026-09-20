@@ -1,7 +1,13 @@
 import type { Db } from "#src/database/index.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import type { MatchProcessingState } from "@scout-for-lol/domain/match-processing/states.ts";
-import { getProcessingState } from "#src/database/durable/observation-repository.ts";
+import type {
+  MatchDeliveryMode,
+  MatchProcessingState,
+} from "@scout-for-lol/domain/match-processing/states.ts";
+import {
+  getObservation,
+  getProcessingState,
+} from "#src/database/durable/observation-repository.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
@@ -35,6 +41,17 @@ import type { MatchTrackedAccountRecord } from "#src/database/durable/tracked-ac
  */
 export type MatchPipelineState = {
   readonly processing: MatchProcessingState;
+  /**
+   * Whether this match is owed a public delivery, as the first observer
+   * recorded it.
+   *
+   * A sibling of `processing` for the same reason the intents are: it is a
+   * column of the observation, not a state the domain machine transitions
+   * between, and a resumed run needs it in this same read — it is what tells a
+   * restart that carries no discovery pass behind it whether the match may
+   * announce itself at all.
+   */
+  readonly deliveryMode: MatchDeliveryMode;
   readonly intents: readonly MatchNotificationIntentRecord[];
   readonly trackedAccounts: readonly MatchTrackedAccountRecord[];
 };
@@ -55,9 +72,23 @@ export async function getMatchPipelineState(
   if (processing === null) {
     return null;
   }
-  const [intents, trackedAccounts] = await Promise.all([
+  const [observation, intents, trackedAccounts] = await Promise.all([
+    // Re-read rather than widen `MatchProcessingState`: the delivery mode is
+    // an observation column, and the point read runs beside the other two
+    // rather than after them.
+    getObservation(db, args),
     listIntentsForMatch(db, args),
     listTrackedAccounts(db, args),
   ]);
-  return { processing, intents, trackedAccounts };
+  if (observation === null) {
+    throw new Error(
+      `MatchObservation ${args.matchId} vanished between its processing state and its delivery mode`,
+    );
+  }
+  return {
+    processing,
+    deliveryMode: observation.deliveryMode,
+    intents,
+    trackedAccounts,
+  };
 }

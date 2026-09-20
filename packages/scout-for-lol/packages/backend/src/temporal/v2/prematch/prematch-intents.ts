@@ -17,6 +17,7 @@ import {
   deliveryIntentKey,
   prematchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
+import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filters.ts";
 import { ACTIVE_GAME_TTL_MS } from "#src/league/tasks/prematch/active-game-queries.ts";
@@ -99,7 +100,11 @@ export async function mintPrematchIntent(
   const key = NotificationIntentKeySchema.parse(
     deliveryIntentKey(prematchDeliveryKeyPrefix(args.matchId), args.channelId),
   );
-  if ((await getIntent(db, { intentKey: key })) !== null) return "existing";
+  const standing = await getIntent(db, { intentKey: key });
+  if (standing !== null) {
+    requireIntentMatches(standing, args.matchId, args.channelId);
+    return "existing";
+  }
 
   const commit = durableCommitV2(
     await upsertIntent(db, {
@@ -124,6 +129,34 @@ export async function mintPrematchIntent(
     `⚠️  Prematch intent ${key} was minted by another producer between this run's read and its write (${commit.reason}); the stored row stands`,
   );
   return "conflict";
+}
+
+/**
+ * Refuse to treat a standing row as this run's replay unless it IS this
+ * instruction.
+ *
+ * The key is derived from the match and the channel, so a row under it should
+ * carry exactly those — but the row's own columns are what every reader uses:
+ * `listIntentsForMatch` selects by the match column, and the notification
+ * child sends to the target column. A row under this key that named a
+ * different match would be accepted here as "already minted" and then never
+ * be found by the fan-out for this game, so the channel would silently never
+ * hear about it. That is a broken internal contract, not a state to reconcile,
+ * and it fails loudly. State progression is deliberately NOT checked: a row
+ * already `ready`, `sending` or `delivered` is this instruction further along.
+ */
+function requireIntentMatches(
+  standing: MatchNotificationIntentRecord,
+  matchId: RiotMatchId,
+  channelId: string,
+): void {
+  const target = standing.intent.target;
+  const sameTarget =
+    target.kind === "channel" ? target.channelId === channelId : false;
+  if (sameTarget && standing.matchId === matchId) return;
+  throw new Error(
+    `Prematch intent ${standing.intent.key} stands for ${standing.matchId} → ${target.kind === "channel" ? target.channelId : target.kind}, not for ${matchId} → ${channelId}; refusing to treat it as this game's instruction`,
+  );
 }
 
 /**

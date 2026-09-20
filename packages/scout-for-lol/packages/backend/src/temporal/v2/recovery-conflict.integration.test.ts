@@ -66,8 +66,12 @@ const { listReceipts } =
   await import("#src/database/durable/receipt-repository.ts");
 const { SCOUT_V2_RECOVERY_CONFLICT_RECEIPT_KIND } =
   await import("#src/temporal/v2/recovery-receipts.ts");
-const { buildReceipt, rawArchiveEvidenceCodec, rawArchiveReceiptKind } =
-  await import("#src/report-lake/durable-receipts.ts");
+const {
+  buildReceipt,
+  rawArchiveEvidenceCodec,
+  rawArchiveEvidenceOf,
+  rawArchiveReceiptKind,
+} = await import("#src/report-lake/durable-receipts.ts");
 const { processRecoveryPageV2, scanRecoveryPageV2 } =
   await import("#src/temporal/v2/recovery.ts");
 
@@ -98,7 +102,9 @@ test("names a conflicted match in the batch's audit trail", async () => {
     buildReceipt({
       matchId: CONFLICTED,
       kind: rawArchiveReceiptKind("match"),
-      evidence: rawArchiveEvidenceCodec.serialize(descriptorFor(CONFLICTED)),
+      evidence: rawArchiveEvidenceCodec.serialize(
+        rawArchiveEvidenceOf(descriptorFor(CONFLICTED)),
+      ),
       recordedAt: new Date("2026-09-11T09:30:00.000Z"),
     }),
   );

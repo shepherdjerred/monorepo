@@ -11,8 +11,29 @@ import {
 const logger = createLogger("storage-s3-prematch");
 
 /**
+ * The identity a prematch object is stored under: the platform-qualified game
+ * id, which is exactly the Riot match id MatchV5 later assigns.
+ *
+ * It is platform-qualified because a numeric game id is only unique per
+ * platform: two platforms can produce the same number on the same day, and a
+ * key built from the number alone would let the later capture overwrite the
+ * earlier platform's canonical bytes — while the advisory fence and the
+ * receipt, both keyed by the qualified id, saw two different artifacts and
+ * let both writes through. The object, the lock and the receipt now share one
+ * identity. Objects written before this qualification sit under the bare
+ * game id; `report-store/s3-raw-source.ts` reads both spellings.
+ */
+export function prematchObjectResourceId(
+  platformId: string,
+  gameId: number,
+): string {
+  return `${platformId}_${gameId.toString()}`;
+}
+
+/**
  * Generate S3 key for prematch data.
- * Pattern: prematch/{date}/{gameId}/{assetType}.{ext}
+ * Pattern: prematch/{date}/{resourceId}/{assetType}.{ext}, where the resource
+ * id is {@link prematchObjectResourceId}.
  */
 function generatePrematchS3Key(
   resourceId: string,
@@ -36,8 +57,8 @@ type SavePrematchToS3Config = {
   errorContext: string;
   /** Stable source timestamp for idempotent match-keyed assets. */
   keyDate?: Date;
-  /** Full natural identity when a numeric game ID is not globally unique. */
-  resourceId?: string;
+  /** The object's identity segment; see {@link prematchObjectResourceId}. */
+  resourceId: string;
   /** Cancels the upload and any retry still to come; see putContentAddressedObject. */
   abortSignal?: AbortSignal;
 };
@@ -79,7 +100,7 @@ export async function savePrematchToS3(
 
   const startTime = Date.now();
   const key = generatePrematchS3Key(
-    resourceId ?? gameIdStr,
+    resourceId,
     assetType,
     extension,
     keyDate ?? new Date(),

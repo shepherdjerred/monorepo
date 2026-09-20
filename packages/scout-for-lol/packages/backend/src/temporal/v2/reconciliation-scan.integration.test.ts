@@ -77,6 +77,7 @@ const {
   buildReceipt,
   lakeStagingReceiptKind,
   rawArchiveEvidenceCodec,
+  rawArchiveEvidenceOf,
   rawArchiveReceiptKind,
 } = await import("#src/report-lake/durable-receipts.ts");
 const { scanPipelineReconciliationPageV2 } =
@@ -282,7 +283,9 @@ async function seedLakeReceipts(
     buildReceipt({
       matchId,
       kind: rawArchiveReceiptKind("match"),
-      evidence: rawArchiveEvidenceCodec.serialize(descriptor),
+      evidence: rawArchiveEvidenceCodec.serialize(
+        rawArchiveEvidenceOf(descriptor),
+      ),
       recordedAt: AT,
     }),
   );

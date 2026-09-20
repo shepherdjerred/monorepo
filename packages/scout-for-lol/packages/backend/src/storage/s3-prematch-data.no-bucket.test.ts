@@ -47,9 +47,7 @@ describe("savePrematchDataToS3 without S3 bucket", () => {
       "skipped_no_bucket",
     );
 
-    const result = await savePrematchDataToS3(gameInfo.gameId, gameInfo, [
-      "Player",
-    ]);
+    const result = await savePrematchDataToS3(gameInfo, ["Player"]);
 
     expect(result).toEqual({ status: "skipped_no_bucket" });
 

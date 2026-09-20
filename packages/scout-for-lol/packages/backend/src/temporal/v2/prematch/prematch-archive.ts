@@ -41,12 +41,12 @@ import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch/prematc
  * result contract has no lake child to report. One prematch row set is also
  * not the hazard a full match projection is.
  *
- * Every write is gated on its own receipt read, because both evidence-bearing
- * receipts carry evidence a second attempt cannot reproduce: an
- * `ArtifactDescriptor` is stamped with `capturedAt` at put time. Reading the
- * receipts first is what makes a retry report the first attempt's descriptor
- * and write nothing, instead of recording a `receipt-evidence-mismatch` raised
- * by the system working correctly.
+ * Every write is gated on its own receipt read. Both receipts' evidence is
+ * derived from the artifact's identity alone — capture time lives in the
+ * receipt's `recordedAt`, not in what it attests — so a retry that wrote again
+ * would be answered `already-applied`; the reads are what keep the put and the
+ * staging write themselves from repeating, and what make a retry report the
+ * first attempt's descriptor rather than a fresh one.
  */
 
 /**

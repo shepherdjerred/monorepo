@@ -29,6 +29,7 @@ import {
   type ReceiptKind,
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
+import { prematchObjectResourceId } from "#src/storage/s3-prematch.ts";
 
 const logger = createLogger("report-lake-durable-receipts");
 
@@ -121,11 +122,113 @@ export const lakeStagingEvidenceCodec = defineVersionedCodec({
   schema: LakeStagingEvidenceSchema,
 });
 
+/**
+ * What a raw-archive receipt attests to: the artifact's IDENTITY, and nothing
+ * observational.
+ *
+ * Version 1 of this evidence was the whole `ArtifactDescriptor`, `capturedAt`
+ * included. That put a wall-clock instant inside the replay identity — the
+ * third instance of the class `recordReceipt`'s doc describes for
+ * `recordedAt` — so two attestations of byte-identical bytes disagreed about
+ * the fact whenever they were stamped a millisecond apart. Version 2 carries
+ * the content-addressed identity only: kind, key, digest, byte count and
+ * content type are true of the object from anywhere; the capture instant is
+ * true only of the attempt that captured it.
+ *
+ * The capture instant is not lost: a version-2 receipt records it as the
+ * receipt's own `recordedAt`, which is exactly the slot the domain reserves
+ * for observational metadata of the first attestation. {@link rawArchiveDescriptorOf}
+ * puts the two halves back together.
+ *
+ * Beta and production hold version-1 rows. They are not reinterpreted: the
+ * migration validates a version-1 payload against the version-1 shape before
+ * narrowing it, and a version-1 row's capture instant is still read from its
+ * own evidence rather than from a column that meant something slightly
+ * different when it was written.
+ */
+export type RawArchiveEvidence = z.infer<typeof RawArchiveEvidenceSchema>;
+export const RawArchiveEvidenceSchema = ArtifactDescriptorSchema.omit({
+  capturedAt: true,
+});
+
+/** The evidence shape version-1 rows were written with. */
+const RawArchiveEvidenceV1Schema = ArtifactDescriptorSchema;
+
+export const RAW_ARCHIVE_EVIDENCE_VERSION = 2;
+/** The last version whose evidence carried the capture instant itself. */
+const RAW_ARCHIVE_EVIDENCE_CAPTURE_IN_EVIDENCE_VERSION = 1;
+
 export const rawArchiveEvidenceCodec = defineVersionedCodec({
   kind: "raw-archive-evidence",
-  version: RECEIPT_VERSION,
-  schema: ArtifactDescriptorSchema,
+  version: RAW_ARCHIVE_EVIDENCE_VERSION,
+  schema: RawArchiveEvidenceSchema,
+  migrations: {
+    1: (old) => rawArchiveEvidenceOf(RawArchiveEvidenceV1Schema.parse(old)),
+  },
 });
+
+/** The attestable part of a descriptor: everything but the capture instant. */
+export function rawArchiveEvidenceOf(
+  artifact: ArtifactDescriptor,
+): RawArchiveEvidence {
+  const { capturedAt: _capturedAt, ...identity } = artifact;
+  return RawArchiveEvidenceSchema.parse(identity);
+}
+
+/**
+ * The receipt that attests one archived artifact.
+ *
+ * `recordedAt` IS the capture instant, by construction rather than by
+ * coincidence: the descriptor's `capturedAt` is what the put stamped, and the
+ * receipt's observational column is where a version-2 row keeps it, so the
+ * descriptor a reader rebuilds is the descriptor the writer was handed.
+ */
+export function rawArchiveReceiptRecord(args: {
+  matchId: RiotMatchId;
+  artifact: ArtifactDescriptor;
+}): MatchProcessingReceiptRecord {
+  return buildReceipt({
+    matchId: args.matchId,
+    kind: rawArchiveReceiptKind(args.artifact.kind),
+    evidence: rawArchiveEvidenceCodec.serialize(
+      rawArchiveEvidenceOf(args.artifact),
+    ),
+    recordedAt: new Date(args.artifact.capturedAt),
+  });
+}
+
+/** Only the envelope's version, read without committing to any payload shape. */
+const EvidenceEnvelopeVersionSchema = z.object({
+  version: z.number().int(),
+  data: z.unknown(),
+});
+
+/**
+ * The descriptor a raw-archive receipt attests to, capture instant included.
+ *
+ * Which column holds the capture instant depends on the version the row was
+ * WRITTEN at, and that decision is made here once rather than at every reader.
+ * A version-1 row's evidence carries it, and is read as version 1 says; a
+ * later row carries it as `recordedAt`. Neither is a fallback for the other —
+ * each version's rows are read the way that version wrote them.
+ */
+export function rawArchiveDescriptorOf(
+  record: MatchProcessingReceiptRecord,
+): ArtifactDescriptor {
+  if (record.evidence == null) {
+    throw new Error(
+      `Raw-archive receipt ${record.receipt.kind} for ${record.matchId} carries no evidence, so it names no artifact`,
+    );
+  }
+  const envelope: unknown = JSON.parse(record.evidence);
+  const identity = rawArchiveEvidenceCodec.parse(envelope);
+  const { version, data } = EvidenceEnvelopeVersionSchema.parse(envelope);
+  const capturedAt =
+    version === RAW_ARCHIVE_EVIDENCE_CAPTURE_IN_EVIDENCE_VERSION
+      ? RawArchiveEvidenceV1Schema.parse(data).capturedAt
+      : record.receipt.recordedAt;
+  return ArtifactDescriptorSchema.parse({ ...identity, capturedAt });
+}
 
 /**
  * The Riot match id a prematch snapshot will belong to.
@@ -133,12 +236,15 @@ export const rawArchiveEvidenceCodec = defineVersionedCodec({
  * Receipts are keyed by match id, and a spectator snapshot is captured before
  * MatchV5 knows about the game — but the id is not unknown, it is simply not
  * assembled yet: Riot builds it from exactly the platform and game id the
- * spectator payload already carries.
+ * spectator payload already carries. It is the same string the S3 object is
+ * keyed under, so the object, the fence and the receipt share one identity.
  */
 export function prematchReceiptMatchId(
   gameInfo: RawCurrentGameInfo,
 ): RiotMatchId {
-  return receiptMatchId(`${gameInfo.platformId}_${gameInfo.gameId.toString()}`);
+  return receiptMatchId(
+    prematchObjectResourceId(gameInfo.platformId, gameInfo.gameId),
+  );
 }
 
 export function receiptMatchId(matchId: string): RiotMatchId {
@@ -150,10 +256,10 @@ export function receiptMatchId(matchId: string): RiotMatchId {
  * its own raw-archive receipt.
  *
  * The receipt is the hand-off between writers that cannot share memory: a
- * raw-archive receipt's evidence IS the `ArtifactDescriptor`, so a later pass
- * reports the identity the pass that archived it recorded, rather than
- * reconstructing a key from the layout convention — which would be evidence of
- * nothing.
+ * raw-archive receipt names the `ArtifactDescriptor` (see
+ * {@link rawArchiveDescriptorOf}), so a later pass reports the identity the
+ * pass that archived it recorded, rather than reconstructing a key from the
+ * layout convention — which would be evidence of nothing.
  *
  * It lives here, beside the receipt kind and the evidence codec it is built
  * from, because two callers need the same answer: the archive door gates its
@@ -167,8 +273,8 @@ export async function storedRawArchiveDescriptor(
   const kind = rawArchiveReceiptKind(artifact);
   const receipts = await listReceipts(db, { matchId });
   const archived = receipts.find((record) => record.receipt.kind === kind);
-  if (archived?.evidence == null) return null;
-  return rawArchiveEvidenceCodec.parse(JSON.parse(archived.evidence));
+  if (archived === undefined) return null;
+  return rawArchiveDescriptorOf(archived);
 }
 
 export function buildReceipt(args: {

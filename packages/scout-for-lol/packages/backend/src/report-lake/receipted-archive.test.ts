@@ -54,7 +54,9 @@ const ARTIFACT_KINDS = ArtifactKindSchema.options;
 const {
   RECEIPTED_LAKE_RECEIPT_KINDS,
   lakeStagingReceiptKind,
+  rawArchiveDescriptorOf,
   rawArchiveEvidenceCodec,
+  rawArchiveEvidenceOf,
   rawArchiveReceiptKind,
 } = await import("#src/report-lake/durable-receipts.ts");
 const {
@@ -146,9 +148,13 @@ describe("receipted match archival", () => {
     expect(receipt.receipt.kind).toBe("raw-archive-match");
     expect(receipt.receipt.scope).toEqual({ kind: "global" });
     if (receipt.evidence === null) throw new Error("receipt had no evidence");
+    // The evidence is the artifact's identity; the capture instant travels as
+    // the receipt's own observational column, so the descriptor round-trips.
     expect(rawArchiveEvidenceCodec.parse(JSON.parse(receipt.evidence))).toEqual(
-      ArtifactDescriptorSchema.parse(result.artifact),
+      rawArchiveEvidenceOf(ArtifactDescriptorSchema.parse(result.artifact)),
     );
+    expect(receipt.receipt.recordedAt).toBe(result.artifact.capturedAt);
+    expect(rawArchiveDescriptorOf(receipt)).toEqual(result.artifact);
   });
 
   test("the receipted descriptor points at the object that was really written", async () => {

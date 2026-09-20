@@ -81,13 +81,17 @@ async function evidenceFor(key: string, digest: string): Promise<string> {
       rawArchiveEvidenceCodec.parse({
         kind: rawArchiveEvidenceCodec.kind,
         version: rawArchiveEvidenceCodec.version,
+        // Version 2 evidence is the artifact's IDENTITY and nothing
+        // observational: the capture instant moved to the receipt's own
+        // `recordedAt`. It is not merely absent here, it is REFUSED — the
+        // schema is strict — so a fixture still supplying it would fail the
+        // parse rather than carry a field the reader ignores.
         data: {
           kind: "prematch",
           key,
           digest,
           bytes: 1234,
           contentType: "application/json",
-          capturedAt: "2026-09-01T00:00:00.000Z",
         },
       }),
     ),
@@ -130,8 +134,12 @@ test("a raw-archive receipt attests the bytes now under its key", async () => {
     JSON.parse(String(rows[0]?.["e"])),
   );
   expect(descriptor.digest).toBe(NEW_DIGEST);
+  // The rest of the identity survives the digest rewrite untouched, which is
+  // what this assertion has always been for: the capture instant was simply
+  // one of the fields it happened to name, and version 2 no longer keeps one.
   expect(descriptor.bytes).toBe(1234);
-  expect(descriptor.capturedAt).toBe("2026-09-01T00:00:00.000Z");
+  expect(descriptor.key).toBe("prematch/a.json");
+  expect(descriptor.contentType).toBe("application/json");
   await db.close();
 });
 
