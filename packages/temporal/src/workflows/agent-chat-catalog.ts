@@ -377,11 +377,29 @@ export function registerAndBindAgentChatCatalogEntry(
             .parse(rawUpdate),
         };
   const binding = AgentChatBindingSchema.parse(rawBinding);
-  const entry = registerAgentChatCatalogEntry(
-    state,
-    rawEntry,
-    agentChatBindingKey(binding),
+  const update = parseBindingUpdate(updateInput);
+  const bindingKey = agentChatBindingKey(binding);
+  const candidate = AgentChatCatalogEntrySchema.parse(rawEntry);
+  const next = AgentChatCatalogBindingSchema.parse({
+    binding,
+    chatId: candidate.config.chatId,
+    ...update,
+  });
+  const retained = retainedOperationEntry(state, bindingKey, next);
+  if (retained !== undefined) return retained;
+  const existing = state.bindings.find(
+    (current) => agentChatBindingKey(current.binding) === bindingKey,
   );
+  assertDistinctSourceOrdering(existing, next, sourceEpochTimestampOrdering);
+  if (
+    existing !== undefined &&
+    existingBindingWins(existing, next, sourceEpochTimestampOrdering)
+  ) {
+    const selected = entryForBinding(state, existing.chatId);
+    retainBindingOperation(state, next, selected.config.chatId);
+    return selected;
+  }
+  const entry = registerAgentChatCatalogEntry(state, rawEntry, bindingKey);
   return bind(state, {
     binding,
     chatId: entry.config.chatId,
