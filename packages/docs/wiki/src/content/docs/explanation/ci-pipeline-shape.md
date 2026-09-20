@@ -155,6 +155,14 @@ one storage path with no size threshold is simpler than reimplementing both.
 Reads fail loudly by design. A defaulted `{}` would let a release step deploy
 nothing and report success.
 
+The store has its own SeaweedFS identity, scoped to the `ci-handoff` bucket and
+nothing else. That is what lets `verify`, `playwright-e2e` and `resume-build`
+run on every pull request: they move build values between steps, so they need
+this credential, and it cannot touch a published site or the OpenTofu state.
+The scope is on the bucket rather than a prefix because the same bucket also
+holds `ci-artifact`'s `artifacts/` trees, and a prefix grant would break those
+while the handoff half kept working.
+
 ## Release refinement has its own authentication boundary
 
 The main-only release refiner can use a ChatGPT subscription for Codex without
@@ -178,6 +186,37 @@ distinguish identities that may initially carry the same value but must rotate
 independently later, such as GitHub download, review, package publication, App,
 and OpenTofu access.
 
+That last sentence is a licence worth using carefully, because it describes an
+intention rather than a boundary, and the two are easy to confuse. SeaweedFS is
+the worked example: `SEAWEEDFS_STATE_*` and `SEAWEEDFS_DEPLOY_*` read as a
+boundary for a long time while holding one value — the gateway's only identity,
+carrying unscoped `Admin` over every bucket. Every step granted either pair
+could rewrite the OpenTofu state and every published site.
+
+SeaweedFS now has four identities that are genuinely distinct, each scoped in
+the gateway to the buckets its job touches:
+
+| Field                    | Reaches                                               |
+| ------------------------ | ----------------------------------------------------- |
+| `SEAWEEDFS_HANDOFF_*`    | `ci-handoff` only                                     |
+| `SEAWEEDFS_SITES_*`      | the twelve published-site and release-archive buckets |
+| `SEAWEEDFS_TOFU_STATE_*` | `homelab-tofu-state` only                             |
+| `SEAWEEDFS_TOFU_ADMIN_*` | everything — see below                                |
+
+`SEAWEEDFS_TOFU_ADMIN_*` is deliberately unscoped: the `seaweedfs` OpenTofu
+stack manages the buckets themselves, and SeaweedFS requires unscoped `Admin`
+to create one. It is the credential `tofu-plan-seaweedfs` holds, which makes
+that step the one pull-request-reachable holder of a broad SeaweedFS key.
+Narrowing it means moving bucket management off the pull-request path, not
+changing a grant.
+
+The scoping lives in the identities config the S3 gateway loads through
+`existingConfigSecret`, which exists only in a 1Password item. No repository
+check can see it, so the boundary is proved by probe — each identity must be
+**denied** a bucket belonging to another — and that denial is the acceptance
+evidence for any change to it. A positive probe alone cannot tell a scoped
+identity from an admin one.
+
 Each generated step names the exact secrets and keys it needs, and the agent
 turns those into `secretKeyRef` entries with
 `WOODPECKER_BACKEND_K8S_ALLOW_NATIVE_SECRETS`. Credentials therefore stay in
@@ -196,8 +235,13 @@ a credential in a step command.
 
 The grant contract is checked rather than written twice. `check-ci-env` reads
 the generated step model directly — not a committed pipeline file — and fails on
-missing or excessive grants, blank or unknown 1Password fields, the wrong
-service account, or a token mount. A credential expansion therefore needs an
+missing grants, blank or unknown 1Password fields, the wrong
+service account, or a token mount. It does **not** detect an _excessive_ grant:
+it reports a step that cannot meet a requirement, never one holding more than
+it needs, so a credential quietly spreading to another step passes it. That gap
+is covered where it matters most by `pr-reachable-secrets.test.ts`, which pins
+both the exact set of credentials a pull request can reach and the exact list
+of steps allowed to write a published site. A credential expansion therefore needs an
 explicit change to a lane definition that appears in the diff.
 
 The stable field names make later rotations pipeline-independent. The
