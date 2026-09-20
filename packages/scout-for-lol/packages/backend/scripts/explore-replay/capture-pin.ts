@@ -6,9 +6,11 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
 import { ME, MY_SERVER } from "#src/configuration/flags.ts";
+import configuration from "#src/configuration.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
 import { readBuildPuuidRemapFingerprint } from "#src/report-lake/build-manifest.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
 import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
 import {
   CapturedGuildConfigSchema,
@@ -63,11 +65,81 @@ async function parquetAccountRows(
 }
 
 /**
+ * Bring the flag client up with no provider.
+ *
+ * Without this, `isPolicyEnabled` asks an OpenFeature client whose provider
+ * was never registered and the call never returns. With mode "disabled" there
+ * is no provider to consult, so every evaluation falls through to the value
+ * the registry supplies as its default — which is exactly the stage's own
+ * static configuration, and what a capture is supposed to read.
+ */
+async function startFlags(): Promise<void> {
+  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+}
+
+/**
+ * Give flag evaluation the stage's semantics without the stage's config.
+ *
+ * `ENVIRONMENT` does two things to flags, both prod-only:
+ * `isFeatureHardDisabled` short-circuits bucks and dares (`flags.ts:219`), and
+ * `applicableOverrides` drops beta-only overrides (`flags.ts:233-238`). A prod
+ * capture has to see both or it records capabilities prod does not grant.
+ *
+ * But the same variable also makes `configuration` demand a complete PostHog
+ * setup outside dev (`configuration.ts:151-159`) — config a capture never
+ * uses, since nothing here constructs an analytics client.
+ *
+ * `resolveEnvironment()` is read live on every flag evaluation while
+ * `configuration` memoizes once, so touching configuration first pins it under
+ * dev and the later flip reaches only the flag path. Narrow and deliberate:
+ * it buys prod's flag rules and nothing else, with no invented config values.
+ */
+function useStageFlagSemantics(stage: "beta" | "prod"): void {
+  // Force the lazy configuration to compute and memoize while the environment
+  // is still whatever the caller supplied.
+  void configuration.environment;
+  if (stage === "prod") {
+    Bun.env["ENVIRONMENT"] = "prod";
+  }
+}
+
+/**
+ * Every explore run's guild and owner, read from its durable payload.
+ *
+ * Not from `ScoutInteractiveRun.guildId`: that column is only populated for
+ * `report-ai` runs, and is null on every explore row. The guild a turn ran
+ * with lives in the payload, which `ExploreDurablePayloadSchema` already
+ * parses — so this reuses the product's own reader rather than a second
+ * interpretation of the same JSON.
+ *
+ * Both stages have well under a thousand explore runs, so reading them all and
+ * tallying here is cheaper than teaching a query to index into JSON.
+ */
+async function exploreRunFacts(): Promise<
+  readonly { guildId: string; ownerId: string }[]
+> {
+  const runs = await prisma.scoutInteractiveRun.findMany({
+    where: { kind: "explore" },
+    select: { ownerId: true, payload: true },
+  });
+  return runs.flatMap((run) => {
+    const parsed = ExploreDurablePayloadSchema.safeParse(
+      JSON.parse(run.payload) as unknown,
+    );
+    if (!parsed.success) return [];
+    return parsed.data.guildIds.map((guildId) => ({
+      guildId,
+      ownerId: run.ownerId,
+    }));
+  });
+}
+
+/**
  * The guilds worth evaluating on this stage.
  *
  * Beta has exactly one: the allowlisted guild, which is `MY_SERVER`. Prod has
  * no allowlist, so the interesting ones are simply those people actually use
- * Explore in — ranked by how many Explore runs they have, excluding my own
+ * Explore in — ranked by how many Explore turns they have, excluding my own
  * guild and my own account so "normal guild" means what it says.
  */
 async function targetGuilds(
@@ -77,22 +149,15 @@ async function targetGuilds(
   if (stage === "beta") {
     return [{ guildId: MY_SERVER, label: "mine" }];
   }
-  const runs = await prisma.scoutInteractiveRun.groupBy({
-    by: ["guildId"],
-    where: {
-      kind: "explore",
-      guildId: { not: null },
-      ownerId: { not: ME },
-    },
-    _count: { _all: true },
-    orderBy: { _count: { guildId: "desc" } },
-    take: top + 1,
-  });
-  return runs
-    .flatMap((row) => (row.guildId === null ? [] : [row.guildId]))
-    .filter((guildId) => guildId !== MY_SERVER)
+  const counts = new Map<string, number>();
+  for (const fact of await exploreRunFacts()) {
+    if (fact.guildId === MY_SERVER || fact.ownerId === ME) continue;
+    counts.set(fact.guildId, (counts.get(fact.guildId) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .toSorted(([, left], [, right]) => right - left)
     .slice(0, top)
-    .map((guildId, index) => ({
+    .map(([guildId], index) => ({
       guildId,
       label: `prod-top-${(index + 1).toString()}`,
     }));
@@ -107,32 +172,18 @@ async function targetGuilds(
  * nothing to do with the model.
  */
 async function busiestRequester(guildId: string): Promise<string> {
-  const runs = await prisma.scoutInteractiveRun.groupBy({
-    by: ["ownerId"],
-    where: { kind: "explore", guildId },
-    _count: { _all: true },
-    orderBy: { _count: { ownerId: "desc" } },
-    take: 1,
-  });
-  const owner = runs[0]?.ownerId;
-  if (owner !== undefined) return owner;
+  const counts = new Map<string, number>();
+  for (const fact of await exploreRunFacts()) {
+    if (fact.guildId !== guildId) continue;
+    counts.set(fact.ownerId, (counts.get(fact.ownerId) ?? 0) + 1);
+  }
+  const busiest = [...counts.entries()].toSorted(
+    ([, left], [, right]) => right - left,
+  )[0];
   // No Explore history in this guild yet. `ME` is a real account and is the
   // only id guaranteed to exist, so it is the honest fallback — recorded in
   // the pin either way, so a reader can see which it was.
-  return ME;
-}
-
-/**
- * Bring the flag client up with no provider.
- *
- * Without this, `isPolicyEnabled` asks an OpenFeature client whose provider
- * was never registered and the call never returns. With mode "disabled" there
- * is no provider to consult, so every evaluation falls through to the value
- * the registry supplies as its default — which is exactly the stage's own
- * static configuration, and what a capture is supposed to read.
- */
-async function startFlags(): Promise<void> {
-  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+  return busiest?.[0] ?? ME;
 }
 
 export async function capturePinForStage(input: {
@@ -143,6 +194,7 @@ export async function capturePinForStage(input: {
   readonly databaseUrl: string;
 }): Promise<StageDatasetPin> {
   await startFlags();
+  useStageFlagSemantics(input.stage);
   const buildId = await publishedBuild(input.lakeDir);
   const fingerprint = await readBuildPuuidRemapFingerprint(
     buildDirPath(input.lakeDir, buildId),

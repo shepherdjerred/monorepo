@@ -83,11 +83,9 @@ async function main(): Promise<void> {
   // point does: these bind on first import and cannot be changed afterwards.
   Bun.env["DATABASE_URL"] = databaseUrl;
   Bun.env["REPORT_LAKE_DIR"] = lakeDir;
-  // Only prod needs its own ENVIRONMENT: the two things it changes —
-  // isFeatureHardDisabled and the beta-only override stripping — fire at prod
-  // and nowhere else, so a beta capture reads the same on "dev" while needing
-  // none of the stage config "beta" would demand.
-  if (stage === "prod") Bun.env["ENVIRONMENT"] = "prod";
+  // ENVIRONMENT is deliberately NOT set here. `capture-pin.ts` flips it after
+  // configuration has memoized, so prod's flag rules apply without prod's
+  // config demands — see `useStageFlagSemantics`.
   Bun.env["TEMPORAL_NAMESPACE"] ??= stage;
   delete Bun.env["TEMPORAL_ADDRESS"];
 
