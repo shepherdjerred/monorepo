@@ -61,8 +61,8 @@ const UV_CACHE = {
  */
 function verifyCommands(): string[] {
   return [
-    ". .buildkite/scripts/toolchain.sh",
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile",
+    ". ci/scripts/toolchain.sh",
+    "ci/scripts/bun-install.sh --frozen-lockfile",
     // CI_CHANGED_BASE arrives in the environment, resolved before this step
     // was generated. It is empty when the branch has never gone green, which
     // correctly makes turbo compare against nothing and build everything.

@@ -1,7 +1,11 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
-import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
+import {
+  GITHUB_DOWNLOAD,
+  grant,
+  HANDOFF_KEYS,
+} from "#src/pipeline/lanes/tofu.ts";
 
 /**
  * Toolchain image refreshes and the version pin commit-back.
@@ -36,11 +40,11 @@ function refreshStep(
     label: `refresh ${name} image`,
     image: images.base,
     commands: [
-      `if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts ${name}; then exit 0; fi`,
-      ". .buildkite/scripts/toolchain.sh",
-      "bun --no-install .buildkite/scripts/reporting/buildkit-env.ts",
-      `bun --no-install .buildkite/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
-      `bun --no-install .buildkite/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json`,
+      `if ! bun --no-install ci/scripts/selectors/ci-changed.ts ${name}; then exit 0; fi`,
+      ". ci/scripts/toolchain.sh",
+      "bun --no-install ci/scripts/reporting/buildkit-env.ts",
+      `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
+      `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json`,
     ],
     dependsOn: ["verify"],
     timeoutMinutes: 60,
@@ -60,8 +64,8 @@ export function ciImageSteps(images: CiImages): CiStep[] {
       label: "commit back image pins",
       image: images.base,
       commands: [
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+        ". ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$(bun --no-install scripts/ci/read-ci-handoff.ts pin-candidates)"',
       ],
       dependsOn: ["images"],
@@ -71,7 +75,7 @@ export function ciImageSteps(images: CiImages): CiStep[] {
       // Shares the image lane's group: the pin it writes describes exactly
       // what that lane pushed, so the two must not interleave across builds.
       concurrency: { limit: 1, group: "image-push" },
-      secrets: [GITHUB_DOWNLOAD, ...GITHUB_APP],
+      secrets: [GITHUB_DOWNLOAD, ...GITHUB_APP, ...HANDOFF_KEYS],
     },
   ];
 }

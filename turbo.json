@@ -115,7 +115,7 @@
         "packages/**/.opencode/**",
         "packages/**/skills/**",
         "packages/dotfiles/dot_agents/skills/**",
-        "packages/dotfiles/private_dot_claude/**",
+        "packages/dotfiles/dot_claude/**",
         "packages/dotfiles/dot_gemini/**",
         "packages/dotfiles/private_dot_codex/**",
         "packages/dotfiles/private_dot_cursor/**",
@@ -146,7 +146,7 @@
         "package.json",
         "packages/**",
         "scripts/**",
-        ".buildkite/**",
+        "ci/**",
         "!**/node_modules/**",
         "!**/dist/**",
         "!packages/dotfiles/dot_agents/skills/**"
@@ -155,7 +155,7 @@
     "//#check-ai-architecture": {
       "inputs": [
         "package.json",
-        ".buildkite/**",
+        "ci/**",
         "packages/**",
         "scripts/**",
         "!**/node_modules/**",
@@ -183,7 +183,7 @@
         "patches/**",
         "packages/**/patches/*.patch",
         "scripts/checks/deps/check-patched-deps.ts",
-        ".buildkite/scripts/selectors/select-image-targets.ts"
+        "ci/scripts/selectors/select-image-targets.ts"
       ]
     },
     // Every env var a pipeline step's scripts require must be provided by that
@@ -199,17 +199,12 @@
     },
     "//#check-ci-env": {
       // Every tree requiredEnvFrom may analyze has to be hashed, not just the
-      // pipeline: the checker treats literal `.buildkite/scripts/*.ts`
+      // pipeline: the checker treats literal `ci/scripts/*.ts`
       // commands as entry points and follows their imports, so a requireEnv
       // added there would otherwise reuse a green cached result.
-      // The check iterates every pipeline in secret-grants.json, so every
-      // one of those files must invalidate it — reporting-pipeline.yml was
-      // missing here, which let a grant violation ride main green on cache.
       "inputs": [
-        ".buildkite/pipeline.yml",
-        ".buildkite/main-bootstrap.yml",
-        ".buildkite/reporting-pipeline.yml",
-        ".buildkite/scripts/**",
+        "ci/pipeline.yml",
+        "ci/scripts/**",
         "scripts/**",
         "!scripts/node_modules/**",
         "packages/homelab/scripts/**",
@@ -223,7 +218,7 @@
         "scripts/script-migrations.schema.json",
         "scripts/checks/check-script-migrations.ts",
         "scripts/**/*.ts",
-        ".buildkite/scripts/**",
+        "ci/scripts/**",
         "**/*.sh",
         "packages/**/*.ts",
         "packages/**/package.json",
@@ -244,9 +239,9 @@
         "scripts/package.json",
         "scripts/**/*.test.ts",
         "vitest.config.ts",
-        ".buildkite/scripts/**/*.ts",
-        ".buildkite/main-bootstrap.yml",
-        ".buildkite/pipeline.yml",
+        "ci/scripts/**/*.ts",
+        "ci/main-bootstrap.yml",
+        "ci/pipeline.yml",
         "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/Dockerfile",
@@ -272,6 +267,7 @@
         "bun.lock",
         "package.json",
         ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -293,6 +289,7 @@
         "bun.lock",
         "package.json",
         ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -314,6 +311,7 @@
         "bun.lock",
         "package.json",
         ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -337,6 +335,7 @@
         "bun.lock",
         "package.json",
         ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -553,15 +552,6 @@
         "!**/node_modules/**"
       ]
     },
-    "//#toolchain-version-sync": {
-      "inputs": [
-        "scripts/checks/deps/check-toolchain-version-sync.ts",
-        ".mise.toml",
-        "global.json",
-        "packages/macos-cross-compiler/Dockerfile",
-        "packages/windows-cross-compiler/Dockerfile"
-      ]
-    },
     "//#large-files-scout": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
@@ -649,13 +639,7 @@
       ]
     },
     "//#ruff": {
-      "inputs": [
-        "ruff.toml",
-        "scripts/tools/ruff-check.ts",
-        "**/*.py",
-        "!**/node_modules/**",
-        "!**/.venv/**"
-      ]
+      "inputs": ["ruff.toml", "**/*.py", "!**/node_modules/**", "!**/.venv/**"]
     },
     "//#pyright": {
       "inputs": [

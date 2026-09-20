@@ -74,13 +74,13 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/discord-plays-mario-kart/wasm-src/upstream.json",
   "packages/discord-plays-mario-kart/Dockerfile",
   "packages/homelab/images/redlib/Dockerfile",
-  ".buildkite/ci-playwright/Dockerfile",
+  "ci/ci-playwright/Dockerfile",
   "packages/windows-cross-compiler/",
   "packages/macos-cross-compiler/",
   ".mise.toml",
   "global.json",
   "docker-bake.hcl",
-  ".buildkite/application-image-smoke.Dockerfile",
+  "ci/application-image-smoke.Dockerfile",
   "packages/scout-for-lol/packages/backend/Dockerfile",
   "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
   "packages/homelab/mac-ci/bootstrap.sh",
@@ -127,8 +127,8 @@ async function readChangedFilesWithGit(
 function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {
   return changedFiles.some(
     (path) =>
-      path === ".buildkite" ||
-      path.startsWith(".buildkite/") ||
+      path === "ci" ||
+      path.startsWith("ci/") ||
       path === "renovate.json" ||
       path === "package.json" ||
       path.endsWith("/package.json") ||

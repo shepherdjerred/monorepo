@@ -162,7 +162,7 @@ export function createTemporalDashboard() {
       ...createTemporalPlatformPanels(),
       // -----------------------------------------------------------------
       // GitHub webhook row (y >= 48) — the merge-conflict check + PR-closed
-      // Buildkite build-cancellation ingress. Metrics emitted by
+      // Woodpecker build-cancellation ingress. Metrics emitted by
       // packages/temporal/src/event-bridge/github-webhook.ts.
       // -----------------------------------------------------------------
       statPanel({

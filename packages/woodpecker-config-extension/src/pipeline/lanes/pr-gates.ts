@@ -41,14 +41,14 @@ export function prGateSteps(images: CiImages): CiStep[] {
       label: "release dry run",
       image: images.base,
       commands: [
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --filter homelab --filter '@homelab/cdk8s'",
+        ". ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --filter homelab --filter '@homelab/cdk8s'",
         "bun --no-install run --cwd packages/llm-models build",
         // Helm value-types drift gate. PR-only by design: the inputs are
         // fully version-pinned, so a green PR gate implies a green main tree.
         // A Renovate chart bump fails here until the regen commit lands,
         // because hosted Renovate cannot run the generator itself.
-        "if bun --no-install .buildkite/scripts/selectors/ci-changed.ts helm-types; then",
+        "if bun --no-install ci/scripts/selectors/ci-changed.ts helm-types; then",
         "  bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check",
         "fi",
         // Print-only rehearsals, seconds each: the site catalog, the whole
@@ -105,13 +105,15 @@ export function prGateSteps(images: CiImages): CiStep[] {
       key: "codex-review-gate",
       label: "automated review gate",
       image: images.base,
-      commands: [
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/review-gate.sh",
-      ],
+      commands: [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"],
       timeoutMinutes: 90,
       resources: MEDIUM_TIER,
       events: ["pull_request"],
+      // Codex's auth bundle carries a refresh token, so it must outlive the
+      // ephemeral step pod.
+      volumes: [
+        { claim: "woodpecker-codex-auth", path: "/woodpecker/codex-auth" },
+      ],
       secrets: [
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_REVIEW_TOKEN"),

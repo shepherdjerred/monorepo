@@ -7,6 +7,7 @@ import {
   STATE_BACKEND,
   TOFU_PLUGIN_CACHE,
   grant,
+  HANDOFF_KEYS,
 } from "#src/pipeline/lanes/tofu.ts";
 
 /**
@@ -43,8 +44,8 @@ function admissionGate(): string[] {
 function applyCommands(stack: string): string[] {
   return [
     ...admissionGate(),
-    ". .buildkite/scripts/toolchain.sh",
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+    ". ci/scripts/toolchain.sh",
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} apply`,
   ];
@@ -156,7 +157,7 @@ export function releaseAdmissionStep(images: CiImages): CiStep {
     timeoutMinutes: 10,
     resources: LIGHT_TIER,
     defaultBranchOnly: true,
-    secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND],
+    secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND, ...HANDOFF_KEYS],
   };
 }
 
@@ -176,6 +177,7 @@ export function tofuApplySteps(images: CiImages): CiStep[] {
       secrets: [
         GITHUB_DOWNLOAD,
         ...STATE_BACKEND,
+        ...HANDOFF_KEYS,
         grant("ci-github-credentials", "TOFU_GITHUB_TOKEN"),
       ],
       volumes: [TOFU_PLUGIN_CACHE],
@@ -200,6 +202,7 @@ export function tofuApplySteps(images: CiImages): CiStep[] {
       secrets: [
         GITHUB_DOWNLOAD,
         ...STATE_BACKEND,
+        ...HANDOFF_KEYS,
         grant(
           "posthog-tofu-credentials",
           "POSTHOG_API_KEY",
@@ -222,7 +225,7 @@ export function tofuApplySteps(images: CiImages): CiStep[] {
     defaultBranchOnly: true,
     concurrency: { limit: 1, group: "tofu-platform-credentials" },
     changed: TOFU_CHANGED,
-    secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND, ...secrets],
+    secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND, ...HANDOFF_KEYS, ...secrets],
     volumes: [TOFU_PLUGIN_CACHE],
   }));
 

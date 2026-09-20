@@ -20,8 +20,8 @@ import type { TaintedNode } from "cdk8s-plus-31";
  * - Per-node system/observability pods (monitoring collectors, CSI node
  *   plugin) — they TOLERATE the taint so liskov is monitored and can
  *   provision volumes, but are not pinned to it.
- * - Buildkite CI step pods — they tolerate AND select the node
- *   (buildkite.ts pod-spec-patch), so CI runs only on liskov and liskov
+ * - Woodpecker CI step pods — they tolerate AND select the node
+ *   (woodpecker.ts pod-spec-patch), so CI runs only on liskov and liskov
  *   runs only CI.
  */
 export const PROD_NODE_HOSTNAME = "torvalds";

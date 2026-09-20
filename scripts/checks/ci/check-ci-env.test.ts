@@ -126,16 +126,16 @@ describe("structuralParens", () => {
 });
 
 describe("scriptPathsInCommand", () => {
-  test("finds root, buildkite, and package script invocations", () => {
+  test("finds root, ci, and package script invocations", () => {
     const paths = scriptPathsInCommand(
       [
         "bun --no-install scripts/release/release.ts --dry-run",
-        "bun --no-install .buildkite/scripts/selectors/ci-changed.ts images",
+        "bun --no-install ci/scripts/selectors/ci-changed.ts images",
         "bun --no-install packages/homelab/scripts/argocd/argocd.ts release-root apps",
       ].join("\n"),
     );
     expect(paths).toEqual([
-      ".buildkite/scripts/selectors/ci-changed.ts",
+      "ci/scripts/selectors/ci-changed.ts",
       "packages/homelab/scripts/argocd/argocd.ts",
       "scripts/release/release.ts",
     ]);
@@ -155,8 +155,8 @@ describe("scriptPathsInCommand", () => {
       scriptPathsInCommand("bun scripts/checks/ci/check-ci-env.ts"),
     ).toEqual(["scripts/checks/ci/check-ci-env.ts"]);
     expect(
-      scriptPathsInCommand("bun .buildkite/scripts/validation/validate.ts"),
-    ).toEqual([".buildkite/scripts/validation/validate.ts"]);
+      scriptPathsInCommand("bun ci/scripts/validation/validate.ts"),
+    ).toEqual(["ci/scripts/validation/validate.ts"]);
   });
 
   test("still finds an entry point directly in its scripts root", () => {

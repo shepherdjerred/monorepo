@@ -184,7 +184,7 @@ describe("Argo CD prune safety", () => {
           return Response.json({
             operation: {
               info: syncRequest.infos,
-              initiatedBy: { username: "buildkite" },
+              initiatedBy: { username: "woodpecker" },
               sync: {
                 prune: syncRequest.prune,
                 revision: "2.0.0-44",

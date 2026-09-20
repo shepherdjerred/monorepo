@@ -1,4 +1,4 @@
-# Prepared only. This file is intentionally not uploaded by .buildkite/pipeline.yml.
+# Prepared only. This file is intentionally not uploaded by ci/pipeline.yml.
 # Activation is blocked by Linear issue SJ-134.
 steps:
   - label: ":windows: TaskNotes Windows release gate"

@@ -2,6 +2,7 @@ import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
+import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 
 /**
  * Build the resume PDF.
@@ -35,6 +36,7 @@ export function resumeSteps(images: CiImages): CiStep[] {
       ],
       timeoutMinutes: 20,
       resources: MEDIUM_TIER,
+      secrets: [...HANDOFF_KEYS],
       changed: {
         include: [
           ...GLOBAL_SELECTOR_INPUTS,

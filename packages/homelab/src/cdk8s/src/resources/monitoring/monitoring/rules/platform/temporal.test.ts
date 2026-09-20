@@ -204,7 +204,7 @@ describe("Temporal workflow outcome rules", () => {
     // The threshold is the served-namespace count: one namespace served, one
     // required for this production-only queue.
     expect(workflowPollerExpressions).toContain(
-      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="buildkite",exported_namespace=~"prod",task_queue="maintenance",poller_type="workflow_task"})) < 1',
+      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="woodpecker",exported_namespace=~"prod",task_queue="maintenance",poller_type="workflow_task"})) < 1',
     );
     const scoutBetaExpression = workflowPollerExpressions.find(
       (expression) =>

@@ -51,7 +51,7 @@ const TARGET_NODE_HOSTNAME = PROD_NODE_HOSTNAME;
  *
  * Why this exists: torvalds runs an i9-14900K on an ASUS Pro Q670M-C whose
  * firmware defaults PL1 to *unlimited*. Left unguarded that drove sustained
- * 100 °C TJMax under bursty Buildkite CI load and overheated the physically
+ * 100 °C TJMax under bursty Woodpecker CI load and overheated the physically
  * adjacent M.2 slots (nvme1 NAND once hit ~104 °C). A large AIO cooler plus
  * per-drive NVMe cooling (installed 2026-05-26) resolved the thermals — heavy
  * CI days now peak ~82–84 °C — so on 2026-06-12 the emergency 95/140 W cap was

@@ -157,7 +157,7 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
 }
 
 describe("temporal homelab audit tooling configuration", () => {
-  it("injects Buildkite and Bugsink configuration", async () => {
+  it("injects Woodpecker and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
 
     expect(yaml).toContain("name: BUGSINK_URL");

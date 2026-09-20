@@ -25,6 +25,10 @@ export const WOODPECKER_TOFU_PLUGIN_CACHE_CLAIM =
   "woodpecker-tofu-plugin-cache";
 export const WOODPECKER_TOFU_PLUGIN_CACHE_PATH =
   "/woodpecker/tofu-plugin-cache";
+export const WOODPECKER_TRIVY_DB_CLAIM = "woodpecker-trivy-db";
+export const WOODPECKER_TRIVY_DB_PATH = "/woodpecker/trivy-db";
+export const WOODPECKER_CODEX_AUTH_CLAIM = "woodpecker-codex-auth";
+export const WOODPECKER_CODEX_AUTH_PATH = "/woodpecker/codex-auth";
 
 const DISPOSABLE_CACHE_LABELS = {
   "velero.io/backup": "disabled",
@@ -52,7 +56,7 @@ function createCacheClaim(
 }
 
 export function createWoodpeckerCaches(chart: Chart): void {
-  // Sized to match the Buildkite bun cache it replaces; the working set is the
+  // Sized to match the Woodpecker bun cache it replaces; the working set is the
   // whole workspace's dependency closure, not one package's.
   createCacheClaim(
     chart,
@@ -81,5 +85,26 @@ export function createWoodpeckerCaches(chart: Chart): void {
     "woodpecker-tofu-plugin-cache-pvc",
     WOODPECKER_TOFU_PLUGIN_CACHE_CLAIM,
     "10Gi",
+  );
+
+  // Trivy's vulnerability database. The scan runs with --skip-db-update so a
+  // pull-request lane never waits on a database download; something must
+  // therefore supply the database, and this is it.
+  createCacheClaim(
+    chart,
+    "woodpecker-trivy-db-pvc",
+    WOODPECKER_TRIVY_DB_CLAIM,
+    "5Gi",
+  );
+
+  // Codex's ChatGPT-managed auth bundle includes a refresh token, so it has to
+  // survive the review gate's ephemeral pods. Never backed up: recover it by
+  // re-seeding from a fresh `codex login` on the trusted operator machine,
+  // never from a snapshot of a live credential.
+  createCacheClaim(
+    chart,
+    "woodpecker-codex-auth-pvc",
+    WOODPECKER_CODEX_AUTH_CLAIM,
+    "1Gi",
   );
 }

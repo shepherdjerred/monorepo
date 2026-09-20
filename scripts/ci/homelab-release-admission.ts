@@ -3,7 +3,7 @@
 /**
  * Decide, and later report, whether this build may release the homelab.
  *
- * Successor to `.buildkite/scripts/admission/homelab-release-admission.ts`.
+ * Successor to `ci/scripts/admission/homelab-release-admission.ts`.
  * The decision itself is shared with that script; only the transport differs,
  * so the two cannot drift on the rule while both exist.
  *

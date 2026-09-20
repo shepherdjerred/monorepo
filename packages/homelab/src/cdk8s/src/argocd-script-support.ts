@@ -48,7 +48,7 @@ export function operationForRootSyncRequest(
   const syncRequest = RootSyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       prune: syncRequest.prune,
       ...(syncRequest.revision === undefined
@@ -68,7 +68,7 @@ export function operationForSyncRequest(
   const syncRequest = SyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       ...(syncRequest.manifests === undefined
         ? {}

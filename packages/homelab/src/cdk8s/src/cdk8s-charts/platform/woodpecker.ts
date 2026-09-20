@@ -21,7 +21,7 @@ export function createWoodpeckerChart(app: App) {
       name: WOODPECKER_NAMESPACE,
       labels: {
         // CI step pods build container images and run privileged toolchains,
-        // exactly as the Buildkite namespace did. Restricted enforcement would
+        // exactly as the Woodpecker namespace did. Restricted enforcement would
         // reject them at admission.
         "pod-security.kubernetes.io/enforce": "privileged",
         "pod-security.kubernetes.io/audit": "privileged",

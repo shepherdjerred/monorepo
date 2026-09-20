@@ -1,4 +1,4 @@
-// Lints .buildkite/scripts with the root-scripts ESLint config. A separate
+// Lints ci/scripts with the root-scripts ESLint config. A separate
 // entry point (instead of a second CLI invocation in the lint script) because
 // flat-config file patterns resolve against the process cwd: linting a
 // directory OUTSIDE the scripts workspace requires cwd = repo root. The CLI is
@@ -17,8 +17,8 @@ const proc = Bun.spawn(
     "--cache-location",
     "scripts/.eslintcache-buildkite",
     "--suppressions-location",
-    ".buildkite/eslint-suppressions.json",
-    ".buildkite/scripts",
+    "ci/eslint-suppressions.json",
+    "ci/scripts",
     ...process.argv.slice(2),
   ],
   { cwd: repoRoot, stdout: "inherit", stderr: "inherit" },

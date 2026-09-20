@@ -93,6 +93,17 @@ const SEMGREP_SOURCE_GLOBS = [
   "**/*.yml",
 ] as const;
 
+/**
+ * Trivy's vulnerability database, supplied by a shared claim.
+ *
+ * The scan runs with --skip-db-update so a pull-request lane never waits on a
+ * database download, which means the database has to come from somewhere.
+ */
+const TRIVY_DB = {
+  claim: "woodpecker-trivy-db",
+  path: "/woodpecker/trivy-db",
+} as const;
+
 const TRIVY_FINDINGS_EXIT = 7;
 const SEMGREP_FINDINGS_EXIT = 1;
 
@@ -100,7 +111,7 @@ function trivyCommands(): string[] {
   return [
     'echo "OPTIONAL SECURITY SCAN: HIGH/CRITICAL findings do not block merge; scanner failures do."',
     "set +e",
-    `trivy fs --cache-backend memory --skip-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code ${TRIVY_FINDINGS_EXIT.toString()} --skip-dirs node_modules --skip-dirs sandbox .`,
+    `trivy fs --cache-backend memory --cache-dir ${TRIVY_DB.path} --skip-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code ${TRIVY_FINDINGS_EXIT.toString()} --skip-dirs node_modules --skip-dirs sandbox .`,
     "trivy_status=$?",
     "set -e",
     `if [ "$trivy_status" -eq ${TRIVY_FINDINGS_EXIT.toString()} ]; then`,
@@ -144,6 +155,7 @@ export function scannerSteps(images: CiImages): CiStep[] {
       timeoutMinutes: 20,
       resources: SCANNER_TIER,
       events: ["pull_request"],
+      volumes: [TRIVY_DB],
       changed: {
         include: [...GLOBAL_SELECTOR_INPUTS, ...DEPENDENCY_MANIFESTS],
         exclude: ["sandbox/**"],

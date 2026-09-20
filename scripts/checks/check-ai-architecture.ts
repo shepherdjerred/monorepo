@@ -437,7 +437,7 @@ function isActiveRuntimePath(
 ): boolean {
   return (
     filePath === "package.json" ||
-    filePath.startsWith(".buildkite/") ||
+    filePath.startsWith("ci/") ||
     (!filePath.startsWith("packages/docs/") &&
       !filePath.startsWith("packages/dotfiles/dot_agents/skills/") &&
       !filePath.includes("/node_modules/") &&
@@ -467,7 +467,7 @@ async function listArchitectureFiles(): Promise<ArchitectureSourceFile[]> {
       "package.json",
       "packages",
       "scripts",
-      ".buildkite",
+      "ci",
     ],
     { cwd: repositoryRoot, capture: true, secret: true },
   );
