@@ -97,6 +97,12 @@ async function main(): Promise<void> {
     );
   }
 
+  // Required by `configuration.ts` whatever the environment, and it must
+  // name a real stage. An address is deliberately not set, so a namespace on
+  // its own cannot reach a server — nothing in a replay may start a workflow.
+  Bun.env["TEMPORAL_NAMESPACE"] ??= pin.stage;
+  delete Bun.env["TEMPORAL_ADDRESS"];
+
   // Only now is it safe to pull in the agent and everything it binds at import
   // time. Keeping this dynamic is what makes the guard above load-bearing
   // rather than advisory.

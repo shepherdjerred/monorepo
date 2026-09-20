@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
 
 /**
  * Pinning the pair of snapshots a replay run reads, and proving they belong
@@ -20,17 +21,6 @@ import { z } from "zod";
 
 export const ReplayStageSchema = z.enum(["beta", "prod"]);
 export type ReplayStage = z.infer<typeof ReplayStageSchema>;
-
-export const ReplayPersonaSchema = z
-  .object({
-    /** Discord snowflake the turn is answered for. */
-    requesterId: z.string().min(1),
-    /** The guilds whose capabilities this persona carries. */
-    guildIds: z.array(z.string().min(1)).min(1),
-  })
-  .strict();
-
-export type ReplayPersona = z.infer<typeof ReplayPersonaSchema>;
 
 export const StageDatasetPinSchema = z
   .object({
@@ -61,8 +51,17 @@ export const StageDatasetPinSchema = z
       })
       .strict(),
     verifiedAt: z.iso.datetime().nullable(),
-    /** Persona per profile name; local only, never committed. */
-    personas: z.record(z.string().min(1), ReplayPersonaSchema),
+    /**
+     * What each target guild actually resolved when the dataset was pulled,
+     * keyed by guild id. Local only, never committed: these are real guild and
+     * account ids.
+     */
+    guilds: z
+      .record(z.string().min(1), CapturedGuildConfigSchema)
+      .refine(
+        (guilds) => Object.keys(guilds).length > 0,
+        "a dataset must target at least one guild",
+      ),
   })
   .strict();
 
@@ -194,6 +193,20 @@ export function replayEnvironmentIssues(input: {
   if (input.resolvedLakeDir !== input.pin.lake.dir) {
     issues.push(
       `REPORT_LAKE_DIR resolves to "${input.resolvedLakeDir}", but the dataset pins "${input.pin.lake.dir}"`,
+    );
+  }
+
+  // ENVIRONMENT changes flag resolution in exactly two ways, and both fire
+  // only at prod: `isFeatureHardDisabled` short-circuits bucks and dares
+  // (`flags.ts:219`), and `applicableOverrides` strips beta-only overrides
+  // (`flags.ts:233-238`). So a prod dataset must run as prod or it would grant
+  // capabilities prod does not have — while for a beta dataset "dev" and
+  // "beta" resolve identically, and demanding "beta" would only force the
+  // caller to supply stage config the replay never uses.
+  const environmentName = input.environment["ENVIRONMENT"] ?? "dev";
+  if (environmentName !== "prod" && input.pin.stage === "prod") {
+    issues.push(
+      `ENVIRONMENT is "${environmentName}", but this dataset pins prod; hard-disabled flags and beta-only overrides resolve differently outside prod`,
     );
   }
 

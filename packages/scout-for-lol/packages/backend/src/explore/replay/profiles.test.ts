@@ -1,91 +1,66 @@
 import { describe, expect, test } from "vitest";
 import {
+  CapturedGuildConfigSchema,
   EXPLORE_REPLAY_CAPABILITIES,
-  EXPLORE_REPLAY_PROFILES,
   capabilityMismatches,
   chipExpectation,
   conditionCapability,
-  exploreReplayProfile,
-  profileConsistencyIssues,
+  flagOverridesFor,
+  guildConfigIssues,
+  type CapturedGuildConfig,
   type ExploreCapabilitySet,
-  type ExploreReplayProfile,
 } from "./profiles.ts";
 
-const MINIMAL = exploreReplayProfile("minimal");
-const FULL = exploreReplayProfile("full");
+const NOTHING: ExploreCapabilitySet = {
+  bucks: false,
+  dares: false,
+  challenges: false,
+  creation: false,
+  riotHistory: false,
+};
 
-function capabilitySet(
-  overrides: Partial<ExploreCapabilitySet> = {},
-): ExploreCapabilitySet {
-  return {
-    bucks: overrides.bucks ?? false,
-    dares: overrides.dares ?? false,
-    challenges: overrides.challenges ?? false,
-    creation: overrides.creation ?? false,
-    riotHistory: overrides.riotHistory ?? false,
-  };
+const EVERYTHING: ExploreCapabilitySet = {
+  bucks: true,
+  dares: true,
+  challenges: true,
+  creation: true,
+  riotHistory: false,
+};
+
+function config(
+  overrides: Partial<CapturedGuildConfig> = {},
+): CapturedGuildConfig {
+  return CapturedGuildConfigSchema.parse({
+    guildId: "1337623164146155593",
+    label: "mine",
+    requesterId: "160509172704739328",
+    capabilities: NOTHING,
+    capturedAt: "2026-09-19T00:00:00.000Z",
+    ...overrides,
+  });
 }
 
-describe("built-in profiles", () => {
-  test("all are internally consistent", () => {
-    for (const profile of EXPLORE_REPLAY_PROFILES) {
-      expect(profileConsistencyIssues(profile)).toEqual([]);
-    }
+describe("CapturedGuildConfigSchema", () => {
+  test("rejects unknown fields rather than ignoring them", () => {
+    expect(() =>
+      CapturedGuildConfigSchema.parse({ ...config(), extra: 1 }),
+    ).toThrow();
   });
 
-  test("names are unique", () => {
-    const names = EXPLORE_REPLAY_PROFILES.map((profile) => profile.name);
-    expect(new Set(names).size).toBe(names.length);
+  test("takes exactly one guild, so bucks can never see two", () => {
+    // `resolveBucksCapability` throws when more than one betting-enabled guild
+    // is in scope; one guild per config makes that structurally impossible.
+    const parsed = config();
+    expect(typeof parsed.guildId).toBe("string");
   });
 
-  test("minimal and full disagree on every gateable capability", () => {
-    for (const capability of EXPLORE_REPLAY_CAPABILITIES) {
-      if (capability === "riotHistory") continue; // off in both, deliberately
-      expect(MINIMAL.expected[capability]).toBe(false);
-      expect(FULL.expected[capability]).toBe(true);
-    }
-  });
-
-  test("no profile enables on-demand Riot reads", () => {
-    for (const profile of EXPLORE_REPLAY_PROFILES) {
-      expect(profile.expected.riotHistory).toBe(false);
-      const riot = profile.flagOverrides.find(
-        (entry) => entry.flag === "explore_on_demand_riot_enabled",
-      );
-      expect(riot?.value).toBe(false);
-    }
-  });
-
-  test("unknown profile names fail loudly and list the known ones", () => {
-    expect(() => exploreReplayProfile("nope")).toThrow(
-      /Unknown replay profile/,
-    );
-    expect(() => exploreReplayProfile("nope")).toThrow(/minimal/);
-  });
-});
-
-describe("profileConsistencyIssues", () => {
-  test("rejects dares without bucks", () => {
-    const broken: ExploreReplayProfile = {
-      ...MINIMAL,
-      name: "broken",
-      expected: capabilitySet({ dares: true }),
-    };
-    expect(profileConsistencyIssues(broken)).toEqual([
-      expect.stringContaining("dares require a bucks capability"),
-    ]);
-  });
-
-  test("rejects creation off the web surface", () => {
-    const broken: ExploreReplayProfile = {
-      ...MINIMAL,
-      name: "broken",
-      expected: capabilitySet({ creation: true }),
-      surface: "discord",
-    };
-    expect(profileConsistencyIssues(broken)).toEqual([
-      expect.stringContaining("creation tools are web-only"),
-    ]);
+  test("rejects a capability set with unknown capabilities", () => {
+    expect(() =>
+      CapturedGuildConfigSchema.parse({
+        ...config(),
+        capabilities: { ...NOTHING, telepathy: true },
+      }),
+    ).toThrow();
   });
 });
 
@@ -99,8 +74,8 @@ describe("conditionCapability", () => {
   });
 
   test("leaves lake-answerable conditions ungated", () => {
-    // These are gated in the web UI by guild feature, but the questions
-    // themselves are ordinary analytics — demanding a refusal would be wrong.
+    // Gated in the web UI per guild, but the questions are ordinary analytics;
+    // demanding a refusal would be wrong.
     expect(conditionCapability("always")).toBeNull();
     expect(conditionCapability("customs")).toBeNull();
     expect(conditionCapability("hall_of_fame")).toBeNull();
@@ -108,53 +83,125 @@ describe("conditionCapability", () => {
 });
 
 describe("chipExpectation", () => {
-  test("ungated conditions are answerable under every profile", () => {
-    for (const profile of EXPLORE_REPLAY_PROFILES) {
-      expect(chipExpectation(profile, "always")).toBe("answerable");
-      expect(chipExpectation(profile, "customs")).toBe("answerable");
-      expect(chipExpectation(profile, "hall_of_fame")).toBe("answerable");
+  test("ungated conditions are answerable for any guild", () => {
+    for (const capabilities of [NOTHING, EVERYTHING]) {
+      expect(chipExpectation(capabilities, "always")).toBe("answerable");
+      expect(chipExpectation(capabilities, "customs")).toBe("answerable");
+      expect(chipExpectation(capabilities, "hall_of_fame")).toBe("answerable");
     }
   });
 
-  test("a gated condition flips with the profile", () => {
-    expect(chipExpectation(MINIMAL, "bucks")).toBe("gated-off");
-    expect(chipExpectation(FULL, "bucks")).toBe("answerable");
-    expect(chipExpectation(MINIMAL, "competitions")).toBe("gated-off");
-    expect(chipExpectation(FULL, "competitions")).toBe("answerable");
+  test("a gated condition follows the guild's capabilities", () => {
+    // The prod case and the beta case, which is the whole point.
+    expect(chipExpectation(NOTHING, "bucks")).toBe("gated-off");
+    expect(chipExpectation(EVERYTHING, "bucks")).toBe("answerable");
+    expect(chipExpectation(NOTHING, "competitions")).toBe("gated-off");
+    expect(chipExpectation(EVERYTHING, "competitions")).toBe("answerable");
+  });
+});
+
+describe("flagOverridesFor", () => {
+  test("turns every gate off for a guild with nothing", () => {
+    for (const override of flagOverridesFor(NOTHING)) {
+      expect(override.value).toBe(false);
+    }
   });
 
-  test("bucks-only answers bucks and dares but gates the rest", () => {
-    const bucksOnly = exploreReplayProfile("bucks-only");
-    expect(chipExpectation(bucksOnly, "bucks")).toBe("answerable");
-    expect(chipExpectation(bucksOnly, "dares")).toBe("answerable");
-    expect(chipExpectation(bucksOnly, "challenges")).toBe("gated-off");
-    expect(chipExpectation(bucksOnly, "reports")).toBe("gated-off");
+  test("sets all three dare flags together", () => {
+    // dareExploreEnabled needs (dare_v2 || extended) && scoutql_relational.
+    const overrides = flagOverridesFor(EVERYTHING);
+    for (const flag of [
+      "dare_v2",
+      "dare_extended_contracts_enabled",
+      "scoutql_relational_enabled",
+    ]) {
+      expect(overrides.find((entry) => entry.flag === flag)?.value).toBe(true);
+    }
+  });
+
+  test("never reproduces on-demand Riot reads, whatever was captured", () => {
+    const overrides = flagOverridesFor({ ...EVERYTHING, riotHistory: true });
+    expect(
+      overrides.find((entry) => entry.flag === "explore_on_demand_riot_enabled")
+        ?.value,
+    ).toBe(false);
+  });
+
+  test("covers every capability that has a gate", () => {
+    const flags = new Set(flagOverridesFor(EVERYTHING).map((e) => e.flag));
+    expect(flags.has("betting_enabled")).toBe(true);
+    expect(flags.has("challenge_runs_enabled")).toBe(true);
+    expect(flags.has("explore_creation_enabled")).toBe(true);
+  });
+});
+
+describe("guildConfigIssues", () => {
+  test("accepts a guild with nothing and a guild with everything", () => {
+    expect(guildConfigIssues(config(), "web")).toEqual([]);
+    expect(
+      guildConfigIssues(config({ capabilities: EVERYTHING }), "web"),
+    ).toEqual([]);
+  });
+
+  test("rejects dares without bucks", () => {
+    expect(
+      guildConfigIssues(
+        config({ capabilities: { ...NOTHING, dares: true } }),
+        "web",
+      ),
+    ).toEqual([expect.stringContaining("dares resolve from a bucks")]);
+  });
+
+  test("rejects creation off the web surface", () => {
+    expect(
+      guildConfigIssues(
+        config({ capabilities: { ...NOTHING, creation: true } }),
+        "discord",
+      ),
+    ).toEqual([expect.stringContaining("creation tools are web-only")]);
+  });
+
+  test("rejects a captured riotHistory, which replay never reproduces", () => {
+    expect(
+      guildConfigIssues(
+        config({ capabilities: { ...NOTHING, riotHistory: true } }),
+        "web",
+      ),
+    ).toEqual([expect.stringContaining("never reproduced")]);
   });
 });
 
 describe("capabilityMismatches", () => {
-  test("is empty when the turn resolved what the profile promised", () => {
+  test("is empty when the turn resolved what was captured", () => {
     expect(
-      capabilityMismatches({ profile: MINIMAL, resolved: capabilitySet() }),
+      capabilityMismatches({ config: config(), resolved: NOTHING }),
     ).toEqual([]);
   });
 
-  test("names the capability and the direction of the mismatch", () => {
+  test("names the capability, the guild and the direction", () => {
     const issues = capabilityMismatches({
-      profile: MINIMAL,
-      resolved: capabilitySet({ bucks: true }),
+      config: config(),
+      resolved: { ...NOTHING, bucks: true },
     });
     expect(issues).toHaveLength(1);
     expect(issues[0]).toContain("bucks");
-    expect(issues[0]).toContain("expects false");
+    expect(issues[0]).toContain("mine");
+    expect(issues[0]).toContain("captured false");
     expect(issues[0]).toContain("resolved true");
   });
 
-  test("catches a full profile that silently ran as minimal", () => {
+  test("catches a guild whose features silently vanished", () => {
+    // The drifted-snapshot case: the capture said everything, the run got
+    // nothing, and without this the bundle would be labelled as if it were
+    // the beta guild.
     const issues = capabilityMismatches({
-      profile: FULL,
-      resolved: capabilitySet(),
+      config: config({ capabilities: EVERYTHING }),
+      resolved: NOTHING,
     });
     expect(issues).toHaveLength(4);
+  });
+
+  test("checks every capability", () => {
+    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(5);
   });
 });

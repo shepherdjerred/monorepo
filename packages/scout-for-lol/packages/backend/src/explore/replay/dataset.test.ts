@@ -26,8 +26,20 @@ const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
   },
   accountRows: { parquet: 100, database: 120 },
   verifiedAt: null,
-  personas: {
-    full: { requesterId: "1", guildIds: ["2"] },
+  guilds: {
+    "1337623164146155593": {
+      guildId: "1337623164146155593",
+      label: "mine",
+      requesterId: "160509172704739328",
+      capabilities: {
+        bucks: true,
+        dares: true,
+        challenges: true,
+        creation: true,
+        riotHistory: false,
+      },
+      capturedAt: "2026-09-19T00:00:00.000Z",
+    },
   },
 });
 
@@ -54,6 +66,7 @@ function environment(
   return {
     DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_beta_snapshot",
     FEATURE_FLAGS_MODE: "disabled",
+    ENVIRONMENT: "beta",
     ...overrides,
   };
 }
@@ -71,13 +84,8 @@ describe("StageDatasetPinSchema", () => {
     ).toThrow();
   });
 
-  test("requires a persona to carry at least one guild", () => {
-    expect(() =>
-      StageDatasetPinSchema.parse({
-        ...PIN,
-        personas: { full: { requesterId: "1", guildIds: [] } },
-      }),
-    ).toThrow();
+  test("requires at least one target guild", () => {
+    expect(() => StageDatasetPinSchema.parse({ ...PIN, guilds: {} })).toThrow();
   });
 });
 
@@ -201,6 +209,36 @@ describe("replayEnvironmentIssues", () => {
       resolvedLakeDir,
     });
     expect(issues).toEqual([expect.stringContaining("FEATURE_FLAGS_MODE")]);
+  });
+
+  test("requires a prod dataset to run as prod", () => {
+    // isFeatureHardDisabled and the betaOnly override stripping both fire only
+    // at prod; a prod replay left on the default "dev" would grant a guild
+    // capabilities prod does not have.
+    const prodPin = StageDatasetPinSchema.parse({
+      ...PIN,
+      stage: "prod",
+      database: { ...PIN.database, name: "scout_prod_snapshot" },
+    });
+    const issues = replayEnvironmentIssues({
+      pin: prodPin,
+      environment: environment({
+        ENVIRONMENT: "dev",
+        DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_prod_snapshot",
+      }),
+      resolvedLakeDir,
+    });
+    expect(issues).toEqual([expect.stringContaining("pins prod")]);
+  });
+
+  test("accepts dev for a beta dataset, which resolves flags identically", () => {
+    expect(
+      replayEnvironmentIssues({
+        pin: PIN,
+        environment: environment({ ENVIRONMENT: "dev" }),
+        resolvedLakeDir,
+      }),
+    ).toEqual([]);
   });
 
   test("rejects a reachable Temporal, which could start a workflow", () => {

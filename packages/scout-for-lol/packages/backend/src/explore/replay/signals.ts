@@ -85,8 +85,21 @@ export function declinedToAnswer(input: {
 }): boolean {
   if (!looksLikeExploreRefusal(input.answer)) return false;
   if ((input.rowsReturned ?? 0) > 0) return false;
-  return numericClaims(input.answer).size === 0;
+  if (numericClaims(input.answer).size > 0) return false;
+  return input.answer.length <= DECLINE_MAX_LENGTH;
 }
+
+/**
+ * A decline is brief, and the ceiling comes from real answers.
+ *
+ * The first live run flagged "What can you do?" as a refusal: an 862-character
+ * capability overview, no query, no figures, matching the vocabulary once on
+ * "I can't access private balances for other members". Describing limits is
+ * exactly what that answer is *for*, so length is what separates it from a
+ * decline — the genuine decline in the same run ran 190 characters. This sits
+ * at roughly twice that, well clear of a real one and well under an overview.
+ */
+const DECLINE_MAX_LENGTH = 400;
 
 function answeredSomething(answer: string | null): boolean {
   return answer !== null && answer.trim() !== "";

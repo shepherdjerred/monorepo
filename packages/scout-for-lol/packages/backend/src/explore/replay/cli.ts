@@ -1,5 +1,4 @@
 import path from "node:path";
-import { EXPLORE_REPLAY_PROFILES } from "#src/explore/replay/profiles.ts";
 
 /**
  * What one invocation of the replay harness is asked to do.
@@ -14,11 +13,14 @@ export type ReplayStageName = "beta" | "prod";
 
 export type ReplayCliOptions = {
   readonly stage: ReplayStageName;
-  /** One or more profile names, run as a matrix. */
-  readonly profiles: readonly string[];
+  /**
+   * Guilds to run as, by label or id. Empty means every guild in the pin,
+   * which is the point: the dataset names the guilds worth evaluating.
+   */
+  readonly guilds: readonly string[];
   readonly includeChips: boolean;
   readonly includeConversations: boolean;
-  /** Cap on cases per profile, for iterating without paying for a sweep. */
+  /** Cap on cases per guild, for iterating without paying for a sweep. */
   readonly limit: number | null;
   readonly concurrency: number;
   /** Continue a previous run, skipping cases it already recorded. */
@@ -34,21 +36,17 @@ export type ReplayCliParseResult =
   | { readonly kind: "help" }
   | { readonly kind: "options"; readonly options: ReplayCliOptions };
 
-const PROFILE_NAMES = EXPLORE_REPLAY_PROFILES.map(
-  (profile) => profile.name,
-).join(", ");
-
 export const USAGE = `Usage: bun run test:explore:replay -- [options]
 
 Replays Explore cases against a pinned stage dataset and writes a bundle.
 
 Options:
   --stage <beta|prod>      Which pinned dataset to read (default: beta)
-  --profile <name>         Capability profile; repeat or comma-separate
-                           (default: minimal,full). Known: ${PROFILE_NAMES}
+  --guild <label|id>       Guild to run as; repeat or comma-separate
+                           (default: every guild in the dataset pin)
   --chips                  Include the shipped starter chips
   --conversations          Include the curated conversation corpus
-  --limit <n>              Cap cases per profile
+  --limit <n>              Cap cases per guild
   --concurrency <n>        Cases in flight at once (default: 4)
   --resume <runId>         Continue a run, skipping recorded cases
   --baseline <runId>       Compare against a previous run
@@ -58,8 +56,6 @@ Options:
 
 With neither --chips nor --conversations, chips are run: they need no corpus.
 This calls a live model and is a manual gate, never CI.`;
-
-const DEFAULT_PROFILES = ["minimal", "full"] as const;
 
 function parseStage(value: string): ReplayStageName {
   if (value === "beta" || value === "prod") return value;
@@ -108,15 +104,9 @@ export function defaultDatasetPinPath(
   );
 }
 
-/** Every profile name that is not one of the built-ins. */
-export function unknownProfiles(names: readonly string[]): readonly string[] {
-  const known = new Set(EXPLORE_REPLAY_PROFILES.map((entry) => entry.name));
-  return names.filter((name) => !known.has(name));
-}
-
 export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
   let stage: ReplayStageName = "beta";
-  const profiles: string[] = [];
+  const guilds: string[] = [];
   let includeChips = false;
   let includeConversations = false;
   let limit: number | null = null;
@@ -145,9 +135,9 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
         stage = parseStage(requireValue(args, index, "--stage"));
         index += 1;
         continue;
-      case "--profile":
-        profiles.push(
-          ...requireValue(args, index, "--profile")
+      case "--guild":
+        guilds.push(
+          ...requireValue(args, index, "--guild")
             .split(",")
             .map((name) => name.trim())
             .filter((name) => name.length > 0),
@@ -189,22 +179,15 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
     }
   }
 
-  const selected = profiles.length > 0 ? profiles : [...DEFAULT_PROFILES];
-  const unknown = unknownProfiles(selected);
-  if (unknown.length > 0) {
-    throw new Error(
-      `Unknown profile(s): ${unknown.join(", ")}. Known: ${PROFILE_NAMES}`,
-    );
-  }
-  // Duplicates would run the same matrix cell twice and double the spend for
+  // Duplicates would run the same guild twice and double the spend for
   // nothing; the second run's bundle would also overwrite the first's.
-  const deduplicated = [...new Set(selected)];
+  const deduplicated = [...new Set(guilds)];
 
   return {
     kind: "options",
     options: {
       stage,
-      profiles: deduplicated,
+      guilds: deduplicated,
       // Chips need no corpus, so they are what an unqualified run does.
       includeChips: includeChips || !includeConversations,
       includeConversations,

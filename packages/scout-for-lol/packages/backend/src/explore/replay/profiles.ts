@@ -1,25 +1,24 @@
+import { z } from "zod";
 import type { SuggestionCondition } from "@scout-for-lol/data";
 import type { FlagName } from "#src/configuration/flags.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 
 /**
- * Which Explore features a replay run has switched on.
+ * What a guild can actually do, captured rather than invented.
  *
- * Running a corpus under one configuration only ever shows half the product.
- * A dares question is supposed to reach the dare tool where Bryan Bucks is
- * live, and is supposed to say Scout does not do that here where it is not —
- * both are correct answers, and which one is correct depends entirely on this.
- * So the configuration is an explicit axis of the eval rather than whatever
- * the developer's guild happened to have enabled.
+ * An earlier version of this module declared synthetic configurations —
+ * "everything off", "everything on" — and forced them. That answers "how does
+ * Explore behave under a setup I made up", which is not the question. The
+ * question is how it behaves for the guilds that exist: the beta guild, which
+ * has every feature, and ordinary prod guilds, which have almost none.
+ *
+ * So a config is *recorded* from a stage's own flag service at pull time and
+ * frozen into the dataset pin. Replay reproduces it, then checks it got what
+ * was recorded. The capability set is the same shape either way, which is why
+ * `chipExpectation` and `capabilityMismatches` did not have to change.
  */
 
-/**
- * The five capabilities the agent actually resolves per turn.
- *
- * This list is `ExploreSkillOptions` minus `surface`, and it is deliberately
- * shorter than the chip catalog's list of gating conditions — see
- * `CONDITION_CAPABILITY` for why those are not the same thing.
- */
+/** The five capabilities the agent resolves per turn (`ExploreSkillOptions` minus surface). */
 export const EXPLORE_REPLAY_CAPABILITIES = [
   "bucks",
   "dares",
@@ -31,30 +30,43 @@ export const EXPLORE_REPLAY_CAPABILITIES = [
 export type ExploreReplayCapability =
   (typeof EXPLORE_REPLAY_CAPABILITIES)[number];
 
-export type ExploreCapabilitySet = Readonly<
-  Record<ExploreReplayCapability, boolean>
->;
+export const ExploreCapabilitySetSchema = z
+  .object({
+    bucks: z.boolean(),
+    dares: z.boolean(),
+    challenges: z.boolean(),
+    creation: z.boolean(),
+    riotHistory: z.boolean(),
+  })
+  .strict();
+
+export type ExploreCapabilitySet = z.infer<typeof ExploreCapabilitySetSchema>;
+
+export const CapturedGuildConfigSchema = z
+  .object({
+    /**
+     * Exactly one guild, never a list.
+     *
+     * `resolveBucksCapability` throws when more than one betting-enabled guild
+     * is in scope (`bucks-tools.ts:79-84`), so one guild per config makes that
+     * failure structurally impossible rather than a thing to remember.
+     */
+    guildId: z.string().min(1),
+    /** How this guild is referred to in a bundle: "mine", "prod-top-1", … */
+    label: z.string().min(1),
+    /** Whose turn it is; the guild's own most-active Explore user. */
+    requesterId: z.string().min(1),
+    /** What the stage's flag service actually resolved, at `capturedAt`. */
+    capabilities: ExploreCapabilitySetSchema,
+    capturedAt: z.iso.datetime(),
+  })
+  .strict();
+
+export type CapturedGuildConfig = z.infer<typeof CapturedGuildConfigSchema>;
 
 export type ExploreReplayFlagOverride = {
   readonly flag: FlagName;
   readonly value: boolean;
-};
-
-export type ExploreReplayProfile = {
-  readonly name: string;
-  readonly description: string;
-  /**
-   * What the agent must resolve for this profile to mean what it says.
-   *
-   * Checked against the capabilities the turn actually resolved, never
-   * assumed. A persona seeded without Bryan Bucks would otherwise produce a
-   * `full` run that is really `minimal`, and every conclusion drawn from it
-   * would be wrong while looking fine.
-   */
-  readonly expected: ExploreCapabilitySet;
-  /** Applied to the flag registry before the turn, scoped to the persona's guilds. */
-  readonly flagOverrides: readonly ExploreReplayFlagOverride[];
-  readonly surface: ExploreSurface;
 };
 
 /**
@@ -89,169 +101,96 @@ export function conditionCapability(
 }
 
 /**
- * What this chip is supposed to do under this profile.
+ * What this chip is supposed to do for this guild.
  *
- * `answerable` — the question is within reach and a refusal is a regression.
- * `gated-off` — the feature is not live, so the honest answer says so; an
- * answer that proceeds as if the feature existed is the regression.
+ * `answerable` — within reach, and a refusal is a regression.
+ * `gated-off` — the feature is not live here, so the honest answer says so.
  */
 export type ChipExpectation = "answerable" | "gated-off";
 
 export function chipExpectation(
-  profile: ExploreReplayProfile,
+  capabilities: ExploreCapabilitySet,
   condition: SuggestionCondition,
 ): ChipExpectation {
   const capability = conditionCapability(condition);
   if (capability === null) return "answerable";
-  return profile.expected[capability] ? "answerable" : "gated-off";
+  return capabilities[capability] ? "answerable" : "gated-off";
 }
 
 /**
- * Reasons a profile could never be satisfied, whatever the persona.
+ * The flag overrides that reproduce a captured capability set.
  *
- * Dares resolve from a non-null bucks capability, so dares-on with bucks-off
- * is not a configuration — it is a typo that would spend a whole sweep before
- * failing its capability assertions one case at a time.
+ * Derived from the set rather than stored beside it, so a pin cannot carry
+ * flags that disagree with the capabilities they are supposed to produce.
+ * Dares need all three of their flags because `dareExploreEnabled` requires
+ * `(dare_v2 || dare_extended_contracts_enabled) && scoutql_relational_enabled`
+ * on top of a bucks capability.
  */
-export function profileConsistencyIssues(
-  profile: ExploreReplayProfile,
+export function flagOverridesFor(
+  capabilities: ExploreCapabilitySet,
+): readonly ExploreReplayFlagOverride[] {
+  return [
+    { flag: "betting_enabled", value: capabilities.bucks },
+    { flag: "dare_v2", value: capabilities.dares },
+    { flag: "dare_extended_contracts_enabled", value: capabilities.dares },
+    { flag: "scoutql_relational_enabled", value: capabilities.dares },
+    { flag: "challenge_runs_enabled", value: capabilities.challenges },
+    { flag: "explore_creation_enabled", value: capabilities.creation },
+    {
+      flag: "explore_on_demand_riot_enabled",
+      // Never reproduced, whatever was captured. The tool starts a Temporal
+      // workflow and would write new matches into the snapshot mid-sweep,
+      // making two runs of one corpus incomparable.
+      value: false,
+    },
+  ];
+}
+
+/** Reasons a captured config could not be reproduced, whatever the flags say. */
+export function guildConfigIssues(
+  config: CapturedGuildConfig,
+  surface: ExploreSurface,
 ): readonly string[] {
   const issues: string[] = [];
-  if (profile.expected.dares && !profile.expected.bucks) {
+  if (config.capabilities.dares && !config.capabilities.bucks) {
     issues.push(
-      "dares require a bucks capability; a profile cannot enable dares with bucks off",
+      "dares resolve from a bucks capability; a config cannot have dares with bucks off",
     );
   }
-  if (profile.expected.creation && profile.surface !== "web") {
+  if (surface !== "web" && config.capabilities.creation) {
     issues.push(
-      `creation tools are web-only; surface "${profile.surface}" cannot resolve them`,
+      `creation tools are web-only; surface "${surface}" cannot resolve them`,
+    );
+  }
+  if (config.capabilities.riotHistory) {
+    // Captured true is possible (it is on for the beta guild), but the replay
+    // deliberately never reproduces it, so a config asserting it would fail
+    // its own capability check on every case.
+    issues.push(
+      "on-demand Riot reads are never reproduced in a replay; capture them as false",
     );
   }
   return issues;
 }
 
-function capabilities(
-  overrides: Partial<ExploreCapabilitySet>,
-): ExploreCapabilitySet {
-  return {
-    bucks: overrides.bucks ?? false,
-    dares: overrides.dares ?? false,
-    challenges: overrides.challenges ?? false,
-    creation: overrides.creation ?? false,
-    riotHistory: overrides.riotHistory ?? false,
-  };
-}
-
 /**
- * On-demand Riot reads stay off in every built-in profile.
- *
- * The tool starts a Temporal workflow rather than fetching inline, so a
- * harness that ran it would need a worker and would write new matches into the
- * snapshot mid-sweep, making two runs of one corpus incomparable. It is also
- * faithful: the flag defaults to false and is overridden only for one beta
- * server, so essentially every real turn ran without it.
- */
-const RIOT_OFF: ExploreReplayFlagOverride = {
-  flag: "explore_on_demand_riot_enabled",
-  value: false,
-};
-
-export const EXPLORE_REPLAY_PROFILES: readonly ExploreReplayProfile[] = [
-  {
-    name: "minimal",
-    description:
-      "Every gated feature off. Only lake analytics are reachable, so every conditioned chip must say so rather than improvise.",
-    expected: capabilities({}),
-    flagOverrides: [
-      RIOT_OFF,
-      { flag: "betting_enabled", value: false },
-      { flag: "dare_v2", value: false },
-      { flag: "challenge_runs_enabled", value: false },
-      { flag: "explore_creation_enabled", value: false },
-    ],
-    surface: "web",
-  },
-  {
-    name: "full",
-    description:
-      "Every feature a web turn can have. A conditioned chip that refuses here is a regression.",
-    expected: capabilities({
-      bucks: true,
-      dares: true,
-      challenges: true,
-      creation: true,
-    }),
-    flagOverrides: [
-      RIOT_OFF,
-      { flag: "betting_enabled", value: true },
-      { flag: "dare_v2", value: true },
-      { flag: "dare_extended_contracts_enabled", value: true },
-      { flag: "scoutql_relational_enabled", value: true },
-      { flag: "challenge_runs_enabled", value: true },
-      { flag: "explore_creation_enabled", value: true },
-    ],
-    surface: "web",
-  },
-  {
-    name: "bucks-only",
-    description:
-      "Bryan Bucks and dares, nothing else. Catches a challenges or creation question answered through the bucks tools.",
-    expected: capabilities({ bucks: true, dares: true }),
-    flagOverrides: [
-      RIOT_OFF,
-      { flag: "betting_enabled", value: true },
-      { flag: "dare_v2", value: true },
-      { flag: "dare_extended_contracts_enabled", value: true },
-      { flag: "scoutql_relational_enabled", value: true },
-      { flag: "challenge_runs_enabled", value: false },
-      { flag: "explore_creation_enabled", value: false },
-    ],
-    surface: "web",
-  },
-  {
-    name: "creation-only",
-    description:
-      "Reports, subscriptions and competitions, nothing else. Catches creation leaking into a bucks or challenges answer.",
-    expected: capabilities({ creation: true }),
-    flagOverrides: [
-      RIOT_OFF,
-      { flag: "betting_enabled", value: false },
-      { flag: "dare_v2", value: false },
-      { flag: "challenge_runs_enabled", value: false },
-      { flag: "explore_creation_enabled", value: true },
-    ],
-    surface: "web",
-  },
-];
-
-export function exploreReplayProfile(name: string): ExploreReplayProfile {
-  const profile = EXPLORE_REPLAY_PROFILES.find((entry) => entry.name === name);
-  if (profile === undefined) {
-    const known = EXPLORE_REPLAY_PROFILES.map((entry) => entry.name).join(", ");
-    throw new Error(
-      `Unknown replay profile "${name}". Known profiles: ${known}`,
-    );
-  }
-  return profile;
-}
-
-/**
- * Did this turn resolve the capabilities its profile promised?
+ * Did this turn resolve what the capture recorded?
  *
  * Returns every mismatch rather than a boolean so a failing case can say which
- * capability was wrong and in which direction.
+ * capability was wrong and in which direction. This is what stops a run whose
+ * guild install or flag state has drifted from being silently mislabelled.
  */
 export function capabilityMismatches(input: {
-  readonly profile: ExploreReplayProfile;
+  readonly config: CapturedGuildConfig;
   readonly resolved: ExploreCapabilitySet;
 }): readonly string[] {
   return EXPLORE_REPLAY_CAPABILITIES.flatMap((capability) => {
-    const expected = input.profile.expected[capability];
+    const expected = input.config.capabilities[capability];
     const actual = input.resolved[capability];
     return expected === actual
       ? []
       : [
-          `${capability}: profile "${input.profile.name}" expects ${String(expected)}, turn resolved ${String(actual)}`,
+          `${capability}: guild ${input.config.label} captured ${String(expected)}, turn resolved ${String(actual)}`,
         ];
   });
 }

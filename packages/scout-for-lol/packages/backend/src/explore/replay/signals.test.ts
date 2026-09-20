@@ -90,6 +90,27 @@ describe("declinedToAnswer", () => {
     ).toBe(false);
   });
 
+  test("does not treat a long capability overview as a decline", () => {
+    // From the first live beta run: "What can you do?" answered with an
+    // 862-character overview that says "I can't access private balances",
+    // which is the answer doing its job, not declining.
+    const overview = `I can help with League match analysis, current League
+      reference, Bryan Bucks, dares and challenges. ${"Detail. ".repeat(60)}
+      I can't access private balances for other members.`;
+    expect(overview.length).toBeGreaterThan(400);
+    expect(declinedToAnswer({ answer: overview, rowsReturned: null })).toBe(
+      false,
+    );
+  });
+
+  test("still accepts a real decline of ordinary length", () => {
+    // Also from the first live run, at 190 characters.
+    const real =
+      "I can't provide a server-wide Bryan Bucks balance leaderboard or another member's current balance. I can show your own balance, or summarize guild-wide earnings instead.";
+    expect(real.length).toBeLessThan(400);
+    expect(declinedToAnswer({ answer: real, rowsReturned: null })).toBe(true);
+  });
+
   test("is false for an answer with no refusal wording at all", () => {
     expect(declinedToAnswer({ answer: "Ezreal leads.", rowsReturned: 0 })).toBe(
       false,

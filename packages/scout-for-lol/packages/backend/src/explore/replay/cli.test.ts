@@ -1,9 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  defaultDatasetPinPath,
-  parseReplayArgs,
-  unknownProfiles,
-} from "./cli.ts";
+import { defaultDatasetPinPath, parseReplayArgs } from "./cli.ts";
 
 function options(args: readonly string[]) {
   const result = parseReplayArgs(args);
@@ -15,7 +11,9 @@ describe("parseReplayArgs defaults", () => {
   test("runs chips across minimal and full", () => {
     const parsed = options([]);
     expect(parsed.stage).toBe("beta");
-    expect(parsed.profiles).toEqual(["minimal", "full"]);
+    // No selection means every guild in the pin: the dataset already names the
+    // guilds worth evaluating.
+    expect(parsed.guilds).toEqual([]);
     // Chips need no corpus, so they are what an unqualified run does.
     expect(parsed.includeChips).toBe(true);
     expect(parsed.includeConversations).toBe(false);
@@ -37,33 +35,32 @@ describe("parseReplayArgs defaults", () => {
   });
 });
 
-describe("parseReplayArgs profiles", () => {
-  test("accepts a comma-separated matrix", () => {
-    expect(options(["--profile", "minimal,full"]).profiles).toEqual([
-      "minimal",
-      "full",
+describe("parseReplayArgs guilds", () => {
+  test("accepts a comma-separated list", () => {
+    expect(options(["--guild", "mine,prod-top-1"]).guilds).toEqual([
+      "mine",
+      "prod-top-1",
     ]);
   });
 
   test("accepts a repeated flag", () => {
     expect(
-      options(["--profile", "minimal", "--profile", "bucks-only"]).profiles,
-    ).toEqual(["minimal", "bucks-only"]);
+      options(["--guild", "mine", "--guild", "prod-top-1"]).guilds,
+    ).toEqual(["mine", "prod-top-1"]);
   });
 
-  test("deduplicates, so a matrix cell is not paid for twice", () => {
-    expect(options(["--profile", "full,full"]).profiles).toEqual(["full"]);
+  test("accepts a raw guild id as well as a label", () => {
+    expect(options(["--guild", "1337623164146155593"]).guilds).toEqual([
+      "1337623164146155593",
+    ]);
   });
 
-  test("rejects an unknown profile and lists the known ones", () => {
-    expect(() => options(["--profile", "everything"])).toThrow(
-      /Unknown profile\(s\): everything/,
-    );
-    expect(() => options(["--profile", "everything"])).toThrow(/minimal/);
+  test("deduplicates, so a guild is not paid for twice", () => {
+    expect(options(["--guild", "mine,mine"]).guilds).toEqual(["mine"]);
   });
 
   test("ignores empty entries from a trailing comma", () => {
-    expect(options(["--profile", "full,"]).profiles).toEqual(["full"]);
+    expect(options(["--guild", "mine,"]).guilds).toEqual(["mine"]);
   });
 });
 
@@ -109,7 +106,7 @@ describe("parseReplayArgs values", () => {
   test("requires a value after each flag", () => {
     for (const flag of [
       "--stage",
-      "--profile",
+      "--guild",
       "--limit",
       "--concurrency",
       "--resume",
@@ -127,16 +124,6 @@ describe("parseReplayArgs values", () => {
   test("returns help for --help", () => {
     expect(parseReplayArgs(["--help"]).kind).toBe("help");
     expect(parseReplayArgs(["-h"]).kind).toBe("help");
-  });
-});
-
-describe("unknownProfiles", () => {
-  test("is empty for built-ins", () => {
-    expect(unknownProfiles(["minimal", "full", "bucks-only"])).toEqual([]);
-  });
-
-  test("names only what it does not know", () => {
-    expect(unknownProfiles(["full", "nope"])).toEqual(["nope"]);
   });
 });
 

@@ -1,5 +1,9 @@
 import path from "node:path";
 import { z } from "zod";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
 import {
   addFlagOverride,
@@ -28,8 +32,9 @@ import type { ReplayCliOptions } from "#src/explore/replay/cli.ts";
 import {
   capabilityMismatches,
   chipExpectation,
-  exploreReplayProfile,
-  type ExploreReplayProfile,
+  flagOverridesFor,
+  guildConfigIssues,
+  type CapturedGuildConfig,
 } from "#src/explore/replay/profiles.ts";
 import {
   exploreChipCases,
@@ -61,7 +66,7 @@ import {
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 
 /**
- * One replay run: verify the dataset, then take each profile through the cases.
+ * One replay run: verify the dataset, then take each guild through the cases.
  *
  * Loaded dynamically by `replay-explore.ts`, after that script has proved the
  * environment points at the pinned dataset. Importing this module binds the
@@ -165,21 +170,25 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
   }
 }
 
-/** Apply a profile's flags to the persona's guilds, and undo them afterwards. */
-function applyProfileFlags(
-  profile: ExploreReplayProfile,
-  guildIds: readonly string[],
-): () => void {
-  for (const override of profile.flagOverrides) {
+/**
+ * Reproduce a captured capability set, and undo it afterwards.
+ *
+ * Each flag is cleared before the guild's own override is added, so the
+ * registry ends up saying exactly what the capture recorded and nothing else.
+ * That matters for `betting_enabled` in particular: `resolveBucksCapability`
+ * bounds its candidates to guilds carrying a whole-guild override, so a
+ * leftover override for a different guild would put two betting guilds in
+ * play — which `bucks-tools.ts` throws on.
+ */
+function applyGuildFlags(config: CapturedGuildConfig): () => void {
+  const overrides = flagOverridesFor(config.capabilities);
+  const guildId = DiscordGuildIdSchema.parse(config.guildId);
+  for (const override of overrides) {
     clearFlagOverrides(override.flag);
-    for (const guildId of guildIds) {
-      addFlagOverride(override.flag, override.value, {
-        server: DiscordGuildIdSchema.parse(guildId),
-      });
-    }
+    addFlagOverride(override.flag, override.value, { server: guildId });
   }
   return () => {
-    for (const override of profile.flagOverrides) {
+    for (const override of overrides) {
       resetFlagOverrides(override.flag);
     }
   };
@@ -201,21 +210,25 @@ function observationSide(observation: ReplayObservation): ReplaySide {
   };
 }
 
-async function runProfile(input: {
+async function runGuild(input: {
   readonly options: ReplayCliOptions;
   readonly pin: StageDatasetPin;
-  readonly profile: ExploreReplayProfile;
+  readonly config: CapturedGuildConfig;
   readonly runId: string;
 }): Promise<{ readonly directory: string; readonly passed: boolean }> {
-  const { options, pin, profile, runId } = input;
-  const persona = pin.personas[profile.name];
-  if (persona === undefined) {
+  const { options, pin, config, runId } = input;
+  const surface = "web" as const;
+  const configIssues = guildConfigIssues(config, surface);
+  if (configIssues.length > 0) {
     throw new Error(
-      `The ${pin.stage} dataset pin has no persona for profile "${profile.name}". Add one to ${pin.lake.dir.replace("report-lake", "dataset.json")}.`,
+      [
+        `Captured config for guild ${config.label} cannot be reproduced:`,
+        ...configIssues.map((issue) => `  - ${issue}`),
+      ].join("\n"),
     );
   }
 
-  const restoreFlags = applyProfileFlags(profile, persona.guildIds);
+  const restoreFlags = applyGuildFlags(config);
   try {
     const runDir = path.join(replayBundleRoot(Bun.env), runId);
     await createBundleDirectory(runDir);
@@ -241,7 +254,7 @@ async function runProfile(input: {
       );
     }
 
-    const requesterId = DiscordAccountIdSchema.parse(persona.requesterId);
+    const requesterId = DiscordAccountIdSchema.parse(config.requesterId);
     const chips = exploreChipCases()
       .filter((chip) =>
         options.onlyCaseId === null ? true : chip.caseId === options.onlyCaseId,
@@ -257,8 +270,8 @@ async function runProfile(input: {
       question: chip.prompt,
       history: [],
       requesterId,
-      guildIds: persona.guildIds,
-      surface: profile.surface,
+      guildIds: [config.guildId],
+      surface,
       originChannelId: null,
     }));
 
@@ -271,8 +284,8 @@ async function runProfile(input: {
           runId,
           startedAt: new Date().toISOString(),
           stage: pin.stage,
-          profile: profile.name,
-          expectedCapabilities: profile.expected,
+          profile: config.label,
+          expectedCapabilities: config.capabilities,
           lake: {
             buildId: pin.lake.buildId,
             puuidRemapFingerprint: pin.lake.puuidRemapFingerprint,
@@ -284,18 +297,19 @@ async function runProfile(input: {
           corpusVersion: null,
           promptSha256: sha256Hex(
             exploreAgentInstructions({
-              bucks: profile.expected.bucks ? { currentTime: "pinned" } : null,
-              dares: profile.expected.dares,
-              challenges: profile.expected.challenges,
-              creation: profile.expected.creation,
-              riotHistory: profile.expected.riotHistory,
-              surface: profile.surface,
+              bucks: config.capabilities.bucks
+                ? { currentTime: "pinned" }
+                : null,
+              dares: config.capabilities.dares,
+              challenges: config.capabilities.challenges,
+              creation: config.capabilities.creation,
+              riotHistory: config.capabilities.riotHistory,
+              surface,
             }),
           ),
-          flagOverrides: profile.flagOverrides.map((override) => ({
-            flag: override.flag,
-            value: override.value,
-          })),
+          flagOverrides: flagOverridesFor(config.capabilities).map(
+            (override) => ({ flag: override.flag, value: override.value }),
+          ),
           tokenBudgets: {
             hourly: Number(Bun.env["LLM_HOURLY_TOKEN_BUDGET"] ?? 2_000_000),
             daily: Number(Bun.env["LLM_DAILY_TOKEN_BUDGET"] ?? 20_000_000),
@@ -329,7 +343,7 @@ async function runProfile(input: {
         onComplete: async (observation) => {
           const chip = chipByCaseId.get(observation.caseId);
           const mismatches = capabilityMismatches({
-            profile,
+            config,
             resolved: observation.capabilities,
           });
           const signals = replaySignals({
@@ -344,7 +358,7 @@ async function runProfile(input: {
             chipExpectation:
               chip === undefined
                 ? null
-                : chipExpectation(profile, chip.condition),
+                : chipExpectation(config.capabilities, chip.condition),
             capabilityMismatches: mismatches,
             baselineRowsReturned: null,
             candidateRowsReturned: observation.preview?.rowsReturned ?? null,
@@ -359,13 +373,13 @@ async function runProfile(input: {
                 meta: {
                   caseId: observation.caseId,
                   kind: "chip",
-                  profile: profile.name,
+                  profile: config.label,
                   condition: chip?.condition ?? null,
                   category: chip?.category ?? null,
                   expectation:
                     chip === undefined
                       ? null
-                      : chipExpectation(profile, chip.condition),
+                      : chipExpectation(config.capabilities, chip.condition),
                   capabilities: observation.capabilities,
                   capabilityMismatches: mismatches,
                   durationMs: observation.durationMs,
@@ -405,7 +419,7 @@ async function runProfile(input: {
         {
           version: 1,
           runId,
-          profile: profile.name,
+          profile: config.label,
           stage: pin.stage,
           model,
           generatedAt: new Date().toISOString(),
@@ -429,21 +443,46 @@ export async function runReplay(input: {
   readonly pin: StageDatasetPin;
   readonly pinPath: string;
 }): Promise<ReplayRunOutcome> {
+  // Without a registered provider, `isPolicyEnabled` awaits an OpenFeature
+  // client that never becomes ready and the first capability resolution hangs
+  // forever. "disabled" registers none, so evaluations fall through to the
+  // registry defaults the guild overrides are applied to.
+  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
   await verifyDataset(input.pin);
 
   const stamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
   const directories: string[] = [];
   let passed = true;
 
-  for (const name of input.options.profiles) {
-    const profile = exploreReplayProfile(name);
+  // No selection means every guild in the pin: the dataset already names the
+  // guilds worth evaluating, so an unqualified run evaluates all of them.
+  const wanted = new Set(input.options.guilds);
+  const configs = Object.values(input.pin.guilds).filter(
+    (config) =>
+      wanted.size === 0 ||
+      wanted.has(config.label) ||
+      wanted.has(config.guildId),
+  );
+  if (configs.length === 0) {
+    const known = Object.values(input.pin.guilds)
+      .map((config) => `${config.label} (${config.guildId})`)
+      .join(", ");
+    throw new Error(
+      `No guild in the ${input.pin.stage} pin matches ${[...wanted].join(", ")}. Known: ${known}`,
+    );
+  }
+
+  for (const config of configs) {
     const runId =
-      input.options.resumeRunId ?? `${input.pin.stage}-${name}-${stamp}`;
-    process.stdout.write(`Replaying profile "${name}" as run ${runId}…\n`);
-    const result = await runProfile({
+      input.options.resumeRunId ??
+      `${input.pin.stage}-${config.label}-${stamp}`;
+    process.stdout.write(
+      `Replaying guild ${config.label} (${config.guildId}) as run ${runId}…\n`,
+    );
+    const result = await runGuild({
       options: input.options,
       pin: input.pin,
-      profile,
+      config,
       runId,
     });
     directories.push(result.directory);
@@ -451,6 +490,9 @@ export async function runReplay(input: {
     process.stdout.write(`  bundle: ${result.directory}\n`);
   }
 
+  // Both hold open handles; without closing them the process sits idle
+  // with its work finished, which reads as a hang.
   await prisma.$disconnect();
+  await shutdownFeatureFlags();
   return { passed, runDirectories: directories };
 }
