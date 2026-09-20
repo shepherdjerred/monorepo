@@ -92,9 +92,11 @@ zoomout-min-tps: 18.0
 showplayerfacesinmenu: true
 grayplayerswhenhidden: true
 showlayercontrol: true
-defaultzoom: 0
+# Fresh RLCraft worlds are rendered into the flat overview first; make the
+# public landing page open on that rendered view instead of an empty surface.
+defaultzoom: 3
 defaultworld: world
-defaultmap: surface
+defaultmap: flat
 persist-ids-by-ip: false
 cyrillic-support: false
 snapshotcachesize: 250
