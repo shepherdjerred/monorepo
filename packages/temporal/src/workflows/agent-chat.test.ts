@@ -817,11 +817,8 @@ describe("agent chat catalog and schedules", () => {
       });
       const binding = { kind: "imessage" as const, conversationId: "guid-1" };
       await handle.executeUpdate(bindAgentChatUpdate, {
-        args: [
-          binding,
-          CONFIG.chatId,
-          { updatedAt: "2026-09-14T16:04:00.000Z" },
-        ],
+        // Legacy histories recorded the update timestamp as a bare string.
+        args: [binding, CONFIG.chatId, "2026-09-14T16:04:00.000Z"],
       });
       await handle.executeUpdate(bindAgentChatUpdate, {
         args: [

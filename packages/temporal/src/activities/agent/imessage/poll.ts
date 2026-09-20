@@ -11,6 +11,37 @@ import {
   type BlueBubblesCursor,
 } from "#shared/agent/agent-chat-imessage.ts";
 
+const BLUEBUBBLES_QUERY_LIMIT = 1000;
+
+async function initialBlueBubblesRowId(): Promise<number> {
+  let watermark = 0;
+  for (;;) {
+    const messages = z
+      .array(BlueBubblesMessageSchema)
+      .max(BLUEBUBBLES_QUERY_LIMIT)
+      .parse(
+        await blueBubblesRequest("/api/v1/message/query", {
+          with: ["chats"],
+          limit: BLUEBUBBLES_QUERY_LIMIT,
+          sort: "DESC",
+          where: [
+            {
+              statement: "message.ROWID > :cursor",
+              args: { cursor: watermark },
+            },
+          ],
+        }),
+      );
+    if (messages.length === 0) return watermark;
+    const next = Math.max(...messages.map((message) => message.originalROWID));
+    if (next <= watermark) {
+      throw new Error("BlueBubbles initialization did not advance its ROWID");
+    }
+    watermark = next;
+    if (messages.length < BLUEBUBBLES_QUERY_LIMIT) return watermark;
+  }
+}
+
 export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   const cursor = BlueBubblesCursorSchema.parse(rawCursor);
   const config = await imessageIngressConfig();
@@ -21,35 +52,31 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
       commands: [],
     };
   const initializing = cursor.lastRowId === 0;
-  const messages = z
-    .array(BlueBubblesMessageSchema)
-    .max(1000)
-    .parse(
-      await blueBubblesRequest("/api/v1/message/query", {
-        with: ["chats"],
-        limit: initializing ? 1 : 1000,
-        sort: initializing ? "DESC" : "ASC",
-        ...(initializing
-          ? {}
-          : {
-              where: [
-                {
-                  statement: "message.ROWID > :cursor",
-                  args: { cursor: cursor.lastRowId },
-                },
-              ],
-            }),
-      }),
-    );
   if (initializing) {
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
-      lastRowId: messages[0]?.originalROWID ?? 0,
+      lastRowId: await initialBlueBubblesRowId(),
       commands: [],
     });
   }
+  const messages = z
+    .array(BlueBubblesMessageSchema)
+    .max(BLUEBUBBLES_QUERY_LIMIT)
+    .parse(
+      await blueBubblesRequest("/api/v1/message/query", {
+        with: ["chats"],
+        limit: BLUEBUBBLES_QUERY_LIMIT,
+        sort: "ASC",
+        where: [
+          {
+            statement: "message.ROWID > :cursor",
+            args: { cursor: cursor.lastRowId },
+          },
+        ],
+      }),
+    );
   // The API sorts by message time, not ROWID. A full page cannot safely advance a ROWID cursor.
-  if (messages.length === 1000)
+  if (messages.length === BLUEBUBBLES_QUERY_LIMIT)
     throw new Error(
       "BlueBubbles backlog exceeds 999 messages; cursor was not advanced",
     );

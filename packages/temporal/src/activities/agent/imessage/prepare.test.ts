@@ -3,6 +3,7 @@ const mocks = vi.hoisted(() => ({
   get: vi.fn(),
   resolve: vi.fn(),
   bind: vi.fn(),
+  register: vi.fn(),
   list: vi.fn(),
   config: vi.fn(),
 }));
@@ -14,6 +15,7 @@ vi.mock("#lib/agent-chat-client.ts", () => ({
   getAgentChat: mocks.get,
   resolveAgentChatBinding: mocks.resolve,
   bindAgentChat: mocks.bind,
+  registerAgentChat: mocks.register,
   listAgentChats: mocks.list,
 }));
 import { prepareImessageCommand } from "./prepare.ts";
@@ -97,6 +99,12 @@ describe("iMessage chat preparation", () => {
       {
         updatedAt: BASE.submittedAt,
         sourceSequence: BASE.sourceSequence,
+      },
+    );
+    expect(mocks.register).toHaveBeenCalledWith(
+      {},
+      {
+        chatId: "scheduled-chat",
       },
     );
   });
