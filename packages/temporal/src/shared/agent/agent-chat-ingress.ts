@@ -13,7 +13,9 @@ export function validateAgentChatIngressTimestamp(
 ): void {
   const currentTimeMs = Date.parse(currentTime);
   if (Number.isNaN(currentTimeMs)) {
-    throw new TypeError("Agent chat API clock returned an invalid timestamp");
+    throw new TypeError(
+      "Agent chat ingress clock returned an invalid timestamp",
+    );
   }
   if (Date.parse(timestamp) > currentTimeMs + MAX_INGRESS_FUTURE_SKEW_MS) {
     throw new AgentChatTimestampInFutureError();

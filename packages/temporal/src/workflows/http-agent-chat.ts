@@ -1,7 +1,8 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { proxyActivities, workflowInfo } from "@temporalio/workflow";
 import {
   AgentChatTurnResultSchema,
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
   type AgentChatTurnResult,
@@ -25,7 +26,14 @@ export async function httpAgentChatWorkflow(
   rawCommand: HttpAgentChatCommand,
 ): Promise<AgentChatTurnResult> {
   const command = HttpAgentChatCommandSchema.parse(rawCommand);
+  const providerStartDeadline = new Date(
+    workflowInfo().startTime.getTime() +
+      AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+  ).toISOString();
   return AgentChatTurnResultSchema.parse(
-    await activities.executeHttpAgentChatCommand(command),
+    await activities.executeHttpAgentChatCommand({
+      command,
+      providerStartDeadline,
+    }),
   );
 }

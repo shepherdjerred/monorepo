@@ -34,6 +34,14 @@ export const HttpAgentChatCommandSchema = z.discriminatedUnion("kind", [
 ]);
 export type HttpAgentChatCommand = z.infer<typeof HttpAgentChatCommandSchema>;
 
+export const HttpAgentChatActivityInputSchema = z.strictObject({
+  command: HttpAgentChatCommandSchema,
+  providerStartDeadline: z.iso.datetime({ offset: true }),
+});
+export type HttpAgentChatActivityInput = z.infer<
+  typeof HttpAgentChatActivityInputSchema
+>;
+
 function requestIdentity(request: z.infer<typeof AgentChatTurnRequestSchema>) {
   return {
     turnId: request.turnId,
@@ -104,6 +112,6 @@ export type HttpAgentChatTurnStatus = z.infer<
 
 export type HttpAgentChatActivities = {
   executeHttpAgentChatCommand: (
-    command: HttpAgentChatCommand,
+    input: HttpAgentChatActivityInput,
   ) => Promise<z.infer<typeof AgentChatTurnResultSchema>>;
 };

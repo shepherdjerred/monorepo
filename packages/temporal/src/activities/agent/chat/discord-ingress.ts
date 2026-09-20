@@ -6,12 +6,13 @@ import { continueAgentChat, runAgentChatTurn } from "#lib/agent-chat-client.ts";
 import {
   DISCORD_MESSAGE_LIMIT,
   DeliverDiscordAgentChatMessageInputSchema,
+  DiscordAgentChatActivityInputSchema,
   DiscordAgentChatCommandResultSchema,
   DiscordAgentChatCommandSchema,
   discordAgentChatConfig,
   discordAgentChatSource,
   type DeliverDiscordAgentChatMessageInput,
-  type DiscordAgentChatCommand,
+  type DiscordAgentChatActivityInput,
   type DiscordAgentChatCommandResult,
 } from "#shared/agent/agent-chat-discord.ts";
 
@@ -47,9 +48,10 @@ export function chunkDiscordAgentChatText(text: string): string[] {
 }
 
 export async function executeDiscordAgentChatCommand(
-  rawCommand: DiscordAgentChatCommand,
+  rawInput: DiscordAgentChatActivityInput,
 ): Promise<DiscordAgentChatCommandResult> {
-  const command = DiscordAgentChatCommandSchema.parse(rawCommand);
+  const input = DiscordAgentChatActivityInputSchema.parse(rawInput);
+  const command = DiscordAgentChatCommandSchema.parse(input.command);
   const context = Context.current();
   const heartbeat = (): void => {
     context.heartbeat({
@@ -66,6 +68,7 @@ export async function executeDiscordAgentChatCommand(
       turnId: `discord-${command.interactionId}`,
       prompt: command.prompt,
       submittedAt: command.submittedAt,
+      providerStartDeadline: input.providerStartDeadline,
       source,
     };
     const result =

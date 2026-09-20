@@ -3,12 +3,14 @@ import { Worker } from "@temporalio/worker";
 import { describe, expect, test } from "vitest";
 import type {
   DeliverDiscordAgentChatMessageInput,
+  DiscordAgentChatActivityInput,
   DiscordAgentChatCommand,
 } from "#shared/agent/agent-chat-discord.ts";
 import { DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS } from "#shared/agent/agent-chat-discord.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
 } from "#shared/agent/agent-chat.ts";
@@ -26,6 +28,7 @@ describe("discordAgentChatWorkflow", () => {
   test("checkpoints the command result before idempotent message delivery", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const deliveries: DeliverDiscordAgentChatMessageInput[] = [];
+    let activityInput: DiscordAgentChatActivityInput | undefined;
     const workflowWorker = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: TASK_QUEUES.WORKFLOWS,
@@ -35,9 +38,14 @@ describe("discordAgentChatWorkflow", () => {
       connection: environment.nativeConnection,
       taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
       activities: {
-        executeDiscordAgentChatCommand: () => ({
-          messages: ["first chunk", "second chunk"],
-        }),
+        executeDiscordAgentChatCommand: (
+          input: DiscordAgentChatActivityInput,
+        ) => {
+          activityInput = input;
+          return {
+            messages: ["first chunk", "second chunk"],
+          };
+        },
         deliverDiscordAgentChatMessage: (
           input: DeliverDiscordAgentChatMessageInput,
         ) => {
@@ -79,6 +87,15 @@ describe("discordAgentChatWorkflow", () => {
         commandActivity?.activityTaskScheduledEventAttributes?.retryPolicy
           ?.maximumAttempts,
       ).toBe(AGENT_CHAT_INGRESS_MAX_ATTEMPTS);
+      const description = await environment.client.workflow
+        .getHandle(workflowId)
+        .describe();
+      expect(activityInput?.providerStartDeadline).toBe(
+        new Date(
+          description.startTime.getTime() +
+            AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+        ).toISOString(),
+      );
       const deliveryActivity = history.events?.find(
         (event) =>
           event.activityTaskScheduledEventAttributes?.activityType?.name ===

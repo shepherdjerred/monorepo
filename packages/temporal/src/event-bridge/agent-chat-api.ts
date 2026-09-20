@@ -36,7 +36,7 @@ import {
 import {
   AgentChatTimestampInFutureError,
   validateAgentChatIngressTimestamp,
-} from "./agent-chat-timestamp.ts";
+} from "#shared/agent/agent-chat-ingress.ts";
 import { bearerMatches, bearerToken } from "./http-auth.ts";
 
 const COMPONENT = "agent-chat-api";

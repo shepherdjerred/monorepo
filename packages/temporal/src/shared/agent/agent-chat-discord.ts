@@ -42,6 +42,13 @@ export const DiscordAgentChatCommandSchema = z.discriminatedUnion("kind", [
 export type DiscordAgentChatCommand = z.infer<
   typeof DiscordAgentChatCommandSchema
 >;
+export const DiscordAgentChatActivityInputSchema = z.strictObject({
+  command: DiscordAgentChatCommandSchema,
+  providerStartDeadline: z.iso.datetime({ offset: true }),
+});
+export type DiscordAgentChatActivityInput = z.infer<
+  typeof DiscordAgentChatActivityInputSchema
+>;
 export type DiscordAgentChatNewCommand = Extract<
   DiscordAgentChatCommand,
   { kind: "new" }
@@ -91,7 +98,7 @@ export type DeliverDiscordAgentChatMessageInput = z.infer<
 
 export type DiscordAgentChatActivities = {
   executeDiscordAgentChatCommand: (
-    input: DiscordAgentChatCommand,
+    input: DiscordAgentChatActivityInput,
   ) => Promise<DiscordAgentChatCommandResult>;
   deliverDiscordAgentChatMessage: (
     input: DeliverDiscordAgentChatMessageInput,

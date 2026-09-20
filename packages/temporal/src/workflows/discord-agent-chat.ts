@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { proxyActivities, workflowInfo } from "@temporalio/workflow";
 import {
   DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS,
   DiscordAgentChatCommandResultSchema,
@@ -9,6 +9,7 @@ import {
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
 } from "#shared/agent/agent-chat.ts";
@@ -44,10 +45,17 @@ export async function discordAgentChatWorkflow(
   rawCommand: DiscordAgentChatCommand,
 ): Promise<void> {
   const command = DiscordAgentChatCommandSchema.parse(rawCommand);
+  const providerStartDeadline = new Date(
+    workflowInfo().startTime.getTime() +
+      AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+  ).toISOString();
   let messages: string[];
   try {
     const result = DiscordAgentChatCommandResultSchema.parse(
-      await commandActivities.executeDiscordAgentChatCommand(command),
+      await commandActivities.executeDiscordAgentChatCommand({
+        command,
+        providerStartDeadline,
+      }),
     );
     messages = result.messages;
   } catch {
