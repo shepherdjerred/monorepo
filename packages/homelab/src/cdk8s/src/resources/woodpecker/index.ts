@@ -128,6 +128,27 @@ export function createWoodpeckerServer(chart: Chart) {
           CONFIG_EXTENSION_ENDPOINT,
         ),
         WOODPECKER_EXTENSIONS_ALLOWED_HOSTS: EnvValue.fromValue("private"),
+        // Exclusive is load-bearing, not a tidiness flag. Without it the
+        // server wraps the extension in `NewCombined(forge, http)`: it reads
+        // `.woodpecker/*.yaml` from the branch first and hands it to the
+        // extension as the fallback config. When the extension then returns
+        // anything but 200 or 204, `server/pipeline/create.go` takes the
+        // "will fallback to old config" branch and executes the YAML the
+        // branch shipped -- which, with ALLOW_NATIVE_SECRETS on the agent,
+        // may name any secret in this namespace. A pull request can force
+        // that error at will, because the extension resolves the image
+        // digests and version catalog at the pull request's own commit and
+        // fails closed on a malformed value. Exclusive skips the forge read
+        // entirely, so there is no branch config to fall back to.
+        WOODPECKER_CONFIG_EXTENSION_EXCLUSIVE: EnvValue.fromValue("true"),
+        // Applied to a repository when it is activated. Woodpecker's own
+        // default is "forks", which lets any account with push access to a
+        // branch in this repository start a pipeline without review. CI here
+        // is meant to run for one human and his bots, so everything else
+        // starts blocked and waits for an explicit approval. The per-repo
+        // allowlist that exempts those accounts lives in the server database
+        // (`approval_allowed_users`); this flag only sets the default.
+        WOODPECKER_DEFAULT_APPROVAL_MODE: EnvValue.fromValue("all_events"),
         // Woodpecker serves /metrics only when this is set, and requires the
         // scraper to present it as a bearer token. The PodMonitor in
         // resources/monitoring/woodpecker.ts reads the same secret key.
