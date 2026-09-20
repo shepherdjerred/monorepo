@@ -32,6 +32,13 @@ export const AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS =
 export const AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS =
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS * AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS +
   AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// Ingress must remain available for the complete retained receipt lifetime,
+// including the initial queue delay before its first Activity can start.
+export const AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS =
+  AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+export const AGENT_CHAT_INGRESS_MAX_ATTEMPTS = Math.ceil(
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS / AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+);
 // Reserve a complete provider execution window plus result propagation margin
 // before the receipt itself can expire.
 export const AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS =

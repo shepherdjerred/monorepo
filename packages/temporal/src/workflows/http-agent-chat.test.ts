@@ -3,6 +3,8 @@ import { Worker } from "@temporalio/worker";
 import { describe, expect, test } from "vitest";
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
   type AgentChatTurnResult,
 } from "#shared/agent/agent-chat.ts";
 import type { HttpAgentChatCommand } from "#shared/agent/agent-chat-http.ts";
@@ -75,6 +77,16 @@ describe("httpAgentChatWorkflow", () => {
             ?.seconds,
         ),
       ).toBe(AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS / 1000);
+      expect(
+        Number(
+          scheduled?.activityTaskScheduledEventAttributes
+            ?.scheduleToCloseTimeout?.seconds,
+        ),
+      ).toBe(AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS / 1000);
+      expect(
+        scheduled?.activityTaskScheduledEventAttributes?.retryPolicy
+          ?.maximumAttempts,
+      ).toBe(AGENT_CHAT_INGRESS_MAX_ATTEMPTS);
     } finally {
       activityWorker.shutdown();
       await activityRun;
