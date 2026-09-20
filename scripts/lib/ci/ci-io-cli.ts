@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-import { MetricSourceSchema } from "./ci-io-prometheus.ts";
-
 type CliValidationOptions = {
   buildNumbers: number[];
   baselineBuildNumbers: number[];
@@ -75,13 +73,12 @@ const CliOptionsSchema = z
     organization: z.string().min(1).optional(),
     pipeline: z.string().min(1).optional(),
     prometheusUrl: z.url().optional(),
-    buildkiteApiUrl: z.url(),
-    metricSource: MetricSourceSchema,
+    woodpeckerUrl: z.url().optional(),
+    repoId: z.number().int().positive().optional(),
     jsonPath: z.string().min(1),
     markdownPath: z.string().min(1),
     benchmark: z.boolean(),
     enforceImpactGates: z.boolean(),
-    annotate: z.boolean(),
     help: z.boolean(),
   })
   .superRefine((options, context) => {
@@ -104,15 +101,15 @@ export const CI_IO_USAGE = `Usage:
 Options:
   --baseline-build <number>[,<number>...]     Compare exact prior builds
   --baseline-from <ISO> --baseline-to <ISO>  Add a comparison window
-  --metrics-source raw|recording             Explicit metric contract (default: raw)
-  --organization <slug>                      Defaults to BUILDKITE_ORGANIZATION_SLUG
-  --pipeline <slug>                          Defaults to BUILDKITE_PIPELINE_SLUG
+  --organization <slug>                      Defaults to CI_ORGANIZATION
+  --pipeline <slug>                          Defaults to CI_PIPELINE
   --prometheus-url <url>                     Defaults to PROMETHEUS_URL
+  --woodpecker-url <url>                     Defaults to WOODPECKER_URL
+  --repo-id <number>                         Defaults to WOODPECKER_REPO_ID
   --json <path>                              Default: ci-io.json
   --markdown <path>                          Default: ci-io.md
   --benchmark                                Fail on metric-integrity issues
   --enforce-impact-gates                     Enforce the fixed-corpus impact gate
-  --annotate                                 Post the Markdown as a Buildkite annotation
 `;
 
 type RawCliOptions = {
@@ -125,13 +122,12 @@ type RawCliOptions = {
   organization: string | undefined;
   pipeline: string | undefined;
   prometheusUrl: string | undefined;
-  buildkiteApiUrl: string;
-  metricSource: string;
+  woodpeckerUrl: string | undefined;
+  repoId: number | undefined;
   jsonPath: string;
   markdownPath: string;
   benchmark: boolean;
   enforceImpactGates: boolean;
-  annotate: boolean;
   help: boolean;
 };
 
@@ -146,13 +142,12 @@ function initialCliOptions(): RawCliOptions {
     organization: undefined,
     pipeline: undefined,
     prometheusUrl: undefined,
-    buildkiteApiUrl: "https://api.buildkite.com/v2/",
-    metricSource: "raw",
+    woodpeckerUrl: undefined,
+    repoId: undefined,
     jsonPath: "ci-io.json",
     markdownPath: "ci-io.md",
     benchmark: Bun.env["CI_IO_OBSERVE"] === "true",
     enforceImpactGates: false,
-    annotate: false,
     help: false,
   };
 }
@@ -196,10 +191,13 @@ function applyValueFlag(
       return { ...options, pipeline: value };
     case "--prometheus-url":
       return { ...options, prometheusUrl: value };
-    case "--buildkite-api-url":
-      return { ...options, buildkiteApiUrl: value };
-    case "--metrics-source":
-      return { ...options, metricSource: value };
+    case "--woodpecker-url":
+      return { ...options, woodpeckerUrl: value };
+    case "--repo-id":
+      return {
+        ...options,
+        repoId: z.coerce.number().int().positive().parse(value),
+      };
     case "--json":
       return { ...options, jsonPath: value };
     case "--markdown":
@@ -229,9 +227,6 @@ export function parseCliOptions(args: string[]): CliOptions {
         break;
       case "--enforce-impact-gates":
         options = { ...options, benchmark: true, enforceImpactGates: true };
-        break;
-      case "--annotate":
-        options = { ...options, annotate: true };
         break;
       case "--help":
       case "-h":

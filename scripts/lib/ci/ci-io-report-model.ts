@@ -1,5 +1,3 @@
-import type { MetricSource } from "./ci-io-prometheus.ts";
-
 export type GateStatus = "passed" | "failed" | "inconclusive";
 export type Coverage = "complete" | "lower-bound" | "missing";
 
@@ -247,9 +245,8 @@ export type WindowComparison = {
 };
 
 export type CiIoReport = {
-  schemaVersion: 4;
+  schemaVersion: 5;
   generatedAt: string;
-  metricSource: MetricSource;
   organization: string;
   pipeline: string;
   candidate: WindowIoReport;

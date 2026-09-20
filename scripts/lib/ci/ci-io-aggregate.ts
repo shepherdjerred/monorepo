@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import type {
   ChildDeviceMetric,
   DeviceMetric,
@@ -8,12 +6,19 @@ import type {
   PrometheusIoMetrics,
 } from "./ci-io-prometheus.ts";
 
-const JobUuidSchema = z.uuid();
-const POD_NAME_PATTERN = /^buildkite-([0-9a-f-]{36})-[a-z0-9]+$/;
-
 export type PodMeasurement = {
   pod: string;
-  jobUuid: string;
+  /**
+   * `<commit>:<step key>`, or null when the pod carries no joined metadata.
+   *
+   * Buildkite encoded its job UUID in the pod name, so this was always
+   * derivable. Woodpecker's pod names identify nothing, so an unattributed pod
+   * is a real possibility — a pod that started and finished between two
+   * kube-state-metrics scrapes, for instance. Null rather than a guess: the
+   * report turns it into an `unmatched-pod` integrity issue and counts its
+   * bytes separately.
+   */
+  jobId: string | null;
   nodes: string[];
   writeBytes: number;
   sampleCount: number;
@@ -26,14 +31,6 @@ export type PodMeasurement = {
   metadata: MetricMetadata | null;
   metadataConflicts: string[];
 };
-
-function podJobUuid(pod: string): string {
-  const match = POD_NAME_PATTERN.exec(pod);
-  if (match === null) {
-    throw new Error(`invalid Buildkite pod name: ${pod}`);
-  }
-  return JobUuidSchema.parse(match[1]);
-}
 
 function deviceKey(metric: DeviceMetric): string {
   return JSON.stringify([metric.pod, metric.node, metric.device]);
@@ -103,12 +100,11 @@ function groupByPod<T extends { pod: string }>(items: T[]): Map<string, T[]> {
 
 function sameMetadata(left: MetricMetadata, right: MetricMetadata): boolean {
   return (
-    left.jobUuid === right.jobUuid &&
+    left.jobId === right.jobId &&
+    left.commit === right.commit &&
     left.stepKey === right.stepKey &&
     left.branch === right.branch &&
-    left.buildUrl === right.buildUrl &&
-    left.jobUrl === right.jobUrl &&
-    left.pipeline === right.pipeline
+    left.pipelineUrl === right.pipelineUrl
   );
 }
 
@@ -228,7 +224,7 @@ export function aggregatePodMetrics(
       ].reduce((total, metric) => total + metric.value, 0);
       return {
         pod,
-        jobUuid: podJobUuid(pod),
+        jobId: resolvedMetadata.metadata?.jobId ?? null,
         nodes: [...new Set(podParents.map((metric) => metric.node))].sort(),
         writeBytes: podParents.reduce(
           (total, metric) => total + metric.value,

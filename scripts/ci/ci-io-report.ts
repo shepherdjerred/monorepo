@@ -3,11 +3,11 @@
 import { z } from "zod";
 
 import {
-  fetchBuildkiteBuild,
-  fetchBuildkiteBuilds,
-  type BuildkiteClientConfig,
+  fetchCiBuild,
+  fetchCiBuilds,
   type PrometheusClientConfig,
   type TimeWindow,
+  type WoodpeckerClientConfig,
 } from "../lib/ci/ci-io-api.ts";
 import {
   CI_IO_USAGE,
@@ -34,6 +34,8 @@ import {
 } from "../lib/ci/ci-io-selection.ts";
 import { compareWindows } from "../lib/ci/ci-io-statistics.ts";
 
+const RepoIdSchema = z.coerce.number().int().positive();
+
 function requestedCohortWindow(from: string, to: string): TimeWindow {
   const window = { from: new Date(from), to: new Date(to) };
   if (window.to.getTime() <= window.from.getTime()) {
@@ -44,30 +46,30 @@ function requestedCohortWindow(from: string, to: string): TimeWindow {
 
 async function candidateSelection(input: {
   options: CliOptions;
-  buildkite: BuildkiteClientConfig;
+  woodpecker: WoodpeckerClientConfig;
   now: Date;
 }): Promise<BuildSelection> {
   if (input.options.buildNumbers.length > 0) {
     return explicitBuildSelection(
       input.options.buildNumbers,
-      input.buildkite,
+      input.woodpecker,
       input.now,
     );
   }
   const from = z.string().parse(input.options.from);
   const to = z.string().parse(input.options.to);
   const cohortWindow = requestedCohortWindow(from, to);
-  const builds = await fetchBuildkiteBuilds(input.buildkite, cohortWindow);
+  const builds = await fetchCiBuilds(input.woodpecker, cohortWindow);
   return selectCohortBuilds(builds, cohortWindow, input.now);
 }
 
 async function explicitBuildSelection(
   buildNumbers: number[],
-  buildkite: BuildkiteClientConfig,
+  woodpecker: WoodpeckerClientConfig,
   now: Date,
 ): Promise<BuildSelection> {
   const builds = await Promise.all(
-    buildNumbers.map((number) => fetchBuildkiteBuild(buildkite, number)),
+    buildNumbers.map((number) => fetchCiBuild(woodpecker, number)),
   );
   return selectExplicitBuilds({ builds, now });
 }
@@ -76,13 +78,11 @@ async function collectWindow(input: {
   selection: BuildSelection;
   prometheus: PrometheusClientConfig;
   options: CliOptions;
-  pipeline: string;
   excludedJobIds: Set<string>;
 }): Promise<WindowIoReport> {
   const metrics = await fetchPrometheusIoMetrics({
     client: input.prometheus,
     window: input.selection.window,
-    source: input.options.metricSource,
   });
   const selectedJobIds = new Set(
     input.selection.builds.flatMap((build) =>
@@ -93,7 +93,6 @@ async function collectWindow(input: {
     builds: input.selection.builds,
     window: input.selection.window,
     metrics: filterPrometheusIoMetrics(metrics, selectedJobIds),
-    pipeline: input.pipeline,
     excludedJobIds: input.excludedJobIds,
     cohort: input.selection.cohort,
     unfinishedBuilds: input.selection.unfinishedBuilds,
@@ -102,9 +101,8 @@ async function collectWindow(input: {
 
 async function collectBaseline(input: {
   options: CliOptions;
-  buildkite: BuildkiteClientConfig;
+  woodpecker: WoodpeckerClientConfig;
   prometheus: PrometheusClientConfig;
-  pipeline: string;
   excludedJobIds: Set<string>;
   now: Date;
 }): Promise<WindowIoReport | null> {
@@ -112,7 +110,7 @@ async function collectBaseline(input: {
   if (input.options.baselineBuildNumbers.length > 0) {
     selection = await explicitBuildSelection(
       input.options.baselineBuildNumbers,
-      input.buildkite,
+      input.woodpecker,
       input.now,
     );
   } else if (
@@ -123,7 +121,7 @@ async function collectBaseline(input: {
       input.options.baselineFrom,
       input.options.baselineTo,
     );
-    const builds = await fetchBuildkiteBuilds(input.buildkite, cohortWindow);
+    const builds = await fetchCiBuilds(input.woodpecker, cohortWindow);
     selection = selectCohortBuilds(builds, cohortWindow, input.now);
   }
   if (selection === null) {
@@ -133,7 +131,6 @@ async function collectBaseline(input: {
     selection,
     prometheus: input.prometheus,
     options: input.options,
-    pipeline: input.pipeline,
     excludedJobIds: input.excludedJobIds,
   });
 }
@@ -155,7 +152,14 @@ function prometheusConfig(url: string): PrometheusClientConfig {
   return token === undefined ? base : { ...base, bearerToken: token };
 }
 
-export function annotationStyle(report: CiIoReport): string {
+/**
+ * Severity the report would have been annotated with.
+ *
+ * Woodpecker has no annotation surface, so this no longer decorates a build
+ * page -- it is printed alongside the written report so a human reading the
+ * job log still sees at a glance whether the numbers are trustworthy.
+ */
+export function reportSeverity(report: CiIoReport): string {
   if (report.candidate.integrityIssues.length > 0) {
     return "error";
   }
@@ -179,31 +183,6 @@ export function annotationStyle(report: CiIoReport): string {
   return "success";
 }
 
-async function postAnnotation(
-  markdown: string,
-  report: CiIoReport,
-): Promise<void> {
-  const process = Bun.spawn(
-    [
-      "buildkite-agent",
-      "annotate",
-      "--style",
-      annotationStyle(report),
-      "--context",
-      "ci-io",
-    ],
-    {
-      stdin: new TextEncoder().encode(markdown),
-      stdout: "inherit",
-      stderr: "inherit",
-    },
-  );
-  const exitCode = await process.exited;
-  if (exitCode !== 0) {
-    throw new Error(`buildkite-agent annotate exited ${String(exitCode)}`);
-  }
-}
-
 export function assertRequestedBenchmarkIntegrity(
   options: Pick<CliOptions, "benchmark" | "enforceImpactGates">,
   candidate: WindowIoReport,
@@ -224,59 +203,64 @@ async function main(): Promise<void> {
     console.log(CI_IO_USAGE);
     return;
   }
+  // Display labels only: they identify the repository in the written report
+  // and nothing keys on them.
   const organization = requiredString(
-    options.organization ?? Bun.env["BUILDKITE_ORGANIZATION_SLUG"],
-    "Buildkite organization",
+    options.organization ?? Bun.env["CI_ORGANIZATION"],
+    "CI organization",
   );
   const pipeline = requiredString(
-    options.pipeline ?? Bun.env["BUILDKITE_PIPELINE_SLUG"],
-    "Buildkite pipeline",
+    options.pipeline ?? Bun.env["CI_PIPELINE"],
+    "CI pipeline",
   );
-  const buildkiteToken = requiredString(
-    Bun.env["BUILDKITE_READ_TOKEN"],
-    "BUILDKITE_READ_TOKEN",
+  const woodpeckerToken = requiredString(
+    Bun.env["WOODPECKER_READ_TOKEN"],
+    "WOODPECKER_READ_TOKEN",
   );
   const prometheusUrl = requiredString(
     options.prometheusUrl ?? Bun.env["PROMETHEUS_URL"],
     "Prometheus URL",
   );
-  const buildkite: BuildkiteClientConfig = {
-    apiBaseUrl: options.buildkiteApiUrl,
-    organization,
-    pipeline,
-    token: buildkiteToken,
+  const woodpecker: WoodpeckerClientConfig = {
+    baseUrl: requiredString(
+      options.woodpeckerUrl ?? Bun.env["WOODPECKER_URL"],
+      "Woodpecker URL",
+    ),
+    repoId: RepoIdSchema.parse(options.repoId ?? Bun.env["WOODPECKER_REPO_ID"]),
+    token: woodpeckerToken,
     fetcher,
   };
   const prometheus = prometheusConfig(prometheusUrl);
+  // A benchmark step measuring itself would report its own writes as CI cost.
+  // Its job identity is the same <commit>:<step key> pair the pod labels use.
   const excludedJobIds = new Set<string>();
-  if (Bun.env["BUILDKITE_JOB_ID"] !== undefined) {
-    excludedJobIds.add(Bun.env["BUILDKITE_JOB_ID"]);
+  const selfCommit = Bun.env["CI_COMMIT_SHA"];
+  const selfStep = Bun.env["CI_STEP_NAME"];
+  if (selfCommit !== undefined && selfStep !== undefined) {
+    excludedJobIds.add(`${selfCommit}:${selfStep}`);
   }
   const startedAt = new Date();
   const selected = await candidateSelection({
     options,
-    buildkite,
+    woodpecker,
     now: startedAt,
   });
   const candidate = await collectWindow({
     selection: selected,
     prometheus,
     options,
-    pipeline,
     excludedJobIds,
   });
   const baseline = await collectBaseline({
     options,
-    buildkite,
+    woodpecker,
     prometheus,
-    pipeline,
     excludedJobIds,
     now: startedAt,
   });
   const report: CiIoReport = {
-    schemaVersion: 4,
+    schemaVersion: 5,
     generatedAt: startedAt.toISOString(),
-    metricSource: options.metricSource,
     organization,
     pipeline,
     candidate,
@@ -288,11 +272,8 @@ async function main(): Promise<void> {
     Bun.write(options.jsonPath, `${JSON.stringify(report, null, 2)}\n`),
     Bun.write(options.markdownPath, markdown),
   ]);
-  if (options.annotate) {
-    await postAnnotation(markdown, report);
-  }
   console.log(
-    `Wrote ${options.jsonPath} and ${options.markdownPath}: ${String(candidate.summary.totalWriteBytes)} parent-write bytes across ${String(candidate.summary.measuredJobCount)} jobs`,
+    `Wrote ${options.jsonPath} and ${options.markdownPath} [${reportSeverity(report)}]: ${String(candidate.summary.totalWriteBytes)} parent-write bytes across ${String(candidate.summary.measuredJobCount)} jobs`,
   );
   assertRequestedBenchmarkIntegrity(options, candidate, baseline);
   if (options.enforceImpactGates) {

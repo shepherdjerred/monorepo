@@ -1,4 +1,4 @@
-import type { BuildkiteBuild, BuildkiteJob } from "./ci-io-api.ts";
+import type { CiBuild, CiJob } from "./ci-io-api.ts";
 import type { PodMeasurement } from "./ci-io-aggregate.ts";
 import type { IntegrityIssue } from "./ci-io-report-model.ts";
 
@@ -11,7 +11,7 @@ function issue(
   return { code, message, jobId, pod };
 }
 
-function finishedTimestampSeconds(job: BuildkiteJob): number | null {
+function finishedTimestampSeconds(job: CiJob): number | null {
   return job.finished_at === null
     ? null
     : new Date(job.finished_at).getTime() / 1000;
@@ -30,7 +30,7 @@ function measurementHasPostFinishParentSample(
 
 export function allDevicesHavePostFinishParentSample(
   measurements: PodMeasurement[],
-  job: BuildkiteJob,
+  job: CiJob,
 ): boolean {
   const finishedAtSeconds = finishedTimestampSeconds(job);
   return (
@@ -41,12 +41,20 @@ export function allDevicesHavePostFinishParentSample(
   );
 }
 
+/**
+ * Cross-check the pod's own metadata against the job the API says it was.
+ *
+ * Narrower than the Buildkite version, which could also compare the build and
+ * job URLs the agent stack stamped. Woodpecker stamps no URLs of its own, and
+ * the forge commit URL the extension does stamp says nothing about which
+ * pipeline ran, so comparing it would prove nothing. What remains — job
+ * identity, step key, commit and branch — is what the labels actually assert.
+ */
 function metadataIssues(input: {
-  build: BuildkiteBuild;
-  job: BuildkiteJob;
+  build: CiBuild;
+  job: CiJob;
   measurement: PodMeasurement;
   expectedStepKey: string;
-  pipeline: string;
 }): IntegrityIssue[] {
   const issues: IntegrityIssue[] = input.measurement.metadataConflicts.map(
     (message) =>
@@ -57,17 +65,15 @@ function metadataIssues(input: {
     return issues;
   }
   const matches =
-    metadata.jobUuid === input.job.id &&
+    metadata.jobId === input.job.id &&
     metadata.stepKey === input.expectedStepKey &&
-    metadata.branch === input.build.branch &&
-    metadata.buildUrl === input.build.web_url &&
-    metadata.jobUrl === input.job.web_url &&
-    metadata.pipeline === input.pipeline;
+    metadata.commit === input.build.commit &&
+    metadata.branch === input.build.branch;
   if (!matches) {
     issues.push(
       issue(
         "metadata-mismatch",
-        "recording-rule metadata does not match the Buildkite job",
+        "recording-rule metadata does not match the CI job",
         input.job.id,
         input.measurement.pod,
       ),
@@ -77,15 +83,14 @@ function metadataIssues(input: {
 }
 
 type MeasurementIssuesInput = {
-  build: BuildkiteBuild;
-  job: BuildkiteJob;
+  build: CiBuild;
+  job: CiJob;
   measurements: PodMeasurement[];
   durationSeconds: number;
   sampleCount: number;
   networkReceiveBytes: number | null;
   networkTransmitBytes: number | null;
   stepKey: string;
-  pipeline: string;
   finished: boolean;
 };
 
@@ -99,7 +104,7 @@ function jobIssues(input: MeasurementIssuesInput): IntegrityIssue[] {
     issues.push(
       issue(
         "ambiguous-job-pods",
-        "multiple pods map to one Buildkite job",
+        "multiple pods map to one CI job",
         job.id,
         null,
       ),
@@ -174,7 +179,7 @@ function podIssues(
     issues.push(
       issue(
         "missing-post-finish-parent-sample",
-        `pod-parent devices do not all have a sample at or after Buildkite finished_at ${input.job.finished_at ?? "missing"}`,
+        `pod-parent devices do not all have a sample at or after the job finished at ${input.job.finished_at ?? "missing"}`,
         input.job.id,
         measurement.pod,
       ),
@@ -196,7 +201,6 @@ function podIssues(
       job: input.job,
       measurement,
       expectedStepKey: input.stepKey,
-      pipeline: input.pipeline,
     }),
   );
   return issues;

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  annotationStyle,
+  reportSeverity,
   assertRequestedBenchmarkIntegrity,
 } from "../../ci/ci-io-report.ts";
 import type { TimeWindow } from "./ci-io-api.ts";
@@ -402,9 +402,8 @@ describe("fixed-corpus impact gate", () => {
       "docker-e2e=5,images=5,resume=5,sjer.red=5,tofu=5,verify=5",
     );
     const report: CiIoReport = {
-      schemaVersion: 4,
+      schemaVersion: 5,
       generatedAt: WINDOW.to.toISOString(),
-      metricSource: "recording",
       organization: "sjerred",
       pipeline: "monorepo",
       candidate,
@@ -556,9 +555,8 @@ describe("fixed-corpus conservative proof", () => {
       expect(gate.baselineSamplingIssueCodes).toEqual([code]);
 
       const report: CiIoReport = {
-        schemaVersion: 4,
+        schemaVersion: 5,
         generatedAt: WINDOW.to.toISOString(),
-        metricSource: "recording",
         organization: "sjerred",
         pipeline: "monorepo",
         candidate,
@@ -568,7 +566,7 @@ describe("fixed-corpus conservative proof", () => {
       expect(renderCiIoMarkdown(report)).toContain(
         "Proof: **conservative baseline lower bound**",
       );
-      expect(annotationStyle(report)).toBe("success");
+      expect(reportSeverity(report)).toBe("success");
       expect(() =>
         assertRequestedBenchmarkIntegrity(
           { benchmark: true, enforceImpactGates: true },
@@ -658,16 +656,15 @@ describe("fixed-corpus conservative proof", () => {
     );
 
     const report: CiIoReport = {
-      schemaVersion: 4,
+      schemaVersion: 5,
       generatedAt: WINDOW.to.toISOString(),
-      metricSource: "recording",
       organization: "sjerred",
       pipeline: "monorepo",
       candidate,
       baseline,
       comparison,
     };
-    expect(annotationStyle(report)).toBe("error");
+    expect(reportSeverity(report)).toBe("error");
   });
 
   test("does not infer duration failures from noncomparable corpus windows", () => {

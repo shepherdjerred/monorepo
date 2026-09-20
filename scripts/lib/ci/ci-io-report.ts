@@ -1,4 +1,4 @@
-import type { BuildkiteBuild, BuildkiteJob, TimeWindow } from "./ci-io-api.ts";
+import type { CiBuild, CiJob, TimeWindow } from "./ci-io-api.ts";
 import { aggregatePodMetrics, type PodMeasurement } from "./ci-io-aggregate.ts";
 import {
   allDevicesHavePostFinishParentSample,
@@ -22,11 +22,11 @@ import {
 } from "./ci-io-statistics.ts";
 
 type JobContext = {
-  build: BuildkiteBuild;
-  job: BuildkiteJob;
+  build: CiBuild;
+  job: CiJob;
 };
 
-function stepKeyFor(job: BuildkiteJob): string {
+function stepKeyFor(job: CiJob): string {
   return job.step_key ?? `unkeyed:${job.name}`;
 }
 
@@ -44,10 +44,9 @@ function jobOutcome(context: JobContext): JobOutcomeReport {
 }
 
 export type BuildWindowReportInput = {
-  builds: BuildkiteBuild[];
+  builds: CiBuild[];
   window: TimeWindow;
   metrics: PrometheusIoMetrics;
-  pipeline: string;
   excludedJobIds: Set<string>;
   cohort: BuildCohort | null;
   unfinishedBuilds: UnfinishedBuildReport[];
@@ -62,12 +61,16 @@ function issue(
   return { code, message, jobId, pod };
 }
 
-function jobContexts(builds: BuildkiteBuild[]): Map<string, JobContext> {
+function jobContexts(builds: CiBuild[]): Map<string, JobContext> {
   const contexts = new Map<string, JobContext>();
   for (const build of builds) {
     for (const job of build.jobs) {
       if (contexts.has(job.id)) {
-        throw new Error(`duplicate Buildkite job id ${job.id}`);
+        // Two jobs sharing <commit>:<step key> means the same step ran twice
+        // on the same commit -- a retry, or a push and a pull_request
+        // pipeline. Their pods are indistinguishable in the telemetry, so the
+        // benchmark refuses rather than reporting one job's bytes as both.
+        throw new Error(`duplicate CI job id ${job.id}`);
       }
       contexts.set(job.id, { build, job });
     }
@@ -80,15 +83,18 @@ function measurementsByJob(
 ): Map<string, PodMeasurement[]> {
   const grouped = new Map<string, PodMeasurement[]>();
   for (const measurement of measurements) {
-    const current = grouped.get(measurement.jobUuid) ?? [];
+    if (measurement.jobId === null) {
+      continue;
+    }
+    const current = grouped.get(measurement.jobId) ?? [];
     current.push(measurement);
-    grouped.set(measurement.jobUuid, current);
+    grouped.set(measurement.jobId, current);
   }
   return grouped;
 }
 
 function jobDuration(
-  job: BuildkiteJob,
+  job: CiJob,
   window: TimeWindow,
 ): {
   seconds: number;
@@ -170,7 +176,6 @@ function createJobReport(input: {
   context: JobContext;
   measurements: PodMeasurement[];
   window: TimeWindow;
-  pipeline: string;
 }): { report: JobIoReport; issues: IntegrityIssue[] } {
   const { context, measurements } = input;
   const duration = jobDuration(context.job, input.window);
@@ -228,7 +233,6 @@ function createJobReport(input: {
       networkReceiveBytes,
       networkTransmitBytes,
       stepKey,
-      pipeline: input.pipeline,
       finished: duration.finished,
     }),
   };
@@ -250,7 +254,7 @@ function componentSummary(jobs: JobIoReport[]): {
 }
 
 function summarizeWindow(
-  builds: BuildkiteBuild[],
+  builds: CiBuild[],
   jobs: JobIoReport[],
   unmatchedWriteBytes: number,
   unfinishedBuilds: UnfinishedBuildReport[],
@@ -338,7 +342,6 @@ export function buildWindowIoReport(
       context,
       measurements: groupedMeasurements.get(context.job.id) ?? [],
       window: input.window,
-      pipeline: input.pipeline,
     });
     reports.push(created.report);
     issues.push(...created.issues);
@@ -346,7 +349,8 @@ export function buildWindowIoReport(
 
   let unmatchedWriteBytes = 0;
   for (const measurement of podMeasurements) {
-    const context = contexts.get(measurement.jobUuid);
+    const context =
+      measurement.jobId === null ? undefined : contexts.get(measurement.jobId);
     const startedAt = context?.job.started_at;
     if (startedAt === undefined || startedAt === null) {
       unmatchedWriteBytes += measurement.writeBytes;

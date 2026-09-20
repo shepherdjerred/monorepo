@@ -10,6 +10,7 @@ MACOS_NATIVE_ENV="${SCRIPT_DIR}/macos-native-env.sh"
 REVIEW_GATE="${SCRIPT_DIR}/review-gate.sh"
 MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
 MAC_CI_PROVISIONER="${SCRIPT_DIR}/../../packages/homelab/mac-ci/provision-host.sh"
+MACOS_LANES="${SCRIPT_DIR}/../../packages/woodpecker-config-extension/src/pipeline/lanes/macos.ts"
 
 if ! awk '
   $0 ~ /^[[:space:]]*mise_ci install --yes[[:space:]]*$/ { install_line = NR }
@@ -88,14 +89,23 @@ fi
 # worker that ran it. Woodpecker's cache claim has no collector yet; if one is
 # added, its exclusive-lock contract belongs back here.
 
-if ! rg -Fq 'shell="/bin/bash -e -c"' "$MAC_CI_BOOTSTRAP"; then
-  echo "macOS agent config must pin bash for the native steps that source macos-native-env.sh" >&2
+# The bash guarantee moved from the agent to the pipeline: Buildkite took a
+# `shell` setting in the agent config, while Woodpecker's local backend reads
+# the step's `image` field as the interpreter. The native steps source
+# macos-native-env.sh, so that field must stay `bash`.
+if ! rg -Fq 'image: "bash"' "$MACOS_LANES"; then
+  echo "macOS lanes must pin bash as the local-backend interpreter for macos-native-env.sh" >&2
   exit 1
 fi
-if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.buildkite-agent/builds"' "$MAC_CI_BOOTSTRAP" ||
+if ! rg -Fq 'WOODPECKER_BACKEND=local' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'WOODPECKER_AGENT_LABELS=platform=darwin/' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS agent must run the local backend and carry the label the native lanes select on" >&2
+  exit 1
+fi
+if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.woodpecker/builds"' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'mise settings set trusted_config_paths "$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP" ||
-  ! rg -Fq 'build-path="$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP"; then
-  echo "macOS bootstrap must trust the same Buildkite checkout root it configures" >&2
+  ! rg -Fq 'WOODPECKER_BACKEND_LOCAL_TEMP_DIR=$AGENT_BUILD_PATH' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS bootstrap must trust the same checkout root it configures" >&2
   exit 1
 fi
 if ! rg -Fq 'mise exec --cd "$REPO_ROOT" -- rustup target add' "$MAC_CI_BOOTSTRAP" ||

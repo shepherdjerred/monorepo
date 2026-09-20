@@ -215,7 +215,7 @@ export function renderCiIoMarkdown(report: CiIoReport): string {
   const lines = [
     "# CI I/O report",
     "",
-    `Generated ${report.generatedAt} for \`${escapeCell(report.organization)}/${escapeCell(report.pipeline)}\` using the explicit \`${report.metricSource}\` metric source. Baseline comparisons use the fixed-corpus impact contract.`,
+    `Generated ${report.generatedAt} for \`${escapeCell(report.organization)}/${escapeCell(report.pipeline)}\` from the CI I/O recording rules. Baseline comparisons use the fixed-corpus impact contract.`,
     "",
     ...comparisonLines(report),
   ];

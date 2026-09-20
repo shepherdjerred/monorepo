@@ -1,78 +1,14 @@
 import { z } from "zod";
 
-const IsoTimestampSchema = z.iso.datetime({ offset: true });
-
-const BuildStateSchema = z.enum([
-  "blocked",
-  "canceled",
-  "canceling",
-  "creating",
-  "failed",
-  "failing",
-  "not_run",
-  "passed",
-  "running",
-  "scheduled",
-  "skipped",
-  "waiting",
-  "waiting_failed",
-]);
-
-const JobStateSchema = z.enum([
-  "accepted",
-  "assigned",
-  "blocked",
-  "blocked_failed",
-  "broken",
-  "canceled",
-  "canceling",
-  "finished",
-  "failed",
-  "expired",
-  "limiting",
-  "limited",
-  "not_run",
-  "pending",
-  "platform_limited",
-  "platform_limiting",
-  "passed",
-  "reserved",
-  "running",
-  "scheduled",
-  "skipped",
-  "timed_out",
-  "timing_out",
-  "unblocked",
-  "unblocked_failed",
-  "waiting",
-  "waiting_failed",
-]);
-
-export const BuildkiteJobSchema = z.object({
-  id: z.uuid(),
-  name: z.string().min(1),
-  step_key: z.string().min(1).nullable(),
-  state: JobStateSchema,
-  started_at: IsoTimestampSchema.nullable(),
-  finished_at: IsoTimestampSchema.nullable(),
-  web_url: z.url(),
-  exit_status: z.number().int().nullable(),
-});
-
-export const BuildkiteBuildSchema = z.object({
-  id: z.uuid(),
-  number: z.number().int().positive(),
-  commit: z.string().min(1),
-  state: BuildStateSchema,
-  branch: z.string().min(1),
-  created_at: IsoTimestampSchema,
-  started_at: IsoTimestampSchema.nullable(),
-  finished_at: IsoTimestampSchema.nullable(),
-  web_url: z.url(),
-  jobs: z.array(BuildkiteJobSchema),
-});
-
-const BuildkiteBuildListSchema = z.array(BuildkiteBuildSchema);
+/**
+ * Woodpecker and Prometheus clients for the CI I/O benchmark.
+ *
+ * Woodpecker's model is pipeline -> workflow -> step, where the generated
+ * pipeline gives every CI step its own single-step workflow. The rest of this
+ * subsystem was written against Buildkite's flatter build -> job model, so the
+ * fetchers below flatten workflows back into jobs rather than propagating the
+ * extra level through aggregation, integrity checking and reporting.
+ */
 
 const PrometheusMetricSchema = z.record(z.string(), z.string());
 const PrometheusSampleSchema = z.tuple([z.number(), z.string()]);
@@ -101,20 +37,100 @@ const PrometheusResponseSchema = z.discriminatedUnion("status", [
   PrometheusErrorSchema,
 ]);
 
+/**
+ * Woodpecker reports every timestamp as whole unix seconds, and uses 0 -- not
+ * null and not an absent key -- for "has not happened yet". Zero is therefore
+ * a sentinel, not a real instant, and is converted to null on the way in so
+ * the rest of the pipeline never has to know that.
+ */
+const UnixSecondsSchema = z.number().int().nonnegative();
+
+const WoodpeckerStepSchema = z.looseObject({
+  id: z.number().int(),
+  name: z.string().min(1),
+  state: z.string().min(1),
+  exit_code: z.number().int(),
+  started: UnixSecondsSchema,
+  finished: UnixSecondsSchema,
+});
+
+const WoodpeckerWorkflowSchema = z.looseObject({
+  id: z.number().int(),
+  name: z.string().min(1),
+  state: z.string().min(1),
+  started: UnixSecondsSchema,
+  finished: UnixSecondsSchema,
+  children: z.array(WoodpeckerStepSchema).default([]),
+});
+
+const WoodpeckerPipelineSchema = z.looseObject({
+  number: z.number().int().positive(),
+  commit: z.string().min(1),
+  status: z.string().min(1),
+  branch: z.string().min(1),
+  created: UnixSecondsSchema,
+  started: UnixSecondsSchema,
+  finished: UnixSecondsSchema,
+  workflows: z.array(WoodpeckerWorkflowSchema).default([]),
+});
+
+const WoodpeckerPipelineListSchema = z.array(
+  z.looseObject({
+    number: z.number().int().positive(),
+    created: UnixSecondsSchema,
+  }),
+);
+
 const FETCH_TIMEOUT_MILLISECONDS = 30_000;
 
-export type BuildkiteBuild = z.infer<typeof BuildkiteBuildSchema>;
-export type BuildkiteJob = z.infer<typeof BuildkiteJobSchema>;
+/**
+ * One CI step, as the rest of the benchmark understands it.
+ *
+ * `id` is `<commit>:<step key>` rather than an opaque identifier from the CI
+ * provider. That is deliberate: it is exactly the pair the step pod carries as
+ * Kubernetes labels, which is what lets a Prometheus series be attributed to a
+ * step at all. Woodpecker's own step id is a per-instance integer that appears
+ * nowhere in the telemetry.
+ *
+ * The pair is not unique across a retry of the same step on the same commit.
+ * That collision is caught rather than hidden: two pods mapping to one job is
+ * an integrity failure, and the benchmark refuses to report instead of
+ * silently summing them.
+ */
+export type CiJob = {
+  id: string;
+  name: string;
+  step_key: string | null;
+  state: string;
+  started_at: string | null;
+  finished_at: string | null;
+  web_url: string;
+  exit_status: number | null;
+};
+
+export type CiBuild = {
+  number: number;
+  commit: string;
+  state: string;
+  branch: string;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  web_url: string;
+  jobs: CiJob[];
+};
+
 export type PrometheusVector = z.infer<
   typeof PrometheusSuccessSchema
 >["data"]["result"];
 
 export type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;
 
-export type BuildkiteClientConfig = {
-  apiBaseUrl: string;
-  organization: string;
-  pipeline: string;
+export type WoodpeckerClientConfig = {
+  /** Origin of the Woodpecker server, e.g. https://woodpecker.sjer.red. */
+  baseUrl: string;
+  /** Numeric repository id, as Woodpecker's own API addresses repositories. */
+  repoId: number;
   token: string;
   fetcher: Fetcher;
 };
@@ -138,7 +154,7 @@ async function readJson(response: Response, context: string): Promise<unknown> {
   return body;
 }
 
-function buildkiteHeaders(token: string): Record<string, string> {
+function bearerHeaders(token: string): Record<string, string> {
   return {
     Accept: "application/json",
     Authorization: `Bearer ${token}`,
@@ -152,64 +168,136 @@ function requestInit(headers: Record<string, string>): RequestInit {
   };
 }
 
-function pipelineBuildsUrl(config: BuildkiteClientConfig): URL {
-  const base = config.apiBaseUrl.endsWith("/")
-    ? config.apiBaseUrl
-    : `${config.apiBaseUrl}/`;
-  return new URL(
-    `organizations/${encodeURIComponent(config.organization)}/pipelines/${encodeURIComponent(config.pipeline)}/builds`,
-    base,
-  );
+function pipelinesUrl(config: WoodpeckerClientConfig): URL {
+  const base = config.baseUrl.endsWith("/")
+    ? config.baseUrl
+    : `${config.baseUrl}/`;
+  return new URL(`api/repos/${String(config.repoId)}/pipelines`, base);
 }
 
-export async function fetchBuildkiteBuild(
-  config: BuildkiteClientConfig,
+function timestamp(seconds: number): string | null {
+  return seconds === 0 ? null : new Date(seconds * 1000).toISOString();
+}
+
+function requiredTimestamp(seconds: number, context: string): string {
+  const value = timestamp(seconds);
+  if (value === null) {
+    throw new Error(`${context} has no creation timestamp`);
+  }
+  return value;
+}
+
+function pipelineUrl(config: WoodpeckerClientConfig, number: number): string {
+  const base = config.baseUrl.replace(/\/$/, "");
+  return `${base}/repos/${String(config.repoId)}/pipeline/${String(number)}`;
+}
+
+/**
+ * Flatten a pipeline's workflows into jobs.
+ *
+ * The generated pipeline gives each CI step its own workflow containing one
+ * step, so the workflow name is the step key. A workflow with a different
+ * shape would mean the emitter changed without this being updated, so the
+ * step key falls back to the workflow name rather than being invented.
+ */
+function toCiBuild(
+  config: WoodpeckerClientConfig,
+  pipeline: z.infer<typeof WoodpeckerPipelineSchema>,
+): CiBuild {
+  const url = pipelineUrl(config, pipeline.number);
+  const jobs = pipeline.workflows.flatMap((workflow) =>
+    workflow.children.map((step) => ({
+      id: `${pipeline.commit}:${workflow.name}`,
+      name: step.name,
+      step_key: workflow.name,
+      state: step.state,
+      started_at: timestamp(step.started),
+      finished_at: timestamp(step.finished),
+      web_url: `${url}/${String(workflow.id)}`,
+      // Woodpecker reports 0 for a step that never ran as well as for one that
+      // succeeded, so an exit status is only meaningful once the step finished.
+      exit_status: step.finished === 0 ? null : step.exit_code,
+    })),
+  );
+  return {
+    number: pipeline.number,
+    commit: pipeline.commit,
+    state: pipeline.status,
+    branch: pipeline.branch,
+    created_at: requiredTimestamp(
+      pipeline.created,
+      `Woodpecker pipeline ${String(pipeline.number)}`,
+    ),
+    started_at: timestamp(pipeline.started),
+    finished_at: timestamp(pipeline.finished),
+    web_url: url,
+    jobs,
+  };
+}
+
+export async function fetchCiBuild(
+  config: WoodpeckerClientConfig,
   buildNumber: number,
-): Promise<BuildkiteBuild> {
-  const url = pipelineBuildsUrl(config);
+): Promise<CiBuild> {
+  const url = pipelinesUrl(config);
   url.pathname = `${url.pathname}/${String(buildNumber)}`;
-  url.searchParams.set("include_retried_jobs", "true");
   const response = await config.fetcher(
     url.toString(),
-    requestInit(buildkiteHeaders(config.token)),
+    requestInit(bearerHeaders(config.token)),
   );
   const body = await readJson(
     response,
-    `Buildkite build ${String(buildNumber)}`,
+    `Woodpecker pipeline ${String(buildNumber)}`,
   );
-  return BuildkiteBuildSchema.parse(body);
+  return toCiBuild(config, WoodpeckerPipelineSchema.parse(body));
 }
 
-export async function fetchBuildkiteBuilds(
-  config: BuildkiteClientConfig,
+/**
+ * Every pipeline created inside `window`, with its workflows resolved.
+ *
+ * Woodpecker's list endpoint returns pipeline summaries without workflows, so
+ * each one is fetched individually. `before`/`after` are applied server-side
+ * and re-checked here: a server that ignored them would otherwise silently
+ * widen the cohort the benchmark reports on.
+ */
+export async function fetchCiBuilds(
+  config: WoodpeckerClientConfig,
   window: TimeWindow,
-): Promise<BuildkiteBuild[]> {
-  const builds: BuildkiteBuild[] = [];
-  const perPage = 100;
+): Promise<CiBuild[]> {
+  const perPage = 50;
+  const numbers: number[] = [];
 
   for (let page = 1; page <= 1000; page += 1) {
-    const url = pipelineBuildsUrl(config);
-    url.searchParams.set("created_from", window.from.toISOString());
-    url.searchParams.set("created_to", window.to.toISOString());
-    url.searchParams.set("per_page", String(perPage));
+    const url = pipelinesUrl(config);
+    url.searchParams.set("after", window.from.toISOString());
+    url.searchParams.set("before", window.to.toISOString());
+    url.searchParams.set("perPage", String(perPage));
     url.searchParams.set("page", String(page));
-    url.searchParams.set("include_retried_jobs", "true");
     const response = await config.fetcher(
       url.toString(),
-      requestInit(buildkiteHeaders(config.token)),
+      requestInit(bearerHeaders(config.token)),
     );
     const body = await readJson(
       response,
-      `Buildkite builds page ${String(page)}`,
+      `Woodpecker pipelines page ${String(page)}`,
     );
-    const pageBuilds = BuildkiteBuildListSchema.parse(body);
-    builds.push(...pageBuilds);
-    if (pageBuilds.length < perPage) {
+    const summaries = WoodpeckerPipelineListSchema.parse(body);
+    for (const summary of summaries) {
+      const created = summary.created * 1000;
+      if (created >= window.from.getTime() && created <= window.to.getTime()) {
+        numbers.push(summary.number);
+      }
+    }
+    if (summaries.length < perPage) {
+      const builds: CiBuild[] = [];
+      for (const number of numbers) {
+        builds.push(await fetchCiBuild(config, number));
+      }
       return builds;
     }
   }
 
-  throw new Error("Buildkite pagination exceeded 1000 pages");
+  throw new Error("Woodpecker pagination exceeded 1000 pages");
 }
 
 function prometheusHeaders(token: string | undefined): Record<string, string> {

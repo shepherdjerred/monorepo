@@ -1,4 +1,4 @@
-import type { BuildkiteBuild, TimeWindow } from "./ci-io-api.ts";
+import type { CiBuild, TimeWindow } from "./ci-io-api.ts";
 import type {
   BuildCohort,
   UnfinishedBuildReport,
@@ -7,14 +7,14 @@ import type {
 const METRIC_WINDOW_PADDING_MILLISECONDS = 30_000;
 
 export type BuildSelection = {
-  builds: BuildkiteBuild[];
+  builds: CiBuild[];
   window: TimeWindow;
   cohort: BuildCohort | null;
   unfinishedBuilds: UnfinishedBuildReport[];
 };
 
 function unfinishedBuildReport(
-  build: BuildkiteBuild,
+  build: CiBuild,
   disposition: UnfinishedBuildReport["disposition"],
 ): UnfinishedBuildReport {
   return {
@@ -27,7 +27,7 @@ function unfinishedBuildReport(
   };
 }
 
-function sortedBuilds(builds: BuildkiteBuild[]): BuildkiteBuild[] {
+function sortedBuilds(builds: CiBuild[]): CiBuild[] {
   return [...builds].sort((left, right) => left.number - right.number);
 }
 
@@ -40,7 +40,7 @@ function sortedUnfinishedBuilds(
 }
 
 export function metricWindowForBuilds(
-  builds: BuildkiteBuild[],
+  builds: CiBuild[],
   now: Date,
 ): TimeWindow {
   if (builds.length === 0) {
@@ -70,7 +70,7 @@ export function metricWindowForBuilds(
 }
 
 export function selectCohortBuilds(
-  builds: BuildkiteBuild[],
+  builds: CiBuild[],
   cohortWindow: TimeWindow,
   now: Date,
 ): BuildSelection {
@@ -103,7 +103,7 @@ export function selectCohortBuilds(
 }
 
 export function selectExplicitBuilds(input: {
-  builds: BuildkiteBuild[];
+  builds: CiBuild[];
   now: Date;
 }): BuildSelection {
   const unfinished = input.builds.filter((build) => build.finished_at === null);
