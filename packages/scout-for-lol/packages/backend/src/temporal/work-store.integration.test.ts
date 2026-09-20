@@ -55,6 +55,37 @@ describe("Scout Temporal work ownership", () => {
     });
   });
 
+  test("requeues a failed champion-mastery refresh on a later page visit", async () => {
+    const puuid = "b".repeat(78);
+    const fetchedAt = new Date("2026-09-20T00:00:00Z");
+    await prisma.scoutTemporalWork.create({
+      data: {
+        id: `champion-mastery:${puuid}:1789862400000`,
+        kind: "champion-mastery-refresh",
+        payload: JSON.stringify({ puuid, region: "AMERICA_NORTH" }),
+        state: "failed",
+        failedAt: new Date("2026-09-20T01:00:00Z"),
+        lastError: "Riot API HTTP 503 (Service Unavailable)",
+      },
+    });
+
+    await enqueueChampionMasteryRefresh(
+      { puuid, region: "AMERICA_NORTH", fetchedAt },
+      prisma,
+    );
+
+    await expect(
+      prisma.scoutTemporalWork.findUniqueOrThrow({
+        where: { id: `champion-mastery:${puuid}:1789862400000` },
+      }),
+    ).resolves.toMatchObject({
+      state: "queued",
+      requeueCount: 1,
+      lastRequeueReason:
+        "Champion mastery refresh retried after a later page visit",
+    });
+  });
+
   test("atomically requeues only failed work with an operator reason", async () => {
     await prisma.scoutTemporalWork.create({
       data: {

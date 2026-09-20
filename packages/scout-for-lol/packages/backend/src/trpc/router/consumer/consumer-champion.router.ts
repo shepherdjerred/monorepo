@@ -240,13 +240,20 @@ export const consumerChampionRouter = router({
         (count, player) => count + player.accounts.length,
         0,
       );
+      const cachedAccountCount = players.reduce(
+        (count, player) =>
+          count +
+          player.accounts.filter((account) => snapshots.has(account.puuid))
+            .length,
+        0,
+      );
       return {
         champion: {
           championId: input.championId,
           name: getChampionDisplayName(input.championId),
         },
         rows: ordered.slice(0, 25),
-        cachedAccountCount: snapshots.size,
+        cachedAccountCount,
         accountCount,
       };
     }),

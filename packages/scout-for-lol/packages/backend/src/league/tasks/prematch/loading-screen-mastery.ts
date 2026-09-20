@@ -32,19 +32,17 @@ export async function fetchParticipantMasteries(
           },
         ],
   );
-  const results = await Promise.allSettled(
-    lookups.map((lookup) => lookup.request),
-  );
+  // `getChampionMasterySnapshot` returns undefined for expected Riot response
+  // failures. Any rejected lookup is therefore an internal contract failure
+  // that must halt the report rather than silently remove mastery data.
+  const results = await Promise.all(lookups.map((lookup) => lookup.request));
   const byPuuid = new Map<string, ChampionMasterySnapshot | undefined>();
   for (const [index, lookup] of lookups.entries()) {
     const result = results[index];
     if (result === undefined) {
-      throw new Error(`Missing settled mastery result for ${lookup.puuid}`);
+      throw new Error(`Missing mastery result for ${lookup.puuid}`);
     }
-    byPuuid.set(
-      lookup.puuid,
-      result.status === "fulfilled" ? result.value : undefined,
-    );
+    byPuuid.set(lookup.puuid, result);
   }
   return byPuuid;
 }

@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { riotClient } from "#src/league/api/api.ts";
+import { RiotHttpError } from "#src/league/api/client/errors.ts";
 import { championMasterySnapshotReadsTotal } from "#src/metrics/champion-mastery.ts";
 
 const FRESH_FOR_MS = 7 * 24 * 60 * 60 * 1000;
@@ -90,7 +91,11 @@ export async function getChampionMasterySnapshot(input: {
     });
     championMasterySnapshotReadsTotal.inc({ outcome: "riot_success" });
     return snapshot;
-  } catch {
+  } catch (error) {
+    // Only Riot's typed response failures are an expected boundary here. A
+    // database write or malformed persisted contract must remain visible to
+    // callers instead of being mislabeled as a stale Riot fallback.
+    if (!(error instanceof RiotHttpError)) throw error;
     if (stored === null) {
       championMasterySnapshotReadsTotal.inc({ outcome: "unavailable" });
       return undefined;

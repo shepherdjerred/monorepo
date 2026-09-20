@@ -160,7 +160,14 @@ export async function enqueueChampionMasteryRefresh(
     },
     database,
   );
-  if (created) {
+  const requeued =
+    !created &&
+    (await requeueFailedScoutTemporalWorkIfFailed(
+      workId,
+      "Champion mastery refresh retried after a later page visit",
+      database,
+    ));
+  if (created || requeued) {
     await requestStart({
       stage: configuration.environment,
       kind: "champion-mastery-refresh",
@@ -174,6 +181,23 @@ export async function requeueFailedScoutTemporalWork(
   reason: string,
   database: ExtendedPrismaClient = prisma,
 ): Promise<void> {
+  const requeued = await requeueFailedScoutTemporalWorkIfFailed(
+    workId,
+    reason,
+    database,
+  );
+  if (!requeued) {
+    throw new Error(
+      `Scout Temporal work ${workId} is missing or is not in failed state`,
+    );
+  }
+}
+
+async function requeueFailedScoutTemporalWorkIfFailed(
+  workId: string,
+  reason: string,
+  database: ExtendedPrismaClient,
+): Promise<boolean> {
   const parsedReason = z.string().trim().min(10).parse(reason);
   const result = await database.scoutTemporalWork.updateMany({
     where: { id: workId, state: "failed" },
@@ -184,11 +208,7 @@ export async function requeueFailedScoutTemporalWork(
       lastRequeuedAt: new Date(),
     },
   });
-  if (result.count !== 1) {
-    throw new Error(
-      `Scout Temporal work ${workId} is missing or is not in failed state`,
-    );
-  }
+  return result.count === 1;
 }
 
 export async function findQueuedScoutTemporalWork(
