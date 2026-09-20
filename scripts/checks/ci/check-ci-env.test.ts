@@ -352,13 +352,24 @@ describe("collectErrors", () => {
     expect(errors[0]).toContain("BLANK");
   });
 
-  test("ignores names the Buildkite agent injects", () => {
+  test("ignores names the CI agent injects", () => {
+    const errors = collectErrors({
+      steps: [step],
+      requiredFor: () =>
+        required({ CI_COMMIT_SHA: "scripts/release/release.ts:5" }),
+    });
+    expect(errors).toEqual([]);
+  });
+
+  // Nothing injects these any more, so a script still reading one is reading
+  // a variable no step provides.
+  test("reports a leftover Buildkite variable as unprovided", () => {
     const errors = collectErrors({
       steps: [step],
       requiredFor: () =>
         required({ BUILDKITE_COMMIT: "scripts/release/release.ts:5" }),
     });
-    expect(errors).toEqual([]);
+    expect(errors.join("\n")).toContain("BUILDKITE_COMMIT");
   });
 
   test("reports a requireEnv whose argument is not a literal", () => {

@@ -53,7 +53,7 @@ The browser configuration lives at
 | **Total**                                         | **616** |
 
 The 16 golden routes cover all four themes and all four Chromium viewports.
-Firefox is not part of the supported browser boundary. The scheduled Buildkite
+Firefox is not part of the supported browser boundary. The scheduled CI
 step remains advisory through `soft_fail` while consecutive main runs establish
 stability.
 

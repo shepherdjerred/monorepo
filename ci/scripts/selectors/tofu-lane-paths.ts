@@ -3,7 +3,6 @@ export const legacyTofuPaths = [
   "packages/homelab/src/tofu/argocd",
   "packages/homelab/src/tofu/arr",
   "packages/homelab/src/tofu/asuswrt",
-  "packages/homelab/src/tofu/buildkite",
   "packages/homelab/src/tofu/cloudflare",
   "packages/homelab/src/tofu/github",
   "packages/homelab/src/tofu/seaweedfs",
@@ -20,7 +19,7 @@ export const platformTofuPaths = [
   "packages/homelab/src/tofu/openai",
   "packages/homelab/src/tofu/platform-desired-state.schema.json",
   "packages/homelab/scripts/platform-desired-state.ts",
-  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts",
+  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
   "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
 ] as const;
 
@@ -43,12 +42,11 @@ export function requestedPlatformTofuApply(
   if (requested === undefined || requested.length === 0) return undefined;
   for (const stack of platformTofuStacks) {
     if (requested === stack) {
-      const defaultBranch =
-        environment["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] ?? "main";
-      const branch = environment["BUILDKITE_BRANCH"];
+      const defaultBranch = environment["CI_REPO_DEFAULT_BRANCH"] ?? "main";
+      const branch = environment["CI_COMMIT_BRANCH"];
       if (branch !== defaultBranch) {
         throw new Error(
-          `TOFU_PLATFORM_APPLY is ${defaultBranch}-only; BUILDKITE_BRANCH was ${branch ?? "unset"}`,
+          `TOFU_PLATFORM_APPLY is ${defaultBranch}-only; CI_COMMIT_BRANCH was ${branch ?? "unset"}`,
         );
       }
       return stack;

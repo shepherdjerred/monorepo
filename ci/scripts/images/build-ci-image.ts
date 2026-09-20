@@ -74,14 +74,14 @@ if (import.meta.main) {
       throw new Error(`Unknown argument ${flag ?? ""}`);
     }
   }
-  const sourceCommit = Bun.env["BUILDKITE_COMMIT"];
+  const sourceCommit = Bun.env["CI_COMMIT_SHA"];
   if (sourceCommit === undefined || !/^[\da-f]{40}$/.test(sourceCommit)) {
-    throw new Error("BUILDKITE_COMMIT must be a full lowercase commit SHA");
+    throw new Error("CI_COMMIT_SHA must be a full lowercase commit SHA");
   }
-  const rawBuildNumber = Bun.env["BUILDKITE_BUILD_NUMBER"];
+  const rawBuildNumber = Bun.env["CI_PIPELINE_NUMBER"];
   const buildNumber = Number(rawBuildNumber);
   if (!Number.isSafeInteger(buildNumber) || buildNumber <= 0) {
-    throw new Error("BUILDKITE_BUILD_NUMBER must be a positive integer");
+    throw new Error("CI_PIPELINE_NUMBER must be a positive integer");
   }
   const sourceFingerprint = await ciImageSourceFingerprint(definition);
   const metadataFile = `/tmp/${definition.name}-buildx-metadata-${buildNumber.toString()}.json`;

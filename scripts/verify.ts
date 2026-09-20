@@ -82,7 +82,7 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "docker-bake.hcl",
   "ci/application-image-smoke.Dockerfile",
   "packages/scout-for-lol/packages/backend/Dockerfile",
-  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
+  "packages/homelab/src/cdk8s/src/resources/woodpecker/bun-cache-gc.sh",
   "packages/homelab/mac-ci/bootstrap.sh",
   "packages/homelab/mac-ci/provision-host.sh",
   "packages/feature-flags/src/managed-flag-inventory.ts",

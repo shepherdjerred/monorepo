@@ -19,9 +19,13 @@ set -euo pipefail
 # rebasing 22 commits of unrelated history would have.
 #
 # This closes the accidental version of that problem, where a branch is simply
-# old. It is not a trust boundary: CI runs the configuration committed with
-# the branch, so a branch that deliberately rewrites this step controls its
-# own gate either way — as it does for every other check.
+# old. It also holds against a deliberate one, which the Buildkite arrangement
+# did not: the configuration extension serves the step model baked into its
+# deployed image rather than the one on the branch under test, so a branch
+# cannot rewrite this step, its command, or the secrets it is granted. The
+# extension additionally refuses to generate a pipeline for anyone but the
+# owner and his bots (see `src/authorization.ts` in that package), so the gate
+# measures only a change one of them pushed.
 #
 # REVIEW_GATE_REF exists so a change to the gate itself can be exercised before
 # it lands, since once this is in place the gate no longer runs a PR's own
@@ -29,7 +33,7 @@ set -euo pipefail
 # set; leave it unset everywhere else.
 
 GATE_REF="${REVIEW_GATE_REF:-main}"
-GATE_DIR="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/.review-gate-source"
+GATE_DIR="${CI_WORKSPACE:-$PWD}/.review-gate-source"
 
 echo "~~~ Fetching the review gate from ${GATE_REF}"
 # `--` so an operator-supplied REVIEW_GATE_REF beginning with `-` is fetched as
@@ -61,7 +65,6 @@ if [[ ! -f "$WAIT_SCRIPT" ]]; then
   echo "review gate: wait-for-review.ts is absent from the fetched main source" >&2
   exit 1
 fi
-
 # Exit status 42 is the gate's "the provider declared it cannot review at all"
 # (quota exhaustion) status, REVIEW_GATE_BLOCKED_EXIT_CODE in
 # @shepherdjerred/code-review. Treat only that result as advisory here so the

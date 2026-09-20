@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-The main Buildkite pipeline is the only writer for repository-backed homelab
+The main CI pipeline is the only writer for repository-backed homelab
 releases. You do not run these steps by hand — merging to `main` runs one
 `release-root` command that owns the complete sequence.
 
@@ -177,7 +177,9 @@ full-source operation must report the restored root Application as `Synced` and
 every validated prune candidate as `Pruned`. A fully applied early batch or
 prune wave is not enough.
 
-Buildkite retries reuse the build UUID. `release-root` adopts an operation only
+A CI retry reuses the request id, which is derived from the pipeline number
+rather than generated — a random id would make a retry look like a different
+requester. `release-root` adopts an operation only
 when the UUID and revision match and its selected resources are exactly one
 desired batch, or when it is the unselected final prune. An unrelated active
 operation or an unexpected selection remains a hard failure. The operation must
@@ -198,8 +200,8 @@ Argo's ordinary sync request as well as the identity metadata.
 A release blocked here means the current operation must be inspected before
 retrying. Confirm the operation's request ID, revision, selected resources,
 phase marker, and prune flag in ArgoCD. Do not terminate it based on revision
-alone. Once the observed operation belongs to the same Buildkite build, retry
-the failed Buildkite job; the same command and build UUID adopt only that exact
+alone. Once the observed operation belongs to the same CI pipeline, restart
+the failed workflow; the same command and request id adopt only that exact
 operation and continue the release.
 
 ```bash
@@ -212,7 +214,7 @@ After the exact root operation reports all selected resources applied, the
 release process deliberately terminates its aggregate wait. This leaves an
 ArgoCD terminal message that does not describe release failure.
 
-Use the `homelab-release-result.json` artifact and the Buildkite
+Use the `homelab-release-result.json` handoff object and the CI
 `homelab-release-result` annotation as the receipt:
 
 - `applied-verified` means the request ID, revision, selected resource results,
@@ -241,7 +243,7 @@ sync does not run that client-side check.
 ## Where it lives
 
 The workflow is defined by the
-[main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+[main release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
 and the
 [Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts).
 
