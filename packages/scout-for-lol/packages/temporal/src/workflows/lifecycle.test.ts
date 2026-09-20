@@ -62,7 +62,7 @@ async function startExploreAcquisitionWorkers(
  * the difference between ending the stall and hiding it.
  */
 async function startRediscoveryWorkers(
-  outcome: "reconciled" | "not-ingested",
+  outcome: "reconciled" | "not-completed",
   observed: {
     attempts: string[];
     reconciled: string[];
@@ -480,7 +480,7 @@ describe("post-match discovery child ownership", () => {
 
   test("stops without settling when a rediscovered match cannot be confirmed", async () => {
     const observed = { attempts: [], reconciled: [], settlement: [] };
-    await startRediscoveryWorkers("not-ingested", observed);
+    await startRediscoveryWorkers("not-completed", observed);
 
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {

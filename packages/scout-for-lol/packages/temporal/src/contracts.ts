@@ -348,16 +348,17 @@ export type IngestionReconciliationResult = z.infer<
 >;
 
 /**
- * Whether a rediscovered match's ingestion could be confirmed from durable
- * state, and its discovering account's cursor therefore moved past it.
+ * Whether a rediscovered match's ingestion child is confirmed COMPLETED, and
+ * its discovering account's cursor therefore moved past the match.
  *
- * `reconciled` means a tracked-account association for the pair exists, which
- * only ingestion writes — so the match's evidence is captured and the run may
- * carry on. `not-ingested` means no such proof, so some other execution may
- * still be mid-ingest and the caller must not advance anything or settle on it.
+ * `reconciled` means the child reached a terminal COMPLETED status, which it
+ * only does once every ingestion effect has run — so the match's evidence is
+ * captured and the run may carry on and settle. `not-completed` covers every
+ * other status: the execution may still be mid-ingest, so the caller must not
+ * advance anything or settle on it.
  */
 export const IngestedMatchCursorReconciliationSchema = z.object({
-  outcome: z.enum(["reconciled", "not-ingested"]),
+  outcome: z.enum(["reconciled", "not-completed"]),
 });
 export type IngestedMatchCursorReconciliation = z.infer<
   typeof IngestedMatchCursorReconciliationSchema
