@@ -448,7 +448,6 @@
   },
   "ignoreBinaries": [
     "argocd",
-    "buildkite-agent",
     "ffmpeg",
     "ffprobe",
     "go",

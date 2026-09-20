@@ -103,7 +103,7 @@ describe("external evidence parsing", () => {
 
 describe("check evidence", () => {
   /**
-   * Buildkite needed the whole build fetched so each check could be matched to
+   * The Buildkite era needed the whole build fetched so each check could be matched to
    * its job and advisory findings excluded. The advisory lanes now exit 0 when
    * findings are not fatal, so a failing check is simply a failure.
    */

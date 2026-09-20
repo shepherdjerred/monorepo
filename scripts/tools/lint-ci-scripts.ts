@@ -15,7 +15,7 @@ const proc = Bun.spawn(
     "scripts/eslint.config.ts",
     "--cache",
     "--cache-location",
-    "scripts/.eslintcache-buildkite",
+    "scripts/.eslintcache-ci-scripts",
     "--suppressions-location",
     "ci/eslint-suppressions.json",
     "ci/scripts",

@@ -15,7 +15,10 @@ function requireEnv(name: string): string {
   return value;
 }
 
-const serverUrl = requireEnv("WOODPECKER_SERVER_URL");
+// WOODPECKER_URL, not WOODPECKER_SERVER: upstream gives that name two
+// meanings (the CLI's HTTP address, the agent's gRPC endpoint), so this
+// repository keeps the HTTP origin under a name with exactly one.
+const serverUrl = requireEnv("WOODPECKER_URL");
 const repoSlug = requireEnv("CI_REPO_SLUG");
 const apiToken = requireEnv("WOODPECKER_API_TOKEN");
 const port = Number(Bun.env["PORT"] ?? "3000");

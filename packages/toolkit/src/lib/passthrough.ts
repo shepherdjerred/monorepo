@@ -60,9 +60,26 @@ export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
         ],
       },
     ],
-    // The CLI reads its server and token from the environment; both are
-    // operator-provided, so nothing is defaulted here.
-    ["woodpecker", { executable: "woodpecker-cli" }],
+    // WOODPECKER_TOKEN stays operator-provided, but the server address is not
+    // a secret and is the same every time. Defaulting it also disarms a real
+    // trap: upstream uses WOODPECKER_SERVER for the AGENT's gRPC endpoint and
+    // for the CLI's HTTP address, so an environment carrying the gRPC value
+    // for the agent would silently point the CLI at the wrong port. This
+    // repository keeps the HTTP origin under WOODPECKER_URL and hands the CLI
+    // its own value here.
+    [
+      "woodpecker",
+      {
+        executable: "woodpecker-cli",
+        defaultEnvironment: [
+          {
+            name: "WOODPECKER_SERVER",
+            value: "https://woodpecker.sjer.red",
+            overrideFlags: ["--server"],
+          },
+        ],
+      },
+    ],
     ["git-spice", { executable: "git-spice" }],
     [
       "linear",
