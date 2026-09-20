@@ -184,6 +184,18 @@ const POSTMATCH_OBSERVED_INTENT = intentKeyFor(
   FINISHED_MATCH,
   "postmatch-observed",
 );
+/**
+ * Prematch, observed match, but mid-attempt: driving it sends NOTHING.
+ *
+ * `beginSend` answers `already-sending`, so the child runs the unobserved-send
+ * recovery that carries the row to `unknown-delivery` and the queue an operator
+ * can resolve it from. It is the only route out of that ambiguity, so the truth
+ * window must not touch it however overtaken the message would have been.
+ */
+const PREMATCH_SENDING_OBSERVED_INTENT = intentKeyFor(
+  FINISHED_MATCH,
+  "prematch-sending-observed",
+);
 
 async function seedObservation(args: {
   matchId: RiotMatchId;
@@ -546,6 +558,14 @@ async function seedNotificationFamily(): Promise<void> {
     attemptCount: 0,
     freshnessDeadline: PREMATCH_DEADLINE,
   });
+  await seedIntent({
+    key: PREMATCH_SENDING_OBSERVED_INTENT,
+    kind: "prematch",
+    matchId: FINISHED_MATCH,
+    state: { kind: "sending", attemptNonce: NONCE, startedAt: OBSERVED_AT },
+    attemptCount: 1,
+    freshnessDeadline: PREMATCH_DEADLINE,
+  });
 
   // Recovery-born intents under the two policies that hold. The batch rows
   // are terminal so they never reach the recovery family's own page, and the
@@ -737,6 +757,7 @@ describe("the notification family", () => {
     // has already had by other means.
     expect(page.pending.notifications).toEqual([
       POSTMATCH_OBSERVED_INTENT,
+      PREMATCH_SENDING_OBSERVED_INTENT,
       PREMATCH_LIVE_INTENT,
       PENDING_INTENT,
       READY_INTENT,
@@ -756,6 +777,22 @@ describe("the notification family", () => {
     // to be asked, and this assertion fails if it stops being asked.
     expect(page.pending.notifications).not.toContain(PREMATCH_OVERTAKEN_INTENT);
     expect(page.pending.notifications).toContain(PREMATCH_LIVE_INTENT);
+  });
+
+  test("keeps driving an overtaken prematch intent that is mid-attempt", () => {
+    // The truth window is a statement about a MESSAGE, so it can only govern a
+    // drive that produces one. This row is `sending`: `beginSend` answers
+    // `already-sending`, so driving it sends nothing and instead runs the
+    // unobserved-send recovery that carries it to `unknown-delivery`, where a
+    // person can resolve it against the exact attempt nonce. Excluding it would
+    // stop the only process that ever resolves it — the row would sit in
+    // `sending` forever, never reaching the unknown-delivery queue. It shares
+    // its kind, its match and its deadline with the excluded prematch row
+    // above, so the drive effect is the only thing separating them.
+    expect(page.pending.notifications).toContain(
+      PREMATCH_SENDING_OBSERVED_INTENT,
+    );
+    expect(page.pending.notifications).not.toContain(PREMATCH_OVERTAKEN_INTENT);
   });
 
   test("keeps driving the post-result kinds on that same observed match", () => {
