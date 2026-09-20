@@ -224,10 +224,16 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           duration: "10m",
           severity: "critical",
         }),
+        // Both hopper rules read a status the exporter keeps at its last known
+        // value when Whisker stops answering, so without the freshness gate
+        // they report a snapshot as if it were current — a fault the hopper may
+        // have long since cleared, paged as critical, indefinitely.
+        // `LitterRobotDiagnosticsStale` below already owns the stale source, so
+        // gating here reports the condition once rather than twice.
         expressionAlert({
           name: "LitterRobotHopperLowOrDisconnected",
           expression:
-            'trmnl_petcare_litter_hopper_status{status=~"low|empty|disconnected|unknown"} == 1',
+            'trmnl_petcare_litter_hopper_status{status=~"low|empty|disconnected|unknown"} == 1 and on () trmnl_petcare_litter_source_fresh == 1',
           description:
             "LR5 hopper is low, empty, disconnected, or reporting an unknown state.",
           summary: "Storage LR5 hopper needs attention",
@@ -235,7 +241,7 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotHopperFault",
           expression:
-            'trmnl_petcare_litter_hopper_status{status=~"jammed|motor-fault|fault"} == 1',
+            'trmnl_petcare_litter_hopper_status{status=~"jammed|motor-fault|fault"} == 1 and on () trmnl_petcare_litter_source_fresh == 1',
           description: "LR5 hopper reports a jam or explicit fault.",
           summary: "Storage LR5 hopper fault",
           severity: "critical",

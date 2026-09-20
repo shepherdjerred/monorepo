@@ -5,6 +5,7 @@ import {
   getUploadedObject,
   hashStoredObject,
   OPAQUE_OBJECT_HEADERS,
+  withTransportRetry,
 } from "./backup-object.ts";
 import {
   CompletionMarkerSchema,
@@ -61,6 +62,8 @@ export type RunBackupInput = {
   now?: Date;
   onProgress?: (progress: BackupProgress) => void;
   onBytes?: (progress: BackupByteProgress) => void;
+  /** Injected for tests; production waits between transport attempts. */
+  delay?: (milliseconds: number) => Promise<void>;
 };
 
 type CopyResult = {
@@ -366,6 +369,7 @@ async function backupSourceBucket(input: {
   bucketPolicy: BucketPolicy;
   onProgress?: (progress: BackupProgress) => void;
   onBytes?: (progress: BackupByteProgress) => void;
+  delay: (milliseconds: number) => Promise<void>;
 }): Promise<{ entries: ManifestEntry[]; result: SnapshotBucketResult }> {
   const startedAt = performance.now();
   input.onProgress?.({ stage: "bucket", bucket: input.bucketPolicy.name });
@@ -386,15 +390,20 @@ async function backupSourceBucket(input: {
   let copiedBytes = 0;
   let completed = 0;
   await runObjectWorkers(protectedObjects, async (object) => {
-    const result = await copyOrReuseObject({
-      source: input.source,
-      destination: input.destination,
-      backupBucket: input.backupBucket,
-      sourceBucket: input.bucketPolicy.name,
-      sourceObject: object,
-      prior: previous.get(object.key),
-      ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
-    });
+    const result = await withTransportRetry(
+      () =>
+        copyOrReuseObject({
+          source: input.source,
+          destination: input.destination,
+          backupBucket: input.backupBucket,
+          sourceBucket: input.bucketPolicy.name,
+          sourceObject: object,
+          prior: previous.get(object.key),
+          ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
+        }),
+      input.delay,
+      () => `copy ${input.bucketPolicy.name}/${object.key}`,
+    );
     copiedObjects += result.copied ? 1 : 0;
     reusedObjects += result.copied ? 0 : 1;
     copiedBytes += result.copied ? result.entry.sourceSize : 0;
@@ -459,6 +468,7 @@ export async function runBackup(input: RunBackupInput): Promise<{
       backupBucket: input.backupBucket,
       snapshotId,
       bucketPolicy,
+      delay: input.delay ?? ((milliseconds) => Bun.sleep(milliseconds)),
       ...(input.onProgress === undefined
         ? {}
         : { onProgress: input.onProgress }),

@@ -433,3 +433,60 @@ describe("metadata preservation", () => {
     });
   });
 });
+
+describe("transport resilience", () => {
+  test("a dropped connection costs one object, not the whole run", async () => {
+    // A multi-hour transfer loses a connection sooner or later. Retrying the
+    // whole run is what the Activity already does, and at hours-to-failure it
+    // never produces a manifest — which is why no daily backup ever completed.
+    const { source, backup } = stores();
+    source.seed("source", "a.json", "first");
+    source.seed("source", "b.json", "second");
+    source.seed("source", "c.json", "third");
+    source.transportFailures.set("b.json", 2);
+
+    const delays: number[] = [];
+    const result = await runBackup({
+      source,
+      destination: backup,
+      backupBucket: "backup",
+      policy: POLICY,
+      cadence: "daily",
+      now: new Date("2026-08-01T12:00:00.000Z"),
+      delay: (milliseconds) => {
+        delays.push(milliseconds);
+        return Promise.resolve();
+      },
+    });
+
+    // Every object landed, including the one interrupted twice, and the run
+    // backed off between attempts rather than hammering.
+    expect(source.transportFailures.get("b.json")).toBe(0);
+    expect(result.buckets[0]).toMatchObject({
+      objectCount: 3,
+      copiedObjects: 3,
+    });
+    expect(delays).toEqual([1000, 2000]);
+  });
+
+  test("a connection that never recovers still fails the run", async () => {
+    // Bounded, not infinite: the run must still fail rather than hang.
+    const { source, backup } = stores();
+    source.seed("source", "a.json", "first");
+    source.transportFailures.set("a.json", Number.MAX_SAFE_INTEGER);
+
+    await expect(
+      runBackup({
+        source,
+        destination: backup,
+        backupBucket: "backup",
+        policy: POLICY,
+        cadence: "daily",
+        now: new Date("2026-08-01T12:00:00.000Z"),
+        delay: () => Promise.resolve(),
+      }),
+    ).rejects.toThrow(
+      /could not copy source\/a\.json after 4 transport attempts/u,
+    );
+  });
+});
