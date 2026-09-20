@@ -405,6 +405,7 @@ extension ProviderID {
     case .cursor: "cursor"
     case .kimi: "kimi"
     case .grok: "grok"
+    case .muse: "muse"
     }
   }
 }
