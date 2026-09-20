@@ -1,4 +1,4 @@
-import { expect, test, vi } from "vitest";
+import { afterAll, expect, test, vi } from "vitest";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { RawMatchSchema } from "@scout-for-lol/data";
 import {
@@ -86,4 +86,8 @@ test("resolves a match on a platform no Region can express", async () => {
 
   expect(riot.routes).toEqual(["EUROPE"]);
   expect(context.trackedPlayers).toEqual([]);
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
 });
