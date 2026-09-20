@@ -13,6 +13,7 @@ import {
 } from "#shared/agent/agent-chat-imessage.ts";
 
 const BLUEBUBBLES_QUERY_LIMIT = 1000;
+const MAX_BLUEBUBBLES_ROW_ID = Number.MAX_SAFE_INTEGER;
 const BlueBubblesMessagesSchema = z
   .array(BlueBubblesMessageSchema)
   .max(BLUEBUBBLES_QUERY_LIMIT);
@@ -28,6 +29,36 @@ function parseBlueBubblesMessages(value: unknown) {
   return result.data;
 }
 
+async function highestBlueBubblesRowId(lastRowId: number): Promise<number> {
+  let low = lastRowId + 1;
+  let high = MAX_BLUEBUBBLES_ROW_ID;
+  let highest = lastRowId;
+  // BlueBubbles orders message queries by message timestamp, not SQLite ROWID.
+  // Ask whether a ROWID range is nonempty to locate a durable initial watermark.
+  while (low <= high) {
+    const midpoint = low + Math.floor((high - low) / 2);
+    const messages = parseBlueBubblesMessages(
+      await blueBubblesRequest("/api/v1/message/query", {
+        with: ["chats"],
+        limit: 1,
+        sort: "DESC",
+        where: [
+          {
+            statement: "message.ROWID >= :minimumRowId",
+            args: { minimumRowId: midpoint },
+          },
+        ],
+      }),
+    );
+    if (messages.length === 0) high = midpoint - 1;
+    else {
+      highest = midpoint;
+      low = midpoint + 1;
+    }
+  }
+  return highest;
+}
+
 async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
   initialized: boolean;
   lastRowId: number;
@@ -35,7 +66,8 @@ async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
 }> {
   const snapshotHighWater = cursor.initialized
     ? undefined
-    : cursor.initializationHighWaterRowId;
+    : (cursor.initializationHighWaterRowId ??
+      (await highestBlueBubblesRowId(cursor.lastRowId)));
   const messages = parseBlueBubblesMessages(
     await blueBubblesRequest("/api/v1/message/query", {
       with: ["chats"],
