@@ -1,0 +1,267 @@
+import { describe, expect, test } from "vitest";
+import {
+  diffReplayCase,
+  type ReplayBaseline,
+  type ReplaySide,
+} from "./diff.ts";
+import {
+  declinedToAnswer,
+  harnessIntegritySignals,
+  replaySignalWeight,
+  replaySignals,
+  type ReplaySignalInput,
+} from "./signals.ts";
+
+const SUBSTANTIVE = "Ezreal leads at 54% over 210 games.";
+const DECLINE = "Scout does not track that, so it cannot be answered here.";
+
+const BASE_SIDE: ReplaySide = {
+  answer: SUBSTANTIVE,
+  queryText: "from matches select champion",
+  caveats: [],
+  followUps: [],
+  rowsReturned: 10,
+  rowsScanned: 100,
+  toolNames: ["run_report_query"],
+  matchCardIds: [],
+  visualizationKind: null,
+};
+
+function diffFor(
+  baselineOverrides: Partial<ReplayBaseline> = {},
+  candidateOverrides: Partial<ReplaySide> = {},
+) {
+  const baseline: ReplayBaseline = {
+    ...BASE_SIDE,
+    source: "stored",
+    createdAt: "2026-03-01T00:00:00.000Z",
+    ...baselineOverrides,
+  };
+  return diffReplayCase({
+    baseline,
+    candidate: { ...BASE_SIDE, ...candidateOverrides },
+    normalizeQuery: (text) => text,
+  });
+}
+
+const BASE_INPUT: ReplaySignalInput = {
+  status: "ok",
+  answer: SUBSTANTIVE,
+  queryFailed: false,
+  diff: null,
+  chipExpectation: null,
+  capabilityMismatches: [],
+  baselineRowsReturned: 10,
+  candidateRowsReturned: 10,
+};
+
+function signals(overrides: Partial<ReplaySignalInput> = {}) {
+  return replaySignals({ ...BASE_INPUT, ...overrides });
+}
+
+describe("declinedToAnswer", () => {
+  test("accepts a genuine decline that rests on nothing", () => {
+    expect(declinedToAnswer({ answer: DECLINE, rowsReturned: 0 })).toBe(true);
+  });
+
+  test("does not treat an ordinary negation as a decline", () => {
+    // The shared vocabulary contains "does not", so a naive check would fire
+    // on a large share of perfectly good answers.
+    expect(
+      declinedToAnswer({
+        answer: "Ezreal does not play mid; he is bot at 54%.",
+        rowsReturned: 8,
+      }),
+    ).toBe(false);
+  });
+
+  test("does not treat a negation backed by rows as a decline", () => {
+    expect(
+      declinedToAnswer({ answer: "That is not the case.", rowsReturned: 3 }),
+    ).toBe(false);
+  });
+
+  test("does not treat a negation that cites figures as a decline", () => {
+    expect(
+      declinedToAnswer({
+        answer: "Ezreal does not lead; Jinx does, at 56%.",
+        rowsReturned: 0,
+      }),
+    ).toBe(false);
+  });
+
+  test("is false for an answer with no refusal wording at all", () => {
+    expect(declinedToAnswer({ answer: "Ezreal leads.", rowsReturned: 0 })).toBe(
+      false,
+    );
+  });
+});
+
+describe("replaySignals outcomes", () => {
+  test("a clean turn produces nothing", () => {
+    expect(signals()).toEqual([]);
+  });
+
+  test("flags an errored turn", () => {
+    expect(signals({ status: "error", answer: null })).toEqual([
+      "new_turn_errored",
+    ]);
+  });
+
+  test("flags a timeout separately from an error", () => {
+    expect(signals({ status: "timeout", answer: null })).toEqual([
+      "new_turn_timed_out",
+    ]);
+  });
+
+  test("does not also call an errored turn empty", () => {
+    // Saying it twice buries the real cause.
+    expect(signals({ status: "error", answer: null })).not.toContain(
+      "new_answer_empty",
+    );
+  });
+
+  test("flags a finished turn that said nothing", () => {
+    expect(signals({ answer: "   " })).toEqual(["new_answer_empty"]);
+  });
+
+  test("flags a failed query", () => {
+    expect(signals({ queryFailed: true })).toEqual(["new_query_failed"]);
+  });
+
+  test("flags rows going to zero", () => {
+    expect(signals({ candidateRowsReturned: 0 })).toContain(
+      "rows_zero_was_nonzero",
+    );
+  });
+
+  test("does not flag rows when the baseline had none either", () => {
+    expect(
+      signals({ baselineRowsReturned: 0, candidateRowsReturned: 0 }),
+    ).not.toContain("rows_zero_was_nonzero");
+  });
+});
+
+describe("replaySignals comparisons", () => {
+  test("flags a substantive baseline that is now a decline", () => {
+    const result = signals({
+      answer: DECLINE,
+      candidateRowsReturned: 0,
+      diff: diffFor({}, { answer: DECLINE, rowsReturned: 0 }),
+    });
+    expect(result).toContain("refusal_regression");
+  });
+
+  test("does not flag a decline when the baseline had no substance either", () => {
+    const result = signals({
+      answer: DECLINE,
+      baselineRowsReturned: 0,
+      candidateRowsReturned: 0,
+      diff: diffFor(
+        { answer: DECLINE, rowsReturned: 0 },
+        { answer: DECLINE, rowsReturned: 0 },
+      ),
+    });
+    expect(result).not.toContain("refusal_regression");
+  });
+
+  test("flags a figure the new answer dropped", () => {
+    const result = signals({
+      answer: "Ezreal leads.",
+      diff: diffFor({}, { answer: "Ezreal leads." }),
+    });
+    expect(result).toContain("numeric_claim_dropped");
+  });
+
+  test("does not flag a rephrasing that keeps every figure", () => {
+    const answer = "At 54%, over 210 games, Ezreal leads.";
+    const result = signals({ answer, diff: diffFor({}, { answer }) });
+    expect(result).not.toContain("numeric_claim_dropped");
+  });
+});
+
+describe("replaySignals profile assertions", () => {
+  test("flags a gated chip that never said the feature was unavailable", () => {
+    const result = signals({
+      chipExpectation: "gated-off",
+      answer: "You have 400 Bryan Bucks.",
+    });
+    expect(result).toContain("gated_chip_did_not_refuse");
+  });
+
+  test("accepts a gated chip that declined", () => {
+    const result = signals({
+      chipExpectation: "gated-off",
+      answer: DECLINE,
+      candidateRowsReturned: 0,
+    });
+    expect(result).not.toContain("gated_chip_did_not_refuse");
+  });
+
+  test("flags an available feature the answer declined anyway", () => {
+    const result = signals({
+      chipExpectation: "answerable",
+      answer: DECLINE,
+      candidateRowsReturned: 0,
+    });
+    expect(result).toContain("ungated_chip_refused");
+  });
+
+  test("does not flag an available chip whose answer merely contains a negation", () => {
+    const result = signals({
+      chipExpectation: "answerable",
+      answer: "Ezreal does not play mid; he is bot at 54%.",
+    });
+    expect(result).not.toContain("ungated_chip_refused");
+  });
+
+  test("makes no profile assertion for a conversation turn", () => {
+    const result = signals({ chipExpectation: null, answer: DECLINE });
+    expect(result).not.toContain("ungated_chip_refused");
+    expect(result).not.toContain("gated_chip_did_not_refuse");
+  });
+
+  test("flags a run that did not resolve the capabilities it promised", () => {
+    expect(
+      signals({
+        capabilityMismatches: ["bucks: expects true, resolved false"],
+      }),
+    ).toEqual(["capability_mismatch"]);
+  });
+});
+
+describe("replaySignalWeight", () => {
+  test("orders a broken turn above a dropped figure", () => {
+    expect(replaySignalWeight(["new_turn_errored"])).toBeGreaterThan(
+      replaySignalWeight(["numeric_claim_dropped"]),
+    );
+  });
+
+  test("is zero for a clean case", () => {
+    expect(replaySignalWeight([])).toBe(0);
+  });
+});
+
+describe("harnessIntegritySignals", () => {
+  test("keeps only what says the harness or its configuration failed", () => {
+    expect(
+      harnessIntegritySignals([
+        "new_turn_errored",
+        "capability_mismatch",
+        "numeric_claim_dropped",
+        "refusal_regression",
+      ]),
+    ).toEqual(["new_turn_errored", "capability_mismatch"]);
+  });
+
+  test("treats answer-quality signals as not a harness failure", () => {
+    // A green run must never be read as "no regression".
+    expect(
+      harnessIntegritySignals([
+        "numeric_claim_dropped",
+        "rows_zero_was_nonzero",
+        "ungated_chip_refused",
+      ]),
+    ).toEqual([]);
+  });
+});

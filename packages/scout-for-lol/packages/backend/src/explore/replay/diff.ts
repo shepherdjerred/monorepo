@@ -1,0 +1,216 @@
+/**
+ * Comparing a replayed turn against what it is being measured off.
+ *
+ * "Baseline" is two different things depending on the case. A conversation
+ * turn has a stored original — the answer a real person actually received. A
+ * chip never shipped an answer at all, so its baseline is a previous run of
+ * the same chip under the same profile. The source is carried explicitly
+ * because a reviewer reads those two very differently.
+ *
+ * Nothing here decides whether a difference is bad. The original answer was
+ * computed against an older lake, so today's agent over today's lake can
+ * legitimately return different numbers for the same question. This module
+ * reports what changed; `signals.ts` flags the subset worth looking at first,
+ * and a person decides.
+ */
+
+export type ReplaySide = {
+  readonly answer: string | null;
+  readonly queryText: string | null;
+  readonly caveats: readonly string[];
+  readonly followUps: readonly string[];
+  readonly rowsReturned: number | null;
+  readonly rowsScanned: number | null;
+  /** Tool names in call order, duplicates kept. */
+  readonly toolNames: readonly string[];
+  readonly matchCardIds: readonly string[];
+  readonly visualizationKind: string | null;
+};
+
+export type ReplayBaseline = ReplaySide & {
+  readonly source: "stored" | "run";
+  /**
+   * When the stored answer was written, or null for a run baseline.
+   *
+   * Carried so a reviewer can weigh a numeric difference against how much lake
+   * has landed since — a six-month-old answer disagreeing about a win rate is
+   * not evidence of anything.
+   */
+  readonly createdAt: string | null;
+};
+
+export type AnswerDiff = {
+  readonly identical: boolean;
+  readonly baselineLength: number;
+  readonly candidateLength: number;
+  /** Figures the baseline asserted that the candidate no longer does, and vice versa. */
+  readonly numbersOnlyInBaseline: readonly string[];
+  readonly numbersOnlyInCandidate: readonly string[];
+};
+
+export type QueryDiff = {
+  readonly status: "identical" | "changed" | "added" | "removed" | "absent";
+  readonly baseline: string | null;
+  readonly candidate: string | null;
+};
+
+export type ToolCallDiff = {
+  readonly baseline: readonly string[];
+  readonly candidate: readonly string[];
+  readonly added: readonly string[];
+  readonly removed: readonly string[];
+  /** Same multiset of tools, different order. */
+  readonly reordered: boolean;
+};
+
+export type SetDiff = {
+  readonly added: readonly string[];
+  readonly removed: readonly string[];
+};
+
+export type ReplayDiff = {
+  readonly baselineSource: "stored" | "run";
+  readonly baselineCreatedAt: string | null;
+  readonly answer: AnswerDiff;
+  readonly query: QueryDiff;
+  readonly toolCalls: ToolCallDiff;
+  readonly rows: {
+    readonly returnedDelta: number | null;
+    readonly scannedDelta: number | null;
+  };
+  readonly caveats: SetDiff;
+  readonly followUps: SetDiff;
+  readonly matchCards: SetDiff;
+  readonly visualizationChanged: boolean;
+};
+
+/**
+ * Every figure a piece of prose asserts.
+ *
+ * Thousands separators are stripped first so "1,234" and "1234" are the same
+ * claim, and a trailing decimal zero is normalized so "54.0" matches "54" —
+ * otherwise the most common column in the bundle fills with differences that
+ * are not differences. Percent signs and units are left off the token: what
+ * matters is whether the number survived, not how it was decorated.
+ */
+export function numericClaims(text: string | null): ReadonlySet<string> {
+  if (text === null) return new Set();
+  const withoutSeparators = text.replaceAll(/(?<=\d),(?=\d{3}\b)/g, "");
+  const found = withoutSeparators.match(/\d+(?:\.\d+)?/g) ?? [];
+  return new Set(
+    found.map((token) => {
+      const value = Number(token);
+      return Number.isFinite(value) ? String(value) : token;
+    }),
+  );
+}
+
+function difference(
+  left: ReadonlySet<string>,
+  right: ReadonlySet<string>,
+): readonly string[] {
+  return [...left].filter((entry) => !right.has(entry)).toSorted();
+}
+
+function setDiff(
+  baseline: readonly string[],
+  candidate: readonly string[],
+): SetDiff {
+  const before = new Set(baseline);
+  const after = new Set(candidate);
+  return {
+    added: difference(after, before),
+    removed: difference(before, after),
+  };
+}
+
+function queryDiff(
+  baseline: string | null,
+  candidate: string | null,
+  normalize: (text: string) => string | null,
+): QueryDiff {
+  // Normalized before comparison so a formatting change — which the formatter
+  // can introduce on its own — is not reported as the agent writing a
+  // different query.
+  const before = baseline === null ? null : (normalize(baseline) ?? baseline);
+  const after = candidate === null ? null : (normalize(candidate) ?? candidate);
+  if (before === null && after === null) {
+    return { status: "absent", baseline: null, candidate: null };
+  }
+  if (before === null) {
+    return { status: "added", baseline: null, candidate: after };
+  }
+  if (after === null) {
+    return { status: "removed", baseline: before, candidate: null };
+  }
+  return {
+    status: before === after ? "identical" : "changed",
+    baseline: before,
+    candidate: after,
+  };
+}
+
+function toolCallDiff(
+  baseline: readonly string[],
+  candidate: readonly string[],
+): ToolCallDiff {
+  const { added, removed } = setDiff([...baseline], [...candidate]);
+  // Only meaningful when nothing was added or removed: otherwise "reordered"
+  // would be a second, confusing way of saying the tools changed.
+  const reordered =
+    added.length === 0 &&
+    removed.length === 0 &&
+    baseline.length === candidate.length &&
+    baseline.some((name, index) => candidate[index] !== name);
+  return { baseline, candidate, added, removed, reordered };
+}
+
+function delta(
+  baseline: number | null,
+  candidate: number | null,
+): number | null {
+  if (baseline === null || candidate === null) return null;
+  return candidate - baseline;
+}
+
+export function diffReplayCase(input: {
+  readonly baseline: ReplayBaseline;
+  readonly candidate: ReplaySide;
+  /**
+   * Canonical form of a query, so formatting is not mistaken for meaning.
+   * Returning null means "could not be normalized"; the raw text is then
+   * compared, which is worse but never silently wrong.
+   */
+  readonly normalizeQuery: (text: string) => string | null;
+}): ReplayDiff {
+  const { baseline, candidate } = input;
+  const baselineNumbers = numericClaims(baseline.answer);
+  const candidateNumbers = numericClaims(candidate.answer);
+
+  return {
+    baselineSource: baseline.source,
+    baselineCreatedAt: baseline.createdAt,
+    answer: {
+      identical: baseline.answer === candidate.answer,
+      baselineLength: baseline.answer?.length ?? 0,
+      candidateLength: candidate.answer?.length ?? 0,
+      numbersOnlyInBaseline: difference(baselineNumbers, candidateNumbers),
+      numbersOnlyInCandidate: difference(candidateNumbers, baselineNumbers),
+    },
+    query: queryDiff(
+      baseline.queryText,
+      candidate.queryText,
+      input.normalizeQuery,
+    ),
+    toolCalls: toolCallDiff(baseline.toolNames, candidate.toolNames),
+    rows: {
+      returnedDelta: delta(baseline.rowsReturned, candidate.rowsReturned),
+      scannedDelta: delta(baseline.rowsScanned, candidate.rowsScanned),
+    },
+    caveats: setDiff(baseline.caveats, candidate.caveats),
+    followUps: setDiff(baseline.followUps, candidate.followUps),
+    matchCards: setDiff(baseline.matchCardIds, candidate.matchCardIds),
+    visualizationChanged:
+      baseline.visualizationKind !== candidate.visualizationKind,
+  };
+}
