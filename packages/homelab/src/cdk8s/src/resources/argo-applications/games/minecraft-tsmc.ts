@@ -108,6 +108,11 @@ export function createMinecraftTsmcApp(chart: Chart) {
       version: versions.paper,
       type: "PAPER",
       serviceType: "ClusterIP",
+      // Clean up superseded plugin jars left behind when a pinned download
+      // URL's filename changes between versions (e.g. WorldGuard/PlaceholderAPI/
+      // LevelledMobs), so old and new versions don't both load as "ambiguous"
+      // duplicates.
+      removeOldMods: true,
 
       // Plugin downloads - direct URLs
       pluginUrls: [
@@ -176,6 +181,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
     extraEnv: {
       ...getMinecraftExtraEnv(),
       ...getDiscordSrvExtraEnv(SECRET_NAME),
+      // Scope removeOldMods to only the plugins known to leave orphaned
+      // duplicate jars on a version bump. mcMMO and LWCX are intentionally
+      // PVC-only (no direct download URL, see pluginUrls comment below) and
+      // must be excluded, or the default *.jar glob would delete them since
+      // they aren't part of the declared pluginUrls list.
+      REMOVE_OLD_MODS_INCLUDE:
+        "worldguard-bukkit-*.jar,PlaceholderAPI-*.jar,LevelledMobs-*.jar",
     },
 
     // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)
