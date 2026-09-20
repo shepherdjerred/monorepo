@@ -162,6 +162,110 @@ model CurrentRankSnapshot {
   updatedAt    DateTime @updatedAt
 }
 
+// Clash-v1 current snapshot. Riot returns empty registrations when Clash is
+// inactive; rows are replaced on each poll rather than accumulated.
+model ClashTournament {
+  id               Int      @id @default(autoincrement())
+  platform         String
+  riotId           Int
+  themeId          Int
+  nameKey          String
+  nameKeySecondary String
+  scheduleJson     String
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([platform, riotId])
+}
+
+model ClashTeam {
+  id               Int      @id @default(autoincrement())
+  platform         String
+  riotId           String
+  tournamentRiotId Int
+  name             String
+  abbreviation     String
+  iconId           Int
+  tier             Int
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([platform, riotId])
+  @@index([platform, tournamentRiotId])
+}
+
+model ClashRegistration {
+  id               Int      @id @default(autoincrement())
+  puuid            String
+  region           String
+  platform         String
+  teamRiotId       String
+  tournamentRiotId Int
+  position         String
+  role             String
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([puuid, region, tournamentRiotId])
+  @@index([puuid])
+  @@index([platform, teamRiotId])
+}
+
+// Append-only Clash-v1 membership. Current ClashTournament/Team/Registration
+// rows still replace on each poll; this table keeps the named team after Riot
+// returns empty.
+model ClashMembershipHistory {
+  id               Int      @id @default(autoincrement())
+  puuid            String
+  region           String
+  platform         String
+  tournamentRiotId Int
+  teamRiotId       String
+  teamName         String
+  teamAbbreviation String
+  position         String
+  role             String
+  nameKey          String
+  nameKeySecondary String
+  windowStartAt    DateTime
+  windowEndAt      DateTime
+  firstSeenAt      DateTime
+  lastSeenAt       DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([puuid, platform, tournamentRiotId])
+  @@index([puuid])
+  @@index([platform, windowStartAt, windowEndAt])
+}
+
+// One Clash lobby or finished match Scout saw a tracked player in.
+// source=prematch has no outcome; source=match may set win (pre-Feb leftover).
+model ClashGameSighting {
+  id         Int       @id @default(autoincrement())
+  platform   String
+  gameId     String
+  puuid      String
+  source     String
+  queue      String
+  championId Int
+  teamId     Int
+  observedAt DateTime
+  win        Boolean?
+  teamRiotId String?
+  cupKey     String?
+  cupDay     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([platform, gameId, puuid])
+  @@index([puuid, observedAt])
+  @@index([cupKey, cupDay])
+}
+
 model Report {
   id                     Int       @id @default(autoincrement())
   serverId               String

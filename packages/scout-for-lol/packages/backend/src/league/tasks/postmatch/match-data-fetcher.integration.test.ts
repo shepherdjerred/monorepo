@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   MatchIdSchema,
+  missingExpectedMatchFields,
   RawMatchSchema,
   RegionSchema,
 } from "@scout-for-lol/data/index.ts";
@@ -99,6 +100,23 @@ describe("fetchMatchData completeness gate", () => {
     const result = await fetchMatchData(matchId, region);
 
     expect(result?.info.participants).toHaveLength(2);
+    expect(savedPayloads).toHaveLength(0);
+  });
+
+  test("accepts a captured production Clash Match-V5 payload", async () => {
+    const clashPath = `${import.meta.dir}/testdata/match-clash-s3.json`;
+    const clashMatch = RawMatchSchema.parse(
+      JSON.parse(await Bun.file(clashPath).text()),
+    );
+    expect(clashMatch.info.queueId).toBe(700);
+    expect(clashMatch.info.gameType).toBe("MATCHED_GAME");
+    expect(missingExpectedMatchFields(clashMatch)).toEqual([]);
+
+    matchResponse = clashMatch;
+    const result = await fetchMatchData(matchId, region);
+
+    expect(result?.metadata.matchId).toBe("EUW1_7721480520");
+    expect(result?.info.queueId).toBe(700);
     expect(savedPayloads).toHaveLength(0);
   });
 });

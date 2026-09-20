@@ -10,6 +10,7 @@ describe("Scout Temporal production policy", () => {
     ["bucks-reconciliation", "betting_enabled"],
     ["weekly-bucks-leaderboard", "betting_enabled"],
     ["competition-refresh", null],
+    ["clash-snapshot", null],
     ["prematch", null],
   ])("maps %s to its hard-disable feature", (kind, expected) => {
     expect(hardDisabledFeatureForTemporalWork(kind)).toBe(expected);

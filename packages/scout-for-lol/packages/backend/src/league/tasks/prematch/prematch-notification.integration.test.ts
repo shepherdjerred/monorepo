@@ -90,7 +90,16 @@ vi.doMock("@sentry/bun", async (importOriginal) => ({
   addBreadcrumb: () => "mock-breadcrumb",
 }));
 
+const clashGuildFlags = new Map<string, boolean>();
+
+vi.doMock("#src/league/clash/access.ts", async (importOriginal) => ({
+  ...(await importOriginal()),
+  clashSurfaceEnabledForGuild: async (guildId: string) =>
+    clashGuildFlags.get(guildId) === true,
+}));
+
 const { sendPrematchNotification } = await import("./prematch-notification.ts");
+const { formatPrematchMessage } = await import("./prematch-copy.ts");
 
 function makeGameInfo() {
   return RawCurrentGameInfoSchema.parse({
@@ -200,6 +209,7 @@ beforeEach(() => {
     },
   ];
   buildLoadingScreenImpl = async () => ({ fake: true });
+  clashGuildFlags.clear();
 });
 
 describe("sendPrematchNotification", () => {
@@ -257,6 +267,40 @@ describe("sendPrematchNotification", () => {
     expect(captureExceptionMock).not.toHaveBeenCalled();
   });
 
+  test("keeps Clash chrome only for guilds with clash_surface", async () => {
+    clashGuildFlags.set("123456789012345678", true);
+    channelsResult = [
+      {
+        serverId: "123456789012345678",
+        channel: "channel-clash",
+        subscriptions: [{ subscriptionId: 1, playerId: 1, filters: null }],
+      },
+      {
+        serverId: "223456789012345678",
+        channel: "channel-standard",
+        subscriptions: [{ subscriptionId: 2, playerId: 1, filters: null }],
+      },
+    ];
+    const clashGame = RawCurrentGameInfoSchema.parse({
+      ...makeGameInfo(),
+      gameType: "CUSTOM",
+      gameQueueConfigId: 700,
+    });
+
+    await sendPrematchNotification(clashGame, [makeTrackedPlayer()]);
+
+    expect(sendCalls).toHaveLength(2);
+    const byChannel = new Map(
+      sendCalls.map((call) => [call.channel, call.message["content"]]),
+    );
+    expect(byChannel.get("channel-clash")).toBe(
+      "Tracked started a Clash match",
+    );
+    expect(byChannel.get("channel-standard")).toBe(
+      "Tracked started a Clash game",
+    );
+  });
+
   test("renders loading-screen image for custom games (unmapped queue 3110)", async () => {
     await sendPrematchNotification(makeCustomGameInfo(), [makeTrackedPlayer()]);
 
@@ -270,5 +314,22 @@ describe("sendPrematchNotification", () => {
     // Image path taken (files present), not the text-only fallback embed.
     expect(sendCalls[0]?.message["files"]).toBeDefined();
     expect(captureExceptionMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("formatPrematchMessage", () => {
+  test("calls a Clash lobby a match when clash_surface is on", () => {
+    expect(
+      formatPrematchMessage([makeTrackedPlayer()], "clash", "CLASSIC", true),
+    ).toBe("Tracked started a Clash match");
+    expect(
+      formatPrematchMessage([makeTrackedPlayer()], "aram clash", "ARAM", true),
+    ).toBe("Tracked started an ARAM Clash match");
+  });
+
+  test("keeps ordinary Clash game wording when clash_surface is off", () => {
+    expect(
+      formatPrematchMessage([makeTrackedPlayer()], "clash", "CLASSIC"),
+    ).toBe("Tracked started a Clash game");
   });
 });

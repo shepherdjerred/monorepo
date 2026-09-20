@@ -60,11 +60,13 @@ describe("competition queue notes", () => {
     expect(markup.split("Pre-match only")).toHaveLength(2);
   });
 
-  test("warns on ARAM Mayhem in the modern queue list", () => {
-    // Live, popular and unscorable: beta watched 964 of these start and
-    // received no result for any of them.
+  test("warns on ARAM Mayhem and ARAM Clash in the modern queue list", () => {
+    // Live, popular and unscorable: beta watched 964 ARAM Mayhem games start
+    // and received no result for any of them. ARAM Clash is the same shape:
+    // prod watched 52 start and received 0 finished matches.
     const markup = renderQueues("MODERN");
     expect(markup).toContain("<span>ARAM Mayhem</span>");
-    expect(markup.split("Pre-match only")).toHaveLength(2);
+    expect(markup).toContain("<span>ARAM Clash</span>");
+    expect(markup.split("Pre-match only")).toHaveLength(3);
   });
 });

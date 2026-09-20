@@ -290,6 +290,12 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             ]);
             break;
           }
+          case "clash-snapshot": {
+            const { runClashSnapshot } =
+              await import("#src/league/clash/snapshot.ts");
+            await runClashSnapshot();
+            break;
+          }
           case "prediction-ingest":
           case "legacy-backfill":
             unavailable(input.kind);

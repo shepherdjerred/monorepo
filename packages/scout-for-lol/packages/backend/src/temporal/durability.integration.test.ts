@@ -4,7 +4,7 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import type { ReportQueryAgentParams } from "#src/reports/ai/report-query-agent.ts";
-import type { ExploreAgentParams } from "#src/explore/agent.ts";
+import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
 
 const reportAiProvider = vi.hoisted(() => ({ calls: 0 }));
 const exploreProvider = vi.hoisted(
