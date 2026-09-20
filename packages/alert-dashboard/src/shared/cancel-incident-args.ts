@@ -13,7 +13,11 @@ const DEFAULT_ALERTNAME = "TemporalWorkflowFailed";
 export const CancelIncidentArgsSchema = z
   .object({
     database: z.string().startsWith("file:"),
-    alertname: z.string().min(1).default(DEFAULT_ALERTNAME),
+    // Left optional so the contradiction below can be judged on what the
+    // operator actually typed. Defaulting here first would make an explicit
+    // `--alertname TemporalWorkflowFailed` indistinguishable from omitting it,
+    // and the pair would be accepted rather than refused.
+    alertname: z.string().min(1).optional(),
     // Every pending row in the window, including rows carrying no occurrences
     // at all — which no alertname can select, and which nothing else can ever
     // clear. Opt in explicitly; it cancels unrelated alerts too.
@@ -25,10 +29,14 @@ export const CancelIncidentArgsSchema = z
     confirm: z.boolean(),
   })
   .superRefine((value, context) => {
-    if (value.allAlertnames && value.alertname !== DEFAULT_ALERTNAME) {
+    if (value.allAlertnames && value.alertname !== undefined) {
       context.addIssue({
         code: "custom",
         message: "--all-alertnames cannot be combined with --alertname",
       });
     }
-  });
+  })
+  .transform((value) => ({
+    ...value,
+    alertname: value.alertname ?? DEFAULT_ALERTNAME,
+  }));

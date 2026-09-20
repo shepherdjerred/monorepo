@@ -24,13 +24,19 @@ describe("cancel-incident CLI arguments", () => {
     expect(args.allAlertnames).toBe(false);
   });
 
-  it("refuses to combine an explicit alertname with every alertname", () => {
-    expect(() =>
-      CancelIncidentArgsSchema.parse({
-        ...base,
-        alertname: "SomethingElse",
-        allAlertnames: true,
-      }),
-    ).toThrow(/cannot be combined/u);
-  });
+  it.each(["SomethingElse", "TemporalWorkflowFailed"])(
+    "refuses --all-alertnames alongside an explicit --alertname %s",
+    (alertname) => {
+      // Including the default spelled out: judging the contradiction on the
+      // resolved value rather than on what was typed would silently accept
+      // this pair and then cancel every alertname anyway.
+      expect(() =>
+        CancelIncidentArgsSchema.parse({
+          ...base,
+          alertname,
+          allAlertnames: true,
+        }),
+      ).toThrow(/cannot be combined/u);
+    },
+  );
 });
