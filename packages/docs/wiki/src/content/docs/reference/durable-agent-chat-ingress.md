@@ -182,7 +182,7 @@ and [Discord delivery Activity](https://github.com/shepherdjerred/monorepo/blob/
 | Contract                | Value                                                                                                                                  |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Bootstrap               | Paired `BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD`; absent pair leaves the connector inactive; partial pair fails startup             |
-| Enable flag             | `temporal-agent-chat-imessage-enabled`; base default `false`, production control gateway override `true`                               |
+| Enable flag             | `temporal-agent-chat-imessage-enabled`; base default `false`, production gateway override `true`                                       |
 | Owners flag             | `temporal-agent-chat-imessage-owners`; exact comma-separated incoming sender handles; default empty                                    |
 | Model defaults          | `temporal-agent-chat-imessage-claude-model` and `temporal-agent-chat-imessage-codex-model`; snapshotted when a chat is created         |
 | Accepted messages       | Incoming text direct messages from an exact owner handle                                                                               |

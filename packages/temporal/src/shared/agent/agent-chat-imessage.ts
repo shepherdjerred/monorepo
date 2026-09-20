@@ -74,4 +74,5 @@ export type ImessageActivities = {
     messageId: string;
     content: string;
   }) => Promise<void>;
+  waitForImessageCommand: (workflowId: string) => Promise<void>;
 };

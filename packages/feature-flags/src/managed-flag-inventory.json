@@ -1653,6 +1653,14 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "temporal-agent-chat-imessage-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "ai_reports_enabled",
           "type": "boolean",
           "default": false,
