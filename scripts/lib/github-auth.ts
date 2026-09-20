@@ -18,34 +18,22 @@ const GITHUB_APP_TOKEN_SCRIPT_REL =
   "packages/temporal/src/lib/github-app-token.ts";
 
 /**
- * Register a runtime-obtained secret with the Buildkite log redactor so the
- * agent scrubs it from all subsequent log output for this job.
+ * There is no runtime log redactor under Woodpecker.
  *
- * Buildkite's static `BUILDKITE_REDACTED_VARS` redaction only knows env vars
- * present at job start; a token minted mid-build is invisible to it. The
- * redactor CLI closes that gap — this is the native backstop that makes an
- * accidental `echo $TOKEN` (or a captured-stdout echo bug) a no-op in the log.
+ * Buildkite's agent could be told about a secret minted mid-build
+ * (`buildkite-agent redactor add`), which made an accidental `echo $TOKEN` a
+ * no-op in the log. Woodpecker masks only the secrets IT issued, and this
+ * repository deliberately keeps credentials in Kubernetes Secrets rather than
+ * Woodpecker's store, so nothing here is masked.
  *
- * No-op outside Buildkite (local operator runs). Fails loudly if we ARE under
- * Buildkite but the agent CLI is missing/errors — a silent miss here would
- * defeat the whole control (repo fail-fast policy).
+ * That control is therefore gone rather than ported, and the mitigation is
+ * upstream of the log: the token is captured with `secret: true` so `run`
+ * never echoes it, it is passed through a git-askpass helper rather than a URL
+ * or a token file, and it is never exported into the step environment.
+ *
+ * Restoring an equivalent means a redacting wrapper the steps pipe through;
+ * until that exists, treat any command that might print this token as unsafe.
  */
-async function registerBuildkiteRedaction(secret: string): Promise<void> {
-  if (Bun.env["BUILDKITE"] !== "true") {
-    return;
-  }
-  const proc = Bun.spawn(
-    ["buildkite-agent", "redactor", "add", "--format=none"],
-    { stdin: new Blob([secret]), stdout: "inherit", stderr: "inherit" },
-  );
-  const exitCode = await proc.exited;
-  if (exitCode !== 0) {
-    throw new Error(
-      `buildkite-agent redactor add failed (exit ${exitCode.toString()}); ` +
-        `refusing to continue with an unredacted minted token`,
-    );
-  }
-}
 
 export type GitAuth = {
   /** The minted installation token (also exported as GH_TOKEN for `gh`). */
@@ -84,9 +72,8 @@ export async function setupGitAuth(repoRoot: string): Promise<GitAuth> {
     throw new Error("GH_TOKEN is empty after mint");
   }
 
-  // Native backstop: even if some downstream step echoes the token, the agent
-  // will scrub it from the log. Register it the instant we have it.
-  await registerBuildkiteRedaction(token);
+  // NOTE: no runtime redaction backstop exists here -- see the comment above
+  // the removed registerBuildkiteRedaction. The token must not be echoed.
 
   // Write an askpass helper to a temp file. Assembling the username as
   // "x-access" + "-token" mirrors the old helper (avoids the literal
