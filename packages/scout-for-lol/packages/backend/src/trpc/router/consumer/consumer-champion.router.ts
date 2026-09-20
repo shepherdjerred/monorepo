@@ -72,6 +72,49 @@ type MasteryRow = {
   freshness: "fresh" | "stale";
 };
 
+const ScopedPlayerSelect = {
+  id: true,
+  alias: true,
+  serverId: true,
+  discordId: true,
+  accounts: {
+    select: {
+      puuid: true,
+      riotGameName: true,
+      riotTagLine: true,
+      region: true,
+    },
+  },
+} as const;
+
+async function findScopedPlayers(guildIds: readonly string[]) {
+  return await prisma.player.findMany({
+    where: { serverId: { in: [...guildIds] } },
+    select: ScopedPlayerSelect,
+  });
+}
+
+async function getScopedChampionPlayers(
+  user: Parameters<typeof assertConsumerPlayerScope>[0],
+  requestedGuildIds: readonly string[] | undefined,
+) {
+  const accessibleGuilds = await assertConsumerPlayerScope(user);
+  const accessibleIds = new Set(accessibleGuilds.map((guild) => guild.id));
+  const selectedGuildIds =
+    requestedGuildIds ??
+    accessibleGuilds.map((guild) => DiscordGuildIdSchema.parse(guild.id));
+  if (selectedGuildIds.some((guildId) => !accessibleIds.has(guildId))) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Requested guild is outside the current player scope",
+    });
+  }
+  return {
+    accessibleGuilds,
+    players: await findScopedPlayers(selectedGuildIds),
+  };
+}
+
 function metric(row: ComparisonRow, sort: ChampionComparisonSort): number {
   switch (sort) {
     case "win_rate":
@@ -129,34 +172,10 @@ export const consumerChampionRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const accessibleGuilds = await assertConsumerPlayerScope(ctx.user);
-      const accessibleIds = new Set(accessibleGuilds.map((guild) => guild.id));
-      const selectedGuildIds =
-        input.guildIds ??
-        accessibleGuilds.map((guild) => DiscordGuildIdSchema.parse(guild.id));
-      if (selectedGuildIds.some((guildId) => !accessibleIds.has(guildId))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Requested guild is outside the current player scope",
-        });
-      }
-      const players = await prisma.player.findMany({
-        where: { serverId: { in: selectedGuildIds } },
-        select: {
-          id: true,
-          alias: true,
-          serverId: true,
-          discordId: true,
-          accounts: {
-            select: {
-              puuid: true,
-              riotGameName: true,
-              riotTagLine: true,
-              region: true,
-            },
-          },
-        },
-      });
+      const { accessibleGuilds, players } = await getScopedChampionPlayers(
+        ctx.user,
+        input.guildIds,
+      );
       const snapshots = await getCachedChampionMasterySnapshots({
         puuids: players.flatMap((player) =>
           player.accounts.map((account) => account.puuid),
@@ -260,27 +279,10 @@ export const consumerChampionRouter = router({
   compare: protectedProcedure
     .input(ComparisonInput)
     .query(async ({ ctx, input }) => {
-      const accessibleGuilds = await assertConsumerPlayerScope(ctx.user);
-      const accessibleIds = new Set(accessibleGuilds.map((guild) => guild.id));
-      const selectedGuildIds =
-        input.guildIds ??
-        accessibleGuilds.map((guild) => DiscordGuildIdSchema.parse(guild.id));
-      if (selectedGuildIds.some((guildId) => !accessibleIds.has(guildId))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Requested guild is outside the current player scope",
-        });
-      }
-      const players = await prisma.player.findMany({
-        where: { serverId: { in: selectedGuildIds } },
-        select: {
-          id: true,
-          alias: true,
-          serverId: true,
-          discordId: true,
-          accounts: { select: { puuid: true } },
-        },
-      });
+      const { accessibleGuilds, players } = await getScopedChampionPlayers(
+        ctx.user,
+        input.guildIds,
+      );
       const lakeRows = await fetchChampionComparisons({
         championId: input.championId,
         games: input.games,
