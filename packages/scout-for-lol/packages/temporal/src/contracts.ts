@@ -180,6 +180,7 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "prediction-ingest",
     "legacy-backfill",
     "progression-outbox",
+    "clash-snapshot",
   ]),
 });
 export type ScoutBackgroundJobInput = z.infer<

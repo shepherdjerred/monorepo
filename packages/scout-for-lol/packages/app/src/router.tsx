@@ -54,6 +54,7 @@ import { ChallengeCatalog } from "#src/routes/challenges/challenge-catalog.tsx";
 import { ChallengeTemplate } from "#src/routes/challenges/challenge-template.tsx";
 import { ChallengeDraft } from "#src/routes/challenges/challenge-draft.tsx";
 import { ChallengeRun } from "#src/routes/challenges/challenge-run.tsx";
+import { ConsumerClash } from "#src/routes/consumer/consumer-clash.tsx";
 import { DuelOverview } from "#src/routes/competitions/duel-overview.tsx";
 import { DuelEvent } from "#src/routes/competitions/duel-event.tsx";
 import { DuelSeries } from "#src/routes/competitions/duel-series.tsx";
@@ -284,6 +285,11 @@ export const routes: RouteObject[] = [
               {
                 path: "challenges",
                 element: <ChallengeCatalog />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "clash",
+                element: <ConsumerClash />,
                 errorElement: <RouteErrorPanel />,
               },
               {

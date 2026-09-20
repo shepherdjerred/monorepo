@@ -14,11 +14,16 @@ describe("QUEUE_POST_MATCH_DATA", () => {
     }
   });
 
-  test("the pre-match-only queues are the two the lakes prove", () => {
+  test("the pre-match-only queues are the ones the lakes prove", () => {
     // Each earned its place by being watched starting and never seen ending:
-    // ARAM Mayhem at 964 pre-match observations and 0 finished matches in
-    // beta, League Classic at 0 post-match objects against 1,078 in prod.
-    expect(queuesWithoutPostMatchData()).toEqual(["aram mayhem", "classic"]);
+    // ARAM Clash at 52 pre-match observations and 0 finished matches in prod,
+    // ARAM Mayhem at 964 and 0 in beta, League Classic at 0 post-match
+    // objects against 1,078 in prod.
+    expect(queuesWithoutPostMatchData()).toEqual([
+      "aram clash",
+      "aram mayhem",
+      "classic",
+    ]);
   });
 
   test("Classic ARAM Mayhem is the exception between the two that are not", () => {
@@ -27,13 +32,17 @@ describe("QUEUE_POST_MATCH_DATA", () => {
     // "classic" instead of the queue value gets this backwards.
     expect(queueHasPostMatchData("classic aram mayhem")).toBe(true);
     expect(queueHasPostMatchData("aram mayhem")).toBe(false);
+    expect(queueHasPostMatchData("aram clash")).toBe(false);
+    expect(queueHasPostMatchData("clash")).toBe(true);
     expect(queueHasPostMatchData("classic")).toBe(false);
   });
 
   test("notes only the queues that cannot be scored", () => {
     expect(queuePostMatchNote("classic")).toContain("Pre-match only");
     expect(queuePostMatchNote("aram mayhem")).toContain("cannot be scored");
+    expect(queuePostMatchNote("aram clash")).toContain("cannot be scored");
     expect(queuePostMatchNote("classic aram mayhem")).toBeUndefined();
+    expect(queuePostMatchNote("clash")).toBeUndefined();
     expect(queuePostMatchNote("aram")).toBeUndefined();
     expect(queuePostMatchNote("solo")).toBeUndefined();
   });

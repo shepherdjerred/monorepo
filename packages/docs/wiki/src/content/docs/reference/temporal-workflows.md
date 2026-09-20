@@ -107,6 +107,7 @@ changing model identity.
 | queue-windows              | daily 06:45                       | deterministic          | heartbeat + gated PR           |
 | image-gc                   | daily 04:00                       | deterministic          | S3 deletions                   |
 | competition updates        | every minute                      | deterministic          | due Discord standings          |
+| clash snapshot             | every 15 minutes                  | deterministic          | Clash-v1 schedule and roster   |
 | realtime and post-match    | fixed Schedules                   | deterministic          | match child Workflows          |
 | initial history            | reconciliation                    | deterministic          | paged S3/lake ingestion        |
 | Explore ranked history     | on-demand Explore tool            | deterministic          | 100 ranked games + lake fold   |

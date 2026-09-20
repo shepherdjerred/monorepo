@@ -125,6 +125,12 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       every: "15 minutes",
     }),
     intervalSchedule(stage, {
+      name: "clash-snapshot",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "clash-snapshot" }],
+      every: "15 minutes",
+    }),
+    intervalSchedule(stage, {
       name: "competition-scheduled-updates",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-scheduled-updates" }],

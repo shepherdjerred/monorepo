@@ -3,6 +3,8 @@ import type { MessageCreateOptions } from "discord.js";
 import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
 import { loadingScreenToImage } from "@scout-for-lol/report";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { clashSurfaceEnabledForPuuids } from "#src/league/clash/access.ts";
+import { attachClashChrome } from "#src/league/clash/chrome.ts";
 import {
   buildLoadingScreenData,
   fetchParticipantRanks,
@@ -11,8 +13,8 @@ import { UnsupportedLoadingScreenQueueError } from "#src/league/tasks/prematch/l
 import {
   buildFallbackPrematchEmbed,
   buildPrematchPayload,
-  formatPrematchMessage,
 } from "#src/league/tasks/prematch/prematch-notification.ts";
+import { formatPrematchMessage } from "#src/league/tasks/prematch/prematch-copy.ts";
 import type { ScoutV2PrematchContext } from "#src/temporal/v2/prematch/prematch-context.ts";
 import { resumeArchivedPrematchContext } from "#src/temporal/v2/prematch/prematch-resume.ts";
 import type { ScoutV2AttestedPrematchArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
@@ -95,11 +97,14 @@ export async function renderPrematchNotificationV2(
   let image: Uint8Array;
   try {
     const ranks = await fetchParticipantRanks(context.gameInfo, region);
-    const data = await buildLoadingScreenData(
-      context.gameInfo,
-      trackedPuuids,
-      region,
-      ranks,
+    const data = await attachClashChrome(
+      await buildLoadingScreenData(
+        context.gameInfo,
+        trackedPuuids,
+        region,
+        ranks,
+      ),
+      await clashSurfaceEnabledForPuuids([...trackedPuuids]),
     );
     image = await loadingScreenToImage(data);
   } catch (error) {
@@ -156,6 +161,11 @@ export async function buildPrematchNotificationMessageV2(
       context.trackedPlayers,
       queueType,
       gameInfo.gameMode,
+      await clashSurfaceEnabledForPuuids(
+        context.trackedPlayers.map(
+          (player) => player.league.leagueAccount.puuid,
+        ),
+      ),
     ),
     loadingScreenAttachment: attachment,
     loadingScreenEmbed: embed,

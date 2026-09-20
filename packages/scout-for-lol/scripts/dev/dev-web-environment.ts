@@ -25,6 +25,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   bucks_dares_enabled: false,
   bucks_transfers_enabled: false,
   challenge_runs_enabled: false,
+  clash_surface: false,
   competition_builder_v2_enabled: false,
   custom_nights_enabled: false,
   dare_extended_contracts_enabled: false,

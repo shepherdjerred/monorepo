@@ -48,6 +48,7 @@ export type ExploreSkillOptions = {
   challenges?: boolean | undefined;
   creation?: boolean | undefined;
   riotHistory?: boolean | undefined;
+  clash?: boolean | undefined;
   surface?: ExploreSurface | undefined;
 };
 
@@ -101,6 +102,8 @@ export function enabledExploreSkills(
         return options.riotHistory === true;
       case "mvp-votes":
         return options.mvpVotes != null;
+      case "clash":
+        return options.clash === true;
     }
   });
 }

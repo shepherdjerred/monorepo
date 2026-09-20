@@ -30,6 +30,7 @@ describe("enabledExploreSkills", () => {
     expect(names).toContain("match-cards");
     expect(names).not.toContain("dares");
     expect(names).not.toContain("challenges");
+    expect(names).not.toContain("clash");
     expect(names).not.toContain("creation");
     expect(names).not.toContain("bryan-bucks");
     expect(names).not.toContain("mvp-votes");
@@ -41,6 +42,7 @@ describe("enabledExploreSkills", () => {
       mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
+      clash: true,
       creation: true,
       surface: "web",
     }).map((candidate) => candidate.name);
@@ -48,6 +50,7 @@ describe("enabledExploreSkills", () => {
     expect(names).toContain("mvp-votes");
     expect(names).toContain("dares");
     expect(names).toContain("challenges");
+    expect(names).toContain("clash");
     expect(names).toContain("creation");
   });
 
@@ -138,6 +141,15 @@ describe("skill bodies", () => {
     );
     expect(body).toContain("catalog: 'current_champions'");
     expect(body).toContain("draft_challenge_contract");
+  });
+
+  test("clash keeps its load-bearing rules", () => {
+    const body = renderExploreSkillBody(skill("clash"), WEB_CONTEXT);
+    expect(body).toContain("get_clash_schedule");
+    expect(body).toContain("get_clash_roster");
+    expect(body).toContain("Do not answer win rates");
+    expect(body).toContain("queue = 'clash'");
+    expect(body).toContain("set queryText to null");
   });
 
   test("the dare body renders the frozen prompt version", () => {

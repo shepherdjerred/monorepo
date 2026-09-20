@@ -4,7 +4,6 @@ import type {
   PlayerConfigEntry,
   LeaguePuuid,
   DiscordGuildId,
-  QueueType,
 } from "@scout-for-lol/data/index.ts";
 import {
   resolveQueueTypeFromGame,
@@ -24,6 +23,12 @@ import {
   fetchParticipantRanks,
   type ParticipantRanks,
 } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { clashExploreEnabled } from "#src/league/clash/access.ts";
+import { attachClashChrome } from "#src/league/clash/chrome.ts";
+import {
+  formatPlayerList,
+  formatPrematchMessage,
+} from "#src/league/tasks/prematch/prematch-copy.ts";
 import { recordLoadingScreenFailure } from "#src/league/tasks/prematch/loading-screen-failure.ts";
 import {
   loadingScreenToImage,
@@ -57,39 +62,6 @@ import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 const logger = createLogger("prematch-notification");
 
 const PREMATCH_EMBED_COLOR = 0x00_bc_d4; // Teal - distinct from post-match
-
-/**
- * Format a natural language list: "A", "A and B", "A, B, and C"
- */
-function formatPlayerList(names: string[]): string {
-  if (names.length === 0) return "";
-  if (names.length === 1) return names[0] ?? "";
-  if (names.length === 2) return `${names[0] ?? ""} and ${names[1] ?? ""}`;
-  const allButLast = names.slice(0, -1).join(", ");
-  const last = names.at(-1) ?? "";
-  return `${allButLast}, and ${last}`;
-}
-
-/**
- * Plain-text message paired with the loading-screen image.
- * Mirrors post-match's `formatGameCompletionMessage`: short, unformatted content
- * that renders above the image embed.
- */
-export function formatPrematchMessage(
-  trackedPlayers: PlayerConfigEntry[],
-  queueType: QueueType | undefined,
-  gameMode: string,
-): string {
-  const queueName = queueType ? queueTypeToDisplayString(queueType) : gameMode;
-  const article = queueName === "arena" ? "an" : "a";
-  const aliases = trackedPlayers
-    .map((p) => p.alias)
-    .filter((alias) => alias.trim().length > 0);
-  if (aliases.length === 0) {
-    return `Game started: ${queueName}`;
-  }
-  return `${formatPlayerList(aliases)} started ${article} ${queueName} game`;
-}
 
 /**
  * Rich text embed used as a fallback when the loading-screen image cannot
@@ -369,17 +341,29 @@ export async function sendPrematchNotification(
     region,
   );
 
+  const targetGuildIds: DiscordGuildId[] = uniqueBy(
+    deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
+    (id) => id,
+  );
+  const clashSurfaceEnabled = await clashExploreEnabled(targetGuildIds);
+  logger.info(
+    `[sendPrematchNotification] 📺 Sending to ${deliverChannels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
+  );
+
   const loadingScreenStartTime = Date.now();
   let loadingScreenData: LoadingScreenData | undefined;
   try {
     const trackedPuuidSet = new Set(
       trackedPlayers.map((p) => p.league.leagueAccount.puuid),
     );
-    loadingScreenData = await buildLoadingScreenData(
-      gameInfo,
-      trackedPuuidSet,
-      region,
-      ranksByPuuid,
+    loadingScreenData = await attachClashChrome(
+      await buildLoadingScreenData(
+        gameInfo,
+        trackedPuuidSet,
+        region,
+        ranksByPuuid,
+      ),
+      clashSurfaceEnabled,
     );
   } catch (error) {
     recordLoadingScreenFailure({
@@ -391,17 +375,11 @@ export async function sendPrematchNotification(
     });
   }
 
-  const targetGuildIds: DiscordGuildId[] = uniqueBy(
-    deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
-    (id) => id,
-  );
-  logger.info(
-    `[sendPrematchNotification] 📺 Sending to ${deliverChannels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
-  );
   const prematchMessageContent = formatPrematchMessage(
     trackedPlayers,
     queueType,
     gameInfo.gameMode,
+    clashSurfaceEnabled,
   );
 
   // Generate presentation assets only when at least one channel will receive

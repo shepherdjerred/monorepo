@@ -74,6 +74,9 @@ function ToolNavIcon(props: { to: string }) {
   if (props.to === "/challenges") {
     return <Target className="size-3.5 shrink-0 text-scout-subtle" />;
   }
+  if (props.to === "/clash") {
+    return <Trophy className="size-4 shrink-0 text-scout-subtle" />;
+  }
   if (props.to === "/bucks") {
     return <Coins className="size-4 shrink-0 text-scout-subtle" />;
   }
@@ -297,6 +300,9 @@ export function AppNavigation() {
   const challengesQuery = useQuery(
     trpc.challenge.status.queryOptions(undefined, { retry: 2 }),
   );
+  const clashQuery = useQuery(
+    trpc.clash.status.queryOptions(undefined, { retry: 2 }),
+  );
   const bucksQuery = useQuery(
     trpc.bucks.status.queryOptions(undefined, { retry: 2 }),
   );
@@ -328,6 +334,7 @@ export function AppNavigation() {
     exploreAvailable: exploreQuery.data?.enabled === true,
     profilesAvailable: profilesQuery.data?.state === "available",
     challengesAvailable: challengesQuery.data?.enabled === true,
+    clashAvailable: clashQuery.data?.state === "available",
     bucksAvailable: bucksQuery.data?.state === "available",
     hallAvailable: hallQuery.data?.state === "available",
     hallTo,

@@ -4,6 +4,7 @@ export type ConsumerNavigationAvailability = {
   exploreAvailable: boolean;
   profilesAvailable: boolean;
   challengesAvailable: boolean;
+  clashAvailable?: boolean;
   bucksAvailable: boolean;
   hallAvailable?: boolean;
   hallTo?: string;
@@ -31,6 +32,9 @@ export function consumerNavigationItems(
       : []),
     ...(input.challengesAvailable
       ? [{ label: "Challenges", to: "/challenges" }]
+      : []),
+    ...(input.clashAvailable === true
+      ? [{ label: "Clash", to: "/clash" }]
       : []),
     ...(input.duelsAvailable === true && input.duelsTo !== undefined
       ? [{ label: "Duels", to: input.duelsTo }]

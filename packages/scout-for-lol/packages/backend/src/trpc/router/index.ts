@@ -28,6 +28,7 @@ import { customsRouter } from "#src/trpc/router/customs.router.ts";
 import { customsHistoryRouter } from "#src/trpc/router/customs-history.router.ts";
 import { hallRouter } from "#src/trpc/router/hall.router.ts";
 import { challengeRouter } from "#src/trpc/router/challenge.router.ts";
+import { clashRouter } from "#src/trpc/router/clash/clash.router.ts";
 import { duelRouter } from "#src/trpc/router/competitions/duel.router.ts";
 import { operationsRouter } from "#src/trpc/router/operations/operations.router.ts";
 import { mvpVotesRouter } from "#src/trpc/router/mvp-votes.router.ts";
@@ -55,6 +56,7 @@ export const appRouter = router({
   customsHistory: customsHistoryRouter,
   hall: hallRouter,
   challenge: challengeRouter,
+  clash: clashRouter,
   duel: duelRouter,
   operations: operationsRouter,
   mvpVotes: mvpVotesRouter,

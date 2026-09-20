@@ -91,6 +91,7 @@ vi.doMock("@sentry/bun", async (importOriginal) => ({
 }));
 
 const { sendPrematchNotification } = await import("./prematch-notification.ts");
+const { formatPrematchMessage } = await import("./prematch-copy.ts");
 
 function makeGameInfo() {
   return RawCurrentGameInfoSchema.parse({
@@ -270,5 +271,22 @@ describe("sendPrematchNotification", () => {
     // Image path taken (files present), not the text-only fallback embed.
     expect(sendCalls[0]?.message["files"]).toBeDefined();
     expect(captureExceptionMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("formatPrematchMessage", () => {
+  test("calls a Clash lobby a match when clash_surface is on", () => {
+    expect(
+      formatPrematchMessage([makeTrackedPlayer()], "clash", "CLASSIC", true),
+    ).toBe("Tracked started a Clash match");
+    expect(
+      formatPrematchMessage([makeTrackedPlayer()], "aram clash", "ARAM", true),
+    ).toBe("Tracked started an ARAM Clash match");
+  });
+
+  test("keeps ordinary Clash game wording when clash_surface is off", () => {
+    expect(
+      formatPrematchMessage([makeTrackedPlayer()], "clash", "CLASSIC"),
+    ).toBe("Tracked started a Clash game");
   });
 });

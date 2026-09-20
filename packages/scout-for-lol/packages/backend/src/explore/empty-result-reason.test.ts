@@ -105,4 +105,14 @@ describe("emptyResultReason", () => {
       reasonFor(`${COUNT_GAMES} WHERE queue = 'classic aram mayhem'`),
     ).toBeNull();
   });
+
+  test("explains a query pinned to ARAM Clash", () => {
+    const reason = reasonFor(`${COUNT_GAMES} WHERE queue = 'aram clash'`);
+    expect(reason).toContain("can never return rows");
+    expect(reason).toContain("'aram clash'");
+  });
+
+  test("stays silent on Summoner's Rift Clash, which has finished matches", () => {
+    expect(reasonFor(`${COUNT_GAMES} WHERE queue = 'clash'`)).toBeNull();
+  });
 });

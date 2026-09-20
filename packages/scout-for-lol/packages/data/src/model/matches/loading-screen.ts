@@ -219,6 +219,19 @@ export const LoadingScreenBanSchema = z.strictObject({
   team: TeamSchema,
 });
 
+export const ClashTeamBannerSchema = z.strictObject({
+  name: z.string().min(1),
+  abbreviation: z.string().min(1),
+});
+export type ClashTeamBanner = z.infer<typeof ClashTeamBannerSchema>;
+
+export const ClashLoadingChromeSchema = z.strictObject({
+  themeLabel: z.string().min(1).optional(),
+  blueTeam: ClashTeamBannerSchema.optional(),
+  redTeam: ClashTeamBannerSchema.optional(),
+});
+export type ClashLoadingChrome = z.infer<typeof ClashLoadingChromeSchema>;
+
 const BaseLoadingScreenDataSchema = z.strictObject({
   /** Riot game ID from spectator API */
   gameId: GameIdSchema,
@@ -234,6 +247,8 @@ const BaseLoadingScreenDataSchema = z.strictObject({
   bans: z.array(LoadingScreenBanSchema),
   /** Game start timestamp in milliseconds */
   gameStartTime: z.number().int().nonnegative(),
+  /** Clash-v1 snapshot overlay; omitted for every other queue. */
+  clashChrome: ClashLoadingChromeSchema.optional(),
 });
 
 /**
@@ -407,4 +422,8 @@ export function makeQueueDisplayName(
   queueType: z.infer<typeof QueueTypeSchema>,
 ): QueueDisplayName {
   return QueueDisplayNameSchema.parse(queueTypeToDisplayString(queueType));
+}
+
+export function isClashQueueType(queueType: QueueType): boolean {
+  return queueType === "clash" || queueType === "aram clash";
 }

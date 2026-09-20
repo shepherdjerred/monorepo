@@ -35,8 +35,30 @@ export const QUEUE_POST_MATCH_DATA: Record<QueueType, QueuePostMatchData> = {
   solo: "available",
   flex: "available",
   "ranked 5s": "available",
+  /**
+   * Summoner's Rift Clash (queue 700). Finished Match-V5 payloads exist:
+   * 27 in prod (2025-12-13 through 2026-02-07) and 10 in beta (2025-12-14
+   * through 2026-01-25). Captured prod object
+   * `games/2026/02/07/EUW1_7721480520/match.json` is MATCHED_GAME, complete,
+   * and passes the matchmade field gate.
+   *
+   * Prematch continues after that window — prod 32 observations (2026-05-09
+   * through 2026-09-20), beta 9 — and those spectator IDs do not overlap the
+   * finished-match IDs. Live spectator payloads are `gameType: "CUSTOM"` with
+   * queue 700; Match-V5 404s the spectator game id. Post-match discovery still
+   * finds Clash through the unfiltered match list when Riot publishes a
+   * MATCHED_GAME id, which is why this stays `available` rather than `never`.
+   */
   clash: "available",
-  "aram clash": "available",
+  /**
+   * ARAM Clash (queue 720). Scout watches these start and never learns how
+   * they ended. Prod holds 52 pre-match observations (2026-06-20 through
+   * 2026-08-24) and 0 finished matches; beta holds 6 and 0. A month-old
+   * spectator id (`NA1_5627356114`, archived
+   * `prematch/2026/08/23/5627356114/spectator-data.json`) still 404s on
+   * Match-V5. Same measurement as ARAM Mayhem, not a quiet queue.
+   */
+  "aram clash": "never",
   aram: "available",
   arurf: "available",
   urf: "available",
