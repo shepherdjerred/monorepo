@@ -1,6 +1,6 @@
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 import type { SettlementAnnouncementFamily } from "#src/database/durable/settlement-announcement-repository.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
 import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 

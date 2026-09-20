@@ -33,3 +33,33 @@ export type ParlaySettlementSummary = {
   messageRefs: { channelId: string; messageId: string }[];
   bets: ParlaySettlementBet[];
 };
+
+export type PendingParlayBet = {
+  id: number;
+  bucksAccountId: number;
+  side: string;
+  stake: number;
+  houseReserve: number;
+  grossPayout: number;
+  bucksAccount: {
+    discordId: string;
+    serverId: string;
+    isHouse: boolean;
+    balance: number;
+  };
+  refundableHeld: bigint;
+};
+
+/**
+ * One parlay position, planned but not yet paid.
+ *
+ * Here with the other settlement descriptions rather than beside the settler,
+ * for the reason the two summary types are: the payment half needs to
+ * DESCRIBE a position without performing one, and a type that stayed with
+ * the machinery made the two runtime halves point back at each other.
+ */
+export type PlannedPosition = {
+  bet: PendingParlayBet;
+  outcome: "won" | "lost" | "refunded";
+  payout: number;
+};

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 
 /**
  * v1's behaviour on the partial-settlement path, pinned BEFORE the

@@ -21,7 +21,7 @@ import {
   settlementDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
 import {
   prepareSettlementAnnouncement,

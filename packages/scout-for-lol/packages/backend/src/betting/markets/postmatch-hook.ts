@@ -17,10 +17,8 @@ import {
   refreshPendingDareV2Callouts,
   type DareV2CalloutDependencies,
 } from "#src/betting/dares/presentation/dare-callout-v2.ts";
-import {
-  DarePartialSettlementError,
-  type DareSettlementSummary,
-} from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import { DarePartialSettlementError } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { refreshClosedParlayMessages } from "#src/betting/parlays/runtime/parlay-refresh.ts";
 import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";

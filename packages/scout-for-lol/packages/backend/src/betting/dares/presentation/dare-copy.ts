@@ -15,7 +15,7 @@ import type {
   DareContributorRefund,
   DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import {
   PARTICIPANT_BOOLEAN_CATALOG,
   PARTICIPANT_NUMERIC_CATALOG,

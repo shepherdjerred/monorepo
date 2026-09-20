@@ -26,9 +26,9 @@ import {
   voidDareWithFullRefund,
   DarePartialSettlementError,
   type ActiveDareRow,
-  type DareSettlementSummary,
   type ParsedDare,
 } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import {
   prisma,

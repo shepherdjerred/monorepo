@@ -2,7 +2,7 @@ import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
 
 /**

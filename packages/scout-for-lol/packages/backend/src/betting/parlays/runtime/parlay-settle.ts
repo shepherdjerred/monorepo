@@ -31,6 +31,8 @@ import { createLogger } from "#src/logger.ts";
 import type {
   ParlaySettlementBet,
   ParlaySettlementSummary,
+  PendingParlayBet,
+  PlannedPosition,
 } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import { settlePosition } from "#src/betting/parlays/runtime/parlay-settle-positions.ts";
 import {
@@ -47,28 +49,6 @@ function creditFits(balance: number, credit: bigint, held: bigint): boolean {
     held >= 0n && BigInt(balance) + credit + held <= BigInt(BUCKS_INT32_MAX)
   );
 }
-
-type PendingParlayBet = {
-  id: number;
-  bucksAccountId: number;
-  side: string;
-  stake: number;
-  houseReserve: number;
-  grossPayout: number;
-  bucksAccount: {
-    discordId: string;
-    serverId: string;
-    isHouse: boolean;
-    balance: number;
-  };
-  refundableHeld: bigint;
-};
-
-export type PlannedPosition = {
-  bet: PendingParlayBet;
-  outcome: "won" | "lost" | "refunded";
-  payout: number;
-};
 
 type SettlementEvaluation = ReturnType<typeof evaluateParlay>;
 

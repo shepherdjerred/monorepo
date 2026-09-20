@@ -20,7 +20,7 @@ import type {
   DareContributorRefund,
   DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementAnnouncementInput } from "#src/betting/notify/announce-prepare.ts";
 import { ParlayLegResultSchema } from "#src/betting/parlays/parlay-evaluator.ts";
 import type {

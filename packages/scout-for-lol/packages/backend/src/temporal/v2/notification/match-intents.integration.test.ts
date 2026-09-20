@@ -13,7 +13,7 @@ import {
   deliveryIntentKey,
   prematchDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { BucksPoolTotalSchema, RiotTeamIdSchema } from "@scout-for-lol/data";
 

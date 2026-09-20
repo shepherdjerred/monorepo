@@ -6,8 +6,10 @@ import {
 } from "@scout-for-lol/data";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import type { Db } from "#src/database/index.ts";
-import type { ParlaySettlementBet } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
-import type { PlannedPosition } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type {
+  ParlaySettlementBet,
+  PlannedPosition,
+} from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 
 /**
  * Paying one settled parlay position.
