@@ -6,7 +6,7 @@ import {
   DiscordAccountIdSchema,
   ZERO_BUCKS,
 } from "@scout-for-lol/data";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import {
   buildSettlementDmMessages,
   type TeamRecipient,

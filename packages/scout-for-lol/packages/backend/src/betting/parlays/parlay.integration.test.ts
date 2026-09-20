@@ -23,6 +23,9 @@ import {
 import { placeParlayBet } from "#src/betting/parlays/runtime/parlay-place-bet.ts";
 import { activatePendingParlayMarkets } from "#src/betting/parlays/runtime/parlay-publish.ts";
 import { settleParlaysForMatch } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import { announcingSettlementSink } from "#src/betting/notify/announcement-sink.ts";
+import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   closeExpiredParlayWindows,
   voidStaleParlayMarkets,
@@ -608,6 +611,64 @@ describe("Bryan Bucks parlay settlement", () => {
     expect(await voidStaleParlayMarkets(db, now)).toBe(1);
     const bet = await db.bucksParlayBet.findFirstOrThrow();
     expect(bet).toMatchObject({ betOutcome: "refunded", payout: 5 });
+  });
+});
+
+describe("the announcement instruction a parlay settlement records", () => {
+  test("is written with the settling transaction's own handle", async () => {
+    // Proven by BEHAVIOUR, because a Prisma transaction client is a proxy and
+    // comparing it to the ambient client tells you nothing. This sink records
+    // for real and then throws, so the settling transaction aborts after the
+    // row was written. Inside the transaction it goes back with it; written
+    // through the ambient client it would have committed on its own, leaving
+    // an instruction to announce a settlement that never happened.
+    await makeMarket();
+    const placed = await place("YES", 5);
+    expect(placed.kind).toBe("placed");
+
+    await settleParlaysForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: async (handle, item) => {
+        await recordSettlementAnnouncementItem(handle, {
+          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          item,
+        });
+        throw new Error("the settlement failed after recording");
+      },
+    });
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: MATCH_ID },
+      }),
+    ).toEqual([]);
+  });
+
+  test("a settled market always leaves its instruction behind", async () => {
+    // The pair: when the settlement DOES commit, so does the instruction, in
+    // the same transaction. A parlay summary is one-shot — the market is no
+    // longer open or closed afterwards — so a recap recorded after the fact
+    // could be lost with no way to rebuild it.
+    await makeMarket();
+    const placed = await place("YES", 5);
+    expect(placed.kind).toBe("placed");
+
+    const settled = await settleParlaysForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: async (handle, item) => {
+        await recordSettlementAnnouncementItem(handle, {
+          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          item,
+        });
+      },
+    });
+
+    expect(settled).toHaveLength(1);
+    const stored = await db.matchSettlementAnnouncement.findMany({
+      where: { riotMatchId: MATCH_ID },
+    });
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.family).toBe("parlay");
   });
 });
 

@@ -17,7 +17,7 @@ import {
   sendSettlementMessage,
   type SettlementDeliveryDependencies,
 } from "#src/betting/notify/announce.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import { recordPoolMessageRefs } from "#src/betting/markets/pool-open.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import {

@@ -6,10 +6,8 @@ import {
 } from "#src/betting/accounts/earnings.ts";
 import { closeAndSettleBettingForMatch } from "#src/betting/settle.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
-import {
-  settleParlaysForMatch,
-  type ParlaySettlementSummary,
-} from "#src/betting/parlays/runtime/parlay-settle.ts";
+import { settleParlaysForMatch } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import { settleDaresForMatch } from "#src/betting/dares/settlement/dare-settle.ts";
 import { settleDaresV2ForMatch } from "#src/betting/dares/settlement/dare-settle-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types-v2.ts";
@@ -126,6 +124,7 @@ export async function settleAndAwardBucks(
   const parlaySettlements = await settleParlaysForMatch(
     matchData,
     prismaClient,
+    sink,
   );
   const earnings = await awardBucksForMatch(matchData, prismaClient);
   // Discord cleanup runs after the committed local operations and regardless

@@ -28,7 +28,7 @@ import {
   type SettlementAnnouncementInput,
 } from "#src/betting/notify/announce-prepare.ts";
 import { buildAnnouncements } from "#src/betting/notify/announce.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
 import { postmatchReportFreshnessDeadline } from "#src/league/tasks/postmatch/match-report-delivery.ts";

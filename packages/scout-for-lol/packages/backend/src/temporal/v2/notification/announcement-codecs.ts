@@ -26,7 +26,7 @@ import { ParlayLegResultSchema } from "#src/betting/parlays/parlay-evaluator.ts"
 import type {
   ParlaySettlementBet,
   ParlaySettlementSummary,
-} from "#src/betting/parlays/runtime/parlay-settle.ts";
+} from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 

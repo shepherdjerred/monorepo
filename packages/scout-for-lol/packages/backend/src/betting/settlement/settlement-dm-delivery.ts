@@ -22,7 +22,7 @@ import {
   type TeamRecipient,
 } from "#src/betting/settlement/settlement-dm.ts";
 import { shortTeamName } from "#src/betting/team.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
