@@ -139,7 +139,7 @@ rotates, refreshes, logs, or persists the Meta token, and an expired token
 surfaces as a sign-in state. An API-key login carries no subscription, and
 over-quota percentages above 100 are shown as fully used with a note. Those
 boundaries are implemented by the
-[Muse adapter](https://github.com/shepherdjerred/monorepo/blob/60665aead5d684d13aa18527d3dc9782db05fd0a/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/MuseProvider.swift).
+[Muse adapter](https://github.com/shepherdjerred/monorepo/blob/029db3520e63631d4c17457072a2fffe1e524b3a/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/MuseProvider.swift).
 
 ## Runtime behavior
 
