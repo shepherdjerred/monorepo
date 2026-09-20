@@ -108,6 +108,11 @@ export function createMinecraftTsmcApp(chart: Chart) {
       version: versions.paper,
       type: "PAPER",
       serviceType: "ClusterIP",
+      // Clean up superseded plugin jars left behind when a pinned download
+      // URL's filename changes between versions (e.g. WorldGuard/PlaceholderAPI/
+      // LevelledMobs), so old and new versions don't both load as "ambiguous"
+      // duplicates.
+      removeOldMods: true,
 
       // Plugin downloads - direct URLs
       pluginUrls: [

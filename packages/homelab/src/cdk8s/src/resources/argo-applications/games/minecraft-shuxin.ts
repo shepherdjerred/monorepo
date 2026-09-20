@@ -81,6 +81,9 @@ export function createMinecraftShuxinApp(chart: Chart) {
       forcegameMode: true,
       // Use ClusterIP - mc-router handles external routing for Java Edition
       serviceType: "ClusterIP",
+      // Clean up superseded plugin jars left behind when a pinned download
+      // URL's filename changes between versions.
+      removeOldMods: true,
       extraPorts: [
         getMinecraftBlueMapPort(),
         {
@@ -113,7 +116,10 @@ export function createMinecraftShuxinApp(chart: Chart) {
         // Floodgate - allows Bedrock players to join with Xbox accounts
         "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot",
         // GeyserExtras - Bedrock QoL improvements for Geyser/Floodgate players
-        "https://cdn.modrinth.com/data/kOfJBurB/versions/riRUqxfR/GeyserExtras-Spigot.jar",
+        // intentionally removed: v2.0.0-BETA-11 (the latest Modrinth build) throws
+        // NoSuchFieldError against the installed Geyser-Spigot API and fails to
+        // enable/disable. Re-add once an upstream build supports this Geyser version:
+        // "https://cdn.modrinth.com/data/kOfJBurB/versions/riRUqxfR/GeyserExtras-Spigot.jar",
         // BedrockPlayerSupport - GUI helpers and UX for Bedrock players
         "https://cdn.modrinth.com/data/hQnZEOj0/versions/1aczasDY/BedrockPlayerSupport-2.1.1-all.jar",
         // ProtocolLib - packet manipulation library (dependency for some plugins)

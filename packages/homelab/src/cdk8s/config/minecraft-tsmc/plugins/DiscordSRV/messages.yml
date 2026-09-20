@@ -363,11 +363,15 @@ MinecraftPlayerAchievementMessage:
 # %tps%:           average TPS of the server
 # PlaceholderAPI placeholders are also supported
 #
-ChannelTopicUpdaterChatChannelTopicFormat: "%playercount%/%playermax% players online | %totalplayers% unique players ever joined | Server online for %uptimemins% minutes | Last update: %date%"
-ChannelTopicUpdaterConsoleChannelTopicFormat: "TPS: %tps% | Mem: %usedmemorygb%GB used/%freememorygb%GB free/%maxmemorygb%GB max | %serverversion%"
+# Topic updates disabled: the bot doesn't have Discord's "Manage Channels"
+# permission, so DiscordSRV logged a warning on every attempt. Blank format
+# strings disable the feature; re-enable by restoring the formats below once
+# the bot has that permission.
+ChannelTopicUpdaterChatChannelTopicFormat: ""
+ChannelTopicUpdaterConsoleChannelTopicFormat: ""
 # AtServerShutdownFormats ONLY supports %totalplayers%, %serverversion%, & %date% / %time%
-ChannelTopicUpdaterChatChannelTopicAtServerShutdownFormat: "Server is offline | %totalplayers% unique players ever joined"
-ChannelTopicUpdaterConsoleChannelTopicAtServerShutdownFormat: "Server is offline | %serverversion%"
+ChannelTopicUpdaterChatChannelTopicAtServerShutdownFormat: ""
+ChannelTopicUpdaterConsoleChannelTopicAtServerShutdownFormat: ""
 
 # Discord command message
 # This is the message sent to players when they run "/discord". It's recommended to leave command syntax as a part of this
