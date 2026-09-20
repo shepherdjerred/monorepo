@@ -95,21 +95,25 @@ await $\`bun --no-install run build:storybook\`.cwd(appDir);
 
 describe("sites install closure", () => {
   const storybookInstall =
-    "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')";
+    "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/llm-models' --filter '@shepherdjerred/glitter-context')";
   const glitterInstall = "filters+=(--filter glitter)";
-  const sitesStep = `${glitterInstall}\n${storybookInstall}\n`;
+  const catalogBuilds = [
+    "bun --no-install run --cwd packages/llm-models build",
+    "bun --no-install run --cwd packages/glitter-context build",
+  ].join("\n");
+  const sitesStep = `${glitterInstall}\n${storybookInstall}\n${catalogBuilds}\n`;
 
-  test("requires Glitter and the Storybook catalog workspaces", () => {
+  test("requires Glitter, Storybook workspaces, and dist catalog builds", () => {
     expect(() => validateSitesInstallClosure(sitesStep)).not.toThrow();
   });
 
-  test("rejects a Storybook install that omits the app catalog", () => {
+  test("rejects a Storybook install that omits the dist catalogs", () => {
     expect(() =>
       validateSitesInstallClosure(
-        `${glitterInstall}\nfilters+=(--filter '@scout-for-lol/design-system')\n`,
+        `${glitterInstall}\nfilters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')\n`,
       ),
     ).toThrow(
-      "sites install closure is missing the Scout Storybook workspaces",
+      "sites install closure is missing the Scout Storybook workspaces or their dist catalogs",
     );
   });
 });

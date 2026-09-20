@@ -124,7 +124,7 @@ export function validateHomelabReleaseAdmission(
 }
 
 const SITES_STORYBOOK_INSTALL =
-  "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')";
+  "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/llm-models' --filter '@shepherdjerred/glitter-context')";
 
 export function validateSitesInstallClosure(sites: string | undefined): void {
   requireIncludes(
@@ -135,8 +135,18 @@ export function validateSitesInstallClosure(sites: string | undefined): void {
   requireIncludes(
     sites,
     SITES_STORYBOOK_INSTALL,
-    "sites install closure is missing the Scout Storybook workspaces",
+    "sites install closure is missing the Scout Storybook workspaces or their dist catalogs",
   );
+  for (const required of [
+    "bun --no-install run --cwd packages/llm-models build",
+    "bun --no-install run --cwd packages/glitter-context build",
+  ]) {
+    requireIncludes(
+      sites,
+      required,
+      `sites Storybook assemble is missing ${required}`,
+    );
+  }
 }
 
 function validateReleaseSteps({

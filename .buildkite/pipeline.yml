@@ -2777,11 +2777,11 @@ steps:
       fi
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-scout-design-system; then
         site_scout_design_system=true
-        # Storybook consumes source exports. The assemble script runs each
-        # catalog's own build, so the isolated linker only needs those two
-        # workspaces (and their production closures). turbo `^build` would
-        # pull backend/temporal and every package's devDependencies.
-        filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')
+        # Storybook consumes source exports from the catalog packages, but
+        # `@scout-for-lol/data` imports the dist-only llm-models and
+        # glitter-context catalogs. Direct-filter those so they get their
+        # build toolchain, then compile them before assembling the site.
+        filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/llm-models' --filter '@shepherdjerred/glitter-context')
       fi
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-glitter; then
         site_glitter=true
@@ -2815,7 +2815,11 @@ steps:
         bun --no-install scripts/release/deploy-site.ts wiki --prebuilt
       fi
       if $$site_glitter; then bun --no-install scripts/release/deploy-site.ts glitter; fi
-      if $$site_scout_design_system; then bun --no-install scripts/release/deploy-site.ts scout-design-system; fi
+      if $$site_scout_design_system; then
+        bun --no-install run --cwd packages/llm-models build
+        bun --no-install run --cwd packages/glitter-context build
+        bun --no-install scripts/release/deploy-site.ts scout-design-system
+      fi
     retry: *retry
     plugins:
       - kubernetes:
