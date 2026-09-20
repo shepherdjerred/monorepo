@@ -67,6 +67,7 @@ type CopyResult = {
 // makes a six-figure bucket finish inside the Activity timeout while bounding
 // open source/R2 streams and multipart uploads on the single backup worker.
 const OBJECT_CONCURRENCY = 16;
+const SOURCE_VERSION_ATTEMPTS = 3;
 
 function makeSnapshotId(now: Date): string {
   const timestamp = now.toISOString().replaceAll(/[-:]/g, "");
@@ -264,20 +265,46 @@ async function copyOrReuseObject(input: {
   prior: ManifestEntry | undefined;
   onBytes?: (progress: BackupByteProgress) => void;
 }): Promise<CopyResult> {
-  if (
-    input.prior !== undefined &&
-    identityMatches(input.prior, input.sourceObject)
-  ) {
-    return { entry: input.prior, copied: false };
+  let sourceObject = input.sourceObject;
+  for (let attempt = 1; attempt <= SOURCE_VERSION_ATTEMPTS; attempt += 1) {
+    if (
+      input.prior !== undefined &&
+      identityMatches(input.prior, sourceObject)
+    ) {
+      return { entry: input.prior, copied: false };
+    }
+    try {
+      return await copyChangedObject({
+        source: input.source,
+        destination: input.destination,
+        backupBucket: input.backupBucket,
+        sourceBucket: input.sourceBucket,
+        sourceObject,
+        ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
+      });
+    } catch (error: unknown) {
+      const preconditionFailed =
+        error instanceof Error &&
+        (error.name === "PreconditionFailed" ||
+          error.message === "PreconditionFailed" ||
+          error.message.includes("pre-conditions you specified did not hold"));
+      if (!preconditionFailed || attempt === SOURCE_VERSION_ATTEMPTS) {
+        throw error;
+      }
+      const refreshed = await input.source.headObject(
+        input.sourceBucket,
+        sourceObject.key,
+      );
+      if (refreshed === undefined) {
+        throw new Error(
+          `Source object disappeared while backing up ${input.sourceBucket}`,
+          { cause: error },
+        );
+      }
+      sourceObject = refreshed;
+    }
   }
-  return copyChangedObject({
-    source: input.source,
-    destination: input.destination,
-    backupBucket: input.backupBucket,
-    sourceBucket: input.sourceBucket,
-    sourceObject: input.sourceObject,
-    ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
-  });
+  throw new Error("Source version retry loop exited unexpectedly");
 }
 
 async function runObjectWorkers(
@@ -383,7 +410,7 @@ async function backupSourceBucket(input: {
     });
     copiedObjects += result.copied ? 1 : 0;
     reusedObjects += result.copied ? 0 : 1;
-    copiedBytes += result.copied ? object.size : 0;
+    copiedBytes += result.copied ? result.entry.sourceSize : 0;
     entries.push(result.entry);
     completed += 1;
     input.onProgress?.({

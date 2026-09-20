@@ -67,6 +67,24 @@ class DelayedHeadStore extends InMemoryObjectStore {
   }
 }
 
+class MutatingSourceStore extends InMemoryObjectStore {
+  private mutated = false;
+
+  public override async listObjects(bucket: string, prefix = "") {
+    const listed = await super.listObjects(bucket, prefix);
+    if (bucket === "source" && !this.mutated) {
+      this.mutated = true;
+      this.seed(
+        "source",
+        "state.json",
+        "after",
+        new Date("2026-08-02T00:00:00.000Z"),
+      );
+    }
+    return listed;
+  }
+}
+
 function concurrencyStores(backup = new DelayedHeadStore()): {
   source: InMemoryObjectStore;
   backup: DelayedHeadStore;
@@ -179,6 +197,39 @@ describe("object concurrency", () => {
 });
 
 describe("incremental backup and restore", () => {
+  test("refreshes a source object that changes after inventory", async () => {
+    const source = new MutatingSourceStore();
+    const backup = new InMemoryObjectStore();
+    source.createBucket("source");
+    backup.createBucket("backup");
+    source.seed("source", "state.json", "before");
+
+    const snapshot = await runBackup({
+      source,
+      destination: backup,
+      backupBucket: "backup",
+      policy: POLICY,
+      cadence: "daily",
+    });
+    const current = await source.headObject("source", "state.json");
+
+    expect(snapshot.buckets[0]).toMatchObject({
+      objectCount: 1,
+      copiedObjects: 1,
+      copiedBytes: 5,
+    });
+    expect(snapshot.marker.manifests[0]).toMatchObject({ protectedBytes: 5 });
+    expect(current).toBeDefined();
+    await expect(
+      verifySnapshot({
+        store: backup,
+        backupBucket: "backup",
+        snapshotId: snapshot.marker.snapshotId,
+        full: true,
+      }),
+    ).resolves.toMatchObject({ checkedObjects: 1, hashedObjects: 1 });
+  });
+
   test("reuses unchanged objects and keeps deleted versions recoverable", async () => {
     const { source, backup } = stores();
     source.seed("source", "résumé.json", "first");
