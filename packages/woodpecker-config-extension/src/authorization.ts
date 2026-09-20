@@ -50,15 +50,21 @@ export type AuthorizationResult =
  * checking only `sender` would accept an untrusted pull request re-triggered
  * by a trusted one.
  *
+ * `sender` is checked only when Woodpecker actually reports one. A webhook
+ * always carries both, so the pull request case above is fully covered; but
+ * pipelines Woodpecker creates itself fill in only what they know. A manual
+ * trigger records the signed-in user who pressed the button as `author` and
+ * leaves `sender` empty, and demanding a sender there would refuse every
+ * manual build. A cron records neither, which is why it is refused: the empty
+ * string is not a trusted actor. That refusal matters, because Woodpecker's
+ * own approval gate exempts cron and manual pipelines entirely, leaving this
+ * the only thing in front of a cron -- and recurring work in this repository
+ * belongs to Temporal, so a cron reaching here is something nobody reviewed.
+ *
  * Forks are refused outright rather than allowlisted. A fork's pull request is
  * the one path by which an account with no write access reaches this pipeline,
  * and the owner works from branches in the repository itself, so the rule
  * costs nothing it needs to permit.
- *
- * Anything this does not recognise is refused, including a cron pipeline --
- * Woodpecker reports the cron's name where a login would go, and recurring
- * work in this repository belongs to Temporal, so a cron appearing here means
- * something was set up that nobody reviewed.
  */
 export function authorizePipeline(pipeline: Pipeline): AuthorizationResult {
   if (pipeline.from_fork) {
@@ -66,16 +72,11 @@ export function authorizePipeline(pipeline: Pipeline): AuthorizationResult {
   }
 
   const trusted = new Set(TRUSTED_ACTORS);
-  for (const [field, login] of [
-    ["author", pipeline.author],
-    ["sender", pipeline.sender],
-  ] as const) {
-    if (!trusted.has(login)) {
-      return {
-        allowed: false,
-        reason: `pipeline ${field} is not a trusted actor`,
-      };
-    }
+  if (!trusted.has(pipeline.author)) {
+    return { allowed: false, reason: "pipeline author is not a trusted actor" };
+  }
+  if (pipeline.sender !== "" && !trusted.has(pipeline.sender)) {
+    return { allowed: false, reason: "pipeline sender is not a trusted actor" };
   }
 
   return { allowed: true };

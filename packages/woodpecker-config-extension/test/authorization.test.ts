@@ -91,15 +91,51 @@ describe("pipeline authorization", () => {
   });
 
   /**
-   * Woodpecker reports a cron's name where a login would go. Recurring work in
-   * this repository belongs to Temporal, so a cron reaching the extension is
-   * something nobody reviewed and must not generate a pipeline.
+   * A cron pipeline carries neither identity -- Woodpecker records the job
+   * name in a separate field and leaves both of these empty. Recurring work in
+   * this repository belongs to Temporal, and Woodpecker's own approval gate
+   * exempts cron entirely, so this is the only thing refusing it.
    */
-  test("refuses a cron pipeline", () => {
+  test("refuses a cron pipeline, which carries neither identity", () => {
     const result = authorizePipeline(
-      pipeline({ event: "cron", author: "nightly", sender: "nightly" }),
+      pipeline({ event: "cron", author: "", sender: "" }),
+    );
+    expect(result).toEqual({
+      allowed: false,
+      reason: "pipeline author is not a trusted actor",
+    });
+  });
+
+  /**
+   * A manual trigger records the signed-in user who pressed the button as
+   * `author` and leaves `sender` empty. Requiring a sender here would refuse
+   * every manual build.
+   */
+  test("admits a manual trigger, which reports no sender", () => {
+    const result = authorizePipeline(
+      pipeline({ event: "manual", author: "shepherdjerred", sender: "" }),
+    );
+    expect(result).toEqual({ allowed: true });
+  });
+
+  test("refuses an untrusted manual trigger", () => {
+    const result = authorizePipeline(
+      pipeline({ event: "manual", author: "mallory", sender: "" }),
     );
     expect(result.allowed).toBe(false);
+  });
+
+  /**
+   * An empty sender is tolerated only because Woodpecker omits it for
+   * pipelines it creates itself. An empty author is never acceptable: no
+   * trusted account has an empty login.
+   */
+  test("refuses an empty author even when the sender is trusted", () => {
+    const result = authorizePipeline(pipeline({ author: "" }));
+    expect(result).toEqual({
+      allowed: false,
+      reason: "pipeline author is not a trusted actor",
+    });
   });
 
   test("allowlists no account that is not the owner or a bot", () => {
