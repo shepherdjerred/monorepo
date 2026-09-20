@@ -43,4 +43,14 @@ describe("conversation context", () => {
       "Travis Scott - SICKO MODE (Official Video)",
     );
   });
+
+  test("does not reuse a pending list for an unrelated new title", () => {
+    const context = new ConversationContextStore();
+    context.rememberCandidates(SCOPE, [
+      candidate("Dune: Part One"),
+      candidate("Dune: Part Two"),
+    ]);
+
+    expect(context.select(SCOPE, "one piece")).toBeNull();
+  });
 });

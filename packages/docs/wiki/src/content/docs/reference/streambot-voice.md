@@ -156,11 +156,18 @@ endpointing, OpenAI connect/transcription/response, every tool, and reply
 delivery. OpenAI SDK tracing remains disabled.
 
 Structured stdout JSON is retained. When telemetry is enabled, the same log
-record is emitted through OTLP with its active trace and span IDs. Private
-traces and logs may contain guild, channel, and speaker IDs; transcripts;
-normalized commands; capture IDs; session IDs; scores and timings; validated tool
-arguments/results; reply transcripts; and bounded error classes. They never contain credentials
-or raw audio.
+record is emitted through OTLP with its active trace and span IDs.
+
+| Surface                  | Contents                                                                                                                            | Not present                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Traces and logs          | Guild, channel, and speaker IDs; capture and session IDs; scores and timings; tool field counts, names, and outcomes; error classes | Credentials, raw audio, transcripts, normalized commands, reply transcripts, tool payloads |
+| Private capture manifest | Transcripts, reply transcripts, validated tool arguments/results, `reply.wav`                                                       | Credentials                                                                                |
+
+Finish-log and tool-span fields are defined in
+[`attempt-context.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/voice/attempt-context.ts)
+and
+[`voice-tools.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/voice/voice-tools.ts).
+The capture field inventory is the table in the previous section.
 
 ## Prometheus metrics
 

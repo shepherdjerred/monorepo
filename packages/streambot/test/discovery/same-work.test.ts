@@ -46,6 +46,22 @@ describe("same-work matching", () => {
     ).toEqual(official);
   });
 
+  test("keeps a local file ahead of a YouTube official upload of the same work", () => {
+    const local = candidate("SICKO MODE", {
+      provider: "local",
+      score: 110,
+    });
+    expect(
+      pickOfficialSameWork([
+        local,
+        candidate("Travis Scott - SICKO MODE (Official Video)", {
+          channel: "TravisScottVEVO",
+          score: 92,
+        }),
+      ]),
+    ).toEqual(local);
+  });
+
   test("does not treat Love and Love Story as the same work", () => {
     expect(
       pickOfficialSameWork([
@@ -61,6 +77,17 @@ describe("same-work matching", () => {
         candidate("Harry Potter (Official Trailer)"),
         candidate("Harry Potter and the Chamber of Secrets"),
         candidate("Harry Potter and the Goblet of Fire"),
+      ]),
+    ).toBeUndefined();
+  });
+
+  test("does not strip title words that happen to match qualifier labels", () => {
+    expect(canonicalWorkKey("Video Games")).toBe("video games");
+    expect(canonicalWorkKey("Games (Official Video)")).toBe("games");
+    expect(
+      pickOfficialSameWork([
+        candidate("Video Games"),
+        candidate("Games (Official Video)"),
       ]),
     ).toBeUndefined();
   });

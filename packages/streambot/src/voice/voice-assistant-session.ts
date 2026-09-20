@@ -181,13 +181,8 @@ export class VoiceAssistantSession {
                   await speakClip(
                     options.streamer,
                     options.feedbackClips.retry,
+                    turn.attempt,
                   );
-                  turn.attempt.reply({
-                    outcome: "local-retry-clip",
-                    packets: 0,
-                    bytes: options.feedbackClips.retry.byteLength,
-                    durationMs: 0,
-                  });
                 } finally {
                   release();
                 }

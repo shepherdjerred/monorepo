@@ -83,6 +83,7 @@ export function normalizeVoicePlayQuery(query: string): string {
 
 /**
  * Explicit music/video beats a spoken verb; `"auto"` is the slash default, so it defers.
+ * Spoken listen/watch comes from the full utterance, not the title-only search query.
  * A spoken model `mode: video` is ignored unless the utterance asked to watch.
  */
 function requestedPlayMode(
@@ -90,17 +91,19 @@ function requestedPlayMode(
   intent: MediaIntent,
   query: string,
 ): MediaMode | undefined {
-  const spokenWatch =
-    input.spoken === true &&
-    inferMediaIntent({ query: input.utterance ?? query }).mode === "video";
+  const spokenVerbMode =
+    input.spoken === true
+      ? inferMediaIntent({ query: input.utterance ?? query }).mode
+      : undefined;
   const unspecified = input.mode === undefined || input.mode === "auto";
-  if (spokenWatch && unspecified) {
-    return "video";
+  const modelVideo = input.spoken === true && input.mode === "video";
+  if (spokenVerbMode !== undefined && (unspecified || modelVideo)) {
+    return spokenVerbMode;
   }
   if (unspecified) {
     return intent.mode;
   }
-  if (!spokenWatch && input.spoken === true && input.mode === "video") {
+  if (modelVideo) {
     return intent.mode;
   }
   return input.mode;

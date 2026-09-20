@@ -10,9 +10,14 @@ export function canonicalWorkKey(title: string): string {
     .replaceAll(/\([^)]*official[^)]*\)/giu, " ")
     .replaceAll(/\[[^\]]*official[^\]]*\]/giu, " ")
     .replaceAll(
-      /\b(?:official|video|audio|lyrics?|visualizer|hd|4k|remaster(?:ed)?|topic|vevo)\b/giu,
+      /\bofficial(?:\s+music)?(?:\s+lyrics?)?(?:\s+video|\s+audio|\s+visualizer)?\b/giu,
       " ",
     )
+    .replaceAll(
+      /\b(?:lyrics?(?:\s+video)?|visualizer|hd|4k|remaster(?:ed)?|topic|vevo)\b/giu,
+      " ",
+    )
+    .replaceAll(/\b(video|audio)$/giu, " ")
     .replaceAll(/[^\p{L}\p{N}\s]/gu, " ")
     .replaceAll(/\s+/gu, " ")
     .trim();
@@ -44,6 +49,12 @@ function sameWorkKey(left: string, right: string): boolean {
   return longer.endsWith(` ${shorter}`);
 }
 
+function ownedMatchScore(candidate: MediaCandidate): number {
+  return candidate.provider === "local" || candidate.provider === "history"
+    ? 1
+    : 0;
+}
+
 /**
  * When every ranked hit is the same work, return the official/best one instead of asking 1/2/3.
  */
@@ -57,7 +68,9 @@ export function pickOfficialSameWork(
   if (!keys.every((key) => sameWorkKey(first, key))) return undefined;
   return [...candidates].toSorted(
     (left, right) =>
-      officialScore(right) - officialScore(left) || right.score - left.score,
+      ownedMatchScore(right) - ownedMatchScore(left) ||
+      officialScore(right) - officialScore(left) ||
+      right.score - left.score,
   )[0];
 }
 
@@ -115,7 +128,10 @@ function asrScore(query: string, title: string): number {
   const best = Math.max(...ratios);
   const average =
     ratios.reduce((total, ratio) => total + ratio, 0) / ratios.length;
-  if (best >= 0.5 || (exactCount > 0 && best >= 0.4)) {
+  const weakest = Math.min(...ratios);
+  // Every query token has to be a plausible ASR hit. One exact short word
+  // ("one") must not drag an unrelated title ("Dune: Part One") over the bar.
+  if (weakest >= 0.4 && (best >= 0.5 || exactCount > 0)) {
     return Math.round(average * 100);
   }
   return 0;
@@ -128,14 +144,18 @@ export function fuzzyMatchCandidate(
   candidates: readonly MediaCandidate[],
   query: string,
 ): MediaCandidate | null {
+  const cleaned = query.replace(
+    /^(?:play|watch|queue|listen to|put on)\s+/iu,
+    "",
+  );
   let best: {
     readonly candidate: MediaCandidate;
     readonly score: number;
   } | null = null;
   for (const candidate of candidates) {
     const score = Math.max(
-      scoreLibraryTitle(candidate.title, query),
-      asrScore(query, candidate.title),
+      scoreLibraryTitle(candidate.title, cleaned),
+      asrScore(cleaned, candidate.title),
     );
     if (best === null || score > best.score) {
       best = { candidate, score };

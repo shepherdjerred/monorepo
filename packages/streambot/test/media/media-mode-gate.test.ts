@@ -191,6 +191,22 @@ describe("music-over-voice rollout gate", () => {
     expect(added?.source.spoken).toBe(true);
   });
 
+  test("a spoken listen request keeps music even when the title looks like film", async () => {
+    const { service, events } = createGatedService({ musicOverVoice: true });
+    await service.play({
+      query: "the dune trailer",
+      source: "auto",
+      placement: "queue",
+      userId: USER,
+      mode: "auto",
+      spoken: true,
+      utterance: "listen to the dune trailer",
+    });
+    const added = events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("music");
+    expect(added?.source.spoken).toBe(true);
+  });
+
   test("an unscoped session cannot evaluate the flag and passes the request through", async () => {
     const { service, lookups } = createGatedService({
       musicOverVoice: false,
