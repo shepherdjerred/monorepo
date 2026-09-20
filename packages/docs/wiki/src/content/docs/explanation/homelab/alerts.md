@@ -36,7 +36,7 @@ flowchart LR
 The application, image, ledger volume, network policy, observability rules,
 Argo CD application, and cutover receiver exist in the repository. The cluster
 continues its existing notification path until the two GitOps changes pass
-Buildkite and Argo CD syncs them; after that, Alerts and Postal are the active
+CI and Argo CD sync them; after that, Alerts and Postal are the active
 destinations.
 
 Activation is a separate operational step: publish and make the image public,

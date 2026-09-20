@@ -17,7 +17,7 @@ flowchart LR
     accTitle: Where the asuswrt stack is applied versus the CI-driven Tofu stacks
     accDescr: CI applies the CI-driven Tofu stacks to the shared remote state but has no route to the home LAN devices; an operator machine that can reach both the LAN and the state backend applies the asuswrt stack to the same shared state.
 
-    ci[Buildkite CI runner]
+    ci[CI runner]
     state[(Shared remote state)]
     router[Home Asus router + APs]
     operator[Operator machine]
@@ -32,7 +32,7 @@ flowchart LR
 
 Most stacks under `packages/homelab/src/tofu/` are planned on each pull request
 and applied on merge, driven by the plan and apply allowlists in
-[`.buildkite/pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
+[the OpenTofu lanes](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/tofu.ts).
 
 A few stacks sit outside those loops, each for its own reason. `asuswrt` is out
 because the CI runner reaches the shared state backend but has no network route

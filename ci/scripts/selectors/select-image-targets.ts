@@ -53,13 +53,13 @@ const GLOBAL_IMAGE_INPUTS = [
   // Selector and orchestration corrections must reconcile every target once:
   // a previously omitted content change can already be inside the last-green
   // base, so testing the new selector alone cannot repair that latent drift.
-  "ci/pipeline.yml",
+  "packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts",
   "ci/scripts/images/bake-images.ts",
   "ci/scripts/images/bake-retry.ts",
   "ci/scripts/reporting/buildkit-env.ts",
   // The image lane writes the digest handoff every downstream release step
   // reads, so a change to the producer must rebuild every target once.
-  "ci/scripts/reporting/buildkite-handoff.ts",
+  "scripts/lib/ci/ci-handoff.ts",
   "ci/scripts/images/ghcr-public-access.ts",
   "ci/scripts/images/image-targets.ts",
   "ci/scripts/migration-core.ts",

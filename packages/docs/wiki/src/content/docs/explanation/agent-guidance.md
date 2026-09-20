@@ -102,7 +102,7 @@ proof.
 
 ## Delivery evidence remains layered
 
-Guidance follows the same acceptance model as the homelab. Source, Buildkite,
+Guidance follows the same acceptance model as the homelab. Source, CI,
 artifacts, ArgoCD reconciliation, and observed runtime behavior are independent
 claims. An instruction should route an agent toward the missing evidence rather
 than collapse those layers into a generic definition of done.

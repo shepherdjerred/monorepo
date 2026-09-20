@@ -13,7 +13,7 @@ compatibility, and promote the same accepted image to production.
 
 Confirm each layer independently:
 
-1. The complete stack is green at its exact head in Buildkite.
+1. The complete stack is green at its exact head in CI.
 2. The candidate image digest and baked Git SHA match the commit under review.
 3. Argo reports the Temporal and Scout applications `Synced` and `Healthy`.
 4. Scout HTTP and Discord processes are healthy in beta.

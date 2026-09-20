@@ -17,7 +17,6 @@ import {
   fixedCorpusMode,
   knownImageTargets,
   parseBakeArguments,
-  parseLastPassedStepsCommit,
   parseImageSelection,
 } from "../migration-core.ts";
 import { resolveManagedImagePins } from "../../../scripts/lib/image-pin-catalog.ts";
@@ -86,32 +85,26 @@ export async function annotate(
 }
 
 /**
- * Resolve the newest main commit with completed image and pin-handoff evidence.
- * The overall build may be canceled after version commit-back advances main;
- * these two passed jobs still prove that the selected closures were built,
- * smoked, pushed, and handed to the durable pin workflow successfully.
+ * Newest main commit with completed image and pin-handoff evidence.
+ *
+ * The configuration extension resolves this before any step is generated — it
+ * asks Woodpecker for the newest main pipeline whose `images` AND
+ * `version-commit-back` workflows both succeeded, then writes it into every
+ * step's environment. Both are required: a pipeline can go green with images
+ * skipped, and treating such a commit as the base would make this build
+ * believe images already exist for content nobody built.
+ *
+ * Reading it here rather than asking the API again keeps one answer per build.
+ * The commit is still validated against this checkout, because an environment
+ * variable is not proof that the commit is reachable from HEAD.
  */
 export async function lastSuccessfulImageReleaseCommit(
   currentCommit: string,
-  fetcher: typeof fetch = fetch,
   executor: CommandExecutor = execute,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Promise<string | undefined> {
-  const token = environment["BUILDKITE_READ_TOKEN"];
-  if (token === undefined) return undefined;
-  const response = await fetcher(
-    "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&per_page=20&include_retried_jobs=true",
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(20_000),
-    },
-  ).catch(() => null);
-  if (response?.ok !== true) return undefined;
-  const commit = parseLastPassedStepsCommit(await response.json(), [
-    "images",
-    "version-commit-back",
-  ]);
-  if (commit === undefined) return undefined;
+  const commit = environment["CI_LAST_IMAGE_RELEASE_COMMIT"];
+  if (commit === undefined || commit.length === 0) return undefined;
   for (const command of [
     ["git", "cat-file", "-e", `${commit}^{commit}`],
     ["git", "merge-base", "--is-ancestor", commit, currentCommit],
@@ -428,10 +421,10 @@ export async function pushImages(
 
 async function main(): Promise<void> {
   const options = parseBakeArguments(Bun.argv.slice(2));
-  const commit = Bun.env["BUILDKITE_COMMIT"];
-  const buildNumber = Bun.env["BUILDKITE_BUILD_NUMBER"];
+  const commit = Bun.env["CI_COMMIT_SHA"];
+  const buildNumber = Bun.env["CI_PIPELINE_NUMBER"];
   if (commit === undefined || buildNumber === undefined) {
-    throw new Error("BUILDKITE_COMMIT and BUILDKITE_BUILD_NUMBER are required");
+    throw new Error("CI_COMMIT_SHA and CI_PIPELINE_NUMBER are required");
   }
   await Promise.all([
     rm(selectionReport, { force: true }),

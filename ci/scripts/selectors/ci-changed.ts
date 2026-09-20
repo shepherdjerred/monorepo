@@ -5,6 +5,14 @@ import {
 } from "../migration-core.ts";
 import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
 
+/**
+ * Lane decisions are no longer recorded anywhere.
+ *
+ * They existed only to feed the Buildkite build-summary annotation, which has
+ * no successor. The decision is still printed, which is what a reader of a
+ * step log actually needs.
+ */
+
 async function execute(
   command: readonly string[],
 ): Promise<{ readonly exitCode: number; readonly stdout: string }> {
@@ -16,20 +24,6 @@ async function execute(
   return { exitCode: await process.exited, stdout };
 }
 
-async function recordDecision(lane: string, decision: string): Promise<void> {
-  if (Bun.env["BUILDKITE"] !== "true") return;
-  const result = await execute([
-    "buildkite-agent",
-    "meta-data",
-    "set",
-    `ci-lane-decision-${lane}`,
-    decision,
-  ]);
-  if (result.exitCode !== 0) {
-    console.error(`WARN: could not record lane decision for ${lane}`);
-  }
-}
-
 async function main(): Promise<number> {
   const lane = Bun.argv[2];
   if (lane === undefined || lane.length === 0) {
@@ -38,36 +32,22 @@ async function main(): Promise<number> {
   }
   const requestedPlatformApply = requestedPlatformTofuApply(Bun.env);
   if (lane === "tofu-platforms" && requestedPlatformApply !== undefined) {
-    await recordDecision(
-      lane,
-      `ran — explicit ${requestedPlatformApply} apply requested`,
-    );
     console.log(
       `${lane}: explicit ${requestedPlatformApply} apply requested; running`,
     );
     return 0;
   }
   if (fixedCorpusForcesLane(lane, Bun.env)) {
-    await recordDecision(lane, "ran — fixed CI I/O corpus requested");
     console.log(`${lane}: fixed CI I/O corpus requested; running`);
     return 0;
   }
-  let base = Bun.env["CI_CHANGED_BASE"];
+  // The configuration extension resolves the last green main commit and writes
+  // it into every step's environment, so there is nothing to look up here. An
+  // absent base means the extension could not resolve one, and the lane runs.
+  const base = Bun.env["CI_CHANGED_BASE"];
   if (base === undefined || base.length === 0) {
-    const metadata = await execute([
-      "buildkite-agent",
-      "meta-data",
-      "get",
-      "ci-changed-base",
-    ]);
-    if (metadata.exitCode !== 0 || metadata.stdout.trim().length === 0) {
-      await recordDecision(
-        lane,
-        "ran — ci-changed-base unavailable (fail-open)",
-      );
-      return 0;
-    }
-    base = metadata.stdout.trim();
+    console.log(`${lane}: no CI_CHANGED_BASE; running`);
+    return 0;
   }
   for (const command of [
     ["git", "cat-file", "-e", `${base}^{commit}`],
@@ -75,10 +55,7 @@ async function main(): Promise<number> {
   ]) {
     const validation = await execute(command);
     if (validation.exitCode !== 0) {
-      await recordDecision(
-        lane,
-        `ran — selector base ${base} invalid (fail-open)`,
-      );
+      console.log(`${lane}: selector base ${base} invalid; running`);
       return 0;
     }
   }
@@ -95,14 +72,9 @@ async function main(): Promise<number> {
     if (selection.exitCode !== 0) throw new Error("image selector failed");
     const targets = selection.stdout.trim();
     if (targets === "[]") {
-      await recordDecision(
-        lane,
-        `skipped — no image closure affected since ${base}`,
-      );
       console.log(`${lane}: unchanged since ${base}; skipping`);
       return 78;
     }
-    await recordDecision(lane, `ran — selected targets ${targets}`);
     console.log(`${lane}: selected targets ${targets}`);
     return 0;
   }
@@ -124,15 +96,12 @@ async function main(): Promise<number> {
     throw new Error(`git diff exited ${changed.exitCode.toString()}`);
   const changedFiles = changed.stdout.trim().split("\n").filter(Boolean);
   if (changedFiles.length === 0) {
-    await recordDecision(lane, `skipped — unchanged since ${base}`);
     console.log(`${lane}: unchanged since ${base}; skipping`);
     return 78;
   }
-  await recordDecision(
-    lane,
-    `ran — ${changedFiles.length.toString()} matching change(s) since ${base}: ${changedFiles.slice(0, 3).join(" ")}`,
+  console.log(
+    `${lane}: ${changedFiles.length.toString()} matching change(s) since ${base}: ${changedFiles.slice(0, 3).join(" ")}; running`,
   );
-  console.log(`${lane}: changed since ${base}; running`);
   return 0;
 }
 
@@ -149,7 +118,6 @@ if (import.meta.main) {
       lane,
       error,
     );
-    await recordDecision(lane, "ran — selector failed (fail-open)");
     process.exitCode = 0;
   }
 }

@@ -69,7 +69,7 @@ test("returns deterministic failures without retrying", async () => {
   expect(delays).toEqual([]);
 });
 
-test("escalates repeated transport failures to Buildkite retry status", async () => {
+test("escalates repeated transport failures to the retryable exit status", async () => {
   let attempts = 0;
   const delays: number[] = [];
   const exitCode = await retryTransientBuildx(

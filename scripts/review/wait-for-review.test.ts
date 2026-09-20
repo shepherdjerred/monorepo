@@ -124,7 +124,7 @@ export function reviewGateStepBlockText(
  * How long the step spends on `toolchain.sh` and the filtered install before
  * wait-for-review.ts starts counting. Nothing bounds that preamble — a cold or
  * stale image pays for mise bootstrap and network downloads — so the margin is
- * deliberately generous. Getting it wrong reinstates the anonymous Buildkite
+ * deliberately generous. Getting it wrong reinstates the anonymous step-timeout
  * kill this whole change exists to prevent.
  */
 const PREAMBLE_MARGIN_SECONDS = 20 * 60;

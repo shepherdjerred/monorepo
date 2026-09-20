@@ -42,7 +42,7 @@ allowlisted environment. The runtime boundary consists of:
 - no GitHub credential, so the clone cannot push,
 - exactly one provider subscription credential and nothing else from the
   worker's own environment,
-- no Postal, S3, ArgoCD, Grafana, Buildkite, Home Assistant, Bugsink, or
+- no Postal, S3, ArgoCD, Grafana, Woodpecker, Home Assistant, Bugsink, or
   Cloudflare credential,
 - a dedicated Kubernetes service account with read-only audit RBAC and no
   `pods/exec` permission,
@@ -107,7 +107,7 @@ Kubernetes identity, the non-secret evidence endpoints, and the one
 subscription credential its own provider needs. A deviating run can spend that
 provider's quota, but there is no second credential in its environment to find.
 
-Investigations that need ArgoCD, Buildkite, Home Assistant, or another
+Investigations that need ArgoCD, Woodpecker, Home Assistant, or another
 authenticated source must become a typed deterministic collector. Stable
 recurring checks, including the daily homelab audit, already use that stronger
 pattern.

@@ -1,4 +1,3 @@
-import { asRecord } from "../../scripts/lib/json.ts";
 import { ALL_IMAGE_TARGETS } from "./images/image-targets.ts";
 import { nativeLanePaths } from "./macos/macos-native-selection.ts";
 import {
@@ -40,12 +39,11 @@ export function fixedCorpusMode(
   // use (`pipeline.default_branch`), not the literal name. Comparing to "main"
   // would reject the default branch itself wherever it is called something
   // else, hard-failing the build before the selector's fail-open path.
-  const defaultBranch =
-    environment["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] ?? "main";
-  const branch = environment["BUILDKITE_BRANCH"];
+  const defaultBranch = environment["CI_REPO_DEFAULT_BRANCH"] ?? "main";
+  const branch = environment["CI_COMMIT_BRANCH"];
   if (branch !== defaultBranch) {
     throw new FixedCorpusConfigurationError(
-      `CI_IO_FIXED_CORPUS is ${defaultBranch}-only; BUILDKITE_BRANCH was ${branch ?? "unset"}`,
+      `CI_IO_FIXED_CORPUS is ${defaultBranch}-only; CI_COMMIT_BRANCH was ${branch ?? "unset"}`,
     );
   }
   return true;
@@ -120,69 +118,20 @@ export function parseImageSelection(output: string): {
     };
   }
 }
-export function parseBuildkiteCommits(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    throw new TypeError("Buildkite response must be an array");
-  }
-  const commits: string[] = [];
-  for (const item of value) {
-    const record = asRecord(item);
-    const commit = record?.["commit"];
-    if (typeof commit !== "string" || commit.length === 0) {
-      throw new TypeError("Buildkite build must contain a commit");
-    }
-    commits.push(commit);
-  }
-  return commits;
-}
-
-export function parseLastPassedStepsCommit(
-  value: unknown,
-  stepKeys: readonly string[],
-): string | undefined {
-  if (!Array.isArray(value)) {
-    throw new TypeError("Buildkite response must be an array");
-  }
-  for (const item of value) {
-    const build = asRecord(item);
-    const commit = build?.["commit"];
-    const jobs = build?.["jobs"];
-    if (typeof commit !== "string" || commit.length === 0) {
-      throw new TypeError("Buildkite build must contain a commit");
-    }
-    if (!Array.isArray(jobs)) {
-      throw new TypeError("Buildkite build must contain jobs");
-    }
-    const passedStepKeys = new Set(
-      jobs.flatMap((job) => {
-        const record = asRecord(job);
-        const stepKey = record?.["step_key"];
-        return typeof stepKey === "string" && record?.["state"] === "passed"
-          ? [stepKey]
-          : [];
-      }),
-    );
-    if (stepKeys.every((stepKey) => passedStepKeys.has(stepKey))) return commit;
-  }
-  return undefined;
-}
-
 // The handoff helpers are global because they are the seam between the image
 // lane that writes the digests and the Helm, ArgoCD, Scout, and version steps
 // that execute them. A commit touching only one side would otherwise select
 // neither, so a repair to the handoff could land without any lane exercising
 // the release path it repairs.
 export const globalPaths = [
-  "ci/main-bootstrap.yml",
-  "ci/pipeline.yml",
-  "ci/scripts/reporting/buildkite-handoff.ts",
+  // The step model IS the pipeline now, so a change to any lane definition or
+  // to the emitter can change every selected step.
+  "packages/woodpecker-config-extension/src",
   "ci/scripts/selectors/ci-changed.ts",
   "ci/scripts/migration-core.ts",
-  "ci/scripts/selectors/prepare-ci-changed-base.ts",
-  "ci/scripts/reporting/read-buildkite-handoff.ts",
-  "ci/scripts/selectors/select-main-pipeline.ts",
-  "ci/scripts/selectors/select-main-pipeline-selection.ts",
-  "ci/scripts/upload-pipeline.sh",
+  "scripts/lib/ci/ci-handoff.ts",
+  "scripts/lib/ci/ci-artifact.ts",
+  "scripts/lib/ci/ci-environment.ts",
   "scripts/lib/json.ts",
 ] as const;
 
@@ -380,7 +329,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/homelab/src/tofu/posthog",
     "packages/homelab/scripts/tofu/tofu-stack.ts",
     "scripts/lib/transient-error.ts",
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts",
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
     "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",
@@ -475,31 +424,4 @@ export function caddyfileEntitlementArguments(
     throw new Error("CADDYFILE_SMOKE_PATH is required for caddy-s3proxy");
   }
   return ["--allow", `fs.read=${caddyfile}`];
-}
-
-export function selectBase(response: unknown): string {
-  if (!Array.isArray(response)) {
-    throw new TypeError("Buildkite response must be an array");
-  }
-  for (const value of response) {
-    const build = asRecord(value);
-    const commit = build?.["commit"];
-    if (typeof commit === "string" && commit.length > 0) {
-      return commit;
-    }
-  }
-  throw new Error("Buildkite response contains no valid green commit");
-}
-
-export function laneMetadata(
-  lane: string,
-  changed: boolean,
-  base: string,
-): Readonly<Record<string, string>> {
-  return {
-    [`ci-lane-run-${lane}`]: changed ? "true" : "false",
-    [`ci-lane-decision-${lane}`]: changed
-      ? `ran — matching changes since ${base}`
-      : `skipped — unchanged since ${base}`,
-  };
 }

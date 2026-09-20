@@ -39,7 +39,7 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
 
 const ALL_TARGET_INPUTS = [
   "ci/ci-playwright/",
-  "ci/pipeline.yml",
+  "packages/woodpecker-config-extension/src/pipeline/lanes/playwright.ts",
   "ci/scripts/bun-install.sh",
   "ci/scripts/selectors/select-image-targets-lockfile.ts",
   "ci/scripts/selection/playwright-targets.ts",

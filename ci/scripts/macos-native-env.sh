@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Kubernetes steps pin BUILDKITE_SHELL in the pod spec; the native queue takes
+# Kubernetes steps get bash from their step image; the native lanes take
 # its shell from the agent config instead (bootstrap.sh writes
 # shell="/bin/bash -e -c"). State that requirement here rather than inheriting
 # it, so a shell regression fails with this message instead of an unbound

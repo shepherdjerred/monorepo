@@ -19,9 +19,10 @@ set -euo pipefail
 # rebasing 22 commits of unrelated history would have.
 #
 # This closes the accidental version of that problem, where a branch is simply
-# old. It is not a trust boundary: Buildkite uploads the pipeline from the
-# branch, so a branch that deliberately rewrites this step controls its own
-# gate either way — as it does for every other check.
+# old. It is not a trust boundary: the configuration extension generates the
+# pipeline from the branch's own lane definitions, so a branch that
+# deliberately rewrites this step controls its own gate either way — as it does
+# for every other check.
 #
 # During the one-time Qodo-to-Codex rollout, `main` may not yet know that
 # `REVIEW_PROVIDER=codex` is valid. In that case the Codex invocation applies a
@@ -37,7 +38,7 @@ set -euo pipefail
 # set; leave it unset everywhere else.
 
 GATE_REF="${REVIEW_GATE_REF:-main}"
-GATE_DIR="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/.review-gate-source"
+GATE_DIR="${CI_WORKSPACE:-$PWD}/.review-gate-source"
 
 echo "~~~ Fetching the review gate from ${GATE_REF}"
 # `--` so an operator-supplied REVIEW_GATE_REF beginning with `-` is fetched as
@@ -79,7 +80,7 @@ fi
 if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
   ! grep -Fq 'ciProviders = new Set(["codex"])' "$WAIT_SCRIPT" && \
   ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$WAIT_SCRIPT"; then
-  BOOTSTRAP_PATCH="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/ci/scripts/review-gate-codex-bootstrap.patch"
+  BOOTSTRAP_PATCH="${CI_WORKSPACE:-$PWD}/ci/scripts/review-gate-codex-bootstrap.patch"
   # The patch's own headers hard-code the pre-split scripts/wait-for-review.ts
   # path; rewrite them to whichever layout $WAIT_SCRIPT actually resolved to
   # above, so the patch still applies once main adopts the new location.

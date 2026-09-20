@@ -141,11 +141,11 @@ describe("selectImageTargets", () => {
   test("selects every image when build or selector machinery changes", async () => {
     for (const path of [
       "docker-bake.hcl",
-      "ci/pipeline.yml",
+      "packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts",
       "ci/scripts/images/bake-images.ts",
       "ci/scripts/images/bake-retry.ts",
       "ci/scripts/reporting/buildkit-env.ts",
-      "ci/scripts/reporting/buildkite-handoff.ts",
+      "scripts/lib/ci/ci-handoff.ts",
       "ci/scripts/images/ghcr-public-access.ts",
       "ci/scripts/images/image-targets.ts",
       "ci/scripts/migration-core.ts",

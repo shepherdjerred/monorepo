@@ -29,8 +29,6 @@ import {
   expandTargets,
   knownImageTargets,
   parseBakeArguments,
-  parseBuildkiteCommits,
-  parseLastPassedStepsCommit,
   parseImageSelection,
   parseStringArray,
 } from "../migration-core.ts";
@@ -489,42 +487,6 @@ test("validates external JSON arrays", () => {
   expect(() => parseStringArray(["one", 2], "targets")).toThrow(
     "only contain strings",
   );
-  expect(parseBuildkiteCommits([{ commit: "one" }, { commit: "two" }])).toEqual(
-    ["one", "two"],
-  );
-  expect(() => parseBuildkiteCommits({})).toThrow("array");
-  expect(() => parseBuildkiteCommits([{}])).toThrow("contain a commit");
-  expect(
-    parseLastPassedStepsCommit(
-      [
-        {
-          commit: "current",
-          jobs: [
-            { step_key: "images", state: "passed" },
-            { step_key: "version-commit-back", state: "running" },
-          ],
-        },
-        {
-          commit: "previous",
-          jobs: [
-            { step_key: "images", state: "passed" },
-            { step_key: "version-commit-back", state: "passed" },
-          ],
-        },
-      ],
-      ["images", "version-commit-back"],
-    ),
-  ).toBe("previous");
-  expect(
-    parseLastPassedStepsCommit([{ commit: "current", jobs: [] }], ["images"]),
-  ).toBeUndefined();
-  expect(() =>
-    parseLastPassedStepsCommit([{ commit: "current" }], ["images"]),
-  ).toThrow("contain jobs");
-  expect(() => parseLastPassedStepsCommit({}, ["images"])).toThrow("array");
-  expect(() => parseLastPassedStepsCommit([{ jobs: [] }], ["images"])).toThrow(
-    "contain a commit",
-  );
 });
 test("fails open when image selection output is malformed", () => {
   for (const output of ["not-json", "{}", '["birmel", 42]']) {
@@ -567,30 +529,7 @@ test("annotates with the expected report arguments", async () => {
     ],
   ]);
 });
-test("resolves the newest main commit whose image release jobs passed", async () => {
-  const fetcher = Object.assign(
-    async () =>
-      Response.json(
-        [
-          {
-            commit: "current",
-            jobs: [
-              { step_key: "images", state: "passed" },
-              { step_key: "version-commit-back", state: "running" },
-            ],
-          },
-          {
-            commit: "image-green-commit",
-            jobs: [
-              { step_key: "images", state: "passed" },
-              { step_key: "version-commit-back", state: "passed" },
-            ],
-          },
-        ],
-        { status: 200 },
-      ),
-    { preconnect: fetch.preconnect },
-  );
+test("uses the image-release base the extension resolved, after validating it", async () => {
   const commands: string[][] = [];
   const executor: CommandExecutor = async (command) => {
     commands.push([...command]);
@@ -598,16 +537,17 @@ test("resolves the newest main commit whose image release jobs passed", async ()
   };
 
   expect(
-    await lastSuccessfulImageReleaseCommit("current", fetcher, executor, {
-      BUILDKITE_READ_TOKEN: "token",
+    await lastSuccessfulImageReleaseCommit("current", executor, {
+      CI_LAST_IMAGE_RELEASE_COMMIT: "image-green-commit",
     }),
   ).toBe("image-green-commit");
+  // An environment variable is not proof the commit is in this checkout.
   expect(commands).toEqual([
     ["git", "cat-file", "-e", "image-green-commit^{commit}"],
     ["git", "merge-base", "--is-ancestor", "image-green-commit", "current"],
   ]);
   expect(
-    await lastSuccessfulImageReleaseCommit("current", fetcher, executor, {}),
+    await lastSuccessfulImageReleaseCommit("current", executor, {}),
   ).toBeUndefined();
 });
 
@@ -689,7 +629,7 @@ test("builds every known image target for the fixed CI I/O corpus", async () => 
         push: true,
         environment: {
           CI_IO_FIXED_CORPUS: "true",
-          BUILDKITE_BRANCH: "main",
+          CI_COMMIT_BRANCH: "main",
         },
       },
       "current",

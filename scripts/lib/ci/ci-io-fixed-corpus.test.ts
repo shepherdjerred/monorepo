@@ -60,7 +60,6 @@ const MAIN_FIXED_CORPUS_STEP_KEYS = [
   "images",
   "tofu-apply-seaweedfs",
   "tofu-apply-tailscale",
-  "tofu-apply-buildkite",
   "tofu-apply-arr",
   "tofu-apply-github",
   "tofu-apply-cloudflare",
@@ -74,7 +73,6 @@ const PR_FIXED_CORPUS_STEP_KEYS = [
   "images-pr",
   "tofu-plan-seaweedfs",
   "tofu-plan-tailscale",
-  "tofu-plan-buildkite",
   "tofu-plan-arr",
   "tofu-plan-github",
   "tofu-plan-cloudflare",
@@ -131,12 +129,12 @@ function gateWindow(
     Array.from({ length: current.jobCount }, (_, jobIndex): JobIoReport => ({
       buildNumber: 1,
       buildState: "passed",
-      buildUrl: "https://buildkite.com/sjerred/monorepo/builds/1",
+      buildUrl: "https://woodpecker.sjer.red/repos/7/pipeline/1",
       branch: "main",
       jobId: `gate-${laneIndex.toString()}-${jobIndex.toString()}`,
       jobName: `${current.stepKey} fixture`,
       jobState: "passed",
-      jobUrl: `https://buildkite.com/sjerred/monorepo/builds/1#gate-${laneIndex.toString()}-${jobIndex.toString()}`,
+      jobUrl: `https://woodpecker.sjer.red/repos/7/pipeline/1/${laneIndex.toString()}${jobIndex.toString()}`,
       stepKey: current.stepKey,
       pods: [`gate-${laneIndex.toString()}-${jobIndex.toString()}`],
       nodes: ["torvalds"],
@@ -171,7 +169,7 @@ function gateWindow(
         buildNumber: 1,
         branch: "main",
         commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/1",
+        buildUrl: "https://woodpecker.sjer.red/repos/7/pipeline/1",
       },
     ],
     unfinishedBuilds: [],
@@ -214,7 +212,7 @@ function distributeGateJobsAcrossTwoBuilds(
     buildNumber: 2,
     branch: "main",
     commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    buildUrl: "https://buildkite.com/sjerred/monorepo/builds/2",
+    buildUrl: "https://woodpecker.sjer.red/repos/7/pipeline/2",
   });
   report.summary.buildCount = 2;
   const jobsById = new Map(report.jobs.map((job) => [job.jobId, job]));
@@ -228,7 +226,7 @@ function distributeGateJobsAcrossTwoBuilds(
       throw new Error(`fixed-corpus job report ${outcome.jobId} is missing`);
     }
     job.buildNumber = buildNumber;
-    job.buildUrl = `https://buildkite.com/sjerred/monorepo/builds/${String(buildNumber)}`;
+    job.buildUrl = `https://woodpecker.sjer.red/repos/7/pipeline/${String(buildNumber)}`;
   });
 }
 
@@ -951,7 +949,7 @@ describe("fixed-corpus completeness guards", () => {
         branch: "main",
         state: "running",
         createdAt: WINDOW.from.toISOString(),
-        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/2",
+        buildUrl: "https://woodpecker.sjer.red/repos/7/pipeline/2",
         disposition: "excluded",
       },
     ];

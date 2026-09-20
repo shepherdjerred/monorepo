@@ -53,12 +53,12 @@ supplies one provider credential. The coding agent has shell and network access
 because useful repository work needs both.
 
 The container does not receive the host home directory, Docker socket, GitHub
-App identity, Linear identity, or Buildkite credential. It cannot publish its
+App identity, Linear identity, or CI credential. It cannot publish its
 own changes.
 
 The host computes changed paths, stages them explicitly, and uses Git-Spice in
 the [workspace publisher](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/host/git-workspace.ts)
-to publish. It also gathers Codex findings and Buildkite logs before asking
+to publish. It also gathers Codex findings and CI logs before asking
 for a repair turn.
 
 ## Approval is bound to the current commit
@@ -76,7 +76,7 @@ again, closing the race between observation and mutation.
 
 An implementation, checkout, or publishing failure gets one automatic retry.
 Repeated failure adds `agent:needs-human` and parks the task. Observation
-failures get five attempts to tolerate transient GitHub or Buildkite outages;
+failures get five attempts to tolerate transient GitHub or CI outages;
 the [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
 owns those transitions.
 

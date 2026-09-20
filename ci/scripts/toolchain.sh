@@ -7,7 +7,7 @@
 set -eu
 # pipefail is not POSIX (dash lacks it) and the agent may run steps under
 # /bin/sh (build 5651/5654 — the agent-stack registration env forces the
-# agent image's default shell until the BUILDKITE_SHELL controller fix is
+# agent image's default shell until the step-shell controller fix is
 # deployed). Enable it when the shell is bash; plain sh proceeds without.
 case "${BASH_VERSION:-}" in "") ;; *) set -o pipefail ;; esac
 

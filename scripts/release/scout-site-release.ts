@@ -73,7 +73,7 @@ async function marketingIdentifiers(): Promise<{
 }
 
 async function resolveGitSha(): Promise<string> {
-  const fromCi = optionalEnv("BUILDKITE_COMMIT");
+  const fromCi = optionalEnv("CI_COMMIT_SHA");
   if (fromCi !== null) {
     return fromCi;
   }

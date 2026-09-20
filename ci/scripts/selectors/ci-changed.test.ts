@@ -30,7 +30,7 @@ test("native lanes separate product changes and share infrastructure changes", (
     "packages/macos-ai-subscription-tracker",
   );
   for (const sharedPath of [
-    "ci/pipeline.yml",
+    "packages/woodpecker-config-extension/src",
     "ci/scripts/macos/macos-native-preflight.ts",
     ".mise.toml",
     ".xcode-version",
@@ -45,7 +45,7 @@ test("native lanes separate product changes and share infrastructure changes", (
 test("forces every runtime-selected fixed-corpus lane", () => {
   const environment = {
     CI_IO_FIXED_CORPUS: "true",
-    BUILDKITE_BRANCH: "main",
+    CI_COMMIT_BRANCH: "main",
   };
   for (const lane of ["docker-e2e", "images", "tofu"]) {
     expect(fixedCorpusForcesLane(lane, environment)).toBe(true);
@@ -59,20 +59,20 @@ test("accepts only one exact main-only platform apply request", () => {
   expect(
     requestedPlatformTofuApply({
       TOFU_PLATFORM_APPLY: "openrouter",
-      BUILDKITE_BRANCH: "main",
+      CI_COMMIT_BRANCH: "main",
     }),
   ).toBe("openrouter");
   expect(requestedPlatformTofuApply({})).toBeUndefined();
   expect(() =>
     requestedPlatformTofuApply({
       TOFU_PLATFORM_APPLY: "all",
-      BUILDKITE_BRANCH: "main",
+      CI_COMMIT_BRANCH: "main",
     }),
   ).toThrow("TOFU_PLATFORM_APPLY must be one of");
   expect(() =>
     requestedPlatformTofuApply({
       TOFU_PLATFORM_APPLY: "openai",
-      BUILDKITE_BRANCH: "feature/platforms",
+      CI_COMMIT_BRANCH: "feature/platforms",
     }),
   ).toThrow("TOFU_PLATFORM_APPLY is main-only");
 });
@@ -95,17 +95,20 @@ test("site-scout excludes global CI inputs and uses exact release libraries", ()
   ]);
 });
 
+// The handoff helpers are global because they are the seam between the image
+// lane that writes the digests and every release step that reads them: a
+// commit touching only one side would otherwise select neither.
 test("other lanes retain global CI inputs", () => {
   const helmPaths = selectorPathsForLane("helm");
-  expect(helmPaths).toContain("ci/main-bootstrap.yml");
-  expect(helmPaths).toContain("ci/scripts/selectors/select-main-pipeline.ts");
-  expect(globalPaths).toContain("ci/pipeline.yml");
-  expect(globalPaths).toContain("ci/scripts/reporting/buildkite-handoff.ts");
-  expect(globalPaths).toContain(
-    "ci/scripts/reporting/read-buildkite-handoff.ts",
-  );
-  expect(helmPaths).toContain("ci/scripts/reporting/buildkite-handoff.ts");
-  expect(helmPaths).toContain("ci/scripts/reporting/read-buildkite-handoff.ts");
+  for (const globalInput of [
+    "packages/woodpecker-config-extension/src",
+    "scripts/lib/ci/ci-handoff.ts",
+    "scripts/lib/ci/ci-artifact.ts",
+    "scripts/lib/ci/ci-environment.ts",
+  ]) {
+    expect(globalPaths).toContain(globalInput);
+    expect(helmPaths).toContain(globalInput);
+  }
   expect(selectorPathsForLane("unknown")).toBeUndefined();
 });
 

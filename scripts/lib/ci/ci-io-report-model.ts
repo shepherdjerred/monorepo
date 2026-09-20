@@ -29,8 +29,6 @@ const FIXED_CORPUS_LANE_DEFINITION: ReadonlyMap<
   ["tofu-apply-seaweedfs", ["tofu", "tofu-plan-seaweedfs", null]],
   ["tofu-plan-tailscale", ["tofu", "tofu-apply-tailscale", "current"]],
   ["tofu-apply-tailscale", ["tofu", "tofu-plan-tailscale", null]],
-  ["tofu-plan-buildkite", ["tofu", "tofu-apply-buildkite", "current"]],
-  ["tofu-apply-buildkite", ["tofu", "tofu-plan-buildkite", null]],
   ["tofu-plan-arr", ["tofu", "tofu-apply-arr", "current"]],
   ["tofu-apply-arr", ["tofu", "tofu-plan-arr", null]],
   ["tofu-plan-github", ["tofu", "tofu-apply-github", "current"]],
