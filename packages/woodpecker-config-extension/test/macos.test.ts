@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { macosSteps } from "#src/pipeline/lanes/macos.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
-import { TEST_IDENTITY } from "./identity.ts";
+import { TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
 
 describe("macOS native lanes", () => {
   const steps = macosSteps();
@@ -31,7 +31,32 @@ describe("macOS native lanes", () => {
   test("target the Mac agent by label", () => {
     for (const step of steps) {
       const parsed: unknown = parse(emitWorkflow(step, TEST_IDENTITY));
-      expect(parsed).toMatchObject({ labels: { platform: "darwin/arm64" } });
+      expect(parsed).toMatchObject({
+        labels: { platform: "darwin/arm64", backend: "local" },
+      });
+    }
+  });
+
+  /**
+   * The other half of that guard, and the one that was missing.
+   *
+   * Woodpecker runs a workflow on any agent satisfying every label the
+   * workflow requests, so a Linux workflow requesting nothing was eligible for
+   * the Mac — where the local backend would have run its commands directly on
+   * the host instead of in the container the step declares.
+   */
+  test("every container step demands a container backend", () => {
+    const containerSteps = testPipelineSteps().filter(
+      (step) => step.backend !== "local",
+    );
+    expect(containerSteps.length).toBeGreaterThan(0);
+
+    for (const step of containerSteps) {
+      const parsed: unknown = parse(emitWorkflow(step, TEST_IDENTITY));
+      expect(
+        parsed,
+        `${step.key} must not be schedulable on the Mac`,
+      ).toMatchObject({ labels: { backend: "kubernetes" } });
     }
   });
 

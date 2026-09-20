@@ -7,8 +7,16 @@ in-cluster agent instead.
 
 The agent runs Woodpecker's **local backend**: it executes each step's commands
 directly on the host rather than in a container, which is the only way Swift
-and Xcode can run at all. It is selected by the `platform=darwin/arm64` agent
-label that the Linux agents do not carry.
+and Xcode can run at all. Native lanes select it with `platform=darwin/arm64`,
+which the Linux agents do not carry.
+
+That label alone only steers mac work to the Mac. Keeping everything else
+_off_ the Mac is the other half, and it runs the other way round: Woodpecker
+will schedule a workflow onto any agent satisfying every label the workflow
+asks for, so a container lane asking for nothing was eligible here. Every
+generated workflow therefore also demands a `backend` — `local` for these
+lanes, `kubernetes` for all the rest — which each agent advertises
+automatically from its engine.
 
 The host is deliberately separate from the personal Chezmoi workstation
 layer. The repository defines its toolchain, native jobs validate that
@@ -24,7 +32,9 @@ Woodpecker checks each workflow out into a fresh directory under
 
 Native steps therefore have a deliberately narrow surface:
 
-- They select the Mac by the `platform=darwin/arm64` agent label.
+- They select the Mac by the `platform=darwin/arm64` and `backend=local` agent
+  labels, and every container lane demands `backend=kubernetes` so it can never
+  land here.
 - Code from third-party forks never executes on the persistent GUI user. This
   is enforced at the repository level — Woodpecker's "Approvals for forked
   repositories" plus `ignore_forks` — rather than by a per-step guard.
