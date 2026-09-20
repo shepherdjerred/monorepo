@@ -1,11 +1,27 @@
 import { ApplicationFailure } from "@temporalio/common";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type * as TemporalActivity from "@temporalio/activity";
 import {
   chunkDiscordAgentChatText,
   deliverDiscordAgentChatMessage,
 } from "./discord-ingress.ts";
 
-const { restPost } = vi.hoisted(() => ({ restPost: vi.fn() }));
+const activityMocks = vi.hoisted(() => ({
+  cancellation: new AbortController(),
+  restPost: vi.fn(),
+}));
+
+vi.mock("@temporalio/activity", async (importOriginal) => {
+  const original = await importOriginal<typeof TemporalActivity>();
+  return {
+    ...original,
+    Context: {
+      current: () => ({
+        cancellationSignal: activityMocks.cancellation.signal,
+      }),
+    },
+  };
+});
 
 vi.mock("discord.js", () => ({
   REST: class {
@@ -13,9 +29,14 @@ vi.mock("discord.js", () => ({
       return this;
     }
 
-    public readonly post = restPost;
+    public readonly post = activityMocks.restPost;
   },
 }));
+
+beforeEach(() => {
+  activityMocks.cancellation = new AbortController();
+  vi.clearAllMocks();
+});
 
 describe("Discord agent chat activities", () => {
   it("chunks provider output at Discord's message boundary", () => {
@@ -36,7 +57,7 @@ describe("Discord agent chat activities", () => {
   });
 
   it("does not retry definitive Discord delivery rejections", async () => {
-    restPost.mockRejectedValueOnce({ status: 403 });
+    activityMocks.restPost.mockRejectedValueOnce({ status: 403 });
     const previousToken = Bun.env["AGENT_CHAT_DISCORD_TOKEN"];
     Bun.env["AGENT_CHAT_DISCORD_TOKEN"] = "test-token";
     try {
@@ -61,7 +82,7 @@ describe("Discord agent chat activities", () => {
 
   it("keeps transient Discord delivery failures retryable", async () => {
     const failure = { status: 503 };
-    restPost.mockRejectedValueOnce(failure);
+    activityMocks.restPost.mockRejectedValueOnce(failure);
     const previousToken = Bun.env["AGENT_CHAT_DISCORD_TOKEN"];
     Bun.env["AGENT_CHAT_DISCORD_TOKEN"] = "test-token";
     try {
@@ -72,6 +93,50 @@ describe("Discord agent chat activities", () => {
           nonce: "22345678901234567800",
         }),
       ).rejects.toBe(failure);
+    } finally {
+      if (previousToken === undefined) {
+        delete Bun.env["AGENT_CHAT_DISCORD_TOKEN"];
+      } else {
+        Bun.env["AGENT_CHAT_DISCORD_TOKEN"] = previousToken;
+      }
+    }
+  });
+
+  it("aborts an in-flight Discord write when the Activity is canceled", async () => {
+    activityMocks.restPost.mockImplementationOnce(
+      (_route: string, options: { signal?: AbortSignal }) =>
+        new Promise<never>((_resolve, reject) => {
+          const signal = options.signal;
+          if (signal === undefined) {
+            reject(new Error("missing Discord request signal"));
+            return;
+          }
+          signal.addEventListener(
+            "abort",
+            () => reject(new Error("delivery canceled")),
+            { once: true },
+          );
+        }),
+    );
+    const previousToken = Bun.env["AGENT_CHAT_DISCORD_TOKEN"];
+    Bun.env["AGENT_CHAT_DISCORD_TOKEN"] = "test-token";
+    try {
+      const delivery = deliverDiscordAgentChatMessage({
+        channelId: "223456789012345678",
+        content: "result",
+        nonce: "32345678901234567800",
+      });
+      await vi.waitFor(() => {
+        expect(activityMocks.restPost).toHaveBeenCalledOnce();
+      });
+
+      activityMocks.cancellation.abort();
+
+      await expect(delivery).rejects.toThrow("delivery canceled");
+      expect(activityMocks.restPost).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      );
     } finally {
       if (previousToken === undefined) {
         delete Bun.env["AGENT_CHAT_DISCORD_TOKEN"];
