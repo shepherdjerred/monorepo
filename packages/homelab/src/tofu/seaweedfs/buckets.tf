@@ -379,6 +379,37 @@ resource "terraform_data" "scout_site_releases_lifecycle" {
   }
 }
 
+# Build-scoped CI handoff and artifact store. Steps pass values to later steps
+# in the same pipeline as `<pipeline number>/<key>.json`, and directory trees
+# under `artifacts/` — scripts/lib/ci/ci-handoff.ts and ci-artifact.ts, which
+# together replace Buildkite's meta-data and artifact stores.
+#
+# Declared so the handoff S3 identity has a bucket named in IaC to be scoped
+# against. That identity is not repo-managed: SeaweedFS reads its identities
+# from the `seaweedfs-s3-credentials` 1Password item through
+# `existingConfigSecret`, so nothing here can assert the scope. Scope it to the
+# BUCKET rather than a prefix — one bucket carries both the JSON keys and the
+# `artifacts/` trees, and a prefix-scoped grant would break the artifact half
+# while the handoff half kept working.
+#
+# The import block is here for the reason the scout-site-releases comment above
+# learned the hard way, and the ordering makes it certain rather than likely:
+# `verify` writes the caddyfile handoff on every build, including pull
+# requests, and `tofu-apply-seaweedfs` runs later in the same main pipeline. So
+# SeaweedFS will have auto-created this bucket on that first PutObject before
+# any apply reaches this resource, and a bare resource would then fail with
+# BucketAlreadyExists on every apply. Adopt it instead. If an apply ever fails
+# here reporting the bucket does not exist, the ordering assumption was wrong:
+# drop the import block rather than creating the bucket by hand.
+import {
+  to = aws_s3_bucket.ci_handoff
+  id = "ci-handoff"
+}
+
+resource "aws_s3_bucket" "ci_handoff" {
+  bucket = "ci-handoff"
+}
+
 # OpenTofu state backend for all modules
 resource "aws_s3_bucket" "homelab_tofu_state" {
   bucket = "homelab-tofu-state"
