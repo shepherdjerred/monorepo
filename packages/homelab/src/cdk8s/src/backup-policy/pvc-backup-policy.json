@@ -243,7 +243,13 @@
     "namespace": "minecraft-sjerred",
     "name": "datadir-minecraft-sjerred-0",
     "backup": "enabled",
-    "reason": "Selected Minecraft world"
+    "reason": "Retained pre-RLCraft Minecraft world rollback volume"
+  },
+  {
+    "namespace": "minecraft-sjerred",
+    "name": "minecraft-sjerred-rlcraft-data",
+    "backup": "enabled",
+    "reason": "Active RLCraft server world and mod data"
   },
   {
     "namespace": "minecraft-tsmc",

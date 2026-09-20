@@ -73,6 +73,46 @@ const WorkloadSchema = z.object({
     .optional(),
 });
 
+const MinecraftApplicationSchema = z.object({
+  kind: z.literal("Application"),
+  metadata: z.object({ name: z.string() }),
+  spec: z.object({
+    source: z.object({
+      helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
+    }),
+    ignoreDifferences: z
+      .array(
+        z.object({
+          group: z.string().optional(),
+          kind: z.string(),
+          jsonPointers: z.array(z.string()),
+        }),
+      )
+      .optional(),
+  }),
+});
+
+function expectSjerredStatefulSetMigration(
+  application: z.infer<typeof MinecraftApplicationSchema> | undefined,
+): void {
+  expect(
+    application?.spec.source.helm.valuesObject["deploymentAnnotations"],
+  ).toEqual({
+    "argocd.argoproj.io/sync-options": "Force=true,Replace=true",
+  });
+  expect(application?.spec.ignoreDifferences).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        group: "apps",
+        kind: "StatefulSet",
+        jsonPointers: expect.not.arrayContaining([
+          "/spec/volumeClaimTemplates",
+        ]),
+      }),
+    ]),
+  );
+}
+
 const WORKLOAD_KINDS = new Set([
   "Deployment",
   "StatefulSet",
@@ -452,23 +492,14 @@ describe("Burst-memory sharing policy", () => {
   });
 
   it("keeps Minecraft heaps and reservations while enabling burst preemption", () => {
-    const schema = z.object({
-      kind: z.literal("Application"),
-      metadata: z.object({ name: z.string() }),
-      spec: z.object({
-        source: z.object({
-          helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
-        }),
-      }),
-    });
     const applications = documents.flatMap((doc) => {
-      const result = schema.safeParse(doc);
+      const result = MinecraftApplicationSchema.safeParse(doc);
       return result.success ? [result.data] : [];
     });
-    for (const [name, cpu, request, limit, heap] of [
-      ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G"],
-      ["minecraft-tsmc", "2", "6Gi", "8Gi", "6G"],
-      ["minecraft-sjerred", "500m", "3Gi", "4Gi", "3G"],
+    for (const [name, cpu, request, limit, heap, mapPort, mapName] of [
+      ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G", 8100, "bluemap"],
+      ["minecraft-tsmc", "2", "6Gi", "8Gi", "6G", 8100, "bluemap"],
+      ["minecraft-sjerred", "2", "6Gi", "8Gi", "5G", 8123, "dynmap"],
     ] as const) {
       const values = applications.find((app) => app.metadata.name === name)
         ?.spec.source.helm.valuesObject;
@@ -486,15 +517,97 @@ describe("Burst-memory sharing policy", () => {
         memory: heap,
         extraPorts: expect.arrayContaining([
           {
-            service: { enabled: true, port: 8100 },
+            service: { enabled: true, port: mapPort },
             protocol: "TCP",
-            containerPort: 8100,
-            name: "bluemap",
+            containerPort: mapPort,
+            name: mapName,
             ingress: { enabled: false },
           },
         ]),
       });
     }
+    const sjerredApplication = applications.find(
+      (app) => app.metadata.name === "minecraft-sjerred",
+    );
+    const sjerred = sjerredApplication?.spec.source.helm.valuesObject;
+    expect(sjerred?.["startupProbe"]).toEqual({
+      enabled: true,
+      failureThreshold: 120,
+      periodSeconds: 10,
+    });
+    expect(sjerred?.["minecraftServer"]).toMatchObject({
+      type: "AUTO_CURSEFORGE",
+      version: "1.12.2",
+      autoCurseForge: {
+        apiKey: {
+          existingSecret: "minecraft-sjerred-curseforge",
+          secretKey: "CF_API_KEY",
+        },
+        slug: "rlcraft",
+        fileId: "4612979",
+      },
+      modUrls: [
+        "https://github.com/webbukkit/dynmap/releases/download/v3.3-beta-2/Dynmap-3.3-beta-2-forge-1.12.2.jar",
+        "https://cdn.modrinth.com/data/rbJ7eS5V/versions/xLuSqQki/dcintegration-forge-2.4.7.1-1.12.jar",
+      ],
+      gameMode: "survival",
+      onlineMode: true,
+      maxPlayers: 20,
+      enableCommandBlock: true,
+      announcePlayerAchievements: true,
+      maxTickTime: -1,
+      overrideServerProperties: true,
+    });
+    expect(sjerred?.["persistence"]).toEqual({
+      dataDir: {
+        enabled: true,
+        existingClaim: "minecraft-sjerred-rlcraft-data",
+      },
+    });
+    expectSjerredStatefulSetMigration(sjerredApplication);
+    expect(sjerred?.["extraEnv"]).toEqual({
+      ALLOW_FLIGHT: "TRUE",
+      ENABLE_WHITELIST: "TRUE",
+    });
+    expect(sjerred?.["extraDeploy"]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metadata: { name: "minecraft-sjerred-discord-integration-config" },
+          data: {
+            "Discord-Integration.toml": expect.stringContaining(
+              'botToken = "${CFG_DISCORD_BOT_TOKEN}"',
+            ),
+          },
+        }),
+      ]),
+    );
+    expect(sjerred?.["initContainers"]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "configure-discord-integration",
+          env: [
+            {
+              name: "CFG_DISCORD_BOT_TOKEN",
+              valueFrom: {
+                secretKeyRef: {
+                  name: "minecraft-sjerred-discord",
+                  key: "DISCORD_BOT_TOKEN",
+                },
+              },
+            },
+            {
+              name: "CFG_DISCORD_CHANNEL_ID",
+              valueFrom: {
+                secretKeyRef: {
+                  name: "minecraft-sjerred-discord",
+                  key: "DISCORD_CHANNEL_ID",
+                },
+              },
+            },
+          ],
+        }),
+      ]),
+    );
     const tempo = applications.find((app) => app.metadata.name === "tempo");
     expect(tempo).toBeDefined();
     expect(tempo?.spec.source.helm.valuesObject["tempo"]).toMatchObject({
