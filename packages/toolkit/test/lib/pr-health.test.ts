@@ -58,7 +58,7 @@ describe("PR health CI fixtures", () => {
     );
     expect(result.status).toBe("UNHEALTHY");
     expect(result.commands).toContain(
-      "toolkit woodpecker logs shepherdjerred/monorepo 1234 failed-workflow",
+      "toolkit woodpecker pipeline log show shepherdjerred/monorepo 1234",
     );
   });
 
@@ -80,7 +80,7 @@ describe("PR health CI fixtures", () => {
     expect(result.status).toBe("UNHEALTHY");
     expect(result.details.join("\n")).toContain("typecheck");
     expect(result.commands).toContain(
-      "toolkit woodpecker logs shepherdjerred/monorepo 1234 typecheck",
+      "toolkit woodpecker pipeline log show shepherdjerred/monorepo 1234",
     );
   });
 

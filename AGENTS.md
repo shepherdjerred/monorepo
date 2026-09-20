@@ -84,7 +84,7 @@ or in-process timers.
   reaches `TARGET`, some directories may still legally sit above 25 and below
   the current `CEILING`.
 
-Automation under `scripts/`, `.buildkite/`, and deploy/build scripts must not
+Automation under `scripts/`, `ci/`, and deploy/build scripts must not
 hide failures or credentials. In particular, do not add `|| true`,
 `2>/dev/null`, `|| echo`, `|| bun install`, `--no-exit-code`, token-bearing
 URLs, token files, `git add .`, or `git add -A`.
@@ -107,14 +107,14 @@ call and distinguish authentication from authorization.
 ## Homelab ownership and delivery
 
 Infrastructure source lives under `packages/homelab`. Change repo-owned IaC and
-let Buildkite and ArgoCD apply it; do not make an untracked dashboard or cluster
+let CI and ArgoCD apply it; do not make an untracked dashboard or cluster
 mutation when a declarative path exists. Load the homelab development or
 operations skill before changing or operating that system.
 
 These are separate acceptance layers:
 
 1. source and focused local checks;
-2. exact-head Buildkite CI;
+2. exact-head Woodpecker CI;
 3. built and published artifacts;
 4. ArgoCD reconciliation to the intended revision;
 5. observed runtime health and user-visible behavior.
@@ -135,8 +135,8 @@ bunx turbo run build typecheck test lint --filter=<package>
 bunx lefthook run pre-commit
 ```
 
-Buildkite is the exhaustive gate and the CI source of truth. Use `toolkit bk` or
-`toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
+Woodpecker is the exhaustive gate and the CI source of truth. Use
+`toolkit woodpecker` or `toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
 reproducing CI or changing verification machinery.
 
 Verify claims from the live tree before reporting them. Preserve unrelated

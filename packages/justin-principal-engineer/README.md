@@ -6,7 +6,7 @@ owner-approved pull request.
 The CLI is intentionally one-shot. `launchd` starts `reconcile` every minute;
 each invocation advances one durable task and exits. Coding turns run through
 the native Claude Agent SDK or Codex SDK inside Docker. GitHub App credentials,
-Buildkite access, commits, pull requests, evidence uploads, approvals, and
+CI access, commits, pull requests, evidence uploads, approvals, and
 merges stay on the host.
 
 ## Commands

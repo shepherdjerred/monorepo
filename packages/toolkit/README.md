@@ -70,7 +70,7 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 - a local merge-tree against freshly fetched `origin/main` and the exact PR
   head;
 - the Woodpecker pipeline for that exact head SHA, including authoritative job
-  state and `toolkit woodpecker logs <repo> <pipeline> <workflow>` investigation commands;
+  state and `toolkit woodpecker pipeline log show <repo> <pipeline>` investigation commands;
 - GitHub PR/check/review metadata from `gh`.
 
 GitHub’s status can lag or describe a different state. The exact-head

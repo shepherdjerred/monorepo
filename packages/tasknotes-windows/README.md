@@ -162,9 +162,9 @@ state between serial scenarios, and drives the app with direct Windows UI
 Automation. Failed scenarios retain the redacted server/proxy logs, JUnit XML,
 UIA tree, screenshot, process inventory, and vault under `artifacts/e2e/`.
 
-The Windows UI lane remains local until Buildkite has unlocked interactive
+The Windows UI lane remains local until CI has unlocked interactive
 Windows 11 x64 workers. The exact inactive lane contract is checked in at
-`ci/windows-buildkite.pipeline.yml`; provisioning is tracked in Linear as
+`ci/windows-ci.pipeline.yml`; provisioning is tracked in Linear as
 SJ-134. Until that issue is complete, a PR needs attached local
 `windows:verify` evidence and must not claim packaged Windows tests are
 CI-enforced.

@@ -85,7 +85,7 @@ export const ConfigSchema = z.object({
     team: z.string().min(1).default("SJ"),
     apiKey: OpReferenceSchema,
   }),
-  buildkite: z.object({ apiToken: OpReferenceSchema }),
+  woodpecker: z.object({ apiToken: OpReferenceSchema }),
   pinchtab: z.object({ configPath: z.string().startsWith("/") }),
   github: z.object({
     appId: OpReferenceSchema,

@@ -436,10 +436,6 @@
       "clones": 1,
       "tokens": 101
     },
-    "packages/homelab/src/cdk8s/grafana/buildkite/buildkite-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
       "clones": 3,
       "tokens": 281
@@ -1431,10 +1427,6 @@
     "packages/temporal/src/activities/glitter/corpus/glitter-corpus-recovery.ts|packages/temporal/src/activities/glitter/corpus/glitter-corpus-snapshot.ts": {
       "clones": 2,
       "tokens": 194
-    },
-    "packages/temporal/src/activities/homelab/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab/homelab-audit-collectors.ts": {
-      "clones": 1,
-      "tokens": 78
     },
     "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,

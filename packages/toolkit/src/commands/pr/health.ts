@@ -196,8 +196,13 @@ export function ciHealth(
       details.push(
         `Workflow "${workflow.name}" - ${workflow.state.toUpperCase()}`,
       );
+    }
+    if (failures.length > 0) {
+      // One command for the whole pipeline rather than one per workflow: the
+      // CLI's log command is addressed by step id, and a workflow name is not
+      // one. The failing workflows are named in the details above.
       commands.push(
-        `toolkit woodpecker logs ${MONOREPO_REPOSITORY} ${String(pipeline.number)} ${workflow.name}`,
+        `toolkit woodpecker pipeline log show ${MONOREPO_REPOSITORY} ${String(pipeline.number)}`,
       );
     }
   }

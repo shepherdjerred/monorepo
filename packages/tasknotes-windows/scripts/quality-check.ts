@@ -160,7 +160,7 @@ const portableSolution = await Bun.file(
 const preparedLanePath = path.join(
   packageRoot,
   "ci",
-  "windows-buildkite.pipeline.yml",
+  "windows-ci.pipeline.yml",
 );
 const preparedLane = await Bun.file(preparedLanePath).text();
 const discoveredProjects = await Array.fromAsync(
@@ -205,7 +205,7 @@ for (const contract of [
 ]) {
   if (!preparedLane.includes(contract)) {
     violations.push(
-      `ci/windows-buildkite.pipeline.yml: missing prepared-worker contract '${contract}'`,
+      `ci/windows-ci.pipeline.yml: missing prepared-worker contract '${contract}'`,
     );
   }
 }
