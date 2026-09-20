@@ -72,13 +72,19 @@ public struct MuseProvider: UsageProvider {
     notes: inout [String],
     now: Date
   ) throws -> UsageWindow? {
-    guard let window, let used = validatedPercentage(window.usedPercent) else { return nil }
-    guard let minutes = window.windowDurationMinutes, minutes > 0 else { return nil }
+    // A missing pool drops the window; a present pool with an unusable value fails loudly.
+    // Brim's rolling kind requires a known positive duration, so an unknown length drops
+    // the window instead of fabricating one.
+    guard let window, let used = window.usedPercent else { return nil }
+    guard used.isFinite, used >= 0 else { throw QuotaValidationError.invalidPercentage }
+    guard let minutes = window.windowDurationMinutes else { return nil }
+    let (durationSeconds, overflow) = minutes.multipliedReportingOverflow(by: 60)
+    guard !overflow, durationSeconds > 0 else { throw QuotaValidationError.invalidDuration }
     let clamped = clampOverQuota(used, notes: &notes)
     return try UsageWindow.validated(
       id: "muse-window",
       label: minutes == 300 ? "5-hour" : durationLabel(minutes: minutes),
-      kind: .rolling(durationSeconds: minutes * 60),
+      kind: .rolling(durationSeconds: durationSeconds),
       usedPercent: clamped,
       resetAt: resetDate(window.resetsAt),
       sourceTimestamp: now
@@ -93,7 +99,8 @@ public struct MuseProvider: UsageProvider {
     notes: inout [String],
     now: Date
   ) throws -> UsageWindow? {
-    guard let window, let used = validatedPercentage(window.usedPercent) else { return nil }
+    guard let window, let used = window.usedPercent else { return nil }
+    guard used.isFinite, used >= 0 else { throw QuotaValidationError.invalidPercentage }
     let clamped = clampOverQuota(used, notes: &notes)
     return try UsageWindow.validated(
       id: id,
@@ -103,11 +110,6 @@ public struct MuseProvider: UsageProvider {
       resetAt: resetDate(window.resetsAt),
       sourceTimestamp: now
     )
-  }
-
-  private static func validatedPercentage(_ value: Double?) -> Double? {
-    guard let value, value.isFinite, value >= 0 else { return nil }
-    return value
   }
 
   /// The provider reports over-quota percentages above 100 verbatim; Brim windows cap at 100
@@ -205,35 +207,29 @@ private struct MuseQuotaWindow: Decodable {
 
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    // Each field degrades to nil independently: a malformed pool drops that window instead of
-    // failing the snapshot, matching the provider's fail-closed-per-window contract.
-    do {
-      self.usedPercent = try container.decodeIfPresent(Double.self, forKey: .usedPercent)
-    } catch {
+    // Absent pools degrade to nil and drop that window; a present pool with an unexpected
+    // type throws so provider drift surfaces as malformed instead of a silent partial
+    // snapshot. resets_at stays lenient (a display-only field): unparseable values drop
+    // just the reset time.
+    if container.contains(.usedPercent), try !container.decodeNil(forKey: .usedPercent) {
+      self.usedPercent = try container.decode(Double.self, forKey: .usedPercent)
+    } else {
       self.usedPercent = nil
     }
-    do {
-      self.windowDurationMinutes = try container.decodeIfPresent(
+    if container.contains(.windowDurationMinutes),
+      try !container.decodeNil(forKey: .windowDurationMinutes)
+    {
+      self.windowDurationMinutes = try container.decode(
         Int.self, forKey: .windowDurationMinutes)
-    } catch {
+    } else {
       self.windowDurationMinutes = nil
     }
-    let decodedSeconds: Int64?
-    do {
-      decodedSeconds = try container.decodeIfPresent(Int64.self, forKey: .resetsAt)
-    } catch {
-      decodedSeconds = nil
-    }
-    let decodedString: String?
-    do {
-      decodedString = try container.decodeIfPresent(String.self, forKey: .resetsAt)
-    } catch {
-      decodedString = nil
-    }
-    if let decodedSeconds {
-      self.resetsAt = .seconds(decodedSeconds)
-    } else if let decodedString {
-      self.resetsAt = .iso8601(decodedString)
+    if !container.contains(.resetsAt) {
+      self.resetsAt = nil
+    } else if let seconds = try? container.decode(Int64.self, forKey: .resetsAt) {
+      self.resetsAt = .seconds(seconds)
+    } else if let string = try? container.decode(String.self, forKey: .resetsAt) {
+      self.resetsAt = .iso8601(string)
     } else {
       self.resetsAt = nil
     }

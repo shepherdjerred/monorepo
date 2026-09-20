@@ -16,6 +16,26 @@ final class MuseDiscoveryTests: XCTestCase {
     XCTAssertEqual(credential.accessToken, "inline-token")
   }
 
+  func testMuseApiKeyLoginWithKeychainStorageCarriesNoSubscription() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"schema_version":2,"providers":{"meta":{"mechanism":"api_key","storage":"keychain"}}}"#,
+      to: root.appendingPathComponent(".config/muse/auth.json")
+    )
+    let keychain = FakeKeychain()
+    try keychain.write(
+      Data(#"{"secret_schema_version":2,"access_token":"model-api-key"}"#.utf8),
+      service: "ai.meta.dev.credentials",
+      account: "meta"
+    )
+    let store = LocalCredentialStore(
+      homeDirectory: root, claudeKeychain: FakeKeychain(), museKeychain: keychain)
+    XCTAssertThrowsError(try store.credential(for: .muse, rejecting: nil)) { error in
+      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.muse))
+    }
+  }
+
   func testMuseApiKeyLoginCarriesNoSubscription() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }

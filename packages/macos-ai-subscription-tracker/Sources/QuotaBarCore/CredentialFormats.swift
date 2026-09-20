@@ -158,8 +158,10 @@ struct MuseMetaCredential: Decodable {
     return TokenValue(accessToken: token, expiresAt: nil)
   }
 
-  /// A `storage: "keychain"` login keeps the OAuth token out of the file entirely.
-  var usesKeychain: Bool { storage == "keychain" }
+  /// A `storage: "keychain"` login keeps the OAuth token out of the file entirely. Keychain
+  /// discovery also requires an OAuth login: an API-key login bills the Model API and has
+  /// no subscription even when a keychain item exists.
+  var usesKeychain: Bool { mechanism == "oauth" && storage == "keychain" }
 }
 
 struct MuseKeychainBundle: Decodable {

@@ -39,10 +39,27 @@ final class MuseProviderTests: XCTestCase {
     let missingWeekly = museResponse(windowUsed: 62, weeklyUsed: nil)
     let snapshot = try MuseProvider.parse(data: missingWeekly)
     XCTAssertEqual(snapshot.windows.map(\.label), ["5-hour"])
+  }
 
-    let negativeWindow = museResponse(windowUsed: -5, weeklyUsed: nil)
+  func testMuseRejectsPresentButUnusableValues() {
+    // A present negative percentage fails loudly instead of dropping the window.
+    let negativeWindow = museResponse(windowUsed: -5)
     XCTAssertThrowsError(try MuseProvider.parse(data: negativeWindow)) { error in
-      XCTAssertEqual(error as? QuotaError, .unsupportedResponse(.muse))
+      XCTAssertEqual(error as? QuotaValidationError, .invalidPercentage)
+    }
+    // A present percentage with an unexpected type surfaces provider drift as malformed.
+    let stringPercent = Data(
+      (#"{"is_subs_active":true,"subs_usage":{"window":{"used_percent":"62","#
+        + #""window_duration_mins":300},"weekly":{"used_percent":25}}}"#).utf8)
+    XCTAssertThrowsError(try MuseProvider.parse(data: stringPercent)) { error in
+      XCTAssertEqual(error as? QuotaError, .malformedResponse(.muse))
+    }
+    // A present duration with an unexpected type is malformed, not a silent relabel.
+    let stringDuration = Data(
+      (#"{"is_subs_active":true,"subs_usage":{"window":{"used_percent":62,"#
+        + #""window_duration_mins":"300"},"weekly":{"used_percent":25}}}"#).utf8)
+    XCTAssertThrowsError(try MuseProvider.parse(data: stringDuration)) { error in
+      XCTAssertEqual(error as? QuotaError, .malformedResponse(.muse))
     }
   }
 
