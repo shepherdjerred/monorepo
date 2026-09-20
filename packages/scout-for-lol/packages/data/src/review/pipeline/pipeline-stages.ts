@@ -286,6 +286,7 @@ export async function generateImageDescription(params: {
  */
 export async function generateImage(params: {
   imageDescription: string;
+  artStyle: string;
   client: ImageGenerationClient;
   model: string;
   timeoutMs: number;
@@ -293,16 +294,18 @@ export async function generateImage(params: {
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
   const {
     imageDescription,
+    artStyle,
     client,
     model,
     timeoutMs,
     userPrompt: userPromptTemplate,
   } = params;
 
-  // Replace variables in prompt template
-  // Note: ART_STYLE is already embedded in IMAGE_DESCRIPTION from step 3
+  // Replace variables in prompt template. ART_STYLE is passed explicitly so
+  // the validator enforces it; step 3 also weaves it into the description.
   const prompt = replacePromptVariables(userPromptTemplate, {
     IMAGE_DESCRIPTION: imageDescription,
+    ART_STYLE: artStyle,
   });
 
   const startTime = Date.now();

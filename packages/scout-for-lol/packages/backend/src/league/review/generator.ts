@@ -325,17 +325,10 @@ export async function generateMatchReview(
     clientsInput.image = imageClient;
   }
 
-  // Get default stage configs and conditionally disable image generation
-  // Generate images only 33% of the time to reduce costs
+  // Get default stage configs with image generation enabled for every review.
+  // The flash image model is cheap enough ($0.039/image) that 100% coverage
+  // costs less per review than the old 33% pro-preview rate.
   const stages = getDefaultStageConfigs();
-  const shouldGenerateImage = Math.random() < 0.33;
-  if (shouldGenerateImage) {
-    logger.info("Image generation enabled for this review (33% probability)");
-  } else {
-    stages.imageDescription.enabled = false;
-    stages.imageGeneration.enabled = false;
-    logger.info("Image generation disabled for this review (67% probability)");
-  }
 
   const promptsInput: Parameters<typeof generateFullMatchReview>[0]["prompts"] =
     {
