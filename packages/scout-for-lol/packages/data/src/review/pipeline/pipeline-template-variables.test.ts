@@ -7,7 +7,9 @@ import {
   extractTemplateVariables,
   replacePromptVariables,
 } from "#src/review/pipeline/pipeline-utils.ts";
+import { generateImage } from "#src/review/pipeline/pipeline-stages.ts";
 import { getDefaultStageConfigs } from "#src/review/pipeline/pipeline-defaults.ts";
+import type { ImageGenerationClient } from "#src/review/pipeline/pipeline-types.ts";
 import {
   PROMPT_STAGE_NAMES,
   STAGE_PROMPT_VARIABLES,
@@ -96,6 +98,41 @@ describe("prompt template variable conformance", () => {
   test("replacePromptVariables throws on an unhydrated placeholder", () => {
     expect(() => replacePromptVariables("hello <A> and <B>", { A: "x" }))
       .toThrow(/Missing prompt variables: B/);
+  });
+
+  test("stage 4 tolerates custom templates without ART_STYLE", async () => {
+    // Pre-change custom templates only contain <IMAGE_DESCRIPTION>.
+    // Passing ART_STYLE unconditionally would make the validator reject
+    // the extra variable and silently disable image generation.
+    const seen: string[] = [];
+    const client: ImageGenerationClient = {
+      generate: (params) => {
+        seen.push(params.prompt);
+        return Promise.resolve({ imageBase64: "aW1hZ2U=" });
+      },
+    };
+    const base = {
+      imageDescription: "a knight beholding a throw",
+      artStyle: "oil painting",
+      client,
+      model: "gemini-2.5-flash-image",
+      timeoutMs: 60_000,
+    };
+    const legacy = await generateImage({
+      ...base,
+      userPrompt: "Paint this: <IMAGE_DESCRIPTION>",
+    });
+    expect(legacy.imageBase64).toBe("aW1hZ2U=");
+
+    const current = await generateImage({
+      ...base,
+      userPrompt: "Paint this: <IMAGE_DESCRIPTION> in <ART_STYLE>",
+    });
+    expect(current.trace.model).toBe("gemini-2.5-flash-image");
+    expect(seen).toEqual([
+      "Paint this: a knight beholding a throw",
+      "Paint this: a knight beholding a throw in oil painting",
+    ]);
   });
 
   test("no raw placeholder replacement outside the validator", () => {
