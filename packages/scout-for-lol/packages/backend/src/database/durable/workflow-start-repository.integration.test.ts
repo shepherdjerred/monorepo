@@ -23,6 +23,7 @@ import {
   appendAuditEvent,
   listAuditEvents,
 } from "#src/database/durable/audit-repository.ts";
+import { scoutDurableWorkflowStartAcceptances } from "#src/metrics/durable-pipeline.ts";
 import { matchTrackedAccountRowToRecord } from "#src/database/durable/tracked-account-row.ts";
 import {
   listTrackedAccounts,
@@ -320,6 +321,20 @@ describe("requestWorkflowStart under a lost insert", () => {
   });
 });
 
+/**
+ * One acceptance series' current value, zero when the series does not exist.
+ *
+ * Absent and zero mean the same thing to this file's assertions, which compare
+ * a delta rather than an absolute: the registry is process-wide and other
+ * suites in the same worker write these same series.
+ */
+async function seriesValue(outcome: string): Promise<number> {
+  const metric = await scoutDurableWorkflowStartAcceptances.get();
+  return (
+    metric.values.find((value) => value.labels.outcome === outcome)?.value ?? 0
+  );
+}
+
 describe("recordWorkflowStartAccepted", () => {
   test("accepts once, answers the same run again, and never overwrites", async () => {
     const record = recorded(
@@ -348,6 +363,28 @@ describe("recordWorkflowStartAccepted", () => {
       acceptedAt: ACCEPTED_AT,
       runId: RUN_ID,
     });
+  });
+
+  test("counts the run-disagreement the soak is watching for", async () => {
+    // The branch itself, not a hand-rolled `inc`: the counter exists to tell a
+    // soak whether this interleaving ever happens, so what has to be pinned is
+    // that reaching it moves the series. A test that incremented the counter
+    // directly would pass with the repository uninstrumented.
+    const before = await seriesValue("answered-by-another-run");
+    const appliedBefore = await seriesValue("applied");
+
+    const record = recorded(
+      await requestWorkflowStart(prisma, request("wf-acc-counted")),
+    );
+    expect(await accept(record)).toEqual({ outcome: "applied" });
+    expect(
+      await accept(record, { runId: WorkflowRunIdSchema.parse("run-other") }),
+    ).toMatchObject({ outcome: "answered-by-another-run" });
+
+    expect(await seriesValue("answered-by-another-run")).toBe(before + 1);
+    // The ordinary answer is counted too, which is what makes a flat rare
+    // series readable as "it did not happen" rather than "nothing is wired".
+    expect(await seriesValue("applied")).toBe(appliedBefore + 1);
   });
 
   test("accepting a request that was never recorded fails loudly", async () => {

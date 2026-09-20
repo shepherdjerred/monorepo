@@ -130,6 +130,57 @@ export const scoutDurableReceiptsRecorded = new Counter({
   registers: [registry],
 });
 
+/**
+ * Workflow-start acceptances by the answer the durable handoff gave.
+ *
+ * This exists to measure ONE of its three series. `answered-by-another-run` is
+ * reached when a request had two drivers, the recorded run closed in the gap
+ * between one adopting and the other starting, and the second start therefore
+ * began a genuinely new execution under the family's reuse policy. Both runs
+ * are real, the request keeps the first as evidence because evidence is never
+ * overwritten, and the table consequently names one run where two existed.
+ *
+ * That is an observability gap rather than a correctness one: once Temporal
+ * has begun an execution it is durable in Temporal and completes on its own,
+ * and the adoption exists for a starter that died before recording, not to
+ * keep a running Workflow alive. The branch only became reachable when
+ * reconciliation moved to `ALLOW_DUPLICATE` and it needs a narrow
+ * interleaving, so nobody has yet seen it taken. The counter is how the beta
+ * soak answers whether it happens at all, before anyone builds the
+ * append-only record of the additional runs that closing it would need.
+ *
+ * ## Why all three outcomes and not just the interesting one
+ *
+ * A counter that only counted the rare answer would make zero ambiguous
+ * between "it never happened" and "nothing is wired up" — and zero is the
+ * reading this soak is most likely to produce and most needs to trust.
+ * Counting the ordinary answers too means `applied` climbing is standing proof
+ * the instrument is live, so a flat `answered-by-another-run` beside it is
+ * evidence rather than silence. It is the counter's version of why the gauges
+ * above are zero-filled.
+ *
+ * ## This is deliberately not alertable
+ *
+ * There is no operator action for a single occurrence — the extra run is
+ * already running and will finish — so a rule that paged on it would be worse
+ * than the gap it reports. It carries no alert rule in
+ * `scout-durable-rules.ts` on purpose, and a threshold is not a substitute:
+ * a threshold is still a rule someone can lower. This is a measurement
+ * feeding a decision after the soak, and if it reads non-zero the answer is
+ * the durable record, not a page.
+ *
+ * Both labels are closed. `outcome` is the three members of
+ * `RecordWorkflowStartAcceptedResult`, and the repository's throws are
+ * deliberately uncounted for the reason receipts give: a broken invariant is
+ * not one of the answers the table can legitimately return.
+ */
+export const scoutDurableWorkflowStartAcceptances = new Counter({
+  name: "scout_durable_workflow_start_acceptances_total",
+  help: "Workflow start acceptances, by the answer the durable handoff gave. `answered-by-another-run` means the request records one run where two executions existed.",
+  labelNames: ["outcome"] as const,
+  registers: [registry],
+});
+
 function ageSeconds(oldest: Date | null, now: number): number {
   return oldest === null ? 0 : Math.max(0, (now - oldest.getTime()) / 1000);
 }
