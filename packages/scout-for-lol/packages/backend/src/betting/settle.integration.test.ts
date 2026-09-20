@@ -1236,7 +1236,7 @@ describe("the announcement instruction a settlement records", () => {
     ).toEqual([]);
   });
 
-  test("records exactly one instruction per settled pool", async () => {
+  test("records one instruction per family this match produced", async () => {
     await makeBalancedPool(10);
     const recorded: { family: string; itemKey: string }[] = [];
 
@@ -1249,7 +1249,12 @@ describe("the announcement instruction a settlement records", () => {
     });
 
     expect(settlements).toHaveLength(1);
+    // Two, because this call both CLOSES the pool and settles it, and each
+    // is its own announcement: closure tells the guild its offers matched,
+    // settlement tells it what they were paid. Each is written in the
+    // transaction that produced it.
     expect(recorded).toEqual([
+      { family: "closure", itemKey: settlements[0]?.serverId },
       { family: "settlement", itemKey: settlements[0]?.serverId },
     ]);
   });
@@ -1280,13 +1285,15 @@ describe("the announcement instruction a settlement records", () => {
       }),
     ).rejects.toBeInstanceOf(SettlementCheckpointError);
 
-    // And the pool is left exactly as a retry needs to find it: still closed
-    // and matched, with its bets unresolved, so the next attempt settles it.
+    // And the pool is left exactly as a retry needs to find it. The failure
+    // now surfaces at the CLOSURE, which is the first family this call
+    // produces, so the match claim rolls back with it and the next attempt
+    // closes and settles from the start.
     const standing = await db.bucksMatchPool.findUniqueOrThrow({
       where: { id: pool.id },
     });
     expect(standing.poolState).toBe("closed");
-    expect(standing.matchedAt).not.toBeNull();
+    expect(standing.matchedAt).toBeNull();
     const bets = await db.bucksBet.findMany({ where: { poolId: pool.id } });
     expect(bets).not.toHaveLength(0);
     expect(bets.map((bet) => bet.betOutcome)).toEqual(
@@ -1316,7 +1323,7 @@ describe("the announcement instruction a settlement records", () => {
     expect(captureException).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        tags: expect.objectContaining({ source: "betting-settle-pool" }),
+        tags: expect.objectContaining({ source: "betting-sweep-force-close" }),
       }),
     );
   });
@@ -1339,8 +1346,8 @@ describe("the announcement instruction a settlement records", () => {
     expect(settlements).toHaveLength(1);
     const stored = await db.matchSettlementAnnouncement.findMany({
       where: { riotMatchId: MATCH_ID },
+      orderBy: { family: "asc" },
     });
-    expect(stored).toHaveLength(1);
-    expect(stored[0]?.family).toBe("settlement");
+    expect(stored.map((row) => row.family)).toEqual(["closure", "settlement"]);
   });
 });

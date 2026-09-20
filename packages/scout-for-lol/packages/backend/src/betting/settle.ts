@@ -77,7 +77,12 @@ export async function closeAndSettleBettingForMatch(
     // A very short game can resolve before the 30-second close sweep. Matching
     // must still happen before any outcome is read into settlement arithmetic.
     closures.push(
-      ...(await closeBettingWindowsForMatch(matchId, prismaClient)),
+      ...(await closeBettingWindowsForMatch(
+        matchId,
+        prismaClient,
+        new Date(),
+        sink,
+      )),
     );
 
     const pools = await prismaClient.bucksMatchPool.findMany({

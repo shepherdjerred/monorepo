@@ -17,6 +17,12 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
+  announcingSettlementSink,
+  SettlementCheckpointError,
+} from "#src/betting/notify/announcement-sink.ts";
+import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
   awardBucksForMatch,
   type EarnedAwardReason,
 } from "#src/betting/accounts/earnings.ts";
@@ -167,6 +173,104 @@ afterEach(() => {
 afterAll(async () => {
   await clearAll();
   await db.$disconnect();
+});
+
+describe("the announcement instruction an earning records", () => {
+  test("is written with the earning transaction's own handle", async () => {
+    // Proven by behaviour: this sink records for real and then throws, so the
+    // earning transaction aborts after the row was written. Inside the
+    // transaction the row goes back with it; written through the ambient
+    // client it would have committed alone, leaving an instruction to
+    // announce awards nobody received.
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473101"),
+      alias: "mvp",
+      puuid: mvpPuuid,
+    });
+
+    // A plain error is still absorbed here — only a typed checkpoint failure
+    // escapes — so the call completes and the proof is what survived.
+    await expect(
+      awardBucksForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: async (handle, item) => {
+          await recordSettlementAnnouncementItem(handle, {
+            matchId: RiotMatchIdSchema.parse(MATCH_ID),
+            item,
+          });
+          throw new Error("the earning failed after recording");
+        },
+      }),
+    ).resolves.toEqual([]);
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: MATCH_ID },
+      }),
+    ).toEqual([]);
+    // And no money moved either, which is the point of one transaction.
+    expect(
+      await db.bucksLedgerEntry.findMany({
+        where: { kind: { startsWith: "earn_" } },
+      }),
+    ).toEqual([]);
+  });
+
+  test("a checkpoint failure escapes rather than blocking nothing quietly", async () => {
+    // The outer handler exists so a broken earning never blocks the match
+    // cursor. A checkpoint failure is not that: the guild's award rolled back
+    // AND this settlement never became recoverable, so absorbing it lets the
+    // caller record a receipt over an award nobody was told about.
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473103"),
+      alias: "mvp",
+      puuid: mvpPuuid,
+    });
+
+    await expect(
+      awardBucksForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: (_handle, item) =>
+          Promise.reject(
+            new SettlementCheckpointError({
+              family: item.family,
+              itemKey: item.itemKey,
+              retryable: true,
+              message: "the checkpoint row could not be written",
+              cause: new Error("connection reset"),
+            }),
+          ),
+      }),
+    ).rejects.toBeInstanceOf(SettlementCheckpointError);
+  });
+
+  test("an awarded guild always leaves its instruction behind", async () => {
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473102"),
+      alias: "mvp",
+      puuid: mvpPuuid,
+    });
+
+    const awards = await awardBucksForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: async (handle, item) => {
+        await recordSettlementAnnouncementItem(handle, {
+          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          item,
+        });
+      },
+    });
+
+    expect(awards).toHaveLength(1);
+    const stored = await db.matchSettlementAnnouncement.findMany({
+      where: { riotMatchId: MATCH_ID },
+    });
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.family).toBe("earnings");
+  });
 });
 
 describe("awardBucksForMatch", () => {

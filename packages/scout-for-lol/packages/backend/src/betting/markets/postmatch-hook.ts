@@ -114,6 +114,8 @@ export async function settleAndAwardBucks(
   const closures = await closeBettingWindowsForMatch(
     matchData.metadata.matchId,
     prismaClient,
+    new Date(),
+    sink,
   );
   const retry = await closeAndSettleBettingForMatch(
     matchData,
@@ -126,7 +128,7 @@ export async function settleAndAwardBucks(
     prismaClient,
     sink,
   );
-  const earnings = await awardBucksForMatch(matchData, prismaClient);
+  const earnings = await awardBucksForMatch(matchData, prismaClient, sink);
   // Discord cleanup runs after the committed local operations and regardless
   // of whether the caller suppresses an old match's post-match notification.
   // This also covers a remake or very short game that settles an `open` market
