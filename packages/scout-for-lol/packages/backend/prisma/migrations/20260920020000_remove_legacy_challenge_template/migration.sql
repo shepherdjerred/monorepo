@@ -43,3 +43,8 @@ DELETE FROM "ChallengeTemplateVersion" WHERE "templateId" IN (
 );
 
 DELETE FROM "ChallengeTemplate" WHERE "slug" = 'scout-win-every-current-champion';
+
+-- Ensure any remaining persisted evidence rows have placement: null if omitted
+UPDATE "ChallengeRunEvidence"
+SET "evidenceJson" = jsonb_set("evidenceJson"::jsonb, '{placement}', 'null'::jsonb)::text
+WHERE ("evidenceJson"::jsonb ? 'placement') = false;

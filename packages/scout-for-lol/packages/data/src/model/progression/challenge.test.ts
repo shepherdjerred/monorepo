@@ -15,7 +15,10 @@ import {
   WIN_EVERY_CURRENT_CHAMPION_FLEX_TEMPLATE,
   WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
 } from "./challenge-builtins.ts";
-import type { ChallengeEvidenceMatch } from "./challenge-public.ts";
+import {
+  ChallengeEvidenceMatchSchema,
+  type ChallengeEvidenceMatch,
+} from "./challenge-public.ts";
 
 function evidence(input: {
   id: string;
@@ -225,7 +228,9 @@ describe("challenge goal evaluation and validation", () => {
     expect(result.progress.completed).toBe(false);
     expect(result.coverage.missingTimelineEvidence).toBe(1);
   });
+});
 
+describe("challenge predicate evaluation and missing evidence", () => {
   test("does not let negation turn missing placement into progress", () => {
     const soloMatch = evidence({
       id: "1",
@@ -344,5 +349,36 @@ describe("challenge goal evaluation and validation", () => {
         },
       }).success,
     ).toBe(false);
+  });
+
+  test("parses legacy evidence without placement field defaulting to null", () => {
+    const parsed = ChallengeEvidenceMatchSchema.parse({
+      matchId: "1",
+      gameEndAt: "2026-01-01T00:00:00.000Z",
+      queue: "solo",
+      championId: 1,
+      championName: "Annie",
+      role: "MIDDLE",
+      win: true,
+      kills: 1,
+      deaths: 0,
+      assists: 2,
+      creep_score: 100,
+      gold_earned: 5000,
+      vision_score: 10,
+      champion_damage: 10_000,
+      damage_taken: 5000,
+      damage_mitigated: 2000,
+      teammate_healing: 0,
+      wards_cleared: 1,
+      objective_damage: 1000,
+      turret_damage: 500,
+      crowd_control_time: 5,
+      longest_life: 600,
+      total_time_dead: 0,
+      timelineEvidenceAvailable: false,
+      timelineEventCounts: {},
+    });
+    expect(parsed.placement).toBeNull();
   });
 });
