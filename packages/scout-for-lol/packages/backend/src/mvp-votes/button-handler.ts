@@ -1,5 +1,6 @@
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type MatchId,
 } from "@scout-for-lol/data";
@@ -18,7 +19,10 @@ import {
   guildAliasesForRoster,
   isMvpVotesEnabledForGuild,
 } from "#src/mvp-votes/eligibility.ts";
-import { loadMatchMvpRoster } from "#src/mvp-votes/vote.ts";
+import {
+  loadMatchMvpRoster,
+  recordMatchMvpReportRefs,
+} from "#src/mvp-votes/vote.ts";
 
 export type VoteButtonEditReplyOptions = {
   content: string;
@@ -28,6 +32,8 @@ export type VoteButtonEditReplyOptions = {
 export type VoteButtonInteraction = {
   customId: string;
   guildId: string | null;
+  channelId?: string | null;
+  message?: { id: string } | null;
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
   editReply: (options: VoteButtonEditReplyOptions) => Promise<unknown>;
@@ -54,11 +60,20 @@ export async function handleMvpVoteButton(
     return;
   }
   const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
+  const matchId: MatchId = parsed.matchId;
+  const channelId = DiscordChannelIdSchema.safeParse(interaction.channelId);
+  const messageId = interaction.message?.id;
+  if (messageId !== undefined && messageId.length > 0 && channelId.success) {
+    await recordMatchMvpReportRefs(
+      matchId,
+      new Map([[channelId.data, messageId]]),
+      prismaClient,
+    );
+  }
   if (!(await isMvpVotesEnabledForGuild(serverId))) {
     await refuse(interaction, MVP_VOTE_NOT_ENABLED);
     return;
   }
-  const matchId: MatchId = parsed.matchId;
   const roster = await loadMatchMvpRoster(matchId, prismaClient);
   if (roster === undefined) {
     await refuse(interaction, MVP_VOTE_NO_CONTEST);

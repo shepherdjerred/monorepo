@@ -13,6 +13,8 @@ import {
 } from "#src/testing/bucks-fixtures.ts";
 import { freezeMatchMvpRosterFromParticipants } from "#src/mvp-votes/roster.ts";
 import { findMatchMvpVoter } from "#src/mvp-votes/eligibility.ts";
+import { handleMvpVoteButton } from "#src/mvp-votes/button-handler.ts";
+import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
 import {
   listMatchMvpReportRefs,
   listMatchMvpVotes,
@@ -195,6 +197,34 @@ describe("Match MVP votes", () => {
       {
         channelId: DiscordChannelIdSchema.parse("1337623164146155595"),
         messageId: "100000000000000002",
+      },
+    ]);
+  });
+
+  test("a vote-button click records the source report message", async () => {
+    const frozen = roster();
+    await db.matchMvpContest.create({
+      data: { matchId: MATCH_ID, roster: frozen },
+    });
+    await handleMvpVoteButton(
+      {
+        customId: formatVoteButtonCustomId({
+          category: "ally",
+          matchId: MATCH_ID,
+        }),
+        guildId: SERVER_ID,
+        channelId: "1337623164146155594",
+        message: { id: "100000000000000001" },
+        user: { id: VOTER },
+        deferReply: () => Promise.resolve(undefined),
+        editReply: () => Promise.resolve(undefined),
+      },
+      db,
+    );
+    await expect(listMatchMvpReportRefs(MATCH_ID, db)).resolves.toEqual([
+      {
+        channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
+        messageId: "100000000000000001",
       },
     ]);
   });
