@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import { selectSteps } from "#src/pipeline/select.ts";
+import { testPipelineSteps } from "./identity.ts";
 
 /**
  * What a pull request can reach.
@@ -19,27 +19,7 @@ import { selectSteps } from "#src/pipeline/select.ts";
  * pull-request-reachable set. That is the set worth bounding.
  */
 
-const IMAGES = {
-  base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
-  playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
-  catalog: {
-    "aquasec/trivy": "aquasec/trivy:0.72.0",
-    "semgrep/semgrep": "semgrep/semgrep:1.170.0",
-    "texlive/texlive": "texlive/texlive:TL2024-historic",
-    "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
-    "grafana/tempo": "grafana/tempo:3.0.3",
-    "mikefarah/yq": "mikefarah/yq:latest",
-    "minio/mc": "minio/mc:RELEASE",
-    "minio/minio": "minio/minio:RELEASE",
-  },
-};
-
-const allSteps = () =>
-  buildPipelineSteps({
-    images: IMAGES,
-    changedBase: "x",
-    imageReleaseBase: "x",
-  });
+const allSteps = testPipelineSteps;
 
 /** The worst case: a pull request against the default branch, touching anything. */
 const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>

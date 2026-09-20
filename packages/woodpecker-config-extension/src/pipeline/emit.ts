@@ -20,6 +20,28 @@ const CI_TOLERATION = {
 const STEP_SERVICE_ACCOUNT = "woodpecker-job";
 
 /**
+ * Which agent may run this workflow.
+ *
+ * Woodpecker schedules a workflow onto any agent satisfying every label the
+ * workflow asks for, so a workflow that asks for nothing is eligible for every
+ * agent — including the Mac, whose `local` backend runs commands directly on
+ * the host as the logged-in user with no container around them. Declaring the
+ * label only on the macOS lanes was therefore half a guard: it kept mac work
+ * off Linux, and did nothing to keep Linux work off the Mac.
+ *
+ * `backend` rather than `platform` because it names the property that actually
+ * matters — container versus host shell — instead of coupling every workflow
+ * to the CI node's architecture. Every agent advertises it automatically from
+ * its engine name, so neither agent needs configuring to make this work.
+ */
+function agentLabels(step: CiStep): Record<string, string> {
+  return {
+    backend: step.backend === "local" ? "local" : "kubernetes",
+    ...step.agentLabels,
+  };
+}
+
+/**
  * Pod metadata the CI I/O telemetry attributes cgroup counters through.
  *
  * Woodpecker names step pods `wp-<ulid>-<workflow>-step-<n>`, which carries no
@@ -194,9 +216,7 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
     ...(step.dependsOn === undefined || step.dependsOn.length === 0
       ? {}
       : { depends_on: [...step.dependsOn] }),
-    ...(step.agentLabels === undefined
-      ? {}
-      : { labels: { ...step.agentLabels } }),
+    labels: agentLabels(step),
     ...(step.concurrency === undefined
       ? {}
       : {
