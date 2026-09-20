@@ -147,7 +147,10 @@ import type {
   ScheduledAgentChatTurnInput,
 } from "#shared/agent/agent-chat.ts";
 import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
-import type { HttpAgentChatCommand } from "#shared/agent/agent-chat-http.ts";
+import type {
+  HttpAgentChatCommand,
+  HttpAgentChatStartOptions,
+} from "#shared/agent/agent-chat-http.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -482,6 +485,7 @@ export async function discordAgentChatWorkflow(
 
 export async function httpAgentChatWorkflow(
   input: HttpAgentChatCommand,
+  options?: HttpAgentChatStartOptions,
 ): Promise<AgentChatTurnResult> {
-  return _httpAgentChatWorkflow(input);
+  return _httpAgentChatWorkflow(input, options);
 }

@@ -114,6 +114,7 @@ function makeOperations(): AgentChatApiOperations {
     list: vi.fn(async () => [ENTRY]),
     resolve: vi.fn(async () => COMPLETED_ENTRY),
     submit: vi.fn(async () => RECEIPT),
+    activate: vi.fn(() => Promise.resolve()),
     poll: vi.fn(async () => COMPLETED_TURN),
   };
 }
@@ -268,14 +269,20 @@ describe("buildAgentChatApiRoutes", () => {
           prompt: "Inspect the homelab.",
         }),
       }),
+      { waitForActivation: true },
+    );
+    expect(
+      vi.mocked(operations.submit).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(operations.register).mock.invocationCallOrder[0] ?? 0,
     );
     expect(
       vi.mocked(operations.register).mock.invocationCallOrder[0],
     ).toBeLessThan(
-      vi.mocked(operations.submit).mock.invocationCallOrder[0] ?? 0,
+      vi.mocked(operations.activate).mock.invocationCallOrder[0] ?? 0,
     );
     expect(
-      vi.mocked(operations.submit).mock.invocationCallOrder[0],
+      vi.mocked(operations.activate).mock.invocationCallOrder[0],
     ).toBeLessThan(vi.mocked(operations.bind).mock.invocationCallOrder[0] ?? 0);
     expect(await response.json()).toEqual({
       chatId:
@@ -384,7 +391,7 @@ describe("buildAgentChatApiRoutes", () => {
 });
 
 describe("prompted chat registration", () => {
-  it("adopts a matching raced owner before durable submission", async () => {
+  it("adopts a matching raced owner before activating the claimed turn", async () => {
     const operations = makeOperations();
     const raced = {
       ...EMPTY_CHAT_ENTRY,
@@ -396,7 +403,7 @@ describe("prompted chat registration", () => {
     operations.get = vi
       .fn<AgentChatApiOperations["get"]>()
       .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(raced);
+      .mockResolvedValue(raced);
     operations.register = vi.fn(() =>
       Promise.reject(new Error("owner already exists")),
     );
@@ -406,13 +413,27 @@ describe("prompted chat registration", () => {
     expect(response.status).toBe(202);
     expect(operations.submit).toHaveBeenCalledWith(
       expect.anything(),
+      expect.objectContaining({ kind: "new" }),
+      { waitForActivation: true },
+    );
+    expect(operations.activate).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ kind: "new", config: raced.config }),
     );
-    expect(
-      vi.mocked(operations.register).mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      vi.mocked(operations.submit).mock.invocationCallOrder[0] ?? 0,
+  });
+
+  it("rejects a reused turn ID before registering a fresh chat", async () => {
+    const operations = makeOperations();
+    operations.submit = vi.fn(() =>
+      Promise.reject(new AgentChatTurnConflictError(RECEIPT.turnId)),
     );
+
+    const response = await appWith(operations).fetch(promptedCreateRequest());
+
+    expect(response.status).toBe(409);
+    expect(operations.register).not.toHaveBeenCalled();
+    expect(operations.activate).not.toHaveBeenCalled();
+    expect(operations.bind).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -444,6 +465,7 @@ describe("prompted chat registration", () => {
     expect(operations.submit).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ kind: "new", config: EMPTY_CHAT_ENTRY.config }),
+      { waitForActivation: true },
     );
     expect(operations.register).toHaveBeenCalledWith(
       expect.anything(),

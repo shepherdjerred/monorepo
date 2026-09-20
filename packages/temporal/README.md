@@ -9,7 +9,8 @@ homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
-plus the `agent-chat-ingress` command and delivery queue. The credentialless
+plus the `agent-chat-ingress` command queue and isolated
+`agent-chat-delivery` queue. The credentialless
 `workflows` role owns deterministic Workflow execution on
 `monorepo-workflows`. The domain roles own only Activity
 Workers, with separate registries, credentials, service accounts, and
@@ -26,19 +27,19 @@ The central Scout worker also polls its unchanged `scout` queue in `beta` for
 the beta-owned Bryan Bucks analytics schedule; all other central queues are
 `prod` only.
 
-| Role              | Queue or surface                                                | Activity concurrency |
-| ----------------- | --------------------------------------------------------------- | -------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`                      |                    4 |
-| `home`            | `home`                                                          |                    4 |
-| `reports`         | `reports`                                                       |                    4 |
-| `infra`           | `infra`                                                         |                    1 |
-| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts` |          1 per queue |
-| `scout`           | `scout`                                                         |                    1 |
-| `agent`           | `agent-task`                                                    |                    1 |
-| `glitter-corpus`  | `glitter-corpus`                                                |                    1 |
-| `glitter-context` | `glitter-context`                                               |                    1 |
-| `maintenance`     | `maintenance`                                                   |                    1 |
-| `workflows`       | `monorepo-workflows`                                            |                 none |
+| Role              | Queue or surface                                                  | Activity concurrency |
+| ----------------- | ----------------------------------------------------------------- | -------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery` |          4 per queue |
+| `home`            | `home`                                                            |                    4 |
+| `reports`         | `reports`                                                         |                    4 |
+| `infra`           | `infra`                                                           |                    1 |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`   |          1 per queue |
+| `scout`           | `scout`                                                           |                    1 |
+| `agent`           | `agent-task`                                                      |                    1 |
+| `glitter-corpus`  | `glitter-corpus`                                                  |                    1 |
+| `glitter-context` | `glitter-context`                                                 |                    1 |
+| `maintenance`     | `maintenance`                                                     |                    1 |
+| `workflows`       | `monorepo-workflows`                                              |                 none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own

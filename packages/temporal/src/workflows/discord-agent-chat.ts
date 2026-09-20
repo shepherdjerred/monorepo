@@ -23,7 +23,7 @@ const commandActivities = proxyActivities<DiscordAgentChatActivities>({
 });
 
 const deliveryActivities = proxyActivities<DiscordAgentChatActivities>({
-  taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
+  taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY,
   startToCloseTimeout: "30 seconds",
   scheduleToCloseTimeout: DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS,
   retry: {

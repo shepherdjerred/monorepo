@@ -1,7 +1,7 @@
 import type { Client, WorkflowClient } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
 import { Hono } from "hono";
-import { z, ZodError } from "zod/v4";
+import { ZodError } from "zod/v4";
 import {
   AgentChatBindingNotFoundError,
   AgentChatNotFoundError,
@@ -12,10 +12,7 @@ import {
   resolveAgentChatBinding,
 } from "#lib/agent-chat-client.ts";
 import {
-  AgentChatBindingSchema,
   AgentChatIdSchema,
-  AgentChatPromptSchema,
-  AgentChatProviderSchema,
   type AgentChatBinding,
   type AgentChatCatalogEntry,
   type AgentChatConfig,
@@ -30,6 +27,7 @@ import {
 } from "#shared/agent/agent-chat-http.ts";
 import {
   AgentChatTurnConflictError,
+  activateHttpAgentChatCommand,
   pollHttpAgentChatCommand,
   submitHttpAgentChatCommand,
 } from "./agent-chat-turns.ts";
@@ -37,51 +35,15 @@ import {
   AgentChatTimestampInFutureError,
   validateAgentChatIngressTimestamp,
 } from "#shared/agent/agent-chat-ingress.ts";
+import {
+  BindAgentChatSchema,
+  ContinueAgentChatSchema,
+  CreateAgentChatSchema,
+  type ContinueAgentChatInput,
+} from "./agent-chat-api-schema.ts";
 import { bearerMatches, bearerToken } from "./http-auth.ts";
 
 const COMPONENT = "agent-chat-api";
-
-const CreateAgentChatSchema = z
-  .strictObject({
-    chatId: AgentChatIdSchema.optional(),
-    title: z.string().min(1).max(200),
-    provider: AgentChatProviderSchema,
-    model: z.string().min(1).max(200),
-    source: AgentChatBindingSchema,
-    prompt: AgentChatPromptSchema.optional(),
-    turnId: HttpAgentChatTurnIdSchema.optional(),
-    submittedAt: z.iso.datetime({ offset: true }).optional(),
-    maxTurnsPerMessage: z.number().int().positive().max(100).default(24),
-  })
-  .refine((input) => input.prompt === undefined || input.turnId !== undefined, {
-    message: "turnId is required when prompt is present",
-    path: ["turnId"],
-  })
-  .refine(
-    (input) => input.prompt === undefined || input.submittedAt !== undefined,
-    {
-      message: "submittedAt is required when prompt is present",
-      path: ["submittedAt"],
-    },
-  )
-  .refine((input) => input.prompt !== undefined || input.chatId !== undefined, {
-    message: "chatId is required when prompt is absent",
-    path: ["chatId"],
-  });
-
-const ContinueAgentChatSchema = z.strictObject({
-  source: AgentChatBindingSchema,
-  prompt: AgentChatPromptSchema,
-  chatId: AgentChatIdSchema.optional(),
-  turnId: HttpAgentChatTurnIdSchema,
-  submittedAt: z.iso.datetime({ offset: true }),
-});
-type ContinueAgentChatInput = z.infer<typeof ContinueAgentChatSchema>;
-
-const BindAgentChatSchema = z.strictObject({
-  binding: AgentChatBindingSchema,
-  submittedAt: z.iso.datetime({ offset: true }),
-});
 
 export type AgentChatApiOperations = {
   register: (
@@ -106,7 +68,9 @@ export type AgentChatApiOperations = {
   submit: (
     client: Client,
     command: HttpAgentChatCommand,
+    options?: { waitForActivation?: boolean },
   ) => Promise<HttpAgentChatTurnReceipt>;
+  activate: (client: Client, command: HttpAgentChatCommand) => Promise<void>;
   poll: (
     client: Client,
     turnId: string,
@@ -129,6 +93,7 @@ const defaultOperations: AgentChatApiOperations = {
   list: listAgentChats,
   resolve: resolveAgentChatBinding,
   submit: submitHttpAgentChatCommand,
+  activate: activateHttpAgentChatCommand,
   poll: pollHttpAgentChatCommand,
 };
 
@@ -346,22 +311,34 @@ export function buildAgentChatApiRoutes(
         return c.json({ chat: entry }, 201);
       }
       const turnId = HttpAgentChatTurnIdSchema.parse(input.turnId);
+      const existing = await findMatchingRegistration(
+        operations,
+        client.workflow,
+        config,
+      );
+      const claimedConfig = existing?.config ?? config;
+      const claimedCommand = HttpAgentChatCommandSchema.parse({
+        kind: "new",
+        config: claimedConfig,
+        request: requestForIngress(
+          { source: input.source, prompt: input.prompt, turnId },
+          timestamp,
+        ),
+      });
+      const receipt = await operations.submit(client, claimedCommand, {
+        waitForActivation: true,
+      });
       const entry = await registerIdempotently(
         operations,
         client.workflow,
         config,
       );
-      const receipt = await operations.submit(
-        client,
-        HttpAgentChatCommandSchema.parse({
-          kind: "new",
-          config: entry.config,
-          request: requestForIngress(
-            { source: input.source, prompt: input.prompt, turnId },
-            timestamp,
-          ),
-        }),
-      );
+      const activatedCommand = HttpAgentChatCommandSchema.parse({
+        kind: "new",
+        config: entry.config,
+        request: claimedCommand.request,
+      });
+      await operations.activate(client, activatedCommand);
       await operations.bind(
         client.workflow,
         input.source,
