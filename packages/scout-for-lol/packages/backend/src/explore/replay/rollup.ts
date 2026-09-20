@@ -20,7 +20,7 @@ export const RollupCaseSchema = z
     caseId: z.string().min(1),
     condition: z.string().nullable(),
     category: z.string().nullable(),
-    expectation: z.enum(["answerable", "gated-off"]).nullable(),
+    expectation: z.enum(["answerable", "gated-off", "either"]).nullable(),
     status: z.enum(["ok", "error", "timeout"]),
     // Parsed as the signal enum rather than raw strings, so the weighting
     // below needs no cast and an unknown signal fails loudly at the boundary.
@@ -37,7 +37,8 @@ export type RollupCase = z.infer<typeof RollupCaseSchema>;
 export type ConditionRollup = {
   readonly condition: string;
   readonly cases: number;
-  readonly expectation: "answerable" | "gated-off" | "mixed" | "none";
+  readonly expectation:
+    "answerable" | "gated-off" | "either" | "mixed" | "none";
   /** Cases whose behaviour contradicted what the guild's capabilities require. */
   readonly violations: number;
   readonly queried: number;

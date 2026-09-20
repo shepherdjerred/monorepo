@@ -29,7 +29,6 @@ export type ReplayCliOptions = {
   readonly baselineRunId: string | null;
   /** Run exactly one case, by id. */
   readonly onlyCaseId: string | null;
-  readonly write: boolean;
 };
 
 export type ReplayCliParseResult =
@@ -51,11 +50,22 @@ Options:
   --resume <runId>         Continue a run, skipping recorded cases
   --baseline <runId>       Compare against a previous run
   --only <caseId>          Run exactly one case
-  --write                  Persist the report next to the code it grades
   --help                   Show this help
 
 With neither --chips nor --conversations, chips are run: they need no corpus.
+
 This calls a live model and is a manual gate, never CI.`;
+
+/**
+ * There is deliberately no --write.
+ *
+ * emitEvalReport's convention is to persist a report beside the code it
+ * grades. That suits the small committed-corpus evals, whose corpora are
+ * hand-written and in-tree; it does not suit a harness whose output is a
+ * private local bundle of real conversation text. The half of the convention
+ * that does apply — a non-zero exit when the run fails — is honoured by the
+ * entry point.
+ */
 
 function parseStage(value: string): ReplayStageName {
   if (value === "beta" || value === "prod") return value;
@@ -114,7 +124,6 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
   let resumeRunId: string | null = null;
   let baselineRunId: string | null = null;
   let onlyCaseId: string | null = null;
-  let write = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -127,9 +136,6 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
         continue;
       case "--conversations":
         includeConversations = true;
-        continue;
-      case "--write":
-        write = true;
         continue;
       case "--stage":
         stage = parseStage(requireValue(args, index, "--stage"));
@@ -196,7 +202,6 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
       resumeRunId,
       baselineRunId,
       onlyCaseId,
-      write,
     },
   };
 }

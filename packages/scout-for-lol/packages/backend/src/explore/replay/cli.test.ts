@@ -19,7 +19,6 @@ describe("parseReplayArgs defaults", () => {
     expect(parsed.includeConversations).toBe(false);
     expect(parsed.concurrency).toBe(4);
     expect(parsed.limit).toBeNull();
-    expect(parsed.write).toBe(false);
   });
 
   test("does not silently add chips when conversations were asked for", () => {
@@ -87,14 +86,12 @@ describe("parseReplayArgs values", () => {
       "run-0",
       "--only",
       "chip:abc123",
-      "--write",
     ]);
     expect(parsed.limit).toBe(3);
     expect(parsed.concurrency).toBe(2);
     expect(parsed.resumeRunId).toBe("run-1");
     expect(parsed.baselineRunId).toBe("run-0");
     expect(parsed.onlyCaseId).toBe("chip:abc123");
-    expect(parsed.write).toBe(true);
   });
 
   test("rejects a non-positive limit or concurrency", () => {

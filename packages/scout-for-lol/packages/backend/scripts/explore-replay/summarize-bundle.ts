@@ -1,6 +1,12 @@
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { z } from "zod";
+import { SuggestionConditionSchema } from "@scout-for-lol/data";
+import {
+  ExploreCapabilitySetSchema,
+  chipExpectation as chipExpectationFor,
+} from "#src/explore/replay/profiles.ts";
+import { scoreCase } from "#src/explore/replay/scoring.ts";
 import {
   RollupCaseSchema,
   queryReach,
@@ -16,6 +22,12 @@ import {
  * Read-only and offline: it opens the per-case records a run already wrote and
  * derives the rollups. Nothing here calls a model or touches a dataset, so it
  * is safe to run against a bundle over and over while reading it.
+ *
+ * Signals are RE-SCORED from the stored evidence rather than read back from
+ * the record, through the same `scoreCase` the run itself used. A bundle is
+ * what happened; the scoring is a judgement over it, and judgements change —
+ * two did on the day the first full sweep was read. Re-deriving means a
+ * grader fix reaches every bundle ever written, with no re-run and no spend.
  */
 
 const USAGE = `Usage: bun run explore:summarize -- <bundle-dir> [--worst <n>]
@@ -25,19 +37,34 @@ Prints condition rollups, signal counts and the cases most worth opening.`;
 /** Only the fields the rollup needs; a case record carries much more. */
 const CaseFileSchema = z
   .object({
-    meta: z.object({
-      caseId: z.string(),
-      condition: z.string().nullable(),
-      category: z.string().nullable(),
-      expectation: z.enum(["answerable", "gated-off"]).nullable(),
-    }),
-    candidate: z.object({
-      answer: z.string().nullable(),
-      queryText: z.string().nullable(),
-      rowsReturned: z.number().nullable(),
-      toolNames: z.array(z.string()),
-    }),
-    signals: z.array(z.string()),
+    meta: z
+      .object({
+        caseId: z.string(),
+        condition: z.string().nullable(),
+        category: z.string().nullable(),
+        capabilities: ExploreCapabilitySetSchema,
+        capabilityMismatches: z.array(z.string()),
+        // Absent in bundles written before the field existed; derived from
+        // `error` for those rather than refusing to read them.
+        status: z.enum(["ok", "error", "timeout"]).optional(),
+      })
+      .loose(),
+    candidate: z
+      .object({
+        answer: z.string().nullable(),
+        queryText: z.string().nullable(),
+        caveats: z.array(z.string()),
+        followUps: z.array(z.string()),
+        rowsReturned: z.number().nullable(),
+        rowsScanned: z.number().nullable(),
+        toolNames: z.array(z.string()),
+        matchCardIds: z.array(z.string()),
+        visualizationKind: z.string().nullable(),
+      })
+      .loose(),
+    trace: z.array(
+      z.object({ toolName: z.string(), status: z.string() }).loose(),
+    ),
     error: z.string().nullable(),
   })
   .loose();
@@ -51,19 +78,40 @@ async function readCases(runDir: string): Promise<readonly RollupCase[]> {
   for (const file of files) {
     const raw: unknown = await Bun.file(path.join(caseDir, file)).json();
     const parsed = CaseFileSchema.parse(raw);
+    const status =
+      parsed.meta.status ??
+      (parsed.error === null
+        ? "ok"
+        : parsed.error.toLowerCase().includes("abort")
+          ? "timeout"
+          : "error");
+    const condition = SuggestionConditionSchema.safeParse(
+      parsed.meta.condition,
+    );
+    const scored = scoreCase({
+      status,
+      answer: parsed.candidate.answer,
+      trace: parsed.trace,
+      rowsReturned: parsed.candidate.rowsReturned,
+      capabilities: parsed.meta.capabilities,
+      condition: condition.success ? condition.data : null,
+      capabilityMismatches: parsed.meta.capabilityMismatches,
+      candidate: parsed.candidate,
+      // Re-scoring compares nothing: a stored diff belongs to the baseline the
+      // run used, and re-deriving it here would need that bundle too.
+      baseline: null,
+      normalizeQuery: (text) => text,
+    });
     cases.push(
       RollupCaseSchema.parse({
         caseId: parsed.meta.caseId,
         condition: parsed.meta.condition,
         category: parsed.meta.category,
-        expectation: parsed.meta.expectation,
-        status:
-          parsed.error === null
-            ? "ok"
-            : parsed.error.toLowerCase().includes("abort")
-              ? "timeout"
-              : "error",
-        signals: parsed.signals,
+        expectation: condition.success
+          ? chipExpectationFor(parsed.meta.capabilities, condition.data)
+          : null,
+        status,
+        signals: scored.signals,
         answerLength: parsed.candidate.answer?.length ?? 0,
         rowsReturned: parsed.candidate.rowsReturned,
         toolNames: parsed.candidate.toolNames,

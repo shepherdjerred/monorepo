@@ -1,4 +1,5 @@
 import path from "node:path";
+import { readdir } from "node:fs/promises";
 import { z } from "zod";
 import {
   initFeatureFlags,
@@ -46,11 +47,12 @@ import {
   type ReplayCaseInput,
   type ReplayObservation,
 } from "#src/explore/replay/runner.ts";
-import type { ReplaySide } from "#src/explore/replay/diff.ts";
+import type { ReplayBaseline, ReplaySide } from "#src/explore/replay/diff.ts";
+import { scoreCase } from "#src/explore/replay/scoring.ts";
+import { validateQuery } from "#src/reports/ai/scoutql-tools.ts";
 import {
   harnessIntegritySignals,
   replaySignalWeight,
-  replaySignals,
 } from "#src/explore/replay/signals.ts";
 import {
   ReplayCaseIndexEntrySchema,
@@ -210,6 +212,61 @@ function observationSide(observation: ReplayObservation): ReplaySide {
   };
 }
 
+/**
+ * A previous run's candidates, keyed by case id, to measure this one against.
+ *
+ * Chips never shipped an answer, so their only possible baseline is an earlier
+ * run of the same chip — which is what makes the first sweep a baseline rather
+ * than just a bundle. A case absent here is reported as new rather than
+ * silently uncompared.
+ */
+async function loadBaseline(
+  runId: string,
+): Promise<ReadonlyMap<string, ReplayBaseline>> {
+  const runDir = path.join(replayBundleRoot(Bun.env), runId);
+  const caseDir = path.join(runDir, "cases");
+  const BaselineCaseSchema = z
+    .object({
+      meta: z.object({ caseId: z.string() }).loose(),
+      candidate: z
+        .object({
+          answer: z.string().nullable(),
+          queryText: z.string().nullable(),
+          caveats: z.array(z.string()),
+          followUps: z.array(z.string()),
+          rowsReturned: z.number().nullable(),
+          rowsScanned: z.number().nullable(),
+          toolNames: z.array(z.string()),
+          matchCardIds: z.array(z.string()),
+          visualizationKind: z.string().nullable(),
+        })
+        .loose(),
+    })
+    .loose();
+
+  const entries = new Map<string, ReplayBaseline>();
+  let files: string[];
+  try {
+    files = (await readdir(caseDir)).filter((name) => name.endsWith(".json"));
+  } catch {
+    throw new Error(
+      `No bundle at ${runDir} to use as a baseline. Pass a run id that exists under ${replayBundleRoot(Bun.env)}.`,
+    );
+  }
+  for (const file of files) {
+    const raw: unknown = await Bun.file(path.join(caseDir, file)).json();
+    const parsed = BaselineCaseSchema.parse(raw);
+    entries.set(parsed.meta.caseId, {
+      ...parsed.candidate,
+      source: "run",
+      // A run baseline has no stored timestamp of its own; the manifest dates
+      // the whole run, and per-case age would be misleading precision.
+      createdAt: null,
+    });
+  }
+  return entries;
+}
+
 async function runGuild(input: {
   readonly options: ReplayCliOptions;
   readonly pin: StageDatasetPin;
@@ -327,6 +384,10 @@ async function runGuild(input: {
     const chipByCaseId = new Map(
       exploreChipCases().map((chip) => [chip.caseId, chip]),
     );
+    const baseline =
+      options.baselineRunId === null
+        ? new Map<string, ReplayBaseline>()
+        : await loadBaseline(options.baselineRunId);
     let integrityFailures = 0;
 
     await runReplayCases(
@@ -346,28 +407,22 @@ async function runGuild(input: {
             config,
             resolved: observation.capabilities,
           });
-          const signals = replaySignals({
+          const candidate = observationSide(observation);
+          const { signals, diff } = scoreCase({
             status: observation.status,
             answer: observation.answer?.answer ?? null,
-            queryFailedUnrecovered:
-              observation.trace.some(
-                (entry) =>
-                  entry.toolName === "run_report_query" &&
-                  entry.status === "failed",
-              ) &&
-              !observation.trace.some(
-                (entry) =>
-                  entry.toolName === "run_report_query" &&
-                  entry.status === "succeeded",
-              ),
-            diff: null,
-            chipExpectation:
-              chip === undefined
-                ? null
-                : chipExpectation(config.capabilities, chip.condition),
+            trace: observation.trace,
+            rowsReturned: observation.preview?.rowsReturned ?? null,
+            capabilities: config.capabilities,
+            condition: chip?.condition ?? null,
             capabilityMismatches: mismatches,
-            baselineRowsReturned: null,
-            candidateRowsReturned: observation.preview?.rowsReturned ?? null,
+            candidate,
+            baseline: baseline.get(observation.caseId) ?? null,
+            // The formatter can reword a query on its own, so both sides are
+            // canonicalised before comparison and a formatting change is not
+            // reported as the agent writing something different.
+            normalizeQuery: (text) =>
+              validateQuery(text).formattedQueryText ?? null,
           });
           if (harnessIntegritySignals(signals).length > 0) {
             integrityFailures += 1;
@@ -390,9 +445,14 @@ async function runGuild(input: {
                   capabilityMismatches: mismatches,
                   durationMs: observation.durationMs,
                   lakeBuildId: pin.lake.buildId,
+                  // Stored so a re-score is exact: an error and a timeout read
+                  // very differently and cannot be told apart from the message.
+                  status: observation.status,
+                  baselineRunId: options.baselineRunId,
                 },
                 prompt: observation.modelMessages,
-                candidate: observationSide(observation),
+                candidate,
+                diff,
                 trace: observation.trace,
                 signals,
                 signalWeight: replaySignalWeight(signals),

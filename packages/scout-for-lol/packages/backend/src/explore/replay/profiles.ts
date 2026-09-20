@@ -120,9 +120,8 @@ export function conditionCapability(
 export type ChipExpectation = "answerable" | "gated-off" | "either";
 
 /** Conditions whose chips legitimately go both ways; see `CONDITION_CAPABILITY`. */
-const UNASSERTABLE_CONDITIONS: ReadonlySet<SuggestionCondition> = new Set<SuggestionCondition>([
-  "reports",
-]);
+const UNASSERTABLE_CONDITIONS: ReadonlySet<SuggestionCondition> =
+  new Set<SuggestionCondition>(["reports"]);
 
 export function chipExpectation(
   capabilities: ExploreCapabilitySet,
