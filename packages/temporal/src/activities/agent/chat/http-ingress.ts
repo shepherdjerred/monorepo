@@ -39,19 +39,22 @@ export async function executeHttpAgentChatCommand(
   const heartbeatTimer = setInterval(heartbeat, HEARTBEAT_INTERVAL_MS);
   try {
     const client = await createTemporalClient();
-    const result =
-      command.kind === "new"
-        ? await runAgentChatTurn({
-            client: client.workflow,
-            config: command.config,
-            request,
-            bindSource: true,
-          })
-        : await continueAgentChat({
-            client: client.workflow,
-            request,
-            chatId: command.chatId,
-          });
+    const result = await client.withAbortSignal(
+      context.cancellationSignal,
+      async () =>
+        command.kind === "new"
+          ? await runAgentChatTurn({
+              client: client.workflow,
+              config: command.config,
+              request,
+              bindSource: true,
+            })
+          : await continueAgentChat({
+              client: client.workflow,
+              request,
+              chatId: command.chatId,
+            }),
+    );
     return AgentChatTurnResultSchema.parse(result);
   } finally {
     clearInterval(heartbeatTimer);

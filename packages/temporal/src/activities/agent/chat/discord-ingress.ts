@@ -71,19 +71,22 @@ export async function executeDiscordAgentChatCommand(
       providerStartDeadline: input.providerStartDeadline,
       source,
     };
-    const result =
-      command.kind === "new"
-        ? await runAgentChatTurn({
-            client: client.workflow,
-            config: discordAgentChatConfig(command),
-            request,
-            bindSource: true,
-          })
-        : await continueAgentChat({
-            client: client.workflow,
-            request,
-            chatId: command.chatId,
-          });
+    const result = await client.withAbortSignal(
+      context.cancellationSignal,
+      async () =>
+        command.kind === "new"
+          ? await runAgentChatTurn({
+              client: client.workflow,
+              config: discordAgentChatConfig(command),
+              request,
+              bindSource: true,
+            })
+          : await continueAgentChat({
+              client: client.workflow,
+              request,
+              chatId: command.chatId,
+            }),
+    );
     return DiscordAgentChatCommandResultSchema.parse({
       messages: chunkDiscordAgentChatText(result.finalText),
     });
