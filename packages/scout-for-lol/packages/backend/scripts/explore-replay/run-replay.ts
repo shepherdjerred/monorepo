@@ -35,15 +35,18 @@ import {
 import {
   datasetCoherenceIssues,
   datasetRepairHint,
+  type ReplayStage,
   type StageDatasetPin,
 } from "#src/explore/replay/dataset.ts";
 import type { ReplayCliOptions } from "#src/explore/replay/cli.ts";
 import {
+  EXPLORE_REPLAY_CAPABILITIES,
   capabilityMismatches,
   chipExpectation,
   flagOverridesFor,
   guildConfigIssues,
   type CapturedGuildConfig,
+  type ExploreCapabilitySet,
 } from "#src/explore/replay/profiles.ts";
 import {
   exploreChipCases,
@@ -59,6 +62,7 @@ import type { ReplayBaseline, ReplaySide } from "#src/explore/replay/diff.ts";
 import { scoreCase } from "#src/explore/replay/scoring.ts";
 import { validateQuery } from "#src/reports/ai/scoutql-tools.ts";
 import {
+  REPLAY_SIGNALS,
   harnessIntegritySignals,
   replaySignalWeight,
 } from "#src/explore/replay/signals.ts";
@@ -68,7 +72,7 @@ import {
   appendBundleLine,
   bundleLocationIssues,
   bundlePaths,
-  completedCaseIds,
+  recordedCaseEntries,
   createBundleDirectory,
   replayBundleRoot,
   writeBundleFile,
@@ -230,9 +234,55 @@ function observationSide(observation: ReplayObservation): ReplaySide {
  */
 async function loadBaseline(
   runId: string,
+  against: {
+    readonly stage: ReplayStage;
+    readonly profile: string;
+    readonly capabilities: ExploreCapabilitySet;
+  },
 ): Promise<ReadonlyMap<string, ReplayBaseline>> {
   const runDir = path.join(replayBundleRoot(Bun.env), runId);
   const caseDir = path.join(runDir, "cases");
+
+  // A chip id is a hash of its prompt, so the same id exists in every bundle
+  // of every profile. Comparing across profiles would report each correct
+  // refusal on a guild without the feature as a regression against a guild
+  // that has it — a whole column of findings that are only the wrong
+  // baseline. The prompt and catalog hashes are deliberately NOT checked:
+  // differing there is the reason to run an A/B at all.
+  const manifestPath = path.join(runDir, "manifest.json");
+  let baselineManifest: unknown;
+  try {
+    baselineManifest = await Bun.file(manifestPath).json();
+  } catch {
+    throw new Error(
+      `Baseline run ${runId} has no readable manifest at ${manifestPath}; its configuration cannot be proven.`,
+    );
+  }
+  const manifest = ReplayManifestSchema.parse(baselineManifest);
+  const conflicts: string[] = [];
+  if (manifest.stage !== against.stage) {
+    conflicts.push(`stage ${manifest.stage}, not ${against.stage}`);
+  }
+  if (manifest.profile !== against.profile) {
+    conflicts.push(`profile ${manifest.profile}, not ${against.profile}`);
+  }
+  for (const capability of EXPLORE_REPLAY_CAPABILITIES) {
+    const before = manifest.expectedCapabilities[capability];
+    const now = against.capabilities[capability];
+    if (before !== now) {
+      conflicts.push(`${capability} was ${String(before)}, now ${String(now)}`);
+    }
+  }
+  if (conflicts.length > 0) {
+    throw new Error(
+      [
+        `Baseline run ${runId} is not comparable to this run:`,
+        ...conflicts.map((conflict) => `  - ${conflict}`),
+        "",
+        "Pass a baseline from the same stage, guild and capability set.",
+      ].join("\n"),
+    );
+  }
   const BaselineCaseSchema = z
     .object({
       meta: z.object({ caseId: z.string() }).loose(),
@@ -289,6 +339,13 @@ async function conversationCasesFor(
 ): Promise<{
   readonly cases: ReplayCaseInput[];
   /**
+   * Which corpus revision produced these cases.
+   *
+   * Two bundles built from different corpus revisions are not comparable, and
+   * without this the manifest could not tell them apart.
+   */
+  readonly corpus: { readonly sha256: string; readonly version: number };
+  /**
    * The answer each turn originally produced.
    *
    * A conversation turn is the one case kind with a real baseline: somebody
@@ -307,7 +364,8 @@ async function conversationCasesFor(
       `No conversation corpus for ${stage}. Create one with explore:curate-corpus --stage ${stage} --write.`,
     );
   }
-  const corpus = parseReplayCorpus(await file.json());
+  const corpusText = await file.text();
+  const corpus = parseReplayCorpus(JSON.parse(corpusText) as unknown);
   if (corpus.stage !== stage) {
     throw new Error(
       `Corpus at ${corpusPath.pathname} is for ${corpus.stage}, not ${stage}.`,
@@ -373,7 +431,11 @@ async function conversationCasesFor(
       });
     }
   }
-  return { cases, baselines };
+  return {
+    cases,
+    baselines,
+    corpus: { sha256: sha256Hex(corpusText), version: corpus.version },
+  };
 }
 
 async function runGuild(input: {
@@ -409,10 +471,25 @@ async function runGuild(input: {
       );
     }
     const paths = bundlePaths(runDir);
-    const alreadyDone =
+    const priorEntries =
       options.resumeRunId === null
-        ? new Set<string>()
-        : await completedCaseIds(paths.index);
+        ? []
+        : await recordedCaseEntries(paths.index);
+    const alreadyDone = new Set(priorEntries.map((entry) => entry.caseId));
+
+    // The skipped half of a resumed run still happened. Counting only the
+    // cases this invocation executed would let a clean remainder rewrite
+    // `summary.json` with `passed: true` over an earlier errored case, which
+    // is the one thing `passed` is supposed to rule out.
+    const priorIntegrityFailures = priorEntries.filter(
+      (entry) =>
+        harnessIntegritySignals(
+          entry.signals.flatMap((signal) => {
+            const parsed = z.enum(REPLAY_SIGNALS).safeParse(signal);
+            return parsed.success ? [parsed.data] : [];
+          }),
+        ).length > 0,
+    ).length;
 
     const requesterId = DiscordAccountIdSchema.parse(config.requesterId);
 
@@ -438,10 +515,31 @@ async function runGuild(input: {
       : {
           cases: [] as ReplayCaseInput[],
           baselines: new Map<string, ReplayBaseline>(),
+          // Null is reserved for a run that read no corpus, which is what a
+          // chip-only sweep is.
+          corpus: null,
         };
     const conversationCases = conversations.cases;
 
-    const all = [...chipCases, ...conversationCases]
+    const selectable = [...chipCases, ...conversationCases];
+    // Every case's kind, so a bundle's records say what they actually are
+    // rather than assuming the chip sweep.
+    const caseKinds = new Map(
+      selectable.map((entry) => [entry.caseId, entry.kind] as const),
+    );
+
+    // Checked against the unfiltered set, before resume exclusions: a typo in
+    // --only would otherwise select nothing, and a zero-case run writes
+    // `passed: true` and exits clean, which is the decorative-eval failure
+    // this harness is built to avoid. An already-completed case is a different
+    // thing and stays a valid no-op.
+    if (options.onlyCaseId !== null && !caseKinds.has(options.onlyCaseId)) {
+      throw new Error(
+        `--only names ${options.onlyCaseId}, which is not in the ${pin.stage} corpus for ${config.label}. Check the case id, or add --conversations if it is a conversation turn.`,
+      );
+    }
+
+    const all = selectable
       .filter((entry) =>
         options.onlyCaseId === null
           ? true
@@ -468,8 +566,8 @@ async function runGuild(input: {
           database: { name: pin.database.name },
           model,
           chipCatalogSha256: exploreChipCatalogSha256(),
-          corpusSha256: null,
-          corpusVersion: null,
+          corpusSha256: conversations.corpus?.sha256 ?? null,
+          corpusVersion: conversations.corpus?.version ?? null,
           promptSha256: sha256Hex(
             exploreAgentInstructions({
               bucks: config.capabilities.bucks
@@ -479,6 +577,12 @@ async function runGuild(input: {
               challenges: config.capabilities.challenges,
               creation: config.capabilities.creation,
               riotHistory: config.capabilities.riotHistory,
+              // A non-null value adds the MVP instructions and skill entry to
+              // the prompt, so omitting it would hash the disabled prompt and
+              // record provenance the run did not have.
+              mvpVotes: config.capabilities.mvpVotes
+                ? { currentTime: "pinned" }
+                : null,
               surface,
             }),
           ),
@@ -507,11 +611,16 @@ async function runGuild(input: {
     // since that is what the operator explicitly asked to compare against.
     const baseline = new Map<string, ReplayBaseline>(conversations.baselines);
     if (options.baselineRunId !== null) {
-      for (const [caseId, entry] of await loadBaseline(options.baselineRunId)) {
+      const baselineEntries = await loadBaseline(options.baselineRunId, {
+        stage: pin.stage,
+        profile: config.label,
+        capabilities: config.capabilities,
+      });
+      for (const [caseId, entry] of baselineEntries) {
         baseline.set(caseId, entry);
       }
     }
-    let integrityFailures = 0;
+    let integrityFailures = priorIntegrityFailures;
 
     await runReplayCases(
       cases,
@@ -556,7 +665,7 @@ async function runGuild(input: {
               {
                 meta: {
                   caseId: observation.caseId,
-                  kind: "chip",
+                  kind: caseKinds.get(observation.caseId) ?? "chip",
                   profile: config.label,
                   condition: chip?.condition ?? null,
                   category: chip?.category ?? null,
@@ -590,7 +699,7 @@ async function runGuild(input: {
             JSON.stringify(
               ReplayCaseIndexEntrySchema.parse({
                 caseId: observation.caseId,
-                kind: "chip",
+                kind: caseKinds.get(observation.caseId) ?? "chip",
                 status: observation.status === "ok" ? "ok" : observation.status,
                 durationMs: observation.durationMs,
                 signals: [...signals],
@@ -663,6 +772,23 @@ export async function runReplay(input: {
       .join(", ");
     throw new Error(
       `No guild in the ${input.pin.stage} pin matches ${[...wanted].join(", ")}. Known: ${known}`,
+    );
+  }
+
+  // A bundle belongs to one guild: its manifest records that guild's profile
+  // and expected capabilities. With more than one selected, every guild would
+  // reuse the resumed run's directory in turn — the second inheriting the
+  // first's completed ids and overwriting its manifest and summary with its
+  // own metadata, leaving a bundle that describes one guild and contains
+  // another's answers.
+  if (input.options.resumeRunId !== null && configs.length > 1) {
+    throw new Error(
+      [
+        `--resume names one bundle, but ${configs.length.toString()} guilds are selected: ${configs
+          .map((config) => config.label)
+          .join(", ")}.`,
+        "Pass --guild <label> to name the one this bundle belongs to.",
+      ].join("\n"),
     );
   }
 

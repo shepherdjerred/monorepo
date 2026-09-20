@@ -177,6 +177,16 @@ function databaseUrlIssues(
       `DATABASE_URL host "${parsed.hostname}" is not loopback; a replay must run against a local snapshot`,
     );
   }
+  // Name and loopback are not enough: a second local Postgres on another port
+  // can hold a database of the same name, and the coherence checks that run
+  // later compare identity mappings and sampled accounts, not conversations or
+  // runs. A stale copy would replay real-looking turns against the wrong rows.
+  const pinned = safeParseUrl(pin.database.url);
+  if (pinned !== null && parsed.port !== pinned.port) {
+    issues.push(
+      `DATABASE_URL points at port ${parsed.port === "" ? "the default" : parsed.port}, but the dataset pins ${pinned.port === "" ? "the default" : pinned.port}`,
+    );
+  }
   return issues;
 }
 

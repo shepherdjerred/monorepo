@@ -36,17 +36,19 @@ export function replayBundleRoot(
  * Not style: `git add -A` in a worktree whose state directory was pointed at
  * the repo would commit every transcript at once. Refusing the location is the
  * only check that happens before anything is written.
+ *
+ * `.git` takes two forms and both count. In an ordinary clone it is a
+ * directory; in a linked worktree it is a *file* holding `gitdir: …`. Missing
+ * the file form would leave the check passing in exactly the setup this
+ * repository is developed in, which is the setup it most needs to catch.
  */
 export async function isInsideGitCheckout(dir: string): Promise<boolean> {
   let current = path.resolve(dir);
   for (;;) {
-    if (await Bun.file(path.join(current, ".git", "HEAD")).exists()) {
-      return true;
-    }
-    const gitDir = path.join(current, ".git");
+    const gitPath = path.join(current, ".git");
     try {
-      const gitDirStat = await stat(gitDir);
-      if (gitDirStat.isDirectory()) return true;
+      const gitStat = await stat(gitPath);
+      if (gitStat.isDirectory() || gitStat.isFile()) return true;
     } catch {
       // No .git here; keep walking up.
     }
@@ -203,6 +205,35 @@ export function bundlePaths(runDir: string): {
     caseFile: (caseId: string) =>
       path.join(runDir, "cases", `${caseId.replaceAll(":", "_")}.json`),
   };
+}
+
+/**
+ * Every well-formed entry already recorded in this run.
+ *
+ * A resume needs more than the ids. The cases it skips still happened, and
+ * their signals still count: a run whose first half errored and whose second
+ * half was clean is not a clean run, and deriving the verdict from only the
+ * newly executed cases would certify it as one.
+ */
+export async function recordedCaseEntries(
+  indexPath: string,
+): Promise<readonly ReplayCaseIndexEntry[]> {
+  const file = Bun.file(indexPath);
+  if (!(await file.exists())) return [];
+  const entries: ReplayCaseIndexEntry[] = [];
+  const indexText = await file.text();
+  for (const line of indexText.split("\n")) {
+    if (line.trim() === "") continue;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    const parsed = ReplayCaseIndexEntrySchema.safeParse(raw);
+    if (parsed.success) entries.push(parsed.data);
+  }
+  return entries;
 }
 
 /** Case ids already recorded in this run, so a resume can skip them. */

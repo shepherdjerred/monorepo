@@ -35,6 +35,14 @@ type Candidate = {
   readonly guildSource: ReplayGuildSource | "message-column";
 };
 
+/**
+ * Conversation origins the `web` replay surface reproduces faithfully.
+ *
+ * `legacy` predates the column and is web by construction; `web` says so.
+ * `discord` and `voice` ran with a different tool set and are left out.
+ */
+const REPLAYABLE_ORIGINS = ["legacy", "web"];
+
 export async function curateCorpus(input: {
   readonly stage: "beta" | "prod";
   readonly minTurns: number;
@@ -46,8 +54,16 @@ export async function curateCorpus(input: {
   // it. Prod has no allowlist and must recover from the turn or its run.
   const soleAllowedGuildId = input.stage === "beta" ? MY_SERVER : null;
 
+  // Only origins a replay can actually reproduce. The harness runs every case
+  // on the `web` surface, so a Discord or voice conversation curated here
+  // would be replayed with a tool set it never had — the web-only creation
+  // tools among them — and every comparison against its stored answers would
+  // be measuring the surface rather than the agent.
   const conversations = await prisma.exploreConversation.findMany({
-    where: { userId: { not: input.ownerId } },
+    where: {
+      userId: { not: input.ownerId },
+      origin: { in: REPLAYABLE_ORIGINS },
+    },
     include: { messages: true },
     orderBy: { createdAt: "desc" },
   });

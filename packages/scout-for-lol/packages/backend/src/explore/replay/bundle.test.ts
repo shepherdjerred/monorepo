@@ -11,6 +11,7 @@ import {
   completedCaseIds,
   createBundleDirectory,
   isInsideGitCheckout,
+  recordedCaseEntries,
   replayBundleRoot,
   writeBundleFile,
 } from "./bundle.ts";
@@ -59,11 +60,34 @@ describe("isInsideGitCheckout", () => {
     expect(await isInsideGitCheckout(nested)).toBe(true);
   });
 
-  test("detects a worktree, whose .git is a file", async () => {
+  test("detects a linked worktree, whose .git is a file", async () => {
+    // The form this repository is developed in: `.git` is a file holding a
+    // `gitdir:` pointer, not a directory. An earlier version of this test
+    // created a directory and so passed without covering the case.
     const dir = await temporaryDir();
-    await mkdir(path.join(dir, ".git"));
-    await Bun.write(path.join(dir, ".git", "HEAD"), "ref: refs/heads/main\n");
+    await Bun.write(
+      path.join(dir, ".git"),
+      "gitdir: /Users/someone/git/repo/.git/worktrees/feature\n",
+    );
     expect(await isInsideGitCheckout(dir)).toBe(true);
+  });
+
+  test("detects a linked worktree above the directory", async () => {
+    const dir = await temporaryDir();
+    await Bun.write(
+      path.join(dir, ".git"),
+      "gitdir: /Users/someone/git/repo/.git/worktrees/feature\n",
+    );
+    const nested = path.join(dir, "packages", "state");
+    await mkdir(nested, { recursive: true });
+    expect(await isInsideGitCheckout(nested)).toBe(true);
+  });
+
+  test("accepts a directory with no checkout above it", async () => {
+    const dir = await temporaryDir();
+    const nested = path.join(dir, "a", "b");
+    await mkdir(nested, { recursive: true });
+    expect(await isInsideGitCheckout(nested)).toBe(false);
   });
 });
 
@@ -122,6 +146,71 @@ describe("createBundleDirectory and writeBundleFile", () => {
     await writeBundleFile(filePath, "{}");
     const fileStat = await stat(filePath);
     expect(fileStat.mode & 0o777).toBe(0o600);
+  });
+});
+
+describe("recordedCaseEntries", () => {
+  test("is empty when no index exists yet", async () => {
+    const dir = await temporaryDir();
+    expect(await recordedCaseEntries(path.join(dir, "cases.jsonl"))).toEqual(
+      [],
+    );
+  });
+
+  test("keeps the signals of cases a resume will skip", async () => {
+    // The reason this exists: a resumed run derives its verdict from the whole
+    // index, so a clean remainder cannot certify a run whose earlier half
+    // errored.
+    const dir = await temporaryDir();
+    const indexPath = path.join(dir, "cases.jsonl");
+    await appendBundleLine(
+      indexPath,
+      JSON.stringify(
+        ReplayCaseIndexEntrySchema.parse({
+          caseId: "chip:aaa",
+          kind: "chip",
+          status: "error",
+          durationMs: 10,
+          signals: ["new_turn_errored"],
+        }),
+      ),
+    );
+    await appendBundleLine(
+      indexPath,
+      JSON.stringify(
+        ReplayCaseIndexEntrySchema.parse({
+          caseId: "conv:bbb:1",
+          kind: "conversation",
+          status: "ok",
+          durationMs: 20,
+          signals: [],
+        }),
+      ),
+    );
+    const entries = await recordedCaseEntries(indexPath);
+    expect(entries).toHaveLength(2);
+    expect(entries[0]?.signals).toEqual(["new_turn_errored"]);
+    expect(entries[1]?.kind).toBe("conversation");
+  });
+
+  test("skips a truncated final line, as an interrupted run leaves", async () => {
+    const dir = await temporaryDir();
+    const indexPath = path.join(dir, "cases.jsonl");
+    await appendBundleLine(
+      indexPath,
+      JSON.stringify(
+        ReplayCaseIndexEntrySchema.parse({
+          caseId: "chip:aaa",
+          kind: "chip",
+          status: "ok",
+          durationMs: 10,
+          signals: [],
+        }),
+      ),
+    );
+    await appendBundleLine(indexPath, '{"caseId":"chip:bb');
+    const entries = await recordedCaseEntries(indexPath);
+    expect(entries.map((entry) => entry.caseId)).toEqual(["chip:aaa"]);
   });
 });
 

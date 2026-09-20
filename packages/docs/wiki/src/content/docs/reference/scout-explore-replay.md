@@ -9,6 +9,9 @@ The Explore replay harness runs the real Explore agent against a frozen copy of
 a stage's data and records every turn. It is a manual gate, never CI: each case
 is a live model call.
 
+Source: [`src/explore/replay/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/explore/replay) and
+[`scripts/explore-replay/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/scripts/explore-replay).
+
 ## Commands
 
 | Command                                  | Does                                                              |
@@ -32,17 +35,19 @@ is a live model call.
 | `guilds`                                     | Per-guild captured capabilities and requester |
 
 A run refuses to start unless `DATABASE_URL` names the pinned database on
-loopback, `REPORT_LAKE_DIR` resolves to the pinned lake, `FEATURE_FLAGS_MODE`
-is `disabled` or `static`, `TEMPORAL_ADDRESS` is unset, and `ENVIRONMENT` is
-unset or `dev`.
+loopback and on the pinned port, `REPORT_LAKE_DIR` resolves to the pinned lake,
+`FEATURE_FLAGS_MODE` is `disabled` or `static`, `TEMPORAL_ADDRESS` is unset,
+and `ENVIRONMENT` is unset or `dev`
+([`dataset.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/replay/dataset.ts)).
 
 `ENVIRONMENT` is the harness's to set, not the caller's. A prod dataset must
 resolve flags as prod, because `isFeatureHardDisabled` and the beta-only
 override stripping fire only there. The same variable also makes configuration
 demand a complete PostHog setup outside dev, which a replay never uses. So the
 run loads configuration under `dev`, then sets `ENVIRONMENT=prod` for a prod
-pin; only flag resolution reads it live. A caller who sets it first is
-refused.
+pin; only flag resolution reads it live. A caller who sets it first is refused
+([`stage-flag-semantics.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/stage-flag-semantics.ts),
+[`flags.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/configuration/flags.ts)).
 
 ## Bundle
 
@@ -57,7 +62,9 @@ files `0600`. Both are checked before the first model call.
 | `summary.json`        | Case count, integrity failures, `passed`                                           |
 
 `passed` means harness integrity only: every case ran and the configuration was
-what it claimed. It is not a statement about answer quality.
+what it claimed. It is not a statement about answer quality. A resumed run
+counts the cases it skipped, so a clean remainder cannot certify a run whose
+earlier half failed ([`bundle.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/replay/bundle.ts)).
 
 Signals stored in a case record are those computed at run time.
 `explore:summarize` re-derives them with the current grader, so a grading change
@@ -71,7 +78,12 @@ applies to bundles already written.
 | Conversation turn | `conv:<conversation>:<turn>` | The answer that turn originally produced |
 
 Chips never shipped an answer, so the first sweep of a guild establishes their
-baseline rather than comparing to one.
+baseline rather than comparing to one
+([`chips.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/replay/chips.ts)).
+
+A chip id is a hash of its prompt, so it is the same in every bundle. A
+`--baseline` from another stage, guild or capability set is refused rather than
+compared.
 
 ## Signals
 
@@ -90,7 +102,11 @@ baseline rather than comparing to one.
 
 Signals are triage aids. `capability_mismatch`,
 `gated_chip_did_not_refuse` and `ungated_chip_refused` are assertions about the
-configuration; the rest rank cases for reading.
+configuration; the rest rank cases for reading
+([`signals.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/replay/signals.ts)).
+
+A gated chip satisfies its expectation by declining or by asking what the
+person meant. Both use the gated feature equally, which is not at all.
 
 ## Guild recovery
 
@@ -104,7 +120,7 @@ refuses the case.
 | `beta-allowlist` | Beta admits exactly one guild, so a beta turn ran with it |
 
 There is no fourth source. A turn with no establishable guild is left out of the
-corpus.
+corpus ([`plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/replay/plan.ts)).
 
 ## Limits
 
@@ -116,6 +132,9 @@ corpus.
   excludes roughly the newest fifteen minutes of matches.
 - A bundle holds real conversation text and stays local; the committed corpus
   holds identifiers only.
+- Every case runs on the `web` surface, so curation takes only `legacy` and
+  `web` conversations
+  ([`curate-corpus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/curate-corpus.ts)).
 
 ## Related
 

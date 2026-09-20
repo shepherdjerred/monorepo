@@ -190,7 +190,9 @@ describe("replayEnvironmentIssues", () => {
       }),
       resolvedLakeDir,
     });
-    expect(issues).toEqual([expect.stringContaining("is not loopback")]);
+    // Also the wrong port, which is true and worth saying; the loopback
+    // failure is the one that matters here.
+    expect(issues).toContainEqual(expect.stringContaining("is not loopback"));
   });
 
   test("rejects a lake dir that is not the pinned one", () => {
@@ -275,6 +277,21 @@ describe("replayEnvironmentIssues", () => {
       resolvedLakeDir,
     });
     expect(issues).toEqual([expect.stringContaining("TEMPORAL_ADDRESS")]);
+  });
+
+  test("refuses a same-named database on another local port", () => {
+    // Name and loopback both pass here. The later coherence checks compare
+    // identity mappings and sampled accounts, not conversations, so a second
+    // local Postgres holding a stale copy would replay real-looking turns
+    // against the wrong rows.
+    const issues = replayEnvironmentIssues({
+      pin: PIN,
+      environment: environment({
+        DATABASE_URL: "postgres://scout@127.0.0.1:5432/scout_beta_snapshot",
+      }),
+      resolvedLakeDir,
+    });
+    expect(issues).toEqual([expect.stringContaining("port 5432")]);
   });
 
   test("rejects a missing DATABASE_URL", () => {
