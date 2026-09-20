@@ -40,6 +40,16 @@ Required configuration is validated at startup: `DATABASE_URL` (a SQLite
 `GRAFANA_API_KEY`. Set `EMAIL_ENABLED=true` only with `POSTAL_HOST`,
 `POSTAL_API_KEY`, `POSTAL_FROM`, and `POSTAL_TO` present.
 
+`EMAIL_ENABLED` and Alertmanager's own mail are alternatives, not layers. The
+`alerts` receiver carries `email_configs` alongside its webhook, so every
+warning and critical alert is already mailed directly over Postal SMTP; turning
+this on as well would mail the same opening twice, once from Alertmanager and
+once from this outbox. Enable it only together with removing `email_configs`
+from that receiver in
+`packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts`.
+While it stays off, `AlertDashboardOutboxStranded` reports any rows queued
+before it was disabled, since those can neither drain nor expire.
+
 The API server listens on port 7341 and the Vite dev server on 7342 (proxying
 `/api` and `/trpc` to 7341). Alertmanager posts v4 webhooks to
 `POST /internal/v1/alertmanager/events` with a bearer token. Public read-only
@@ -93,6 +103,14 @@ bun run email:cancel-incident -- \
 # Repeat the reviewed command with --confirm to apply it. A claimed row is
 # excluded and remains owned by the sender.
 ```
+
+Pass `--alertname <name>` to target a different incident. `--all-alertnames`
+instead cancels every pending row in the window regardless of alertname,
+including rows carrying no occurrences at all — a truncation notice, or one
+whose occurrences were since pruned. Those rows are unreachable by any
+alertname and nothing else can ever clear them, but the flag also cancels
+unrelated warning and critical notifications, so it is opt-in and cannot be
+combined with `--alertname`.
 
 ## Architecture
 

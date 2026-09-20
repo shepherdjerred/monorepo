@@ -92,6 +92,12 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
       // and warning alerts worth interrupting someone for. Delivery is
       // additive: the webhook above still records every alert whether or not
       // the mail succeeds.
+      //
+      // This and the dashboard's own outbox are alternatives, not layers. The
+      // webhook above queues an opening email of its own whenever the dashboard
+      // runs with EMAIL_ENABLED=true, which would mail every alert twice. The
+      // dashboard's sender is therefore off, and re-enabling it means removing
+      // this entry in the same change — see packages/alert-dashboard/README.md.
       email_configs: OPERATOR_EMAIL_CONFIGS,
     },
     {
