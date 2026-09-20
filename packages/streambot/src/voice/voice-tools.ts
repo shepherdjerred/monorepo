@@ -125,7 +125,11 @@ export function bindPlaybackVoiceCommandPort(
     resume: () => service.resume(userId).message,
     restart: () => service.restart(userId).message,
     previous: async (signal) => {
-      const result = await service.previous(userId, signal);
+      const spokenCommand = observed.spokenCommand();
+      const result = await service.previous(userId, signal, {
+        spoken: true,
+        ...(spokenCommand === null ? {} : { utterance: spokenCommand }),
+      });
       return result.message;
     },
     // Five grounded titles is plenty for one spoken disambiguation and keeps the tool result

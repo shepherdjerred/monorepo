@@ -58,4 +58,12 @@ describe("conversation context", () => {
     ]);
     expect(context.select(SCOPE, "play Psycho")).toBeNull();
   });
+
+  test("does not reuse pending One More Time for One More Night", () => {
+    const context = new ConversationContextStore();
+    context.rememberCandidates(SCOPE, [
+      candidate("Daft Punk - One More Time (Official Video)"),
+    ]);
+    expect(context.select(SCOPE, "play One More Night")).toBeNull();
+  });
 });

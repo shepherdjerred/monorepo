@@ -81,6 +81,17 @@ describe("same-work matching", () => {
     ).toBeUndefined();
   });
 
+  test("does not treat a franchise prefix as the same work as a shared suffix", () => {
+    expect(
+      pickOfficialSameWork([
+        candidate("Mission: Impossible - Fallout"),
+        candidate("Fallout (Official Trailer)", {
+          channel: "Paramount Pictures",
+        }),
+      ]),
+    ).toBeUndefined();
+  });
+
   test("does not treat a title suffix as an artist-stripped same work", () => {
     expect(
       pickOfficialSameWork([
@@ -110,5 +121,21 @@ describe("same-work matching", () => {
     expect(fuzzyMatchCandidate(pending, "Suka mode")?.title).toBe(
       official.title,
     );
+  });
+
+  test("does not reuse a pending One More Time for One More Night", () => {
+    const pending = [
+      candidate("Maroon 5 - One More Night (Official Video)"),
+      candidate("Daft Punk - One More Time (Official Video)"),
+    ];
+    expect(fuzzyMatchCandidate(pending, "play One More Night")?.title).toBe(
+      "Maroon 5 - One More Night (Official Video)",
+    );
+    expect(
+      fuzzyMatchCandidate(
+        [candidate("Daft Punk - One More Time (Official Video)")],
+        "play One More Night",
+      ),
+    ).toBeNull();
   });
 });

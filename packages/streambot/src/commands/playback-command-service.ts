@@ -362,6 +362,10 @@ export class PlaybackCommandService extends PlaybackControls {
   async previous(
     userId: UserId,
     signal?: AbortSignal,
+    options?: {
+      readonly spoken?: boolean;
+      readonly utterance?: string;
+    },
   ): Promise<PlaybackCommandResult> {
     const scope = this.scope(userId);
     if (scope === null || this.deps.history === undefined) {
@@ -389,6 +393,10 @@ export class PlaybackCommandService extends PlaybackControls {
       userId,
       sourceOverride: candidate.source,
       ...(signal === undefined ? {} : { signal }),
+      ...(options?.spoken === true ? { spoken: true } : {}),
+      ...(options?.utterance === undefined
+        ? {}
+        : { utterance: options.utterance }),
     });
   }
 

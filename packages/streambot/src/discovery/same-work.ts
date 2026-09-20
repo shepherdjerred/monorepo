@@ -1,5 +1,4 @@
 import type { MediaCandidate } from "@shepherdjerred/streambot/discovery/candidate.ts";
-import { scoreLibraryTitle } from "@shepherdjerred/streambot/sources/library.ts";
 
 /**
  * Strip official-video / lyrics / remaster noise so five SICKO MODE uploads collapse to one work.
@@ -42,10 +41,58 @@ function workTitleKey(title: string): string {
   );
 }
 
-function sameWorkTitle(left: string, right: string): boolean {
+function leftoverPrefix(title: string): string {
+  const separator = title.lastIndexOf(" - ");
+  if (separator === -1) return "";
+  return canonicalWorkKey(title.slice(0, separator));
+}
+
+function channelKey(candidate: MediaCandidate): string {
+  return candidate.channel === undefined
+    ? ""
+    : canonicalWorkKey(candidate.channel);
+}
+
+function prefixMatchesChannel(prefix: string, channel: string): boolean {
+  if (prefix.length === 0 || channel.length === 0) return false;
+  const prefixTokens = prefix.split(" ").filter((token) => token.length > 0);
+  const channelTokens = channel.split(" ").filter((token) => token.length > 0);
+  return prefixTokens.every((token) =>
+    channelTokens.some(
+      (channelToken) =>
+        channelToken.includes(token) || token.includes(channelToken),
+    ),
+  );
+}
+
+function dashPrefixIsArtist(
+  prefix: string,
+  group: readonly MediaCandidate[],
+): boolean {
+  if (prefix.length === 0) return true;
+  return group.some((candidate) =>
+    prefixMatchesChannel(prefix, channelKey(candidate)),
+  );
+}
+
+function sameWorkTitle(
+  left: string,
+  right: string,
+  group: readonly MediaCandidate[],
+): boolean {
+  const leftFull = canonicalWorkKey(left);
+  const rightFull = canonicalWorkKey(right);
+  if (leftFull === rightFull && leftFull.length > 0) return true;
   const leftKey = workTitleKey(left);
   const rightKey = workTitleKey(right);
-  return leftKey.length > 0 && leftKey === rightKey;
+  if (leftKey !== rightKey || leftKey.length === 0) return false;
+  const leftPrefix = leftoverPrefix(left);
+  const rightPrefix = leftoverPrefix(right);
+  if (leftPrefix === rightPrefix) return true;
+  return (
+    dashPrefixIsArtist(leftPrefix, group) &&
+    dashPrefixIsArtist(rightPrefix, group)
+  );
 }
 
 function ownedMatchScore(candidate: MediaCandidate): number {
@@ -66,7 +113,7 @@ export function pickOfficialSameWork(
     return undefined;
   if (
     !candidates.every((candidate) =>
-      sameWorkTitle(first.title, candidate.title),
+      sameWorkTitle(first.title, candidate.title, candidates),
     )
   )
     return undefined;
@@ -159,10 +206,7 @@ export function fuzzyMatchCandidate(
     readonly score: number;
   } | null = null;
   for (const candidate of candidates) {
-    const score = Math.max(
-      scoreLibraryTitle(candidate.title, cleaned),
-      asrScore(cleaned, candidate.title),
-    );
+    const score = asrScore(cleaned, candidate.title);
     if (best === null || score > best.score) {
       best = { candidate, score };
     }

@@ -66,7 +66,7 @@ export function inferMediaIntent(input: {
   const explicitCover = explicitAiCover || /\bcovers?\b/iu.test(query);
   const explicitOriginal = /\boriginal(?: version)?\b/iu.test(query);
   const withoutPolite = query.replace(
-    /^(?:please\s+|(?:can|could|would)\s+you\s+)+/iu,
+    /^(?:please\s+|(?:can|could|would)\s+you\s+)+(?=(?:play|watch|queue|listen to|put on)\s)/iu,
     "",
   );
   const verb = /^(?:play|watch|queue|listen to|put on)\s+/iu.exec(
