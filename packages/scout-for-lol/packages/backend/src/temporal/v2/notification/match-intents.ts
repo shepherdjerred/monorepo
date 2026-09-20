@@ -32,6 +32,7 @@ import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parla
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
 import { postmatchReportFreshnessDeadline } from "#src/league/tasks/postmatch/match-report-delivery.ts";
+import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { createLogger } from "#src/logger.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
 import { z } from "zod";
@@ -448,6 +449,39 @@ export function recoveredAnnouncementsOf(
  * the envelope, because the envelope is what the send renders and another
  * guild's awards are not this channel's business.
  */
+/**
+ * How long a MONETARY announcement stays deliverable.
+ *
+ * Not the report's window, which is what these two mints used to borrow. A
+ * match report is news about a game and goes stale; a settlement notice is a
+ * receipt for money that already moved, and v1 never applied the report's
+ * age check to it — `deliverPostmatchReport` is the only caller of
+ * `isPostmatchReportStale`, and the settlement and Dare announcements go out
+ * whenever settlement runs. Borrowing it meant a live match processed after
+ * an outage, a long game or repeated retries minted intents that were
+ * already expired: the send is refused, reconciliation excludes them, and
+ * nobody is ever told what they were paid.
+ *
+ * Derived rather than picked round, in the style `VOID_GRACE_MS` sets. The
+ * latest a settlement can legitimately happen is the void sweep, which fires
+ * `VOID_GRACE_MS` past a pool's close and itself produces a refund somebody
+ * is owed word of. So the bound is the report's window plus that grace: past
+ * it, no settlement this pipeline performs can still be waiting to announce.
+ *
+ * RESIDUAL, stated because the bound is not conceptually required: a
+ * settlement performed beyond this window — a takeover after a very long
+ * outage — still loses its announcement. Removing the bound entirely means
+ * making `freshnessDeadline` optional in the notification contract, which is
+ * a replay-affecting change to a recorded shape and is not made here.
+ */
+export function monetaryAnnouncementFreshnessDeadline(
+  gameCreation: number,
+): Date {
+  return new Date(
+    postmatchReportFreshnessDeadline(gameCreation).getTime() + VOID_GRACE_MS,
+  );
+}
+
 export async function mintSettlementIntentsV2(
   db: Db,
   args: {
@@ -463,7 +497,9 @@ export async function mintSettlementIntentsV2(
   },
 ): Promise<MatchIntentsV2Summary> {
   const summary = emptySummary();
-  const freshnessDeadline = postmatchReportFreshnessDeadline(args.gameCreation);
+  const freshnessDeadline = monetaryAnnouncementFreshnessDeadline(
+    args.gameCreation,
+  );
   const announcements =
     args.announcements ??
     settlementAnnouncementInputs({
@@ -535,7 +571,9 @@ export async function mintDareSummaryIntentsV2(
   },
 ): Promise<MatchIntentsV2Summary> {
   const summary = emptySummary();
-  const freshnessDeadline = postmatchReportFreshnessDeadline(args.gameCreation);
+  const freshnessDeadline = monetaryAnnouncementFreshnessDeadline(
+    args.gameCreation,
+  );
   for (const dare of args.dareSettlements) {
     if (UNANNOUNCED_DARE_RESOLUTIONS.has(dare.resolution)) continue;
     // A summary with no match id was resolved by a DEADLINE sweep, not by

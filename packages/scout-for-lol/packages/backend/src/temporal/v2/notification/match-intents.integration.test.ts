@@ -97,6 +97,11 @@ const { listSettlementAnnouncementItems, recordSettlementAnnouncementItem } =
   await import("#src/database/durable/settlement-announcement-repository.ts");
 const { settlementAnnouncementItemsOf } =
   await import("#src/temporal/v2/notification/match-intents.test-fixtures.ts");
+const { monetaryAnnouncementFreshnessDeadline } =
+  await import("#src/temporal/v2/notification/match-intents.ts");
+const { postmatchReportFreshnessDeadline } =
+  await import("#src/league/tasks/postmatch/match-report-delivery.ts");
+const { toIsoInstant } = await import("#src/durable/match/match-identity.ts");
 
 const GAME_CREATED_AT = Date.parse("2026-09-19T09:00:00.000Z");
 
@@ -239,6 +244,39 @@ describe("what the settlement effect mints", () => {
     houseCut: BucksPoolTotalSchema.parse(0),
     bets: [],
   };
+
+  test("gives the recap a deadline money can still reach", async () => {
+    // It used to borrow the REPORT's window. A match report is news about a
+    // game and goes stale; a settlement notice is a receipt for money that
+    // already moved, and v1 never applied the report's age check to it. A
+    // live match processed after an outage or repeated retries therefore
+    // minted an intent that was already expired, the send was refused, and
+    // nobody was told what they were paid.
+    await observe(MATCH, "live");
+    prepared.kind = "message";
+
+    await mintSettlementIntentsV2(prisma, {
+      matchId: MATCH,
+      closures: [],
+      settlements: [settlement],
+      parlaySettlements: [],
+      earnings: [],
+      gameCreation: GAME_CREATED_AT,
+      createdAt: new Date("2026-09-19T09:35:00.000Z"),
+    });
+
+    const [minted] = await listIntentsForMatch(prisma, { matchId: MATCH });
+    expect(minted?.intent.freshnessDeadline).toBe(
+      toIsoInstant(monetaryAnnouncementFreshnessDeadline(GAME_CREATED_AT)),
+    );
+    // And strictly later than the report's, which is the defect: equal means
+    // the recap expires when the report does.
+    expect(
+      monetaryAnnouncementFreshnessDeadline(GAME_CREATED_AT).getTime(),
+    ).toBeGreaterThan(
+      postmatchReportFreshnessDeadline(GAME_CREATED_AT).getTime(),
+    );
+  });
 
   test("mints one recap per channel the pool's bettors are watching", async () => {
     await observe(MATCH, "live");
