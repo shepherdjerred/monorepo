@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
   LAKE_STAGES,
-  buildTarCommand,
+  buildEntryFileCountCommand,
+  buildEntryTarCommand,
+  buildTableListCommand,
   currentBuildCommand,
   datasetPinPath,
   defaultLakeDestination,
@@ -142,19 +144,43 @@ describe("pod commands", () => {
     ]);
   });
 
-  test("tars one build, rooted at the build id", () => {
-    expect(buildTarCommand(LAKE_STAGES.beta, "build-123")).toEqual([
+  test("lists the entries inside a build", () => {
+    expect(buildTableListCommand(LAKE_STAGES.beta, "build-123")).toEqual([
+      "ls",
+      "/data/report-lake/builds/build-123",
+    ]);
+  });
+
+  test("tars one entry at a time, rooted at the build", () => {
+    // Per-entry because a single ~900MB kubectl pipe truncates in practice.
+    expect(
+      buildEntryTarCommand(LAKE_STAGES.beta, "build-123", "matches"),
+    ).toEqual([
       "tar",
       "-cf",
       "-",
       "-C",
-      "/data/report-lake/builds",
-      "build-123",
+      "/data/report-lake/builds/build-123",
+      "matches",
+    ]);
+  });
+
+  test("counts an entry's files on the pod, for verifying the copy", () => {
+    expect(
+      buildEntryFileCountCommand(LAKE_STAGES.beta, "build-123", "matches"),
+    ).toEqual([
+      "sh",
+      "-c",
+      "find /data/report-lake/builds/build-123/matches -type f | wc -l",
     ]);
   });
 
   test("never names a staging directory, so the snapshot stays frozen", () => {
-    const command = buildTarCommand(LAKE_STAGES.beta, "build-123").join(" ");
+    const command = buildEntryTarCommand(
+      LAKE_STAGES.beta,
+      "build-123",
+      "matches",
+    ).join(" ");
     expect(command).not.toContain("-recent");
   });
 });

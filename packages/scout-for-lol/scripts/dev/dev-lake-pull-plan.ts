@@ -193,24 +193,52 @@ export function currentBuildCommand(
   return ["cat", path.posix.join(target.lakeDir, "CURRENT")];
 }
 
-/**
- * Stream one build directory out as a tar, from inside the lake directory.
- *
- * `-C` keeps the archive rooted at the build id rather than at `/data`, so it
- * unpacks into the destination's `builds/` without a path prefix to strip. The
- * staging NDJSON directories are never named here, which is how the frozen
- * guarantee is enforced rather than merely documented.
- */
-export function buildTarCommand(
+/** List the tables inside a published build, one per line. */
+export function buildTableListCommand(
   target: LakeStageTarget,
   buildId: string,
+): readonly string[] {
+  return ["ls", path.posix.join(target.lakeDir, "builds", buildId)];
+}
+
+/**
+ * Stream ONE entry of a build out as a tar, from inside the build directory.
+ *
+ * Deliberately per-entry rather than one archive for the whole build. A prod
+ * build is ~900 MB and a single `kubectl exec` pipe of that size truncates —
+ * observed, mid-`prematch`, after ~770 MB. Splitting it means each transfer is
+ * small enough to survive, a truncation costs one table instead of everything,
+ * and each can be retried on its own.
+ *
+ * `-C` roots the archive at the entry name, so it unpacks into the staged
+ * build directory with no path prefix to strip. The `-recent` staging
+ * directories are never named, which is how "a replay reads a frozen dataset"
+ * stays enforced rather than documented.
+ */
+export function buildEntryTarCommand(
+  target: LakeStageTarget,
+  buildId: string,
+  entry: string,
 ): readonly string[] {
   return [
     "tar",
     "-cf",
     "-",
     "-C",
-    path.posix.join(target.lakeDir, "builds"),
-    buildId,
+    path.posix.join(target.lakeDir, "builds", buildId),
+    entry,
+  ];
+}
+
+/** Count the files a build entry holds on the pod, to verify the copy. */
+export function buildEntryFileCountCommand(
+  target: LakeStageTarget,
+  buildId: string,
+  entry: string,
+): readonly string[] {
+  return [
+    "sh",
+    "-c",
+    `find ${path.posix.join(target.lakeDir, "builds", buildId, entry)} -type f | wc -l`,
   ];
 }

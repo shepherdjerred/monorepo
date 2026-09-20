@@ -2,7 +2,9 @@ import { mkdir, rm, rename } from "node:fs/promises";
 import path from "node:path";
 import {
   USAGE,
-  buildTarCommand,
+  buildEntryFileCountCommand,
+  buildEntryTarCommand,
+  buildTableListCommand,
   currentBuildCommand,
   datasetPinPath,
   parseDevLakePullArgs,
@@ -93,24 +95,36 @@ function execArgs(
   ];
 }
 
+/** How many times one entry's transfer is retried before the pull gives up. */
+const ENTRY_ATTEMPTS = 3;
+
 /**
- * Stream the build out of the pod and unpack it locally.
+ * Stream one entry of the build out of the pod and unpack it locally.
  *
- * Piped rather than written to a temporary archive: a published lake build is
- * large, and a `kubectl cp` of the same tree is markedly slower and silently
- * skips files it cannot stat.
+ * Piped rather than written to a temporary archive, and per-entry rather than
+ * whole-build: a single ~900 MB `kubectl exec` pipe truncates in practice.
  */
-async function extractBuild(
-  options: DevLakePullOptions,
-  pod: string,
-  buildId: string,
-  buildsDir: string,
-): Promise<void> {
+type EntryPull = {
+  readonly options: DevLakePullOptions;
+  readonly pod: string;
+  readonly buildId: string;
+  readonly entry: string;
+  readonly buildDir: string;
+};
+
+async function extractEntry(input: EntryPull): Promise<void> {
+  const { options, pod, buildId, entry, buildDir } = input;
   const source = Bun.spawn(
-    [...execArgs(options, pod, buildTarCommand(options.target, buildId))],
+    [
+      ...execArgs(
+        options,
+        pod,
+        buildEntryTarCommand(options.target, buildId, entry),
+      ),
+    ],
     { stdout: "pipe", stderr: "pipe" },
   );
-  const sink = Bun.spawn(["tar", "-xf", "-", "-C", buildsDir], {
+  const sink = Bun.spawn(["tar", "-xf", "-", "-C", buildDir], {
     stdin: source.stdout,
     stdout: "inherit",
     stderr: "pipe",
@@ -123,13 +137,71 @@ async function extractBuild(
   ]);
   if (sourceExit !== 0) {
     throw new Error(
-      `Reading build ${buildId} from ${pod} failed (exit ${sourceExit.toString()}): ${sourceStderr.trim()}`,
+      `Reading ${entry} failed (exit ${sourceExit.toString()}): ${sourceStderr.trim()}`,
     );
   }
   if (sinkExit !== 0) {
     throw new Error(
-      `Unpacking build ${buildId} failed (exit ${sinkExit.toString()}): ${sinkStderr.trim()}`,
+      `Unpacking ${entry} failed (exit ${sinkExit.toString()}): ${sinkStderr.trim()}`,
     );
+  }
+}
+
+/** Local file count for one extracted entry. */
+async function localFileCount(dir: string): Promise<number> {
+  const listing = await run(
+    ["sh", "-c", `find ${dir} -type f | wc -l`],
+    `Counting files in ${dir}`,
+  );
+  return Number(listing.trim());
+}
+
+/**
+ * Copy one entry and prove it arrived whole.
+ *
+ * The file count is compared against the pod's rather than trusting tar's exit
+ * status: a truncated stream is exactly the failure this pull hit, and a
+ * silently short table would produce a lake that queries fine and answers
+ * wrong.
+ */
+async function pullEntry(input: EntryPull): Promise<void> {
+  const { options, pod, buildId, entry, buildDir } = input;
+  const counted = await run(
+    [
+      ...execArgs(
+        options,
+        pod,
+        buildEntryFileCountCommand(options.target, buildId, entry),
+      ),
+    ],
+    `Counting ${entry} on ${pod}`,
+  );
+  const expected = Number(counted.trim());
+
+  for (let attempt = 1; attempt <= ENTRY_ATTEMPTS; attempt += 1) {
+    await rm(path.join(buildDir, entry), { recursive: true, force: true });
+    try {
+      await extractEntry(input);
+      const actual = await localFileCount(path.join(buildDir, entry));
+      if (actual === expected) {
+        process.stdout.write(`  ${entry}: ${actual.toString()} files\n`);
+        return;
+      }
+      throw new Error(
+        `expected ${expected.toString()} files, got ${actual.toString()}`,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (attempt === ENTRY_ATTEMPTS) {
+        throw new Error(
+          `${entry} did not transfer intact after ${ENTRY_ATTEMPTS.toString()} attempts: ${message}`,
+          { cause: error },
+        );
+      }
+      process.stdout.write(
+        `  ${entry}: attempt ${attempt.toString()} failed (${message}); retrying\n`,
+      );
+    }
   }
 }
 
@@ -160,9 +232,39 @@ async function main(): Promise<void> {
   // Staged then renamed, so an interrupted pull never leaves a half-copied
   // tree where a complete dataset is expected.
   await rm(options.staging, { recursive: true, force: true });
-  const buildsDir = path.join(options.staging, "builds");
-  await mkdir(buildsDir, { recursive: true });
-  await extractBuild(options, pod, buildId, buildsDir);
+  const buildDir = path.join(options.staging, "builds", buildId);
+  await mkdir(buildDir, { recursive: true });
+
+  const listing = await run(
+    [...execArgs(options, pod, buildTableListCommand(options.target, buildId))],
+    "Listing build entries",
+  );
+  const entries = listing
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  if (entries.length === 0) {
+    throw new Error(`Build ${buildId} on ${pod} is empty.`);
+  }
+
+  for (const entry of entries) {
+    await pullEntry({ options, pod, buildId, entry, buildDir });
+  }
+
+  // Published builds are immutable, but the compactor keeps only the newest
+  // two, and a fold lands every fifteen minutes. A long pull can therefore
+  // outlive the build it is reading — so confirm it is still there rather than
+  // installing a tree that was collected halfway through.
+  const stillPresent = await run(
+    [...execArgs(options, pod, buildTableListCommand(options.target, buildId))],
+    "Re-checking the build after copying",
+  );
+  if (stillPresent.trim().length === 0) {
+    throw new Error(
+      `Build ${buildId} was garbage-collected while it was being copied. Re-run; the pull will pick up the newer published build.`,
+    );
+  }
+
   await Bun.write(path.join(options.staging, "CURRENT"), `${buildId}\n`);
 
   const staged = await publishedBuildId(options.staging);
