@@ -6,40 +6,34 @@
  * composed under `/app/` through Storybook's refs. They stay separate builds —
  * one has no Tailwind and no data layer, the other has both — and only the
  * output is joined.
+ *
+ * This does not run turbo. The catalogs consume source exports; turbo `^build`
+ * would typecheck and compile the backend/temporal closure, which a filtered
+ * sites install cannot provide. Playwright already runs that graph.
  */
 import { rm, mkdir, cp } from "node:fs/promises";
 import path from "node:path";
 import { $ } from "bun";
 
 const scoutRoot = path.resolve(import.meta.dir, "..");
-const repoRoot = path.resolve(scoutRoot, "../..");
 const outputDir = path.join(scoutRoot, "storybook-site");
+const designSystemDir = path.join(scoutRoot, "packages/design-system");
+const appDir = path.join(scoutRoot, "packages/app");
 
-const designSystemOutput = path.join(
-  scoutRoot,
-  "packages/design-system/storybook-static",
-);
-const appOutput = path.join(scoutRoot, "packages/app/storybook-static");
+const designSystemOutput = path.join(designSystemDir, "storybook-static");
+const appOutput = path.join(appDir, "storybook-static");
 
 // The design system's catalog is its `build`; the app's is a separate task so
 // its own `build` stays the deployed SPA.
 //
 // SCOUT_STORYBOOK_COMPOSED is what turns on the ref to the app catalog. It is
 // off by default because `bun run dev` has no /app to compose, and it is
-// declared in the design system's turbo `build` env so a composed build does
-// not reuse a plain build's cache entry.
-//
-// Turbo is a root-package binary. Filtered CI installs that run this script
-// must include `@shepherdjerred/monorepo` or `bun x --no-install turbo` has
-// nothing to execute.
+// declared in the design system's turbo `build` env so a composed turbo build
+// does not reuse a plain build's cache entry. This script is not turbo, but
+// Storybook still reads the same env.
 process.env["SCOUT_STORYBOOK_COMPOSED"] = "true";
-await $`bun x --no-install turbo run build --filter=@scout-for-lol/design-system`.cwd(
-  repoRoot,
-);
-
-await $`bun x --no-install turbo run build:storybook --filter=@scout-for-lol/app`.cwd(
-  repoRoot,
-);
+await $`bun --no-install run build`.cwd(designSystemDir);
+await $`bun --no-install run build:storybook`.cwd(appDir);
 
 await rm(outputDir, { recursive: true, force: true });
 await mkdir(outputDir, { recursive: true });

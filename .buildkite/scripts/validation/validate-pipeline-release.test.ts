@@ -4,6 +4,7 @@ import {
   validateAtomicRootSyncLifecycle,
   validateHomelabReleaseAdmission,
   validateSitesInstallClosure,
+  validateStorybookSiteAssemble,
   validateVersionCommitBackInstall,
 } from "./validate-pipeline-release.ts";
 
@@ -72,23 +73,43 @@ describe("atomic ArgoCD root sync pipeline contract", () => {
   });
 });
 
+describe("Storybook site assemble", () => {
+  const assemble = `
+process.env["SCOUT_STORYBOOK_COMPOSED"] = "true";
+await $\`bun --no-install run build\`.cwd(designSystemDir);
+await $\`bun --no-install run build:storybook\`.cwd(appDir);
+`;
+
+  test("accepts the package-script assemble path", () => {
+    expect(() => validateStorybookSiteAssemble(assemble)).not.toThrow();
+  });
+
+  test("rejects turbo ^build from a filtered sites install", () => {
+    expect(() =>
+      validateStorybookSiteAssemble(
+        `${assemble}\nawait $\`bun x --no-install turbo run build --filter=@scout-for-lol/design-system\`;\n`,
+      ),
+    ).toThrow("Scout Storybook site assemble must not invoke turbo run");
+  });
+});
+
 describe("sites install closure", () => {
   const storybookInstall =
-    "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/monorepo')";
+    "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')";
   const glitterInstall = "filters+=(--filter glitter)";
   const sitesStep = `${glitterInstall}\n${storybookInstall}\n`;
 
-  test("requires Glitter and the Storybook turbo closure", () => {
+  test("requires Glitter and the Storybook catalog workspaces", () => {
     expect(() => validateSitesInstallClosure(sitesStep)).not.toThrow();
   });
 
-  test("rejects a Storybook install that omits the root turbo owner", () => {
+  test("rejects a Storybook install that omits the app catalog", () => {
     expect(() =>
       validateSitesInstallClosure(
-        `${glitterInstall}\nfilters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')\n`,
+        `${glitterInstall}\nfilters+=(--filter '@scout-for-lol/design-system')\n`,
       ),
     ).toThrow(
-      "sites install closure is missing the Scout Storybook workspaces or the root package that owns turbo",
+      "sites install closure is missing the Scout Storybook workspaces",
     );
   });
 });

@@ -124,7 +124,7 @@ export function validateHomelabReleaseAdmission(
 }
 
 const SITES_STORYBOOK_INSTALL =
-  "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/monorepo')";
+  "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')";
 
 export function validateSitesInstallClosure(sites: string | undefined): void {
   requireIncludes(
@@ -135,7 +135,7 @@ export function validateSitesInstallClosure(sites: string | undefined): void {
   requireIncludes(
     sites,
     SITES_STORYBOOK_INSTALL,
-    "sites install closure is missing the Scout Storybook workspaces or the root package that owns turbo",
+    "sites install closure is missing the Scout Storybook workspaces",
   );
 }
 
@@ -459,10 +459,32 @@ async function validatePlaywrightImage(): Promise<void> {
   }
 }
 
+export function validateStorybookSiteAssemble(source: string): void {
+  if (/\bturbo run\b/.test(source)) {
+    fail(
+      "Scout Storybook site assemble must not invoke turbo run; the sites lane's filtered install cannot satisfy ^build",
+    );
+  }
+  for (const required of [
+    "bun --no-install run build",
+    "bun --no-install run build:storybook",
+    'SCOUT_STORYBOOK_COMPOSED"] = "true"',
+  ]) {
+    if (!source.includes(required)) {
+      fail(`Scout Storybook site assemble is missing ${required}`);
+    }
+  }
+}
+
 export async function validateReleasePipelineContracts(
   options: ReleaseValidationOptions,
 ): Promise<void> {
   validateReleaseSteps(options);
   validatePublishing(options.stepBlocks);
+  validateStorybookSiteAssemble(
+    await Bun.file(
+      "packages/scout-for-lol/scripts/build-storybook-site.ts",
+    ).text(),
+  );
   await Promise.all([validateSelectorAndUpload(), validatePlaywrightImage()]);
 }
