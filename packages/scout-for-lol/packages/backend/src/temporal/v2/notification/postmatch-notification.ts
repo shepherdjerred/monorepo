@@ -7,6 +7,8 @@ import {
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
+import { withFlexMvpVoteFurniture } from "#src/mvp-votes/components.ts";
+import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
   AI_REVIEW_ATTACHMENT_NAME,
@@ -62,8 +64,9 @@ import type { z } from "zod";
  * a second copy of that decision would drift from the one v1 delivers. The
  * disassembly is strict: an attachment under a name this module does not
  * know, an embed the delivery would not rebuild, or components other than
- * the match link is a message the receipt could not describe truthfully, and
- * that is a broken contract with v1's builders rather than a degraded mode.
+ * the match link (and, on Flex, the MVP vote furniture) is a message the
+ * receipt could not describe truthfully, and that is a broken contract with
+ * v1's builders rather than a degraded mode.
  */
 
 export type ScoutV2ReportComponents = z.infer<
@@ -113,6 +116,13 @@ function classifyComponents(
   ) {
     return "match-link";
   }
+  const voteFurniture = withFlexMvpVoteFurniture(
+    { components: matchLinkComponents(matchId) },
+    matchId,
+  );
+  if (JSON.stringify(components) === JSON.stringify(voteFurniture.components)) {
+    return "match-link-mvp-vote";
+  }
   throw new Error(
     `The report message for ${matchId} carries components other than the match link, which the render receipt cannot describe`,
   );
@@ -149,10 +159,13 @@ function disassembleReport(
       `The report message for ${matchId} carried no report image, so there is nothing to commit`,
     );
   }
+  const components = classifyComponents(message, matchId);
   const [, expectedEmbed] = attachReportImage(image, matchId);
-  if (
-    JSON.stringify(message.embeds ?? []) !== JSON.stringify([expectedEmbed])
-  ) {
+  const expectedEmbeds =
+    components === "match-link-mvp-vote"
+      ? [expectedEmbed, emptyMvpTallyEmbed()]
+      : [expectedEmbed];
+  if (JSON.stringify(message.embeds ?? []) !== JSON.stringify(expectedEmbeds)) {
     throw new Error(
       `The report message for ${matchId} carries embeds other than the report image's, which the delivery would not rebuild`,
     );
@@ -161,7 +174,7 @@ function disassembleReport(
     image,
     review,
     content,
-    components: classifyComponents(message, matchId),
+    components,
     queueId,
   };
 }
@@ -224,6 +237,11 @@ export function buildPostmatchNotificationMessageV2(
   switch (artifact.evidence.components) {
     case "match-link":
       return { ...message, components: matchLinkComponents(matchId) };
+    case "match-link-mvp-vote":
+      return withFlexMvpVoteFurniture(
+        { ...message, components: matchLinkComponents(matchId) },
+        matchId,
+      );
     case "none":
       return message;
   }

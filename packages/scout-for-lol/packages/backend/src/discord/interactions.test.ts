@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, MatchIdSchema } from "@scout-for-lol/data";
 import {
   routeButton,
   type RoutableButtonInteraction,
@@ -8,6 +8,7 @@ import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
 import { formatParlayCustomId } from "#src/betting/parlays/parlay-custom-id.ts";
 import { formatDareV2CustomId } from "#src/betting/dares/lifecycle/dare-custom-id-v2.ts";
+import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 
@@ -156,6 +157,21 @@ describe("routeButton", () => {
         matchId: "NA1_5000000042",
         side: "YES",
         amount: 5,
+      }),
+    );
+    await routeButton(valid.interaction);
+    expect(valid.calls).toEqual(["deferReply", "editReply"]);
+  });
+
+  test("acknowledges malformed MVP vote IDs and routes valid ones", async () => {
+    const malformed = fakeInteraction("vote:1:z:NA1_1");
+    await routeButton(malformed.interaction);
+    expect(malformed.calls).toEqual(["deferUpdate"]);
+
+    const valid = fakeInteraction(
+      formatVoteButtonCustomId({
+        category: "ally",
+        matchId: MatchIdSchema.parse("NA1_5000000042"),
       }),
     );
     await routeButton(valid.interaction);

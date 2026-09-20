@@ -382,6 +382,33 @@
       "thresholdRollouts": []
     },
     {
+      "key": "mvp_votes_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable post-match Flex community MVP voting on Discord reports.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "hall_of_fame_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -1550,6 +1577,14 @@
         },
         {
           "key": "hall_of_fame_enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "mvp_votes_enabled",
           "type": "boolean",
           "default": false,
           "rollouts": [],

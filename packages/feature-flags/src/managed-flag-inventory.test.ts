@@ -135,6 +135,7 @@ describe("ManagedFlagInventorySchema", () => {
     for (const key of [
       "hall_of_fame_enabled",
       "challenge_runs_enabled",
+      "mvp_votes_enabled",
       "voice_assistant_enabled",
     ]) {
       expect(scoutPolicyFlag("prod", key)).toMatchObject({

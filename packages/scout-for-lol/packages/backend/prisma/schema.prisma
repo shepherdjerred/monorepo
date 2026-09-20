@@ -2472,6 +2472,37 @@ model MatchObservation {
   @@index([gameCreatedAt])
 }
 
+/// Frozen 10-player Flex roster for community MVP votes. Match-global: the
+/// players are a fact of the Riot match, while ballots below are per guild.
+/// `reportMessageIds` is the durable channel→message map for tally edits;
+/// ActiveGame.postmatchMessageIds expires with the 3-hour active-game TTL.
+model MatchMvpContest {
+  matchId          String   @id
+  roster           Json
+  reportMessageIds Json?
+  createdAt        DateTime @default(now())
+}
+
+/// One guild member's vote in one category for one Flex match.
+model MatchMvpVote {
+  id             Int      @id @default(autoincrement())
+  matchId        String
+  serverId       String
+  voterDiscordId String
+  /// `ally` or `enemy`, relative to the voter's team in this match.
+  category       String
+  /// Index into MatchMvpContest.roster.participants.
+  nomineeIndex   Int
+  voterPuuid     String
+  voterTeamId    Int
+  justification  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([matchId, serverId, voterDiscordId, category])
+  @@index([matchId, serverId, category])
+}
+
 /// Association between an observation and one tracked account seen in the
 /// match. FK-by-value on riotMatchId (no relation) so ingestion can record
 /// participants before/independently of any other table. playerId/accountId

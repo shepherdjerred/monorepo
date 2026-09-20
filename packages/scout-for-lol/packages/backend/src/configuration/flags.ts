@@ -171,6 +171,7 @@ export type FlagName =
   | "explore_on_demand_riot_enabled"
   | "feature_tips_enabled"
   | "hall_of_fame_enabled"
+  | "mvp_votes_enabled"
   | "initial_match_history_import_enabled"
   | "scout_operations_console_enabled"
   | "scoutql_relational_enabled"
@@ -242,6 +243,12 @@ function applicableOverrides(config: FlagConfig): FlagOverride[] {
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   hall_of_fame_enabled: {
+    default: false,
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
+  },
+  mvp_votes_enabled: {
     default: false,
     overrides: [
       { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
