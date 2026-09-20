@@ -2,6 +2,7 @@ import {
   agentActivities,
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
+  agentChatDeliveryActivities,
   agentChatIngressActivities,
   glitterContextWorkerActivities,
   glitterCorpusWorkerActivities,
@@ -56,6 +57,13 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     role: "control",
     taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
     activities: agentChatIngressActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY,
+    activities: agentChatDeliveryActivities,
     maxConcurrentActivityTaskExecutions: 4,
   },
   {

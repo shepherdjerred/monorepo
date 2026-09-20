@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   agentActivities,
+  agentChatDeliveryActivities,
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
   agentChatIngressActivities,
@@ -95,6 +96,7 @@ describe("Temporal worker role contracts", () => {
       runsEventBridge: false,
       workers: [
         expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS }),
+        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY }),
       ],
     });
     expect(getWorkerRoleContract("home")).toMatchObject({
@@ -191,5 +193,14 @@ describe("Temporal worker role contracts", () => {
     expect(agentActivities).not.toHaveProperty(
       "deliverDiscordAgentChatMessage",
     );
+    const deliveryWorker = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.taskQueue === TASK_QUEUES.AGENT_CHAT_DELIVERY,
+    );
+    expect(deliveryWorker).toMatchObject({
+      kind: "activity",
+      role: "control",
+      activities: agentChatDeliveryActivities,
+      maxConcurrentActivityTaskExecutions: 4,
+    });
   });
 });

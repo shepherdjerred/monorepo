@@ -25,6 +25,8 @@ export const TASK_QUEUES = {
   AGENT_CHAT_RECEIPTS: "agent-chat-receipts",
   /** Durable Discord command execution and bot-token message delivery. */
   AGENT_CHAT_INGRESS: "agent-chat-ingress",
+  /** Latency-sensitive Discord delivery, isolated from long command waits. */
+  AGENT_CHAT_DELIVERY: "agent-chat-delivery",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
   SCOUT_BETA: "scout-beta",
   /** Scout production activity worker, co-located with its database and Discord bot. */
@@ -60,6 +62,7 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.AGENT_CHAT_DISPATCH,
   TASK_QUEUES.AGENT_CHAT_RECEIPTS,
   TASK_QUEUES.AGENT_CHAT_INGRESS,
+  TASK_QUEUES.AGENT_CHAT_DELIVERY,
   TASK_QUEUES.SCOUT_BETA,
   TASK_QUEUES.SCOUT_PROD,
   TASK_QUEUES.AGENT_TASK,

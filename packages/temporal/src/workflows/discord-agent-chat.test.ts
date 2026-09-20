@@ -34,7 +34,7 @@ describe("discordAgentChatWorkflow", () => {
       taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowsPath: new URL("index.ts", import.meta.url).pathname,
     });
-    const activityWorker = await Worker.create({
+    const commandWorker = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
       activities: {
@@ -46,6 +46,12 @@ describe("discordAgentChatWorkflow", () => {
             messages: ["first chunk", "second chunk"],
           };
         },
+      },
+    });
+    const deliveryWorker = await Worker.create({
+      connection: environment.nativeConnection,
+      taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY,
+      activities: {
         deliverDiscordAgentChatMessage: (
           input: DeliverDiscordAgentChatMessageInput,
         ) => {
@@ -53,7 +59,7 @@ describe("discordAgentChatWorkflow", () => {
         },
       },
     });
-    const activityRun = activityWorker.run();
+    const activityRuns = [commandWorker.run(), deliveryWorker.run()];
     const workflowId = `discord-agent-chat-test-${crypto.randomUUID()}`;
     try {
       await workflowWorker.runUntil(
@@ -107,9 +113,13 @@ describe("discordAgentChatWorkflow", () => {
             ?.scheduleToCloseTimeout?.seconds,
         ),
       ).toBe(DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS / 1000);
+      expect(
+        deliveryActivity?.activityTaskScheduledEventAttributes?.taskQueue?.name,
+      ).toBe(TASK_QUEUES.AGENT_CHAT_DELIVERY);
     } finally {
-      activityWorker.shutdown();
-      await activityRun;
+      commandWorker.shutdown();
+      deliveryWorker.shutdown();
+      await Promise.all(activityRuns);
       await environment.teardown();
     }
 

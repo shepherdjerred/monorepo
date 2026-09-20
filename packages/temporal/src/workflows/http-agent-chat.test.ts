@@ -8,9 +8,10 @@ import {
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
   type AgentChatTurnResult,
 } from "#shared/agent/agent-chat.ts";
-import type {
-  HttpAgentChatActivityInput,
-  HttpAgentChatCommand,
+import {
+  activateHttpAgentChatCommandUpdate,
+  type HttpAgentChatActivityInput,
+  type HttpAgentChatCommand,
 } from "#shared/agent/agent-chat-http.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -106,6 +107,84 @@ describe("httpAgentChatWorkflow", () => {
       );
     } finally {
       activityWorker.shutdown();
+      await activityRun;
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  test("claims command identity before activating an adopted chat owner", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    let activityInput: HttpAgentChatActivityInput | undefined;
+    const workflowWorker = await Worker.create({
+      connection: environment.nativeConnection,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+    });
+    const activityWorker = await Worker.create({
+      connection: environment.nativeConnection,
+      taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
+      activities: {
+        executeHttpAgentChatCommand: (input: HttpAgentChatActivityInput) => {
+          activityInput = input;
+          return RESULT;
+        },
+      },
+    });
+    const workflowRun = workflowWorker.run();
+    const activityRun = activityWorker.run();
+    const workflowId = `http-agent-chat-claim-test-${crypto.randomUUID()}`;
+    const claimed: HttpAgentChatCommand = {
+      kind: "new",
+      config: {
+        chatId: "claimed-chat",
+        title: "Claimed chat",
+        provider: "codex",
+        model: "gpt-5.6-luna",
+        origin: { kind: "imessage", conversationId: "bluebubbles-chat" },
+        createdAt: "2026-09-14T22:00:00.000Z",
+        maxTurnsPerMessage: 24,
+      },
+      request: COMMAND.request,
+    };
+    const adopted: HttpAgentChatCommand = {
+      ...claimed,
+      config: {
+        ...claimed.config,
+        createdAt: "2026-09-14T21:59:00.000Z",
+      },
+    };
+    try {
+      const handle = await environment.client.workflow.start(
+        "httpAgentChatWorkflow",
+        {
+          workflowId,
+          taskQueue: TASK_QUEUES.WORKFLOWS,
+          args: [claimed, { waitForActivation: true }],
+        },
+      );
+      await expect(
+        handle.executeUpdate(activateHttpAgentChatCommandUpdate, {
+          args: [
+            {
+              ...claimed,
+              request: { ...claimed.request, prompt: "different" },
+            },
+          ],
+          updateId: "mismatch",
+        }),
+      ).rejects.toThrow("Workflow Update failed");
+      expect(activityInput).toBeUndefined();
+
+      await handle.executeUpdate(activateHttpAgentChatCommandUpdate, {
+        args: [adopted],
+        updateId: "activate",
+      });
+      expect(await handle.result()).toEqual(RESULT);
+      expect(activityInput?.command).toEqual(adopted);
+    } finally {
+      workflowWorker.shutdown();
+      activityWorker.shutdown();
+      await workflowRun;
       await activityRun;
       await environment.teardown();
     }

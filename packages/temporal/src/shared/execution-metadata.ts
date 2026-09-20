@@ -56,6 +56,7 @@ export function executionDomainForTaskQueue(
     case TASK_QUEUES.BACKUP:
     case TASK_QUEUES.BILLING:
     case TASK_QUEUES.AGENT_CHAT_INGRESS:
+    case TASK_QUEUES.AGENT_CHAT_DELIVERY:
       return "platform";
     case TASK_QUEUES.WORKFLOWS:
       return "platform";

@@ -200,8 +200,9 @@ send. Models cannot select the status or subject.
 Agent chat Activities run on `agent-task`. Scheduled dispatch waits on its own
 `agent-chat-dispatch` queue inside the repo worker process, so it occupies
 neither the provider queue nor unrelated `repo-automation`. HTTP and Discord
-command Activities run on `agent-chat-ingress`; only
-the control worker accepts the dedicated bot token used by Discord delivery.
+command Activities run on `agent-chat-ingress`; Discord sends use the isolated
+`agent-chat-delivery` queue so long command waits cannot consume their slots.
+Only the control worker accepts the dedicated bot token used by delivery.
 Provider session slices are stored in SeaweedFS; the workspace is fresh for
 each turn.
 Receipt dispatch uses a separate `agent-chat-receipts` queue in the repo process,

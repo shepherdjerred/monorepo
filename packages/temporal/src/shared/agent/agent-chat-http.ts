@@ -1,3 +1,4 @@
+import { defineUpdate } from "@temporalio/workflow";
 import { z } from "zod/v4";
 import {
   AgentChatConfigSchema,
@@ -33,6 +34,18 @@ export const HttpAgentChatCommandSchema = z.discriminatedUnion("kind", [
   HttpAgentChatContinueCommandSchema,
 ]);
 export type HttpAgentChatCommand = z.infer<typeof HttpAgentChatCommandSchema>;
+
+export const HttpAgentChatStartOptionsSchema = z.strictObject({
+  waitForActivation: z.boolean(),
+});
+export type HttpAgentChatStartOptions = z.infer<
+  typeof HttpAgentChatStartOptionsSchema
+>;
+
+export const activateHttpAgentChatCommandUpdate = defineUpdate<
+  null,
+  [HttpAgentChatCommand]
+>("activateHttpAgentChatCommand");
 
 export const HttpAgentChatActivityInputSchema = z.strictObject({
   command: HttpAgentChatCommandSchema,
