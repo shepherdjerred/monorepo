@@ -821,6 +821,7 @@
         "database contract: postgresql sha256:f9546139956ffe48cf1873fab7a58818cd24905a42cddbe247e5a3cd6d197b0a",
         "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
         "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
+        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
         "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd"
       ]
     },
@@ -1566,7 +1567,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16531@sha256:a86e46a94048d5a3b40afae07304db921606f93f4bdd278b9155613098a87296",
+      "value": "2.0.0-16536@sha256:39a4de293f53e38de3723a7459c140f1cedd3294a22e2d31360d249030022e37",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
