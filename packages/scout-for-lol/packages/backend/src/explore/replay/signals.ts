@@ -107,6 +107,35 @@ export function declinedToAnswer(input: {
  */
 const DECLINE_MAX_LENGTH = 400;
 
+/**
+ * Whether the answer handed the question back rather than answering it.
+ *
+ * A gated chip has two acceptable outcomes, not one. Saying "that feature is
+ * off here" is the obvious one. Asking what the person meant is the other: it
+ * uses the gated feature exactly as much — which is not at all — and calling
+ * it a failure to refuse says the agent did something it did not do.
+ *
+ * The prod sweep is where this showed up. Three chips for features prod has
+ * switched off were flagged as answered. Two were questions back to the user:
+ * "Do you mean League Challenges, or challenges in a Scout competition?" and
+ * "I'm not sure what you mean by 'dare terms.'" (145 and 123 characters, no
+ * tool calls, no rows). The third really did draft a dare for a guild with
+ * dares off, at 205 characters and no question mark. That case is the finding;
+ * the other two were the grader's.
+ *
+ * Same shape as `declinedToAnswer` on purpose: a clarification rests on
+ * nothing either, so it must return no rows and stay brief. The question mark
+ * is what separates the two, and it is what separated them in the evidence.
+ */
+function askedForClarification(input: {
+  readonly answer: string;
+  readonly rowsReturned: number | null;
+}): boolean {
+  if (!input.answer.includes("?")) return false;
+  if ((input.rowsReturned ?? 0) > 0) return false;
+  return input.answer.length <= DECLINE_MAX_LENGTH;
+}
+
 function answeredSomething(answer: string | null): boolean {
   return answer !== null && answer.trim() !== "";
 }
@@ -162,8 +191,14 @@ function profileSignals(
     return [];
   }
   if (input.chipExpectation === "gated-off") {
-    // Absence of the vocabulary, which is the direction it is reliable in.
-    return looksLikeExploreRefusal(answer) ? [] : ["gated_chip_did_not_refuse"];
+    // Absence of the vocabulary, which is the direction it is reliable in —
+    // plus the other way of not using a gated feature, which is to ask what
+    // the person meant instead of answering.
+    const rowsReturned = input.candidateRowsReturned;
+    const usedTheFeature =
+      !looksLikeExploreRefusal(answer) &&
+      !askedForClarification({ answer, rowsReturned });
+    return usedTheFeature ? ["gated_chip_did_not_refuse"] : [];
   }
   return declinedToAnswer({
     answer,

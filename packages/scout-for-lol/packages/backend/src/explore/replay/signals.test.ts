@@ -227,6 +227,41 @@ describe("replaySignals profile assertions", () => {
     expect(result).not.toContain("gated_chip_did_not_refuse");
   });
 
+  test("accepts a gated chip that asked what the person meant", () => {
+    // Verbatim from the prod sweep, where prod has challenges switched off.
+    // Handing the question back uses the feature exactly as much as declining
+    // does, which is not at all.
+    const result = signals({
+      chipExpectation: "gated-off",
+      answer:
+        "Do you mean League Challenges, or challenges in a Scout competition? The answer depends on which challenge system and reward you’re referring to.",
+      candidateRowsReturned: null,
+    });
+    expect(result).not.toContain("gated_chip_did_not_refuse");
+  });
+
+  test("still flags a gated chip that produced the feature's output", () => {
+    // Also verbatim: prod has dares off, and this turn drafted one anyway.
+    // No question mark, so it is not a clarification, and it is the finding
+    // the other two were burying.
+    const result = signals({
+      chipExpectation: "gated-off",
+      answer:
+        "Dare: “For your next mid-lane game, lock in an assassin and play like you mean it—no safe farming simulator. Get first blood or solo-kill your lane opponent before 15 minutes, or you owe the team a snack.”",
+      candidateRowsReturned: null,
+    });
+    expect(result).toContain("gated_chip_did_not_refuse");
+  });
+
+  test("does not let a question mark excuse an answer built on rows", () => {
+    const result = signals({
+      chipExpectation: "gated-off",
+      answer: "You have 400 Bryan Bucks. Want the full ledger?",
+      candidateRowsReturned: 12,
+    });
+    expect(result).toContain("gated_chip_did_not_refuse");
+  });
+
   test("flags an available feature the answer declined anyway", () => {
     const result = signals({
       chipExpectation: "answerable",
