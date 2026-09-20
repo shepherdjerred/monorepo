@@ -8,6 +8,7 @@ CI_PLAYWRIGHT_IMAGE="${SCRIPT_DIR}/../ci-playwright/Dockerfile"
 BUN_INSTALL_WRAPPER="${SCRIPT_DIR}/bun-install.sh"
 MACOS_NATIVE_ENV="${SCRIPT_DIR}/macos-native-env.sh"
 REVIEW_GATE="${SCRIPT_DIR}/review-gate.sh"
+BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/woodpecker/bun-cache-gc.sh"
 MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
 MAC_CI_PROVISIONER="${SCRIPT_DIR}/../../packages/homelab/mac-ci/provision-host.sh"
 MACOS_LANES="${SCRIPT_DIR}/../../packages/woodpecker-config-extension/src/pipeline/lanes/macos.ts"
@@ -85,10 +86,6 @@ if ! rg -Fq 'BUN_INSTALL_LOCK_MODE=shared "$GATE_DIR/ci/scripts/bun-install.sh"'
   exit 1
 fi
 
-# The bun cache garbage collector was removed with the Buildkite maintenance
-# worker that ran it. Woodpecker's cache claim has no collector yet; if one is
-# added, its exclusive-lock contract belongs back here.
-
 # The bash guarantee moved from the agent to the pipeline: Buildkite took a
 # `shell` setting in the agent config, while Woodpecker's local backend reads
 # the step's `image` field as the interpreter. The native steps source
@@ -126,8 +123,129 @@ if ! rg -Fq 'sudo /usr/bin/automationmodetool enable-automationmode-without-auth
   exit 1
 fi
 
-# The bun cache garbage collector's behavioural tests were removed with the
-# collector itself. If a Woodpecker equivalent is written, its below-threshold
-# preservation and exclusive-lock behaviour belong back here.
+TEST_ROOT=$(mktemp -d)
+trap 'rm -rf "$TEST_ROOT"' EXIT
+mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/cache/data" "$TEST_ROOT/control"
+
+cat >"$TEST_ROOT/bin/df" <<'EOF'
+#!/usr/bin/env bash
+printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\n'
+printf 'cache 100 50 50 %s%% /cache\n' "$BUN_GC_TEST_USAGE"
+EOF
+cat >"$TEST_ROOT/bin/bun" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$BUN_GC_TEST_LOG"
+EOF
+cat >"$TEST_ROOT/bin/flock" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "$TEST_ROOT/bin/df" "$TEST_ROOT/bin/bun" "$TEST_ROOT/bin/flock"
+
+touch "$TEST_ROOT/cache/data/below-threshold-marker"
+BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_CACHE_GC_THRESHOLD_PERCENT=60 \
+  BUN_GC_TEST_USAGE=42 \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_CACHE_GC"
+if [[ ! -e "$TEST_ROOT/cache/data/below-threshold-marker" ]]; then
+  echo "bun cache collector must preserve a cache below its threshold" >&2
+  exit 1
+fi
+
+mkdir -p "$TEST_ROOT/cache/data/nested"
+touch "$TEST_ROOT/cache/data/nested/cache-entry"
+BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_CACHE_GC_THRESHOLD_PERCENT=60 \
+  BUN_GC_TEST_USAGE=75 \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_CACHE_GC"
+if [[ -n $(find "$TEST_ROOT/cache/data" -mindepth 1 -print -quit) ]]; then
+  echo "bun cache collector must remove every cache entry above its threshold" >&2
+  exit 1
+fi
+if [[ ! -e "$TEST_ROOT/control/.gc.lock" ]]; then
+  echo "bun cache collector must preserve the independent coordination lock" >&2
+  exit 1
+fi
+
+: >"$TEST_ROOT/bun.log"
+BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_INSTALL_LOCK_MODE=shared \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter example
+if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter example" ]]; then
+  echo "bun install wrapper must preserve every install argument" >&2
+  exit 1
+fi
+
+: >"$TEST_ROOT/bun.log"
+BUN_INSTALL_LOCK_MODE=local \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter native-example
+if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter native-example" ]]; then
+  echo "local Bun install mode must preserve every install argument" >&2
+  exit 1
+fi
+
+if BUN_INSTALL_LOCK_MODE=local \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile; then
+  echo "local Bun install mode must reject a shared lock path" >&2
+  exit 1
+fi
+
+if BUN_INSTALL_LOCK_MODE=unknown \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile; then
+  echo "Bun install wrapper must reject an unknown lock mode" >&2
+  exit 1
+fi
+
+mkdir -p "$TEST_ROOT/home"
+HOME="$TEST_ROOT/home" \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  TURBO_API=http://linux-cache.invalid \
+  TURBO_CACHE=remote:rw \
+  TURBO_SCM_BASE=origin/main \
+  TURBO_TEAM=monorepo \
+  TURBO_TELEMETRY_DISABLED=1 \
+  TURBO_TOKEN=secret \
+  bash -c '
+    set -euo pipefail
+    source "$1"
+    [[ "$BUN_INSTALL_LOCK_MODE" == "local" ]]
+    [[ "$MISE_AUTO_INSTALL" == "0" ]]
+    [[ "$MISE_NOT_FOUND_AUTO_INSTALL" == "0" ]]
+    [[ "$BUN_INSTALL_CACHE_DIR" == "$HOME/Library/Caches/Bun/install/cache" ]]
+    [[ -z "${BUN_CACHE_LOCK_FILE+x}" ]]
+    [[ -z "${TURBO_API+x}" ]]
+    [[ -z "${TURBO_CACHE+x}" ]]
+    [[ -z "${TURBO_SCM_BASE+x}" ]]
+    [[ -z "${TURBO_TEAM+x}" ]]
+    [[ -z "${TURBO_TELEMETRY_DISABLED+x}" ]]
+    [[ -z "${TURBO_TOKEN+x}" ]]
+  ' _ "$MACOS_NATIVE_ENV"
+
+# A non-bash shell is simulated by unsetting BASH_VERSION rather than invoking
+# /bin/sh, which is bash in POSIX mode on macOS and would still define it.
+if bash -c 'unset BASH_VERSION; . "$1"' _ "$MACOS_NATIVE_ENV" \
+  >"$TEST_ROOT/native-env-shell.log" 2>&1; then
+  echo "macos-native-env.sh must refuse a shell that is not bash" >&2
+  exit 1
+fi
+if ! rg -Fq 'requires bash' "$TEST_ROOT/native-env-shell.log"; then
+  echo "macos-native-env.sh must name the bash requirement when it refuses" >&2
+  exit 1
+fi
 
 echo "toolchain and cache-lifecycle tests passed"

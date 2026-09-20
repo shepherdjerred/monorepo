@@ -24,10 +24,7 @@
 import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod";
 import { run, requireEnv } from "../lib/run.ts";
-import {
-  SEAWEEDFS_AWS_ENV,
-  SEAWEEDFS_ENDPOINT,
-} from "../lib/s3-static-site.ts";
+import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
 
 const PACKAGE_DIR = "packages/macos-cross-compiler";
 const IMAGE = "ghcr.io/shepherdjerred/macos-cross-compiler";

@@ -24,6 +24,12 @@
       ],
       "project": ["**/*.ts"]
     },
+    "packages/woodpecker-config-extension": {
+      // dump-steps.ts is invoked as a subprocess by check-ci-env (see
+      // scripts/lib/ci/generated-steps.ts), which knip cannot see.
+      "entry": ["src/dump-steps.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
     "packages/birmel": {
       "project": ["src/**/*.ts", "prisma/**/*.prisma"]
     },

@@ -63,22 +63,6 @@ export function buildUrl(
   return read(environment, "CI_PIPELINE_URL");
 }
 
-export function commitMessage(
-  environment: Environment = Bun.env,
-): string | undefined {
-  return read(environment, "CI_COMMIT_MESSAGE");
-}
-
-export function repoCloneUrl(environment: Environment = Bun.env): string {
-  return required(environment, "CI_REPO_CLONE_URL");
-}
-
-export function workspacePath(
-  environment: Environment = Bun.env,
-): string | undefined {
-  return read(environment, "CI_WORKSPACE");
-}
-
 /**
  * Pull request number, or undefined on a branch or tag build.
  *

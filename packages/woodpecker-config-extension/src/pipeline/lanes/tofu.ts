@@ -68,7 +68,13 @@ export function grant(secret: string, key: string, env = key): SecretGrant {
 }
 
 /** Provider credentials, beyond the shared state-backend grants. */
-const STACK_SECRETS: Readonly<Record<string, readonly SecretGrant[]>> = {
+/**
+ * Per-stack provider credentials.
+ *
+ * Exported so the apply lane names the same grants as the plan lane. Two
+ * copies would let an apply run with a credential its plan never used.
+ */
+export const STACK_SECRETS: Readonly<Record<string, readonly SecretGrant[]>> = {
   seaweedfs: [
     grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
     grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
