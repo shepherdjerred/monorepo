@@ -24,6 +24,9 @@ export const PipelineSchema = z.looseObject({
    * Account whose action produced this specific event. Equal to `author` on a
    * push; on a pull request it is whoever triggered the build, which need not
    * be the account that opened it.
+   *
+   * Empty for pipelines Woodpecker creates itself rather than from a webhook:
+   * a manual trigger records only `author`, and a cron records neither.
    */
   sender: z.string(),
   /**

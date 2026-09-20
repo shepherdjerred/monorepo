@@ -51,12 +51,14 @@ Two independent gates say so, and they fail in different directions on purpose:
   push or pull request waits for an explicit approval. This is the stronger
   gate, but it lives in the server's database, where nothing in this repository
   can assert it.
-- **The extension's own allowlist** refuses to emit any workflow unless both
-  identities Woodpecker reports — the account that owns the change and the
-  account whose action triggered this event — are the owner or one of his bots,
-  and the change did not come from a fork. This gate is weaker, because it runs
+- **The extension's own allowlist** refuses to emit any workflow unless the
+  account that owns the change is the owner or one of his bots — and, where
+  Woodpecker reports one, the account whose action triggered this event too, so
+  that nobody else can drive commits into a trusted account's pull request. The
+  change must also not come from a fork. This gate is weaker, because it runs
   after the pipeline exists, but it is reviewable: it ships in the extension's
-  image, and a branch cannot edit it into admitting itself.
+  image, and a branch cannot edit it into admitting itself. It is also the only
+  gate in front of a cron pipeline, which Woodpecker's approval gate exempts.
 
 A refusal is an error status, never `204`. To Woodpecker a `204` means "keep the
 configuration you already have", which is the branch's own committed YAML — the
