@@ -27,6 +27,11 @@ export function ExploreMatch() {
   const detail = useQuery(trpc.exploreMatch.detail.queryOptions({ matchId }));
   const tally = useQuery(trpc.mvpVotes.matchTally.queryOptions({ matchId }));
   const value = Loaded.strict(Loaded.fromQuery(detail, ["explore.match"]));
+  // Same 403/refetch rule as the detail query: a failed reauthorization must
+  // not keep rendering guild aliases and justifications from the last success.
+  const tallyValue = Loaded.strict(
+    Loaded.fromQuery(tally, ["mvpVotes.matchTally"]),
+  );
 
   if (value.status === "loading") {
     return <PageShell>Loading match details…</PageShell>;
@@ -70,8 +75,8 @@ export function ExploreMatch() {
         </div>
         <MatchScoreboards teams={match.teams} />
       </section>
-      {tally.data !== null && tally.data !== undefined && (
-        <MatchMvpTally tally={tally.data} />
+      {tallyValue.status === "done" && tallyValue.data !== null && (
+        <MatchMvpTally tally={tallyValue.data} />
       )}
       <MatchTimeline
         source={{ kind: "explore" }}

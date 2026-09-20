@@ -127,7 +127,7 @@ export function createMvpVotesExploreTools(input: MvpVotesExploreToolsInput) {
   return {
     query_mvp_vote_leaderboard: tool({
       description:
-        "Rank who received the most community Discord MVP votes in this server over an explicit UTC date range of match start times. Optional queueType is flex or ranked 5s. Load the mvp-votes skill first if you have not this turn.",
+        "Rank who received the most community Discord MVP votes in this server over an explicit UTC date range of match start times. Optional queueType is flex. Load the mvp-votes skill first if you have not this turn.",
       inputSchema: LeaderboardToolInputSchema,
       outputSchema: MvpVoteLeaderboardResultSchema,
       execute: (inputData) => executors.queryLeaderboard(inputData),

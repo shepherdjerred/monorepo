@@ -37,6 +37,9 @@ export function ConsumerMatch() {
     trpc.consumerMatch.detail.queryOptions({ playerId, matchId }),
   );
   const tally = useQuery(trpc.mvpVotes.matchTally.queryOptions({ matchId }));
+  const tallyValue = Loaded.strict(
+    Loaded.fromQuery(tally, ["mvpVotes.matchTally"]),
+  );
   const tracked = useRef(false);
   // `strict` because this query carries authorization: the scoreboard and the
   // guild-scoped Scout aliases below are only visible through a shared guild.
@@ -130,8 +133,8 @@ export function ConsumerMatch() {
         <MatchScoreboards teams={match.teams} />
       </section>
 
-      {tally.data !== null && tally.data !== undefined && (
-        <MatchMvpTally tally={tally.data} />
+      {tallyValue.status === "done" && tallyValue.data !== null && (
+        <MatchMvpTally tally={tallyValue.data} />
       )}
 
       <MatchTimeline

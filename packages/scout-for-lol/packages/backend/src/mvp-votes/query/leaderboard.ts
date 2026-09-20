@@ -10,7 +10,7 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { mvpQueryDisplayName } from "#src/mvp-votes/query/names.ts";
 import { MatchMvpRosterSchema } from "#src/mvp-votes/roster.ts";
 
-export const MvpVoteQueueTypeSchema = z.enum(["flex", "ranked 5s"]);
+export const MvpVoteQueueTypeSchema = z.enum(["flex"]);
 export type MvpVoteQueueType = z.infer<typeof MvpVoteQueueTypeSchema>;
 
 export const MvpVoteLeaderboardQuerySchema = z.strictObject({
