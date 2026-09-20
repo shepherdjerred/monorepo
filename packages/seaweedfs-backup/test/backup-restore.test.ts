@@ -67,29 +67,56 @@ class DelayedHeadStore extends InMemoryObjectStore {
   }
 }
 
+function concurrencyStores(backup = new DelayedHeadStore()): {
+  source: InMemoryObjectStore;
+  backup: DelayedHeadStore;
+} {
+  const source = new InMemoryObjectStore();
+  source.createBucket("source");
+  backup.createBucket("backup");
+  for (let index = 0; index < 40; index++) {
+    source.seed("source", `object-${index.toString()}.json`, "important");
+  }
+  return { source, backup };
+}
+
+function takeConcurrencySnapshot(
+  source: InMemoryObjectStore,
+  backup: DelayedHeadStore,
+  onCompleted?: (completed: number) => void,
+) {
+  return runBackup({
+    source,
+    destination: backup,
+    backupBucket: "backup",
+    policy: POLICY,
+    cadence: "daily",
+    onProgress(update) {
+      if (update.stage === "copy" || update.stage === "verify") {
+        onCompleted?.(update.completed);
+      }
+    },
+  });
+}
+
+function resetHeadTracking(
+  backup: DelayedHeadStore,
+  failFirstHead = false,
+): void {
+  backup.headCalls = 0;
+  backup.maximumActiveHeads = 0;
+  backup.failFirstHead = failFirstHead;
+}
+
 describe("object concurrency", () => {
   test("copies objects with bounded concurrency", async () => {
-    const source = new InMemoryObjectStore();
-    const backup = new DelayedHeadStore();
-    source.createBucket("source");
-    backup.createBucket("backup");
-    for (let index = 0; index < 40; index++) {
-      source.seed("source", `object-${index.toString()}.json`, "important");
-    }
-
+    const { source, backup } = concurrencyStores();
     const progress: number[] = [];
-    const snapshot = await runBackup({
+    const snapshot = await takeConcurrencySnapshot(
       source,
-      destination: backup,
-      backupBucket: "backup",
-      policy: POLICY,
-      cadence: "daily",
-      onProgress(update) {
-        if (update.stage === "copy" || update.stage === "verify") {
-          progress.push(update.completed);
-        }
-      },
-    });
+      backup,
+      (completed) => progress.push(completed),
+    );
 
     expect(backup.maximumActiveHeads).toBeGreaterThan(1);
     expect(backup.maximumActiveHeads).toBeLessThanOrEqual(16);
@@ -103,28 +130,51 @@ describe("object concurrency", () => {
   });
 
   test("drains in-flight work and stops claiming objects after a failure", async () => {
-    const source = new InMemoryObjectStore();
     const backup = new DelayedHeadStore();
     backup.failFirstHead = true;
-    source.createBucket("source");
-    backup.createBucket("backup");
-    for (let index = 0; index < 40; index++) {
-      source.seed("source", `object-${index.toString()}.json`, "important");
-    }
+    const { source } = concurrencyStores(backup);
 
-    await expect(
-      runBackup({
-        source,
-        destination: backup,
-        backupBucket: "backup",
-        policy: POLICY,
-        cadence: "daily",
-      }),
-    ).rejects.toThrow("Injected head failure");
+    await expect(takeConcurrencySnapshot(source, backup)).rejects.toThrow(
+      "Injected head failure",
+    );
 
     expect(backup.activeHeads).toBe(0);
     expect(backup.headCalls).toBeLessThanOrEqual(16);
     await expect(listCompletionMarkers(backup, "backup")).resolves.toEqual([]);
+  });
+
+  test("verifies objects with bounded concurrency", async () => {
+    const { source, backup } = concurrencyStores();
+    const snapshot = await takeConcurrencySnapshot(source, backup);
+    resetHeadTracking(backup);
+
+    await expect(
+      verifySnapshot({
+        store: backup,
+        backupBucket: "backup",
+        snapshotId: snapshot.marker.snapshotId,
+        full: true,
+      }),
+    ).resolves.toMatchObject({ checkedObjects: 40, hashedObjects: 40 });
+    expect(backup.maximumActiveHeads).toBeGreaterThan(1);
+    expect(backup.maximumActiveHeads).toBeLessThanOrEqual(16);
+  });
+
+  test("drains a failed verification batch before rejecting", async () => {
+    const { source, backup } = concurrencyStores();
+    const snapshot = await takeConcurrencySnapshot(source, backup);
+    resetHeadTracking(backup, true);
+
+    await expect(
+      verifySnapshot({
+        store: backup,
+        backupBucket: "backup",
+        snapshotId: snapshot.marker.snapshotId,
+        full: true,
+      }),
+    ).rejects.toThrow("Injected head failure");
+    expect(backup.activeHeads).toBe(0);
+    expect(backup.headCalls).toBeLessThanOrEqual(16);
   });
 });
 
