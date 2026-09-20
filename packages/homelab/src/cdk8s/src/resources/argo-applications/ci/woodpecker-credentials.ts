@@ -20,17 +20,17 @@ export const WOODPECKER_NAMESPACE = "woodpecker";
 export const WOODPECKER_SERVER_ITEM_ID = "REPLACE_WITH_1PASSWORD_ITEM_ID";
 
 /**
- * Per-step credential boundary, carried over from the Woodpecker stack.
+ * Per-step credential boundary, carried over from the Buildkite stack.
  *
  * Each entry becomes one Kubernetes Secret in the CI namespace, synced by the
  * 1Password operator. Steps reference exact keys through
  * `backend_options.kubernetes.secrets`, so a step receives only the values its
- * grant names — the same boundary the Woodpecker pipeline enforced with
+ * grant names — the same boundary the Buildkite pipeline enforced with
  * `secretKeyRef`, and the reason credentials never enter Woodpecker's own
  * secret store or database.
  *
- * Item IDs are unchanged from the Woodpecker stack; only the Secret names lose
- * their `woodpecker-` prefix.
+ * Item IDs are unchanged from the Buildkite stack; only the Secret names lose
+ * their `buildkite-` prefix.
  */
 const CI_CREDENTIAL_ITEMS = [
   { secretName: "ci-github-credentials", itemId: "34gzcrhwdm34lpadyly3rcsu44" },

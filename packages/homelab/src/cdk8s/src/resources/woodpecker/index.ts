@@ -13,6 +13,7 @@ import {
 import {
   IntOrString,
   KubeNetworkPolicy,
+  KubeService,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
@@ -164,6 +165,37 @@ export function createWoodpeckerServer(chart: Chart) {
     ],
   });
 
+  // The macOS agent runs off-cluster on the Mac Mini and holds the same
+  // long-lived gRPC stream the in-cluster agents do. It reaches the server over
+  // the tailnet, not the public hostname: the Cloudflare tunnel exists so
+  // GitHub can deliver webhooks and OAuth callbacks, and the agent endpoint is
+  // guarded by nothing but the shared agent secret, so it has no business being
+  // publicly reachable.
+  //
+  // A LoadBalancer with `loadBalancerClass: tailscale` rather than a
+  // TailscaleIngress: the operator's Ingress path terminates TLS and proxies
+  // HTTP/1.1, which does not carry gRPC's HTTP/2 streams. This is the same
+  // Tailscale operator, taking its raw-TCP path — not a second edge.
+  new KubeService(chart, "woodpecker-grpc-service", {
+    metadata: {
+      name: "woodpecker-grpc",
+      annotations: { "tailscale.com/hostname": "woodpecker-grpc" },
+    },
+    spec: {
+      type: "LoadBalancer",
+      loadBalancerClass: "tailscale",
+      selector: { app: "woodpecker-server" },
+      ports: [
+        {
+          name: "grpc",
+          port: WOODPECKER_GRPC_PORT,
+          targetPort: IntOrString.fromNumber(WOODPECKER_GRPC_PORT),
+          protocol: "TCP",
+        },
+      ],
+    },
+  });
+
   new KubeNetworkPolicy(chart, "woodpecker-server-netpol", {
     metadata: { name: "woodpecker-server-netpol" },
     spec: {
@@ -193,8 +225,16 @@ export function createWoodpeckerServer(chart: Chart) {
           ],
         },
         {
-          // Agents hold a long-lived gRPC stream from inside this namespace.
-          from: [{ podSelector: { matchLabels: { app: "woodpecker-agent" } } }],
+          // Agents hold a long-lived gRPC stream: the in-cluster ones directly,
+          // the macOS agent through the tailnet proxy created above.
+          from: [
+            { podSelector: { matchLabels: { app: "woodpecker-agent" } } },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
           ports: [
             {
               port: IntOrString.fromNumber(WOODPECKER_GRPC_PORT),

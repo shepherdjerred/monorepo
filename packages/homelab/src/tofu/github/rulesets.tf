@@ -24,9 +24,8 @@ resource "github_repository_ruleset" "monorepo_main" {
     required_status_checks {
       strict_required_status_checks_policy = false
 
-      # The buildkite/monorepo/pr/* required checks were removed 2026-07 along
-      # with the CI pipeline. ci/merge-conflict below is posted by the Temporal
-      # worker, not Buildkite, so it survives the CI strip.
+      # ci/merge-conflict is posted by the Temporal worker rather than by CI,
+      # which is why it survived the move off Buildkite untouched.
       #
       # ci/merge-conflict: locally-computed merge-tree result against main,
       # posted by packages/temporal/src/activities/maintenance/check-pr-merge-conflicts.ts
@@ -48,20 +47,21 @@ resource "github_repository_ruleset" "monorepo_main" {
         context = "ci/merge-conflict"
       }
 
-      # Aggregate Buildkite CI check for the replatformed pipeline. Buildkite
-      # posts a single rolled-up "buildkite/monorepo/pr" commit status per PR
-      # build (build passed/failed) — NOT the bare "buildkite/monorepo" the
-      # replatform originally staged here; the context was verified live
-      # 2026-07-18 against merged PR heads (success on PR #1542's head
-      # 1433973f, failure on #1543-#1547) before being required. Red CI now
-      # blocks merge, matching the old pipeline's ci-complete-backed
-      # buildkite/monorepo/pr/* required checks.
+      # Aggregate CI check. Woodpecker posts one rolled-up status per pipeline
+      # event, so this is the pipeline-level verdict rather than a per-workflow
+      # one -- requiring individual workflows would block every PR whose lane
+      # selection legitimately skipped them.
       #
-      # Release-please PR builds skip every step (see the release-please
-      # guard in .buildkite/pipeline.yml); the resulting empty build still
-      # completes and posts this context, so those PRs stay mergeable.
+      # ROLLOUT ORDERING — do NOT `tofu apply` this context until a Woodpecker
+      # pipeline has actually run on a PR head and posted it. Requiring a
+      # context nothing posts blocks every open PR on a missing check, which is
+      # the same trap the merge-conflict note above describes.
+      #
+      # The exact spelling must be verified against a real PR head before this
+      # is applied: it is Woodpecker's own status context, not a name this
+      # repository chooses.
       required_check {
-        context = "buildkite/monorepo/pr"
+        context = "ci/woodpecker/pr"
       }
     }
   }

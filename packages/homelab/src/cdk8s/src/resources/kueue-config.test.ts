@@ -101,7 +101,7 @@ describe("kueue-config", () => {
     expect(eph?.nominalQuota).toBe("100Gi");
   });
 
-  it("pods nominalQuota stays in lockstep with Woodpecker's max-in-flight", () => {
+  it("pods nominalQuota stays in lockstep with the CI max-in-flight cap", () => {
     const clusterQueue = synthKueueClusterQueue();
     const flavor = clusterQueue.spec.resourceGroups[0]?.flavors[0];
     expect(flavor).toBeDefined();

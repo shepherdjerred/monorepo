@@ -131,7 +131,7 @@ export function createWoodpeckerAgent(chart: Chart) {
 
         // Steps reference existing Kubernetes Secrets by exact key through
         // `backend_options.kubernetes.secrets`. This preserves the per-step
-        // grant boundary the Woodpecker pipeline enforced with `secretKeyRef`,
+        // grant boundary the Buildkite pipeline enforced with `secretKeyRef`,
         // and keeps credentials in 1Password-synced Secrets instead of
         // Woodpecker's own secret store.
         //
