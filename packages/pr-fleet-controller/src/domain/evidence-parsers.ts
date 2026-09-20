@@ -69,7 +69,7 @@ const ReviewPageSchema = z.object({
 
 const HeadSchema = z.object({ headRefOid: z.string() });
 
-/** A GitHub check run before its Buildkite soft-failure status is resolved. */
+/** A GitHub check run, as `gh pr checks` reports it. */
 export type RawCheck = {
   name: string;
   state: string;
@@ -114,10 +114,6 @@ export function parseChecks(text: string): RawCheck[] {
       link: check.link === undefined || check.link === "" ? null : check.link,
     }));
 }
-
-// Extract the Buildkite job id from a per-step check's target URL
-// (`https://buildkite.com/<org>/<pipeline>/builds/<n>#<job-uuid>`). The
-// aggregate `buildkite/monorepo/pr` check and non-Buildkite checks carry no
 
 /**
  * Normalise raw GitHub checks into evidence.

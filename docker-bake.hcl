@@ -86,6 +86,7 @@ group "app" {
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
     "openrouter-broadcast-ingest",
+    "woodpecker-config-extension",
   ]
 }
 
@@ -104,6 +105,17 @@ target "birmel" {
   tags       = imagetags("birmel")
   cache-from = cachefrom("birmel")
   cache-to   = cacheto("birmel")
+}
+
+# The service Woodpecker asks for each build's pipeline. Without it there is
+# no graph to run, so it is an app image like any other rather than something
+# built out of band.
+target "woodpecker-config-extension" {
+  inherits   = ["_app"]
+  dockerfile = "packages/woodpecker-config-extension/Dockerfile"
+  tags       = imagetags("woodpecker-config-extension")
+  cache-from = cachefrom("woodpecker-config-extension")
+  cache-to   = cacheto("woodpecker-config-extension")
 }
 
 target "alert-dashboard" {

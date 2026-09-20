@@ -907,6 +907,20 @@
       "notes": ["not managed by renovate"]
     },
     {
+      "name": "shepherdjerred/woodpecker-config-extension",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "not managed by renovate — pre-first-publish placeholder. The main image",
+        "release injects the built digest into chart synthesis and version",
+        "commit-back replaces this pin before a later release can use source state."
+      ]
+    },
+    {
       "name": "shepherdjerred/alert-dashboard",
       "category": "internal-image",
       "artifactType": "image",

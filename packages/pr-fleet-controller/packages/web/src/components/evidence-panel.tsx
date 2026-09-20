@@ -62,7 +62,7 @@ export function EvidencePanel({ pr }: { pr: PrState }): ReactElement {
 
       {e.ciFailure === null ? null : (
         <div className="bk-failure">
-          <h4>Buildkite failure</h4>
+          <h4>CI failure</h4>
           <p className="mono">{e.ciFailure.name}</p>
           <a href={e.ciFailure.webUrl} target="_blank" rel="noreferrer">
             open job ↗

@@ -2,7 +2,7 @@ glob_matcher: doublestar
 
 # Local hooks inspect staged files, then run package-scoped typecheck and
 # lint for the workspaces that own those files (Turbo, concurrency 1).
-# Buildkite owns the exhaustive whole-repo graph. The hook does not run
+# CI owns the exhaustive whole-repo graph. The hook does not run
 # tests, dependents, or `bun run verify`.
 
 commit-msg:
@@ -56,7 +56,7 @@ pre-commit:
                     - "**/node_modules/**"
                   run: bun scripts/checks/check-directory-file-counts.ts {staged_files}
 
-                # Swift is the one language Buildkite cannot build: the CI image ships
+                # Swift is the one language Linux CI cannot build: the CI image ships
                 # SwiftLint's static binary but no toolchain, and standing up a
                 # Swift+Rust+bun image for one test layer is not worth ~5GB/arch and a
                 # promotion lane (measured — see the macOS plan's "Swift on Linux").
@@ -88,7 +88,7 @@ pre-commit:
                     - run: test -n "$CODEX_CI"
                     - run: test -n "$CODEX_CLOUD_TASKS_BASE_URL"
                     # Swift, swiftlint, xcrun, and the XCFramework builder are
-                    # macOS-only. Buildkite remains the cross-platform backstop.
+                    # macOS-only. CI remains the cross-platform backstop.
                     - run: 'bun -e ''process.exit(process.platform === "win32" ? 0 : 1)'''
                   run: |
                     cd packages/tasknotes-macos

@@ -129,4 +129,4 @@ packages/streambot/scratch/
 
 # transient bun-publish auth indirection (scripts/release/publish-npm.ts writes + removes it)
 .npmrc
-**/.eslintcache-buildkite
+**/.eslintcache-ci-scripts

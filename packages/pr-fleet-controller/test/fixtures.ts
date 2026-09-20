@@ -92,10 +92,10 @@ export function evidence(
     headSha: pr.headSha,
     checks: [
       {
-        name: "buildkite",
+        name: "ci/woodpecker/pr",
         state: "SUCCESS",
         bucket: "pass",
-        link: "https://buildkite.com/sjerred/monorepo/builds/1",
+        link: "https://woodpecker.sjer.red/repos/1/pipeline/1",
       },
     ],
     ciCurrentHead: true,

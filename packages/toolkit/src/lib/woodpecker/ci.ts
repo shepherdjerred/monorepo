@@ -42,11 +42,15 @@ export type WoodpeckerConfig = {
 export function woodpeckerConfigFromEnv(
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): WoodpeckerConfig {
-  const baseUrl = environment["WOODPECKER_SERVER"];
+  // WOODPECKER_URL, not WOODPECKER_SERVER: upstream gives that name two
+  // meanings -- the CLI's HTTP address and the agent's gRPC endpoint -- so
+  // this repository keeps the HTTP origin under a name with one meaning and
+  // lets the passthrough hand the CLI its own value.
+  const baseUrl = environment["WOODPECKER_URL"];
   const token = environment["WOODPECKER_TOKEN"];
   const repoId = environment["WOODPECKER_REPO_ID"];
   if (baseUrl === undefined || baseUrl.length === 0) {
-    throw new Error("WOODPECKER_SERVER is required");
+    throw new Error("WOODPECKER_URL is required");
   }
   if (token === undefined || token.length === 0) {
     throw new Error("WOODPECKER_TOKEN is required");

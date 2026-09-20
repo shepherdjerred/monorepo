@@ -49,7 +49,9 @@ export type GateStatus = {
  * restarts at pipeline granularity, so this returns the pipeline number and
  * the retry re-runs the gate rather than one job inside it.
  */
-export function jobIdFromTargetUrl(targetUrl: string | null): string | null {
+export function pipelineNumberFromTargetUrl(
+  targetUrl: string | null,
+): string | null {
   if (targetUrl === null) return null;
   // Woodpecker links a status at .../pipeline/<number>, so the retry unit is
   // the pipeline rather than one job inside it. Matched strictly: every
@@ -111,7 +113,8 @@ export async function gateStatusFor(input: {
 }
 
 export type HarvestVerdict =
-  { retryable: true; jobId: string } | { retryable: false; reason: string };
+  | { retryable: true; pipelineNumber: string }
+  | { retryable: false; reason: string };
 
 /**
  * Whether a failed gate is stale rather than correct.
@@ -144,9 +147,9 @@ export function harvestVerdict(input: {
       reason: `${String(input.blockingCount)} blocking finding(s) remain`,
     };
   }
-  const jobId = jobIdFromTargetUrl(input.gate.targetUrl);
-  if (jobId === null) {
-    return { retryable: false, reason: "gate status names no Buildkite job" };
+  const pipelineNumber = pipelineNumberFromTargetUrl(input.gate.targetUrl);
+  if (pipelineNumber === null) {
+    return { retryable: false, reason: "gate status names no CI pipeline" };
   }
-  return { retryable: true, jobId };
+  return { retryable: true, pipelineNumber };
 }

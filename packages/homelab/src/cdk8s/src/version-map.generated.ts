@@ -65,6 +65,7 @@ export const VersionMapSchema = z
     "shepherdjerred/starlight-karma-bot/beta": z.string(),
     "shepherdjerred/starlight-karma-bot/prod": z.string(),
     "shepherdjerred/birmel": z.string(),
+    "shepherdjerred/woodpecker-config-extension": z.string(),
     "shepherdjerred/alert-dashboard": z.string(),
     "shepherdjerred/openrouter-broadcast-ingest": z.string(),
     "shepherdjerred/scout-evals": z.string(),

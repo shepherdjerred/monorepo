@@ -202,13 +202,12 @@
       // commands as entry points and follows their imports, so a requireEnv
       // added there would otherwise reuse a green cached result.
       "inputs": [
-        "ci/pipeline.yml",
         "ci/scripts/**",
         "scripts/**",
         "!scripts/node_modules/**",
         "packages/homelab/scripts/**",
         "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts"
+        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts"
       ]
     },
     "//#check-script-migrations": {
@@ -397,7 +396,7 @@
       ]
     },
     "//#gitleaks": {
-      "env": ["BUILDKITE_COMMIT", "CI_CHANGED_BASE"],
+      "env": ["CI_COMMIT_SHA", "CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/gitleaks.ts",
         "**/*",
