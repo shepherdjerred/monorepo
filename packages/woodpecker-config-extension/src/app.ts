@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { KeyObject } from "node:crypto";
 import { ConfigExtensionRequestSchema } from "#src/schemas.ts";
+import { authorizePipeline } from "#src/authorization.ts";
 import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { selectSteps } from "#src/pipeline/select.ts";
@@ -58,6 +59,20 @@ export function createApp(options: AppOptions): Hono {
     }
 
     const { repo, pipeline } = parsed.data;
+
+    // Decided before any other work. A refusal must not be the 204 that means
+    // "keep the configuration you already have", and it must not be a 200
+    // carrying an empty set of configs either: this returns an error status so
+    // the server marks the pipeline errored and schedules nothing. Refusing
+    // first also keeps an untrusted commit from driving the forge reads below.
+    const authorization = authorizePipeline(pipeline);
+    if (!authorization.allowed) {
+      console.warn(
+        `refused pipeline for ${repo.name}: ${authorization.reason}`,
+      );
+      return context.json({ error: "actor is not permitted to run CI" }, 403);
+    }
+
     const [images, changedBase, imageReleaseBase] = await Promise.all([
       resolveCiImages(pipeline.commit, options.imageFetcher),
       options.changedBase(repo.id, repo.default_branch),

@@ -36,6 +36,34 @@ Three consequences are worth stating plainly:
   ed25519 signature — and recomputes the body digest rather than trusting the
   `Content-Digest` header it covers — before reading anything.
 
+## CI runs only for the owner and his bots
+
+Steps in this pipeline mount production credentials — Cloudflare and Tailscale
+tokens, an ArgoCD token, OpenTofu state keys, an npm token, a GitHub App private
+key. Nobody else's change is worth that exposure, so the pipeline is not
+generated for anybody else.
+
+Two independent gates say so, and they fail in different directions on purpose:
+
+- **Woodpecker's approval gate**, `require_approval` with
+  `approval_allowed_users`, blocks a pipeline before any step is scheduled. The
+  server defaults new repositories to `all_events`, so an unknown account's
+  push or pull request waits for an explicit approval. This is the stronger
+  gate, but it lives in the server's database, where nothing in this repository
+  can assert it.
+- **The extension's own allowlist** refuses to emit any workflow unless both
+  identities Woodpecker reports — the account that owns the change and the
+  account whose action triggered this event — are the owner or one of his bots,
+  and the change did not come from a fork. This gate is weaker, because it runs
+  after the pipeline exists, but it is reviewable: it ships in the extension's
+  image, and a branch cannot edit it into admitting itself.
+
+A refusal is an error status, never `204`. To Woodpecker a `204` means "keep the
+configuration you already have", which is the branch's own committed YAML — the
+opposite of a refusal. For the same reason the server runs the extension in
+exclusive mode, so there is no committed YAML to fall back to when the extension
+fails.
+
 ## The lanes are phases, not duplicated test suites
 
 - **Browser E2E** covers the shipped Playwright consumers: `sjer.red`, the docs

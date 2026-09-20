@@ -3,8 +3,8 @@ import { z } from "zod";
 /**
  * The slice of Woodpecker's configuration-extension request this service uses.
  *
- * Woodpecker sends considerably more than this (author, avatars, netrc, the
- * committed configuration files). Unknown keys are allowed through rather than
+ * Woodpecker sends considerably more than this (avatars, netrc, the committed
+ * configuration files). Unknown keys are allowed through rather than
  * rejected so a Woodpecker upgrade that adds a field does not take CI down,
  * but every field read below is required — a missing one means the contract
  * changed and lane selection would silently fall back to running everything.
@@ -14,6 +14,27 @@ export const PipelineSchema = z.looseObject({
   branch: z.string(),
   commit: z.string(),
   ref: z.string(),
+  /**
+   * Account that owns the change: the pusher, or the account that opened the
+   * pull request. Authenticated by the forge, not taken from commit metadata,
+   * which anyone can write.
+   */
+  author: z.string(),
+  /**
+   * Account whose action produced this specific event. Equal to `author` on a
+   * push; on a pull request it is whoever triggered the build, which need not
+   * be the account that opened it.
+   */
+  sender: z.string(),
+  /**
+   * Whether the pull request comes from a fork.
+   *
+   * Woodpecker serialises this with `omitempty`, so it is absent rather than
+   * `false` on every push and on same-repository pull requests. The default
+   * reproduces that encoding; it is not a fallback for a field that went
+   * missing, and `authorizePipeline` does not rely on it alone.
+   */
+  from_fork: z.boolean().default(false),
   /**
    * Forge URL for the commit being built. Stamped onto each step pod so the
    * I/O reporter can link a measured pod back to the change that caused it.

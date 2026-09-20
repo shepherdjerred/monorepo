@@ -19,10 +19,13 @@ set -euo pipefail
 # rebasing 22 commits of unrelated history would have.
 #
 # This closes the accidental version of that problem, where a branch is simply
-# old. It is not a trust boundary: the configuration extension generates the
-# pipeline from the branch's own lane definitions, so a branch that
-# deliberately rewrites this step controls its own gate either way — as it does
-# for every other check.
+# old. It also holds against a deliberate one, which the Buildkite arrangement
+# did not: the configuration extension serves the step model baked into its
+# deployed image rather than the one on the branch under test, so a branch
+# cannot rewrite this step, its command, or the secrets it is granted. The
+# extension additionally refuses to generate a pipeline at all for anyone but
+# the owner and his bots (see `src/authorization.ts` in that package), so the
+# gate is only ever measuring a change that one of them pushed.
 #
 # During the one-time Qodo-to-Codex rollout, `main` may not yet know that
 # `REVIEW_PROVIDER=codex` is valid. In that case the Codex invocation applies a
