@@ -33,6 +33,7 @@ const SUBMITTED_AT = "2026-09-14T21:59:00.000Z";
 const SOURCE_SEQUENCE = "123456789012345678";
 const EMPTY_CHAT_REQUEST = {
   chatId: "empty-chat",
+  bindingId: "empty-chat-binding-1",
   title: "Empty chat",
   provider: "codex",
   model: "gpt-5.6-luna",
@@ -444,6 +445,7 @@ describe("buildAgentChatApiRoutes", () => {
       {
         updatedAt: expect.any(String),
         sourceSequence: SOURCE_SEQUENCE,
+        tieBreaker: EMPTY_CHAT_REQUEST.bindingId,
       },
     );
     expect(operations.submit).not.toHaveBeenCalled();
@@ -499,6 +501,7 @@ describe("buildAgentChatApiRoutes", () => {
       {
         updatedAt: existing.config.createdAt,
         sourceSequence: SOURCE_SEQUENCE,
+        tieBreaker: EMPTY_CHAT_REQUEST.bindingId,
       },
     );
   });
@@ -730,6 +733,7 @@ describe("durable agent chat binding retries", () => {
       expect(call[3]).toEqual({
         updatedAt: NOW,
         sourceSequence: SOURCE_SEQUENCE,
+        tieBreaker: "binding-1",
       });
     }
     expect(now).toHaveBeenCalledTimes(2);
@@ -989,7 +993,11 @@ describe("durable agent chat turn status and direct bindings", () => {
       expect.anything(),
       { kind: "discord", channelId: "channel-1" },
       "chat-existing",
-      { updatedAt: NOW, sourceSequence: SOURCE_SEQUENCE },
+      {
+        updatedAt: NOW,
+        sourceSequence: SOURCE_SEQUENCE,
+        tieBreaker: "binding-2",
+      },
     );
   });
 

@@ -46,7 +46,6 @@ import {
 import { bearerMatches, bearerToken } from "./http-auth.ts";
 
 const COMPONENT = "agent-chat-api";
-
 export type AgentChatApiOperations = {
   register: (
     client: WorkflowClient,
@@ -79,7 +78,6 @@ export type AgentChatApiOperations = {
     turnId: string,
   ) => Promise<HttpAgentChatTurnStatus | undefined>;
 };
-
 class AgentChatRegistrationConflictError extends Error {
   public constructor(chatId: string) {
     super(
@@ -88,7 +86,6 @@ class AgentChatRegistrationConflictError extends Error {
     this.name = "AgentChatRegistrationConflictError";
   }
 }
-
 const defaultOperations: AgentChatApiOperations = {
   register: registerAgentChat,
   bind: bindAgentChat,
@@ -100,7 +97,6 @@ const defaultOperations: AgentChatApiOperations = {
   cancel: cancelHttpAgentChatCommand,
   poll: pollHttpAgentChatCommand,
 };
-
 type AgentChatApiDependencies = {
   operations?: AgentChatApiOperations;
   now?: () => string;
@@ -341,6 +337,7 @@ export function buildAgentChatApiRoutes(
         await operations.bind(client.workflow, input.source, config.chatId, {
           updatedAt: entry.config.createdAt,
           sourceSequence: input.sourceSequence,
+          tieBreaker: input.bindingId,
         });
         return c.json({ chat: entry }, 201);
       }
@@ -480,7 +477,11 @@ export function buildAgentChatApiRoutes(
         client.workflow,
         input.binding,
         chatId,
-        { updatedAt: input.submittedAt, sourceSequence: input.sourceSequence },
+        {
+          updatedAt: input.submittedAt,
+          sourceSequence: input.sourceSequence,
+          tieBreaker: input.bindingId,
+        },
       );
       return c.json(entry);
     } catch (error: unknown) {

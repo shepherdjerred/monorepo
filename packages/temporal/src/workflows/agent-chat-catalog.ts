@@ -302,6 +302,27 @@ function bind(
     chatId,
     ...update,
   });
+  if (
+    existing?.tieBreaker !== undefined &&
+    existing.tieBreaker === next.tieBreaker
+  ) {
+    if (
+      existing.chatId !== next.chatId ||
+      existing.updatedAt !== next.updatedAt ||
+      existing.sourceSequence !== next.sourceSequence
+    ) {
+      throw new Error(
+        `Agent chat binding operation ${next.tieBreaker} was reused with different input`,
+      );
+    }
+    const selected = entryFor(state, existing.chatId);
+    if (selected === undefined) {
+      throw new Error(
+        `Agent chat binding points to unknown chat ${existing.chatId}`,
+      );
+    }
+    return selected;
+  }
   if (existing !== undefined && existingBindingWins(existing, next)) {
     const selected = entryFor(state, existing.chatId);
     if (selected === undefined) {
