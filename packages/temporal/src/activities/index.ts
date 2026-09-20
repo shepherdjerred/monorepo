@@ -150,3 +150,7 @@ export const agentChatIngressActivities = {
   ...discordAgentChatActivities,
   ...httpAgentChatActivities,
 };
+export const agentChatDeliveryActivities = {
+  deliverDiscordAgentChatMessage:
+    discordAgentChatActivities.deliverDiscordAgentChatMessage,
+};

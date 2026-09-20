@@ -10,11 +10,14 @@ import {
   HttpAgentChatTurnIdSchema,
   HttpAgentChatTurnReceiptSchema,
   HttpAgentChatTurnStatusSchema,
+  HttpAgentChatStartOptionsSchema,
+  activateHttpAgentChatCommandUpdate,
   httpAgentChatCommandIdentity,
   type HttpAgentChatCommand,
   type HttpAgentChatTurnReceipt,
   type HttpAgentChatTurnStatus,
 } from "#shared/agent/agent-chat-http.ts";
+import { AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS } from "#shared/agent/agent-chat.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 function httpAgentChatWorkflowId(turnId: string): string {
@@ -41,8 +44,12 @@ export function httpAgentChatCommandFingerprint(
 export async function submitHttpAgentChatCommand(
   client: Client,
   rawCommand: HttpAgentChatCommand,
+  rawOptions: { waitForActivation?: boolean } = {},
 ): Promise<HttpAgentChatTurnReceipt> {
   const command = HttpAgentChatCommandSchema.parse(rawCommand);
+  const options = HttpAgentChatStartOptionsSchema.parse({
+    waitForActivation: rawOptions.waitForActivation ?? false,
+  });
   const workflowId = httpAgentChatWorkflowId(command.request.turnId);
   const fingerprint = httpAgentChatCommandFingerprint(command);
   const handle = await client.workflow
@@ -51,7 +58,8 @@ export async function submitHttpAgentChatCommand(
       workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
       workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
       taskQueue: TASK_QUEUES.WORKFLOWS,
-      args: [command],
+      workflowExecutionTimeout: AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
+      args: [command, options],
       memo: { agentChatCommandFingerprint: fingerprint },
     })
     .catch((error: unknown) => {
@@ -75,6 +83,26 @@ export async function submitHttpAgentChatCommand(
     turnId: command.request.turnId,
     workflowId,
   });
+}
+
+export async function activateHttpAgentChatCommand(
+  client: Client,
+  rawCommand: HttpAgentChatCommand,
+): Promise<void> {
+  const command = HttpAgentChatCommandSchema.parse(rawCommand);
+  const handle = client.workflow.getHandle(
+    httpAgentChatWorkflowId(command.request.turnId),
+  );
+  try {
+    await handle.executeUpdate(activateHttpAgentChatCommandUpdate, {
+      args: [command],
+      updateId: "activate",
+    });
+  } catch (error: unknown) {
+    const description = await handle.describe();
+    if (description.status.name !== "RUNNING") return;
+    throw error;
+  }
 }
 
 export async function pollHttpAgentChatCommand(

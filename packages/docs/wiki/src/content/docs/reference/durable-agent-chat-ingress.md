@@ -154,8 +154,9 @@ durable-chat application, not another bot. Source:
 
 The bot requests only the Discord `Guilds` intent. A slash interaction receives
 an immediate private acknowledgement. Temporal then runs or continues the chat
-and posts the result through a retrying delivery Activity on the credential-owning
-gateway queue. Each chunk uses a Discord enforced nonce, so retrying an
+and posts the result through a retrying delivery Activity on the isolated
+`agent-chat-delivery` queue in the credential-owning gateway. Each chunk uses a
+Discord enforced nonce, so retrying an
 ambiguous send does not duplicate a recent message. Provider output is split at
 Discord's message limit and all user or role mentions are disabled. See the
 [delivery Workflow](https://github.com/shepherdjerred/monorepo/blob/995f3d3ced2de1040a150e15aeb467a636269b4c/packages/temporal/src/workflows/discord-agent-chat.ts)
