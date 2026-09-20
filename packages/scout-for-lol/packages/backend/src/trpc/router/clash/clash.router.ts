@@ -3,6 +3,7 @@ import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   assertClashSurfaceEnabled,
+  assertClashSurfaceEnabledForGuild,
   clashSurfaceStatus,
 } from "#src/league/clash/access.ts";
 import { readClashHistoryForGuild } from "#src/league/clash/history.ts";
@@ -26,7 +27,7 @@ export const clashRouter = router({
   roster: webProcedure
     .input(z.strictObject({ guildId: DiscordGuildIdSchema }))
     .query(async ({ ctx, input }) => {
-      await assertClashSurfaceEnabled(ctx.user);
+      await assertClashSurfaceEnabledForGuild(input.guildId);
       const guilds = await fetchUserGuildsForRequest(ctx.user);
       if (!guilds.some((guild) => guild.id === input.guildId)) {
         throw new TRPCError({
@@ -43,7 +44,7 @@ export const clashRouter = router({
   history: webProcedure
     .input(z.strictObject({ guildId: DiscordGuildIdSchema }))
     .query(async ({ ctx, input }) => {
-      await assertClashSurfaceEnabled(ctx.user);
+      await assertClashSurfaceEnabledForGuild(input.guildId);
       const guilds = await fetchUserGuildsForRequest(ctx.user);
       if (!guilds.some((guild) => guild.id === input.guildId)) {
         throw new TRPCError({

@@ -32,19 +32,41 @@ export async function clashSurfaceEnabled(user: User): Promise<boolean> {
   return status.state === "available";
 }
 
-export async function clashSnapshotShouldRun(): Promise<boolean> {
+export async function clashSnapshotEnabledGuildIds(): Promise<string[]> {
   const guilds = await prisma.player.findMany({
     distinct: ["serverId"],
     select: { serverId: true },
   });
-  const decisions = await Promise.all(
-    guilds.map((guild) =>
-      isPolicyEnabled("clash_surface", {
-        server: DiscordGuildIdSchema.parse(guild.serverId),
-      }),
-    ),
+  const enabled: string[] = [];
+  for (const guild of guilds) {
+    const parsed = DiscordGuildIdSchema.parse(guild.serverId);
+    if (await isPolicyEnabled("clash_surface", { server: parsed })) {
+      enabled.push(guild.serverId);
+    }
+  }
+  return enabled;
+}
+
+export async function clashSurfaceEnabledForGuild(
+  guildId: string,
+): Promise<boolean> {
+  const parsed = DiscordGuildIdSchema.parse(guildId);
+  return (
+    (await isPolicyEnabled("clash_surface", { server: parsed })) ||
+    isDevGuildOverrideGuild(guildId)
   );
-  return decisions.some(Boolean);
+}
+
+export async function assertClashSurfaceEnabledForGuild(
+  guildId: string,
+): Promise<void> {
+  if (await clashSurfaceEnabledForGuild(guildId)) {
+    return;
+  }
+  throw new TRPCError({
+    code: "NOT_FOUND",
+    message: "Clash is unavailable",
+  });
 }
 
 /**
@@ -57,13 +79,7 @@ export async function clashExploreEnabled(
   guildIds: readonly string[],
 ): Promise<boolean> {
   const decisions = await Promise.all(
-    guildIds.map(async (guildId) => {
-      const parsed = DiscordGuildIdSchema.parse(guildId);
-      return (
-        (await isPolicyEnabled("clash_surface", { server: parsed })) ||
-        isDevGuildOverrideGuild(guildId)
-      );
-    }),
+    guildIds.map((guildId) => clashSurfaceEnabledForGuild(guildId)),
   );
   return decisions.some(Boolean);
 }

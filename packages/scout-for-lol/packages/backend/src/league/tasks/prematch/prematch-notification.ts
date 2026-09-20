@@ -1,4 +1,8 @@
-import { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import {
+  EmbedBuilder,
+  type AttachmentBuilder,
+  type MessageCreateOptions,
+} from "discord.js";
 import type {
   RawCurrentGameInfo,
   PlayerConfigEntry,
@@ -19,26 +23,15 @@ import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
 import {
-  buildLoadingScreenData,
   fetchParticipantRanks,
   type ParticipantRanks,
 } from "#src/league/tasks/prematch/loading-screen-builder.ts";
-import { clashExploreEnabled } from "#src/league/clash/access.ts";
-import { attachClashChrome } from "#src/league/clash/chrome.ts";
+import { formatPlayerList } from "#src/league/tasks/prematch/prematch-copy.ts";
 import {
-  formatPlayerList,
-  formatPrematchMessage,
-} from "#src/league/tasks/prematch/prematch-copy.ts";
-import { recordLoadingScreenFailure } from "#src/league/tasks/prematch/loading-screen-failure.ts";
-import {
-  loadingScreenToImage,
-  loadingScreenToSvg,
-} from "@scout-for-lol/report";
-import { savePrematchImageToS3, savePrematchSvgToS3 } from "#src/storage/s3.ts";
-import {
-  prematchLoadingScreenGeneratedTotal,
-  prematchLoadingScreenDurationSeconds,
-} from "#src/metrics/index.ts";
+  clashSurfaceByGuild,
+  partitionPrematchChannels,
+  renderPrematchPresentation,
+} from "#src/league/tasks/prematch/prematch-clash-presentation.ts";
 import { isStandardLobby } from "#src/betting/eligibility/eligibility.ts";
 import { withBucksDigest } from "#src/betting/markets/prematch-line.ts";
 import {
@@ -56,8 +49,6 @@ import {
   type ChannelDeliveryRecorder,
 } from "#src/durable/match/delivery-intents.ts";
 import { ACTIVE_GAME_TTL_MS } from "#src/league/tasks/prematch/active-game-queries.ts";
-import type { MessageCreateOptions } from "discord.js";
-import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -263,6 +254,33 @@ async function deliverPrematchMessages(input: {
   return { sentMessageIds, deliveredGuildIds, messageRefsByGuild };
 }
 
+function emptyPrematchDelivery(): Awaited<
+  ReturnType<typeof deliverPrematchMessages>
+> {
+  return {
+    sentMessageIds: new Map(),
+    deliveredGuildIds: new Set(),
+    messageRefsByGuild: new Map(),
+  };
+}
+
+function mergePrematchDeliveries(
+  left: Awaited<ReturnType<typeof deliverPrematchMessages>>,
+  right: Awaited<ReturnType<typeof deliverPrematchMessages>>,
+): Awaited<ReturnType<typeof deliverPrematchMessages>> {
+  return {
+    sentMessageIds: new Map([...left.sentMessageIds, ...right.sentMessageIds]),
+    deliveredGuildIds: new Set([
+      ...left.deliveredGuildIds,
+      ...right.deliveredGuildIds,
+    ]),
+    messageRefsByGuild: new Map([
+      ...left.messageRefsByGuild,
+      ...right.messageRefsByGuild,
+    ]),
+  };
+}
+
 export async function sendPrematchNotification(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
@@ -345,99 +363,45 @@ export async function sendPrematchNotification(
     deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
     (id) => id,
   );
-  const clashSurfaceEnabled = await clashExploreEnabled(targetGuildIds);
+  const clashByGuild = await clashSurfaceByGuild(targetGuildIds);
+  const { clash: clashChannels, standard: standardChannels } =
+    partitionPrematchChannels(deliverChannels, clashByGuild);
   logger.info(
     `[sendPrematchNotification] 📺 Sending to ${deliverChannels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
   );
 
-  const loadingScreenStartTime = Date.now();
-  let loadingScreenData: LoadingScreenData | undefined;
-  try {
-    const trackedPuuidSet = new Set(
-      trackedPlayers.map((p) => p.league.leagueAccount.puuid),
-    );
-    loadingScreenData = await attachClashChrome(
-      await buildLoadingScreenData(
-        gameInfo,
-        trackedPuuidSet,
-        region,
-        ranksByPuuid,
-      ),
-      clashSurfaceEnabled,
-    );
-  } catch (error) {
-    recordLoadingScreenFailure({
-      error,
-      gameId,
-      gameInfo,
-      loadingScreenData,
-      queueType,
-    });
-  }
-
-  const prematchMessageContent = formatPrematchMessage(
+  const presentationInput = {
+    gameId,
+    gameInfo,
     trackedPlayers,
+    aliases,
+    region,
+    ranksByPuuid,
     queueType,
-    gameInfo.gameMode,
-    clashSurfaceEnabled,
-  );
-
-  // Generate presentation assets only when at least one channel will receive
-  // them.
-  let loadingScreenAttachment: AttachmentBuilder | undefined;
-  let loadingScreenEmbed: EmbedBuilder | undefined;
-  if (loadingScreenData !== undefined) {
-    try {
-      const [image, svg] = await Promise.all([
-        loadingScreenToImage(loadingScreenData),
-        loadingScreenToSvg(loadingScreenData),
-      ]);
-      const attachmentName = `loading-screen-${gameId}.png`;
-      loadingScreenAttachment = new AttachmentBuilder(
-        Buffer.from(image),
-      ).setName(attachmentName);
-      loadingScreenEmbed = new EmbedBuilder({
-        image: { url: `attachment://${attachmentName}` },
-      });
-
-      const duration = (Date.now() - loadingScreenStartTime) / 1000;
-      prematchLoadingScreenDurationSeconds.observe(duration);
-      prematchLoadingScreenGeneratedTotal.inc({
-        queue_type: queueType ?? "unknown",
-        status: "success",
-      });
-      logger.info(
-        `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
-      );
-
-      void (async () => {
-        try {
-          await Promise.all([
-            savePrematchImageToS3(
-              gameInfo,
-              image,
-              queueType ?? "unknown",
-              aliases,
-            ),
-            savePrematchSvgToS3(gameInfo, svg, queueType ?? "unknown", aliases),
-          ]);
-        } catch (s3Error) {
-          logger.error(
-            `[sendPrematchNotification] Failed to save prematch assets to S3:`,
-            s3Error,
-          );
-        }
-      })();
-    } catch (error) {
-      recordLoadingScreenFailure({
-        error,
-        gameId,
-        gameInfo,
-        loadingScreenData,
-        queueType,
-      });
-    }
+  };
+  const clashPresentation =
+    clashChannels.length === 0
+      ? undefined
+      : await renderPrematchPresentation({
+          ...presentationInput,
+          clashSurfaceEnabled: true,
+          persistAssets: true,
+        });
+  const standardPresentation =
+    standardChannels.length === 0
+      ? undefined
+      : await renderPrematchPresentation({
+          ...presentationInput,
+          clashSurfaceEnabled: false,
+          persistAssets: clashPresentation === undefined,
+        });
+  const primaryPresentation = clashPresentation ?? standardPresentation;
+  if (primaryPresentation === undefined) {
+    throw new Error(
+      `Prematch ${gameId} had channels to deliver but no presentation`,
+    );
   }
+
   // Bryan Bucks: open the markets and build the buttons. Entirely
   // best-effort — on any failure this yields no guilds, no rows, and the
   // notification below is exactly what it was before the feature existed.
@@ -451,34 +415,55 @@ export async function sendPrematchNotification(
       detectedAt,
     }));
   const prematchContentBase =
-    loadingScreenAttachment !== undefined && loadingScreenEmbed !== undefined
-      ? prematchMessageContent
+    primaryPresentation.loadingScreenAttachment !== undefined &&
+    primaryPresentation.loadingScreenEmbed !== undefined
+      ? primaryPresentation.prematchMessageContent
       : "";
 
   // The platform-qualified match id the completed game will carry, so a
   // pre-match intent and the post-match facts describe the same match.
   const prematchMatchId = `${gameInfo.platformId}_${gameInfo.gameId.toString()}`;
   const facts = liveDurableFacts();
-  const delivery = await deliverPrematchMessages({
-    channels: deliverChannels,
-    gameInfo,
-    gameId,
-    trackedPlayers,
-    bucks,
-    prematchMessageContent,
-    loadingScreenAttachment,
-    loadingScreenEmbed,
-    recordDelivery:
-      tryCreateChannelDeliveryRecorder({
-        facts,
-        matchId: prematchMatchId,
-        kind: "prematch",
-        keyPrefix: prematchDeliveryKeyPrefix(prematchMatchId),
-        // The ActiveGame row's own lifetime: past it the game is no longer
-        // tracked, so a pre-match send would be about a game already over.
-        freshnessDeadline: new Date(detectedAt.getTime() + ACTIVE_GAME_TTL_MS),
-      }) ?? undefined,
-  });
+  const recordDelivery =
+    tryCreateChannelDeliveryRecorder({
+      facts,
+      matchId: prematchMatchId,
+      kind: "prematch",
+      keyPrefix: prematchDeliveryKeyPrefix(prematchMatchId),
+      // The ActiveGame row's own lifetime: past it the game is no longer
+      // tracked, so a pre-match send would be about a game already over.
+      freshnessDeadline: new Date(detectedAt.getTime() + ACTIVE_GAME_TTL_MS),
+    }) ?? undefined;
+  const clashDelivery =
+    clashPresentation === undefined
+      ? emptyPrematchDelivery()
+      : await deliverPrematchMessages({
+          channels: clashChannels,
+          gameInfo,
+          gameId,
+          trackedPlayers,
+          bucks,
+          prematchMessageContent: clashPresentation.prematchMessageContent,
+          loadingScreenAttachment: clashPresentation.loadingScreenAttachment,
+          loadingScreenEmbed: clashPresentation.loadingScreenEmbed,
+          recordDelivery,
+        });
+  const standardDelivery =
+    standardPresentation === undefined
+      ? emptyPrematchDelivery()
+      : await deliverPrematchMessages({
+          channels: standardChannels,
+          gameInfo,
+          gameId,
+          trackedPlayers,
+          bucks,
+          prematchMessageContent: standardPresentation.prematchMessageContent,
+          loadingScreenAttachment: standardPresentation.loadingScreenAttachment,
+          loadingScreenEmbed: standardPresentation.loadingScreenEmbed,
+          recordDelivery,
+        });
+  const delivery = mergePrematchDeliveries(clashDelivery, standardDelivery);
+  const loadingScreenData = primaryPresentation.loadingScreenData;
   await recordDeliveryReceipts({
     facts,
     kind: "prematchDelivery",

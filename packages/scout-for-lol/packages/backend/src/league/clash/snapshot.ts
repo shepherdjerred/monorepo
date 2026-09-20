@@ -13,7 +13,7 @@ import {
 import { riotClient } from "#src/league/api/api.ts";
 import { extractHttpStatus } from "#src/league/api/client/errors.ts";
 import { prisma } from "#src/database/index.ts";
-import { clashSnapshotShouldRun } from "#src/league/clash/access.ts";
+import { clashSnapshotEnabledGuildIds } from "#src/league/clash/access.ts";
 import { archiveClashMembership } from "#src/league/clash/history.ts";
 import { backfillClashSightingsFromLake } from "#src/league/clash/backfill.ts";
 import {
@@ -38,13 +38,31 @@ type PendingClashPoll = {
   players: RawClashPlayer[];
 };
 
+export function splitClashPollAccounts(
+  accounts: readonly TrackedAccount[],
+  pollPlayersByPlatform: ReadonlyMap<PlatformRoute, boolean>,
+): { poll: TrackedAccount[]; clear: TrackedAccount[] } {
+  const poll: TrackedAccount[] = [];
+  const clear: TrackedAccount[] = [];
+  for (const account of accounts) {
+    if (pollPlayersByPlatform.get(account.platform) === true) {
+      poll.push(account);
+    } else {
+      clear.push(account);
+    }
+  }
+  return { poll, clear };
+}
+
 export async function runClashSnapshot(): Promise<void> {
-  if (!(await clashSnapshotShouldRun())) {
+  const enabledGuildIds = await clashSnapshotEnabledGuildIds();
+  if (enabledGuildIds.length === 0) {
     logger.info("Clash snapshot skipped: no guild has clash_surface");
     return;
   }
   const accounts = uniqueAccounts(
     await prisma.account.findMany({
+      where: { serverId: { in: enabledGuildIds } },
       select: { puuid: true, region: true },
     }),
   );
@@ -69,22 +87,21 @@ export async function runClashSnapshot(): Promise<void> {
     );
   }
 
-  const pending = await pollRegisteredPlayers(accounts, pollPlayersByPlatform);
+  const { poll: accountsToPoll, clear: accountsToClear } =
+    splitClashPollAccounts(accounts, pollPlayersByPlatform);
+  const pending = await pollRegisteredPlayers(accountsToPoll);
   const teams = await refreshRegisteredTeams(pending, fetchedAt);
   await writePendingRegistrations(pending, teams, tournamentsByKey, fetchedAt);
+  await clearInactiveRegistrations(accountsToClear, fetchedAt);
   await deleteOrphanClashTeams();
   await backfillClashSightingsFromLake();
 }
 
 async function pollRegisteredPlayers(
   accounts: readonly TrackedAccount[],
-  pollPlayersByPlatform: ReadonlyMap<PlatformRoute, boolean>,
 ): Promise<PendingClashPoll[]> {
   const pending: PendingClashPoll[] = [];
   for (const account of accounts) {
-    if (pollPlayersByPlatform.get(account.platform) !== true) {
-      continue;
-    }
     const players = await riotClient.clash.playersByPuuid(
       account.puuid,
       account.platform,
@@ -92,6 +109,21 @@ async function pollRegisteredPlayers(
     pending.push({ account, players });
   }
   return pending;
+}
+
+async function clearInactiveRegistrations(
+  accounts: readonly TrackedAccount[],
+  fetchedAt: Date,
+): Promise<void> {
+  for (const account of accounts) {
+    await replaceRegistrationsForAccount({
+      puuid: account.puuid,
+      region: account.region,
+      platform: account.platform,
+      registrations: [],
+      fetchedAt,
+    });
+  }
 }
 
 async function refreshRegisteredTeams(

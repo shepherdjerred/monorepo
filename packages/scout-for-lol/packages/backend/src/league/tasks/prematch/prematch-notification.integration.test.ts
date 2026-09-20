@@ -90,6 +90,14 @@ vi.doMock("@sentry/bun", async (importOriginal) => ({
   addBreadcrumb: () => "mock-breadcrumb",
 }));
 
+const clashGuildFlags = new Map<string, boolean>();
+
+vi.doMock("#src/league/clash/access.ts", async (importOriginal) => ({
+  ...(await importOriginal()),
+  clashSurfaceEnabledForGuild: async (guildId: string) =>
+    clashGuildFlags.get(guildId) === true,
+}));
+
 const { sendPrematchNotification } = await import("./prematch-notification.ts");
 const { formatPrematchMessage } = await import("./prematch-copy.ts");
 
@@ -201,6 +209,7 @@ beforeEach(() => {
     },
   ];
   buildLoadingScreenImpl = async () => ({ fake: true });
+  clashGuildFlags.clear();
 });
 
 describe("sendPrematchNotification", () => {
@@ -256,6 +265,40 @@ describe("sendPrematchNotification", () => {
     );
     expect(sendCalls[0]?.message["files"]).toBeDefined();
     expect(captureExceptionMock).not.toHaveBeenCalled();
+  });
+
+  test("keeps Clash chrome only for guilds with clash_surface", async () => {
+    clashGuildFlags.set("123456789012345678", true);
+    channelsResult = [
+      {
+        serverId: "123456789012345678",
+        channel: "channel-clash",
+        subscriptions: [{ subscriptionId: 1, playerId: 1, filters: null }],
+      },
+      {
+        serverId: "223456789012345678",
+        channel: "channel-standard",
+        subscriptions: [{ subscriptionId: 2, playerId: 1, filters: null }],
+      },
+    ];
+    const clashGame = RawCurrentGameInfoSchema.parse({
+      ...makeGameInfo(),
+      gameType: "CUSTOM",
+      gameQueueConfigId: 700,
+    });
+
+    await sendPrematchNotification(clashGame, [makeTrackedPlayer()]);
+
+    expect(sendCalls).toHaveLength(2);
+    const byChannel = new Map(
+      sendCalls.map((call) => [call.channel, call.message["content"]]),
+    );
+    expect(byChannel.get("channel-clash")).toBe(
+      "Tracked started a Clash match",
+    );
+    expect(byChannel.get("channel-standard")).toBe(
+      "Tracked started a Clash game",
+    );
   });
 
   test("renders loading-screen image for custom games (unmapped queue 3110)", async () => {
