@@ -3,7 +3,7 @@ import { verify } from "@octokit/webhooks-methods";
 import type { Client } from "@temporalio/client";
 import {
   handleClosedPr,
-  startCancelBuildkiteBuilds,
+  startCancelCiPipelines,
   type CancelStartFn,
 } from "./pr-closed.ts";
 import { jsonLog } from "./webhook-log.ts";
@@ -211,7 +211,7 @@ export type WebhookHooks = {
  *
  * Scope: the GitHub webhook server is the ingress for the merge-conflict
  * check (`push` to main + per-PR `pull_request` actions) and for cancelling
- * still-running Buildkite builds when a PR is `closed`. It no longer starts
+ * still-running CI pipelines when a PR is `closed`. It no longer starts
  * any PR review/summary/babysit workflow.
  */
 export function buildWebhookApp(
@@ -279,7 +279,7 @@ export function buildWebhookApp(
     const action = parsed.action;
     prWebhookReceivedTotal.inc({ event: "pull_request", action });
 
-    // PR closed (merged or plain close): stop any still-active Buildkite builds
+    // PR closed (merged or plain close): stop any still-active CI pipelines
     // for the head branch. Delegated to handleClosedPr — it does not skip draft
     // or bot PRs (Renovate branches churn the most CI).
     if (action === "closed") {
@@ -316,7 +316,7 @@ export function startGithubWebhook(client: Client): WebhookHandle {
   );
 
   const app = buildWebhookApp(secret, {
-    startCancel: (input) => startCancelBuildkiteBuilds(client, input),
+    startCancel: (input) => startCancelCiPipelines(client, input),
     startConflictCheckMain: (args) =>
       startCheckPrMergeConflictsForMain(client, args),
     startConflictCheckPr: (args) =>

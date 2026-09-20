@@ -1,6 +1,9 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import { exportDashboardWithHelmEscaping } from "@shepherdjerred/homelab/cdk8s/grafana/dashboard-export.ts";
-import { addCiCapacityHealthPanels } from "./ci-capacity-panels.ts";
+import {
+  addCiCapacityHealthPanels,
+  addCiIoPanels,
+} from "./ci-capacity-panels.ts";
 
 /**
  * CI capacity and admission.
@@ -10,9 +13,9 @@ import { addCiCapacityHealthPanels } from "./ci-capacity-panels.ts";
  * ephemeral-storage quotas, so its queue depth and admission latency remain
  * worth charting.
  *
- * The agent-health and per-job I/O attribution panels are NOT here. Those read
- * Buildkite's own metrics and its per-job pod labels, and rebuilding them
- * against Woodpecker's labels needs the new CI to have produced data first.
+ * The I/O panels came back with it, re-pointed at the `woodpecker:` recording
+ * rules. The agent-health panels did not: they read the Buildkite agent
+ * stack's own metrics, which have no Woodpecker counterpart.
  */
 export function createCiCapacityDashboard() {
   const builder = new dashboard.DashboardBuilder("CI — Capacity & Admission")
@@ -24,6 +27,7 @@ export function createCiCapacityDashboard() {
     .editable();
 
   addCiCapacityHealthPanels(builder);
+  addCiIoPanels(builder);
 
   return builder.build();
 }
