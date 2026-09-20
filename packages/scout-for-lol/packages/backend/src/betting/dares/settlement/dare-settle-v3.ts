@@ -17,7 +17,7 @@ import { matchTouchesRelationalDare } from "#src/betting/dares/evaluation/dare-m
 import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { dareV2MoneyFactsInTransaction } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import { distributeDareResolutionV3 } from "#src/betting/dares/lifecycle/dare-resolution-v3.ts";
-import { recordTerminalDareAnnouncement } from "#src/betting/dares/settlement/dare-resolution-v2.ts";
+import { recordTerminalDareAnnouncement } from "#src/betting/dares/settlement/dare-terminal-announcement.ts";
 import { claimActiveDareV2Settlement } from "#src/betting/dares/settlement/dare-settlement-claim-v2.ts";
 import {
   decisiveTargetDependenciesV3,

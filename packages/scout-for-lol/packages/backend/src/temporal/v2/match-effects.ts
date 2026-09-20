@@ -24,6 +24,7 @@ import {
 } from "#src/betting/notify/announcement-sink.ts";
 import { runGuardedEffectV2 } from "#src/temporal/v2/effect-fence.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
+import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import {
   readMatchReceiptEvidenceV2,
   recordMatchReceiptV2,
@@ -506,11 +507,27 @@ export async function mintPostmatchNotificationIntentsV2(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutMintedIntentsV2Result> {
   const context = await resolveScoutV2MatchContext(input.riotMatchId);
+  // The audience is read from the SNAPSHOT the observation recorded, not
+  // rebuilt from who is tracked now.
+  //
+  // The report is owed to the accounts this match was observed for, and that
+  // set was settled at observation time. Rebuilding it here asks a different
+  // question — who is tracked at the moment this Activity happens to run —
+  // and an account deregistered in between answers it by vanishing: the mint
+  // succeeds with fewer channels, the Workflow advances the cursor over a
+  // complete-looking run, and a report that was owed is gone with nothing
+  // recording that it was dropped.
+  //
+  // That window is not narrow. The Activity retries, and a takeover can run
+  // it much later than the observation; `MatchTrackedAccount` exists to make
+  // the answer durable rather than time-dependent, which is why the
+  // observation writes it in the same call that commits.
+  const tracked = await listTrackedAccounts(prisma, {
+    matchId: input.riotMatchId,
+  });
   const summary = await mintPostmatchIntentsV2(prisma, {
     matchId: input.riotMatchId,
-    puuids: context.trackedPlayers.map(
-      (player) => player.league.leagueAccount.puuid,
-    ),
+    puuids: tracked.map((account) => account.puuid),
     queue: {
       queueId: context.matchData.info.queueId,
       gameMode: context.matchData.info.gameMode,
