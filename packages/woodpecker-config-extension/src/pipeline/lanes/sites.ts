@@ -60,6 +60,28 @@ const SOURCE_BUILT_SITES = [
   { lane: "site-glitter", site: "glitter", filter: "glitter" },
 ] as const;
 
+/**
+ * The Scout Storybook catalogs.
+ *
+ * Their own entry rather than another SOURCE_BUILT_SITES row: the catalog
+ * packages consume source exports from their workspace dependencies, but
+ * `@scout-for-lol/data` reaches the llm-models and glitter-context catalogs
+ * through dist-only exports. Those two are direct-filtered so the install
+ * gives them their build toolchain, then compiled before the site is
+ * assembled. `turbo run` would be the obvious way to do that and is exactly
+ * wrong here: the lane's install is filtered, so `^build` cannot resolve.
+ */
+const STORYBOOK_SITE = {
+  lane: "site-scout-design-system",
+  site: "scout-design-system",
+  filters:
+    "--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/llm-models' --filter '@shepherdjerred/glitter-context'",
+  prebuild: [
+    "bun --no-install run --cwd packages/llm-models build",
+    "bun --no-install run --cwd packages/glitter-context build",
+  ],
+} as const;
+
 /** Sites deployed from a bundle another lane already built. */
 const PREBUILT_SITES = [
   { lane: "site-sjer-red", site: "sjer.red", artifact: "sjer-red-dist" },
@@ -83,6 +105,15 @@ function siteCommands(): string[] {
       "fi",
     );
   }
+  const storybookFlag = STORYBOOK_SITE.lane.replaceAll("-", "_");
+  lines.push(
+    `${storybookFlag}=false`,
+    `if bun --no-install ci/scripts/selectors/ci-changed.ts ${STORYBOOK_SITE.lane}; then`,
+    `  ${storybookFlag}=true`,
+    `  filters+=(${STORYBOOK_SITE.filters})`,
+    "fi",
+  );
+
   for (const { lane } of PREBUILT_SITES) {
     lines.push(
       `${lane.replaceAll("-", "_")}=false`,
@@ -112,6 +143,12 @@ function siteCommands(): string[] {
       `if [ "$${flag}" = "true" ]; then bun --no-install scripts/release/deploy-site.ts ${site}; fi`,
     );
   }
+  lines.push(
+    `if [ "$${storybookFlag}" = "true" ]; then`,
+    ...STORYBOOK_SITE.prebuild.map((command) => `  ${command}`),
+    `  bun --no-install scripts/release/deploy-site.ts ${STORYBOOK_SITE.site}`,
+    "fi",
+  );
 
   return lines;
 }
