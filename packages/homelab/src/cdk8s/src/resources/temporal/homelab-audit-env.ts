@@ -16,8 +16,9 @@ export function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
   return {
     ...temporalFeatureFlagEnvironment(),
     BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
-    BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
-    BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
+    // HTTP origin of the Woodpecker server. Deliberately not
+    // WOODPECKER_SERVER, which upstream uses for the agent's gRPC endpoint.
+    WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),
     PROMETHEUS_URL: EnvValue.fromValue(
       "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
     ),
@@ -31,7 +32,8 @@ export function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
       "ARGOCD_SERVER",
       "ARGOCD_AUTH_TOKEN",
       "CLOUDFLARE_API_TOKEN",
-      "BUILDKITE_API_TOKEN",
+      "WOODPECKER_TOKEN",
+      "WOODPECKER_REPO_ID",
     ]),
     ALERT_DASHBOARD_URL: EnvValue.fromValue(
       "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",

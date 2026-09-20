@@ -61,11 +61,14 @@ export async function cancelCiPipelinesForBranchImpl(
     throw new Error("WOODPECKER_TOKEN is required to cancel CI pipelines");
   }
 
-  const server = Bun.env["WOODPECKER_SERVER"] ?? "";
+  // WOODPECKER_URL, not WOODPECKER_SERVER: upstream uses the latter for the
+  // agent's gRPC endpoint, and reusing it for an HTTP origin is how a host
+  // that works for one ends up silently wrong for the other.
+  const server = Bun.env["WOODPECKER_URL"] ?? "";
   const repoId = Bun.env["WOODPECKER_REPO_ID"] ?? "";
   if (server === "" || repoId === "") {
     throw new Error(
-      "WOODPECKER_SERVER and WOODPECKER_REPO_ID are required to cancel CI pipelines",
+      "WOODPECKER_URL and WOODPECKER_REPO_ID are required to cancel CI pipelines",
     );
   }
 

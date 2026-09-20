@@ -25,10 +25,10 @@ const forbiddenFetch: FetchFn = () =>
 
 beforeEach(() => {
   savedToken = Bun.env["WOODPECKER_TOKEN"];
-  savedServer = Bun.env["WOODPECKER_SERVER"];
+  savedServer = Bun.env["WOODPECKER_URL"];
   savedRepoId = Bun.env["WOODPECKER_REPO_ID"];
   Bun.env["WOODPECKER_TOKEN"] = "wp-test-token";
-  Bun.env["WOODPECKER_SERVER"] = SERVER;
+  Bun.env["WOODPECKER_URL"] = SERVER;
   Bun.env["WOODPECKER_REPO_ID"] = "7";
 });
 
@@ -43,9 +43,9 @@ afterEach(() => {
     Bun.env["WOODPECKER_TOKEN"] = savedToken;
   }
   if (savedServer === undefined) {
-    delete Bun.env["WOODPECKER_SERVER"];
+    delete Bun.env["WOODPECKER_URL"];
   } else {
-    Bun.env["WOODPECKER_SERVER"] = savedServer;
+    Bun.env["WOODPECKER_URL"] = savedServer;
   }
   if (savedRepoId === undefined) {
     delete Bun.env["WOODPECKER_REPO_ID"];

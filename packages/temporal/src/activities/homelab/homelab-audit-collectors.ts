@@ -11,7 +11,7 @@ import type {
   ReportEnvelopeV1,
 } from "#shared/reports/report.ts";
 import { ensureGcxContext } from "#activities/gcx-context.ts";
-import { collectBuildkite } from "./homelab-audit-buildkite.ts";
+import { collectCiMain } from "./homelab-audit-ci.ts";
 import {
   interpretKubernetesWorkloads,
   KubernetesWorkloadListSchema,
@@ -93,12 +93,7 @@ async function runCommand(args: string[]): Promise<string> {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
-    env: {
-      ...Bun.env,
-      BUILDKITE_ORGANIZATION_SLUG:
-        Bun.env["BUILDKITE_ORGANIZATION_SLUG"] ?? "sjerred",
-      BUILDKITE_PIPELINE_SLUG: Bun.env["BUILDKITE_PIPELINE_SLUG"] ?? "monorepo",
-    },
+    env: { ...Bun.env },
   });
   const timeout = setTimeout(() => {
     process.kill();
@@ -462,7 +457,7 @@ export async function collectHomelabAuditEvidence(): Promise<HomelabAuditCollect
       schema: ArgoApplicationsSchema,
       interpret: interpretArgoApplications,
     }),
-    collectBuildkite(),
+    collectCiMain(),
   ]);
   return {
     startedAt,

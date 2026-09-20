@@ -37,10 +37,10 @@ export function buildHomelabAuditReport(
     ...(synthesis === undefined ? {} : { synthesis }),
     provenance: {
       source:
-        "typed Prometheus, Alerts, Temporal, Kubernetes, ArgoCD, and Buildkite collectors",
+        "typed Prometheus, Alerts, Temporal, Kubernetes, ArgoCD, and CI collectors",
       windowStart: collection.startedAt,
       windowEnd: collection.completedAt,
-      query: "current health plus Temporal/Buildkite 24-hour failure windows",
+      query: "current health plus Temporal/CI 24-hour failure windows",
     },
   };
 }

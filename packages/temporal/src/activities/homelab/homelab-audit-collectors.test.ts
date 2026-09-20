@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildkiteBuildFinding } from "./homelab-audit-buildkite.ts";
+import { ciPipelineFinding } from "./homelab-audit-ci.ts";
 import {
   interpretArgoApplications,
   prometheusCount,
@@ -77,28 +77,27 @@ describe("homelab audit collector interpretation", () => {
     );
   });
 
-  test("reports failed Buildkite job log evidence instead of inferring from its label", () => {
-    const finding = buildkiteBuildFinding(
+  test("reports failed step log evidence instead of inferring from its label", () => {
+    const finding = ciPipelineFinding(
       {
         number: 9001,
-        state: "failed",
-        web_url: "https://buildkite.com/sjerred/monorepo/builds/9001",
+        status: "failure",
         commit: "abc123",
-        jobs: [
+        created: 1_784_505_600,
+        workflows: [
           {
-            id: "job-1",
-            name: "Typecheck",
-            state: "failed",
-            web_url: null,
+            name: "verify",
+            state: "failure",
+            children: [{ id: 1, name: "Typecheck", state: "failure" }],
           },
         ],
       },
       [
-        "build #9001 Typecheck: kubernetes scheduler rejected pod: Insufficient memory",
+        "pipeline #9001 verify/Typecheck: kubernetes scheduler rejected pod: Insufficient memory",
       ],
     );
 
-    expect(finding.summary).toContain("#9001 failed");
+    expect(finding.summary).toContain("#9001 failure");
     expect(finding.detail).toContain("Insufficient memory");
   });
 
