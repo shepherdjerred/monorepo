@@ -2,6 +2,12 @@ import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { describe, expect, test } from "vitest";
+import {
+  AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
+} from "#shared/agent/agent-chat.ts";
+import type { HttpAgentChatActivityInput } from "#shared/agent/agent-chat-http.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { PreparedImessageCommandSchema } from "#shared/agent/agent-chat-imessage.ts";
 import type { z } from "zod/v4";
@@ -35,6 +41,7 @@ describe("durable iMessage response Workflow", () => {
       const env = await TestWorkflowEnvironment.createTimeSkipping();
       let prepares = 0;
       let executions = 0;
+      let activityInput: HttpAgentChatActivityInput | undefined;
       const deliveries: {
         conversationId: string;
         messageId: string;
@@ -72,7 +79,10 @@ describe("durable iMessage response Workflow", () => {
           connection: env.nativeConnection,
           taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
           activities: {
-            executeHttpAgentChatCommand: () => {
+            executeHttpAgentChatCommand: (
+              input: HttpAgentChatActivityInput,
+            ) => {
+              activityInput = input;
               executions += 1;
               if (scenario === "provider-failure")
                 throw ApplicationFailure.nonRetryable(
@@ -116,6 +126,34 @@ describe("durable iMessage response Workflow", () => {
         else await execution;
         expect(prepares).toBe(1);
         expect(executions).toBe(scenario === "help" ? 0 : 1);
+        if (scenario === "help") {
+          expect(activityInput).toBeUndefined();
+        } else {
+          const handle = env.client.workflow.getHandle(workflowId);
+          const description = await handle.describe();
+          expect(activityInput?.providerStartDeadline).toBe(
+            new Date(
+              description.startTime.getTime() +
+                AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+            ).toISOString(),
+          );
+          const history = await handle.fetchHistory();
+          const commandActivity = history.events?.find(
+            (event) =>
+              event.activityTaskScheduledEventAttributes?.activityType?.name ===
+              "executeHttpAgentChatCommand",
+          );
+          expect(
+            Number(
+              commandActivity?.activityTaskScheduledEventAttributes
+                ?.scheduleToCloseTimeout?.seconds,
+            ),
+          ).toBe(AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS / 1000);
+          expect(
+            commandActivity?.activityTaskScheduledEventAttributes?.retryPolicy
+              ?.maximumAttempts,
+          ).toBe(AGENT_CHAT_INGRESS_MAX_ATTEMPTS);
+        }
         expect(deliveries).toHaveLength(1);
         expect(deliveries[0]).toMatchObject({
           conversationId: INPUT.conversationId,
