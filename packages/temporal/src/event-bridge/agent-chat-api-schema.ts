@@ -15,6 +15,7 @@ export const CreateAgentChatSchema = z
     provider: AgentChatProviderSchema,
     model: z.string().min(1).max(200),
     source: AgentChatBindingSchema,
+    bindingId: HttpAgentChatTurnIdSchema.optional(),
     prompt: AgentChatPromptSchema.optional(),
     turnId: HttpAgentChatTurnIdSchema.optional(),
     submittedAt: z.iso.datetime({ offset: true }).optional(),
@@ -35,7 +36,14 @@ export const CreateAgentChatSchema = z
   .refine((input) => input.prompt !== undefined || input.chatId !== undefined, {
     message: "chatId is required when prompt is absent",
     path: ["chatId"],
-  });
+  })
+  .refine(
+    (input) => input.prompt !== undefined || input.bindingId !== undefined,
+    {
+      message: "bindingId is required when prompt is absent",
+      path: ["bindingId"],
+    },
+  );
 
 export const ContinueAgentChatSchema = z.strictObject({
   source: AgentChatBindingSchema,
