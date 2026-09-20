@@ -196,6 +196,23 @@ describe("object concurrency", () => {
   });
 });
 
+describe("destination visibility", () => {
+  test("retries a newly uploaded object that is briefly not visible", async () => {
+    const { source, backup } = stores();
+    source.seed("source", "state.json", "important");
+    backup.unavailableReadsAfterPut = 1;
+    await expect(
+      runBackup({
+        source,
+        destination: backup,
+        backupBucket: "backup",
+        policy: POLICY,
+        cadence: "daily",
+      }),
+    ).resolves.toMatchObject({ buckets: [{ copiedObjects: 1 }] });
+  });
+});
+
 describe("incremental backup and restore", () => {
   test("refreshes a source object that changes after inventory", async () => {
     const source = new MutatingSourceStore();
@@ -361,10 +378,20 @@ describe("incremental backup and restore", () => {
       }),
     ).rejects.toThrow("must be empty");
   });
+});
 
-  test("restores metadata and verifies all checksums", async () => {
+describe("metadata preservation", () => {
+  test("stores opaque payloads and restores source metadata", async () => {
     const { source, backup } = stores();
-    source.seed("source", "state.json", "important");
+    source.seedWithHeaders({
+      bucket: "source",
+      key: "state.json",
+      value: "important",
+      headers: {
+        contentType: "application/json",
+        metadata: { trackedplayers: "Jérred" },
+      },
+    });
     const snapshot = await runBackup({
       source,
       destination: backup,
@@ -389,6 +416,20 @@ describe("incremental backup and restore", () => {
       "acceptance-restore",
       "state.json",
     );
-    expect(restored.headers.metadata).toEqual({ fixture: "true" });
+    expect(restored.headers).toEqual({
+      contentType: "application/json",
+      metadata: { trackedplayers: "Jérred" },
+    });
+    const backupObjects = await backup.listObjects("backup");
+    const payload = backupObjects.find((object) =>
+      object.key.startsWith("objects/"),
+    );
+    expect(payload).toBeDefined();
+    if (payload === undefined) throw new Error("Missing backup payload");
+    const storedPayload = await backup.getObject("backup", payload.key);
+    expect(storedPayload.headers).toEqual({
+      contentType: "application/octet-stream",
+      metadata: {},
+    });
   });
 });

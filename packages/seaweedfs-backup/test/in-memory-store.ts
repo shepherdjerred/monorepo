@@ -37,8 +37,10 @@ async function readBody(body: Readable | Uint8Array): Promise<Uint8Array> {
 
 export class InMemoryObjectStore implements ObjectStore {
   private readonly buckets = new Map<string, Map<string, MemoryObject>>();
+  private readonly unavailableReads = new Map<string, number>();
   public corruptWrites = false;
   public failPutPrefix: string | undefined;
+  public unavailableReadsAfterPut = 0;
 
   public createBucket(name: string): void {
     this.buckets.set(name, new Map());
@@ -50,12 +52,35 @@ export class InMemoryObjectStore implements ObjectStore {
     value: string,
     lastModified = new Date("2026-08-01T00:00:00.000Z"),
   ): void {
-    const bytes = new TextEncoder().encode(value);
-    this.requireBucket(bucket).set(key, {
+    this.seedWithHeaders(
+      {
+        bucket,
+        key,
+        value,
+        headers: {
+          contentType: "text/plain",
+          metadata: { fixture: "true" },
+        },
+      },
+      lastModified,
+    );
+  }
+
+  public seedWithHeaders(
+    input: {
+      bucket: string;
+      key: string;
+      value: string;
+      headers: ObjectHeaders;
+    },
+    lastModified = new Date("2026-08-01T00:00:00.000Z"),
+  ): void {
+    const bytes = new TextEncoder().encode(input.value);
+    this.requireBucket(input.bucket).set(input.key, {
       bytes,
       etag: `"${createHash("md5").update(bytes).digest("hex")}"`,
       lastModified,
-      headers: { contentType: "text/plain", metadata: { fixture: "true" } },
+      headers: input.headers,
     });
   }
 
@@ -81,6 +106,14 @@ export class InMemoryObjectStore implements ObjectStore {
     key: string,
     conditions: GetObjectConditions = {},
   ): Promise<StoredObject> {
+    const objectId = `${bucket}\0${key}`;
+    const unavailableReads = this.unavailableReads.get(objectId) ?? 0;
+    if (unavailableReads > 0) {
+      this.unavailableReads.set(objectId, unavailableReads - 1);
+      const error = new Error(`NoSuchKey: ${bucket}/${key}`);
+      error.name = "NoSuchKey";
+      throw error;
+    }
     const object = this.requireObject(bucket, key);
     if (conditions.etag !== undefined && conditions.etag !== object.etag) {
       throw new Error("PreconditionFailed");
@@ -135,6 +168,12 @@ export class InMemoryObjectStore implements ObjectStore {
       lastModified: new Date(),
       headers: input.headers,
     });
+    if (this.unavailableReadsAfterPut > 0 && input.key.startsWith("objects/")) {
+      this.unavailableReads.set(
+        `${input.bucket}\0${input.key}`,
+        this.unavailableReadsAfterPut,
+      );
+    }
   }
 
   public deleteObject(bucket: string, key: string): Promise<void> {
