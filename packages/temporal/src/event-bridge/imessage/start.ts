@@ -1,6 +1,7 @@
 import {
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
+  WorkflowExecutionAlreadyStartedError,
   type Client,
 } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -15,17 +16,22 @@ export async function startBlueBubblesIngress(client: {
     throw new Error(
       "BlueBubbles ingress requires both bootstrap URL and password",
     );
-  await client.workflow.start("blueBubblesIngressWorkflow", {
-    workflowId: "agent-chat-bluebubbles-ingress",
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
-    workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
-    args: [
-      {
-        startedAt: new Date().toISOString(),
-        initialized: false,
-        lastRowId: 0,
-      },
-    ],
-  });
+  try {
+    await client.workflow.start("blueBubblesIngressWorkflow", {
+      workflowId: "agent-chat-bluebubbles-ingress",
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
+      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+      args: [
+        {
+          startedAt: new Date().toISOString(),
+          initialized: false,
+          lastRowId: 0,
+        },
+      ],
+    });
+  } catch (error: unknown) {
+    if (error instanceof WorkflowExecutionAlreadyStartedError) return;
+    throw error;
+  }
 }
