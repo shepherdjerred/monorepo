@@ -28,19 +28,27 @@ const logger = createLogger("match-data-fetcher");
  * Fetch match data from Riot API
  *
  * Validates the response against our schema to ensure type safety and catch API changes.
+ *
+ * Takes either spelling of the route because the only thing it does with the
+ * value is hand it to `platformToRegionalRoute`, which parses which one it was
+ * given. A caller holding a match id already knows the platform — it is the
+ * id's own prefix — and should pass that rather than finding an account whose
+ * region maps to it. The region spelling is strictly narrower: `ME1` is a
+ * platform no `Region` maps to, so a region-derived route cannot express a
+ * match played on it at all.
  */
 export async function fetchMatchData(
   matchId: MatchId,
-  playerRegion: Region,
+  route: PlatformRoute | Region,
 ): Promise<RawMatch | undefined> {
-  const regionalRoute = platformToRegionalRoute(playerRegion);
+  const regionalRoute = platformToRegionalRoute(route);
 
   const match = await callRiotOrUndefined(
     {
       source: "match-data",
       schema: RawMatchSchema,
       schemaLabel: "match",
-      context: { matchId, region: playerRegion },
+      context: { matchId, region: route },
       onValidationFailure: {
         kind: "save-to-s3",
         assetType: "match",

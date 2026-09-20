@@ -85,7 +85,6 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
       riotMatchId,
       matchData: { info: { queueId: 420 } },
       trackedPlayers: [],
-      allPlayerConfigs: [],
     });
   },
 }));

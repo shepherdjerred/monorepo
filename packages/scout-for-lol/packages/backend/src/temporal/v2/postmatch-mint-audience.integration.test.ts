@@ -55,7 +55,6 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
           league: { leagueAccount: { puuid: "s".repeat(78) } },
         },
       ],
-      allPlayerConfigs: [],
     }),
 }));
 

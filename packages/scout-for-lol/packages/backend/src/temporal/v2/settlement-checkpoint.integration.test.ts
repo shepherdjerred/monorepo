@@ -57,7 +57,6 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
         info: { gameCreation: Date.parse("2026-09-18T09:00:00.000Z") },
       },
       trackedPlayers: [],
-      allPlayerConfigs: [],
     }),
 }));
 

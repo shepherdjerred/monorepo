@@ -1,11 +1,8 @@
-import { ApplicationFailure } from "@temporalio/common";
 import {
   MatchIdSchema,
-  regionToPlatformRoute,
   type MatchId,
   type PlayerConfigEntry,
   type RawMatch,
-  type Region,
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { getAccountsWithState, prisma } from "#src/database/index.ts";
@@ -33,60 +30,33 @@ export type ScoutV2MatchContext = {
   readonly matchData: RawMatch;
   /** Every tracked account that played in this match. */
   readonly trackedPlayers: PlayerConfigEntry[];
-  /** Every tracked account, which is what the v1 pipeline's steps take. */
-  readonly allPlayerConfigs: PlayerConfigEntry[];
 };
-
-/**
- * The region to fetch a match through, taken from a tracked account on the
- * match's own platform.
- *
- * Riot routes a MatchV5 read by regional route, and `platformToRegionalRoute`
- * derives that from either spelling — but `fetchMatchData` takes Scout's
- * `Region` label, and the match id carries the platform. Resolving one from a
- * tracked account rather than inverting the mapping here keeps a single source
- * of truth for the correspondence, and makes the failure honest: Scout
- * archives matches of accounts it tracks, so a match on a platform where it
- * tracks none is not a transient fault.
- */
-function regionForPlatform(
-  accounts: readonly PlayerConfigEntry[],
-  riotMatchId: RiotMatchId,
-): Region {
-  const platform = platformRouteOf(riotMatchId);
-  const region = accounts
-    .map((config) => config.league.leagueAccount.region)
-    .find((candidate) => regionToPlatformRoute(candidate) === platform);
-  if (region === undefined) {
-    throw ApplicationFailure.nonRetryable(
-      `No tracked account plays on ${platform}, so ${riotMatchId} cannot be fetched`,
-      "MissingDomainRecord",
-    );
-  }
-  return region;
-}
 
 export async function resolveScoutV2MatchContext(
   riotMatchId: RiotMatchId,
 ): Promise<ScoutV2MatchContext> {
   const matchId = MatchIdSchema.parse(riotMatchId);
-  const accounts = await getAccountsWithState(prisma, getActiveServerIds());
-  const allPlayerConfigs = accounts.map((account) => account.config);
+  // The route comes from the match id's own prefix, so fetching does not
+  // depend on the roster at all. It previously did: the resolver derived this
+  // same platform, searched the live accounts for one whose region mapped back
+  // to it, and passed that region to a fetcher that mapped it forward again.
+  // That round trip raised a non-retryable failure whenever no tracked account
+  // remained on the match's platform, which stalled the whole per-match
+  // pipeline at its first Activity for a match Scout had already observed.
+  // `platformRouteOf` is also the only derivation `MatchObservationRecordSchema`
+  // accepts, so the id is the source of truth for this by construction.
   const matchData = requireAuthoritativeMatchData(
     riotMatchId,
-    await fetchMatchData(
-      matchId,
-      regionForPlatform(allPlayerConfigs, riotMatchId),
-    ),
+    await fetchMatchData(matchId, platformRouteOf(riotMatchId)),
   );
+  const accounts = await getAccountsWithState(prisma, getActiveServerIds());
   const participants = new Set<string>(matchData.metadata.participants);
   return {
     matchId,
     riotMatchId,
     matchData,
-    trackedPlayers: allPlayerConfigs.filter((config) =>
-      participants.has(config.league.leagueAccount.puuid),
-    ),
-    allPlayerConfigs,
+    trackedPlayers: accounts
+      .map((account) => account.config)
+      .filter((config) => participants.has(config.league.leagueAccount.puuid)),
   };
 }

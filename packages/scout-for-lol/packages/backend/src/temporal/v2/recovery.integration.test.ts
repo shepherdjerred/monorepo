@@ -61,7 +61,6 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
       riotMatchId,
       matchData: { info: { gameCreation: riot.gameCreation } },
       trackedPlayers: [],
-      allPlayerConfigs: [],
     }),
 }));
 
