@@ -7,6 +7,7 @@ import { createWoodpeckerAgent } from "@shepherdjerred/homelab/cdk8s/src/resourc
 import { createWoodpeckerCaches } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/caches.ts";
 import { createWoodpeckerMaintenanceWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/maintenance-worker.ts";
 import { createWoodpeckerConfigExtension } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/config-extension-workload.ts";
+import { createWoodpeckerStepNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 import {
   createWoodpeckerCredentialBoundaries,
   WOODPECKER_NAMESPACE,
@@ -37,6 +38,7 @@ export function createWoodpeckerChart(app: App) {
   createWoodpeckerServer(chart);
   createWoodpeckerAgent(chart);
   createWoodpeckerConfigExtension(chart);
+  createWoodpeckerStepNetworkPolicy(chart);
   createWoodpeckerCaches(chart);
   createWoodpeckerMaintenanceWorker(chart);
 }
