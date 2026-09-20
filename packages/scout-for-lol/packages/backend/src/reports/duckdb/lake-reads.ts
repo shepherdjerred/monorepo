@@ -419,7 +419,7 @@ export async function fetchPlayerChampionPool(options: {
       `sum(COALESCE(gold_earned, 0))::BIGINT AS gold_earned, ` +
       `sum(COALESCE(vision_score, 0))::BIGINT AS vision_score, ` +
       `sum(COALESCE(total_damage_dealt_to_champions, 0))::BIGINT AS damage_to_champions, ` +
-      `mode(NULLIF(team_position, '')) AS team_position ` +
+      `mode(CASE WHEN upper(trim(team_position)) IN ('', 'INVALID') THEN NULL ELSE team_position END) AS team_position ` +
       `FROM player_matches ` +
       `GROUP BY champion_id, champion_name ORDER BY games DESC, champion_name ASC`,
     extraParams:

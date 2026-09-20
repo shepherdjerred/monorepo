@@ -65,6 +65,7 @@ export type TestLakeMatchFact = {
   playerSubteamId?: number;
   championId?: number;
   championName?: string;
+  teamPosition?: string | undefined;
   /**
    * The Riot ID recorded on this match row.
    *
@@ -124,7 +125,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     summoner_name: fact.playerAlias,
     champion_id: fact.championId ?? 22,
     champion_name: fact.championName ?? "Ashe",
-    team_position: "BOTTOM",
+    team_position: fact.teamPosition ?? "BOTTOM",
     individual_position: "BOTTOM",
     lane: null,
     role: null,
