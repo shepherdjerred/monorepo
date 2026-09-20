@@ -37,7 +37,6 @@ import {
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
   recoveredAnnouncementsOf,
-  settlementAnnouncementItemsOf,
 } from "#src/temporal/v2/notification/match-intents.ts";
 import {
   listSettlementAnnouncementItems,
@@ -122,18 +121,21 @@ function settledRecordCount(evidence: SettlementEvidence): number {
  */
 function checkpointingSettlementSink(
   riotMatchId: RiotMatchId,
+  mayAnnounce: boolean,
 ): SettlementAnnouncementSink {
   return {
     ...silentSettlementSink,
-    // A live V2 match may still post a callout for a Dare that has none: that
-    // is v1's own pre-existing surface and the gate's promise permits it for a
-    // match a live discovery surfaced.
-    mayPostDareCallout: announcingSettlementSink.mayPostDareCallout,
-    // Likewise the Dare outbox. A live match is owed those DMs, and they are
-    // a different surface from the summaries this pipeline mints, so
-    // withholding them here would drop a delivery rather than defer one.
-    mayEnqueueDareNotification:
-      announcingSettlementSink.mayEnqueueDareNotification,
+    // Announcement ELIGIBILITY varies; recovery evidence does not. A live V2
+    // match may still post a callout for a Dare that has none and still owes
+    // its Dare DMs, both being v1 surfaces the gate's promise permits for a
+    // match a live discovery surfaced. A backfill owes neither.
+    ...(mayAnnounce
+      ? {
+          mayPostDareCallout: announcingSettlementSink.mayPostDareCallout,
+          mayEnqueueDareNotification:
+            announcingSettlementSink.mayEnqueueDareNotification,
+        }
+      : {}),
     recordAnnouncementItem: async (db, item) => {
       // EVERY failure leaves here as a `SettlementCheckpointError`, not just
       // the conflict. A connection blip writing this row loses the settlement
@@ -334,42 +336,20 @@ export async function settleMatchMarketsV2(input: {
             matchData: context.matchData,
             trackedPlayers: context.trackedPlayers,
             prismaClient: prisma,
-            announcementSink: (await matchMayAnnounce(
-              prisma,
+            // One sink either way, because the two concerns it used to fuse
+            // are different questions. WHETHER TO ANNOUNCE depends on the
+            // committed delivery mode; WHETHER TO RECORD does not. A silent
+            // match that recorded nothing left a retry with state-gated
+            // nothing and no standing instruction, and the receipt then
+            // attested a settlement with no ledger identities although the
+            // money had moved. The mint reads the same committed mode and
+            // withholds the notifications; the evidence stays durable.
+            announcementSink: checkpointingSettlementSink(
               input.riotMatchId,
-            ))
-              ? checkpointingSettlementSink(input.riotMatchId)
-              : silentSettlementSink,
+              await matchMayAnnounce(prisma, input.riotMatchId),
+            ),
           }),
       );
-      // The checkpoint, written before anything else this attempt does with
-      // the settlement's output. It is the only durable record of results no
-      // retry can reproduce, so it goes down first and never changes: a
-      // standing row whose instructions DIFFER is two producers disagreeing
-      // about what one settlement produced, and that fails the Activity rather
-      // than overwriting what the first one recorded.
-      await fence.assertHeld();
-      const instructions = settlementAnnouncementItemsOf({
-        closures: settled.bucks.closures,
-        settlements: settled.bucks.settlements,
-        parlaySettlements: settled.bucks.parlaySettlements,
-        earnings: settled.bucks.earnings,
-        dareSettlements: settled.bucks.dareSettlements,
-      });
-      for (const item of instructions) {
-        const checkpoint = durableCommitV2(
-          await recordSettlementAnnouncementItem(prisma, {
-            matchId: input.riotMatchId,
-            item,
-          }),
-        );
-        if (checkpoint.outcome === "conflict") {
-          throw ApplicationFailure.nonRetryable(
-            `A settlement announcement already stands for ${input.riotMatchId} (${item.family}/${item.itemKey}) with different instructions (${checkpoint.reason}); refusing to overwrite the only record of what that transition produced`,
-            "DurableCommitConflict",
-          );
-        }
-      }
       // Every instruction standing for this match, which is this attempt's
       // output UNION whatever an earlier attempt checkpointed before it
       // stopped. Read after the writes above so it includes them.

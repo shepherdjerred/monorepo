@@ -35,6 +35,7 @@ const WRITE_FAILS = RiotMatchIdSchema.parse("NA1_9501");
 const WRITE_CONFLICTS = RiotMatchIdSchema.parse("NA1_9502");
 const CONFLICTS_INSIDE_A_DARE_BATCH = RiotMatchIdSchema.parse("NA1_9503");
 const PARTLY_SETTLED = RiotMatchIdSchema.parse("NA1_9504");
+const BACKFILLED = RiotMatchIdSchema.parse("NA1_9505");
 
 type DriveSettlement = (sink: SettlementAnnouncementSink) => Promise<void>;
 
@@ -135,6 +136,18 @@ afterAll(async () => {
 beforeEach(async () => {
   await prisma.matchSettlementAnnouncement.deleteMany({});
   await prisma.matchObservation.deleteMany({});
+  await observeMatch(prisma, {
+    matchId: BACKFILLED,
+    platformRoute: "NA1",
+    policy: "FULL",
+    // Owed no public delivery, which is the whole point of this case.
+    deliveryMode: "silent-backfill",
+    owner: { kind: "temporal-v2" },
+    promotion: null,
+    gameCreatedAt: IsoInstantSchema.parse("2026-09-18T09:00:00.000Z"),
+    observedAt: IsoInstantSchema.parse("2026-09-18T09:40:00.000Z"),
+    artifacts: { match: null, timeline: null },
+  });
   for (const matchId of [
     WRITE_FAILS,
     WRITE_CONFLICTS,
@@ -167,9 +180,13 @@ async function standingSettlementReceipt(
 }
 
 /** One guild's settled pool, in the shape a checkpoint stores. */
-function settlementPayload(serverId: string, betId: number): unknown {
+function settlementPayload(
+  serverId: string,
+  betId: number,
+  matchId: string = PARTLY_SETTLED,
+): unknown {
   return {
-    matchId: PARTLY_SETTLED,
+    matchId,
     serverId,
     winningTeamId: 100,
     winnersPool: 100,
@@ -260,6 +277,31 @@ describe("a settlement resuming a match another attempt settled part of", () => 
     const parsed = settlementEvidenceCodec.parse(evidence);
     expect(parsed.settledBetIds.toSorted((a, b) => a - b)).toEqual([101, 202]);
   });
+});
+
+test("a backfilled match still records what its settlement produced", async () => {
+  // Announcement eligibility and recovery evidence are different questions,
+  // and the sink used to fuse them: a silent match recorded nothing, so a
+  // death after a pool committed left the retry with state-gated nothing and
+  // no standing instruction, and the receipt then attested a settlement with
+  // no ledger identities although the money had moved.
+  //
+  // The money is not silent. Only the announcing is, and the mint reads the
+  // same committed mode to decide that.
+  settlement.drive = async (sink) => {
+    await sink.recordAnnouncementItem(prisma, {
+      family: "settlement",
+      itemKey: "guild-1",
+      payload: settlementPayload("guild-1", 303, BACKFILLED),
+    });
+  };
+
+  await settleMatchMarketsV2({ riotMatchId: BACKFILLED });
+
+  const stored = await prisma.matchSettlementAnnouncement.findMany({
+    where: { riotMatchId: BACKFILLED },
+  });
+  expect(stored).toHaveLength(1);
 });
 
 describe("a settlement whose checkpoint cannot be written", () => {
