@@ -182,17 +182,22 @@ export class GitHubClient {
       ({ commands: values }) => values ?? [],
     );
     for (const command of commands) {
-      const match = /^toolkit bk job log ([A-Za-z0-9-]+) --agent$/.exec(
-        command,
-      );
-      const jobId = match?.[1];
-      if (jobId === undefined) continue;
+      // Matches exactly what `toolkit pr health` emits for a failing pipeline.
+      // Strict rather than lenient: the captured values are spliced straight
+      // into a subprocess argument list.
+      const match =
+        /^toolkit woodpecker pipeline log show (?<repo>[\w.-]+\/[\w.-]+) (?<pipeline>\d+)$/u.exec(
+          command,
+        );
+      const repo = match?.groups?.["repo"];
+      const pipeline = match?.groups?.["pipeline"];
+      if (repo === undefined || pipeline === undefined) continue;
       const log = await this.run(
-        ["toolkit", "bk", "job", "log", jobId, "--agent"],
+        ["toolkit", "woodpecker", "pipeline", "log", "show", repo, pipeline],
         { cwd: checkout, env: this.env },
       );
       sections.push(
-        `Buildkite job ${jobId}:\n${(log.stdout || log.stderr).slice(-60_000)}`,
+        `CI pipeline ${pipeline}:\n${(log.stdout || log.stderr).slice(-60_000)}`,
       );
     }
     return sections.join("\n\n").slice(-100_000);
