@@ -407,3 +407,32 @@ describe("coverage of the Buildkite pipeline", () => {
     }
   });
 });
+
+/**
+ * The Storybook catalogs reach their dist-only dependencies through
+ * `@scout-for-lol/data`, so the lane has to direct-filter them into the
+ * install and compile them before assembling the site. `turbo run` cannot do
+ * it: the lane installs a filtered subset, so `^build` has nothing to resolve.
+ */
+test("the sites lane installs and pre-builds the Storybook catalogs", () => {
+  const sites = step("sites");
+  if (sites === undefined) throw new Error("sites step missing");
+  const commands = sites.commands.join("\n");
+
+  expect(commands).toContain(
+    "ci/scripts/selectors/ci-changed.ts site-scout-design-system",
+  );
+  expect(commands).toContain(
+    "--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/llm-models' --filter '@shepherdjerred/glitter-context'",
+  );
+  expect(commands).toContain(
+    "bun --no-install run --cwd packages/llm-models build",
+  );
+  expect(commands).toContain(
+    "bun --no-install run --cwd packages/glitter-context build",
+  );
+  expect(commands).toContain(
+    "bun --no-install scripts/release/deploy-site.ts scout-design-system",
+  );
+  expect(commands).not.toContain("turbo run");
+});
