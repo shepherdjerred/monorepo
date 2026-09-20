@@ -7,6 +7,7 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
 import {
+  MY_SERVER,
   addFlagOverride,
   clearFlagOverrides,
   resetFlagOverrides,
@@ -15,6 +16,9 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
+import { parseReplayCorpus } from "#src/explore/replay/corpus.ts";
+import { planConversationTurns } from "#src/explore/replay/plan.ts";
+import { buildTranscript } from "#src/explore/store-mappers.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
@@ -267,6 +271,107 @@ async function loadBaseline(
   return entries;
 }
 
+/**
+ * Turn the committed corpus for a stage into cases.
+ *
+ * Each turn is its own case, answered as the person who asked it and with the
+ * guild that turn actually ran with — not the guild config's persona. A
+ * conversation turn is a record of something that happened; borrowing another
+ * identity or another guild would make the comparison meaningless.
+ */
+async function conversationCasesFor(
+  stage: "beta" | "prod",
+  surface: "web",
+): Promise<{
+  readonly cases: ReplayCaseInput[];
+  /**
+   * The answer each turn originally produced.
+   *
+   * A conversation turn is the one case kind with a real baseline: somebody
+   * asked this and got that. Comparing against it is the entire reason to
+   * replay a conversation rather than a chip.
+   */
+  readonly baselines: Map<string, ReplayBaseline>;
+}> {
+  const corpusPath = new URL(
+    `../../src/explore/replay/corpus.${stage}.json`,
+    import.meta.url,
+  );
+  const file = Bun.file(corpusPath);
+  if (!(await file.exists())) {
+    throw new Error(
+      `No conversation corpus for ${stage}. Create one with explore:curate-corpus --stage ${stage} --write.`,
+    );
+  }
+  const corpus = parseReplayCorpus(await file.json());
+  if (corpus.stage !== stage) {
+    throw new Error(
+      `Corpus at ${corpusPath.pathname} is for ${corpus.stage}, not ${stage}.`,
+    );
+  }
+
+  const soleAllowedGuildId = stage === "beta" ? MY_SERVER : null;
+  const cases: ReplayCaseInput[] = [];
+  const baselines = new Map<string, ReplayBaseline>();
+
+  for (const entry of corpus.conversations) {
+    const conversation = await prisma.exploreConversation.findFirst({
+      where: { id: entry.conversationId },
+      include: { messages: true },
+    });
+    if (conversation === null) {
+      throw new Error(
+        `Corpus names conversation ${entry.conversationId}, which is not in this ${stage} snapshot. Re-pull the dataset or re-curate.`,
+      );
+    }
+    const runs = await prisma.scoutInteractiveRun.findMany({
+      where: { kind: "explore", conversationId: entry.conversationId },
+      select: { resultMessageId: true, payload: true },
+    });
+
+    const planned = planConversationTurns({
+      entry,
+      transcript: buildTranscript(
+        conversation,
+        conversation.messages,
+        entry.leafId,
+      ),
+      runs,
+      soleAllowedGuildId,
+    });
+
+    for (const turn of planned) {
+      baselines.set(turn.caseId, {
+        source: "stored",
+        createdAt: turn.baseline.createdAt,
+        answer: turn.baseline.content,
+        queryText: turn.baseline.queryText,
+        caveats: turn.baseline.caveats,
+        followUps: turn.baseline.followUps,
+        rowsReturned: turn.baseline.preview?.rowsReturned ?? null,
+        rowsScanned: turn.baseline.preview?.rowsScanned ?? null,
+        toolNames: turn.baseline.trace.map((entry) => entry.toolName),
+        matchCardIds: turn.baseline.matchCards.map(
+          (card) => card.match.matchId,
+        ),
+        visualizationKind: turn.baseline.visualization?.kind ?? null,
+      });
+      cases.push({
+        caseId: turn.caseId,
+        kind: "conversation",
+        conversationId: turn.conversationId,
+        question: turn.question,
+        history: turn.history,
+        requesterId: DiscordAccountIdSchema.parse(conversation.userId),
+        guildIds: turn.guildIds,
+        surface,
+        originChannelId: null,
+      });
+    }
+  }
+  return { cases, baselines };
+}
+
 async function runGuild(input: {
   readonly options: ReplayCliOptions;
   readonly pin: StageDatasetPin;
@@ -305,32 +410,41 @@ async function runGuild(input: {
         ? new Set<string>()
         : await completedCaseIds(paths.index);
 
-    if (options.includeConversations) {
-      throw new Error(
-        "Conversation replay is not implemented yet; run with --chips.",
-      );
-    }
-
     const requesterId = DiscordAccountIdSchema.parse(config.requesterId);
-    const chips = exploreChipCases()
-      .filter((chip) =>
-        options.onlyCaseId === null ? true : chip.caseId === options.onlyCaseId,
-      )
-      .filter((chip) => !alreadyDone.has(chip.caseId));
-    const selected =
-      options.limit === null ? chips : chips.slice(0, options.limit);
 
-    const cases: ReplayCaseInput[] = selected.map((chip) => ({
-      caseId: chip.caseId,
-      kind: "chip",
-      conversationId: globalThis.crypto.randomUUID(),
-      question: chip.prompt,
-      history: [],
-      requesterId,
-      guildIds: [config.guildId],
-      surface,
-      originChannelId: null,
-    }));
+    const chipCases: ReplayCaseInput[] = options.includeChips
+      ? exploreChipCases().map((chip) => ({
+          caseId: chip.caseId,
+          kind: "chip",
+          conversationId: globalThis.crypto.randomUUID(),
+          question: chip.prompt,
+          history: [],
+          requesterId,
+          guildIds: [config.guildId],
+          surface,
+          originChannelId: null,
+        }))
+      : [];
+
+    // A conversation turn answers as the person who asked it, not as the
+    // guild's busiest user: the bucks and challenge tools read the requester,
+    // so borrowing someone else's identity would change what the turn can see.
+    const conversations = options.includeConversations
+      ? await conversationCasesFor(pin.stage, surface)
+      : {
+          cases: [] as ReplayCaseInput[],
+          baselines: new Map<string, ReplayBaseline>(),
+        };
+    const conversationCases = conversations.cases;
+
+    const all = [...chipCases, ...conversationCases]
+      .filter((entry) =>
+        options.onlyCaseId === null
+          ? true
+          : entry.caseId === options.onlyCaseId,
+      )
+      .filter((entry) => !alreadyDone.has(entry.caseId));
+    const cases = options.limit === null ? all : all.slice(0, options.limit);
 
     const model = exploreModel();
     await writeBundleFile(
@@ -384,10 +498,15 @@ async function runGuild(input: {
     const chipByCaseId = new Map(
       exploreChipCases().map((chip) => [chip.caseId, chip]),
     );
-    const baseline =
-      options.baselineRunId === null
-        ? new Map<string, ReplayBaseline>()
-        : await loadBaseline(options.baselineRunId);
+    // A conversation turn brings its own stored baseline; a chip can only
+    // have one from an earlier run. A `--baseline` run wins where both exist,
+    // since that is what the operator explicitly asked to compare against.
+    const baseline = new Map<string, ReplayBaseline>(conversations.baselines);
+    if (options.baselineRunId !== null) {
+      for (const [caseId, entry] of await loadBaseline(options.baselineRunId)) {
+        baseline.set(caseId, entry);
+      }
+    }
     let integrityFailures = 0;
 
     await runReplayCases(
