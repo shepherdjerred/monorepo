@@ -101,8 +101,8 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     receiptRequiredAfter: SCANNER_REPORT_ACTIVATION,
   },
   {
-    scheduleId: "ci-io-post-merge-impact",
-    reportType: "ci-io-impact",
+    scheduleId: "ci-io-telemetry-daily",
+    reportType: "ci-io-telemetry",
     cadenceHours: 24,
     graceHours: defaultReportGraceHours(24),
     receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,

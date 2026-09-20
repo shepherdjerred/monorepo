@@ -5,6 +5,7 @@ import { createWoodpeckerPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8
 import { createWoodpeckerServer } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/index.ts";
 import { createWoodpeckerAgent } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/agent.ts";
 import { createWoodpeckerCaches } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/caches.ts";
+import { createWoodpeckerMaintenanceWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/maintenance-worker.ts";
 import {
   createWoodpeckerCredentialBoundaries,
   WOODPECKER_NAMESPACE,
@@ -35,4 +36,5 @@ export function createWoodpeckerChart(app: App) {
   createWoodpeckerServer(chart);
   createWoodpeckerAgent(chart);
   createWoodpeckerCaches(chart);
+  createWoodpeckerMaintenanceWorker(chart);
 }

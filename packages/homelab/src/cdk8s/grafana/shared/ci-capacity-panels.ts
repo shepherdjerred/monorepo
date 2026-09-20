@@ -4,8 +4,13 @@
  * Kept when the Buildkite dashboard was removed: Kueue still admits CI work
  * and still enforces the node's CPU, memory and ephemeral-storage quotas, so
  * losing these charts would have been a real observability regression from
- * what is only a CI provider swap. The agent-health and per-job I/O panels
- * DID go, because they keyed off Buildkite-specific metrics and pod labels.
+ * what is only a CI provider swap. The agent-health panels DID go: they read
+ * the agent stack's own metrics, which have no Woodpecker counterpart.
+ *
+ * The I/O panels are rebuilt at the bottom of this file. They are the same
+ * charts, re-pointed at the `woodpecker:` recording rules and at the step-key
+ * label the configuration extension stamps — and the CI I/O telemetry report
+ * asserts by title that they exist, so a rename here fails that report.
  */
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import { createTimeseriesPanel } from "./dashboard-panels.ts";
@@ -20,7 +25,7 @@ const PHYSICAL_DISK_PATTERN = "nvme[0-9]+n[0-9]+|sd[a-z]+|vd[a-z]+|xvd[a-z]+";
 
 // Verified against the live Kueue 0.18 metric schema: these local-queue metric
 // families expose the queue as `name`, while `local_queue` is absent.
-const BUILDKITE_LOCAL_QUEUE_SELECTOR =
+const CI_LOCAL_QUEUE_SELECTOR =
   'exported_namespace="woodpecker",name="default"';
 
 export function addCiCapacityHealthPanels(
@@ -57,19 +62,19 @@ export function addCiCapacityHealthPanels(
       title: "Kueue CPU & Pod Reservations",
       targets: [
         {
-          query: `kueue_local_queue_resource_usage{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="cpu"}`,
+          query: `kueue_local_queue_resource_usage{${CI_LOCAL_QUEUE_SELECTOR},resource="cpu"}`,
           legend: "CPU usage",
         },
         {
-          query: `kueue_local_queue_resource_reservation{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="cpu"}`,
+          query: `kueue_local_queue_resource_reservation{${CI_LOCAL_QUEUE_SELECTOR},resource="cpu"}`,
           legend: "CPU reserved",
         },
         {
-          query: `kueue_local_queue_resource_usage{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="pods"}`,
+          query: `kueue_local_queue_resource_usage{${CI_LOCAL_QUEUE_SELECTOR},resource="pods"}`,
           legend: "pods used",
         },
         {
-          query: `kueue_local_queue_resource_reservation{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="pods"}`,
+          query: `kueue_local_queue_resource_reservation{${CI_LOCAL_QUEUE_SELECTOR},resource="pods"}`,
           legend: "pods reserved",
         },
       ],
@@ -82,19 +87,19 @@ export function addCiCapacityHealthPanels(
       title: "Kueue Memory & Ephemeral Reservations",
       targets: [
         {
-          query: `kueue_local_queue_resource_usage{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="memory"}`,
+          query: `kueue_local_queue_resource_usage{${CI_LOCAL_QUEUE_SELECTOR},resource="memory"}`,
           legend: "memory usage",
         },
         {
-          query: `kueue_local_queue_resource_reservation{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="memory"}`,
+          query: `kueue_local_queue_resource_reservation{${CI_LOCAL_QUEUE_SELECTOR},resource="memory"}`,
           legend: "memory reserved",
         },
         {
-          query: `kueue_local_queue_resource_usage{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="ephemeral-storage"}`,
+          query: `kueue_local_queue_resource_usage{${CI_LOCAL_QUEUE_SELECTOR},resource="ephemeral-storage"}`,
           legend: "ephemeral usage",
         },
         {
-          query: `kueue_local_queue_resource_reservation{${BUILDKITE_LOCAL_QUEUE_SELECTOR},resource="ephemeral-storage"}`,
+          query: `kueue_local_queue_resource_reservation{${CI_LOCAL_QUEUE_SELECTOR},resource="ephemeral-storage"}`,
           legend: "ephemeral reserved",
         },
       ],
@@ -242,6 +247,142 @@ node_hwmon_sensor_label{node="liskov", label="Tctl"}`;
         },
       ],
       gridPos: { x: 12, y: 115, w: 12, h: 8 },
+    }),
+  );
+}
+
+/**
+ * Nodes currently running a CI step pod.
+ *
+ * Mirrors ACTIVE_NODES in
+ * packages/temporal/src/activities/maintenance/ci-io-observability.ts, which
+ * runs the same queries as a health check. Woodpecker stamps nothing
+ * identifying on a step pod, so the join goes through the step-key label the
+ * configuration extension adds.
+ */
+const ACTIVE_CI_NODES =
+  'max by (node) (kube_pod_info{namespace="woodpecker"} * on (namespace, pod) group_left kube_pod_labels{namespace="woodpecker", label_ci_sjer_red_step_key!=""})';
+
+/**
+ * CI write volume and I/O pressure.
+ *
+ * Panel titles are load-bearing: the daily CI I/O telemetry report fetches
+ * this dashboard and checks each one is present, because a silently-emptied
+ * chart is exactly the failure this telemetry exists to catch.
+ */
+export function addCiIoPanels(builder: dashboard.DashboardBuilder): void {
+  builder.withRow(new dashboard.RowBuilder("CI I/O"));
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Logical Write Rate",
+      targets: [
+        {
+          query: "sum(rate(woodpecker:pod_parent_fs_writes_bytes_total[5m]))",
+          legend: "pod-parent writes",
+        },
+      ],
+      gridPos: { x: 0, y: 123, w: 12, h: 8 },
+      unit: "Bps",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Node Physical Write Rate",
+      targets: [
+        {
+          query: `sum(rate(node_disk_written_bytes_total{device=~"${PHYSICAL_DISK_PATTERN}"}[5m]) and on (node) ${ACTIVE_CI_NODES})`,
+          legend: "physical writes",
+        },
+      ],
+      gridPos: { x: 12, y: 123, w: 12, h: 8 },
+      unit: "Bps",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "CI Pod I/O Pressure",
+      targets: [
+        {
+          query:
+            "sum(rate(woodpecker:pod_parent_io_waiting_seconds_total[5m]))",
+          legend: "pod stall seconds/s",
+        },
+      ],
+      gridPos: { x: 0, y: 131, w: 12, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Node I/O Pressure",
+      targets: [
+        {
+          query: `sum(rate(node_pressure_io_waiting_seconds_total[5m]) and on (node) ${ACTIVE_CI_NODES})`,
+          legend: "node stall seconds/s",
+        },
+      ],
+      gridPos: { x: 12, y: 131, w: 12, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Disk Write Latency",
+      targets: [
+        {
+          // clamp_min keeps a device with no completed writes in the window
+          // from dividing by zero and disappearing from the chart.
+          query: `sum by (node, device) (rate(node_disk_write_time_seconds_total{device=~"${PHYSICAL_DISK_PATTERN}"}[5m]) and on (node) ${ACTIVE_CI_NODES}) / clamp_min(sum by (node, device) (rate(node_disk_writes_completed_total{device=~"${PHYSICAL_DISK_PATTERN}"}[5m]) and on (node) ${ACTIVE_CI_NODES}), 1e-9)`,
+          legend: "{{device}}",
+        },
+      ],
+      gridPos: { x: 0, y: 139, w: 12, h: 8 },
+      unit: "s",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Disk Queue Depth (Diagnostic)",
+      targets: [
+        {
+          query: `rate(node_disk_io_time_weighted_seconds_total{device=~"${PHYSICAL_DISK_PATTERN}"}[5m]) and on (node) ${ACTIVE_CI_NODES}`,
+          legend: "{{device}}",
+        },
+      ],
+      gridPos: { x: 12, y: 139, w: 12, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "CI I/O Recording Series",
+      targets: [
+        {
+          query: 'count({__name__=~"woodpecker:.*"})',
+          legend: "recorded series",
+        },
+      ],
+      gridPos: { x: 0, y: 147, w: 12, h: 8 },
+      unit: "short",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Prometheus Storage Growth (24h)",
+      targets: [
+        {
+          query:
+            'max(delta(kubelet_volume_stats_used_bytes{namespace="prometheus", persistentvolumeclaim=~"prometheus-prometheus-kube-prometheus-prometheus.*"}[24h]))',
+          legend: "PVC growth",
+        },
+      ],
+      gridPos: { x: 12, y: 147, w: 12, h: 8 },
+      unit: "bytes",
     }),
   );
 }

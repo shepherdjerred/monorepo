@@ -3,10 +3,6 @@ import {
   collectCiIoObservability,
   evaluateCiIoObservability,
 } from "./ci-io-observability.ts";
-import {
-  countCiIoFinishedBuilds,
-  selectCiIoCandidateBuilds,
-} from "./ci-io-impact.ts";
 
 const originalFetch = globalThis.fetch;
 const originalPrometheusUrl = Bun.env["PROMETHEUS_URL"];
@@ -33,40 +29,6 @@ afterEach(() => {
 });
 
 describe("CI I/O observability evidence", () => {
-  test("selects the newest completed fixed-corpus build and excludes cancellations", () => {
-    expect(
-      selectCiIoCandidateBuilds([
-        {
-          number: 103,
-          state: "canceled",
-          env: { CI_IO_FIXED_CORPUS: "true" },
-        },
-        {
-          number: 102,
-          state: "failed",
-          env: { CI_IO_FIXED_CORPUS: "true" },
-        },
-        {
-          number: 101,
-          state: "passed",
-          env: { CI_IO_FIXED_CORPUS: "false" },
-        },
-      ]),
-    ).toEqual([102]);
-  });
-
-  test("counts only passed and failed builds toward retirement", () => {
-    expect(
-      countCiIoFinishedBuilds([
-        { state: "passed" },
-        { state: "failed" },
-        { state: "running" },
-        { state: "blocked" },
-        { state: "canceled" },
-      ]),
-    ).toBe(2);
-  });
-
   test("enforces series, minimum, and maximum thresholds", () => {
     const definition = {
       id: "threshold",

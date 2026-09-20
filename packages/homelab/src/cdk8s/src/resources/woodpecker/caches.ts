@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import {
+  KubeConfigMap,
   KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
@@ -19,6 +20,18 @@ import { WOODPECKER_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resource
 
 export const WOODPECKER_BUN_CACHE_CLAIM = "woodpecker-bun-cache";
 export const WOODPECKER_BUN_CACHE_PATH = "/woodpecker/bun-cache";
+/**
+ * Coordination volume for the Bun cache collector.
+ *
+ * Deliberately a separate claim: the collector takes its exclusive lock here
+ * before clearing the cache, and a lock file on a full data filesystem is a
+ * lock the collector cannot take — exactly when it is most needed.
+ */
+export const WOODPECKER_BUN_CACHE_CONTROL_CLAIM =
+  "woodpecker-bun-cache-control";
+export const WOODPECKER_BUN_CACHE_CONTROL_PATH =
+  "/woodpecker/bun-cache-control";
+export const WOODPECKER_BUN_CACHE_GC_CONFIG_MAP = "woodpecker-bun-cache-gc";
 export const WOODPECKER_UV_CACHE_CLAIM = "woodpecker-uv-cache";
 export const WOODPECKER_UV_CACHE_PATH = "/woodpecker/uv-cache";
 export const WOODPECKER_TOFU_PLUGIN_CACHE_CLAIM =
@@ -55,6 +68,13 @@ function createCacheClaim(
   });
 }
 
+const BUN_CACHE_GC_SCRIPT = await Bun.file(
+  new URL("bun-cache-gc.sh", import.meta.url),
+).text();
+if (BUN_CACHE_GC_SCRIPT.length === 0) {
+  throw new Error("bun-cache-gc.sh must not be empty");
+}
+
 export function createWoodpeckerCaches(chart: Chart): void {
   // Sized to match the Woodpecker bun cache it replaces; the working set is the
   // whole workspace's dependency closure, not one package's.
@@ -64,6 +84,24 @@ export function createWoodpeckerCaches(chart: Chart): void {
     WOODPECKER_BUN_CACHE_CLAIM,
     "60Gi",
   );
+
+  createCacheClaim(
+    chart,
+    "woodpecker-bun-cache-control-pvc",
+    WOODPECKER_BUN_CACHE_CONTROL_CLAIM,
+    "1Gi",
+  );
+
+  // The collector itself, mounted into the maintenance worker rather than
+  // baked into its image: the worker image is shared with every other Temporal
+  // role, and this script is specific to this one cache.
+  new KubeConfigMap(chart, "woodpecker-bun-cache-gc-config", {
+    metadata: {
+      name: WOODPECKER_BUN_CACHE_GC_CONFIG_MAP,
+      namespace: WOODPECKER_NAMESPACE,
+    },
+    data: { "bun-cache-gc.sh": BUN_CACHE_GC_SCRIPT },
+  });
 
   // uv's artifact cache is safe for concurrent readers and writers, unlike a
   // virtual environment; only downloads and build artifacts live here and each

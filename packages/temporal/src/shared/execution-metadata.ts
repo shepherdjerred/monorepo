@@ -88,7 +88,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runZfsMaintenanceWorkflow: "infra",
   syncGolinks: "infra",
   runTasknotesCanary: "infra",
-  runCiIoImpact: "infra",
+  runCiIoTelemetry: "infra",
   runDnsAudit: "infra",
   runHomelabCrdImportsRefresh: "infra",
   runHomelabAuditWorkflow: "infra",

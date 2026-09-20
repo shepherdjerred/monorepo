@@ -100,25 +100,25 @@ const SUBJECT_CASES = [
     expected: "Inspect production could not finish",
   },
   {
-    reportType: "ci-io-impact",
-    title: "CI I/O optimization impact",
+    reportType: "ci-io-telemetry",
+    title: "CI I/O telemetry health",
     execution: "complete",
     verdict: "clear",
-    expected: "CI I/O report is ready",
+    expected: "CI I/O telemetry is healthy",
   },
   {
-    reportType: "ci-io-impact",
-    title: "CI I/O optimization impact",
+    reportType: "ci-io-telemetry",
+    title: "CI I/O telemetry health",
     execution: "complete",
     verdict: "pending",
-    expected: "CI I/O report is still pending",
+    expected: "CI I/O telemetry report is still pending",
   },
   {
-    reportType: "ci-io-impact",
-    title: "CI I/O optimization impact",
+    reportType: "ci-io-telemetry",
+    title: "CI I/O telemetry health",
     execution: "complete",
     verdict: "attention",
-    expected: "Action needed: CI I/O target missed",
+    expected: "Action needed: CI I/O telemetry is broken",
   },
   {
     reportType: "dependency-summary",
@@ -366,7 +366,7 @@ describe("ReportEnvelopeV1", () => {
     expect(
       presentReport({
         ...validReport(),
-        reportType: "ci-io-impact",
+        reportType: "ci-io-telemetry",
         verdict: "pending",
       }).statusLabel,
     ).toBe("Check incomplete");
@@ -388,13 +388,13 @@ describe("ReportEnvelopeV1", () => {
   test("includes retirement recommendations when selecting review tone", () => {
     const presentation = presentReport({
       ...validReport(),
-      reportType: "ci-io-impact",
-      retirementRecommendation: "Retire the temporary CI I/O comparison.",
+      reportType: "ci-io-telemetry",
+      retirementRecommendation: "Retire the CI I/O telemetry check.",
     });
 
     expect(presentation.statusLabel).toBe("Review needed");
     expect(presentation.actions).toEqual([
-      "Retire the temporary CI I/O comparison.",
+      "Retire the CI I/O telemetry check.",
     ]);
   });
 

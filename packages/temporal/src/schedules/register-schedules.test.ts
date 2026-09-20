@@ -100,10 +100,10 @@ test("every declared schedule workflow is exported by the workflow bundle", () =
 
 describe("central Workflow schedule routing", () => {
   const definitions = [
-    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
+    ["ci-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
-    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
-    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
+    ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
   ] as const;
 
@@ -225,19 +225,25 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
     ).toBe(true);
   });
 
-  // Regression: ci-io-post-merge-impact was created as a dynamic agent task and
-  // later promoted into SCHEDULES. Temporal memos are immutable after creation,
-  // so its live memo still carries the marker while its action starts
-  // runCiIoImpact. Reconciling it threw "must start agentTaskWorkflow" and
-  // crash-looped the worker before it could register any schedule.
+  // Regression: ci-io-post-merge-impact was created as a dynamic agent task
+  // and later promoted into SCHEDULES. Temporal memos are immutable after
+  // creation, so its live memo still carried the marker while its action
+  // started a declared workflow. Reconciling it threw "must start
+  // agentTaskWorkflow" and crash-looped the worker before it could register
+  // any schedule. That schedule has since been retired, so the regression is
+  // pinned against an arbitrary declared id instead — the rule is about
+  // declared-vs-dynamic precedence, not about that one schedule.
   test("a declared schedule with a stale marker is skipped", () => {
-    expect(declaredIds.has("ci-io-post-merge-impact")).toBe(true);
+    const declared = SCHEDULES[0];
+    if (declared === undefined) {
+      throw new Error("no declared schedules to check precedence against");
+    }
     expect(
       isReconcilableDynamicAgentTaskSchedule(
-        "ci-io-post-merge-impact",
+        declared.id,
         {
           ...DYNAMIC_AGENT_TASK_MEMO,
-          description: "Agent task: Measure CI I/O optimization impact",
+          description: "Agent task: promoted into SCHEDULES",
         },
         declaredIds,
       ),
@@ -261,7 +267,7 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
   test("declared precedence matches orphan detection", () => {
     expect(
       isOrphanSchedule({
-        scheduleId: "ci-io-post-merge-impact",
+        scheduleId: "ci-io-telemetry-daily",
         memo: DYNAMIC_AGENT_TASK_MEMO,
         namespace: "prod",
         declaredIds,
@@ -410,7 +416,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "generateDependencySummary",
   "runProtobufWatch",
   "runTasknotesCanary",
-  "runCiIoImpact",
+  "runCiIoTelemetry",
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",

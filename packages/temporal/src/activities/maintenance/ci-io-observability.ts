@@ -24,64 +24,74 @@ export type CiIoObservabilityResult = ObservabilityDefinition & {
   passed: boolean;
 };
 
+/**
+ * Nodes currently running a CI step pod.
+ *
+ * Joined through the step-key label the configuration extension stamps, since
+ * Woodpecker itself puts nothing identifying on a step pod. See
+ * packages/woodpecker-config-extension/src/pipeline/emit.ts.
+ */
 const ACTIVE_NODES =
-  'max by (node) (kube_pod_info{namespace="buildkite"} * on (namespace, pod) group_left kube_pod_labels{namespace="buildkite", label_buildkite_com_job_uuid!=""})';
+  'max by (node) (kube_pod_info{namespace="woodpecker"} * on (namespace, pod) group_left kube_pod_labels{namespace="woodpecker", label_ci_sjer_red_step_key!=""})';
 const DISKS = "nvme[0-9]+n[0-9]+|sd[a-z]+|vd[a-z]+|xvd[a-z]+";
 
 const QUERIES: readonly ObservabilityDefinition[] = [
   {
-    id: "monitor-discovery",
-    query: 'max(buildkite_monitor_monitor_up{namespace="buildkite"})',
+    // Successor to the agent-stack-k8s monitor check: the server is what holds
+    // scheduling state now, and its metrics endpoint is only scraped when the
+    // PodMonitor's bearer token is accepted.
+    id: "server-metrics-discovery",
+    query: 'max(woodpecker_worker_count{namespace="woodpecker"})',
     minimumRequiredSeries: 1,
     minimumValue: 1,
   },
   {
     id: "raw-write-series",
-    query: "buildkite:pod_parent_fs_writes_bytes_total",
+    query: "woodpecker:pod_parent_fs_writes_bytes_total",
     minimumRequiredSeries: 1,
   },
   {
     id: "job-write-series",
-    query: "buildkite:pod_parent_fs_writes_bytes_by_job_total",
+    query: "woodpecker:pod_parent_fs_writes_bytes_by_job_total",
     minimumRequiredSeries: 1,
   },
   {
     id: "recording-rule-groups",
     query:
-      'prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"}',
+      'prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*woodpecker-ci-io-(recording|rollups|alerts).*"}',
     minimumRequiredSeries: 3,
   },
   {
     id: "recording-rule-freshness",
     query:
-      'time() - max(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"})',
+      'time() - max(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*woodpecker-ci-io-(recording|rollups|alerts).*"})',
     minimumRequiredSeries: 1,
     maximumValue: 300,
   },
   {
     id: "recording-rule-duration",
     query:
-      'max(prometheus_rule_group_last_duration_seconds{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"})',
+      'max(prometheus_rule_group_last_duration_seconds{rule_group=~".*woodpecker-ci-io-(recording|rollups|alerts).*"})',
     minimumRequiredSeries: 1,
     maximumValue: 1,
   },
   {
     id: "recording-rule-failures",
     query:
-      'sum(increase(prometheus_rule_evaluation_failures_total{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"}[1h]))',
+      'sum(increase(prometheus_rule_evaluation_failures_total{rule_group=~".*woodpecker-ci-io-(recording|rollups|alerts).*"}[1h]))',
     minimumRequiredSeries: 1,
     maximumValue: 0,
   },
   {
     id: "ci-io-alert-state",
     query:
-      'count(ALERTS{alertname=~"BuildkiteCI.*", alertstate="firing"}) or vector(0)',
+      'count(ALERTS{alertname=~"WoodpeckerCI.*", alertstate="firing"}) or vector(0)',
     minimumRequiredSeries: 1,
     maximumValue: 0,
   },
   {
     id: "ci-io-recording-series-budget",
-    query: 'count({__name__=~"buildkite:.*"})',
+    query: 'count({__name__=~"woodpecker:.*"})',
     minimumRequiredSeries: 1,
     maximumValue: 2000,
   },
@@ -94,7 +104,7 @@ const QUERIES: readonly ObservabilityDefinition[] = [
   },
   {
     id: "logical-write-rate",
-    query: "sum(rate(buildkite:pod_parent_fs_writes_bytes_total[5m]))",
+    query: "sum(rate(woodpecker:pod_parent_fs_writes_bytes_total[5m]))",
     minimumRequiredSeries: 1,
   },
   {
@@ -104,7 +114,7 @@ const QUERIES: readonly ObservabilityDefinition[] = [
   },
   {
     id: "pod-io-pressure",
-    query: "sum(rate(buildkite:pod_parent_io_waiting_seconds_total[5m]))",
+    query: "sum(rate(woodpecker:pod_parent_io_waiting_seconds_total[5m]))",
     minimumRequiredSeries: 1,
   },
   {
@@ -196,14 +206,14 @@ async function dashboardCheck(): Promise<CiIoObservabilityResult> {
   ) {
     throw new Error("GRAFANA_URL and GRAFANA_API_KEY are required");
   }
-  const url = new URL("/api/dashboards/uid/buildkite-ci-dashboard", base);
+  const url = new URL("/api/dashboards/uid/ci-capacity-dashboard", base);
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(20_000),
   });
   if (!response.ok) {
     throw new Error(
-      `Grafana Buildkite dashboard returned HTTP ${response.status.toString()}`,
+      `Grafana CI dashboard returned HTTP ${response.status.toString()}`,
     );
   }
   const titles = new Set(
@@ -211,6 +221,11 @@ async function dashboardCheck(): Promise<CiIoObservabilityResult> {
       GrafanaDashboardSchema.parse(await response.json()).dashboard,
     ),
   );
+  // Titles must match addCiIoPanels in
+  // packages/homelab/src/cdk8s/grafana/shared/ci-capacity-panels.ts. Checking
+  // by title is the point: a panel whose query silently returns nothing still
+  // renders, so presence is the weakest claim worth asserting here, and the
+  // Prometheus checks above cover whether the series exist.
   const required = [
     "Logical Write Rate",
     "Node Physical Write Rate",
@@ -244,3 +259,6 @@ export async function collectCiIoObservability(): Promise<
   );
   return [await dashboardCheck(), ...prometheus];
 }
+
+export const ciIoObservabilityActivities = { collectCiIoObservability };
+export type CiIoObservabilityActivities = typeof ciIoObservabilityActivities;

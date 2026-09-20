@@ -21,7 +21,16 @@ export const CI_POD_LIFETIME_WRITES_SEEN_24H_METRIC =
 export const CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC =
   "woodpecker:pod_parent_fs_writes_bytes_by_job_total";
 export const CI_BUN_CACHE_PVC = "woodpecker-bun-cache";
-export const CI_BUN_CACHE_GC_ACTIVITY = "woodpecker-bun-cache-gc";
+/**
+ * `maintenance_job` label on the Bun cache collector's metrics.
+ *
+ * This is the Temporal Schedule id and the MaintenanceKind literal in
+ * packages/temporal/src/activities/maintenance/maintenance.ts -- the same
+ * string in three places, because the metric label is produced there and
+ * matched here. A rename in one is an alert that watches a job nothing
+ * reports.
+ */
+export const CI_BUN_CACHE_GC_ACTIVITY = "ci-bun-cache-gc";
 export const TURBO_CACHE_CLEAN_ACTIVITY = "turbo-cache-clean";
 
 function maintenanceWorkerStaleExpression(

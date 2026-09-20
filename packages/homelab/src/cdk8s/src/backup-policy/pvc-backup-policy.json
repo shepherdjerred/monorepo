@@ -31,6 +31,12 @@
   },
   {
     "namespace": "woodpecker",
+    "name": "woodpecker-bun-cache-control",
+    "backup": "disabled",
+    "reason": "Lock file only - coordination state for the bun cache collector"
+  },
+  {
+    "namespace": "woodpecker",
     "name": "woodpecker-uv-cache",
     "backup": "disabled",
     "reason": "Disposable CI package cache - rebuildable from the lockfile"

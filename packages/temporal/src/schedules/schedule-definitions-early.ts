@@ -76,7 +76,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Create missing managed Flipt flags, then alert on remaining inventory drift",
   },
   {
-    id: "buildkite-bun-cache-gc",
+    id: "ci-bun-cache-gc",
     workflowType: "runBunCacheGcWorkflow",
     args: [],
     timing: {
@@ -88,7 +88,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 15-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "1 hour",
-    memo: "Every-five-minute Buildkite Bun cache GC on the CI node",
+    memo: "Every-five-minute Bun cache GC on the CI node",
   },
   {
     id: "turbo-cache-clean-daily",
@@ -154,8 +154,8 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Daily typed TaskNotes engine, pod, skipped-file, and accepted task-count baseline check",
   },
   {
-    id: "ci-io-post-merge-impact",
-    workflowType: "runCiIoImpact",
+    id: "ci-io-telemetry-daily",
+    workflowType: "runCiIoTelemetry",
     args: [],
     timing: {
       kind: "cron",
@@ -164,8 +164,8 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Daily deterministic schema-v4 CI I/O impact and observability report",
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily CI I/O recording-rule, freshness, budget, and dashboard-panel health report",
   },
   {
     id: "dns-audit-daily",

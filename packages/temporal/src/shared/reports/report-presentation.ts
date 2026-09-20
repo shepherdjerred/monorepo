@@ -3,7 +3,7 @@ import type { ReportEnvelopeV1 } from "./report.ts";
 
 export const TAILORED_REPORT_TYPES = [
   "agent-task",
-  "ci-io-impact",
+  "ci-io-telemetry",
   "dependency-summary",
   "homelab-audit",
   "link-rot-scan",
@@ -78,15 +78,15 @@ function agentTaskSubject(report: ReportEnvelopeV1): string {
 
 const SUBJECT_POLICIES = {
   "agent-task": agentTaskSubject,
-  "ci-io-impact": (report) =>
+  "ci-io-telemetry": (report) =>
     subjectFromCopy(report, {
-      clear: "CI I/O report is ready",
-      changed: "CI I/O report is ready",
-      attention: "Action needed: CI I/O target missed",
-      pending: "CI I/O report is still pending",
-      inconclusive: "CI I/O report could not finish",
-      partial: "CI I/O report could not finish",
-      failed: "CI I/O report failed",
+      clear: "CI I/O telemetry is healthy",
+      changed: "CI I/O telemetry is healthy",
+      attention: "Action needed: CI I/O telemetry is broken",
+      pending: "CI I/O telemetry report is still pending",
+      inconclusive: "CI I/O telemetry report could not finish",
+      partial: "CI I/O telemetry report could not finish",
+      failed: "CI I/O telemetry report failed",
     }),
   "dependency-summary": (report) =>
     subjectFromCopy(report, {
