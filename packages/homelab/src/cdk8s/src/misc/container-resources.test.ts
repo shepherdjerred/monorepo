@@ -4,6 +4,7 @@ import { z } from "zod";
 import { App } from "cdk8s";
 import { rm } from "node:fs/promises";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   BATCH_PRIORITY,
   BURST_SERVICE_PRIORITY,
@@ -13,6 +14,12 @@ import {
   BEST_EFFORT_CONTAINER_ALLOWLIST,
   PARTIAL_REQUEST_CONTAINER_ALLOWLIST,
 } from "./container-resource-allowlist.ts";
+
+const LEGACY_DISCORD_MOD_PATH =
+  "/data/mods/dcintegration-forge-2.4.7.1-1.12.jar";
+const LEGACY_DISCORD_MOD_CLEANUP = expect.arrayContaining([
+  expect.stringContaining(LEGACY_DISCORD_MOD_PATH),
+]);
 
 /**
  * Container Resources Backstop
@@ -555,7 +562,7 @@ describe("Burst-memory sharing policy", () => {
       },
       modUrls: [
         "https://github.com/webbukkit/dynmap/releases/download/v3.3-beta-2/Dynmap-3.3-beta-2-forge-1.12.2.jar",
-        "https://cdn.modrinth.com/data/rbJ7eS5V/versions/xLuSqQki/dcintegration-forge-2.4.7.1-1.12.jar",
+        versions["mc2discord-forge-1.12.2"],
       ],
       gameMode: "survival",
       onlineMode: true,
@@ -579,10 +586,16 @@ describe("Burst-memory sharing policy", () => {
     expect(sjerred?.["extraDeploy"]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
+          metadata: { name: "minecraft-sjerred-dynmap-config" },
+          data: expect.objectContaining({
+            "configuration.txt": expect.stringContaining("defaultworld: world"),
+          }),
+        }),
+        expect.objectContaining({
           metadata: { name: "minecraft-sjerred-discord-integration-config" },
           data: {
-            "Discord-Integration.toml": expect.stringContaining(
-              'botToken = "${CFG_DISCORD_BOT_TOKEN}"',
+            "mc2discord.toml": expect.stringContaining(
+              'token = "${CFG_DISCORD_BOT_TOKEN}"',
             ),
           },
         }),
@@ -592,6 +605,7 @@ describe("Burst-memory sharing policy", () => {
       expect.arrayContaining([
         expect.objectContaining({
           name: "configure-discord-integration",
+          command: LEGACY_DISCORD_MOD_CLEANUP,
           env: [
             {
               name: "CFG_DISCORD_BOT_TOKEN",
