@@ -207,17 +207,6 @@ describe("Home Assistant rules — environment and automation dependencies", () 
     }
   });
 
-  test("does not keep the retired self-referential availability sensor", async () => {
-    const configuration = await Bun.file(
-      new URL(
-        "../../../../../config/homeassistant/configuration.yaml",
-        import.meta.url,
-      ),
-    ).text();
-
-    expect(configuration).not.toContain("unavailable_entities_count");
-  });
-
   test("alerts on every entity the Temporal HA workflows depend on", async () => {
     const workflowEntities = await collectWorkflowEntityIds();
     expect(workflowEntities.size).toBeGreaterThan(0);
@@ -279,5 +268,35 @@ describe("Home Assistant rules — environment and automation dependencies", () 
     expect(configuration).toContain(
       "select.dockstream_2_smart_fountain_water_dispensing_mode') != 'Flowing Water (Constant)'",
     );
+  });
+});
+
+describe("Home Assistant prometheus exporter", () => {
+  test("excludes stateless domains from availability inventory", async () => {
+    const configuration = await Bun.file(
+      new URL(
+        "../../../../../config/homeassistant/configuration.yaml",
+        import.meta.url,
+      ),
+    ).text();
+
+    expect(configuration).not.toContain("unavailable_entities_count");
+    const prometheus = configuration
+      .split("prometheus:")[1]
+      ?.split("\nlight:")[0];
+    expect(prometheus).toBeDefined();
+    expect(prometheus).toContain("exclude_domains:");
+    for (const domain of ["button", "event", "conversation", "stt", "tts"]) {
+      expect(prometheus).toContain(`- ${domain}`);
+    }
+    const automationDomains = new Set(
+      TEMPORAL_AUTOMATION_ENTITY_IDS.flatMap((entity) => {
+        const domain = entity.split(".", 1)[0];
+        return domain === undefined ? [] : [domain];
+      }),
+    );
+    for (const domain of automationDomains) {
+      expect(prometheus).not.toContain(`- ${domain}`);
+    }
   });
 });
