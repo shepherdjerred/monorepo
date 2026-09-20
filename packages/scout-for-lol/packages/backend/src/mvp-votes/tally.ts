@@ -160,9 +160,36 @@ export function formatMvpTallyDescription(
   if (sections.length === 0) {
     return MVP_TALLY_EMPTY;
   }
+  return fitTallyLines(sections);
+}
+
+function isReasonLine(line: string): boolean {
+  return line.startsWith('  "');
+}
+
+function joinLines(lines: readonly string[]): string {
+  return lines.join("\n");
+}
+
+function fitTallyLines(sections: readonly string[]): string {
+  const detailed = joinLines(sections);
+  if (detailed.length <= TALLY_DESCRIPTION_BUDGET) {
+    return detailed;
+  }
+  const compact = sections.filter((line) => !isReasonLine(line));
+  const compactText = joinLines(compact);
+  if (compactText.length <= TALLY_DESCRIPTION_BUDGET) {
+    if (
+      compact.length === sections.length ||
+      compactText.length + 2 > TALLY_DESCRIPTION_BUDGET
+    ) {
+      return compactText;
+    }
+    return `${compactText}\n…`;
+  }
   const kept: string[] = [];
   let used = 0;
-  for (const line of sections) {
+  for (const line of compact) {
     const extra = kept.length === 0 ? line.length : line.length + 1;
     if (used + extra > TALLY_DESCRIPTION_BUDGET) {
       break;
@@ -170,7 +197,7 @@ export function formatMvpTallyDescription(
     kept.push(line);
     used += extra;
   }
-  return kept.join("\n");
+  return joinLines(kept);
 }
 
 export function mvpTallyEmbed(input: {

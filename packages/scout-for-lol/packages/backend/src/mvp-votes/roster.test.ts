@@ -45,9 +45,27 @@ describe("freezeMatchMvpRosterFromParticipants", () => {
     expect(indexOfPuuid(roster, puuid(9))).toBe(9);
   });
 
-  test("rejects a roster that is not 10 players", () => {
+  test("rejects a roster that is not 10 players", async () => {
     expect(() =>
       freezeMatchMvpRosterFromParticipants("NA1_1", [participant(0, 1)]),
     ).toThrow(/not 10/u);
+  });
+
+  test("strips extra Riot participant fields when freezing a roster", () => {
+    const extras = Array.from({ length: 10 }, (_unused, index) => ({
+      ...participant(index, index + 1),
+      kills: 12,
+      item0: 3006,
+      challenges: { abilityUses: 400, legendaryItemUsed: ["3031"] },
+      missions: { playerScore0: 1 },
+    }));
+    const roster = freezeMatchMvpRosterFromParticipants("NA1_1", extras);
+    expect(roster.participants).toHaveLength(10);
+    expect(roster.participants[0]).toEqual({
+      puuid: puuid(0),
+      teamId: 100,
+      championName: "Champ0",
+      riotId: "Player0#NA1",
+    });
   });
 });

@@ -97,6 +97,44 @@ describe("MVP tally copy", () => {
     expect(nomineeLabel(0, frozen, aliasesByPuuid)).toBe("alice (Champ0)");
   });
 
+  test("keeps both sides' counts when reasons overflow the embed budget", () => {
+    const frozen = roster();
+    const longAlias = "a".repeat(80);
+    const aliasesByPuuid = aliases(
+      Array.from({ length: 10 }, (_unused, index) => [puuid(index), longAlias]),
+    );
+    const votes = Array.from({ length: 10 }, (_unused, index) => [
+      vote({
+        category: "ally",
+        nomineeIndex: index,
+        voterPuuid: puuid(index),
+        voterDiscordId: DiscordAccountIdSchema.parse(
+          `1605091727047393${index.toString().padStart(2, "0")}`,
+        ),
+        justification: "j".repeat(200),
+      }),
+      vote({
+        category: "enemy",
+        nomineeIndex: index,
+        voterPuuid: puuid((index + 1) % 10),
+        voterDiscordId: DiscordAccountIdSchema.parse(
+          `1605091727047394${index.toString().padStart(2, "0")}`,
+        ),
+        justification: "k".repeat(200),
+      }),
+    ]).flat();
+    const description = formatMvpTallyDescription(
+      votes,
+      frozen,
+      aliasesByPuuid,
+    );
+    expect(description).toContain("**Blue MVP**");
+    expect(description).toContain("**Red MVP**");
+    expect(description).toContain(`${longAlias} (Champ0) · `);
+    expect(description).toContain(`${longAlias} (Champ9) · `);
+    expect(description.length).toBeLessThanOrEqual(3900);
+  });
+
   test("puts a nominee on their side even if the ballot was 'my team'", () => {
     const description = formatMvpTallyDescription(
       [

@@ -28,7 +28,7 @@ export const MatchMvpRosterSchema = z.strictObject({
   participants: z.array(MatchMvpParticipantSchema).length(10),
 });
 
-const RosterSourceParticipantSchema = z.strictObject({
+const RosterSourceParticipantSchema = z.looseObject({
   participantId: z.number().int(),
   puuid: LeaguePuuidSchema,
   teamId: RiotTeamIdSchema,
