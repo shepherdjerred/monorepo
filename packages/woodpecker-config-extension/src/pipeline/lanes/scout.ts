@@ -1,7 +1,11 @@
 import type { CiImages } from "#src/images.ts";
-import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
+import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
-import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
+import {
+  DEPLOY_KEYS,
+  GITHUB_DOWNLOAD,
+  grant,
+} from "#src/pipeline/lanes/tofu.ts";
 
 /**
  * Scout's site release: archive, beta deploy, tag, and production reconcile.
@@ -14,12 +18,6 @@ import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
  */
 
 const SITE_DEPLOY_GROUP = { limit: 1, group: "site-deploys" } as const;
-
-/** SeaweedFS holds the site archives; the deploy keys are the write side. */
-const DEPLOY_KEYS: readonly SecretGrant[] = [
-  grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
-  grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
-];
 
 /**
  * The aws CLI and the release scripts read the standard AWS names, while the

@@ -42,14 +42,14 @@ export const STATE_BACKEND: SecretGrant[] = [
 ];
 
 /**
- * Keys the build-scoped handoff store needs.
+ * The identity that writes the live buckets: the published static sites and
+ * the release archives.
  *
- * Every step that reads or writes a handoff -- which includes every step that
- * consumes the release admission token -- talks to SeaweedFS, and it does so
- * with the DEPLOY identity rather than the state identity the OpenTofu
- * backends use. The two are deliberately separate.
+ * Named here rather than copied per lane so "which steps can write production
+ * data" is one list with one answer, and so the handoff split below has a
+ * single thing to diff against.
  */
-export const HANDOFF_KEYS: SecretGrant[] = [
+export const DEPLOY_KEYS: SecretGrant[] = [
   {
     secret: "ci-seaweedfs-credentials",
     key: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
@@ -61,6 +61,24 @@ export const HANDOFF_KEYS: SecretGrant[] = [
     env: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
   },
 ];
+
+/**
+ * Keys the build-scoped handoff store needs.
+ *
+ * Every step that reads or writes a handoff -- which includes every step that
+ * consumes the release admission token -- talks to SeaweedFS, and does so with
+ * the DEPLOY identity rather than the state identity the OpenTofu backends
+ * use.
+ *
+ * Sharing DEPLOY is a known and temporary wart, not a design: it means three
+ * steps that run on every pull request (`verify`, `playwright-e2e`,
+ * `resume-build`) hold the credential that publishes sjer.red, purely to move
+ * build values around. The fix is a third identity scoped to the `ci-handoff`
+ * bucket, which needs an entry in the SeaweedFS identities item; until that
+ * exists these stay pointed at DEPLOY. This constant is the single place that
+ * changes when it does -- see the CI pipeline shape explanation.
+ */
+export const HANDOFF_KEYS: SecretGrant[] = [...DEPLOY_KEYS];
 
 /** Shorthand for one grant; `env` defaults to the Secret's key name. */
 export function grant(secret: string, key: string, env = key): SecretGrant {

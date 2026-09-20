@@ -5,6 +5,7 @@ import {
   GITHUB_DOWNLOAD,
   STATE_BACKEND,
   TOFU_PLUGIN_CACHE,
+  DEPLOY_KEYS,
   grant,
   HANDOFF_KEYS,
   STACK_SECRETS,
@@ -106,8 +107,7 @@ export function releaseChainSteps(
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
         ...STATE_BACKEND,
-        grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
-        grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
+        ...DEPLOY_KEYS,
       ],
     },
     {
@@ -225,10 +225,7 @@ function chainedTofuApplies(images: CiImages): CiStep[] {
     {
       stack: "seaweedfs",
       dependsOn: ["homelab-release-admission", "helm-push"],
-      secrets: [
-        grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
-        grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
-      ],
+      secrets: [...DEPLOY_KEYS],
     },
     {
       stack: "tailscale",
