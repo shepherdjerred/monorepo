@@ -16,7 +16,7 @@ Library/
 # these paths exist solely to wire it into agent hooks and are meaningless without it.
 .grok/hooks/plannotator.json
 .local/bin/plannotator-antigravity-stop-hook
-.local/bin/plannotator-cursor-stop-hook
+.local/bin/plannotator-cursor-session-end-hook
 {{- end }}
 
 scripts
