@@ -325,6 +325,7 @@ async function appendCompleteAnswer(input: {
   parentMessageId: string;
 }) {
   return await appendExploreAnswer(trpc.prisma, {
+    guildIds: [],
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer: {
@@ -347,6 +348,7 @@ describe("explore salvage", () => {
   test("a stop before prose salvages nothing", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: true,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -363,6 +365,7 @@ describe("explore salvage", () => {
   test("a stopped turn with text is saved with the stop caveat", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: true,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -383,6 +386,7 @@ describe("explore salvage", () => {
   test("an errored turn with streamed text is saved with the interrupted caveat", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: false,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -405,6 +409,7 @@ describe("explore salvage", () => {
   test("an errored turn with no text saves nothing", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: false,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -426,6 +431,7 @@ describe("explore salvage", () => {
     });
 
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: true,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -449,6 +455,7 @@ describe("explore salvage", () => {
     });
 
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: true,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,

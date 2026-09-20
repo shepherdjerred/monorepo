@@ -23,6 +23,8 @@ export async function persistPartialAnswer(
     expectedCurrentLeafId: string | null;
     text: string;
     trace: ExploreTraceEntry[];
+    /** Same per-turn guild context the full answer records. */
+    guildIds: readonly string[];
     existingMessageId: string | null;
   },
 ): Promise<ExploreMessage | null> {
@@ -58,6 +60,7 @@ export async function persistPartialAnswer(
     });
   }
   return await appendExploreAnswer(client, {
+    guildIds: input.guildIds,
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer,
