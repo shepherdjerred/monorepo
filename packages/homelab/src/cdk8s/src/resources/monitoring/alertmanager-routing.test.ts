@@ -54,6 +54,40 @@ async function renderApps(): Promise<string> {
   return result;
 }
 
+/** Every mapping in the rendered documents that the predicate accepts. */
+function findRecords(
+  rendered: string,
+  accept: (record: Record<string, unknown>) => boolean,
+): Record<string, unknown>[] {
+  const found: Record<string, unknown>[] = [];
+  const visit = (node: unknown) => {
+    if (Array.isArray(node)) {
+      node.forEach((child) => visit(child));
+      return;
+    }
+    const record = RecordSchema.safeParse(node);
+    if (!record.success) return;
+    if (accept(record.data)) found.push(record.data);
+    Object.values(record.data).forEach((value) => visit(value));
+  };
+  parseAllDocuments(rendered).forEach((document) => visit(document.toJS()));
+  return found;
+}
+
+/** The single match, or a failure naming what was looked for. */
+function onlyRecord(
+  found: Record<string, unknown>[],
+  description: string,
+): Record<string, unknown> {
+  const [record] = found;
+  if (record === undefined || found.length !== 1) {
+    throw new Error(
+      `expected one ${description}, found ${String(found.length)}`,
+    );
+  }
+  return record;
+}
+
 /**
  * Receivers are addressed by name because more than one now carries the same
  * kind of config. Matching on the presence of a config key instead would make
@@ -63,57 +97,23 @@ function findReceiverNamed(
   rendered: string,
   name: string,
 ): Record<string, unknown> {
-  const found: Record<string, unknown>[] = [];
-  const visit = (node: unknown) => {
-    if (Array.isArray(node)) {
-      node.forEach((child) => visit(child));
-      return;
-    }
-    const record = RecordSchema.safeParse(node);
-    if (!record.success) return;
-    if (
-      record.data["name"] === name &&
-      (Array.isArray(record.data["email_configs"]) ||
-        Array.isArray(record.data["webhook_configs"]))
-    ) {
-      found.push(record.data);
-    }
-    Object.values(record.data).forEach((value) => visit(value));
-  };
-  parseAllDocuments(rendered).forEach((document) => visit(document.toJS()));
-  if (found.length !== 1) {
-    throw new Error(
-      `expected one receiver named ${name}, found ${String(found.length)}`,
-    );
-  }
-  const receiver = found[0];
-  if (receiver === undefined) throw new Error(`receiver ${name} missing`);
-  return receiver;
+  return onlyRecord(
+    findRecords(
+      rendered,
+      (record) =>
+        record["name"] === name &&
+        (Array.isArray(record["email_configs"]) ||
+          Array.isArray(record["webhook_configs"])),
+    ),
+    `receiver named ${name}`,
+  );
 }
 
 function findReceiver(rendered: string, key: string): Record<string, unknown> {
-  const found: Record<string, unknown>[] = [];
-  const visit = (node: unknown) => {
-    if (Array.isArray(node)) {
-      node.forEach((child) => visit(child));
-      return;
-    }
-    const record = RecordSchema.safeParse(node);
-    if (!record.success) return;
-    if (Array.isArray(record.data[key])) {
-      found.push(record.data);
-    }
-    Object.values(record.data).forEach((value) => visit(value));
-  };
-  parseAllDocuments(rendered).forEach((document) => visit(document.toJS()));
-  if (found.length !== 1) {
-    throw new Error(
-      `expected one ${key} receiver, found ${String(found.length)}`,
-    );
-  }
-  const receiver = found[0];
-  if (receiver === undefined) throw new Error(`${key} receiver missing`);
-  return receiver;
+  return onlyRecord(
+    findRecords(rendered, (record) => Array.isArray(record[key])),
+    `${key} receiver`,
+  );
 }
 
 function findAlertmanagerRoute(rendered: string): RouteNode {

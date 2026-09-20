@@ -448,14 +448,33 @@ describe("post-match discovery child ownership", () => {
     expect(attempts).toBe(2);
   });
 
-  test("advances the stale cursor when a rediscovered match is confirmed ingested", async () => {
+  // Both runs behave identically up to the collision; the child's confirmed
+  // status is the only thing that decides what the second run may do with it.
+  test.each([
+    {
+      label: "advances the stale cursor when the child is confirmed COMPLETED",
+      outcome: "reconciled" as const,
+      slug: "reconciled",
+      // Evidence IS captured, so the second pass may still settle — withholding
+      // it would starve deadlines for a match already fully ingested.
+      settlement: [true, true],
+    },
+    {
+      label: "stops without settling when the child is not COMPLETED",
+      outcome: "not-completed" as const,
+      slug: "unconfirmed",
+      // Another execution may still be mid-ingest, so nothing may be assumed
+      // done and the run reports a partial pass.
+      settlement: [true, false],
+    },
+  ])("$label", async ({ outcome, slug, settlement }) => {
     const observed = { attempts: [], reconciled: [], settlement: [] };
-    await startRediscoveryWorkers("reconciled", observed);
+    await startRediscoveryWorkers(outcome, observed);
 
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
         taskQueue: "scout-dev",
-        workflowId: "postmatch-rediscovery-first",
+        workflowId: `postmatch-rediscovery-${slug}-first`,
         args: [{ stage: "dev" }],
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
@@ -463,46 +482,16 @@ describe("post-match discovery child ownership", () => {
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
         taskQueue: "scout-dev",
-        workflowId: "postmatch-rediscovery-reconciled",
+        workflowId: `postmatch-rediscovery-${slug}`,
         args: [{ stage: "dev" }],
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
 
-    // Durable progress, not a quiet no-op: the cursor was reconciled rather
-    // than the collision merely swallowed.
+    // The collision was resolved by asking, not swallowed.
     expect(observed.reconciled).toEqual(["NA1_300"]);
     // Ingestion ran once, for the child that actually started.
     expect(observed.attempts).toEqual(["NA1_300"]);
-    // The match's evidence IS captured, so the second pass may still settle —
-    // withholding it here would starve deadlines for a match already ingested.
-    expect(observed.settlement).toEqual([true, true]);
-  });
-
-  test("stops without settling when a rediscovered match cannot be confirmed", async () => {
-    const observed = { attempts: [], reconciled: [], settlement: [] };
-    await startRediscoveryWorkers("not-completed", observed);
-
-    await expect(
-      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
-        taskQueue: "scout-dev",
-        workflowId: "postmatch-rediscovery-unconfirmed-first",
-        args: [{ stage: "dev" }],
-      }),
-    ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
-
-    await expect(
-      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
-        taskQueue: "scout-dev",
-        workflowId: "postmatch-rediscovery-unconfirmed",
-        args: [{ stage: "dev" }],
-      }),
-    ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
-
-    // Another execution may still be mid-ingest, so nothing advances and the
-    // run reports a partial pass instead of settling on unproven evidence.
-    expect(observed.reconciled).toEqual(["NA1_300"]);
-    expect(observed.attempts).toEqual(["NA1_300"]);
-    expect(observed.settlement).toEqual([true, false]);
+    expect(observed.settlement).toEqual(settlement);
   });
 });
 
