@@ -17,7 +17,7 @@ import {
   recordAnnouncement,
   type SettlementAnnouncementSink,
 } from "#src/betting/notify/announcement-sink.ts";
-import { isScoutTournamentLobby } from "#src/league/tournament/scout-lobby-lookup.ts";
+import { isScoutManagedCustomMatch } from "#src/betting/eligibility/managed-custom-match.ts";
 import {
   BUCKS_EARNING_QUEUES,
   PENDING_EARNING_RETRY_DELAY_MS,
@@ -186,16 +186,16 @@ export async function awardBucksForMatch(
 
   try {
     const queueType = queueTypeOf(matchData);
-    // A Scout-minted 5v5 custom earns like a ranked game. "custom" is
+    // A Scout-managed 5v5 custom earns like a ranked game. "custom" is
     // deliberately NOT in BUCKS_EARNING_QUEUES: an arbitrary custom is
-    // trivially farmable, and this gate is what makes the code we issued the
-    // thing that qualifies rather than the queue id.
+    // trivially farmable, and this gate requires a historical code or the
+    // exact roster of a scheduled Custom or duel.
     const earnableQueue =
       queueType !== undefined &&
       (BUCKS_EARNING_QUEUES.includes(queueType) ||
         (queueType === "custom" &&
           isStandardLobby(matchData.info.participants) &&
-          (await isScoutTournamentLobby(matchData, prismaClient))));
+          (await isScoutManagedCustomMatch(matchData, prismaClient))));
     if (!earnableQueue) {
       return awards;
     }

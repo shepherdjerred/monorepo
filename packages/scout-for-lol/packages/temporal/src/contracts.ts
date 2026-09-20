@@ -40,7 +40,7 @@ export type ScoutWorkflowStatus = z.infer<typeof ScoutWorkflowStatusSchema>;
 
 export const ScoutRealtimePollInputSchema = z.object({
   stage: ScoutStageSchema,
-  kind: z.enum(["prematch", "tournament-lobbies"]),
+  kind: z.literal("prematch"),
   scheduledStartAt: IsoInstantSchema.optional(),
   maximumAgeSeconds: z.number().int().positive(),
 });

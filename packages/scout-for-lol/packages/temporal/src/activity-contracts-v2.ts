@@ -248,13 +248,11 @@ export const ScoutReceiptsV2ResultSchema = z.strictObject({
 export type ScoutReceiptsV2Result = z.infer<typeof ScoutReceiptsV2ResultSchema>;
 
 /**
- * What the tournament-code finalization stage found and did.
+ * What the managed-custom finalization stage found and did.
  *
- * Tournament custom games and ordinary Riot match ingestion keep distinct
- * provenance, so this is its own stage with its own answer rather than a flag
- * on the observation: `not-a-tournament-match` is the ordinary case and says
- * so out loud, instead of being indistinguishable from a finalization that
- * happened to publish nothing.
+ * The schema and its legacy `not-a-tournament-match` discriminator are frozen
+ * because existing Temporal histories contain them. New games are bound from
+ * local observations; historical Tournament API rows remain readable.
  *
  * `publishedNight` reports the Custom Night snapshot broadcast, which is a
  * projection of current state rather than an event, so a resumed run that

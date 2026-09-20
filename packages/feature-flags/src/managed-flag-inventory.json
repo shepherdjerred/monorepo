@@ -568,29 +568,14 @@
       "thresholdRollouts": []
     },
     {
-      "key": "tournament_lobbies_enabled",
+      "key": "scout_client_ingestion",
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable Scout tournament lobbies.",
+      "purpose": "Accept observations from paired Scout native clients.",
       "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "default": true,
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -716,30 +701,6 @@
       "purpose": "Select the Scout report AI model.",
       "type": "variant",
       "default": "gpt-5.6-sol",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "scout-tournament-api-mode",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-dynamic",
-      "purpose": "Select the Scout tournament API mode.",
-      "type": "variant",
-      "default": "stub",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "scout-tournament-max-open-lobbies",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-dynamic",
-      "purpose": "Bound the number of concurrently open Scout tournament lobbies.",
-      "type": "variant",
-      "default": "10",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1472,6 +1433,29 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "scout_client_ingestion",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "scout-user-160509172704739328",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "user",
+                  "operator": "eq",
+                  "value": "160509172704739328"
+                }
+              ],
+              "result": true
+            }
+          ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "explore_on_demand_riot_enabled",
           "type": "boolean",

@@ -36,9 +36,8 @@ const docs = defineCollection({
           ALL_DOCS,
           "!**/bryan-bucks*/**",
           "!**/bryan-bucks*",
-          // Duels are production-hard-disabled (they issue tournament-code
-          // lobbies, like custom games), so their how-to and reference ship
-          // on beta only.
+          // Duels remain a beta product while the local-observation rollout is
+          // evaluated, so their how-to and reference ship on beta only.
           "!**/run-duel-event*",
           "!**/duels*",
         ],

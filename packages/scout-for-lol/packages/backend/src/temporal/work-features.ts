@@ -20,8 +20,6 @@ export function hardDisabledFeatureForTemporalWork(
   kind: string,
 ): FlagName | null {
   switch (kind) {
-    case "tournament-lobbies":
-      return "tournament_lobbies_enabled";
     case "custom-nights-expiry":
       return "custom_nights_enabled";
     case "bucks-reconciliation":

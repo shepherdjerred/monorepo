@@ -13,10 +13,16 @@ import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { requireAuthoritativeMatchData } from "#src/league/tasks/postmatch/temporal-match-ingestion.ts";
+import {
+  readSelectedLocalCanonicalMatch,
+  resolveLocalCanonicalMatch,
+} from "#src/scout-client/canonical-match.ts";
 
 /**
  * What every V2 per-match Activity needs before it can do anything: the
- * authoritative Riot payload, and which tracked accounts are in it.
+ * authoritative match payload, and which tracked accounts are in it. Riot is
+ * preferred; a complete paired-client payload may fill the gap only after the
+ * source-selection delay and is then fixed for retries.
  *
  * Each Activity resolves this for itself rather than receiving it from the
  * one before. That is not redundancy to be optimised away — it is what makes
@@ -72,13 +78,21 @@ export async function resolveScoutV2MatchContext(
   const matchId = MatchIdSchema.parse(riotMatchId);
   const accounts = await getAccountsWithState(prisma, getActiveServerIds());
   const allPlayerConfigs = accounts.map((account) => account.config);
-  const matchData = requireAuthoritativeMatchData(
-    riotMatchId,
-    await fetchMatchData(
-      matchId,
-      regionForPlatform(allPlayerConfigs, riotMatchId),
-    ),
-  );
+  const selectedLocal = await readSelectedLocalCanonicalMatch(riotMatchId);
+  const riotMatch =
+    selectedLocal === null
+      ? await fetchMatchData(
+          matchId,
+          regionForPlatform(allPlayerConfigs, riotMatchId),
+        )
+      : undefined;
+  const matchData =
+    selectedLocal ??
+    riotMatch ??
+    requireAuthoritativeMatchData(
+      riotMatchId,
+      (await resolveLocalCanonicalMatch(riotMatchId)) ?? undefined,
+    );
   const participants = new Set<string>(matchData.metadata.participants);
   return {
     matchId,

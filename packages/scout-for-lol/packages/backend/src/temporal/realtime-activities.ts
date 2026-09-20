@@ -37,15 +37,9 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
     pollRealtime: async (input) => {
       if (temporalWorkHardDisabled(input.kind)) return;
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
-        if (input.kind === "prematch") {
-          const { checkPreMatch } =
-            await import("#src/league/tasks/prematch/index.ts");
-          await checkPreMatch();
-        } else {
-          const { checkTournamentLobbies } =
-            await import("#src/league/tournament/poller.ts");
-          await checkTournamentLobbies();
-        }
+        const { checkPreMatch } =
+          await import("#src/league/tasks/prematch/index.ts");
+        await checkPreMatch();
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },

@@ -40,7 +40,7 @@ import {
   type DiscoveredMatchIntent,
   type MatchDiscovery,
 } from "#src/league/tasks/postmatch/match-intents.ts";
-import { finalizeAndPublishTournamentResult } from "#src/customs/riot-result-publication.ts";
+import { finalizeAndPublishManagedCustomResult } from "#src/customs/riot-result-publication.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import {
   deliverVisiblePostmatchReport,
@@ -189,7 +189,7 @@ export async function processMatchAndUpdatePlayers(
   // past the match. Tournament lobbies — and linked Customs games — finalize
   // here, after authoritative S3 ingest and post-match side effects. A failure
   // therefore leaves the cursors in place and retries the same match.
-  await finalizeAndPublishTournamentResult(prisma, matchData);
+  await finalizeAndPublishManagedCustomResult(prisma, matchData);
 
   const { processCompetitiveProgressionMatch } =
     await import("#src/progression/postmatch.ts");

@@ -1,5 +1,6 @@
 export * from "./model/index.ts";
 export * from "./customs/customs.schema.ts";
+export * from "./scout-client/protocol.schema.ts";
 export {
   friendGroupHistory,
   getPerson,
@@ -114,7 +115,6 @@ export type {
 
 export * from "./model/riot/puuid-key-map.ts";
 export * from "./league/raw-match.schema.ts";
-export * from "./league/raw-tournament.schema.ts";
 export * from "./league/raw-clash.schema.ts";
 export * from "./league/raw-participant.schema.ts";
 export * from "./league/raw-team.schema.ts";

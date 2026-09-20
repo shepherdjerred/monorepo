@@ -44,9 +44,9 @@ export const SCOUT_V2_MATCH_RECEIPT_KINDS = {
  * The phases of the per-match serial core that leave a durable effect behind,
  * in the order the Workflow runs them.
  *
- * `tournament` is the tournament-code finalization stage, which runs last
- * because it publishes a Custom Night projection and must not do so before the
- * domain effects it describes have committed.
+ * `tournament` is the durable legacy name for managed-custom finalization. It
+ * runs last because it publishes a Custom Night projection and must not do so
+ * before the domain effects it describes have committed.
  *
  * The cursor advance is deliberately absent. It has no stage receipt because
  * it already has a better durable signal: `MatchTrackedAccount.cursorAdvancedAt`

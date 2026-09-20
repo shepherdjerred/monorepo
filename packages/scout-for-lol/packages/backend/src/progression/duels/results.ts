@@ -20,20 +20,73 @@ import {
   duelResults,
   duelSeriesTransitions,
 } from "#src/metrics/progression.ts";
+
+const duelGameInclude = {
+  series: {
+    include: {
+      participants: true,
+      competitorOne: { include: { members: true } },
+      competitorTwo: { include: { members: true } },
+      games: true,
+    },
+  },
+} as const;
+
+async function findObservedDuelGame(match: RawMatch) {
+  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const bound = await prisma.duelGame.findFirst({
+    where: { matchId },
+    include: duelGameInclude,
+  });
+  if (bound !== null) return bound;
+
+  const active = await prisma.duelGame.findMany({
+    where: {
+      gameState: { in: ["code_ready", "in_progress"] },
+      matchId: null,
+      series: { seriesState: { in: ["code_ready", "in_progress"] } },
+    },
+    include: duelGameInclude,
+  });
+  const participants = new Set(match.metadata.participants);
+  const candidates = active.filter((game) => {
+    const expected = [
+      ...game.series.competitorOne.members,
+      ...game.series.competitorTwo.members,
+    ].map((member) => member.puuid);
+    return (
+      expected.length === participants.size &&
+      expected.every((puuid) => participants.has(puuid))
+    );
+  });
+  if (candidates.length > 1) {
+    throw new Error(
+      `Observed match ${match.metadata.matchId} matches more than one active duel`,
+    );
+  }
+  const candidate = candidates[0];
+  if (candidate === undefined) return null;
+  const boundNow = await prisma.duelGame.updateMany({
+    where: { id: candidate.id, matchId: null },
+    data: { matchId, gameState: "in_progress" },
+  });
+  if (boundNow.count === 0) {
+    return await prisma.duelGame.findFirst({
+      where: { matchId },
+      include: duelGameInclude,
+    });
+  }
+  await prisma.duelSeries.updateMany({
+    where: { id: candidate.seriesId, seriesState: "code_ready" },
+    data: { seriesState: "in_progress" },
+  });
+  return candidate;
+}
+
 export async function duelMatchNeedsTimeline(
   match: RawMatch,
 ): Promise<boolean> {
-  const tournamentCode = match.info.tournamentCode;
-  if (tournamentCode === undefined) return false;
-  return (
-    (await prisma.duelGame.count({
-      where: {
-        gameState: { in: ["code_ready", "in_progress"] },
-        tournamentLobby: { code: tournamentCode },
-        series: { seriesState: { in: ["code_ready", "in_progress"] } },
-      },
-    })) > 0
-  );
+  return (await findObservedDuelGame(match)) !== null;
 }
 
 function timelineInput(match: RawMatch, timeline: RawTimeline) {
@@ -251,27 +304,7 @@ export async function processDuelResult(
   timeline: RawTimeline | null | undefined,
   stage: ScoutStage,
 ): Promise<void> {
-  const tournamentCode = match.info.tournamentCode;
-  const game = await prisma.duelGame.findFirst({
-    where: {
-      OR: [
-        { matchId: MatchIdSchema.parse(match.metadata.matchId) },
-        ...(tournamentCode === undefined
-          ? []
-          : [{ tournamentLobby: { code: tournamentCode } }]),
-      ],
-    },
-    include: {
-      series: {
-        include: {
-          participants: true,
-          competitorOne: { include: { members: true } },
-          competitorTwo: { include: { members: true } },
-          games: true,
-        },
-      },
-    },
-  });
+  const game = await findObservedDuelGame(match);
   if (game === null) return;
   if (game.resultState === "verified") return;
   const series = game.series;

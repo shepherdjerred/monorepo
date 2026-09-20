@@ -52,8 +52,6 @@ const HAS_USED: Record<
     })) > 0,
   "custom-nights": async (serverId, db) =>
     (await db.customNight.count({ where: { guildId: serverId }, take: 1 })) > 0,
-  "tournament-lobbies": async (serverId, db) =>
-    (await db.tournamentLobby.count({ where: { serverId }, take: 1 })) > 0,
 };
 
 /** Every flag a tip names must be on; a feature with none is always available. */

@@ -88,13 +88,6 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       catchupWindow: CATCHUP_TIGHT,
     }),
     intervalSchedule(stage, {
-      name: "tournament-lobby-poll",
-      workflowType: "scoutRealtimePollWorkflow",
-      args: [{ stage, kind: "tournament-lobbies", maximumAgeSeconds: 60 }],
-      every: "20 seconds",
-      catchupWindow: CATCHUP_TIGHT,
-    }),
-    intervalSchedule(stage, {
       name: "postmatch-discovery",
       workflowType: "scoutPostMatchDiscoveryWorkflow",
       args: [{ stage }],

@@ -1,18 +1,14 @@
 ---
 title: Operate Scout custom nights
-description: Configure the beta Discord Activity, register Riot Tournament-V5, recover interrupted nights, and verify Riot-only results.
+description: Configure the beta Discord Activity, pair local observers, run a custom night, and recover incomplete local observations.
 sidebar:
   order: 12
 ---
 
-Scout custom nights are permanently beta-only. Production has no
-`/customs/index.html`, and the backend hard-disables both Customs and Tournament
-lobbies even if a flag provider returns `true`.
+This guide shows how to operate a beta custom night with normal League lobbies
+observed by paired Scout Clients.
 
-Keep `custom_nights_enabled` and `tournament_lobbies_enabled` off while doing
-the setup below.
-
-## Configure the beta Discord application
+## 1. Configure the beta Discord application
 
 Use Scout's existing beta Discord application. Do not create a second bot or
 OAuth application.
@@ -28,90 +24,76 @@ OAuth application.
    existing Scout application ID from `/api/customs/config`.
 
 The Activity session lasts ten minutes. Refresh is bounded to two hours and
-rechecks the Activity instance, live guild membership, and the feature policy.
+rechecks the Activity instance, live guild membership, and feature policy.
 
-## Register Tournament-V5
+## 2. Enable the guild and observers
 
-The beta database needs one durable registration for every live Tournament
-region Customs will use. Run the registration script from an environment with
-the beta `DATABASE_URL`, `RIOT_API_KEY`, and public callback configuration:
+Target the beta guild with `custom_nights_enabled` using its `server`
+attribute. Confirm the global `scout_client_ingestion` kill switch is enabled.
 
-```bash
-cd packages/scout-for-lol/packages/backend
-bun run scripts/register-tournament-provider.ts \
-  --mode=live \
-  --region=AMERICA_NORTH
-```
+Install Scout Client on the computers that will observe games. Three or four
+observers are useful for a ten-player lobby, but one valid observation is
+enough. Each observer must:
 
-Registration is explicit and durable. A missing row is an error; Scout never
-silently creates a replacement provider during `/lobby create` or a custom
-night.
+1. Open Scout Client and choose **Pair with Scout**.
+2. Approve the device in the authenticated browser page.
+3. Confirm the client shows both **League: Connected** and **Scout API:
+   Paired** while League is open.
+4. Enable **Start Scout Client at login** if the observer wants unattended
+   collection.
 
-Before enabling either flag, use the existing `/lobby create` command to prove
-that the beta Riot key can create a real code and that the Tournament poller
-can read its events.
+Any Scout user can pair a client while the kill switch is enabled. Uploaded
+player observations are accepted only when the local Riot account is linked to
+the same Scout user.
 
-## Enable the initial guild
-
-Target the existing beta guild in Flipt. Enable both flags for the same
-`server` attribute:
-
-- `tournament_lobbies_enabled` permits code creation.
-- `custom_nights_enabled` exposes Activity authentication, mutations, socket
-  delivery, and dashboard history.
-
-Do not add a guild allowlist environment variable. Later expansion is another
-Flipt target using the `server` attribute.
-
-## Run and observe a night
+## 3. Run and observe a night
 
 1. Open Scout Customs in the configured beta voice lobby.
 2. Start recruitment and verify the shared Scout bot posts the recruitment
    message in the launch channel.
 3. Collect consent, select Riot accounts, lock ten players, choose captains,
    and finish the draft.
-4. Create the Tournament lobby. Only the host and cohosts should see the code.
-5. Arrange team voice, then start the game in League. Scout changes to
-   `PLAYING` only after Tournament-V5 observes the game.
-6. After the lobby resolves, expect `RESULT_PENDING`. There is no manual result
-   action.
-7. Wait for the ordinary Match-V5 cursor to archive the raw match in S3. In
-   the same database transaction before the cursor advances, Scout marks the
-   lobby `reported`, projects champions and wins, verifies the game, and opens
-   intermission.
-8. Choose one of the four intermission team/captain options and complete a
-   second game.
+4. Have any player create a normal custom lobby in League and invite the two
+   assigned teams.
+5. Keep at least one paired Scout Client running. Scout binds the lobby after
+   its exact roster matches the pending game.
+6. Play the game and keep the client open through the post-game screen.
+7. Wait for the match workflow to archive a complete result. Riot data is
+   preferred. Complete local data can fill the gap after two minutes.
+8. Confirm the game becomes `VERIFIED`, intermission opens, and a completed
+   ROFL is uploaded when League saved one.
+9. Choose an intermission team or captain option before the next game.
 
-Check the beta dashboard's Customs history after each game. It should show the
-normalized game snapshot and the append-only audit revisions.
+Check Customs history after each game. It should show the normalized game
+snapshot and append-only audit revisions.
 
-An unfinished night expires 12 hours after it starts. The beta Temporal
-schedule checks once per minute, records `NIGHT_EXPIRED`, ends the night, and
-releases the guild's active-night pointer so a later night can start. Treat
-this as stale-night recovery, not a result path: expiry never chooses a winner
-or verifies an unfinished game.
+An unfinished night expires 12 hours after it starts. The Temporal schedule
+records `NIGHT_EXPIRED`, ends the night, and releases the active-night pointer.
+Expiry never chooses a winner or verifies an unfinished game.
 
-## Recover without inventing a result
+## 4. Recover without inventing a result
 
-- **Code remains pending:** retry the existing provisioning claim. An
-  ambiguous Riot response is never permission to request another code.
-- **Lobby is resolved:** do not retry Tournament-V5. The lobby waits for the
-  normal Match-V5/S3 boundary. Repair match ingestion instead.
+- **No lobby binds:** verify every selected Riot account, then compare the
+  League roster with the pending game's exact roster. Resolve duplicate pending
+  games instead of guessing.
+- **Observations remain queued:** keep Scout Client running and check its last
+  typed error. The SQLite outbox retries the same immutable observations.
+- **Riot has no result:** keep one observer online through postgame. Repair the
+  local upload or void the game explicitly; never enter a winner manually.
+- **Replay does not upload:** confirm League finished writing the ROFL and that
+  the same device supplied accepted postgame evidence for its game ID.
 - **Voice provisioning failed:** use the Activity retry. Scout cleans up a
   partial channel pair before retrying.
-- **Players remain in team channels:** use **Return everyone to lobby**. End
-  night also performs that cleanup before removing the active-night pointer.
-- **The host disappears:** wait for the 12-hour expiry if no manager can end the
-  night. Confirm the audit contains `NIGHT_EXPIRED` and the guild can start a
-  new night before intervening in PostgreSQL.
-- **Riot never produces the match:** keep waiting while recovery remains
-  possible, or have the host explicitly void the game. Never enter a winner
-  manually.
+- **Players remain in team channels:** use **Return everyone to lobby**. Ending
+  the night also performs that cleanup.
+- **The host disappears:** wait for the 12-hour expiry if no manager can end
+  the night. Confirm `NIGHT_EXPIRED` exists before intervening in PostgreSQL.
 
-The rollback is only to disable `custom_nights_enabled`. Leave the PostgreSQL
-history and consent/audit rows intact.
+Rollback requires disabling `custom_nights_enabled` for the guild. Disable the
+global `scout_client_ingestion` kill switch only when all native ingestion must
+stop. Leave PostgreSQL history, observations, consent, and audit rows intact.
 
 ## Related
 
-- [Why Scout can only see custom games through the Tournament API](/explanation/scout-custom-games/)
+- [Why Scout observes League locally](/explanation/scout-custom-games/)
 - [Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/)

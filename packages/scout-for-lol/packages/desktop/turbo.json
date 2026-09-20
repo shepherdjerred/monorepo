@@ -1,0 +1,58 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "rustfmt.toml",
+        "protocol/**",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "protocol/**",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "protocol/**",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "test:ci": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "protocol/**",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "rustfmt.toml",
+        "protocol/**",
+        "!target/**"
+      ],
+      "outputs": []
+    }
+  }
+}

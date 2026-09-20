@@ -521,7 +521,7 @@ export const SCOUT_V2_MATCH_MINT_INTENTS_PATCH = "scout-v2-match-mint-intents";
  * The per-match core, V2.
  *
  * Phases, in order: archive the raw artifacts, commit the observation, settle
- * markets, apply progression, finalize any tournament result, record receipts,
+ * markets, apply progression, finalize any managed-custom result, record receipts,
  * advance tracked-account cursors, and only then fan out notification and
  * lake-projection children.
  *
@@ -665,9 +665,9 @@ export async function scoutMatchProcessingV2Workflow(
   // is the only caller repo-wide, so a V2 core that skipped it would leave the
   // result unfinalized and the snapshot unpublished — with the cursor moved
   // past the match, so nothing would ever rediscover it. The stage answers
-  // `not-a-tournament-match` cheaply for an ordinary match.
+  // The legacy `not-a-tournament-match` result cheaply covers an ordinary match.
   if (!attested.has(SCOUT_V2_MATCH_RECEIPT_KINDS.tournament)) {
-    setWorkflowPhase("**Phase:** finalizing any tournament result");
+    setWorkflowPhase("**Phase:** finalizing any managed custom result");
     await activities.finalizeTournamentResultV2(ref);
     receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.tournament);
   }

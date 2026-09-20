@@ -33,7 +33,6 @@ const PRODUCTION_DENIED_FLAGS = [
   "dare_extended_contracts_enabled",
   "dare_notifications_enabled",
   "custom_nights_enabled",
-  "tournament_lobbies_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
 ] as const;
@@ -104,7 +103,6 @@ describe("production hard-disable policy", () => {
         dare_extended_contracts_enabled: true,
         dare_notifications_enabled: true,
         custom_nights_enabled: true,
-        tournament_lobbies_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
       }),

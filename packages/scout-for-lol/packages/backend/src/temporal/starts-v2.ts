@@ -6,6 +6,7 @@ import {
   SCOUT_V2_REUSE_POLICIES,
   SCOUT_WORKFLOW_NAMES,
   scoutLakeProjectionV2WorkflowId,
+  scoutMatchProcessingV2WorkflowId,
   scoutNotificationV2WorkflowId,
   scoutPipelineReconciliationV2WorkflowId,
   scoutTaskQueues,
@@ -13,9 +14,11 @@ import {
 } from "@scout-for-lol/temporal";
 import {
   scoutLakeProjectionV2InputCodec,
+  scoutMatchProcessingV2InputCodec,
   scoutNotificationV2InputCodec,
   scoutPipelineReconciliationV2InputCodec,
   type ScoutLakeProjectionV2Input,
+  type ScoutMatchProcessingV2Input,
   type ScoutNotificationV2Input,
   type ScoutPipelineReconciliationV2Input,
 } from "@scout-for-lol/temporal/workflow-contracts-v2";
@@ -93,6 +96,46 @@ function operatorStartMetadata(
     }),
     summary,
     description,
+  });
+}
+
+function apiStartMetadata(
+  stage: ScoutStage,
+  summary: string,
+  description: string,
+) {
+  return buildTemporalExecutionStartMetadata({
+    metadata: ExecutionMetadataSchema.parse({
+      Environment: stage,
+      Domain: "scout",
+      Trigger: "api",
+      ReleaseCommit: configuration.gitSha,
+    }),
+    summary,
+    description,
+  });
+}
+
+/** Start or join the durable per-match pipeline for native-client ingress. */
+export async function startScoutMatchProcessingV2(
+  client: ScoutV2WorkflowStarter,
+  input: ScoutMatchProcessingV2Input,
+): Promise<{ firstExecutionRunId: string }> {
+  return await client.workflow.start(SCOUT_WORKFLOW_NAMES.matchProcessingV2, {
+    ...JOIN_RUNNING_EXECUTION,
+    workflowIdReusePolicy:
+      SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.matchProcessingV2],
+    workflowId: scoutMatchProcessingV2WorkflowId(
+      input.stage,
+      input.riotMatchId,
+    ),
+    taskQueue: scoutTaskQueues(input.stage).workflow,
+    args: [scoutMatchProcessingV2InputCodec.serialize(input)],
+    ...apiStartMetadata(
+      input.stage,
+      "Ingest a native Scout match observation",
+      "Runs the existing post-match pipeline with Riot-first, paired-client gap filling.",
+    ),
   });
 }
 
