@@ -11,12 +11,17 @@ import {
   PreparedImessageCommandSchema,
   type ImessageCommand,
 } from "#shared/agent/agent-chat-imessage.ts";
+import { validateAgentChatIngressTimestamp } from "#shared/agent/agent-chat-ingress.ts";
 
 export const IMESSAGE_HELP =
   "Use /new claude <prompt> or /new codex <prompt>; /chats lists recent chats; /use <chat-id> selects any previous chat; /continue <chat-id> <prompt> continues it directly. Ordinary text continues the selected chat. Text prompts must be 1–4000 characters.";
 
 export async function prepareImessageCommand(rawCommand: ImessageCommand) {
   const input = ImessageCommandSchema.parse(rawCommand);
+  validateAgentChatIngressTimestamp(
+    input.submittedAt,
+    new Date().toISOString(),
+  );
   const action = input.action;
   const message = (content: string) =>
     PreparedImessageCommandSchema.parse({ kind: "message", content });

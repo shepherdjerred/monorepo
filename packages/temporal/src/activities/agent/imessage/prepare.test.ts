@@ -34,6 +34,18 @@ beforeEach(() => {
   });
 });
 describe("iMessage chat preparation", () => {
+  test("rejects a future-dated BlueBubbles message before mutating chat state", async () => {
+    await expect(
+      prepareImessageCommand({
+        ...BASE,
+        submittedAt: "2099-01-01T00:00:00.000Z",
+        action: { kind: "new", provider: "claude", prompt: "investigate" },
+      }),
+    ).rejects.toThrow("submittedAt is too far in the future");
+    expect(mocks.config).not.toHaveBeenCalled();
+    expect(mocks.bind).not.toHaveBeenCalled();
+  });
+
   test.each(["claude", "codex"] as const)(
     "freezes identity, provider and model before dispatch: %s",
     async (provider) => {
