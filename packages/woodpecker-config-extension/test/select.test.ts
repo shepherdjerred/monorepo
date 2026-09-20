@@ -105,16 +105,55 @@ describe("selection", () => {
     expect(selected).toEqual([]);
   });
 
-  test("keeps a default-branch-only step on main", () => {
+  test("keeps a default-branch-only step on a push to main", () => {
     const selected = selectSteps(
       [step("release", { defaultBranchOnly: true })],
-      {
-        ...CONTEXT,
-        branch: "main",
-      },
+      { ...CONTEXT, event: "push", branch: "main" },
     );
     expect(selected.map((s) => s.key)).toEqual(["release"]);
   });
+
+  test("keeps a default-branch-only step on a manual run of main", () => {
+    const selected = selectSteps(
+      [step("release", { defaultBranchOnly: true })],
+      { ...CONTEXT, event: "manual", branch: "main" },
+    );
+    expect(selected.map((s) => s.key)).toEqual(["release"]);
+  });
+
+  /**
+   * The branch of a pull request IS the default branch: Woodpecker reports the
+   * target branch for every pull-request event. Selecting on branch identity
+   * alone therefore put the whole release chain -- infrastructure applies,
+   * package publishes, ArgoCD syncs -- inside reach of any pull request
+   * against main. All three pull-request shapes must be refused, including the
+   * metadata one, which fires on something as ordinary as adding a label.
+   */
+  test.each(["pull_request", "pull_request_closed", "pull_request_metadata"])(
+    "drops a default-branch-only step for %s against main",
+    (event) => {
+      const selected = selectSteps(
+        [step("release", { defaultBranchOnly: true })],
+        { ...CONTEXT, event, branch: "main" },
+      );
+      expect(selected).toEqual([]);
+    },
+  );
+
+  /**
+   * Events this model does not reason about must fail closed rather than
+   * inherit "the branch looks right".
+   */
+  test.each(["tag", "release", "deployment", "cron"])(
+    "drops a default-branch-only step for the unmodelled %s event",
+    (event) => {
+      const selected = selectSteps(
+        [step("release", { defaultBranchOnly: true })],
+        { ...CONTEXT, event, branch: "main" },
+      );
+      expect(selected).toEqual([]);
+    },
+  );
 
   test("rejects an unknown dependency instead of dropping the edge", () => {
     expect(() =>
