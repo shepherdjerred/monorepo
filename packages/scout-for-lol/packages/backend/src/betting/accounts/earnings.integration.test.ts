@@ -17,11 +17,10 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
-  announcingSettlementSink,
-  SettlementCheckpointError,
-} from "#src/betting/notify/announcement-sink.ts";
-import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+  checkpointFailingSink,
+  checkpointRecordingSink,
+} from "#src/betting/notify/announcement-sink.test-fixtures.ts";
+import { SettlementCheckpointError } from "#src/betting/notify/announcement-sink.ts";
 import {
   awardBucksForMatch,
   type EarnedAwardReason,
@@ -192,16 +191,13 @@ describe("the announcement instruction an earning records", () => {
     // A plain error is still absorbed here — only a typed checkpoint failure
     // escapes — so the call completes and the proof is what survived.
     await expect(
-      awardBucksForMatch(fixture, db, {
-        ...announcingSettlementSink,
-        recordAnnouncementItem: async (handle, item) => {
-          await recordSettlementAnnouncementItem(handle, {
-            matchId: RiotMatchIdSchema.parse(MATCH_ID),
-            item,
-          });
-          throw new Error("the earning failed after recording");
-        },
-      }),
+      awardBucksForMatch(
+        fixture,
+        db,
+        checkpointRecordingSink(MATCH_ID, {
+          thenThrow: "the earning failed after recording",
+        }),
+      ),
     ).resolves.toEqual([]);
 
     expect(
@@ -230,19 +226,7 @@ describe("the announcement instruction an earning records", () => {
     });
 
     await expect(
-      awardBucksForMatch(fixture, db, {
-        ...announcingSettlementSink,
-        recordAnnouncementItem: (_handle, item) =>
-          Promise.reject(
-            new SettlementCheckpointError({
-              family: item.family,
-              itemKey: item.itemKey,
-              retryable: true,
-              message: "the checkpoint row could not be written",
-              cause: new Error("connection reset"),
-            }),
-          ),
-      }),
+      awardBucksForMatch(fixture, db, checkpointFailingSink()),
     ).rejects.toBeInstanceOf(SettlementCheckpointError);
   });
 
@@ -254,15 +238,11 @@ describe("the announcement instruction an earning records", () => {
       puuid: mvpPuuid,
     });
 
-    const awards = await awardBucksForMatch(fixture, db, {
-      ...announcingSettlementSink,
-      recordAnnouncementItem: async (handle, item) => {
-        await recordSettlementAnnouncementItem(handle, {
-          matchId: RiotMatchIdSchema.parse(MATCH_ID),
-          item,
-        });
-      },
-    });
+    const awards = await awardBucksForMatch(
+      fixture,
+      db,
+      checkpointRecordingSink(MATCH_ID),
+    );
 
     expect(awards).toHaveLength(1);
     const stored = await db.matchSettlementAnnouncement.findMany({
