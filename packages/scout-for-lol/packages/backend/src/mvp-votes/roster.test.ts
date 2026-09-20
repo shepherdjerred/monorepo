@@ -68,4 +68,30 @@ describe("freezeMatchMvpRosterFromParticipants", () => {
       riotId: "Player0#NA1",
     });
   });
+
+  test("freezes a roster when Riot identity fields are omitted or blank", () => {
+    const participants = Array.from({ length: 10 }, (_unused, index) => {
+      const base = {
+        participantId: index + 1,
+        puuid: puuid(index),
+        teamId: index < 5 ? (100 as const) : (200 as const),
+        championName: `Champ${String(index)}`,
+      };
+      if (index === 0) {
+        return { ...base, riotIdTagline: "" };
+      }
+      if (index === 1) {
+        return { ...base, summonerName: "OldSummoner" };
+      }
+      return {
+        ...base,
+        riotIdGameName: `Player${String(index)}`,
+        riotIdTagline: "NA1",
+      };
+    });
+    const roster = freezeMatchMvpRosterFromParticipants("NA1_1", participants);
+    expect(roster.participants[0]?.riotId).toBe("Champ0");
+    expect(roster.participants[1]?.riotId).toBe("OldSummoner");
+    expect(roster.participants[2]?.riotId).toBe("Player2#NA1");
+  });
 });

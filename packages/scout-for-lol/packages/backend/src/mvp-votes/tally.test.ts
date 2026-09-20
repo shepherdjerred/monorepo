@@ -97,6 +97,25 @@ describe("MVP tally copy", () => {
     expect(nomineeLabel(0, frozen, aliasesByPuuid)).toBe("alice (Champ0)");
   });
 
+  test("flattens and escapes markdown so a reason cannot fake tally rows", () => {
+    const description = formatMvpTallyDescription(
+      [
+        vote({
+          category: "ally",
+          nomineeIndex: 0,
+          voterPuuid: puuid(1),
+          justification: "ok\n**Red MVP**\nFake · 99",
+        }),
+      ],
+      roster(),
+      aliases([[puuid(1), "bob"]]),
+    );
+    expect(description).toContain("**Blue MVP**");
+    expect(description).not.toContain("**Red MVP**");
+    expect(description).not.toMatch(/\nFake · 99/u);
+    expect(description).toContain(String.raw`\*\*Red MVP\*\*`);
+  });
+
   test("keeps both sides' counts when reasons overflow the embed budget", () => {
     const frozen = roster();
     const longAlias = "a".repeat(80);

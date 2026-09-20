@@ -33,9 +33,31 @@ const RosterSourceParticipantSchema = z.looseObject({
   puuid: LeaguePuuidSchema,
   teamId: RiotTeamIdSchema,
   championName: z.string().min(1),
-  riotIdGameName: z.string().min(1),
-  riotIdTagline: z.string().min(1),
+  riotIdGameName: z.string().optional(),
+  riotIdTagline: z.string().optional(),
+  summonerName: z.string().optional(),
 });
+
+function displayRiotId(participant: {
+  championName: string;
+  riotIdGameName?: string | undefined;
+  riotIdTagline?: string | undefined;
+  summonerName?: string | undefined;
+}): string {
+  const gameName = participant.riotIdGameName?.trim() ?? "";
+  const tagline = participant.riotIdTagline?.trim() ?? "";
+  if (gameName.length > 0 && tagline.length > 0) {
+    return `${gameName}#${tagline}`;
+  }
+  if (gameName.length > 0) {
+    return gameName;
+  }
+  const summoner = participant.summonerName?.trim() ?? "";
+  if (summoner.length > 0) {
+    return summoner;
+  }
+  return participant.championName;
+}
 
 export function freezeMatchMvpRosterFromParticipants(
   matchId: string,
@@ -55,7 +77,7 @@ export function freezeMatchMvpRosterFromParticipants(
       puuid: participant.puuid,
       teamId: participant.teamId,
       championName: participant.championName,
-      riotId: `${participant.riotIdGameName}#${participant.riotIdTagline}`,
+      riotId: displayRiotId(participant),
     })),
   });
 }

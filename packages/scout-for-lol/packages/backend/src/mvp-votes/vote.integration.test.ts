@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   MatchIdSchema,
 } from "@scout-for-lol/data";
@@ -13,7 +14,9 @@ import {
 import { freezeMatchMvpRosterFromParticipants } from "#src/mvp-votes/roster.ts";
 import { findMatchMvpVoter } from "#src/mvp-votes/eligibility.ts";
 import {
+  listMatchMvpReportRefs,
   listMatchMvpVotes,
+  recordMatchMvpReportRefs,
   setMatchMvpJustification,
   upsertMatchMvpVote,
 } from "#src/mvp-votes/vote.ts";
@@ -162,6 +165,38 @@ describe("Match MVP votes", () => {
     );
     expect(voter?.alias).toBe("alice");
     expect(voter?.rosterIndex).toBe(0);
+  });
+
+  test("persists report message refs on the contest, not the ActiveGame TTL", async () => {
+    const frozen = roster();
+    await db.matchMvpContest.create({
+      data: { matchId: MATCH_ID, roster: frozen },
+    });
+    await recordMatchMvpReportRefs(
+      MATCH_ID,
+      new Map([["1337623164146155594", "100000000000000001"]]),
+      db,
+    );
+    await recordMatchMvpReportRefs(
+      MATCH_ID,
+      new Map([["1337623164146155595", "100000000000000002"]]),
+      db,
+    );
+    const refs = await listMatchMvpReportRefs(MATCH_ID, db);
+    expect(
+      [...refs].sort((left, right) =>
+        left.channelId.localeCompare(right.channelId),
+      ),
+    ).toEqual([
+      {
+        channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
+        messageId: "100000000000000001",
+      },
+      {
+        channelId: DiscordChannelIdSchema.parse("1337623164146155595"),
+        messageId: "100000000000000002",
+      },
+    ]);
   });
 
   test("a linked Discord who did not play cannot vote", async () => {

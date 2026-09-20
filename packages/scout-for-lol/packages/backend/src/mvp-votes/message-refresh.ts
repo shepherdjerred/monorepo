@@ -2,7 +2,6 @@ import type { APIEmbed, Channel, MessageEditOptions } from "discord.js";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import {
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   MatchIdSchema,
   type DiscordChannelId,
@@ -18,13 +17,17 @@ import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 import { guildAliasesForRoster } from "#src/mvp-votes/eligibility.ts";
 import { MVP_TALLY_TITLE } from "#src/mvp-votes/copy.ts";
 import { mvpTallyEmbed } from "#src/mvp-votes/tally.ts";
-import { listMatchMvpVotes, loadMatchMvpRoster } from "#src/mvp-votes/vote.ts";
+import {
+  listMatchMvpReportRefs,
+  listMatchMvpVotes,
+  loadMatchMvpRoster,
+  recordMatchMvpReportRefs,
+} from "#src/mvp-votes/vote.ts";
 
 const logger = createLogger("mvp-vote-refresh");
 const tallyRefreshTails = new Map<string, Promise<unknown>>();
 const DiscordApiErrorSchema = z.object({ code: z.number() });
 const UNKNOWN_DISCORD_RESOURCE_CODES = new Set([10_003, 10_008]);
-const PostmatchMessageIdsSchema = z.record(z.string(), z.string());
 
 function isUnknownDiscordResource(error: unknown): boolean {
   const parsed = DiscordApiErrorSchema.safeParse(error);
@@ -85,38 +88,18 @@ function refKey(ref: {
   return `${ref.channelId}:${ref.messageId}`;
 }
 
-async function v1PostmatchRefs(
-  matchId: MatchId,
-  prismaClient: ExtendedPrismaClient,
-): Promise<{ channelId: DiscordChannelId; messageId: string }[]> {
-  const row = await prismaClient.activeGame.findUnique({
-    where: { prematchMatchId: matchId },
-    select: { postmatchMessageIds: true },
-  });
-  if (row?.postmatchMessageIds == null) {
-    return [];
-  }
-  const parsed = PostmatchMessageIdsSchema.parse(
-    JSON.parse(row.postmatchMessageIds),
-  );
-  return Object.entries(parsed).map(([channelId, messageId]) => ({
-    channelId: DiscordChannelIdSchema.parse(channelId),
-    messageId,
-  }));
-}
-
 async function deliveredPostmatchRefs(
   matchId: MatchId,
   prismaClient: ExtendedPrismaClient,
 ): Promise<{ channelId: DiscordChannelId; messageId: string }[]> {
-  const [intents, v1Refs] = await Promise.all([
+  const [intents, contestRefs] = await Promise.all([
     listIntentsForMatch(prismaClient, {
       matchId: RiotMatchIdSchema.parse(matchId),
     }),
-    v1PostmatchRefs(matchId, prismaClient),
+    listMatchMvpReportRefs(matchId, prismaClient),
   ]);
   const refs: { channelId: DiscordChannelId; messageId: string }[] = [
-    ...v1Refs,
+    ...contestRefs,
   ];
   const seen = new Set(refs.map((ref) => refKey(ref)));
   for (const record of intents) {
@@ -164,6 +147,11 @@ async function refreshOnce(
     );
     return;
   }
+  await recordMatchMvpReportRefs(
+    input.matchId,
+    new Map(refs.map((ref) => [ref.channelId, ref.messageId])),
+    prismaClient,
+  );
   let updated = 0;
   for (const ref of refs) {
     try {

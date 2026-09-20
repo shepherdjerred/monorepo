@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, escapeMarkdown } from "discord.js";
 import type { LeaguePuuid, RiotTeamId } from "@scout-for-lol/data";
 import { MVP_TALLY_EMPTY, MVP_TALLY_TITLE } from "#src/mvp-votes/copy.ts";
 import {
@@ -50,7 +50,16 @@ export function nomineeLabel(
 }
 
 function sanitizeReason(raw: string): string {
-  return raw
+  const oneLine = raw
+    .replaceAll(/[\r\n\u{2028}\u{2029}]+/gu, " ")
+    .replaceAll(/\s+/gu, " ")
+    .trim();
+  return escapeMarkdown(oneLine, {
+    heading: true,
+    bulletedList: true,
+    numberedList: true,
+    maskedLink: true,
+  })
     .replaceAll("@everyone", "@\u{200B}everyone")
     .replaceAll("@here", "@\u{200B}here")
     .replaceAll(/<@!?\d+>/gu, "[mention]");

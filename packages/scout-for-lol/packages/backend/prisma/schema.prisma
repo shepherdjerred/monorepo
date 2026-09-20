@@ -2474,10 +2474,13 @@ model MatchObservation {
 
 /// Frozen 10-player Flex roster for community MVP votes. Match-global: the
 /// players are a fact of the Riot match, while ballots below are per guild.
+/// `reportMessageIds` is the durable channel→message map for tally edits;
+/// ActiveGame.postmatchMessageIds expires with the 3-hour active-game TTL.
 model MatchMvpContest {
-  matchId   String   @id
-  roster    Json
-  createdAt DateTime @default(now())
+  matchId          String   @id
+  roster           Json
+  reportMessageIds Json?
+  createdAt        DateTime @default(now())
 }
 
 /// One guild member's vote in one category for one Flex match.
