@@ -93,7 +93,7 @@ showplayerfacesinmenu: true
 grayplayerswhenhidden: true
 showlayercontrol: true
 defaultzoom: 0
-defaultworld: World
+defaultworld: world
 defaultmap: surface
 persist-ids-by-ip: false
 cyrillic-support: false

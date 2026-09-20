@@ -1178,6 +1178,21 @@
       ]
     },
     {
+      "name": "mc2discord-forge-1.12.2",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "custom.mc2discord-forge-1-12-2",
+        "versioning": "regex:^https://cdn[.]modrinth[.]com/data/Cfbcv7uF/versions/[A-Za-z0-9]+/mc2discord-forge-1[.]12[.]2-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)[.]jar$"
+      },
+      "value": "https://cdn.modrinth.com/data/Cfbcv7uF/versions/lABepxc4/mc2discord-forge-1.12.2-3.3.2.jar",
+      "notes": [
+        "Forge 1.12.2 releases only; the custom datasource carries each immutable Modrinth",
+        "version ID in the file URL while ordering upgrades by the semantic filename version."
+      ]
+    },
+    {
       "name": "recyclarr",
       "category": "upstream",
       "artifactType": "image",

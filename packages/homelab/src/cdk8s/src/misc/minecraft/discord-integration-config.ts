@@ -1,10 +1,8 @@
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
-export const DISCORD_INTEGRATION_MOD_URL =
-  "https://cdn.modrinth.com/data/rbJ7eS5V/versions/xLuSqQki/dcintegration-forge-2.4.7.1-1.12.jar";
+export const DISCORD_INTEGRATION_MOD_URL = versions["mc2discord-forge-1.12.2"];
 
-const configPath = new URL("discord-integration-config.toml", import.meta.url)
-  .pathname;
+const configPath = new URL("mc2discord-config.toml", import.meta.url).pathname;
 const configTemplate = await Bun.file(configPath).text();
 
 export function getDiscordIntegrationConfigMapManifest(name: string): object {
@@ -12,7 +10,7 @@ export function getDiscordIntegrationConfigMapManifest(name: string): object {
     apiVersion: "v1",
     kind: "ConfigMap",
     metadata: { name: `${name}-discord-integration-config` },
-    data: { "Discord-Integration.toml": configTemplate },
+    data: { "mc2discord.toml": configTemplate },
   };
 }
 
@@ -34,8 +32,8 @@ export function getDiscordIntegrationExtraVolumes(name: string): object[] {
       volumeMounts: [
         {
           name: "discord-integration-generated",
-          mountPath: "/data/config/Discord-Integration.toml",
-          subPath: "Discord-Integration.toml",
+          mountPath: "/data/config/mc2discord.toml",
+          subPath: "mc2discord.toml",
         },
       ],
     },
@@ -51,7 +49,10 @@ export function getDiscordIntegrationConfigInitContainer(
     command: [
       "sh",
       "-ec",
-      `mkdir -p /data/config
+      `if [ -f /data/mods/dcintegration-forge-2.4.7.1-1.12.jar ]; then
+  rm /data/mods/dcintegration-forge-2.4.7.1-1.12.jar
+fi
+mkdir -p /data/config
 exec mc-image-helper sync-and-interpolate \
   --replace-env-prefix=CFG_ \
   --replace-env-file-suffixes=toml \
