@@ -61,6 +61,20 @@ function isUniqueConstraintError(error: unknown): boolean {
   );
 }
 
+function storedRosterMatching(
+  matchId: MatchId,
+  storedJson: unknown,
+  roster: MatchMvpRoster,
+): MatchMvpRoster {
+  const stored = MatchMvpRosterSchema.parse(storedJson);
+  if (!Bun.deepEquals(stored, roster)) {
+    throw new Error(
+      `Match MVP contest ${matchId} already froze a different roster`,
+    );
+  }
+  return stored;
+}
+
 export async function ensureMatchMvpContest(
   match: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -72,13 +86,7 @@ export async function ensureMatchMvpContest(
     select: { roster: true },
   });
   if (existing !== null) {
-    const stored = MatchMvpRosterSchema.parse(existing.roster);
-    if (!Bun.deepEquals(stored, roster)) {
-      throw new Error(
-        `Match MVP contest ${matchId} already froze a different roster`,
-      );
-    }
-    return stored;
+    return storedRosterMatching(matchId, existing.roster, roster);
   }
   try {
     await prismaClient.matchMvpContest.create({
@@ -98,7 +106,7 @@ export async function ensureMatchMvpContest(
         { cause: error },
       );
     }
-    return MatchMvpRosterSchema.parse(raced.roster);
+    return storedRosterMatching(matchId, raced.roster, roster);
   }
   return roster;
 }

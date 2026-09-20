@@ -12,6 +12,10 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
+import {
+  isMissingChannelError,
+  isPermissionError,
+} from "#src/discord/utils/permissions.ts";
 import { createLogger } from "#src/logger.ts";
 import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 import { guildAliasesForRoster } from "#src/mvp-votes/eligibility.ts";
@@ -27,11 +31,15 @@ import {
 const logger = createLogger("mvp-vote-refresh");
 const tallyRefreshTails = new Map<string, Promise<unknown>>();
 const DiscordApiErrorSchema = z.object({ code: z.number() });
-const UNKNOWN_DISCORD_RESOURCE_CODES = new Set([10_003, 10_008]);
+const UNKNOWN_MESSAGE_CODE = 10_008;
 
-function isUnknownDiscordResource(error: unknown): boolean {
+function isSkippableTallyEditError(error: unknown): boolean {
   const parsed = DiscordApiErrorSchema.safeParse(error);
-  return parsed.success && UNKNOWN_DISCORD_RESOURCE_CODES.has(parsed.data.code);
+  return (
+    (parsed.success && parsed.data.code === UNKNOWN_MESSAGE_CODE) ||
+    isPermissionError(error) ||
+    isMissingChannelError(error)
+  );
 }
 
 function guildIdOfChannel(channel: Channel): DiscordGuildId | undefined {
@@ -187,7 +195,7 @@ async function refreshOnce(
       });
       updated += 1;
     } catch (error) {
-      if (isUnknownDiscordResource(error)) {
+      if (isSkippableTallyEditError(error)) {
         logger.warn(
           `Skipping MVP tally edit for missing Discord resource ${ref.channelId}/${ref.messageId}`,
           error,
