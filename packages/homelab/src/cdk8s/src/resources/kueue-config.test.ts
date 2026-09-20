@@ -4,7 +4,7 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
-import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
+import { WOODPECKER_MAX_WORKFLOWS } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 
 const ClusterQueueSchema = z.object({
   apiVersion: z.literal("kueue.x-k8s.io/v1beta1"),
@@ -87,7 +87,7 @@ describe("kueue-config", () => {
   });
 
   it("covers ephemeral-storage (pods request it — omitting it freezes CI)", () => {
-    // Every .buildkite/pipeline.yml step container sets an ephemeral-storage
+    // Every ci/pipeline.yml step container sets an ephemeral-storage
     // request. Kueue refuses to admit a workload that
     // requests a resource the ClusterQueue does not cover, so if this drifts
     // out every build sits Pending forever. Regression guard for the
@@ -101,16 +101,16 @@ describe("kueue-config", () => {
     expect(eph?.nominalQuota).toBe("100Gi");
   });
 
-  it("pods nominalQuota stays in lockstep with Buildkite's max-in-flight", () => {
+  it("pods nominalQuota stays in lockstep with Woodpecker's max-in-flight", () => {
     const clusterQueue = synthKueueClusterQueue();
     const flavor = clusterQueue.spec.resourceGroups[0]?.flavors[0];
     expect(flavor).toBeDefined();
     const podsResource = flavor?.resources.find((r) => r.name === "pods");
     expect(podsResource).toBeDefined();
-    // Two independent enforcement layers (Buildkite max-in-flight, Kueue pods
+    // Two independent enforcement layers (Woodpecker max-in-flight, Kueue pods
     // quota) for the same concurrency cap must never drift apart — see the
-    // long comment in kueue-config.ts / buildkite.ts for why both exist.
-    expect(podsResource?.nominalQuota).toBe(String(BUILDKITE_MAX_IN_FLIGHT));
+    // long comment in kueue-config.ts / woodpecker.ts for why both exist.
+    expect(podsResource?.nominalQuota).toBe(String(WOODPECKER_MAX_WORKFLOWS));
   });
 
   it("enables and selects Kueue metrics in the Prometheus namespace", () => {

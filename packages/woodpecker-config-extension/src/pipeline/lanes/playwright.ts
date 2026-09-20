@@ -1,4 +1,5 @@
 import type { CiImages } from "#src/images.ts";
+import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BROWSER_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
@@ -22,10 +23,10 @@ export function playwrightSteps(images: CiImages): CiStep[] {
       image: images.playwright,
       commands: [
         // Postgres scope: several suites need a live database.
-        "MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
         'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
         'export TURBO_CACHE="local:rw,remote:rw"',
-        "bun --no-install .buildkite/scripts/selection/run-playwright.ts",
+        "bun --no-install ci/scripts/selection/run-playwright.ts",
         // The suites build these bundles to test them; the deploy lane then
         // ships exactly what was tested instead of rebuilding.
         "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist packages/sjer.red/dist; fi",
@@ -40,6 +41,7 @@ export function playwrightSteps(images: CiImages): CiStep[] {
           key: "GITHUB_DOWNLOAD_TOKEN",
           env: "GITHUB_DOWNLOAD_TOKEN",
         },
+        ...HANDOFF_KEYS,
       ],
       changed: {
         include: [

@@ -364,7 +364,7 @@ export function compareStepGrants(
       }
     }
     if (
-      step.command.includes(". .buildkite/scripts/toolchain.sh") &&
+      step.command.includes(". ci/scripts/toolchain.sh") &&
       !step.grants.some((grant) => grant.env === "GITHUB_DOWNLOAD_TOKEN")
     ) {
       errors.push(

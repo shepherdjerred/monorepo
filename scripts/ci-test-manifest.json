@@ -799,21 +799,21 @@
     {
       "package": "@shepherdjerred/root-scripts",
       "directory": "scripts",
-      "coverageSourceDirectories": ["scripts", ".buildkite/scripts"],
+      "coverageSourceDirectories": ["scripts", "ci/scripts"],
       "steps": [
         {
           "runner": "vitest",
-          "args": [".", "../.buildkite/scripts"]
+          "args": [".", "../ci/scripts"]
         },
         {
           "runner": "command",
           "name": "upload-pipeline-shell",
-          "command": ["bash", "../.buildkite/scripts/upload-pipeline.test.sh"]
+          "command": ["bash", "../ci/scripts/upload-pipeline.test.sh"]
         },
         {
           "runner": "command",
           "name": "toolchain-shell",
-          "command": ["bash", "../.buildkite/scripts/toolchain.test.sh"]
+          "command": ["bash", "../ci/scripts/toolchain.test.sh"]
         }
       ]
     },

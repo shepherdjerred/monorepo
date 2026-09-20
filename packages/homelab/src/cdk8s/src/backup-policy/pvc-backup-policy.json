@@ -48,46 +48,16 @@
     "reason": "Rebuildable BuildKit cache"
   },
   {
-    "namespace": "buildkite",
-    "name": "buildkite-bun-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable Bun package cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-bun-cache-control",
-    "backup": "disabled",
-    "reason": "Disposable Bun cache coordination locks"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-codex-auth",
+    "namespace": "woodpecker",
+    "name": "woodpecker-codex-auth",
     "backup": "disabled",
     "reason": "Refreshable ChatGPT-managed Codex credential bundle"
   },
   {
-    "namespace": "buildkite",
-    "name": "buildkite-git-mirrors-liskov",
-    "backup": "disabled",
-    "reason": "Rebuildable Git mirror cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-tofu-plugin-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable OpenTofu plugin cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-trivy-db",
+    "namespace": "woodpecker",
+    "name": "woodpecker-trivy-db",
     "backup": "disabled",
     "reason": "Rebuildable vulnerability database cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-uv-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable Python package cache"
   },
   {
     "namespace": "chartmuseum",
@@ -453,6 +423,6 @@
     "namespace": "flipt",
     "name": "flipt-data",
     "backup": "enabled",
-    "reason": "Flipt git-backed flag state — the only durable copy of every flag definition"
+    "reason": "Flipt git-backed flag state \u2014 the only durable copy of every flag definition"
   }
 ]

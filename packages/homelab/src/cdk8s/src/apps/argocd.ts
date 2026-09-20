@@ -87,13 +87,13 @@ export function createArgoCdApp(chart: Chart) {
         "exec.enabled": true,
         "timeout.reconciliation": "60s",
         "statusbadge.enabled": true,
-        "accounts.buildkite": "apiKey",
-        "accounts.buildkite.enabled": true,
+        "accounts.woodpecker": "apiKey",
+        "accounts.woodpecker.enabled": true,
       },
       rbac: {
-        // Allow buildkite to sync and read the apps application
+        // Allow woodpecker to sync and read the apps application
         "policy.csv":
-          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow",
+          "p, woodpecker, applications, sync, default/apps, allow\np, woodpecker, applications, get, default/apps, allow",
       },
     },
   };

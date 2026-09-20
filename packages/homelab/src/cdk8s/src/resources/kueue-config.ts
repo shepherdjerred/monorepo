@@ -1,15 +1,15 @@
 import type { Chart } from "cdk8s";
 import { ApiObject } from "cdk8s";
-import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
+import { WOODPECKER_MAX_WORKFLOWS } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 
 /**
- * Creates Kueue resource management configuration for the Buildkite namespace.
+ * Creates Kueue resource management configuration for the Woodpecker namespace.
  *
- * Caps the buildkite namespace at 24 CPU / 80Gi of requests. Sized to liskov's
+ * Caps the woodpecker namespace at 24 CPU / 80Gi of requests. Sized to liskov's
  * current allocatable capacity of roughly 83.5Gi after Talos reservations and
  * eviction floors. Memory sits below the full allocatable capacity because the
  * CI workspace is memory-backed (agent-stack `workspace-volume` tmpfs — see
- * argo-applications/ci/buildkite.ts): checkout explicitly requests 1Gi and each
+ * argo-applications/ci/woodpecker.ts): checkout explicitly requests 1Gi and each
  * step request covers its own install/workspace demand. Image builds use the
  * remote BuildKit daemon and do not run DinD sidecars. The request-weighted
  * quota admits broad light-job mixes while keeping verify, Playwright, and
@@ -22,9 +22,9 @@ import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/
  * Jobs exceeding the quota are suspended (not rejected), eliminating
  * FailedCreate event storms.
  *
- * The `pods` covered resource is capped at `BUILDKITE_MAX_IN_FLIGHT`.
- * Buildkite's `max-in-flight` is the real, primary concurrency control (see the
- * long comment on it in buildkite.ts); this is a cheap, independent second
+ * The `pods` covered resource is capped at `WOODPECKER_MAX_WORKFLOWS`.
+ * Woodpecker's `max-in-flight` is the real, primary concurrency control (see the
+ * long comment on it in woodpecker.ts); this is a cheap, independent second
  * enforcement point at the K8s admission layer in case that setting ever
  * regresses (e.g. a future Helm-values typo). Kueue admission accounting is
  * always requests-based, so the CPU/memory nominal quota is scoped against the
@@ -44,7 +44,7 @@ export function createKueueConfig(chart: Chart) {
     apiVersion: "kueue.x-k8s.io/v1beta1",
     kind: "ClusterQueue",
     metadata: {
-      name: "buildkite",
+      name: "woodpecker",
       annotations: { "argocd.argoproj.io/sync-wave": "2" },
     },
     spec: {
@@ -59,7 +59,7 @@ export function createKueueConfig(chart: Chart) {
       },
       resourceGroups: [
         {
-          // ephemeral-storage MUST be covered here: .buildkite/pipeline.yml sets
+          // ephemeral-storage MUST be covered here: ci/pipeline.yml sets
           // an ephemeral-storage request on every step container, and
           // Kueue refuses to admit a workload that requests a resource its
           // ClusterQueue does not cover ("resource ephemeral-storage unavailable
@@ -87,7 +87,7 @@ export function createKueueConfig(chart: Chart) {
                 },
                 {
                   name: "pods",
-                  nominalQuota: String(BUILDKITE_MAX_IN_FLIGHT),
+                  nominalQuota: String(WOODPECKER_MAX_WORKFLOWS),
                 },
                 {
                   // Generous headroom, deliberately NOT a binding constraint:
@@ -111,11 +111,11 @@ export function createKueueConfig(chart: Chart) {
     kind: "LocalQueue",
     metadata: {
       name: "default",
-      namespace: "buildkite",
+      namespace: "woodpecker",
       annotations: { "argocd.argoproj.io/sync-wave": "2" },
     },
     spec: {
-      clusterQueue: "buildkite",
+      clusterQueue: "woodpecker",
     },
   });
 }

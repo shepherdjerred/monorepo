@@ -3,7 +3,7 @@
 /**
  * Print one build-scoped handoff value to stdout.
  *
- * Replaces `.buildkite/scripts/reporting/read-buildkite-handoff.ts`. Pipeline
+ * Replaces `ci/scripts/reporting/read-buildkite-handoff.ts`. Pipeline
  * steps use it the same way — `export FOO="$(bun scripts/ci/read-ci-handoff.ts
  * some-key)"` — but there is no pointer to resolve, so the whole artifact
  * download path is gone.

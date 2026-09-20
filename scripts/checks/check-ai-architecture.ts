@@ -287,7 +287,7 @@ function isActiveRuntimePath(
   filePath: string,
   workspaceRoots: readonly string[],
 ): boolean {
-  if (filePath === "package.json" || filePath.startsWith(".buildkite/")) {
+  if (filePath === "package.json" || filePath.startsWith("ci/")) {
     return true;
   }
   if (filePath.startsWith("packages/docs/")) return false;

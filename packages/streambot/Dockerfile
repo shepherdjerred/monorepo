@@ -224,8 +224,8 @@ FROM runtime AS smoke
 COPY --from=deps /app/ /app/
 COPY vitest.config.ts /app/vitest.config.ts
 COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=streambot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 USER 1000:1000
@@ -234,11 +234,11 @@ ENV HOME=/tmp
 # It needs the runtime rootfs (ffmpeg + libass + zimg + fonts) AND a Vitest
 # runner, and the published image deliberately carries no development
 # dependencies — so it cannot run from the shared harness, which also executes
-# against the pushed digest (.buildkite/application-image-smoke.Dockerfile).
+# against the pushed digest (ci/application-image-smoke.Dockerfile).
 RUN mkdir -p /tmp/videos \
     && cd /app/packages/streambot \
     && bun run test:integration
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image
 # Corpus evaluation is deliberately NOT a build dependency: it is a multi-hour acceptance

@@ -25,7 +25,7 @@ describe("affected verification filters", () => {
       await affectedVerifyFilters(
         { CI_CHANGED_BASE: "abc123" },
         () => Promise.resolve(0),
-        () => Promise.resolve([".buildkite/scripts/selectors/ci-changed.ts"]),
+        () => Promise.resolve(["ci/scripts/selectors/ci-changed.ts"]),
       ),
     ).toEqual([
       "--filter=...[abc123]",
@@ -39,7 +39,7 @@ describe("affected verification filters", () => {
       await affectedVerifyFilters(
         { CI_CHANGED_BASE: "abc123" },
         () => Promise.resolve(0),
-        () => Promise.resolve([".buildkite/pipeline.yml"]),
+        () => Promise.resolve(["ci/pipeline.yml"]),
       ),
     ).toContain("--filter=@shepherdjerred/root-scripts");
   });
@@ -86,7 +86,7 @@ describe("affected verification filters", () => {
     "packages/discord-plays-mario-kart/wasm-src/upstream.json",
     "packages/homelab/images/redlib/Dockerfile",
     "docker-bake.hcl",
-    ".buildkite/application-image-smoke.Dockerfile",
+    "ci/application-image-smoke.Dockerfile",
     "packages/scout-for-lol/packages/backend/Dockerfile",
     "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
     "packages/homelab/mac-ci/bootstrap.sh",

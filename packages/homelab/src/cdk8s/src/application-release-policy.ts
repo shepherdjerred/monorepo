@@ -27,7 +27,7 @@ export const APPLICATION_SYNC_WAVES = {
   structural: "0",
   kueue: "1",
   dependentConfiguration: "2",
-  buildkite: "3",
+  woodpecker: "3",
   leaf: "4",
 } as const;
 
@@ -107,8 +107,8 @@ function applicationSyncWave(name: string): string {
   if (name === "kueue") {
     return APPLICATION_SYNC_WAVES.kueue;
   }
-  if (name === "buildkite") {
-    return APPLICATION_SYNC_WAVES.buildkite;
+  if (name === "woodpecker") {
+    return APPLICATION_SYNC_WAVES.woodpecker;
   }
   return APPLICATION_SYNC_WAVES.leaf;
 }

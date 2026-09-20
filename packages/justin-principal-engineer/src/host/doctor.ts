@@ -50,10 +50,7 @@ export async function doctor(input: {
     }),
   );
   const digestText = await Bun.file(
-    path.join(
-      input.config.repository.stableCheckout,
-      ".buildkite/ci-image/DIGEST",
-    ),
+    path.join(input.config.repository.stableCheckout, "ci/ci-image/DIGEST"),
   ).text();
   const digest = digestText.trim();
   if (

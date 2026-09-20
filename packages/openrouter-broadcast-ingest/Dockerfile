@@ -38,10 +38,10 @@ USER 1000:1000
 CMD ["bun", "packages/openrouter-broadcast-ingest/src/index.ts"]
 
 FROM runtime AS smoke
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=openrouter-broadcast-ingest
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
-RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

@@ -19,8 +19,8 @@ export function alertDashboardSteps(images: CiImages): CiStep[] {
       commands: [
         // Runtime scope: this lane needs the language runtimes, not the full
         // developer toolchain.
-        "MISE_TOOLCHAIN_SCOPE=runtime . .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'",
+        "MISE_TOOLCHAIN_SCOPE=runtime . ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'",
         "export DATABASE_URL='file:/tmp/alert-dashboard.db'",
         "bun --no-install run --cwd packages/alert-dashboard generate",
         "bun --no-install run --cwd packages/alert-dashboard migrate:deploy",

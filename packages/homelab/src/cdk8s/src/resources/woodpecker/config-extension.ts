@@ -11,7 +11,7 @@ export const CONFIG_EXTENSION_APP_LABEL = "woodpecker-config-extension";
  *
  * Woodpecker posts the repository, the pipeline, and the changed file list
  * here and uses the returned workflow YAML instead of anything committed in
- * the repository. That is what replaces Buildkite's `pipeline upload`: the
+ * the repository. That is what replaces Woodpecker's `pipeline upload`: the
  * lane selectors run in this service rather than in a bootstrap pod, so no
  * step has to start before the graph is known.
  *

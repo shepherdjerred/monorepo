@@ -26,12 +26,12 @@ import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { getFliptRuleGroups } from "./rules/flipt.ts";
 import { getLlmRuleGroups } from "./rules/llm.ts";
-import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
+import { createWoodpeckerMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/woodpecker.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 import { getAlertingControlRuleGroups } from "./rules/platform/alerting-control.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
-  createBuildkiteMonitoring(chart);
+  createWoodpeckerMonitoring(chart);
   createBuildkitdMonitoring(chart);
 
   // Keep the control signal, but do not let pending informational alerts make

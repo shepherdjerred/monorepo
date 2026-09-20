@@ -1,7 +1,7 @@
 /**
  * Cluster-wide cap on concurrently-running CI workflows.
  *
- * Direct successor to `BUILDKITE_MAX_IN_FLIGHT`, sized during the 2026-07 CI
+ * Direct successor to Buildkite's max-in-flight cap, sized during the 2026-07 CI
  * freeze incident response. Woodpecker enforces it per agent via
  * `WOODPECKER_MAX_WORKFLOWS` rather than through a controller-side scheduler,
  * so a single agent replica makes this the cluster-wide bound.

@@ -183,7 +183,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
     },
     {
       queue: "maintenance",
-      metricsNamespace: "buildkite",
+      metricsNamespace: "woodpecker",
       deploymentPattern: "temporal-maintenance-worker",
       servicePattern: ".*temporal-maintenance-worker.*metrics.*",
       activityPoller: true,
@@ -196,7 +196,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
     const servedNamespaces = definition.servedNamespaces.join("|");
     // `namespace` is the Kubernetes namespace Prometheus scraped the pod in,
     // so both poller types share it: the maintenance worker runs in
-    // `buildkite` and the Scout workflow workers in their stage namespaces,
+    // `woodpecker` and the Scout workflow workers in their stage namespaces,
     // and hardcoding `temporal` here selected no series at all for them —
     // an alert that can never fire.
     const pollerSelector = `namespace="${definition.metricsNamespace}",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;

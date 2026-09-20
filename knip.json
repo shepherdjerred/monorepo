@@ -7,8 +7,8 @@
   "playwright": false,
   "workspaces": {
     ".": {
-      "entry": [".buildkite/scripts/**/*.ts"],
-      "project": [".buildkite/**/*.ts"]
+      "entry": ["ci/scripts/**/*.ts"],
+      "project": ["ci/**/*.ts"]
     },
     "scripts": {
       "entry": [

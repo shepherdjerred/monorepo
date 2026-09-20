@@ -49,7 +49,7 @@ const GITHUB_TOKEN_EXCLUSIONS = [
   "plans/",
   "dot_agents/skills/",
   "GITHUB_TOKEN_URL",
-  "buildkite/scripts/toolchain.sh",
+  "ci/scripts/toolchain.sh",
 ];
 
 export type EnvironmentVariableViolation = {

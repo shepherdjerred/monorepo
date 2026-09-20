@@ -1,0 +1,47 @@
+{
+  "ci/scripts/images/docker-source-label.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 4
+    }
+  },
+  "ci/scripts/images/update-ci-image-pin.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "ci/scripts/reporting/annotate-image-summary.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "ci/scripts/selectors/ci-changed.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "ci/scripts/selectors/select-image-targets-lockfile.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 4
+    }
+  },
+  "ci/scripts/selectors/select-main-pipeline.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "ci/scripts/validation/validate-pipeline-lib.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "ci/scripts/validation/validate-pipeline-release.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "ci/scripts/validation/validate-pipeline-resources.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

@@ -26,7 +26,6 @@ import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { createOpenEBSApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/openebs.ts";
-import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkite.ts";
 import { createWoodpeckerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker.ts";
 import { createVeleroApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/velero.ts";
 import { createPostgresOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/postgres-operator.ts";
@@ -126,7 +125,6 @@ export async function createAppsChart(app: App) {
   createPyroscopeApp(chart);
   createAlloyApp(chart);
   createAlloyGatewayApp(chart);
-  createBuildkiteApp(chart);
   createWoodpeckerApp(chart);
   createKueueApp(chart);
   createKueueConfig(chart);

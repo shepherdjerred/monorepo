@@ -4,7 +4,7 @@ import {
   BUILDKITE_KUBE_STATE_METRICS_VALUES,
 } from "./grafana-values.ts";
 
-describe("Buildkite I/O observability Helm values", () => {
+describe("Woodpecker I/O observability Helm values", () => {
   it("keeps cAdvisor sampling at 10 seconds without accelerating all kube-state-metrics", () => {
     expect(
       BUILDKITE_IO_OBSERVABILITY_VALUES.kubelet.serviceMonitor.cAdvisorInterval,
@@ -16,16 +16,16 @@ describe("Buildkite I/O observability Helm values", () => {
 
   it("allowlists the pod attribution and PVC backup-policy labels", () => {
     expect(BUILDKITE_KUBE_STATE_METRICS_VALUES.metricLabelsAllowlist).toEqual([
-      "pods=[buildkite.com/job-uuid,ci.sjer.red/step-key]",
+      "pods=[woodpecker.com/job-uuid,ci.sjer.red/step-key]",
       "persistentvolumeclaims=[velero.io/backup]",
     ]);
   });
 
-  it("allowlists only stable Buildkite link and grouping annotations", () => {
+  it("allowlists only stable Woodpecker link and grouping annotations", () => {
     expect(
       BUILDKITE_KUBE_STATE_METRICS_VALUES.metricAnnotationsAllowList,
     ).toEqual([
-      "pods=[buildkite.com/build-branch,buildkite.com/build-url,buildkite.com/job-url,buildkite.com/pipeline-slug]",
+      "pods=[woodpecker.com/build-branch,woodpecker.com/build-url,woodpecker.com/job-url,woodpecker.com/pipeline-slug]",
     ]);
   });
 

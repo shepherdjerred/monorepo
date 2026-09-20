@@ -50,7 +50,7 @@ export function createTurboCacheDeployment(chart: Chart) {
   const secrets = new OnePasswordItem(chart, "turbo-cache-secrets", {
     spec: {
       // vaultItemPath takes the 1Password item *ID*, not its title. This is the
-      // dedicated Turbo item shared with Buildkite's exact TURBO_TOKEN grant.
+      // dedicated Turbo item shared with Woodpecker's exact TURBO_TOKEN grant.
       itemPath: vaultItemPath("mzvcz4pqqbda75ufu7l5myd4ey"),
     },
     metadata: {

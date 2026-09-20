@@ -21,7 +21,7 @@ type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
 type KubeStateMetricsValues = NonNullable<
   KubePrometheusStackValues["kube-state-metrics"]
 >;
-type KubeStateMetricsWithBuildkiteMetadata = KubeStateMetricsValues & {
+type KubeStateMetricsWithWoodpeckerMetadata = KubeStateMetricsValues & {
   metricLabelsAllowlist?: string[];
   metricAnnotationsAllowList?: string[];
   resources?: {
@@ -34,7 +34,7 @@ export type PrometheusValuesWithBlackbox = Omit<
   "grafana" | "kube-state-metrics"
 > & {
   grafana?: GrafanaValuesWithStringDashboardLabel;
-  "kube-state-metrics"?: KubeStateMetricsWithBuildkiteMetadata;
+  "kube-state-metrics"?: KubeStateMetricsWithWoodpeckerMetadata;
   "prometheus-blackbox-exporter"?: {
     enabled?: boolean;
     resources?: {
@@ -61,16 +61,16 @@ export type PrometheusValuesWithBlackbox = Omit<
 
 export const BUILDKITE_KUBE_STATE_METRICS_VALUES = {
   metricLabelsAllowlist: [
-    "pods=[buildkite.com/job-uuid,ci.sjer.red/step-key]",
+    "pods=[woodpecker.com/job-uuid,ci.sjer.red/step-key]",
     "persistentvolumeclaims=[velero.io/backup]",
   ],
   metricAnnotationsAllowList: [
-    "pods=[buildkite.com/build-branch,buildkite.com/build-url,buildkite.com/job-url,buildkite.com/pipeline-slug]",
+    "pods=[woodpecker.com/build-branch,woodpecker.com/build-url,woodpecker.com/job-url,woodpecker.com/pipeline-slug]",
   ],
   resources: {
     requests: { cpu: "20m", memory: "128Mi" },
   },
-} satisfies KubeStateMetricsWithBuildkiteMetadata;
+} satisfies KubeStateMetricsWithWoodpeckerMetadata;
 
 export const BUILDKITE_IO_OBSERVABILITY_VALUES = {
   kubelet: {

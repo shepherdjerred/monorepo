@@ -112,7 +112,7 @@ async function evaluateApplicationHealth(status: unknown): Promise<string> {
 }
 
 describe("ArgoCD application", () => {
-  it("grants the Buildkite release step only its required application access", () => {
+  it("grants the Woodpecker release step only its required application access", () => {
     const application = synthArgoCdApplication();
 
     expect(
@@ -120,9 +120,9 @@ describe("ArgoCD application", () => {
         "policy.csv"
       ].split("\n"),
     ).toEqual([
-      "p, buildkite, applications, sync, default/*, allow",
-      "p, buildkite, applications, get, default/*, allow",
-      "p, buildkite, applications, override, default/apps, allow",
+      "p, woodpecker, applications, sync, default/*, allow",
+      "p, woodpecker, applications, get, default/*, allow",
+      "p, woodpecker, applications, override, default/apps, allow",
     ]);
   });
 

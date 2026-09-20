@@ -39,8 +39,8 @@ export type CatalogImageName =
   | "minio/minio";
 
 const DIGEST_PATHS = {
-  base: ".buildkite/ci-image/DIGEST",
-  playwright: ".buildkite/ci-playwright/DIGEST",
+  base: "ci/ci-image/DIGEST",
+  playwright: "ci/ci-playwright/DIGEST",
 } as const;
 
 const IMAGE_REPOS = {

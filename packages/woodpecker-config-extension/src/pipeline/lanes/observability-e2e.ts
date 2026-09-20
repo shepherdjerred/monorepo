@@ -31,8 +31,8 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
       label: "llm-observability e2e",
       image: images.base,
       commands: [
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/llm-observability'",
+        ". ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/llm-observability'",
         // Services start with the step, not before it, so wait rather than
         // assume. `mc alias set` is the readiness probe MinIO actually has.
         `until mc alias set local http://127.0.0.1:9000 ${MINIO_ROOT} ${MINIO_ROOT}; do sleep 1; done`,

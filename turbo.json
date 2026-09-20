@@ -145,7 +145,7 @@
         "package.json",
         "packages/**",
         "scripts/**",
-        ".buildkite/**",
+        "ci/**",
         "!**/node_modules/**",
         "!**/dist/**",
         "!packages/dotfiles/dot_agents/skills/**"
@@ -154,7 +154,7 @@
     "//#check-ai-architecture": {
       "inputs": [
         "package.json",
-        ".buildkite/**",
+        "ci/**",
         "packages/**",
         "scripts/**",
         "!**/node_modules/**",
@@ -182,7 +182,7 @@
         "patches/**",
         "packages/**/patches/*.patch",
         "scripts/checks/deps/check-patched-deps.ts",
-        ".buildkite/scripts/selectors/select-image-targets.ts"
+        "ci/scripts/selectors/select-image-targets.ts"
       ]
     },
     // Every env var a pipeline step's scripts require must be provided by that
@@ -198,12 +198,12 @@
     },
     "//#check-ci-env": {
       // Every tree requiredEnvFrom may analyze has to be hashed, not just the
-      // pipeline: the checker treats literal `.buildkite/scripts/*.ts`
+      // pipeline: the checker treats literal `ci/scripts/*.ts`
       // commands as entry points and follows their imports, so a requireEnv
       // added there would otherwise reuse a green cached result.
       "inputs": [
-        ".buildkite/pipeline.yml",
-        ".buildkite/scripts/**",
+        "ci/pipeline.yml",
+        "ci/scripts/**",
         "scripts/**",
         "!scripts/node_modules/**",
         "packages/homelab/scripts/**",
@@ -217,7 +217,7 @@
         "scripts/script-migrations.schema.json",
         "scripts/checks/check-script-migrations.ts",
         "scripts/**/*.ts",
-        ".buildkite/scripts/**",
+        "ci/scripts/**",
         "**/*.sh",
         "packages/**/*.ts",
         "packages/**/package.json",
@@ -238,9 +238,9 @@
         "scripts/package.json",
         "scripts/**/*.test.ts",
         "vitest.config.ts",
-        ".buildkite/scripts/**/*.ts",
-        ".buildkite/main-bootstrap.yml",
-        ".buildkite/pipeline.yml",
+        "ci/scripts/**/*.ts",
+        "ci/main-bootstrap.yml",
+        "ci/pipeline.yml",
         "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/Dockerfile",

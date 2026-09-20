@@ -212,7 +212,7 @@ export default {
       ? {
           include: [
             ...defaultTestInclude,
-            "../.buildkite/scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)",
+            "../ci/scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)",
           ],
         }
       : {}),

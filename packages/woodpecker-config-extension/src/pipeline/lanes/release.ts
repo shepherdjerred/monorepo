@@ -6,6 +6,7 @@ import {
   STATE_BACKEND,
   TOFU_PLUGIN_CACHE,
   grant,
+  HANDOFF_KEYS,
 } from "#src/pipeline/lanes/tofu.ts";
 
 /**
@@ -54,8 +55,8 @@ function releaseRequestedGate(): string[] {
   return [
     'image_digests="$(bun --no-install scripts/ci/read-ci-handoff.ts image-digests)"',
     "release_requested=false",
-    "if bun --no-install .buildkite/scripts/selectors/ci-changed.ts helm; then release_requested=true; fi",
-    "if bun --no-install .buildkite/scripts/selectors/ci-changed.ts argocd; then release_requested=true; fi",
+    "if bun --no-install ci/scripts/selectors/ci-changed.ts helm; then release_requested=true; fi",
+    "if bun --no-install ci/scripts/selectors/ci-changed.ts argocd; then release_requested=true; fi",
     'if [ "$image_digests" != "{}" ]; then release_requested=true; fi',
     'if [ "$release_requested" != "true" ]; then exit 0; fi',
   ];
@@ -87,13 +88,13 @@ export function releaseChainSteps(
       environment,
       commands: [
         ...admissionGate(),
-        ". .buildkite/scripts/toolchain.sh",
-        "bun --no-install .buildkite/scripts/reporting/buildkit-env.ts",
+        ". ci/scripts/toolchain.sh",
+        "bun --no-install ci/scripts/reporting/buildkit-env.ts",
         // The Caddyfile is an input to the in-image smoke test. verify builds
         // it; it travels through the handoff store because each Woodpecker
         // workflow gets its own workspace.
         `bun --no-install scripts/ci/read-ci-handoff.ts caddyfile | jq -r . > ${CADDYFILE_SMOKE_PATH}`,
-        `${smokeAssignment} bun --no-install .buildkite/scripts/images/bake-images.ts --push`,
+        `${smokeAssignment} bun --no-install ci/scripts/images/bake-images.ts --push`,
       ],
       dependsOn: ["verify", "homelab-release-admission"],
       timeoutMinutes: 60,
@@ -116,8 +117,8 @@ export function releaseChainSteps(
       commands: [
         ...admissionGate(),
         ...releaseRequestedGate(),
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production",
+        ". ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         // Auto-sync is suspended for the whole rollout so ArgoCD cannot
         // reconcile a half-published set of charts.
@@ -145,6 +146,7 @@ export function releaseChainSteps(
       secrets: [
         GITHUB_DOWNLOAD,
         ...STATE_BACKEND,
+        ...HANDOFF_KEYS,
         ARGOCD_GRANT,
         grant("ci-chartmuseum-credentials", "CHARTMUSEUM_USERNAME"),
         grant("ci-chartmuseum-credentials", "CHARTMUSEUM_PASSWORD"),
@@ -158,8 +160,8 @@ export function releaseChainSteps(
       commands: [
         ...admissionGate(),
         ...releaseRequestedGate(),
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production",
+        ". ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         "bun --no-install scripts/ci/read-ci-handoff.ts argocd-release-expected > argocd-release-expected.json",
         // release-root owns the exact-revision, lifecycle, immutable-field and
@@ -178,7 +180,12 @@ export function releaseChainSteps(
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
       concurrency: RELEASE_GROUP,
-      secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND, ARGOCD_GRANT],
+      secrets: [
+        GITHUB_DOWNLOAD,
+        ...STATE_BACKEND,
+        ...HANDOFF_KEYS,
+        ARGOCD_GRANT,
+      ],
     },
     ...chainedTofuApplies(images),
   ];
@@ -200,8 +207,8 @@ function chainedApplyCommands(stack: string): string[] {
     '  echo "invalid homelab release admission outcome: $release_admission" >&2',
     "  exit 1",
     "fi",
-    ". .buildkite/scripts/toolchain.sh",
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+    ". ci/scripts/toolchain.sh",
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} apply`,
   ];
@@ -266,7 +273,7 @@ function chainedTofuApplies(images: CiImages): CiStep[] {
     timeoutMinutes: 60,
     resources: MEDIUM_TIER,
     defaultBranchOnly: true,
-    secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND, ...secrets],
+    secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND, ...HANDOFF_KEYS, ...secrets],
     volumes: [TOFU_PLUGIN_CACHE],
     ...(concurrency === undefined ? {} : { concurrency }),
   }));

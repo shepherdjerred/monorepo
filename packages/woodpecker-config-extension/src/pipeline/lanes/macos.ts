@@ -47,7 +47,7 @@ const LANES: readonly MacosLane[] = [
     label: "QuotaBar macOS",
     timeoutMinutes: 45,
     commands: [
-      "bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar",
+      "bun --no-install ci/scripts/macos/macos-native-preflight.ts quotabar",
       "bun --no-install run --cwd packages/macos-ai-subscription-tracker verify:macos",
     ],
     changed: ["packages/macos-ai-subscription-tracker/**"],
@@ -64,7 +64,7 @@ const LANES: readonly MacosLane[] = [
     label: "TaskNotes macOS",
     timeoutMinutes: 90,
     commands: [
-      "bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts tasknotes",
+      "bun --no-install ci/scripts/macos/macos-native-preflight.ts tasknotes",
       "bun --no-install run --cwd packages/tasknotes-macos verify:macos",
     ],
     changed: [
@@ -87,7 +87,7 @@ export function macosSteps(): CiStep[] {
     commands: [
       // Validates the pre-provisioned host against .mise.toml and
       // .xcode-version. Native jobs never install or upgrade host tools.
-      ". .buildkite/scripts/macos-native-env.sh",
+      ". ci/scripts/macos-native-env.sh",
       ...lane.commands,
     ],
     // Native lanes gate on the Linux verify so a Swift host is never occupied

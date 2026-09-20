@@ -79,7 +79,7 @@ describe("ci image resolution", () => {
     expect(images.playwright).toBe(
       `ghcr.io/shepherdjerred/ci-playwright@${digest}`,
     );
-    expect(seen).toContain(".buildkite/ci-image/DIGEST@abc123");
+    expect(seen).toContain("ci/ci-image/DIGEST@abc123");
   });
 
   test("reads scanner versions from the catalog at that commit", async () => {

@@ -398,7 +398,7 @@ describe("Coverage report aggregation", () => {
     );
     expect(
       coverableWorkspaceSources(
-        ["packages/parent", ".buildkite/scripts"],
+        ["packages/parent", "ci/scripts"],
         ["packages/parent", "packages/parent/packages/child"],
         [
           "packages/parent/src/index.ts",
@@ -406,13 +406,13 @@ describe("Coverage report aggregation", () => {
           "packages/parent/src/generated/client.ts",
           "packages/parent/packages/child/src/index.ts",
           "packages/parent/eslint.config.ts",
-          ".buildkite/scripts/upload-pipeline.ts",
-          ".buildkite/scripts/upload-pipeline.test.ts",
+          "ci/scripts/upload-pipeline.ts",
+          "ci/scripts/upload-pipeline.test.ts",
           "packages/other/src/index.ts",
         ],
       ),
     ).toEqual([
-      ".buildkite/scripts/upload-pipeline.ts",
+      "ci/scripts/upload-pipeline.ts",
       "packages/parent/src/index.ts",
     ]);
     expect(

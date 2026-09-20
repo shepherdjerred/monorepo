@@ -29,6 +29,12 @@ const DEPLOY_KEYS: readonly SecretGrant[] = [
  * Site syncs use the deployment identity; the OpenTofu lanes use a separate
  * state identity, and the two are deliberately not interchangeable.
  */
+/** deploy-site purges the Cloudflare cache after a successful sync. */
+const CLOUDFLARE_PURGE: readonly SecretGrant[] = [
+  grant("ci-cloudflare-credentials", "CLOUDFLARE_ACCOUNT_ID"),
+  grant("ci-cloudflare-credentials", "CLOUDFLARE_API_TOKEN"),
+];
+
 const AWS_ALIASES = [
   'export AWS_ACCESS_KEY_ID="$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"',
   'export AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"',
@@ -63,15 +69,15 @@ const PREBUILT_SITES = [
 
 function siteCommands(): string[] {
   const lines: string[] = [
-    "if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts sites; then exit 0; fi",
-    ". .buildkite/scripts/toolchain.sh",
+    "if ! bun --no-install ci/scripts/selectors/ci-changed.ts sites; then exit 0; fi",
+    ". ci/scripts/toolchain.sh",
     "filters=()",
   ];
 
   for (const { lane, filter } of SOURCE_BUILT_SITES) {
     lines.push(
       `${lane.replaceAll("-", "_")}=false`,
-      `if bun --no-install .buildkite/scripts/selectors/ci-changed.ts ${lane}; then`,
+      `if bun --no-install ci/scripts/selectors/ci-changed.ts ${lane}; then`,
       `  ${lane.replaceAll("-", "_")}=true`,
       `  filters+=(--filter ${filter})`,
       "fi",
@@ -80,13 +86,13 @@ function siteCommands(): string[] {
   for (const { lane } of PREBUILT_SITES) {
     lines.push(
       `${lane.replaceAll("-", "_")}=false`,
-      `if bun --no-install .buildkite/scripts/selectors/ci-changed.ts ${lane}; then ${lane.replaceAll("-", "_")}=true; fi`,
+      `if bun --no-install ci/scripts/selectors/ci-changed.ts ${lane}; then ${lane.replaceAll("-", "_")}=true; fi`,
     );
   }
 
   lines.push(
     'if [ "${#filters[@]}" -gt 0 ]; then',
-    '  .buildkite/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
+    '  ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
     "fi",
     ...AWS_ALIASES,
   );
@@ -127,7 +133,7 @@ export function siteSteps(images: CiImages): CiStep[] {
       resources: VERIFY_TIER,
       defaultBranchOnly: true,
       concurrency: SITE_DEPLOY_GROUP,
-      secrets: [GITHUB_DOWNLOAD, ...DEPLOY_KEYS],
+      secrets: [GITHUB_DOWNLOAD, ...DEPLOY_KEYS, ...CLOUDFLARE_PURGE],
     },
     {
       key: "publish",
@@ -136,16 +142,16 @@ export function siteSteps(images: CiImages): CiStep[] {
       commands: [
         "npm_changed=true",
         "cooklang_changed=true",
-        "if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts npm; then npm_changed=false; fi",
-        "if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts cooklang; then cooklang_changed=false; fi",
+        "if ! bun --no-install ci/scripts/selectors/ci-changed.ts npm; then npm_changed=false; fi",
+        "if ! bun --no-install ci/scripts/selectors/ci-changed.ts cooklang; then cooklang_changed=false; fi",
         'if [ "$npm_changed" != "true" ] && [ "$cooklang_changed" != "true" ]; then exit 0; fi',
-        ". .buildkite/scripts/toolchain.sh",
+        ". ci/scripts/toolchain.sh",
         "filters=()",
         'if [ "$npm_changed" = "true" ]; then',
         "  filters+=(--filter astro-opengraph-images --filter webring --filter '@shepherdjerred/helm-types' --filter '@shepherdjerred/home-assistant')",
         "fi",
         'if [ "$cooklang_changed" = "true" ]; then filters+=(--filter cooklang-for-obsidian); fi',
-        '.buildkite/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
+        'ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
         'if [ "$npm_changed" = "true" ]; then',
         "  bun --no-install run --cwd packages/astro-opengraph-images publish:npm",
         "  bun --no-install run --cwd packages/webring publish:npm",

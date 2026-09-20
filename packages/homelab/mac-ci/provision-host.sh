@@ -112,10 +112,10 @@ echo "==> Running the native preflight"
 cd "$REPO_ROOT"
 # The preflight is the acceptance check used by Buildkite. Run both suites so
 # this host script fails with the same actionable reason CI would report.
-# shellcheck source=.buildkite/scripts/macos-native-env.sh
-. .buildkite/scripts/macos-native-env.sh
-bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar
-bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts tasknotes
+# shellcheck source=ci/scripts/macos-native-env.sh
+. ci/scripts/macos-native-env.sh
+bun --no-install ci/scripts/macos/macos-native-preflight.ts quotabar
+bun --no-install ci/scripts/macos/macos-native-preflight.ts tasknotes
 
 echo
 echo "Native host setup is complete only after:"
@@ -126,5 +126,5 @@ echo
 echo "Run the affected native preflight from:"
 echo "  $REPO_ROOT"
 echo
-echo "  . .buildkite/scripts/macos-native-env.sh"
-echo "  bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar"
+echo "  . ci/scripts/macos-native-env.sh"
+echo "  bun --no-install ci/scripts/macos/macos-native-preflight.ts quotabar"

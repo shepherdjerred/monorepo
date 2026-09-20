@@ -199,7 +199,7 @@ test("drives Playwright upgrades from the official image source only", async () 
   });
 
   const dockerfile = await Bun.file(
-    `${root}/.buildkite/ci-playwright/Dockerfile`,
+    `${root}/ci/ci-playwright/Dockerfile`,
   ).text();
   expect(dockerfile).toContain(
     "# renovate: datasource=docker depName=mcr.microsoft.com/playwright",

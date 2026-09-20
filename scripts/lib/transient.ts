@@ -1,7 +1,7 @@
 /**
  * Transient-failure classification for CI scripts.
  *
- * The Buildkite retry anchor (`.buildkite/pipeline.yml`) only auto-retries
+ * The Buildkite retry anchor (`ci/pipeline.yml`) only auto-retries
  * exit codes 255 / 34 / -1 — plain exit 1 ("logical failure") never retries.
  * Scripts that talk to external services (GitHub, ArgoCD, Cloudflare, the
  * tofu state backend) use `runMain` so that failures matching a known

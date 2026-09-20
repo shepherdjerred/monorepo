@@ -129,7 +129,7 @@ export function commandScopes(command: string): CommandScope[] {
 export function scriptPathsInCommand(command: string): string[] {
   const paths = new Set<string>();
   const pattern =
-    /(?<![\w./-])((?:scripts|\.buildkite\/scripts|packages\/[\w.-]+(?:\/[\w.-]+)*?\/scripts)(?:\/[\w.-]+)*?\/[\w.-]+\.ts)/gu;
+    /(?<![\w./-])((?:scripts|ci\/scripts|packages\/[\w.-]+(?:\/[\w.-]+)*?\/scripts)(?:\/[\w.-]+)*?\/[\w.-]+\.ts)/gu;
   for (const match of command.matchAll(pattern)) {
     const found = match[1];
     if (found !== undefined) paths.add(found);

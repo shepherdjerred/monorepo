@@ -41,6 +41,28 @@ export const STATE_BACKEND: SecretGrant[] = [
   },
 ];
 
+/**
+ * Keys the build-scoped handoff store needs.
+ *
+ * Every step that reads or writes a handoff -- which includes every step that
+ * consumes the release admission token -- talks to SeaweedFS, and it does so
+ * with the DEPLOY identity rather than the state identity the OpenTofu
+ * backends use. The two are deliberately separate.
+ */
+export const HANDOFF_KEYS: SecretGrant[] = [
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
+    env: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
+  },
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
+    env: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
+  },
+];
+
+/** Shorthand for one grant; `env` defaults to the Secret's key name. */
 export function grant(secret: string, key: string, env = key): SecretGrant {
   return { secret, key, env };
 }
@@ -114,8 +136,8 @@ const TOFU_CHANGED = {
 
 function tofuCommands(stack: string, action: "plan" | "apply"): string[] {
   return [
-    ". .buildkite/scripts/toolchain.sh",
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+    ". ci/scripts/toolchain.sh",
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     // The plugin cache protocol has no concurrent-writer support, so take an
     // advisory lock even though the lanes are chained: a rerun of one lane can
@@ -138,8 +160,8 @@ function tofuValidateSteps(images: CiImages): CiStep[] {
       label: "tofu validate platforms",
       image: images.base,
       commands: [
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+        ". ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
         `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
         `for stack in ${PLATFORM_STACKS.join(" ")}; do`,
         `  flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts "$stack" validate`,
@@ -157,8 +179,8 @@ function tofuValidateSteps(images: CiImages): CiStep[] {
       label: "tofu validate posthog",
       image: images.base,
       commands: [
-        ". .buildkite/scripts/toolchain.sh",
-        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+        ". ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
         `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
         `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts posthog validate`,
       ],
