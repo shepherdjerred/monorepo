@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
   clashSightingWriteFromLake,
-  clashLakeObservedSinceClause,
+  clashLakeRowsMissingFromSightings,
 } from "./backfill.ts";
 
 describe("clashSightingWriteFromLake", () => {
@@ -38,13 +38,39 @@ describe("clashSightingWriteFromLake", () => {
     expect(lobby.win).toBeNull();
   });
 
-  test("adds an observed_ms watermark only when a previous sighting exists", () => {
-    expect(clashLakeObservedSinceClause(undefined)).toEqual({
-      sql: "",
-      params: [],
-    });
-    const clause = clashLakeObservedSinceClause(1_700_000_000_000);
-    expect(clause.sql).toBe(" AND observed_ms >= ?");
-    expect(clause.params).toHaveLength(1);
+  test("keeps lake rows whose identity is not already stored", () => {
+    const puuid = "p".repeat(78);
+    const stored = {
+      platform: "NA1",
+      gameId: "100",
+      puuid,
+    };
+    const rows = [
+      {
+        platform_id: "NA1",
+        game_id: "100",
+        puuid,
+        queue: "clash",
+        champion_id: 1,
+        team_id: 100,
+        observed_ms: 1,
+        win: null,
+        source: "prematch" as const,
+      },
+      {
+        platform_id: "NA1",
+        game_id: "101",
+        puuid,
+        queue: "clash",
+        champion_id: 2,
+        team_id: 100,
+        observed_ms: 2,
+        win: null,
+        source: "prematch" as const,
+      },
+    ];
+    expect(clashLakeRowsMissingFromSightings(rows, [stored])).toEqual([
+      rows[1],
+    ]);
   });
 });

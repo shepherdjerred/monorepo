@@ -44,6 +44,31 @@ const LakeClashRowSchema = z.object({
 
 type LakeClashRow = z.infer<typeof LakeClashRowSchema>;
 
+export function clashLakeSightingKey(row: {
+  platform: string;
+  gameId: string;
+  puuid: string;
+}): string {
+  return `${row.platform}:${row.gameId}:${row.puuid}`;
+}
+
+export function clashLakeRowsMissingFromSightings(
+  rows: readonly LakeClashRow[],
+  existing: readonly { platform: string; gameId: string; puuid: string }[],
+): LakeClashRow[] {
+  const seen = new Set(existing.map((row) => clashLakeSightingKey(row)));
+  return rows.filter(
+    (row) =>
+      !seen.has(
+        clashLakeSightingKey({
+          platform: row.platform_id,
+          gameId: row.game_id,
+          puuid: row.puuid,
+        }),
+      ),
+  );
+}
+
 export function clashSightingWriteFromLake(
   row: LakeClashRow,
 ): ClashSightingWrite {
@@ -57,19 +82,6 @@ export function clashSightingWriteFromLake(
     teamId: row.team_id,
     observedAt: new Date(row.observed_ms),
     win: row.source === "match" ? row.win : null,
-  };
-}
-
-export function clashLakeObservedSinceClause(sinceMs: number | undefined): {
-  sql: string;
-  params: ReturnType<typeof scalarParam>[];
-} {
-  if (sinceMs === undefined) {
-    return { sql: "", params: [] };
-  }
-  return {
-    sql: " AND observed_ms >= ?",
-    params: [scalarParam(sinceMs)],
   };
 }
 
@@ -87,12 +99,12 @@ export async function backfillClashSightingsFromLake(): Promise<number> {
   if (puuids.length === 0) {
     return 0;
   }
-  const latest = await prisma.clashGameSighting.aggregate({
-    _max: { observedAt: true },
+  const existing = await prisma.clashGameSighting.findMany({
+    select: { platform: true, gameId: true, puuid: true },
   });
-  const rows = await loadClashLakeRows(
-    puuids,
-    latest._max.observedAt?.getTime(),
+  const rows = clashLakeRowsMissingFromSightings(
+    await loadClashLakeRows(puuids),
+    existing,
   );
   let written = 0;
   for (const row of rows) {
@@ -103,12 +115,8 @@ export async function backfillClashSightingsFromLake(): Promise<number> {
   return written;
 }
 
-async function loadClashLakeRows(
-  puuids: string[],
-  sinceMs: number | undefined,
-): Promise<LakeClashRow[]> {
+async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
   const files = await resolveLakeFiles(resolveLakeDir());
-  const since = clashLakeObservedSinceClause(sinceMs);
   const prematch = buildPrematchSource(files, {
     sql: "puuid IN (SELECT unnest(?)) AND queue IN (SELECT unnest(?))",
     params: [listParam(puuids), listParam(["clash", "aram clash"])],
@@ -122,12 +130,10 @@ async function loadClashLakeRows(
     rows.push(
       ...(await queryClashLake({
         source: prematch,
-        extraParams: since.params,
         sql:
-          `SELECT * FROM (SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
+          `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
           `COALESCE(epoch_ms(game_start_at), epoch_ms(observed_at))::BIGINT AS observed_ms, ` +
-          `NULL AS win, 'prematch' AS source FROM (${prematch.sql})) clash_rows` +
-          ` WHERE TRUE${since.sql}`,
+          `NULL AS win, 'prematch' AS source FROM (${prematch.sql})`,
       })),
     );
   }
@@ -135,12 +141,10 @@ async function loadClashLakeRows(
     rows.push(
       ...(await queryClashLake({
         source: matches,
-        extraParams: since.params,
         sql:
-          `SELECT * FROM (SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
+          `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
           `epoch_ms(game_start_at)::BIGINT AS observed_ms, win, 'match' AS source ` +
-          `FROM (${matches.sql})) clash_rows` +
-          ` WHERE TRUE${since.sql}`,
+          `FROM (${matches.sql})`,
       })),
     );
   }
@@ -150,15 +154,11 @@ async function loadClashLakeRows(
 async function queryClashLake(input: {
   source: SqlFragment;
   sql: string;
-  extraParams?: SqlFragment["params"];
 }): Promise<LakeClashRow[]> {
   return await withDuckDBConnection(async (session) => {
     const raw = await session.run(
       input.sql,
-      bindParams(session, [
-        ...input.source.params,
-        ...(input.extraParams ?? []),
-      ]),
+      bindParams(session, input.source.params),
     );
     return raw.map((row) => LakeClashRowSchema.parse(row));
   });
