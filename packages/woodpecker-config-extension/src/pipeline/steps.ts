@@ -5,7 +5,7 @@ import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
 import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 import { resumeSteps } from "#src/pipeline/lanes/resume.ts";
 import { trmnlSteps } from "#src/pipeline/lanes/trmnl.ts";
-import { tofuPlanSteps } from "#src/pipeline/lanes/tofu.ts";
+import { HANDOFF_KEYS, tofuPlanSteps } from "#src/pipeline/lanes/tofu.ts";
 import { playwrightSteps } from "#src/pipeline/lanes/playwright.ts";
 import {
   releaseAdmissionStep,
@@ -122,16 +122,7 @@ export function buildPipelineSteps({
           key: "TURBO_TOKEN",
           env: "TURBO_TOKEN",
         },
-        {
-          secret: "ci-seaweedfs-credentials",
-          key: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
-          env: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
-        },
-        {
-          secret: "ci-seaweedfs-credentials",
-          key: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
-          env: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
-        },
+        ...HANDOFF_KEYS,
       ],
       volumes: [BUN_CACHE, UV_CACHE],
     },

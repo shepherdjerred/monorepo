@@ -27,38 +27,53 @@ export const GITHUB_DOWNLOAD: SecretGrant = {
   env: "GITHUB_DOWNLOAD_TOKEN",
 };
 
+/**
+ * SeaweedFS identities, one per job this CI does.
+ *
+ * These are four genuinely distinct S3 identities, each scoped in SeaweedFS to
+ * the buckets its job touches, not four names for one key. That distinction
+ * was previously cosmetic: `SEAWEEDFS_STATE_*` and `SEAWEEDFS_DEPLOY_*` held
+ * the same value, and that value was the cluster's only identity -- unscoped
+ * `Admin` over every bucket. Any step granted either pair could read and write
+ * the OpenTofu state, every published site, and the LLM archive alike.
+ *
+ * The scoping lives in SeaweedFS's identities config, which is not
+ * repo-managed: it exists only in the `seaweedfs-s3-credentials` 1Password
+ * item the S3 gateway loads through `existingConfigSecret`. Nothing here can
+ * assert it, so the boundary is proved by probe -- each identity must be
+ * denied a bucket belonging to another -- and that proof is the acceptance
+ * evidence for any change to it.
+ */
+
 /** Remote state lives in SeaweedFS, so every stack reads the state keys. */
 export const STATE_BACKEND: SecretGrant[] = [
   {
     secret: "ci-seaweedfs-credentials",
-    key: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
-    env: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
+    key: "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
+    env: "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
   },
   {
     secret: "ci-seaweedfs-credentials",
-    key: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
-    env: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+    key: "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
+    env: "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
   },
 ];
 
 /**
  * The identity that writes the live buckets: the published static sites and
- * the release archives.
- *
- * Named here rather than copied per lane so "which steps can write production
- * data" is one list with one answer, and so the handoff split below has a
- * single thing to diff against.
+ * the release archives. Scoped to exactly those twelve buckets, so it cannot
+ * reach the OpenTofu state or the handoff store.
  */
 export const DEPLOY_KEYS: SecretGrant[] = [
   {
     secret: "ci-seaweedfs-credentials",
-    key: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
-    env: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
+    key: "SEAWEEDFS_SITES_ACCESS_KEY_ID",
+    env: "SEAWEEDFS_SITES_ACCESS_KEY_ID",
   },
   {
     secret: "ci-seaweedfs-credentials",
-    key: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
-    env: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
+    key: "SEAWEEDFS_SITES_SECRET_ACCESS_KEY",
+    env: "SEAWEEDFS_SITES_SECRET_ACCESS_KEY",
   },
 ];
 
@@ -66,19 +81,28 @@ export const DEPLOY_KEYS: SecretGrant[] = [
  * Keys the build-scoped handoff store needs.
  *
  * Every step that reads or writes a handoff -- which includes every step that
- * consumes the release admission token -- talks to SeaweedFS, and does so with
- * the DEPLOY identity rather than the state identity the OpenTofu backends
- * use.
+ * consumes the release admission token -- talks to SeaweedFS. Scoped to the
+ * `ci-handoff` bucket alone, which is what lets `verify`, `playwright-e2e` and
+ * `resume-build` run on every pull request without holding the credential that
+ * publishes sjer.red.
  *
- * Sharing DEPLOY is a known and temporary wart, not a design: it means three
- * steps that run on every pull request (`verify`, `playwright-e2e`,
- * `resume-build`) hold the credential that publishes sjer.red, purely to move
- * build values around. The fix is a third identity scoped to the `ci-handoff`
- * bucket, which needs an entry in the SeaweedFS identities item; until that
- * exists these stay pointed at DEPLOY. This constant is the single place that
- * changes when it does -- see the CI pipeline shape explanation.
+ * Bucket-scoped rather than prefix-scoped on purpose: one bucket carries both
+ * the `<pipeline>/<key>.json` handoffs and `ci-artifact`'s `artifacts/` trees,
+ * and a prefix grant would break the artifact half while the handoff half kept
+ * working.
  */
-export const HANDOFF_KEYS: SecretGrant[] = [...DEPLOY_KEYS];
+export const HANDOFF_KEYS: SecretGrant[] = [
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+    env: "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+  },
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+    env: "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+  },
+];
 
 /** Shorthand for one grant; `env` defaults to the Secret's key name. */
 export function grant(secret: string, key: string, env = key): SecretGrant {
@@ -93,9 +117,17 @@ export function grant(secret: string, key: string, env = key): SecretGrant {
  * copies would let an apply run with a credential its plan never used.
  */
 export const STACK_SECRETS: Readonly<Record<string, readonly SecretGrant[]>> = {
+  // The only CI credential that is still unscoped, and deliberately so: this
+  // stack manages the buckets themselves, and SeaweedFS requires unscoped
+  // `Admin` to create one. It cannot be the site-sync identity without handing
+  // that identity admin back, so it is its own -- which at least makes "who
+  // can create and delete buckets" one name that can be rotated on its own.
+  // It is also why `tofu-plan-seaweedfs` remains the one pull-request-reachable
+  // step holding a broad SeaweedFS credential; narrowing that means moving
+  // bucket management off the pull-request path.
   seaweedfs: [
-    grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
-    grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
+    grant("ci-seaweedfs-credentials", "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID"),
+    grant("ci-seaweedfs-credentials", "SEAWEEDFS_TOFU_ADMIN_SECRET_ACCESS_KEY"),
   ],
   tailscale: [
     grant("ci-tailscale-credentials", "TAILSCALE_OAUTH_CLIENT_ID"),
