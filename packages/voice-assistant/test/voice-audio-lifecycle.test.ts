@@ -86,6 +86,8 @@ function recordingAttempt() {
     localVerification: () => null,
     endpoint: (evidence) => endpoints.push(evidence.reason),
     transcription: () => null,
+    spokenCommand: () => null,
+    replyTranscript: () => null,
     tool: () => null,
     cloudOutcome: () => null,
     cloudUsage: () => null,

@@ -12,6 +12,7 @@ import type {
   VoiceAttemptHandle,
   VoiceToolObservation,
 } from "@shepherdjerred/voice-assistant/realtime/attempt.ts";
+import { openaiPcmToWakeSamples } from "@shepherdjerred/voice-assistant/audio/codecs.ts";
 import { encodePcm16MonoWave } from "@shepherdjerred/voice-assistant/audio/wave-io.ts";
 import {
   getTracer,
@@ -32,6 +33,7 @@ const SAMPLE_RATE = 16_000;
 export type VoiceAttemptCandidate = {
   readonly guildId: string;
   readonly channelId: string;
+  readonly sessionId: string;
   readonly userId: string;
   readonly detector: "sherpa";
   readonly phrase: string;
@@ -53,8 +55,10 @@ type ManifestState = {
   verifierLatencyMs?: number;
   endpoint?: VoiceCaptureManifest["endpoint"];
   audio?: { bytes: Uint8Array; metadata: VoiceCaptureAudioObject };
+  replyAudio?: { bytes: Uint8Array; metadata: VoiceCaptureAudioObject };
   transcript?: string | null;
   normalizedCommand?: string | null;
+  replyTranscript?: string | null;
   tools: VoiceCaptureManifest["tools"];
   cloudOutcome?: string;
   cloudUsage?: unknown;
@@ -77,6 +81,7 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
     this.rootSpan = getTracer().startSpan("streambot.voice.attempt", {
       attributes: {
         "streambot.capture_id": this.captureId,
+        "streambot.voice.session_id": candidate.sessionId,
         "discord.guild_id": candidate.guildId,
         "discord.channel_id": candidate.channelId,
         "discord.user_id": candidate.userId,
@@ -92,6 +97,7 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
     context.with(this.rootContext, () => {
       log.info("voice wake candidate started", {
         captureId: this.captureId,
+        sessionId: candidate.sessionId,
         guildId: candidate.guildId,
         channelId: candidate.channelId,
         userId: candidate.userId,
@@ -216,6 +222,15 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
     });
   }
 
+  spokenCommand(): string | null {
+    return this.state.normalizedCommand ?? null;
+  }
+
+  replyTranscript(transcript: string): void {
+    this.state.replyTranscript = transcript;
+    this.rootSpan.setAttribute("streambot.voice.reply_transcript", transcript);
+  }
+
   tool(observation: VoiceToolObservation): void {
     this.state.tools.push(observation);
     this.rootSpan.addEvent("streambot.voice.tool", {
@@ -244,14 +259,42 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
     readonly packets: number;
     readonly bytes: number;
     readonly durationMs: number;
+    readonly pcm24k?: Uint8Array;
   }): void {
-    this.state.reply = input;
+    this.state.reply = {
+      outcome: input.outcome,
+      packets: input.packets,
+      bytes: input.bytes,
+      durationMs: input.durationMs,
+    };
     this.rootSpan.setAttributes({
       "streambot.voice.reply_outcome": input.outcome,
       "streambot.voice.reply_packets": input.packets,
       "streambot.voice.reply_bytes": input.bytes,
       "streambot.voice.reply_duration_ms": input.durationMs,
     });
+    if (input.pcm24k === undefined || input.pcm24k.byteLength === 0) return;
+    if (!this.uploads.enabled) return;
+    try {
+      const pcm16k = openaiPcmToWakeSamples(input.pcm24k);
+      const bytes = encodePcm16MonoWave(pcm16k, SAMPLE_RATE);
+      const key = `${this.prefix()}/reply.wav`;
+      this.state.replyAudio = {
+        bytes,
+        metadata: {
+          key,
+          filename: "reply.wav",
+          sha256: sha256(bytes),
+          bytes: bytes.byteLength,
+          sampleRate: SAMPLE_RATE,
+          channels: 1,
+          encoding: "pcm_s16le",
+          durationSeconds: pcm16k.length / SAMPLE_RATE,
+        },
+      };
+    } catch (error) {
+      this.recordError("reply-audio", error);
+    }
   }
 
   finish(outcome: string, error?: unknown): void {
@@ -269,8 +312,17 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
     context.with(this.rootContext, () => {
       log.info("voice attempt finished", {
         captureId: this.captureId,
+        sessionId: this.candidate.sessionId,
         outcome,
         durationMs: Math.max(0, endedAtMs - this.candidate.detectedAtMs),
+        transcript: this.state.transcript,
+        normalizedCommand: this.state.normalizedCommand,
+        replyTranscript: this.state.replyTranscript,
+        tools: this.state.tools.map((tool) => ({
+          name: tool.name,
+          arguments: tool.arguments,
+          result: tool.result,
+        })),
       });
     });
     this.rootSpan.end();
@@ -286,8 +338,9 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
       });
       return;
     }
+    const replyAudio = this.state.replyAudio;
     const manifest = VoiceCaptureManifestSchema.parse({
-      schemaVersion: 1,
+      schemaVersion: 2,
       captureId: this.captureId,
       kind: "wake-candidate",
       committedAt: new Date(endedAtMs).toISOString(),
@@ -295,11 +348,15 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
       endedAt: new Date(endedAtMs).toISOString(),
       guildId: this.candidate.guildId,
       channelId: this.candidate.channelId,
+      sessionId: this.candidate.sessionId,
       userId: this.candidate.userId,
       traceId: this.traceId,
       terminalOutcome: outcome,
       truncated: false,
-      audio: [audio.metadata],
+      audio: [
+        audio.metadata,
+        ...(replyAudio === undefined ? [] : [replyAudio.metadata]),
+      ],
       wake: {
         detector: this.candidate.detector,
         phrase: this.candidate.phrase,
@@ -313,6 +370,7 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
       endpoint: this.state.endpoint,
       transcript: this.state.transcript,
       normalizedCommand: this.state.normalizedCommand,
+      replyTranscript: this.state.replyTranscript,
       tools: this.state.tools,
       cloudOutcome: this.state.cloudOutcome,
       cloudUsage: this.state.cloudUsage,
@@ -327,11 +385,23 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
           body: audio.bytes,
           contentType: "audio/wav",
         },
+        ...(replyAudio === undefined
+          ? []
+          : [
+              {
+                key: replyAudio.metadata.key,
+                body: replyAudio.bytes,
+                contentType: "audio/wav",
+              },
+            ]),
       ],
       manifestKey: `${this.prefix()}/manifest.json`,
       manifest,
     });
-    if (!accepted) audio.bytes.fill(0);
+    if (!accepted) {
+      audio.bytes.fill(0);
+      replyAudio?.bytes.fill(0);
+    }
   }
 
   private recordError(stage: string, error: unknown): void {

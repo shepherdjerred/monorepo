@@ -264,6 +264,57 @@ export function wakePcmToOpenAiPcm(samples: Float32Array): Uint8Array {
   }
 }
 
+/** Downsample OpenAI reply PCM16 (24 kHz) to the wake-capture rate (16 kHz float). */
+export function openaiPcmToWakeSamples(pcm24k: Uint8Array): Float32Array {
+  if (pcm24k.byteLength === 0) return new Float32Array();
+  if (pcm24k.byteLength % 2 !== 0) {
+    throw new Error("Invalid OpenAI PCM16 length");
+  }
+  const resampler = new SoftwareResampleContext();
+  const input = Frame.fromAudioBuffer(Buffer.from(pcm24k), {
+    format: AV_SAMPLE_FMT_S16,
+    nbSamples: pcm24k.byteLength / 2,
+    sampleRate: OPENAI_SAMPLE_RATE,
+    channelLayout: AV_CHANNEL_LAYOUT_MONO,
+  });
+  try {
+    FFmpegError.throwIfError(
+      resampler.allocSetOpts2(
+        AV_CHANNEL_LAYOUT_MONO,
+        AV_SAMPLE_FMT_FLT,
+        WAKE_SAMPLE_RATE,
+        AV_CHANNEL_LAYOUT_MONO,
+        AV_SAMPLE_FMT_S16,
+        OPENAI_SAMPLE_RATE,
+      ),
+      "configure wake capture resampler",
+    );
+    FFmpegError.throwIfError(
+      resampler.init(),
+      "initialize wake capture resampler",
+    );
+    const outputSamples = resampler.getOutSamples(input.nbSamples);
+    const output = Frame.fromAudioBuffer(Buffer.alloc(outputSamples * 4), {
+      format: AV_SAMPLE_FMT_FLT,
+      nbSamples: outputSamples,
+      sampleRate: WAKE_SAMPLE_RATE,
+      channelLayout: AV_CHANNEL_LAYOUT_MONO,
+    });
+    try {
+      FFmpegError.throwIfError(
+        resampler.convertFrame(output, input),
+        "resample OpenAI reply audio",
+      );
+      return float32FromBytes(output.toBuffer());
+    } finally {
+      output.free();
+    }
+  } finally {
+    input.free();
+    resampler.free();
+  }
+}
+
 export class DiscordOpusEncoder {
   private readonly context = createOpusContext("encoder");
   private readonly resampler = new SoftwareResampleContext();
