@@ -247,7 +247,8 @@ export function devGuildOverride(input: {
     // snowflake back into consumer-facing UI. The id remains authoritative
     // for access checks; the ordinal only distinguishes multiple fixtures.
     name: `Dev Guild ${(index + 1).toString()}`,
-    icon: null,
+    icon:
+      id === "1337623164146155593" ? "847f22af55d2a9dc3ec87e66384a7d07" : null,
     owner: true,
     permissions: ADMINISTRATOR_BIT.toString(),
   }));
