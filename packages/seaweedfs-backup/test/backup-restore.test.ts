@@ -85,6 +85,70 @@ class MutatingSourceStore extends InMemoryObjectStore {
   }
 }
 
+class CountingSourceStore extends InMemoryObjectStore {
+  public getCalls = 0;
+
+  public override getObject(
+    ...input: Parameters<InMemoryObjectStore["getObject"]>
+  ) {
+    this.getCalls += 1;
+    return super.getObject(...input);
+  }
+}
+
+class RetryingHeadStore extends InMemoryObjectStore {
+  public transientHeadFailures = 0;
+
+  public override async headObject(
+    ...input: Parameters<InMemoryObjectStore["headObject"]>
+  ) {
+    if (this.transientHeadFailures > 0) {
+      this.transientHeadFailures -= 1;
+      const error = new Error("connect ECONNREFUSED 10.0.0.1:8333");
+      Object.defineProperty(error, "code", { value: "ECONNREFUSED" });
+      throw error;
+    }
+    return super.headObject(...input);
+  }
+}
+
+class TransientErrorSourceStore extends InMemoryObjectStore {
+  public nextError: Error | undefined;
+
+  public override getObject(
+    ...input: Parameters<InMemoryObjectStore["getObject"]>
+  ) {
+    if (this.nextError !== undefined) {
+      const error = this.nextError;
+      this.nextError = undefined;
+      throw error;
+    }
+    return super.getObject(...input);
+  }
+}
+
+async function retrySourceError(
+  error: Error,
+): Promise<TransientErrorSourceStore> {
+  const source = new TransientErrorSourceStore();
+  const backup = new InMemoryObjectStore();
+  source.createBucket("source");
+  backup.createBucket("backup");
+  source.seed("source", "state.json", "important");
+  source.nextError = error;
+  await expect(
+    runBackup({
+      source,
+      destination: backup,
+      backupBucket: "backup",
+      policy: POLICY,
+      cadence: "daily",
+      delay: () => Promise.resolve(),
+    }),
+  ).resolves.toMatchObject({ buckets: [{ copiedObjects: 1 }] });
+  return source;
+}
+
 function concurrencyStores(backup = new DelayedHeadStore()): {
   source: InMemoryObjectStore;
   backup: DelayedHeadStore;
@@ -210,6 +274,97 @@ describe("destination visibility", () => {
         cadence: "daily",
       }),
     ).resolves.toMatchObject({ buckets: [{ copiedObjects: 1 }] });
+  });
+});
+
+describe("transient object-store failures", () => {
+  test("retries an AbortError regardless of its message", async () => {
+    const error = new Error("S3 request cancelled by peer");
+    error.name = "AbortError";
+    const source = await retrySourceError(error);
+    expect(source.nextError).toBeUndefined();
+  });
+
+  test("retries contextual socket hang-up errors", async () => {
+    const source = await retrySourceError(
+      new Error("request failed: socket hang up"),
+    );
+    expect(source.nextError).toBeUndefined();
+  });
+
+  test("does not open source streams before retrying destination probes", async () => {
+    const source = new CountingSourceStore();
+    const backup = new RetryingHeadStore();
+    source.createBucket("source");
+    backup.createBucket("backup");
+    source.seed("source", "state.json", "important");
+    backup.transientHeadFailures = 1;
+
+    await expect(
+      runBackup({
+        source,
+        destination: backup,
+        backupBucket: "backup",
+        policy: POLICY,
+        cadence: "daily",
+      }),
+    ).resolves.toMatchObject({ buckets: [{ copiedObjects: 1 }] });
+
+    expect(source.getCalls).toBe(1);
+  });
+
+  test("drains the source pipeline when an upload rejects immediately", async () => {
+    const { source, backup } = stores();
+    source.seed("source", "state.json", "important");
+    backup.failPutPrefix = "objects/";
+    await expect(
+      runBackup({
+        source,
+        destination: backup,
+        backupBucket: "backup",
+        policy: POLICY,
+        cadence: "daily",
+      }),
+    ).rejects.toThrow("Injected put failure");
+  });
+
+  test("retries a refused source connection without restarting the backup", async () => {
+    const { source, backup } = stores();
+    source.seed("source", "state.json", "important");
+    source.transientGetFailures = 1;
+    await expect(
+      runBackup({
+        source,
+        destination: backup,
+        backupBucket: "backup",
+        policy: POLICY,
+        cadence: "daily",
+      }),
+    ).resolves.toMatchObject({ buckets: [{ copiedObjects: 1 }] });
+    expect(source.transientGetFailures).toBe(0);
+  });
+
+  test("preserves upload accounting and heartbeats across read-back retries", async () => {
+    const { source, backup } = stores();
+    const retryHeartbeats: number[] = [];
+    source.seed("source", "state.json", "important");
+    backup.transientGetFailures = 1;
+    const result = await runBackup({
+      source,
+      destination: backup,
+      backupBucket: "backup",
+      policy: POLICY,
+      cadence: "daily",
+      onBytes(progress) {
+        if (progress.bytes === 0) retryHeartbeats.push(progress.bytes);
+      },
+    });
+    expect(result.buckets[0]).toMatchObject({
+      copiedObjects: 1,
+      reusedObjects: 0,
+      copiedBytes: 9,
+    });
+    expect(retryHeartbeats).toEqual([0]);
   });
 });
 
@@ -466,7 +621,7 @@ describe("transport resilience", () => {
       objectCount: 3,
       copiedObjects: 3,
     });
-    expect(delays).toEqual([1000, 2000]);
+    expect(delays).toEqual([500, 1000]);
   });
 
   test("a connection that never recovers still fails the run", async () => {
@@ -486,7 +641,7 @@ describe("transport resilience", () => {
         delay: () => Promise.resolve(),
       }),
     ).rejects.toThrow(
-      /could not copy source\/a\.json after 4 transport attempts/u,
+      /could not copy source\/a\.json after 12 transient transport attempts/u,
     );
   });
 });
