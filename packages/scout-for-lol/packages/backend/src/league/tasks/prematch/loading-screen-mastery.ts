@@ -39,9 +39,6 @@ export async function fetchParticipantMasteries(
   const byPuuid = new Map<string, ChampionMasterySnapshot | undefined>();
   for (const [index, lookup] of lookups.entries()) {
     const result = results[index];
-    if (result === undefined) {
-      throw new Error(`Missing mastery result for ${lookup.puuid}`);
-    }
     byPuuid.set(lookup.puuid, result);
   }
   return byPuuid;

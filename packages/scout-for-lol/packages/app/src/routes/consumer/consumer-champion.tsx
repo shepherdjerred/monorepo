@@ -249,6 +249,8 @@ export function ConsumerChampion() {
           mastery.isSuccess && !mastery.isFetching ? mastery.data : undefined
         }
         pending={mastery.isPending}
+        failed={mastery.isError}
+        onRetry={() => void mastery.refetch()}
       />
 
       <div className="flex flex-wrap items-end gap-6 rounded-lg border bg-card p-4">
@@ -356,6 +358,8 @@ function formatMasteryPoints(points: number): string {
 function MasteryLeaderboard(props: {
   data: MasteryOutput | undefined;
   pending: boolean;
+  failed: boolean;
+  onRetry: () => void;
 }) {
   return (
     <section className="space-y-3">
@@ -365,6 +369,15 @@ function MasteryLeaderboard(props: {
       />
       {props.pending ? (
         <p className="text-sm text-scout-subtle">Loading mastery…</p>
+      ) : props.failed ? (
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-scout-subtle">
+            Mastery is temporarily unavailable.
+          </p>
+          <Button size="sm" variant="outline" onClick={props.onRetry}>
+            Retry
+          </Button>
+        </div>
       ) : props.data === undefined || props.data.rows.length === 0 ? (
         <p className="text-sm text-scout-subtle">
           No cached mastery exists for this champion yet.

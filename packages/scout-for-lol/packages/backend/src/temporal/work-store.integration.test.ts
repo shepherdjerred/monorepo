@@ -70,7 +70,7 @@ describe("Scout Temporal work ownership", () => {
     });
 
     await enqueueChampionMasteryRefresh(
-      { puuid, region: "AMERICA_NORTH", fetchedAt },
+      { puuid, region: "EU_WEST", fetchedAt },
       prisma,
     );
 
@@ -81,6 +81,7 @@ describe("Scout Temporal work ownership", () => {
     ).resolves.toMatchObject({
       state: "queued",
       requeueCount: 1,
+      payload: JSON.stringify({ puuid, region: "EU_WEST" }),
       lastRequeueReason:
         "Champion mastery refresh retried after a later page visit",
     });

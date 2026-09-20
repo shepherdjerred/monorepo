@@ -166,6 +166,7 @@ export async function enqueueChampionMasteryRefresh(
       workId,
       "Champion mastery refresh retried after a later page visit",
       database,
+      JSON.stringify(payload),
     ));
   if (created || requeued) {
     await requestStart({
@@ -197,6 +198,7 @@ async function requeueFailedScoutTemporalWorkIfFailed(
   workId: string,
   reason: string,
   database: ExtendedPrismaClient,
+  payload?: string,
 ): Promise<boolean> {
   const parsedReason = z.string().trim().min(10).parse(reason);
   const result = await database.scoutTemporalWork.updateMany({
@@ -206,6 +208,7 @@ async function requeueFailedScoutTemporalWorkIfFailed(
       requeueCount: { increment: 1 },
       lastRequeueReason: parsedReason,
       lastRequeuedAt: new Date(),
+      ...(payload === undefined ? {} : { payload }),
     },
   });
   return result.count === 1;
