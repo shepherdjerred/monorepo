@@ -13,9 +13,10 @@ export function canonicalWorkKey(title: string): string {
       " ",
     )
     .replaceAll(
-      /\b(?:lyrics?(?:\s+video)?|visualizer|hd|4k|remaster(?:ed)?|topic|vevo)\b/giu,
+      /\b(?:lyrics?(?:\s+video)?|visualizer|hd|4k|remaster(?:ed)?|vevo)\b/giu,
       " ",
     )
+    .replaceAll(/\s+-\s+topic\b/giu, " ")
     .replaceAll(/\b(video|audio)$/giu, " ")
     .replaceAll(/[^\p{L}\p{N}\s]/gu, " ")
     .replaceAll(/\s+/gu, " ")
@@ -181,8 +182,23 @@ function asrScore(query: string, title: string): number {
     ratios.reduce((total, ratio) => total + ratio, 0) / ratios.length;
   const weakest = Math.min(...ratios);
   // A single token must be a close ASR hit (`silco`/`sicko`), not a different
-  // word that shares a few letters (`psycho`/`sicko`). Multi-token retries can
-  // keep a weaker first token when another token matches exactly (`suka mode`).
+  // word that shares a few letters (`hello`/`yellow`). Same first letter of the
+  // best title token keeps Silco while rejecting Hello-for-Yellow. Multi-token
+  // retries can keep a weaker first token when another token matches exactly
+  // (`suka mode`).
+  const queryToken = queryTokens[0];
+  if (queryToken !== undefined && queryTokens.length === 1) {
+    let bestTitleToken = titleTokens[0] ?? "";
+    let bestRatio = 0;
+    for (const titleToken of titleTokens) {
+      const ratio = tokenRatio(queryToken, titleToken);
+      if (ratio > bestRatio) {
+        bestTitleToken = titleToken;
+        bestRatio = ratio;
+      }
+    }
+    if (!queryToken.startsWith(bestTitleToken.slice(0, 1))) return 0;
+  }
   const minimum = queryTokens.length === 1 ? 0.6 : 0.4;
   if (weakest >= minimum && (best >= 0.5 || exactCount > 0)) {
     return Math.round(average * 100);

@@ -333,9 +333,8 @@ describe("voice capture manager", () => {
       outcome: "ok",
       durationMs: 120,
     });
-    attempt.replyTranscript(
-      "I found Travis Scott SICKO MODE Official Video. Playing that.",
-    );
+    attempt.replyTranscript("I found Travis Scott SICKO MODE Official Video.");
+    attempt.replyTranscript("Playing that.");
     const replyPcm = new Uint8Array(24_000 * 2);
     attempt.reply({
       outcome: "success",

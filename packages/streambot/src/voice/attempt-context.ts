@@ -225,7 +225,11 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
   }
 
   replyTranscript(transcript: string): void {
-    this.state.replyTranscript = transcript;
+    const previous = this.state.replyTranscript;
+    this.state.replyTranscript =
+      previous === undefined || previous === null || previous.length === 0
+        ? transcript
+        : `${previous} ${transcript}`;
   }
 
   tool(observation: VoiceToolObservation): void {

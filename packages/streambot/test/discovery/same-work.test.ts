@@ -114,6 +114,16 @@ describe("same-work matching", () => {
     ).toBeUndefined();
   });
 
+  test("does not strip Topic from a title that is not an auto-generated suffix", () => {
+    expect(canonicalWorkKey("Le Tigre - Hot Topic")).toBe("le tigre hot topic");
+    expect(
+      pickOfficialSameWork([
+        candidate("Le Tigre - Hot Topic", { channel: "Le Tigre" }),
+        candidate("Hot (Official Video)"),
+      ]),
+    ).toBeUndefined();
+  });
+
   test("fuzzy-matches Silco and Suka onto SICKO MODE", () => {
     const official = candidate("Travis Scott - SICKO MODE (Official Video)");
     const pending = [official, candidate("Travis Scott - SICKO MODE")];
@@ -135,6 +145,12 @@ describe("same-work matching", () => {
       fuzzyMatchCandidate(
         [candidate("Daft Punk - One More Time (Official Video)")],
         "play One More Night",
+      ),
+    ).toBeNull();
+    expect(
+      fuzzyMatchCandidate(
+        [candidate("Coldplay - Yellow (Official Video)")],
+        "play Hello",
       ),
     ).toBeNull();
   });
