@@ -13,6 +13,10 @@ const MatchTallyInput = z.strictObject({ matchId: MatchIdSchema });
  * viewer's `mvp_votes_enabled` guilds have votes on this match.
  */
 export const mvpVotesRouter = router({
+  status: webProcedure.query(
+    async ({ ctx }) =>
+      await guildFeatureStatus(ctx.user, isMvpVotesEnabledForGuild),
+  ),
   matchTally: webProcedure
     .input(MatchTallyInput)
     .query(async ({ ctx, input }) => {

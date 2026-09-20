@@ -47,13 +47,13 @@ describe("resolveMvpVotesCapability", () => {
     ).resolves.toBeNull();
   });
 
-  test("more than one enabled guild is a hard failure", async () => {
+  test("more than one enabled guild omits the tools instead of aborting Explore", async () => {
     clearFlagOverrides("mvp_votes_enabled");
     addFlagOverride("mvp_votes_enabled", true, { server: ENABLED_GUILD });
     addFlagOverride("mvp_votes_enabled", true, { server: OTHER_GUILD });
     await expect(
       resolveMvpVotesCapability([ENABLED_GUILD, OTHER_GUILD]),
-    ).rejects.toThrow("exactly one enabled guild");
+    ).resolves.toBeNull();
   });
 
   test("production Flipt enablement is not dropped by the beta-only registry", async () => {

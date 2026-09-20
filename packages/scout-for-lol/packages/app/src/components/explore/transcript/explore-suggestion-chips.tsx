@@ -25,6 +25,10 @@ export function ExploreSuggestionChips(props: {
     ...trpc.challenge.status.queryOptions(),
     enabled,
   });
+  const mvpVotesQuery = useQuery({
+    ...trpc.mvpVotes.status.queryOptions(),
+    enabled,
+  });
   const guildsQuery = useQuery({
     ...trpc.guild.listManageable.queryOptions(),
     enabled,
@@ -33,8 +37,7 @@ export function ExploreSuggestionChips(props: {
   const featureContext = useMemo<ExploreFeatureContext>(
     () => ({
       bucksEnabled: bucksQuery.data?.state === "available",
-      mvpVotesEnabled:
-        guildsQuery.data?.some((g) => g.mvpVotesEnabled) ?? false,
+      mvpVotesEnabled: mvpVotesQuery.data?.state === "available",
       daresEnabled:
         bucksQuery.data?.state === "available" &&
         bucksQuery.data.guilds.some((g) => g.daresAvailable),
@@ -46,7 +49,12 @@ export function ExploreSuggestionChips(props: {
       hallOfFameEnabled:
         guildsQuery.data?.some((g) => g.hallOfFameEnabled) ?? false,
     }),
-    [bucksQuery.data, challengesQuery.data, guildsQuery.data],
+    [
+      bucksQuery.data,
+      challengesQuery.data,
+      guildsQuery.data,
+      mvpVotesQuery.data,
+    ],
   );
 
   const [suggestionChips, setSuggestionChips] = useState<string[]>(() =>

@@ -27,12 +27,11 @@ export type MvpVotesExploreCapability = {
 /**
  * Whether — and for which guild — this turn may read community MVP votes.
  *
- * Unlike Bryan Bucks, MVP votes are not production-hard-disabled. Flipt is
- * authoritative, so every guild in scope is evaluated with `isPolicyEnabled`
- * rather than the static registry pre-filter (that list is empty in
- * production because the only registry override is `betaOnly`). Zero enabled
- * guilds hide the tools; more than one is a hard failure until an explicit
- * mapping exists.
+ * Unlike Bryan Bucks, MVP votes are not production-hard-disabled and can be
+ * on for more than one of a viewer's guilds. Flipt is authoritative, so every
+ * guild in scope is evaluated with `isPolicyEnabled`. Zero enabled guilds, or
+ * more than one, hide the tools: aborting the turn would take down all of
+ * Explore for anyone shared by two enabled servers.
  */
 export async function resolveMvpVotesCapability(
   guildIds: readonly string[],
@@ -44,15 +43,9 @@ export async function resolveMvpVotesCapability(
       enabled.push(serverId);
     }
   }
-  if (enabled.length === 0) {
-    return null;
-  }
   const serverId = enabled[0];
-  if (serverId === undefined || enabled.length > 1) {
-    throw new Error(
-      "Community MVP vote analysis requires exactly one enabled guild in scope; " +
-        "add an explicit mapping before enabling a second guild.",
-    );
+  if (serverId === undefined || enabled.length !== 1) {
+    return null;
   }
   return { serverId };
 }

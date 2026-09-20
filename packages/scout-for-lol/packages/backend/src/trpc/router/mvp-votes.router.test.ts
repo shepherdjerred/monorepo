@@ -54,6 +54,17 @@ describe("mvpVotes.router", () => {
     ).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
+    await expect(trpc.anonCaller().mvpVotes.status()).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+  });
+
+  test("status is available for an ordinary member of an enabled guild", async () => {
+    addFlagOverride("mvp_votes_enabled", true, { server: guildId });
+    await expect(caller().mvpVotes.status()).resolves.toMatchObject({
+      state: "available",
+      guilds: [{ id: guildId }],
+    });
   });
 
   test("returns null when no enabled guild is in scope", async () => {
