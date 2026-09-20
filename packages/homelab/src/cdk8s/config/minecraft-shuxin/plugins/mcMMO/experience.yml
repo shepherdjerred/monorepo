@@ -299,6 +299,10 @@ Experience_Values:
     Crimson_Stem: 35
     Warped_Stem: 35
     Oak_Log: 70
+    Poplar_Log: 95
+    Stripped_Poplar_Log: 95
+    Poplar_Wood: 85
+    Stripped_Poplar_Wood: 85
     Cherry_Log: 105
     Spruce_Log: 80
     Birch_Log: 90
@@ -341,6 +345,8 @@ Experience_Values:
     Mushroom_Stem: 80
   Herbalism:
     Bush: 11
+    Red_Shrub: 11
+    Shelf_Mushroom: 50
     Cactus_Flower: 60
     Firefly_Bush: 15
     Leaf_Litter: 2
