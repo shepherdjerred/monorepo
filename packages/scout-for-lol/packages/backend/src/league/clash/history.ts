@@ -3,6 +3,9 @@ import {
   ClashRoleSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
+  PlatformRouteSchema,
+  clashCalendarDateForPlatform,
+  clashIsoWeekKey,
   getChampionDisplayName,
   type LeaguePuuid,
   type PlatformRoute,
@@ -171,11 +174,12 @@ export function groupClashHistory(input: {
     if (alias === undefined) {
       continue;
     }
-    const cup = cupForSighting(cups, sighting);
+    const groupKey = clashHistoryGroupKey(sighting);
+    const cup = cupForSighting(cups, sighting, groupKey);
     const player = playerOnCup(cup, sighting.puuid, alias);
     const membership = membershipForSighting(input.memberships, sighting);
     applyMembershipLabels(player, membership);
-    const playerCupKey = `${cup.cupKey ?? ""}:${cup.cupDay ?? ""}:${cup.queue}:${sighting.puuid}`;
+    const playerCupKey = `${groupKey}:${sighting.puuid}`;
     const nextIndex = (matchIndexByPlayerCup.get(playerCupKey) ?? 0) + 1;
     matchIndexByPlayerCup.set(playerCupKey, nextIndex);
     player.sightings.push({
@@ -194,12 +198,20 @@ export function groupClashHistory(input: {
   );
 }
 
+function clashHistoryGroupKey(sighting: SightingRow): string {
+  const platform = PlatformRouteSchema.parse(sighting.platform);
+  const week = clashIsoWeekKey(
+    clashCalendarDateForPlatform(sighting.observedAt, platform),
+  );
+  return `${week}:${sighting.cupKey ?? ""}:${sighting.cupDay ?? ""}:${sighting.queue}`;
+}
+
 function cupForSighting(
   cups: Map<string, ClashHistoryCup>,
   sighting: SightingRow,
+  groupKey: string,
 ): ClashHistoryCup {
-  const key = `${sighting.cupKey ?? ""}:${sighting.cupDay ?? ""}:${sighting.queue}`;
-  const existing = cups.get(key);
+  const existing = cups.get(groupKey);
   if (existing !== undefined) {
     return existing;
   }
@@ -210,7 +222,7 @@ function cupForSighting(
     queue: sighting.queue,
     players: [],
   };
-  cups.set(key, created);
+  cups.set(groupKey, created);
   return created;
 }
 

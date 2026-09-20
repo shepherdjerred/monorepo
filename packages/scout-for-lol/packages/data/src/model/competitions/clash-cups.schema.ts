@@ -5,8 +5,8 @@ import { PlatformRouteSchema } from "#src/model/core/routes.ts";
  * Language-neutral Clash cup calendar (`clash-cups.json`).
  *
  * Clash-v1 does not return past tournaments. This file is a committed map from
- * UTC calendar date + queue onto a cup `nameKey` and day, used only when a
- * game was never snapshotted. It is not scraped at runtime.
+ * platform-local calendar date + queue onto a cup `nameKey` and day, used only
+ * when a game was never snapshotted. It is not scraped at runtime.
  */
 
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;

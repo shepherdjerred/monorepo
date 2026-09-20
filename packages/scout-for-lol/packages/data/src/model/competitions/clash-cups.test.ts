@@ -64,6 +64,28 @@ describe("resolveClashCupFromCalendar", () => {
       }),
     ).toEqual({
       nameKey: "bandle_city",
+      cupDay: "day_1",
+      queue: "clash",
+    });
+    expect(
+      resolveClashCupFromCalendar({
+        queue: "clash",
+        at: new Date(1_789_867_832_147),
+        platform: "NA1",
+      }),
+    ).toEqual({
+      nameKey: "bandle_city",
+      cupDay: "day_1",
+      queue: "clash",
+    });
+    expect(
+      resolveClashCupFromCalendar({
+        queue: "clash",
+        at: new Date("2026-09-21T01:30:00.000Z"),
+        platform: "NA1",
+      }),
+    ).toEqual({
+      nameKey: "bandle_city",
       cupDay: "day_2",
       queue: "clash",
     });

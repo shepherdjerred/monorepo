@@ -75,4 +75,45 @@ describe("groupClashHistory", () => {
     expect(cups[1]?.players[0]?.teamName).toBeUndefined();
     expect(cups[1]?.players[0]?.sightings[0]?.outcome).toBe("win");
   });
+
+  test("keeps the same cup theme on different weekends in separate groups", () => {
+    const cups = groupClashHistory({
+      sightings: [
+        sighting({
+          gameId: "2026",
+          cupKey: "bandle_city",
+          cupDay: "day_1",
+          observedAt: new Date("2026-09-19T18:00:00.000Z"),
+        }),
+        sighting({
+          gameId: "2027",
+          cupKey: "bandle_city",
+          cupDay: "day_1",
+          observedAt: new Date("2027-09-18T18:00:00.000Z"),
+        }),
+        sighting({
+          gameId: "unknown-a",
+          cupKey: null,
+          cupDay: null,
+          observedAt: new Date("2026-03-07T18:00:00.000Z"),
+        }),
+        sighting({
+          gameId: "unknown-b",
+          cupKey: null,
+          cupDay: null,
+          observedAt: new Date("2026-04-11T18:00:00.000Z"),
+        }),
+      ],
+      memberships: [],
+      aliasByPuuid: new Map([[PUUID, "Jerred"]]),
+    });
+    expect(cups).toHaveLength(4);
+    expect(
+      cups.flatMap((cup) =>
+        cup.players.flatMap((player) =>
+          player.sightings.map((row) => row.gameId),
+        ),
+      ),
+    ).toEqual(["2027", "2026", "unknown-b", "unknown-a"]);
+  });
 });

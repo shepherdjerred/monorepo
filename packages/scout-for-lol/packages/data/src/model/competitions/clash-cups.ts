@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import clashCupsJson from "#src/model/competitions/clash-cups.json" with { type: "json" };
 import {
   ClashCupsFileSchema,
@@ -19,11 +20,62 @@ export type ClashCupMatch = {
   queue: ClashCupQueue;
 };
 
-function utcDateOnly(at: Date): string {
-  const year = at.getUTCFullYear().toString();
-  const month = (at.getUTCMonth() + 1).toString().padStart(2, "0");
-  const day = at.getUTCDate().toString().padStart(2, "0");
+export function platformToClashTimezone(platform: PlatformRoute): string {
+  return match(platform)
+    .with("NA1", "PBE1", () => "America/Los_Angeles")
+    .with("BR1", () => "America/Sao_Paulo")
+    .with("LA1", () => "America/Mexico_City")
+    .with("LA2", () => "America/Argentina/Buenos_Aires")
+    .with("EUW1", () => "Europe/Paris")
+    .with("EUN1", () => "Europe/Bucharest")
+    .with("TR1", () => "Europe/Istanbul")
+    .with("RU", () => "Europe/Moscow")
+    .with("ME1", () => "Asia/Riyadh")
+    .with("KR", () => "Asia/Seoul")
+    .with("JP1", () => "Asia/Tokyo")
+    .with("OC1", () => "Australia/Sydney")
+    .with("SG2", () => "Asia/Singapore")
+    .with("TW2", () => "Asia/Taipei")
+    .with("VN2", () => "Asia/Ho_Chi_Minh")
+    .exhaustive();
+}
+
+export function clashCalendarDateForPlatform(
+  at: Date,
+  platform: PlatformRoute,
+): string {
+  const timeZone = platformToClashTimezone(platform);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(at);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+  if (year === undefined || month === undefined || day === undefined) {
+    throw new Error(
+      `Could not format ${at.toISOString()} as a calendar date in ${timeZone}`,
+    );
+  }
   return `${year}-${month}-${day}`;
+}
+
+export function clashIsoWeekKey(dateOnly: string): string {
+  const [yearText, monthText, dayText] = dateOnly.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  const dayNum = (utc.getUTCDay() + 6) % 7;
+  utc.setUTCDate(utc.getUTCDate() - dayNum + 3);
+  const weekYear = utc.getUTCFullYear();
+  const jan4 = new Date(Date.UTC(weekYear, 0, 4));
+  const week =
+    1 +
+    Math.round((utc.getTime() - jan4.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  return `${weekYear.toString()}-W${week.toString().padStart(2, "0")}`;
 }
 
 function cupAllowsPlatform(cup: ClashCup, platform: PlatformRoute): boolean {
@@ -56,8 +108,8 @@ export function clashQueueFromQueueType(
 /**
  * Best-effort cup for a Clash lobby or finished match Scout already saw.
  *
- * Matches UTC calendar date + queue. Regional makeup cups require `platform`
- * to be in `shards`. Does not invent a team name.
+ * Matches the platform-local calendar date + queue. Regional makeup cups
+ * require `platform` to be in `shards`. Does not invent a team name.
  */
 export function resolveClashCupFromCalendar(input: {
   queue: QueueType;
@@ -68,7 +120,7 @@ export function resolveClashCupFromCalendar(input: {
   if (queue === undefined) {
     return undefined;
   }
-  const date = utcDateOnly(input.at);
+  const date = clashCalendarDateForPlatform(input.at, input.platform);
   for (const cup of CLASH_CUPS) {
     if (cup.queue !== queue) {
       continue;
