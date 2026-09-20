@@ -84,6 +84,12 @@ export async function clashExploreEnabled(
   return decisions.some(Boolean);
 }
 
+/**
+ * Shared loading-screen artifacts only get Clash chrome when every guild
+ * that tracks those puuids has `clash_surface`. A mixed audience therefore
+ * stays on the ordinary canvas so a disabled guild never inherits Clash
+ * styling from an enabled one.
+ */
 export async function clashSurfaceEnabledForPuuids(
   puuids: readonly string[],
 ): Promise<boolean> {
@@ -95,5 +101,11 @@ export async function clashSurfaceEnabledForPuuids(
     distinct: ["serverId"],
     select: { serverId: true },
   });
-  return await clashExploreEnabled(guilds.map((guild) => guild.serverId));
+  if (guilds.length === 0) {
+    return false;
+  }
+  const decisions = await Promise.all(
+    guilds.map((guild) => clashSurfaceEnabledForGuild(guild.serverId)),
+  );
+  return decisions.every(Boolean);
 }

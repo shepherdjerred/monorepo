@@ -5,6 +5,7 @@ import {
   PlatformRouteSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { clashSnapshotEnabledGuildIds } from "#src/league/clash/access.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
@@ -59,8 +60,26 @@ export function clashSightingWriteFromLake(
   };
 }
 
+export function clashLakeObservedSinceClause(sinceMs: number | undefined): {
+  sql: string;
+  params: ReturnType<typeof scalarParam>[];
+} {
+  if (sinceMs === undefined) {
+    return { sql: "", params: [] };
+  }
+  return {
+    sql: " AND observed_ms >= ?",
+    params: [scalarParam(sinceMs)],
+  };
+}
+
 export async function backfillClashSightingsFromLake(): Promise<number> {
+  const enabledGuildIds = await clashSnapshotEnabledGuildIds();
+  if (enabledGuildIds.length === 0) {
+    return 0;
+  }
   const accounts = await prisma.account.findMany({
+    where: { serverId: { in: enabledGuildIds } },
     distinct: ["puuid"],
     select: { puuid: true },
   });
@@ -68,7 +87,13 @@ export async function backfillClashSightingsFromLake(): Promise<number> {
   if (puuids.length === 0) {
     return 0;
   }
-  const rows = await loadClashLakeRows(puuids);
+  const latest = await prisma.clashGameSighting.aggregate({
+    _max: { observedAt: true },
+  });
+  const rows = await loadClashLakeRows(
+    puuids,
+    latest._max.observedAt?.getTime(),
+  );
   let written = 0;
   for (const row of rows) {
     await upsertClashGameSighting(clashSightingWriteFromLake(row));
@@ -78,8 +103,12 @@ export async function backfillClashSightingsFromLake(): Promise<number> {
   return written;
 }
 
-async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
+async function loadClashLakeRows(
+  puuids: string[],
+  sinceMs: number | undefined,
+): Promise<LakeClashRow[]> {
   const files = await resolveLakeFiles(resolveLakeDir());
+  const since = clashLakeObservedSinceClause(sinceMs);
   const prematch = buildPrematchSource(files, {
     sql: "puuid IN (SELECT unnest(?)) AND queue IN (SELECT unnest(?))",
     params: [listParam(puuids), listParam(["clash", "aram clash"])],
@@ -93,10 +122,12 @@ async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
     rows.push(
       ...(await queryClashLake({
         source: prematch,
+        extraParams: since.params,
         sql:
-          `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
+          `SELECT * FROM (SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
           `COALESCE(epoch_ms(game_start_at), epoch_ms(observed_at))::BIGINT AS observed_ms, ` +
-          `NULL AS win, 'prematch' AS source FROM (${prematch.sql})`,
+          `NULL AS win, 'prematch' AS source FROM (${prematch.sql})) clash_rows` +
+          ` WHERE TRUE${since.sql}`,
       })),
     );
   }
@@ -104,10 +135,12 @@ async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
     rows.push(
       ...(await queryClashLake({
         source: matches,
+        extraParams: since.params,
         sql:
-          `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
+          `SELECT * FROM (SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
           `epoch_ms(game_start_at)::BIGINT AS observed_ms, win, 'match' AS source ` +
-          `FROM (${matches.sql})`,
+          `FROM (${matches.sql})) clash_rows` +
+          ` WHERE TRUE${since.sql}`,
       })),
     );
   }
@@ -117,11 +150,15 @@ async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
 async function queryClashLake(input: {
   source: SqlFragment;
   sql: string;
+  extraParams?: SqlFragment["params"];
 }): Promise<LakeClashRow[]> {
   return await withDuckDBConnection(async (session) => {
     const raw = await session.run(
       input.sql,
-      bindParams(session, input.source.params),
+      bindParams(session, [
+        ...input.source.params,
+        ...(input.extraParams ?? []),
+      ]),
     );
     return raw.map((row) => LakeClashRowSchema.parse(row));
   });

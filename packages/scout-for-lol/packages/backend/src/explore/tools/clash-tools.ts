@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { clashSurfaceEnabledForGuild } from "#src/league/clash/access.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 import { readClashHistoryForGuild } from "#src/league/clash/history.ts";
 import {
@@ -55,6 +56,13 @@ export function createClashExploreTools(options: {
               data: [],
             };
           }
+          if (!(await clashSurfaceEnabledForGuild(input.guildId))) {
+            return {
+              kind: "clash_roster",
+              message: "Clash is unavailable in that guild.",
+              data: [],
+            };
+          }
           const teams = await readClashRosterForGuild(input.guildId);
           return {
             kind: "clash_roster",
@@ -81,6 +89,13 @@ export function createClashExploreTools(options: {
             return {
               kind: "clash_history",
               message: "That guild is not in this conversation's scope.",
+              data: [],
+            };
+          }
+          if (!(await clashSurfaceEnabledForGuild(input.guildId))) {
+            return {
+              kind: "clash_history",
+              message: "Clash is unavailable in that guild.",
               data: [],
             };
           }

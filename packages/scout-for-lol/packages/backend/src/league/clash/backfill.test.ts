@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
-import { clashSightingWriteFromLake } from "./backfill.ts";
+import {
+  clashSightingWriteFromLake,
+  clashLakeObservedSinceClause,
+} from "./backfill.ts";
 
 describe("clashSightingWriteFromLake", () => {
   test("maps a scored leftover match and a lobby prematch", () => {
@@ -33,5 +36,15 @@ describe("clashSightingWriteFromLake", () => {
     });
     expect(lobby.source).toBe("prematch");
     expect(lobby.win).toBeNull();
+  });
+
+  test("adds an observed_ms watermark only when a previous sighting exists", () => {
+    expect(clashLakeObservedSinceClause(undefined)).toEqual({
+      sql: "",
+      params: [],
+    });
+    const clause = clashLakeObservedSinceClause(1_700_000_000_000);
+    expect(clause.sql).toBe(" AND observed_ms >= ?");
+    expect(clause.params).toHaveLength(1);
   });
 });
