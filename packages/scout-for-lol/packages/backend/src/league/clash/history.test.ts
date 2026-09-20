@@ -108,6 +108,7 @@ describe("groupClashHistory", () => {
       aliasByPuuid: new Map([[PUUID, "Jerred"]]),
     });
     expect(cups).toHaveLength(4);
+    expect(new Set(cups.map((cup) => cup.id)).size).toBe(4);
     expect(
       cups.flatMap((cup) =>
         cup.players.flatMap((player) =>

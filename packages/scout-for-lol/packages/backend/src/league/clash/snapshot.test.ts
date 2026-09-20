@@ -1,6 +1,9 @@
 import { LeaguePuuidSchema, type PlatformRoute } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
-import { splitClashPollAccounts } from "./snapshot.ts";
+import {
+  platformsAbsentFromEnabledAccounts,
+  splitClashPollAccounts,
+} from "./snapshot.ts";
 
 const PUUID = LeaguePuuidSchema.parse("p".repeat(78));
 
@@ -35,5 +38,13 @@ describe("splitClashPollAccounts", () => {
     );
     expect(poll).toEqual([]);
     expect(clear).toEqual([na]);
+  });
+});
+
+describe("platformsAbsentFromEnabledAccounts", () => {
+  test("returns stored platforms that no enabled account still occupies", () => {
+    expect(
+      platformsAbsentFromEnabledAccounts(["NA1", "EUW1", "KR"], ["NA1"]),
+    ).toEqual(["EUW1", "KR"]);
   });
 });

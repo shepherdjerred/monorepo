@@ -96,6 +96,7 @@ export type ClashHistoryPlayer = {
 };
 
 export type ClashHistoryCup = {
+  id: string;
   cupKey: string | undefined;
   cupDay: string | undefined;
   themeLabel: string;
@@ -216,6 +217,7 @@ function cupForSighting(
     return existing;
   }
   const created: ClashHistoryCup = {
+    id: groupKey,
     cupKey: sighting.cupKey ?? undefined,
     cupDay: sighting.cupDay ?? undefined,
     themeLabel: clashHistoryThemeLabel(sighting.cupKey, sighting.cupDay),

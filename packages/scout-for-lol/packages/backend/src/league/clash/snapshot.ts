@@ -38,6 +38,14 @@ type PendingClashPoll = {
   players: RawClashPlayer[];
 };
 
+export function platformsAbsentFromEnabledAccounts(
+  stored: readonly PlatformRoute[],
+  enabled: readonly PlatformRoute[],
+): PlatformRoute[] {
+  const live = new Set(enabled);
+  return [...new Set(stored)].filter((platform) => !live.has(platform));
+}
+
 export function splitClashPollAccounts(
   accounts: readonly TrackedAccount[],
   pollPlayersByPlatform: ReadonlyMap<PlatformRoute, boolean>,
@@ -68,6 +76,23 @@ export async function runClashSnapshot(): Promise<void> {
   );
   const platforms = [...new Set(accounts.map((account) => account.platform))];
   const fetchedAt = new Date();
+  const storedRows = await prisma.clashTournament.findMany({
+    distinct: ["platform"],
+    select: { platform: true },
+  });
+  const storedPlatforms = storedRows.map((row) =>
+    PlatformRouteSchema.parse(row.platform),
+  );
+  for (const platform of platformsAbsentFromEnabledAccounts(
+    storedPlatforms,
+    platforms,
+  )) {
+    await replacePlatformTournaments({
+      platform,
+      tournaments: [],
+      fetchedAt,
+    });
+  }
   const pollPlayersByPlatform = new Map<PlatformRoute, boolean>();
   const tournamentsByKey = new Map<string, RawClashTournament>();
 

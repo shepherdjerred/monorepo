@@ -51,9 +51,7 @@ export function ClashHistorySection(props: {
       ) : null}
       <div className="grid gap-3">
         {cups.map((cup) => (
-          <Card
-            key={`${cup.cupKey ?? "clash"}:${cup.cupDay ?? "weekend"}:${cup.queue}`}
-          >
+          <Card key={cup.id}>
             <CardHeader>
               <CardTitle>{cup.themeLabel}</CardTitle>
               <CardDescription>{titleCaseToken(cup.queue)}</CardDescription>

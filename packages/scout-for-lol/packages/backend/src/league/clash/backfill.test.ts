@@ -44,6 +44,7 @@ describe("clashSightingWriteFromLake", () => {
       platform: "NA1",
       gameId: "100",
       puuid,
+      source: "prematch",
     };
     const rows = [
       {
@@ -72,5 +73,32 @@ describe("clashSightingWriteFromLake", () => {
     expect(clashLakeRowsMissingFromSightings(rows, [stored])).toEqual([
       rows[1],
     ]);
+  });
+
+  test("keeps a scored match that upgrades an existing lobby sighting", () => {
+    const puuid = "p".repeat(78);
+    const rows = [
+      {
+        platform_id: "NA1",
+        game_id: "100",
+        puuid,
+        queue: "clash",
+        champion_id: 1,
+        team_id: 100,
+        observed_ms: 1,
+        win: true,
+        source: "match" as const,
+      },
+    ];
+    expect(
+      clashLakeRowsMissingFromSightings(rows, [
+        { platform: "NA1", gameId: "100", puuid, source: "prematch" },
+      ]),
+    ).toEqual(rows);
+    expect(
+      clashLakeRowsMissingFromSightings(rows, [
+        { platform: "NA1", gameId: "100", puuid, source: "match" },
+      ]),
+    ).toEqual([]);
   });
 });

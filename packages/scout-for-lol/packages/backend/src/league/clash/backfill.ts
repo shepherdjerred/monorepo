@@ -54,19 +54,29 @@ export function clashLakeSightingKey(row: {
 
 export function clashLakeRowsMissingFromSightings(
   rows: readonly LakeClashRow[],
-  existing: readonly { platform: string; gameId: string; puuid: string }[],
+  existing: readonly {
+    platform: string;
+    gameId: string;
+    puuid: string;
+    source: string;
+  }[],
 ): LakeClashRow[] {
-  const seen = new Set(existing.map((row) => clashLakeSightingKey(row)));
-  return rows.filter(
-    (row) =>
-      !seen.has(
-        clashLakeSightingKey({
-          platform: row.platform_id,
-          gameId: row.game_id,
-          puuid: row.puuid,
-        }),
-      ),
+  const seen = new Map(
+    existing.map((row) => [clashLakeSightingKey(row), row.source]),
   );
+  return rows.filter((row) => {
+    const existingSource = seen.get(
+      clashLakeSightingKey({
+        platform: row.platform_id,
+        gameId: row.game_id,
+        puuid: row.puuid,
+      }),
+    );
+    if (existingSource === undefined) {
+      return true;
+    }
+    return existingSource === "prematch" && row.source === "match";
+  });
 }
 
 export function clashSightingWriteFromLake(
@@ -100,7 +110,7 @@ export async function backfillClashSightingsFromLake(): Promise<number> {
     return 0;
   }
   const existing = await prisma.clashGameSighting.findMany({
-    select: { platform: true, gameId: true, puuid: true },
+    select: { platform: true, gameId: true, puuid: true, source: true },
   });
   const rows = clashLakeRowsMissingFromSightings(
     await loadClashLakeRows(puuids),
