@@ -1,5 +1,10 @@
 [
   {
+    "prompt": "Who got the most community MVP votes this month?",
+    "category": "mvp_votes",
+    "condition": "mvp_votes"
+  },
+  {
     "prompt": "How many Bryan Bucks do I have?",
     "category": "bucks",
     "condition": "bucks"

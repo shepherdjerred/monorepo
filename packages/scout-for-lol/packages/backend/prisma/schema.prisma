@@ -2477,13 +2477,22 @@ model MatchObservation {
 /// `reportMessageIds` is the durable channel→message map for tally edits;
 /// ActiveGame.postmatchMessageIds expires with the 3-hour active-game TTL.
 model MatchMvpContest {
-  matchId          String   @id
+  matchId          String    @id
   roster           Json
   reportMessageIds Json?
-  createdAt        DateTime @default(now())
+  /// Riot `info.gameCreation`. Backfilled from MatchObservation / rank history
+  /// for contests that existed before this column; writers fill any remainder.
+  gameCreationAt   DateTime?
+  /// Resolved Scout queue type (`flex`, `ranked 5s`, …). Pre-column contests
+  /// were Flex-only attach and backfill to `flex`.
+  queueType        String?
+  createdAt        DateTime  @default(now())
+
+  @@index([gameCreationAt])
+  @@index([queueType, gameCreationAt])
 }
 
-/// One guild member's vote in one category for one Flex match.
+/// One guild member's vote in one category for one community MVP contest.
 model MatchMvpVote {
   id             Int      @id @default(autoincrement())
   matchId        String
@@ -2493,6 +2502,9 @@ model MatchMvpVote {
   category       String
   /// Index into MatchMvpContest.roster.participants.
   nomineeIndex   Int
+  /// Copied from the frozen roster at vote time so leaderboards skip JSON.
+  nomineePuuid   String?
+  nomineeTeamId  Int?
   voterPuuid     String
   voterTeamId    Int
   justification  String?
@@ -2501,6 +2513,7 @@ model MatchMvpVote {
 
   @@unique([matchId, serverId, voterDiscordId, category])
   @@index([matchId, serverId, category])
+  @@index([serverId, nomineePuuid])
 }
 
 /// Association between an observation and one tracked account seen in the

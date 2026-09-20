@@ -24,21 +24,15 @@ import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/editor/for
 import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
-import {
-  createBucksExploreTools,
-  resolveBucksCapability,
-} from "#src/explore/tools/bucks-tools.ts";
-import { createDareExploreTools } from "#src/explore/tools/dare-tool-definitions.ts";
+import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
+import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
+import { createGatedExploreTools } from "#src/explore/gated-tools.ts";
 import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
-import {
-  challengeExploreEnabled,
-  createChallengeExploreTools,
-} from "#src/explore/tools/challenge-tools.ts";
+import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
 import {
   resolveCreationCapability,
   type CreationCapability,
 } from "#src/explore/creation/capability.ts";
-import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
 import { createLeagueExploreTools } from "#src/explore/tools/league-tools.ts";
 import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
@@ -176,6 +170,7 @@ async function streamExploreAgentInternal(
   // revocation both re-evaluate; a guild losing `betting_enabled` loses the
   // tools on its very next turn.
   const bucksCapability = await resolveBucksCapability(params.guildIds);
+  const mvpVotesCapability = await resolveMvpVotesCapability(params.guildIds);
   const daresEnabled = await dareExploreEnabled(bucksCapability);
   const challengesEnabled = await challengeExploreEnabled(params.guildIds);
   // Tier 1 only: a surface comparison and one flag read per guild. The
@@ -187,11 +182,10 @@ async function streamExploreAgentInternal(
   });
   const riotHistoryEnabled = await riotHistoryExploreEnabled(params.guildIds);
 
+  const clock = { currentTime: new Date().toISOString() };
   const skillOptions = {
-    bucks:
-      bucksCapability === null
-        ? null
-        : { currentTime: new Date().toISOString() },
+    bucks: bucksCapability === null ? null : clock,
+    mvpVotes: mvpVotesCapability === null ? null : clock,
     dares: daresEnabled,
     challenges: challengesEnabled,
     creation: creationCapability !== null,
@@ -208,6 +202,7 @@ async function streamExploreAgentInternal(
       state,
       skillOptions,
       bucksCapability,
+      mvpVotesCapability,
       daresEnabled,
       challengesEnabled,
       creationCapability,
@@ -342,6 +337,7 @@ type ExploreToolsOptions = {
   state: RunState;
   skillOptions: ExploreSkillOptions;
   bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>;
+  mvpVotesCapability: Awaited<ReturnType<typeof resolveMvpVotesCapability>>;
   daresEnabled: boolean;
   challengesEnabled: boolean;
   creationCapability: CreationCapability | null;
@@ -354,6 +350,7 @@ function createExploreTools(options: ExploreToolsOptions) {
     state,
     skillOptions,
     bucksCapability,
+    mvpVotesCapability,
     daresEnabled,
     challengesEnabled,
     creationCapability,
@@ -527,7 +524,11 @@ function createExploreTools(options: ExploreToolsOptions) {
   return {
     load_skill: createLoadSkillTool({
       skills: enabledExploreSkills(skillOptions),
-      context: { bucks: skillOptions.bucks, surface: params.surface },
+      context: {
+        bucks: skillOptions.bucks,
+        mvpVotes: skillOptions.mvpVotes ?? null,
+        surface: params.surface,
+      },
       track,
       onLoaded: (name) => state.loadedSkills.add(name),
     }),
@@ -542,31 +543,15 @@ function createExploreTools(options: ExploreToolsOptions) {
       eligibleTimelineMatchIds: () => state.lastQueryMatchIds,
       track,
     }),
-    ...(bucksCapability === null
-      ? {}
-      : createBucksExploreTools({
-          capability: bucksCapability,
-          requesterId: params.requesterId,
-          track,
-        })),
-    ...(bucksCapability === null || !daresEnabled
-      ? {}
-      : createDareExploreTools({
-          capability: bucksCapability,
-          requesterId: params.requesterId,
-          conversationId: params.conversationId,
-          originChannelId: params.originChannelId,
-          track,
-        })),
-    ...(challengesEnabled
-      ? createChallengeExploreTools({
-          requesterId: params.requesterId,
-          track,
-        })
-      : {}),
-    ...createCreationExploreTools({
-      capability: creationCapability,
+    ...createGatedExploreTools({
+      bucksCapability,
+      mvpVotesCapability,
+      daresEnabled,
+      challengesEnabled,
+      creationCapability,
       requesterId: params.requesterId,
+      conversationId: params.conversationId,
+      originChannelId: params.originChannelId,
       track,
     }),
   };

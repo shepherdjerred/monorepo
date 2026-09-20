@@ -35,12 +35,15 @@ const TURN_PLACEHOLDER_NAMES = new Set(["currentTime"]);
 export type ExploreSkillContext = {
   /** Non-null only for a bucks-capable turn; carries the turn's timestamp. */
   bucks: { currentTime: string } | null;
+  /** Non-null only for an MVP-votes-capable turn; shares the clock token. */
+  mvpVotes?: { currentTime: string } | null;
   surface: ExploreSurface;
 };
 
 /** The option shape `exploreAgentInstructions` already takes. */
 export type ExploreSkillOptions = {
   bucks: { currentTime: string } | null;
+  mvpVotes?: { currentTime: string } | null | undefined;
   dares?: boolean | undefined;
   challenges?: boolean | undefined;
   creation?: boolean | undefined;
@@ -96,6 +99,8 @@ export function enabledExploreSkills(
         return options.creation === true;
       case "riot-history":
         return options.riotHistory === true;
+      case "mvp-votes":
+        return options.mvpVotes != null;
     }
   });
 }
@@ -133,12 +138,13 @@ export function renderExploreSkillBody(
         return staticProvider();
       }
       if (name === "currentTime") {
-        if (context.bucks === null) {
+        const clock = context.bucks ?? context.mvpVotes ?? null;
+        if (clock === null) {
           throw new Error(
-            `Skill '${skill.name}' needs {{currentTime}} but the turn has no bucks context.`,
+            `Skill '${skill.name}' needs {{currentTime}} but the turn has no clock context.`,
           );
         }
-        return context.bucks.currentTime;
+        return clock.currentTime;
       }
       throw new Error(
         `Skill '${skill.name}' references unknown placeholder ${token}.`,

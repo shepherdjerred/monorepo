@@ -6,6 +6,7 @@ import {
   teamLabel,
   type MatchMvpRoster,
 } from "#src/mvp-votes/roster.ts";
+import { groupMatchMvpVotesForTeam } from "#src/mvp-votes/vote-groups.ts";
 import type { StoredMatchMvpVote } from "#src/mvp-votes/vote.ts";
 
 /** Discord embed description limit, with a small buffer for formatting. */
@@ -90,33 +91,21 @@ function bucketsForTeam(
   roster: MatchMvpRoster,
   aliases: ReadonlyMap<LeaguePuuid, string>,
 ): NomineeBucket[] {
-  const byIndex = new Map<number, NomineeBucket>();
-  for (const vote of votes) {
-    if (nomineeAt(roster, vote.nomineeIndex).teamId !== teamId) {
-      continue;
+  return groupMatchMvpVotesForTeam(votes, teamId, roster).map((group) => {
+    const reasons: NomineeBucket["reasons"] = [];
+    for (const vote of group.votes) {
+      if (vote.justification !== null) {
+        reasons.push({
+          voterLabel: displayNameFor(vote.voterPuuid, roster, aliases),
+          justification: sanitizeTallyText(vote.justification),
+        });
+      }
     }
-    const existing = byIndex.get(vote.nomineeIndex);
-    const bucket =
-      existing ??
-      ({
-        nomineeIndex: vote.nomineeIndex,
-        count: 0,
-        reasons: [],
-      } satisfies NomineeBucket);
-    bucket.count += 1;
-    if (vote.justification !== null) {
-      bucket.reasons.push({
-        voterLabel: displayNameFor(vote.voterPuuid, roster, aliases),
-        justification: sanitizeTallyText(vote.justification),
-      });
-    }
-    byIndex.set(vote.nomineeIndex, bucket);
-  }
-  return [...byIndex.values()].sort((left, right) => {
-    if (right.count !== left.count) {
-      return right.count - left.count;
-    }
-    return left.nomineeIndex - right.nomineeIndex;
+    return {
+      nomineeIndex: group.nomineeIndex,
+      count: group.votes.length,
+      reasons,
+    };
   });
 }
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MatchScoreboards } from "./match-scoreboard.tsx";
+import { MatchMvpTally } from "./match-mvp-tally.tsx";
 import { MatchObjectivesSummary } from "./match-objectives-summary.tsx";
 import { ChampionIcon } from "./champion-icon.tsx";
 import {
@@ -359,6 +360,44 @@ export const ComparisonTableEmpty: Story = {
       empty="No tracked player has played this champion yet."
       onPrevious={noop}
       onNext={noop}
+    />
+  ),
+};
+
+export const CommunityMvpTally: Story = {
+  args: { teams: [] },
+  render: () => (
+    <MatchMvpTally
+      tally={{
+        showGuildNames: false,
+        guilds: [
+          {
+            guildId: "1337623164146155593",
+            guildName: "Scout Test Server",
+            blue: [
+              {
+                displayName: "bald",
+                championName: "Aatrox",
+                voteCount: 3,
+                reasons: [
+                  {
+                    voterName: "Jungle Diff",
+                    justification: "split the map in half",
+                  },
+                ],
+              },
+            ],
+            red: [
+              {
+                displayName: "Player9#NA1",
+                championName: "Jinx",
+                voteCount: 2,
+                reasons: [],
+              },
+            ],
+          },
+        ],
+      }}
     />
   ),
 };

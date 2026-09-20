@@ -53,13 +53,20 @@ describe("exploreAgentInstructions", () => {
     const plain = exploreAgentInstructions({ bucks: null });
     const everything = exploreAgentInstructions({
       bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
       creation: true,
       surface: "web",
     });
 
-    for (const name of ["bryan-bucks", "dares", "challenges", "creation"]) {
+    for (const name of [
+      "bryan-bucks",
+      "dares",
+      "challenges",
+      "creation",
+      "mvp-votes",
+    ]) {
       expect(plain).not.toContain(`- ${name}:`);
       expect(everything).toContain(`- ${name}:`);
     }
@@ -68,6 +75,7 @@ describe("exploreAgentInstructions", () => {
   test("carries tripwires but not skill bodies", () => {
     const everything = exploreAgentInstructions({
       bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
       creation: true,
@@ -79,6 +87,7 @@ describe("exploreAgentInstructions", () => {
     expect(everything).toContain("Never publish a challenge from Explore");
     expect(everything).toContain("private to the asker");
     expect(everything).toContain("queryText to null");
+    expect(everything).toContain("ScoutQL cannot answer Discord MVP ballots");
 
     // Bodies stay out: one marker line per moved section.
     expect(everything).not.toContain("game-set CTE");

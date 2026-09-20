@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
+import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
 import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {
@@ -34,6 +35,10 @@ export function ConsumerMatch() {
   const trpc = useTRPC();
   const detail = useQuery(
     trpc.consumerMatch.detail.queryOptions({ playerId, matchId }),
+  );
+  const tally = useQuery(trpc.mvpVotes.matchTally.queryOptions({ matchId }));
+  const tallyValue = Loaded.strict(
+    Loaded.fromQuery(tally, ["mvpVotes.matchTally"]),
   );
   const tracked = useRef(false);
   // `strict` because this query carries authorization: the scoreboard and the
@@ -127,6 +132,10 @@ export function ConsumerMatch() {
         </div>
         <MatchScoreboards teams={match.teams} />
       </section>
+
+      {tallyValue.status === "done" && tallyValue.data !== null && (
+        <MatchMvpTally tally={tallyValue.data} />
+      )}
 
       <MatchTimeline
         source={{ kind: "consumer", playerId }}

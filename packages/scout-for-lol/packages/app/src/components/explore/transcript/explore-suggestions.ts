@@ -3,6 +3,7 @@ import rawSuggestions from "./explore-suggestions.json" with { type: "json" };
 
 export const SuggestionCategorySchema = z.enum([
   "bucks",
+  "mvp_votes",
   "competitions",
   "hall_of_fame",
   "customs",
@@ -20,6 +21,7 @@ export type SuggestionCategory = z.infer<typeof SuggestionCategorySchema>;
 export const SuggestionConditionSchema = z.enum([
   "always",
   "bucks",
+  "mvp_votes",
   "dares",
   "competitions",
   "hall_of_fame",
@@ -42,6 +44,7 @@ export const PERSISTENT_EXPLORE_SUGGESTION = "What can you do?";
 
 export type ExploreFeatureContext = {
   readonly bucksEnabled?: boolean;
+  readonly mvpVotesEnabled?: boolean;
   readonly daresEnabled?: boolean;
   readonly competitionsEnabled?: boolean;
   readonly reportsEnabled?: boolean;
@@ -63,6 +66,8 @@ export function isSuggestionEligible(
       return true;
     case "bucks":
       return context.bucksEnabled ?? false;
+    case "mvp_votes":
+      return context.mvpVotesEnabled ?? false;
     case "dares":
       return context.daresEnabled ?? false;
     case "competitions":

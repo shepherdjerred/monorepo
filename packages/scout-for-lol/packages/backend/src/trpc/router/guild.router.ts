@@ -70,11 +70,16 @@ export const guildRouter = router({
       await Promise.all(
         present.map(async (guild) => {
           const guildId = DiscordGuildIdSchema.parse(guild.id);
-          const [customNightsEnabled, hallOfFameEnabled] = await Promise.all([
-            isPolicyEnabled("custom_nights_enabled", { server: guildId }),
-            isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
-          ]);
-          return [guildId, { customNightsEnabled, hallOfFameEnabled }] as const;
+          const [customNightsEnabled, hallOfFameEnabled, mvpVotesEnabled] =
+            await Promise.all([
+              isPolicyEnabled("custom_nights_enabled", { server: guildId }),
+              isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
+              isPolicyEnabled("mvp_votes_enabled", { server: guildId }),
+            ]);
+          return [
+            guildId,
+            { customNightsEnabled, hallOfFameEnabled, mvpVotesEnabled },
+          ] as const;
         }),
       ),
     );

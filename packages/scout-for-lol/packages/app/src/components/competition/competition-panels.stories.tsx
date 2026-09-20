@@ -47,6 +47,7 @@ function seedPermissions(permissions: Permission[]): StorySeed {
           isDiscordAdmin: false,
           customNightsEnabled: true,
           hallOfFameEnabled: true,
+          mvpVotesEnabled: false,
           permissions,
         },
       ],
