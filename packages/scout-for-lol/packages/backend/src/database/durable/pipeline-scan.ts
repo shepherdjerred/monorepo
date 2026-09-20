@@ -10,6 +10,7 @@ import {
   type ReceiptKind,
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
+  NotificationIntentKind,
   NotificationIntentState,
   NotificationTargetKind,
 } from "@scout-for-lol/domain/notifications/intent.ts";
@@ -37,15 +38,15 @@ import {
  * ordered one hands two consecutive sweeps different halves of the same work
  * while claiming both are the front of the queue.
  *
- * The two families that ask "and NOT the other fact" are raw SQL, and that is
- * the point of them. `MatchObservation`, `MatchProcessingReceipt` and
- * `MatchTrackedAccount` are joined by value with no Prisma relation between
- * them — deliberately, so ingestion can record participants before or
- * independently of any other table — so there is no `none:` filter to reach
- * for and the anti-join can only be said in SQL. Fetching a window and
- * filtering it in TypeScript would destroy the one property the caller depends
- * on: a page that came back short has to mean the backlog is short, not that
- * the window happened to be full of finished work.
+ * The families that ask "and NOT the other fact" are raw SQL, and that is the
+ * point of them. `MatchObservation`, `MatchProcessingReceipt`,
+ * `MatchTrackedAccount` and `MatchNotificationIntent` are joined by value with
+ * no Prisma relation between them — deliberately, so ingestion can record
+ * participants before or independently of any other table — so there is no
+ * `none:` filter to reach for and the anti-join can only be said in SQL.
+ * Fetching a window and filtering it in TypeScript would destroy the one
+ * property the caller depends on: a page that came back short has to mean the
+ * backlog is short, not that the window happened to be full of finished work.
  *
  * Receipt kinds arrive as arguments rather than being imported. The kinds this
  * sweep asks about belong to the workflows that emit them — `report-lake/` owns
@@ -56,49 +57,82 @@ import {
  */
 
 /**
- * Which intent states a notification child can still drive, and why nothing
- * else qualifies.
+ * What starting a notification child on an intent in this state actually DOES.
  *
- * `pending` and `ready` are work not yet attempted. `sending` is an attempt
- * whose worker may have died: only the notification machine can resolve it,
- * and the child's deterministic ID collapses onto whichever execution already
- * owns it. `delivered`, `suppressed`, `expired` and `permission-denied` are
- * settled. `unknown-delivery` is the domain's operator dead end — the request
- * left, the response did not arrive — and starting a child on it is precisely
- * how a user gets told the same thing twice, which is why it carries its own
- * label here rather than being lumped in with the settled states.
+ * The table classifies the OPERATION rather than mere eligibility, because two
+ * of the drivable states drive in opposite directions and a reader who knows
+ * only that both are "drivable" will reason wrongly about both:
+ *
+ * - `sends-the-message` — `pending` and `ready` are work not yet attempted, and
+ *   driving one puts a message in front of a user.
+ * - `resolves-a-prior-send` — `sending` is an attempt whose worker may have
+ *   died. Driving it sends NOTHING: `beginSend` answers `already-sending`, and
+ *   the child instead runs the unobserved-send recovery that moves the row to
+ *   `unknown-delivery`, where a person can resolve it against the exact attempt
+ *   nonce. It is the only route out of that ambiguity, so a filter that stops
+ *   driving it strands the row permanently rather than delaying it.
+ * - `settled` — `delivered`, `suppressed`, `expired` and `permission-denied`.
+ * - `operator-dead-end` — `unknown-delivery`, where the request left and the
+ *   response did not arrive. Starting a child on it is precisely how a user
+ *   gets told the same thing twice, which is why it carries its own label
+ *   rather than being lumped in with the settled states.
+ *
+ * Every set below is derived from this one table, so a state added to the
+ * domain union cannot reach production until someone says what driving it
+ * would do — which is the question that decides membership of all of them.
  *
  * `temporal/v2/match-reads.ts` spells the same drivable set for its per-match
  * fan-out. The duplication stands because the persistence layer is driven by
  * the application and must not import it; what keeps the two honest is that
  * this table is exhaustive over the domain union, so a state added there fails
- * to compile here until someone decides which column it belongs in.
+ * to compile here until someone decides which row it belongs in.
  */
+type IntentDriveEffect =
+  | "sends-the-message"
+  | "resolves-a-prior-send"
+  | "settled"
+  | "operator-dead-end";
+
 const INTENT_DRIVABILITY = {
-  pending: "drivable",
-  ready: "drivable",
-  sending: "drivable",
+  pending: "sends-the-message",
+  ready: "sends-the-message",
+  sending: "resolves-a-prior-send",
   delivered: "settled",
   suppressed: "settled",
   expired: "settled",
   "permission-denied": "settled",
   "unknown-delivery": "operator-dead-end",
-} satisfies Record<
-  NotificationIntentState["kind"],
-  "drivable" | "settled" | "operator-dead-end"
->;
+} satisfies Record<NotificationIntentState["kind"], IntentDriveEffect>;
 
-const DRIVABLE_INTENT_STATES: readonly string[] = Object.entries(
-  INTENT_DRIVABILITY,
-)
-  .filter(([, drivability]) => drivability === "drivable")
-  .map(([kind]) => kind);
+/** The states whose drive does something rather than nothing. */
+const DRIVING_EFFECTS: ReadonlySet<IntentDriveEffect> =
+  new Set<IntentDriveEffect>(["sends-the-message", "resolves-a-prior-send"]);
 
-const OPERATOR_DEAD_END_INTENT_STATES: readonly string[] = Object.entries(
-  INTENT_DRIVABILITY,
-)
-  .filter(([, drivability]) => drivability === "operator-dead-end")
-  .map(([kind]) => kind);
+function intentStatesWhere(
+  matches: (effect: IntentDriveEffect) => boolean,
+): readonly string[] {
+  return Object.entries(INTENT_DRIVABILITY)
+    .filter(([, effect]) => matches(effect))
+    .map(([kind]) => kind);
+}
+
+const DRIVABLE_INTENT_STATES: readonly string[] = intentStatesWhere((effect) =>
+  DRIVING_EFFECTS.has(effect),
+);
+
+/**
+ * The drivable states whose drive puts a message in front of a user.
+ *
+ * This, and not the drivable set, is what a truth window can apply to. See
+ * {@link listStalledNotificationIntents}.
+ */
+const MESSAGE_SENDING_INTENT_STATES: readonly string[] = intentStatesWhere(
+  (effect) => effect === "sends-the-message",
+);
+
+const OPERATOR_DEAD_END_INTENT_STATES: readonly string[] = intentStatesWhere(
+  (effect) => effect === "operator-dead-end",
+);
 
 /**
  * Every intent state, for the gauge that reports one series per state.
@@ -112,6 +146,40 @@ const OPERATOR_DEAD_END_INTENT_STATES: readonly string[] = Object.entries(
  */
 export const NOTIFICATION_INTENT_STATE_KINDS: readonly string[] =
   Object.keys(INTENT_DRIVABILITY);
+
+/**
+ * Which intent kinds say something that the match's own result overtakes.
+ *
+ * `prematch` announces a game STARTING. It is the only kind whose message
+ * stops being true the moment the result is known, and the freshness deadline
+ * does not express that: the deadline is the game's own three-hour TTL, so a
+ * prematch row a failed prematch child left `pending` is still comfortably
+ * inside it forty minutes later — it would pass `beginSend`, render from the
+ * archived spectator snapshot, and post "game starting" after the score was
+ * already public.
+ *
+ * The other three are `after-result` and must keep being driven, which is why
+ * this is a per-KIND table rather than a postmatch-only filter. `settlement`
+ * and `dare-summary` are minted INSIDE the fenced settlement effect, so they
+ * exist only once the result is known; a filter that kept just `postmatch`
+ * would strand exactly the rows that effect has already committed.
+ *
+ * Exhaustive over the domain union for the same reason as
+ * {@link INTENT_DRIVABILITY}: a fifth kind has to be classified here before
+ * this file compiles, rather than defaulting into or out of the sweep.
+ */
+const INTENT_TRUTH_WINDOW = {
+  prematch: "before-result",
+  postmatch: "after-result",
+  settlement: "after-result",
+  "dare-summary": "after-result",
+} satisfies Record<NotificationIntentKind, "before-result" | "after-result">;
+
+const BEFORE_RESULT_INTENT_KINDS: readonly string[] = Object.entries(
+  INTENT_TRUTH_WINDOW,
+)
+  .filter(([, window]) => window === "before-result")
+  .map(([kind]) => kind);
 
 /**
  * Which batch states still have a run's work left inside them.
@@ -335,19 +403,85 @@ export async function listStalledV2MatchProcessing(
  * should be the work closest to running out of time, not whatever the index
  * happened to hold first.
  *
+ * `overtakenByResult` is a per-caller choice, and a required one. An intent of
+ * a `before-result` kind (see {@link INTENT_TRUTH_WINDOW}) whose match carries
+ * a `MatchObservation` row is one the result has already overtaken: an
+ * observation is written only by a pipeline that ingested a FINISHED match, so
+ * its existence is the durable fact that the game ended. Such an intent is
+ * still unfinished, but it is no longer sendable — the message would be false —
+ * so the sweep EXCLUDES it while operator surfaces INCLUDE it, exactly as they
+ * do for a contested match: the sweep must not drive it, and a person must
+ * still be able to see that it is there.
+ *
+ * The window applies only to {@link MESSAGE_SENDING_INTENT_STATES}, and that
+ * restriction is the whole correctness of it rather than an exception to it.
+ * A truth window is a statement about a MESSAGE, so it can only govern a drive
+ * that produces one. Driving a `sending` row produces none: it runs the
+ * unobserved-send recovery that carries the row to `unknown-delivery` and the
+ * operator queue that can resolve it. Excluding those would stop the only
+ * process that ever resolves them, leaving the row ambiguous forever — and a
+ * prematch row can reach `sending` after its match was observed, so this is an
+ * ordinary interleaving rather than a rare one.
+ *
+ * The predicate is in this query rather than in the caller because the page's
+ * shape is a promise. `complete` in the scan result is false exactly when a
+ * family FILLED its page, so a caller that fetched a page and then dropped rows
+ * from it would report a short backlog over a long one — and, worse, a cohort
+ * of overtaken prematch intents sorts by deadline like any other, so it would
+ * occupy the page every tick and starve the intents that can still be sent.
+ *
  * Rides `MatchNotificationIntent(state, freshnessDeadline)`: the drivable
  * states select the index's leading ranges and the deadline both bounds and
  * orders inside them. The intent key breaks ties, because two intents minted
- * for one match share a deadline to the millisecond.
+ * for one match share a deadline to the millisecond. The observation check is a
+ * residual on the already-narrowed range and rides `MatchObservation`'s primary
+ * key.
  */
+/**
+ * Whether a stalled-intent listing carries intents the match's own result has
+ * overtaken. See {@link listStalledNotificationIntents}.
+ */
+export type OvertakenIntentListing = "include" | "exclude";
+
 export async function listStalledNotificationIntents(
   db: Db,
-  args: { freshAt: Date; limit: number; after?: ScanPosition | undefined },
+  args: {
+    freshAt: Date;
+    overtakenByResult: OvertakenIntentListing;
+    limit: number;
+    after?: ScanPosition | undefined;
+  },
 ): Promise<MatchNotificationIntentRecord[]> {
   const keyset =
     args.after === undefined
       ? Prisma.empty
       : Prisma.sql`AND (i."freshnessDeadline", i."intentKey") > (${args.after.at}::timestamp, ${args.after.id}::text)`;
+  // Either classification going empty is a coherent answer, not corrupt input:
+  // no kind whose message expires at the result, or no drive that sends a
+  // message, both mean there is nothing for this window to exclude and the
+  // faithful rendering of that is no clause at all. Guarded rather than left to
+  // `Prisma.join`, which rejects an empty array by throwing as the query is
+  // BUILT — so every sweep tick would fail on the same line, in production,
+  // over a classification decision CI could not see. What keeps the guard from
+  // being silent is the behavioural test: emptying either table makes the
+  // overtaken prematch row reappear on the page and
+  // `reconciliation-scan.integration.test.ts` fails on the row, which is the
+  // fact a reader needs, rather than on an array length.
+  const windowApplies =
+    args.overtakenByResult === "exclude" &&
+    BEFORE_RESULT_INTENT_KINDS.length > 0 &&
+    MESSAGE_SENDING_INTENT_STATES.length > 0;
+  const overtaken = windowApplies
+    ? Prisma.sql`AND NOT (i."kind" IN (${Prisma.join([
+        ...BEFORE_RESULT_INTENT_KINDS,
+      ])})
+                          AND i."state" IN (${Prisma.join([
+                            ...MESSAGE_SENDING_INTENT_STATES,
+                          ])})
+                          AND EXISTS (SELECT 1
+                                        FROM "MatchObservation" AS o
+                                       WHERE o."riotMatchId" = i."riotMatchId"))`
+    : Prisma.empty;
   // Held intents are not stalled: a recovery-born intent whose batch policy
   // forbids its target is deliberately not being driven, and a sweep that
   // started a child on it would find the gate closed every minute until the
@@ -368,6 +502,7 @@ export async function listStalledNotificationIntents(
                           AND (b."policy" = ${HELD_EVERYTHING_POLICY}
                                OR (b."policy" = ${HELD_CHANNELS_POLICY}
                                    AND i."targetKind" = ${CHANNEL_TARGET_COLUMN})))
+       ${overtaken}
        ${keyset}
      ORDER BY i."freshnessDeadline" ASC, i."intentKey" ASC
      LIMIT ${args.limit}::int`);
