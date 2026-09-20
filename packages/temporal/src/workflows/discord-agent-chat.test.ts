@@ -7,7 +7,11 @@ import type {
 } from "#shared/agent/agent-chat-discord.ts";
 import { DISCORD_AGENT_CHAT_DELIVERY_TIMEOUT_MS } from "#shared/agent/agent-chat-discord.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS } from "#shared/agent/agent-chat.ts";
+import {
+  AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
+} from "#shared/agent/agent-chat.ts";
 
 const COMMAND: DiscordAgentChatCommand = {
   kind: "continue",
@@ -65,6 +69,16 @@ describe("discordAgentChatWorkflow", () => {
             ?.startToCloseTimeout?.seconds,
         ),
       ).toBe(AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS / 1000);
+      expect(
+        Number(
+          commandActivity?.activityTaskScheduledEventAttributes
+            ?.scheduleToCloseTimeout?.seconds,
+        ),
+      ).toBe(AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS / 1000);
+      expect(
+        commandActivity?.activityTaskScheduledEventAttributes?.retryPolicy
+          ?.maximumAttempts,
+      ).toBe(AGENT_CHAT_INGRESS_MAX_ATTEMPTS);
       const deliveryActivity = history.events?.find(
         (event) =>
           event.activityTaskScheduledEventAttributes?.activityType?.name ===
