@@ -275,6 +275,14 @@ export async function scanPipelineReconciliationPageV2(
     }),
     listStalledNotificationIntents(prisma, {
       freshAt,
+      // A prematch intent whose match already carries an observation announces
+      // a game the pipeline knows has ENDED; the freshness deadline is the
+      // game's three-hour TTL and does not cover it, so the sweep would post
+      // "game starting" after the result was public. The exclusion is by
+      // TRUTH WINDOW rather than by "postmatch only" on purpose: settlement
+      // and dare-summary rows are minted inside the fenced settlement effect
+      // and must still be driven.
+      overtakenByResult: "exclude",
       limit: SCOUT_V2_PAGE_MAX,
     }),
     listUnprojectedLakeMatches(prisma, {
