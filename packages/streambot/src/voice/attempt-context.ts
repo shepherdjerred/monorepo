@@ -216,8 +216,6 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
     this.state.transcript = input.transcript;
     this.state.normalizedCommand = input.normalizedCommand;
     this.rootSpan.setAttributes({
-      "streambot.voice.transcript": input.transcript,
-      "streambot.voice.normalized_command": input.normalizedCommand ?? "",
       "streambot.voice.transcript_outcome": input.outcome,
     });
   }

@@ -403,14 +403,10 @@ export async function runRealtimeCommandTurn(
     await Promise.race([created, interruption, sessionFailure]);
     failureStage = "response";
     metrics.cloudRequests.inc({ stage: "response", outcome: "request" });
-    await attempt.runStage(
-      `${stagePrefix}.openai.response`,
-      { [`${stagePrefix}.normalized_command`]: verified.command },
-      async () => {
-        session.transport.sendEvent({ type: "response.create" });
-        await Promise.race([completed, interruption, sessionFailure]);
-      },
-    );
+    await attempt.runStage(`${stagePrefix}.openai.response`, {}, async () => {
+      session.transport.sendEvent({ type: "response.create" });
+      await Promise.race([completed, interruption, sessionFailure]);
+    });
     metrics.cloudRequests.inc({ stage: "response", outcome: "success" });
     // `audio_stopped` only means Realtime finished generating. The sink still paces whatever it
     // queued at 20 ms per packet, so leaving this await unraced lets a long or fast-generated

@@ -50,7 +50,12 @@ describe("conversation context", () => {
       candidate("Dune: Part One"),
       candidate("Dune: Part Two"),
     ]);
-
     expect(context.select(SCOPE, "one piece")).toBeNull();
+
+    context.rememberCandidates(SCOPE, [
+      candidate("Travis Scott - SICKO MODE (Official Video)"),
+      candidate("Travis Scott - SICKO MODE"),
+    ]);
+    expect(context.select(SCOPE, "play Psycho")).toBeNull();
   });
 });

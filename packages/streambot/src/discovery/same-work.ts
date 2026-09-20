@@ -35,18 +35,17 @@ function officialScore(candidate: MediaCandidate): number {
   return score;
 }
 
-function sameWorkKey(left: string, right: string): boolean {
-  if (left === right) return true;
-  if (left.length === 0 || right.length === 0) return false;
-  const leftTokens = left.split(" ").filter((token) => token.length > 0);
-  const rightTokens = right.split(" ").filter((token) => token.length > 0);
-  // A one-token key matching as a substring would collapse "Love" into "Love Story".
-  if (leftTokens.length < 2 || rightTokens.length < 2) return false;
-  const [shorter, longer] =
-    left.length <= right.length ? [left, right] : [right, left];
-  // Artist-stripped titles are suffixes ("travis scott sicko mode" / "sicko mode").
-  // A prefix match would collapse "Harry Potter" into every sequel.
-  return longer.endsWith(` ${shorter}`);
+function workTitleKey(title: string): string {
+  const separator = title.lastIndexOf(" - ");
+  return canonicalWorkKey(
+    separator === -1 ? title : title.slice(separator + 3),
+  );
+}
+
+function sameWorkTitle(left: string, right: string): boolean {
+  const leftKey = workTitleKey(left);
+  const rightKey = workTitleKey(right);
+  return leftKey.length > 0 && leftKey === rightKey;
 }
 
 function ownedMatchScore(candidate: MediaCandidate): number {
@@ -62,10 +61,15 @@ export function pickOfficialSameWork(
   candidates: readonly MediaCandidate[],
 ): MediaCandidate | undefined {
   if (candidates.length < 2) return undefined;
-  const keys = candidates.map((candidate) => canonicalWorkKey(candidate.title));
-  const first = keys[0];
-  if (first === undefined || first.length === 0) return undefined;
-  if (!keys.every((key) => sameWorkKey(first, key))) return undefined;
+  const first = candidates[0];
+  if (first === undefined || workTitleKey(first.title).length === 0)
+    return undefined;
+  if (
+    !candidates.every((candidate) =>
+      sameWorkTitle(first.title, candidate.title),
+    )
+  )
+    return undefined;
   return [...candidates].toSorted(
     (left, right) =>
       ownedMatchScore(right) - ownedMatchScore(left) ||
@@ -129,9 +133,11 @@ function asrScore(query: string, title: string): number {
   const average =
     ratios.reduce((total, ratio) => total + ratio, 0) / ratios.length;
   const weakest = Math.min(...ratios);
-  // Every query token has to be a plausible ASR hit. One exact short word
-  // ("one") must not drag an unrelated title ("Dune: Part One") over the bar.
-  if (weakest >= 0.4 && (best >= 0.5 || exactCount > 0)) {
+  // A single token must be a close ASR hit (`silco`/`sicko`), not a different
+  // word that shares a few letters (`psycho`/`sicko`). Multi-token retries can
+  // keep a weaker first token when another token matches exactly (`suka mode`).
+  const minimum = queryTokens.length === 1 ? 0.6 : 0.4;
+  if (weakest >= minimum && (best >= 0.5 || exactCount > 0)) {
     return Math.round(average * 100);
   }
   return 0;

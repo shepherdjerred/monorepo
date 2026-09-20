@@ -81,6 +81,17 @@ describe("same-work matching", () => {
     ).toBeUndefined();
   });
 
+  test("does not treat a title suffix as an artist-stripped same work", () => {
+    expect(
+      pickOfficialSameWork([
+        candidate("More Time"),
+        candidate("Daft Punk - One More Time (Official Video)", {
+          channel: "DaftPunkVEVO",
+        }),
+      ]),
+    ).toBeUndefined();
+  });
+
   test("does not strip title words that happen to match qualifier labels", () => {
     expect(canonicalWorkKey("Video Games")).toBe("video games");
     expect(canonicalWorkKey("Games (Official Video)")).toBe("games");

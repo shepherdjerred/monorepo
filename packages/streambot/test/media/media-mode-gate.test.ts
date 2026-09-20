@@ -191,6 +191,21 @@ describe("music-over-voice rollout gate", () => {
     expect(added?.source.spoken).toBe(true);
   });
 
+  test("a polite spoken watch still stamps video", async () => {
+    const { service, events } = createGatedService({ musicOverVoice: true });
+    await service.play({
+      query: "sicko mode",
+      source: "auto",
+      placement: "queue",
+      userId: USER,
+      mode: "video",
+      spoken: true,
+      utterance: "please watch sicko mode",
+    });
+    const added = events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("video");
+  });
+
   test("a spoken listen request keeps music even when the title looks like film", async () => {
     const { service, events } = createGatedService({ musicOverVoice: true });
     await service.play({
