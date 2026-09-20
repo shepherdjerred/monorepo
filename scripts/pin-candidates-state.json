@@ -2,14 +2,14 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "version": "2.0.0-16257",
-      "digest": "sha256:97f6eb2b0b9b282d083cfa7d143833627a9b1c8cf73439a323ed2750fa055a5c",
-      "buildNumber": 16257
+      "buildNumber": 16329,
+      "version": "2.0.0-16329",
+      "digest": "sha256:ad5a3ac48079f68348ad714b4501578bbaebadfc8a9c339223f6e4f943a69a88"
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 16308,
-      "version": "2.0.0-16308",
-      "digest": "sha256:8a3d80dc1ea57e08289d16055ad6e9aae7aed43885bc7f87690f63dab27135c7"
+      "buildNumber": 16329,
+      "version": "2.0.0-16329",
+      "digest": "sha256:861198edf988417265057851a5bf5265f3cf7acf0fe7403674c5b60887cb54ff"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-13290",
@@ -47,9 +47,9 @@
       "buildNumber": 16257
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 16308,
-      "version": "2.0.0-16308",
-      "digest": "sha256:57583edbf7ea74bb250ac30cca8628bb9480a01b8157462001dfa9a415d755bc"
+      "buildNumber": 16329,
+      "version": "2.0.0-16329",
+      "digest": "sha256:59e38ffe0a0d450090c4981d76792a9e1325cd711af7bceaa3d4c16a15a38229"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -73,9 +73,9 @@
       "buildNumber": 16257
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 16308,
-      "version": "2.0.0-16308",
-      "digest": "sha256:3db7db2d3133c526867a2eb658490f5bbccec9d5cdb2a53386493e9a21e3a23d"
+      "buildNumber": 16329,
+      "version": "2.0.0-16329",
+      "digest": "sha256:c47af69774eb6e9ddea04aa2a92051a6bae149b9eb88aa273f225524083e447e"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
