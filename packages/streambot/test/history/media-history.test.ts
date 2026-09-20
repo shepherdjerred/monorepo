@@ -27,12 +27,22 @@ function record(
   history: MediaHistoryStore,
   title: string,
   url: string,
-  nowMs = Date.now(),
+  options: {
+    readonly nowMs?: number;
+    readonly mode?: "video";
+    readonly spoken?: true;
+  } = {},
 ): void {
+  const nowMs = options.nowMs ?? Date.now();
   const media = {
     title,
     provider: "youtube" as const,
-    source: { kind: "url" as const, url },
+    source: {
+      kind: "url" as const,
+      url,
+      ...(options.mode === undefined ? {} : { mode: options.mode }),
+      ...(options.spoken === undefined ? {} : { spoken: options.spoken }),
+    },
     canonicalUrl: url,
   };
   const requestId = history.recordQueueRequest({
@@ -111,27 +121,9 @@ describe("media history", () => {
   test("strips a spoken request hint before storing an item", () => {
     const history = new MediaHistoryStore(":memory:");
     try {
-      const media = {
-        title: "Spoken Cover",
-        provider: "youtube" as const,
-        source: {
-          kind: "url" as const,
-          url: "https://youtu.be/spoken",
-          spoken: true as const,
-        },
-      };
-      const requestId = history.recordQueueRequest({
-        scope: USER_SCOPE,
-        rawQuery: media.title,
-        intent: inferMediaIntent({ query: media.title }),
-        media,
+      record(history, "Spoken Cover", "https://youtu.be/spoken", {
         nowMs: 1000,
-      });
-      history.recordPlaybackStart({
-        requestId,
-        scope: USER_SCOPE,
-        media,
-        nowMs: 1000,
+        spoken: true,
       });
       const found = history.search(USER_SCOPE, "Spoken");
       expect(found).toHaveLength(1);
@@ -163,8 +155,8 @@ describe("media history", () => {
   test("returns the latest distinct previous item", () => {
     const history = new MediaHistoryStore(":memory:");
     try {
-      record(history, "First", "https://youtu.be/first", 1000);
-      record(history, "Current", "https://youtu.be/current", 2000);
+      record(history, "First", "https://youtu.be/first", { nowMs: 1000 });
+      record(history, "Current", "https://youtu.be/current", { nowMs: 2000 });
 
       expect(
         history.previous(USER_SCOPE, "url:https://youtu.be/current")?.title,
@@ -183,7 +175,7 @@ describe("media history", () => {
         provider: "youtube" as const,
         source: { kind: "url" as const, url: "https://youtu.be/old" },
       };
-      record(history, media.title, media.source.url, old);
+      record(history, media.title, media.source.url, { nowMs: old });
       history.addFavorite(USER_SCOPE.userId, media);
 
       history.prune(old + 366 * 24 * 60 * 60 * 1000);

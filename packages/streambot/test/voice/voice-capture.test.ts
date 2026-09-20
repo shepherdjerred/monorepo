@@ -40,6 +40,24 @@ class RecordingStore implements CaptureObjectStore {
 
 const SESSION_ID = "11111111-1111-4111-8111-111111111111";
 
+function startCandidate(store = new RecordingStore()) {
+  const manager = new VoiceCaptureManager(CAPTURE_CONFIG, store);
+  const attempt = manager.begin({
+    guildId: "guild-1",
+    channelId: "channel-1",
+    sessionId: SESSION_ID,
+    userId: "user-1",
+    detector: "sherpa",
+    phrase: "hey streambot",
+    score: 0.8,
+    fragmentEndSeconds: 0.4,
+    detectedAtMs: Date.now(),
+  });
+  const samples = new Float32Array(16_000);
+  samples[0] = 0.5;
+  return { store, manager, attempt, samples };
+}
+
 function captureSession(
   overrides: {
     readonly guildId?: string;
@@ -256,21 +274,7 @@ describe("voice capture manager", () => {
   });
 
   test("commits a correlated candidate WAV and manifest", async () => {
-    const store = new RecordingStore();
-    const manager = new VoiceCaptureManager(CAPTURE_CONFIG, store);
-    const attempt = manager.begin({
-      guildId: "guild-1",
-      channelId: "channel-1",
-      sessionId: SESSION_ID,
-      userId: "user-1",
-      detector: "sherpa",
-      phrase: "hey streambot",
-      score: 0.8,
-      fragmentEndSeconds: 0.4,
-      detectedAtMs: Date.now(),
-    });
-    const samples = new Float32Array(16_000);
-    samples[0] = 0.5;
+    const { store, manager, attempt, samples } = startCandidate();
     attempt.localVerification({ accepted: true, score: 0.9, latencyMs: 12 });
     attempt.endpoint({
       reason: "vad",
@@ -309,21 +313,7 @@ describe("voice capture manager", () => {
   });
 
   test("stores reply audio, reply transcript, and real tool arguments", async () => {
-    const store = new RecordingStore();
-    const manager = new VoiceCaptureManager(CAPTURE_CONFIG, store);
-    const attempt = manager.begin({
-      guildId: "guild-1",
-      channelId: "channel-1",
-      sessionId: SESSION_ID,
-      userId: "user-1",
-      detector: "sherpa",
-      phrase: "hey streambot",
-      score: 0.8,
-      fragmentEndSeconds: 0.4,
-      detectedAtMs: Date.now(),
-    });
-    const samples = new Float32Array(16_000);
-    samples[0] = 0.5;
+    const { store, manager, attempt, samples } = startCandidate();
     attempt.endpoint({
       reason: "vad",
       sawSpeech: true,

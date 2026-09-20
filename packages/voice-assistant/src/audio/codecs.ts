@@ -21,7 +21,7 @@ export const DISCORD_FRAME_SAMPLES = 960;
 const OPENAI_SAMPLE_RATE = 24_000;
 const WAKE_SAMPLE_RATE = 16_000;
 
-function concatBytes(parts: readonly Uint8Array[]): Uint8Array {
+export function concatBytes(parts: readonly Uint8Array[]): Uint8Array {
   const length = parts.reduce((total, part) => total + part.byteLength, 0);
   const result = new Uint8Array(length);
   let offset = 0;

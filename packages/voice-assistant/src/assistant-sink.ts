@@ -1,4 +1,4 @@
-import { DiscordOpusEncoder } from "./audio/codecs.ts";
+import { concatBytes, DiscordOpusEncoder } from "./audio/codecs.ts";
 import type {
   AssistantAudioTransport,
   DuckObserver,
@@ -24,17 +24,6 @@ export type PacedAssistantSenderOptions = {
 };
 
 /** Encodes 24 kHz PCM16 reply audio to Discord Opus and paces it at one packet per 20 ms. */
-function concatPcm(parts: readonly Uint8Array[]): Uint8Array {
-  const length = parts.reduce((total, part) => total + part.byteLength, 0);
-  const result = new Uint8Array(length);
-  let offset = 0;
-  for (const part of parts) {
-    result.set(part, offset);
-    offset += part.byteLength;
-  }
-  return result;
-}
-
 export class PacedAssistantSender implements AssistantAudioSink {
   private readonly encoder = new DiscordOpusEncoder();
   private readonly queue: Uint8Array[] = [];
@@ -161,7 +150,7 @@ export class PacedAssistantSender implements AssistantAudioSink {
 
   private capturedReplyPcm(): { readonly pcm24k?: Uint8Array } {
     if (this.capturedPcm.length === 0) return {};
-    return { pcm24k: concatPcm(this.capturedPcm) };
+    return { pcm24k: concatBytes(this.capturedPcm) };
   }
 
   private start(): void {
