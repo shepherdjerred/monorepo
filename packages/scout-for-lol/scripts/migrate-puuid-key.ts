@@ -30,9 +30,10 @@
  *   export   write this database's map to a file
  *   import   load a map built elsewhere into this database
  *
- * Targets both live shapes: prod's SQLite and beta's Postgres, selected from
- * DATABASE_URL. The column inventory is discovered at run time because their
- * schemas differ and prod's will change again at promotion.
+ * Live beta and prod are Postgres, selected through DATABASE_URL. The local
+ * harvest database is SQLite so the days-long Riot phase does not depend on a
+ * cluster tunnel. The column inventory is discovered at run time because the
+ * live schemas can differ during a rollout.
  *
  * The map table outlives the migration. Raw S3 payloads keep old-domain
  * PUUIDs forever, so any future re-derivation from the corpus needs it.
