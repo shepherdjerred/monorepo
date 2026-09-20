@@ -302,12 +302,26 @@ async function rewriteScalarColumn(
   col: PuuidColumn,
   map: ReadonlyMap<string, string>,
 ): Promise<void> {
-  // Apply the already-composed map one edge at a time. This keeps the query
-  // portable across SQLite and Postgres without asking either dialect to join
-  // against a temporary table, and prevents a retained return-cycle edge from
-  // rewriting a value through only one historical hop.
+  // Drive the rewrite from values the column actually stores, not every entry
+  // in the corpus-wide map. The map is hundreds of thousands of rows while a
+  // live scalar column usually contains tens or hundreds of relevant values;
+  // issuing one UPDATE per map row would hold the online transaction open for
+  // millions of statements. Looking up each distinct stored value in the
+  // already-composed map preserves return-cycle semantics and stays portable
+  // across SQLite and Postgres without a temporary table.
+  const stored = await db.query(
+    `SELECT DISTINCT "${col.column}" AS v FROM "${col.table}" WHERE "${col.column}" IS NOT NULL`,
+  );
   let changed = 0;
-  for (const [oldPuuid, newPuuid] of map) {
+  for (const row of stored) {
+    const oldPuuid = asOptionalString(row["v"]);
+    if (oldPuuid === null) {
+      continue;
+    }
+    const newPuuid = map.get(oldPuuid);
+    if (newPuuid === undefined) {
+      continue;
+    }
     await db.exec(
       `UPDATE "${col.table}" SET "${col.column}" = ${db.param(2)} WHERE "${col.column}" = ${db.param(1)}`,
       [oldPuuid, newPuuid],
@@ -315,7 +329,7 @@ async function rewriteScalarColumn(
     changed++;
   }
   console.log(
-    `  ${col.table}.${col.column}: ${changed.toString()} mappings applied`,
+    `  ${col.table}.${col.column}: ${changed.toString()} of ${stored.length.toString()} stored values rewritten`,
   );
 }
 

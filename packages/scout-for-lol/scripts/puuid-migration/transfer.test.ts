@@ -11,6 +11,14 @@ const OLD_B = `OLDB_${"b".repeat(73)}`;
 const NEW_A = `NEWA_${"y".repeat(73)}`;
 const NEW_B = `NEWB_${"z".repeat(73)}`;
 
+const generatedPuuid = (prefix: string, index: number): string => {
+  const stem = `${prefix}_${index.toString().padStart(6, "0")}`;
+  return `${stem}${prefix
+    .toLowerCase()
+    .repeat(78)
+    .slice(0, 78 - stem.length)}`;
+};
+
 /** One exported line for OLD_A with no replacement, for a given reason. */
 const lostLine = (status: string): string =>
   JSON.stringify({
@@ -131,6 +139,70 @@ test("import does not carry appliedAt, which is a fact about the target", async 
   );
   expect(rows[0]?.["v"]).toBeNull();
   expect(rows[0]?.["n"]).toBe(NEW_A);
+  await db.close();
+});
+
+test("import batches new rows and remains resumable across batch boundaries", async () => {
+  const db = await open();
+  const { importMap } = await import("./transfer.ts");
+  const incoming = Array.from({ length: 1001 }, (_, index) => ({
+    oldPuuid: generatedPuuid("O", index),
+    gameName: `Player${index.toString()}`,
+    tagLine: "TEST",
+    newPuuid: generatedPuuid("N", index),
+    status: "resolved",
+  }));
+
+  expect(await importMap(db, incoming)).toEqual({
+    inserted: 1001,
+    updated: 0,
+    downgraded: 0,
+  });
+  expect(await importMap(db, incoming)).toEqual({
+    inserted: 0,
+    updated: 1001,
+    downgraded: 0,
+  });
+  const rows = await db.query(
+    `SELECT COUNT(*) AS n FROM "PuuidKeyMap" WHERE "status" = 'resolved'`,
+  );
+  expect(Number(rows[0]?.["n"])).toBe(1001);
+  await db.close();
+});
+
+test("import accepts PostgreSQL Date values from unrelated applied rows", async () => {
+  const db = await open();
+  await db.exec(
+    `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status", "appliedAt") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved', datetime('now'))`,
+    [OLD_A, NEW_A],
+  );
+  const postgresShaped = {
+    ...db,
+    query: async (sql: string, params?: Parameters<typeof db.query>[1]) => {
+      const rows = await db.query(sql, params);
+      if (!sql.includes('FROM "PuuidKeyMap"')) return rows;
+      return rows.map((row) => ({
+        ...row,
+        appliedAt:
+          typeof row["appliedAt"] === "string"
+            ? new Date(row["appliedAt"])
+            : row["appliedAt"],
+      }));
+    },
+  };
+  const { importMap } = await import("./transfer.ts");
+
+  await expect(
+    importMap(postgresShaped, [
+      {
+        oldPuuid: OLD_B,
+        gameName: "New",
+        tagLine: "TEST",
+        newPuuid: NEW_B,
+        status: "resolved",
+      },
+    ]),
+  ).resolves.toEqual({ inserted: 1, updated: 0, downgraded: 0 });
   await db.close();
 });
 
