@@ -168,14 +168,6 @@ export function createMinecraftSjerredApp(chart: Chart) {
         existingClaim: DATA_PVC_NAME,
       },
     },
-    // One-release migration: the live Paper StatefulSet owns a
-    // volumeClaimTemplate, while the RLCraft StatefulSet mounts the explicit
-    // backed-up PVC above. Kubernetes cannot patch that immutable transition,
-    // so Argo must replace only this zero-replica StatefulSet. Remove this
-    // annotation after the cutover.
-    deploymentAnnotations: {
-      "argocd.argoproj.io/sync-options": "Force=true,Replace=true",
-    },
     extraDeploy: [
       getDynmapConfigMapManifest(NAMESPACE),
       getDiscordIntegrationConfigMapManifest(NAMESPACE),
@@ -243,7 +235,10 @@ export function createMinecraftSjerredApp(chart: Chart) {
         },
       ],
       syncPolicy: {
-        automated: { enabled: true },
+        // One-release cleanup: prune the BlueMap service and DiscordSRV config
+        // that the previous chart values owned. Return this to enabled-only
+        // after Argo confirms both resources are gone.
+        automated: { enabled: true, prune: true },
         syncOptions: [
           "CreateNamespace=true",
           "ServerSideApply=true",

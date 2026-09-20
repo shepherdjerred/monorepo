@@ -89,16 +89,24 @@ const MinecraftApplicationSchema = z.object({
         }),
       )
       .optional(),
+    syncPolicy: z.object({
+      automated: z.object({
+        enabled: z.boolean(),
+        prune: z.boolean().optional(),
+      }),
+    }),
   }),
 });
 
-function expectSjerredStatefulSetMigration(
+function expectSjerredPostCutoverCleanup(
   application: z.infer<typeof MinecraftApplicationSchema> | undefined,
 ): void {
   expect(
     application?.spec.source.helm.valuesObject["deploymentAnnotations"],
-  ).toEqual({
-    "argocd.argoproj.io/sync-options": "Force=true,Replace=true",
+  ).toBeUndefined();
+  expect(application?.spec.syncPolicy.automated).toEqual({
+    enabled: true,
+    prune: true,
   });
   expect(application?.spec.ignoreDifferences).toEqual(
     expect.arrayContaining([
@@ -564,7 +572,7 @@ describe("Burst-memory sharing policy", () => {
         existingClaim: "minecraft-sjerred-rlcraft-data",
       },
     });
-    expectSjerredStatefulSetMigration(sjerredApplication);
+    expectSjerredPostCutoverCleanup(sjerredApplication);
     expect(sjerred?.["extraEnv"]).toEqual({
       ALLOW_FLIGHT: "TRUE",
       ENABLE_WHITELIST: "TRUE",
