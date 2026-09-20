@@ -39,6 +39,12 @@ export const AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS =
 export const AGENT_CHAT_INGRESS_MAX_ATTEMPTS = Math.ceil(
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS / AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
 );
+// A receipt started by delayed ingress must still stop provider admission early
+// enough for execution and result propagation before ingress itself expires.
+export const AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS =
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS -
+  AGENT_CHAT_TURN_TIMEOUT_MS -
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 // Reserve a complete provider execution window plus result propagation margin
 // before the receipt itself can expire.
 export const AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS =
