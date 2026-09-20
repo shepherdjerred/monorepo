@@ -117,7 +117,14 @@ export type CiStep = {
   readonly events?: readonly StepEvent[];
   /** Run only when matching files changed. */
   readonly changed?: ChangedPathGuard;
-  /** Run only on the default branch. */
+  /**
+   * Run only for the default branch itself, never for a proposed change to it.
+   *
+   * Not the same as "the branch is `main`": Woodpecker reports the target
+   * branch for pull-request events, so branch identity alone would let every
+   * pull request run these steps. `select.ts` also requires an event that
+   * means the default branch actually moved.
+   */
   readonly defaultBranchOnly?: boolean;
   /**
    * Treat a non-zero exit as advisory rather than failing the build.

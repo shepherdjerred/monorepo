@@ -17,6 +17,41 @@ function normalizeEvent(event: string): StepEvent | undefined {
 }
 
 /**
+ * Events that may run a step marked `defaultBranchOnly`.
+ *
+ * An allowlist rather than "anything that is not a pull request", so that
+ * every event this model does not reason about -- `tag`, `release`,
+ * `deployment`, `cron`, and the three pull-request shapes Woodpecker sends --
+ * fails closed. These steps apply infrastructure, publish packages and
+ * reconcile ArgoCD; running one from an unconsidered trigger is far worse than
+ * not running it.
+ *
+ * `manual` is included because it is the UI's Trigger Pipeline button, which
+ * only an account that can sign in can reach and which the extension's actor
+ * allowlist filters again. Restarting a failed build preserves that build's
+ * original event, so ordinary re-runs of a release arrive here as `push`.
+ */
+const DEFAULT_BRANCH_EVENTS = new Set(["push", "manual"]);
+
+/**
+ * Is this build the default branch itself, rather than a proposal to change
+ * it?
+ *
+ * Branch identity alone cannot answer that, which is the bug this function
+ * exists to prevent recurring. Woodpecker sets `pipeline.branch` to the TARGET
+ * branch for every pull-request event, so a pull request against `main`
+ * reports `main` here and passed the original branch-equality check -- placing
+ * the entire release chain, and every credential it holds, inside reach of any
+ * pull request.
+ */
+function onDefaultBranch(context: SelectionContext): boolean {
+  return (
+    context.branch === context.defaultBranch &&
+    DEFAULT_BRANCH_EVENTS.has(context.event)
+  );
+}
+
+/**
  * Does this step's changed-path guard match?
  *
  * An empty changed-file list means "we could not determine what changed" — a
@@ -41,10 +76,7 @@ export function changedGuardMatches(
 }
 
 function directlySelected(step: CiStep, context: SelectionContext): boolean {
-  if (
-    step.defaultBranchOnly === true &&
-    context.branch !== context.defaultBranch
-  ) {
+  if (step.defaultBranchOnly === true && !onDefaultBranch(context)) {
     return false;
   }
   if (step.events !== undefined) {
