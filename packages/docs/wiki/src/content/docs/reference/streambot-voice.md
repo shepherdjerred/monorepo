@@ -104,7 +104,7 @@ All keys use UTC dates:
 ```text
 voice-captures/YYYY/MM/DD/<capture-id>/
 ├── speaker.wav          # wake-candidate user utterance
-├── reply.wav            # assistant reply, when any PCM was sent
+├── reply.wav            # generated assistant reply, when any PCM was enqueued
 ├── speaker-001.wav      # manual window, one file per decoded speaker
 ├── speaker-002.wav
 └── manifest.json        # uploaded last; capture commit marker
