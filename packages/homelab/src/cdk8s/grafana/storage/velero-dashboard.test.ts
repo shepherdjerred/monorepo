@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { BUILDKITE_KUBE_STATE_METRICS_VALUES } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
+import { CI_KUBE_STATE_METRICS_VALUES } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
 import { createVeleroDashboard } from "./velero-dashboard.ts";
 
 const DashboardSchema = z.object({
@@ -51,7 +51,7 @@ describe("Velero dashboard", () => {
   // The dashboard can only join on a PVC label that kube-state-metrics is
   // configured to export; a dropped allowlist entry silently empties the panels.
   test("joins on a PVC label kube-state-metrics actually exports", () => {
-    expect(BUILDKITE_KUBE_STATE_METRICS_VALUES.metricLabelsAllowlist).toContain(
+    expect(CI_KUBE_STATE_METRICS_VALUES.metricLabelsAllowlist).toContain(
       "persistentvolumeclaims=[velero.io/backup]",
     );
   });

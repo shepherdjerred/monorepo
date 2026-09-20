@@ -4,12 +4,12 @@ import type {
   PrometheusRuleSpecGroupsRules,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import {
-  BUILDKITE_JOB_POD_PATTERN,
-  BUILDKITE_POD_CHILD_CGROUP_PATTERN,
-  BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
-  BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
-  BUILDKITE_POD_PARENT_CGROUP_PATTERN,
-  BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+  CI_JOB_POD_PATTERN,
+  CI_POD_CHILD_CGROUP_PATTERN,
+  CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
+  CI_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
+  CI_POD_PARENT_CGROUP_PATTERN,
+  CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
   getWoodpeckerRuleGroups,
 } from "./woodpecker.ts";
 
@@ -64,7 +64,7 @@ describe("Woodpecker CI I/O recording rules", () => {
     expect(recordingGroup.interval).toBe("10s");
     expect(rulesForGroup(recordingGroup).map((rule) => rule.record)).toEqual([
       "woodpecker:pod_parent_fs_writes_bytes_total",
-      BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+      CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
       "woodpecker:pod_parent_fs_reads_bytes_total",
       "woodpecker:pod_parent_fs_writes_total",
       "woodpecker:pod_parent_fs_reads_total",
@@ -82,11 +82,9 @@ describe("Woodpecker CI I/O recording rules", () => {
 
     expect(expression).toContain("max by (namespace, pod, node, device)");
     expect(expression).toContain('container=""');
-    expect(expression).toContain(`pod=~"${BUILDKITE_JOB_POD_PATTERN}"`);
-    expect(expression).toContain(
-      `id=~"${BUILDKITE_POD_PARENT_CGROUP_PATTERN}"`,
-    );
-    expect(expression).not.toContain(BUILDKITE_POD_CHILD_CGROUP_PATTERN);
+    expect(expression).toContain(`pod=~"${CI_JOB_POD_PATTERN}"`);
+    expect(expression).toContain(`id=~"${CI_POD_PARENT_CGROUP_PATTERN}"`);
+    expect(expression).not.toContain(CI_POD_CHILD_CGROUP_PATTERN);
     expect(expression).not.toContain(
       "woodpecker:container_fs_writes_bytes_total",
     );
@@ -103,54 +101,51 @@ describe("Woodpecker CI I/O recording rules", () => {
     );
     expect(expression).toContain('container!=""');
     expect(expression).toContain('container!="POD"');
-    expect(expression).toContain(`id=~"${BUILDKITE_POD_CHILD_CGROUP_PATTERN}"`);
-    expect(expression).not.toContain(
-      `id=~"${BUILDKITE_POD_PARENT_CGROUP_PATTERN}"`,
-    );
+    expect(expression).toContain(`id=~"${CI_POD_CHILD_CGROUP_PATTERN}"`);
+    expect(expression).not.toContain(`id=~"${CI_POD_PARENT_CGROUP_PATTERN}"`);
   });
 
-  it("retains the stable Woodpecker identity and link metadata", () => {
-    const rule = recordingRule(
-      BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
-    );
+  // Woodpecker's own pod metadata identifies nothing -- its pod names carry a
+  // ULID and a step index -- so every key joined here is stamped by the
+  // configuration extension. Spelled out rather than imported: this is one of
+  // three files that must agree on the exact flattened names, and a shared
+  // constant would let all three drift together.
+  it("retains the identity and link metadata the extension stamps", () => {
+    const rule = recordingRule(CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC);
     const expression = ruleExpression(rule);
 
-    expect(expression).toContain("label_woodpecker_com_job_uuid");
     expect(expression).toContain("label_ci_sjer_red_step_key");
-    expect(expression).toContain("annotation_woodpecker_com_build_branch");
-    expect(expression).toContain("annotation_woodpecker_com_build_url");
-    expect(expression).toContain("annotation_woodpecker_com_job_url");
-    expect(expression).toContain("annotation_woodpecker_com_pipeline_slug");
+    expect(expression).toContain("label_ci_sjer_red_commit");
+    expect(expression).toContain("annotation_ci_sjer_red_branch");
+    expect(expression).toContain("annotation_ci_sjer_red_pipeline_url");
     expect(expression).toContain("group_left");
   });
 
   it("normalizes metadata to one namespace/pod tuple before joining", () => {
-    const rule = recordingRule(
-      BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
-    );
+    const rule = recordingRule(CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC);
     const expression = ruleExpression(rule);
 
     expect(expression).toContain(
-      "max by (namespace, pod, label_woodpecker_com_job_uuid, label_ci_sjer_red_step_key)",
+      "max by (namespace, pod, label_ci_sjer_red_commit, label_ci_sjer_red_step_key)",
     );
     expect(expression).toContain(
-      "max by (namespace, pod, annotation_woodpecker_com_build_branch, annotation_woodpecker_com_build_url, annotation_woodpecker_com_job_url, annotation_woodpecker_com_pipeline_slug)",
+      "max by (namespace, pod, annotation_ci_sjer_red_branch, annotation_ci_sjer_red_pipeline_url)",
     );
   });
 
   it("records one sample-presence series from the parent counter only", () => {
     const rule = recordingRule("woodpecker:pod_parent_sample_present");
     expect(ruleExpression(rule)).toBe(
-      `${BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC} * 0 + 1`,
+      `${CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC} * 0 + 1`,
     );
   });
 
   it("rolls the conservative pod-lifetime cohort total up at a slower cadence", () => {
     const rollupGroup = findGroup("woodpecker-ci-io-rollups");
-    const rule = recordingRule(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC);
+    const rule = recordingRule(CI_POD_LIFETIME_WRITES_SEEN_24H_METRIC);
 
     expect(rollupGroup.interval).toBe("5m");
-    expect(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC).toContain(
+    expect(CI_POD_LIFETIME_WRITES_SEEN_24H_METRIC).toContain(
       "pod_lifetime_max_seen_24h",
     );
     expect(ruleExpression(rule)).toBe(
@@ -164,7 +159,7 @@ describe("Woodpecker CI I/O informational alerts", () => {
     const rule = alertRule("WoodpeckerCIIOTelemetryMissing");
     const expression = ruleExpression(rule);
     expect(expression).toContain('phase="Running"');
-    expect(expression).toContain(`pod=~"${BUILDKITE_JOB_POD_PATTERN}"`);
+    expect(expression).toContain(`pod=~"${CI_JOB_POD_PATTERN}"`);
     expect(expression).toContain("unless on (namespace, pod)");
     expect(expression).toContain("woodpecker:pod_parent_sample_present");
     expect(expression).not.toContain("kube_pod_labels");
@@ -179,7 +174,7 @@ describe("Woodpecker CI I/O informational alerts", () => {
       "WoodpeckerCIPodLifetimeWritesSeen24hBudgetExceeded",
     );
     expect(ruleExpression(rule)).toBe(
-      `${BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC} > ${String(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES)}`,
+      `${CI_POD_LIFETIME_WRITES_SEEN_24H_METRIC} > ${String(CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES)}`,
     );
     expect(rule.annotations?.["description"]).toContain(
       "Pods crossing the left boundary include earlier writes",
@@ -190,21 +185,22 @@ describe("Woodpecker CI I/O informational alerts", () => {
     expect(rule.annotations?.["description"]).toContain(
       "separate from the reporter's exact fixed-corpus 50% acceptance gate",
     );
-    expect(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES).toBe(
-      4 * 1024 ** 4,
-    );
+    expect(CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES).toBe(4 * 1024 ** 4);
     expect(rule.labels?.["severity"]).toBe("info");
   });
 
-  it("detects a running controller whose metrics loop is absent or stopped", () => {
-    const rule = alertRule("WoodpeckerControllerMetricsMissing");
+  // An available agent Deployment that the server does not see is the
+  // Woodpecker-shaped version of the old agent-stack-k8s controller alert:
+  // workflows queue forever with nothing obviously broken.
+  it("detects running agents that the server has no connection from", () => {
+    const rule = alertRule("WoodpeckerAgentDisconnected");
     const expression = ruleExpression(rule);
-    expect(expression).toContain('deployment="woodpecker-agent-stack-k8s"');
+    expect(expression).toContain('deployment="woodpecker-agent"');
     expect(expression).toContain(
-      'absent(woodpecker_monitor_monitor_up{namespace="woodpecker"})',
+      'absent(woodpecker_worker_count{namespace="woodpecker"})',
     );
     expect(expression).toContain(
-      'max(woodpecker_monitor_monitor_up{namespace="woodpecker"}) == 0',
+      'max(woodpecker_worker_count{namespace="woodpecker"}) == 0',
     );
     expect(rule.for).toBe("5m");
     expect(rule.labels?.["severity"]).toBe("info");
@@ -214,7 +210,7 @@ describe("Woodpecker CI I/O informational alerts", () => {
     const alerts = [
       alertRule("WoodpeckerCIIOTelemetryMissing"),
       alertRule("WoodpeckerCIPodLifetimeWritesSeen24hBudgetExceeded"),
-      alertRule("WoodpeckerControllerMetricsMissing"),
+      alertRule("WoodpeckerAgentDisconnected"),
     ];
     expect(alerts).toHaveLength(3);
     expect(alerts.every((rule) => rule.labels?.["severity"] === "info")).toBe(

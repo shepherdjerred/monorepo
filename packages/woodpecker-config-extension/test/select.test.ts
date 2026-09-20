@@ -5,6 +5,7 @@ import { emitWorkflow, shellQuote, wrapCommands } from "#src/pipeline/emit.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
+import { TEST_IDENTITY } from "./identity.ts";
 
 function step(key: string, overrides: Partial<CiStep> = {}): CiStep {
   return {
@@ -166,6 +167,7 @@ describe("emission", () => {
         volumes: [{ claim: "woodpecker-bun-cache", path: "/cache" }],
         concurrency: { limit: 1, group: "release" },
       }),
+      TEST_IDENTITY,
     );
     const parsed: unknown = parse(yaml);
     expect(parsed).toMatchObject({
@@ -194,7 +196,7 @@ describe("emission", () => {
   });
 
   test("carries ephemeral-storage bounds the node quota counts", () => {
-    const parsed: unknown = parse(emitWorkflow(step("a")));
+    const parsed: unknown = parse(emitWorkflow(step("a"), TEST_IDENTITY));
     expect(parsed).toMatchObject({
       steps: [
         {
@@ -215,10 +217,39 @@ describe("emission", () => {
     });
   });
 
+  /**
+   * Exact strings, not the exported constants: the whole point of these keys is
+   * that three separate systems agree on them. The kube-state-metrics allowlist
+   * and the Prometheus recording rules in packages/homelab spell the flattened
+   * forms by hand, so a rename here that updated only this package's constants
+   * would leave the telemetry join silently empty.
+   */
+  test("stamps the pod metadata CI I/O telemetry joins on", () => {
+    const parsed: unknown = parse(emitWorkflow(step("verify"), TEST_IDENTITY));
+    expect(parsed).toMatchObject({
+      steps: [
+        {
+          backend_options: {
+            kubernetes: {
+              labels: {
+                "ci.sjer.red/step-key": "verify",
+                "ci.sjer.red/commit": TEST_IDENTITY.commit,
+              },
+              annotations: {
+                "ci.sjer.red/branch": TEST_IDENTITY.branch,
+                "ci.sjer.red/pipeline-url": TEST_IDENTITY.linkUrl,
+              },
+            },
+          },
+        },
+      ],
+    });
+  });
+
   /** Double-filtering would strand a dependent on a skipped workflow. */
   test("emits no when clause — selection already decided", () => {
     const parsed: unknown = parse(
-      emitWorkflow(step("a", { changed: { include: ["**"] } })),
+      emitWorkflow(step("a", { changed: { include: ["**"] } }), TEST_IDENTITY),
     );
     expect(parsed).not.toHaveProperty("when");
   });

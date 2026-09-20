@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
 import {
-  BUILDKITE_CONTROLLER_METRICS_INTERVAL,
+  CI_METRICS_SCRAPE_INTERVAL,
   createWoodpeckerMonitoring,
 } from "./woodpecker.ts";
 import {
-  BUILDKITE_BUN_CACHE_GC_ACTIVITY,
-  BUILDKITE_BUN_CACHE_PVC,
+  CI_BUN_CACHE_GC_ACTIVITY,
+  CI_BUN_CACHE_PVC,
   TURBO_CACHE_CLEAN_ACTIVITY,
 } from "./monitoring/rules/woodpecker.ts";
 
@@ -33,11 +33,17 @@ const PodMonitorSchema = z
           matchLabels: z.record(z.string(), z.string()),
         }),
         podMetricsEndpoints: z.array(
-          z.object({
-            port: z.string(),
-            path: z.string(),
-            interval: z.string(),
-          }),
+          z
+            .object({
+              port: z.string(),
+              path: z.string(),
+              interval: z.string(),
+              bearerTokenSecret: z.object({
+                name: z.string(),
+                key: z.string(),
+              }),
+            })
+            .loose(),
         ),
       })
       .loose(),
@@ -91,9 +97,9 @@ function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
   const expression = ruleExpression(rule);
   expectExpressionContains(expression, ["> 1200"]);
   expectExpressionContains(expression, [
-    `maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
+    `maintenance_job="${CI_BUN_CACHE_GC_ACTIVITY}"`,
     "kubernetes_maintenance_last_success_timestamp_seconds",
-    `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
+    `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      maintenance_job="${CI_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
     'temporal_worker_app_process_start_time_seconds{\n        namespace="woodpecker",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
     'kube_pod_start_time{\n        namespace="woodpecker",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
     'kube_deployment_status_replicas_available{\n        namespace="woodpecker",\n        deployment="temporal-maintenance-worker"\n      }',
@@ -119,7 +125,7 @@ function requireAlert(
 }
 
 describe("Woodpecker monitoring manifests", () => {
-  it("synthesizes a selectable 10-second controller PodMonitor", () => {
+  it("synthesizes a selectable 10-second authenticated server PodMonitor", () => {
     const manifests = synthWoodpeckerMonitoring();
     const manifest = manifests.find(
       (candidate) => PodMonitorSchema.safeParse(candidate).success,
@@ -127,7 +133,7 @@ describe("Woodpecker monitoring manifests", () => {
     const podMonitor = PodMonitorSchema.parse(manifest);
 
     expect(podMonitor.metadata).toEqual({
-      name: "woodpecker-controller",
+      name: "woodpecker-server",
       namespace: "woodpecker",
       labels: { release: "prometheus" },
     });
@@ -135,13 +141,19 @@ describe("Woodpecker monitoring manifests", () => {
       "woodpecker",
     ]);
     expect(podMonitor.spec.selector.matchLabels).toEqual({
-      app: "woodpecker-agent-stack-k8s",
+      app: "woodpecker-server",
     });
+    // The bearer token is not optional: without it Woodpecker answers 401 and
+    // the scrape silently yields no series.
     expect(podMonitor.spec.podMetricsEndpoints).toEqual([
       {
-        port: "metrics",
+        port: "http",
         path: "/metrics",
-        interval: BUILDKITE_CONTROLLER_METRICS_INTERVAL,
+        interval: CI_METRICS_SCRAPE_INTERVAL,
+        bearerTokenSecret: {
+          name: "woodpecker-server-credentials",
+          key: "WOODPECKER_PROMETHEUS_AUTH_TOKEN",
+        },
       },
     ]);
   });
@@ -212,7 +224,7 @@ describe("Woodpecker monitoring manifests", () => {
       },
     });
     expect(bunCacheWarningExpr).toContain(
-      `persistentvolumeclaim="${BUILDKITE_BUN_CACHE_PVC}"`,
+      `persistentvolumeclaim="${CI_BUN_CACHE_PVC}"`,
     );
     expect(bunCacheWarningExpr).toContain("> 0.75");
     expect(bunCacheWarningExpr).toContain("zfs_dataset_used_bytes");

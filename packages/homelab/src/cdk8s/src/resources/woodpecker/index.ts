@@ -128,6 +128,13 @@ export function createWoodpeckerServer(chart: Chart) {
           CONFIG_EXTENSION_ENDPOINT,
         ),
         WOODPECKER_EXTENSIONS_ALLOWED_HOSTS: EnvValue.fromValue("private"),
+        // Woodpecker serves /metrics only when this is set, and requires the
+        // scraper to present it as a bearer token. The PodMonitor in
+        // resources/monitoring/woodpecker.ts reads the same secret key.
+        WOODPECKER_PROMETHEUS_AUTH_TOKEN: EnvValue.fromSecretValue({
+          secret: serverSecretRef,
+          key: "WOODPECKER_PROMETHEUS_AUTH_TOKEN",
+        }),
       },
       securityContext: {
         ensureNonRoot: false,

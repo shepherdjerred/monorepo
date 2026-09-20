@@ -6,6 +6,7 @@ import {
 } from "#src/woodpecker-api.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
+import { TEST_IDENTITY } from "./identity.ts";
 
 const IMAGES = {
   base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
@@ -93,7 +94,7 @@ describe("changed base injection", () => {
       changedBase: undefined,
     });
     expect(step?.environment).toMatchObject({ CI_CHANGED_BASE: "" });
-    const parsed: unknown = parse(emitWorkflow(step!));
+    const parsed: unknown = parse(emitWorkflow(step!, TEST_IDENTITY));
     expect(parsed).toMatchObject({
       steps: [{ environment: { CI_CHANGED_BASE: "" } }],
     });

@@ -11,7 +11,7 @@ import {
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
-  BUILDKITE_IO_OBSERVABILITY_VALUES,
+  CI_IO_OBSERVABILITY_VALUES,
   createGrafanaValues,
   type PrometheusValuesWithBlackbox,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
@@ -231,7 +231,7 @@ export async function createPrometheusApp(chart: Chart) {
     // kube-state-metrics scrape adds Woodpecker identity/link metadata; missing
     // joins remain explicit in the rules and CI I/O reporter rather than
     // accelerating the full cluster-wide metadata endpoint.
-    ...BUILDKITE_IO_OBSERVABILITY_VALUES,
+    ...CI_IO_OBSERVABILITY_VALUES,
     grafana: createGrafanaValues(prometheusSecrets.name),
     prometheusOperator: {
       resources: {
