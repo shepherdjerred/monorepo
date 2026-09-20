@@ -39,6 +39,95 @@ function stores(): {
   return { source, backup };
 }
 
+class DelayedHeadStore extends InMemoryObjectStore {
+  public activeHeads = 0;
+  public failFirstHead = false;
+  public headCalls = 0;
+  public maximumActiveHeads = 0;
+
+  public override async headObject(bucket: string, key: string) {
+    this.headCalls += 1;
+    const call = this.headCalls;
+    this.activeHeads += 1;
+    this.maximumActiveHeads = Math.max(
+      this.maximumActiveHeads,
+      this.activeHeads,
+    );
+    try {
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, call === 1 && this.failFirstHead ? 1 : 10),
+      );
+      if (call === 1 && this.failFirstHead) {
+        throw new Error("Injected head failure");
+      }
+      return await super.headObject(bucket, key);
+    } finally {
+      this.activeHeads -= 1;
+    }
+  }
+}
+
+describe("object concurrency", () => {
+  test("copies objects with bounded concurrency", async () => {
+    const source = new InMemoryObjectStore();
+    const backup = new DelayedHeadStore();
+    source.createBucket("source");
+    backup.createBucket("backup");
+    for (let index = 0; index < 40; index++) {
+      source.seed("source", `object-${index.toString()}.json`, "important");
+    }
+
+    const progress: number[] = [];
+    const snapshot = await runBackup({
+      source,
+      destination: backup,
+      backupBucket: "backup",
+      policy: POLICY,
+      cadence: "daily",
+      onProgress(update) {
+        if (update.stage === "copy" || update.stage === "verify") {
+          progress.push(update.completed);
+        }
+      },
+    });
+
+    expect(backup.maximumActiveHeads).toBeGreaterThan(1);
+    expect(backup.maximumActiveHeads).toBeLessThanOrEqual(16);
+    expect(progress).toEqual(
+      Array.from({ length: 40 }, (_, index) => index + 1),
+    );
+    expect(snapshot.buckets[0]).toMatchObject({
+      objectCount: 40,
+      copiedObjects: 40,
+    });
+  });
+
+  test("drains in-flight work and stops claiming objects after a failure", async () => {
+    const source = new InMemoryObjectStore();
+    const backup = new DelayedHeadStore();
+    backup.failFirstHead = true;
+    source.createBucket("source");
+    backup.createBucket("backup");
+    for (let index = 0; index < 40; index++) {
+      source.seed("source", `object-${index.toString()}.json`, "important");
+    }
+
+    await expect(
+      runBackup({
+        source,
+        destination: backup,
+        backupBucket: "backup",
+        policy: POLICY,
+        cadence: "daily",
+      }),
+    ).rejects.toThrow("Injected head failure");
+
+    expect(backup.activeHeads).toBe(0);
+    expect(backup.headCalls).toBeLessThanOrEqual(16);
+    await expect(listCompletionMarkers(backup, "backup")).resolves.toEqual([]);
+  });
+});
+
 describe("incremental backup and restore", () => {
   test("reuses unchanged objects and keeps deleted versions recoverable", async () => {
     const { source, backup } = stores();

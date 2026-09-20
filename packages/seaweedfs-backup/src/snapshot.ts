@@ -63,6 +63,11 @@ type CopyResult = {
   copied: boolean;
 };
 
+// Object storage round trips dominate this path. Keeping a small fixed pool
+// makes a six-figure bucket finish inside the Activity timeout while bounding
+// open source/R2 streams and multipart uploads on the single backup worker.
+const OBJECT_CONCURRENCY = 16;
+
 function makeSnapshotId(now: Date): string {
   const timestamp = now.toISOString().replaceAll(/[-:]/g, "");
   return `${timestamp}-${randomBytes(6).toString("hex")}`;
@@ -250,6 +255,72 @@ async function copyChangedObject(input: {
   };
 }
 
+async function copyOrReuseObject(input: {
+  source: ObjectStore;
+  destination: ObjectStore;
+  backupBucket: string;
+  sourceBucket: string;
+  sourceObject: ListedObject;
+  prior: ManifestEntry | undefined;
+  onBytes?: (progress: BackupByteProgress) => void;
+}): Promise<CopyResult> {
+  if (
+    input.prior !== undefined &&
+    identityMatches(input.prior, input.sourceObject)
+  ) {
+    return { entry: input.prior, copied: false };
+  }
+  return copyChangedObject({
+    source: input.source,
+    destination: input.destination,
+    backupBucket: input.backupBucket,
+    sourceBucket: input.sourceBucket,
+    sourceObject: input.sourceObject,
+    ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
+  });
+}
+
+async function runObjectWorkers(
+  objects: readonly ListedObject[],
+  task: (object: ListedObject) => Promise<void>,
+): Promise<void> {
+  let nextIndex = 0;
+  const state: { stopped: boolean; failure: unknown } = {
+    stopped: false,
+    failure: undefined,
+  };
+  const worker = async (): Promise<void> => {
+    while (!state.stopped && nextIndex < objects.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      const object = objects[index];
+      if (object === undefined) {
+        state.stopped = true;
+        state.failure = new Error(
+          "Backup object cursor exceeded the inventory",
+        );
+        return;
+      }
+      try {
+        await task(object);
+      } catch (error: unknown) {
+        state.failure = error;
+        state.stopped = true;
+        return;
+      }
+    }
+  };
+  await Promise.all(
+    Array.from(
+      { length: Math.min(OBJECT_CONCURRENCY, objects.length) },
+      worker,
+    ),
+  );
+  if (state.stopped) {
+    throw state.failure;
+  }
+}
+
 async function previousEntriesForBucket(
   store: ObjectStore,
   backupBucket: string,
@@ -299,36 +370,29 @@ async function backupSourceBucket(input: {
   let copiedObjects = 0;
   let reusedObjects = 0;
   let copiedBytes = 0;
-  for (const [index, object] of protectedObjects.entries()) {
-    const prior = previous.get(object.key);
-    let result: CopyResult;
-    if (prior !== undefined && identityMatches(prior, object)) {
-      result = { entry: prior, copied: false };
-      reusedObjects += 1;
-    } else {
-      result = await copyChangedObject({
-        source: input.source,
-        destination: input.destination,
-        backupBucket: input.backupBucket,
-        sourceBucket: input.bucketPolicy.name,
-        sourceObject: object,
-        ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
-      });
-      if (result.copied) {
-        copiedObjects += 1;
-        copiedBytes += object.size;
-      } else {
-        reusedObjects += 1;
-      }
-    }
+  let completed = 0;
+  await runObjectWorkers(protectedObjects, async (object) => {
+    const result = await copyOrReuseObject({
+      source: input.source,
+      destination: input.destination,
+      backupBucket: input.backupBucket,
+      sourceBucket: input.bucketPolicy.name,
+      sourceObject: object,
+      prior: previous.get(object.key),
+      ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
+    });
+    copiedObjects += result.copied ? 1 : 0;
+    reusedObjects += result.copied ? 0 : 1;
+    copiedBytes += result.copied ? object.size : 0;
     entries.push(result.entry);
+    completed += 1;
     input.onProgress?.({
       stage: result.copied ? "verify" : "copy",
       bucket: input.bucketPolicy.name,
-      completed: index + 1,
+      completed,
       total: protectedObjects.length,
     });
-  }
+  });
   entries.sort((left, right) => left.sourceKey.localeCompare(right.sourceKey));
   return {
     entries,
