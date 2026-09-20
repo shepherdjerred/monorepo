@@ -42,26 +42,43 @@ const RESULT: AgentChatTurnResult = {
   },
 };
 
+async function createWorkflowHarness() {
+  const environment = await TestWorkflowEnvironment.createTimeSkipping();
+  let activityInput: HttpAgentChatActivityInput | undefined;
+  const workflowWorker = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    workflowsPath: new URL("index.ts", import.meta.url).pathname,
+  });
+  const activityWorker = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
+    activities: {
+      executeHttpAgentChatCommand: (input: HttpAgentChatActivityInput) => {
+        activityInput = input;
+        return RESULT;
+      },
+    },
+  });
+  const activityRun = activityWorker.run();
+  return {
+    environment,
+    workflowWorker,
+    activityInput: () => activityInput,
+    teardown: async (workflowRun?: Promise<void>) => {
+      if (workflowRun !== undefined) workflowWorker.shutdown();
+      activityWorker.shutdown();
+      if (workflowRun !== undefined) await workflowRun;
+      await activityRun;
+      await environment.teardown();
+    },
+  };
+}
+
 describe("httpAgentChatWorkflow", () => {
   test("durably checkpoints the HTTP command result", async () => {
-    const environment = await TestWorkflowEnvironment.createTimeSkipping();
-    let activityInput: HttpAgentChatActivityInput | undefined;
-    const workflowWorker = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-    });
-    const activityWorker = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
-      activities: {
-        executeHttpAgentChatCommand: (input: HttpAgentChatActivityInput) => {
-          activityInput = input;
-          return RESULT;
-        },
-      },
-    });
-    const activityRun = activityWorker.run();
+    const harness = await createWorkflowHarness();
+    const { environment, workflowWorker } = harness;
     const workflowId = `http-agent-chat-test-${crypto.randomUUID()}`;
     try {
       const result = await workflowWorker.runUntil(
@@ -99,39 +116,21 @@ describe("httpAgentChatWorkflow", () => {
       const description = await environment.client.workflow
         .getHandle(workflowId)
         .describe();
-      expect(activityInput?.providerStartDeadline).toBe(
+      expect(harness.activityInput()?.providerStartDeadline).toBe(
         new Date(
           description.startTime.getTime() +
             AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
         ).toISOString(),
       );
     } finally {
-      activityWorker.shutdown();
-      await activityRun;
-      await environment.teardown();
+      await harness.teardown();
     }
   }, 60_000);
 
   test("claims command identity before activating an adopted chat owner", async () => {
-    const environment = await TestWorkflowEnvironment.createTimeSkipping();
-    let activityInput: HttpAgentChatActivityInput | undefined;
-    const workflowWorker = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-    });
-    const activityWorker = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
-      activities: {
-        executeHttpAgentChatCommand: (input: HttpAgentChatActivityInput) => {
-          activityInput = input;
-          return RESULT;
-        },
-      },
-    });
+    const harness = await createWorkflowHarness();
+    const { environment, workflowWorker } = harness;
     const workflowRun = workflowWorker.run();
-    const activityRun = activityWorker.run();
     const workflowId = `http-agent-chat-claim-test-${crypto.randomUUID()}`;
     const claimed: HttpAgentChatCommand = {
       kind: "new",
@@ -173,20 +172,16 @@ describe("httpAgentChatWorkflow", () => {
           updateId: "mismatch",
         }),
       ).rejects.toThrow("Workflow Update failed");
-      expect(activityInput).toBeUndefined();
+      expect(harness.activityInput()).toBeUndefined();
 
       await handle.executeUpdate(activateHttpAgentChatCommandUpdate, {
         args: [adopted],
         updateId: "activate",
       });
       expect(await handle.result()).toEqual(RESULT);
-      expect(activityInput?.command).toEqual(adopted);
+      expect(harness.activityInput()?.command).toEqual(adopted);
     } finally {
-      workflowWorker.shutdown();
-      activityWorker.shutdown();
-      await workflowRun;
-      await activityRun;
-      await environment.teardown();
+      await harness.teardown(workflowRun);
     }
   }, 60_000);
 });
