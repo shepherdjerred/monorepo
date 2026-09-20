@@ -4,6 +4,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   MatchIdSchema,
+  RawMatchSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -11,11 +12,15 @@ import {
   bucksTestPuuid,
   createTrackedTestPlayer,
 } from "#src/testing/bucks-fixtures.ts";
-import { freezeMatchMvpRosterFromParticipants } from "#src/mvp-votes/roster.ts";
+import {
+  freezeMatchMvpRoster,
+  freezeMatchMvpRosterFromParticipants,
+} from "#src/mvp-votes/roster.ts";
 import { findMatchMvpVoter } from "#src/mvp-votes/eligibility.ts";
 import { handleMvpVoteButton } from "#src/mvp-votes/button-handler.ts";
 import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
 import {
+  ensureMatchMvpContest,
   listMatchMvpReportRefs,
   listMatchMvpVotes,
   recordMatchMvpReportRefs,
@@ -29,6 +34,7 @@ const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 const MATCH_ID = MatchIdSchema.parse("NA1_5000000099");
 const VOTER = bucksTestDiscordId(1);
 const OTHER = bucksTestDiscordId(2);
+const RIFT_FIXTURE = new URL("../../../../testdata/rift.json", import.meta.url);
 
 function roster() {
   return freezeMatchMvpRosterFromParticipants(
@@ -247,5 +253,21 @@ describe("Match MVP votes", () => {
         db,
       ),
     ).resolves.toBeUndefined();
+  });
+
+  test("fills query columns on a contest that predated those fields", async () => {
+    const match = RawMatchSchema.parse(await Bun.file(RIFT_FIXTURE).json());
+    const matchId = MatchIdSchema.parse(match.metadata.matchId);
+    await db.matchMvpContest.create({
+      data: { matchId, roster: freezeMatchMvpRoster(match) },
+    });
+
+    await ensureMatchMvpContest(match, db);
+
+    const stored = await db.matchMvpContest.findUniqueOrThrow({
+      where: { matchId },
+    });
+    expect(stored.gameCreationAt).toEqual(new Date(match.info.gameCreation));
+    expect(stored.queueType).toBe("flex");
   });
 });

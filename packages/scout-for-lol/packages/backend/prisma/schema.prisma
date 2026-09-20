@@ -2480,9 +2480,11 @@ model MatchMvpContest {
   matchId          String    @id
   roster           Json
   reportMessageIds Json?
-  /// Riot `info.gameCreation`. Null on contests created before this column.
+  /// Riot `info.gameCreation`. Backfilled from MatchObservation / rank history
+  /// for contests that existed before this column; writers fill any remainder.
   gameCreationAt   DateTime?
-  /// Resolved Scout queue type (`flex`, `ranked 5s`, …). Null on older rows.
+  /// Resolved Scout queue type (`flex`, `ranked 5s`, …). Pre-column contests
+  /// were Flex-only attach and backfill to `flex`.
   queueType        String?
   createdAt        DateTime  @default(now())
 

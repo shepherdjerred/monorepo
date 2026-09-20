@@ -5,13 +5,13 @@ import {
   MatchIdSchema,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import {
-  isPolicyEnabled,
-  listGuildsWithFlagEnabled,
-} from "#src/configuration/flags.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
   loadMatchMvpTallyForGuild,
   MatchMvpGuildTallySchema,
+  MatchMvpTallyNomineeSchema,
+  type MatchMvpGuildTally,
+  type MatchMvpTallyNominee,
 } from "#src/mvp-votes/query/tally.ts";
 import {
   loadMvpVoteLeaderboard,
@@ -27,19 +27,18 @@ export type MvpVotesExploreCapability = {
 /**
  * Whether — and for which guild — this turn may read community MVP votes.
  *
- * Mirrors Bryan Bucks: the sync registry pre-filter bounds Flipt evaluation,
- * zero enabled guilds hide the tools, and more than one enabled guild in
- * scope is a hard failure until an explicit mapping exists.
+ * Unlike Bryan Bucks, MVP votes are not production-hard-disabled. Flipt is
+ * authoritative, so every guild in scope is evaluated with `isPolicyEnabled`
+ * rather than the static registry pre-filter (that list is empty in
+ * production because the only registry override is `betaOnly`). Zero enabled
+ * guilds hide the tools; more than one is a hard failure until an explicit
+ * mapping exists.
  */
 export async function resolveMvpVotesCapability(
   guildIds: readonly string[],
 ): Promise<MvpVotesExploreCapability | null> {
-  const declared = new Set<string>(
-    listGuildsWithFlagEnabled("mvp_votes_enabled"),
-  );
-  const candidates = guildIds.filter((guildId) => declared.has(guildId));
   const enabled: DiscordGuildId[] = [];
-  for (const guildId of candidates) {
+  for (const guildId of guildIds) {
     const serverId = DiscordGuildIdSchema.parse(guildId);
     if (await isPolicyEnabled("mvp_votes_enabled", { server: serverId })) {
       enabled.push(serverId);
@@ -69,11 +68,45 @@ const MatchTallyToolInputSchema = z.strictObject({
   matchId: MatchIdSchema,
 });
 
+const MatchMvpExploreNomineeSchema = MatchMvpTallyNomineeSchema.omit({
+  reasons: true,
+});
+
+const MatchMvpExploreGuildTallySchema = z.strictObject({
+  guildId: MatchMvpGuildTallySchema.shape.guildId,
+  guildName: MatchMvpGuildTallySchema.shape.guildName,
+  blue: z.array(MatchMvpExploreNomineeSchema),
+  red: z.array(MatchMvpExploreNomineeSchema),
+});
+
 const MatchTallyToolResultSchema = z.strictObject({
   found: z.boolean(),
   message: z.string(),
-  tally: MatchMvpGuildTallySchema.nullable(),
+  tally: MatchMvpExploreGuildTallySchema.nullable(),
 });
+
+function nomineesWithoutReasons(
+  nominees: readonly MatchMvpTallyNominee[],
+): z.infer<typeof MatchMvpExploreNomineeSchema>[] {
+  return nominees.map((nominee) => ({
+    puuid: nominee.puuid,
+    displayName: nominee.displayName,
+    championName: nominee.championName,
+    voteCount: nominee.voteCount,
+  }));
+}
+
+/** Drop voter justifications before they enter another member's model context. */
+export function toExploreMatchTally(
+  tally: MatchMvpGuildTally,
+): z.infer<typeof MatchMvpExploreGuildTallySchema> {
+  return {
+    guildId: tally.guildId,
+    guildName: tally.guildName,
+    blue: nomineesWithoutReasons(tally.blue),
+    red: nomineesWithoutReasons(tally.red),
+  };
+}
 
 export type MvpVotesExploreToolsInput = {
   capability: MvpVotesExploreCapability;
@@ -116,7 +149,7 @@ export function createMvpVotesToolExecutors(input: MvpVotesExploreToolsInput) {
         return {
           found: true,
           message: "Community MVP votes for this match in this server.",
-          tally,
+          tally: toExploreMatchTally(tally),
         };
       }),
   };

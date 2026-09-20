@@ -22,7 +22,7 @@ The current UTC timestamp is {{currentTime}}. Interpret relative periods such as
 Use ScoutQL for Riot honors, champion performance, or match facts. Use these tools only for community Discord MVP votes on THIS server.
 
 - query_mvp_vote_leaderboard answers who received the most community MVP votes in a date range. Optional queueType is `flex`.
-- query_mvp_match_tally answers who was voted MVP in one matchId such as NA1_….
+- query_mvp_match_tally answers who was voted MVP in one matchId such as NA1_…. It returns vote counts and names, not the free-text reasons voters typed in Discord.
 
 Both tools see only this server. Date coverage is match start time (`gameCreation`), not the moment someone clicked a button. Ally and enemy ballots both count toward the nominee. State the matched vote count and the UTC range; when truncated is true, call the rows a partial list.
 

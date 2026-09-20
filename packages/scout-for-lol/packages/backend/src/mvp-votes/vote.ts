@@ -80,6 +80,29 @@ function storedRosterMatching(
   return stored;
 }
 
+type ContestQueryColumns = {
+  gameCreationAt: Date | null;
+  queueType: string | null;
+};
+
+async function backfillContestQueryColumns(
+  matchId: MatchId,
+  stored: ContestQueryColumns,
+  next: { gameCreationAt: Date; queueType: string | null },
+  prismaClient: ExtendedPrismaClient,
+): Promise<void> {
+  if (stored.gameCreationAt !== null && stored.queueType !== null) {
+    return;
+  }
+  await prismaClient.matchMvpContest.update({
+    where: { matchId },
+    data: {
+      gameCreationAt: stored.gameCreationAt ?? next.gameCreationAt,
+      queueType: stored.queueType ?? next.queueType,
+    },
+  });
+}
+
 export async function ensureMatchMvpContest(
   match: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -92,12 +115,20 @@ export async function ensureMatchMvpContest(
     match.info.gameMode,
     match.info.gameType,
   );
+  const queryColumns = { gameCreationAt, queueType: queueType ?? null };
   const existing = await prismaClient.matchMvpContest.findUnique({
     where: { matchId },
-    select: { roster: true },
+    select: { roster: true, gameCreationAt: true, queueType: true },
   });
   if (existing !== null) {
-    return storedRosterMatching(matchId, existing.roster, roster);
+    const stored = storedRosterMatching(matchId, existing.roster, roster);
+    await backfillContestQueryColumns(
+      matchId,
+      existing,
+      queryColumns,
+      prismaClient,
+    );
+    return stored;
   }
   try {
     await prismaClient.matchMvpContest.create({
@@ -114,7 +145,7 @@ export async function ensureMatchMvpContest(
     }
     const raced = await prismaClient.matchMvpContest.findUnique({
       where: { matchId },
-      select: { roster: true },
+      select: { roster: true, gameCreationAt: true, queueType: true },
     });
     if (raced === null) {
       throw new Error(
@@ -122,7 +153,14 @@ export async function ensureMatchMvpContest(
         { cause: error },
       );
     }
-    return storedRosterMatching(matchId, raced.roster, roster);
+    const stored = storedRosterMatching(matchId, raced.roster, roster);
+    await backfillContestQueryColumns(
+      matchId,
+      raced,
+      queryColumns,
+      prismaClient,
+    );
+    return stored;
   }
   return roster;
 }
