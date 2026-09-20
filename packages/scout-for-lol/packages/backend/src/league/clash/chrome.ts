@@ -10,6 +10,10 @@ import {
   type Team,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import {
+  clashTeamLabels,
+  loadClashTeamAndTournamentMaps,
+} from "#src/league/clash/store.ts";
 import { formatClashThemeLabel } from "#src/league/clash/theme.ts";
 
 export async function loadClashChrome(input: {
@@ -32,25 +36,8 @@ export async function loadClashChrome(input: {
   if (registrations.length === 0) {
     return {};
   }
-  const teams = await prisma.clashTeam.findMany({
-    where: {
-      OR: registrations.map((registration) => ({
-        platform: registration.platform,
-        riotId: registration.teamRiotId,
-      })),
-    },
-  });
-  const tournaments = await prisma.clashTournament.findMany({
-    where: {
-      OR: registrations.map((registration) => ({
-        platform: registration.platform,
-        riotId: registration.tournamentRiotId,
-      })),
-    },
-  });
-  const teamByKey = new Map(
-    teams.map((team) => [`${team.platform}:${team.riotId}`, team]),
-  );
+  const { teamByKey, tournamentByKey } =
+    await loadClashTeamAndTournamentMaps(registrations);
   const bannerFor = (side: Team): ClashTeamBanner | undefined => {
     const sidePuuids = new Set(
       input.participants
@@ -68,24 +55,14 @@ export async function loadClashChrome(input: {
     if (team === undefined) {
       return undefined;
     }
-    const name = team.name.trim();
-    const abbreviation = team.abbreviation.trim();
-    if (name.length === 0 && abbreviation.length === 0) {
-      return undefined;
-    }
-    return {
-      name: name.length > 0 ? name : abbreviation,
-      abbreviation: abbreviation.length > 0 ? abbreviation : name,
-    };
+    return clashTeamLabels(team);
   };
   const first = registrations[0];
   const tournament =
     first === undefined
       ? undefined
-      : tournaments.find(
-          (row) =>
-            row.platform === first.platform &&
-            row.riotId === first.tournamentRiotId,
+      : tournamentByKey.get(
+          `${first.platform}:${String(first.tournamentRiotId)}`,
         );
   const themeLabel =
     tournament === undefined

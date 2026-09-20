@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DateOnlySchema } from "#src/model/core/calendar-date.ts";
 
 /**
  * Language-neutral source of truth for limited-time queue availability windows
@@ -9,28 +10,6 @@ import { z } from "zod";
  * Dates are calendar dates in UTC (`YYYY-MM-DD`), matching how the availability
  * model constructs `new Date("YYYY-MM-DD")`.
  */
-
-const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-const DateOnlySchema = z
-  .string()
-  .regex(DATE_ONLY_REGEX, "expected a YYYY-MM-DD calendar date")
-  // A shape-valid string like `2026-13-40` or `2026-02-30` passes the regex but
-  // is not a real date; the runtime loader would then build an invalid `Date`
-  // or silently normalize it (Feb 30 → March), making queue availability wrong
-  // without failing validation. Reject by round-tripping the components.
-  .refine((value) => {
-    const parts = value.split("-");
-    const year = Number(parts[0]);
-    const month = Number(parts[1]);
-    const day = Number(parts[2]);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    return (
-      date.getUTCFullYear() === year &&
-      date.getUTCMonth() === month - 1 &&
-      date.getUTCDate() === day
-    );
-  }, "expected a real calendar date (valid month 01-12 and day for that month)");
 
 export const QueueWindowSourceSchema = z.enum(["manual", "observed"]);
 export type QueueWindowSource = z.infer<typeof QueueWindowSourceSchema>;

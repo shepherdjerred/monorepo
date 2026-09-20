@@ -252,31 +252,8 @@ export async function readClashRosterForGuild(
   if (registrations.length === 0) {
     return [];
   }
-  const teams = await prisma.clashTeam.findMany({
-    where: {
-      OR: registrations.map((registration) => ({
-        platform: registration.platform,
-        riotId: registration.teamRiotId,
-      })),
-    },
-  });
-  const tournaments = await prisma.clashTournament.findMany({
-    where: {
-      OR: registrations.map((registration) => ({
-        platform: registration.platform,
-        riotId: registration.tournamentRiotId,
-      })),
-    },
-  });
-  const teamByKey = new Map(
-    teams.map((team) => [`${team.platform}:${team.riotId}`, team]),
-  );
-  const tournamentByKey = new Map(
-    tournaments.map((tournament) => [
-      `${tournament.platform}:${String(tournament.riotId)}`,
-      tournament,
-    ]),
-  );
+  const { teamByKey, tournamentByKey } =
+    await loadClashTeamAndTournamentMaps(registrations);
   const accountByPuuid = new Map(
     accounts.map((account) => [account.puuid, account]),
   );
@@ -354,7 +331,52 @@ function groupRosterTeams(input: {
   return grouped;
 }
 
-function clashTeamLabels(team: {
+export async function loadClashTeamAndTournamentMaps(
+  registrations: readonly {
+    platform: string;
+    teamRiotId: string;
+    tournamentRiotId: number;
+  }[],
+): Promise<{
+  teamByKey: Map<
+    string,
+    Awaited<ReturnType<typeof prisma.clashTeam.findMany>>[number]
+  >;
+  tournamentByKey: Map<
+    string,
+    Awaited<ReturnType<typeof prisma.clashTournament.findMany>>[number]
+  >;
+}> {
+  const teams = await prisma.clashTeam.findMany({
+    where: {
+      OR: registrations.map((registration) => ({
+        platform: registration.platform,
+        riotId: registration.teamRiotId,
+      })),
+    },
+  });
+  const tournaments = await prisma.clashTournament.findMany({
+    where: {
+      OR: registrations.map((registration) => ({
+        platform: registration.platform,
+        riotId: registration.tournamentRiotId,
+      })),
+    },
+  });
+  return {
+    teamByKey: new Map(
+      teams.map((team) => [`${team.platform}:${team.riotId}`, team]),
+    ),
+    tournamentByKey: new Map(
+      tournaments.map((tournament) => [
+        `${tournament.platform}:${String(tournament.riotId)}`,
+        tournament,
+      ]),
+    ),
+  };
+}
+
+export function clashTeamLabels(team: {
   name: string;
   abbreviation: string;
 }): { name: string; abbreviation: string } | undefined {

@@ -8,6 +8,7 @@ import {
   type ClashCupQueue,
 } from "#src/model/competitions/clash-cups.schema.ts";
 import type { PlatformRoute } from "#src/model/core/routes.ts";
+import { calendarDateInTimeZone } from "#src/model/core/calendar-date.ts";
 import type { QueueType } from "#src/model/core/state.ts";
 
 const cupsFile = ClashCupsFileSchema.parse(clashCupsJson);
@@ -44,22 +45,7 @@ export function clashCalendarDateForPlatform(
   at: Date,
   platform: PlatformRoute,
 ): string {
-  const timeZone = platformToClashTimezone(platform);
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(at);
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
-  if (year === undefined || month === undefined || day === undefined) {
-    throw new Error(
-      `Could not format ${at.toISOString()} as a calendar date in ${timeZone}`,
-    );
-  }
-  return `${year}-${month}-${day}`;
+  return calendarDateInTimeZone(at, platformToClashTimezone(platform));
 }
 
 export function clashIsoWeekKey(dateOnly: string): string {
