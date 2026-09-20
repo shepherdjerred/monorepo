@@ -9,7 +9,7 @@ import {
 } from "@scout-for-lol/data";
 
 /**
- * Frozen 10-player Flex roster. Indices are the identity Discord custom IDs
+ * Frozen 10-player roster. Indices are the identity Discord custom IDs
  * carry: a PUUID is 78 characters and Discord's cap is 100.
  *
  * Ordered by Riot's `participantId` so a replay that shuffled `participants`
@@ -65,7 +65,7 @@ export function freezeMatchMvpRosterFromParticipants(
 ): MatchMvpRoster {
   if (participants.length !== 10) {
     throw new Error(
-      `Flex MVP roster for ${matchId} has ${String(participants.length)} participants, not 10`,
+      `MVP roster for ${matchId} has ${String(participants.length)} participants, not 10`,
     );
   }
   const parsed = z.array(RosterSourceParticipantSchema).parse(participants);

@@ -88,7 +88,7 @@ export const ScoutV2AttestedObjectSchema = z.strictObject({
 /**
  * Which message furniture v1's generator attached beside the report image.
  * `match-link` is the Explore "View match" button of a standard-queue report;
- * `match-link-mvp-vote` is that button plus Flex community-MVP vote controls
+ * `match-link-mvp-vote` is that button plus community-MVP vote controls
  * and the empty tally embed. Arena and Classic reports attach nothing.
  * Recorded as a closed name rather than as the component JSON so the receipt
  * stays readable and a component v1 grows later cannot be attested under a
