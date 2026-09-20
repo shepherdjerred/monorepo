@@ -99,16 +99,32 @@ export function checkpointFailureIn(
  *
  * ## The rule a sink implements
  *
- * A silent-backfill match posts no new message of any kind and enqueues no
- * delivery: no notification intent, no announcement, no DM, no Dare callout,
- * and no row suggesting a send was intended. It does not suppress edits to
- * messages that already exist — a settled pool's controls are still refreshed
- * and an existing Dare callout is still updated, because those concern
- * messages a live discovery already posted. Settlement itself still runs in
- * full; only the announcing does not.
+ * A silent-backfill match posts no new message of any kind, enqueues no
+ * delivery, AND LEAVES NOTHING PENDING THAT A LATER RUN WILL POST: no
+ * notification intent, no announcement, no DM, no Dare callout, no row
+ * suggesting a send was intended, and no durable flag marking a send as still
+ * owed. It does not suppress edits to messages that already exist — a settled
+ * pool's controls are still refreshed and an existing Dare callout is still
+ * updated, because those concern messages a live discovery already posted.
+ * Settlement itself still runs in full; only the announcing does not.
  *
  * "No new messages, edits fine" is one rule rather than a list of paths, which
  * matters because a path nobody enumerated decides itself under it.
+ *
+ * ## Why deferral is named explicitly
+ *
+ * The third clause was learned three times, each time from a path that DID
+ * withhold its send and still ended in a public message. Delivery rows were
+ * enqueued inside the settling transaction and drained by a later run. A
+ * Dare's `calloutRefreshPending` was left set and serviced by a later scan,
+ * by a poller that had never heard of delivery modes. In both, the suppressed
+ * call was the one looking at the sink, and the work outlived it.
+ *
+ * So the rule is about the STATE a silent settlement leaves behind, not about
+ * the call that happens to be executing. Withholding a send suppresses
+ * nothing if the instruction to send survives for someone else to act on; ask
+ * of every new path not only "does this post?" but "does this leave work that
+ * will post?".
  */
 export type SettlementAnnouncementSink = {
   /**
