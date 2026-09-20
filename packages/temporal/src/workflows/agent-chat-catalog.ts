@@ -99,7 +99,6 @@ function existingBindingWins(
   }
   return false;
 }
-
 function oldestBindingIndex(
   state: AgentChatCatalogState,
   protectedBindingKey?: string,
