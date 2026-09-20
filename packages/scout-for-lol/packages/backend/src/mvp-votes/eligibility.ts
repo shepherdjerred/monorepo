@@ -1,6 +1,7 @@
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  LeaguePuuidSchema,
   type DiscordAccountId,
   type DiscordGuildId,
   type LeaguePuuid,
@@ -55,39 +56,44 @@ export async function findMatchMvpVoter(
 ): Promise<MatchMvpVoter | undefined> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
   const discordId = DiscordAccountIdSchema.parse(input.discordId);
-  const player = await prismaClient.player.findFirst({
-    where: { serverId, discordId },
-    select: {
-      id: true,
-      alias: true,
-      accounts: { select: { puuid: true }, orderBy: { id: "asc" } },
+  const accounts = await prismaClient.account.findMany({
+    where: {
+      puuid: {
+        in: input.roster.participants.map((participant) => participant.puuid),
+      },
+      player: { serverId, discordId },
     },
-    orderBy: { id: "asc" },
+    select: {
+      puuid: true,
+      player: { select: { id: true, alias: true } },
+    },
+    orderBy: [{ playerId: "asc" }, { id: "asc" }],
   });
-  if (player === null) {
+  const account = accounts[0];
+  if (account === undefined) {
     return undefined;
   }
-  for (const account of player.accounts) {
-    const rosterIndex = indexOfPuuid(input.roster, account.puuid);
-    if (rosterIndex === undefined) {
-      continue;
-    }
-    const participant = input.roster.participants[rosterIndex];
-    if (participant === undefined) {
-      throw new Error(
-        `Match MVP roster named index ${String(rosterIndex)} for ${account.puuid} but the slot is empty`,
-      );
-    }
-    return {
-      playerId: player.id,
-      alias: player.alias,
-      discordId,
-      puuid: participant.puuid,
-      teamId: participant.teamId,
-      rosterIndex,
-    };
+  const puuid = LeaguePuuidSchema.parse(account.puuid);
+  const rosterIndex = indexOfPuuid(input.roster, puuid);
+  if (rosterIndex === undefined) {
+    throw new Error(
+      `Match MVP voter query returned ${puuid} which is not on the frozen roster`,
+    );
   }
-  return undefined;
+  const participant = input.roster.participants[rosterIndex];
+  if (participant === undefined) {
+    throw new Error(
+      `Match MVP roster named index ${String(rosterIndex)} for ${puuid} but the slot is empty`,
+    );
+  }
+  return {
+    playerId: account.player.id,
+    alias: account.player.alias,
+    discordId,
+    puuid: participant.puuid,
+    teamId: participant.teamId,
+    rosterIndex,
+  };
 }
 
 export async function guildAliasesForRoster(

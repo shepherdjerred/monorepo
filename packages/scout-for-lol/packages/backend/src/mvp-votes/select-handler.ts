@@ -5,6 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import type { ModalBuilder } from "discord.js";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 import { parseVoteCustomId } from "#src/mvp-votes/custom-id.ts";
 import { mvpVoteModal } from "#src/mvp-votes/components.ts";
 import {
@@ -34,6 +35,8 @@ export type VoteSelectInteraction = {
     allowedMentions: { parse: [] };
   }) => Promise<unknown>;
 };
+
+const logger = createLogger("mvp-vote-select");
 
 export type VoteSelectDependencies = {
   refreshMessages: typeof refreshMvpTallyMessages;
@@ -124,5 +127,9 @@ export async function handleMvpVoteSelect(
   await interaction.showModal(
     mvpVoteModal({ matchId, category: parsed.category }),
   );
-  void dependencies.refreshMessages({ matchId, serverId }, prismaClient);
+  try {
+    await dependencies.refreshMessages({ matchId, serverId }, prismaClient);
+  } catch (error) {
+    logger.error("Failed to refresh the MVP tally after a vote", error);
+  }
 }

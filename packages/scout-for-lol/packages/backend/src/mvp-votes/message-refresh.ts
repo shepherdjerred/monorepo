@@ -1,7 +1,7 @@
-import type { APIEmbed, MessageEditOptions } from "discord.js";
+import type { APIEmbed, Channel, MessageEditOptions } from "discord.js";
 import { EmbedBuilder } from "discord.js";
+import { z } from "zod";
 import {
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   MatchIdSchema,
   type DiscordChannelId,
@@ -20,6 +20,19 @@ import { mvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { listMatchMvpVotes, loadMatchMvpRoster } from "#src/mvp-votes/vote.ts";
 
 const logger = createLogger("mvp-vote-refresh");
+const DiscordApiErrorSchema = z.object({ code: z.number() });
+const UNKNOWN_DISCORD_RESOURCE_CODES = new Set([10_003, 10_008]);
+
+function isUnknownDiscordResource(error: unknown): boolean {
+  const parsed = DiscordApiErrorSchema.safeParse(error);
+  return parsed.success && UNKNOWN_DISCORD_RESOURCE_CODES.has(parsed.data.code);
+}
+
+function guildIdOfChannel(channel: Channel): DiscordGuildId | undefined {
+  const guildId: unknown = "guildId" in channel ? channel.guildId : undefined;
+  const parsed = DiscordGuildIdSchema.safeParse(guildId);
+  return parsed.success ? parsed.data : undefined;
+}
 
 export type MvpTallyMessageEdit = (input: {
   channelId: DiscordChannelId;
@@ -64,22 +77,11 @@ function withReplacedTally(
 
 async function deliveredPostmatchRefs(
   matchId: MatchId,
-  serverId: DiscordGuildId,
   prismaClient: ExtendedPrismaClient,
 ): Promise<{ channelId: DiscordChannelId; messageId: string }[]> {
-  const [intents, subscriptions] = await Promise.all([
-    listIntentsForMatch(prismaClient, {
-      matchId: RiotMatchIdSchema.parse(matchId),
-    }),
-    prismaClient.subscription.findMany({
-      where: { serverId },
-      select: { channelId: true },
-      distinct: ["channelId"],
-    }),
-  ]);
-  const guildChannels = new Set(
-    subscriptions.map((row) => DiscordChannelIdSchema.parse(row.channelId)),
-  );
+  const intents = await listIntentsForMatch(prismaClient, {
+    matchId: RiotMatchIdSchema.parse(matchId),
+  });
   const refs: { channelId: DiscordChannelId; messageId: string }[] = [];
   for (const record of intents) {
     if (record.intent.kind !== "postmatch") {
@@ -90,7 +92,7 @@ async function deliveredPostmatchRefs(
       continue;
     }
     const target = record.intent.target;
-    if (target.kind !== "channel" || !guildChannels.has(target.channelId)) {
+    if (target.kind !== "channel") {
       continue;
     }
     refs.push({ channelId: target.channelId, messageId: state.messageId });
@@ -112,7 +114,7 @@ async function refreshOnce(
   const [votes, aliases, refs] = await Promise.all([
     listMatchMvpVotes(input, prismaClient),
     guildAliasesForRoster({ serverId: input.serverId, roster }, prismaClient),
-    deliveredPostmatchRefs(input.matchId, input.serverId, prismaClient),
+    deliveredPostmatchRefs(input.matchId, prismaClient),
   ]);
   if (refs.length === 0) {
     logger.info(
@@ -120,34 +122,55 @@ async function refreshOnce(
     );
     return;
   }
+  let updated = 0;
   for (const ref of refs) {
-    const channel = await fetchChannelForDelivery(ref.channelId);
-    if (channel?.isTextBased() !== true) {
-      logger.warn(
-        `Skipping MVP tally edit for missing channel ${ref.channelId}`,
+    try {
+      const channel = await fetchChannelForDelivery(ref.channelId);
+      if (channel?.isTextBased() !== true) {
+        logger.warn(
+          `Skipping MVP tally edit for missing channel ${ref.channelId}`,
+        );
+        continue;
+      }
+      if (guildIdOfChannel(channel) !== input.serverId) {
+        continue;
+      }
+      const message = await channel.messages.fetch(ref.messageId);
+      const current = message.embeds.map((embed) => embed.toJSON());
+      const existingTally = current.find(
+        (embed) => embed.title === MVP_TALLY_TITLE,
       );
-      continue;
+      const tally = mvpTallyEmbed({
+        votes,
+        roster,
+        aliases,
+        footerText:
+          existingTally === undefined ? undefined : tallyFooter(existingTally),
+      });
+      await editMessage({
+        channelId: ref.channelId,
+        messageId: ref.messageId,
+        options: {
+          embeds: withReplacedTally(current, tally),
+          allowedMentions: { parse: [] },
+        },
+      });
+      updated += 1;
+    } catch (error) {
+      if (isUnknownDiscordResource(error)) {
+        logger.warn(
+          `Skipping MVP tally edit for missing Discord resource ${ref.channelId}/${ref.messageId}`,
+          error,
+        );
+        continue;
+      }
+      throw error;
     }
-    const message = await channel.messages.fetch(ref.messageId);
-    const current = message.embeds.map((embed) => embed.toJSON());
-    const existingTally = current.find(
-      (embed) => embed.title === MVP_TALLY_TITLE,
+  }
+  if (updated === 0) {
+    logger.info(
+      `No delivered Flex reports in ${input.serverId} to update for ${input.matchId}`,
     );
-    const tally = mvpTallyEmbed({
-      votes,
-      roster,
-      aliases,
-      footerText:
-        existingTally === undefined ? undefined : tallyFooter(existingTally),
-    });
-    await editMessage({
-      channelId: ref.channelId,
-      messageId: ref.messageId,
-      options: {
-        embeds: withReplacedTally(current, tally),
-        allowedMentions: { parse: [] },
-      },
-    });
   }
 }
 

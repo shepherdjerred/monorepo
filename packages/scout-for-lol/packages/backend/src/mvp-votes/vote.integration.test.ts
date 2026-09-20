@@ -134,6 +134,36 @@ describe("Match MVP votes", () => {
     expect(votes).toHaveLength(2);
   });
 
+  test("a later linked Player on the same Discord wins when the oldest did not play", async () => {
+    const frozen = roster();
+    await db.matchMvpContest.create({
+      data: { matchId: MATCH_ID, roster: frozen },
+    });
+    await createTrackedTestPlayer(db, {
+      alias: "spectator",
+      serverId: SERVER_ID,
+      discordId: VOTER,
+      accounts: [bucksTestPuuid(20)],
+      creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
+      createdAt: new Date("2026-09-19T00:00:00.000Z"),
+    });
+    await createTrackedTestPlayer(db, {
+      alias: "alice",
+      serverId: SERVER_ID,
+      discordId: VOTER,
+      accounts: [bucksTestPuuid(0)],
+      creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
+      createdAt: new Date("2026-09-19T00:00:01.000Z"),
+    });
+
+    const voter = await findMatchMvpVoter(
+      { serverId: SERVER_ID, discordId: VOTER, roster: frozen },
+      db,
+    );
+    expect(voter?.alias).toBe("alice");
+    expect(voter?.rosterIndex).toBe(0);
+  });
+
   test("a linked Discord who did not play cannot vote", async () => {
     const frozen = roster();
     await createTrackedTestPlayer(db, {
