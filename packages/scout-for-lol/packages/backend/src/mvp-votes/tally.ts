@@ -11,6 +11,8 @@ import type { StoredMatchMvpVote } from "#src/mvp-votes/vote.ts";
 /** Discord embed description limit, with a small buffer for formatting. */
 const TALLY_DESCRIPTION_BUDGET = 3900;
 const REASON_LINE_MAX = 80;
+const DISPLAY_NAME_MAX = 80;
+const CHAMPION_LABEL_MAX = 24;
 
 export function emptyMvpTallyEmbed(): EmbedBuilder {
   return new EmbedBuilder({
@@ -19,37 +21,7 @@ export function emptyMvpTallyEmbed(): EmbedBuilder {
   });
 }
 
-export function displayNameFor(
-  puuid: LeaguePuuid,
-  roster: MatchMvpRoster,
-  aliases: ReadonlyMap<LeaguePuuid, string>,
-): string {
-  const alias = aliases.get(puuid);
-  if (alias !== undefined && alias.trim().length > 0) {
-    return alias;
-  }
-  const participant = roster.participants.find(
-    (entry) => entry.puuid === puuid,
-  );
-  if (participant === undefined) {
-    throw new Error(
-      `Match MVP tally asked to name ${puuid}, who is not on the frozen roster`,
-    );
-  }
-  return participant.riotId;
-}
-
-export function nomineeLabel(
-  index: number,
-  roster: MatchMvpRoster,
-  aliases: ReadonlyMap<LeaguePuuid, string>,
-): string {
-  const participant = nomineeAt(roster, index);
-  const name = displayNameFor(participant.puuid, roster, aliases);
-  return `${name} (${participant.championName})`;
-}
-
-function sanitizeReason(raw: string): string {
+function sanitizeTallyText(raw: string): string {
   const oneLine = raw
     .replaceAll(/[\r\n\u{2028}\u{2029}]+/gu, " ")
     .replaceAll(/\s+/gu, " ")
@@ -63,6 +35,40 @@ function sanitizeReason(raw: string): string {
     .replaceAll("@everyone", "@\u{200B}everyone")
     .replaceAll("@here", "@\u{200B}here")
     .replaceAll(/<@!?\d+>/gu, "[mention]");
+}
+
+export function displayNameFor(
+  puuid: LeaguePuuid,
+  roster: MatchMvpRoster,
+  aliases: ReadonlyMap<LeaguePuuid, string>,
+): string {
+  const alias = aliases.get(puuid);
+  if (alias !== undefined && alias.trim().length > 0) {
+    return truncate(sanitizeTallyText(alias), DISPLAY_NAME_MAX);
+  }
+  const participant = roster.participants.find(
+    (entry) => entry.puuid === puuid,
+  );
+  if (participant === undefined) {
+    throw new Error(
+      `Match MVP tally asked to name ${puuid}, who is not on the frozen roster`,
+    );
+  }
+  return truncate(sanitizeTallyText(participant.riotId), DISPLAY_NAME_MAX);
+}
+
+export function nomineeLabel(
+  index: number,
+  roster: MatchMvpRoster,
+  aliases: ReadonlyMap<LeaguePuuid, string>,
+): string {
+  const participant = nomineeAt(roster, index);
+  const name = displayNameFor(participant.puuid, roster, aliases);
+  const champion = truncate(
+    sanitizeTallyText(participant.championName),
+    CHAMPION_LABEL_MAX,
+  );
+  return `${name} (${champion})`;
 }
 
 function truncate(text: string, max: number): string {
@@ -101,7 +107,7 @@ function bucketsForTeam(
     if (vote.justification !== null) {
       bucket.reasons.push({
         voterLabel: displayNameFor(vote.voterPuuid, roster, aliases),
-        justification: sanitizeReason(vote.justification),
+        justification: sanitizeTallyText(vote.justification),
       });
     }
     byIndex.set(vote.nomineeIndex, bucket);

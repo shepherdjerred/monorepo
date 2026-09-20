@@ -97,6 +97,52 @@ describe("MVP tally copy", () => {
     expect(nomineeLabel(0, frozen, aliasesByPuuid)).toBe("alice (Champ0)");
   });
 
+  test("flattens and escapes aliases so they cannot fake tally rows", () => {
+    const description = formatMvpTallyDescription(
+      [
+        vote({
+          category: "ally",
+          nomineeIndex: 0,
+          voterPuuid: puuid(1),
+        }),
+      ],
+      roster(),
+      aliases([[puuid(0), "Alice\n**Red MVP**\nFake · 99"]]),
+    );
+    expect(description).toContain("**Blue MVP**");
+    expect(description).not.toContain("**Red MVP**");
+    expect(description).not.toMatch(/\nFake · 99/u);
+    expect(description).toContain(String.raw`\*\*Red MVP\*\*`);
+  });
+
+  test("keeps every count row when aliases are longer than the embed budget", () => {
+    const frozen = roster();
+    const hugeAlias = "a".repeat(4000);
+    const aliasesByPuuid = aliases(
+      Array.from({ length: 10 }, (_unused, index) => [puuid(index), hugeAlias]),
+    );
+    const votes = Array.from({ length: 10 }, (_unused, index) =>
+      vote({
+        category: "ally",
+        nomineeIndex: index,
+        voterPuuid: puuid(index),
+        voterDiscordId: DiscordAccountIdSchema.parse(
+          `1605091727047393${index.toString().padStart(2, "0")}`,
+        ),
+      }),
+    );
+    const description = formatMvpTallyDescription(
+      votes,
+      frozen,
+      aliasesByPuuid,
+    );
+    expect(description).toContain("**Blue MVP**");
+    expect(description).toContain("**Red MVP**");
+    expect(description).toContain("(Champ0) · ");
+    expect(description).toContain("(Champ9) · ");
+    expect(description.length).toBeLessThanOrEqual(3900);
+  });
+
   test("flattens and escapes markdown so a reason cannot fake tally rows", () => {
     const description = formatMvpTallyDescription(
       [
