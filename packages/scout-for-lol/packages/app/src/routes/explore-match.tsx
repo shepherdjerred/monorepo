@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
+import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
 import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
 import { useExploreMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -24,6 +25,7 @@ export function ExploreMatch() {
   const { matchId } = useExploreMatchParams();
   const trpc = useTRPC();
   const detail = useQuery(trpc.exploreMatch.detail.queryOptions({ matchId }));
+  const tally = useQuery(trpc.mvpVotes.matchTally.queryOptions({ matchId }));
   const value = Loaded.strict(Loaded.fromQuery(detail, ["explore.match"]));
 
   if (value.status === "loading") {
@@ -68,6 +70,9 @@ export function ExploreMatch() {
         </div>
         <MatchScoreboards teams={match.teams} />
       </section>
+      {tally.data !== null && tally.data !== undefined && (
+        <MatchMvpTally tally={tally.data} />
+      )}
       <MatchTimeline
         source={{ kind: "explore" }}
         matchId={matchId}

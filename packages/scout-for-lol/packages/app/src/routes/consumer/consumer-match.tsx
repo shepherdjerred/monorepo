@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
+import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
 import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {
@@ -35,6 +36,7 @@ export function ConsumerMatch() {
   const detail = useQuery(
     trpc.consumerMatch.detail.queryOptions({ playerId, matchId }),
   );
+  const tally = useQuery(trpc.mvpVotes.matchTally.queryOptions({ matchId }));
   const tracked = useRef(false);
   // `strict` because this query carries authorization: the scoreboard and the
   // guild-scoped Scout aliases below are only visible through a shared guild.
@@ -127,6 +129,10 @@ export function ConsumerMatch() {
         </div>
         <MatchScoreboards teams={match.teams} />
       </section>
+
+      {tally.data !== null && tally.data !== undefined && (
+        <MatchMvpTally tally={tally.data} />
+      )}
 
       <MatchTimeline
         source={{ kind: "consumer", playerId }}

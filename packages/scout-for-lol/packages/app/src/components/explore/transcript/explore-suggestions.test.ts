@@ -36,6 +36,7 @@ describe("EXPLORE_SUGGESTIONS catalog", () => {
   test("includes suggested questions for each specific feature", () => {
     const conditions = new Set(EXPLORE_SUGGESTIONS.map((s) => s.condition));
     expect(conditions.has("bucks")).toBe(true);
+    expect(conditions.has("mvp_votes")).toBe(true);
     expect(conditions.has("dares")).toBe(true);
     expect(conditions.has("competitions")).toBe(true);
     expect(conditions.has("hall_of_fame")).toBe(true);
@@ -53,6 +54,7 @@ describe("isSuggestionEligible and filterSuggestions", () => {
 
   test("evaluates feature flags accurately", () => {
     const bucks = dummySuggestion("bucks");
+    const mvpVotes = dummySuggestion("mvp_votes");
     const dares = dummySuggestion("dares");
     const competitions = dummySuggestion("competitions");
     const hallOfFame = dummySuggestion("hall_of_fame");
@@ -63,6 +65,7 @@ describe("isSuggestionEligible and filterSuggestions", () => {
     // All disabled
     const emptyCtx: ExploreFeatureContext = {};
     expect(isSuggestionEligible(bucks, emptyCtx)).toBe(false);
+    expect(isSuggestionEligible(mvpVotes, emptyCtx)).toBe(false);
     expect(isSuggestionEligible(dares, emptyCtx)).toBe(false);
     expect(isSuggestionEligible(competitions, emptyCtx)).toBe(false);
     expect(isSuggestionEligible(hallOfFame, emptyCtx)).toBe(false);
@@ -72,6 +75,9 @@ describe("isSuggestionEligible and filterSuggestions", () => {
 
     // Each enabled individually
     expect(isSuggestionEligible(bucks, { bucksEnabled: true })).toBe(true);
+    expect(isSuggestionEligible(mvpVotes, { mvpVotesEnabled: true })).toBe(
+      true,
+    );
     expect(isSuggestionEligible(dares, { daresEnabled: true })).toBe(true);
     expect(
       isSuggestionEligible(competitions, { competitionsEnabled: true }),
@@ -90,7 +96,10 @@ describe("isSuggestionEligible and filterSuggestions", () => {
     const filteredNoFlags = filterSuggestions(EXPLORE_SUGGESTIONS, {});
     expect(
       filteredNoFlags.some(
-        (s) => s.condition === "bucks" || s.condition === "dares",
+        (s) =>
+          s.condition === "bucks" ||
+          s.condition === "mvp_votes" ||
+          s.condition === "dares",
       ),
     ).toBe(false);
     expect(filteredNoFlags.some((s) => s.condition === "competitions")).toBe(
@@ -159,6 +168,7 @@ describe("pickDiverseSuggestions", () => {
     // When flags are enabled and we pick 4 items, they should be drawn from different categories
     const ctx: ExploreFeatureContext = {
       bucksEnabled: true,
+      mvpVotesEnabled: true,
       daresEnabled: true,
       competitionsEnabled: true,
       hallOfFameEnabled: true,

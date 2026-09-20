@@ -5,6 +5,7 @@ import {
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
   MatchIdSchema,
+  resolveQueueTypeFromGame,
   RiotTeamIdSchema,
   type DiscordAccountId,
   type DiscordChannelId,
@@ -34,6 +35,8 @@ export type StoredMatchMvpVote = {
   voterDiscordId: DiscordAccountId;
   category: MatchMvpCategory;
   nomineeIndex: number;
+  nomineePuuid: LeaguePuuid | null;
+  nomineeTeamId: RiotTeamId | null;
   voterPuuid: LeaguePuuid;
   voterTeamId: RiotTeamId;
   justification: string | null;
@@ -45,6 +48,8 @@ const StoredMatchMvpVoteRowSchema = z.object({
   voterDiscordId: DiscordAccountIdSchema,
   category: MatchMvpCategorySchema,
   nomineeIndex: z.number().int().min(0).max(9),
+  nomineePuuid: LeaguePuuidSchema.nullable(),
+  nomineeTeamId: RiotTeamIdSchema.nullable(),
   voterPuuid: LeaguePuuidSchema,
   voterTeamId: RiotTeamIdSchema,
   justification: z.string().max(MVP_JUSTIFICATION_MAX_LENGTH).nullable(),
@@ -81,6 +86,12 @@ export async function ensureMatchMvpContest(
 ): Promise<MatchMvpRoster> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const roster = freezeMatchMvpRoster(match);
+  const gameCreationAt = new Date(match.info.gameCreation);
+  const queueType = resolveQueueTypeFromGame(
+    match.info.queueId,
+    match.info.gameMode,
+    match.info.gameType,
+  );
   const existing = await prismaClient.matchMvpContest.findUnique({
     where: { matchId },
     select: { roster: true },
@@ -90,7 +101,12 @@ export async function ensureMatchMvpContest(
   }
   try {
     await prismaClient.matchMvpContest.create({
-      data: { matchId, roster },
+      data: {
+        matchId,
+        roster,
+        gameCreationAt,
+        queueType: queueType ?? null,
+      },
     });
   } catch (error) {
     if (!isUniqueConstraintError(error)) {
@@ -211,7 +227,7 @@ export async function upsertMatchMvpVote(
   // name any of the ten participants on either ballot. The public tally
   // groups by the nominee's side, so two ballots for the same person both
   // count there.
-  nomineeAt(roster, input.nomineeIndex);
+  const nominee = nomineeAt(roster, input.nomineeIndex);
   const justification =
     input.justification === undefined ? null : input.justification;
   const row = await prismaClient.matchMvpVote.upsert({
@@ -229,12 +245,16 @@ export async function upsertMatchMvpVote(
       voterDiscordId: input.voterDiscordId,
       category: input.category,
       nomineeIndex: input.nomineeIndex,
+      nomineePuuid: nominee.puuid,
+      nomineeTeamId: nominee.teamId,
       voterPuuid: input.voterPuuid,
       voterTeamId: input.voterTeamId,
       justification,
     },
     update: {
       nomineeIndex: input.nomineeIndex,
+      nomineePuuid: nominee.puuid,
+      nomineeTeamId: nominee.teamId,
       voterPuuid: input.voterPuuid,
       voterTeamId: input.voterTeamId,
       justification,

@@ -178,6 +178,7 @@ const seedSuggestionContext: StorySeed = (trpc, queryClient) => {
       isDiscordAdmin: true,
       customNightsEnabled: true,
       hallOfFameEnabled: true,
+      mvpVotesEnabled: true,
       permissions: [...ALL_PERMISSIONS],
     },
   ]);

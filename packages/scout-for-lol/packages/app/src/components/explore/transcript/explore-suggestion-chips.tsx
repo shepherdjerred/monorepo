@@ -33,6 +33,8 @@ export function ExploreSuggestionChips(props: {
   const featureContext = useMemo<ExploreFeatureContext>(
     () => ({
       bucksEnabled: bucksQuery.data?.state === "available",
+      mvpVotesEnabled:
+        guildsQuery.data?.some((g) => g.mvpVotesEnabled) ?? false,
       daresEnabled:
         bucksQuery.data?.state === "available" &&
         bucksQuery.data.guilds.some((g) => g.daresAvailable),

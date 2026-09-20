@@ -90,6 +90,8 @@ describe("Match MVP votes", () => {
       db,
     );
     expect(ally.nomineeIndex).toBe(9);
+    expect(ally.nomineePuuid).toBe(bucksTestPuuid(9));
+    expect(ally.nomineeTeamId).toBe(200);
     expect(ally.justification).toBeNull();
 
     await upsertMatchMvpVote(

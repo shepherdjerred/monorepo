@@ -1,0 +1,143 @@
+import { tool } from "ai";
+import { z } from "zod";
+import {
+  DiscordGuildIdSchema,
+  MatchIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
+import {
+  isPolicyEnabled,
+  listGuildsWithFlagEnabled,
+} from "#src/configuration/flags.ts";
+import {
+  loadMatchMvpTallyForGuild,
+  MatchMvpGuildTallySchema,
+} from "#src/mvp-votes/query/tally.ts";
+import {
+  loadMvpVoteLeaderboard,
+  MvpVoteLeaderboardResultSchema,
+  MvpVoteQueueTypeSchema,
+} from "#src/mvp-votes/query/leaderboard.ts";
+import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+
+export type MvpVotesExploreCapability = {
+  serverId: DiscordGuildId;
+};
+
+/**
+ * Whether — and for which guild — this turn may read community MVP votes.
+ *
+ * Mirrors Bryan Bucks: the sync registry pre-filter bounds Flipt evaluation,
+ * zero enabled guilds hide the tools, and more than one enabled guild in
+ * scope is a hard failure until an explicit mapping exists.
+ */
+export async function resolveMvpVotesCapability(
+  guildIds: readonly string[],
+): Promise<MvpVotesExploreCapability | null> {
+  const declared = new Set<string>(
+    listGuildsWithFlagEnabled("mvp_votes_enabled"),
+  );
+  const candidates = guildIds.filter((guildId) => declared.has(guildId));
+  const enabled: DiscordGuildId[] = [];
+  for (const guildId of candidates) {
+    const serverId = DiscordGuildIdSchema.parse(guildId);
+    if (await isPolicyEnabled("mvp_votes_enabled", { server: serverId })) {
+      enabled.push(serverId);
+    }
+  }
+  if (enabled.length === 0) {
+    return null;
+  }
+  const serverId = enabled[0];
+  if (serverId === undefined || enabled.length > 1) {
+    throw new Error(
+      "Community MVP vote analysis requires exactly one enabled guild in scope; " +
+        "add an explicit mapping before enabling a second guild.",
+    );
+  }
+  return { serverId };
+}
+
+const LeaderboardToolInputSchema = z.strictObject({
+  from: z.iso.datetime(),
+  to: z.iso.datetime(),
+  queueType: MvpVoteQueueTypeSchema.optional(),
+  limit: z.number().int().min(1).max(50).optional(),
+});
+
+const MatchTallyToolInputSchema = z.strictObject({
+  matchId: MatchIdSchema,
+});
+
+const MatchTallyToolResultSchema = z.strictObject({
+  found: z.boolean(),
+  message: z.string(),
+  tally: MatchMvpGuildTallySchema.nullable(),
+});
+
+export type MvpVotesExploreToolsInput = {
+  capability: MvpVotesExploreCapability;
+  track: ToolTracker;
+};
+
+export function createMvpVotesToolExecutors(input: MvpVotesExploreToolsInput) {
+  return {
+    queryLeaderboard: (inputData: unknown) =>
+      input.track("query_mvp_vote_leaderboard", async () => {
+        const parsed = LeaderboardToolInputSchema.parse(inputData);
+        return await loadMvpVoteLeaderboard({
+          serverId: input.capability.serverId,
+          from: parsed.from,
+          to: parsed.to,
+          ...(parsed.queueType === undefined
+            ? {}
+            : { queueType: parsed.queueType }),
+          ...(parsed.limit === undefined ? {} : { limit: parsed.limit }),
+        });
+      }),
+    queryMatchTally: (inputData: unknown) =>
+      input.track("query_mvp_match_tally", async () => {
+        const parsed = MatchTallyToolInputSchema.parse(inputData);
+        const tally = await loadMatchMvpTallyForGuild({
+          matchId: parsed.matchId,
+          guild: {
+            id: input.capability.serverId,
+            name: "this server",
+          },
+        });
+        if (tally === null) {
+          return {
+            found: false,
+            message:
+              "No community MVP votes are recorded for this match in this server.",
+            tally: null,
+          };
+        }
+        return {
+          found: true,
+          message: "Community MVP votes for this match in this server.",
+          tally,
+        };
+      }),
+  };
+}
+
+export function createMvpVotesExploreTools(input: MvpVotesExploreToolsInput) {
+  const executors = createMvpVotesToolExecutors(input);
+  return {
+    query_mvp_vote_leaderboard: tool({
+      description:
+        "Rank who received the most community Discord MVP votes in this server over an explicit UTC date range of match start times. Optional queueType is flex or ranked 5s. Load the mvp-votes skill first if you have not this turn.",
+      inputSchema: LeaderboardToolInputSchema,
+      outputSchema: MvpVoteLeaderboardResultSchema,
+      execute: (inputData) => executors.queryLeaderboard(inputData),
+    }),
+    query_mvp_match_tally: tool({
+      description:
+        "Read the community Discord MVP vote tally for one matchId in this server. Load the mvp-votes skill first if you have not this turn.",
+      inputSchema: MatchTallyToolInputSchema,
+      outputSchema: MatchTallyToolResultSchema,
+      execute: (inputData) => executors.queryMatchTally(inputData),
+    }),
+  };
+}
