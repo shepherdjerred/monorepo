@@ -39,7 +39,9 @@ function sameWorkKey(left: string, right: string): boolean {
   if (leftTokens.length < 2 || rightTokens.length < 2) return false;
   const [shorter, longer] =
     left.length <= right.length ? [left, right] : [right, left];
-  return ` ${longer} `.includes(` ${shorter} `);
+  // Artist-stripped titles are suffixes ("travis scott sicko mode" / "sicko mode").
+  // A prefix match would collapse "Harry Potter" into every sequel.
+  return longer.endsWith(` ${shorter}`);
 }
 
 /**

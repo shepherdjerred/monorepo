@@ -159,18 +159,17 @@ export function withMode(source: Source, mode: MediaMode | undefined): Source {
   }
 }
 
-/** Stamp a spoken-command hint onto a source so classification can break YouTube category ties. */
+/** Stamp or clear a spoken-command hint so classification can break YouTube category ties. */
 export function withSpoken(
   source: Source,
   spoken: boolean | undefined,
 ): Source {
-  if (spoken !== true) return source;
   switch (source.kind) {
     case "file":
-      return { ...source, spoken: true };
+      return { ...source, spoken: spoken === true ? true : undefined };
     case "url":
-      return { ...source, spoken: true };
+      return { ...source, spoken: spoken === true ? true : undefined };
     case "search":
-      return { ...source, spoken: true };
+      return { ...source, spoken: spoken === true ? true : undefined };
   }
 }

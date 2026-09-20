@@ -228,15 +228,18 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
 
   replyTranscript(transcript: string): void {
     this.state.replyTranscript = transcript;
-    this.rootSpan.setAttribute("streambot.voice.reply_transcript", transcript);
   }
 
   tool(observation: VoiceToolObservation): void {
     this.state.tools.push(observation);
+    const argumentFields =
+      typeof observation.arguments === "object" &&
+      observation.arguments !== null
+        ? Object.keys(observation.arguments).length
+        : 0;
     this.rootSpan.addEvent("streambot.voice.tool", {
       "streambot.voice.tool.name": observation.name,
-      "streambot.voice.tool.arguments": JSON.stringify(observation.arguments),
-      "streambot.voice.tool.result": observation.result ?? "",
+      "streambot.voice.tool.argument_fields": argumentFields,
       "streambot.voice.tool.outcome": observation.outcome,
       "streambot.voice.tool.duration_ms": observation.durationMs,
     });
@@ -315,13 +318,10 @@ export class ObservedVoiceAttempt implements VoiceAttemptHandle {
         sessionId: this.candidate.sessionId,
         outcome,
         durationMs: Math.max(0, endedAtMs - this.candidate.detectedAtMs),
-        transcript: this.state.transcript,
-        normalizedCommand: this.state.normalizedCommand,
-        replyTranscript: this.state.replyTranscript,
+        toolCount: this.state.tools.length,
         tools: this.state.tools.map((tool) => ({
           name: tool.name,
-          arguments: tool.arguments,
-          result: tool.result,
+          outcome: tool.outcome,
         })),
       });
     });

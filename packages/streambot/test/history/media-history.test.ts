@@ -108,6 +108,42 @@ describe("media history", () => {
     }
   });
 
+  test("strips a spoken request hint before storing an item", () => {
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      const media = {
+        title: "Spoken Cover",
+        provider: "youtube" as const,
+        source: {
+          kind: "url" as const,
+          url: "https://youtu.be/spoken",
+          spoken: true as const,
+        },
+      };
+      const requestId = history.recordQueueRequest({
+        scope: USER_SCOPE,
+        rawQuery: media.title,
+        intent: inferMediaIntent({ query: media.title }),
+        media,
+        nowMs: 1000,
+      });
+      history.recordPlaybackStart({
+        requestId,
+        scope: USER_SCOPE,
+        media,
+        nowMs: 1000,
+      });
+      const found = history.search(USER_SCOPE, "Spoken");
+      expect(found).toHaveLength(1);
+      expect(found[0]?.source).toEqual({
+        kind: "url",
+        url: "https://youtu.be/spoken",
+      });
+    } finally {
+      history.close();
+    }
+  });
+
   test("leaves a request that carried no mode byte-identical to today", () => {
     // Every stored item lands mode-less regardless of how it was requested, so a replay's transport
     // is decided by the classifier at play time rather than inherited from whoever queued it last.

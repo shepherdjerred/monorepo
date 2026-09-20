@@ -55,6 +55,16 @@ describe("same-work matching", () => {
     ).toBeUndefined();
   });
 
+  test("does not treat a franchise prefix as the same work as its sequels", () => {
+    expect(
+      pickOfficialSameWork([
+        candidate("Harry Potter (Official Trailer)"),
+        candidate("Harry Potter and the Chamber of Secrets"),
+        candidate("Harry Potter and the Goblet of Fire"),
+      ]),
+    ).toBeUndefined();
+  });
+
   test("fuzzy-matches Silco and Suka onto SICKO MODE", () => {
     const official = candidate("Travis Scott - SICKO MODE (Official Video)");
     const pending = [official, candidate("Travis Scott - SICKO MODE")];

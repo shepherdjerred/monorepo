@@ -161,7 +161,10 @@ export function createStreambotVoiceTools(
       `streambot.voice.tool.${name}`,
       {
         "streambot.voice.tool.name": name,
-        "streambot.voice.tool.arguments": JSON.stringify(toolArguments),
+        "streambot.voice.tool.argument_fields":
+          typeof toolArguments === "object" && toolArguments !== null
+            ? Object.keys(toolArguments).length
+            : 0,
         "streambot.voice.tool.mutating": mutating,
       },
       async (span) => {
@@ -218,7 +221,6 @@ export function createStreambotVoiceTools(
           );
           span.setAttributes({
             "streambot.voice.tool.outcome": outcome,
-            "streambot.voice.tool.result": result ?? "",
             "streambot.voice.tool.duration_ms": durationMs,
           });
           attempt.tool({
