@@ -31,7 +31,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.4",
     "@types/jsdom": "^30.0.0",
-    "astro": "^7.1.5",
+    "astro": "^7.3.3",
     "astro-icon": "^1.1.5",
     "astro-opengraph-images": "workspace:*",
     "astro-seo": "^1.1.0",

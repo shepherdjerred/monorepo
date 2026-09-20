@@ -16,7 +16,7 @@
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.2.4",
-    "astro": "^7.1.5",
+    "astro": "^7.3.3",
     "astro-icon": "^1.1.1",
     "astro-opengraph-images": "workspace:*",
     "clsx": "^2.1.1",
