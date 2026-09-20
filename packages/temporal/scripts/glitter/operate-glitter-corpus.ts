@@ -46,8 +46,27 @@ function flags(argv: readonly string[]): Record<string, string> {
  * and an optional corpus-snapshot pin, plus whether to await the result. Kept
  * as one fragment so the two command schemas cannot drift apart.
  */
+/**
+ * `--now=<iso>` is typed by an operator, and ISO 8601 accepts minute precision
+ * ("2026-09-20T12:00Z"). zod 4.6 made `z.iso.datetime()` require seconds, so
+ * fill in the missing seconds rather than rejecting a form the flag has always
+ * documented. Input that is not minute-precision is left alone and still has
+ * to pass the strict validator.
+ */
+const OperatorInstantSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const withSeconds = value.replace(
+      /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(Z|[+-]\d{2}:\d{2})$/u,
+      "$1:00$2",
+    );
+    return withSeconds;
+  },
+  z.iso.datetime({ offset: true }),
+);
+
 const CONTEXT_COMMAND_FLAGS = {
-  now: z.iso.datetime({ offset: true }).optional(),
+  now: OperatorInstantSchema.optional(),
   "snapshot-id": z.uuid().optional(),
   "snapshot-sha256": z
     .string()
