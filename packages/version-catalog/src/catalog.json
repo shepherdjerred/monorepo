@@ -961,19 +961,6 @@
       ]
     },
     {
-      "name": "shepherdjerred/scout-evals",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-16257@sha256:4cda369fee4627518f3aab20024de39d405e5632de6c4de81ba5835dadbe7f52",
-      "notes": [
-        "not managed by renovate — placeholder digest; CI version-commit-back fills",
-        "the real digest after the first successful scout-evals image push."
-      ]
-    },
-    {
       "name": "shepherdjerred/discord-plays-pokemon",
       "category": "internal-image",
       "artifactType": "image",

@@ -139,7 +139,6 @@
     "packages/scout-for-lol/packages/design-system",
     "packages/scout-for-lol/packages/docs-site",
     "packages/scout-for-lol/packages/domain",
-    "packages/scout-for-lol/packages/evals",
     "packages/scout-for-lol/packages/frontend",
     "packages/scout-for-lol/packages/report",
     "packages/scout-for-lol/packages/temporal",

@@ -503,10 +503,6 @@ await assertPackageTokens([
     "packages/sjer.red/package.json",
     ['"bun --no-install --bun playwright test'],
   ],
-  [
-    "packages/scout-for-lol/packages/evals/package.json",
-    ['"bun --no-install --bun playwright test'],
-  ],
   ["scripts/package.json", ['"bunx --no-install eslint']],
   [
     "packages/release-tools/package.json",

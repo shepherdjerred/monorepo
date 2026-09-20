@@ -31,10 +31,6 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
     package: "@scout-for-lol/design-system",
     reportDirectory: "scout-for-lol__design-system",
   },
-  {
-    package: "@scout-for-lol/evals",
-    reportDirectory: "scout-for-lol__evals",
-  },
 ] as const;
 
 const ALL_TARGET_INPUTS = [
@@ -80,7 +76,6 @@ const SCOUT_TARGETS = new Set([
   "@scout-for-lol/activity",
   "@scout-for-lol/app",
   "@scout-for-lol/design-system",
-  "@scout-for-lol/evals",
 ]);
 const SITE_ARTIFACT_TARGETS = new Set([
   "sjer.red",
