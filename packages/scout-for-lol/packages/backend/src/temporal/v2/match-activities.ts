@@ -112,6 +112,15 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
           return await advanceMatchCursorV2(input);
         },
       ),
+    mintPostmatchNotificationIntentsV2: async (input) =>
+      await heartbeatWhile(
+        { riotMatchId: input.riotMatchId, phase: "minting-report-intents-v2" },
+        async () => {
+          const { mintPostmatchNotificationIntentsV2 } =
+            await import("#src/temporal/v2/match-effects.ts");
+          return await mintPostmatchNotificationIntentsV2(input);
+        },
+      ),
     planMatchFanOutV2: async (input) =>
       await heartbeatWhile(
         { riotMatchId: input.riotMatchId, phase: "planning-fan-out-v2" },

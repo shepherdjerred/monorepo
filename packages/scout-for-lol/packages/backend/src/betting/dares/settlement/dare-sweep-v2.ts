@@ -116,7 +116,7 @@ export async function settleEndedDareV2Windows(
         row,
         "invalid_contract",
         prismaClient,
-        now,
+        { now },
       );
       return voided
         ? {

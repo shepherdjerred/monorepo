@@ -278,6 +278,24 @@ export type ScoutTournamentResultV2Result = z.infer<
   typeof ScoutTournamentResultV2ResultSchema
 >;
 
+/**
+ * What one post-match minting pass did.
+ *
+ * `silent` is counted rather than folded into a zero, because "this match is
+ * owed no public delivery" and "this match had no subscribed channel" are
+ * different facts and a result envelope that reported both as nothing minted
+ * could not tell an operator which happened.
+ */
+export const ScoutMintedIntentsV2ResultSchema = z.strictObject({
+  minted: z.int().nonnegative(),
+  existing: z.int().nonnegative(),
+  conflicts: z.int().nonnegative(),
+  silent: z.int().nonnegative(),
+});
+export type ScoutMintedIntentsV2Result = z.infer<
+  typeof ScoutMintedIntentsV2ResultSchema
+>;
+
 export const ScoutMatchCursorV2ResultSchema = z.strictObject({
   advanced: z.int().nonnegative(),
   alreadyAdvanced: z.int().nonnegative(),

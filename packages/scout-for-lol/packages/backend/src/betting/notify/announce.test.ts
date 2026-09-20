@@ -15,7 +15,7 @@ import {
   formatSettlementBody,
 } from "#src/betting/notify/outcome-message.ts";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 import {
   ChannelSendError,

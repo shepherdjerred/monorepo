@@ -398,6 +398,7 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   finalizeTournamentResultV2: "realtime",
   recordMatchReceiptsV2: "realtime",
   advanceMatchCursorV2: "realtime",
+  mintPostmatchNotificationIntentsV2: "realtime",
   planMatchFanOutV2: "realtime",
   archivePrematchSnapshotV2: "realtime",
   planPrematchFanOutV2: "realtime",

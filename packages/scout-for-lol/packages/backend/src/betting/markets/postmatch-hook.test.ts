@@ -4,7 +4,7 @@ import {
   refreshPendingDareV2CalloutsWithoutBlocking,
   refreshSettledPoolMessages,
 } from "#src/betting/markets/postmatch-hook.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import { defaultDareV2CalloutDependencies } from "#src/betting/dares/presentation/dare-callout-v2.ts";
 
 describe("refreshSettledPoolMessages", () => {

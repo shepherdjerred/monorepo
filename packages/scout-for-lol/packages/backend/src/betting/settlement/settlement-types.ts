@@ -1,6 +1,8 @@
 import type {
   BucksAmount,
+  BucksPoolTotal,
   BucksStake,
+  BucksVoidReason,
   DiscordAccountId,
   LeaguePuuid,
 } from "@scout-for-lol/data";
@@ -30,4 +32,19 @@ export type SettlementBet = {
   won: boolean;
   refunded: boolean;
   subjectPuuid: LeaguePuuid;
+};
+
+export type SettlementSummary = {
+  matchId: string;
+  serverId: string;
+  winningTeamId: number | undefined;
+  voidReason: BucksVoidReason | undefined;
+  // Pool-level aggregates sum many bettors' Int32 positions, and matching
+  // permits a side to total up to Number.MAX_SAFE_INTEGER. `BucksPoolTotal`
+  // is the brand for exactly that: non-negative, exact, and deliberately not
+  // bounded by any one bettor's storage column.
+  winnersPool: BucksPoolTotal;
+  losersPool: BucksPoolTotal;
+  houseCut: BucksPoolTotal;
+  bets: SettlementBet[];
 };

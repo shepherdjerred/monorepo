@@ -11,8 +11,8 @@ import {
   voidDareWithFullRefund,
   type ActiveDareRow,
   type DareRefundView,
-  type DareSettlementSummary,
 } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
