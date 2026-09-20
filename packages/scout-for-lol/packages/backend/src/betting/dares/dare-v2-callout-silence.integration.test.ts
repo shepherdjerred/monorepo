@@ -219,6 +219,22 @@ async function outboxKinds(dareId: number): Promise<string[]> {
   return rows.map((row) => `${row.category}/${row.kind}`);
 }
 
+/** A match that does NOT resolve the Dare, so its capture stays open. */
+async function nonResolvingMatch(matchId: string): Promise<RawMatch> {
+  const fixture = RawMatchSchema.parse(
+    await Bun.file(
+      new URL("../../../../../testdata/rift.json", import.meta.url),
+    ).json(),
+  );
+  return makeTwistedFateMatch(fixture, {
+    matchId,
+    timePlayed: 25 * 60,
+    // Far below the plan's threshold, so nothing becomes final.
+    creepScore: 1,
+    gameStartTimestamp: T0.getTime() + 60 * 60 * 1000,
+  });
+}
+
 /** A match the active Dare's plan resolves against. */
 async function qualifyingMatch(matchId: string): Promise<RawMatch> {
   const fixture = RawMatchSchema.parse(
@@ -236,6 +252,30 @@ async function qualifyingMatch(matchId: string): Promise<RawMatch> {
 }
 
 describe("withholding a Dare v2 notification", () => {
+  test("a CAPTURED Dare says nothing either, and keeps nothing pending", async () => {
+    // A capture is not final, but it still says something: progress toward a
+    // Dare, and a callout the capture just marked for refresh. Neither
+    // consulted the delivery mode, so a backfill announced its progress and
+    // handed its callout to the next scanner.
+    const dareId = await activeDare("withheld-capture");
+    const beforeSettlement = await outboxKinds(dareId);
+
+    // A match the Dare's plan does NOT resolve on: it captures evidence and
+    // stays active, which is the state under test.
+    await settleDaresV2ForMatch(await nonResolvingMatch("NA1_7000000004"), db, {
+      now: new Date(T0.getTime() + 2 * 60 * 60 * 1000),
+      notify: "withhold",
+    });
+
+    expect(await outboxKinds(dareId)).toEqual(beforeSettlement);
+    expect(
+      await db.bucksDareV2.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { dareState: true, calloutRefreshPending: true },
+      }),
+    ).toEqual({ dareState: "active", calloutRefreshPending: false });
+  });
+
   test("writes no outbox row for a match owed no public delivery", async () => {
     // Withholding the DRAIN was never suppression: the v1 post-match poller
     // drains this same table with no sink and no knowledge of delivery modes,

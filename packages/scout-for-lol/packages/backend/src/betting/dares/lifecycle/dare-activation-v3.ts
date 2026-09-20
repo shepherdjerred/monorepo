@@ -237,7 +237,7 @@ async function activateOne(
       row,
       "activation_timeout",
       dependencies.prismaClient,
-      now,
+      { now },
     );
     return "voided";
   }
@@ -271,7 +271,7 @@ async function activateOne(
         row,
         "activation_timeout",
         dependencies.prismaClient,
-        now,
+        { now },
       );
       return "voided";
     }
@@ -313,7 +313,7 @@ async function activateOne(
         row,
         "target_unavailable",
         dependencies.prismaClient,
-        now,
+        { now },
       );
       return "voided";
     }
@@ -322,7 +322,7 @@ async function activateOne(
         row,
         "insufficient_baseline",
         dependencies.prismaClient,
-        now,
+        { now },
       );
       return "voided";
     }

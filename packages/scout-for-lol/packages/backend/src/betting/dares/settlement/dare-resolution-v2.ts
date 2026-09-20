@@ -8,7 +8,7 @@ import type {
   DareProofV2,
 } from "#src/betting/dares/evaluation/dare-proof-v2.ts";
 import { claimActiveDareV2Settlement } from "#src/betting/dares/settlement/dare-settlement-claim-v2.ts";
-import { recordTerminalDareAnnouncement } from "#src/betting/dares/settlement/dare-terminal-announcement.ts";
+import { recordTerminalDareAnnouncement } from "#src/betting/dares/settlement/dare-announcement.ts";
 import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import type { DareContractV2 } from "@scout-for-lol/data";
 import type { Db } from "#src/database/index.ts";

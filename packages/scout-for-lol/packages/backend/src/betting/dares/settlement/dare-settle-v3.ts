@@ -17,7 +17,10 @@ import { matchTouchesRelationalDare } from "#src/betting/dares/evaluation/dare-m
 import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { dareV2MoneyFactsInTransaction } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import { distributeDareResolutionV3 } from "#src/betting/dares/lifecycle/dare-resolution-v3.ts";
-import { recordTerminalDareAnnouncement } from "#src/betting/dares/settlement/dare-terminal-announcement.ts";
+import {
+  announceOrWithholdDare,
+  recordTerminalDareAnnouncement,
+} from "#src/betting/dares/settlement/dare-announcement.ts";
 import { claimActiveDareV2Settlement } from "#src/betting/dares/settlement/dare-settlement-claim-v2.ts";
 import {
   decisiveTargetDependenciesV3,
@@ -325,14 +328,22 @@ export async function captureDareSqlV3ForMatch(input: {
         })
       : "captured";
     if (resolution === "captured") {
-      await enqueueMaterialDareProgressNotificationV3(tx, {
-        dareId: dare.id,
-        contract,
-        evidence: rows,
-        matchId: matchData.metadata.matchId,
-        finality,
-        now,
-      });
+      // Same rule as the version-2 capture: progress and a pending callout
+      // are both things this match would say, and a backfill says neither.
+      await announceOrWithholdDare(
+        tx,
+        { dareId: dare.id, notify: input.notify },
+        async () => {
+          await enqueueMaterialDareProgressNotificationV3(tx, {
+            dareId: dare.id,
+            contract,
+            evidence: rows,
+            matchId: matchData.metadata.matchId,
+            finality,
+            now,
+          });
+        },
+      );
     }
     return {
       contractVersion: 3,

@@ -41,6 +41,7 @@ import {
 } from "#src/betting/dares/dare-v2-common.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dares/settlement/dare-void-v2.ts";
 import { enqueueMaterialDareProgressNotification } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
+import { announceOrWithholdDare } from "#src/betting/dares/settlement/dare-announcement.ts";
 import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import {
   prisma,
@@ -116,14 +117,23 @@ async function captureOneDareV2(
       })
     : "captured";
   if (resolution === "captured") {
-    await enqueueMaterialDareProgressNotification(tx, {
-      dareId: input.dare.id,
-      contract: input.contract,
-      evidence,
-      matchId: input.matchEvidence.matchId,
-      finality,
-      now: input.now,
-    });
+    // A capture is not final, but it still SAYS something: progress toward a
+    // Dare, and a callout this capture just marked for refresh. A match owed
+    // no public delivery owes neither.
+    await announceOrWithholdDare(
+      tx,
+      { dareId: input.dare.id, notify: input.notify },
+      async () => {
+        await enqueueMaterialDareProgressNotification(tx, {
+          dareId: input.dare.id,
+          contract: input.contract,
+          evidence,
+          matchId: input.matchEvidence.matchId,
+          finality,
+          now: input.now,
+        });
+      },
+    );
   }
   return {
     contractVersion: 2,
@@ -152,7 +162,7 @@ async function inspectStoredContract(
     row,
     "invalid_contract",
     prismaClient,
-    now,
+    { now },
   );
   return {
     kind: "invalid",
@@ -278,6 +288,7 @@ export async function settleDaresV2ForMatch(
           prismaClient,
           now,
           matchId: matchData.metadata.matchId,
+          notify,
         },
         async () =>
           await prismaClient.$transaction(
@@ -322,14 +333,15 @@ export async function settleActiveDareV2AtBound(
   const contract = parseRelationalDareContract(dare.contractJson);
   if (contract.version === 3) {
     return await settleDareV2OrVoidOnStorageOverflow(
-      { dare, prismaClient, now },
+      // A deadline bound delivers no match, so nothing here is owed silence.
+      { dare, prismaClient, now, notify: "enqueue" },
       async () =>
         await settleDareSqlV3AtDeadline(dare, contract, prismaClient, now),
     );
   }
   const evaluator = dareEvaluatorImplementationV2(contract.evaluatorVersion);
   return await settleDareV2OrVoidOnStorageOverflow(
-    { dare, prismaClient, now },
+    { dare, prismaClient, now, notify: "enqueue" },
     async () =>
       await prismaClient.$transaction(async (tx) => {
         const claim = await tx.bucksDareV2.updateMany({

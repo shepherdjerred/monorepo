@@ -249,12 +249,9 @@ async function recoverUnavailableActiveDares(input: {
       logger.warn(
         `Voiding Dare ${dare.id.toString()} because frozen target account(s) are unavailable: ${unavailable.join(", ")}`,
       );
-      await voidDareV2WithFullRefund(
-        dare,
-        "target_unavailable",
-        prisma,
-        input.currentTime,
-      );
+      await voidDareV2WithFullRefund(dare, "target_unavailable", prisma, {
+        now: input.currentTime,
+      });
       continue;
     }
     for (const puuid of darePuuids) requiredPuuids.add(puuid);
