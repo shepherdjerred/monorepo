@@ -152,6 +152,21 @@ function guildDisplay(
   };
 }
 
+function guildProfileDisplay(
+  guilds: { id: string; name: string; icon: string | null }[],
+  guildId: string,
+) {
+  const guild = guilds.find((candidate) => candidate.id === guildId);
+  if (guild === undefined) {
+    throw new Error("Authorized player resolved outside its request scope");
+  }
+  return {
+    id: guild.id,
+    name: guild.name,
+    icon: guild.icon,
+  };
+}
+
 type HomePlayer = {
   id: number;
   alias: string;
@@ -335,7 +350,7 @@ export const consumerPlayerRouter = router({
         ...(input.queues === undefined ? {} : { queues: input.queues }),
       });
       const { guildId, ...profile } = summary;
-      return { ...profile, guild: guildDisplay(guilds, guildId) };
+      return { ...profile, guild: guildProfileDisplay(guilds, guildId) };
     }),
 
   matchHistory: protectedProcedure

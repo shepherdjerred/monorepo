@@ -19,6 +19,7 @@ import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
+import { regionName } from "#src/lib/regions.ts";
 import { useConsumerPlayerParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import {
@@ -285,17 +286,17 @@ function ConsumerPlayerProfileContent(props: {
     <ProfileShell>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <ConsumerGuildAvatar name={summary.guild.name} size="large" />
+          <ConsumerGuildAvatar
+            guildId={summary.guild.id}
+            icon={summary.guild.icon}
+            name={summary.guild.name}
+            size="large"
+          />
           <div>
             <p className="text-sm text-scout-subtle">{summary.guild.name}</p>
             <h1 className="text-3xl font-semibold tracking-tight">
               {summary.alias}
             </h1>
-            <p className="mt-1 text-sm text-scout-subtle">
-              {summary.accountCount === 1
-                ? "1 Riot account"
-                : `${summary.accountCount.toString()} Riot accounts combined`}
-            </p>
           </div>
         </div>
         <Button asChild variant="outline">
@@ -313,12 +314,10 @@ function ConsumerPlayerProfileContent(props: {
                 <CardTitle className="text-lg">
                   {formatRiotId(account, "Riot ID pending")}
                 </CardTitle>
-                <Badge variant="outline">{account.region}</Badge>
+                <Badge variant="outline">{regionName(account.region)}</Badge>
               </div>
-              <CardDescription>
-                Last observed match: {observedAt(account.lastMatchTime)}
-                <br />
-                Last checked by Scout: {observedAt(account.lastCheckedAt)}
+              <CardDescription className="text-xs">
+                Last match: {observedAt(account.lastMatchTime)}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm sm:grid-cols-3">

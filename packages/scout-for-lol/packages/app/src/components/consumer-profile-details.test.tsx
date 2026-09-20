@@ -5,8 +5,8 @@ import { ChampionComparisonTable } from "#src/components/match/champion-comparis
 import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
 import { retainedEventFields } from "#src/components/match/match-timeline.tsx";
 import { FRAME_COLUMNS } from "#src/components/match/timeline-frame-table.tsx";
+import { ChampionPoolTable } from "#src/components/player/champion-pool-table.tsx";
 import {
-  ChampionPoolTable,
   MatchHistoryList,
   PlayerSummaryCards,
   RankValue,

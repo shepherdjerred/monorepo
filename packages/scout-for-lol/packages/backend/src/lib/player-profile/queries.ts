@@ -269,9 +269,18 @@ export type ChampionPoolEntry = {
   championName: string;
   games: number;
   wins: number;
+  losses: number;
   winRate: number;
   kda: number;
+  averageKills: number;
+  averageDeaths: number;
+  averageAssists: number;
+  averageCs: number;
   csPerMinute: number;
+  damagePerMinute: number;
+  averageDamage: number;
+  averageVisionScore: number;
+  teamPosition: string | null;
   /** True when `games` is too small for the rates above to mean much. */
   lowSample: boolean;
 };
@@ -288,6 +297,29 @@ async function accountSummaries(accounts: ProfileAccount[]) {
       ranks: await latestRanks([account.puuid]),
     })),
   );
+}
+
+function calculatePreferredPositions(recent: MatchHistoryEntry[]): {
+  position: string;
+  games: number;
+  percentage: number;
+}[] {
+  const counts = new Map<string, number>();
+  for (const entry of recent) {
+    const pos = entry.teamPosition.trim().toUpperCase();
+    if (pos !== "INVALID" && pos !== "") {
+      counts.set(pos, (counts.get(pos) ?? 0) + 1);
+    }
+  }
+  const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+  if (total === 0) return [];
+  return [...counts.entries()]
+    .map(([position, games]) => ({
+      position,
+      games,
+      percentage: Math.round((games / total) * 100),
+    }))
+    .sort((a, b) => b.games - a.games);
 }
 
 async function profileSummaryForPlayer(
@@ -359,17 +391,37 @@ async function profileSummaryForPlayer(
                 ? null
                 : participations.reduce((sum, value) => sum + value, 0) /
                   participations.length,
+            averageCs:
+              recent.reduce((sum, entry) => sum + entry.creepScore, 0) /
+              recent.length,
+            averageCsPerMinute:
+              recent.reduce((sum, entry) => sum + entry.csPerMinute, 0) /
+              recent.length,
+            averageVisionScore:
+              recent.reduce((sum, entry) => sum + entry.visionScore, 0) /
+              recent.length,
+            preferredPositions: calculatePreferredPositions(recent),
           },
     championPool: pool.map((row): ChampionPoolEntry => {
       const minutes = row.time_played / 60;
+      const games = row.games > 0 ? row.games : 1;
       return {
         championId: row.champion_id,
         championName: row.champion_name,
         games: row.games,
         wins: row.wins,
+        losses: Math.max(0, row.games - row.wins),
         winRate: row.games > 0 ? row.wins / row.games : 0,
         kda: computeKda(row),
+        averageKills: row.kills / games,
+        averageDeaths: row.deaths / games,
+        averageAssists: row.assists / games,
+        averageCs: row.creep_score / games,
         csPerMinute: minutes > 0 ? row.creep_score / minutes : 0,
+        damagePerMinute: minutes > 0 ? row.damage_to_champions / minutes : 0,
+        averageDamage: row.damage_to_champions / games,
+        averageVisionScore: row.vision_score / games,
+        teamPosition: row.team_position,
         lowSample: row.games < MIN_GAMES_FOR_RATE,
       };
     }),
