@@ -28,4 +28,19 @@ describe("conversation context", () => {
       "Taylor Swift - Style",
     );
   });
+
+  test("fuzzy-matches a garbled retry against pending candidates", () => {
+    const context = new ConversationContextStore();
+    context.rememberCandidates(SCOPE, [
+      candidate("Travis Scott - SICKO MODE (Official Video)"),
+      candidate("Travis Scott - SICKO MODE"),
+    ]);
+
+    expect(context.select(SCOPE, "silco")?.title).toBe(
+      "Travis Scott - SICKO MODE (Official Video)",
+    );
+    expect(context.select(SCOPE, "play Suka mode")?.title).toBe(
+      "Travis Scott - SICKO MODE (Official Video)",
+    );
+  });
 });

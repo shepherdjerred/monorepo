@@ -71,4 +71,37 @@ describe("federated discovery", () => {
       candidate: { title: "Result Beta" },
     });
   });
+
+  test("auto-plays the official match when every hit is the same work", async () => {
+    const discovery = new DiscoveryService({
+      library: () => [],
+      searchYoutube: () =>
+        Promise.resolve([
+          {
+            title: "Travis Scott - SICKO MODE (Official Video)",
+            url: "https://youtu.be/official",
+            channel: "TravisScottVEVO",
+          },
+          {
+            title: "Travis Scott - SICKO MODE",
+            url: "https://youtu.be/audio",
+            channel: "Travis Scott",
+          },
+          {
+            title: "SICKO MODE",
+            url: "https://youtu.be/lyrics",
+            channel: "Various Artists - Topic",
+          },
+        ]),
+    });
+    const result = await discovery.resolve(
+      inferMediaIntent({ query: "sicko mode" }),
+      SCOPE,
+      AbortSignal.timeout(1000),
+    );
+    expect(result).toMatchObject({
+      kind: "found",
+      candidate: { title: "Travis Scott - SICKO MODE (Official Video)" },
+    });
+  });
 });
