@@ -90,8 +90,9 @@ describe("prompt template variable conformance", () => {
   });
 
   test("replacePromptVariables throws on an unhydrated placeholder", () => {
-    expect(() => replacePromptVariables("hello <A> and <B>", { A: "x" }))
-      .toThrow(/Missing prompt variables: B/);
+    expect(() =>
+      replacePromptVariables("hello <A> and <B>", { A: "x" }),
+    ).toThrow(/Missing prompt variables: B/);
   });
 
   test("stage 4 tolerates custom templates without ART_STYLE", async () => {

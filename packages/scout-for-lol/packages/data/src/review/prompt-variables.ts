@@ -158,8 +158,7 @@ export const STAGE_PROMPT_VARIABLES = {
       { name: "ART_STYLE", description: "Selected art style description" },
       {
         name: "IMAGE_INSPIRATIONS",
-        description:
-          "Random personality image prompts shaping the art concept",
+        description: "Random personality image prompts shaping the art concept",
       },
     ],
   },
