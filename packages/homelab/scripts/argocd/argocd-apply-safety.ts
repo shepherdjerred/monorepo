@@ -185,7 +185,13 @@ function declaredTargetChanged(
 ): boolean {
   const targetValue = valueAt(target, field.path);
   const liveValue = valueAt(live, field.path);
-  return targetValue === undefined
+  // Kubernetes treats an explicit null in a manifest as an omitted field.
+  // Helm commonly emits null for disabled optional lists (for example a
+  // StatefulSet using an existing claim emits volumeClaimTemplates: null),
+  // while the API server drops that key from the stored object. Compare both
+  // shapes with the field's omission semantics so an absent live field is not
+  // misclassified as an immutable change.
+  return targetValue === undefined || targetValue === null
     ? omissionChanges(field, liveValue)
     : !targetMatchesLive(targetValue, liveValue, field.liveOnlyKeys);
 }

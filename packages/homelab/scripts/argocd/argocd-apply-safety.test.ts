@@ -249,6 +249,50 @@ describe("ArgoCD apply safety", () => {
   });
 });
 
+describe("ArgoCD apply safety on explicit nulls", () => {
+  test("treats a null immutable field as an omission", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "minecraft-sjerred",
+          name: "existing-claim",
+          liveState: state({
+            spec: {
+              serviceName: "minecraft-sjerred",
+              selector: { matchLabels: { app: "minecraft-sjerred" } },
+            },
+          }),
+          targetState: state({
+            spec: {
+              serviceName: "minecraft-sjerred",
+              selector: { matchLabels: { app: "minecraft-sjerred" } },
+              volumeClaimTemplates: null,
+            },
+          }),
+        },
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "minecraft-sjerred",
+          name: "removed-template",
+          liveState: database([{ metadata: { name: "datadir" } }]),
+          targetState: state({
+            spec: {
+              serviceName: "db",
+              selector: { matchLabels: { app: "db" } },
+              volumeClaimTemplates: null,
+            },
+          }),
+        },
+      ]),
+    ).toEqual([
+      "apps/StatefulSet minecraft-sjerred/removed-template changes immutable /spec/volumeClaimTemplates",
+    ]);
+  });
+});
+
 // The preflight reads every managed resource in the application, so an
 // unreadable one has to name itself. Staying fatal is the point — reporting no
 // immutable changes for a resource nobody could inspect is the failure mode
