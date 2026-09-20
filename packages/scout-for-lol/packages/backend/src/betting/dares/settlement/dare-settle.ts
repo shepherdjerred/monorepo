@@ -403,6 +403,7 @@ async function settleOneDareForMatch(
       {
         voidReason: "unknown_evaluator",
         surface: "postmatch",
+        sink: input.sink,
       },
     );
   }
@@ -464,7 +465,11 @@ async function settleOneDareForMatch(
         dareRefundView(row, matchId),
         prismaClient,
         now,
-        { voidReason: "storage_overflow", surface: "postmatch" },
+        {
+          voidReason: "storage_overflow",
+          surface: "postmatch",
+          sink: input.sink,
+        },
       );
     }
     throw error;

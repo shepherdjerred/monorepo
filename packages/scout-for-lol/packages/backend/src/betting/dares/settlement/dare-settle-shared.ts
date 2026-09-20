@@ -1,4 +1,9 @@
 import {
+  announcingSettlementSink,
+  recordAnnouncement,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
+import {
   BucksDareHorizonKindSchema,
   type BucksDareHorizonKind,
 } from "@scout-for-lol/data";
@@ -197,9 +202,14 @@ export async function voidDareWithFullRefund(
   dare: DareRefundView,
   prismaClient: ExtendedPrismaClient,
   now: Date,
-  input: { voidReason: DareVoidReason; surface: "postmatch" | "sweep" },
+  input: {
+    voidReason: DareVoidReason;
+    surface: "postmatch" | "sweep";
+    /** Who may announce this void; v1's behaviour by default. */
+    sink?: SettlementAnnouncementSink | undefined;
+  },
 ): Promise<DareSettlementSummary | undefined> {
-  const outcome = await prismaClient.$transaction(async (tx) => {
+  const settled = await prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksDare.updateMany({
       where: { id: dare.row.id, dareState: "active" },
       data: {
@@ -218,9 +228,26 @@ export async function voidDareWithFullRefund(
       withCut: false,
       voidReason: input.voidReason,
     });
-    return { refunds, potTotal: facts.potTotal };
+    // The summary is BUILT and checkpointed here rather than assembled after
+    // the transaction, because this void is a fallback: it runs when a
+    // capture failed, in a transaction of its own, and its summary is the
+    // only record of a refund that a retry cannot reproduce — the Dare is
+    // terminal once this commits, so the re-run finds nothing to settle. An
+    // instruction written afterwards can be lost in the gap.
+    const built = baseSummary(dare, "voided", dare.facts.matchId);
+    built.potTotal = facts.potTotal;
+    built.refunds = refunds;
+    built.voidReason = input.voidReason;
+    await recordAnnouncement({
+      sink: input.sink ?? announcingSettlementSink,
+      db: tx,
+      family: "dare-summary",
+      itemKey: String(built.dareId),
+      payload: built,
+    });
+    return built;
   });
-  if (outcome === undefined) return undefined;
+  if (settled === undefined) return undefined;
   bettingDaresTotal.inc({ result: "voided" });
   bettingDareSettlementsTotal.inc({ outcome: "voided" });
   logBucksTransition({
@@ -232,14 +259,5 @@ export async function voidDareWithFullRefund(
     reason: input.voidReason,
     surface: input.surface,
   });
-  // The match id comes from the VIEW, which is where a caller that voided
-  // during a match's settlement put it. Dropping it here made every such
-  // void look like a deadline sweep's to the minter, which skips those on
-  // purpose — so the refund committed and nobody was told, on both the
-  // unknown-evaluator path and the storage-overflow one.
-  const summary = baseSummary(dare, "voided", dare.facts.matchId);
-  summary.potTotal = outcome.potTotal;
-  summary.refunds = outcome.refunds;
-  summary.voidReason = input.voidReason;
-  return summary;
+  return settled;
 }

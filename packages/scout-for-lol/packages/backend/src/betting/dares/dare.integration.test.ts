@@ -50,6 +50,7 @@ import {
   type TargetSpec,
 } from "#src/betting/dares/dare-integration-fixtures.ts";
 import { settleDaresForMatch } from "#src/betting/dares/settlement/dare-settle.ts";
+import { checkpointRecordingSink } from "#src/betting/notify/announcement-sink.test-fixtures.ts";
 import { announcingSettlementSink } from "#src/betting/notify/announcement-sink.ts";
 import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
@@ -949,6 +950,42 @@ describe("capture and settlement: payouts", () => {
       "achieved",
     );
     await expectNoDrift();
+  });
+
+  test("a fallback void commits its summary with the refund", async () => {
+    // This void is a FALLBACK: it runs when a capture failed, in a
+    // transaction of its own, and its summary is the only record of a refund
+    // no retry can reproduce — the Dare is terminal once it commits, so the
+    // re-run finds nothing to settle. Recording for real and then failing
+    // shows the instruction going back with the money rather than surviving
+    // to describe a refund that never happened.
+    const dareId = await makeActive({ amount: 5 });
+    await db.bucksDare.update({
+      where: { id: dareId },
+      data: { evaluatorVersion: "0" },
+    });
+    const match = winningMatch(ONE_TARGET);
+
+    await expect(
+      settleDaresForMatch(
+        match,
+        db,
+        settleTime,
+        checkpointRecordingSink(match.metadata.matchId, {
+          thenThrow: "the void failed after recording",
+        }),
+      ),
+    ).rejects.toThrow();
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: match.metadata.matchId },
+      }),
+    ).toEqual([]);
+    // And the refund went back with it: the Dare is still active, so a retry
+    // can void it again.
+    expect(await dareState(dareId)).toBe("active");
+    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT - 5);
   });
 
   test("a stored evaluator version this code does not implement voids with full refunds", async () => {
