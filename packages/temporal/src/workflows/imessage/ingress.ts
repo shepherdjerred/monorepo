@@ -23,18 +23,29 @@ const activities = proxyActivities<ImessageActivities>({
   startToCloseTimeout: "1 minute",
   retry: { maximumInterval: "5 minutes" },
 });
+const duplicateCommandWait = proxyActivities<
+  Pick<ImessageActivities, "waitForImessageCommand">
+>({
+  taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE,
+  startToCloseTimeout: "30 minutes",
+  retry: { maximumAttempts: 1 },
+});
 async function settleCommand(command: ImessageCommand): Promise<void> {
+  const workflowId = `agent-chat-imessage/${command.messageId}`;
   let child;
   try {
     child = await startChild(imessageAgentChatWorkflow, {
-      workflowId: `agent-chat-imessage/${command.messageId}`,
+      workflowId,
       taskQueue: TASK_QUEUES.WORKFLOWS,
       args: [command],
       parentClosePolicy: ParentClosePolicy.ABANDON,
       workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
     });
   } catch (error: unknown) {
-    if (error instanceof WorkflowExecutionAlreadyStartedError) return;
+    if (error instanceof WorkflowExecutionAlreadyStartedError) {
+      await duplicateCommandWait.waitForImessageCommand(workflowId);
+      return;
+    }
     throw error;
   }
   // Selection commands and new-chat binding must settle before the next message resolves its binding.

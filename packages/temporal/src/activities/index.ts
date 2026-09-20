@@ -56,6 +56,7 @@ import { httpAgentChatActivities } from "./agent/chat/http-ingress.ts";
 import { pollBlueBubblesMessages } from "./agent/imessage/poll.ts";
 import { prepareImessageCommand } from "./agent/imessage/prepare.ts";
 import { deliverImessageResponse } from "./agent/imessage/deliver.ts";
+import { waitForImessageCommand } from "./agent/imessage/wait.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -161,4 +162,5 @@ export const imessageAgentChatActivities = {
   pollBlueBubblesMessages,
   prepareImessageCommand,
   deliverImessageResponse,
+  waitForImessageCommand,
 };

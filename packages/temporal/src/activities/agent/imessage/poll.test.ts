@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { z } from "zod/v4";
 const mocks = vi.hoisted(() => ({ request: vi.fn(), config: vi.fn() }));
 vi.mock("#lib/bluebubbles/client.ts", () => ({
   blueBubblesRequest: mocks.request,
@@ -21,6 +22,9 @@ const message = (row: number) => ({
   itemType: 0,
   associatedMessageType: null,
   chats: [{ guid: "dm", style: 45 }],
+});
+const QueryBodySchema = z.object({
+  where: z.array(z.object({ args: z.record(z.string(), z.number()) })),
 });
 beforeEach(() => {
   vi.resetAllMocks();
@@ -46,7 +50,13 @@ describe("durable BlueBubbles polling", () => {
     expect(mocks.request.mock.calls[0]?.[1]).not.toHaveProperty("after");
   });
   test("establishes an initial ROWID watermark without replaying history", async () => {
-    mocks.request.mockResolvedValue([message(50), message(75), message(60)]);
+    mocks.request.mockImplementation(async (_route: string, body: unknown) => {
+      const input = QueryBodySchema.parse(body);
+      const minimumRowId = input.where[0]?.args["minimumRowId"];
+      if (minimumRowId !== undefined)
+        return minimumRowId <= 75 ? [message(75)] : [];
+      return [message(50), message(75), message(60)];
+    });
     const result = await pollBlueBubblesMessages({
       ...CURSOR,
       initialized: false,
@@ -58,20 +68,31 @@ describe("durable BlueBubbles polling", () => {
       lastRowId: 75,
       commands: [],
     });
-    expect(mocks.request).toHaveBeenCalledWith("/api/v1/message/query", {
+    expect(mocks.request).toHaveBeenLastCalledWith("/api/v1/message/query", {
       with: ["chats"],
       limit: 1000,
       sort: "DESC",
-      where: [{ statement: "message.ROWID > :cursor", args: { cursor: 0 } }],
+      where: [
+        { statement: "message.ROWID > :cursor", args: { cursor: 0 } },
+        {
+          statement: "message.ROWID <= :initializationHighWater",
+          args: { initializationHighWater: 75 },
+        },
+      ],
     });
   });
   test("freezes initialization before admitting messages that arrive during it", async () => {
-    mocks.request
-      .mockResolvedValueOnce(
-        Array.from({ length: 1000 }, (_, index) => message(index + 1)),
-      )
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([message(1001)]);
+    mocks.request.mockImplementation(async (_route: string, body: unknown) => {
+      const input = QueryBodySchema.parse(body);
+      const minimumRowId = input.where[0]?.args["minimumRowId"];
+      if (minimumRowId !== undefined)
+        return minimumRowId <= 1000 ? [message(1000)] : [];
+      const cursor = input.where[0]?.args["cursor"];
+      if (cursor === 0)
+        return Array.from({ length: 1000 }, (_, index) => message(index + 1));
+      if (cursor === 1000 && input.where.length === 2) return [];
+      return [message(1001)];
+    });
 
     const first = await pollBlueBubblesMessages({
       ...CURSOR,
@@ -99,8 +120,7 @@ describe("durable BlueBubbles polling", () => {
       lastRowId: 1000,
       commands: [],
     });
-    expect(mocks.request).toHaveBeenNthCalledWith(
-      2,
+    expect(mocks.request).toHaveBeenLastCalledWith(
       "/api/v1/message/query",
       expect.objectContaining({
         where: [
