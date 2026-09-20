@@ -11,6 +11,11 @@
       "rationale": "Process and Pipe lack Sendable conformances; cancellation state is guarded by NSLock."
     },
     {
+      "path": "Sources/QuotaBarCore/Providers/MuseProvider.swift",
+      "count": 1,
+      "rationale": "URLSession retains its delegate; the redirect refusal is stateless and touches no shared state."
+    },
+    {
       "path": "Sources/QuotaBarCore/Credentials.swift",
       "count": 1,
       "rationale": "The rejected-token cache is guarded by NSLock; all other stored dependencies are immutable."
