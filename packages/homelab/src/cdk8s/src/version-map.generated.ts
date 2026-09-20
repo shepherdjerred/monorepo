@@ -18,6 +18,7 @@ export const VersionMapSchema = z
     "shepherdjerred/streambot": z.string(),
     "shepherdjerred/redlib": z.string(),
     "itzg/minecraft-server": z.string(),
+    "itzg/minecraft-server-java8": z.string(),
     "plexinc/pms-docker": z.string(),
     "linuxserver/tautulli": z.string(),
     "linuxserver/bazarr": z.string(),

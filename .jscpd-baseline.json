@@ -676,17 +676,9 @@
       "clones": 1,
       "tokens": 104
     },
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-sjerred.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
     "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts": {
       "clones": 1,
       "tokens": 90
-    },
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-sjerred.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts": {
-      "clones": 1,
-      "tokens": 108
     },
     "packages/homelab/src/cdk8s/src/resources/bugsink/index.ts|packages/homelab/src/cdk8s/src/resources/bugsink/index.ts": {
       "clones": 1,

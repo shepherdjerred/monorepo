@@ -16,7 +16,18 @@ export const ManagedResourcesSchema = z.object({
 export type ManagedResource = z.infer<typeof ManagedResourceSchema>;
 
 const JsonObjectSchema = z.record(z.string(), z.unknown());
+const ResourceSyncOptionsSchema = z
+  .object({
+    metadata: z
+      .object({
+        annotations: z.record(z.string(), z.string()).optional(),
+      })
+      .loose()
+      .optional(),
+  })
+  .loose();
 const PROBE_HANDLERS = ["exec", "grpc", "httpGet", "tcpSocket"] as const;
+const ARGO_SYNC_OPTIONS_ANNOTATION = "argocd.argoproj.io/sync-options";
 
 /**
  * Unreadable state stays fatal — a resource whose live or target state cannot
@@ -431,6 +442,24 @@ function identity(resource: ManagedResource): string {
   return `${resource.group ?? ""}/${resource.kind} ${resource.namespace ?? "_cluster"}/${resource.name}`;
 }
 
+/**
+ * A resource carrying both options is deleted and recreated by Argo rather
+ * than patched. That makes immutable-field and probe-handler update checks
+ * inapplicable, but only when the destructive intent is declared on the
+ * target resource itself. Application-wide options do not reach this parser.
+ */
+function targetRequestsForceReplace(target: Record<string, unknown>): boolean {
+  const annotation =
+    ResourceSyncOptionsSchema.parse(target).metadata?.annotations?.[
+      ARGO_SYNC_OPTIONS_ANNOTATION
+    ];
+  if (annotation === undefined) {
+    return false;
+  }
+  const options = new Set(annotation.split(",").map((option) => option.trim()));
+  return options.has("Force=true") && options.has("Replace=true");
+}
+
 function immutableFields(kind: string): readonly ImmutableField[] {
   switch (kind) {
     // A DaemonSet's selector is as immutable as a Deployment's; the API server
@@ -554,19 +583,25 @@ export function analyzeApplySafety(
     if (live === null || target === null) {
       continue;
     }
-    for (const field of immutableFields(resource.kind)) {
-      if (declaredTargetChanged(live, target, field)) {
+    const forceReplace = targetRequestsForceReplace(target);
+    if (!forceReplace) {
+      for (const field of immutableFields(resource.kind)) {
+        if (declaredTargetChanged(live, target, field)) {
+          findings.push(
+            `${identity(resource)} changes immutable /${field.path.join("/")}`,
+          );
+        }
+      }
+      for (const list of embeddedResourceLists(resource.kind)) {
         findings.push(
-          `${identity(resource)} changes immutable /${field.path.join("/")}`,
+          ...embeddedListFindings(live, target, list, identity(resource)),
         );
       }
     }
-    for (const list of embeddedResourceLists(resource.kind)) {
-      findings.push(
-        ...embeddedListFindings(live, target, list, identity(resource)),
-      );
-    }
     findings.push(...imageDowngradeFindings(live, target, identity(resource)));
+    if (forceReplace) {
+      continue;
+    }
     const liveProbes = new Map<string, string>();
     const targetProbes = new Map<string, string>();
     collectProbeHandlers(live, "", liveProbes);

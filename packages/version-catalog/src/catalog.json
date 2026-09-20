@@ -194,6 +194,23 @@
       ]
     },
     {
+      "name": "itzg/minecraft-server-java8",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker",
+        "packageName": "itzg/minecraft-server"
+      },
+      "value": "2026.8.2-java8@sha256:baf543e7ac35bd1cd06c3e2d8c546884e77a70ea1468f25a16c0981d84f5f72f",
+      "notes": [
+        "Java 8 variant for the Forge 1.12.2 RLCraft server; keep separate from",
+        "the Java 25 Paper image used by the other Minecraft servers."
+      ]
+    },
+    {
       "name": "plexinc/pms-docker",
       "category": "upstream",
       "artifactType": "image",
