@@ -232,7 +232,12 @@ export async function voidDareWithFullRefund(
     reason: input.voidReason,
     surface: input.surface,
   });
-  const summary = baseSummary(dare, "voided");
+  // The match id comes from the VIEW, which is where a caller that voided
+  // during a match's settlement put it. Dropping it here made every such
+  // void look like a deadline sweep's to the minter, which skips those on
+  // purpose — so the refund committed and nobody was told, on both the
+  // unknown-evaluator path and the storage-overflow one.
+  const summary = baseSummary(dare, "voided", dare.facts.matchId);
   summary.potTotal = outcome.potTotal;
   summary.refunds = outcome.refunds;
   summary.voidReason = input.voidReason;

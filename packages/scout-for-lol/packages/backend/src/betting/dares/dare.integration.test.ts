@@ -958,13 +958,15 @@ describe("capture and settlement: payouts", () => {
       data: { evaluatorVersion: "0" },
     });
     const houseBefore = await houseBalance();
-    const summaries = await settleDaresForMatch(
-      winningMatch(ONE_TARGET),
-      db,
-      settleTime,
-    );
+    const match = winningMatch(ONE_TARGET);
+    const summaries = await settleDaresForMatch(match, db, settleTime);
     expect(summaries.map((summary) => summary.resolution)).toEqual(["voided"]);
     expect(summaries[0]?.voidReason).toBe("unknown_evaluator");
+    // This refund happened on THIS match, and its summary has to say so. An
+    // absent match id is the minter's signal that a DEADLINE sweep resolved
+    // the Dare, so a void that looked like one returned the money and told
+    // nobody it had.
+    expect(summaries[0]?.matchId).toBe(match.metadata.matchId);
     expect(await dareState(dareId)).toBe("voided");
     expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
     expect(await houseBalance()).toBe(houseBefore);

@@ -456,30 +456,23 @@ export function recoveredAnnouncementsOf(
   readonly settlements: readonly SettlementAnnouncementInput[];
   readonly dareSummaries: readonly DareSettlementSummary[];
 } {
+  // A FOLD of the same records, not a second parse of the same rows. Both
+  // readers want every family back in the shapes settlement returned; only
+  // this one then folds four of them into announcements. Parsing twice meant
+  // two places where a family could be read differently from the other.
+  const records = recoveredSettlementRecordsOf(items);
   return {
+    // Through the module's own mappers, which is also what the live
+    // announcement path parses with: the v1 types require these keys
+    // present-but-undefined where the schema makes them optional, and one
+    // normalisation for both paths is what keeps them identical.
     settlements: settlementAnnouncementInputs({
-      closures: payloadsOfFamily(items, "closure").map((payload): ClosedPool =>
-        ClosedPoolSchema.parse(payload),
-      ),
-      // Through the module's own mappers, which is also what the live
-      // announcement path parses with: the v1 types require these keys
-      // present-but-undefined where the schema makes them optional, and one
-      // normalisation for both paths is what keeps them identical.
-      settlements: payloadsOfFamily(items, "settlement").map(
-        (payload): SettlementSummary =>
-          settlementSummaryOf(SettlementSummarySchema.parse(payload)),
-      ),
-      parlaySettlements: payloadsOfFamily(items, "parlay").map(
-        (payload): ParlaySettlementSummary =>
-          parlaySummaryOf(ParlaySettlementSummarySchema.parse(payload)),
-      ),
-      earnings: payloadsOfFamily(items, "earnings").flatMap((payload) =>
-        z.array(EarnedAwardSchema).parse(payload),
-      ),
+      closures: records.closures,
+      settlements: records.settlements,
+      parlaySettlements: records.parlaySettlements,
+      earnings: records.earnings,
     }),
-    dareSummaries: payloadsOfFamily(items, "dare-summary").map((payload) =>
-      dareSettlementSummaryOf(DareSummaryAnnouncementSchema.parse(payload)),
-    ),
+    dareSummaries: records.dareSettlements,
   };
 }
 
@@ -596,6 +589,10 @@ export async function mintDareSummaryIntentsV2(
   const freshnessDeadline = postmatchReportFreshnessDeadline(args.gameCreation);
   for (const dare of args.dareSettlements) {
     if (UNANNOUNCED_DARE_RESOLUTIONS.has(dare.resolution)) continue;
+    // A summary with no match id was resolved by a DEADLINE sweep, not by
+    // this match, and announcing it under this match's id would tell people
+    // a game decided something it had nothing to do with. Every resolution a
+    // match produces carries its id; one that does not is the sweep's.
     if (dare.matchId === undefined) continue;
     countMint(
       summary,

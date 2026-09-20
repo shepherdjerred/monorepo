@@ -47,6 +47,44 @@ async function freshFacts(
   });
 }
 
+/**
+ * What a Dare that just became terminal owes its audience, decided once.
+ *
+ * Both contract generations end the same way and for the same reason, so
+ * they end in the same function: withholding is not "skip the send", it is a
+ * pair of durable decisions that have to commit with the settlement — the
+ * outbox row is not written, and the pending callout the capture set is
+ * retired. Two copies of that is two places to get it half right, which is
+ * exactly what item six's edit had to touch twice.
+ */
+export async function recordTerminalDareAnnouncement(
+  tx: Db,
+  // The settling input itself, so neither caller has to restate the same
+  // seven fields: an argument list rebuilt at each call site IS the
+  // duplication, just spelled as arguments.
+  input: {
+    dare: { id: number; potTotal: number };
+    contract: { revision: number };
+    matchId?: string | undefined;
+    now: Date;
+    notify: DareNotificationDisposition;
+  },
+  resolution: "achieved" | "unachieved" | "voided",
+): Promise<void> {
+  if (input.notify === "withhold") {
+    await withholdDareV2Callout(tx, input.dare.id);
+    return;
+  }
+  await enqueueTerminalDareNotification(tx, {
+    dareId: input.dare.id,
+    revision: input.contract.revision,
+    potTotal: input.dare.potTotal,
+    resolution,
+    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
+    now: input.now,
+  });
+}
+
 export async function resolveFinalDareV2(
   tx: Db,
   input: {
@@ -116,18 +154,6 @@ export async function resolveFinalDareV2(
       ...(value === null ? { voidReason: "missing_evidence" } : {}),
     });
   }
-  if (input.notify === "withhold") {
-    await withholdDareV2Callout(tx, input.dare.id);
-  }
-  if (input.notify === "enqueue") {
-    await enqueueTerminalDareNotification(tx, {
-      dareId: input.dare.id,
-      revision: input.contract.revision,
-      potTotal: input.dare.potTotal,
-      resolution,
-      ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
-      now: input.now,
-    });
-  }
+  await recordTerminalDareAnnouncement(tx, input, resolution);
   return resolution;
 }

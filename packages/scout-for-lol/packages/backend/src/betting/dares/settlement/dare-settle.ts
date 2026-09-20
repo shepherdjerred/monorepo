@@ -387,9 +387,17 @@ async function settleOneDareForMatch(
   const matchId = matchData.metadata.matchId;
   // Evaluator gate FIRST, before any strict conditions parse: voiding is a
   // refund path and must work even when the stored blob no longer parses.
+  //
+  // The match id travels with it, as it does on every other resolution this
+  // function produces. A Dare summary's `matchId` names the match whose
+  // settlement resolved it, and its ABSENCE is what tells the minter the
+  // resolution came from a deadline sweep instead — a sweep's summary must
+  // not be announced under some unrelated match's id. Omitting it here made
+  // this void look like a sweep's, so the refund committed and the minter
+  // skipped it: the money came back and nobody was ever told.
   if (row.evaluatorVersion !== DARE_EVALUATOR_VERSION) {
     return await voidDareWithFullRefund(
-      dareRefundView(row),
+      dareRefundView(row, matchId),
       prismaClient,
       now,
       {

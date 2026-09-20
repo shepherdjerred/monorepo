@@ -5,10 +5,12 @@ import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import type * as DatabaseModule from "#src/database/index.ts";
 import type { SettlementAnnouncementSink } from "#src/betting/notify/announcement-sink.ts";
 import type * as MatchIntentsModule from "#src/temporal/v2/notification/match-intents.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  createTestDatabase,
+  testDatabaseModule,
+} from "#src/testing/test-database.ts";
 
 /**
  * What the settlement Activity does when its checkpoint cannot be written.
@@ -43,12 +45,7 @@ const settlement = vi.hoisted(
   }),
 );
 
-vi.mock("#src/database/index.ts", async () => {
-  const actual = await vi.importActual<typeof DatabaseModule>(
-    "#src/database/index.ts",
-  );
-  return { ...actual, prisma };
-});
+vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
   resolveScoutV2MatchContext: (riotMatchId: string) =>

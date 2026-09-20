@@ -14,21 +14,16 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { isRemakeMatch } from "#src/betting/outcome.ts";
 import { matchTouchesRelationalDare } from "#src/betting/dares/evaluation/dare-match-eligibility.ts";
-import {
-  pendingDareV2CalloutRefresh,
-  withholdDareV2Callout,
-} from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
+import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { dareV2MoneyFactsInTransaction } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import { distributeDareResolutionV3 } from "#src/betting/dares/lifecycle/dare-resolution-v3.ts";
+import { recordTerminalDareAnnouncement } from "#src/betting/dares/settlement/dare-resolution-v2.ts";
 import { claimActiveDareV2Settlement } from "#src/betting/dares/settlement/dare-settlement-claim-v2.ts";
 import {
   decisiveTargetDependenciesV3,
   executeDareSqlV3,
 } from "#src/betting/dares/sql/dare-sql-v3.ts";
-import {
-  enqueueMaterialDareProgressNotificationV3,
-  enqueueTerminalDareNotification,
-} from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
+import { enqueueMaterialDareProgressNotificationV3 } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
 import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import type {
   DareProofV3,
@@ -162,19 +157,7 @@ async function resolveV3(
     facts,
     value,
   });
-  if (input.notify === "withhold") {
-    await withholdDareV2Callout(tx, input.dare.id);
-  }
-  if (input.notify === "enqueue") {
-    await enqueueTerminalDareNotification(tx, {
-      dareId: input.dare.id,
-      revision: input.contract.revision,
-      potTotal: input.dare.potTotal,
-      resolution,
-      ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
-      now: input.now,
-    });
-  }
+  await recordTerminalDareAnnouncement(tx, input, resolution);
   return resolution;
 }
 
@@ -460,6 +443,9 @@ export async function settleMatureDareSqlV3Races(
           finality,
           proof,
           now,
+          // Deadline-driven, like its sibling above: a matured race resolves
+          // on the clock rather than on a match being delivered, so no
+          // delivery mode is in play and nothing here is owed silence.
           notify: "enqueue",
         });
         return {
