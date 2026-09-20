@@ -1,6 +1,9 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { startBlueBubblesIngress } from "./start.ts";
-import type { Client } from "@temporalio/client";
+import {
+  WorkflowExecutionAlreadyStartedError,
+  type Client,
+} from "@temporalio/client";
 afterEach(() => vi.unstubAllEnvs());
 test("missing bootstrap leaves the connector inactive without changing other ingress", async () => {
   vi.stubEnv("BLUEBUBBLES_URL", "");
@@ -40,4 +43,21 @@ test("admits one stable ingress without placing bootstrap credentials in history
     }),
   );
   expect(JSON.stringify(start.mock.calls)).not.toContain("test-secret");
+});
+test("leaves a closed ingress terminal without blocking other gateway surfaces", async () => {
+  vi.stubEnv("BLUEBUBBLES_URL", "http://localhost:1234");
+  vi.stubEnv("BLUEBUBBLES_PASSWORD", "test-secret");
+  const start = vi.fn<Client["workflow"]["start"]>();
+  start.mockRejectedValue(
+    new WorkflowExecutionAlreadyStartedError(
+      "ingress is closed",
+      "agent-chat-bluebubbles-ingress",
+      "blueBubblesIngressWorkflow",
+    ),
+  );
+
+  await expect(
+    startBlueBubblesIngress({ workflow: { start } }),
+  ).resolves.toBeUndefined();
+  expect(start).toHaveBeenCalledOnce();
 });
