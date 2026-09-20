@@ -71,6 +71,7 @@ export async function executeDiscordAgentChatCommand(
       submittedAt: command.submittedAt,
       providerStartDeadline: input.providerStartDeadline,
       source,
+      sourceSequence: command.interactionId,
     };
     const result = await client.withAbortSignal(
       context.cancellationSignal,

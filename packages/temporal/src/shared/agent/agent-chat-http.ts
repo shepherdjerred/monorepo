@@ -61,6 +61,7 @@ function requestIdentity(request: z.infer<typeof AgentChatTurnRequestSchema>) {
     prompt: request.prompt,
     submittedAt: request.submittedAt,
     source: request.source,
+    sourceSequence: request.sourceSequence,
   };
 }
 

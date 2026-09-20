@@ -4,6 +4,7 @@ import {
   AgentChatIdSchema,
   AgentChatPromptSchema,
   AgentChatProviderSchema,
+  AgentChatSourceSequenceSchema,
 } from "#shared/agent/agent-chat.ts";
 import { HttpAgentChatTurnIdSchema } from "#shared/agent/agent-chat-http.ts";
 
@@ -17,6 +18,7 @@ export const CreateAgentChatSchema = z
     prompt: AgentChatPromptSchema.optional(),
     turnId: HttpAgentChatTurnIdSchema.optional(),
     submittedAt: z.iso.datetime({ offset: true }).optional(),
+    sourceSequence: AgentChatSourceSequenceSchema,
     maxTurnsPerMessage: z.number().int().positive().max(100).default(24),
   })
   .refine((input) => input.prompt === undefined || input.turnId !== undefined, {
@@ -41,10 +43,13 @@ export const ContinueAgentChatSchema = z.strictObject({
   chatId: AgentChatIdSchema.optional(),
   turnId: HttpAgentChatTurnIdSchema,
   submittedAt: z.iso.datetime({ offset: true }),
+  sourceSequence: AgentChatSourceSequenceSchema,
 });
 export type ContinueAgentChatInput = z.infer<typeof ContinueAgentChatSchema>;
 
 export const BindAgentChatSchema = z.strictObject({
   binding: AgentChatBindingSchema,
+  bindingId: HttpAgentChatTurnIdSchema,
   submittedAt: z.iso.datetime({ offset: true }),
+  sourceSequence: AgentChatSourceSequenceSchema,
 });

@@ -3,6 +3,7 @@ import {
   ApplicationFailure,
   allHandlersFinished,
   condition,
+  patched,
   proxyActivities,
   setHandler,
   sleep,
@@ -14,6 +15,9 @@ import {
   AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS,
   AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS,
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS,
+  AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS,
+  AGENT_CHAT_SETTLEMENT_MARGIN_MS,
   AgentChatTurnResultSchema,
   boundAgentChatFailureMessage,
   type AgentChatTurnResult,
@@ -43,6 +47,13 @@ const dispatchActivities = proxyActivities<AgentChatReceiptActivities>({
   retry: { maximumAttempts: AGENT_CHAT_DISPATCH_MAX_ATTEMPTS },
 });
 
+const RESULT_PROPAGATION_DEADLINE_PATCH =
+  "agent-chat-result-propagation-deadlines-v1";
+const LEGACY_RECEIPT_ADMISSION_TIMEOUT_MS =
+  AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS -
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
+  AGENT_CHAT_SETTLEMENT_MARGIN_MS;
+
 type ReceiptOutcome =
   | { status: "completed"; result: AgentChatTurnResult }
   | { status: "failed"; message: string };
@@ -71,9 +82,11 @@ export async function agentChatTurnReceiptWorkflow(
   rawInput: AgentChatReceiptInput,
 ): Promise<AgentChatTurnResult> {
   const input = AgentChatReceiptInputSchema.parse(rawInput);
+  const admissionTimeoutMs = patched(RESULT_PROPAGATION_DEADLINE_PATCH)
+    ? AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS
+    : LEGACY_RECEIPT_ADMISSION_TIMEOUT_MS;
   const receiptDeadline =
-    workflowInfo().startTime.getTime() +
-    AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS;
+    workflowInfo().startTime.getTime() + admissionTimeoutMs;
   const requestedDeadline = input.request.providerStartDeadline;
   const providerStartDeadline = new Date(
     requestedDeadline === undefined

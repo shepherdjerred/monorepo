@@ -53,17 +53,29 @@ defines these methods and response statuses.
 - `POST /agent-chats/:chatId/bindings` makes a chat active for an ingress
   identity.
 
-Explicit binding requests require `binding` and an ISO-8601 `submittedAt`:
+Create, continue, and explicit binding requests require a caller-assigned
+`sourceSequence` that increases for each ingress identity. Use the source's
+native ordered identifier when it has one, such as a Discord interaction
+snowflake. Retries must preserve the original sequence. Binding precedence is
+decided by this sequence, not by arrival time or `bindingId`. Values must be
+non-negative integers no greater than `9223372036854775806`; the reserved final
+signed 64-bit value cannot permanently prevent a later selection.
+
+Explicit binding requests also require `binding`, a caller-stable `bindingId`,
+and an ISO-8601 `submittedAt`:
 
 ```json
 {
   "binding": { "kind": "imessage", "conversationId": "bluebubbles-chat-guid" },
-  "submittedAt": "2026-09-14T22:00:00.000Z"
+  "bindingId": "select-storage-chat-01",
+  "submittedAt": "2026-09-14T22:00:00.000Z",
+  "sourceSequence": "1757887200000000000"
 }
 ```
 
-Retries retain the original `submittedAt`. An older operation cannot replace
-a newer active binding.
+Retries retain the original `bindingId`, `submittedAt`, and `sourceSequence`.
+The stable binding ID identifies the operation; the monotonic source sequence
+prevents a delayed older operation from replacing a newer active binding.
 
 Create a chat from iMessage:
 
@@ -78,7 +90,8 @@ Create a chat from iMessage:
   },
   "prompt": "Inspect the current alerts and summarize the likely cause.",
   "turnId": "bluebubbles-message-01J8ABCDEF",
-  "submittedAt": "2026-09-14T21:59:00.000Z"
+  "submittedAt": "2026-09-14T21:59:00.000Z",
+  "sourceSequence": "1757887140000000000"
 }
 ```
 
@@ -92,7 +105,8 @@ Continue whichever chat is active in that iMessage conversation:
   },
   "prompt": "Check whether the affected volume recovered.",
   "turnId": "bluebubbles-message-01J8ABCDEG",
-  "submittedAt": "2026-09-14T22:00:00.000Z"
+  "submittedAt": "2026-09-14T22:00:00.000Z",
+  "sourceSequence": "1757887200000000000"
 }
 ```
 
@@ -104,17 +118,18 @@ Every prompt-bearing HTTP request requires a globally unique, stable `turnId`.
 Use the source message or delivery ID when it fits the accepted
 letters/digits/underscore/dot/colon/hyphen format (200 characters maximum).
 Prompted create and continuation requests also require the source delivery's
-stable ISO-8601 `submittedAt`. Retry the same delivery with the same ID and timestamp. Temporal
-rejects a second execution after the first settles and reuses an in-flight
-execution, so a network retry does not execute another provider turn. The
-stable timestamp also prevents a delayed retry from replacing a newer active
-binding.
+stable ISO-8601 `submittedAt` and monotonic `sourceSequence`. Retry the same
+delivery with the same ID, timestamp, and sequence. Temporal rejects a second
+execution after the first settles and reuses an in-flight execution, so a
+network retry does not execute another provider turn. Source-sequence ordering
+prevents a delayed retry from replacing a newer active binding.
 
 Prompt-bearing POSTs return `202 Accepted` immediately with the `turnId` and
 Temporal `workflowId`. A create request without an explicit `chatId` derives a
 stable chat ID from that turn ID, so retrying the POST cannot leave a second
 empty chat behind. A prompt-less create must supply `chatId`; retrying it with
-the same configuration reuses the original catalog entry and creation time.
+the same configuration and `sourceSequence` reuses the original catalog entry
+and creation time.
 Reusing either stable ID for different content returns `409 Conflict`. Poll
 `GET /agent-chat-turns/:turnId`: it returns `202` while the turn is running and
 `200` with either the completed turn result or a terminal failure status. The

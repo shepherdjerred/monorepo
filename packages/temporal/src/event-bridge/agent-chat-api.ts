@@ -14,6 +14,7 @@ import {
 import {
   AgentChatIdSchema,
   type AgentChatBinding,
+  type AgentChatBindingUpdate,
   type AgentChatCatalogEntry,
   type AgentChatConfig,
   type AgentChatTurnRequest,
@@ -28,6 +29,7 @@ import {
 import {
   AgentChatTurnConflictError,
   activateHttpAgentChatCommand,
+  cancelHttpAgentChatCommand,
   pollHttpAgentChatCommand,
   submitHttpAgentChatCommand,
 } from "./agent-chat-turns.ts";
@@ -54,7 +56,7 @@ export type AgentChatApiOperations = {
     client: WorkflowClient,
     binding: AgentChatBinding,
     chatId: string,
-    updatedAt: string,
+    update: AgentChatBindingUpdate,
   ) => Promise<AgentChatCatalogEntry>;
   get: (
     client: WorkflowClient,
@@ -71,6 +73,7 @@ export type AgentChatApiOperations = {
     options?: { waitForActivation?: boolean },
   ) => Promise<HttpAgentChatTurnReceipt>;
   activate: (client: Client, command: HttpAgentChatCommand) => Promise<void>;
+  cancel: (client: Client, turnId: string) => Promise<void>;
   poll: (
     client: Client,
     turnId: string,
@@ -94,6 +97,7 @@ const defaultOperations: AgentChatApiOperations = {
   resolve: resolveAgentChatBinding,
   submit: submitHttpAgentChatCommand,
   activate: activateHttpAgentChatCommand,
+  cancel: cancelHttpAgentChatCommand,
   poll: pollHttpAgentChatCommand,
 };
 
@@ -116,9 +120,8 @@ function unauthorized(authorization: string | undefined, token: string) {
   return !bearerMatches(bearerToken(authorization), token);
 }
 
-async function parseBody(request: Request): Promise<unknown> {
-  return await request.json();
-}
+const parseBody = async (request: Request): Promise<unknown> =>
+  await request.json();
 
 function configForIngress(
   input: {
@@ -128,6 +131,7 @@ function configForIngress(
     provider: "claude" | "codex";
     model: string;
     source: AgentChatBinding;
+    sourceSequence: string | number;
     maxTurnsPerMessage: number;
   },
   now: string,
@@ -137,11 +141,10 @@ function configForIngress(
     (input.turnId === undefined
       ? undefined
       : `chat-http-${new Bun.CryptoHasher("sha256").update(input.turnId).digest("hex")}`);
-  if (chatId === undefined) {
+  if (chatId === undefined)
     throw new TypeError(
       "Agent chat creation requires a stable chat or turn ID",
     );
-  }
   return {
     chatId,
     title: input.title,
@@ -203,19 +206,39 @@ async function registerIdempotently(
   }
 }
 
+async function registerClaimedTurn(
+  operations: AgentChatApiOperations,
+  client: Client,
+  config: AgentChatConfig,
+  turnId: string,
+): Promise<AgentChatCatalogEntry> {
+  try {
+    return await registerIdempotently(operations, client.workflow, config);
+  } catch (error: unknown) {
+    if (error instanceof AgentChatRegistrationConflictError) {
+      await operations.cancel(client, turnId);
+    }
+    throw error;
+  }
+}
+
 function requestForIngress(
   input: {
     source: AgentChatBinding;
-    prompt: string;
-    turnId: string;
+    prompt?: string | undefined;
+    turnId?: string | undefined;
+    sourceSequence: string | number;
   },
   now: string,
 ): AgentChatTurnRequest {
+  if (input.prompt === undefined || input.turnId === undefined)
+    throw new TypeError("Agent chat turn requires a prompt and turn ID");
   return {
     turnId: input.turnId,
     prompt: input.prompt,
     submittedAt: now,
     source: input.source,
+    sourceSequence: input.sourceSequence,
   };
 }
 
@@ -244,6 +267,19 @@ function captureFailure(error: unknown, operation: string): void {
     operation,
     error: error instanceof Error ? error.message : String(error),
   });
+}
+
+async function checkpointAcceptedTurn(
+  operation: string,
+  checkpoint: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    await checkpoint();
+  } catch (error: unknown) {
+    // The provider turn is already durable. A catalog repair can be retried,
+    // but must not tell the ingress to resubmit an accepted turn.
+    captureFailure(error, operation);
+  }
 }
 
 export function buildAgentChatApiRoutes(
@@ -302,12 +338,10 @@ export function buildAgentChatApiRoutes(
           client.workflow,
           config,
         );
-        await operations.bind(
-          client.workflow,
-          input.source,
-          config.chatId,
-          entry.config.createdAt,
-        );
+        await operations.bind(client.workflow, input.source, config.chatId, {
+          updatedAt: entry.config.createdAt,
+          sourceSequence: input.sourceSequence,
+        });
         return c.json({ chat: entry }, 201);
       }
       const turnId = HttpAgentChatTurnIdSchema.parse(input.turnId);
@@ -320,18 +354,16 @@ export function buildAgentChatApiRoutes(
       const claimedCommand = HttpAgentChatCommandSchema.parse({
         kind: "new",
         config: claimedConfig,
-        request: requestForIngress(
-          { source: input.source, prompt: input.prompt, turnId },
-          timestamp,
-        ),
+        request: requestForIngress(input, timestamp),
       });
       const receipt = await operations.submit(client, claimedCommand, {
         waitForActivation: true,
       });
-      const entry = await registerIdempotently(
+      const entry = await registerClaimedTurn(
         operations,
-        client.workflow,
+        client,
         config,
+        turnId,
       );
       const activatedCommand = HttpAgentChatCommandSchema.parse({
         kind: "new",
@@ -339,11 +371,11 @@ export function buildAgentChatApiRoutes(
         request: claimedCommand.request,
       });
       await operations.activate(client, activatedCommand);
-      await operations.bind(
-        client.workflow,
-        input.source,
-        entry.config.chatId,
-        timestamp,
+      await checkpointAcceptedTurn("create-bind-after-activation", async () =>
+        operations.bind(client.workflow, input.source, entry.config.chatId, {
+          updatedAt: timestamp,
+          sourceSequence: input.sourceSequence,
+        }),
       );
       return c.json({ chatId: config.chatId, turn: receipt }, 202);
     } catch (error: unknown) {
@@ -386,11 +418,13 @@ export function buildAgentChatApiRoutes(
         }),
       );
       if (input.chatId !== undefined) {
-        await operations.bind(
-          client.workflow,
-          input.source,
-          chatId,
-          input.submittedAt,
+        await checkpointAcceptedTurn(
+          "continue-bind-after-submission",
+          async () =>
+            operations.bind(client.workflow, input.source, chatId, {
+              updatedAt: input.submittedAt,
+              sourceSequence: input.sourceSequence,
+            }),
         );
       }
       return c.json({ turn: receipt }, 202);
@@ -446,7 +480,7 @@ export function buildAgentChatApiRoutes(
         client.workflow,
         input.binding,
         chatId,
-        input.submittedAt,
+        { updatedAt: input.submittedAt, sourceSequence: input.sourceSequence },
       );
       return c.json(entry);
     } catch (error: unknown) {

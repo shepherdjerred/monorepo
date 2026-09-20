@@ -1,8 +1,13 @@
-import type { Client } from "@temporalio/client";
+import {
+  WorkflowExecutionAlreadyStartedError,
+  WorkflowIdConflictPolicy,
+  type Client,
+} from "@temporalio/client";
 import { describe, expect, it, vi } from "vitest";
 import { AgentChatNotFoundError } from "#lib/agent-chat-client.ts";
 import type {
   AgentChatBinding,
+  AgentChatBindingUpdate,
   AgentChatCatalogEntry,
   AgentChatTurnResult,
 } from "#shared/agent/agent-chat.ts";
@@ -17,6 +22,7 @@ import {
 } from "./agent-chat-api.ts";
 import {
   AgentChatTurnConflictError,
+  activateHttpAgentChatCommand,
   httpAgentChatCommandFingerprint,
   submitHttpAgentChatCommand,
 } from "./agent-chat-turns.ts";
@@ -24,12 +30,14 @@ import {
 const TOKEN = "test-agent-chat-token";
 const NOW = "2026-09-14T22:00:00.000Z";
 const SUBMITTED_AT = "2026-09-14T21:59:00.000Z";
+const SOURCE_SEQUENCE = "123456789012345678";
 const EMPTY_CHAT_REQUEST = {
   chatId: "empty-chat",
   title: "Empty chat",
   provider: "codex",
   model: "gpt-5.6-luna",
   source: { kind: "discord", channelId: "channel-1" },
+  sourceSequence: SOURCE_SEQUENCE,
 } as const;
 
 const ENTRY: AgentChatCatalogEntry = {
@@ -91,9 +99,18 @@ const COMPLETED_TURN: HttpAgentChatTurnStatus = {
   result: TURN,
 };
 
-function fakeClient(): Client {
+function fakeClient(
+  input: {
+    start?: unknown;
+    getHandle?: unknown;
+  } = {},
+): Client {
   const client = Object.create(null);
   client.workflow = Object.create(null);
+  if (input.start !== undefined) client.workflow.start = input.start;
+  if (input.getHandle !== undefined) {
+    client.workflow.getHandle = input.getHandle;
+  }
   return client;
 }
 
@@ -115,8 +132,25 @@ function makeOperations(): AgentChatApiOperations {
     resolve: vi.fn(async () => COMPLETED_ENTRY),
     submit: vi.fn(async () => RECEIPT),
     activate: vi.fn(() => Promise.resolve()),
+    cancel: vi.fn(() => Promise.resolve()),
     poll: vi.fn(async () => COMPLETED_TURN),
   };
+}
+
+function operationsWithConflictingRegistration(): AgentChatApiOperations {
+  const operations = makeOperations();
+  const conflicting = {
+    ...EMPTY_CHAT_ENTRY,
+    config: { ...EMPTY_CHAT_ENTRY.config, model: "different-model" },
+  };
+  operations.get = vi
+    .fn<AgentChatApiOperations["get"]>()
+    .mockResolvedValueOnce(undefined)
+    .mockResolvedValueOnce(conflicting);
+  operations.register = vi.fn(() =>
+    Promise.reject(new Error("owner already exists")),
+  );
+  return operations;
 }
 
 function appWith(operations: AgentChatApiOperations) {
@@ -155,7 +189,23 @@ function promptedCreateRequest(
       prompt: "Inspect the homelab.",
       turnId: RECEIPT.turnId,
       submittedAt: SUBMITTED_AT,
+      sourceSequence: SOURCE_SEQUENCE,
       ...overrides,
+    },
+  });
+}
+
+function explicitContinuationRequest(): Request {
+  return request("/agent-chat-turns", {
+    method: "POST",
+    token: TOKEN,
+    body: {
+      chatId: "chat-existing",
+      source: { kind: "discord", channelId: "channel-1" },
+      prompt: "Continue that investigation.",
+      turnId: RECEIPT.turnId,
+      submittedAt: SUBMITTED_AT,
+      sourceSequence: SOURCE_SEQUENCE,
     },
   });
 }
@@ -169,13 +219,23 @@ describe("submitHttpAgentChatCommand", () => {
       prompt: "Continue the investigation.",
       submittedAt: "2026-09-14T21:59:00.000Z",
       source: { kind: "imessage", conversationId: "chat123" },
+      sourceSequence: SOURCE_SEQUENCE,
     },
   };
 
   function clientWithAcceptedCommand(command: HttpAgentChatCommand): Client {
     const client = Object.create(null);
     client.workflow = Object.create(null);
-    client.workflow.start = vi.fn(async () => ({
+    client.workflow.start = vi.fn(() =>
+      Promise.reject(
+        new WorkflowExecutionAlreadyStartedError(
+          "already accepted",
+          `agent-chat-http/${command.request.turnId}`,
+          "httpAgentChatWorkflow",
+        ),
+      ),
+    );
+    client.workflow.getHandle = vi.fn(() => ({
       describe: vi.fn(async () => ({
         memo: {
           agentChatCommandFingerprint: httpAgentChatCommandFingerprint(command),
@@ -184,6 +244,25 @@ describe("submitHttpAgentChatCommand", () => {
     }));
     return client;
   }
+
+  it("returns a receipt after a fresh start without another Temporal lookup", async () => {
+    const describeWorkflow = vi.fn(() =>
+      Promise.reject(new Error("lookup outage")),
+    );
+    const start = vi.fn(async () => ({ describe: describeWorkflow }));
+    const client = fakeClient({ start });
+
+    await expect(
+      submitHttpAgentChatCommand(client, accepted),
+    ).resolves.toMatchObject({ status: "accepted", turnId: RECEIPT.turnId });
+    expect(describeWorkflow).not.toHaveBeenCalled();
+    expect(start).toHaveBeenCalledWith(
+      "httpAgentChatWorkflow",
+      expect.objectContaining({
+        workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
+      }),
+    );
+  });
 
   it("rejects a retry that changes the caller timestamp", async () => {
     const retry: HttpAgentChatCommand = {
@@ -208,6 +287,38 @@ describe("submitHttpAgentChatCommand", () => {
         conflicting,
       ),
     ).rejects.toBeInstanceOf(AgentChatTurnConflictError);
+  });
+
+  it("rejects a retry that changes the source sequence", async () => {
+    const retry: HttpAgentChatCommand = {
+      ...accepted,
+      request: { ...accepted.request, sourceSequence: "123456789012345679" },
+    };
+
+    await expect(
+      submitHttpAgentChatCommand(clientWithAcceptedCommand(accepted), retry),
+    ).rejects.toBeInstanceOf(AgentChatTurnConflictError);
+  });
+
+  it("reconciles an ambiguous activation with the same update id", async () => {
+    const executeUpdate = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("response lost"))
+      .mockResolvedValueOnce(null);
+    const client = fakeClient({
+      getHandle: vi.fn(() => ({ executeUpdate })),
+    });
+
+    await expect(
+      activateHttpAgentChatCommand(client, accepted),
+    ).resolves.toBeUndefined();
+    expect(executeUpdate).toHaveBeenCalledTimes(2);
+    expect(executeUpdate.mock.calls[0]?.[1]).toMatchObject({
+      updateId: "activate",
+    });
+    expect(executeUpdate.mock.calls[1]?.[1]).toMatchObject({
+      updateId: "activate",
+    });
   });
 });
 
@@ -237,18 +348,12 @@ describe("buildAgentChatApiRoutes", () => {
     const app = appWith(operations);
 
     const response = await app.fetch(
-      request("/agent-chats", {
-        method: "POST",
-        token: TOKEN,
-        body: {
-          title: "From Messages",
-          provider: "claude",
-          model: "claude-opus-4-1",
-          source: { kind: "imessage", conversationId: "chat123" },
-          prompt: "Inspect the homelab.",
-          turnId: RECEIPT.turnId,
-          submittedAt: SUBMITTED_AT,
-        },
+      promptedCreateRequest({
+        chatId: undefined,
+        title: "From Messages",
+        provider: "claude",
+        model: "claude-opus-4-1",
+        source: { kind: "imessage", conversationId: "chat123" },
       }),
     );
 
@@ -258,7 +363,7 @@ describe("buildAgentChatApiRoutes", () => {
       expect.anything(),
       { kind: "imessage", conversationId: "chat123" },
       expect.stringMatching(/^chat-http-/),
-      SUBMITTED_AT,
+      { updatedAt: SUBMITTED_AT, sourceSequence: SOURCE_SEQUENCE },
     );
     expect(operations.submit).toHaveBeenCalledWith(
       expect.anything(),
@@ -291,6 +396,33 @@ describe("buildAgentChatApiRoutes", () => {
     });
   });
 
+  it("acknowledges an activated chat when its binding checkpoint fails", async () => {
+    const operations = makeOperations();
+    operations.bind = vi.fn(() =>
+      Promise.reject(new Error("catalog unavailable")),
+    );
+    const app = appWith(operations);
+
+    const response = await app.fetch(
+      promptedCreateRequest({
+        chatId: undefined,
+        title: "From Messages",
+        provider: "claude",
+        model: "claude-opus-4-1",
+        source: { kind: "imessage", conversationId: "chat123" },
+      }),
+    );
+
+    expect(response.status).toBe(202);
+    expect(await response.json()).toEqual({
+      chatId:
+        "chat-http-390d9274a759cef6304caee4885239a27f98af3eeb1ccf0a93f72dea9f7cb86b",
+      turn: RECEIPT,
+    });
+    expect(operations.activate).toHaveBeenCalledOnce();
+    expect(operations.bind).toHaveBeenCalledOnce();
+  });
+
   it("creates and binds a chat without starting a turn", async () => {
     const operations = makeOperations();
     const app = appWith(operations);
@@ -305,7 +437,15 @@ describe("buildAgentChatApiRoutes", () => {
 
     expect(response.status).toBe(201);
     expect(operations.register).toHaveBeenCalledOnce();
-    expect(operations.bind).toHaveBeenCalledOnce();
+    expect(operations.bind).toHaveBeenCalledWith(
+      expect.anything(),
+      EMPTY_CHAT_REQUEST.source,
+      EMPTY_CHAT_REQUEST.chatId,
+      {
+        updatedAt: expect.any(String),
+        sourceSequence: SOURCE_SEQUENCE,
+      },
+    );
     expect(operations.submit).not.toHaveBeenCalled();
   });
 
@@ -356,23 +496,15 @@ describe("buildAgentChatApiRoutes", () => {
       expect.anything(),
       EMPTY_CHAT_REQUEST.source,
       EMPTY_CHAT_REQUEST.chatId,
-      existing.config.createdAt,
+      {
+        updatedAt: existing.config.createdAt,
+        sourceSequence: SOURCE_SEQUENCE,
+      },
     );
   });
 
   it("returns a conflict when another request races registration", async () => {
-    const operations = makeOperations();
-    const conflicting = {
-      ...EMPTY_CHAT_ENTRY,
-      config: { ...EMPTY_CHAT_ENTRY.config, model: "different-model" },
-    };
-    operations.get = vi
-      .fn<AgentChatApiOperations["get"]>()
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(conflicting);
-    operations.register = vi.fn(() =>
-      Promise.reject(new Error("owner already exists")),
-    );
+    const operations = operationsWithConflictingRegistration();
 
     const response = await appWith(operations).fetch(
       request("/agent-chats", {
@@ -436,6 +568,21 @@ describe("prompted chat registration", () => {
     expect(operations.bind).not.toHaveBeenCalled();
   });
 
+  it("cancels a deferred turn when raced registration conflicts", async () => {
+    const operations = operationsWithConflictingRegistration();
+
+    const response = await appWith(operations).fetch(promptedCreateRequest());
+
+    expect(response.status).toBe(409);
+    expect(operations.submit).toHaveBeenCalledOnce();
+    expect(operations.cancel).toHaveBeenCalledWith(
+      expect.anything(),
+      RECEIPT.turnId,
+    );
+    expect(operations.activate).not.toHaveBeenCalled();
+    expect(operations.bind).not.toHaveBeenCalled();
+  });
+
   it.each([
     { title: "Another title" },
     { provider: "claude" },
@@ -475,7 +622,7 @@ describe("prompted chat registration", () => {
       expect.anything(),
       EMPTY_CHAT_REQUEST.source,
       EMPTY_CHAT_REQUEST.chatId,
-      SUBMITTED_AT,
+      { updatedAt: SUBMITTED_AT, sourceSequence: SOURCE_SEQUENCE },
     );
   });
 
@@ -554,7 +701,7 @@ describe("durable agent chat binding retries", () => {
         _client: Client["workflow"],
         _binding: AgentChatBinding,
         _chatId: string,
-        _submittedAt: string,
+        _update: AgentChatBindingUpdate,
       ) => ENTRY,
     );
     operations.bind = bind;
@@ -569,7 +716,9 @@ describe("durable agent chat binding retries", () => {
         token: TOKEN,
         body: {
           binding: { kind: "discord", channelId: "channel-1" },
+          bindingId: "binding-1",
           submittedAt: NOW,
+          sourceSequence: SOURCE_SEQUENCE,
         },
       });
     const first = await app.fetch(bindRequest());
@@ -578,18 +727,24 @@ describe("durable agent chat binding retries", () => {
     expect(retry.status).toBe(200);
     expect(bind).toHaveBeenCalledTimes(2);
     for (const call of bind.mock.calls) {
-      expect(call[3]).toBe(NOW);
+      expect(call[3]).toEqual({
+        updatedAt: NOW,
+        sourceSequence: SOURCE_SEQUENCE,
+      });
     }
     expect(now).toHaveBeenCalledTimes(2);
   });
 
-  it("requires a stable timestamp for an explicit binding operation", async () => {
+  it("requires a stable identity for an explicit binding operation", async () => {
     const operations = makeOperations();
     const response = await appWith(operations).fetch(
       request("/agent-chats/chat-existing/bindings", {
         method: "POST",
         token: TOKEN,
-        body: { binding: { kind: "discord", channelId: "channel-1" } },
+        body: {
+          binding: { kind: "discord", channelId: "channel-1" },
+          submittedAt: NOW,
+        },
       }),
     );
     expect(response.status).toBe(400);
@@ -604,7 +759,9 @@ describe("durable agent chat binding retries", () => {
         token: TOKEN,
         body: {
           binding: { kind: "discord", channelId: "channel-1" },
+          bindingId: "future-binding",
           submittedAt: "2099-01-01T00:00:00.000Z",
+          sourceSequence: SOURCE_SEQUENCE,
         },
       }),
     );
@@ -622,19 +779,7 @@ describe("durable agent chat turns and bindings", () => {
     const operations = makeOperations();
     const app = appWith(operations);
 
-    const response = await app.fetch(
-      request("/agent-chat-turns", {
-        method: "POST",
-        token: TOKEN,
-        body: {
-          chatId: "chat-existing",
-          source: { kind: "discord", channelId: "channel-1" },
-          prompt: "Continue that investigation.",
-          turnId: RECEIPT.turnId,
-          submittedAt: SUBMITTED_AT,
-        },
-      }),
-    );
+    const response = await app.fetch(explicitContinuationRequest());
 
     expect(response.status).toBe(202);
     expect(operations.get).toHaveBeenCalledWith(
@@ -649,6 +794,7 @@ describe("durable agent chat turns and bindings", () => {
         turnId: RECEIPT.turnId,
         prompt: "Continue that investigation.",
         submittedAt: SUBMITTED_AT,
+        sourceSequence: SOURCE_SEQUENCE,
         source: { kind: "discord", channelId: "channel-1" },
       },
     });
@@ -656,11 +802,26 @@ describe("durable agent chat turns and bindings", () => {
       expect.anything(),
       { kind: "discord", channelId: "channel-1" },
       "chat-existing",
-      SUBMITTED_AT,
+      { updatedAt: SUBMITTED_AT, sourceSequence: SOURCE_SEQUENCE },
     );
     expect(
       vi.mocked(operations.submit).mock.invocationCallOrder[0],
     ).toBeLessThan(vi.mocked(operations.bind).mock.invocationCallOrder[0] ?? 0);
+  });
+
+  it("acknowledges a submitted continuation when rebinding fails", async () => {
+    const operations = makeOperations();
+    operations.bind = vi.fn(() =>
+      Promise.reject(new Error("catalog unavailable")),
+    );
+    const app = appWith(operations);
+
+    const response = await app.fetch(explicitContinuationRequest());
+
+    expect(response.status).toBe(202);
+    expect(await response.json()).toEqual({ turn: RECEIPT });
+    expect(operations.submit).toHaveBeenCalledOnce();
+    expect(operations.bind).toHaveBeenCalledOnce();
   });
 
   it("rejects an unknown explicit chat before durable submission", async () => {
@@ -677,6 +838,7 @@ describe("durable agent chat turns and bindings", () => {
           prompt: "Continue that investigation.",
           turnId: RECEIPT.turnId,
           submittedAt: SUBMITTED_AT,
+          sourceSequence: SOURCE_SEQUENCE,
         },
       }),
     );
@@ -736,6 +898,7 @@ describe("durable agent chat turns and bindings", () => {
           prompt: "Continue.",
           turnId: RECEIPT.turnId,
           submittedAt: SUBMITTED_AT,
+          sourceSequence: SOURCE_SEQUENCE,
         },
       }),
     );
@@ -814,7 +977,9 @@ describe("durable agent chat turn status and direct bindings", () => {
         token: TOKEN,
         body: {
           binding: { kind: "discord", channelId: "channel-1" },
+          bindingId: "binding-2",
           submittedAt: NOW,
+          sourceSequence: SOURCE_SEQUENCE,
         },
       }),
     );
@@ -824,7 +989,7 @@ describe("durable agent chat turn status and direct bindings", () => {
       expect.anything(),
       { kind: "discord", channelId: "channel-1" },
       "chat-existing",
-      NOW,
+      { updatedAt: NOW, sourceSequence: SOURCE_SEQUENCE },
     );
   });
 
@@ -841,7 +1006,9 @@ describe("durable agent chat turn status and direct bindings", () => {
         token: TOKEN,
         body: {
           binding: { kind: "discord", channelId: "channel-1" },
+          bindingId: "missing-chat-binding",
           submittedAt: NOW,
+          sourceSequence: SOURCE_SEQUENCE,
         },
       }),
     );
@@ -862,7 +1029,9 @@ describe("durable agent chat turn status and direct bindings", () => {
         token: TOKEN,
         body: {
           binding: { kind: "discord", channelId: "channel-1" },
+          bindingId: "bad-chat-binding",
           submittedAt: NOW,
+          sourceSequence: SOURCE_SEQUENCE,
         },
       }),
     );

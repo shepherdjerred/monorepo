@@ -1,4 +1,9 @@
-import type { Client as TemporalClient } from "@temporalio/client";
+import {
+  WorkflowExecutionAlreadyStartedError,
+  WorkflowIdConflictPolicy,
+  type Client as TemporalClient,
+} from "@temporalio/client";
+import { getEventListeners } from "node:events";
 import {
   MessageFlags,
   PermissionFlagsBits,
@@ -6,13 +11,18 @@ import {
 } from "discord.js";
 import { describe, expect, it, vi } from "vitest";
 import type { AgentChatCatalogEntry } from "#shared/agent/agent-chat.ts";
+import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
 import {
+  AgentChatDiscordCommandConflictError,
   agentChatDiscordCommand,
+  discordAgentChatCommandFingerprint,
   formatDiscordChatList,
   handleAgentChatDiscordCommand,
   registerAgentChatDiscordCommand,
+  startDiscordAgentChatCommand,
   type AgentChatDiscordOperations,
 } from "./agent-chat-discord.ts";
+import { startAgentChatDiscordSupervisor } from "./agent-chat-discord-supervisor.ts";
 
 const NOW = "2026-09-14T22:00:00.000Z";
 const INTERACTION_ID = "123456789012345678";
@@ -33,10 +43,29 @@ const ENTRY: AgentChatCatalogEntry = {
   updatedAt: NOW,
   turnCount: 4,
 };
+const ACCEPTED_COMMAND: DiscordAgentChatCommand = {
+  kind: "new",
+  interactionId: INTERACTION_ID,
+  channelId: CHANNEL_ID,
+  provider: "codex",
+  prompt: "Inspect the current branch.",
+  title: "Inspect the current branch.",
+  model: "gpt-5.6-luna",
+  submittedAt: INTERACTION_TIMESTAMP,
+};
 
-function fakeTemporalClient(): TemporalClient {
+function fakeTemporalClient(
+  workflowStart?: unknown,
+  workflowGetHandle?: unknown,
+): TemporalClient {
   const client = Object.create(null);
   client.workflow = Object.create(null);
+  if (workflowStart !== undefined) {
+    client.workflow.start = workflowStart;
+  }
+  if (workflowGetHandle !== undefined) {
+    client.workflow.getHandle = workflowGetHandle;
+  }
   return client;
 }
 
@@ -90,7 +119,84 @@ function fakeInteraction(input: {
   return { interaction, deferReply, editReply, reply };
 }
 
+it("rejects a redelivery whose resolved command changed", async () => {
+  const temporal = fakeTemporalClient(
+    vi.fn(() =>
+      Promise.reject(
+        new WorkflowExecutionAlreadyStartedError(
+          "already accepted",
+          `discord-agent-chat/${INTERACTION_ID}`,
+          "discordAgentChatWorkflow",
+        ),
+      ),
+    ),
+    vi.fn(() => ({
+      describe: vi.fn(async () => ({
+        memo: {
+          agentChatCommandFingerprint:
+            discordAgentChatCommandFingerprint(ACCEPTED_COMMAND),
+        },
+      })),
+    })),
+  );
+  const changed = { ...ACCEPTED_COMMAND, model: "gpt-5.6-terra" };
+
+  await expect(
+    startDiscordAgentChatCommand(temporal, changed),
+  ).rejects.toBeInstanceOf(AgentChatDiscordCommandConflictError);
+});
+
+it("accepts a fresh Discord workflow without another Temporal lookup", async () => {
+  const describeWorkflow = vi.fn(() =>
+    Promise.reject(new Error("lookup outage")),
+  );
+  const start = vi.fn(async () => ({ describe: describeWorkflow }));
+  const temporal = fakeTemporalClient(start);
+
+  await expect(
+    startDiscordAgentChatCommand(temporal, ACCEPTED_COMMAND),
+  ).resolves.toBeUndefined();
+  expect(describeWorkflow).not.toHaveBeenCalled();
+  expect(start).toHaveBeenCalledWith(
+    "discordAgentChatWorkflow",
+    expect.objectContaining({
+      workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
+    }),
+  );
+});
+
 describe("agent chat Discord ingress", () => {
+  it("retries Discord startup without blocking gateway readiness", async () => {
+    const connected = { close: vi.fn(() => Promise.resolve()) };
+    let supervisorSignal: AbortSignal | undefined;
+    let startAttempts = 0;
+    const start = vi.fn((_temporal: TemporalClient, signal: AbortSignal) => {
+      supervisorSignal = signal;
+      startAttempts += 1;
+      return startAttempts === 1
+        ? Promise.reject(new Error("Discord unavailable"))
+        : Promise.resolve(connected);
+    });
+
+    const supervisor = startAgentChatDiscordSupervisor(fakeTemporalClient(), {
+      start,
+      initialRetryDelayMs: 1,
+      maximumRetryDelayMs: 1,
+    });
+
+    expect(start).toHaveBeenCalledOnce();
+    await vi.waitFor(() => {
+      expect(start).toHaveBeenCalledTimes(2);
+    });
+    expect(supervisorSignal).toBeDefined();
+    if (supervisorSignal === undefined) {
+      throw new Error("Discord supervisor did not provide an abort signal");
+    }
+    expect(getEventListeners(supervisorSignal, "abort")).toHaveLength(0);
+    await supervisor.close();
+    expect(connected.close).toHaveBeenCalledOnce();
+  });
+
   it("fails startup when slash-command registration fails", async () => {
     const failure = new Error("Discord unavailable");
     const set = vi.fn(() => Promise.reject(failure));
@@ -192,7 +298,10 @@ describe("agent chat Discord ingress", () => {
       expect.anything(),
       { kind: "discord", channelId: CHANNEL_ID },
       `chat-discord-${INTERACTION_ID}`,
-      expect.any(String),
+      {
+        updatedAt: INTERACTION_TIMESTAMP,
+        sourceSequence: INTERACTION_ID,
+      },
     );
     expect(vi.mocked(deps.start).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(deps.register).mock.invocationCallOrder[0] ?? 0,
@@ -258,7 +367,10 @@ describe("agent chat Discord ingress", () => {
       expect.anything(),
       { kind: "discord", channelId: CHANNEL_ID },
       "scheduled-chat",
-      INTERACTION_TIMESTAMP,
+      {
+        updatedAt: INTERACTION_TIMESTAMP,
+        sourceSequence: INTERACTION_ID,
+      },
     );
     expect(vi.mocked(deps.start).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(deps.bind).mock.invocationCallOrder[0] ?? 0,
@@ -302,6 +414,55 @@ describe("explicit Discord chat selection", () => {
     expect(deps.get).not.toHaveBeenCalled();
     expect(deps.start).not.toHaveBeenCalled();
     expect(fake.editReply).toHaveBeenCalledOnce();
+  });
+});
+
+describe("accepted Discord command recovery", () => {
+  it("acknowledges a new chat when its catalog checkpoint fails", async () => {
+    const deps = operations();
+    deps.register = vi
+      .fn<AgentChatDiscordOperations["register"]>()
+      .mockRejectedValue(new Error("catalog unavailable"));
+    const fake = fakeInteraction({
+      subcommand: "new",
+      strings: { provider: "codex", prompt: "Inspect the branch." },
+    });
+
+    await handleAgentChatDiscordCommand(
+      fakeTemporalClient(),
+      fake.interaction,
+      deps,
+    );
+
+    expect(deps.start).toHaveBeenCalledOnce();
+    expect(deps.bind).not.toHaveBeenCalled();
+    expect(fake.editReply).toHaveBeenCalledWith({
+      content: "Queued. I’ll post the durable agent response in this channel.",
+      allowedMentions: { parse: [] },
+    });
+  });
+
+  it("acknowledges an explicit continuation when rebinding fails", async () => {
+    const deps = operations();
+    deps.bind = vi
+      .fn<AgentChatDiscordOperations["bind"]>()
+      .mockRejectedValue(new Error("catalog unavailable"));
+    const fake = fakeInteraction({
+      subcommand: "continue",
+      strings: { chat: "scheduled-chat", prompt: "Continue the work." },
+    });
+
+    await handleAgentChatDiscordCommand(
+      fakeTemporalClient(),
+      fake.interaction,
+      deps,
+    );
+
+    expect(deps.start).toHaveBeenCalledOnce();
+    expect(fake.editReply).toHaveBeenCalledWith({
+      content: "Queued. I’ll post the durable agent response in this channel.",
+      allowedMentions: { parse: [] },
+    });
   });
 });
 

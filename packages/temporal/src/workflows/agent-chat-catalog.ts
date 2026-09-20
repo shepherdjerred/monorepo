@@ -7,6 +7,7 @@ import {
 } from "@temporalio/workflow";
 import {
   AgentChatBindingSchema,
+  AgentChatBindingUpdateSchema,
   AgentChatCatalogBindingSchema,
   AgentChatCatalogEntrySchema,
   AgentChatCatalogStateSchema,
@@ -16,6 +17,8 @@ import {
   MAX_AGENT_CHAT_CATALOG_STATE_BYTES,
   agentChatBindingKey,
   type AgentChatBinding,
+  type AgentChatBindingUpdate,
+  type AgentChatBindingUpdateInput,
   type AgentChatCatalogEntry,
   type AgentChatCatalogState,
 } from "#shared/agent/agent-chat.ts";
@@ -41,6 +44,60 @@ function timestampInstant(timestamp: string): number {
     throw new TypeError(`Invalid agent chat catalog timestamp: ${timestamp}`);
   }
   return instant;
+}
+
+function parseBindingUpdate(
+  rawUpdate: AgentChatBindingUpdateInput,
+): AgentChatBindingUpdate {
+  const update = AgentChatBindingUpdateSchema.parse(
+    typeof rawUpdate === "string" ? { updatedAt: rawUpdate } : rawUpdate,
+  );
+  if (update.orderingVersion === 1 && update.sourceSequence === undefined) {
+    throw new TypeError(
+      "Versioned binding updates require a monotonic source sequence",
+    );
+  }
+  return update;
+}
+
+function sourceSequenceAtLeast(
+  existing: string | number,
+  next: string | number,
+): boolean {
+  const existingDigits = String(existing);
+  const nextDigits = String(next);
+  return existingDigits.length === nextDigits.length
+    ? existingDigits >= nextDigits
+    : existingDigits.length > nextDigits.length;
+}
+
+function existingBindingWins(
+  existing: AgentChatCatalogState["bindings"][number],
+  next: AgentChatCatalogState["bindings"][number],
+): boolean {
+  if (
+    existing.orderingVersion === undefined &&
+    next.orderingVersion === 1 &&
+    next.sourceSequence !== undefined
+  ) {
+    return false;
+  }
+  if (
+    existing.sourceSequence !== undefined &&
+    next.sourceSequence !== undefined
+  ) {
+    return sourceSequenceAtLeast(existing.sourceSequence, next.sourceSequence);
+  }
+  const existingInstant = Date.parse(existing.updatedAt);
+  const nextInstant = Date.parse(next.updatedAt);
+  if (existingInstant !== nextInstant) return existingInstant > nextInstant;
+  if (
+    existing.sourceSequence !== undefined &&
+    next.sourceSequence === undefined
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function oldestBindingIndex(
@@ -227,9 +284,10 @@ function bind(
   state: AgentChatCatalogState,
   rawBinding: AgentChatBinding,
   rawChatId: string,
-  updatedAt: string,
+  rawUpdate: AgentChatBindingUpdateInput,
 ): AgentChatCatalogEntry {
   const binding = AgentChatBindingSchema.parse(rawBinding);
+  const update = parseBindingUpdate(rawUpdate);
   const chatId = AgentChatIdSchema.parse(rawChatId);
   const entry = entryFor(state, chatId);
   if (entry === undefined) {
@@ -242,12 +300,9 @@ function bind(
   const next = AgentChatCatalogBindingSchema.parse({
     binding,
     chatId,
-    updatedAt,
+    ...update,
   });
-  if (
-    existing !== undefined &&
-    Date.parse(existing.updatedAt) > Date.parse(next.updatedAt)
-  ) {
+  if (existing !== undefined && existingBindingWins(existing, next)) {
     const selected = entryFor(state, existing.chatId);
     if (selected === undefined) {
       throw new Error(
@@ -269,10 +324,10 @@ export function registerAndBindAgentChatCatalogEntry(
   state: AgentChatCatalogState,
   rawEntry: AgentChatCatalogEntry,
   rawBinding: AgentChatBinding,
-  updatedAt: string,
+  update: AgentChatBindingUpdateInput,
 ): AgentChatCatalogEntry {
   const entry = registerAgentChatCatalogEntry(state, rawEntry);
-  return bind(state, rawBinding, entry.config.chatId, updatedAt);
+  return bind(state, rawBinding, entry.config.chatId, update);
 }
 
 function resolve(
