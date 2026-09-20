@@ -155,7 +155,11 @@ export async function runRealtimeVoiceTurn(
   return await runRealtimeCommandTurn(config, {
     pcm16k: input.pcm16k,
     activatedAtMs: input.activatedAtMs,
-    commands: bindPlaybackVoiceCommandPort(input.service, input.userId),
+    commands: bindPlaybackVoiceCommandPort(
+      input.service,
+      input.userId,
+      input.attempt,
+    ),
     assistantAudio: new PacedAssistantSender(input.streamer, {
       stagePrefix: STREAMBOT_VOICE_STAGE_PREFIX,
       metrics: streambotVoiceReplyMetrics,

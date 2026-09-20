@@ -101,6 +101,12 @@ flag forcing the pre-split transport, so [`resolveSource`](https://github.com/sh
 rejects the item by name rather than switching it to audio. Silently switching would ignore the
 user, and would make the flag a switch that turns nothing off.
 
+Spoken play is a weaker hint. Slash `/stream play` is unchanged. A voice request that did not say
+“watch” ignores a model `mode: video` and, on YouTube, treats Entertainment, People & Blogs, and
+Comedy as a music tie instead of forcing Go Live. That is the AI-cover case: those categories are
+typical of lyric and character-cover uploads. Film & Animation, TV, Gaming, Sports, and News stay
+video. The streamer logs `mediaKind`, `decidedBy`, `spoken`, and `transport` on `starting stream`.
+
 ## What this rules out
 
 **One transport with audio-only encoding.** Go Live with no picture still costs a second connection

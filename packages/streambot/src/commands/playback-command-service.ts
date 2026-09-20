@@ -14,6 +14,7 @@ import type { MediaMode } from "@shepherdjerred/streambot/sources/media-kind.ts"
 import {
   sourceLabel,
   withMode,
+  withSpoken,
   type Source,
   type SubtitlePref,
   withSubtitles,
@@ -27,6 +28,7 @@ import type {
   DiscoveryScope,
   MediaCandidate,
 } from "@shepherdjerred/streambot/discovery/candidate.ts";
+import { pickOfficialSameWork } from "@shepherdjerred/streambot/discovery/same-work.ts";
 import type { RecordMedia } from "@shepherdjerred/streambot/history/media-history.ts";
 import {
   PlaybackCommandBlockedError,
@@ -49,6 +51,8 @@ type PlayInput = {
   readonly signal?: AbortSignal;
   /** Slash commands may still supply supported URLs; spoken commands never may. */
   readonly spoken?: boolean;
+  /** Full spoken command after the wake prefix, used to honour “watch” over a model `mode: video`. */
+  readonly utterance?: string;
   readonly subtitles?: SubtitlePref;
   /** Per-request transport override; `undefined` and `"auto"` both mean "let the classifier decide". */
   readonly mode?: MediaMode;
@@ -75,6 +79,31 @@ export function normalizeVoicePlayQuery(query: string): string {
     throw new PlaybackCommandBoundaryError("Say a title instead of a URL.");
   }
   return normalized;
+}
+
+/**
+ * Explicit music/video beats a spoken verb; `"auto"` is the slash default, so it defers.
+ * A spoken model `mode: video` is ignored unless the utterance asked to watch.
+ */
+function requestedPlayMode(
+  input: PlayInput,
+  intent: MediaIntent,
+  query: string,
+): MediaMode | undefined {
+  const spokenWatch =
+    input.spoken === true &&
+    inferMediaIntent({ query: input.utterance ?? query }).mode === "video";
+  const unspecified = input.mode === undefined || input.mode === "auto";
+  if (spokenWatch && unspecified) {
+    return "video";
+  }
+  if (unspecified) {
+    return intent.mode;
+  }
+  if (!spokenWatch && input.spoken === true && input.mode === "video") {
+    return intent.mode;
+  }
+  return input.mode;
 }
 
 /** Permission-checked operations shared by slash commands and the voice agent. */
@@ -146,17 +175,15 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     const scope = this.scope(input.userId);
     const selected = await this.selectMedia(input, query, intent, scope);
-    // Precedence: an explicit `music`/`video` beats the verb, the verb beats nothing. `"auto"` is
-    // the slash command's default rather than a choice anyone made, so it defers to the spoken
-    // verb instead of suppressing it — otherwise "watch the trailer" would be overridden by an
-    // option the speaker never touched.
-    const requestedMode =
-      input.mode === undefined || input.mode === "auto"
-        ? intent.mode
-        : input.mode;
-    const source = withMode(
-      withSubtitles(selected.source, input.subtitles),
-      await this.resolveMediaMode(input.userId, requestedMode),
+    const source = withSpoken(
+      withMode(
+        withSubtitles(selected.source, input.subtitles),
+        await this.resolveMediaMode(
+          input.userId,
+          requestedPlayMode(input, intent, query),
+        ),
+      ),
+      input.spoken === true,
     );
     if (isBlockedSource(source)) {
       await this.announceBlocked(input.userId);
@@ -247,7 +274,7 @@ export class PlaybackCommandService extends PlaybackControls {
         .map((item, index) => `${String(index + 1)}, ${item.title}`)
         .join("; ");
       throw new PlaybackCommandBoundaryError(
-        `I found a few matches: ${choices}. Say first, second, or third.`,
+        `I found a few matches: ${choices}. Say the title, or first, second, or third.`,
       );
     }
     return { source: result.candidate.source, candidate: result.candidate };
@@ -388,9 +415,13 @@ export class PlaybackCommandService extends PlaybackControls {
       signal,
     );
     if (matches.length === 0) return "I couldn't find any matching media.";
+    discovery.rememberCandidates(scope, matches);
+    const official = pickOfficialSameWork(matches);
+    if (official !== undefined) {
+      return `These matches are the same work. Play this official/best match: ${official.title}.`;
+    }
     if (matches.length > 1) {
       this.clarificationGeneration += 1;
-      discovery.rememberCandidates(scope, matches);
     }
     return matches
       .map(

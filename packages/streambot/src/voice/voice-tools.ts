@@ -35,15 +35,6 @@ function isAdvancedPlay(name: ToolName, toolArguments: unknown): boolean {
   return parsed.success && parsed.data.placement === "now";
 }
 
-function safeToolArgumentMetadata(toolArguments: unknown): {
-  readonly fieldCount: number;
-} {
-  if (typeof toolArguments !== "object" || toolArguments === null) {
-    return { fieldCount: 0 };
-  }
-  return { fieldCount: Object.keys(toolArguments).length };
-}
-
 /** User/session-bound command surface shared by production execution and local dry runs. */
 export type VoiceCommandPort = {
   readonly play: (
@@ -89,10 +80,19 @@ export type VoiceCommandPort = {
 export function bindPlaybackVoiceCommandPort(
   service: PlaybackCommandService,
   userId: UserId,
+  attempt?: VoiceAttemptHandle,
 ): VoiceCommandPort {
+  const observed = attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
   return {
     play: async (input, signal) => {
-      const result = await service.play({ ...input, userId, signal });
+      const spokenCommand = observed.spokenCommand();
+      const result = await service.play({
+        ...input,
+        userId,
+        signal,
+        spoken: true,
+        ...(spokenCommand === null ? {} : { utterance: spokenCommand }),
+      });
       return result.message;
     },
     skip: () => service.skip(userId).message,
@@ -157,12 +157,11 @@ export function createStreambotVoiceTools(
     operation: () => string | Promise<string>,
   ): Promise<string> {
     const startedAt = performance.now();
-    const safeArguments = safeToolArgumentMetadata(toolArguments);
     return await attempt.runStage(
       `streambot.voice.tool.${name}`,
       {
         "streambot.voice.tool.name": name,
-        "streambot.voice.tool.arguments": JSON.stringify(safeArguments),
+        "streambot.voice.tool.arguments": JSON.stringify(toolArguments),
         "streambot.voice.tool.mutating": mutating,
       },
       async (span) => {
@@ -224,7 +223,7 @@ export function createStreambotVoiceTools(
           });
           attempt.tool({
             name,
-            arguments: safeArguments,
+            arguments: toolArguments,
             ...(result === undefined ? {} : { result }),
             outcome,
             durationMs,
