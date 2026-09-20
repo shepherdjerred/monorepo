@@ -99,6 +99,26 @@ function existingBindingWins(
   }
   return false;
 }
+
+function retainedBindingEntry(
+  state: AgentChatCatalogState,
+  next: AgentChatCatalogState["bindings"][number],
+): AgentChatCatalogEntry | undefined {
+  const bindingKey = agentChatBindingKey(next.binding);
+  const existing = state.bindings.find(
+    (candidate) => agentChatBindingKey(candidate.binding) === bindingKey,
+  );
+  if (existing === undefined || !existingBindingWins(existing, next)) {
+    return undefined;
+  }
+  const selected = entryFor(state, existing.chatId);
+  if (selected === undefined) {
+    throw new Error(
+      `Agent chat binding points to unknown chat ${existing.chatId}`,
+    );
+  }
+  return selected;
+}
 function oldestBindingIndex(
   state: AgentChatCatalogState,
   protectedBindingKey?: string,
@@ -322,15 +342,8 @@ function bind(
     }
     return selected;
   }
-  if (existing !== undefined && existingBindingWins(existing, next)) {
-    const selected = entryFor(state, existing.chatId);
-    if (selected === undefined) {
-      throw new Error(
-        `Agent chat binding points to unknown chat ${existing.chatId}`,
-      );
-    }
-    return selected;
-  }
+  const retained = retainedBindingEntry(state, next);
+  if (retained !== undefined) return retained;
   if (existing === undefined) {
     state.bindings.push(next);
   } else {
@@ -344,10 +357,20 @@ export function registerAndBindAgentChatCatalogEntry(
   state: AgentChatCatalogState,
   rawEntry: AgentChatCatalogEntry,
   rawBinding: AgentChatBinding,
-  update: AgentChatBindingUpdateInput,
+  rawUpdate: AgentChatBindingUpdateInput,
 ): AgentChatCatalogEntry {
+  const candidate = AgentChatCatalogEntrySchema.parse(rawEntry);
+  const binding = AgentChatBindingSchema.parse(rawBinding);
+  const update = parseBindingUpdate(rawUpdate);
+  const next = AgentChatCatalogBindingSchema.parse({
+    binding,
+    chatId: candidate.config.chatId,
+    ...update,
+  });
+  const retained = retainedBindingEntry(state, next);
+  if (retained !== undefined) return retained;
   const entry = registerAgentChatCatalogEntry(state, rawEntry);
-  return bind(state, rawBinding, entry.config.chatId, update);
+  return bind(state, binding, entry.config.chatId, update);
 }
 
 function resolve(

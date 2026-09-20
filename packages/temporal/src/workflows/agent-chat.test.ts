@@ -74,6 +74,19 @@ function request(turnId: string, prompt: string): AgentChatTurnRequest {
   };
 }
 
+function fullResidentCatalog(): AgentChatCatalogEntry[] {
+  return Array.from({ length: MAX_AGENT_CHAT_CATALOG_ENTRIES }, (_, index) => ({
+    schemaVersion: 1,
+    config: {
+      ...CONFIG,
+      chatId: `resident-${String(index)}`,
+      createdAt: new Date(Date.UTC(2027, 0, 1) + index).toISOString(),
+    },
+    updatedAt: new Date(Date.UTC(2027, 0, 1) + index).toISOString(),
+    turnCount: 0,
+  }));
+}
+
 function turnResult(input: RunAgentChatTurnInput): AgentChatTurnResult {
   return {
     turnId: input.request.turnId,
@@ -568,6 +581,52 @@ test("replays legacy register-and-bind timestamp arguments", () => {
     chatId: CONFIG.chatId,
     updatedAt: "2026-09-14T16:02:00.000Z",
   });
+});
+
+test("preserves a sequenced binding before recovering an evicted chat", () => {
+  const entries = fullResidentCatalog();
+  const incumbent = entries[0];
+  if (incumbent === undefined) throw new Error("missing incumbent chat");
+  const binding = { kind: "imessage" as const, conversationId: "chat-123" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries,
+    bindings: [
+      {
+        binding,
+        chatId: incumbent.config.chatId,
+        updatedAt: incumbent.updatedAt,
+        sourceSequence: 100,
+      },
+    ],
+    retiredChatIds: [CONFIG.chatId],
+  };
+
+  const selected = registerAndBindAgentChatCatalogEntry(
+    state,
+    {
+      schemaVersion: 1,
+      config: CONFIG,
+      updatedAt: CONFIG.createdAt,
+      turnCount: 0,
+    },
+    binding,
+    { updatedAt: "2028-01-01T00:00:00.000Z" },
+  );
+
+  expect(selected).toEqual(incumbent);
+  expect(state.entries).not.toContainEqual(
+    expect.objectContaining({ config: CONFIG }),
+  );
+  expect(state.bindings).toEqual([
+    {
+      binding,
+      chatId: incumbent.config.chatId,
+      updatedAt: incumbent.updatedAt,
+      sourceSequence: 100,
+    },
+  ]);
+  expect(state.retiredChatIds).toContain(CONFIG.chatId);
 });
 
 async function testFreshCatalogRecovery(): Promise<void> {
