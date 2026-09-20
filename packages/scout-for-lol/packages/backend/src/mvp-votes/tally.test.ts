@@ -216,6 +216,28 @@ describe("MVP tally copy", () => {
     expect(description).not.toContain("**Blue MVP**");
   });
 
+  test("counts both of a voter's ballots even when they name the same player", () => {
+    const description = formatMvpTallyDescription(
+      [
+        vote({
+          category: "ally",
+          nomineeIndex: 9,
+          voterPuuid: puuid(0),
+        }),
+        vote({
+          category: "enemy",
+          nomineeIndex: 9,
+          voterPuuid: puuid(0),
+        }),
+      ],
+      roster(),
+      aliases([[puuid(0), "alice"]]),
+    );
+    expect(description).toContain("**Red MVP**");
+    expect(description).toContain("Player9#NA1 (Champ9) · 2");
+    expect(description).not.toContain("**Blue MVP**");
+  });
+
   test("blank justification becomes null; over-max is rejected", () => {
     expect(parseJustification("   ")).toEqual({ ok: true, value: null });
     expect(parseJustification("threw at baron")).toEqual({

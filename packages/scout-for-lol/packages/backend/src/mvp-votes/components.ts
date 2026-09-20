@@ -66,6 +66,8 @@ export function mvpVoteSelectRow(input: {
   roster: MatchMvpRoster;
   aliases: ReadonlyMap<LeaguePuuid, string>;
 }): ActionRowBuilder<StringSelectMenuBuilder> {
+  // Both ballots list all ten participants. Ally/enemy are independent
+  // nominations, not team filters.
   const options = input.roster.participants.map((participant, index) => {
     const name = displayNameFor(participant.puuid, input.roster, input.aliases);
     return new StringSelectMenuOptionBuilder()

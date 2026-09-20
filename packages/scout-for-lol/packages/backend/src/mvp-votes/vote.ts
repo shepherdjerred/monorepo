@@ -207,6 +207,10 @@ export async function upsertMatchMvpVote(
       `Match MVP contest ${input.matchId} is missing; a vote cannot be recorded without a frozen roster`,
     );
   }
+  // Ally/enemy are two independent ballots, not team filters: a voter may
+  // name any of the ten participants on either ballot. The public tally
+  // groups by the nominee's side, so two ballots for the same person both
+  // count there.
   nomineeAt(roster, input.nomineeIndex);
   const justification =
     input.justification === undefined ? null : input.justification;
