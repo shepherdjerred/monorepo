@@ -1,6 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readdir, readFile } from "node:fs/promises";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -67,9 +65,7 @@ describe("prompt template variable conformance", () => {
           templateSystemVars.add(v);
         }
       }
-      const registrySystemVars = new Set(
-        variables.system.map((v) => v.name),
-      );
+      const registrySystemVars = new Set(variables.system.map((v) => v.name));
       expect([...templateSystemVars].sort()).toEqual(
         [...registrySystemVars].sort(),
       );
@@ -80,9 +76,7 @@ describe("prompt template variable conformance", () => {
       // is a separate change; the system side is covered here.
       if (stage === "reviewText") return;
       const templateUserVars = extractTemplateVariables(user);
-      const registryUserVars = new Set(
-        variables.user.map((v) => v.name),
-      );
+      const registryUserVars = new Set(variables.user.map((v) => v.name));
       expect([...templateUserVars].sort()).toEqual(
         [...registryUserVars].sort(),
       );
@@ -135,16 +129,16 @@ describe("prompt template variable conformance", () => {
     ]);
   });
 
-  test("no raw placeholder replacement outside the validator", () => {
-    const here = dirname(fileURLToPath(import.meta.url));
-    const dirs = [here, join(here, "..", "art")];
+  test("no raw placeholder replacement outside the validator", async () => {
+    const here = import.meta.dirname;
+    const dirs = [here, `${here}/../art`];
     const rawPlaceholderReplace = /\.replaceAll\(\s*[`'"]</;
     const offenders: string[] = [];
     for (const dir of dirs) {
-      for (const file of readdirSync(dir)) {
+      for (const file of await readdir(dir)) {
         if (!file.endsWith(".ts") || file.endsWith(".test.ts")) continue;
         if (file === "pipeline-utils.ts") continue;
-        const content = readFileSync(join(dir, file), "utf8");
+        const content = await readFile(`${dir}/${file}`, "utf8");
         if (rawPlaceholderReplace.test(content)) {
           offenders.push(file);
         }

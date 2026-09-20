@@ -54,12 +54,12 @@ flowchart TB
 
 ## AI Models Used
 
-| Model                    | Purpose                 | Temperature | Max Tokens | Cost                               |
-| ------------------------ | ----------------------- | ----------- | ---------- | ---------------------------------- |
-| `gpt-5.4-mini`           | Timeline/match summaries | 0.3–0.4     | 6000       | $0.75 in / $4.50 out (per 1M)      |
-| `gpt-5.6-luna`           | Review text             | —           | 3000       | $0.20 in / $1.20 out (per 1M)      |
-| `gpt-5.6-luna`           | Image description       | —           | 1800       | $0.20 in / $1.20 out (per 1M)      |
-| `gemini-2.5-flash-image` | Image (every review)    | —           | —          | $0.039 per image                   |
+| Model                    | Purpose                  | Temperature | Max Tokens | Cost                          |
+| ------------------------ | ------------------------ | ----------- | ---------- | ----------------------------- |
+| `gpt-5.4-mini`           | Timeline/match summaries | 0.3–0.4     | 6000       | $0.75 in / $4.50 out (per 1M) |
+| `gpt-5.6-luna`           | Review text              | —           | 3000       | $0.20 in / $1.20 out (per 1M) |
+| `gpt-5.6-luna`           | Image description        | —           | 1800       | $0.20 in / $1.20 out (per 1M) |
+| `gemini-2.5-flash-image` | Image (every review)     | —           | —          | $0.039 per image              |
 
 ## Match Analysis
 
@@ -359,14 +359,14 @@ export const ART_STYLES = [
 
 ### Per-Review Estimate
 
-| Component         | Tokens (approx) | Cost        |
-| ----------------- | --------------- | ----------- |
-| Analysis input    | ~2000           | $0.0003     |
-| Analysis output   | ~400            | $0.00024    |
-| Art prompt input  | ~600            | $0.003      |
-| Art prompt output | ~150            | $0.00225    |
-| Image (every review) | —            | $0.039      |
-| **Total**         |                 | **~$0.045** |
+| Component            | Tokens (approx) | Cost        |
+| -------------------- | --------------- | ----------- |
+| Analysis input       | ~2000           | $0.0003     |
+| Analysis output      | ~400            | $0.00024    |
+| Art prompt input     | ~600            | $0.003      |
+| Art prompt output    | ~150            | $0.00225    |
+| Image (every review) | —               | $0.039      |
+| **Total**            |                 | **~$0.045** |
 
 ### Monitoring
 

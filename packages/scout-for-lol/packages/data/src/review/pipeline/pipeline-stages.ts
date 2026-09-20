@@ -312,7 +312,7 @@ export async function generateImage(params: {
     IMAGE_DESCRIPTION: imageDescription,
   };
   if (userPromptTemplate.includes("<ART_STYLE>")) {
-    variables.ART_STYLE = artStyle;
+    variables["ART_STYLE"] = artStyle;
   }
   const prompt = replacePromptVariables(userPromptTemplate, variables);
 
