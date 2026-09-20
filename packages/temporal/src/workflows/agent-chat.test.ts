@@ -655,6 +655,35 @@ test("accepts a new ordering epoch after a source sequence reset", () => {
   ).toEqual(resetEntry);
 });
 
+test("replays legacy register-and-bind timestamp arguments", () => {
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [],
+    bindings: [],
+    retiredChatIds: [],
+  };
+  const binding = { kind: "discord" as const, channelId: "legacy-channel" };
+
+  const registered = registerAndBindAgentChatCatalogEntry(
+    state,
+    {
+      schemaVersion: 1,
+      config: CONFIG,
+      updatedAt: CONFIG.createdAt,
+      turnCount: 0,
+    },
+    binding,
+    "2026-09-14T16:02:00.000Z",
+  );
+
+  expect(registered.config.chatId).toBe(CONFIG.chatId);
+  expect(state.bindings).toContainEqual({
+    binding,
+    chatId: CONFIG.chatId,
+    updatedAt: "2026-09-14T16:02:00.000Z",
+  });
+});
+
 async function testFreshCatalogRecovery(): Promise<void> {
   await withWorkers(async (environment) => {
     const client = environment.client.workflow;
