@@ -553,16 +553,16 @@
       "tokens": 437
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 1,
-      "tokens": 142
+      "clones": 2,
+      "tokens": 262
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
       "clones": 8,
       "tokens": 763
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 12,
-      "tokens": 1435
+      "clones": 11,
+      "tokens": 1285
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
       "clones": 2,
