@@ -503,6 +503,44 @@ test("rejects versioned binding updates without a monotonic source sequence", ()
   expect(state.bindings).toEqual([]);
 });
 
+test("rejects a changed retry that reuses a binding operation identity", () => {
+  const firstEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const secondEntry: AgentChatCatalogEntry = {
+    ...firstEntry,
+    config: { ...CONFIG, chatId: "different-chat" },
+  };
+  const binding = { kind: "discord" as const, channelId: "retry-channel" };
+  const update = {
+    updatedAt: "2026-09-14T16:02:00.000Z",
+    sourceSequence: "123456789012345678",
+    tieBreaker: "binding-retry-1",
+    orderingVersion: 1 as const,
+  };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [firstEntry, secondEntry],
+    bindings: [],
+    retiredChatIds: [],
+  };
+
+  expect(
+    registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, update),
+  ).toEqual(firstEntry);
+  expect(
+    registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, update),
+  ).toEqual(firstEntry);
+  expect(() =>
+    registerAndBindAgentChatCatalogEntry(state, secondEntry, binding, update),
+  ).toThrow(
+    "binding operation binding-retry-1 was reused with different input",
+  );
+});
+
 async function testFreshCatalogRecovery(): Promise<void> {
   await withWorkers(async (environment) => {
     const client = environment.client.workflow;
