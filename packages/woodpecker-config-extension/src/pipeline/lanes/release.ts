@@ -5,7 +5,6 @@ import {
   GITHUB_DOWNLOAD,
   STATE_BACKEND,
   TOFU_PLUGIN_CACHE,
-  DEPLOY_KEYS,
   grant,
   HANDOFF_KEYS,
   STACK_SECRETS,
@@ -106,8 +105,7 @@ export function releaseChainSteps(
       secrets: [
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
-        ...STATE_BACKEND,
-        ...DEPLOY_KEYS,
+        ...HANDOFF_KEYS,
       ],
     },
     {
@@ -225,7 +223,9 @@ function chainedTofuApplies(images: CiImages): CiStep[] {
     {
       stack: "seaweedfs",
       dependsOn: ["homelab-release-admission", "helm-push"],
-      secrets: [...DEPLOY_KEYS],
+      // Same grants the plan lane used: this stack's provider identity is the
+      // unscoped admin one, because it creates and deletes buckets.
+      secrets: [...(STACK_SECRETS["seaweedfs"] ?? [])],
     },
     {
       stack: "tailscale",

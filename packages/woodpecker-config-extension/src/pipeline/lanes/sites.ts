@@ -3,6 +3,7 @@ import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import {
   DEPLOY_KEYS,
+  HANDOFF_KEYS,
   GITHUB_DOWNLOAD,
   grant,
 } from "#src/pipeline/lanes/tofu.ts";
@@ -35,8 +36,8 @@ const CLOUDFLARE_PURGE: readonly SecretGrant[] = [
 ];
 
 const AWS_ALIASES = [
-  'export AWS_ACCESS_KEY_ID="$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"',
-  'export AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"',
+  'export AWS_ACCESS_KEY_ID="$SEAWEEDFS_SITES_ACCESS_KEY_ID"',
+  'export AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SITES_SECRET_ACCESS_KEY"',
 ];
 
 /** Sites built from source in this step, with the workspace each needs. */
@@ -169,7 +170,12 @@ export function siteSteps(images: CiImages): CiStep[] {
       resources: VERIFY_TIER,
       defaultBranchOnly: true,
       concurrency: SITE_DEPLOY_GROUP,
-      secrets: [GITHUB_DOWNLOAD, ...DEPLOY_KEYS, ...CLOUDFLARE_PURGE],
+      secrets: [
+        GITHUB_DOWNLOAD,
+        ...DEPLOY_KEYS,
+        ...HANDOFF_KEYS,
+        ...CLOUDFLARE_PURGE,
+      ],
     },
     {
       key: "publish",

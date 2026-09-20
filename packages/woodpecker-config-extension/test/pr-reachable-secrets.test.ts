@@ -41,15 +41,17 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
  * genuinely needs:
  *
  * - `tofu-plan-*` hold their stack's provider credentials because a plan has
- *   to talk to the provider. They are the reason most of this list exists, and
- *   they are why the state identity appears without the release chain.
+ *   to talk to the provider. They are the reason most of this list exists.
  * - `codex-review-gate` mints a review token; `pr-dryrun` reads ArgoCD.
- * - `SEAWEEDFS_DEPLOY_*` is the exception that is NOT yet justified: `verify`,
- *   `resume-build` and `playwright-e2e` hold the live site-deployment identity
- *   only because the build handoff store reuses it. Splitting a scoped handoff
- *   identity off removes it from those three, after which
- *   `tofu-plan-seaweedfs` is the sole remaining holder, where it is the
- *   OpenTofu provider credential and belongs.
+ * - The SeaweedFS names are three distinct identities, each scoped in the
+ *   gateway to the buckets its job touches. `SEAWEEDFS_HANDOFF_*` reaches only
+ *   the `ci-handoff` bucket and `SEAWEEDFS_TOFU_STATE_*` only
+ *   `homelab-tofu-state`, so neither can touch a published site.
+ * - `SEAWEEDFS_TOFU_ADMIN_*` is the one genuinely broad credential left here.
+ *   It belongs to `tofu-plan-seaweedfs`, whose stack manages the buckets
+ *   themselves, and SeaweedFS requires unscoped `Admin` to create one.
+ *   Narrowing it means moving bucket management off the pull-request path,
+ *   which is a change to the pipeline's shape rather than to its grants.
  */
 const PR_REACHABLE_SECRETS = [
   "ANIMEZ_PASSWORD",
@@ -70,10 +72,12 @@ const PR_REACHABLE_SECRETS = [
   "PROWLARR_API_KEY",
   "QBITTORRENT_PASSWORD",
   "RADARR_API_KEY",
-  "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
-  "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
-  "SEAWEEDFS_STATE_ACCESS_KEY_ID",
-  "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+  "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+  "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+  "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",
+  "SEAWEEDFS_TOFU_ADMIN_SECRET_ACCESS_KEY",
+  "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
+  "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
   "SONARR_API_KEY",
   "TAILSCALE_OAUTH_CLIENT_ID",
   "TAILSCALE_OAUTH_CLIENT_SECRET",
@@ -91,6 +95,23 @@ const RELEASE_ONLY_SECRETS = [
   "CHARTMUSEUM_USERNAME",
   "CHARTMUSEUM_PASSWORD",
   "GITHUB_PACKAGES_TOKEN",
+  "SEAWEEDFS_SITES_ACCESS_KEY_ID",
+  "SEAWEEDFS_SITES_SECRET_ACCESS_KEY",
+];
+
+/**
+ * Exactly the steps allowed to write a published site or release archive.
+ *
+ * Closed-world on purpose. Nothing in this repository checks for an
+ * *excessive* grant -- `check-ci-env` only reports a step that cannot meet a
+ * requirement -- so a step quietly gaining the site-write identity would
+ * otherwise pass every check while widening what a build can overwrite.
+ */
+const SITE_WRITERS = [
+  "scout-beta-release",
+  "scout-prod-reconcile",
+  "scout-tag-release",
+  "sites",
 ];
 
 describe("what a pull request can reach", () => {
@@ -127,6 +148,23 @@ describe("what a pull request can reach", () => {
         false,
       );
     }
+  });
+
+  /**
+   * The site-write identity is the one that can overwrite a published site, so
+   * it gets its own closed-world assertion rather than riding on the set
+   * above: which steps hold it matters as much as whether a pull request can.
+   */
+  test("grants the site-write identity to exactly the deploy steps", () => {
+    const holders = allSteps()
+      .filter((step) =>
+        (step.secrets ?? []).some((grant) =>
+          grant.env.startsWith("SEAWEEDFS_SITES_"),
+        ),
+      )
+      .map((step) => step.key)
+      .sort();
+    expect(holders).toEqual(SITE_WRITERS);
   });
 
   /**

@@ -58,8 +58,8 @@ export function handoffObjectKey(pipelineNumber: string, key: string): string {
 
 export function ciHandoffConfigFromEnv(): CiHandoffConfig {
   return {
-    accessKeyId: requireEnv("SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
-    secretAccessKey: requireEnv("SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
+    accessKeyId: requireEnv("SEAWEEDFS_HANDOFF_ACCESS_KEY_ID"),
+    secretAccessKey: requireEnv("SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY"),
     endpoint: SEAWEEDFS_ENDPOINT,
     bucket: CI_HANDOFF_BUCKET,
     region: CI_HANDOFF_REGION,

@@ -3,6 +3,7 @@ import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import {
   DEPLOY_KEYS,
+  HANDOFF_KEYS,
   GITHUB_DOWNLOAD,
   grant,
 } from "#src/pipeline/lanes/tofu.ts";
@@ -25,8 +26,8 @@ const SITE_DEPLOY_GROUP = { limit: 1, group: "site-deploys" } as const;
  * this system.
  */
 const AWS_ALIASES = [
-  'export AWS_ACCESS_KEY_ID="$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"',
-  'export AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"',
+  'export AWS_ACCESS_KEY_ID="$SEAWEEDFS_SITES_ACCESS_KEY_ID"',
+  'export AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SITES_SECRET_ACCESS_KEY"',
 ];
 
 const SCOUT_WORKSPACE_FILTERS = [
@@ -80,7 +81,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
       resources: VERIFY_TIER,
       defaultBranchOnly: true,
       concurrency: SITE_DEPLOY_GROUP,
-      secrets: [GITHUB_DOWNLOAD, ...DEPLOY_KEYS],
+      secrets: [GITHUB_DOWNLOAD, ...DEPLOY_KEYS, ...HANDOFF_KEYS],
     },
     {
       key: "scout-tag-release",
@@ -104,6 +105,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
         ...DEPLOY_KEYS,
+        ...HANDOFF_KEYS,
       ],
     },
     {

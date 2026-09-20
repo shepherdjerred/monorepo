@@ -35,11 +35,11 @@ export type TofuStack =
 
 export const STATE_CREDENTIALS: readonly CredentialMapping[] = [
   {
-    source: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
+    source: "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
     target: "AWS_ACCESS_KEY_ID",
   },
   {
-    source: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+    source: "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
     target: "AWS_SECRET_ACCESS_KEY",
   },
 ];
@@ -187,11 +187,11 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   seaweedfs: {
     credentials: [
       {
-        source: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
+        source: "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",
         target: "TF_VAR_seaweedfs_access_key_id",
       },
       {
-        source: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
+        source: "SEAWEEDFS_TOFU_ADMIN_SECRET_ACCESS_KEY",
         target: "TF_VAR_seaweedfs_secret_access_key",
       },
     ],

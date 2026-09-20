@@ -438,7 +438,9 @@ describe("ported lanes", () => {
     expect(envs("tofu-plan-github")).toContain("TOFU_GITHUB_TOKEN");
     expect(envs("tofu-plan-github")).not.toContain("CLOUDFLARE_API_TOKEN");
     // Every stack reads remote state from SeaweedFS.
-    expect(envs("tofu-plan-arr")).toContain("SEAWEEDFS_STATE_ACCESS_KEY_ID");
+    expect(envs("tofu-plan-arr")).toContain(
+      "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
+    );
   });
 
   test("playwright depends on verify and uses the browser image", () => {
