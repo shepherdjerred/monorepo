@@ -28,6 +28,10 @@ const appOutput = path.join(scoutRoot, "packages/app/storybook-static");
 // off by default because `bun run dev` has no /app to compose, and it is
 // declared in the design system's turbo `build` env so a composed build does
 // not reuse a plain build's cache entry.
+//
+// Turbo is a root-package binary. Filtered CI installs that run this script
+// must include `@shepherdjerred/monorepo` or `bun x --no-install turbo` has
+// nothing to execute.
 process.env["SCOUT_STORYBOOK_COMPOSED"] = "true";
 await $`bun x --no-install turbo run build --filter=@scout-for-lol/design-system`.cwd(
   repoRoot,

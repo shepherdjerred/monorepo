@@ -2777,9 +2777,11 @@ steps:
       fi
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-scout-design-system; then
         site_scout_design_system=true
-        # The catalogs are built in-lane from both Scout workspaces, so their
-        # production closures must be installed under the isolated linker.
-        filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')
+        # The catalogs are built in-lane through turbo (`generate`, `^build`,
+        # and the composed design-system env). Isolated-linker installs must
+        # cover both Storybook workspaces and the root package that owns turbo;
+        # without the root, `bun x --no-install turbo` cannot see a binary.
+        filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/monorepo')
       fi
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-glitter; then
         site_glitter=true

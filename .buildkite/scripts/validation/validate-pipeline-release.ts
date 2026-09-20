@@ -123,17 +123,28 @@ export function validateHomelabReleaseAdmission(
   }
 }
 
-function validateReleaseSteps({
-  prDryrun,
-  stepBlocks,
-}: Pick<ReleaseValidationOptions, "prDryrun" | "stepBlocks">): void {
-  validateHomelabReleaseAdmission(stepBlocks);
-  const sites = stepBlocks.get("sites");
+const SITES_STORYBOOK_INSTALL =
+  "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/monorepo')";
+
+export function validateSitesInstallClosure(sites: string | undefined): void {
   requireIncludes(
     sites,
     "filters+=(--filter glitter)",
     "sites install closure is missing Glitter",
   );
+  requireIncludes(
+    sites,
+    SITES_STORYBOOK_INSTALL,
+    "sites install closure is missing the Scout Storybook workspaces or the root package that owns turbo",
+  );
+}
+
+function validateReleaseSteps({
+  prDryrun,
+  stepBlocks,
+}: Pick<ReleaseValidationOptions, "prDryrun" | "stepBlocks">): void {
+  validateHomelabReleaseAdmission(stepBlocks);
+  validateSitesInstallClosure(stepBlocks.get("sites"));
   const scoutBetaRelease = stepBlocks.get("scout-beta-release");
   for (const required of [
     "--filter '@scout-for-lol/frontend'",

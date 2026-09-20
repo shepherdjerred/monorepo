@@ -475,6 +475,7 @@ await assertNoNestedBunRuntime([
   "scripts/release/publish-npm.ts",
   "scripts/checks/check-large-files.ts",
   "packages/scout-for-lol/scripts/build-bucket.ts",
+  "packages/scout-for-lol/scripts/build-storybook-site.ts",
   "packages/homelab/scripts/helm/helm-push.ts",
   "packages/homelab/scripts/smoke-images.ts",
   "packages/homelab/src/cdk8s/scripts/check-caddyfile.ts",

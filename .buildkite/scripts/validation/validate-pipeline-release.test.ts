@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   validateAtomicRootSyncLifecycle,
   validateHomelabReleaseAdmission,
+  validateSitesInstallClosure,
   validateVersionCommitBackInstall,
 } from "./validate-pipeline-release.ts";
 
@@ -67,6 +68,27 @@ describe("atomic ArgoCD root sync pipeline contract", () => {
       validateAtomicRootSyncLifecycle(`${releaseRoot} --dry-run`),
     ).toThrow(
       "argocd-sync must contain exactly one identity-bound release-root command",
+    );
+  });
+});
+
+describe("sites install closure", () => {
+  const storybookInstall =
+    "filters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app' --filter '@shepherdjerred/monorepo')";
+  const glitterInstall = "filters+=(--filter glitter)";
+  const sitesStep = `${glitterInstall}\n${storybookInstall}\n`;
+
+  test("requires Glitter and the Storybook turbo closure", () => {
+    expect(() => validateSitesInstallClosure(sitesStep)).not.toThrow();
+  });
+
+  test("rejects a Storybook install that omits the root turbo owner", () => {
+    expect(() =>
+      validateSitesInstallClosure(
+        `${glitterInstall}\nfilters+=(--filter '@scout-for-lol/design-system' --filter '@scout-for-lol/app')\n`,
+      ),
+    ).toThrow(
+      "sites install closure is missing the Scout Storybook workspaces or the root package that owns turbo",
     );
   });
 });
