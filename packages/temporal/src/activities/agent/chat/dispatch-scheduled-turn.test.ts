@@ -144,6 +144,7 @@ describe("agent chat ingress cancellation", () => {
     },
     {
       name: "Discord",
+      expectedSourceSequence: "123456789012345678",
       execute: () =>
         executeDiscordAgentChatCommand({
           command: {
@@ -159,11 +160,20 @@ describe("agent chat ingress cancellation", () => {
     },
   ])(
     "stops the $name wait when the Activity is canceled",
-    async ({ execute }) => {
+    async ({ execute, expectedSourceSequence }) => {
       const execution = execute();
       await vi.waitFor(() => {
         expect(activityMocks.continueChat).toHaveBeenCalledOnce();
       });
+      if (expectedSourceSequence !== undefined) {
+        expect(activityMocks.continueChat).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.objectContaining({
+              sourceSequence: expectedSourceSequence,
+            }),
+          }),
+        );
+      }
 
       activityMocks.cancellation.abort(new Error("ingress canceled"));
 

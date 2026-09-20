@@ -52,22 +52,25 @@ export async function submitHttpAgentChatCommand(
   });
   const workflowId = httpAgentChatWorkflowId(command.request.turnId);
   const fingerprint = httpAgentChatCommandFingerprint(command);
-  const handle = await client.workflow
-    .start("httpAgentChatWorkflow", {
+  try {
+    await client.workflow.start("httpAgentChatWorkflow", {
       workflowId,
-      workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
+      workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
       workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
       taskQueue: TASK_QUEUES.WORKFLOWS,
       workflowExecutionTimeout: AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
       args: [command, options],
       memo: { agentChatCommandFingerprint: fingerprint },
-    })
-    .catch((error: unknown) => {
-      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) {
-        throw error;
-      }
-      return client.workflow.getHandle(workflowId);
     });
+    return HttpAgentChatTurnReceiptSchema.parse({
+      status: "accepted",
+      turnId: command.request.turnId,
+      workflowId,
+    });
+  } catch (error: unknown) {
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+  }
+  const handle = client.workflow.getHandle(workflowId);
   const description = await handle.describe();
   const acceptedFingerprint = description.memo?.["agentChatCommandFingerprint"];
   if (typeof acceptedFingerprint !== "string") {
@@ -93,16 +96,29 @@ export async function activateHttpAgentChatCommand(
   const handle = client.workflow.getHandle(
     httpAgentChatWorkflowId(command.request.turnId),
   );
-  try {
-    await handle.executeUpdate(activateHttpAgentChatCommandUpdate, {
-      args: [command],
-      updateId: "activate",
-    });
-  } catch (error: unknown) {
-    const description = await handle.describe();
-    if (description.status.name !== "RUNNING") return;
-    throw error;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await handle.executeUpdate(activateHttpAgentChatCommandUpdate, {
+        args: [command],
+        updateId: "activate",
+      });
+      return;
+    } catch (error: unknown) {
+      lastError = error;
+    }
   }
+  const description = await handle.describe();
+  if (description.status.name !== "RUNNING") return;
+  throw lastError;
+}
+
+export async function cancelHttpAgentChatCommand(
+  client: Client,
+  rawTurnId: string,
+): Promise<void> {
+  const turnId = HttpAgentChatTurnIdSchema.parse(rawTurnId);
+  await client.workflow.getHandle(httpAgentChatWorkflowId(turnId)).cancel();
 }
 
 export async function pollHttpAgentChatCommand(

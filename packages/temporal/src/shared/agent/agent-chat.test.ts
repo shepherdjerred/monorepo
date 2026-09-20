@@ -1,8 +1,13 @@
 import { describe, expect, test } from "vitest";
 import {
   AgentChatConfigSchema,
+  AgentChatSourceSequenceSchema,
   AgentChatTurnRequestSchema,
   AgentChatWorkflowStateSchema,
+  AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS,
+  AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS,
   MAX_AGENT_CHAT_FAILURE_MESSAGE_BYTES,
   agentChatTurnRequestsMatch,
   agentChatBindingKey,
@@ -20,6 +25,16 @@ const CONFIG = {
 };
 
 describe("agent chat contract", () => {
+  test("reserves result propagation time after provider execution", () => {
+    expect(
+      AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS -
+        AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+    ).toBe(
+      AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS +
+        AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS,
+    );
+  });
+
   test("defaults the bounded per-message turn budget", () => {
     expect(AgentChatConfigSchema.parse(CONFIG).maxTurnsPerMessage).toBe(24);
   });
@@ -103,5 +118,34 @@ describe("agent chat contract", () => {
         providerStartDeadline: "2026-09-14T18:01:00.000Z",
       }),
     ).toBe(true);
+  });
+
+  test("treats source ordering as part of stable turn identity", () => {
+    const original = AgentChatTurnRequestSchema.parse({
+      turnId: "stable-turn",
+      prompt: "inspect",
+      submittedAt: "2026-09-14T16:01:00.000Z",
+      source: { kind: "discord", channelId: "channel-1" },
+      sourceSequence: "123456789012345678",
+    });
+
+    expect(
+      agentChatTurnRequestsMatch(original, {
+        ...original,
+        sourceSequence: "123456789012345679",
+      }),
+    ).toBe(false);
+  });
+
+  test("keeps source ordering below the terminal signed 64-bit value", () => {
+    expect(AgentChatSourceSequenceSchema.parse("9223372036854775806")).toBe(
+      "9223372036854775806",
+    );
+    expect(() =>
+      AgentChatSourceSequenceSchema.parse("9223372036854775807"),
+    ).toThrow("must not exceed");
+    expect(() =>
+      AgentChatSourceSequenceSchema.parse("99999999999999999999"),
+    ).toThrow();
   });
 });
