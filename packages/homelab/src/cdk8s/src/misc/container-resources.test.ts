@@ -106,7 +106,6 @@ function expectSjerredPostCutoverCleanup(
   ).toBeUndefined();
   expect(application?.spec.syncPolicy.automated).toEqual({
     enabled: true,
-    prune: true,
   });
   expect(application?.spec.ignoreDifferences).toEqual(
     expect.arrayContaining([

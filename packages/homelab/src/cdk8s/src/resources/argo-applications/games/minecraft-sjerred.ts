@@ -235,10 +235,7 @@ export function createMinecraftSjerredApp(chart: Chart) {
         },
       ],
       syncPolicy: {
-        // One-release cleanup: prune the BlueMap service and DiscordSRV config
-        // that the previous chart values owned. Return this to enabled-only
-        // after Argo confirms both resources are gone.
-        automated: { enabled: true, prune: true },
+        automated: { enabled: true },
         syncOptions: [
           "CreateNamespace=true",
           "ServerSideApply=true",
