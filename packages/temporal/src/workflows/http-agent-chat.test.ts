@@ -3,11 +3,15 @@ import { Worker } from "@temporalio/worker";
 import { describe, expect, test } from "vitest";
 import {
   AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+  AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_INGRESS_MAX_ATTEMPTS,
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
   type AgentChatTurnResult,
 } from "#shared/agent/agent-chat.ts";
-import type { HttpAgentChatCommand } from "#shared/agent/agent-chat-http.ts";
+import type {
+  HttpAgentChatActivityInput,
+  HttpAgentChatCommand,
+} from "#shared/agent/agent-chat-http.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const COMMAND: HttpAgentChatCommand = {
@@ -40,6 +44,7 @@ const RESULT: AgentChatTurnResult = {
 describe("httpAgentChatWorkflow", () => {
   test("durably checkpoints the HTTP command result", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    let activityInput: HttpAgentChatActivityInput | undefined;
     const workflowWorker = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: TASK_QUEUES.WORKFLOWS,
@@ -49,7 +54,10 @@ describe("httpAgentChatWorkflow", () => {
       connection: environment.nativeConnection,
       taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
       activities: {
-        executeHttpAgentChatCommand: () => RESULT,
+        executeHttpAgentChatCommand: (input: HttpAgentChatActivityInput) => {
+          activityInput = input;
+          return RESULT;
+        },
       },
     });
     const activityRun = activityWorker.run();
@@ -87,6 +95,15 @@ describe("httpAgentChatWorkflow", () => {
         scheduled?.activityTaskScheduledEventAttributes?.retryPolicy
           ?.maximumAttempts,
       ).toBe(AGENT_CHAT_INGRESS_MAX_ATTEMPTS);
+      const description = await environment.client.workflow
+        .getHandle(workflowId)
+        .describe();
+      expect(activityInput?.providerStartDeadline).toBe(
+        new Date(
+          description.startTime.getTime() +
+            AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS,
+        ).toISOString(),
+      );
     } finally {
       activityWorker.shutdown();
       await activityRun;

@@ -6,16 +6,28 @@ import {
   type AgentChatTurnResult,
 } from "#shared/agent/agent-chat.ts";
 import {
-  HttpAgentChatCommandSchema,
-  type HttpAgentChatCommand,
+  HttpAgentChatActivityInputSchema,
+  type HttpAgentChatActivityInput,
 } from "#shared/agent/agent-chat-http.ts";
 
 const HEARTBEAT_INTERVAL_MS = 20_000;
 
 export async function executeHttpAgentChatCommand(
-  rawCommand: HttpAgentChatCommand,
+  rawInput: HttpAgentChatActivityInput,
 ): Promise<AgentChatTurnResult> {
-  const command = HttpAgentChatCommandSchema.parse(rawCommand);
+  const input = HttpAgentChatActivityInputSchema.parse(rawInput);
+  const command = input.command;
+  const requestedDeadline = command.request.providerStartDeadline;
+  const providerStartDeadline =
+    requestedDeadline === undefined
+      ? input.providerStartDeadline
+      : new Date(
+          Math.min(
+            Date.parse(requestedDeadline),
+            Date.parse(input.providerStartDeadline),
+          ),
+        ).toISOString();
+  const request = { ...command.request, providerStartDeadline };
   const context = Context.current();
   const heartbeat = (): void => {
     context.heartbeat({
@@ -32,12 +44,12 @@ export async function executeHttpAgentChatCommand(
         ? await runAgentChatTurn({
             client: client.workflow,
             config: command.config,
-            request: command.request,
+            request,
             bindSource: true,
           })
         : await continueAgentChat({
             client: client.workflow,
-            request: command.request,
+            request,
             chatId: command.chatId,
           });
     return AgentChatTurnResultSchema.parse(result);
