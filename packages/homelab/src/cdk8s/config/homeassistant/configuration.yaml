@@ -286,11 +286,13 @@ prometheus:
   filter:
     # Stateless HA entity types have no durable value. Exporting them as
     # unavailable inflates homeassistant:unavailable_entities_total without
-    # changing any named availability alert.
+    # changing any named availability alert. Do not exclude `scene`: Temporal
+    # automations depend on scene.bedroom_dimmed/bright and
+    # scene.living_room_bright, and those availability alerts treat an absent
+    # series as an outage.
     exclude_domains:
       - button
       - event
-      - scene
       - conversation
       - stt
       - tts

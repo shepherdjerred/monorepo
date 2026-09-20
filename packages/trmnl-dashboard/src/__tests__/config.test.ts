@@ -4,6 +4,7 @@ import {
   isExpectedUnavailable,
   loadConfig,
   parseEntities,
+  UNAVAILABLE_IGNORED_ENTITY_GLOBS,
 } from "../config.ts";
 import { worstStatus } from "../status.ts";
 
@@ -42,12 +43,11 @@ describe("loadConfig", () => {
     expect(config.homeAssistant.unavailableIgnoredDomains).toContain(
       "conversation",
     );
-    expect(config.homeAssistant.unavailableIgnoredEntityGlobs).toContain(
-      "media_player.rooftop",
+    expect(config.homeAssistant.unavailableIgnoredEntityGlobs).toEqual(
+      UNAVAILABLE_IGNORED_ENTITY_GLOBS,
     );
-    expect(config.homeAssistant.unavailableIgnoredEntityGlobs).toContain(
-      "sensor.ipad_*",
-    );
+    expect(UNAVAILABLE_IGNORED_ENTITY_GLOBS).toContain("media_player.rooftop");
+    expect(UNAVAILABLE_IGNORED_ENTITY_GLOBS).toContain("sensor.ipad_*");
   });
 
   it("treats companion diagnostics and portable speakers as expected gaps", () => {

@@ -255,15 +255,17 @@ describe("Home Assistant prometheus exporter", () => {
       ?.split("\nlight:")[0];
     expect(prometheus).toBeDefined();
     expect(prometheus).toContain("exclude_domains:");
-    for (const domain of [
-      "button",
-      "event",
-      "scene",
-      "conversation",
-      "stt",
-      "tts",
-    ]) {
+    for (const domain of ["button", "event", "conversation", "stt", "tts"]) {
       expect(prometheus).toContain(`- ${domain}`);
+    }
+    const automationDomains = new Set(
+      TEMPORAL_AUTOMATION_ENTITY_IDS.flatMap((entity) => {
+        const domain = entity.split(".", 1)[0];
+        return domain === undefined ? [] : [domain];
+      }),
+    );
+    for (const domain of automationDomains) {
+      expect(prometheus).not.toContain(`- ${domain}`);
     }
   });
 });

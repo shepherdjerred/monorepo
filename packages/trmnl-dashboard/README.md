@@ -38,12 +38,12 @@ screen is enabled.
 - Server: `PORT` (3000), `DISPLAY_TIME_ZONE` (`America/Los_Angeles`)
 - Home Assistant: `HA_URL`, `HA_BATTERY_THRESHOLD`,
   `HA_UNAVAILABLE_IGNORED_DOMAINS` (CSV of domains with no durable state),
-  `HA_UNAVAILABLE_IGNORED_ENTITY_GLOBS` (CSV of entity IDs that are often
-  unavailable by design: companion diagnostics, a portable speaker, a TV),
   and `HA_PRESENCE_ENTITIES` / `HA_SECURITY_ENTITIES` /
-  `HA_CLIMATE_ENTITIES` (CSV of `entity_id:label` pairs). Named
-  presence/security/climate tiles still warn if those entities are
-  unavailable. The home unavailable list only includes unexpected gaps.
+  `HA_CLIMATE_ENTITIES` (CSV of `entity_id:label` pairs). Expected-unavailable
+  entity globs (companion diagnostics, rooftop Play, living-room TV) live in
+  `UNAVAILABLE_IGNORED_ENTITY_GLOBS` in source. Named presence/security/climate
+  tiles still warn if those entities are unavailable. The home unavailable
+  list only includes unexpected gaps.
 - Homelab: `PROMETHEUS_URL`, `ALERT_DASHBOARD_URL`, `BUGSINK_URL`,
   `BUGSINK_TOKEN` (optional), and Kubernetes API access via
   `KUBERNETES_API_URL` (or in-cluster `KUBERNETES_SERVICE_HOST`/`PORT`) plus
