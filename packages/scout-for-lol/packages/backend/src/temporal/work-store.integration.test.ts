@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
+  enqueueChampionMasteryRefresh,
   findQueuedScoutTemporalWork,
   persistScoutTemporalWork,
   requeueFailedScoutTemporalWork,
@@ -29,6 +30,29 @@ describe("Scout Temporal work ownership", () => {
     await expect(persistScoutTemporalWork(work, prisma)).resolves.toBe(true);
     await expect(persistScoutTemporalWork(work, prisma)).resolves.toBe(false);
     await expect(prisma.scoutTemporalWork.count()).resolves.toBe(1);
+  });
+
+  test("persists a champion-mastery refresh without serializing its cache timestamp", async () => {
+    const puuid = "a".repeat(78);
+    await enqueueChampionMasteryRefresh(
+      {
+        puuid,
+        region: "AMERICA_NORTH",
+        fetchedAt: new Date("2026-09-20T00:00:00Z"),
+      },
+      prisma,
+    );
+
+    await expect(
+      prisma.scoutTemporalWork.findUniqueOrThrow({
+        where: {
+          id: `champion-mastery:${puuid}:1789862400000`,
+        },
+      }),
+    ).resolves.toMatchObject({
+      kind: "champion-mastery-refresh",
+      payload: `{"puuid":"${puuid}","region":"AMERICA_NORTH"}`,
+    });
   });
 
   test("atomically requeues only failed work with an operator reason", async () => {
