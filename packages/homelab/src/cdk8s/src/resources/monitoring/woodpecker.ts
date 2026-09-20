@@ -5,20 +5,22 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { getWoodpeckerRuleGroups } from "./monitoring/rules/woodpecker.ts";
 
-export const BUILDKITE_CONTROLLER_METRICS_INTERVAL = "10s";
+export const CI_METRICS_SCRAPE_INTERVAL = "10s";
 
 /**
- * Scrapes the agent-stack controller's native Prometheus endpoint.
+ * Scrapes the Woodpecker server's Prometheus endpoint.
  *
- * The upstream chart's optional PodMonitor does not accept discovery labels,
- * while this cluster's Prometheus instance selects PodMonitors with
- * `release=prometheus`. Own the monitor here so a chart upgrade cannot leave
- * controller scheduling and cancellation telemetry undiscovered.
+ * Successor to the agent-stack-k8s controller monitor: that controller was
+ * what scheduled and cancelled Buildkite jobs, and Woodpecker's server holds
+ * the equivalent state. It serves /metrics only when
+ * `WOODPECKER_PROMETHEUS_AUTH_TOKEN` is set and only to a scraper presenting
+ * that token, which is why this monitor carries `bearerTokenSecret` reading
+ * the same key the server does.
  */
 export function createWoodpeckerMonitoring(chart: Chart): void {
-  new PodMonitor(chart, "woodpecker-controller-pod-monitor", {
+  new PodMonitor(chart, "woodpecker-server-pod-monitor", {
     metadata: {
-      name: "woodpecker-controller",
+      name: "woodpecker-server",
       namespace: "woodpecker",
       labels: {
         release: "prometheus",
@@ -30,14 +32,18 @@ export function createWoodpeckerMonitoring(chart: Chart): void {
       },
       selector: {
         matchLabels: {
-          app: "woodpecker-agent-stack-k8s",
+          app: "woodpecker-server",
         },
       },
       podMetricsEndpoints: [
         {
-          port: "metrics",
+          port: "http",
           path: "/metrics",
-          interval: BUILDKITE_CONTROLLER_METRICS_INTERVAL,
+          interval: CI_METRICS_SCRAPE_INTERVAL,
+          bearerTokenSecret: {
+            name: "woodpecker-server-credentials",
+            key: "WOODPECKER_PROMETHEUS_AUTH_TOKEN",
+          },
         },
       ],
     },

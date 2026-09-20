@@ -20,6 +20,46 @@ const CI_TOLERATION = {
 const STEP_SERVICE_ACCOUNT = "woodpecker-job";
 
 /**
+ * Pod metadata the CI I/O telemetry attributes cgroup counters through.
+ *
+ * Woodpecker names step pods `wp-<ulid>-<workflow>-step-<n>`, which carries no
+ * information about WHICH step ran. Buildkite's agent stack stamped a job UUID
+ * and build/job URLs; nothing equivalent exists here, so the pipeline stamps
+ * its own identity instead.
+ *
+ * Commit plus step key, rather than a pipeline number: the configuration
+ * extension generates this YAML while the pipeline record is still being
+ * created, and the `number` field in that request is not yet meaningful. A
+ * commit and a step key do identify a job — except across a retry or a
+ * push/pull_request pair on the same commit, where two pods can carry the same
+ * pair. That is not silently wrong: the reporter's integrity check already
+ * fails loudly when more than one pod maps to a job, so the ambiguity surfaces
+ * as a refusal to report rather than as misattributed bytes.
+ *
+ * Branch is an annotation, not a label: branch names contain `/`, which is not
+ * a legal label value.
+ *
+ * These keys are load-bearing outside this package. Their counterparts are the
+ * kube-state-metrics allowlist in the homelab observability values and the
+ * recording rules in `resources/monitoring/monitoring/rules/woodpecker.ts`,
+ * which join on the flattened forms (`label_ci_sjer_red_step_key`,
+ * `annotation_ci_sjer_red_branch`). Changing one without the others silently
+ * empties the join.
+ */
+export const POD_STEP_KEY_LABEL = "ci.sjer.red/step-key";
+export const POD_COMMIT_LABEL = "ci.sjer.red/commit";
+export const POD_BRANCH_ANNOTATION = "ci.sjer.red/branch";
+export const POD_PIPELINE_URL_ANNOTATION = "ci.sjer.red/pipeline-url";
+
+/** Identity of the pipeline being generated, stamped onto every step pod. */
+export type PipelineIdentity = {
+  readonly commit: string;
+  readonly branch: string;
+  /** Forge URL for the commit this pipeline is building. */
+  readonly linkUrl: string;
+};
+
+/**
  * Wrap a step's commands so they inherit the guarantees Woodpecker's step
  * schema does not provide.
  *
@@ -55,7 +95,10 @@ export function shellQuote(value: string): string {
   return `'${value.replaceAll("'", String.raw`'\''`)}'`;
 }
 
-function backendOptions(step: CiStep): Record<string, unknown> {
+function backendOptions(
+  step: CiStep,
+  identity: PipelineIdentity,
+): Record<string, unknown> {
   const secrets = (step.secrets ?? []).map((grant) => ({
     name: grant.secret,
     key: grant.key,
@@ -79,7 +122,14 @@ function backendOptions(step: CiStep): Record<string, unknown> {
       nodeSelector: CI_NODE_SELECTOR,
       tolerations: [CI_TOLERATION],
       serviceAccountName: STEP_SERVICE_ACCOUNT,
-      labels: { "ci.sjer.red/step-key": step.key },
+      labels: {
+        [POD_STEP_KEY_LABEL]: step.key,
+        [POD_COMMIT_LABEL]: identity.commit,
+      },
+      annotations: {
+        [POD_BRANCH_ANNOTATION]: identity.branch,
+        [POD_PIPELINE_URL_ANNOTATION]: identity.linkUrl,
+      },
       ...(secrets.length > 0 ? { secrets } : {}),
     },
   };
@@ -100,7 +150,7 @@ function backendOptions(step: CiStep): Record<string, unknown> {
  * workflow whose dependency was filtered out never becomes runnable — a lane
  * that silently never runs rather than one that fails.
  */
-export function emitWorkflow(step: CiStep): string {
+export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
   const workflow: Record<string, unknown> = {
     steps: [
       {
@@ -124,7 +174,7 @@ export function emitWorkflow(step: CiStep): string {
         // silently deliver nothing.
         ...(step.backend === "local"
           ? {}
-          : { backend_options: backendOptions(step) }),
+          : { backend_options: backendOptions(step, identity) }),
       },
     ],
     ...(step.services === undefined || step.services.length === 0
@@ -164,9 +214,10 @@ export function emitWorkflow(step: CiStep): string {
 
 export function emitWorkflows(
   steps: readonly CiStep[],
+  identity: PipelineIdentity,
 ): { name: string; data: string }[] {
   return steps.map((step) => ({
     name: `.woodpecker/${step.key}.yaml`,
-    data: emitWorkflow(step),
+    data: emitWorkflow(step, identity),
   }));
 }

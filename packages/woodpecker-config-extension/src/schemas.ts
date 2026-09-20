@@ -15,6 +15,11 @@ export const PipelineSchema = z.looseObject({
   commit: z.string(),
   ref: z.string(),
   /**
+   * Forge URL for the commit being built. Stamped onto each step pod so the
+   * I/O reporter can link a measured pod back to the change that caused it.
+   */
+  link_url: z.string(),
+  /**
    * Files touched by this push or pull request. This is what replaces
    * Buildkite's `if_changed` inputs: lane selection reads it directly instead
    * of shelling out to git in a bootstrap pod.

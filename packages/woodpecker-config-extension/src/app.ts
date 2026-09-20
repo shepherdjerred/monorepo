@@ -73,7 +73,13 @@ export function createApp(options: AppOptions): Hono {
       },
     );
 
-    return context.json({ configs: emitWorkflows(selected) });
+    return context.json({
+      configs: emitWorkflows(selected, {
+        commit: pipeline.commit,
+        branch: pipeline.branch,
+        linkUrl: pipeline.link_url,
+      }),
+    });
   });
 
   return app;
