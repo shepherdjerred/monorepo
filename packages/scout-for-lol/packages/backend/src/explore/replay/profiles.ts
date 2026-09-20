@@ -18,13 +18,14 @@ import type { ExploreSurface } from "#src/explore/surface.ts";
  * `chipExpectation` and `capabilityMismatches` did not have to change.
  */
 
-/** The five capabilities the agent resolves per turn (`ExploreSkillOptions` minus surface). */
+/** The capabilities the agent resolves per turn (`ExploreSkillOptions` minus surface). */
 export const EXPLORE_REPLAY_CAPABILITIES = [
   "bucks",
   "dares",
   "challenges",
   "creation",
   "riotHistory",
+  "mvpVotes",
 ] as const;
 
 export type ExploreReplayCapability =
@@ -37,6 +38,7 @@ export const ExploreCapabilitySetSchema = z
     challenges: z.boolean(),
     creation: z.boolean(),
     riotHistory: z.boolean(),
+    mvpVotes: z.boolean(),
   })
   .strict();
 
@@ -99,6 +101,7 @@ const CONDITION_CAPABILITY: Readonly<
   dares: "dares",
   challenges: "challenges",
   competitions: "creation",
+  mvp_votes: "mvpVotes",
   reports: null,
 };
 
@@ -151,6 +154,7 @@ export function flagOverridesFor(
     { flag: "dare_extended_contracts_enabled", value: capabilities.dares },
     { flag: "scoutql_relational_enabled", value: capabilities.dares },
     { flag: "challenge_runs_enabled", value: capabilities.challenges },
+    { flag: "mvp_votes_enabled", value: capabilities.mvpVotes },
     { flag: "explore_creation_enabled", value: capabilities.creation },
     {
       flag: "explore_on_demand_riot_enabled",

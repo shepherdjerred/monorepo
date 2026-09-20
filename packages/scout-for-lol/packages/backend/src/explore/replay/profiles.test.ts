@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { EXPLORE_SUGGESTIONS } from "@scout-for-lol/data";
 import {
   CapturedGuildConfigSchema,
   EXPLORE_REPLAY_CAPABILITIES,
@@ -17,6 +18,7 @@ const NOTHING: ExploreCapabilitySet = {
   challenges: false,
   creation: false,
   riotHistory: false,
+  mvpVotes: false,
 };
 
 const EVERYTHING: ExploreCapabilitySet = {
@@ -25,6 +27,7 @@ const EVERYTHING: ExploreCapabilitySet = {
   challenges: true,
   creation: true,
   riotHistory: false,
+  mvpVotes: true,
 };
 
 function config(
@@ -96,6 +99,21 @@ describe("chipExpectation", () => {
     expect(chipExpectation(EVERYTHING, "bucks")).toBe("answerable");
     expect(chipExpectation(NOTHING, "competitions")).toBe("gated-off");
     expect(chipExpectation(EVERYTHING, "competitions")).toBe("answerable");
+    expect(chipExpectation(NOTHING, "mvp_votes")).toBe("gated-off");
+    expect(chipExpectation(EVERYTHING, "mvp_votes")).toBe("answerable");
+  });
+
+  test("every shipped condition resolves to an expectation", () => {
+    // `CONDITION_CAPABILITY` is exhaustive over `SuggestionCondition`, so a
+    // condition added to the catalog cannot reach a run unmapped. This asserts
+    // the other half: that the catalog as shipped is fully covered, which is
+    // what stops a new chip from being silently ungraded.
+    const conditions = new Set(EXPLORE_SUGGESTIONS.map((s) => s.condition));
+    for (const condition of conditions) {
+      expect(["answerable", "gated-off", "either"]).toContain(
+        chipExpectation(EVERYTHING, condition),
+      );
+    }
   });
 
   test("asserts nothing for report chips, which legitimately go both ways", () => {
@@ -205,10 +223,12 @@ describe("capabilityMismatches", () => {
       config: config({ capabilities: EVERYTHING }),
       resolved: NOTHING,
     });
-    expect(issues).toHaveLength(4);
+    // Five, not six: riotHistory is false on both sides, because a replay
+    // never reproduces it.
+    expect(issues).toHaveLength(5);
   });
 
   test("checks every capability", () => {
-    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(5);
+    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(6);
   });
 });

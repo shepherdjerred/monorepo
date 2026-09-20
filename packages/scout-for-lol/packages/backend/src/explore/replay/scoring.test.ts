@@ -13,6 +13,7 @@ const CAPS: ExploreCapabilitySet = {
   challenges: true,
   creation: false,
   riotHistory: false,
+  mvpVotes: false,
 };
 
 const SIDE: ReplaySide = {
