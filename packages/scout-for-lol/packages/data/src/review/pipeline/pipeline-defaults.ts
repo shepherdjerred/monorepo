@@ -160,9 +160,13 @@ export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
 
 /**
  * Default model config for review text (Stage 2)
+ *
+ * Uses gpt-5.6-luna: ~20x cheaper input / ~17x cheaper output than sol.
+ * Luna ignores temperature (like sol did), and the pipeline already strips
+ * temperature for models that do not support it.
  */
 export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
-  model: "gpt-5.6-sol",
+  model: "gpt-5.6-luna",
   maxTokens: 3000,
 };
 
@@ -170,15 +174,18 @@ export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
  * Default model config for image description (Stage 3)
  */
 export const DEFAULT_IMAGE_DESCRIPTION_MODEL: ModelConfig = {
-  model: "gpt-5.6-sol",
+  model: "gpt-5.6-luna",
   maxTokens: 1800,
   temperature: 0.8,
 };
 
 /**
  * Default model for image generation (Stage 4)
+ *
+ * Uses Gemini 2.5 Flash Image: $0.039/image vs $0.134 for pro preview,
+ * so 100% coverage costs less per review than the old 33% pro rate.
  */
-export const DEFAULT_IMAGE_GENERATION_MODEL = "gemini-3-pro-image-preview";
+export const DEFAULT_IMAGE_GENERATION_MODEL = "gemini-2.5-flash-image";
 
 /**
  * Default timeout for image generation (Stage 4)

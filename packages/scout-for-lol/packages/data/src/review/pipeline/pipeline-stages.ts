@@ -286,6 +286,7 @@ export async function generateImageDescription(params: {
  */
 export async function generateImage(params: {
   imageDescription: string;
+  artStyle: string;
   client: ImageGenerationClient;
   model: string;
   timeoutMs: number;
@@ -293,17 +294,27 @@ export async function generateImage(params: {
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
   const {
     imageDescription,
+    artStyle,
     client,
     model,
     timeoutMs,
     userPrompt: userPromptTemplate,
   } = params;
 
-  // Replace variables in prompt template
-  // Note: ART_STYLE is already embedded in IMAGE_DESCRIPTION from step 3
-  const prompt = replacePromptVariables(userPromptTemplate, {
+  // Replace variables in prompt template. ART_STYLE is passed explicitly so
+  // the validator enforces it; step 3 also weaves it into the description.
+  // Backward compatible: custom pre-change Stage 4 templates may only
+  // contain <IMAGE_DESCRIPTION>. Only pass ART_STYLE when the template asks
+  // for it, otherwise the validator would reject the extra variable and the
+  // stage would silently produce no image. The default template always
+  // includes it (pinned by pipeline-template-variables.test.ts).
+  const variables: Record<string, string> = {
     IMAGE_DESCRIPTION: imageDescription,
-  });
+  };
+  if (userPromptTemplate.includes("<ART_STYLE>")) {
+    variables["ART_STYLE"] = artStyle;
+  }
+  const prompt = replacePromptVariables(userPromptTemplate, variables);
 
   const startTime = Date.now();
 

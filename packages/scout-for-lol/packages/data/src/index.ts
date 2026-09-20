@@ -21,7 +21,6 @@ export type { ArtStyle } from "./review/art/art-categories.ts";
 export * from "./review/models.ts";
 export * from "./review/prompts.ts";
 export * from "./review/exceptional-performance.ts";
-export * from "./review/art/image-prompt.ts";
 export {
   type ReviewTextMetadata,
   type ReviewImageMetadata,
