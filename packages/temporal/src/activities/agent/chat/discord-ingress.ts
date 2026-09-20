@@ -17,6 +17,7 @@ import {
 } from "#shared/agent/agent-chat-discord.ts";
 
 const HEARTBEAT_INTERVAL_MS = 20_000;
+const DISCORD_DELIVERY_REQUEST_TIMEOUT_MS = 25_000;
 const DiscordRestErrorSchema = z.object({
   status: z.number().int().min(400).max(599),
 });
@@ -99,6 +100,11 @@ export async function deliverDiscordAgentChatMessage(
   rawInput: DeliverDiscordAgentChatMessageInput,
 ): Promise<void> {
   const input = DeliverDiscordAgentChatMessageInputSchema.parse(rawInput);
+  const context = Context.current();
+  const requestSignal = AbortSignal.any([
+    context.cancellationSignal,
+    AbortSignal.timeout(DISCORD_DELIVERY_REQUEST_TIMEOUT_MS),
+  ]);
   const rest = new REST({ version: "10" }).setToken(
     requiredEnvironment("AGENT_CHAT_DISCORD_TOKEN"),
   );
@@ -110,6 +116,7 @@ export async function deliverDiscordAgentChatMessage(
         nonce: input.nonce,
         enforce_nonce: true,
       },
+      signal: requestSignal,
     });
   } catch (error: unknown) {
     const parsed = DiscordRestErrorSchema.safeParse(error);
