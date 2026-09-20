@@ -2,6 +2,11 @@ import { createHash, randomBytes } from "node:crypto";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
+  getUploadedObject,
+  hashStoredObject,
+  OPAQUE_OBJECT_HEADERS,
+} from "./backup-object.ts";
+import {
   CompletionMarkerSchema,
   type BackupCadence,
   type BackupPolicy,
@@ -21,7 +26,7 @@ import {
   objectIsProtected,
   policyForCadence,
 } from "./policy.ts";
-import type { ListedObject, ObjectStore, StoredObject } from "./store.ts";
+import type { ListedObject, ObjectStore } from "./store.ts";
 
 export type SnapshotBucketResult = {
   bucket: string;
@@ -96,28 +101,6 @@ function opaqueObjectKey(bucket: string, object: ListedObject): string {
     .digest("hex")}`;
 }
 
-async function hashStream(
-  object: StoredObject,
-  onBytes?: (bytes: number) => void,
-): Promise<{
-  sha256: string;
-  bytes: number;
-}> {
-  const hash = createHash("sha256");
-  let bytes = 0;
-  for await (const chunk of object.body) {
-    if (typeof chunk !== "string" && !(chunk instanceof Uint8Array)) {
-      throw new TypeError("Object stream emitted an unsupported chunk type");
-    }
-    const value =
-      typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk;
-    hash.update(value);
-    bytes += value.byteLength;
-    onBytes?.(bytes);
-  }
-  return { sha256: hash.digest("hex"), bytes };
-}
-
 async function copyChangedObject(input: {
   source: ObjectStore;
   destination: ObjectStore;
@@ -148,14 +131,14 @@ async function copyChangedObject(input: {
       backupObjectKey,
     );
     const [sourceHash, destinationHash] = await Promise.all([
-      hashStream(source, (bytes) =>
+      hashStoredObject(source, (bytes) =>
         input.onBytes?.({
           stage: "verify",
           bucket: input.sourceBucket,
           bytes,
         }),
       ),
-      hashStream(destination, (bytes) =>
+      hashStoredObject(destination, (bytes) =>
         input.onBytes?.({
           stage: "verify",
           bucket: input.sourceBucket,
@@ -214,7 +197,7 @@ async function copyChangedObject(input: {
     key: backupObjectKey,
     body: hashingStream,
     contentLength: input.sourceObject.size,
-    headers: source.headers,
+    headers: OPAQUE_OBJECT_HEADERS,
   });
   await Promise.all([pipeline(source.body, hashingStream), upload]);
   if (copiedBytes !== input.sourceObject.size) {
@@ -223,8 +206,12 @@ async function copyChangedObject(input: {
     );
   }
   const sha256 = hash.digest("hex");
-  const verification = await hashStream(
-    await input.destination.getObject(input.backupBucket, backupObjectKey),
+  const verification = await hashStoredObject(
+    await getUploadedObject({
+      destination: input.destination,
+      backupBucket: input.backupBucket,
+      backupObjectKey,
+    }),
     (bytes) =>
       input.onBytes?.({
         stage: "verify",
