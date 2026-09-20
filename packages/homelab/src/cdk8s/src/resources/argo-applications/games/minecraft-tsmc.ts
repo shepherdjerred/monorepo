@@ -104,7 +104,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       gameMode: "survival",
       forcegameMode: true,
       spawnProtection: 0,
-      ops: "RiotShielder",
+      ops: "XiguaJerred",
       version: versions.paper,
       type: "PAPER",
       serviceType: "ClusterIP",

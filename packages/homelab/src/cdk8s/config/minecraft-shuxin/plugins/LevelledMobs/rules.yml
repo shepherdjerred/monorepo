@@ -578,13 +578,13 @@ custom-rules:
       maxLevel: 70
       construct-level: "%distance-from-origin% + %weighted-random% + (%player-variable-mod% * 1.6) + (%custom_special% * 1.5) + 4 + %rand_0_3%"
 
-  - custom-rule: "RiotShielder LuckPerms Hard Mode"
+  - custom-rule: "XiguaJerred LuckPerms Hard Mode"
     is-enabled: true
     use-preset: challenge-platinum
     conditions:
       worlds: ["*"]
       permission: ["lm.hardmode"]
-      player-names: ["RiotShielder"]
+      player-names: ["XiguaJerred"]
       entities:
         included-groups: ["all_hostile_mobs"]
     settings:

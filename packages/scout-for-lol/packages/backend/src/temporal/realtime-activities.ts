@@ -88,6 +88,15 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
       });
       Context.current().heartbeat({ phase: "complete" });
     },
+    reconcileIngestedMatchCursor: async (input) =>
+      await heartbeatWhile(
+        { matchId: input.matchId, phase: "reconciling-cursor" },
+        async () => {
+          const { reconcileIngestedMatchCursor } =
+            await import("#src/league/tasks/postmatch/cursor-reconciliation.ts");
+          return await reconcileIngestedMatchCursor(input);
+        },
+      ),
     ingestMatch: async (input) => {
       await heartbeatWhile(
         { matchId: input.matchId, phase: "ingesting" },

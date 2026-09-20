@@ -55,6 +55,53 @@ async function startExploreAcquisitionWorkers(
   await workers.start(lake);
 }
 
+/**
+ * A stalled account cursor keeps re-reporting a match whose child already
+ * COMPLETED. `ALLOW_DUPLICATE_FAILED_ONLY` refuses to reuse a succeeded ID,
+ * so the start is rejected forever. What the run does with that rejection is
+ * the difference between ending the stall and hiding it.
+ */
+async function startRediscoveryWorkers(
+  outcome: "reconciled" | "not-completed",
+  observed: {
+    attempts: string[];
+    reconciled: string[];
+    settlement: boolean[];
+  },
+): Promise<void> {
+  const workflow = await workflowWorker();
+  const activities = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: "scout-dev-realtime",
+    activities: {
+      discoverPostMatchIds: () => ({
+        evidenceComplete: true,
+        matches: [
+          {
+            matchId: "NA1_300",
+            sourcePuuid: "puuid-NA1_300",
+            region: "AMERICA_NORTH",
+            delivery: "live",
+          },
+        ],
+      }),
+      ingestMatch: (input: { matchId: string }) => {
+        observed.attempts.push(input.matchId);
+      },
+      reconcileIngestedMatchCursor: (input: { matchId: string }) => {
+        observed.reconciled.push(input.matchId);
+        return { outcome };
+      },
+      runPostMatchMaintenance: (input: { settleDareV2Deadlines: boolean }) => {
+        observed.settlement.push(input.settleDareV2Deadlines);
+      },
+    },
+    maxConcurrentActivityTaskExecutions: 1,
+  });
+  await workers.start(workflow);
+  await workers.start(activities);
+}
+
 beforeEach(async () => {
   environment = await TestWorkflowEnvironment.createTimeSkipping();
 }, 60_000);
@@ -318,7 +365,13 @@ describe("realtime workflows", () => {
       },
     ]);
   });
+});
 
+// Child IDs are one-per-match and permanent, so a rediscovered match always
+// collides with whatever execution already owns it. Whether that collision is a
+// fault depends entirely on what the owning execution did, which is what these
+// cover.
+describe("post-match discovery child ownership", () => {
   test("restarts a failed match child without duplicating a successful child", async () => {
     let attempts = 0;
     let failIngestion = true;
@@ -393,6 +446,52 @@ describe("realtime workflows", () => {
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
     expect(attempts).toBe(2);
+  });
+
+  // Both runs behave identically up to the collision; the child's confirmed
+  // status is the only thing that decides what the second run may do with it.
+  test.each([
+    {
+      label: "advances the stale cursor when the child is confirmed COMPLETED",
+      outcome: "reconciled" as const,
+      slug: "reconciled",
+      // Evidence IS captured, so the second pass may still settle — withholding
+      // it would starve deadlines for a match already fully ingested.
+      settlement: [true, true],
+    },
+    {
+      label: "stops without settling when the child is not COMPLETED",
+      outcome: "not-completed" as const,
+      slug: "unconfirmed",
+      // Another execution may still be mid-ingest, so nothing may be assumed
+      // done and the run reports a partial pass.
+      settlement: [true, false],
+    },
+  ])("$label", async ({ outcome, slug, settlement }) => {
+    const observed = { attempts: [], reconciled: [], settlement: [] };
+    await startRediscoveryWorkers(outcome, observed);
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: `postmatch-rediscovery-${slug}-first`,
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: `postmatch-rediscovery-${slug}`,
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
+
+    // The collision was resolved by asking, not swallowed.
+    expect(observed.reconciled).toEqual(["NA1_300"]);
+    // Ingestion ran once, for the child that actually started.
+    expect(observed.attempts).toEqual(["NA1_300"]);
+    expect(observed.settlement).toEqual(settlement);
   });
 });
 

@@ -37,6 +37,7 @@ ExploitFix:
   PreventPluginNPCInteraction: true
   # This will limit XP gained from unnaturally tall plants, like those created by Bone Meal
   LimitTallPlantFarming: true
+  AcrobaticsDodgeXpFarming: true
 Fishing_ExploitFix_Options:
   MoveRange: 3
   OverFishLimit: 10
@@ -193,6 +194,8 @@ Experience_Formula:
   # with 1.25 by default, resulting in a 25% XP boost
   Custom_XP_Perk:
     Boost: 2.0
+  Player_Tamed:
+    Multiplier: 0.0
 
 #
 # Settings for Diminished Returns
@@ -446,6 +449,7 @@ Experience_Values:
     Lily_Of_The_Valley: 150
     Wither_Rose: 500
     Torchflower: 90
+    Golden_Dandelion: 150
   Mining:
     Sculk: 4
     Sculk_Vein: 3
@@ -548,6 +552,34 @@ Experience_Values:
     Packed_Mud: 30
     Mud_Bricks: 40
     Dripstone_Block: 35
+    Cinnabar: 40
+    Cinnabar_Stairs: 40
+    Cinnabar_Slab: 40
+    Cinnabar_Wall: 40
+    Polished_Cinnabar: 40
+    Polished_Cinnabar_Stairs: 40
+    Polished_Cinnabar_Slab: 40
+    Polished_Cinnabar_Wall: 40
+    Cinnabar_Bricks: 40
+    Cinnabar_Brick_Stairs: 40
+    Cinnabar_Brick_Slab: 40
+    Cinnabar_Brick_Wall: 40
+    Chiseled_Cinnabar: 40
+    Sulfur: 40
+    Sulfur_Stairs: 40
+    Sulfur_Slab: 40
+    Sulfur_Wall: 40
+    Polished_Sulfur: 40
+    Polished_Sulfur_Stairs: 40
+    Polished_Sulfur_Slab: 40
+    Polished_Sulfur_Wall: 40
+    Sulfur_Bricks: 40
+    Sulfur_Brick_Stairs: 40
+    Sulfur_Brick_Slab: 40
+    Sulfur_Brick_Wall: 40
+    Chiseled_Sulfur: 40
+    Potent_Sulfur: 60
+    Sulfur_Spike: 30
   Repair:
     Base: 1000.0
     Wood: 0.6
@@ -699,3 +731,4 @@ Experience_Values:
       Breeze: 4.0
       Armor_Stand: 0.0
       Mannequin: 0.0
+      Sulfur_Cube: 2.0

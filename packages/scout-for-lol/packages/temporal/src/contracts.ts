@@ -347,6 +347,23 @@ export type IngestionReconciliationResult = z.infer<
   typeof IngestionReconciliationResultSchema
 >;
 
+/**
+ * Whether a rediscovered match's ingestion child is confirmed COMPLETED, and
+ * its discovering account's cursor therefore moved past the match.
+ *
+ * `reconciled` means the child reached a terminal COMPLETED status, which it
+ * only does once every ingestion effect has run — so the match's evidence is
+ * captured and the run may carry on and settle. `not-completed` covers every
+ * other status: the execution may still be mid-ingest, so the caller must not
+ * advance anything or settle on it.
+ */
+export const IngestedMatchCursorReconciliationSchema = z.object({
+  outcome: z.enum(["reconciled", "not-completed"]),
+});
+export type IngestedMatchCursorReconciliation = z.infer<
+  typeof IngestedMatchCursorReconciliationSchema
+>;
+
 export const PostMatchDiscoveryResultSchema = z.object({
   matches: z.array(ScoutMatchIngestionInputSchema.omit({ stage: true })),
   // Old activity completions predate this field and only returned after a

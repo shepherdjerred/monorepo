@@ -5,6 +5,7 @@ type MetricName =
   | "alert_dashboard_email_attempt_total";
 
 type GaugeName =
+  | "alert_dashboard_email_enabled"
   | "alert_dashboard_email_outbox_depth"
   | "alert_dashboard_failed_email_outbox_depth"
   | "alert_dashboard_oldest_pending_email_timestamp_seconds"
