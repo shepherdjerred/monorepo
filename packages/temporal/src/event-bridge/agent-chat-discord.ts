@@ -1,14 +1,13 @@
 import {
+  WorkflowExecutionAlreadyStartedError,
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
   type Client as TemporalClient,
 } from "@temporalio/client";
+import { createHash } from "node:crypto";
 import * as Sentry from "@sentry/bun";
 import {
   ApplicationIntegrationType,
-  Client,
-  Events,
-  GatewayIntentBits,
   InteractionContextType,
   MessageFlags,
   PermissionFlagsBits,
@@ -29,6 +28,7 @@ import type {
   AgentChatCatalogEntry,
   AgentChatBinding,
   AgentChatConfig,
+  AgentChatBindingUpdate,
   AgentChatProvider,
 } from "#shared/agent/agent-chat.ts";
 import { AgentChatIdSchema } from "#shared/agent/agent-chat.ts";
@@ -39,6 +39,10 @@ import {
   type DiscordAgentChatCommand,
 } from "#shared/agent/agent-chat-discord.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import {
+  checkpointAcceptedDiscordCommand,
+  discordInteractionTimestamp,
+} from "./agent-chat-discord-checkpoint.ts";
 
 const COMPONENT = "agent-chat-discord";
 type DiscordAgentChatBinding = Extract<AgentChatBinding, { kind: "discord" }>;
@@ -114,10 +118,6 @@ export const agentChatDiscordCommand = new SlashCommandBuilder()
       .setDescription("List recent durable chats that can be continued"),
   );
 
-export type AgentChatDiscordHandle = {
-  close: () => Promise<void>;
-};
-
 export type AgentChatDiscordOperations = {
   start: (
     temporal: TemporalClient,
@@ -138,7 +138,7 @@ export type AgentChatDiscordOperations = {
     client: TemporalClient["workflow"],
     binding: DiscordAgentChatBinding,
     chatId: string,
-    updatedAt: string,
+    update: AgentChatBindingUpdate,
   ) => Promise<AgentChatCatalogEntry>;
   resolve: (
     client: TemporalClient["workflow"],
@@ -147,16 +147,54 @@ export type AgentChatDiscordOperations = {
   defaultModel: (provider: AgentChatProvider) => Promise<string>;
 };
 
-const defaultOperations: AgentChatDiscordOperations = {
-  start: async (temporal, command) => {
+export class AgentChatDiscordCommandConflictError extends Error {
+  public constructor(interactionId: string) {
+    super(
+      `Discord interaction ${interactionId} was reused for another command`,
+    );
+    this.name = "AgentChatDiscordCommandConflictError";
+  }
+}
+
+export function discordAgentChatCommandFingerprint(
+  command: DiscordAgentChatCommand,
+): string {
+  return createHash("sha256").update(JSON.stringify(command)).digest("hex");
+}
+
+export async function startDiscordAgentChatCommand(
+  temporal: TemporalClient,
+  rawCommand: DiscordAgentChatCommand,
+): Promise<void> {
+  const command = DiscordAgentChatCommandSchema.parse(rawCommand);
+  const workflowId = `discord-agent-chat/${command.interactionId}`;
+  const fingerprint = discordAgentChatCommandFingerprint(command);
+  try {
     await temporal.workflow.start("discordAgentChatWorkflow", {
-      workflowId: `discord-agent-chat/${command.interactionId}`,
-      workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
+      workflowId,
+      workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
       workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
       taskQueue: TASK_QUEUES.WORKFLOWS,
       args: [command],
+      memo: { agentChatCommandFingerprint: fingerprint },
     });
-  },
+    return;
+  } catch (error: unknown) {
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+  }
+  const handle = temporal.workflow.getHandle(workflowId);
+  const description = await handle.describe();
+  const accepted = description.memo?.["agentChatCommandFingerprint"];
+  if (typeof accepted !== "string") {
+    throw new TypeError("Discord agent chat command is missing its identity");
+  }
+  if (accepted !== fingerprint) {
+    throw new AgentChatDiscordCommandConflictError(command.interactionId);
+  }
+}
+
+const defaultOperations: AgentChatDiscordOperations = {
+  start: startDiscordAgentChatCommand,
   list: listAgentChats,
   get: getAgentChat,
   register: registerAgentChat,
@@ -201,13 +239,6 @@ function generatedTitle(prompt: string): string {
   return `${title}...`;
 }
 
-function discordInteractionTimestamp(interactionId: string): string {
-  const discordEpoch = 1_420_070_400_000n;
-  return new Date(
-    Number((BigInt(interactionId) >> 22n) + discordEpoch),
-  ).toISOString();
-}
-
 async function handleNew(
   temporal: TemporalClient,
   interaction: ChatInputCommandInteraction,
@@ -238,13 +269,17 @@ async function handleNew(
   if (command.kind !== "new") throw new Error("Expected a new chat command");
   await operations.start(temporal, command);
   const config = discordAgentChatConfig(command);
-  await operations.register(temporal.workflow, config);
-  await operations.bind(
-    temporal.workflow,
-    source,
-    config.chatId,
-    command.submittedAt,
-  );
+  await checkpointAcceptedDiscordCommand({
+    interaction,
+    operation: "new",
+    checkpoint: async () => {
+      await operations.register(temporal.workflow, config);
+      await operations.bind(temporal.workflow, source, config.chatId, {
+        updatedAt: command.submittedAt,
+        sourceSequence: interaction.id,
+      });
+    },
+  });
   await interaction.editReply({
     content: "Queued. I’ll post the durable agent response in this channel.",
     allowedMentions: { parse: [] },
@@ -285,7 +320,16 @@ async function handleContinue(
     }),
   );
   if (explicitChatId !== undefined) {
-    await operations.bind(temporal.workflow, source, chatId, timestamp);
+    await checkpointAcceptedDiscordCommand({
+      interaction,
+      operation: "continue",
+      checkpoint: async () => {
+        await operations.bind(temporal.workflow, source, chatId, {
+          updatedAt: timestamp,
+          sourceSequence: interaction.id,
+        });
+      },
+    });
   }
   await interaction.editReply({
     content: "Queued. I’ll post the durable agent response in this channel.",
@@ -434,56 +478,4 @@ export async function registerAgentChatDiscordCommand(
     });
     throw error;
   }
-}
-
-async function handleDiscordInteractionSafely(
-  temporal: TemporalClient,
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
-  try {
-    await handleAgentChatDiscordCommand(temporal, interaction);
-  } catch (error: unknown) {
-    Sentry.captureException(error);
-    jsonLog("error", "Unhandled Discord agent chat command failure", {
-      interactionId: interaction.id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
-
-export async function startAgentChatDiscordBot(
-  temporal: TemporalClient,
-): Promise<AgentChatDiscordHandle | undefined> {
-  const token = Bun.env["AGENT_CHAT_DISCORD_TOKEN"];
-  if (token === undefined || token === "") {
-    jsonLog(
-      "warning",
-      "AGENT_CHAT_DISCORD_TOKEN not set; skipping Discord ingress",
-    );
-    return undefined;
-  }
-  const discord = new Client({ intents: [GatewayIntentBits.Guilds] });
-  discord.on(Events.InteractionCreate, (interaction) => {
-    if (interaction.isChatInputCommand()) {
-      void handleDiscordInteractionSafely(temporal, interaction);
-    }
-  });
-  const ready = new Promise<Client<true>>((resolve) => {
-    discord.once(Events.ClientReady, resolve);
-  });
-  try {
-    await discord.login(token);
-    const readyClient = await ready;
-    await registerAgentChatDiscordCommand(readyClient.application);
-  } catch (error: unknown) {
-    await discord.destroy();
-    throw error;
-  }
-  jsonLog("info", "Dedicated durable agent Discord ingress connected");
-  return {
-    async close() {
-      await discord.destroy();
-      jsonLog("info", "Dedicated durable agent Discord ingress stopped");
-    },
-  };
 }

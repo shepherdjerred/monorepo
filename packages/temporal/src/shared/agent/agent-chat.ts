@@ -21,6 +21,10 @@ export const AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS =
 // Completion still has to reach the chat Workflow, settle its Update, and
 // propagate through a receipt or scheduled dispatch after provider execution.
 export const AGENT_CHAT_SETTLEMENT_MARGIN_MS = 15 * 60 * 1000;
+// Durable result propagation includes the chat update, receipt settlement,
+// catalog mutation, ingress Activity return, and any ingress response delivery.
+export const AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS =
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 // A full per-chat queue, plus headroom for receipt and session persistence.
 export const AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS =
   MAX_AGENT_CHAT_PENDING_TURNS *
@@ -43,14 +47,14 @@ export const AGENT_CHAT_INGRESS_MAX_ATTEMPTS = Math.ceil(
 // enough for execution and result propagation before ingress itself expires.
 export const AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS -
-  AGENT_CHAT_TURN_TIMEOUT_MS -
-  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
+  AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS;
 // Reserve a complete provider execution window plus result propagation margin
 // before the receipt itself can expire.
 export const AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS -
   AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
-  AGENT_CHAT_SETTLEMENT_MARGIN_MS;
+  AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS;
 export const AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 // A scheduled dispatch must leave enough of its own Activity lifetime for the
@@ -58,7 +62,7 @@ export const AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS =
 export const AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS -
   AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
-  AGENT_CHAT_SETTLEMENT_MARGIN_MS;
+  AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS;
 // Cover the globally queued dispatch Activity and leave shutdown margin.
 export const AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS =
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
@@ -130,12 +134,36 @@ export const AgentChatOriginSchema = z.discriminatedUnion("kind", [
 ]);
 export type AgentChatOrigin = z.infer<typeof AgentChatOriginSchema>;
 
+export const MAX_AGENT_CHAT_SOURCE_SEQUENCE = "9223372036854775806";
+
+function isRecoverableSourceSequence(value: string | number): boolean {
+  const decimal = value.toString();
+  return (
+    decimal.length < MAX_AGENT_CHAT_SOURCE_SEQUENCE.length ||
+    (decimal.length === MAX_AGENT_CHAT_SOURCE_SEQUENCE.length &&
+      decimal <= MAX_AGENT_CHAT_SOURCE_SEQUENCE)
+  );
+}
+
+export const AgentChatSourceSequenceSchema = z
+  .union([
+    z.number().int().nonnegative(),
+    z
+      .string()
+      .regex(/^(0|[1-9]\d*)$/)
+      .max(MAX_AGENT_CHAT_SOURCE_SEQUENCE.length),
+  ])
+  .refine(isRecoverableSourceSequence, {
+    message: `Source sequence must not exceed ${MAX_AGENT_CHAT_SOURCE_SEQUENCE}`,
+  });
+
 export const AgentChatTurnRequestSchema = z.strictObject({
   turnId: z.string().min(1).max(512),
   prompt: AgentChatPromptSchema,
   submittedAt: z.iso.datetime({ offset: true }),
   providerStartDeadline: z.iso.datetime({ offset: true }).optional(),
   source: AgentChatOriginSchema,
+  sourceSequence: AgentChatSourceSequenceSchema.optional(),
 });
 export type AgentChatTurnRequest = z.infer<typeof AgentChatTurnRequestSchema>;
 
@@ -160,6 +188,7 @@ export function agentChatTurnRequestsMatch(
     previous.turnId === incoming.turnId &&
     previous.prompt === incoming.prompt &&
     previous.submittedAt === incoming.submittedAt &&
+    previous.sourceSequence === incoming.sourceSequence &&
     sourcesMatch
   );
 }
@@ -331,11 +360,22 @@ export const AgentChatCatalogEntrySchema = z.strictObject({
 });
 export type AgentChatCatalogEntry = z.infer<typeof AgentChatCatalogEntrySchema>;
 
-export const AgentChatCatalogBindingSchema = z.strictObject({
-  binding: AgentChatBindingSchema,
-  chatId: AgentChatIdSchema,
+export const AgentChatBindingUpdateSchema = z.strictObject({
   updatedAt: z.iso.datetime({ offset: true }),
+  sourceSequence: AgentChatSourceSequenceSchema.optional(),
+  tieBreaker: z.string().min(1).max(512).optional(),
+  orderingVersion: z.literal(1).optional(),
 });
+export type AgentChatBindingUpdate = z.infer<
+  typeof AgentChatBindingUpdateSchema
+>;
+export type AgentChatBindingUpdateInput = AgentChatBindingUpdate | string;
+
+export const AgentChatCatalogBindingSchema =
+  AgentChatBindingUpdateSchema.extend({
+    binding: AgentChatBindingSchema,
+    chatId: AgentChatIdSchema,
+  });
 
 export const AgentChatCatalogStateSchema = z
   .strictObject({
