@@ -40,6 +40,19 @@ import {
   isScoutCustomId,
   parseScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
+import {
+  handleMvpVoteButton,
+  type VoteButtonInteraction,
+} from "#src/mvp-votes/button-handler.ts";
+import { isVoteCustomId, parseVoteCustomId } from "#src/mvp-votes/custom-id.ts";
+import {
+  handleMvpVoteSelect,
+  type VoteSelectInteraction,
+} from "#src/mvp-votes/select-handler.ts";
+import {
+  handleMvpVoteModal,
+  type VoteModalInteraction,
+} from "#src/mvp-votes/modal-handler.ts";
 
 const logger = createLogger("discord-interactions");
 
@@ -83,6 +96,14 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
     await routeButton(interaction);
     return;
   }
+  if (interaction.isStringSelectMenu()) {
+    await routeStringSelect(interaction);
+    return;
+  }
+  if (interaction.isModalSubmit()) {
+    await routeModalSubmit(interaction);
+    return;
+  }
   if (interaction.isChatInputCommand()) {
     await handleChatInputCommand(interaction);
   }
@@ -99,11 +120,22 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
   ScoutPublishButtonInteraction &
-  DareButtonInteraction & {
+  DareButtonInteraction &
+  VoteButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;
   };
+
+export type RoutableSelectInteraction = VoteSelectInteraction & {
+  deferUpdate: () => Promise<unknown>;
+};
+
+export type RoutableModalInteraction = VoteModalInteraction & {
+  deferUpdate: () => Promise<unknown>;
+  deferred: boolean;
+  replied: boolean;
+};
 
 async function routeDareButton(
   interaction: RoutableButtonInteraction,
@@ -237,6 +269,10 @@ export async function routeButton(
     await routeScoutButton(interaction);
     return;
   }
+  if (isVoteCustomId(interaction.customId)) {
+    await routeVoteButton(interaction);
+    return;
+  }
   if (!isBucksCustomId(interaction.customId)) {
     // Some other feature's component. Not ours to answer, and Discord shows the
     // clicker nothing for a component no handler claims.
@@ -277,6 +313,80 @@ export async function routeButton(
     if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({
         content: "😵 Something went wrong placing that bet. Try again shortly.",
+      });
+    }
+  }
+}
+
+async function routeVoteButton(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    if (parseVoteCustomId(interaction.customId)?.kind !== "button") {
+      discordComponentsTotal.inc({ namespace: "vote", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleMvpVoteButton(interaction);
+    discordComponentsTotal.inc({ namespace: "vote", status: "success" });
+  } catch (error) {
+    logger.error("Error handling an MVP vote button:", error);
+    discordComponentsTotal.inc({ namespace: "vote", status: "error" });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content: "Something went wrong recording that vote. Try again shortly.",
+      });
+    }
+  }
+}
+
+export async function routeStringSelect(
+  interaction: RoutableSelectInteraction,
+): Promise<void> {
+  if (!isVoteCustomId(interaction.customId)) {
+    discordComponentsTotal.inc({ namespace: "unknown", status: "ignored" });
+    return;
+  }
+  try {
+    if (parseVoteCustomId(interaction.customId)?.kind !== "select") {
+      discordComponentsTotal.inc({ namespace: "vote", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleMvpVoteSelect(interaction);
+    discordComponentsTotal.inc({ namespace: "vote", status: "success" });
+  } catch (error) {
+    logger.error("Error handling an MVP vote select:", error);
+    discordComponentsTotal.inc({ namespace: "vote", status: "error" });
+    await interaction.reply({
+      content: "Something went wrong recording that vote. Try again shortly.",
+      ephemeral: true,
+      allowedMentions: { parse: [] },
+    });
+  }
+}
+
+export async function routeModalSubmit(
+  interaction: RoutableModalInteraction,
+): Promise<void> {
+  if (!isVoteCustomId(interaction.customId)) {
+    discordComponentsTotal.inc({ namespace: "unknown", status: "ignored" });
+    return;
+  }
+  try {
+    if (parseVoteCustomId(interaction.customId)?.kind !== "modal") {
+      discordComponentsTotal.inc({ namespace: "vote", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleMvpVoteModal(interaction);
+    discordComponentsTotal.inc({ namespace: "vote", status: "success" });
+  } catch (error) {
+    logger.error("Error handling an MVP vote modal:", error);
+    discordComponentsTotal.inc({ namespace: "vote", status: "error" });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content: "Something went wrong saving that reason. Try again shortly.",
       });
     }
   }

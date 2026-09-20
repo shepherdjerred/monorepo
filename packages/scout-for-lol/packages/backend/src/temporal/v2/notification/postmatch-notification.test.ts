@@ -45,6 +45,8 @@ const { buildPostmatchNotificationMessageV2, renderPostmatchNotificationV2 } =
   await import("#src/temporal/v2/notification/postmatch-notification.ts");
 const { matchLinkComponents } =
   await import("#src/league/tasks/postmatch/match-report-components.ts");
+const { withFlexMvpVoteFurniture } =
+  await import("#src/mvp-votes/components.ts");
 
 const RIOT_MATCH = RiotMatchIdSchema.parse("NA1_9301");
 const MATCH = MatchIdSchema.parse("NA1_9301");
@@ -114,6 +116,10 @@ describe("the round trip", () => {
       message: standardReport(false),
     },
     { name: "a report without a link button", message: reportWithoutLink() },
+    {
+      name: "a Flex report with MVP vote furniture",
+      message: withFlexMvpVoteFurniture(standardReport(false), MATCH),
+    },
   ])("rebuilds $name exactly as the generator built it", async (scenario) => {
     stubs.generateMatchReport.mockResolvedValue(scenario.message);
 
