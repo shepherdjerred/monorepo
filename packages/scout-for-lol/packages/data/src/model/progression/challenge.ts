@@ -43,6 +43,7 @@ export const ChallengeNumericFieldSchema = z.enum([
   "crowd_control_time",
   "longest_life",
   "total_time_dead",
+  "placement",
 ]);
 export type ChallengeNumericField = z.infer<typeof ChallengeNumericFieldSchema>;
 
@@ -293,12 +294,11 @@ export function evaluateChallengePredicate(
       return predicate.championIds.includes(match.championId);
     case "role_in":
       return predicate.roles.includes(match.role);
-    case "numeric":
-      return compare(
-        match[predicate.field],
-        predicate.operator,
-        predicate.threshold,
-      );
+    case "numeric": {
+      const value = match[predicate.field];
+      if (value === null) return false;
+      return compare(value, predicate.operator, predicate.threshold);
+    }
     case "timeline_event_count":
       return compare(
         match.timelineEventCounts[predicate.eventType]?.[predicate.role] ?? 0,
@@ -341,6 +341,78 @@ function longestTrueStreak(matches: readonly boolean[]): number {
   return best;
 }
 
+function evaluateDistinctGoal(
+  goal: Extract<ChallengeProgressGoal, { kind: "distinct" }>,
+  matches: readonly ChallengeEvidenceMatch[],
+  matched: readonly boolean[],
+): ChallengeProgress {
+  if (goal.catalog !== null) {
+    throw new Error(
+      "Challenge distinct catalog must be frozen before evaluation",
+    );
+  }
+  const coveredValues = new Set(
+    matches
+      .filter((_match, index) => matched[index] === true)
+      .map((match) => distinctMatchValue(goal, match)),
+  );
+  const covered = goal.requiredValues.filter((entry) =>
+    coveredValues.has(entry.value),
+  );
+  const missing = goal.requiredValues.filter(
+    (entry) => !coveredValues.has(entry.value),
+  );
+  return {
+    kind: "distinct",
+    current: covered.length,
+    target: goal.target,
+    covered,
+    missing,
+    completed: covered.length >= goal.target,
+  };
+}
+
+function aggregateNumericField(
+  field: ChallengeNumericField,
+  matches: readonly ChallengeEvidenceMatch[],
+  matched: readonly boolean[],
+  reducer: "sum" | "maximum",
+): number {
+  const values: number[] = [];
+  for (const [index, match] of matches.entries()) {
+    if (matched[index] === true && match[field] !== null) {
+      values.push(match[field]);
+    }
+  }
+  if (reducer === "sum") {
+    return values.reduce((total, value) => total + value, 0);
+  }
+  return values.length === 0 ? 0 : Math.max(0, ...values);
+}
+
+function evaluateScalarGoal(
+  goal: Extract<
+    ChallengeProgressGoal,
+    { kind: "count" | "sum" | "maximum" | "consecutive_streak" }
+  >,
+  matches: readonly ChallengeEvidenceMatch[],
+  matched: readonly boolean[],
+): ChallengeProgress {
+  const current =
+    goal.kind === "count"
+      ? matched.filter(Boolean).length
+      : goal.kind === "consecutive_streak"
+        ? longestTrueStreak(matched)
+        : aggregateNumericField(goal.field, matches, matched, goal.kind);
+  return {
+    kind: "scalar",
+    reducer: goal.kind,
+    current,
+    target: goal.target,
+    completed: current >= goal.target,
+  };
+}
+
 function evaluateGoal(
   goal: ChallengeProgressGoal,
   matches: readonly ChallengeEvidenceMatch[],
@@ -362,53 +434,10 @@ function evaluateGoal(
   }
 
   if (goal.kind === "distinct") {
-    if (goal.catalog !== null) {
-      throw new Error(
-        "Challenge distinct catalog must be frozen before evaluation",
-      );
-    }
-    const coveredValues = new Set(
-      matches
-        .filter((_match, index) => matched[index] === true)
-        .map((match) => distinctMatchValue(goal, match)),
-    );
-    const covered = goal.requiredValues.filter((entry) =>
-      coveredValues.has(entry.value),
-    );
-    const missing = goal.requiredValues.filter(
-      (entry) => !coveredValues.has(entry.value),
-    );
-    return {
-      kind: "distinct",
-      current: covered.length,
-      target: goal.target,
-      covered,
-      missing,
-      completed: covered.length >= goal.target,
-    };
+    return evaluateDistinctGoal(goal, matches, matched);
   }
 
-  let current: number;
-  if (goal.kind === "count") {
-    current = matched.filter(Boolean).length;
-  } else if (goal.kind === "consecutive_streak") {
-    current = longestTrueStreak(matched);
-  } else {
-    const values = matches
-      .filter((_match, index) => matched[index] === true)
-      .map((match) => match[goal.field]);
-    current =
-      goal.kind === "sum"
-        ? values.reduce((total, value) => total + value, 0)
-        : Math.max(0, ...values);
-  }
-  return {
-    kind: "scalar",
-    reducer: goal.kind,
-    current,
-    target: goal.target,
-    completed: current >= goal.target,
-  };
+  return evaluateScalarGoal(goal, matches, matched);
 }
 
 export function evaluateChallengeContract(

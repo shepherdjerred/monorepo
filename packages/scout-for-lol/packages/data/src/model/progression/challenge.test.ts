@@ -7,7 +7,12 @@ import {
   freezeChallengeCatalogs,
   type ChallengeMatchPredicate,
 } from "./challenge.ts";
-import { WIN_EVERY_CURRENT_CHAMPION_TEMPLATE } from "./challenge-builtins.ts";
+import {
+  WIN_EVERY_CURRENT_CHAMPION_ARENA_FIRST_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_ARENA_WIN_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_FLEX_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
+} from "./challenge-builtins.ts";
 import type { ChallengeEvidenceMatch } from "./challenge-public.ts";
 
 function evidence(input: {
@@ -16,15 +21,18 @@ function evidence(input: {
   win: boolean;
   kills?: number;
   timeline?: boolean;
+  queue?: "solo" | "flex" | "arena";
+  placement?: number | null;
 }): ChallengeEvidenceMatch {
   return {
     matchId: input.id,
     gameEndAt: `2026-01-${input.id.padStart(2, "0")}T00:00:00.000Z`,
-    queue: "solo",
+    queue: input.queue ?? "solo",
     championId: input.championId,
     championName: `Champion ${input.championId.toString()}`,
     role: "MIDDLE",
     win: input.win,
+    placement: input.placement ?? null,
     kills: input.kills ?? 0,
     deaths: 0,
     assists: 0,
@@ -66,15 +74,81 @@ function evaluateTimelineChallenge(
 }
 
 describe("community challenge contracts", () => {
-  test("freezes the current champion catalog for a run", () => {
-    const frozen = freezeChallengeCatalogs(WIN_EVERY_CURRENT_CHAMPION_TEMPLATE);
-    expect(frozen.progressGoal.kind).toBe("distinct");
-    if (frozen.progressGoal.kind !== "distinct") return;
-    expect(frozen.progressGoal.catalog).toBeNull();
-    expect(frozen.progressGoal.requiredValues.length).toBeGreaterThan(150);
-    expect(frozen.progressGoal.target).toBe(
-      frozen.progressGoal.requiredValues.length,
+  test("freezes the current champion catalog for solo and flex runs", () => {
+    for (const template of [
+      WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
+      WIN_EVERY_CURRENT_CHAMPION_FLEX_TEMPLATE,
+    ]) {
+      const frozen = freezeChallengeCatalogs(template);
+      expect(frozen.progressGoal.kind).toBe("distinct");
+      if (frozen.progressGoal.kind !== "distinct") return;
+      expect(frozen.progressGoal.catalog).toBeNull();
+      expect(frozen.progressGoal.requiredValues.length).toBeGreaterThan(150);
+      expect(frozen.progressGoal.target).toBe(
+        frozen.progressGoal.requiredValues.length,
+      );
+    }
+  });
+
+  test("evaluates arena placement predicates correctly", () => {
+    const top3 = evaluateChallengeContract(
+      freezeChallengeCatalogs(WIN_EVERY_CURRENT_CHAMPION_ARENA_WIN_TEMPLATE),
+      [
+        evidence({
+          id: "1",
+          championId: 1,
+          win: true,
+          queue: "arena",
+          placement: 3,
+        }),
+        evidence({
+          id: "2",
+          championId: 2,
+          win: false,
+          queue: "arena",
+          placement: 4,
+        }),
+        evidence({
+          id: "3",
+          championId: 3,
+          win: true,
+          queue: "solo",
+          placement: null,
+        }),
+      ],
+      { startAt: "2026-01-01T00:00:00.000Z", endAt: null },
     );
+    expect(top3.progress.kind).toBe("distinct");
+    if (top3.progress.kind === "distinct") {
+      expect(top3.progress.current).toBe(1);
+      expect(top3.progress.covered[0]?.value).toBe("1");
+    }
+
+    const first = evaluateChallengeContract(
+      freezeChallengeCatalogs(WIN_EVERY_CURRENT_CHAMPION_ARENA_FIRST_TEMPLATE),
+      [
+        evidence({
+          id: "1",
+          championId: 1,
+          win: true,
+          queue: "arena",
+          placement: 1,
+        }),
+        evidence({
+          id: "2",
+          championId: 2,
+          win: true,
+          queue: "arena",
+          placement: 2,
+        }),
+      ],
+      { startAt: "2026-01-01T00:00:00.000Z", endAt: null },
+    );
+    expect(first.progress.kind).toBe("distinct");
+    if (first.progress.kind === "distinct") {
+      expect(first.progress.current).toBe(1);
+      expect(first.progress.covered[0]?.value).toBe("1");
+    }
   });
 
   test("evaluates count, sum, maximum, streak, distinct, and boolean goals", () => {
