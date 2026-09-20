@@ -70,7 +70,6 @@ describe("conditionCapability", () => {
     expect(conditionCapability("dares")).toBe("dares");
     expect(conditionCapability("challenges")).toBe("challenges");
     expect(conditionCapability("competitions")).toBe("creation");
-    expect(conditionCapability("reports")).toBe("creation");
   });
 
   test("leaves lake-answerable conditions ungated", () => {
@@ -97,6 +96,14 @@ describe("chipExpectation", () => {
     expect(chipExpectation(EVERYTHING, "bucks")).toBe("answerable");
     expect(chipExpectation(NOTHING, "competitions")).toBe("gated-off");
     expect(chipExpectation(EVERYTHING, "competitions")).toBe("answerable");
+  });
+
+  test("asserts nothing for report chips, which legitimately go both ways", () => {
+    // Nine of fifteen declined and six answered informatively in the beta
+    // sweep, and both were right; an assertion wrong half the time is worse
+    // than none.
+    expect(chipExpectation(NOTHING, "reports")).toBe("either");
+    expect(chipExpectation(EVERYTHING, "reports")).toBe("either");
   });
 });
 

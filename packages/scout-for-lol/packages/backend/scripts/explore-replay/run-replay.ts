@@ -349,11 +349,17 @@ async function runGuild(input: {
           const signals = replaySignals({
             status: observation.status,
             answer: observation.answer?.answer ?? null,
-            queryFailed: observation.trace.some(
-              (entry) =>
-                entry.toolName === "run_report_query" &&
-                entry.status === "failed",
-            ),
+            queryFailedUnrecovered:
+              observation.trace.some(
+                (entry) =>
+                  entry.toolName === "run_report_query" &&
+                  entry.status === "failed",
+              ) &&
+              !observation.trace.some(
+                (entry) =>
+                  entry.toolName === "run_report_query" &&
+                  entry.status === "succeeded",
+              ),
             diff: null,
             chipExpectation:
               chip === undefined

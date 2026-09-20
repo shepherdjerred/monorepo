@@ -47,7 +47,7 @@ function diffFor(
 const BASE_INPUT: ReplaySignalInput = {
   status: "ok",
   answer: SUBSTANTIVE,
-  queryFailed: false,
+  queryFailedUnrecovered: false,
   diff: null,
   chipExpectation: null,
   capabilityMismatches: [],
@@ -146,8 +146,16 @@ describe("replaySignals outcomes", () => {
     expect(signals({ answer: "   " })).toEqual(["new_answer_empty"]);
   });
 
-  test("flags a failed query", () => {
-    expect(signals({ queryFailed: true })).toEqual(["new_query_failed"]);
+  test("flags a query failure the turn never recovered from", () => {
+    expect(signals({ queryFailedUnrecovered: true })).toEqual([
+      "new_query_failed",
+    ]);
+  });
+
+  test("says nothing when a failed query was retried successfully", () => {
+    // Twelve of thirteen failures in the first full beta sweep were recovered
+    // in the same turn; flagging those buried the one that was not.
+    expect(signals({ queryFailedUnrecovered: false })).toEqual([]);
   });
 
   test("flags rows going to zero", () => {
@@ -234,6 +242,12 @@ describe("replaySignals profile assertions", () => {
       answer: "Ezreal does not play mid; he is bot at 54%.",
     });
     expect(result).not.toContain("ungated_chip_refused");
+  });
+
+  test("asserts nothing when both behaviours are defensible", () => {
+    const result = signals({ chipExpectation: "either", answer: DECLINE });
+    expect(result).not.toContain("ungated_chip_refused");
+    expect(result).not.toContain("gated_chip_did_not_refuse");
   });
 
   test("makes no profile assertion for a conversation turn", () => {

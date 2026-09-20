@@ -24,7 +24,7 @@ export const REPLAY_SIGNALS = [
   "new_turn_timed_out",
   /** It finished, but said nothing. */
   "new_answer_empty",
-  /** A query was attempted and did not run. */
+  /** A query failed and the turn never got one to run. */
   "new_query_failed",
   /** The baseline found rows here and this run found none. */
   "rows_zero_was_nonzero",
@@ -45,8 +45,14 @@ export type ReplaySignal = (typeof REPLAY_SIGNALS)[number];
 export type ReplaySignalInput = {
   readonly status: "ok" | "error" | "timeout";
   readonly answer: string | null;
-  /** True when a query tool ran and reported failure. */
-  readonly queryFailed: boolean;
+  /**
+   * A query failed and no later one succeeded.
+   *
+   * Recovery is the common case and is not a defect: in the first full beta
+   * sweep twelve of thirteen failed queries were retried successfully in the
+   * same turn and answered well. Flagging those buried the one that did not.
+   */
+  readonly queryFailedUnrecovered: boolean;
   readonly diff: ReplayDiff | null;
   /** Null for a conversation turn, which has no profile expectation. */
   readonly chipExpectation: ChipExpectation | null;
@@ -114,7 +120,7 @@ function outcomeSignals(input: ReplaySignalInput): readonly ReplaySignal[] {
   if (input.status === "ok" && !answeredSomething(input.answer)) {
     signals.push("new_answer_empty");
   }
-  if (input.queryFailed) signals.push("new_query_failed");
+  if (input.queryFailedUnrecovered) signals.push("new_query_failed");
   if (
     input.baselineRowsReturned !== null &&
     input.baselineRowsReturned > 0 &&
@@ -151,7 +157,10 @@ function profileSignals(
   input: ReplaySignalInput,
   answer: string,
 ): readonly ReplaySignal[] {
-  if (input.chipExpectation === null) return [];
+  // `either` asserts nothing: both behaviours are defensible for that chip.
+  if (input.chipExpectation === null || input.chipExpectation === "either") {
+    return [];
+  }
   if (input.chipExpectation === "gated-off") {
     // Absence of the vocabulary, which is the direction it is reliable in.
     return looksLikeExploreRefusal(answer) ? [] : ["gated_chip_did_not_refuse"];

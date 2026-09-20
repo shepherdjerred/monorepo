@@ -78,8 +78,16 @@ export type ExploreReplayFlagOverride = {
  * them onto a capability would make the eval demand a refusal that Explore is
  * right not to give.
  *
- * `competitions` and `reports` both map to `creation`: making either one goes
- * through the same creation tools.
+ * `competitions` maps to `creation`: making one genuinely needs that tool, and
+ * the run bears it out — all twenty competition chips declined when creation
+ * was off.
+ *
+ * `reports` is deliberately NOT mapped. Its chips are a mix: "subscribe me to
+ * a weekly report" needs the creation tool, while "generate a role
+ * distribution report" is answered by querying and presenting. In the beta run
+ * nine declined and six answered informatively, and both were right. Asserting
+ * either way would be wrong for half of them, so the condition resolves to
+ * `either` and a person reads those cases.
  */
 const CONDITION_CAPABILITY: Readonly<
   Record<SuggestionCondition, ExploreReplayCapability | null>
@@ -91,7 +99,7 @@ const CONDITION_CAPABILITY: Readonly<
   dares: "dares",
   challenges: "challenges",
   competitions: "creation",
-  reports: "creation",
+  reports: null,
 };
 
 export function conditionCapability(
@@ -105,13 +113,22 @@ export function conditionCapability(
  *
  * `answerable` — within reach, and a refusal is a regression.
  * `gated-off` — the feature is not live here, so the honest answer says so.
+ * `either` — both are defensible, so the eval asserts nothing and a person
+ *   reads the case. Better than an assertion that is wrong half the time:
+ *   a signal nobody trusts is worse than no signal.
  */
-export type ChipExpectation = "answerable" | "gated-off";
+export type ChipExpectation = "answerable" | "gated-off" | "either";
+
+/** Conditions whose chips legitimately go both ways; see `CONDITION_CAPABILITY`. */
+const UNASSERTABLE_CONDITIONS: ReadonlySet<SuggestionCondition> = new Set<SuggestionCondition>([
+  "reports",
+]);
 
 export function chipExpectation(
   capabilities: ExploreCapabilitySet,
   condition: SuggestionCondition,
 ): ChipExpectation {
+  if (UNASSERTABLE_CONDITIONS.has(condition)) return "either";
   const capability = conditionCapability(condition);
   if (capability === null) return "answerable";
   return capabilities[capability] ? "answerable" : "gated-off";
