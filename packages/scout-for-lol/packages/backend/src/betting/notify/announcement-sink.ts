@@ -152,6 +152,21 @@ export type SettlementAnnouncementSink = {
   ) => Promise<void>;
 
   /**
+   * Whether this settlement may ENQUEUE a Dare notification at all.
+   *
+   * Not "may it be drained now" — whether the row may exist. The outbox is
+   * durable work, and `drainDareNotifications` returning early suppresses
+   * only THIS run's drain: the v1 post-match poller drains the same table
+   * with no sink and no knowledge of delivery modes, so a row withheld from
+   * one drain is sent by the next. The only durable suppression is the row
+   * never being written.
+   *
+   * Asked inside the settling transaction, so the decision and the settlement
+   * commit together.
+   */
+  readonly mayEnqueueDareNotification: () => boolean;
+
+  /**
    * Whether a Dare that has no callout yet may have one POSTED.
    *
    * The callout refresh both posts and edits depending on whether a message
@@ -197,6 +212,7 @@ export const announcingSettlementSink: SettlementAnnouncementSink = {
   drainDareNotifications: async (prismaClient) => {
     await deliverPendingDareNotifications(prismaClient);
   },
+  mayEnqueueDareNotification: () => true,
   mayPostDareCallout: () => true,
   // v1 announces from this call stack; there is nothing to recover.
   recordAnnouncementItem: () => Promise.resolve(),
@@ -212,6 +228,7 @@ export const announcingSettlementSink: SettlementAnnouncementSink = {
 export const silentSettlementSink: SettlementAnnouncementSink = {
   deliverPartialDareSummaries: () => Promise.resolve(),
   drainDareNotifications: () => Promise.resolve(),
+  mayEnqueueDareNotification: () => false,
   mayPostDareCallout: () => false,
   // Nothing may be announced, so nothing is recorded to announce later.
   recordAnnouncementItem: () => Promise.resolve(),

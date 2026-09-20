@@ -410,48 +410,6 @@ export async function refreshPendingDareV2Callouts(
   return dareIds;
 }
 
-/**
- * Retire the pending-refresh flag on a Dare whose callout was withheld.
- *
- * Withholding the POST is not enough on its own. `calloutRefreshPending` is
- * durable WORK, and every scanner that reads it will do that work: the
- * settlement path passes a sink-derived `mayPost`, but the v1 post-match and
- * pre-match pollers call the same scan with none at all — so a callout
- * withheld from a silent backfill is posted minutes later by a poller that
- * was never told to keep it quiet. Withholding delayed the message; it did
- * not suppress it.
- *
- * So the decision is persisted where every reader sees it, rather than made
- * again by each caller. Scoping the settlement's own refresh to the Dares it
- * touched would have fixed one of the four callers and left the other three.
- *
- * Guarded by `calloutRefreshVersion`, the same compare-and-set the refresh
- * path uses: if anything marked this Dare pending again between the read and
- * this write, the version moved and this clears nothing. That later event is
- * a fresh decision by whatever made it, and it is not this run's to discard.
- */
-async function retirePendingCallout(
-  dareId: number,
-  calloutRefreshVersion: number,
-  dependencies: DareV2CalloutDependencies,
-): Promise<void> {
-  await dependencies.prismaClient.bucksDareV2.updateMany({
-    where: {
-      id: dareId,
-      calloutRefreshPending: true,
-      calloutRefreshVersion,
-      // Redundant TODAY — a concurrent post clears the pending flag, so the
-      // clause above already excludes a Dare that acquired a callout, and no
-      // test distinguishes this. Kept because it makes the statement "this
-      // only retires work for a Dare with no public message" true of this
-      // query rather than true of another function's write set, which is how
-      // the next refactor would silently break it.
-      messageRef: null,
-    },
-    data: { calloutRefreshPending: false },
-  });
-}
-
 export async function ensureDareV2Callout(
   dareId: number,
   dependencies: DareV2CalloutDependencies = defaultDareV2CalloutDependencies,
@@ -460,11 +418,7 @@ export async function ensureDareV2Callout(
 > {
   const dare = await dependencies.prismaClient.bucksDareV2.findUnique({
     where: { id: dareId },
-    select: {
-      dareState: true,
-      messageRef: true,
-      calloutRefreshVersion: true,
-    },
+    select: { dareState: true, messageRef: true },
   });
   if (dare === null) throw new Error(`Dare v2 ${dareId.toString()} not found.`);
   if (dare.dareState === "draft") return "draft";
@@ -473,14 +427,12 @@ export async function ensureDareV2Callout(
     // owed no public delivery withholds it; there is nothing to edit and
     // nothing is left half-done, because a Dare with no callout is exactly the
     // state it was already in.
-    if (dependencies.mayPost?.() === false) {
-      await retirePendingCallout(
-        dareId,
-        dare.calloutRefreshVersion,
-        dependencies,
-      );
-      return "withheld";
-    }
+    // Withheld, and nothing is retired from here. The scan this runs under
+    // selects every globally pending Dare, so a decision about one match must
+    // not write to rows that match never touched; the Dare a silent match
+    // DID resolve has its pending callout retired inside that settlement's
+    // own transaction. See `withholdDareV2Callout`.
+    if (dependencies.mayPost?.() === false) return "withheld";
     const result = await postDareV2Callout(dareId, dependencies);
     return result.kind;
   }

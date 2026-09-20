@@ -158,6 +158,10 @@ export async function settleAndAwardBucks(
   try {
     await settleDaresV2ForMatch(matchData, prismaClient, {
       timeline: options.dareTimeline,
+      // Whether the ROW may exist, not merely whether this run drains it:
+      // the v1 poller drains the same outbox with no sink, so a delivery
+      // withheld from one drain is sent by the next.
+      notify: sink.mayEnqueueDareNotification() ? "enqueue" : "withhold",
     });
   } catch (error) {
     if (error instanceof DareV2PartialSettlementError) {

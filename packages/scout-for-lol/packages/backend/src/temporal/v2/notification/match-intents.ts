@@ -406,6 +406,50 @@ function payloadsOfFamily(
  * settled on an earlier tick, and a recovery that walked the items one at a
  * time would drop exactly those.
  */
+/**
+ * The settlement RECORDS a match's standing checkpoints attest to.
+ *
+ * The same payloads {@link recoveredAnnouncementsOf} folds into announcements,
+ * parsed back to the shapes settlement itself returned rather than to the
+ * presentation inputs — because the caller needs them as evidence, not as
+ * something to render.
+ *
+ * This exists so a receipt can name what the WHOLE match settled rather than
+ * what the last attempt happened to settle. Settlement's steps are one-shot,
+ * so an attempt resuming a partly-settled match legitimately returns little or
+ * nothing; a receipt built from that alone would record an empty settlement
+ * for a match whose bets were all resolved.
+ */
+export function recoveredSettlementRecordsOf(
+  items: readonly SettlementAnnouncementItem[],
+): {
+  readonly closures: readonly ClosedPool[];
+  readonly settlements: readonly SettlementSummary[];
+  readonly parlaySettlements: readonly ParlaySettlementSummary[];
+  readonly earnings: readonly EarnedAward[];
+  readonly dareSettlements: readonly DareSettlementSummary[];
+} {
+  return {
+    closures: payloadsOfFamily(items, "closure").map((payload): ClosedPool =>
+      ClosedPoolSchema.parse(payload),
+    ),
+    settlements: payloadsOfFamily(items, "settlement").map(
+      (payload): SettlementSummary =>
+        settlementSummaryOf(SettlementSummarySchema.parse(payload)),
+    ),
+    parlaySettlements: payloadsOfFamily(items, "parlay").map(
+      (payload): ParlaySettlementSummary =>
+        parlaySummaryOf(ParlaySettlementSummarySchema.parse(payload)),
+    ),
+    earnings: payloadsOfFamily(items, "earnings").flatMap((payload) =>
+      z.array(EarnedAwardSchema).parse(payload),
+    ),
+    dareSettlements: payloadsOfFamily(items, "dare-summary").map((payload) =>
+      dareSettlementSummaryOf(DareSummaryAnnouncementSchema.parse(payload)),
+    ),
+  };
+}
+
 export function recoveredAnnouncementsOf(
   items: readonly SettlementAnnouncementItem[],
 ): {

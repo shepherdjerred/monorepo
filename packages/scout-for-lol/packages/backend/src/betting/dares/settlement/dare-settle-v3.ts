@@ -14,7 +14,10 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { isRemakeMatch } from "#src/betting/outcome.ts";
 import { matchTouchesRelationalDare } from "#src/betting/dares/evaluation/dare-match-eligibility.ts";
-import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
+import {
+  pendingDareV2CalloutRefresh,
+  withholdDareV2Callout,
+} from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { dareV2MoneyFactsInTransaction } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import { distributeDareResolutionV3 } from "#src/betting/dares/lifecycle/dare-resolution-v3.ts";
 import { claimActiveDareV2Settlement } from "#src/betting/dares/settlement/dare-settlement-claim-v2.ts";
@@ -26,6 +29,7 @@ import {
   enqueueMaterialDareProgressNotificationV3,
   enqueueTerminalDareNotification,
 } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import type {
   DareProofV3,
   DareV2SettlementSummary,
@@ -129,6 +133,8 @@ async function resolveV3(
     proof: DareProofV3 | null;
     now: Date;
     matchId?: string | undefined;
+    /** Whether the match this settles is owed a public delivery. */
+    notify: DareNotificationDisposition;
   },
 ): Promise<"achieved" | "unachieved" | "voided"> {
   const value = input.finality.value;
@@ -156,14 +162,19 @@ async function resolveV3(
     facts,
     value,
   });
-  await enqueueTerminalDareNotification(tx, {
-    dareId: input.dare.id,
-    revision: input.contract.revision,
-    potTotal: input.dare.potTotal,
-    resolution,
-    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
-    now: input.now,
-  });
+  if (input.notify === "withhold") {
+    await withholdDareV2Callout(tx, input.dare.id);
+  }
+  if (input.notify === "enqueue") {
+    await enqueueTerminalDareNotification(tx, {
+      dareId: input.dare.id,
+      revision: input.contract.revision,
+      potTotal: input.dare.potTotal,
+      resolution,
+      ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
+      now: input.now,
+    });
+  }
   return resolution;
 }
 
@@ -273,6 +284,8 @@ export async function captureDareSqlV3ForMatch(input: {
   matchData: RawMatch;
   prismaClient: ExtendedPrismaClient;
   now: Date;
+  /** Whether the match this settles is owed a public delivery. */
+  notify: DareNotificationDisposition;
 }): Promise<DareV2SettlementSummary | undefined> {
   const { dare, contract, matchData, prismaClient, now } = input;
   if (
@@ -325,6 +338,7 @@ export async function captureDareSqlV3ForMatch(input: {
           proof,
           now,
           matchId: matchData.metadata.matchId,
+          notify: input.notify,
         })
       : "captured";
     if (resolution === "captured") {
@@ -377,6 +391,9 @@ export async function settleDareSqlV3AtDeadline(
       finality,
       proof,
       now,
+      // A deadline is not a match's announcement; nothing here is owed
+      // silence by a delivery mode.
+      notify: "enqueue",
     });
     return {
       contractVersion: 3,
@@ -443,6 +460,7 @@ export async function settleMatureDareSqlV3Races(
           finality,
           proof,
           now,
+          notify: "enqueue",
         });
         return {
           contractVersion: 3 as const,

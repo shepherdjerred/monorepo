@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import type { SettlementAnnouncementSink } from "#src/betting/notify/announcement-sink.ts";
+import type * as MatchIntentsModule from "#src/temporal/v2/notification/match-intents.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
 /**
@@ -31,12 +32,16 @@ const { prisma } = createTestDatabase("scout-v2-settlement-checkpoint");
 const WRITE_FAILS = RiotMatchIdSchema.parse("NA1_9501");
 const WRITE_CONFLICTS = RiotMatchIdSchema.parse("NA1_9502");
 const CONFLICTS_INSIDE_A_DARE_BATCH = RiotMatchIdSchema.parse("NA1_9503");
+const PARTLY_SETTLED = RiotMatchIdSchema.parse("NA1_9504");
 
 type DriveSettlement = (sink: SettlementAnnouncementSink) => Promise<void>;
 
-const settlement = vi.hoisted((): { drive: DriveSettlement | undefined } => ({
-  drive: undefined,
-}));
+const settlement = vi.hoisted(
+  (): { drive: DriveSettlement | undefined; entered: number } => ({
+    drive: undefined,
+    entered: 0,
+  }),
+);
 
 vi.mock("#src/database/index.ts", async () => {
   const actual = await vi.importActual<typeof DatabaseModule>(
@@ -58,10 +63,36 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
     }),
 }));
 
+// Only the settlement minter is replaced, and only to see WHICH instructions
+// reach it; everything else in the module — the delivery gate this Activity
+// reads, the item builders — stays real.
+const minted = vi.hoisted((): { guilds: string[] } => ({ guilds: [] }));
+
+vi.mock("#src/temporal/v2/notification/match-intents.ts", async () => {
+  const actual = await vi.importActual<typeof MatchIntentsModule>(
+    "#src/temporal/v2/notification/match-intents.ts",
+  );
+  return {
+    ...actual,
+    mintSettlementIntentsV2: (
+      db: Parameters<typeof actual.mintSettlementIntentsV2>[0],
+      args: Parameters<typeof actual.mintSettlementIntentsV2>[1],
+    ) => {
+      minted.guilds.push(
+        ...(args.announcements ?? []).map(
+          (announcement) => announcement.summary.serverId,
+        ),
+      );
+      return actual.mintSettlementIntentsV2(db, args);
+    },
+  };
+});
+
 vi.mock("#src/betting/dares/evaluation/dare-postmatch-timeline-v2.ts", () => ({
   settleBucksWithDareTimelineV2: async (input: {
     announcementSink: SettlementAnnouncementSink;
   }) => {
+    settlement.entered += 1;
     if (settlement.drive === undefined) {
       throw new Error("the test did not say how settlement should behave");
     }
@@ -97,6 +128,8 @@ const { recordSettlementAnnouncementItem } =
   await import("#src/database/durable/settlement-announcement-repository.ts");
 const { DarePartialSettlementError } =
   await import("#src/betting/dares/settlement/dare-settle-shared.ts");
+const { settlementEvidenceCodec } =
+  await import("#src/durable/match/receipt-evidence.ts");
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -109,6 +142,7 @@ beforeEach(async () => {
     WRITE_FAILS,
     WRITE_CONFLICTS,
     CONFLICTS_INSIDE_A_DARE_BATCH,
+    PARTLY_SETTLED,
   ]) {
     // A live match, so the Activity builds the CHECKPOINTING sink rather than
     // the silent one. A backfill records nothing and has nothing to lose.
@@ -134,6 +168,102 @@ async function standingSettlementReceipt(
     MATCH_RECEIPT_KINDS.settlement,
   );
 }
+
+/** One guild's settled pool, in the shape a checkpoint stores. */
+function settlementPayload(serverId: string, betId: number): unknown {
+  return {
+    matchId: PARTLY_SETTLED,
+    serverId,
+    winningTeamId: 100,
+    winnersPool: 100,
+    losersPool: 100,
+    houseCut: 10,
+    bets: [
+      {
+        betId,
+        bucksAccountId: betId,
+        discordId: "100000000000000001",
+        isHouse: false,
+        predictedTeamId: 100,
+        submittedStake: 50,
+        matchedStake: 50,
+        unmatchedStake: 0,
+        grossPayout: 100,
+        houseCut: 10,
+        payout: 90,
+        winnings: 40,
+        won: true,
+        refunded: false,
+        subjectPuuid: "p".repeat(78),
+      },
+    ],
+  };
+}
+
+describe("a settlement resuming a match another attempt settled part of", () => {
+  test("re-enters settlement instead of reading a checkpoint as completion", async () => {
+    // The regression. An attempt whose first pool checkpointed and whose
+    // second failed leaves ONE row. Reading "a row exists" as "settlement
+    // completed" returned already-applied, and the match was retired with its
+    // second pool closed and its bettors never paid.
+    await recordSettlementAnnouncementItem(prisma, {
+      matchId: PARTLY_SETTLED,
+      item: {
+        family: "settlement",
+        itemKey: "guild-1",
+        payload: settlementPayload("guild-1", 101),
+      },
+    });
+    settlement.entered = 0;
+    settlement.drive = async (sink) => {
+      await sink.recordAnnouncementItem(prisma, {
+        family: "settlement",
+        itemKey: "guild-2",
+        payload: settlementPayload("guild-2", 202),
+      });
+    };
+
+    minted.guilds.length = 0;
+
+    await settleMatchMarketsV2({ riotMatchId: PARTLY_SETTLED });
+
+    // Settlement RAN, which is what pays the pool the dead attempt missed.
+    expect(settlement.entered).toBe(1);
+    // And the mint is driven by BOTH attempts' instructions: the dead
+    // attempt's recap exists only as its checkpoint, and nothing else can
+    // reconstruct it.
+    expect(minted.guilds.toSorted()).toEqual(["guild-1", "guild-2"]);
+  });
+
+  test("attests what the match settled, not what the last attempt returned", async () => {
+    // Settlement's steps are one-shot, so a resumption legitimately returns
+    // little or nothing. A receipt built from that alone would record an
+    // empty settlement for a match whose bets are all resolved — a durable
+    // record saying the opposite of what happened.
+    await recordSettlementAnnouncementItem(prisma, {
+      matchId: PARTLY_SETTLED,
+      item: {
+        family: "settlement",
+        itemKey: "guild-1",
+        payload: settlementPayload("guild-1", 101),
+      },
+    });
+    settlement.drive = async (sink) => {
+      await sink.recordAnnouncementItem(prisma, {
+        family: "settlement",
+        itemKey: "guild-2",
+        payload: settlementPayload("guild-2", 202),
+      });
+    };
+
+    await settleMatchMarketsV2({ riotMatchId: PARTLY_SETTLED });
+
+    const evidence = await standingSettlementReceipt(PARTLY_SETTLED);
+    expect(evidence).not.toBeNull();
+    const parsed = settlementEvidenceCodec.parse(evidence);
+    expect(parsed.settledBetIds.toSorted((a, b) => a - b)).toEqual([101, 202]);
+  });
+});
 
 describe("a settlement whose checkpoint cannot be written", () => {
   test("records no settlement receipt", async () => {

@@ -32,6 +32,7 @@ import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
 import {
   matchMayAnnounce,
   mintDareSummaryIntentsV2,
+  recoveredSettlementRecordsOf,
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
   recoveredAnnouncementsOf,
@@ -127,6 +128,11 @@ function checkpointingSettlementSink(
     // is v1's own pre-existing surface and the gate's promise permits it for a
     // match a live discovery surfaced.
     mayPostDareCallout: announcingSettlementSink.mayPostDareCallout,
+    // Likewise the Dare outbox. A live match is owed those DMs, and they are
+    // a different surface from the summaries this pipeline mints, so
+    // withholding them here would drop a delivery rather than defer one.
+    mayEnqueueDareNotification:
+      announcingSettlementSink.mayEnqueueDareNotification,
     recordAnnouncementItem: async (db, item) => {
       // EVERY failure leaves here as a `SettlementCheckpointError`, not just
       // the conflict. A connection blip writing this row loses the settlement
@@ -238,6 +244,31 @@ async function settledWithCheckpointFailuresSurfaced<T>(
   }
 }
 
+/**
+ * Everything this match settled, across every attempt that touched it.
+ *
+ * This attempt's own return value plus the records its standing checkpoints
+ * attest to. Duplicates are harmless: the evidence builder canonicalises each
+ * identity set, so a pool present in both appears once.
+ */
+function settledRecordsAcrossAttempts(
+  bucks: Awaited<ReturnType<typeof settleBucksWithDareTimelineV2>>["bucks"],
+  standing: readonly SettlementAnnouncementItem[],
+): Awaited<ReturnType<typeof settleBucksWithDareTimelineV2>>["bucks"] {
+  const recorded = recoveredSettlementRecordsOf(standing);
+  return {
+    ...bucks,
+    closures: [...bucks.closures, ...recorded.closures],
+    settlements: [...bucks.settlements, ...recorded.settlements],
+    parlaySettlements: [
+      ...bucks.parlaySettlements,
+      ...recorded.parlaySettlements,
+    ],
+    earnings: [...bucks.earnings, ...recorded.earnings],
+    dareSettlements: [...bucks.dareSettlements, ...recorded.dareSettlements],
+  };
+}
+
 export async function settleMatchMarketsV2(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutGuardedEffectV2Result> {
@@ -263,34 +294,29 @@ export async function settleMatchMarketsV2(input: {
       // Resolved inside the guard so a replay whose claim is already complete
       // costs no Riot read at all.
       const context = await resolveScoutV2MatchContext(input.riotMatchId);
-      // A standing checkpoint means a previous attempt settled this match and
-      // died before its receipt. Settlement's steps are one-shot, so re-running
-      // it would return nothing and the announcements would be unmintable
-      // forever; the checkpoint is what that attempt left so this one can mint
-      // from what actually happened. Read before settling, because settling
-      // again is the thing it exists to prevent.
-      const recovered = await listSettlementAnnouncementItems(prisma, {
-        matchId: input.riotMatchId,
-      });
-      if (recovered.length > 0) {
-        await fence.assertHeld();
-        await mintFromInstructions(
-          input.riotMatchId,
-          recovered,
-          context.matchData.info.gameCreation,
-        );
-        await fence.assertHeld();
-        const standing = await readMatchReceiptEvidenceV2(
-          input.riotMatchId,
-          MATCH_RECEIPT_KINDS.settlement,
-        );
-        const evidence =
-          standing === null ? null : settlementEvidenceCodec.parse(standing);
-        return {
-          fact: { outcome: "already-applied" },
-          effects: evidence === null ? 0 : settledRecordCount(evidence),
-        };
-      }
+      // Settlement is ENTERED even when checkpoints already stand.
+      //
+      // A standing checkpoint used to short-circuit this, on the reasoning
+      // that a previous attempt had settled the match and only its
+      // announcements were missing. That reasoning held for the attempt that
+      // finished and not for the one that stopped half way: an attempt whose
+      // first pool checkpointed and whose second failed leaves exactly one
+      // row, and reading "a row exists" as "settlement completed" retired the
+      // match with its second pool closed and its bettors unpaid.
+      //
+      // "Some checkpoints exist" was never a completion marker. The RECEIPT
+      // is, and it is checked before this runs, so reaching here means no
+      // attempt has completed and re-entering is right. Re-entry is safe
+      // because every step is state-gated on its own durable row: a settled
+      // pool is no longer matched-and-closed, a terminal Dare returns nothing,
+      // an earned guild carries its marker. A resumption therefore settles
+      // exactly what is left, which is the whole point.
+      //
+      // What the checkpoints are for is the OTHER half — results that a
+      // re-run legitimately no longer returns — and that half is served below,
+      // where both the mint and the receipt read every standing instruction
+      // rather than only this attempt's output.
+      //
       // The Riot read above can take as long as Riot takes; the fence may
       // have lapsed while it ran, and the ledger must not be entered on a
       // lock this attempt no longer holds.
@@ -315,7 +341,6 @@ export async function settleMatchMarketsV2(input: {
               : silentSettlementSink,
           }),
       );
-      const evidence = settlementEvidenceOf(settled.bucks);
       // The checkpoint, written before anything else this attempt does with
       // the settlement's output. It is the only durable record of results no
       // retry can reproduce, so it goes down first and never changes: a
@@ -344,6 +369,13 @@ export async function settleMatchMarketsV2(input: {
           );
         }
       }
+      // Every instruction standing for this match, which is this attempt's
+      // output UNION whatever an earlier attempt checkpointed before it
+      // stopped. Read after the writes above so it includes them.
+      await fence.assertHeld();
+      const standing = await listSettlementAnnouncementItems(prisma, {
+        matchId: input.riotMatchId,
+      });
       // Minted INSIDE the fence and before the receipt, because these intents
       // carry the summaries this settlement just produced and nothing else can
       // reconstruct them. A silent-backfill match mints none of them; that gate
@@ -368,17 +400,25 @@ export async function settleMatchMarketsV2(input: {
       // than inside it.
       await mintFromInstructions(
         input.riotMatchId,
-        instructions,
+        standing,
         context.matchData.info.gameCreation,
       );
       await fence.assertHeld();
+      // The receipt names what the MATCH settled, not what this attempt did.
+      // A resumption settles only what was left, so evidence built from its
+      // own return value alone would record an empty settlement for a match
+      // whose bets are all resolved — a durable record saying the opposite of
+      // what happened.
+      const attested = settlementEvidenceOf(
+        settledRecordsAcrossAttempts(settled.bucks, standing),
+      );
       return {
         fact: await recordMatchReceiptV2({
           matchId: input.riotMatchId,
           kind: MATCH_RECEIPT_KINDS.settlement,
-          evidence: settlementEvidenceCodec.serialize(evidence),
+          evidence: settlementEvidenceCodec.serialize(attested),
         }),
-        effects: settledRecordCount(evidence),
+        effects: settledRecordCount(attested),
       };
     },
   });
