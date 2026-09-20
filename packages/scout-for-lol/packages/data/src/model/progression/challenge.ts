@@ -7,12 +7,13 @@ import type {
   ChallengeEvidenceMatch,
   ChallengeProgress,
 } from "#src/model/progression/challenge-public.ts";
-import { validateDistinctGoal } from "#src/model/progression/challenge-refinements.ts";
+import {
+  validateContractComplexity,
+  validateDistinctGoal,
+} from "#src/model/progression/challenge-refinements.ts";
 
 export const CHALLENGE_CONTRACT_VERSION = 1;
 export const CHALLENGE_EVALUATOR_VERSION = "challenge-evaluator-1" as const;
-const MAX_CHALLENGE_DEPTH = 12;
-const MAX_CHALLENGE_NODES = 80;
 
 export const ChallengeComparisonOperatorSchema = z.enum([
   "eq",
@@ -185,38 +186,6 @@ export const ChallengeProgressGoalSchema: z.ZodType<ChallengeProgressGoal> =
     ]),
   );
 
-type ContractComplexity = { nodes: number; depth: number };
-
-function predicateComplexity(
-  predicate: ChallengeMatchPredicate,
-): ContractComplexity {
-  if (predicate.kind === "not") {
-    const child = predicateComplexity(predicate.predicate);
-    return { nodes: child.nodes + 1, depth: child.depth + 1 };
-  }
-  if (predicate.kind === "all" || predicate.kind === "any") {
-    const children = predicate.predicates.map((child) =>
-      predicateComplexity(child),
-    );
-    return {
-      nodes: 1 + children.reduce((total, child) => total + child.nodes, 0),
-      depth: 1 + Math.max(...children.map((child) => child.depth)),
-    };
-  }
-  return { nodes: 1, depth: 1 };
-}
-
-function goalComplexity(goal: ChallengeProgressGoal): ContractComplexity {
-  if (goal.kind === "all" || goal.kind === "any") {
-    const children = goal.goals.map((child) => goalComplexity(child));
-    return {
-      nodes: 1 + children.reduce((total, child) => total + child.nodes, 0),
-      depth: 1 + Math.max(...children.map((child) => child.depth)),
-    };
-  }
-  return { nodes: 1, depth: 1 };
-}
-
 export const ChallengeContractV1Schema = z
   .strictObject({
     version: z.literal(CHALLENGE_CONTRACT_VERSION),
@@ -227,22 +196,7 @@ export const ChallengeContractV1Schema = z
     matchPredicate: ChallengeMatchPredicateSchema,
     progressGoal: ChallengeProgressGoalSchema,
   })
-  .superRefine((contract, context) => {
-    const predicate = predicateComplexity(contract.matchPredicate);
-    const goal = goalComplexity(contract.progressGoal);
-    if (predicate.nodes + goal.nodes > MAX_CHALLENGE_NODES) {
-      context.addIssue({
-        code: "custom",
-        message: `Challenge contracts may contain at most ${MAX_CHALLENGE_NODES.toString()} nodes`,
-      });
-    }
-    if (Math.max(predicate.depth, goal.depth) > MAX_CHALLENGE_DEPTH) {
-      context.addIssue({
-        code: "custom",
-        message: `Challenge contracts may be at most ${MAX_CHALLENGE_DEPTH.toString()} levels deep`,
-      });
-    }
-  });
+  .superRefine(validateContractComplexity);
 export type ChallengeContractV1 = z.infer<typeof ChallengeContractV1Schema>;
 
 function compare(
@@ -266,15 +220,35 @@ function compare(
   }
 }
 
+function predicateMatchesAny(
+  predicate: ChallengeMatchPredicate,
+  test: (predicate: ChallengeMatchPredicate) => boolean,
+): boolean {
+  if (test(predicate)) return true;
+  if (predicate.kind === "not") {
+    return predicateMatchesAny(predicate.predicate, test);
+  }
+  return (
+    (predicate.kind === "all" || predicate.kind === "any") &&
+    predicate.predicates.some((child) => predicateMatchesAny(child, test))
+  );
+}
+
 export function challengeNeedsTimeline(
   predicate: ChallengeMatchPredicate,
 ): boolean {
-  if (predicate.kind === "timeline_event_count") return true;
-  if (predicate.kind === "not")
-    return challengeNeedsTimeline(predicate.predicate);
-  return (
-    (predicate.kind === "all" || predicate.kind === "any") &&
-    predicate.predicates.some((child) => challengeNeedsTimeline(child))
+  return predicateMatchesAny(
+    predicate,
+    (child) => child.kind === "timeline_event_count",
+  );
+}
+
+export function challengeNeedsPlacement(
+  predicate: ChallengeMatchPredicate,
+): boolean {
+  return predicateMatchesAny(
+    predicate,
+    (child) => child.kind === "numeric" && child.field === "placement",
   );
 }
 
@@ -314,6 +288,12 @@ export function evaluateChallengePredicate(
         evaluateChallengePredicate(child, match),
       );
     case "not":
+      if (
+        match.placement === null &&
+        challengeNeedsPlacement(predicate.predicate)
+      ) {
+        return false;
+      }
       return !evaluateChallengePredicate(predicate.predicate, match);
   }
 }

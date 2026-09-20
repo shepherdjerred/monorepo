@@ -3,7 +3,9 @@ import {
   CHALLENGE_CONTRACT_VERSION,
   CHALLENGE_EVALUATOR_VERSION,
   ChallengeContractV1Schema,
+  challengeNeedsPlacement,
   evaluateChallengeContract,
+  evaluateChallengePredicate,
   freezeChallengeCatalogs,
   type ChallengeMatchPredicate,
 } from "./challenge.ts";
@@ -150,7 +152,9 @@ describe("community challenge contracts", () => {
       expect(first.progress.covered[0]?.value).toBe("1");
     }
   });
+});
 
+describe("challenge goal evaluation and validation", () => {
   test("evaluates count, sum, maximum, streak, distinct, and boolean goals", () => {
     const contract = ChallengeContractV1Schema.parse({
       version: CHALLENGE_CONTRACT_VERSION,
@@ -220,6 +224,85 @@ describe("community challenge contracts", () => {
     });
     expect(result.progress.completed).toBe(false);
     expect(result.coverage.missingTimelineEvidence).toBe(1);
+  });
+
+  test("does not let negation turn missing placement into progress", () => {
+    const soloMatch = evidence({
+      id: "1",
+      championId: 1,
+      win: true,
+      queue: "solo",
+      placement: null,
+    });
+    const arenaTop3 = evidence({
+      id: "2",
+      championId: 1,
+      win: true,
+      queue: "arena",
+      placement: 2,
+    });
+    const arenaBottom = evidence({
+      id: "3",
+      championId: 1,
+      win: false,
+      queue: "arena",
+      placement: 5,
+    });
+
+    const notPlacementLte3: ChallengeMatchPredicate = {
+      kind: "not",
+      predicate: {
+        kind: "numeric",
+        field: "placement",
+        operator: "lte",
+        threshold: 3,
+      },
+    };
+
+    expect(challengeNeedsPlacement(notPlacementLte3)).toBe(true);
+    expect(evaluateChallengePredicate(notPlacementLte3, soloMatch)).toBe(false);
+    expect(evaluateChallengePredicate(notPlacementLte3, arenaTop3)).toBe(false);
+    expect(evaluateChallengePredicate(notPlacementLte3, arenaBottom)).toBe(
+      true,
+    );
+
+    const allSoloNotPlacementGt3: ChallengeMatchPredicate = {
+      kind: "all",
+      predicates: [
+        { kind: "queue_in", queues: ["solo"] },
+        {
+          kind: "not",
+          predicate: {
+            kind: "numeric",
+            field: "placement",
+            operator: "gt",
+            threshold: 3,
+          },
+        },
+      ],
+    };
+    expect(evaluateChallengePredicate(allSoloNotPlacementGt3, soloMatch)).toBe(
+      false,
+    );
+
+    const anySoloNotPlacementGt3: ChallengeMatchPredicate = {
+      kind: "any",
+      predicates: [
+        { kind: "queue_in", queues: ["solo"] },
+        {
+          kind: "not",
+          predicate: {
+            kind: "numeric",
+            field: "placement",
+            operator: "gt",
+            threshold: 3,
+          },
+        },
+      ],
+    };
+    expect(evaluateChallengePredicate(anySoloNotPlacementGt3, soloMatch)).toBe(
+      true,
+    );
   });
 
   test("rejects duplicate and incompatible distinct coverage selectors", () => {
