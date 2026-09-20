@@ -1,40 +1,28 @@
 import { describe, expect, test } from "vitest";
-import { createAiProviderDashboard } from "./ai/ai-provider-dashboard.ts";
-import { createAlertDashboardGrafanaDashboard } from "./alert-dashboard.ts";
-import { createBuildkiteDashboard } from "./buildkite/buildkite-dashboard.ts";
-import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
-import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
-import { createScoutDashboard } from "./scout/scout-dashboard.ts";
-import { createScoutDurableDashboard } from "./scout/scout-durable-dashboard.ts";
-import { createSmartctlDashboard } from "./storage/smartctl-dashboard.ts";
-import { createTasknotesDashboard } from "./tasknotes-dashboard.ts";
-import { createTemporalDashboard } from "./temporal/temporal-dashboard.ts";
-import { createStreambotVoiceDashboard } from "./streambot/streambot-voice-dashboard.ts";
-import { createVeleroDashboard } from "./storage/velero-dashboard.ts";
-import { createZfsDashboard } from "./storage/zfs-dashboard.ts";
+import { ALL_DASHBOARDS } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
 
-const dashboardJson = [
-  createAiProviderDashboard(),
-  // Unlike the other create*Dashboard functions here, this one deliberately
-  // returns the raw builder (exportAlertDashboardJson calls .build() itself);
-  // build it explicitly so this array holds Dashboard objects consistently.
-  createAlertDashboardGrafanaDashboard().build(),
-  createBuildkiteDashboard(),
-  createBuildkitdDashboard(),
-  createDiscordPlaysDashboard(),
-  createScoutDashboard(),
-  createScoutDurableDashboard(),
-  createSmartctlDashboard(),
-  createTasknotesDashboard(),
-  createTemporalDashboard(),
-  createStreambotVoiceDashboard(),
-  createVeleroDashboard(),
-  createZfsDashboard(),
-]
-  .map((dashboard) => JSON.stringify(dashboard))
-  .join("\n");
+// Derived from the shipped dashboard inventory instead of a hand-kept list. A
+// dashboard added to ALL_DASHBOARDS is covered by every check below without
+// anyone remembering to edit this file, and the text checked is each
+// dashboard's exported JSON - the bytes the Grafana sidecar provisions.
+const dashboardJson = ALL_DASHBOARDS.map((dashboard) =>
+  dashboard.exportFn(),
+).join("\n");
 
 describe("dashboard query health", () => {
+  test("reads every dashboard in the shipped inventory", () => {
+    // Every other check here is a deny-list over `dashboardJson`, and a
+    // deny-list is only as strong as the text it reads. If the inventory ever
+    // stopped yielding dashboards, those checks would all pass while covering
+    // nothing, so the coverage itself is asserted before anything is denied.
+    expect(ALL_DASHBOARDS.length).toBeGreaterThan(0);
+    for (const dashboard of ALL_DASHBOARDS) {
+      const exported = dashboard.exportFn();
+      expect(exported).toContain('"title"');
+      expect(dashboardJson).toContain(exported);
+    }
+  });
+
   test("does not contain known-invalid PromQL patterns", () => {
     expect(dashboardJson).not.toContain(
       "sum without(pod, instance, container, endpoint) by",
