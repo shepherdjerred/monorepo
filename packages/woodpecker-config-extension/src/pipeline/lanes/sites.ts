@@ -1,7 +1,11 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
-import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
+import {
+  DEPLOY_KEYS,
+  GITHUB_DOWNLOAD,
+  grant,
+} from "#src/pipeline/lanes/tofu.ts";
 
 /**
  * Static site deploys and package publishing.
@@ -19,11 +23,6 @@ import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
  */
 
 const SITE_DEPLOY_GROUP = { limit: 1, group: "site-deploys" } as const;
-
-const DEPLOY_KEYS: readonly SecretGrant[] = [
-  grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"),
-  grant("ci-seaweedfs-credentials", "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"),
-];
 
 /**
  * Site syncs use the deployment identity; the OpenTofu lanes use a separate
