@@ -7,6 +7,7 @@ import {
   TOFU_PLUGIN_CACHE,
   grant,
   HANDOFF_KEYS,
+  STACK_SECRETS,
 } from "#src/pipeline/lanes/tofu.ts";
 
 /**
@@ -240,18 +241,9 @@ function chainedTofuApplies(images: CiImages): CiStep[] {
     {
       stack: "arr",
       dependsOn: ["tofu-apply-tailscale"],
-      secrets: [
-        grant("ci-arr-credentials", "RADARR_API_KEY"),
-        grant("ci-arr-credentials", "SONARR_API_KEY"),
-        grant("ci-arr-credentials", "PROWLARR_API_KEY"),
-        grant("ci-arr-credentials", "QBITTORRENT_PASSWORD"),
-        grant("ci-arr-credentials", "PRIVATEHD_PASSWORD"),
-        grant("ci-arr-credentials", "PRIVATEHD_PID"),
-        grant("ci-arr-credentials", "AVISTAZ_PASSWORD"),
-        grant("ci-arr-credentials", "AVISTAZ_PID"),
-        grant("ci-arr-credentials", "ANIMEZ_PASSWORD"),
-        grant("ci-arr-credentials", "ANIMEZ_PID"),
-      ],
+      // Same grants the plan lane used. Two copies would let an apply run
+      // with a credential its plan never saw.
+      secrets: [...(STACK_SECRETS["arr"] ?? [])],
     },
     {
       stack: "cloudflare",

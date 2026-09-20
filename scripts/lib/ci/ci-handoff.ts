@@ -15,7 +15,7 @@
 
 import { createSignedS3Request } from "@shepherdjerred/s3-signed-request";
 import { requireEnv } from "../run.ts";
-import { SEAWEEDFS_ENDPOINT } from "../s3-static-site.ts";
+import { SEAWEEDFS_ENDPOINT } from "../seaweedfs.ts";
 
 export const CI_HANDOFF_BUCKET = "ci-handoff";
 

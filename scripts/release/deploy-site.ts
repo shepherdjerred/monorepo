@@ -18,11 +18,8 @@
  */
 
 import { run, requireEnv, optionalEnv } from "../lib/run.ts";
-import {
-  s3SyncStaticSite,
-  SEAWEEDFS_ENDPOINT,
-  SEAWEEDFS_AWS_ENV,
-} from "../lib/s3-static-site.ts";
+import { s3SyncStaticSite } from "../lib/s3-static-site.ts";
+import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
 
 // ---------------------------------------------------------------------------
 // Static site deploy catalog (translated verbatim from DEPLOY_SITES)

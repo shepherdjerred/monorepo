@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { sha256 } from "./homelab-audit-digest.ts";
 import type {
   ReportCheckV1,
   ReportEvidenceReceiptV1,
@@ -63,16 +64,6 @@ const EVIDENCE_ID = "ci-main-evidence";
 const CHECK_ID = "ci-main";
 const CHECK_LABEL = "CI main pipelines";
 const SOURCE = "Woodpecker REST API";
-
-async function sha256(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value),
-  );
-  return [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function requiredEnv(name: string): string {
   const value = Bun.env[name];

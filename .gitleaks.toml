@@ -51,6 +51,9 @@ paths = [
   '''/dist/''',
   '''/target/''',
   '''\.turbo/''',
+  # Storybook's bundled output; `e.key,n=...` in a minified chunk reads as a
+  # generic API key.
+  '''storybook-static/''',
   '''\.venv/''',
   '''\.moon/''',
   # Scout test/runtime logs are gitignored outputs and may be written while the

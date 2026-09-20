@@ -378,6 +378,49 @@ function reportMetrics(): PrometheusIoMetrics {
   return metrics;
 }
 
+const METADATA_POD = "wp-01hcd83q7be5ymh89k5accn3k6-0-step-0";
+
+/**
+ * A Prometheus client answering every CI I/O query with one labelled series.
+ *
+ * The flattened label names are spelled out rather than imported: they are the
+ * contract between the emitter, the kube-state-metrics allowlist, and the
+ * recording rules, so a rename in any of them should fail a test rather than
+ * quietly empty a join.
+ */
+function recordingClient(device: string | undefined): PrometheusClientConfig {
+  const labels = {
+    pod: METADATA_POD,
+    node: "torvalds",
+    ...(device === undefined ? {} : { device }),
+    label_ci_sjer_red_commit: COMMITS.a,
+    label_ci_sjer_red_step_key: "fixture",
+    annotation_ci_sjer_red_branch: "feature/io",
+    annotation_ci_sjer_red_pipeline_url: `https://github.com/shepherdjerred/monorepo/commit/${COMMITS.a}`,
+  };
+  return {
+    apiBaseUrl: "http://prometheus:9090/",
+    fetcher: (url) => {
+      const query = new URL(url).searchParams.get("query") ?? "";
+      // The timestamp probe reads raw cAdvisor, which carries no joined
+      // metadata; everything else reads a recording rule, which does.
+      const metric = query.includes("container_network_")
+        ? { pod: METADATA_POD, node: "torvalds", interface: "eth0" }
+        : query.includes("timestamp(")
+          ? { pod: METADATA_POD, node: "torvalds" }
+          : query.includes('container!=""')
+            ? { ...labels, container: "container-0" }
+            : labels;
+      return Promise.resolve(
+        Response.json({
+          status: "success",
+          data: { resultType: "vector", result: [{ metric, value: [1, "1"] }] },
+        }),
+      );
+    },
+  };
+}
+
 describe("Prometheus query contract", () => {
   test("reads writes from the enriched recording rules", () => {
     const queries = buildIoQueries(WINDOW);
@@ -420,77 +463,23 @@ describe("Prometheus query contract", () => {
   // kube-state-metrics allowlist, and the recording rules. Spelled out here so
   // a rename in any of them fails a test rather than emptying a join.
   test("preserves recording-rule devices and enriched metadata", async () => {
-    const labels = {
-      pod: "wp-01hcd83q7be5ymh89k5accn3k6-0-step-0",
-      node: "torvalds",
-      device: "/dev/nvme0n1",
-      label_ci_sjer_red_commit: COMMITS.a,
-      label_ci_sjer_red_step_key: "fixture",
-      annotation_ci_sjer_red_branch: "feature/io",
-      annotation_ci_sjer_red_pipeline_url: `https://github.com/shepherdjerred/monorepo/commit/${COMMITS.a}`,
-    };
-    const client: PrometheusClientConfig = {
-      apiBaseUrl: "http://prometheus:9090/",
-      fetcher: (url) => {
-        const query = new URL(url).searchParams.get("query") ?? "";
-        const metric = query.includes("container_network_")
-          ? { pod: labels.pod, node: labels.node, interface: "eth0" }
-          : query.includes("woodpecker:container_fs_writes_bytes_total")
-            ? { ...labels, container: "container-0" }
-            : labels;
-        return Promise.resolve(
-          Response.json({
-            status: "success",
-            data: {
-              resultType: "vector",
-              result: [{ metric, value: [1, "1"] }],
-            },
-          }),
-        );
-      },
-    };
-
-    const metrics = await fetchPrometheusIoMetrics({ client, window: WINDOW });
+    const metrics = await fetchPrometheusIoMetrics({
+      client: recordingClient("/dev/nvme0n1"),
+      window: WINDOW,
+    });
     expect(metrics.parentMax[0]?.device).toBe("/dev/nvme0n1");
     expect(metrics.parentMax[0]?.metadata?.stepKey).toBe("fixture");
     expect(metrics.parentMax[0]?.metadata?.jobId).toBe(IDS.long);
     expect(metrics.childMax[0]?.device).toBe("/dev/nvme0n1");
   });
 
+  // cAdvisor omits `device` for pseudo-filesystems. Absence is part of the
+  // series identity, so it must survive rather than become an invented name.
   test("preserves cAdvisor series whose device label is absent", async () => {
-    const pod = "wp-01hcd83q7be5ymh89k5accn3k6-0-step-0";
-    const labels = {
-      pod,
-      node: "torvalds",
-      label_ci_sjer_red_commit: COMMITS.a,
-      label_ci_sjer_red_step_key: "fixture",
-      annotation_ci_sjer_red_branch: "feature/io",
-      annotation_ci_sjer_red_pipeline_url: `https://github.com/shepherdjerred/monorepo/commit/${COMMITS.a}`,
-    };
-    const client: PrometheusClientConfig = {
-      apiBaseUrl: "http://prometheus:9090/",
-      fetcher: (url) => {
-        const query = new URL(url).searchParams.get("query") ?? "";
-        const metric = query.includes("container_network_")
-          ? { pod, node: "torvalds", interface: "eth0" }
-          : query.includes("timestamp(")
-            ? { pod, node: "torvalds" }
-            : query.includes('container!=""')
-              ? { ...labels, container: "container-0" }
-              : labels;
-        return Promise.resolve(
-          Response.json({
-            status: "success",
-            data: {
-              resultType: "vector",
-              result: [{ metric, value: [1, "1"] }],
-            },
-          }),
-        );
-      },
-    };
-
-    const metrics = await fetchPrometheusIoMetrics({ client, window: WINDOW });
+    const metrics = await fetchPrometheusIoMetrics({
+      client: recordingClient(undefined),
+      window: WINDOW,
+    });
     expect(metrics.parentMax[0]?.device).toBeNull();
     expect(metrics.childMax[0]?.device).toBeNull();
     expect(aggregatePodMetrics(metrics)[0]?.writeBytes).toBe(1);

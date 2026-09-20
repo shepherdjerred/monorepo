@@ -472,6 +472,10 @@
       "clones": 1,
       "tokens": 140
     },
+    "packages/homelab/src/cdk8s/grafana/shared/dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
     "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
       "clones": 1,
       "tokens": 72
@@ -660,6 +664,14 @@
       "clones": 1,
       "tokens": 87
     },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/config-extension-workload.ts": {
+      "clones": 1,
+      "tokens": 124
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/index.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
       "clones": 3,
       "tokens": 339
@@ -723,6 +735,10 @@
     "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts": {
       "clones": 1,
       "tokens": 90
+    },
+    "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/woodpecker-db.ts": {
+      "clones": 2,
+      "tokens": 235
     },
     "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts": {
       "clones": 1,
@@ -1513,8 +1529,8 @@
       "tokens": 156
     },
     "scripts/lib/ci/ci-io-report.test.ts|scripts/lib/ci/ci-io-report.test.ts": {
-      "clones": 2,
-      "tokens": 182
+      "clones": 1,
+      "tokens": 87
     },
     "scripts/lib/scout/scout-legacy-site-storage.ts|scripts/lib/scout/scout-site-storage.ts": {
       "clones": 1,

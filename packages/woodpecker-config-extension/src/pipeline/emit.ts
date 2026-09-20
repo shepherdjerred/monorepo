@@ -46,10 +46,10 @@ const STEP_SERVICE_ACCOUNT = "woodpecker-job";
  * `annotation_ci_sjer_red_branch`). Changing one without the others silently
  * empties the join.
  */
-export const POD_STEP_KEY_LABEL = "ci.sjer.red/step-key";
-export const POD_COMMIT_LABEL = "ci.sjer.red/commit";
-export const POD_BRANCH_ANNOTATION = "ci.sjer.red/branch";
-export const POD_PIPELINE_URL_ANNOTATION = "ci.sjer.red/pipeline-url";
+const POD_STEP_KEY_LABEL = "ci.sjer.red/step-key";
+const POD_COMMIT_LABEL = "ci.sjer.red/commit";
+const POD_BRANCH_ANNOTATION = "ci.sjer.red/branch";
+const POD_PIPELINE_URL_ANNOTATION = "ci.sjer.red/pipeline-url";
 
 /** Identity of the pipeline being generated, stamped onto every step pod. */
 export type PipelineIdentity = {

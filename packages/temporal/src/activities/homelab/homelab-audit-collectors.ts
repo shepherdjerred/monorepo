@@ -16,6 +16,7 @@ import {
   interpretKubernetesWorkloads,
   KubernetesWorkloadListSchema,
 } from "./homelab-audit-kubernetes.ts";
+import { sha256 } from "./homelab-audit-digest.ts";
 
 export const PrometheusResultSchema = z.object({
   status: z.literal("success"),
@@ -77,16 +78,6 @@ type CollectorResult = {
   findings: Finding[];
   limitation: string | undefined;
 };
-
-async function sha256(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value),
-  );
-  return [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 async function runCommand(args: string[]): Promise<string> {
   const process = Bun.spawn(args, {

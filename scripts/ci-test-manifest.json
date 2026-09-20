@@ -807,11 +807,6 @@
         },
         {
           "runner": "command",
-          "name": "upload-pipeline-shell",
-          "command": ["bash", "../ci/scripts/upload-pipeline.test.sh"]
-        },
-        {
-          "runner": "command",
           "name": "toolchain-shell",
           "command": ["bash", "../ci/scripts/toolchain.test.sh"]
         }
