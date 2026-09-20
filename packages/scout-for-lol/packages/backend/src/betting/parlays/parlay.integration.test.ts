@@ -23,7 +23,11 @@ import {
 import { placeParlayBet } from "#src/betting/parlays/runtime/parlay-place-bet.ts";
 import { activatePendingParlayMarkets } from "#src/betting/parlays/runtime/parlay-publish.ts";
 import { settleParlaysForMatch } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import { announcingSettlementSink } from "#src/betting/notify/announcement-sink.ts";
+import {
+  announcingSettlementSink,
+  SettlementCheckpointError,
+} from "#src/betting/notify/announcement-sink.ts";
+import { checkpointFailingSink } from "#src/betting/notify/announcement-sink.test-fixtures.ts";
 import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
@@ -642,6 +646,37 @@ describe("the announcement instruction a parlay settlement records", () => {
         where: { riotMatchId: MATCH_ID },
       }),
     ).toEqual([]);
+  });
+
+  test("a checkpoint failure escapes rather than costing one guild quietly", async () => {
+    // The handler exists so one guild's broken market cannot cost every
+    // other guild its settlement. A checkpoint failure is not that: the
+    // market rolled back AND this settlement never became recoverable, so
+    // absorbing it lets the caller record a receipt over bettors who were
+    // never paid.
+    await makeMarket();
+    const placed = await place("YES", 5);
+    expect(placed.kind).toBe("placed");
+
+    await expect(
+      settleParlaysForMatch(fixture, db, checkpointFailingSink()),
+    ).rejects.toBeInstanceOf(SettlementCheckpointError);
+  });
+
+  test("an ordinary market failure is still absorbed, one guild at a time", async () => {
+    // The exemption is narrow. Anything that is NOT a checkpoint failure
+    // keeps the per-market isolation this handler was written for.
+    await makeMarket();
+    const placed = await place("YES", 5);
+    expect(placed.kind).toBe("placed");
+
+    await expect(
+      settleParlaysForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: () =>
+          Promise.reject(new Error("an ordinary market failure")),
+      }),
+    ).resolves.toEqual([]);
   });
 
   test("a settled market always leaves its instruction behind", async () => {

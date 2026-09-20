@@ -336,57 +336,6 @@ const ClosedPoolSchema = z.strictObject({
   positions: z.array(ClosedPositionSchema),
 }) satisfies z.ZodType<ClosedPool>;
 
-/**
- * The items one settlement produced, each ready to be recorded on its own.
- *
- * One entry per thing that committed separately, because that is the unit the
- * checkpoint has to survive at: a match whose third Dare fails after two
- * settled keeps those two. Earnings are keyed by guild for the same reason the
- * fold filters them by guild — a guild's awards are only that guild's business.
- */
-export function settlementAnnouncementItemsOf(input: {
-  closures: readonly ClosedPool[];
-  settlements: readonly SettlementSummary[];
-  parlaySettlements: readonly ParlaySettlementSummary[];
-  earnings: readonly EarnedAward[];
-  dareSettlements: readonly DareSettlementSummary[];
-}): readonly SettlementAnnouncementItem[] {
-  const earningsByGuild = new Map<string, EarnedAward[]>();
-  for (const award of input.earnings) {
-    earningsByGuild.set(award.serverId, [
-      ...(earningsByGuild.get(award.serverId) ?? []),
-      award,
-    ]);
-  }
-  return [
-    ...input.closures.map((closure) => ({
-      family: "closure" as const,
-      itemKey: closure.serverId,
-      payload: closure,
-    })),
-    ...input.settlements.map((settlement) => ({
-      family: "settlement" as const,
-      itemKey: settlement.serverId,
-      payload: settlement,
-    })),
-    ...input.parlaySettlements.map((parlay) => ({
-      family: "parlay" as const,
-      itemKey: parlay.serverId,
-      payload: parlay,
-    })),
-    ...[...earningsByGuild].map(([serverId, awards]) => ({
-      family: "earnings" as const,
-      itemKey: serverId,
-      payload: awards,
-    })),
-    ...input.dareSettlements.map((dare) => ({
-      family: "dare-summary" as const,
-      itemKey: String(dare.dareId),
-      payload: dare,
-    })),
-  ];
-}
-
 function payloadsOfFamily(
   items: readonly SettlementAnnouncementItem[],
   family: SettlementAnnouncementFamily,

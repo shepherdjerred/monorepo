@@ -35,6 +35,7 @@ import type {
 import { settlePosition } from "#src/betting/parlays/runtime/parlay-settle-positions.ts";
 import {
   announcingSettlementSink,
+  checkpointFailureIn,
   recordAnnouncement,
   type SettlementAnnouncementSink,
 } from "#src/betting/notify/announcement-sink.ts";
@@ -408,6 +409,13 @@ export async function settleParlaysForMatch(
         }
       }
     } catch (error) {
+      if (checkpointFailureIn(error) !== undefined) throw error;
+      // The exemption this handler must not extend to. It was written so one
+      // guild's broken market could not cost every other guild its
+      // settlement, and it answers by logging and continuing. A checkpoint
+      // failure is a different class: the market rolled back AND this
+      // match's settlement never became recoverable, so absorbing it lets
+      // the caller record a receipt over bettors who were never paid.
       logger.error(
         `Could not settle Bryan Bucks parlay ${matchId} in guild ${market.serverId}:`,
         error,

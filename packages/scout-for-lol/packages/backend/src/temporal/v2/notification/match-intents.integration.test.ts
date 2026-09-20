@@ -91,13 +91,12 @@ const { observeMatch, getObservation } =
 const { listIntentsForMatch, upsertIntent } =
   await import("#src/database/durable/intent-repository.ts");
 const { planMatchFanOutV2 } = await import("#src/temporal/v2/match-reads.ts");
-const {
-  recoveredAnnouncementsOf,
-  settlementAnnouncementInputs,
-  settlementAnnouncementItemsOf,
-} = await import("#src/temporal/v2/notification/match-intents.ts");
+const { recoveredAnnouncementsOf, settlementAnnouncementInputs } =
+  await import("#src/temporal/v2/notification/match-intents.ts");
 const { listSettlementAnnouncementItems, recordSettlementAnnouncementItem } =
   await import("#src/database/durable/settlement-announcement-repository.ts");
+const { settlementAnnouncementItemsOf } =
+  await import("#src/temporal/v2/notification/match-intents.test-fixtures.ts");
 
 const GAME_CREATED_AT = Date.parse("2026-09-19T09:00:00.000Z");
 
