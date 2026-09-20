@@ -2,6 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import { readClashHistoryForGuild } from "#src/league/clash/history.ts";
 import {
   readClashRosterForGuild,
   readClashSchedule,
@@ -62,6 +63,35 @@ export function createClashExploreTools(options: {
                 ? "No tracked player in this guild is registered in the current Clash snapshot."
                 : "Registered Clash teams among tracked players. There is no bracket or win/loss.",
             data: teams,
+          };
+        }),
+    }),
+    get_clash_history: tool({
+      description:
+        "List Clash lobbies Scout saw for tracked players in a guild, grouped by cup. Current weekends are lobby-only. Finished scores exist only through February 2026. Load the clash skill first.",
+      inputSchema: z.strictObject({
+        guildId: DiscordGuildIdSchema.describe(
+          "Discord guild id whose tracked Clash history should be listed",
+        ),
+      }),
+      outputSchema: ClashToolResultSchema,
+      execute: (input) =>
+        options.track("get_clash_history", async () => {
+          if (!options.guildIds.includes(input.guildId)) {
+            return {
+              kind: "clash_history",
+              message: "That guild is not in this conversation's scope.",
+              data: [],
+            };
+          }
+          const cups = await readClashHistoryForGuild(input.guildId);
+          return {
+            kind: "clash_history",
+            message:
+              cups.length === 0
+                ? "No past Clash lobbies for tracked players in this guild yet."
+                : "Clash cups Scout saw. Match numbers are lobby order that weekend, not a bracket. Scores appear only on games through February 2026.",
+            data: cups,
           };
         }),
     }),

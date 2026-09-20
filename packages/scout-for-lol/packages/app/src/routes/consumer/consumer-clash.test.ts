@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
   formatClashInstant,
+  formatClashIso,
   phaseLabel,
+  sightingOutcomeLabel,
   titleCaseToken,
 } from "#src/routes/consumer/consumer-clash-copy.ts";
 
@@ -52,5 +54,12 @@ describe("Clash copy helpers", () => {
         now: registrationTime - 1,
       }),
     ).toBe("Upcoming");
+  });
+
+  test("formats Clash ISO instants and labels lobby versus scored leftovers", () => {
+    expect(formatClashIso("not-a-date")).toBe("—");
+    expect(sightingOutcomeLabel("lobby")).toBe("Lobby only");
+    expect(sightingOutcomeLabel("win")).toBe("Win · scored through Feb 2026");
+    expect(sightingOutcomeLabel("loss")).toBe("Loss · scored through Feb 2026");
   });
 });

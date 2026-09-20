@@ -7,12 +7,15 @@ import {
   type PlatformRoute,
   type RawClashPlayer,
   type RawClashTeam,
+  type RawClashTournament,
   type Region,
 } from "@scout-for-lol/data";
 import { riotClient } from "#src/league/api/api.ts";
 import { extractHttpStatus } from "#src/league/api/client/errors.ts";
 import { prisma } from "#src/database/index.ts";
 import { clashSnapshotShouldRun } from "#src/league/clash/access.ts";
+import { archiveClashMembership } from "#src/league/clash/history.ts";
+import { backfillClashSightingsFromLake } from "#src/league/clash/backfill.ts";
 import {
   deleteOrphanClashTeams,
   replacePlatformTournaments,
@@ -48,12 +51,16 @@ export async function runClashSnapshot(): Promise<void> {
   const platforms = [...new Set(accounts.map((account) => account.platform))];
   const fetchedAt = new Date();
   const pollPlayersByPlatform = new Map<PlatformRoute, boolean>();
+  const tournamentsByKey = new Map<string, RawClashTournament>();
 
   for (const platform of platforms.toSorted((left, right) =>
     left.localeCompare(right),
   )) {
     const tournaments = await riotClient.clash.tournaments(platform);
     await replacePlatformTournaments({ platform, tournaments, fetchedAt });
+    for (const tournament of tournaments) {
+      tournamentsByKey.set(`${platform}:${String(tournament.id)}`, tournament);
+    }
     pollPlayersByPlatform.set(
       platform,
       tournaments.some((tournament) =>
@@ -64,8 +71,9 @@ export async function runClashSnapshot(): Promise<void> {
 
   const pending = await pollRegisteredPlayers(accounts, pollPlayersByPlatform);
   const teams = await refreshRegisteredTeams(pending, fetchedAt);
-  await writePendingRegistrations(pending, teams, fetchedAt);
+  await writePendingRegistrations(pending, teams, tournamentsByKey, fetchedAt);
   await deleteOrphanClashTeams();
+  await backfillClashSightingsFromLake();
 }
 
 async function pollRegisteredPlayers(
@@ -96,6 +104,9 @@ async function refreshRegisteredTeams(
   >();
   for (const { account, players } of pending) {
     for (const player of players) {
+      if (player.teamId === undefined) {
+        continue;
+      }
       teamKeys.set(`${account.platform}:${player.teamId}`, {
         platform: account.platform,
         teamId: player.teamId,
@@ -117,14 +128,33 @@ async function refreshRegisteredTeams(
 async function writePendingRegistrations(
   pending: readonly PendingClashPoll[],
   teams: ReadonlyMap<string, RawClashTeam>,
+  tournamentsByKey: ReadonlyMap<string, RawClashTournament>,
   fetchedAt: Date,
 ): Promise<void> {
   for (const { account, players } of pending) {
     const registrations = [];
     for (const player of players) {
+      if (player.teamId === undefined) {
+        continue;
+      }
       const team = teams.get(`${account.platform}:${player.teamId}`);
       if (team === undefined) {
         continue;
+      }
+      const tournament = tournamentsByKey.get(
+        `${account.platform}:${String(team.tournamentId)}`,
+      );
+      if (tournament !== undefined) {
+        await archiveClashMembership({
+          puuid: account.puuid,
+          region: account.region,
+          platform: account.platform,
+          team,
+          tournament,
+          position: player.position,
+          role: player.role,
+          seenAt: fetchedAt,
+        });
       }
       registrations.push({
         teamId: player.teamId,

@@ -34,6 +34,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   debug: false,
   duels_enabled: false,
   explore_creation_enabled: false,
+  explore_on_demand_riot_enabled: false,
   feature_tips_enabled: false,
   hall_of_fame_enabled: false,
   mvp_votes_enabled: false,

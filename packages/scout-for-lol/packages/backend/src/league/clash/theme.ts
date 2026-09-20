@@ -42,3 +42,33 @@ export function isClashPlayerPollWindow(
     return nowMs <= start + WEEK_MS;
   });
 }
+
+export function clashScheduleSightingWindow(
+  schedule: readonly {
+    registrationTime: number;
+    startTime: number;
+    cancelled: boolean;
+  }[],
+): { startMs: number; endMs: number } | undefined {
+  let startMs: number | undefined;
+  let endMs: number | undefined;
+  for (const phase of schedule) {
+    if (phase.cancelled) {
+      continue;
+    }
+    const start = toClashEpochMs(phase.startTime);
+    if (start === 0) {
+      continue;
+    }
+    const registration = toClashEpochMs(phase.registrationTime);
+    const windowStart = registration > 0 ? registration : start;
+    const windowEnd = start + WEEK_MS;
+    startMs =
+      startMs === undefined ? windowStart : Math.min(startMs, windowStart);
+    endMs = endMs === undefined ? windowEnd : Math.max(endMs, windowEnd);
+  }
+  if (startMs === undefined || endMs === undefined) {
+    return undefined;
+  }
+  return { startMs, endMs };
+}

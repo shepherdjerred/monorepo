@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  clashScheduleSightingWindow,
   formatClashThemeLabel,
   isClashPlayerPollWindow,
   toClashEpochMs,
@@ -61,6 +62,24 @@ describe("isClashPlayerPollWindow", () => {
         start,
       ),
     ).toBe(false);
+  });
+});
+
+describe("clashScheduleSightingWindow", () => {
+  test("spans registration through a week after start", () => {
+    const start = 1_779_100_000_000;
+    const registration = start - 3 * 24 * 60 * 60 * 1000;
+    const window = clashScheduleSightingWindow([
+      {
+        registrationTime: registration,
+        startTime: start,
+        cancelled: false,
+      },
+    ]);
+    expect(window).toEqual({
+      startMs: registration,
+      endMs: start + 7 * 24 * 60 * 60 * 1000,
+    });
   });
 });
 

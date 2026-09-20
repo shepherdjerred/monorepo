@@ -27,7 +27,11 @@ export const RawClashPlayerSchema = z.strictObject({
   puuid: z.string().min(1).optional(),
   /** Legacy identity; TeamDTO.captain still uses this on some shards. */
   summonerId: z.string().min(1).optional(),
-  teamId: z.string().min(1),
+  /**
+   * Set on `GET players/by-puuid`. Nested `TeamDTO.players` omit it because
+   * the team id is the parent resource.
+   */
+  teamId: z.string().min(1).optional(),
   position: ClashPositionSchema,
   role: ClashRoleSchema,
 });

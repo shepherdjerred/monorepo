@@ -61,4 +61,25 @@ describe("RawClash schemas", () => {
     ]);
     expect(tournaments).toHaveLength(1);
   });
+
+  test("parses a team whose nested players omit teamId", () => {
+    const team = RawClashTeamSchema.parse({
+      id: "team-1",
+      tournamentId: 42,
+      name: "Glivengers",
+      iconId: 1,
+      tier: 4,
+      captain: "summoner-1",
+      abbreviation: "GLIV",
+      players: [
+        {
+          puuid: "abc",
+          position: "TOP",
+          role: "CAPTAIN",
+        },
+      ],
+    });
+    expect(team.players[0]?.teamId).toBeUndefined();
+    expect(team.players[0]?.role).toBe("CAPTAIN");
+  });
 });

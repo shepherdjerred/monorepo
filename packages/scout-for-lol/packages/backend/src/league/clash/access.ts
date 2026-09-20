@@ -3,6 +3,7 @@ import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { User } from "#generated/prisma/client/index.js";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
+import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
 import {
   guildFeatureStatus,
   type GuildFeatureStatus,
@@ -46,15 +47,23 @@ export async function clashSnapshotShouldRun(): Promise<boolean> {
   return decisions.some(Boolean);
 }
 
+/**
+ * Explore tools, prematch Clash chrome, and puuid-gated canvas follow the
+ * same fixture-guild exception as `clash.status`: the local dev-login guild
+ * can use Clash without a static-flag override, so navigation never
+ * advertises a surface the tools would then refuse.
+ */
 export async function clashExploreEnabled(
   guildIds: readonly string[],
 ): Promise<boolean> {
   const decisions = await Promise.all(
-    guildIds.map((guildId) =>
-      isPolicyEnabled("clash_surface", {
-        server: DiscordGuildIdSchema.parse(guildId),
-      }),
-    ),
+    guildIds.map(async (guildId) => {
+      const parsed = DiscordGuildIdSchema.parse(guildId);
+      return (
+        (await isPolicyEnabled("clash_surface", { server: parsed })) ||
+        isDevGuildOverrideGuild(guildId)
+      );
+    }),
   );
   return decisions.some(Boolean);
 }

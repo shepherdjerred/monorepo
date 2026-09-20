@@ -147,6 +147,7 @@ describe("skill bodies", () => {
     const body = renderExploreSkillBody(skill("clash"), WEB_CONTEXT);
     expect(body).toContain("get_clash_schedule");
     expect(body).toContain("get_clash_roster");
+    expect(body).toContain("get_clash_history");
     expect(body).toContain("Do not answer win rates");
     expect(body).toContain("queue = 'clash'");
     expect(body).toContain("set queryText to null");

@@ -14,5 +14,6 @@ describe("createClashExploreTools", () => {
     });
     expect(tools.get_clash_schedule.description).toContain("not match history");
     expect(tools.get_clash_roster.description).toContain("not results");
+    expect(tools.get_clash_history.description).toContain("lobby-only");
   });
 });

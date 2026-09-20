@@ -40,3 +40,29 @@ export function phaseLabel(input: {
   }
   return "Upcoming";
 }
+
+export function formatClashIso(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export function sightingOutcomeLabel(
+  outcome: "lobby" | "win" | "loss",
+): string {
+  if (outcome === "lobby") {
+    return "Lobby only";
+  }
+  if (outcome === "win") {
+    return "Win · scored through Feb 2026";
+  }
+  return "Loss · scored through Feb 2026";
+}

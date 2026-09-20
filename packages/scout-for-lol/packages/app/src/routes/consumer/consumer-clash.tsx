@@ -17,6 +17,7 @@ import {
   phaseLabel,
   titleCaseToken,
 } from "#src/routes/consumer/consumer-clash-copy.ts";
+import { ClashHistorySection } from "#src/routes/consumer/consumer-clash-history.tsx";
 
 const RESULTS_NOTE =
   "Current Clash games are pre-match only. Riot does not publish results, so Scout cannot score them.";
@@ -217,6 +218,12 @@ export function ConsumerClash() {
     }),
     enabled: status.data?.state === "available" && rosterGuildId !== undefined,
   });
+  const history = useQuery({
+    ...trpc.clash.history.queryOptions({
+      guildId: rosterGuildId ?? PLACEHOLDER_GUILD,
+    }),
+    enabled: status.data?.state === "available" && rosterGuildId !== undefined,
+  });
 
   if (status.isPending) {
     return (
@@ -245,7 +252,7 @@ export function ConsumerClash() {
       <ClashShell>
         <ForbiddenPanel
           title="Clash is unavailable"
-          message="Clash schedule and roster are off for the servers you share with Scout."
+          message="Clash schedule, roster, and history are off for the servers you share with Scout."
         />
       </ClashShell>
     );
@@ -287,6 +294,15 @@ export function ConsumerClash() {
         rosterGuildId={rosterGuildId}
         onSelectGuild={setSelectedGuildId}
         registrationOpen={registrationOpen}
+      />
+      <ClashHistorySection
+        history={{
+          isPending: history.isPending,
+          isError: history.isError,
+          isSuccess: history.isSuccess,
+          error: history.error,
+          data: history.data,
+        }}
       />
     </ClashShell>
   );
