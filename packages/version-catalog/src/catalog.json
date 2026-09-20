@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16329@sha256:59e38ffe0a0d450090c4981d76792a9e1325cd711af7bceaa3d4c16a15a38229",
+      "value": "2.0.0-16339@sha256:243d3fc71546588837e431d9612fe7c0b3d45bf5e8af09661efaf264ff82f341",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
         "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
@@ -797,7 +797,8 @@
         "database contract: postgresql sha256:22bc4a3c06b101533f21f525ec12b31c0426eb823a8c6fc520e936ab56eab1b0",
         "database contract: postgresql sha256:dff66e01c9e1e8addb305b17bc20ca71ec2de1059fa3fcdeaab3ab3d72b144f6",
         "database contract: postgresql sha256:57583edbf7ea74bb250ac30cca8628bb9480a01b8157462001dfa9a415d755bc",
-        "database contract: postgresql sha256:59e38ffe0a0d450090c4981d76792a9e1325cd711af7bceaa3d4c16a15a38229"
+        "database contract: postgresql sha256:59e38ffe0a0d450090c4981d76792a9e1325cd711af7bceaa3d4c16a15a38229",
+        "database contract: postgresql sha256:243d3fc71546588837e431d9612fe7c0b3d45bf5e8af09661efaf264ff82f341"
       ]
     },
     {
@@ -904,7 +905,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16329@sha256:861198edf988417265057851a5bf5265f3cf7acf0fe7403674c5b60887cb54ff",
+      "value": "2.0.0-16339@sha256:c10b02cdf077d500095dd101a90a34b667e44412857d2a37a6e99477422e4cba",
       "notes": ["not managed by renovate"]
     },
     {
@@ -914,7 +915,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16329@sha256:ad5a3ac48079f68348ad714b4501578bbaebadfc8a9c339223f6e4f943a69a88",
+      "value": "2.0.0-16339@sha256:7e54b8980e49e54ec64d30286860f7852591e6ed212e9facf5862a48abd05a65",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -1542,7 +1543,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16329@sha256:c47af69774eb6e9ddea04aa2a92051a6bae149b9eb88aa273f225524083e447e",
+      "value": "2.0.0-16339@sha256:a464c7945fbeb73b0b53dbde73ab65697914cff323d4ade48cb2a3a2330e6de3",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
