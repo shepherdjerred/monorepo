@@ -92,12 +92,14 @@ export function mvpVoteSelectRow(input: {
 export function mvpVoteModal(input: {
   matchId: MatchId;
   category: MatchMvpCategory;
+  nomineeIndex: number;
 }): ModalBuilder {
   return new ModalBuilder()
     .setCustomId(
       formatVoteModalCustomId({
         category: input.category,
         matchId: input.matchId,
+        nomineeIndex: input.nomineeIndex,
       }),
     )
     .setTitle(voteModalTitle(input.category))

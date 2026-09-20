@@ -22,7 +22,7 @@ import { nomineeLabel } from "#src/mvp-votes/tally.ts";
 import {
   loadMatchMvpRoster,
   parseJustification,
-  setMatchMvpJustification,
+  upsertMatchMvpVote,
 } from "#src/mvp-votes/vote.ts";
 
 export type VoteModalInteraction = {
@@ -94,12 +94,15 @@ export async function handleMvpVoteModal(
     });
     return;
   }
-  const vote = await setMatchMvpJustification(
+  const vote = await upsertMatchMvpVote(
     {
       matchId,
       serverId,
       voterDiscordId: voter.discordId,
       category: parsed.category,
+      nomineeIndex: parsed.nomineeIndex,
+      voterPuuid: voter.puuid,
+      voterTeamId: voter.teamId,
       justification: parsedReason.value,
     },
     prismaClient,

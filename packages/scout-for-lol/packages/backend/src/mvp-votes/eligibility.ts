@@ -22,15 +22,18 @@ export async function shouldAttachFlexMvpVotes(input: {
   queueType: QueueType | undefined;
   targetGuildIds: readonly DiscordGuildId[];
 }): Promise<boolean> {
-  if (input.queueType !== "flex") {
+  // V2 attests one postmatch message for every destination. Furniture that
+  // went out because *any* audience guild had the flag would also land in
+  // guilds where the flag is off. Require every destination instead.
+  if (input.queueType !== "flex" || input.targetGuildIds.length === 0) {
     return false;
   }
   for (const guildId of input.targetGuildIds) {
-    if (await isMvpVotesEnabledForGuild(guildId)) {
-      return true;
+    if (!(await isMvpVotesEnabledForGuild(guildId))) {
+      return false;
     }
   }
-  return false;
+  return true;
 }
 
 export type MatchMvpVoter = {

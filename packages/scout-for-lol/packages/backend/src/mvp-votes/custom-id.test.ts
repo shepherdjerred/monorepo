@@ -26,17 +26,29 @@ describe("MVP vote custom IDs", () => {
       ).toEqual({ kind: "select", category, matchId: MATCH });
       expect(
         parseVoteCustomId(
-          formatVoteModalCustomId({ category, matchId: MATCH }),
+          formatVoteModalCustomId({
+            category,
+            matchId: MATCH,
+            nomineeIndex: 3,
+          }),
         ),
-      ).toEqual({ kind: "modal", category, matchId: MATCH });
+      ).toEqual({
+        kind: "modal",
+        category,
+        matchId: MATCH,
+        nomineeIndex: 3,
+      });
     }
   });
 
   test("stays inside Discord's length limit", () => {
     const longMatch = MatchIdSchema.parse("NA1_12345678901234567890");
     expect(
-      formatVoteSelectCustomId({ category: "enemy", matchId: longMatch })
-        .length,
+      formatVoteModalCustomId({
+        category: "enemy",
+        matchId: longMatch,
+        nomineeIndex: 9,
+      }).length,
     ).toBeLessThanOrEqual(MAX_CUSTOM_ID_LENGTH);
   });
 

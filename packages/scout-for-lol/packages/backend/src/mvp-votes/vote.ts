@@ -124,6 +124,7 @@ export async function upsertMatchMvpVote(
     nomineeIndex: number;
     voterPuuid: LeaguePuuid;
     voterTeamId: RiotTeamId;
+    justification?: string | null;
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<StoredMatchMvpVote> {
@@ -134,6 +135,8 @@ export async function upsertMatchMvpVote(
     );
   }
   nomineeAt(roster, input.nomineeIndex);
+  const justification =
+    input.justification === undefined ? null : input.justification;
   const row = await prismaClient.matchMvpVote.upsert({
     where: {
       matchId_serverId_voterDiscordId_category: {
@@ -151,13 +154,13 @@ export async function upsertMatchMvpVote(
       nomineeIndex: input.nomineeIndex,
       voterPuuid: input.voterPuuid,
       voterTeamId: input.voterTeamId,
-      justification: null,
+      justification,
     },
     update: {
       nomineeIndex: input.nomineeIndex,
       voterPuuid: input.voterPuuid,
       voterTeamId: input.voterTeamId,
-      justification: null,
+      justification,
     },
   });
   return parseStoredVote(row);

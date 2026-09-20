@@ -37,12 +37,18 @@ describe("shouldAttachFlexMvpVotes", () => {
     ).resolves.toBe(false);
   });
 
-  test("flex attaches when any audience guild has the flag", async () => {
+  test("flex attaches only when every audience guild has the flag", async () => {
     addFlagOverride("mvp_votes_enabled", true, { server: MY_SERVER });
     await expect(
       shouldAttachFlexMvpVotes({
         queueType: "flex",
         targetGuildIds: [OTHER_GUILD, MY_SERVER],
+      }),
+    ).resolves.toBe(false);
+    await expect(
+      shouldAttachFlexMvpVotes({
+        queueType: "flex",
+        targetGuildIds: [MY_SERVER],
       }),
     ).resolves.toBe(true);
   });

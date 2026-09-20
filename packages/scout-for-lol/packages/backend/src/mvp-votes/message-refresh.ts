@@ -13,13 +13,14 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { createLogger } from "#src/logger.ts";
+import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 import { guildAliasesForRoster } from "#src/mvp-votes/eligibility.ts";
 import { MVP_TALLY_TITLE } from "#src/mvp-votes/copy.ts";
-import { runSerialized } from "#src/mvp-votes/refresh-queue.ts";
 import { mvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { listMatchMvpVotes, loadMatchMvpRoster } from "#src/mvp-votes/vote.ts";
 
 const logger = createLogger("mvp-vote-refresh");
+const tallyRefreshTails = new Map<string, Promise<unknown>>();
 const DiscordApiErrorSchema = z.object({ code: z.number() });
 const UNKNOWN_DISCORD_RESOURCE_CODES = new Set([10_003, 10_008]);
 
@@ -181,7 +182,11 @@ export async function refreshMvpTallyMessages(
 ): Promise<void> {
   const matchId = MatchIdSchema.parse(input.matchId);
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
-  await runSerialized(refreshKey(matchId, serverId), async () => {
-    await refreshOnce({ matchId, serverId }, prismaClient, editMessage);
-  });
+  await enqueuePerKey(
+    tallyRefreshTails,
+    refreshKey(matchId, serverId),
+    async () => {
+      await refreshOnce({ matchId, serverId }, prismaClient, editMessage);
+    },
+  );
 }

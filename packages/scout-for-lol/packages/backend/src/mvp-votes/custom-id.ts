@@ -7,9 +7,11 @@ import { MatchIdSchema, type MatchId } from "@scout-for-lol/data";
  * Format:
  * - button: `vote:1:<a|e>:<matchId>`
  * - select: `vote:1:s:<a|e>:<matchId>`
- * - modal:  `vote:1:m:<a|e>:<matchId>`
+ * - modal:  `vote:1:m:<a|e>:<matchId>:<nomineeIndex>`
  *
- * The ID is a key, never state. Category is relative to the voter and is
+ * The ID is a key, never mutable vote state. The modal carries the nominee
+ * index chosen on the select so two overlapping reason forms cannot attach a
+ * justification to the wrong player. Category is relative to the voter and is
  * re-checked against the frozen roster. A malformed ID is never fatal.
  */
 
@@ -41,6 +43,7 @@ export const VoteModalCustomIdSchema = z.strictObject({
   kind: z.literal("modal"),
   category: MatchMvpCategorySchema,
   matchId: MatchIdSchema,
+  nomineeIndex: z.number().int().min(0).max(9),
 });
 
 export type VoteCustomId = z.infer<typeof VoteCustomIdSchema>;
@@ -113,11 +116,13 @@ export function formatVoteSelectCustomId(input: {
 export function formatVoteModalCustomId(input: {
   category: MatchMvpCategory;
   matchId: MatchId;
+  nomineeIndex: number;
 }): string {
   const parsed = VoteModalCustomIdSchema.parse({
     kind: "modal",
     category: input.category,
     matchId: input.matchId,
+    nomineeIndex: input.nomineeIndex,
   });
   return assertCustomIdLength(
     [
@@ -126,6 +131,7 @@ export function formatVoteModalCustomId(input: {
       "m",
       categoryToWire(parsed.category),
       parsed.matchId,
+      String(parsed.nomineeIndex),
     ].join(":"),
   );
 }
@@ -161,8 +167,29 @@ export function parseVoteCustomId(raw: string): VoteCustomId | undefined {
       return { kind: "select", category, matchId: matchId.data };
     }
     if (kindWire === "m") {
-      return { kind: "modal", category, matchId: matchId.data };
+      return undefined;
     }
+  }
+  if (segments.length === 6) {
+    const kindWire = segments[2];
+    const category = categoryFromWire(segments[3] ?? "");
+    const matchId = MatchIdSchema.safeParse(segments[4]);
+    const nomineeRaw = segments[5];
+    if (
+      kindWire !== "m" ||
+      nomineeRaw === undefined ||
+      category === undefined ||
+      !matchId.success ||
+      !/^\d$/u.test(nomineeRaw)
+    ) {
+      return undefined;
+    }
+    return {
+      kind: "modal",
+      category,
+      matchId: matchId.data,
+      nomineeIndex: Number.parseInt(nomineeRaw, 10),
+    };
   }
   return undefined;
 }
