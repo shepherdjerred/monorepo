@@ -256,12 +256,12 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
   let httpServers: EventBridgeHandle | undefined;
   if (shouldReconcile && options.roleContract.runsGateway) {
     await registerGatewaySchedules(options, clientConnection);
-    httpServers = startHttpServers(client);
+    httpServers = await startHttpServers(client);
   } else if (options.roleContract.runsGateway) {
     jsonLog("info", "Schedule reconciliation disabled", {
       namespace: options.namespace,
     });
-    httpServers = startHttpServers(client);
+    httpServers = await startHttpServers(client);
   }
   return {
     ...(httpServers === undefined ? {} : { httpServers }),

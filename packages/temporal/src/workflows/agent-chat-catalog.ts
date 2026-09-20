@@ -2,6 +2,7 @@ import {
   allHandlersFinished,
   condition,
   continueAsNew,
+  patched,
   setHandler,
   workflowInfo,
 } from "@temporalio/workflow";
@@ -33,6 +34,9 @@ import {
   resolveAgentChatBindingQuery,
   settleAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
+
+const REGISTER_AND_BIND_PRECEDENCE_PATCH =
+  "agent-chat-register-and-bind-precedence-v1";
 
 function catalogStateBytes(state: AgentChatCatalogState): number {
   return new TextEncoder().encode(JSON.stringify(state)).byteLength;
@@ -353,12 +357,21 @@ function bind(
   return entry;
 }
 
-export function registerAndBindAgentChatCatalogEntry(
-  state: AgentChatCatalogState,
-  rawEntry: AgentChatCatalogEntry,
-  rawBinding: AgentChatBinding,
-  rawUpdate: AgentChatBindingUpdateInput,
-): AgentChatCatalogEntry {
+type RegisterAndBindAgentChatCatalogEntryInput = {
+  state: AgentChatCatalogState;
+  entry: AgentChatCatalogEntry;
+  binding: AgentChatBinding;
+  update: AgentChatBindingUpdateInput;
+  precedenceBeforeRegistration?: boolean;
+};
+
+export function registerAndBindAgentChatCatalogEntry({
+  state,
+  entry: rawEntry,
+  binding: rawBinding,
+  update: rawUpdate,
+  precedenceBeforeRegistration = true,
+}: RegisterAndBindAgentChatCatalogEntryInput): AgentChatCatalogEntry {
   const candidate = AgentChatCatalogEntrySchema.parse(rawEntry);
   const binding = AgentChatBindingSchema.parse(rawBinding);
   const update = parseBindingUpdate(rawUpdate);
@@ -367,8 +380,10 @@ export function registerAndBindAgentChatCatalogEntry(
     chatId: candidate.config.chatId,
     ...update,
   });
-  const retained = retainedBindingEntry(state, next);
-  if (retained !== undefined) return retained;
+  if (precedenceBeforeRegistration) {
+    const retained = retainedBindingEntry(state, next);
+    if (retained !== undefined) return retained;
+  }
   const entry = registerAgentChatCatalogEntry(state, rawEntry);
   return bind(state, binding, entry.config.chatId, update);
 }
@@ -400,7 +415,13 @@ export async function agentChatCatalogWorkflow(
     settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
   );
   setHandler(registerAndBindAgentChatUpdate, (entry, binding, update) =>
-    registerAndBindAgentChatCatalogEntry(state, entry, binding, update),
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry,
+      binding,
+      update,
+      precedenceBeforeRegistration: patched(REGISTER_AND_BIND_PRECEDENCE_PATCH),
+    }),
   );
   setHandler(bindAgentChatUpdate, (binding, chatId, update) =>
     bind(state, binding, chatId, update),

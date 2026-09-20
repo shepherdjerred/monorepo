@@ -208,6 +208,26 @@ describe("ManagedFlagInventorySchema", () => {
     });
   });
 
+  test("stages durable iMessage ingress in beta before production", () => {
+    const betaFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "temporal",
+    ).find(
+      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+    );
+    const prodFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "temporal",
+    ).find(
+      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+    );
+
+    expect(betaFlag?.default).toBe(true);
+    expect(prodFlag?.default).toBe(false);
+  });
+
   test("materializes a full-state environment override", () => {
     const parsed = ManagedFlagInventorySchema.parse(inventory([fullOverride]));
     expect(

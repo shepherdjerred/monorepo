@@ -62,11 +62,18 @@ export async function blueBubblesIngressWorkflow(
     }
     // Advance only after every qualifying command has been durably admitted.
     const progressed = batch.lastRowId > cursor.lastRowId;
-    cursor = {
-      startedAt: batch.startedAt,
-      initialized: batch.initialized,
-      lastRowId: batch.lastRowId,
-    };
+    cursor = batch.initialized
+      ? {
+          startedAt: batch.startedAt,
+          initialized: true,
+          lastRowId: batch.lastRowId,
+        }
+      : {
+          startedAt: batch.startedAt,
+          initialized: false,
+          lastRowId: batch.lastRowId,
+          initializationHighWaterRowId: batch.initializationHighWaterRowId,
+        };
     await sleep(progressed ? "1 second" : "30 seconds");
   }
   return await continueAsNew<typeof blueBubblesIngressWorkflow>(cursor);
