@@ -6,10 +6,13 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
 import { ME, MY_SERVER } from "#src/configuration/flags.ts";
-import configuration from "#src/configuration.ts";
+import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
 import { readBuildPuuidRemapFingerprint } from "#src/report-lake/build-manifest.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import {
+  closeDuckDB,
+  withDuckDBConnection,
+} from "#src/reports/duckdb/instance.ts";
 import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
 import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
 import {
@@ -75,32 +78,6 @@ async function parquetAccountRows(
  */
 async function startFlags(): Promise<void> {
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
-}
-
-/**
- * Give flag evaluation the stage's semantics without the stage's config.
- *
- * `ENVIRONMENT` does two things to flags, both prod-only:
- * `isFeatureHardDisabled` short-circuits bucks and dares (`flags.ts:219`), and
- * `applicableOverrides` drops beta-only overrides (`flags.ts:233-238`). A prod
- * capture has to see both or it records capabilities prod does not grant.
- *
- * But the same variable also makes `configuration` demand a complete PostHog
- * setup outside dev (`configuration.ts:151-159`) — config a capture never
- * uses, since nothing here constructs an analytics client.
- *
- * `resolveEnvironment()` is read live on every flag evaluation while
- * `configuration` memoizes once, so touching configuration first pins it under
- * dev and the later flip reaches only the flag path. Narrow and deliberate:
- * it buys prod's flag rules and nothing else, with no invented config values.
- */
-function useStageFlagSemantics(stage: "beta" | "prod"): void {
-  // Force the lazy configuration to compute and memoize while the environment
-  // is still whatever the caller supplied.
-  void configuration.environment;
-  if (stage === "prod") {
-    Bun.env["ENVIRONMENT"] = "prod";
-  }
 }
 
 /**
@@ -259,9 +236,12 @@ export async function capturePinForStage(input: {
     verifiedAt: now,
     guilds: captured,
   });
-  // Both hold open handles; without closing them the process sits idle
-  // with its work finished, which reads as a hang.
+  // All three hold resources past the work. Prisma and the flag provider keep
+  // the process alive outright; DuckDB's native instance is a process-wide
+  // singleton the server is meant to keep, and a CLI that leaves it to
+  // finalization pays a few seconds of dead time on exit.
   await prisma.$disconnect();
   await shutdownFeatureFlags();
+  await closeDuckDB();
   return pin;
 }

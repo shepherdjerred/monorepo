@@ -17,6 +17,7 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import { parseReplayCorpus } from "#src/explore/replay/corpus.ts";
+import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
 import { planConversationTurns } from "#src/explore/replay/plan.ts";
 import { buildTranscript } from "#src/explore/store-mappers.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
@@ -27,7 +28,10 @@ import {
   loadPuuidRemap,
   puuidRemapFingerprint,
 } from "#src/report-lake/puuid-remap.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import {
+  closeDuckDB,
+  withDuckDBConnection,
+} from "#src/reports/duckdb/instance.ts";
 import {
   datasetCoherenceIssues,
   datasetRepairHint,
@@ -628,6 +632,11 @@ export async function runReplay(input: {
   readonly pin: StageDatasetPin;
   readonly pinPath: string;
 }): Promise<ReplayRunOutcome> {
+  // Before any flag is evaluated: a prod pin must resolve flags the way prod
+  // does, and the caller cannot supply that without also supplying stage
+  // config the replay never uses.
+  useStageFlagSemantics(input.pin.stage);
+
   // Without a registered provider, `isPolicyEnabled` awaits an OpenFeature
   // client that never becomes ready and the first capability resolution hangs
   // forever. "disabled" registers none, so evaluations fall through to the
@@ -675,9 +684,12 @@ export async function runReplay(input: {
     process.stdout.write(`  bundle: ${result.directory}\n`);
   }
 
-  // Both hold open handles; without closing them the process sits idle
-  // with its work finished, which reads as a hang.
+  // All three hold resources past the work. Prisma and the flag provider keep
+  // the process alive outright; DuckDB's native instance is a process-wide
+  // singleton the server is meant to keep, and a CLI that leaves it to
+  // finalization pays a few seconds of dead time on exit.
   await prisma.$disconnect();
   await shutdownFeatureFlags();
+  await closeDuckDB();
   return { passed, runDirectories: directories };
 }

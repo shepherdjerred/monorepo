@@ -66,7 +66,6 @@ function environment(
   return {
     DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_beta_snapshot",
     FEATURE_FLAGS_MODE: "disabled",
-    ENVIRONMENT: "beta",
     ...overrides,
   };
 }
@@ -211,10 +210,38 @@ describe("replayEnvironmentIssues", () => {
     expect(issues).toEqual([expect.stringContaining("FEATURE_FLAGS_MODE")]);
   });
 
-  test("requires a prod dataset to run as prod", () => {
-    // isFeatureHardDisabled and the betaOnly override stripping both fire only
-    // at prod; a prod replay left on the default "dev" would grant a guild
-    // capabilities prod does not have.
+  test("accepts a prod dataset started at dev, which the harness then flips", () => {
+    // The caller must not set ENVIRONMENT=prod: configuration would demand a
+    // complete PostHog setup the replay never uses. `useStageFlagSemantics`
+    // memoizes configuration under dev and flips the variable afterwards, so
+    // only flag resolution sees prod.
+    const prodPin = StageDatasetPinSchema.parse({
+      ...PIN,
+      stage: "prod",
+      database: { ...PIN.database, name: "scout_prod_snapshot" },
+    });
+    expect(
+      replayEnvironmentIssues({
+        pin: prodPin,
+        environment: environment({
+          DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_prod_snapshot",
+        }),
+        resolvedLakeDir,
+      }),
+    ).toEqual([]);
+  });
+
+  test("accepts an explicit dev, which is what the harness expects", () => {
+    expect(
+      replayEnvironmentIssues({
+        pin: PIN,
+        environment: environment({ ENVIRONMENT: "dev" }),
+        resolvedLakeDir,
+      }),
+    ).toEqual([]);
+  });
+
+  test("refuses a caller that pre-empts the flip with ENVIRONMENT=prod", () => {
     const prodPin = StageDatasetPinSchema.parse({
       ...PIN,
       stage: "prod",
@@ -223,22 +250,21 @@ describe("replayEnvironmentIssues", () => {
     const issues = replayEnvironmentIssues({
       pin: prodPin,
       environment: environment({
-        ENVIRONMENT: "dev",
+        ENVIRONMENT: "prod",
         DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_prod_snapshot",
       }),
       resolvedLakeDir,
     });
-    expect(issues).toEqual([expect.stringContaining("pins prod")]);
+    expect(issues).toEqual([expect.stringContaining('must start as "dev"')]);
   });
 
-  test("accepts dev for a beta dataset, which resolves flags identically", () => {
-    expect(
-      replayEnvironmentIssues({
-        pin: PIN,
-        environment: environment({ ENVIRONMENT: "dev" }),
-        resolvedLakeDir,
-      }),
-    ).toEqual([]);
+  test("refuses a stage name for a beta dataset too", () => {
+    const issues = replayEnvironmentIssues({
+      pin: PIN,
+      environment: environment({ ENVIRONMENT: "beta" }),
+      resolvedLakeDir,
+    });
+    expect(issues).toEqual([expect.stringContaining("ENVIRONMENT")]);
   });
 
   test("rejects a reachable Temporal, which could start a workflow", () => {

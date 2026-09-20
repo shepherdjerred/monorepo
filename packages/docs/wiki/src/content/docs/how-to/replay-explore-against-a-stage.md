@@ -65,6 +65,11 @@ op run --env-file=./dev-web.env.tpl -- env \
 Raise the token budgets deliberately. The in-process ceiling defaults to 2M an
 hour, which a sweep passes, and hitting it aborts the run part-way.
 
+For prod, point the three paths at the prod pin and add `--stage prod`. Do not
+set `ENVIRONMENT`: the run applies the pinned stage's flag semantics itself,
+and setting it yourself makes configuration demand stage secrets the replay
+never uses.
+
 Start with `--limit 3 --concurrency 1` the first time; it costs pennies and
 proves the wiring. Add `--conversations` to replay the curated corpus, and
 `--baseline <runId>` to compare against an earlier run.

@@ -199,14 +199,21 @@ export function replayEnvironmentIssues(input: {
   // ENVIRONMENT changes flag resolution in exactly two ways, and both fire
   // only at prod: `isFeatureHardDisabled` short-circuits bucks and dares
   // (`flags.ts:219`), and `applicableOverrides` strips beta-only overrides
-  // (`flags.ts:233-238`). So a prod dataset must run as prod or it would grant
-  // capabilities prod does not have — while for a beta dataset "dev" and
-  // "beta" resolve identically, and demanding "beta" would only force the
-  // caller to supply stage config the replay never uses.
-  const environmentName = input.environment["ENVIRONMENT"] ?? "dev";
-  if (environmentName !== "prod" && input.pin.stage === "prod") {
+  // (`flags.ts:233-238`). A prod dataset must see both or it would grant
+  // capabilities prod does not have.
+  //
+  // The caller does not supply that, though — the harness does, by flipping
+  // ENVIRONMENT once `configuration` has memoized (see
+  // `useStageFlagSemantics`). The same variable also makes `configuration`
+  // demand a complete PostHog setup outside dev (`configuration.ts:151-159`),
+  // config a replay never uses because nothing here builds an analytics
+  // client. So the rule is the inverse of what it looks like it should be:
+  // the caller must leave ENVIRONMENT at dev, and is refused if they pre-empt
+  // the flip with a value that would strand the run on missing config.
+  const environmentName = input.environment["ENVIRONMENT"];
+  if (environmentName !== undefined && environmentName !== "dev") {
     issues.push(
-      `ENVIRONMENT is "${environmentName}", but this dataset pins prod; hard-disabled flags and beta-only overrides resolve differently outside prod`,
+      `ENVIRONMENT is "${environmentName}"; a replay must start as "dev" so configuration memoizes without stage config, and the harness applies the pinned stage's flag semantics itself`,
     );
   }
 
