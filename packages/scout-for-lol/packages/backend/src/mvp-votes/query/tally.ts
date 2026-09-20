@@ -16,6 +16,7 @@ import {
   nomineeAt,
   type MatchMvpRoster,
 } from "#src/mvp-votes/roster.ts";
+import { groupMatchMvpVotesForTeam } from "#src/mvp-votes/vote-groups.ts";
 import {
   listMatchMvpVotes,
   type StoredMatchMvpVote,
@@ -68,45 +69,25 @@ function bucketsForTeam(
   roster: MatchMvpRoster,
   aliases: ReadonlyMap<LeaguePuuid, string>,
 ): MatchMvpTallyNominee[] {
-  const byIndex = new Map<number, NomineeBucket>();
-  for (const vote of votes) {
-    if (nomineeAt(roster, vote.nomineeIndex).teamId !== teamId) {
-      continue;
-    }
-    const existing = byIndex.get(vote.nomineeIndex);
-    const bucket =
-      existing ??
-      ({
-        nomineeIndex: vote.nomineeIndex,
-        count: 0,
-        reasons: [],
-      } satisfies NomineeBucket);
-    bucket.count += 1;
-    if (vote.justification !== null) {
-      bucket.reasons.push({
-        voterName: mvpQueryDisplayName(vote.voterPuuid, roster, aliases),
-        justification: vote.justification,
-      });
-    }
-    byIndex.set(vote.nomineeIndex, bucket);
-  }
-  return [...byIndex.values()]
-    .toSorted((left, right) => {
-      if (right.count !== left.count) {
-        return right.count - left.count;
+  return groupMatchMvpVotesForTeam(votes, teamId, roster).map((group) => {
+    const participant = nomineeAt(roster, group.nomineeIndex);
+    const reasons: NomineeBucket["reasons"] = [];
+    for (const vote of group.votes) {
+      if (vote.justification !== null) {
+        reasons.push({
+          voterName: mvpQueryDisplayName(vote.voterPuuid, roster, aliases),
+          justification: vote.justification,
+        });
       }
-      return left.nomineeIndex - right.nomineeIndex;
-    })
-    .map((bucket) => {
-      const participant = nomineeAt(roster, bucket.nomineeIndex);
-      return {
-        puuid: participant.puuid,
-        displayName: mvpQueryDisplayName(participant.puuid, roster, aliases),
-        championName: participant.championName,
-        voteCount: bucket.count,
-        reasons: bucket.reasons,
-      };
-    });
+    }
+    return {
+      puuid: participant.puuid,
+      displayName: mvpQueryDisplayName(participant.puuid, roster, aliases),
+      championName: participant.championName,
+      voteCount: group.votes.length,
+      reasons,
+    };
+  });
 }
 
 async function tallyForGuild(

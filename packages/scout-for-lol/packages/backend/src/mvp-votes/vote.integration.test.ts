@@ -12,10 +12,8 @@ import {
   bucksTestPuuid,
   createTrackedTestPlayer,
 } from "#src/testing/bucks-fixtures.ts";
-import {
-  freezeMatchMvpRoster,
-  freezeMatchMvpRosterFromParticipants,
-} from "#src/mvp-votes/roster.ts";
+import { freezeMatchMvpRoster } from "#src/mvp-votes/roster.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
 import { findMatchMvpVoter } from "#src/mvp-votes/eligibility.ts";
 import { handleMvpVoteButton } from "#src/mvp-votes/button-handler.ts";
 import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
@@ -37,17 +35,7 @@ const OTHER = bucksTestDiscordId(2);
 const RIFT_FIXTURE = new URL("../../../../testdata/rift.json", import.meta.url);
 
 function roster() {
-  return freezeMatchMvpRosterFromParticipants(
-    MATCH_ID,
-    Array.from({ length: 10 }, (_unused, index) => ({
-      participantId: index + 1,
-      puuid: bucksTestPuuid(index),
-      teamId: index < 5 ? (100 as const) : (200 as const),
-      championName: `Champ${String(index)}`,
-      riotIdGameName: `Player${String(index)}`,
-      riotIdTagline: "NA1",
-    })),
-  );
+  return freezeMvpTestRoster(MATCH_ID);
 }
 
 afterAll(async () => {

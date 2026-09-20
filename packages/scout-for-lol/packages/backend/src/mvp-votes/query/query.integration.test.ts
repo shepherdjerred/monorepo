@@ -10,7 +10,7 @@ import {
   bucksTestPuuid,
   createTrackedTestPlayer,
 } from "#src/testing/bucks-fixtures.ts";
-import { freezeMatchMvpRosterFromParticipants } from "#src/mvp-votes/roster.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
 import { loadMatchMvpTallyForGuilds } from "#src/mvp-votes/query/tally.ts";
 import { loadMvpVoteLeaderboard } from "#src/mvp-votes/query/leaderboard.ts";
 import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
@@ -23,20 +23,6 @@ const MATCH_A = MatchIdSchema.parse("NA1_5000000101");
 const MATCH_B = MatchIdSchema.parse("NA1_5000000102");
 const CREATOR = DiscordAccountIdSchema.parse("160509172704739328");
 
-function roster(matchId: string) {
-  return freezeMatchMvpRosterFromParticipants(
-    matchId,
-    Array.from({ length: 10 }, (_unused, index) => ({
-      participantId: index + 1,
-      puuid: bucksTestPuuid(index),
-      teamId: index < 5 ? (100 as const) : (200 as const),
-      championName: `Champ${String(index)}`,
-      riotIdGameName: `Player${String(index)}`,
-      riotIdTagline: "NA1",
-    })),
-  );
-}
-
 async function seedContest(input: {
   matchId: string;
   gameCreationAt: Date;
@@ -45,7 +31,7 @@ async function seedContest(input: {
   await db.matchMvpContest.create({
     data: {
       matchId: input.matchId,
-      roster: roster(input.matchId),
+      roster: freezeMvpTestRoster(input.matchId),
       gameCreationAt: input.gameCreationAt,
       queueType: input.queueType,
     },

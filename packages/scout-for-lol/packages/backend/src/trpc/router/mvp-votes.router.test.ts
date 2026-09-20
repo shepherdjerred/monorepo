@@ -9,7 +9,7 @@ import {
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
-import { freezeMatchMvpRosterFromParticipants } from "#src/mvp-votes/roster.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
 import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
 import {
   bucksTestDiscordId,
@@ -29,17 +29,7 @@ function caller() {
 }
 
 function roster() {
-  return freezeMatchMvpRosterFromParticipants(
-    MATCH_ID,
-    Array.from({ length: 10 }, (_unused, index) => ({
-      participantId: index + 1,
-      puuid: bucksTestPuuid(index),
-      teamId: index < 5 ? (100 as const) : (200 as const),
-      championName: `Champ${String(index)}`,
-      riotIdGameName: `Player${String(index)}`,
-      riotIdTagline: "NA1",
-    })),
-  );
+  return freezeMvpTestRoster(MATCH_ID);
 }
 
 describe("mvpVotes.router", () => {
