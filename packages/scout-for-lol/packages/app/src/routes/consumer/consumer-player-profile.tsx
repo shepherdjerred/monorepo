@@ -15,6 +15,7 @@ import {
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
 import { ConsumerPlayerChallengeRuns } from "#src/components/challenge/player-challenge-runs.tsx";
 import { CombinedPerformance } from "#src/components/player/player-combined-performance.tsx";
+import { PlayerRankHistoryPanel } from "#src/components/player/player-rank-history.tsx";
 import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
@@ -175,6 +176,12 @@ function ConsumerPlayerProfileContent(props: {
   // `refetchOnMount: "always"`), and `Loaded`'s `degraded` says the exact
   // opposite — keep rendering the last known answer when the refresh fails.
   // That is right for a match list and wrong for an authorization check.
+  const rankHistoryQuery = useQuery(
+    trpc.consumerPlayer.rankHistory.queryOptions(
+      { playerId },
+      { enabled: accessIsFresh },
+    ),
+  );
   const historyQuery = useQuery(
     trpc.consumerPlayer.matchHistory.queryOptions(
       {
@@ -377,6 +384,20 @@ function ConsumerPlayerProfileContent(props: {
       </div>
 
       <ConsumerPlayerChallengeRuns playerId={playerId} />
+
+      <PlayerRankHistoryPanel
+        status={
+          rankHistoryQuery.isPending
+            ? "loading"
+            : rankHistoryQuery.isError
+              ? "error"
+              : "ready"
+        }
+        history={rankHistoryQuery.data}
+        onRetry={() => {
+          void rankHistoryQuery.refetch();
+        }}
+      />
 
       <CombinedPerformance
         filters={props.filters}

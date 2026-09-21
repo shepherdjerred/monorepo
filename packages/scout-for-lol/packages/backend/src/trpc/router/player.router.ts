@@ -29,6 +29,7 @@ import {
   getPlayerMatchHistory,
   getPlayerProfileSummary,
 } from "#src/lib/player-profile/queries.ts";
+import { getPlayerRankHistory } from "#src/lib/player-profile/rank-history.ts";
 import {
   SuggestTeammatesInputSchema,
   suggestTeammates,
@@ -61,6 +62,10 @@ export const playerRouter = router({
   profileSummary: guildProcedure("players", "read")
     .input(PlayerProfileInput)
     .query(async ({ input }) => getPlayerProfileSummary(input)),
+
+  rankHistory: guildProcedure("players", "read")
+    .input(PlayerLookupInput)
+    .query(async ({ input }) => getPlayerRankHistory(input)),
 
   matchHistory: guildProcedure("players", "read")
     .input(PlayerMatchHistoryInput)
