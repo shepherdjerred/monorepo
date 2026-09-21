@@ -65,7 +65,7 @@ describe("buildPlayerRankHistory", () => {
       {
         splitId: "2026_SEASON_2",
         displayName: "2026 Season 2",
-        peak: rank("platinum", 3, 80),
+        peak: rank("platinum", 4, 10),
         last: rank("platinum", 4, 10),
       },
     ]);
@@ -159,6 +159,30 @@ describe("buildPlayerRankHistory", () => {
         displayName: "Earlier",
         peak: rank("bronze", 2, 30),
         last: rank("bronze", 2, 30),
+      },
+    ]);
+  });
+
+  test("does not treat the previous split's rankBefore as this split's peak", () => {
+    const history = buildPlayerRankHistory({
+      now: NOW,
+      accounts: ACCOUNTS.slice(0, 1),
+      observations: [
+        {
+          puuid: MAIN,
+          queue: "solo",
+          at: new Date("2026-05-01T12:00:00-07:00"),
+          rank: rank("gold", 4, 0),
+          rankBefore: rank("diamond", 2, 50),
+        },
+      ],
+    });
+    expect(history.queues.solo.previous).toEqual([
+      {
+        splitId: "2026_SEASON_2",
+        displayName: "2026 Season 2",
+        peak: rank("gold", 4, 0),
+        last: rank("gold", 4, 0),
       },
     ]);
   });

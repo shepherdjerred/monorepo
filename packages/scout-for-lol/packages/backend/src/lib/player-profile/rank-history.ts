@@ -104,7 +104,7 @@ function newerSnapshotObservations(
         continue;
       }
       const latest = latestMatchAt.get(`${snapshot.puuid}:${queue}`);
-      if (latest !== undefined && snapshot.fetchedAt.getTime() <= latest) {
+      if (latest === undefined || snapshot.fetchedAt.getTime() <= latest) {
         continue;
       }
       observations.push({

@@ -4,7 +4,10 @@ import {
   getCurrentRankedSplit,
   rankedSplitForTimestamp,
 } from "#src/seasons.ts";
-import { rankToLeaguePoints } from "#src/model/riot/league-points.ts";
+import {
+  rankToChartPoints,
+  tierToOrdinal,
+} from "#src/model/riot/league-points.ts";
 import {
   RankSchema,
   RankedQueueTypeSchema,
@@ -106,7 +109,7 @@ export function buildPlayerRankHistory(input: {
       }
       series.points.push({
         at: observation.at,
-        leaguePoints: rankToLeaguePoints(observation.rank),
+        leaguePoints: rankToChartPoints(observation.rank),
         rank: observation.rank,
       });
       continue;
@@ -119,9 +122,6 @@ export function buildPlayerRankHistory(input: {
       lastAt: observation.at.getTime(),
     };
     previous.peak = higherRank(previous.peak, observation.rank);
-    if (observation.rankBefore !== undefined) {
-      previous.peak = higherRank(previous.peak, observation.rankBefore);
-    }
     if (observation.at.getTime() >= previous.lastAt) {
       previous.last = observation.rank;
       previous.lastAt = observation.at.getTime();
@@ -176,5 +176,12 @@ function finishQueue(queue: QueueAccumulator): QueueRankHistory {
 }
 
 function higherRank(left: Rank, right: Rank): Rank {
-  return rankToLeaguePoints(right) > rankToLeaguePoints(left) ? right : left;
+  const tier = tierToOrdinal(right.tier) - tierToOrdinal(left.tier);
+  if (tier !== 0) {
+    return tier > 0 ? right : left;
+  }
+  if (left.division !== right.division) {
+    return right.division < left.division ? right : left;
+  }
+  return right.lp > left.lp ? right : left;
 }

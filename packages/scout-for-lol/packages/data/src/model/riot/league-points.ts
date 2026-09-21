@@ -66,14 +66,36 @@ export function lpDiffToString(input: number): string {
 
 const MASTER_PLUS = new Set<Tier>(["master", "grandmaster", "challenger"]);
 const DIVISION_FLOORS: readonly Division[] = [4, 3, 2, 1];
+/**
+ * Master+ LP is unbounded, so a 400-LP stride would make Master 400 occupy
+ * the same number as Grandmaster 0. Chart space keeps each Master+ tier in
+ * its own band so the recorded tier stays visible.
+ */
+export const masterPlusChartStride = 10_000;
 
 function floorRank(tier: Tier, division: Division): Rank {
   return { tier, division, lp: 0, wins: 0, losses: 0 };
 }
 
 /**
+ * Numeric Y for a rank-history chart. Iron through Diamond reuse the
+ * competition ladder. Master+ uses {@link masterPlusChartStride} so a high
+ * Master LP cannot be drawn or labeled as Grandmaster or Challenger.
+ */
+export function rankToChartPoints(rank: Rank): number {
+  if (!MASTER_PLUS.has(rank.tier)) {
+    return rankToLeaguePoints(rank);
+  }
+  const masterFloor = rankToLeaguePoints(floorRank("master", 1));
+  const offset =
+    (tierToOrdinal(rank.tier) - tierToOrdinal("master")) *
+    masterPlusChartStride;
+  return masterFloor + offset + rank.lp;
+}
+
+/**
  * Division-floor ladder ticks for a rank axis. Master+ has no divisions, so
- * each of those tiers is a single tick at 0 LP.
+ * each of those tiers is a single tick at 0 LP in chart space.
  */
 export function rankLadderAxisTicks(): {
   leaguePoints: number;
@@ -83,14 +105,14 @@ export function rankLadderAxisTicks(): {
   for (const tier of TierSchema.options) {
     if (MASTER_PLUS.has(tier)) {
       ticks.push({
-        leaguePoints: rankToLeaguePoints(floorRank(tier, 1)),
+        leaguePoints: rankToChartPoints(floorRank(tier, 1)),
         label: startCase(tier),
       });
       continue;
     }
     for (const division of DIVISION_FLOORS) {
       ticks.push({
-        leaguePoints: rankToLeaguePoints(floorRank(tier, division)),
+        leaguePoints: rankToChartPoints(floorRank(tier, division)),
         label: `${startCase(tier)} ${divisionToString(division)}`,
       });
     }

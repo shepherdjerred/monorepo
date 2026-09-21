@@ -403,6 +403,31 @@ describe("player.rankHistory", () => {
     });
   });
 
+  test("does not invent live rank history from an imported current snapshot", async () => {
+    await seedPlayer({ serverId: guildId, alias: "Imported", puuids: [MAIN] });
+    await testPrisma.currentRankSnapshot.create({
+      data: {
+        puuid: MAIN,
+        soloRank: JSON.stringify({
+          tier: "gold",
+          division: 1,
+          lp: 12,
+          wins: 8,
+          losses: 4,
+        }),
+        flexRank: null,
+        fetchedAt: new Date("2026-09-19T12:00:00-07:00"),
+      },
+    });
+
+    const history = await getPlayerRankHistory(
+      { guildId, alias: "Imported" },
+      now,
+    );
+    expect(history.queues.solo.series).toEqual([]);
+    expect(history.queues.solo.previous).toEqual([]);
+  });
+
   test("refuses another guild's player and an anonymous caller", async () => {
     await seedPlayer({
       serverId: otherGuildId,
