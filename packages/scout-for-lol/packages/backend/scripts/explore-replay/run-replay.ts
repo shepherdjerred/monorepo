@@ -97,9 +97,9 @@ export type ReplayRunOutcome = {
   readonly runDirectories: readonly string[];
 };
 
-function sha256Hex(text: string): string {
+function sha256Hex(data: string | Uint8Array): string {
   const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(text);
+  hasher.update(data);
   return hasher.digest("hex");
 }
 
@@ -356,7 +356,28 @@ async function checkoutRevision(): Promise<string> {
   const status = (await gitOutput(["status", "--porcelain"])).trim();
   if (status === "") return revision;
   const diff = await gitOutput(["diff", "HEAD"]);
-  return `${revision}-dirty-${sha256Hex(`${status}\n${diff}`).slice(0, 12)}`;
+  // `git status` names an untracked file and `git diff HEAD` never carries
+  // its bytes, so without this two runs with different contents at the same
+  // new path would share a fingerprint — and a resume would retain cases the
+  // earlier contents produced.
+  const untracked = status
+    .split("\n")
+    .filter((line) => line.startsWith("?? "))
+    .map((line) => line.slice(3).trim())
+    .toSorted();
+  const untrackedContents: string[] = [];
+  for (const file of untracked) {
+    const handle = Bun.file(file);
+    // A directory, or something removed between the status and this read.
+    const bytes = (await handle.exists()) ? await handle.arrayBuffer() : null;
+    untrackedContents.push(
+      `${file}:${bytes === null ? "unreadable" : sha256Hex(new Uint8Array(bytes))}`,
+    );
+  }
+  const fingerprint = sha256Hex(
+    [status, diff, ...untrackedContents].join("\n"),
+  );
+  return `${revision}-dirty-${fingerprint.slice(0, 12)}`;
 }
 
 /** A bundle's manifest, or null when the run directory is new. */
@@ -619,6 +640,38 @@ async function runGuild(input: {
       options.resumeRunId === null
         ? []
         : await recordedCaseEntries(paths.index);
+    // An index entry is a claim that a case ran; the case file is the evidence.
+    // Skipping on the claim alone would let a bundle whose case file was
+    // deleted or truncated report a full case count and `passed: true` with
+    // nothing behind that case. Checked before the skip, so the run either has
+    // the evidence or says which case lost it.
+    const missingEvidence: string[] = [];
+    for (const entry of priorEntries) {
+      const caseFile = Bun.file(paths.caseFile(entry.caseId));
+      if (!(await caseFile.exists())) {
+        missingEvidence.push(`${entry.caseId}: no case file`);
+        continue;
+      }
+      try {
+        ReplayCaseCandidateSchema.parse(
+          z.looseObject({ candidate: z.unknown() }).parse(await caseFile.json())
+            .candidate,
+        );
+      } catch {
+        missingEvidence.push(`${entry.caseId}: case file is unreadable`);
+      }
+    }
+    if (missingEvidence.length > 0) {
+      throw new Error(
+        [
+          `Run ${runId} is indexed as having cases whose evidence is gone:`,
+          ...missingEvidence.map((entry) => `  - ${entry}`),
+          "",
+          "Resuming would report them as complete; start a new run instead.",
+        ].join("\n"),
+      );
+    }
+
     const alreadyDone = new Set(priorEntries.map((entry) => entry.caseId));
 
     // The skipped half of a resumed run still happened. Counting only the
@@ -668,9 +721,28 @@ async function runGuild(input: {
     // guild's captured profile, so replaying another guild's turns here would
     // answer them under capabilities they never had — and a prod pin with two
     // profiles would replay the whole corpus twice, once wrongly.
-    const conversationCases = conversations.cases.filter((entry) =>
-      entry.guildIds.includes(config.guildId),
-    );
+    //
+    // An exact singleton, not `includes`. A turn that ran with several guilds
+    // in scope could query all of them while only this profile's overrides
+    // were installed, and the mismatch check — which asks about this profile —
+    // would not necessarily notice. A pin describes one guild at a time, so a
+    // multi-guild turn has no profile here and is left out rather than
+    // answered under a narrower configuration than it had.
+    const skippedMultiGuild: string[] = [];
+    const conversationCases = conversations.cases.filter((entry) => {
+      if (entry.guildIds.length === 1 && entry.guildIds[0] === config.guildId) {
+        return true;
+      }
+      if (entry.guildIds.includes(config.guildId)) {
+        skippedMultiGuild.push(entry.caseId);
+      }
+      return false;
+    });
+    if (skippedMultiGuild.length > 0) {
+      process.stdout.write(
+        `  skipped ${skippedMultiGuild.length.toString()} turn(s) that ran with more guilds than ${config.label} covers\n`,
+      );
+    }
 
     const selectable = [...chipCases, ...conversationCases];
     // Every case's kind, so a bundle's records say what they actually are

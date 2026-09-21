@@ -523,6 +523,9 @@ describe("explore http route — remaining surface", () => {
         messages: z.array(
           z.object({
             content: z.string(),
+            // Same contract one level down: a cached client parses each
+            // message strictly, and an empty array still serializes the key.
+            guildIds: z.never().optional(),
             trace: z.array(
               z.object({
                 details: z.object({ kind: z.string() }).nullable(),
