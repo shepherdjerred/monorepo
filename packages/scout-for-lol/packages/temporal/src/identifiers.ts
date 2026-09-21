@@ -8,7 +8,11 @@ import {
   NotificationAttemptNonceSchema,
   type NotificationAttemptNonce,
 } from "@scout-for-lol/domain/notifications/intent.ts";
-import type { ScoutQueueClass, ScoutStage } from "./contracts.ts";
+import type {
+  ScoutDetachedWorkInput,
+  ScoutQueueClass,
+  ScoutStage,
+} from "./contracts.ts";
 import type { ScoutPrematchGameRef, ScoutV2Trigger } from "./contracts-v2.ts";
 import type { ScoutV2ActivityName } from "./activities.ts";
 
@@ -181,7 +185,7 @@ export function scoutExploreTimelineWorkflowId(
 
 export function scoutDetachedWorkWorkflowId(
   stage: ScoutStage,
-  kind: "parlay-generation",
+  kind: ScoutDetachedWorkInput["kind"],
   workId: string,
 ): string {
   return `scout-${stage}-${kind}-${workId}`;

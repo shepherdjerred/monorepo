@@ -93,6 +93,13 @@ function observedAt(value: Date | string | null): string {
   return new Date(value).toLocaleString();
 }
 
+function masteryPoints(points: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(points);
+}
+
 export function ConsumerPlayerProfile() {
   const { filters, setFilters } = usePlayerProfileUrlState();
   return (
@@ -334,6 +341,37 @@ function ConsumerPlayerProfileContent(props: {
                 <RankValue rank={account.ranks.ranked5s} compact />
               </div>
             </CardContent>
+            {account.mastery !== null && (
+              <CardContent className="border-t pt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium">Champion mastery</p>
+                  <p className="text-xs text-scout-subtle">
+                    {account.mastery.freshness === "stale" ? "Last known " : ""}
+                    {observedAt(account.mastery.fetchedAt)}
+                  </p>
+                </div>
+                {account.mastery.champions.length === 0 ? (
+                  <p className="mt-2 text-sm text-scout-subtle">
+                    No champion mastery recorded.
+                  </p>
+                ) : (
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {account.mastery.champions.map((champion) => (
+                      <li
+                        key={champion.championId}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <span>{champion.championName}</span>
+                        <span className="text-scout-subtle">
+                          M{champion.level.toString()} ·{" "}
+                          {masteryPoints(champion.points)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>

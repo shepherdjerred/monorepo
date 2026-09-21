@@ -114,6 +114,12 @@ export type LoadingScreenRankState = z.infer<
   typeof LoadingScreenRankStateSchema
 >;
 
+export const LoadingScreenMasterySchema = z.strictObject({
+  level: z.number().int().nonnegative(),
+  points: z.number().int().nonnegative(),
+});
+export type LoadingScreenMastery = z.infer<typeof LoadingScreenMasterySchema>;
+
 function validateRankVisibility(
   participant: {
     puuid: string | null;
@@ -160,6 +166,8 @@ export const BaseLoadingScreenParticipantSchema = z.strictObject({
   secondaryTreeId: RuneIdSchema.optional(),
   /** League-V4 lookup state for loading-screen presentation. */
   rankState: LoadingScreenRankStateSchema,
+  /** Mastery on the champion selected in this lobby, when Riot exposes it. */
+  mastery: LoadingScreenMasterySchema.optional(),
   /** Whether this player is tracked by the bot */
   isTrackedPlayer: z.boolean(),
 });
@@ -359,6 +367,7 @@ export const ClassicLoadingScreenParticipantSchema = z.strictObject({
   spell1Id: SummonerSpellIdSchema,
   spell2Id: SummonerSpellIdSchema,
   isTrackedPlayer: z.boolean(),
+  mastery: LoadingScreenMasterySchema.optional(),
 });
 export type ClassicLoadingScreenParticipant = z.infer<
   typeof ClassicLoadingScreenParticipantSchema

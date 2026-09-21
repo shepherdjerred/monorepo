@@ -16,6 +16,12 @@ import { fontFamilyForText } from "@scout-for-lol/design-system/satori/fonts";
 const CARD_WIDTH = 320;
 const CARD_HEIGHT = 560;
 
+function formatMasteryPoints(points: number): string {
+  if (points >= 1_000_000) return `${(points / 1_000_000).toFixed(1)}M`;
+  if (points >= 1000) return `${Math.round(points / 1000).toString()}K`;
+  return points.toString();
+}
+
 function ClassicSpell({ spellId }: { spellId: number }) {
   const imageName = getSummonerSpellImageNameById(spellId);
   return (
@@ -147,6 +153,22 @@ function ClassicCard({
             }}
           >
             SCOUT
+          </div>
+        )}
+        {participant.mastery !== undefined && (
+          <div
+            style={{
+              display: "flex",
+              color: classicPalette.gold.highlight,
+              fontFamily: classicTypography.stack.body,
+              fontWeight: 700,
+              fontSize: 14,
+              lineHeight: "18px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            M{participant.mastery.level.toString()} ·{" "}
+            {formatMasteryPoints(participant.mastery.points)}
           </div>
         )}
       </div>

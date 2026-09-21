@@ -159,6 +159,15 @@ export class RiotClient {
   };
 
   public readonly championMastery = {
+    byPuuid: async (
+      puuid: LeaguePuuid,
+      platform: PlatformRoute,
+      requestOptions: RateLimitedRequestOptions = {},
+    ): Promise<RawChampionMastery[]> => {
+      const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${encodeURIComponent(puuid)}`;
+      const data = await this.fetchJson(url, requestOptions);
+      return RawChampionMasteryListSchema.parse(data);
+    },
     topByPuuid: async (
       puuid: LeaguePuuid,
       platform: PlatformRoute,
