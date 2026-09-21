@@ -2,6 +2,7 @@ import { appendFile, mkdir, stat, readdir, chmod } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
+import { REPLAY_SIGNALS } from "#src/explore/replay/signals.ts";
 
 /**
  * Where a replay run is written, and the permissions it insists on first.
@@ -246,7 +247,15 @@ export const ReplayCaseIndexEntrySchema = z
     kind: z.enum(["chip", "conversation"]),
     status: z.enum(["ok", "error", "timeout", "skipped"]),
     durationMs: z.number().int().nonnegative(),
-    signals: z.array(z.string()),
+    /**
+     * The signals this case produced, as signals — not free strings.
+     *
+     * A resume derives its prior integrity failures from these. Accepting an
+     * unknown value and dropping it would let a corrupted `new_turn_errored`
+     * quietly reduce that count to zero and a resumed summary report
+     * `passed: true` over a run that had already failed.
+     */
+    signals: z.array(z.enum(REPLAY_SIGNALS)),
   })
   .strict();
 

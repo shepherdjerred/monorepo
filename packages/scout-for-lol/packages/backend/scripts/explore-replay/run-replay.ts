@@ -63,7 +63,6 @@ import type { ReplayBaseline, ReplaySide } from "#src/explore/replay/diff.ts";
 import { scoreCase } from "#src/explore/replay/scoring.ts";
 import { validateQuery } from "#src/reports/ai/scoutql-tools.ts";
 import {
-  REPLAY_SIGNALS,
   harnessIntegritySignals,
   replaySignalWeight,
 } from "#src/explore/replay/signals.ts";
@@ -353,7 +352,12 @@ async function checkoutRevision(): Promise<string> {
     );
   }
   // Tracked modifications and untracked files both change what ran.
-  const status = (await gitOutput(["status", "--porcelain"])).trim();
+  // `--untracked-files=all`, because the default collapses an untracked
+  // directory to a single `?? dir/` entry — editing a file inside it would
+  // leave the fingerprint unchanged.
+  const status = (
+    await gitOutput(["status", "--porcelain", "--untracked-files=all"])
+  ).trim();
   if (status === "") return revision;
   const diff = await gitOutput(["diff", "HEAD"]);
   // `git status` names an untracked file and `git diff HEAD` never carries
@@ -397,6 +401,9 @@ async function loadBaseline(
     readonly capabilities: ExploreCapabilitySet;
     /** This run's corpus, or null when it replays chips only. */
     readonly corpus: { readonly sha256: string } | null;
+    /** The data this run reads, so a baseline from other data is refused. */
+    readonly lake: { readonly buildId: string; readonly fingerprint: string };
+    readonly snapshotId: string;
   },
 ): Promise<ReadonlyMap<string, ReplayBaseline>> {
   const runDir = path.join(replayBundleRoot(Bun.env), runId);
@@ -441,6 +448,25 @@ async function loadBaseline(
   // A conversation case id is the conversation and turn index, which survives
   // re-curation: repin a leaf and the same id carries a different question.
   // Only the corpus hash can tell those apart.
+  // The data both runs read. A baseline from an older lake build or a
+  // re-pulled snapshot would differ on numbers and queries because the world
+  // changed, and the bundle would present that as candidate-versus-baseline.
+  if (manifest.lake.buildId !== against.lake.buildId) {
+    conflicts.push(
+      `lake build ${manifest.lake.buildId}, not ${against.lake.buildId}`,
+    );
+  }
+  if (manifest.lake.puuidRemapFingerprint !== against.lake.fingerprint) {
+    conflicts.push(
+      `PUUID remap ${manifest.lake.puuidRemapFingerprint}, not ${against.lake.fingerprint}`,
+    );
+  }
+  if (manifest.database.snapshotId !== against.snapshotId) {
+    conflicts.push(
+      `database snapshot ${manifest.database.snapshotId}, not ${against.snapshotId}`,
+    );
+  }
+
   const baselineCorpus = manifest.corpusSha256;
   const thisCorpus = against.corpus?.sha256 ?? null;
   if (baselineCorpus !== thisCorpus) {
@@ -461,7 +487,13 @@ async function loadBaseline(
   }
   const BaselineCaseSchema = z
     .object({
-      meta: z.object({ caseId: z.string() }).loose(),
+      meta: z
+        .object({
+          caseId: z.string(),
+          // Absent in bundles written before the field existed.
+          status: z.enum(["ok", "error", "timeout"]).optional(),
+        })
+        .loose(),
       candidate: ReplayCaseCandidateSchema,
     })
     .loose();
@@ -478,6 +510,13 @@ async function loadBaseline(
   for (const file of files) {
     const raw: unknown = await Bun.file(path.join(caseDir, file)).json();
     const parsed = BaselineCaseSchema.parse(raw);
+    // A turn that errored or timed out produced no answer. Diffing a later
+    // success against that empty observation would report every figure as
+    // newly added; the case is better off reported as having no baseline.
+    if (parsed.meta.status !== undefined && parsed.meta.status !== "ok") {
+      continue;
+    }
+    if (parsed.candidate.answer === null) continue;
     entries.set(parsed.meta.caseId, {
       ...parsed.candidate,
       source: "run",
@@ -679,13 +718,7 @@ async function runGuild(input: {
     // `summary.json` with `passed: true` over an earlier errored case, which
     // is the one thing `passed` is supposed to rule out.
     const priorIntegrityFailures = priorEntries.filter(
-      (entry) =>
-        harnessIntegritySignals(
-          entry.signals.flatMap((signal) => {
-            const parsed = z.enum(REPLAY_SIGNALS).safeParse(signal);
-            return parsed.success ? [parsed.data] : [];
-          }),
-        ).length > 0,
+      (entry) => harnessIntegritySignals(entry.signals).length > 0,
     ).length;
 
     const requesterId = DiscordAccountIdSchema.parse(config.requesterId);
@@ -874,6 +907,11 @@ async function runGuild(input: {
         guildId: config.guildId,
         capabilities: config.capabilities,
         corpus: conversations.corpus,
+        lake: {
+          buildId: pin.lake.buildId,
+          fingerprint: pin.lake.puuidRemapFingerprint,
+        },
+        snapshotId: pin.database.snapshotId,
       });
       for (const [caseId, entry] of baselineEntries) {
         baseline.set(caseId, entry);
