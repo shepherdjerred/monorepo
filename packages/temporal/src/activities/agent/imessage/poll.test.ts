@@ -24,8 +24,16 @@ const message = (row: number) => ({
   chats: [{ guid: "dm", style: 45 }],
 });
 const QueryBodySchema = z.object({
-  where: z.array(z.object({ args: z.record(z.string(), z.number()) })),
+  where: z.array(
+    z.object({ statement: z.string(), args: z.record(z.string(), z.number()) }),
+  ),
 });
+function isHighWaterQuery(input: z.infer<typeof QueryBodySchema>): boolean {
+  return input.where.some(
+    (where) =>
+      where.statement === "message.ROWID = (SELECT MAX(ROWID) FROM message)",
+  );
+}
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.config.mockResolvedValue({ enabled: true, owners: ["owner"] });
@@ -52,9 +60,7 @@ describe("durable BlueBubbles polling", () => {
   test("establishes an initial ROWID watermark without replaying history", async () => {
     mocks.request.mockImplementation(async (_route: string, body: unknown) => {
       const input = QueryBodySchema.parse(body);
-      const minimumRowId = input.where[0]?.args["minimumRowId"];
-      if (minimumRowId !== undefined)
-        return minimumRowId <= 75 ? [message(75)] : [];
+      if (isHighWaterQuery(input)) return [message(75)];
       return [message(50), message(75), message(60)];
     });
     const result = await pollBlueBubblesMessages({
@@ -84,9 +90,7 @@ describe("durable BlueBubbles polling", () => {
   test("freezes initialization before admitting messages that arrive during it", async () => {
     mocks.request.mockImplementation(async (_route: string, body: unknown) => {
       const input = QueryBodySchema.parse(body);
-      const minimumRowId = input.where[0]?.args["minimumRowId"];
-      if (minimumRowId !== undefined)
-        return minimumRowId <= 1000 ? [message(1000)] : [];
+      if (isHighWaterQuery(input)) return [message(1000)];
       const cursor = input.where[0]?.args["cursor"];
       if (cursor === 0)
         return Array.from({ length: 1000 }, (_, index) => message(index + 1));
