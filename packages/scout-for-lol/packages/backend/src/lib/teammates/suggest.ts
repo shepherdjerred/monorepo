@@ -17,6 +17,7 @@ import {
   LeaguePuuidSchema,
   PlayerAliasSchema,
   RegionSchema,
+  RiotIdSchema,
   isCustomMatchPayload,
   type LeaguePuuid,
   type MatchId,
@@ -75,7 +76,7 @@ export type SuggestTeammatesResult = z.infer<
   typeof SuggestTeammatesResultSchema
 >;
 
-type Round = { match: RawMatch; region: Region };
+type Round = { match: RawMatch; region: Region; matchId: MatchId };
 
 type Tally = {
   gameName: string;
@@ -83,6 +84,7 @@ type Tally = {
   region: Region;
   gamesTogether: number;
   lastPlayedMs: number;
+  lastMatchId: MatchId;
 };
 
 function isSuggestible(
@@ -94,10 +96,12 @@ function isSuggestible(
   if (!selfTeamIds.has(participant.teamId)) return false;
   if (selfPuuids.has(participant.puuid)) return false;
   if (trackedPuuids.has(participant.puuid)) return false;
-  return (
-    participant.riotIdGameName !== undefined &&
-    participant.riotIdGameName.trim().length > 0
-  );
+  if (participant.riotIdGameName === undefined) return false;
+  // The Add flow parses this exact text with RiotIdTextSchema (a RiotIdSchema
+  // refinement), so an unusable identity must never reach the suggestion list.
+  return RiotIdSchema.safeParse(
+    `${participant.riotIdGameName}#${participant.riotIdTagline}`,
+  ).success;
 }
 
 type TallyState = {
@@ -108,26 +112,29 @@ type TallyState = {
 function recordTeammate(
   state: TallyState,
   participant: RawMatch["info"]["participants"][number],
-  region: Region,
-  lastPlayedMs: number,
+  round: Round,
 ): void {
   if (state.seenInMatch.has(participant.puuid)) return;
   state.seenInMatch.add(participant.puuid);
-  // isSuggestible guarantees riotIdGameName is present and non-blank.
+  // isSuggestible guarantees a valid Riot ID, so gameName is present.
   const gameName = participant.riotIdGameName ?? "";
   const existing = state.perPuuid.get(participant.puuid);
   if (existing === undefined) {
     state.perPuuid.set(participant.puuid, {
       gameName,
       tagLine: participant.riotIdTagline,
-      region,
+      region: round.region,
       gamesTogether: 1,
-      lastPlayedMs,
+      lastPlayedMs: round.match.info.gameEndTimestamp,
+      lastMatchId: round.matchId,
     });
     return;
   }
   existing.gamesTogether += 1;
-  existing.lastPlayedMs = Math.max(existing.lastPlayedMs, lastPlayedMs);
+  if (round.match.info.gameEndTimestamp >= existing.lastPlayedMs) {
+    existing.lastPlayedMs = round.match.info.gameEndTimestamp;
+    existing.lastMatchId = round.matchId;
+  }
 }
 
 /**
@@ -135,9 +142,10 @@ function recordTeammate(
  *
  * - Skips custom games (no stable duo signal, same rule as the import path).
  * - A match counts only when a self PUUID is on a team; only that team counts.
- * - Skips self, already-tracked PUUIDs, and rows without a Riot game name
- *   (bots and privacy-scrubbed participants carry no usable identity).
- * - Ranked by games together, ties broken by most recent shared game.
+ * - Skips self, already-tracked PUUIDs, and rows whose Riot ID would not
+ *   parse (bots and privacy-scrubbed participants carry no usable identity).
+ * - Ranked by games together, then most recent shared game, then match and
+ *   player identity, so truncation at topN is deterministic.
  */
 export function aggregateTeammates(input: {
   rounds: Round[];
@@ -147,7 +155,8 @@ export function aggregateTeammates(input: {
 }): TeammateSuggestion[] {
   const perPuuid = new Map<string, Tally>();
 
-  for (const { match, region } of input.rounds) {
+  for (const round of input.rounds) {
+    const { match } = round;
     if (isCustomMatchPayload(match)) continue;
     const selfTeamIds = new Set(
       match.info.participants
@@ -168,7 +177,7 @@ export function aggregateTeammates(input: {
       ) {
         continue;
       }
-      recordTeammate(state, participant, region, match.info.gameEndTimestamp);
+      recordTeammate(state, participant, round);
     }
   }
 
@@ -181,21 +190,40 @@ export function aggregateTeammates(input: {
       region: row.region,
       gamesTogether: row.gamesTogether,
       lastPlayedMs: row.lastPlayedMs,
+      lastMatchId: row.lastMatchId,
     }))
     .toSorted(
       (left, right) =>
         right.gamesTogether - left.gamesTogether ||
-        right.lastPlayedMs - left.lastPlayedMs,
+        right.lastPlayedMs - left.lastPlayedMs ||
+        compareStrings(left.lastMatchId, right.lastMatchId) ||
+        compareStrings(left.puuid, right.puuid),
     )
-    .slice(0, input.topN);
+    .slice(0, input.topN)
+    .map((row) => ({
+      puuid: row.puuid,
+      gameName: row.gameName,
+      tagLine: row.tagLine,
+      riotId: row.riotId,
+      region: row.region,
+      gamesTogether: row.gamesTogether,
+      lastPlayedMs: row.lastPlayedMs,
+    }));
+}
+
+function compareStrings(left: string, right: string): number {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
 }
 
 type SelfAccount = { puuid: LeaguePuuid; region: Region };
 
 /**
  * Load the player's stored accounts. Stored strings are untyped at the
- * boundary — narrow them before they reach the Riot client. Returns null
- * when the alias is not tracked in this guild.
+ * boundary, and a malformed row is a broken internal contract — parse
+ * strictly and fail the request rather than suggesting from partial data.
+ * Returns null when the alias is not tracked in this guild.
  */
 async function loadSelfAccounts(
   guildId: string,
@@ -212,18 +240,10 @@ async function loadSelfAccounts(
   });
   if (player === null) return null;
 
-  const accounts: SelfAccount[] = [];
-  for (const account of player.accounts) {
-    const parsedPuuid = LeaguePuuidSchema.safeParse(account.puuid);
-    const parsedRegion = RegionSchema.safeParse(account.region);
-    if (parsedPuuid.success && parsedRegion.success) {
-      accounts.push({
-        puuid: parsedPuuid.data,
-        region: parsedRegion.data,
-      });
-    }
-  }
-  return accounts;
+  return player.accounts.map((account) => ({
+    puuid: LeaguePuuidSchema.parse(account.puuid),
+    region: RegionSchema.parse(account.region),
+  }));
 }
 
 /**
@@ -287,13 +307,18 @@ async function fetchRoundMatches(
     const batch = rounds.slice(index, index + MATCH_FETCH_CONCURRENCY);
     const results = await Promise.all(
       batch.map(async (round) => ({
+        matchId: round.matchId,
         region: round.region,
         match: await fetchMatchData(round.matchId, round.region),
       })),
     );
     for (const result of results) {
       if (result.match !== undefined) {
-        fetched.push({ match: result.match, region: result.region });
+        fetched.push({
+          match: result.match,
+          region: result.region,
+          matchId: result.matchId,
+        });
       }
     }
   }

@@ -1,4 +1,10 @@
-import { useEffect, useReducer, useRef, type ReactElement } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { match } from "ts-pattern";
@@ -82,6 +88,11 @@ export function OnboardingWizard() {
   // subscription.list is paginated ({ items, nextCursor }); the onboarding
   // wizard only needs the first page's items for its "tracking so far" list.
   const subs = subsQuery.data?.items ?? [];
+  // Alias successfully tracked in subscribe-self. Anchors teammate
+  // suggestions (and their destination channel) on the account the current
+  // user just added — never on another guild member's subscription.
+  const [selfAlias, setSelfAlias] = useState("");
+  const selfSub = subs.find((sub) => sub.player.alias === selfAlias);
 
   function complete(outcome: OnboardingOutcome): void {
     const user = meQuery.data?.user ?? null;
@@ -187,6 +198,8 @@ export function OnboardingWizard() {
           discordId={meQuery.data?.user?.discordId ?? ""}
           existingSubs={[]}
           selfAlias=""
+          selfChannelId=""
+          onSelfAdded={setSelfAlias}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),
@@ -215,7 +228,8 @@ export function OnboardingWizard() {
             alias: s.player.alias,
             channelId: s.channelId,
           }))}
-          selfAlias={subs[0]?.player.alias ?? ""}
+          selfAlias={selfAlias}
+          selfChannelId={selfSub?.channelId ?? ""}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),

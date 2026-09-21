@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
@@ -5,19 +6,34 @@ import {
   Card,
   CardContent,
 } from "@scout-for-lol/design-system/components/card";
-import { useTRPC } from "#src/lib/query/trpc.ts";
+import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
 import { useAddSubscription } from "#src/lib/player/use-add-subscription.ts";
 import { ServerFormError } from "#src/components/semantic-form.tsx";
 import { regionLabel } from "#src/lib/regions.ts";
+
+type SuggestionsResult = RouterOutputs["player"]["suggestTeammates"];
+
+function withoutAdded(
+  previous: SuggestionsResult | undefined,
+  addedPuuid: string,
+): SuggestionsResult | undefined {
+  if (previous?.kind !== "ok") return previous;
+  return {
+    kind: "ok",
+    suggestions: previous.suggestions.filter(
+      (suggestion) => suggestion.puuid !== addedPuuid,
+    ),
+  };
+}
 
 /**
  * "Played with recently" suggestions for the onboarding add-friends step.
  * Counts same-team teammates across the self alias's recent matches; every
  * pick still goes through the verified `subscription.add` flow.
  *
- * Renders nothing when there is no self alias yet, when the player is
- * unknown, or when there are no suggestions — the manual form below stays
- * the fallback for every state.
+ * Renders nothing when there is no self alias or destination channel yet,
+ * when the player is unknown, or when there are no suggestions — the manual
+ * form below stays the fallback for every state.
  */
 export function TeammateSuggestions(props: {
   guildId: string;
@@ -27,6 +43,9 @@ export function TeammateSuggestions(props: {
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  // The PUUID just added. Removed from the cached list on success so one
+  // click never refetches the backend's full Riot workload.
+  const addedPuuid = useRef<string | null>(null);
   const suggestions = useQuery(
     trpc.player.suggestTeammates.queryOptions(
       { guildId: props.guildId, alias: props.selfAlias },
@@ -36,14 +55,25 @@ export function TeammateSuggestions(props: {
   const { submit, isPending, error } = useAddSubscription({
     guildId: props.guildId,
     onAdded: () => {
-      void queryClient.invalidateQueries({
-        queryKey: trpc.player.suggestTeammates.pathKey(),
-      });
+      const added = addedPuuid.current;
+      addedPuuid.current = null;
+      if (added !== null) {
+        queryClient.setQueryData(
+          trpc.player.suggestTeammates.queryOptions({
+            guildId: props.guildId,
+            alias: props.selfAlias,
+          }).queryKey,
+          (previous: SuggestionsResult | undefined) =>
+            withoutAdded(previous, added),
+        );
+      }
       props.onAdded();
     },
   });
 
-  if (props.selfAlias.length === 0) return null;
+  if (props.selfAlias.length === 0 || props.channelId.length === 0) {
+    return null;
+  }
   if (suggestions.isPending) {
     return (
       <Card>
@@ -108,8 +138,9 @@ export function TeammateSuggestions(props: {
                 type="button"
                 size="sm"
                 variant="outline"
-                disabled={isPending || props.channelId.length === 0}
+                disabled={isPending}
                 onClick={() => {
+                  addedPuuid.current = suggestion.puuid;
                   submit({
                     channelId: props.channelId,
                     region: suggestion.region,

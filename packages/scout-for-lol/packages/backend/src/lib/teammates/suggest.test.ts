@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
+  MatchIdSchema,
   RawMatchSchema,
+  type MatchId,
   type RawMatch,
   type Region,
 } from "@scout-for-lol/data";
@@ -29,7 +31,7 @@ function roster(
   match: RawMatch,
   rows: Row[],
   opts?: { gameType?: string; end?: number },
-): { match: RawMatch; region: Region } {
+): { match: RawMatch; region: Region; matchId: MatchId } {
   const template = match.info.participants[0];
   if (template === undefined) throw new Error("fixture has no participants");
   const clone = structuredClone(match);
@@ -46,7 +48,11 @@ function roster(
   });
   if (opts?.gameType !== undefined) clone.info.gameType = opts.gameType;
   if (opts?.end !== undefined) clone.info.gameEndTimestamp = opts.end;
-  return { region: REGION, match: clone };
+  return {
+    region: REGION,
+    match: clone,
+    matchId: MatchIdSchema.parse(clone.metadata.matchId),
+  };
 }
 
 describe("aggregateTeammates", () => {
@@ -129,6 +135,71 @@ describe("aggregateTeammates", () => {
     });
 
     expect(suggestions).toEqual([]);
+  });
+
+  test("omits rows whose Riot ID would not parse", async () => {
+    const base = await baseMatch();
+    const rounds = [
+      roster(base, [
+        { puuid: SELF, team: 100, name: "Me" },
+        { puuid: "puuid-good", team: 100, name: "Good", tag: "NA1" },
+        { puuid: "puuid-bad-tag", team: 100, name: "Bad", tag: "" },
+      ]),
+    ];
+
+    const suggestions = aggregateTeammates({
+      rounds,
+      selfPuuids: new Set([SELF]),
+      trackedPuuids: new Set([SELF]),
+      topN: 5,
+    });
+
+    expect(suggestions.map((suggestion) => suggestion.riotId)).toEqual([
+      "Good#NA1",
+    ]);
+  });
+
+  test("breaks full ties by match and player identity", async () => {
+    const base = await baseMatch();
+    const forward = [
+      roster(
+        base,
+        [
+          { puuid: SELF, team: 100, name: "Me" },
+          { puuid: "puuid-b", team: 100, name: "Bee" },
+          { puuid: "puuid-a", team: 100, name: "Aye" },
+        ],
+        { end: 5000 },
+      ),
+    ];
+    const reversed = [
+      roster(
+        base,
+        [
+          { puuid: "puuid-a", team: 100, name: "Aye" },
+          { puuid: "puuid-b", team: 100, name: "Bee" },
+          { puuid: SELF, team: 100, name: "Me" },
+        ],
+        { end: 5000 },
+      ),
+    ];
+
+    const run = (rounds: typeof forward) =>
+      aggregateTeammates({
+        rounds,
+        selfPuuids: new Set([SELF]),
+        trackedPuuids: new Set([SELF]),
+        topN: 1,
+      });
+
+    // Same count, same timestamp, same match: the cutoff pick is stable
+    // regardless of upstream participant order.
+    expect(run(forward).map((suggestion) => suggestion.puuid)).toEqual([
+      "puuid-a",
+    ]);
+    expect(run(reversed).map((suggestion) => suggestion.puuid)).toEqual([
+      "puuid-a",
+    ]);
   });
 
   test("breaks count ties by most recent game and honors topN", async () => {
