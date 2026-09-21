@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16718@sha256:15fec8264b5c212c95a7b75feae53505e5b3cd2e5030eb424139adfd30fb1cb9",
+      "value": "2.0.0-16743@sha256:715b38548e36589da6de6fd840df794a9ed0ea154d2ffb424146f5ab5ec3b136",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -667,7 +667,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16718@sha256:5e3548e3012ca58364369fff2ab16b711f8f7cafc88618131bafbca4f2267610",
+      "value": "2.0.0-16753@sha256:83d3776e58a004d24172af38def91164c0c7102c5eeed3ebfde7340709b19126",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
         "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
@@ -828,7 +828,8 @@
         "database contract: postgresql sha256:d6f1de94543542e0572a008dac99fbd5cef15f65499124a545c41405f73e9ab9",
         "database contract: postgresql sha256:295e7af1cdf933de7597e883e2db8905109e3227410bb87534e1ae9fb46ad752",
         "database contract: postgresql sha256:cb81789547c64a7da10cc9ae4a70178dc90c904e1bbbf1c555d0b10d8e55c128",
-        "database contract: postgresql sha256:5e3548e3012ca58364369fff2ab16b711f8f7cafc88618131bafbca4f2267610"
+        "database contract: postgresql sha256:5e3548e3012ca58364369fff2ab16b711f8f7cafc88618131bafbca4f2267610",
+        "database contract: postgresql sha256:83d3776e58a004d24172af38def91164c0c7102c5eeed3ebfde7340709b19126"
       ]
     },
     {
