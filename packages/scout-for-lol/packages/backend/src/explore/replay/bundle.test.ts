@@ -317,7 +317,10 @@ describe("ReplayManifestSchema", () => {
       guildId: "1337623164146155593",
       expectedCapabilities: { bucks: true },
       lake: { buildId: "b1", puuidRemapFingerprint: "none" },
-      database: { name: "scout_beta_snapshot" },
+      database: {
+        name: "scout_beta_snapshot",
+        pulledAt: "2026-09-19T00:05:00.000Z",
+      },
       model: "gpt-5.6-luna",
       chipCatalogSha256: "a".repeat(64),
       corpusSha256: null,

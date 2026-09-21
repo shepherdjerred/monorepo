@@ -70,6 +70,11 @@ Signals stored in a case record are those computed at run time.
 `explore:summarize` re-derives them with the current grader, so a grading change
 applies to bundles already written.
 
+That holds while the recorded capability set is one the current code
+understands. Adding a capability ends it: the older bundle never resolved the
+new one, so `explore:summarize` refuses it rather than inventing a value, and
+the sweep has to be re-run.
+
 ## Case kinds
 
 | Kind              | Case id                      | Baseline                                 |

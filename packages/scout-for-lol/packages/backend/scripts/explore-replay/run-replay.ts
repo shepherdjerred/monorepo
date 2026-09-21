@@ -260,6 +260,11 @@ function manifestDifferences(
     current.lake.puuidRemapFingerprint,
   );
   compare("database", existing.database.name, current.database.name);
+  compare(
+    "database snapshot",
+    existing.database.pulledAt,
+    current.database.pulledAt,
+  );
   compare("model", existing.model, current.model);
   compare(
     "chip catalog",
@@ -285,6 +290,34 @@ function manifestDifferences(
     );
   }
   return differences;
+}
+
+/**
+ * The checkout a run was produced from.
+ *
+ * Not `GIT_SHA`: the documented invocation goes through `dev-web.env.tpl`,
+ * which sets it to forty zeroes, and without that file it is unset. Comparing
+ * two runs across a code change is the harness's whole purpose, and tool or
+ * runtime changes can leave the prompt hash identical, so a bundle that cannot
+ * say which revision produced it is missing the one field that would explain
+ * the difference. Asked of git directly, and refused rather than guessed.
+ */
+async function checkoutRevision(): Promise<string> {
+  const proc = Bun.spawn(["git", "rev-parse", "HEAD"], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [out, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    proc.exited,
+  ]);
+  const revision = out.trim();
+  if (exitCode !== 0 || !/^[0-9a-f]{40}$/.test(revision)) {
+    throw new Error(
+      "Could not resolve the checkout revision with `git rev-parse HEAD`; a bundle must record which code produced it.",
+    );
+  }
+  return revision;
 }
 
 /** A bundle's manifest, or null when the run directory is new. */
@@ -633,7 +666,7 @@ async function runGuild(input: {
         buildId: pin.lake.buildId,
         puuidRemapFingerprint: pin.lake.puuidRemapFingerprint,
       },
-      database: { name: pin.database.name },
+      database: { name: pin.database.name, pulledAt: pin.database.pulledAt },
       model,
       chipCatalogSha256: exploreChipCatalogSha256(),
       corpusSha256: conversations.corpus?.sha256 ?? null,
@@ -663,7 +696,7 @@ async function runGuild(input: {
         hourly: Number(Bun.env["LLM_HOURLY_TOKEN_BUDGET"] ?? 2_000_000),
         daily: Number(Bun.env["LLM_DAILY_TOKEN_BUDGET"] ?? 20_000_000),
       },
-      gitCommit: Bun.env["GIT_SHA"] ?? "unknown",
+      gitCommit: await checkoutRevision(),
       concurrency: options.concurrency,
       caseCount: priorEntries.length + cases.length,
       baselineRunId: options.baselineRunId,

@@ -253,6 +253,19 @@ describe("replaySignals profile assertions", () => {
     expect(result).toContain("gated_chip_did_not_refuse");
   });
 
+  test("still flags produced output with a follow-up question appended", () => {
+    // The leak this signal exists to catch is prose: a drafted dare has no
+    // rows and fits the length ceiling, so a trailing question must not buy it
+    // a pass.
+    const result = signals({
+      chipExpectation: "gated-off",
+      answer:
+        "Dare: “For your next mid-lane game, lock in an assassin and play like you mean it—no safe farming simulator. Get first blood before 15 minutes.” Want to review it?",
+      candidateRowsReturned: null,
+    });
+    expect(result).toContain("gated_chip_did_not_refuse");
+  });
+
   test("does not let a question mark excuse an answer built on rows", () => {
     const result = signals({
       chipExpectation: "gated-off",

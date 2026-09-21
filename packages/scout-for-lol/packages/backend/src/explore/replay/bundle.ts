@@ -154,7 +154,21 @@ export const ReplayManifestSchema = z
         puuidRemapFingerprint: z.string().min(1),
       })
       .strict(),
-    database: z.object({ name: z.string().min(1) }).strict(),
+    database: z
+      .object({
+        name: z.string().min(1),
+        /**
+         * When the snapshot was restored, from the dataset pin.
+         *
+         * The name is reusable — `scout_beta_snapshot` is restored in place on
+         * every pull — so it identifies the slot, not the contents. Two runs
+         * can share a name and a lake build while the relational rows behind
+         * bucks, challenges and conversations have been replaced underneath
+         * them.
+         */
+        pulledAt: z.iso.datetime(),
+      })
+      .strict(),
     model: z.string().min(1),
     chipCatalogSha256: z.string().regex(/^[0-9a-f]{64}$/),
     corpusSha256: z

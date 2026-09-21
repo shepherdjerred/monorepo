@@ -66,7 +66,32 @@ async function readCases(runDir: string): Promise<readonly RollupCase[]> {
   const cases: RollupCase[] = [];
   for (const file of files) {
     const raw: unknown = await Bun.file(path.join(caseDir, file)).json();
-    const parsed = CaseFileSchema.parse(raw);
+    const result = CaseFileSchema.safeParse(raw);
+    if (!result.success) {
+      // Re-scoring works on any bundle whose recorded capability set this
+      // code understands. Adding a capability breaks that: the older bundle
+      // never resolved it, so its cases say nothing about it, and inventing a
+      // value would score evidence against a configuration that never ran.
+      const missing = result.error.issues
+        .filter(
+          (issue) =>
+            issue.path[0] === "meta" &&
+            issue.path[1] === "capabilities" &&
+            issue.code === "invalid_type",
+        )
+        .map((issue) => String(issue.path[2]));
+      if (missing.length > 0) {
+        throw new Error(
+          [
+            `${path.basename(runDir)} predates ${missing.join(", ")} and cannot be re-scored.`,
+            "Its cases never resolved those capabilities, so no value for them would be true of this run.",
+            "Re-run the sweep against a re-captured dataset pin to get a comparable bundle.",
+          ].join("\n"),
+        );
+      }
+      throw result.error;
+    }
+    const parsed = result.data;
     const status =
       parsed.meta.status ??
       (parsed.error === null

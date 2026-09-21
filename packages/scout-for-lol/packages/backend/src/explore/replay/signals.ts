@@ -117,23 +117,44 @@ const DECLINE_MAX_LENGTH = 400;
  *
  * The prod sweep is where this showed up. Three chips for features prod has
  * switched off were flagged as answered. Two were questions back to the user:
- * "Do you mean League Challenges, or challenges in a Scout competition?" and
- * "I'm not sure what you mean by 'dare terms.'" (145 and 123 characters, no
- * tool calls, no rows). The third really did draft a dare for a guild with
- * dares off, at 205 characters and no question mark. That case is the finding;
- * the other two were the grader's.
+ * "Do you mean League Challenges, or challenges in a Scout competition? The
+ * answer depends on which challenge system and reward you're referring to."
+ * and "I'm not sure what you mean by 'dare terms.' Do you mean popular terms
+ * used in League dares, or something specific in Scout?" The third really did
+ * draft a dare for a guild with dares off. That case is the finding; the other
+ * two were the grader's.
  *
- * Same shape as `declinedToAnswer` on purpose: a clarification rests on
- * nothing either, so it must return no rows and stay brief. The question mark
- * is what separates the two, and it is what separated them in the evidence.
+ * A question mark alone cannot separate them, because the leak this signal
+ * exists to catch is prose — a drafted dare has no rows and fits well under
+ * the length ceiling, so `Dare: "…" Want to review it?` would pass as a
+ * clarification and suppress the very finding being looked for. So the
+ * question has to be what the answer *is*, not something it ends with: the
+ * prose outside the questions is capped, tightly.
+ *
+ * The ceiling comes from the evidence. The two real clarifications carry 76
+ * and 42 characters of statement prose; the drafted dare carries 143 with a
+ * question appended. This sits between them, nearer the clarifications,
+ * because a clarification may add a sentence of context and not a paragraph of
+ * output.
  */
+const CLARIFICATION_MAX_STATEMENT_LENGTH = 120;
+
 function askedForClarification(input: {
   readonly answer: string;
   readonly rowsReturned: number | null;
 }): boolean {
   if (!input.answer.includes("?")) return false;
   if ((input.rowsReturned ?? 0) > 0) return false;
-  return input.answer.length <= DECLINE_MAX_LENGTH;
+  if (input.answer.length > DECLINE_MAX_LENGTH) return false;
+  // Everything the answer states rather than asks: remove each question — a
+  // run of text ending in a question mark — and weigh what is left.
+  //
+  // Not a sentence split. A closing quote after the full stop defeats one,
+  // which is how `…before 15 minutes.\u201d Want to review it?` first slipped
+  // through as a clarification: the drafted dare and the question landed in a
+  // single piece that was dropped whole for ending in a mark.
+  const statements = input.answer.replaceAll(/[^.!?]*\?/g, "").trim();
+  return statements.length <= CLARIFICATION_MAX_STATEMENT_LENGTH;
 }
 
 function answeredSomething(answer: string | null): boolean {
