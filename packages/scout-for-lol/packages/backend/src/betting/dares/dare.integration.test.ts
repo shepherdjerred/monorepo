@@ -901,9 +901,20 @@ describe("capture and settlement: payouts", () => {
   test("remakes, wrong queues, pre-activation and post-window games never capture", async () => {
     const dareId = await makeActive({ conditions: winConditions(2) });
 
+    // Riot marks a remake with the early-surrender flags, not a short clock.
     const remake = RawMatchSchema.parse({
       ...winningMatch(ONE_TARGET),
-      info: { ...winningMatch(ONE_TARGET).info, gameDuration: 200 },
+      info: {
+        ...winningMatch(ONE_TARGET).info,
+        gameDuration: 120,
+        participants: winningMatch(ONE_TARGET).info.participants.map(
+          (participant) => ({
+            ...participant,
+            gameEndedInEarlySurrender: true,
+            teamEarlySurrendered: true,
+          }),
+        ),
+      },
     });
     expect(await settleDaresForMatch(remake, db, settleTime)).toEqual([]);
 
