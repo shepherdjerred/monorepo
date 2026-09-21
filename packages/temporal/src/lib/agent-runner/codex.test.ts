@@ -92,6 +92,22 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
+async function withLifecycleDirectory(
+  name: string,
+  action: (input: { directory: string; codexHome: string }) => Promise<void>,
+): Promise<void> {
+  const directory = path.join(os.tmpdir(), `${name}-${crypto.randomUUID()}`);
+  const codexHome = path.join(directory, "home");
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  try {
+    await action({ directory, codexHome });
+    const restored = await stat(directory);
+    expect(restored.mode & 0o777).toBe(0o700);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
 describe("runCodexAgentTurn failure classification", () => {
   test("never materializes subscription credentials in the provider home", async () => {
     mocks.subscriptionEvents.mockImplementation((input: unknown) => {
@@ -205,65 +221,50 @@ describe("runCodexAgentTurn failure classification", () => {
 
 describe("runCodexAgentTurn preparation", () => {
   test("restores a persistent OpenRouter home when setup fails", async () => {
-    const lifecycleDirectory = path.join(
-      os.tmpdir(),
-      `codex-openrouter-lifecycle-${crypto.randomUUID()}`,
-    );
-    const codexHome = path.join(lifecycleDirectory, "home");
-    await mkdir(lifecycleDirectory, { recursive: true, mode: 0o700 });
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
     mocks.createOpenRouterConfig.mockImplementation(() => {
       throw new Error("OpenRouter setup failed");
     });
 
-    try {
-      await expect(
-        runCodexAgentTurn({
-          service: "temporal",
-          callSite: "agent-chat",
-          prompt: "continue",
-          model: "openrouter/model",
-          maxTurns: 4,
-          turnBudgetKind: "turns",
-          cwd: "/work/session",
-          auth: { kind: "openrouter", apiKey: "openrouter-secret" },
-          env: { CODEX_HOME: codexHome },
-          signal: new AbortController().signal,
-          sandboxPolicy: {
-            sandboxMode: "danger-full-access",
-            networkAccessEnabled: true,
-            webSearchMode: "live",
-          },
-          resumeSessionId: "codex-session",
-          beforeEvent: () => Promise.resolve(true),
-          onEvent: vi.fn(),
-        }),
-      ).rejects.toMatchObject({ name: "AgentTurnExecutionError" });
-
-      const restoredLifecycle = await stat(lifecycleDirectory);
-      expect(restoredLifecycle.mode & 0o777).toBe(0o700);
-    } finally {
-      await rm(lifecycleDirectory, { recursive: true, force: true });
-    }
+    await withLifecycleDirectory(
+      "codex-openrouter-lifecycle",
+      async ({ codexHome }) => {
+        await expect(
+          runCodexAgentTurn({
+            service: "temporal",
+            callSite: "agent-chat",
+            prompt: "continue",
+            model: "openrouter/model",
+            maxTurns: 4,
+            turnBudgetKind: "turns",
+            cwd: "/work/session",
+            auth: { kind: "openrouter", apiKey: "openrouter-secret" },
+            env: { CODEX_HOME: codexHome },
+            signal: new AbortController().signal,
+            sandboxPolicy: {
+              sandboxMode: "danger-full-access",
+              networkAccessEnabled: true,
+              webSearchMode: "live",
+            },
+            resumeSessionId: "codex-session",
+            beforeEvent: () => Promise.resolve(true),
+            onEvent: vi.fn(),
+          }),
+        ).rejects.toMatchObject({ name: "AgentTurnExecutionError" });
+      },
+    );
   });
 
   test("rolls back subscription preparation when launcher setup fails", async () => {
-    const lifecycleDirectory = path.join(
-      os.tmpdir(),
-      `codex-runner-lifecycle-${crypto.randomUUID()}`,
-    );
-    const codexHome = path.join(lifecycleDirectory, "home");
-    const invalidTemporaryDirectory = path.join(
-      lifecycleDirectory,
-      "not-a-directory",
-    );
-    await mkdir(lifecycleDirectory, { recursive: true, mode: 0o700 });
-    await chmod(lifecycleDirectory, 0o700);
-    await writeFile(invalidTemporaryDirectory, "file");
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
-    vi.stubEnv("TMPDIR", invalidTemporaryDirectory);
-
-    try {
+    await withLifecycleDirectory("codex-runner-lifecycle", async (input) => {
+      const invalidTemporaryDirectory = path.join(
+        input.directory,
+        "not-a-directory",
+      );
+      await chmod(input.directory, 0o700);
+      await writeFile(invalidTemporaryDirectory, "file");
+      vi.stubEnv("TMPDIR", invalidTemporaryDirectory);
       await expect(
         runCodexAgentTurn({
           service: "temporal",
@@ -282,7 +283,7 @@ describe("runCodexAgentTurn preparation", () => {
               },
             }),
           },
-          env: { CODEX_HOME: codexHome },
+          env: { CODEX_HOME: input.codexHome },
           signal: new AbortController().signal,
           sandboxPolicy: {
             sandboxMode: "danger-full-access",
@@ -293,12 +294,7 @@ describe("runCodexAgentTurn preparation", () => {
           onEvent: vi.fn(),
         }),
       ).rejects.toMatchObject({ name: "AgentTurnExecutionError" });
-
-      const restoredLifecycle = await stat(lifecycleDirectory);
-      expect(restoredLifecycle.mode & 0o777).toBe(0o700);
-    } finally {
-      await rm(lifecycleDirectory, { recursive: true, force: true });
-    }
+    });
   });
 });
 
