@@ -147,7 +147,6 @@ export function agentChatTurnRequestsMatch(
     previous.turnId === incoming.turnId &&
     previous.prompt === incoming.prompt &&
     previous.submittedAt === incoming.submittedAt &&
-    previous.providerStartDeadline === incoming.providerStartDeadline &&
     sourcesMatch
   );
 }

@@ -196,53 +196,51 @@ export async function runAgentChatTurnWithDependencies(
 ): Promise<AgentChatTurnResult> {
   const input = RunAgentChatTurnInputSchema.parse(rawInput);
   const paths = sessionPaths(dependencies.baseDirectory, input.config.chatId);
-  await dependencies.terminateProviderSubprocesses();
-  const published = await recoverPublishedAgentChatTurn({
-    store: dependencies.store,
-    prefix: dependencies.bundlePrefix,
-    chatId: input.config.chatId,
-    provider: input.config.provider,
-    turnNumber: input.turnNumber,
-    turnId: input.request.turnId,
-    workspacePath: paths.workspacePath,
-  });
-  if (published !== undefined) {
-    await rm(paths.root, { recursive: true, force: true });
-    return published;
-  }
-  const providerAdmissionKey = agentChatProviderAdmissionKey({
-    prefix: dependencies.bundlePrefix,
-    chatId: input.config.chatId,
-    turnNumber: input.turnNumber,
-    turnId: input.request.turnId,
-  });
-  if (
-    dependencies.attempt > 1 &&
-    (await dependencies.store.has(providerAdmissionKey))
-  ) {
-    throw ApplicationFailure.nonRetryable(
-      `Agent chat turn ${input.request.turnId} was durably admitted without a publication checkpoint; refusing to replay its provider call`,
-      "AgentChatPublicationCheckpointMissing",
-    );
-  }
-  rejectExpiredProviderAdmission(input, dependencies.now());
-  await rm(paths.root, { recursive: true, force: true });
-  await Promise.all([
-    mkdir(paths.sessionHome, { recursive: true }),
-    mkdir(paths.workspacePath, { recursive: true }),
-  ]);
-  let phase = "prepare";
-  const heartbeat = (): void => {
-    dependencies.heartbeat({ phase, turn: input.turnNumber });
-  };
-  heartbeat();
-  const heartbeatTimer = setInterval(
-    heartbeat,
-    dependencies.heartbeatIntervalMs ?? HEARTBEAT_INTERVAL_MS,
-  );
+  let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
   let publicationComplete = false;
 
   try {
+    await dependencies.terminateProviderSubprocesses();
+    const published = await recoverPublishedAgentChatTurn({
+      store: dependencies.store,
+      prefix: dependencies.bundlePrefix,
+      chatId: input.config.chatId,
+      provider: input.config.provider,
+      turnNumber: input.turnNumber,
+      turnId: input.request.turnId,
+      workspacePath: paths.workspacePath,
+    });
+    if (published !== undefined) return published;
+    const providerAdmissionKey = agentChatProviderAdmissionKey({
+      prefix: dependencies.bundlePrefix,
+      chatId: input.config.chatId,
+      turnNumber: input.turnNumber,
+      turnId: input.request.turnId,
+    });
+    if (
+      dependencies.attempt > 1 &&
+      (await dependencies.store.has(providerAdmissionKey))
+    ) {
+      throw ApplicationFailure.nonRetryable(
+        `Agent chat turn ${input.request.turnId} was durably admitted without a publication checkpoint; refusing to replay its provider call`,
+        "AgentChatPublicationCheckpointMissing",
+      );
+    }
+    rejectExpiredProviderAdmission(input, dependencies.now());
+    await rm(paths.root, { recursive: true, force: true });
+    await Promise.all([
+      mkdir(paths.sessionHome, { recursive: true }),
+      mkdir(paths.workspacePath, { recursive: true }),
+    ]);
+    let phase = "prepare";
+    const heartbeat = (): void => {
+      dependencies.heartbeat({ phase, turn: input.turnNumber });
+    };
+    heartbeat();
+    heartbeatTimer = setInterval(
+      heartbeat,
+      dependencies.heartbeatIntervalMs ?? HEARTBEAT_INTERVAL_MS,
+    );
     if (input.providerSessionId !== undefined) {
       if (input.priorSessionManifestKey === undefined) {
         throw new Error(
@@ -409,7 +407,7 @@ export async function runAgentChatTurnWithDependencies(
     publicationComplete = true;
     return result;
   } finally {
-    clearInterval(heartbeatTimer);
+    if (heartbeatTimer !== undefined) clearInterval(heartbeatTimer);
     await cleanupAgentChatRuntime({
       root: paths.root,
       publicationComplete,

@@ -88,7 +88,7 @@ describe("agent chat contract", () => {
     expect(bounded.endsWith("🧪")).toBe(true);
   });
 
-  test("treats caller deadlines as part of stable turn identity", () => {
+  test("does not treat caller deadlines as stable turn identity", () => {
     const original = AgentChatTurnRequestSchema.parse({
       turnId: "stable-turn",
       prompt: "inspect",
@@ -102,6 +102,6 @@ describe("agent chat contract", () => {
         ...original,
         providerStartDeadline: "2026-09-14T18:01:00.000Z",
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 });
