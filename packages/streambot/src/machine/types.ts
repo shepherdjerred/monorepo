@@ -8,7 +8,10 @@ import type {
   SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
-import type { MediaKind } from "@shepherdjerred/streambot/sources/media-kind.ts";
+import type {
+  MediaKind,
+  MediaKindDecidedBy,
+} from "@shepherdjerred/streambot/sources/media-kind.ts";
 import type {
   ChannelId,
   GuildId,
@@ -84,6 +87,10 @@ export type ResolvedSource = {
    * tile, or worse, a video-typed play with no video track hard-throwing inside the fork).
    */
   readonly mediaKind: MediaKind;
+  /** Which classifier rule produced {@link mediaKind}. Present for resolve-time diagnostics. */
+  readonly decidedBy?: MediaKindDecidedBy;
+  /** True when the queued request came from a spoken voice command. */
+  readonly spoken?: boolean;
   /**
    * HTTP headers the primary input must be fetched with (yt-dlp's `http_headers` for the format it
    * selected: User-Agent, Referer, Cookie, …). Maps onto `prepareStream`'s `customHeaders`. Absent

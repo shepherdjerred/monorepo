@@ -4,6 +4,7 @@ import {
   sourceIdentity,
   sourceLabel,
   withMode,
+  withSpoken,
 } from "@shepherdjerred/streambot/sources/source.ts";
 
 describe("SourceSchema", () => {
@@ -186,5 +187,15 @@ describe("sourceIdentity", () => {
     const urlId = sourceIdentity({ kind: "url", url: "https://x.test/x" });
     const searchId = sourceIdentity({ kind: "search", query: "x" });
     expect(new Set([fileId, urlId, searchId]).size).toBe(3);
+  });
+});
+
+describe("withSpoken", () => {
+  test("clears a stored spoken hint for a non-spoken play", () => {
+    const spoken = withSpoken(
+      { kind: "url", url: "https://youtu.be/abc", spoken: true },
+      undefined,
+    );
+    expect(spoken.spoken).toBeUndefined();
   });
 });

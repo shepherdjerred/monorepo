@@ -38,10 +38,45 @@ class RecordingStore implements CaptureObjectStore {
   }
 }
 
+const SESSION_ID = "11111111-1111-4111-8111-111111111111";
+
+function startCandidate(store = new RecordingStore()) {
+  const manager = new VoiceCaptureManager(CAPTURE_CONFIG, store);
+  const attempt = manager.begin({
+    guildId: "guild-1",
+    channelId: "channel-1",
+    sessionId: SESSION_ID,
+    userId: "user-1",
+    detector: "sherpa",
+    phrase: "hey streambot",
+    score: 0.8,
+    fragmentEndSeconds: 0.4,
+    detectedAtMs: Date.now(),
+  });
+  const samples = new Float32Array(16_000);
+  samples[0] = 0.5;
+  return { store, manager, attempt, samples };
+}
+
+function captureSession(
+  overrides: {
+    readonly guildId?: string;
+    readonly channelId?: string;
+    readonly sessionId?: string;
+  } = {},
+) {
+  return {
+    guildId: "guild-1",
+    channelId: "channel-1",
+    sessionId: SESSION_ID,
+    ...overrides,
+  };
+}
+
 function manifest(captureId = crypto.randomUUID()): VoiceCaptureManifest {
   const now = new Date().toISOString();
   return VoiceCaptureManifestSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     captureId,
     kind: "debug-window",
     committedAt: now,
@@ -49,6 +84,7 @@ function manifest(captureId = crypto.randomUUID()): VoiceCaptureManifest {
     endedAt: now,
     guildId: "guild-1",
     channelId: "channel-1",
+    sessionId: SESSION_ID,
     terminalOutcome: "test",
     truncated: false,
     audio: [],
@@ -222,7 +258,7 @@ describe("voice capture manager", () => {
       CAPTURE_CONFIG,
       new RecordingStore(),
     );
-    const session = { guildId: "guild-1", channelId: "channel-1" };
+    const session = captureSession();
 
     expect(() => manager.startDebug(session, 9)).toThrow(
       "Voice debug duration must be an integer from 10 to 300 seconds",
@@ -238,20 +274,7 @@ describe("voice capture manager", () => {
   });
 
   test("commits a correlated candidate WAV and manifest", async () => {
-    const store = new RecordingStore();
-    const manager = new VoiceCaptureManager(CAPTURE_CONFIG, store);
-    const attempt = manager.begin({
-      guildId: "guild-1",
-      channelId: "channel-1",
-      userId: "user-1",
-      detector: "sherpa",
-      phrase: "hey streambot",
-      score: 0.8,
-      fragmentEndSeconds: 0.4,
-      detectedAtMs: Date.now(),
-    });
-    const samples = new Float32Array(16_000);
-    samples[0] = 0.5;
+    const { store, manager, attempt, samples } = startCandidate();
     attempt.localVerification({ accepted: true, score: 0.9, latencyMs: 12 });
     attempt.endpoint({
       reason: "vad",
@@ -284,13 +307,72 @@ describe("voice capture manager", () => {
       new Bun.CryptoHasher("sha256").update(audio.body).digest("hex"),
     );
     expect(parsed.normalizedCommand).toBe("skip");
+    expect(parsed.sessionId).toBe(SESSION_ID);
+    expect(parsed.schemaVersion).toBe(2);
     expect(parsed.endpoint?.dtxSeconds).toBe(0.02);
+  });
+
+  test("stores reply audio, reply transcript, and real tool arguments", async () => {
+    const { store, manager, attempt, samples } = startCandidate();
+    attempt.endpoint({
+      reason: "vad",
+      sawSpeech: true,
+      sampleCount: samples.length,
+      dtxSamples: 0,
+      pcm16k: samples,
+    });
+    attempt.transcription({
+      transcript: "Hey Streambot, play sicko mode",
+      normalizedCommand: "play sicko mode",
+      outcome: "accepted",
+    });
+    attempt.tool({
+      name: "search_media",
+      arguments: { query: "sicko mode", source: "youtube" },
+      result: "1. Travis Scott - SICKO MODE (Official Video), YouTube",
+      outcome: "ok",
+      durationMs: 120,
+    });
+    attempt.replyTranscript("I found Travis Scott SICKO MODE Official Video.");
+    attempt.replyTranscript("Playing that.");
+    const replyPcm = new Uint8Array(24_000 * 2);
+    attempt.reply({
+      outcome: "success",
+      packets: 50,
+      bytes: 4000,
+      durationMs: 1000,
+      pcm24k: replyPcm,
+    });
+    attempt.finish("command");
+    await manager.shutdown();
+
+    const names = store.objects.map(({ key }) =>
+      key.slice(key.lastIndexOf("/") + 1),
+    );
+    expect(names).toEqual(["speaker.wav", "reply.wav", "manifest.json"]);
+    const committed = store.objects.at(-1);
+    if (committed === undefined) throw new Error("Expected committed manifest");
+    const parsed = VoiceCaptureManifestSchema.parse(
+      JSON.parse(new TextDecoder().decode(committed.body)),
+    );
+    expect(parsed.sessionId).toBe(SESSION_ID);
+    expect(parsed.replyTranscript).toBe(
+      "I found Travis Scott SICKO MODE Official Video. Playing that.",
+    );
+    expect(parsed.tools[0]?.arguments).toEqual({
+      query: "sicko mode",
+      source: "youtube",
+    });
+    expect(parsed.audio.map((item) => item.filename)).toEqual([
+      "speaker.wav",
+      "reply.wav",
+    ]);
   });
 
   test("enforces one session-bound manual window and emits per-speaker WAVs", async () => {
     const store = new RecordingStore();
     const manager = new VoiceCaptureManager(CAPTURE_CONFIG, store);
-    const session = { guildId: "guild-1", channelId: "channel-1" };
+    const session = captureSession();
     const started = manager.startDebug(session, 60);
     expect(started.outcome).toBe("started");
     expect(manager.startDebug(session, 60).outcome).toBe("already-active");
@@ -298,7 +380,9 @@ describe("voice capture manager", () => {
     manager.acceptDecoded(session, "user-2", new Float32Array([0.5]));
     expect(manager.debugStatus(session)?.speakerCount).toBe(2);
     expect(
-      manager.stopDebug({ guildId: "guild-2", channelId: "channel-2" }).outcome,
+      manager.stopDebug(
+        captureSession({ guildId: "guild-2", channelId: "channel-2" }),
+      ).outcome,
     ).toBe("different-session");
     expect(manager.stopDebug(session).outcome).toBe("stopped");
     await manager.shutdown();
@@ -320,7 +404,7 @@ describe("voice capture manager", () => {
   test("finalizes a manual window as truncated before a ninth speaker is buffered", async () => {
     const store = new RecordingStore();
     const manager = new VoiceCaptureManager(CAPTURE_CONFIG, store);
-    const session = { guildId: "guild-1", channelId: "channel-1" };
+    const session = captureSession();
     expect(manager.startDebug(session, 60).outcome).toBe("started");
     for (let index = 1; index <= 9; index += 1) {
       manager.acceptDecoded(

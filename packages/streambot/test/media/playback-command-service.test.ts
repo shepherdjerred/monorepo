@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
@@ -323,5 +325,85 @@ describe("PlaybackCommandService queue and chapter surface", () => {
       }),
     ).rejects.toBeDefined();
     expect(events).toEqual([]);
+  });
+});
+
+describe("PlaybackCommandService voice previous", () => {
+  test("voice previous keeps the spoken transport hint", async () => {
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      const media = {
+        title: "Previous Song",
+        provider: "youtube" as const,
+        source: {
+          kind: "url" as const,
+          url: "https://youtu.be/previous",
+        },
+      };
+      const requestId = history.recordQueueRequest({
+        scope: {
+          guildId: "guild-one",
+          channelId: "channel-one",
+          userId: USER,
+        },
+        rawQuery: media.title,
+        intent: inferMediaIntent({ query: media.title }),
+        media,
+        nowMs: 1000,
+      });
+      history.recordPlaybackStart({
+        requestId,
+        scope: {
+          guildId: "guild-one",
+          channelId: "channel-one",
+          userId: USER,
+        },
+        media,
+        nowMs: 1000,
+      });
+      const spoken: (boolean | undefined)[] = [];
+      const events: PlaybackEvent[] = [];
+      const config = loadConfig({
+        BOT_TOKEN: "bot",
+        USER_TOKENS: "userbot",
+        VIDEOS_DIR: "/videos",
+      });
+      const service = new PlaybackCommandService({
+        config,
+        dispatch: (event) => events.push(event),
+        view: () => ({
+          state: "idle",
+          current: null,
+          queue: [],
+          loop: "off",
+          volume: 100,
+          positionSeconds: null,
+        }),
+        library: () => [],
+        setVolume: () => Promise.resolve(true),
+        seek: () => Promise.resolve(true),
+        announce: () => Promise.resolve(),
+        history,
+        guildId: "guild-one",
+        channelId: "channel-one",
+        resolvePlaySource: (source) => {
+          spoken.push(source.spoken);
+          return Promise.resolve({
+            title: "Previous Song",
+            ffmpegInput: "https://media.invalid/previous",
+            mediaKind: "music",
+            chapters: [],
+          });
+        },
+      });
+      await service.previous(USER, undefined, { spoken: true });
+      expect(spoken).toEqual([true]);
+      expect(events[0]).toMatchObject({
+        type: "PLAY_NOW",
+        source: { spoken: true },
+      });
+    } finally {
+      history.close();
+    }
   });
 });

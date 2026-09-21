@@ -82,7 +82,11 @@ function demoteToMusic(resolved: ResolvedSource): ResolvedSource {
     audioInputHeaders: _audioInputHeaders,
     ...withoutSecondInput
   } = resolved;
-  return { ...withoutSecondInput, mediaKind: "music" };
+  return {
+    ...withoutSecondInput,
+    mediaKind: "music",
+    decidedBy: "no-video-stream",
+  };
 }
 
 /**
@@ -176,22 +180,26 @@ export async function resolveSource(
       { input: source.path, title: source.title },
       signal,
     );
+    const fileDecision = classifyMediaKind(
+      {
+        mode: source.mode,
+        // ffprobe reports `"unknown"` when it found no video stream at all. A failed probe leaves
+        // this undefined — no evidence either way, so the library's video-only default stands.
+        hasVideoStream:
+          probed === null ? undefined : probed.videoCodec !== "unknown",
+        provider: "local",
+        ...(source.spoken === true ? { spoken: true } : {}),
+      },
+      "video",
+    );
     resolved = {
       title: source.title,
       ffmpegInput: source.path,
       // `pass: "video"` because ffprobe read the whole container, not a deliberately narrowed slice
       // of it: here "no video stream" is a real fact about the file, so rule 1 applies in full.
-      mediaKind: classifyMediaKind(
-        {
-          mode: source.mode,
-          // ffprobe reports `"unknown"` when it found no video stream at all. A failed probe leaves
-          // this undefined — no evidence either way, so the library's video-only default stands.
-          hasVideoStream:
-            probed === null ? undefined : probed.videoCodec !== "unknown",
-          provider: "local",
-        },
-        "video",
-      ).kind,
+      mediaKind: fileDecision.kind,
+      decidedBy: fileDecision.decidedBy,
+      ...(source.spoken === true ? { spoken: true } : {}),
       chapters: await probeFileChapters(config, source.path, signal),
       provenance: { provider: "local" },
       ...(subtitle === undefined ? {} : { subtitle }),

@@ -160,6 +160,83 @@ describe("music-over-voice rollout gate", () => {
     expect(added?.source.mode).toBe("music");
   });
 
+  test("a spoken model mode:video is ignored unless the utterance asked to watch", async () => {
+    const { service, events } = createGatedService({ musicOverVoice: true });
+    await service.play({
+      query: "plankton",
+      source: "auto",
+      placement: "queue",
+      userId: USER,
+      mode: "video",
+      spoken: true,
+    });
+    const added = events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBeUndefined();
+    expect(added?.source.spoken).toBe(true);
+  });
+
+  test("a spoken watch still stamps video", async () => {
+    const { service, events } = createGatedService({ musicOverVoice: true });
+    await service.play({
+      query: "the trailer",
+      source: "auto",
+      placement: "queue",
+      userId: USER,
+      mode: "video",
+      spoken: true,
+      utterance: "watch the trailer",
+    });
+    const added = events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("video");
+    expect(added?.source.spoken).toBe(true);
+  });
+
+  test("a spoken watch wins over a model mode:music", async () => {
+    const { service, events } = createGatedService({ musicOverVoice: true });
+    await service.play({
+      query: "sicko mode",
+      source: "auto",
+      placement: "queue",
+      userId: USER,
+      mode: "music",
+      spoken: true,
+      utterance: "watch sicko mode",
+    });
+    const added = events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("video");
+  });
+
+  test("a polite spoken watch still stamps video", async () => {
+    const { service, events } = createGatedService({ musicOverVoice: true });
+    await service.play({
+      query: "sicko mode",
+      source: "auto",
+      placement: "queue",
+      userId: USER,
+      mode: "video",
+      spoken: true,
+      utterance: "please watch sicko mode",
+    });
+    const added = events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("video");
+  });
+
+  test("a spoken listen request keeps music even when the title looks like film", async () => {
+    const { service, events } = createGatedService({ musicOverVoice: true });
+    await service.play({
+      query: "the dune trailer",
+      source: "auto",
+      placement: "queue",
+      userId: USER,
+      mode: "auto",
+      spoken: true,
+      utterance: "listen to the dune trailer",
+    });
+    const added = events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("music");
+    expect(added?.source.spoken).toBe(true);
+  });
+
   test("an unscoped session cannot evaluate the flag and passes the request through", async () => {
     const { service, lookups } = createGatedService({
       musicOverVoice: false,
