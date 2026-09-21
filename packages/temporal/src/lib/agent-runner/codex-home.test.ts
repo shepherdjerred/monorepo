@@ -51,7 +51,9 @@ test("subscription home and restored session directories are writable without an
     await Bun.write(session, "test session");
     expect(await Bun.file(session).text()).toBe("test session");
     expect(await Bun.file(path.join(home, "auth.json")).exists()).toBe(false);
-    expect(parentMode).toEqual({ directory, mode: 0o600 });
+    expect(parentMode).toEqual({
+      directories: [{ directory, mode: 0o600 }],
+    });
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

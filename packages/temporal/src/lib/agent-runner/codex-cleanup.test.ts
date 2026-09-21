@@ -36,7 +36,9 @@ test("restores the subscription staging parent's original mode", async () => {
     const failure = await cleanupCodexRun({
       workdir: directory,
       subscriptionAuthPath: undefined,
-      subscriptionParentMode: { directory, mode: 0o600 },
+      subscriptionParentMode: {
+        directories: [{ directory, mode: 0o600 }],
+      },
       providerWrapperDirectory: undefined,
       parser: { finish: vi.fn() },
       trace: { end: vi.fn() },

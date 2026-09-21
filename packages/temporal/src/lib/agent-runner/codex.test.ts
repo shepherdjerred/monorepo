@@ -240,7 +240,8 @@ describe("runCodexAgentTurn preparation", () => {
         }),
       ).rejects.toMatchObject({ name: "AgentTurnExecutionError" });
 
-      expect(mocks.restoreProviderWorkspace).toHaveBeenCalledWith(codexHome);
+      const restoredLifecycle = await stat(lifecycleDirectory);
+      expect(restoredLifecycle.mode & 0o777).toBe(0o700);
     } finally {
       await rm(lifecycleDirectory, { recursive: true, force: true });
     }
@@ -295,7 +296,6 @@ describe("runCodexAgentTurn preparation", () => {
 
       const restoredLifecycle = await stat(lifecycleDirectory);
       expect(restoredLifecycle.mode & 0o777).toBe(0o700);
-      expect(mocks.restoreProviderWorkspace).toHaveBeenCalledWith(codexHome);
     } finally {
       await rm(lifecycleDirectory, { recursive: true, force: true });
     }

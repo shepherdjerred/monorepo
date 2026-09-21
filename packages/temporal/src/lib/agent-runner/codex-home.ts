@@ -41,13 +41,22 @@ export async function prepareCodexSubscriptionHome(
     await prepareProviderWorkspace(codexHome, providerUid);
     return parentMode;
   } catch (error: unknown) {
-    try {
-      await restoreCodexSubscriptionParentMode(parentMode);
-    } catch (restoreError: unknown) {
+    const failures: unknown[] = [];
+    for (const operation of [
+      () => restoreProviderWorkspace(codexHome),
+      () => restoreCodexSubscriptionParentMode(parentMode),
+    ]) {
+      try {
+        await operation();
+      } catch (restoreError: unknown) {
+        failures.push(restoreError);
+      }
+    }
+    if (failures.length > 0) {
       throw new AggregateError(
-        [error],
+        [error, ...failures],
         "Codex subscription home preparation and parent restoration failed",
-        { cause: restoreError },
+        { cause: error },
       );
     }
     throw error;
@@ -112,16 +121,39 @@ export async function prepareCodexOpenRouterHome(input: {
 export async function rollbackCodexOpenRouterHome(
   home: CodexOpenRouterHome,
 ): Promise<void> {
-  try {
-    if (home.providerHomeDirectory !== undefined) {
-      await rm(home.providerHomeDirectory, { recursive: true, force: true });
+  const failures: unknown[] = [];
+  for (const operation of [
+    async () => {
+      if (home.providerHomeDirectory !== undefined) {
+        await rm(home.providerHomeDirectory, { recursive: true, force: true });
+      }
+    },
+    async () => {
+      if (home.subscriptionHome !== undefined) {
+        await restoreProviderWorkspace(home.subscriptionHome);
+      }
+    },
+    () => restoreCodexSubscriptionParentMode(home.subscriptionParentMode),
+  ]) {
+    try {
+      await operation();
+    } catch (error: unknown) {
+      failures.push(error);
     }
-    if (home.subscriptionHome !== undefined) {
-      await restoreProviderWorkspace(home.subscriptionHome);
-    }
-    await restoreCodexSubscriptionParentMode(home.subscriptionParentMode);
-  } catch (error: unknown) {
-    throw new Error("Codex OpenRouter home cleanup failed", { cause: error });
+  }
+  if (failures.length > 0) {
+    const firstFailure = failures[0];
+    if (firstFailure === undefined)
+      throw new Error("Codex OpenRouter home cleanup failed without an error");
+    throw new Error("Codex OpenRouter home cleanup failed", {
+      cause:
+        failures.length === 1
+          ? firstFailure
+          : new AggregateError(
+              failures,
+              "Codex OpenRouter home cleanup had multiple failures",
+            ),
+    });
   }
 }
 
