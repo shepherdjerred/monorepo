@@ -264,6 +264,7 @@ model ClashGameSighting {
   @@unique([platform, gameId, puuid])
   @@index([puuid, observedAt])
   @@index([cupKey, cupDay])
+}
 
 // Champion mastery is public, current account state rather than match history.
 // One PUUID snapshot is shared by every guild that tracks that Riot account.
