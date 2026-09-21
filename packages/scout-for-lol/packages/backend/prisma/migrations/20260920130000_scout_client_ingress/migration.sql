@@ -53,6 +53,16 @@ CREATE UNIQUE INDEX "ScoutClientDevice_tokenDigest_key" ON "ScoutClientDevice"("
 CREATE INDEX "ScoutClientDevice_ownerId_deviceState_idx" ON "ScoutClientDevice"("ownerId", "deviceState");
 CREATE INDEX "ScoutClientDevice_lastSeenAt_idx" ON "ScoutClientDevice"("lastSeenAt");
 
+CREATE TABLE "ScoutClientDeviceVersion" (
+  "deviceId" TEXT NOT NULL,
+  "appVersion" TEXT NOT NULL,
+  "firstSeenAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "lastSeenAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "ScoutClientDeviceVersion_pkey" PRIMARY KEY ("deviceId", "appVersion")
+);
+
+CREATE INDEX "ScoutClientDeviceVersion_appVersion_lastSeenAt_idx" ON "ScoutClientDeviceVersion"("appVersion", "lastSeenAt");
+
 CREATE TABLE "ScoutClientObservation" (
   "observationId" TEXT NOT NULL,
   "deviceId" TEXT NOT NULL,
@@ -156,6 +166,8 @@ ALTER TABLE "ScoutClientDevice" ADD CONSTRAINT "ScoutClientDevice_ownerId_fkey"
   FOREIGN KEY ("ownerId") REFERENCES "User"("discordId") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ScoutClientDevice" ADD CONSTRAINT "ScoutClientDevice_pairingId_fkey"
   FOREIGN KEY ("pairingId") REFERENCES "ScoutClientPairing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ScoutClientDeviceVersion" ADD CONSTRAINT "ScoutClientDeviceVersion_deviceId_fkey"
+  FOREIGN KEY ("deviceId") REFERENCES "ScoutClientDevice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ScoutClientObservation" ADD CONSTRAINT "ScoutClientObservation_deviceId_fkey"
   FOREIGN KEY ("deviceId") REFERENCES "ScoutClientDevice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ScoutClientReplayArtifact" ADD CONSTRAINT "ScoutClientReplayArtifact_deviceId_fkey"

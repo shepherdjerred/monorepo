@@ -153,6 +153,7 @@ export async function exchangePairing(
         appVersion: pairing.appVersion,
         protocolVersion: pairing.protocolVersion,
         lastSeenAt: now,
+        versions: { create: { appVersion: pairing.appVersion } },
       },
       select: { id: true },
     });

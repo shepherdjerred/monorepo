@@ -230,6 +230,24 @@ describe("Riot-only Customs results", () => {
     });
   });
 
+  test("treats a retry after verified result commit as success", async () => {
+    const seeded = await seedPendingResult();
+
+    await finalizeManagedCustomResult(testPrisma, tournamentFixture);
+    await expect(
+      finalizeManagedCustomResult(testPrisma, tournamentFixture),
+    ).resolves.toBe(seeded.nightId);
+
+    await expect(
+      testPrisma.customNight.findUniqueOrThrow({
+        where: { id: seeded.nightId },
+      }),
+    ).resolves.toMatchObject({ state: "INTERMISSION", revision: 1 });
+    await expect(
+      testPrisma.customAuditEvent.count({ where: { gameId: seeded.gameId } }),
+    ).resolves.toBe(1);
+  });
+
   test("a projection error rolls back before lobby and cursor completion", async () => {
     const seeded = await seedPendingResult();
     await testPrisma.customGameParticipant.deleteMany({

@@ -26,6 +26,12 @@ describe("parseLocalCanonicalMatch", () => {
     ).toEqual(fixture);
   });
 
+  test("derives metadata around a complete LCU match info payload", () => {
+    expect(
+      parseLocalCanonicalMatch(riotMatchId, candidate({ data: fixture.info })),
+    ).toEqual(fixture);
+  });
+
   test("does not promote partial LCU evidence by inventing missing fields", () => {
     expect(
       parseLocalCanonicalMatch(

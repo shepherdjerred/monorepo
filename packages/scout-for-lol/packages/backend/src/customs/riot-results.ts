@@ -128,6 +128,19 @@ type ObservedCustomGame = NonNullable<
   Awaited<ReturnType<typeof findObservedCustomGame>>
 >;
 
+function verifiedResultNightId(
+  game: ObservedCustomGame,
+  matchId: string,
+): string | null {
+  if (game.state !== "VERIFIED") return null;
+  if (game.matchId !== matchId) {
+    throw new Error(
+      `Verified Custom game ${game.id} is bound to another match`,
+    );
+  }
+  return game.nightId;
+}
+
 async function projectParticipantResults(
   transaction: Db,
   game: ObservedCustomGame,
@@ -200,6 +213,9 @@ export async function finalizeManagedCustomResult(
       return;
     }
     if (game === undefined) return;
+
+    const verifiedNightId = verifiedResultNightId(game, matchId);
+    if (verifiedNightId !== null) return verifiedNightId;
 
     if (resultDisposition(game.state, game.id) === "VOID") {
       if (lobby === null) return;

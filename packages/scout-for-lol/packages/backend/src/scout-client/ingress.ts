@@ -25,6 +25,11 @@ type Receipt = {
   readonly outcome: "accepted" | "already_accepted" | "quarantined";
 };
 
+type ObservationAttestation = {
+  readonly verifiedPuuids: ReadonlySet<string>;
+  readonly acceptedAppVersions: ReadonlySet<string>;
+};
+
 const PLAYER_SNAPSHOT_KINDS = new Set([
   "account_profile",
   "champion_mastery",
@@ -97,11 +102,11 @@ function payloadContainsPuuid(payload: unknown, puuid: string): boolean {
 export function observationQuarantineReason(
   observation: ScoutClientObservation,
   verifiedPuuids: ReadonlySet<string>,
-  deviceAppVersion: string,
+  acceptedAppVersions: ReadonlySet<string>,
   now: Date,
 ): string | null {
-  if (observation.appVersion !== deviceAppVersion) {
-    return "observation app version does not match the last device check-in";
+  if (!acceptedAppVersions.has(observation.appVersion)) {
+    return "observation app version has not authenticated for this device";
   }
   if (
     new Date(observation.capturedAt).getTime() >
@@ -133,7 +138,7 @@ export function observationQuarantineReason(
 async function createObservation(
   device: AuthenticatedScoutClient,
   observation: ScoutClientObservation,
-  verifiedPuuids: ReadonlySet<string>,
+  attestation: ObservationAttestation,
   now: Date,
 ): Promise<Receipt> {
   const digest = bodyDigest(observation);
@@ -161,8 +166,8 @@ async function createObservation(
 
   const reason = observationQuarantineReason(
     observation,
-    verifiedPuuids,
-    device.appVersion,
+    attestation.verifiedPuuids,
+    attestation.acceptedAppVersions,
     now,
   );
   try {
@@ -213,20 +218,30 @@ export async function ingestObservationBatch(
       ),
     ),
   ];
-  const ownedAccounts = await prisma.account.findMany({
-    where: {
-      puuid: { in: localPuuids },
-      player: { discordId: device.ownerId },
-    },
-    select: { puuid: true },
-  });
+  const [ownedAccounts, authenticatedVersions] = await Promise.all([
+    prisma.account.findMany({
+      where: {
+        puuid: { in: localPuuids },
+        player: { discordId: device.ownerId },
+      },
+      select: { puuid: true },
+    }),
+    prisma.scoutClientDeviceVersion.findMany({
+      where: { deviceId: device.deviceId },
+      select: { appVersion: true },
+    }),
+  ]);
   const verifiedPuuids = new Set(ownedAccounts.map((account) => account.puuid));
+  const acceptedAppVersions = new Set(
+    authenticatedVersions.map((version) => version.appVersion),
+  );
+  const attestation = { verifiedPuuids, acceptedAppVersions };
   const receipts: Receipt[] = [];
   for (const observation of batch.observations) {
     const receipt = await createObservation(
       device,
       observation,
-      verifiedPuuids,
+      attestation,
       now,
     );
     await projectPlayerSnapshot(observation, receipt);

@@ -35,7 +35,7 @@ describe("Scout Client ingress security", () => {
       observationQuarantineReason(
         observation({ participants: [{ puuid: PUUID }] }),
         new Set([PUUID]),
-        "0.1.0",
+        new Set(["0.1.0"]),
         NOW,
       ),
     ).toBeNull();
@@ -46,7 +46,7 @@ describe("Scout Client ingress security", () => {
       observationQuarantineReason(
         observation({ participants: [{ puuid: "someone-else" }] }),
         new Set([PUUID]),
-        "0.1.0",
+        new Set(["0.1.0"]),
         NOW,
       ),
     ).toContain("does not appear");
@@ -57,9 +57,31 @@ describe("Scout Client ingress security", () => {
       observationQuarantineReason(
         observation({ participants: [{ puuid: PUUID }] }),
         new Set(),
-        "0.1.0",
+        new Set(["0.1.0"]),
         NOW,
       ),
     ).toContain("not linked");
+  });
+
+  test("accepts an observation from an authenticated pre-upgrade version", () => {
+    expect(
+      observationQuarantineReason(
+        observation({ participants: [{ puuid: PUUID }] }),
+        new Set([PUUID]),
+        new Set(["0.1.0", "0.2.0"]),
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  test("quarantines an app version that never authenticated", () => {
+    expect(
+      observationQuarantineReason(
+        observation({ participants: [{ puuid: PUUID }] }),
+        new Set([PUUID]),
+        new Set(["0.2.0"]),
+        NOW,
+      ),
+    ).toContain("has not authenticated");
   });
 });

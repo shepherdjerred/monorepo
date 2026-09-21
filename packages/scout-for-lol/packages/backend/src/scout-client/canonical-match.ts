@@ -1,5 +1,9 @@
 import { ApplicationFailure } from "@temporalio/common";
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
+import {
+  RawInfoSchema,
+  RawMatchSchema,
+  type RawMatch,
+} from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
@@ -23,19 +27,36 @@ function embeddedPayload(payload: unknown): unknown {
 }
 
 /**
- * Accept only a complete Match-V5-compatible local payload with identities
- * that agree with both the requested match and the verified observer.
- * Legacy LCU match-history bodies remain useful raw evidence but are not
- * promoted by inventing fields they do not contain.
+ * Accept only complete Match-V5-compatible local evidence with identities that
+ * agree with both the requested match and verified observer. Current LCU match
+ * history rows carry the complete Match-V5 `info` object without its metadata;
+ * derive that identity wrapper from the payload while never inventing gameplay
+ * fields for older, partial LCU rows.
  */
 export function parseLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
   candidate: Candidate,
 ): RawMatch | null {
-  const parsed = RawMatchSchema.safeParse(embeddedPayload(candidate.payload));
-  if (!parsed.success) return null;
-  const match = parsed.data;
   const platform = platformRouteOf(riotMatchId);
+  const payload = embeddedPayload(candidate.payload);
+  const complete = RawMatchSchema.safeParse(payload);
+  const infoOnly = complete.success ? null : RawInfoSchema.safeParse(payload);
+  const parsed = complete.success
+    ? complete
+    : infoOnly?.success === true
+      ? RawMatchSchema.safeParse({
+          metadata: {
+            dataVersion: "2",
+            matchId: riotMatchId,
+            participants: infoOnly.data.participants.map(
+              (participant) => participant.puuid,
+            ),
+          },
+          info: infoOnly.data,
+        })
+      : null;
+  if (parsed?.success !== true) return null;
+  const match = parsed.data;
   if (
     match.metadata.matchId !== riotMatchId ||
     match.info.platformId.toUpperCase() !== platform ||

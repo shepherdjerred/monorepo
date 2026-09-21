@@ -146,10 +146,27 @@ async function handleAuthenticatedRoute(
       await boundedJson(request),
     );
     if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
-    await prisma.scoutClientDevice.update({
-      where: { id: device.deviceId },
-      data: { appVersion: input.data.appVersion, lastSeenAt: new Date() },
-    });
+    const checkedInAt = new Date();
+    await prisma.$transaction([
+      prisma.scoutClientDevice.update({
+        where: { id: device.deviceId },
+        data: { appVersion: input.data.appVersion, lastSeenAt: checkedInAt },
+      }),
+      prisma.scoutClientDeviceVersion.upsert({
+        where: {
+          deviceId_appVersion: {
+            deviceId: device.deviceId,
+            appVersion: input.data.appVersion,
+          },
+        },
+        create: {
+          deviceId: device.deviceId,
+          appVersion: input.data.appVersion,
+          lastSeenAt: checkedInAt,
+        },
+        update: { lastSeenAt: checkedInAt },
+      }),
+    ]);
     return jsonResponse({ accepted: true });
   }
 

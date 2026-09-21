@@ -44,6 +44,7 @@ async function findObservedDuelGame(match: RawMatch) {
     where: {
       gameState: { in: ["code_ready", "in_progress"] },
       matchId: null,
+      observedLobbyId: { not: null },
       series: { seriesState: { in: ["code_ready", "in_progress"] } },
     },
     include: duelGameInclude,

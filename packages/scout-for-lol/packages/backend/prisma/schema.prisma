@@ -597,9 +597,25 @@ model ScoutClientDevice {
   pairing         ScoutClientPairing          @relation(fields: [pairingId], references: [id], onDelete: Restrict)
   observations    ScoutClientObservation[]
   replayArtifacts ScoutClientReplayArtifact[]
+  versions        ScoutClientDeviceVersion[]
 
   @@index([ownerId, deviceState])
   @@index([lastSeenAt])
+}
+
+/// Every application version this credential has authenticated. Keeping the
+/// history lets a client upload immutable observations captured before an
+/// upgrade without weakening version attestation for arbitrary values.
+model ScoutClientDeviceVersion {
+  deviceId    String
+  appVersion  String
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+
+  device ScoutClientDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, appVersion])
+  @@index([appVersion, lastSeenAt])
 }
 
 /// One content-addressed ROFL received through the authenticated backend relay.
