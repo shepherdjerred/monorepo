@@ -1,5 +1,6 @@
 import { themes, viewports, type AuditTheme } from "#src/constants.ts";
-import { auditRoutes, type AuditRoute } from "#src/routes.ts";
+import { type AuditRoute } from "#src/app-routes.ts";
+import { auditRoutes } from "#src/routes.ts";
 
 export const auditProjects = [
   { name: "chromium-desktop", browser: "chromium", viewport: "desktop" },
