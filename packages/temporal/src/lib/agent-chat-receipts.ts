@@ -99,6 +99,17 @@ export async function dispatchPinnedAgentChatTurn(
     };
   } catch (error: unknown) {
     if (error instanceof WorkflowUpdateFailedError) {
+      // A run can continue as new after the pre-dispatch status check. Only
+      // redirect after the original pin confirms that it closed; otherwise a
+      // failed update remains a durable terminal receipt outcome.
+      try {
+        const description = await handle.describe();
+        if (description.status.name === "CONTINUED_AS_NEW") {
+          return { status: "run-closed" };
+        }
+      } catch {
+        // We cannot safely redirect without confirmation from the pinned run.
+      }
       throw ApplicationFailure.create({
         message: boundAgentChatFailureMessage(collectErrorMessages(error)),
         type: "AgentChatTurnPreviouslyFailed",

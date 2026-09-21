@@ -604,6 +604,29 @@ describe("agent chat provider admission races", () => {
     ).rejects.toMatchObject({ code: "ENOENT" });
   });
 
+  test("removes stale runtime files when published-result recovery fails", async () => {
+    const baseDirectory = await temporaryDirectories.create();
+    const store = memoryAgentChatStore();
+    store.has = vi.fn(() => Promise.resolve(true));
+    store.get = vi.fn(() => Promise.reject(new Error("corrupt manifest")));
+    const dependencies = {
+      ...providerMustNotRunDependencies(
+        baseDirectory,
+        () => new Date("2026-09-14T20:01:00.000Z"),
+      ),
+      store,
+    };
+    const input = codexTurnInput("recovery-cleanup", "recovery-turn");
+    const staleRoot = path.join(baseDirectory, input.config.chatId);
+    await mkdir(staleRoot, { recursive: true });
+    await Bun.write(path.join(staleRoot, "stale-runtime-file"), "stale");
+
+    await expect(
+      runAgentChatTurnWithDependencies(input, dependencies),
+    ).rejects.toThrow("corrupt manifest");
+    await expect(stat(staleRoot)).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
   test("recovers a published result after post-publication cleanup fails", async () => {
     const baseDirectory = await temporaryDirectories.create();
     const store = memoryAgentChatStore();
