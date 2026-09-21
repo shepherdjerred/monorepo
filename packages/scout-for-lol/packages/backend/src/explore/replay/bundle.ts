@@ -1,4 +1,4 @@
-import { mkdir, stat, readdir, chmod } from "node:fs/promises";
+import { appendFile, mkdir, stat, readdir, chmod } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
@@ -119,14 +119,22 @@ export async function writeBundleFile(
   await chmod(filePath, FILE_MODE);
 }
 
-/** Append one line to the resume index, keeping its mode. */
+/**
+ * Append one line to the resume index, keeping its mode.
+ *
+ * A real `O_APPEND` write, not read-then-rewrite. Cases run four at a time by
+ * default, and two workers finishing together would each read the same file,
+ * each rewrite it, and one entry would vanish — leaving a case whose result
+ * file exists but which `--resume` would pay to run again.
+ */
 export async function appendBundleLine(
   filePath: string,
   line: string,
 ): Promise<void> {
-  const existing = await Bun.file(filePath).exists();
-  const previous = existing ? await Bun.file(filePath).text() : "";
-  await writeBundleFile(filePath, `${previous}${line}\n`);
+  // `mode` applies only when this call creates the file; an existing one keeps
+  // what it has, which the location check already requires to be 0600.
+  await appendFile(filePath, `${line}\n`, { mode: FILE_MODE });
+  await chmod(filePath, FILE_MODE);
 }
 
 export const ReplayManifestSchema = z
@@ -158,15 +166,17 @@ export const ReplayManifestSchema = z
       .object({
         name: z.string().min(1),
         /**
-         * When the snapshot was restored, from the dataset pin.
+         * The snapshot database's own identity, from the dataset pin.
          *
          * The name is reusable — `scout_beta_snapshot` is restored in place on
          * every pull — so it identifies the slot, not the contents. Two runs
          * can share a name and a lake build while the relational rows behind
          * bucks, challenges and conversations have been replaced underneath
-         * them.
+         * them. Postgres gives a recreated database a fresh OID, so this
+         * distinguishes a snapshot from its replacement; a capture timestamp
+         * would only describe when the pin was written.
          */
-        pulledAt: z.iso.datetime(),
+        snapshotId: z.string().min(1),
       })
       .strict(),
     model: z.string().min(1),

@@ -12,8 +12,9 @@ import type { ExploreSurface } from "#src/explore/surface.ts";
  * question is how it behaves for the guilds that exist: the beta guild, which
  * has every feature, and ordinary prod guilds, which have almost none.
  *
- * So a config is *recorded* from a stage's own flag service at pull time and
- * frozen into the dataset pin. Replay reproduces it, then checks it got what
+ * So a config is *recorded* at pull time and frozen into the dataset pin —
+ * from the stage's own flag provider when one is reachable, otherwise from its
+ * static configuration, with the pin saying which it was. Replay reproduces it, then checks it got what
  * was recorded. The capability set is the same shape either way, which is why
  * `chipExpectation` and `capabilityMismatches` did not have to change.
  */

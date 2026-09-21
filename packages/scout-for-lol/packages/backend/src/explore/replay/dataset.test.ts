@@ -23,8 +23,11 @@ const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
     name: "scout_beta_snapshot",
     url: "postgres://scout@127.0.0.1:5471/scout_beta_snapshot",
     pulledAt: "2026-09-19T00:05:00.000Z",
+    snapshotId: "1326601",
+    writableRows: { ConfirmationIntent: 4 },
   },
   accountRows: { parquet: 100, database: 120 },
+  flagSource: "static",
   verifiedAt: null,
   guilds: {
     "1337623164146155593": {
@@ -49,6 +52,12 @@ function facts(
   overrides: Partial<DatasetCoherenceFacts> = {},
 ): DatasetCoherenceFacts {
   return {
+    snapshotId: overrides.snapshotId ?? "1326601",
+    pinnedSnapshotId: overrides.pinnedSnapshotId ?? "1326601",
+    writableRows: overrides.writableRows ?? { ConfirmationIntent: 4 },
+    pinnedWritableRows: overrides.pinnedWritableRows ?? {
+      ConfirmationIntent: 4,
+    },
     // `in` rather than `??`: an explicitly-undefined fingerprint is the case
     // under test, and a nullish fallback would quietly restore the default.
     lakeFingerprint:
@@ -93,6 +102,25 @@ describe("StageDatasetPinSchema", () => {
 describe("datasetCoherenceIssues", () => {
   test("accepts a matching pair", () => {
     expect(datasetCoherenceIssues(facts())).toEqual([]);
+  });
+
+  test("rejects a database restored since the pin was captured", () => {
+    // The name and the lake are unchanged; only the database's own identity
+    // moved, which is exactly what a re-pull does.
+    const issues = datasetCoherenceIssues(facts({ snapshotId: "1400002" }));
+    expect(issues).toEqual([expect.stringContaining("has been restored")]);
+  });
+
+  test("rejects a snapshot an earlier sweep already wrote into", () => {
+    // Dare, challenge and creation tools persist drafts and confirmation
+    // intents, and nothing rolls them back between cases, so the next sweep
+    // would not be measuring the world the pin describes.
+    const issues = datasetCoherenceIssues(
+      facts({ writableRows: { ConfirmationIntent: 6 } }),
+    );
+    expect(issues).toEqual([
+      expect.stringContaining("restore the snapshot before running again"),
+    ]);
   });
 
   test("rejects a fingerprint mismatch — the silent identity-split case", () => {

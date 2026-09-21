@@ -149,6 +149,24 @@ describe("createBundleDirectory and writeBundleFile", () => {
   });
 });
 
+describe("appendBundleLine", () => {
+  test("keeps every line when writers finish at the same moment", async () => {
+    // Cases run four at a time. A read-then-rewrite append loses entries here,
+    // and a lost entry means `--resume` pays to run a case whose result file
+    // already exists.
+    const dir = await temporaryDir();
+    const indexPath = path.join(dir, "cases.jsonl");
+    const lines = Array.from({ length: 24 }, (_, index) =>
+      JSON.stringify({ caseId: `chip:${index.toString()}` }),
+    );
+    await Promise.all(lines.map((line) => appendBundleLine(indexPath, line)));
+    const indexText = await Bun.file(indexPath).text();
+    const written = indexText.split("\n").filter((line) => line.trim() !== "");
+    expect(written).toHaveLength(lines.length);
+    expect(new Set(written)).toEqual(new Set(lines));
+  });
+});
+
 describe("recordedCaseEntries", () => {
   test("is empty when no index exists yet", async () => {
     const dir = await temporaryDir();
@@ -317,10 +335,7 @@ describe("ReplayManifestSchema", () => {
       guildId: "1337623164146155593",
       expectedCapabilities: { bucks: true },
       lake: { buildId: "b1", puuidRemapFingerprint: "none" },
-      database: {
-        name: "scout_beta_snapshot",
-        pulledAt: "2026-09-19T00:05:00.000Z",
-      },
+      database: { name: "scout_beta_snapshot", snapshotId: "1326601" },
       model: "gpt-5.6-luna",
       chipCatalogSha256: "a".repeat(64),
       corpusSha256: null,

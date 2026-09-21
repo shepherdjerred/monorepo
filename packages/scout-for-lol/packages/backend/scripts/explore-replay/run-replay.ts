@@ -6,6 +6,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
+import { writableRowCounts } from "./writable-rows.ts";
 import {
   MY_SERVER,
   addFlagOverride,
@@ -147,13 +148,28 @@ async function lakeAccountFacts(pin: StageDatasetPin): Promise<{
  * folding. A mismatch does not surface as an error at query time — it splits
  * one player into two identities — so it has to be an entry condition.
  */
+
 async function verifyDataset(pin: StageDatasetPin): Promise<void> {
   const buildDir = buildDirPath(pin.lake.dir, pin.lake.buildId);
-  const [lakeFingerprint, remap, databaseRows, lakeFacts] = await Promise.all([
+  const [
+    lakeFingerprint,
+    remap,
+    databaseRows,
+    lakeFacts,
+    snapshotRows,
+    writableRows,
+  ] = await Promise.all([
     readBuildPuuidRemapFingerprint(buildDir),
     loadPuuidRemap(prisma),
     prisma.account.count(),
     lakeAccountFacts(pin),
+    // The live database's own identity, which a restore replaces. Checked
+    // here so a pin reused after a re-pull is refused rather than silently
+    // describing data it never saw.
+    prisma.$queryRaw<{ oid: string }[]>`
+        select oid::text as oid from pg_database where datname = current_database()
+      `,
+    writableRowCounts(),
   ]);
 
   const present = await prisma.account.findMany({
@@ -163,6 +179,10 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
   const known = new Set(present.map((row) => row.puuid));
 
   const issues = datasetCoherenceIssues({
+    snapshotId: snapshotRows[0]?.oid ?? "unreadable",
+    pinnedSnapshotId: pin.database.snapshotId,
+    writableRows,
+    pinnedWritableRows: pin.database.writableRows,
     lakeFingerprint,
     databaseFingerprint: puuidRemapFingerprint(remap),
     accountRows: { parquet: lakeFacts.rows, database: databaseRows },
@@ -262,8 +282,8 @@ function manifestDifferences(
   compare("database", existing.database.name, current.database.name);
   compare(
     "database snapshot",
-    existing.database.pulledAt,
-    current.database.pulledAt,
+    existing.database.snapshotId,
+    current.database.snapshotId,
   );
   compare("model", existing.model, current.model);
   compare(
@@ -277,6 +297,9 @@ function manifestDifferences(
     current.corpusSha256 ?? "none",
   );
   compare("prompt", existing.promptSha256, current.promptSha256);
+  // The code itself. A tool or runtime change can leave the prompt and catalog
+  // hashes untouched while changing every answer.
+  compare("revision", existing.gitCommit, current.gitCommit);
   compare(
     "baseline",
     existing.baselineRunId ?? "none",
@@ -301,23 +324,39 @@ function manifestDifferences(
  * runtime changes can leave the prompt hash identical, so a bundle that cannot
  * say which revision produced it is missing the one field that would explain
  * the difference. Asked of git directly, and refused rather than guessed.
+ *
+ * A commit alone is not enough either. "Edit Explore, then compare" is the
+ * workflow this harness exists for, and uncommitted edits leave `HEAD` naming
+ * the previous commit — attributing results to code that did not produce them.
+ * So a dirty tree is recorded as such, fingerprinted by the diff, and two runs
+ * from different uncommitted states are visibly different.
  */
-async function checkoutRevision(): Promise<string> {
-  const proc = Bun.spawn(["git", "rev-parse", "HEAD"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+async function gitOutput(args: readonly string[]): Promise<string> {
+  const proc = Bun.spawn(["git", ...args], { stdout: "pipe", stderr: "pipe" });
   const [out, exitCode] = await Promise.all([
     new Response(proc.stdout).text(),
     proc.exited,
   ]);
-  const revision = out.trim();
-  if (exitCode !== 0 || !/^[0-9a-f]{40}$/.test(revision)) {
+  if (exitCode !== 0) {
+    throw new Error(
+      `git ${args.join(" ")} failed with exit ${exitCode.toString()}.`,
+    );
+  }
+  return out;
+}
+
+async function checkoutRevision(): Promise<string> {
+  const revision = (await gitOutput(["rev-parse", "HEAD"])).trim();
+  if (!/^[0-9a-f]{40}$/.test(revision)) {
     throw new Error(
       "Could not resolve the checkout revision with `git rev-parse HEAD`; a bundle must record which code produced it.",
     );
   }
-  return revision;
+  // Tracked modifications and untracked files both change what ran.
+  const status = (await gitOutput(["status", "--porcelain"])).trim();
+  if (status === "") return revision;
+  const diff = await gitOutput(["diff", "HEAD"]);
+  return `${revision}-dirty-${sha256Hex(`${status}\n${diff}`).slice(0, 12)}`;
 }
 
 /** A bundle's manifest, or null when the run directory is new. */
@@ -624,7 +663,14 @@ async function runGuild(input: {
           // chip-only sweep is.
           corpus: null,
         };
-    const conversationCases = conversations.cases;
+    // A turn belongs to the guild it actually ran with. `runGuild` installs
+    // one guild's flag overrides and judges every mismatch against that
+    // guild's captured profile, so replaying another guild's turns here would
+    // answer them under capabilities they never had — and a prod pin with two
+    // profiles would replay the whole corpus twice, once wrongly.
+    const conversationCases = conversations.cases.filter((entry) =>
+      entry.guildIds.includes(config.guildId),
+    );
 
     const selectable = [...chipCases, ...conversationCases];
     // Every case's kind, so a bundle's records say what they actually are
@@ -666,7 +712,10 @@ async function runGuild(input: {
         buildId: pin.lake.buildId,
         puuidRemapFingerprint: pin.lake.puuidRemapFingerprint,
       },
-      database: { name: pin.database.name, pulledAt: pin.database.pulledAt },
+      database: {
+        name: pin.database.name,
+        snapshotId: pin.database.snapshotId,
+      },
       model,
       chipCatalogSha256: exploreChipCatalogSha256(),
       corpusSha256: conversations.corpus?.sha256 ?? null,
@@ -709,8 +758,20 @@ async function runGuild(input: {
     // bundle whose metadata describes inputs its retained cases never saw.
     if (options.resumeRunId !== null) {
       const existing = await readManifestIfPresent(paths.manifest);
-      const differences =
-        existing === null ? [] : manifestDifferences(existing, manifest);
+      if (existing === null) {
+        // A resume must prove what it is resuming. With no manifest there is
+        // nothing to compare against, and any index or case files left in the
+        // directory would be retained under provenance nobody established —
+        // while a mistyped run id would quietly begin fresh model spend under
+        // a name that means nothing.
+        throw new Error(
+          [
+            `--resume names ${runId}, which has no manifest at ${paths.manifest}.`,
+            "A resume continues a bundle that can say what produced it; start a new run instead.",
+          ].join("\n"),
+        );
+      }
+      const differences = manifestDifferences(existing, manifest);
       if (differences.length > 0) {
         throw new Error(
           [
@@ -775,7 +836,12 @@ async function runGuild(input: {
             condition: chip?.condition ?? null,
             capabilityMismatches: mismatches,
             candidate,
-            baseline: baseline.get(observation.caseId) ?? null,
+            comparison: ((): Parameters<typeof scoreCase>[0]["comparison"] => {
+              const entry = baseline.get(observation.caseId);
+              return entry === undefined
+                ? { kind: "none" }
+                : { kind: "baseline", baseline: entry };
+            })(),
             // The formatter can reword a query on its own, so both sides are
             // canonicalised before comparison and a formatting change is not
             // reported as the agent writing something different.

@@ -7,6 +7,7 @@ import {
   chipExpectation as chipExpectationFor,
 } from "#src/explore/replay/profiles.ts";
 import { ReplayCaseCandidateSchema } from "#src/explore/replay/bundle.ts";
+import { ReplayDiffSchema } from "#src/explore/replay/diff.ts";
 import { scoreCase } from "#src/explore/replay/scoring.ts";
 import {
   RollupCaseSchema,
@@ -51,6 +52,8 @@ const CaseFileSchema = z
       })
       .loose(),
     candidate: ReplayCaseCandidateSchema,
+    // The comparison the run recorded, absent in a bundle with no baseline.
+    diff: ReplayDiffSchema.nullable().default(null),
     trace: z.array(
       z.object({ toolName: z.string(), status: z.string() }).loose(),
     ),
@@ -111,9 +114,15 @@ async function readCases(runDir: string): Promise<readonly RollupCase[]> {
       condition: condition.success ? condition.data : null,
       capabilityMismatches: parsed.meta.capabilityMismatches,
       candidate: parsed.candidate,
-      // Re-scoring compares nothing: a stored diff belongs to the baseline the
-      // run used, and re-deriving it here would need that bundle too.
-      baseline: null,
+      // The comparison the run recorded. It cannot be rebuilt here — the
+      // baseline lived in another bundle — but it was stored, and discarding
+      // it would drop `refusal_regression`, `rows_zero_was_nonzero` and
+      // `numeric_claim_dropped` from every re-scored conversation and
+      // `--baseline` run, making the summary quieter than the bundle.
+      comparison:
+        parsed.diff === null
+          ? { kind: "none" }
+          : { kind: "diff", diff: parsed.diff },
       normalizeQuery: (text) => text,
     });
     cases.push(

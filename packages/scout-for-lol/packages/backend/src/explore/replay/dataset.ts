@@ -19,6 +19,20 @@ import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
  * eval that cannot trust its own dataset is worse than no eval.
  */
 
+/**
+ * The tables a replay can write into, and therefore the ones that prove a
+ * snapshot is still the one that was pinned.
+ *
+ * Explore's dare, challenge and creation tools prepare rather than perform,
+ * but preparing persists: a draft, and the single-use confirmation intent that
+ * would enact it. Nothing rolls that back between cases.
+ */
+export const REPLAY_WRITABLE_TABLES = [
+  "ConfirmationIntent",
+  "BucksDareV2",
+  "ChallengeRun",
+] as const;
+
 export const ReplayStageSchema = z.enum(["beta", "prod"]);
 export type ReplayStage = z.infer<typeof ReplayStageSchema>;
 
@@ -42,6 +56,30 @@ export const StageDatasetPinSchema = z
         name: z.string().min(1),
         url: z.string().min(1),
         pulledAt: z.iso.datetime(),
+        /**
+         * The database's own OID, which changes when it is restored.
+         *
+         * `pulledAt` records when the pin was captured, and the name is a slot
+         * that every pull restores in place — neither can tell a snapshot from
+         * its replacement. Postgres assigns a fresh OID to a recreated
+         * database, so comparing it catches a pin reused against data it never
+         * described.
+         */
+        snapshotId: z.string().min(1),
+        /**
+         * Row counts of the tables a replay can write into.
+         *
+         * The agent's dare, challenge and creation tools persist: a draft and
+         * the confirmation intent that would enact it. A replay runs them for
+         * real against a snapshot with no rollback, so a sweep leaves the
+         * snapshot slightly different from the one it started on, and the next
+         * sweep would not be measuring the same world. Recorded here so a run
+         * can refuse a snapshot that has moved since it was pinned.
+         */
+        writableRows: z.record(
+          z.string().min(1),
+          z.number().int().nonnegative(),
+        ),
       })
       .strict(),
     accountRows: z
@@ -50,6 +88,16 @@ export const StageDatasetPinSchema = z
         database: z.number().int().nonnegative(),
       })
       .strict(),
+    /**
+     * Where the captured capabilities came from.
+     *
+     * `static` means the registry defaults plus static overrides, with no
+     * provider consulted; `provider` means the stage's own Flipt decisions. A
+     * static capture is a faithful record of static configuration and nothing
+     * more — where provider targeting differs, the replay would reproduce and
+     * assert a capability the guild does not actually have.
+     */
+    flagSource: z.enum(["static", "provider"]),
     verifiedAt: z.iso.datetime().nullable(),
     /**
      * What each target guild actually resolved when the dataset was pulled,
@@ -74,6 +122,12 @@ export type StageDatasetPin = z.infer<typeof StageDatasetPinSchema>;
  * means the two came from different places.
  */
 export type DatasetCoherenceFacts = {
+  /** The live database's own identity, and the one the pin recorded. */
+  readonly snapshotId: string;
+  readonly pinnedSnapshotId: string;
+  /** What the writable tables hold now, and held when the pin was captured. */
+  readonly writableRows: Readonly<Record<string, number>>;
+  readonly pinnedWritableRows: Readonly<Record<string, number>>;
   /** `undefined` when the build predates the fingerprint, or its manifest is unreadable. */
   readonly lakeFingerprint: string | undefined;
   readonly databaseFingerprint: string;
@@ -112,6 +166,23 @@ export function datasetCoherenceIssues(
   facts: DatasetCoherenceFacts,
 ): readonly string[] {
   const issues: string[] = [];
+
+  for (const [table, pinned] of Object.entries(facts.pinnedWritableRows)) {
+    const now = facts.writableRows[table];
+    if (now === undefined) {
+      issues.push(`the snapshot no longer has a ${table} table to count`);
+    } else if (now !== pinned) {
+      issues.push(
+        `${table} holds ${now.toString()} rows, but ${pinned.toString()} when pinned; a replay writes drafts and intents, so restore the snapshot before running again`,
+      );
+    }
+  }
+
+  if (facts.snapshotId !== facts.pinnedSnapshotId) {
+    issues.push(
+      `the database has been restored since this pin was captured (snapshot ${facts.snapshotId}, pin ${facts.pinnedSnapshotId}); re-capture the pin`,
+    );
+  }
 
   if (facts.lakeFingerprint === undefined) {
     // Not the same as a mismatch, and worth saying differently: the build is

@@ -43,7 +43,20 @@ export type ScorableCase = {
   readonly capabilityMismatches: readonly string[];
   /** The candidate's own shape, for comparison against a baseline. */
   readonly candidate: ReplaySide;
-  readonly baseline: ReplayBaseline | null;
+  /**
+   * What this case is measured against, as a baseline to diff or a diff
+   * already taken.
+   *
+   * A run holds the baseline and computes the comparison. Anything re-scoring
+   * a stored case holds the comparison the run recorded and cannot rebuild it
+   * — the baseline lived in another bundle. Both must reach the same signals,
+   * so both arrive here, and passing neither means the case genuinely had no
+   * baseline rather than that the reader could not find one.
+   */
+  readonly comparison:
+    | { readonly kind: "baseline"; readonly baseline: ReplayBaseline }
+    | { readonly kind: "diff"; readonly diff: ReplayDiff }
+    | { readonly kind: "none" };
   /** Canonical form of a query, so formatting is not mistaken for meaning. */
   readonly normalizeQuery: (text: string) => string | null;
 };
@@ -83,15 +96,38 @@ export function queryFailedUnrecovered(
     .some((entry) => entry.status === "succeeded");
 }
 
+/**
+ * How many rows the baseline returned.
+ *
+ * Straight off the baseline when there is one. When re-scoring a stored case
+ * there is not, so it comes back out of the recorded delta — the run wrote
+ * `candidate - baseline`, so the baseline is `candidate - delta`. Both routes
+ * have to agree, because `rows_zero_was_nonzero` is decided on this number and
+ * a re-score that could not recover it would quietly drop the signal.
+ */
+function baselineRowsReturned(
+  input: ScorableCase,
+  diff: ReplayDiff | null,
+): number | null {
+  if (input.comparison.kind === "baseline") {
+    return input.comparison.baseline.rowsReturned;
+  }
+  const delta = diff?.rows.returnedDelta ?? null;
+  if (delta === null || input.rowsReturned === null) return null;
+  return input.rowsReturned - delta;
+}
+
 export function scoreCase(input: ScorableCase): CaseScore {
   const diff =
-    input.baseline === null
+    input.comparison.kind === "none"
       ? null
-      : diffReplayCase({
-          baseline: input.baseline,
-          candidate: input.candidate,
-          normalizeQuery: input.normalizeQuery,
-        });
+      : input.comparison.kind === "diff"
+        ? input.comparison.diff
+        : diffReplayCase({
+            baseline: input.comparison.baseline,
+            candidate: input.candidate,
+            normalizeQuery: input.normalizeQuery,
+          });
 
   return {
     diff,
@@ -105,7 +141,7 @@ export function scoreCase(input: ScorableCase): CaseScore {
           ? null
           : chipExpectation(input.capabilities, input.condition),
       capabilityMismatches: input.capabilityMismatches,
-      baselineRowsReturned: input.baseline?.rowsReturned ?? null,
+      baselineRowsReturned: baselineRowsReturned(input, diff),
       candidateRowsReturned: input.rowsReturned,
     }),
   };

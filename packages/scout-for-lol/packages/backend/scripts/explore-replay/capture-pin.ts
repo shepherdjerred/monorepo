@@ -5,6 +5,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
+import { writableRowCounts } from "./writable-rows.ts";
 import { ME, MY_SERVER } from "#src/configuration/flags.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
@@ -68,16 +69,29 @@ async function parquetAccountRows(
 }
 
 /**
- * Bring the flag client up with no provider.
+ * Where this capture's flag decisions come from.
  *
- * Without this, `isPolicyEnabled` asks an OpenFeature client whose provider
- * was never registered and the call never returns. With mode "disabled" there
- * is no provider to consult, so every evaluation falls through to the value
- * the registry supplies as its default — which is exactly the stage's own
- * static configuration, and what a capture is supposed to read.
+ * `disabled` registers no provider, so every evaluation falls through to the
+ * registry default plus the static overrides — the stage's static
+ * configuration, and nothing more. That is the right answer only while the
+ * stage has no provider targeting of its own; where Flipt says something
+ * different, a static capture records a value the guild does not have and the
+ * replay would then reproduce and assert it as if it were real.
+ *
+ * So the caller decides, and the pin records which it was. Pass
+ * `FEATURE_FLAGS_MODE=flipt` with the stage's provider reachable to capture
+ * live decisions; leave it unset for the static ones.
  */
-async function startFlags(): Promise<void> {
+type FlagSource = "static" | "provider";
+
+async function startFlags(): Promise<FlagSource> {
+  const mode = Bun.env["FEATURE_FLAGS_MODE"];
+  if (mode === "flipt") {
+    await initFeatureFlags({ environment: Bun.env });
+    return "provider";
+  }
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+  return "static";
 }
 
 /**
@@ -163,6 +177,28 @@ async function busiestRequester(guildId: string): Promise<string> {
   return busiest?.[0] ?? ME;
 }
 
+/**
+ * The database's own identity, so a pin can tell its snapshot from a later one.
+ *
+ * Postgres assigns a fresh OID to a database it recreates, which is what a
+ * restore does. Anything derived here instead — a capture timestamp, the
+ * database name — describes the pin rather than the data, and would go on
+ * matching after the snapshot underneath had been replaced.
+ */
+
+async function databaseSnapshotId(): Promise<string> {
+  const rows = await prisma.$queryRaw<{ oid: string }[]>`
+    select oid::text as oid from pg_database where datname = current_database()
+  `;
+  const oid = rows[0]?.oid;
+  if (oid === undefined) {
+    throw new Error(
+      "Could not read the snapshot database's identity from pg_database.",
+    );
+  }
+  return oid;
+}
+
 export async function capturePinForStage(input: {
   readonly stage: "beta" | "prod";
   readonly top: number;
@@ -170,7 +206,7 @@ export async function capturePinForStage(input: {
   readonly databaseName: string;
   readonly databaseUrl: string;
 }): Promise<StageDatasetPin> {
-  await startFlags();
+  const flagSource = await startFlags();
   useStageFlagSemantics(input.stage);
   const buildId = await publishedBuild(input.lakeDir);
   const fingerprint = await readBuildPuuidRemapFingerprint(
@@ -231,7 +267,10 @@ export async function capturePinForStage(input: {
       name: input.databaseName,
       url: input.databaseUrl,
       pulledAt: now,
+      snapshotId: await databaseSnapshotId(),
+      writableRows: await writableRowCounts(),
     },
+    flagSource,
     accountRows: { parquet: parquetRows, database: databaseRows },
     verifiedAt: now,
     guilds: captured,

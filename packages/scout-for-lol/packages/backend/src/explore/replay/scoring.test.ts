@@ -39,7 +39,7 @@ function scorable(overrides: Partial<ScorableCase> = {}): ScorableCase {
     condition: "always",
     capabilityMismatches: [],
     candidate: SIDE,
-    baseline: null,
+    comparison: { kind: "none" },
     normalizeQuery: (text) => text,
     ...overrides,
   };
@@ -112,7 +112,9 @@ describe("scoreCase", () => {
       source: "run",
       createdAt: null,
     };
-    const scored = scoreCase(scorable({ baseline }));
+    const scored = scoreCase(
+      scorable({ comparison: { kind: "baseline", baseline } }),
+    );
     expect(scored.diff).not.toBeNull();
     expect(scored.diff?.answer.identical).toBe(true);
   });
@@ -125,12 +127,73 @@ describe("scoreCase", () => {
     };
     const scored = scoreCase(
       scorable({
-        baseline,
+        comparison: { kind: "baseline", baseline },
         answer: "Ezreal leads.",
         candidate: { ...SIDE, answer: "Ezreal leads." },
       }),
     );
     expect(scored.signals).toContain("numeric_claim_dropped");
+  });
+
+  test("a stored diff reaches the same signals as the baseline that made it", () => {
+    // What re-scoring depends on. `explore:summarize` cannot rebuild a diff —
+    // the baseline lived in another bundle — so a recorded one has to carry
+    // the baseline-dependent signals on its own.
+    const baseline: ReplayBaseline = {
+      ...SIDE,
+      source: "run",
+      createdAt: null,
+    };
+    const fromBaseline = scoreCase(
+      scorable({
+        comparison: { kind: "baseline", baseline },
+        answer: "Ezreal leads.",
+        candidate: { ...SIDE, answer: "Ezreal leads." },
+      }),
+    );
+    expect(fromBaseline.diff).not.toBeNull();
+    expect(fromBaseline.signals).toContain("numeric_claim_dropped");
+
+    const storedDiff = fromBaseline.diff;
+    if (storedDiff === null) throw new Error("expected a diff");
+    const fromStored = scoreCase(
+      scorable({
+        comparison: { kind: "diff", diff: storedDiff },
+        answer: "Ezreal leads.",
+        candidate: { ...SIDE, answer: "Ezreal leads." },
+      }),
+    );
+    expect(fromStored.signals).toEqual(fromBaseline.signals);
+  });
+
+  test("recovers the baseline row count from a stored delta", () => {
+    // `rows_zero_was_nonzero` is decided on the baseline's row count, which a
+    // re-score has only as the delta the run recorded.
+    const baseline: ReplayBaseline = {
+      ...SIDE,
+      source: "run",
+      createdAt: null,
+      rowsReturned: 12,
+    };
+    const fromBaseline = scoreCase(
+      scorable({
+        comparison: { kind: "baseline", baseline },
+        rowsReturned: 0,
+        candidate: { ...SIDE, rowsReturned: 0 },
+      }),
+    );
+    expect(fromBaseline.signals).toContain("rows_zero_was_nonzero");
+
+    const storedDiff = fromBaseline.diff;
+    if (storedDiff === null) throw new Error("expected a diff");
+    const fromStored = scoreCase(
+      scorable({
+        comparison: { kind: "diff", diff: storedDiff },
+        rowsReturned: 0,
+        candidate: { ...SIDE, rowsReturned: 0 },
+      }),
+    );
+    expect(fromStored.signals).toContain("rows_zero_was_nonzero");
   });
 
   test("normalizes queries so formatting is not a difference", () => {
@@ -142,7 +205,7 @@ describe("scoreCase", () => {
     };
     const scored = scoreCase(
       scorable({
-        baseline,
+        comparison: { kind: "baseline", baseline },
         normalizeQuery: (text) => text.replaceAll(/\s+/g, " "),
       }),
     );

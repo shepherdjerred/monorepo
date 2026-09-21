@@ -14,6 +14,64 @@
  * and a person decides.
  */
 
+import { z } from "zod";
+
+/**
+ * The stored shape of a comparison, for readers that cannot rebuild it.
+ *
+ * A bundle records the diff a run computed. Re-scoring offline has the
+ * candidate but not the baseline — that lived in another bundle — so the
+ * recorded comparison is the only way the baseline-dependent signals survive
+ * a re-score. Loose, because a bundle written later may carry more.
+ */
+export const ReplayDiffSchema = z
+  .object({
+    baselineSource: z.enum(["stored", "run"]),
+    baselineCreatedAt: z.string().nullable(),
+    answer: z
+      .object({
+        identical: z.boolean(),
+        baselineLength: z.number(),
+        candidateLength: z.number(),
+        numbersOnlyInBaseline: z.array(z.string()),
+        numbersOnlyInCandidate: z.array(z.string()),
+      })
+      .loose(),
+    query: z
+      .object({
+        status: z.enum(["identical", "changed", "added", "removed", "absent"]),
+        baseline: z.string().nullable(),
+        candidate: z.string().nullable(),
+      })
+      .loose(),
+    toolCalls: z
+      .object({
+        baseline: z.array(z.string()),
+        candidate: z.array(z.string()),
+        added: z.array(z.string()),
+        removed: z.array(z.string()),
+        reordered: z.boolean(),
+      })
+      .loose(),
+    rows: z
+      .object({
+        returnedDelta: z.number().nullable(),
+        scannedDelta: z.number().nullable(),
+      })
+      .loose(),
+    caveats: SetDiffSchema(),
+    followUps: SetDiffSchema(),
+    matchCards: SetDiffSchema(),
+    visualizationChanged: z.boolean(),
+  })
+  .loose();
+
+function SetDiffSchema() {
+  return z
+    .object({ added: z.array(z.string()), removed: z.array(z.string()) })
+    .loose();
+}
+
 export type ReplaySide = {
   readonly answer: string | null;
   readonly queryText: string | null;

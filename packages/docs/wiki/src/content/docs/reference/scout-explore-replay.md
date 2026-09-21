@@ -27,12 +27,15 @@ Source: [`src/explore/replay/`](https://github.com/shepherdjerred/monorepo/tree/
 
 `$XDG_DATA_HOME/scout-for-lol/stage-dataset/<stage>/dataset.json`, mode `0600`.
 
-| Field                                        | Meaning                                       |
-| -------------------------------------------- | --------------------------------------------- |
-| `lake.buildId`, `lake.puuidRemapFingerprint` | The published build this dataset reads        |
-| `database.name`, `database.url`              | The restored snapshot                         |
-| `accountRows`                                | Parquet and database account counts           |
-| `guilds`                                     | Per-guild captured capabilities and requester |
+| Field                                        | Meaning                                              |
+| -------------------------------------------- | ---------------------------------------------------- |
+| `lake.buildId`, `lake.puuidRemapFingerprint` | The published build this dataset reads               |
+| `database.name`, `database.url`              | The restored snapshot                                |
+| `accountRows`                                | Parquet and database account counts                  |
+| `database.snapshotId`                        | The snapshot database's OID, which a restore changes |
+| `database.writableRows`                      | Row counts of the tables a replay writes             |
+| `flagSource`                                 | `provider` when Flipt was consulted, else `static`   |
+| `guilds`                                     | Per-guild captured capabilities and requester        |
 
 A run refuses to start unless `DATABASE_URL` names the pinned database on
 loopback and on the pinned port, `REPORT_LAKE_DIR` resolves to the pinned lake,
@@ -139,6 +142,13 @@ corpus ([`plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/package
   excludes roughly the newest fifteen minutes of matches.
 - A bundle holds real conversation text and stays local; the committed corpus
   holds identifiers only.
+- Dare, challenge and creation tools persist drafts and confirmation intents,
+  and nothing rolls them back between cases. A run refuses a snapshot whose
+  writable tables have moved since the pin, so restore it between sweeps;
+  within one sweep, an earlier case can still affect a later one.
+- `explore:capture-guilds` reads static flag configuration unless
+  `FEATURE_FLAGS_MODE=flipt` points it at the stage's provider. `flagSource`
+  records which, because a static capture is not evidence of live targeting.
 - Every case runs on the `web` surface. Curation admits a conversation only
   when that is proven: `origin` says `web`, or a durable run payload records
   the surface. `origin` alone cannot, because the migration that added it
