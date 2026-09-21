@@ -220,15 +220,22 @@ describe("runCodexAgentTurn failure classification", () => {
 });
 
 describe("runCodexAgentTurn preparation", () => {
-  test("restores a persistent OpenRouter home when setup fails", async () => {
+  test("uses a persistent OpenRouter home for an initial session", async () => {
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
-    mocks.createOpenRouterConfig.mockImplementation(() => {
+    let expectedCodexHome = "";
+    mocks.createOpenRouterConfig.mockImplementation((input: unknown) => {
+      const parsed = z
+        .object({ env: z.record(z.string(), z.string()) })
+        .parse(input);
+      expect(parsed.env["HOME"]).toBe(expectedCodexHome);
+      expect(parsed.env["CODEX_HOME"]).toBe(expectedCodexHome);
       throw new Error("OpenRouter setup failed");
     });
 
     await withLifecycleDirectory(
       "codex-openrouter-lifecycle",
       async ({ codexHome }) => {
+        expectedCodexHome = codexHome;
         await expect(
           runCodexAgentTurn({
             service: "temporal",
@@ -246,7 +253,6 @@ describe("runCodexAgentTurn preparation", () => {
               networkAccessEnabled: true,
               webSearchMode: "live",
             },
-            resumeSessionId: "codex-session",
             beforeEvent: () => Promise.resolve(true),
             onEvent: vi.fn(),
           }),

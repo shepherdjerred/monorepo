@@ -75,10 +75,7 @@ export async function prepareCodexOpenRouterHome(input: {
   providerUid: number | undefined;
   resumeSessionId: string | undefined;
 }): Promise<CodexOpenRouterHome> {
-  const configuredCodexHome =
-    input.resumeSessionId === undefined
-      ? undefined
-      : input.environment["CODEX_HOME"];
+  const configuredCodexHome = input.environment["CODEX_HOME"];
   const persistentCodexHome =
     configuredCodexHome === "" ? undefined : configuredCodexHome;
   if (
