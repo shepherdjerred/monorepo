@@ -33,10 +33,9 @@ const observedCustomGameInclude = {
 } as const;
 
 /**
- * Resolve a scheduled Custom game from its bound match id or exact ten-player
- * roster. The roster path is the local-client replacement for tournament-code
- * identity, so it is available only after a client bound the scheduled game to
- * an observed lobby. It deliberately fails on ambiguity rather than guessing.
+ * Resolve a scheduled Custom game from the exact match identity attached by an
+ * accepted live post-game observation. A lobby roster alone is not sufficient:
+ * the same players can create another game while an earlier result is pending.
  */
 export async function findObservedCustomGame(
   client: ExtendedPrismaClient,
@@ -47,29 +46,7 @@ export async function findObservedCustomGame(
     where: { matchId },
     include: observedCustomGameInclude,
   });
-  if (bound !== null) return bound;
-  const candidates = await client.customGame.findMany({
-    where: {
-      matchId: null,
-      observedLobbyId: { not: null },
-      state: { in: ["LOBBY_READY", "PLAYING", "RESULT_PENDING"] },
-    },
-    include: observedCustomGameInclude,
-  });
-  const participants = new Set(match.metadata.participants);
-  const matching = candidates.filter(
-    (game) =>
-      game.participants.length === participants.size &&
-      game.participants.every((participant) =>
-        participants.has(participant.puuid),
-      ),
-  );
-  if (matching.length > 1) {
-    throw new Error(
-      `Observed match ${matchId} matches more than one scheduled Custom game`,
-    );
-  }
-  return matching[0] ?? null;
+  return bound;
 }
 
 function resultDisposition(

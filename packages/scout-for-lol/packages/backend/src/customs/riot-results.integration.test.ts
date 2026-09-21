@@ -182,12 +182,36 @@ describe("Riot-only Customs results", () => {
     ).resolves.toMatchObject({ state: "PLAYING", revision: 0 });
   });
 
-  test("finalizes an observed local lobby by its exact roster", async () => {
+  test("does not finalize an observed lobby from its roster alone", async () => {
     const seeded = await seedPendingResult({ linkMatch: false });
     await detachHistoricalLobby(seeded);
     await testPrisma.customGame.update({
       where: { id: seeded.gameId },
       data: { observedLobbyId: "observed-local-lobby" },
+    });
+
+    await expect(
+      finalizeManagedCustomResult(testPrisma, fixture),
+    ).resolves.toBeUndefined();
+
+    await expect(
+      testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
+    ).resolves.toMatchObject({
+      state: "RESULT_PENDING",
+      matchId: null,
+      observedLobbyId: "observed-local-lobby",
+    });
+  });
+
+  test("finalizes an observed lobby by its attached match identity", async () => {
+    const seeded = await seedPendingResult({ linkMatch: false });
+    await detachHistoricalLobby(seeded);
+    await testPrisma.customGame.update({
+      where: { id: seeded.gameId },
+      data: {
+        observedLobbyId: "observed-local-lobby",
+        matchId: fixture.metadata.matchId,
+      },
     });
 
     await expect(

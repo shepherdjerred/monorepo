@@ -1,4 +1,5 @@
 import type { ScoutClientObservation } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
@@ -8,6 +9,12 @@ type ObservedGameState = "PLAYING" | "RESULT_PENDING";
 
 const ResourcePayloadSchema = z.object({ resource: z.string() });
 const DataPayloadSchema = z.object({ data: z.unknown() });
+const LobbyConfigurationSchema = z.object({
+  gameConfig: z.object({
+    mapId: z.number().int(),
+    pickType: z.string().min(1),
+  }),
+});
 
 function observationResource(payload: unknown): string | null {
   const parsed = ResourcePayloadSchema.safeParse(payload);
@@ -78,6 +85,32 @@ function sameRoster(
   );
 }
 
+function customMapId(map: string): number | null {
+  if (map === "SUMMONERS_RIFT") return 11;
+  if (map === "HOWLING_ABYSS") return 12;
+  return null;
+}
+
+function normalizedPickMode(value: string): string {
+  return value.replaceAll(/[^a-z0-9]/gi, "").toUpperCase();
+}
+
+/** Require the observed LCU lobby to implement the scheduled game rules. */
+export function observedLobbyMatchesCustomSettings(
+  payload: unknown,
+  expected: { readonly map: string; readonly pickMode: string },
+): boolean {
+  const parsed = LobbyConfigurationSchema.safeParse(observationData(payload));
+  const expectedMapId = customMapId(expected.map);
+  return (
+    parsed.success &&
+    expectedMapId !== null &&
+    parsed.data.gameConfig.mapId === expectedMapId &&
+    normalizedPickMode(parsed.data.gameConfig.pickType) ===
+      normalizedPickMode(expected.pickMode)
+  );
+}
+
 /**
  * Bind a complete observed lobby to one pending scheduled Custom game or duel.
  * The user creates the lobby normally; Scout reacts to the exact participant
@@ -120,8 +153,10 @@ export async function bindObservedLobby(
       },
     }),
   ]);
-  const matchingCustoms = customGames.filter((game) =>
-    sameRoster(observed, game.participants),
+  const matchingCustoms = customGames.filter(
+    (game) =>
+      sameRoster(observed, game.participants) &&
+      observedLobbyMatchesCustomSettings(observation.payload, game),
   );
   const matchingDuels = duelGames.filter((game) =>
     sameRoster(observed, [
@@ -154,6 +189,182 @@ export async function bindObservedLobby(
         lobbyObservationId: observation.observationId,
       },
     });
+  }
+}
+
+function observedPostGameMatchId(
+  observation: ScoutClientObservation,
+): string | null {
+  if (
+    observation.kind !== "post_game" ||
+    observationResource(observation.payload) !== "post_game" ||
+    observation.platformId === undefined ||
+    observation.gameId === undefined
+  ) {
+    return null;
+  }
+  const parsed = RiotMatchIdSchema.safeParse(
+    `${observation.platformId.toUpperCase()}_${observation.gameId}`,
+  );
+  return parsed.success ? parsed.data : null;
+}
+
+async function lobbyWasSuperseded(
+  candidate: {
+    readonly observedLobbyId: string | null;
+    readonly lobbyObservationId: string | null;
+  },
+  participantPuuids: string[],
+  postGameCapturedAt: Date,
+): Promise<boolean> {
+  if (
+    candidate.observedLobbyId === null ||
+    candidate.lobbyObservationId === null
+  ) {
+    throw new Error("Bound Scout game is missing its source lobby evidence");
+  }
+  const source = await prisma.scoutClientObservation.findUnique({
+    where: { observationId: candidate.lobbyObservationId },
+    select: { capturedAt: true },
+  });
+  if (source === null) {
+    throw new Error(
+      `Bound Scout lobby observation ${candidate.lobbyObservationId} does not exist`,
+    );
+  }
+  if (source.capturedAt > postGameCapturedAt) return true;
+  const supersedingLobby = await prisma.scoutClientObservation.findFirst({
+    where: {
+      kind: "lobby",
+      disposition: "ACCEPTED",
+      localPuuid: { in: participantPuuids },
+      lobbyId: { not: candidate.observedLobbyId },
+      capturedAt: { gt: source.capturedAt, lte: postGameCapturedAt },
+    },
+    select: { observationId: true },
+  });
+  return supersedingLobby !== null;
+}
+
+async function eligibleBoundGames(
+  observation: ScoutClientObservation,
+  localPuuid: ReturnType<typeof LeaguePuuidSchema.parse>,
+) {
+  const observed = lobbyParticipantPuuids(observation.payload);
+  const [customGames, duelGames] = await Promise.all([
+    prisma.customGame.findMany({
+      where: {
+        matchId: null,
+        observedLobbyId: { not: null },
+        lobbyObservationId: { not: null },
+        state: { in: ["LOBBY_READY", "PLAYING", "RESULT_PENDING"] },
+        participants: { some: { puuid: localPuuid } },
+      },
+      include: { participants: true },
+    }),
+    prisma.duelGame.findMany({
+      where: {
+        matchId: null,
+        observedLobbyId: { not: null },
+        lobbyObservationId: { not: null },
+        gameState: { in: ["code_ready", "in_progress"] },
+        series: {
+          seriesState: { in: ["code_ready", "in_progress"] },
+          OR: [
+            { competitorOne: { members: { some: { puuid: localPuuid } } } },
+            { competitorTwo: { members: { some: { puuid: localPuuid } } } },
+          ],
+        },
+      },
+      include: {
+        series: {
+          include: {
+            competitorOne: { include: { members: true } },
+            competitorTwo: { include: { members: true } },
+          },
+        },
+      },
+    }),
+  ]);
+  const customCandidates = customGames.filter((game) =>
+    sameRoster(observed, game.participants),
+  );
+  const duelCandidates = duelGames.filter((game) =>
+    sameRoster(observed, [
+      ...game.series.competitorOne.members,
+      ...game.series.competitorTwo.members,
+    ]),
+  );
+  const capturedAt = new Date(observation.capturedAt);
+  const eligibleCustoms = [];
+  for (const game of customCandidates) {
+    const participantPuuids = game.participants.map(
+      (participant) => participant.puuid,
+    );
+    if (!(await lobbyWasSuperseded(game, participantPuuids, capturedAt))) {
+      eligibleCustoms.push(game);
+    }
+  }
+  const eligibleDuels = [];
+  for (const game of duelCandidates) {
+    const participantPuuids = [
+      ...game.series.competitorOne.members,
+      ...game.series.competitorTwo.members,
+    ].map((participant) => participant.puuid);
+    if (!(await lobbyWasSuperseded(game, participantPuuids, capturedAt))) {
+      eligibleDuels.push(game);
+    }
+  }
+  if (eligibleCustoms.length + eligibleDuels.length > 1) {
+    throw new Error(
+      `Observed post-game ${observation.gameId ?? "unknown"} matches more than one bound Scout game`,
+    );
+  }
+  return { custom: eligibleCustoms[0], duel: eligibleDuels[0] };
+}
+
+/**
+ * Attach an accepted live post-game identity to the one lobby-bound game.
+ * A later lobby seen by any scheduled participant invalidates the old binding,
+ * preventing a repeated roster from being attributed to an unfinished game.
+ */
+export async function bindObservedMatch(
+  observation: ScoutClientObservation,
+): Promise<void> {
+  const matchId = observedPostGameMatchId(observation);
+  if (matchId === null || observation.localPuuid === undefined) return;
+
+  const localPuuid = LeaguePuuidSchema.parse(observation.localPuuid);
+  const [existingCustom, existingDuel] = await Promise.all([
+    prisma.customGame.findUnique({ where: { matchId }, select: { id: true } }),
+    prisma.duelGame.findUnique({ where: { matchId }, select: { id: true } }),
+  ]);
+  if (existingCustom !== null && existingDuel !== null) {
+    throw new Error(`Observed match ${matchId} is bound to two Scout games`);
+  }
+  if (existingCustom !== null || existingDuel !== null) return;
+
+  const { custom, duel } = await eligibleBoundGames(observation, localPuuid);
+  if (custom !== undefined) {
+    const updated = await prisma.customGame.updateMany({
+      where: { id: custom.id, matchId: null },
+      data: { matchId },
+    });
+    if (updated.count !== 1) {
+      throw new Error(
+        `Custom game ${custom.id} changed while binding ${matchId}`,
+      );
+    }
+    return;
+  }
+  if (duel !== undefined) {
+    const updated = await prisma.duelGame.updateMany({
+      where: { id: duel.id, matchId: null },
+      data: { matchId },
+    });
+    if (updated.count !== 1) {
+      throw new Error(`Duel game ${duel.id} changed while binding ${matchId}`);
+    }
   }
 }
 

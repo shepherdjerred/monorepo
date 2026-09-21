@@ -61,34 +61,7 @@ async function findObservedDuelGame(match: RawMatch) {
     }
   }
 
-  const active = await prisma.duelGame.findMany({
-    where: {
-      gameState: { in: ["code_ready", "in_progress"] },
-      matchId: null,
-      observedLobbyId: { not: null },
-      series: { seriesState: { in: ["code_ready", "in_progress"] } },
-    },
-    include: duelGameInclude,
-  });
-  const participants = new Set(match.metadata.participants);
-  const candidates = active.filter((game) => {
-    const expected = [
-      ...game.series.competitorOne.members,
-      ...game.series.competitorTwo.members,
-    ].map((member) => member.puuid);
-    return (
-      expected.length === participants.size &&
-      expected.every((puuid) => participants.has(puuid))
-    );
-  });
-  if (candidates.length > 1) {
-    throw new Error(
-      `Observed match ${match.metadata.matchId} matches more than one active duel`,
-    );
-  }
-  const candidate = candidates[0];
-  if (candidate === undefined) return null;
-  return await bindDuelGame(candidate, matchId);
+  return null;
 }
 
 async function bindDuelGame(

@@ -13,6 +13,7 @@ import { startScoutMatchProcessingV2 } from "#src/temporal/starts-v2.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
 import {
   bindObservedLobby,
+  bindObservedMatch,
   projectObservedGameState,
 } from "./lobby-binding.ts";
 
@@ -247,6 +248,7 @@ export async function ingestObservationBatch(
     await projectPlayerSnapshot(observation, receipt);
     if (receipt.outcome !== "quarantined") {
       await bindObservedLobby(observation);
+      await bindObservedMatch(observation);
       await projectObservedGameState(observation);
     }
     receipts.push(receipt);

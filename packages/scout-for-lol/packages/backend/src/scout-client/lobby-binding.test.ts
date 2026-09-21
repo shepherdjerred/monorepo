@@ -1,6 +1,10 @@
 import { expect, test } from "vitest";
 import type { ScoutClientObservation } from "@scout-for-lol/data";
-import { lobbyParticipantPuuids, observedGameState } from "./lobby-binding.ts";
+import {
+  lobbyParticipantPuuids,
+  observedGameState,
+  observedLobbyMatchesCustomSettings,
+} from "./lobby-binding.ts";
 
 function observation(
   kind: ScoutClientObservation["kind"],
@@ -42,4 +46,38 @@ test("observedGameState maps only explicit live lifecycle evidence", () => {
   expect(
     observedGameState(observation("post_game", "match_history_game:123", {})),
   ).toBeNull();
+});
+
+test("observedLobbyMatchesCustomSettings validates map and pick mode", () => {
+  const payload = {
+    resource: "lobby",
+    data: { gameConfig: { mapId: 11, pickType: "TournamentDraft" } },
+  };
+  expect(
+    observedLobbyMatchesCustomSettings(payload, {
+      map: "SUMMONERS_RIFT",
+      pickMode: "TOURNAMENT_DRAFT",
+    }),
+  ).toBe(true);
+  expect(
+    observedLobbyMatchesCustomSettings(payload, {
+      map: "HOWLING_ABYSS",
+      pickMode: "TOURNAMENT_DRAFT",
+    }),
+  ).toBe(false);
+  expect(
+    observedLobbyMatchesCustomSettings(payload, {
+      map: "SUMMONERS_RIFT",
+      pickMode: "BLIND_PICK",
+    }),
+  ).toBe(false);
+  expect(
+    observedLobbyMatchesCustomSettings(
+      { resource: "lobby", data: {} },
+      {
+        map: "SUMMONERS_RIFT",
+        pickMode: "TOURNAMENT_DRAFT",
+      },
+    ),
+  ).toBe(false);
 });

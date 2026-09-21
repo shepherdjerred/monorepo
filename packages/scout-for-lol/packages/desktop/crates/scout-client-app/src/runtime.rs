@@ -199,17 +199,16 @@ async fn run_collector(
                 ).await {
                     set_error(&state, error);
                 }
-                if let Err(error) = collect_once(
-                    &state,
-                    &outbox,
-                    &mut payloads,
-                    live_client.as_ref(),
-                    tick_number,
-                ).await {
-                    set_error(&state, error);
-                }
                 if let Some(active_credential) = &credential {
-                    if let Err(error) = ensure_checked_in(
+                    if let Err(error) = collect_once(
+                        &state,
+                        &outbox,
+                        &mut payloads,
+                        live_client.as_ref(),
+                        tick_number,
+                    ).await {
+                        set_error(&state, error);
+                    } else if let Err(error) = ensure_checked_in(
                         &backend,
                         active_credential,
                         &mut checked_in_device,
