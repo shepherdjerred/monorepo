@@ -186,6 +186,7 @@ export function OnboardingWizard() {
           username={meQuery.data?.user?.username ?? ""}
           discordId={meQuery.data?.user?.discordId ?? ""}
           existingSubs={[]}
+          selfAlias=""
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),
@@ -214,6 +215,7 @@ export function OnboardingWizard() {
             alias: s.player.alias,
             channelId: s.channelId,
           }))}
+          selfAlias={subs[0]?.player.alias ?? ""}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),

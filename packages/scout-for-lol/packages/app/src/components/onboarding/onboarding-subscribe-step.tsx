@@ -13,6 +13,7 @@ import { useAddSubscription } from "#src/lib/player/use-add-subscription.ts";
 import type { OnboardingStepKind } from "@scout-for-lol/data";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 import { OnboardingNoChannels } from "#src/components/onboarding/onboarding-no-channels.tsx";
+import { TeammateSuggestions } from "#src/components/onboarding/teammate-suggestions.tsx";
 import {
   emptySubscriptionFormValue,
   SubscriptionFormSchema,
@@ -40,6 +41,8 @@ export function OnboardingSubscribeStep(props: {
   username: string;
   discordId: string;
   existingSubs: { alias: string; channelId: string }[];
+  /** Alias tracked in subscribe-self; feeds teammate suggestions. Empty when skipped. */
+  selfAlias: string;
   onAdded: () => void;
   onContinue: () => void;
   onBack: () => void;
@@ -127,6 +130,14 @@ export function OnboardingSubscribeStep(props: {
       }}
     >
       <div className="space-y-4">
+        {props.mode === "more" && (
+          <TeammateSuggestions
+            guildId={props.guildId}
+            channelId={initialChannel}
+            selfAlias={props.selfAlias}
+            onAdded={props.onAdded}
+          />
+        )}
         {props.mode === "more" && trackedAliases.length > 0 && (
           <Card>
             <CardContent className="space-y-1 p-4">

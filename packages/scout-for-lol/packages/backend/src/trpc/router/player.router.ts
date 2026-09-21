@@ -30,6 +30,10 @@ import {
   getPlayerProfileSummary,
 } from "#src/lib/player-profile/queries.ts";
 import {
+  SuggestTeammatesInputSchema,
+  suggestTeammates,
+} from "#src/lib/teammates/suggest.ts";
+import {
   LinkDiscordInput,
   MergePlayersInput,
   RenamePlayerInput,
@@ -61,6 +65,13 @@ export const playerRouter = router({
   matchHistory: guildProcedure("players", "read")
     .input(PlayerMatchHistoryInput)
     .query(async ({ input }) => getPlayerMatchHistory(input)),
+
+  // First-time setup helper: frequent teammates for a tracked alias. Gated
+  // on accounts:read like the Riot search procedures that feed the same
+  // onboarding step. Creation still goes through subscription.add.
+  suggestTeammates: guildProcedure("accounts", "read")
+    .input(SuggestTeammatesInputSchema)
+    .query(async ({ input }) => suggestTeammates(input)),
 
   getCurrentLinkedPlayer: guildProcedure("players", "read")
     .input(GuildIdInput)
