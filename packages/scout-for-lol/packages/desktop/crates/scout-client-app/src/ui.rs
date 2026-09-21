@@ -26,6 +26,7 @@ enum TrayCommand {
 pub struct ScoutApp {
     runtime: ClientRuntime,
     page: Page,
+    quitting: bool,
     tray_commands: Receiver<TrayCommand>,
     _tray: Option<TrayIcon>,
 }
@@ -38,6 +39,7 @@ impl ScoutApp {
         Self {
             runtime,
             page: Page::Overview,
+            quitting: false,
             tray_commands,
             _tray: tray,
         }
@@ -58,6 +60,7 @@ impl ScoutApp {
                     context.send_viewport_cmd(egui::ViewportCommand::Focus);
                 }
                 TrayCommand::Quit => {
+                    self.quitting = true;
                     self.runtime.shutdown();
                     context.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
@@ -74,7 +77,7 @@ impl eframe::App for ScoutApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let context = ui.ctx().clone();
         self.handle_tray(&context);
-        if context.input(|input| input.viewport().close_requested()) {
+        if !self.quitting && context.input(|input| input.viewport().close_requested()) {
             context.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             context.send_viewport_cmd(egui::ViewportCommand::Visible(false));
         }

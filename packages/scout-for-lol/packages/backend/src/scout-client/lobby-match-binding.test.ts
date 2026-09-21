@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   findSupersedingLobby: vi.fn(),
   updateCustom: vi.fn(),
   updateDuel: vi.fn(),
+  transaction: vi.fn(),
 }));
 
 vi.mock("#src/database/index.ts", () => ({
@@ -28,6 +29,7 @@ vi.mock("#src/database/index.ts", () => ({
       findUnique: mocks.findLobbyObservation,
       findFirst: mocks.findSupersedingLobby,
     },
+    $transaction: mocks.transaction,
   },
 }));
 
@@ -35,7 +37,8 @@ vi.mock("#src/customs/socket.ts", () => ({
   publishCustomNightSnapshot: vi.fn(),
 }));
 
-const { bindObservedMatch } = await import("./lobby-binding.ts");
+const { bindObservedLobby, bindObservedMatch, projectObservedGameState } =
+  await import("./lobby-binding.ts");
 const participantPuuids = Array.from(
   { length: 10 },
   (_, index) => `${index.toString().padStart(2, "0")}${"a".repeat(76)}`,
@@ -62,10 +65,42 @@ const observation = ScoutClientObservationSchema.parse({
 });
 const customCandidate = {
   id: "custom-game",
+  map: "SUMMONERS_RIFT",
+  pickMode: "TOURNAMENT_DRAFT",
   observedLobbyId: "lobby-a",
   lobbyObservationId: "00000000-0000-4000-8000-000000000001",
   participants: participantPuuids.map((puuid) => ({ puuid })),
+  auditEvents: [{ createdAt: new Date("2026-09-20T12:05:00.000Z") }],
 };
+const lifecycleObservation = ScoutClientObservationSchema.parse({
+  protocolVersion: 1,
+  schemaVersion: 1,
+  observationId: "00000000-0000-4000-8000-000000000004",
+  sequence: 3,
+  capturedAt: "2026-09-20T12:20:00.000Z",
+  appVersion: "0.1.0",
+  kind: "gameflow",
+  localPuuid: participantPuuids[0],
+  payload: { resource: "gameflow_phase", data: "InProgress" },
+});
+const staleLobbyObservation = ScoutClientObservationSchema.parse({
+  protocolVersion: 1,
+  schemaVersion: 1,
+  observationId: "00000000-0000-4000-8000-000000000005",
+  sequence: 1,
+  capturedAt: "2026-09-20T12:00:00.000Z",
+  appVersion: "0.1.0",
+  kind: "lobby",
+  lobbyId: "old-lobby",
+  localPuuid: participantPuuids[0],
+  payload: {
+    resource: "lobby",
+    data: {
+      gameConfig: { mapId: 11, pickType: "TournamentDraft" },
+      members: participantPuuids.map((puuid) => ({ puuid })),
+    },
+  },
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -96,6 +131,22 @@ test("rejects a repeated roster after a different lobby was observed", async () 
   });
 
   await bindObservedMatch(observation);
+
+  expect(mocks.updateCustom).not.toHaveBeenCalled();
+});
+
+test("does not project lifecycle events after a different lobby was observed", async () => {
+  mocks.findSupersedingLobby.mockResolvedValue({
+    observationId: "00000000-0000-4000-8000-000000000003",
+  });
+
+  await projectObservedGameState(lifecycleObservation);
+
+  expect(mocks.transaction).not.toHaveBeenCalled();
+});
+
+test("does not bind lobby evidence captured before the game became ready", async () => {
+  await bindObservedLobby(staleLobbyObservation);
 
   expect(mocks.updateCustom).not.toHaveBeenCalled();
 });

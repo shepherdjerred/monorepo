@@ -36,30 +36,19 @@ describe("parseLocalCanonicalMatch", () => {
     ).toEqual(fixture);
   });
 
-  test("converts a legacy LCU match-history row to canonical Match-V5", async () => {
+  test("rejects a legacy LCU row with incomplete Match-V5 stats", async () => {
     const payload = await Bun.file(
       "../../testdata/lcu-match-history-game.json",
     ).json();
     const localMatchId = RiotMatchIdSchema.parse("NA1_9876543210");
     const localPuuid = LeaguePuuidSchema.parse("p".repeat(78));
 
-    const match = parseLocalCanonicalMatch(
-      localMatchId,
-      candidate({ data: payload }, "NA1", localPuuid),
-    );
-
-    expect(match).not.toBeNull();
-    expect(match?.info.gameStartTimestamp).toBe(1_780_000_000_000);
-    expect(match?.info.gameEndTimestamp).toBe(1_780_001_451_000);
-    expect(match?.info.participants[0]).toMatchObject({
-      puuid: localPuuid,
-      kills: 5,
-      deaths: 2,
-      assists: 7,
-      summoner1Id: 4,
-      summoner2Id: 14,
-      teamPosition: "MIDDLE",
-    });
+    expect(
+      parseLocalCanonicalMatch(
+        localMatchId,
+        candidate({ data: payload }, "NA1", localPuuid),
+      ),
+    ).toBeNull();
   });
 
   test("does not promote partial LCU evidence by inventing missing fields", () => {

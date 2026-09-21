@@ -144,9 +144,9 @@ export async function startScoutMatchProcessingV2(
       ),
     });
   } catch (error) {
-    // A successfully completed deterministic match workflow is the durable
-    // receipt. Historical observations must be acknowledged rather than
-    // poisoning the whole client batch with a permanent start conflict.
+    // The caller acknowledges the deterministic start conflict only after it
+    // reconciles any Custom or duel binding that arrived after this execution
+    // passed its binding-dependent stages.
     if (error instanceof WorkflowExecutionAlreadyStartedError) return null;
     throw error;
   }

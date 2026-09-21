@@ -104,7 +104,7 @@ test("native ingress starts the same durable per-match workflow", async () => {
   expect(start?.options.startDelay).toBe(SCOUT_CLIENT_MATCH_START_DELAY);
 });
 
-test("native ingress treats an already-completed match workflow as acknowledged", async () => {
+test("native ingress reports an already-completed workflow for binding reconciliation", async () => {
   const temporal = fakeTemporal();
   const first = await startScoutMatchProcessingV2(temporal.client, {
     stage: "beta",

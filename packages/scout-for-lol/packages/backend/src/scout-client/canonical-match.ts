@@ -8,7 +8,6 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
-import { convertLcuMatchHistoryRow } from "#src/scout-client/lcu-match.ts";
 
 const LOCAL_CANONICAL_DELAY_MS = 2 * 60 * 1000;
 
@@ -29,10 +28,9 @@ function embeddedPayload(payload: unknown): unknown {
 
 /**
  * Accept only complete Match-V5-compatible local evidence with identities that
- * agree with both the requested match and verified observer. Current LCU match
- * history rows carry the complete Match-V5 `info` object without its metadata;
- * derive that identity wrapper from the payload while never inventing gameplay
- * fields for older, partial LCU rows.
+ * agree with both the requested match and verified observer. Complete LCU
+ * Match-V5 `info` objects can safely receive their missing metadata wrapper;
+ * legacy match-history rows remain partial evidence and are never promoted.
  */
 export function parseLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
@@ -59,7 +57,7 @@ export function parseLocalCanonicalMatch(
     ? complete.data
     : infoMatch?.success === true
       ? infoMatch.data
-      : convertLcuMatchHistoryRow(riotMatchId, payload);
+      : null;
   if (match === null) return null;
   if (
     match.metadata.matchId !== riotMatchId ||

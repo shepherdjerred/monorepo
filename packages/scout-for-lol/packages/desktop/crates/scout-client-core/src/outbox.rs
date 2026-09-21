@@ -46,6 +46,7 @@ impl ObservationOutbox {
                observation_id TEXT PRIMARY KEY,
                sequence INTEGER NOT NULL UNIQUE,
                body BLOB NOT NULL,
+               coalesce_key TEXT,
                attempt_count INTEGER NOT NULL DEFAULT 0,
                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
              );
@@ -71,6 +72,27 @@ impl ObservationOutbox {
                digest TEXT NOT NULL,
                handled_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
              );",
+        )?;
+        let has_coalesce_key = {
+            let mut statement = connection.prepare("PRAGMA table_info(observation_outbox)")?;
+            let columns = statement.query_map([], |row| row.get::<_, String>(1))?;
+            let mut found = false;
+            for column in columns {
+                if column? == "coalesce_key" {
+                    found = true;
+                }
+            }
+            found
+        };
+        if !has_coalesce_key {
+            connection.execute(
+                "ALTER TABLE observation_outbox ADD COLUMN coalesce_key TEXT",
+                [],
+            )?;
+        }
+        connection.execute_batch(
+            "CREATE UNIQUE INDEX IF NOT EXISTS observation_outbox_coalesce_key
+             ON observation_outbox(coalesce_key) WHERE coalesce_key IS NOT NULL;",
         )?;
         Ok(outbox)
     }
@@ -119,6 +141,45 @@ impl ObservationOutbox {
              ON CONFLICT(observation_id) DO NOTHING",
             params![observation.observation_id.to_string(), sequence, body],
         )?;
+        Ok(())
+    }
+
+    /// Replace an older unsent sample for the same bounded resource.
+    ///
+    /// # Errors
+    ///
+    /// Returns a validation, serialization, SQLite, or numeric-range error.
+    pub fn enqueue_coalesced(
+        &self,
+        coalesce_key: &str,
+        observation: &ObservationEnvelope,
+    ) -> Result<(), OutboxError> {
+        if coalesce_key.is_empty() || coalesce_key.len() > 128 {
+            return Err(OutboxError::InvalidCoalesceKey);
+        }
+        observation.validate()?;
+        let body = observation.to_bytes()?;
+        let sequence =
+            i64::try_from(observation.sequence).map_err(|_| OutboxError::SequenceRange)?;
+        let mut connection = self.connection()?;
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        transaction.execute(
+            "DELETE FROM observation_outbox WHERE coalesce_key = ?1",
+            [coalesce_key],
+        )?;
+        transaction.execute(
+            "INSERT INTO observation_outbox
+               (observation_id, sequence, body, coalesce_key)
+             VALUES (?1, ?2, ?3, ?4)
+             ON CONFLICT(observation_id) DO NOTHING",
+            params![
+                observation.observation_id.to_string(),
+                sequence,
+                body,
+                coalesce_key
+            ],
+        )?;
+        transaction.commit()?;
         Ok(())
     }
 
@@ -314,6 +375,9 @@ pub enum OutboxError {
     /// Sequence could not be represented safely.
     #[error("outbox sequence is outside the supported range")]
     SequenceRange,
+    /// A coalescing key must be short and non-empty.
+    #[error("outbox coalescing key is invalid")]
+    InvalidCoalesceKey,
 }
 
 #[cfg(test)]
@@ -366,6 +430,43 @@ mod tests {
         assert!(outbox.replay_file_handled("/replays/12345.rofl", 12, 34)?);
         assert!(!outbox.replay_file_handled("/replays/12345.rofl", 13, 34)?);
         assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 35)?);
+        drop(outbox);
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn coalesces_unsent_live_frames_without_dropping_other_observations()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        let first_frame = ObservationEnvelope::new(
+            1,
+            ObservationKind::LiveGameFrame,
+            "test",
+            json!({ "gameTime": 10 }),
+        )?;
+        let phase = ObservationEnvelope::new(
+            2,
+            ObservationKind::Gameflow,
+            "test",
+            json!({ "phase": "InProgress" }),
+        )?;
+        let latest_frame = ObservationEnvelope::new(
+            3,
+            ObservationKind::LiveGameFrame,
+            "test",
+            json!({ "gameTime": 12 }),
+        )?;
+
+        outbox.enqueue_coalesced("live_game_frame", &first_frame)?;
+        outbox.enqueue(&phase)?;
+        outbox.enqueue_coalesced("live_game_frame", &latest_frame)?;
+
+        let pending = outbox.pending(100)?;
+        assert_eq!(pending.len(), 2);
+        assert_eq!(pending[0].observation_id, phase.observation_id);
+        assert_eq!(pending[1].observation_id, latest_frame.observation_id);
         drop(outbox);
         fs::remove_file(path)?;
         Ok(())

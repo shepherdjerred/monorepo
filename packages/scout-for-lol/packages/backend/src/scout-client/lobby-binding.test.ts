@@ -4,7 +4,8 @@ import {
   lobbyParticipantPuuids,
   observedGameState,
   observedLobbyMatchesCustomSettings,
-} from "./lobby-binding.ts";
+  observedLobbyMatchesDuelSettings,
+} from "./lobby-payload.ts";
 
 function observation(
   kind: ScoutClientObservation["kind"],
@@ -79,5 +80,26 @@ test("observedLobbyMatchesCustomSettings validates map and pick mode", () => {
         pickMode: "TOURNAMENT_DRAFT",
       },
     ),
+  ).toBe(false);
+});
+
+test("observedLobbyMatchesDuelSettings requires tournament draft on Summoner's Rift", () => {
+  expect(
+    observedLobbyMatchesDuelSettings({
+      resource: "lobby",
+      data: { gameConfig: { mapId: 11, pickType: "TournamentDraft" } },
+    }),
+  ).toBe(true);
+  expect(
+    observedLobbyMatchesDuelSettings({
+      resource: "lobby",
+      data: { gameConfig: { mapId: 12, pickType: "TournamentDraft" } },
+    }),
+  ).toBe(false);
+  expect(
+    observedLobbyMatchesDuelSettings({
+      resource: "lobby",
+      data: { gameConfig: { mapId: 11, pickType: "BlindPick" } },
+    }),
   ).toBe(false);
 });

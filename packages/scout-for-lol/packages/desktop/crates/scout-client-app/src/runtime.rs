@@ -913,9 +913,15 @@ fn enqueue_if_changed(
     observation.platform_id = find_string(&observation.payload, &["platformId"]);
     observation.league_patch = find_string(&observation.payload, &["gameVersion"]);
     observation.validate().map_err(|error| error.to_string())?;
-    outbox
-        .enqueue(&observation)
-        .map_err(|error| error.to_string())?;
+    if kind == ObservationKind::LiveGameFrame {
+        outbox
+            .enqueue_coalesced(key, &observation)
+            .map_err(|error| error.to_string())?;
+    } else {
+        outbox
+            .enqueue(&observation)
+            .map_err(|error| error.to_string())?;
+    }
     payloads.insert(key.to_owned(), body);
     Ok(())
 }

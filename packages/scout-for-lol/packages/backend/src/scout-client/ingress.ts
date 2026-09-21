@@ -11,6 +11,7 @@ import configuration from "#src/configuration.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { startScoutMatchProcessingV2 } from "#src/temporal/starts-v2.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
+import { reconcileProcessedClientBinding } from "./late-binding.ts";
 import {
   bindObservedLobby,
   bindObservedMatch,
@@ -314,5 +315,10 @@ export async function startAcceptedClientMatches(
       sourcePuuid: start.sourcePuuid,
       deliveryMode: "live",
     });
+    // A binding can arrive after Riot's run has already passed the Custom and
+    // duel stages. Once a durable observation exists, replay only those
+    // binding-dependent, idempotent projectors; otherwise the newly started or
+    // still-running match Workflow will observe the binding itself.
+    await reconcileProcessedClientBinding(start.riotMatchId);
   }
 }
