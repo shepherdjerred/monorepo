@@ -88,11 +88,10 @@ export function OnboardingWizard() {
   // subscription.list is paginated ({ items, nextCursor }); the onboarding
   // wizard only needs the first page's items for its "tracking so far" list.
   const subs = subsQuery.data?.items ?? [];
-  // Alias successfully tracked in subscribe-self. Anchors teammate
-  // suggestions (and their destination channel) on the account the current
-  // user just added — never on another guild member's subscription.
-  const [selfAlias, setSelfAlias] = useState("");
-  const selfSub = subs.find((sub) => sub.player.alias === selfAlias);
+  // Alias and channel successfully tracked in subscribe-self. Anchors
+  // teammate suggestions on the subscription the current user just added —
+  // never on another guild member's row in the paginated list.
+  const [self, setSelf] = useState({ alias: "", channelId: "" });
 
   function complete(outcome: OnboardingOutcome): void {
     const user = meQuery.data?.user ?? null;
@@ -199,7 +198,7 @@ export function OnboardingWizard() {
           existingSubs={[]}
           selfAlias=""
           selfChannelId=""
-          onSelfAdded={setSelfAlias}
+          onSelfAdded={setSelf}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),
@@ -228,8 +227,8 @@ export function OnboardingWizard() {
             alias: s.player.alias,
             channelId: s.channelId,
           }))}
-          selfAlias={selfAlias}
-          selfChannelId={selfSub?.channelId ?? ""}
+          selfAlias={self.alias}
+          selfChannelId={self.channelId}
           onAdded={() => {
             void queryClient.invalidateQueries({
               queryKey: trpc.subscription.list.pathKey(),

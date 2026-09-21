@@ -49,7 +49,13 @@ export function TeammateSuggestions(props: {
   const suggestions = useQuery(
     trpc.player.suggestTeammates.queryOptions(
       { guildId: props.guildId, alias: props.selfAlias },
-      { enabled: props.selfAlias.length > 0 },
+      {
+        enabled: props.selfAlias.length > 0,
+        // Visit-long snapshot: the list only changes through local adds
+        // below, so background refetches would just re-spend Riot quota.
+        staleTime: Number.POSITIVE_INFINITY,
+        refetchOnWindowFocus: false,
+      },
     ),
   );
   const { submit, isPending, error } = useAddSubscription({

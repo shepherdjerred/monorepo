@@ -45,8 +45,8 @@ export function OnboardingSubscribeStep(props: {
   selfAlias: string;
   /** Destination channel of the self subscription; suggestion adds land here. */
   selfChannelId: string;
-  /** Reports the alias successfully tracked in subscribe-self mode. */
-  onSelfAdded?: (alias: string) => void;
+  /** Reports the alias and channel successfully tracked in subscribe-self. */
+  onSelfAdded?: (self: { alias: string; channelId: string }) => void;
   onAdded: () => void;
   onContinue: () => void;
   onBack: () => void;
@@ -54,10 +54,10 @@ export function OnboardingSubscribeStep(props: {
 }) {
   const initialChannel = props.channels[0]?.id ?? "";
   const formElement = useRef<HTMLFormElement>(null);
-  // The alias the user actually submitted. Reported via onSelfAdded so the
-  // wizard anchors suggestions on the just-added account rather than guessing
-  // from the guild's subscription list.
-  const submittedAlias = useRef("");
+  // The alias and channel the user actually submitted. Reported via
+  // onSelfAdded so the wizard anchors suggestions on the just-added
+  // subscription rather than guessing from the guild's paginated list.
+  const submittedSelf = useRef({ alias: "", channelId: "" });
   const initialValue =
     props.mode === "self"
       ? {
@@ -72,7 +72,7 @@ export function OnboardingSubscribeStep(props: {
     onAdded: () => {
       props.onAdded();
       if (props.mode === "self") {
-        props.onSelfAdded?.(submittedAlias.current);
+        props.onSelfAdded?.(submittedSelf.current);
         form.reset();
         props.onContinue();
       } else {
@@ -87,7 +87,10 @@ export function OnboardingSubscribeStep(props: {
     validationLogic: submitThenChangeValidation,
     validators: { onDynamic: SubscriptionFormSchema },
     onSubmit: ({ value }) => {
-      submittedAlias.current = value.alias;
+      submittedSelf.current = {
+        alias: value.alias,
+        channelId: value.channelId,
+      };
       submit(value);
     },
     onSubmitInvalid: () => {

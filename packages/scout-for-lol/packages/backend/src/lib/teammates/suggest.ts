@@ -94,6 +94,7 @@ function isSuggestible(
   trackedPuuids: ReadonlySet<string>,
 ): boolean {
   if (!selfTeamIds.has(participant.teamId)) return false;
+  if (!LeaguePuuidSchema.safeParse(participant.puuid).success) return false;
   if (selfPuuids.has(participant.puuid)) return false;
   if (trackedPuuids.has(participant.puuid)) return false;
   if (participant.riotIdGameName === undefined) return false;
@@ -132,8 +133,13 @@ function recordTeammate(
   }
   existing.gamesTogether += 1;
   if (round.match.info.gameEndTimestamp >= existing.lastPlayedMs) {
+    // Newest occurrence wins outright: after a Riot ID rename the older
+    // gameName/tagLine/region would otherwise submit a stale, unverifiable ID.
     existing.lastPlayedMs = round.match.info.gameEndTimestamp;
     existing.lastMatchId = round.matchId;
+    existing.gameName = gameName;
+    existing.tagLine = participant.riotIdTagline;
+    existing.region = round.region;
   }
 }
 
