@@ -42,9 +42,9 @@
       "buildNumber": 11934
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 16753,
-      "version": "2.0.0-16753",
-      "digest": "sha256:83d3776e58a004d24172af38def91164c0c7102c5eeed3ebfde7340709b19126"
+      "buildNumber": 16779,
+      "version": "2.0.0-16779",
+      "digest": "sha256:d7a2551840dcbecaf7823c490379e95abda9c8a8a63d17b9e2f3b071f99bbc3a"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -58,9 +58,9 @@
       "buildNumber": 16718
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 16743,
       "version": "2.0.0-16743",
-      "digest": "sha256:715b38548e36589da6de6fd840df794a9ed0ea154d2ffb424146f5ab5ec3b136"
+      "digest": "sha256:715b38548e36589da6de6fd840df794a9ed0ea154d2ffb424146f5ab5ec3b136",
+      "buildNumber": 16743
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-16711",
@@ -68,9 +68,9 @@
       "buildNumber": 16711
     },
     "shepherdjerred/temporal-worker": {
-      "version": "2.0.0-16718",
-      "digest": "sha256:a9c9d347ff0d5537db83b2a9b3c041c5117c96ce86a9d1837b1a3ae7ce8ea8e2",
-      "buildNumber": 16718
+      "buildNumber": 16779,
+      "version": "2.0.0-16779",
+      "digest": "sha256:370d1321617eed636e44ccf50f4092afd71d0cb278cc9cc05281e79f0b4eea39"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
