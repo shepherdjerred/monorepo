@@ -1,3 +1,8 @@
+import {
+  SCOUT_STAGES,
+  scoutGatewayOwnerRole,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+
 export const SCOUT_TRPC_NON_FAULT_CODES = [
   "OK",
   "UNAUTHORIZED",
@@ -32,17 +37,32 @@ export const SCOUT_TRPC_NON_FAULT_CODES = [
  * Pointing a stage at a role it does not run would not degrade gracefully — the
  * series simply would not exist, the `absent()` guard would fire, and that
  * stage would page continuously while perfectly healthy. An alert that is right
- * about the future and wrong about the present is wrong, which is why this
- * stays a table rather than being folded into a single selector: each stage's
- * answer has to be one obvious line that moves with its Deployment.
+ * about the future and wrong about the present is wrong.
+ *
+ * ## Why this is derived rather than typed out
+ *
+ * That failure mode is not hypothetical, and until this became a derivation it
+ * was one edit away in the rollback direction. `SCOUT_GATEWAY_TOPOLOGY` and
+ * this table were two hand-maintained lists describing the same fact, and
+ * nothing coupled them. Retiring beta's gateway while this still said `gateway`
+ * would delete the only pod exporting
+ * `discord_connection_status{role="gateway"}`, so `absent()` would fire and
+ * beta would page critical continuously — during a rollback, and without
+ * clearing, because beta's combined series is not in its own selector.
+ *
+ * Deriving it from the topology gives the backward direction the guarantee the
+ * forward one already had: one edit moves the pods, this alert and the
+ * dashboard connection panel at a single ArgoCD revision, and neither is
+ * briefly true alone. A `retiring` stage answers `combined` because the backend
+ * has already taken the shard back by the time its gateway scales away.
  *
  * `activity-worker` is deliberately absent, and not only because it owns no
  * gateway — its Deployment is deferred out of this wave entirely.
  */
-export const SCOUT_GATEWAY_OWNER_BY_STAGE = [
-  { environment: "beta", role: "gateway" },
-  { environment: "prod", role: "combined" },
-];
+export const SCOUT_GATEWAY_OWNER_BY_STAGE = SCOUT_STAGES.map((environment) => ({
+  environment,
+  role: scoutGatewayOwnerRole(environment),
+}));
 
 /**
  * The same answer as a role set, for callers that cannot phrase a per-stage

@@ -4,7 +4,10 @@ import {
   findResource,
   scoutResources,
 } from "@shepherdjerred/homelab/cdk8s/src/scout-test-resources.ts";
-import { SPLIT_TOPOLOGY_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import {
+  gatewayTopologyRunsRole,
+  SCOUT_GATEWAY_TOPOLOGY,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 const EnvEntrySchema = z
   .object({
@@ -70,13 +73,13 @@ const VOICE_RTP_EGRESS = {
  * pod holds the shard) instead of about the current topology.
  */
 function voiceWorkloadName(stage: "beta" | "prod"): string {
-  return SPLIT_TOPOLOGY_STAGES.includes(stage)
+  return gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[stage])
     ? `scout-${stage}-scout-gateway`
     : `scout-${stage}-scout-backend`;
 }
 
 function voiceEgressPolicyName(stage: "beta" | "prod"): string {
-  return SPLIT_TOPOLOGY_STAGES.includes(stage)
+  return gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[stage])
     ? "scout-gateway-netpol"
     : "scout-egress-netpol";
 }
@@ -124,16 +127,16 @@ describe("Hey Scout voice deployment boundary", () => {
    * Pin the topology→owner mapping the rest of this file resolves through.
    *
    * Without this the helpers would faithfully follow a wrong
-   * SPLIT_TOPOLOGY_STAGES and every assertion below would keep passing while
+   * SCOUT_GATEWAY_TOPOLOGY and every assertion below would keep passing while
    * pointing at the wrong pod. Naming both expectations explicitly means a
-   * change to the split membership has to come here and be looked at.
+   * change to a stage's topology has to come here and be looked at.
    */
   test("voice is owned by the gateway on a split stage and the backend on a combined one", () => {
-    expect(SPLIT_TOPOLOGY_STAGES.includes("beta")).toBe(true);
+    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.beta)).toBe(true);
     expect(voiceWorkloadName("beta")).toBe("scout-beta-scout-gateway");
     expect(voiceEgressPolicyName("beta")).toBe("scout-gateway-netpol");
 
-    expect(SPLIT_TOPOLOGY_STAGES.includes("prod")).toBe(false);
+    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.prod)).toBe(false);
     expect(voiceWorkloadName("prod")).toBe("scout-prod-scout-backend");
     expect(voiceEgressPolicyName("prod")).toBe("scout-egress-netpol");
   });
@@ -235,7 +238,7 @@ describe("Hey Scout voice deployment boundary", () => {
    */
   test("a split stage leaves no voice surface on the application pod", () => {
     for (const stage of ["beta", "prod"] as const) {
-      if (!SPLIT_TOPOLOGY_STAGES.includes(stage)) continue;
+      if (!gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[stage])) continue;
       const deployment = backendDeployment(stage);
       const container = containerOf(deployment, `scout-${stage}-scout-backend`);
       const names = new Set(container.env.map((entry) => entry.name));

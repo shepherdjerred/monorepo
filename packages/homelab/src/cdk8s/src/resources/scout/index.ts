@@ -32,9 +32,12 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
 import {
   assertStageCanHostSplitRoles,
   createScoutGatewayDeployment,
-  SPLIT_TOPOLOGY_STAGES,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import {
+  gatewayTopologyRunsRole,
+  type ScoutGatewayTopology,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -50,7 +53,11 @@ function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
-export function createScoutDeployment(chart: Chart, stage: Stage) {
+export function createScoutDeployment(
+  chart: Chart,
+  stage: Stage,
+  gatewayTopology: ScoutGatewayTopology,
+) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
@@ -190,14 +197,20 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   // a split stage the credential follows the shard into scout-gateway, and this
   // pod — which runs `application` — neither mounts nor needs it. On an unsplit
   // stage the combined pod keeps it exactly as #2870 wired it.
-  const splitTopology = SPLIT_TOPOLOGY_STAGES.includes(stage);
+  const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
   // Gate the whole split render, not just the gateway Deployment at the end of
-  // this function. Membership in SPLIT_TOPOLOGY_STAGES is a standing decision,
-  // but the property it depends on lives in a pin that moves underneath it: a
-  // rollback to a pre-Postgres digest flips DATABASE_URL back to the SQLite
-  // file on the shared claim while the role assignment and the gateway pod
-  // stand, which is two processes on one SQLite database. Checking here means
-  // that combination cannot be rendered at all, in either direction.
+  // this function. A stage's SCOUT_GATEWAY_TOPOLOGY entry is a standing
+  // decision, but the property it depends on lives in a pin that moves
+  // underneath it: a rollback to a pre-Postgres digest flips DATABASE_URL back
+  // to the SQLite file on the shared claim while the role assignment and the
+  // gateway pod stand, which is two processes on one SQLite database. Checking
+  // here means that combination cannot be rendered at all, in either direction.
+  //
+  // Keyed on `split` rather than on "renders gateway resources" because a
+  // `retiring` stage has already given the shard back to the combined pod and
+  // scaled the gateway to zero — there is no second opener of the SQLite file —
+  // and because retiring is the remedy the guard's own message prescribes for
+  // this exact rollback.
   if (splitTopology) {
     assertStageCanHostSplitRoles(stage, imageVersion);
   }
@@ -459,8 +472,14 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   // see createScoutGatewayDeployment for why that is safe for this role and
   // not for activity-worker. The pin is already proven safe for a second pod
   // above, before any of this stage's resources were built.
-  if (splitTopology) {
+  //
+  // Rendered while retiring as well as while split — at zero replicas, which is
+  // how the rollback retires the pod without an operator scaling it by hand.
+  // The claim is still declared on a retiring Deployment; with no pod it is
+  // never mounted, so the read-only co-mount argument above is unaffected.
+  if (gatewayTopology !== "absent") {
     createScoutGatewayDeployment(chart, stage, {
+      topology: gatewayTopology,
       imageVersion,
       envVariables: { ...envVariables, ...voiceEnvVariables },
       claim: localPathVolume.claim,

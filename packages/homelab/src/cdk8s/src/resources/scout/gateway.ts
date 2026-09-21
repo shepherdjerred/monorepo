@@ -24,20 +24,46 @@ import { postgresImageDigests } from "@shepherdjerred/homelab/cdk8s/src/versions
 import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import type { RenderedGatewayTopology } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 /** Pod label every gateway-role resource selects on. */
 export const SCOUT_GATEWAY_APP_LABEL = "scout-gateway";
 
 /**
- * The stages a human has opted into the split topology.
+ * Where the gateway Deployment sits in the sync, per topology.
  *
- * Deliberately an explicit list rather than a predicate over the pins. Topology
- * must never appear as a side effect of a version bump: a stage joins the split
- * because someone added it here, and {@link assertStageCanHostSplitRoles} then
- * proves that stage is actually safe to split. The predicate gates a human
- * decision; it does not make one.
+ * The backend Deployment deliberately carries no annotation, so it is in the
+ * default wave 0. ArgoCD starts a wave only once every resource in the previous
+ * one reports Healthy, which makes these two numbers the whole ordering
+ * contract between the roles — and the contract runs in OPPOSITE directions
+ * depending on which way the topology is moving.
+ *
+ * `split` is wave 1: the backend's wave-0 Recreate rollout terminates the
+ * combined pod and brings up the `application` pod, so the shard handover is a
+ * precondition of the gateway pod existing at all, even on a fully automated
+ * sync.
+ *
+ * `retiring` is wave -1, BEFORE the backend, for the mirror image of the same
+ * reason. On the retirement sync the backend returns to `combined` and its
+ * Recreate rollout opens a Discord session. If the scale-to-zero were still in
+ * wave 1 it would be applied *after* that, so the rolled-back backend would
+ * connect while the gateway pod was still logged in — two sessions on one
+ * token, caused by the rollback itself and on every rollback rather than only
+ * when an operator forgot a step. Wave -1 is the declarative spelling of the
+ * runbook's "scale gateway to 0, wait, revert the backend to combined".
+ *
+ * Known limit, stated because an operator reading an overstated guarantee
+ * during a rollback is worse off than one reading an honest one: this orders
+ * the APPLY, not the termination. A Deployment at zero replicas can report
+ * Healthy while its last pod is still terminating, so wave -1 does not prove
+ * the token is released before wave 0 proceeds. It strictly dominates the
+ * status quo — nothing here previously scaled the gateway down at all — and it
+ * removes the manual step, but it is not atomic.
  */
-export const SPLIT_TOPOLOGY_STAGES: readonly Stage[] = ["beta"];
+const GATEWAY_SYNC_WAVE = {
+  split: "1",
+  retiring: "-1",
+} as const;
 
 /**
  * Refuse to synth a split-role stage whose image still keeps its database on
@@ -49,9 +75,17 @@ export const SPLIT_TOPOLOGY_STAGES: readonly Stage[] = ["beta"];
  * file open, so the co-mount this split depends on is only sound once the
  * stage's database has moved to PostgreSQL.
  *
- * Throwing at synth time is the point: a stage added to
- * {@link SPLIT_TOPOLOGY_STAGES} before its pin crosses over fails the build
- * rather than reaching a cluster.
+ * Throwing at synth time is the point: a stage set to `split` in
+ * `SCOUT_GATEWAY_TOPOLOGY` before its pin crosses over fails the build rather
+ * than reaching a cluster.
+ *
+ * Only `split` is checked. A `retiring` stage is exempt, and deliberately so:
+ * the instruction this very error gives for a pin rollback is to move the stage
+ * to `retiring`, so checking that state too would refuse to render the exact
+ * remedy it prescribes. The exemption is sound because retirement is what
+ * removes the second pod — a retiring stage renders the gateway at zero
+ * replicas, so there is no concurrent opener of the SQLite file to protect
+ * against.
  */
 export function assertStageCanHostSplitRoles(
   stage: Stage,
@@ -60,8 +94,8 @@ export function assertStageCanHostSplitRoles(
   if (scoutImageUsesPostgres(imageVersion, postgresImageDigests)) return;
   throw new Error(
     `Scout ${stage} cannot host split runtime roles: its pinned image ${imageVersion} stores the database as SQLite at /data/db.sqlite on the same ReadWriteOnce claim as the report lake, so the split's second pod would hold that SQLite database file open concurrently. ` +
-      `If you are adding ${stage} to SPLIT_TOPOLOGY_STAGES, promote it to a PostgreSQL-contract image first. ` +
-      `If you are rolling ${stage}'s pin back past the PostgreSQL boundary, remove ${stage} from SPLIT_TOPOLOGY_STAGES in the same change — the rollback is only safe once the stage is back on the single combined pod.`,
+      `If you are setting ${stage} to "split" in SCOUT_GATEWAY_TOPOLOGY, promote it to a PostgreSQL-contract image first. ` +
+      `If you are rolling ${stage}'s pin back past the PostgreSQL boundary, set ${stage} to "retiring" in SCOUT_GATEWAY_TOPOLOGY in the same change — that returns the shard to the single combined pod and scales the gateway to zero ahead of it, so the rollback completes without an operator scaling anything by hand.`,
   );
 }
 
@@ -74,6 +108,14 @@ export function assertStageCanHostSplitRoles(
 export const SCOUT_RUNTIME_ROLE_LABEL = "scout-runtime-role";
 
 export type ScoutGatewayDeploymentOptions = {
+  /**
+   * Whether this render runs the role or is retiring it.
+   *
+   * `absent` stages never reach here — the caller's `!== "absent"` check is
+   * what narrows to this type — so it excludes that case rather than leaving a
+   * third one to be handled defensively at every use.
+   */
+  readonly topology: RenderedGatewayTopology;
   readonly imageVersion: string;
   /**
    * The application role's environment, verbatim.
@@ -168,8 +210,12 @@ export function createScoutGatewayDeployment(
   stage: Stage,
   options: ScoutGatewayDeploymentOptions,
 ) {
+  const { topology } = options;
   const deployment = new Deployment(chart, "scout-gateway", {
-    replicas: 1,
+    // Zero while retiring, so automated sync scales the shard's pod away by
+    // itself. The Deployment stays rendered rather than disappearing because
+    // this Application does not prune — see SCOUT_GATEWAY_TOPOLOGY.
+    replicas: topology === "split" ? 1 : 0,
     // One Discord identity per token. Recreate keeps the old shard fully
     // terminated before the replacement logs in; a rolling update would put
     // two sessions on one token.
@@ -206,7 +252,11 @@ export function createScoutGatewayDeployment(
         // The gateway's Service, ServiceMonitor and NetworkPolicy deliberately
         // stay in wave 0: the policy governing this pod should exist before the
         // pod does.
-        [ARGOCD_SYNC_WAVE_ANNOTATION]: "1",
+        //
+        // Retiring inverts this to wave -1 so the scale-to-zero is applied
+        // BEFORE the backend returns to combined. See GATEWAY_SYNC_WAVE, which
+        // also records what that ordering does and does not prove.
+        [ARGOCD_SYNC_WAVE_ANNOTATION]: GATEWAY_SYNC_WAVE[topology],
       },
     },
   });

@@ -14,10 +14,12 @@ import {
   externalHttpsEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { SCOUT_GATEWAY_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import {
-  SCOUT_GATEWAY_APP_LABEL,
-  SPLIT_TOPOLOGY_STAGES,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+  gatewayTopologyRunsRole,
+  SCOUT_GATEWAY_TOPOLOGY,
+  type ScoutGatewayTopology,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -131,6 +133,16 @@ export function createScoutChart(
   app: App,
   stage: Stage,
   workflowWorkerImageOverrides?: WorkflowWorkerImageOverrides,
+  /**
+   * Render this stage as though its SCOUT_GATEWAY_TOPOLOGY entry said this.
+   *
+   * Same shape and purpose as `workflowWorkerImageOverrides` above: a
+   * render-time override so a topology can be exercised through the real chart
+   * without editing the standing decision. It is what lets the retirement path
+   * — the rollback this whole state exists for — be proven by rendering it
+   * rather than by mocking the module that decides it.
+   */
+  gatewayTopologyOverride?: ScoutGatewayTopology,
 ) {
   const chart = new Chart(app, `scout-${stage}`, {
     namespace: `scout-${stage}`,
@@ -143,10 +155,15 @@ export function createScoutChart(
     },
   });
 
-  const splitTopology = SPLIT_TOPOLOGY_STAGES.includes(stage);
+  const gatewayTopology =
+    gatewayTopologyOverride ?? SCOUT_GATEWAY_TOPOLOGY[stage];
+  // Voice belongs to whichever pod holds the shard, so this tracks `split`
+  // specifically: a retiring stage has the shard back on the combined pod and
+  // must get its UDP egress back with it.
+  const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
 
   createScoutPostgreSQLDatabase(chart, stage);
-  createScoutDeployment(chart, stage);
+  createScoutDeployment(chart, stage, gatewayTopology);
   const stableImage =
     workflowWorkerImageOverrides?.stable ??
     versions[`shepherdjerred/scout-for-lol/${stage}/workflows/stable`];
@@ -241,7 +258,14 @@ export function createScoutChart(
   // its own pair of policies: a NetworkPolicy only governs pods its selector
   // matches, and the two above deliberately select `app: scout-backend` alone
   // to keep the operator-managed Patroni/Spilo pods unselected.
-  if (splitTopology) {
+  //
+  // Kept rendered through retirement, unlike the voice rule above. This
+  // Application does not prune, so a policy that stopped being rendered would
+  // stop being managed and linger; keeping it means the stage stays fully
+  // managed and the policy simply selects no pods once the Deployment is at
+  // zero replicas. It is deleted with the Deployment when the stage goes
+  // `absent`.
+  if (gatewayTopology !== "absent") {
     new KubeNetworkPolicy(chart, "scout-gateway-netpol", {
       metadata: { name: "scout-gateway-netpol" },
       spec: {
