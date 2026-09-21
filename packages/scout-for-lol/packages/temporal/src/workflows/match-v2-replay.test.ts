@@ -205,8 +205,9 @@ test("a discovery recorded before the page carried matches still replays", async
 function isMintEvent(event: Event): boolean {
   const scheduled =
     event.activityTaskScheduledEventAttributes?.activityType?.name;
-  if (scheduled === "mintPostmatchNotificationIntentsV2") return true;
-  return namesThisPatch(event);
+  return (
+    scheduled === "mintPostmatchNotificationIntentsV2" || namesThisPatch(event)
+  );
 }
 
 /**

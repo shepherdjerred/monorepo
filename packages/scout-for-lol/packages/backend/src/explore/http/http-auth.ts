@@ -111,10 +111,7 @@ function statusForTrpcError(error: TRPCError): number {
   if (error.code === "TOO_MANY_REQUESTS") {
     return 429;
   }
-  if (error.code === "SERVICE_UNAVAILABLE") {
-    return 503;
-  }
-  return 500;
+  return error.code === "SERVICE_UNAVAILABLE" ? 503 : 500;
 }
 
 function errorMessage(error: unknown): string {

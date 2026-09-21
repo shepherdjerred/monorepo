@@ -95,10 +95,9 @@ function calleeOf(previous: IToken | undefined): string | undefined {
     return undefined;
   }
   const name = previous.tokenType.name;
-  if (name === "Identifier" || name === "Group") {
-    return decodeScoutQlIdentifier(previous.image);
-  }
-  return undefined;
+  return name === "Identifier" || name === "Group"
+    ? decodeScoutQlIdentifier(previous.image)
+    : undefined;
 }
 
 function wordAt(

@@ -17,12 +17,13 @@ export function publicAgentOutput(output: AgentOutput): AgentOutput {
 
 export function linearCommentBodies(linearContext: string | null): string[] {
   const marker = "Linear comments present for agent context:\n";
-  if (linearContext?.startsWith(marker) !== true) return [];
-  return linearContext
-    .slice(marker.length)
-    .split("\n")
-    .filter((line) => line !== "")
-    .map((line) => z.string().parse(JSON.parse(line)));
+  return linearContext?.startsWith(marker) === true
+    ? linearContext
+        .slice(marker.length)
+        .split("\n")
+        .filter((line) => line !== "")
+        .map((line) => z.string().parse(JSON.parse(line)))
+    : [];
 }
 
 export async function assertNoLinearContextInChanges(

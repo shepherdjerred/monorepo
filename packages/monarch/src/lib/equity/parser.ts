@@ -16,8 +16,9 @@ type ParentRow = { vestDate: string; symbol: string; quantity: number };
 
 function parseUsDate(raw: string): string | undefined {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw.trim());
-  if (match === null) return undefined;
-  return `${match[3] ?? ""}-${match[1] ?? ""}-${match[2] ?? ""}`;
+  return match === null
+    ? undefined
+    : `${match[3] ?? ""}-${match[1] ?? ""}-${match[2] ?? ""}`;
 }
 
 function parseNumber(raw: string): number | undefined {
@@ -34,8 +35,9 @@ function parentFromRow(fields: string[]): ParentRow | undefined {
   // is a vest, and only a vest has a corresponding zero-amount Monarch row.
   if ((fields[1] ?? "") !== LAPSE_ACTION) return undefined;
   const quantity = parseNumber(fields[4] ?? "");
-  if (quantity === undefined) return undefined;
-  return { vestDate, symbol: fields[2] ?? "", quantity };
+  return quantity === undefined
+    ? undefined
+    : { vestDate, symbol: fields[2] ?? "", quantity };
 }
 
 function awardFromRow(

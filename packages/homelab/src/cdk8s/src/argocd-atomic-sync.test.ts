@@ -774,13 +774,10 @@ test("atomic Argo sync reports why repeated terminations were rejected", async (
       ) {
         return new Response("Unable to terminate operation", { status: 403 });
       }
-      if (
-        request.method === "GET" &&
+      return request.method === "GET" &&
         url.pathname === "/api/v1/applications/apps"
-      ) {
-        return Response.json(applied);
-      }
-      return new Response("not found", { status: 404 });
+        ? Response.json(applied)
+        : new Response("not found", { status: 404 });
     },
   });
 

@@ -42,12 +42,13 @@ export async function initializeLocalVoiceModelsForRuntime(
 export async function initializeLocalVoiceModels(
   config: Config["voice"],
 ): Promise<LocalVoiceModels | null> {
-  if (!config.enabled) return null;
-  return await initializeVoiceAssistantModels(
-    streambotVoiceAssetManifest(config.assetsDir),
-    config.runtime,
-    logger.child("voice-models"),
-  );
+  return config.enabled
+    ? await initializeVoiceAssistantModels(
+        streambotVoiceAssetManifest(config.assetsDir),
+        config.runtime,
+        logger.child("voice-models"),
+      )
+    : null;
 }
 
 /** The injected lifecycle ports every streambot-owned VoiceAudioLifecycle shares. */

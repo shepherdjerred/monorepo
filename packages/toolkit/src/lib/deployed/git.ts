@@ -22,10 +22,7 @@ async function git(args: string[]) {
 
 async function gitOut(args: string[]): Promise<string | null> {
   const r = await git(args);
-  if (r.exitCode !== 0) {
-    return null;
-  }
-  return r.stdout.toString().trim();
+  return r.exitCode === 0 ? r.stdout.toString().trim() : null;
 }
 
 /** Repo root if we're inside the monorepo (verified by versions.ts presence). */
@@ -52,10 +49,9 @@ export async function resolveCommit(ref: string): Promise<CommitMeta | null> {
     return null;
   }
   const [sha, shortSha, subject] = out.split(SEP);
-  if (sha == null || shortSha == null || subject == null) {
-    return null;
-  }
-  return { sha, shortSha, subject };
+  return sha == null || shortSha == null || subject == null
+    ? null
+    : { sha, shortSha, subject };
 }
 
 /** True when `ancestor` is an ancestor of (or equal to) `descendant`. */
@@ -102,10 +98,7 @@ export async function latestCommitForPackage(
     // ":/" makes the pathspec repo-root-relative, so this works from any subdir.
     `:/packages/${pkg}`,
   ]);
-  if (sha == null || sha.length === 0) {
-    return null;
-  }
-  return resolveCommit(sha);
+  return sha == null || sha.length === 0 ? null : resolveCommit(sha);
 }
 
 /** Raw contents of versions.ts at a given ref. */
@@ -133,10 +126,9 @@ export async function commitThatWroteDigest(
     return null;
   }
   const [sha, subject] = out.split(SEP);
-  if (sha == null || subject == null || sha.length === 0) {
-    return null;
-  }
-  return { sha, subject };
+  return sha == null || subject == null || sha.length === 0
+    ? null
+    : { sha, subject };
 }
 
 const BUMP_SUBJECT = /bump image versions/i;

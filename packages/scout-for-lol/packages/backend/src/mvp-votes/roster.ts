@@ -53,10 +53,7 @@ function displayRiotId(participant: {
     return gameName;
   }
   const summoner = participant.summonerName?.trim() ?? "";
-  if (summoner.length > 0) {
-    return summoner;
-  }
-  return participant.championName;
+  return summoner.length > 0 ? summoner : participant.championName;
 }
 
 export function freezeMatchMvpRosterFromParticipants(

@@ -266,8 +266,9 @@ export function SavedViewScreen({ route, navigation }: Props) {
 
   const saveEditor = useCallback(
     async (definition: SavedViewDefinition): Promise<boolean> => {
-      if (view === undefined) return false;
-      return (await editView(view.id, definition)) !== null;
+      return (
+        view !== undefined && (await editView(view.id, definition)) !== null
+      );
     },
     [editView, view],
   );

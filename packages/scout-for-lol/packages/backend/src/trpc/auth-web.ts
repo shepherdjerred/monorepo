@@ -115,8 +115,11 @@ function checkStateNonce(
   state: string,
   expectedNonce: string | undefined,
 ): boolean {
-  if (expectedNonce === undefined || expectedNonce.length === 0) return false;
-  return state.startsWith(`${expectedNonce}|`);
+  return (
+    expectedNonce !== undefined &&
+    expectedNonce.length > 0 &&
+    state.startsWith(`${expectedNonce}|`)
+  );
 }
 
 /**
@@ -586,9 +589,7 @@ export async function handleAuthRoutes(
     }
   }
 
-  if (url.pathname === "/api/auth/logout" && request.method === "POST") {
-    return handleWebLogout(request);
-  }
-
-  return null;
+  return url.pathname === "/api/auth/logout" && request.method === "POST"
+    ? handleWebLogout(request)
+    : null;
 }

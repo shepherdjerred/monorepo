@@ -277,10 +277,9 @@ export async function confirmDare(
         });
         if (claim.count !== 1) {
           const dareState = await currentDareState(tx, dare.id);
-          if (dareState === "proposed") {
-            return { kind: "proposal_expired" } as const;
-          }
-          return { kind: "already_resolved", dareState } as const;
+          return dareState === "proposed"
+            ? ({ kind: "proposal_expired" } as const)
+            : ({ kind: "already_resolved", dareState } as const);
         }
         const balance = await stakeDareContributionInTransaction(tx, {
           facts: {

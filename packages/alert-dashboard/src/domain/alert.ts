@@ -91,8 +91,7 @@ export function suppressionFromSnapshot(
 ): z.infer<typeof SuppressionStateSchema> {
   if (alert.status.silencedBy.length > 0) return "silenced";
   if (alert.status.inhibitedBy.length > 0) return "inhibited";
-  if (alert.status.state === "unprocessed") return "unprocessed";
-  return "none";
+  return alert.status.state === "unprocessed" ? "unprocessed" : "none";
 }
 
 export function summaryFromMetadata(

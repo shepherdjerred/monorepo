@@ -10,8 +10,5 @@ export function asTextChannel(
   if (channel == null) {
     return null;
   }
-  if (channel.isTextBased()) {
-    return channel;
-  }
-  return null;
+  return channel.isTextBased() ? channel : null;
 }

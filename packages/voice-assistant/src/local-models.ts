@@ -211,8 +211,7 @@ const KeywordTimestampsSchema = z.looseObject({
 
 function fragmentEndSeconds(result: unknown): number | null {
   const parsed = KeywordTimestampsSchema.safeParse(result);
-  if (!parsed.success) return null;
-  return parsed.data.timestamps.at(-1) ?? null;
+  return parsed.success ? (parsed.data.timestamps.at(-1) ?? null) : null;
 }
 
 function modelConfig(assets: AssetPaths) {

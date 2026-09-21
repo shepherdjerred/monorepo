@@ -16,7 +16,7 @@ export function CompetitionQueueFields(props: {
   return (
     <fieldset
       className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-2"
-      aria-invalid={props.error === undefined ? undefined : true}
+      aria-invalid={props.error !== undefined || undefined}
       aria-describedby={
         props.error === undefined ? undefined : "criteria-queues-error"
       }

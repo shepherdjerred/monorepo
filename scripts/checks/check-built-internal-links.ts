@@ -22,10 +22,9 @@ if (htmlFiles.length === 0) {
 function outputPaths(target: string): string[] {
   const relativeTarget = decodeURIComponent(target.slice(1));
   const filePath = path.join(distDirectory, relativeTarget);
-  if (relativeTarget.endsWith("/")) {
-    return [path.join(filePath, "index.html")];
-  }
-  return [filePath, path.join(filePath, "index.html")];
+  return relativeTarget.endsWith("/")
+    ? [path.join(filePath, "index.html")]
+    : [filePath, path.join(filePath, "index.html")];
 }
 
 const broken: string[] = [];

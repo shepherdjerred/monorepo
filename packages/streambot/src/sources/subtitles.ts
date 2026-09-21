@@ -52,8 +52,7 @@ export type SubtitleClass = "text" | "image" | "other";
 export function classifySubtitleCodec(codec: string): SubtitleClass {
   const c = codec.toLowerCase();
   if (TEXT_SUBTITLE_CODECS.has(c)) return "text";
-  if (IMAGE_SUBTITLE_CODECS.has(c)) return "image";
-  return "other";
+  return IMAGE_SUBTITLE_CODECS.has(c) ? "image" : "other";
 }
 
 export type SidecarInfo = {
@@ -164,8 +163,7 @@ function languageScore(
 /** Modifier preference: full subs (none) > hearing-impaired/SDH/CC > forced (partial). Lower is better. */
 function modifierScore(modifier: SubtitleModifier | null): number {
   if (modifier === null) return 0;
-  if (modifier === "forced") return 2;
-  return 1;
+  return modifier === "forced" ? 2 : 1;
 }
 
 /**
@@ -203,8 +201,7 @@ export type SubtitleCandidate =
 /** Sidecars beat embedded tracks ONLY at equal language + modifier quality (extraction-free); yt-dlp candidates never mix with either in practice (a source is exclusively a file OR a url/search). */
 function sourceScore(candidate: SubtitleCandidate): number {
   if (candidate.kind === "sidecar") return 0;
-  if (candidate.kind === "embedded") return 1;
-  return 2;
+  return candidate.kind === "embedded" ? 1 : 2;
 }
 
 /** Deterministic intra-source tie-break: filename for sidecars, stream order for embedded, manual-before-auto then language for yt-dlp. */
@@ -404,8 +401,7 @@ export function ytdlpSubtitleArgs(
 function subtitleExtRank(f: string): number {
   const e = path.extname(f).slice(1).toLowerCase();
   if (e === "srt") return 0;
-  if (e === "ass" || e === "ssa") return 1;
-  return 2;
+  return e === "ass" || e === "ssa" ? 1 : 2;
 }
 
 /** Pick the best subtitle file yt-dlp wrote: preferred language first, then SRT over other formats. */
@@ -472,10 +468,9 @@ export function embeddedSubtitleModifier(
   if ((stream.disposition?.hearing_impaired ?? 0) === 1) return "sdh";
   const title = stream.tags?.title ?? "";
   if (/\bforced\b/iu.test(title)) return "forced";
-  if (/\bsdh\b/iu.test(title) || /hearing.?impaired/iu.test(title)) {
-    return "sdh";
-  }
-  return null;
+  return /\bsdh\b/iu.test(title) || /hearing.?impaired/iu.test(title)
+    ? "sdh"
+    : null;
 }
 
 /**

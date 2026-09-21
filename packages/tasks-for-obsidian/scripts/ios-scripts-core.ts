@@ -1,14 +1,15 @@
 import { lstat } from "node:fs/promises";
+import { z } from "zod";
+
+const ErrorCodeSchema = z.looseObject({ code: z.unknown() });
 
 export function cleanTargets(packageRoot: string): readonly [string, string] {
   return [`${packageRoot}/ios/build`, `${packageRoot}/ios/Pods`];
 }
 
 function isMissingPath(error: unknown): boolean {
-  if (typeof error !== "object" || error === null || !("code" in error)) {
-    return false;
-  }
-  return error.code === "ENOENT";
+  const parsed = ErrorCodeSchema.safeParse(error);
+  return parsed.success && parsed.data.code === "ENOENT";
 }
 
 export async function derivedDataTargets(home: string): Promise<string[]> {

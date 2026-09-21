@@ -35,10 +35,11 @@ const formInputStyle: React.CSSProperties = {
 };
 
 function MatchReportRenderer({ match }: { match: AnyMatch }): React.ReactNode {
-  if (match.queueType === "arena") {
-    return <ArenaReport match={match} />;
-  }
-  return <Report match={match} />;
+  return match.queueType === "arena" ? (
+    <ArenaReport match={match} />
+  ) : (
+    <Report match={match} />
+  );
 }
 
 export function App() {

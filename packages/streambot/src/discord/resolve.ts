@@ -29,10 +29,9 @@ export function resolvePlayQuery(
   if (match !== null) {
     return { kind: "file", path: match.path, title: match.title };
   }
-  if (isHttpUrl(query)) {
-    return { kind: "url", url: query };
-  }
-  return { kind: "search", query };
+  return isHttpUrl(query)
+    ? { kind: "url", url: query }
+    : { kind: "search", query };
 }
 
 const CHARACTER_BUDGET = 200;

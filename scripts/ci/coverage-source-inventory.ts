@@ -142,21 +142,17 @@ export function resolveCoverageSource(
   if (absoluteLike) {
     const workspaceMarker = `/${normalizedWorkspace}/`;
     const workspaceIndex = normalizedSource.lastIndexOf(workspaceMarker);
-    if (workspaceIndex !== -1) {
-      return path.resolve(
-        repositoryRoot,
-        normalizedSource.slice(workspaceIndex + 1),
-      );
-    }
-    return path.normalize(source);
+    return workspaceIndex === -1
+      ? path.normalize(source)
+      : path.resolve(
+          repositoryRoot,
+          normalizedSource.slice(workspaceIndex + 1),
+        );
   }
-  if (
-    normalizedSource === normalizedWorkspace ||
+  return normalizedSource === normalizedWorkspace ||
     normalizedSource.startsWith(`${normalizedWorkspace}/`)
-  ) {
-    return path.resolve(repositoryRoot, normalizedSource);
-  }
-  return path.resolve(repositoryRoot, normalizedWorkspace, normalizedSource);
+    ? path.resolve(repositoryRoot, normalizedSource)
+    : path.resolve(repositoryRoot, normalizedWorkspace, normalizedSource);
 }
 
 export function initialSourceCoverage(

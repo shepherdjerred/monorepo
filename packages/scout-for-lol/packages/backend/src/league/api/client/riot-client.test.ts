@@ -5,8 +5,7 @@ import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data";
 
 function getUrlString(input: string | URL | Request): string {
   if (typeof input === "string") return input;
-  if ("url" in input) return input.url;
-  return input.href;
+  return "url" in input ? input.url : input.href;
 }
 
 function championMasteryResponse(puuid: string): Response {

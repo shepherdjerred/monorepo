@@ -363,9 +363,7 @@ export function selectBindingQuota(
   if (userDay !== undefined) return userDay;
 
   const anyUser = snapshots.find((s) => s.scope === "user_guild");
-  if (anyUser !== undefined) return anyUser;
-
-  return snapshots[0] ?? null;
+  return anyUser ?? snapshots[0] ?? null;
 }
 
 function quotaWindowLabel(
@@ -464,20 +462,16 @@ function statusDisabledReason(
   if (!status.enabled) {
     return status.disabledReason;
   }
-  if (status.activeRun) {
-    return "An AI edit is already running.";
-  }
-  return null;
+  return status.activeRun ? "An AI edit is already running." : null;
 }
 
 function progressClassName(tone: ProgressItem["tone"]): string {
   if (tone === "success") {
     return "text-xs text-[var(--scout-color-success)]";
   }
-  if (tone === "error") {
-    return "text-xs text-scout-danger";
-  }
-  return "text-xs text-scout-subtle";
+  return tone === "error"
+    ? "text-xs text-scout-danger"
+    : "text-xs text-scout-subtle";
 }
 
 function formatReset(resetsAt: string): string {

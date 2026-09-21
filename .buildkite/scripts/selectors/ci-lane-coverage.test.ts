@@ -113,10 +113,9 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
  */
 async function samplePaths(entry: string): Promise<string[]> {
   const isFile = await Bun.file(`${REPO_ROOT}/${entry}`).exists();
-  if (isFile) {
-    return [entry];
-  }
-  return [`${entry}/sample-file.ts`, `${entry}/nested/dir/sample-file.ts`];
+  return isFile
+    ? [entry]
+    : [`${entry}/sample-file.ts`, `${entry}/nested/dir/sample-file.ts`];
 }
 
 function coveredBy(path: string, globs: readonly string[]): boolean {

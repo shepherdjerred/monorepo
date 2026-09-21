@@ -24,8 +24,8 @@ import type {
 class TestLogger implements AstroIntegrationLogger {
   readonly options = {
     destination: {
-      write: (message: unknown) => {
-        void message;
+      write: (_message: unknown) => {
+        // Test log output is intentionally discarded.
       },
     },
     level: "silent" as const,
@@ -36,28 +36,28 @@ class TestLogger implements AstroIntegrationLogger {
     return new TestLogger();
   }
 
-  info(message: string): void {
-    void message;
+  info(_message: string): void {
+    // Test log output is intentionally discarded.
   }
 
-  warn(message: string): void {
-    void message;
+  warn(_message: string): void {
+    // Test log output is intentionally discarded.
   }
 
-  error(message: string): void {
-    void message;
+  error(_message: string): void {
+    // Test log output is intentionally discarded.
   }
 
-  debug(message: string): void {
-    void message;
+  debug(_message: string): void {
+    // Test log output is intentionally discarded.
   }
 
   flush(): void {
-    void this.label;
+    // Nothing to flush in the test logger.
   }
 
   close(): void {
-    void this.label;
+    // Nothing to close in the test logger.
   }
 }
 

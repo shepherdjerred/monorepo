@@ -98,10 +98,9 @@ function compareTranscriptCandidates(
     return timestamp;
   }
   const sequence = (left.sessionSequence ?? -1) - (right.sessionSequence ?? -1);
-  if (sequence !== 0) {
-    return sequence;
-  }
-  return left.source.id.localeCompare(right.source.id);
+  return sequence === 0
+    ? left.source.id.localeCompare(right.source.id)
+    : sequence;
 }
 
 function selectRankedFragments(

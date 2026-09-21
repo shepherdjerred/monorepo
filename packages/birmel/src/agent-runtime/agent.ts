@@ -84,14 +84,11 @@ function sanitizeArrayEntry(
       options,
     );
   }
-  if (
-    entry !== null &&
+  return entry !== null &&
     typeof entry === "object" &&
     (options.isInviteCall || InviteEntrySchema.safeParse(entry).success)
-  ) {
-    return sanitizeToolOutputData(redactInviteFields(entry), options);
-  }
-  return sanitizeToolOutputData(entry, options);
+    ? sanitizeToolOutputData(redactInviteFields(entry), options)
+    : sanitizeToolOutputData(entry, options);
 }
 
 function sanitizeObjectEntry(
@@ -113,10 +110,9 @@ function sanitizeObjectEntry(
     );
   }
   const invite = InviteEntrySchema.safeParse(value);
-  if (invite.success) {
-    return sanitizeToolOutputData(redactInviteFields(invite.data), options);
-  }
-  return sanitizeToolOutputData(value, options);
+  return invite.success
+    ? sanitizeToolOutputData(redactInviteFields(invite.data), options)
+    : sanitizeToolOutputData(value, options);
 }
 
 // A persisted tool summary is interpolated into the memory-extraction prompt,

@@ -85,10 +85,9 @@ function teamLabel(
 ): string {
   const banner =
     side === "blue" ? data.clashChrome?.blueTeam : data.clashChrome?.redTeam;
-  if (banner === undefined) {
-    return fallback;
-  }
-  return `${banner.abbreviation} · ${banner.name}`;
+  return banner === undefined
+    ? fallback
+    : `${banner.abbreviation} · ${banner.name}`;
 }
 
 function VsDivider() {

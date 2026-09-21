@@ -63,8 +63,9 @@ function renderReportOutputSync(
   if (snapshotOutput !== null) return snapshotOutput;
   if (render.kind === "BAR_CHART") return renderBarChart(params, render);
   if (render.kind === "LINE_CHART") return renderLineChart(params, render);
-  if ("encoding" in render) return renderAnalyticsChart(params, render);
-  return renderTextOutput(params, render);
+  return "encoding" in render
+    ? renderAnalyticsChart(params, render)
+    : renderTextOutput(params, render);
 }
 
 function renderSnapshotOutput(

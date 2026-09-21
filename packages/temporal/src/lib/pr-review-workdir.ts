@@ -109,10 +109,7 @@ export const defaultWorkdirDeps: WorkdirDeps = {
   },
   readFileUtf8: async (path: string) => {
     const file = Bun.file(path);
-    if (!(await file.exists())) {
-      return null;
-    }
-    return await file.text();
+    return (await file.exists()) ? await file.text() : null;
   },
   clone: async (params: CloneParams) => {
     await cloneViaGitAskpass(params);

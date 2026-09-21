@@ -92,8 +92,9 @@ function aggregate(
 ): number | null {
   if (values.length === 0) return null;
   if (kind === "maximum") return Math.max(...values);
-  if (kind === "minimum") return Math.min(...values);
-  return values.reduce((total, value) => total + value, 0) / values.length;
+  return kind === "minimum"
+    ? Math.min(...values)
+    : values.reduce((total, value) => total + value, 0) / values.length;
 }
 
 function improvementTarget(

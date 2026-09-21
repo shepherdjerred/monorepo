@@ -73,10 +73,9 @@ const LiveApplicationPolicyListSchema = z.object({
 function describeAutoSyncPolicy(
   syncPolicy: Record<string, unknown> | undefined,
 ): string {
-  if (syncPolicy === undefined || !Object.hasOwn(syncPolicy, "automated")) {
-    return AUTO_SYNC_POLICY_ABSENT;
-  }
-  return canonicalJson(syncPolicy["automated"]);
+  return syncPolicy === undefined || !Object.hasOwn(syncPolicy, "automated")
+    ? AUTO_SYNC_POLICY_ABSENT
+    : canonicalJson(syncPolicy["automated"]);
 }
 
 /**

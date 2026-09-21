@@ -215,11 +215,11 @@ function addUsage(left: Usage | undefined, right: Usage): Usage {
 }
 
 function eventMayApplyEffect(event: ThreadEvent): boolean {
-  if (event.type !== "item.started" && event.type !== "item.completed") {
-    return false;
-  }
-  return ["command_execution", "file_change", "mcp_tool_call"].includes(
-    event.item.type,
+  return (
+    (event.type === "item.started" || event.type === "item.completed") &&
+    ["command_execution", "file_change", "mcp_tool_call"].includes(
+      event.item.type,
+    )
   );
 }
 

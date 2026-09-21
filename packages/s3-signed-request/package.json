@@ -19,11 +19,11 @@
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.13",
     "@tsconfig/strictest": "^2.0.8",
-    "@types/bun": "1.4.0",
+    "@types/bun": "1.4.2",
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.0",
-    "vitest": "4.1.10"
+    "vitest": "5.0.1"
   }
 }

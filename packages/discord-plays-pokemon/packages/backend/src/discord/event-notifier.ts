@@ -39,8 +39,7 @@ const COLORS: Record<GameEventKind, number> = {
 function titleCase(name: string): string {
   return name.replaceAll(/[A-Z]+/gi, (word) => {
     const first = word[0];
-    if (first === undefined) return word;
-    return first + word.slice(1).toLowerCase();
+    return first === undefined ? word : first + word.slice(1).toLowerCase();
   });
 }
 

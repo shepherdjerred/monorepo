@@ -132,10 +132,7 @@ function meanWeights(): MvpComponents {
 const DEFAULT_WEIGHTS = meanWeights();
 
 export function weightsForRole(role: MvpRole): MvpComponents {
-  if (role === "DEFAULT") {
-    return DEFAULT_WEIGHTS;
-  }
-  return ROLE_WEIGHTS[role];
+  return role === "DEFAULT" ? DEFAULT_WEIGHTS : ROLE_WEIGHTS[role];
 }
 
 /**
@@ -317,13 +314,12 @@ function damageScore(
   upgrades: ChallengeUpgrades,
 ): number {
   const reported = participant.challenges?.teamDamagePercentage;
-  if (reported !== undefined && upgrades.teamDamagePercentage) {
-    return clamp(reported * PARTICIPANTS_PER_TEAM, 0, MAX_RELATIVE);
-  }
-  return relativeShare(
-    participant.totalDamageDealtToChampions,
-    totals.damageToChampions,
-  );
+  return reported !== undefined && upgrades.teamDamagePercentage
+    ? clamp(reported * PARTICIPANTS_PER_TEAM, 0, MAX_RELATIVE)
+    : relativeShare(
+        participant.totalDamageDealtToChampions,
+        totals.damageToChampions,
+      );
 }
 
 function componentsFor(

@@ -202,8 +202,7 @@ function reviewSeverity(level: number): ReviewFinding["severity"] {
   if (level === 0) return "P0";
   if (level === 1) return "P1";
   if (level === 2) return "P2";
-  if (level === 3) return "P3";
-  return "unknown";
+  return level === 3 ? "P3" : "unknown";
 }
 
 /**
@@ -299,10 +298,9 @@ export function reviewFindings(input: {
 }
 
 export function fingerprint(values: string[]): string | null {
-  if (values.length === 0) {
-    return null;
-  }
-  return new Bun.CryptoHasher("sha256")
-    .update([...values].sort().join("\n"))
-    .digest("hex");
+  return values.length === 0
+    ? null
+    : new Bun.CryptoHasher("sha256")
+        .update([...values].sort().join("\n"))
+        .digest("hex");
 }

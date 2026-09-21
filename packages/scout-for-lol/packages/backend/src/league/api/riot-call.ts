@@ -64,8 +64,9 @@ type CallResult<T> =
 
 function formatContext(context: Record<string, string | number>): string {
   const entries = Object.entries(context);
-  if (entries.length === 0) return "";
-  return ` [${entries.map(([k, v]) => `${k}=${v.toString()}`).join(", ")}]`;
+  return entries.length === 0
+    ? ""
+    : ` [${entries.map(([k, v]) => `${k}=${v.toString()}`).join(", ")}]`;
 }
 
 function contextAsTags(

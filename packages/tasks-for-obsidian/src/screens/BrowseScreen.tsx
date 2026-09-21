@@ -320,7 +320,7 @@ export function BrowseScreen({ navigation }: Props) {
                 {error.message}
               </Text>
             </View>
-          ) : null
+          ) : undefined
         }
       />
       <Fab

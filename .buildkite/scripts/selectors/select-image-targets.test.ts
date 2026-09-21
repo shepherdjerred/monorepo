@@ -467,7 +467,7 @@ describe("patch attribution", () => {
     // rebuild images that never resolve the patched package.
     expect(
       await select([
-        "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.3.patch",
+        "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
       ]),
     ).toEqual([
       "discord-plays-mario-kart",

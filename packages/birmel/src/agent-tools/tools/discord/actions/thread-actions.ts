@@ -13,15 +13,12 @@ function parseAutoArchiveDuration(
     return 1440;
   }
   const parsed = Number.parseInt(value);
-  if (
-    parsed === 60 ||
+  return parsed === 60 ||
     parsed === 1440 ||
     parsed === 4320 ||
     parsed === 10_080
-  ) {
-    return parsed;
-  }
-  return 1440;
+    ? parsed
+    : 1440;
 }
 
 type ThreadResult = {

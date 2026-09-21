@@ -6,7 +6,10 @@ export function useAppState(onForeground: () => void) {
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (next) => {
-      if (next === "active" && /inactive|background/.test(appState.current)) {
+      if (
+        next === "active" &&
+        /inactive|background/.test(appState.current ?? "")
+      ) {
         onForeground();
       }
       appState.current = next;

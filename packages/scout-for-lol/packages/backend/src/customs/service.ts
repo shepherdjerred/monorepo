@@ -62,8 +62,9 @@ export async function activeCustomNight(
   const active = await prisma.customActiveNight.findUnique({
     where: { guildId: actor.guildId },
   });
-  if (active === null) return null;
-  return requiredCustomSnapshot(prisma, active.nightId, actor);
+  return active === null
+    ? null
+    : requiredCustomSnapshot(prisma, active.nightId, actor);
 }
 
 export async function startCustomNight(

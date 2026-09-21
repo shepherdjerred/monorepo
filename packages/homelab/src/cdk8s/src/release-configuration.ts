@@ -186,10 +186,9 @@ export function applyCurrentBuildImageOverrides(
 export function releaseChartRevisions(
   raw: string | undefined = Bun.env["HOMELAB_CHART_REVISIONS_JSON"],
 ): Readonly<Record<string, string>> | undefined {
-  if (raw === undefined) {
-    return undefined;
-  }
-  return ChartRevisionsSchema.parse(
-    parseJson(raw, "HOMELAB_CHART_REVISIONS_JSON"),
-  );
+  return raw === undefined
+    ? undefined
+    : ChartRevisionsSchema.parse(
+        parseJson(raw, "HOMELAB_CHART_REVISIONS_JSON"),
+      );
 }

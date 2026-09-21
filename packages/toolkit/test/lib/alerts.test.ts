@@ -8,8 +8,7 @@ type FetchInput = Parameters<typeof fetch>[0];
 
 function fetchInputToUrl(input: FetchInput): URL {
   if (typeof input === "string") return new URL(input);
-  if (input instanceof URL) return input;
-  return new URL(input.url);
+  return input instanceof URL ? input : new URL(input.url);
 }
 
 function alert(index: number) {

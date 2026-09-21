@@ -63,8 +63,7 @@ export async function resolveCachePath(
   legacyPath: string,
 ): Promise<string> {
   if (await Bun.file(vaultPath).exists()) return vaultPath;
-  if (await Bun.file(legacyPath).exists()) return legacyPath;
-  return vaultPath;
+  return (await Bun.file(legacyPath).exists()) ? legacyPath : vaultPath;
 }
 
 // Vault exports are named with a leading date or date range, so the

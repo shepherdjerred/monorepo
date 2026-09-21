@@ -373,12 +373,11 @@ function assertRenderColumn(
 
 function parseRenderList(raw: string): string[] {
   const value = raw.trim();
-  if (!value.startsWith("(") || !value.endsWith(")")) {
-    return [normalizeColumnRef(value)];
-  }
-  return splitRenderPairs(value.slice(1, -1)).map((item) =>
-    normalizeColumnRef(item.key),
-  );
+  return !value.startsWith("(") || !value.endsWith(")")
+    ? [normalizeColumnRef(value)]
+    : splitRenderPairs(value.slice(1, -1)).map((item) =>
+        normalizeColumnRef(item.key),
+      );
 }
 
 function splitRenderPairs(body: string): { key: string; value: string }[] {
@@ -421,12 +420,9 @@ function normalizeColumnRef(value: string): string {
 
 function stripRenderQuotes(raw: string): string {
   const value = raw.trim();
-  if (
-    value.length >= 2 &&
+  return value.length >= 2 &&
     ((value.startsWith('"') && value.endsWith('"')) ||
       (value.startsWith("'") && value.endsWith("'")))
-  ) {
-    return value.slice(1, -1).replaceAll(/\\["']/gu, (match) => match.slice(1));
-  }
-  return value;
+    ? value.slice(1, -1).replaceAll(/\\["']/gu, (match) => match.slice(1))
+    : value;
 }

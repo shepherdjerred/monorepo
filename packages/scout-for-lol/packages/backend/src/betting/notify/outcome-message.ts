@@ -147,10 +147,9 @@ function settlementBetLines(input: SettlementMessageInput): {
 }
 
 function formatEarningAlias(alias: string): string {
-  if (alias.length <= MAX_EARNING_ALIAS_LENGTH) {
-    return alias;
-  }
-  return `${alias.slice(0, MAX_EARNING_ALIAS_LENGTH - 1)}…`;
+  return alias.length <= MAX_EARNING_ALIAS_LENGTH
+    ? alias
+    : `${alias.slice(0, MAX_EARNING_ALIAS_LENGTH - 1)}…`;
 }
 
 function settlementEarningLines(input: SettlementMessageInput): string[] {

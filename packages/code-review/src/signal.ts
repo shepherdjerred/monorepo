@@ -100,8 +100,7 @@ function findingKey(level: number | null): keyof FindingCounts {
   if (level === 0) return "p0";
   if (level === 1) return "p1";
   if (level === 2) return "p2";
-  if (level === 3) return "p3";
-  return "unknown";
+  return level === 3 ? "p3" : "unknown";
 }
 
 /**

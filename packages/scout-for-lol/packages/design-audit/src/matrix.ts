@@ -28,13 +28,10 @@ export function auditCaseTags(route: AuditRoute, theme: AuditTheme): string[] {
 export function auditProjectGrep(project: AuditProject): RegExp {
   if (project.name === "chromium-desktop") return /.*/;
   if (project.name === "chromium-laptop") return /@golden/;
-  if (
-    project.name === "chromium-tablet" ||
+  return project.name === "chromium-tablet" ||
     project.name === "chromium-mobile"
-  ) {
-    return /@golden|@theme-classic-light/;
-  }
-  return /@theme-modern-light/;
+    ? /@golden|@theme-classic-light/
+    : /@theme-modern-light/;
 }
 
 export function includesAuditCase(
@@ -44,10 +41,9 @@ export function includesAuditCase(
 ): boolean {
   if (project.name === "chromium-desktop") return true;
   if (project.name === "chromium-laptop") return route.golden;
-  if (project.browser === "chromium") {
-    return route.golden || theme.name === "classic-light";
-  }
-  return theme.name === "modern-light";
+  return project.browser === "chromium"
+    ? route.golden || theme.name === "classic-light"
+    : theme.name === "modern-light";
 }
 
 export function auditCases(): AuditCase[] {

@@ -169,8 +169,7 @@ export function pollClaimOf(scan: { pollOwner?: IsoInstant | undefined }): {
 export function observedDeliveryModeOf(observation: {
   deliveryMode?: MatchDeliveryMode | undefined;
 }): MatchDeliveryMode {
-  if (observation.deliveryMode !== undefined) return observation.deliveryMode;
-  return "live";
+  return observation.deliveryMode ?? "live";
 }
 
 async function processLegacyDiscoveredMatches(

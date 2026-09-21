@@ -96,68 +96,99 @@ export function patchedDependencyKey(
   return null;
 }
 
+/** Skip a `//` comment starting at `from` (the first slash); stops at `\n`. */
+function skipLineComment(text: string, from: number): number {
+  let j = from;
+  while (j < text.length && text[j] !== "\n") j += 1;
+  return j;
+}
+
+/** Skip a `/*` comment starting at `from` (the slash); stops past `*\/`. */
+function skipBlockComment(text: string, from: number): number {
+  let j = from + 2;
+  while (j < text.length && !(text[j] === "*" && text[j + 1] === "/")) j += 1;
+  return j + 2;
+}
+
+function skipWsAndComments(text: string, from: number): number {
+  let j = from;
+  while (j < text.length) {
+    const d = text[j];
+    if (d === " " || d === "\t" || d === "\n" || d === "\r") {
+      j += 1;
+    } else if (d === "/" && text[j + 1] === "/") {
+      j = skipLineComment(text, j);
+    } else if (d === "/" && text[j + 1] === "*") {
+      j = skipBlockComment(text, j);
+    } else {
+      break;
+    }
+  }
+  return j;
+}
+
+type JsoncScan = {
+  out: string;
+  i: number;
+  inString: boolean;
+};
+
+/** Append one string-mode character (handling escapes and the closing quote). */
+function appendStringChar(text: string, state: JsoncScan): void {
+  const c = text.charAt(state.i);
+  state.out += c;
+  if (c === "\\") {
+    state.out += text[state.i + 1] ?? "";
+    state.i += 2;
+    return;
+  }
+  if (c === '"') state.inString = false;
+  state.i += 1;
+}
+
+/**
+ * The index past a trailing comma (`,` followed only by `}`/`]`), or null
+ * when the comma at `commaAt` separates values.
+ */
+function endOfTrailingComma(text: string, commaAt: number): number | null {
+  const j = skipWsAndComments(text, commaAt + 1);
+  return text[j] === "}" || text[j] === "]" ? commaAt + 1 : null;
+}
+
 /**
  * Parse the subset of JSONC that `bun.lock` uses: strict JSON plus comments
  * and trailing commas. A character scanner (string-aware, so a comma or
  * slash inside a string value is never touched) rather than regex surgery.
  */
 export function parseJsonc(text: string): unknown {
-  let out = "";
-  let i = 0;
-  let inString = false;
-  const skipWsAndComments = (from: number): number => {
-    let j = from;
-    while (j < text.length) {
-      const d = text[j];
-      if (d === " " || d === "\t" || d === "\n" || d === "\r") {
-        j += 1;
-      } else if (d === "/" && text[j + 1] === "/") {
-        while (j < text.length && text[j] !== "\n") j += 1;
-      } else if (d === "/" && text[j + 1] === "*") {
-        j += 2;
-        while (j < text.length && !(text[j] === "*" && text[j + 1] === "/"))
-          j += 1;
-        j += 2;
-      } else {
-        break;
-      }
-    }
-    return j;
-  };
-  while (i < text.length) {
-    const c = text.charAt(i);
-    if (inString) {
-      out += c;
-      if (c === "\\") {
-        out += text[i + 1] ?? "";
-        i += 2;
-        continue;
-      }
-      if (c === '"') inString = false;
-      i += 1;
+  const state: JsoncScan = { out: "", i: 0, inString: false };
+  while (state.i < text.length) {
+    const c = text.charAt(state.i);
+    if (state.inString) {
+      appendStringChar(text, state);
       continue;
     }
     if (c === '"') {
-      inString = true;
-      out += c;
-      i += 1;
+      state.inString = true;
+      state.out += c;
+      state.i += 1;
       continue;
     }
-    if (c === "/" && (text[i + 1] === "/" || text[i + 1] === "*")) {
-      i = skipWsAndComments(i);
+    if (c === "/" && (text[state.i + 1] === "/" || text[state.i + 1] === "*")) {
+      state.i = skipWsAndComments(text, state.i);
       continue;
     }
     if (c === ",") {
-      const j = skipWsAndComments(i + 1);
-      if (text[j] === "}" || text[j] === "]") {
-        i += 1;
+      const end = endOfTrailingComma(text, state.i);
+      if (end !== null) {
+        state.i = end;
         continue;
       }
     }
-    out += c;
-    i += 1;
+    state.out += c;
+    state.i += 1;
   }
-  return JSON.parse(out);
+  return JSON.parse(state.out);
 }
 
 // Top-level bun.lock keys this selector understands. Anything else means the
@@ -325,8 +356,7 @@ function resolvePackageKey(
     const nested = `${parentName}/${name}`;
     if (packages.has(nested)) return nested;
   }
-  if (packages.has(name)) return name;
-  return null;
+  return packages.has(name) ? name : null;
 }
 
 /** "name@version" | "@scope/name@version" | "name@workspace:dir" → the name. */
@@ -334,6 +364,96 @@ function packageNameOfId(id: string): string {
   const at = id.lastIndexOf("@");
   if (at <= 0) throw new Error(`lockfile package id has no version: ${id}`);
   return id.slice(0, at);
+}
+
+type ResolutionQueueEntry = {
+  name: string;
+  parentName: string;
+  required: boolean;
+};
+
+type LockWorkspaceEntry =
+  Lockfile["workspaces"] extends Map<string, infer Entry> ? Entry : never;
+
+type LockPackageEntry =
+  Lockfile["packages"] extends Map<string, infer Entry> ? Entry : never;
+
+/**
+ * Seed the resolution queue from the closure's workspace dirs. Returns null
+ * when a closure dir is missing from the lockfile (membership changed).
+ */
+function seedResolutionQueue(
+  closureDirs: readonly string[],
+  lock: Lockfile,
+  onWorkspace: (dir: string, workspace: LockWorkspaceEntry) => void,
+): ResolutionQueueEntry[] | null {
+  const queue: ResolutionQueueEntry[] = [];
+  for (const dir of closureDirs) {
+    const workspace = lock.workspaces.get(dir);
+    if (workspace === undefined) return null;
+    onWorkspace(dir, workspace);
+    for (const [name, { spec, required }] of Object.entries(workspace.deps)) {
+      if (!spec.startsWith("workspace:"))
+        queue.push({ name, parentName: workspace.name, required });
+    }
+  }
+  return queue;
+}
+
+type QueueVisit = {
+  lock: Lockfile;
+  seen: Set<string>;
+  queue: ResolutionQueueEntry[];
+  onEntry: (key: string, entry: LockPackageEntry) => void;
+};
+
+/**
+ * Visit one queued dep: resolve it, call onEntry, and enqueue its own deps.
+ * Throws on a required dep with no resolution; skips optional ones.
+ */
+function visitQueueEntry(next: ResolutionQueueEntry, visit: QueueVisit): void {
+  const key = resolvePackageKey(
+    next.name,
+    next.parentName,
+    visit.lock.packages,
+  );
+  if (key === null) {
+    if (next.required)
+      throw new Error(
+        `lockfile has no resolution for ${next.name} under ${next.parentName}`,
+      );
+    return;
+  }
+  if (visit.seen.has(key)) return;
+  visit.seen.add(key);
+  const entry = visit.lock.packages.get(key);
+  if (entry === undefined) throw new Error(`lockfile lost key ${key}`);
+  visit.onEntry(key, entry);
+  // Workspace members reached through the graph are covered by closureDirs.
+  if (entry.id.includes("@workspace:")) return;
+  const parentName = packageNameOfId(entry.id);
+  for (const { field, required } of PACKAGE_DEP_FIELDS) {
+    for (const name of Object.keys(depMap(entry.meta, field))) {
+      visit.queue.push({ name, parentName, required });
+    }
+  }
+}
+
+/**
+ * Drain the resolution queue the way bun's nested lockfile keys shadow,
+ * calling onEntry for every resolved package.
+ */
+function drainResolutionQueue(
+  queue: ResolutionQueueEntry[],
+  lock: Lockfile,
+  onEntry: (key: string, entry: LockPackageEntry) => void,
+): void {
+  const visit: QueueVisit = { lock, seen: new Set<string>(), queue, onEntry };
+  while (visit.queue.length > 0) {
+    const next = visit.queue.pop();
+    if (next === undefined) break;
+    visitQueueEntry(next, visit);
+  }
 }
 
 /**
@@ -346,42 +466,15 @@ export function closureFingerprint(
   lock: Lockfile,
 ): string | null {
   const acc = new Set<string>();
-  const queue: { name: string; parentName: string; required: boolean }[] = [];
-  for (const dir of closureDirs) {
-    const workspace = lock.workspaces.get(dir);
-    if (workspace === undefined) return null;
-    for (const [name, { spec, required }] of Object.entries(workspace.deps)) {
+  const queue = seedResolutionQueue(closureDirs, lock, (dir, workspace) => {
+    for (const [name, { spec }] of Object.entries(workspace.deps)) {
       acc.add(`workspace:${dir}:${name}@${spec}`);
-      if (!spec.startsWith("workspace:"))
-        queue.push({ name, parentName: workspace.name, required });
     }
-  }
-  const seen = new Set<string>();
-  while (queue.length > 0) {
-    const next = queue.pop();
-    if (next === undefined) break;
-    const key = resolvePackageKey(next.name, next.parentName, lock.packages);
-    if (key === null) {
-      if (next.required)
-        throw new Error(
-          `lockfile has no resolution for ${next.name} under ${next.parentName}`,
-        );
-      continue;
-    }
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const entry = lock.packages.get(key);
-    if (entry === undefined) throw new Error(`lockfile lost key ${key}`);
+  });
+  if (queue === null) return null;
+  drainResolutionQueue(queue, lock, (key, entry) => {
     acc.add(`${key}=${entry.id}#${entry.integrity}`);
-    // Workspace members reached through the graph are covered by closureDirs.
-    if (entry.id.includes("@workspace:")) continue;
-    const parentName = packageNameOfId(entry.id);
-    for (const { field, required } of PACKAGE_DEP_FIELDS) {
-      for (const name of Object.keys(depMap(entry.meta, field))) {
-        queue.push({ name, parentName, required });
-      }
-    }
-  }
+  });
   acc.add(`sentinel:${lock.sentinel}`);
   return [...acc].sort().join("\n");
 }
@@ -399,42 +492,13 @@ export function closurePackageIds(
   lock: Lockfile,
 ): Set<string> | null {
   const ids = new Set<string>();
-  const queue: { name: string; parentName: string; required: boolean }[] = [];
-  for (const dir of closureDirs) {
-    const workspace = lock.workspaces.get(dir);
-    if (workspace === undefined) return null;
+  const queue = seedResolutionQueue(closureDirs, lock, (_dir, workspace) => {
     ids.add(workspace.name);
-    for (const [name, { spec, required }] of Object.entries(workspace.deps)) {
-      if (!spec.startsWith("workspace:"))
-        queue.push({ name, parentName: workspace.name, required });
-    }
-  }
-  const seen = new Set<string>();
-  while (queue.length > 0) {
-    const next = queue.pop();
-    if (next === undefined) break;
-    const key = resolvePackageKey(next.name, next.parentName, lock.packages);
-    if (key === null) {
-      if (next.required)
-        throw new Error(
-          `lockfile has no resolution for ${next.name} under ${next.parentName}`,
-        );
-      continue;
-    }
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const entry = lock.packages.get(key);
-    if (entry === undefined) throw new Error(`lockfile lost key ${key}`);
+  });
+  if (queue === null) return null;
+  drainResolutionQueue(queue, lock, (_key, entry) => {
     ids.add(entry.id);
-    const parentName = packageNameOfId(entry.id);
-    // Workspace members reached through the graph are covered by closureDirs.
-    if (entry.id.includes("@workspace:")) continue;
-    for (const { field, required } of PACKAGE_DEP_FIELDS) {
-      for (const name of Object.keys(depMap(entry.meta, field))) {
-        queue.push({ name, parentName, required });
-      }
-    }
-  }
+  });
   return ids;
 }
 

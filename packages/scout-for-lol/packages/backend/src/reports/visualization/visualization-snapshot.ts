@@ -182,12 +182,9 @@ function snapshotDisplay(plan: ScoutQlPlan) {
 }
 
 function resolveSparkline(plan: ScoutQlPlan): boolean {
-  if (plan.render.kind === "TABLE") {
-    return plan.render.options?.sparkline ?? false;
-  }
-  return "encoding" in plan.render
-    ? (plan.render.options.sparkline ?? false)
-    : false;
+  return plan.render.kind === "TABLE"
+    ? (plan.render.options?.sparkline ?? false)
+    : "encoding" in plan.render && (plan.render.options.sparkline ?? false);
 }
 
 /**
@@ -334,10 +331,11 @@ function orderedRows(
       ),
     );
   }
-  if (context.bucket === null) return rows;
-  return rows.toSorted((left, right) =>
-    pointLabel(context, left, axes).localeCompare(
-      pointLabel(context, right, axes),
-    ),
-  );
+  return context.bucket === null
+    ? rows
+    : rows.toSorted((left, right) =>
+        pointLabel(context, left, axes).localeCompare(
+          pointLabel(context, right, axes),
+        ),
+      );
 }

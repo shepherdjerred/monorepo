@@ -34,8 +34,9 @@ async function newestSourceMtimeMs(): Promise<number> {
 
 async function catalogIsFresh(): Promise<boolean> {
   const output = Bun.file(OUTPUT);
-  if (!(await output.exists())) return false;
-  return output.lastModified > (await newestSourceMtimeMs());
+  return (await output.exists())
+    ? output.lastModified > (await newestSourceMtimeMs())
+    : false;
 }
 
 if (!(await catalogIsFresh())) {

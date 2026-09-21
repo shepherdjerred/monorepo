@@ -45,13 +45,9 @@ export function shouldRefreshStyleCard(input: {
   refreshedAt: string | null;
   now: Date;
 }): boolean {
-  if (input.newMessageCount >= MIN_NEW_MESSAGES) {
-    return true;
-  }
-  if (input.refreshedAt === null) {
-    return true;
-  }
   return (
+    input.newMessageCount >= MIN_NEW_MESSAGES ||
+    input.refreshedAt === null ||
     input.now.getTime() - Date.parse(input.refreshedAt) >= QUARTERLY_REFRESH_MS
   );
 }

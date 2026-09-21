@@ -44,10 +44,9 @@ function errorMessage(error: unknown): string {
 
 function apiErrors(error: unknown): readonly APICallError[] {
   if (APICallError.isInstance(error)) return [error];
-  if (RetryError.isInstance(error)) {
-    return error.errors.filter((item) => APICallError.isInstance(item));
-  }
-  return [];
+  return RetryError.isInstance(error)
+    ? error.errors.filter((item) => APICallError.isInstance(item))
+    : [];
 }
 
 function isImmediateFailure(error: unknown): boolean {
@@ -74,10 +73,9 @@ function isTransportFailure(error: unknown): boolean {
 
 function findZodError(error: unknown): z.ZodError | undefined {
   if (error instanceof z.ZodError) return error;
-  if (error instanceof Error && error.cause !== undefined) {
-    return findZodError(error.cause);
-  }
-  return undefined;
+  return error instanceof Error && error.cause !== undefined
+    ? findZodError(error.cause)
+    : undefined;
 }
 
 function issueSummary(error: unknown): string {
@@ -111,8 +109,9 @@ function correctivePrompt(
   originalPrompt: string,
   priorIssueSummary: string | undefined,
 ): string {
-  if (priorIssueSummary === undefined) return originalPrompt;
-  return `${originalPrompt}${CORRECTIVE_PROMPT_PREAMBLE}${priorIssueSummary}`;
+  return priorIssueSummary === undefined
+    ? originalPrompt
+    : `${originalPrompt}${CORRECTIVE_PROMPT_PREAMBLE}${priorIssueSummary}`;
 }
 
 function outputTokenLimit(input: {
@@ -122,14 +121,11 @@ function outputTokenLimit(input: {
   priorFinishReason: string | undefined;
 }): number | undefined {
   if (input.initial === undefined) return undefined;
-  if (
-    input.priorFinishReason === "length" &&
+  return input.priorFinishReason === "length" &&
     input.semanticAttempt > 1 &&
     input.retry !== undefined
-  ) {
-    return input.retry;
-  }
-  return input.initial;
+    ? input.retry
+    : input.initial;
 }
 
 function aggregateUsage(

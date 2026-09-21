@@ -46,8 +46,8 @@ export function reachedSelectedSameMapWarpLanding(
   const world = observation.world;
   if (warp === undefined || world === null) return false;
   const landing = warp.destination.landing;
-  if (landing === null) return false;
   return (
+    landing !== null &&
     warp.destination.mapGroup === topology.mapGroup &&
     warp.destination.mapNum === topology.mapNum &&
     mapMatchesTopology(observation, topology) &&

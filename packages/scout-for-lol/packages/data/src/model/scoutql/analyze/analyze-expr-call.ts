@@ -326,10 +326,7 @@ function commonType(
   if (known.every((type) => type === "integer")) {
     return "integer";
   }
-  if (known.every((type) => isNumeric(type))) {
-    return "double";
-  }
-  return first;
+  return known.every((type) => isNumeric(type)) ? "double" : first;
 }
 
 const DATE_TRUNC_PARTS: ReadonlySet<string> = new Set(["day", "week", "month"]);
@@ -501,13 +498,12 @@ export function typeCall(
     return "unknown";
   }
   checkCallFlags(node, info, ctx);
-  if (!checkArity(node, info, ctx)) {
-    return "unknown";
-  }
-  return match(info.kind)
-    .with("aggregate", () => typeAggregateCall(node, ctx, typer))
-    .with("macro", () => typeMacroCall(node, ctx, typer))
-    .with("scalar", () => typeScalarCall(node, ctx, typer))
-    .with("reference", () => typeReferenceCall(node, ctx))
-    .exhaustive();
+  return checkArity(node, info, ctx)
+    ? match(info.kind)
+        .with("aggregate", () => typeAggregateCall(node, ctx, typer))
+        .with("macro", () => typeMacroCall(node, ctx, typer))
+        .with("scalar", () => typeScalarCall(node, ctx, typer))
+        .with("reference", () => typeReferenceCall(node, ctx))
+        .exhaustive()
+    : "unknown";
 }

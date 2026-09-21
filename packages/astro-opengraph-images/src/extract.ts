@@ -13,10 +13,9 @@ function getMetaContent(document: Document, property: string): string | null {
   const content = document
     .querySelector(`meta[property='${property}']`)
     ?.getAttribute("content");
-  if (content === undefined || content === null || content === "") {
-    return null;
-  }
-  return content;
+  return content === undefined || content === null || content === ""
+    ? null
+    : content;
 }
 
 export function extract(document: Document): PageDetails {

@@ -96,10 +96,7 @@ function emptyConfusionMatrix(): Record<Lane, Record<Lane, number>> {
 }
 
 function accuracy(correct: number, total: number): number {
-  if (total === 0) {
-    return 0;
-  }
-  return correct / total;
+  return total === 0 ? 0 : correct / total;
 }
 
 function participantKey(matchId: string, participantId: number): string {

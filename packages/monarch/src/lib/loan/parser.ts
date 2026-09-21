@@ -32,8 +32,9 @@ function money(raw: string): number {
 
 function isoDate(printed: string): string | undefined {
   const parsed = new Date(printed);
-  if (Number.isNaN(parsed.getTime())) return undefined;
-  return parsed.toISOString().slice(0, 10);
+  return Number.isNaN(parsed.getTime())
+    ? undefined
+    : parsed.toISOString().slice(0, 10);
 }
 
 export type LoanMail = {
@@ -67,8 +68,9 @@ export function parseLoanEmail(
   const payment = PAYMENT.exec(body);
   if (payment?.[1] === undefined || payment[2] === undefined) return {};
   const date = isoDate(payment[2]);
-  if (date === undefined) return {};
-  return { payments: [{ loanId, date, amount: money(payment[1]) }] };
+  return date === undefined
+    ? {}
+    : { payments: [{ loanId, date, amount: money(payment[1]) }] };
 }
 
 // The servicer resends the same reminder, so identical records collapse.

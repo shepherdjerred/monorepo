@@ -73,6 +73,7 @@ export async function persistPartialAnswer(
 
 export function clampAnswer(text: string): string {
   const trimmed = text.trim();
-  if (trimmed.length <= EXPLORE_ANSWER_MAX_LENGTH) return trimmed;
-  return `${trimmed.slice(0, EXPLORE_ANSWER_MAX_LENGTH - 1)}…`;
+  return trimmed.length <= EXPLORE_ANSWER_MAX_LENGTH
+    ? trimmed
+    : `${trimmed.slice(0, EXPLORE_ANSWER_MAX_LENGTH - 1)}…`;
 }

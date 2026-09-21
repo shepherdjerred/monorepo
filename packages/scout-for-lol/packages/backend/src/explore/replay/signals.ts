@@ -89,10 +89,12 @@ export function declinedToAnswer(input: {
   readonly answer: string;
   readonly rowsReturned: number | null;
 }): boolean {
-  if (!looksLikeExploreRefusal(input.answer)) return false;
-  if ((input.rowsReturned ?? 0) > 0) return false;
-  if (numericClaims(input.answer).size > 0) return false;
-  return input.answer.length <= DECLINE_MAX_LENGTH;
+  return (
+    looksLikeExploreRefusal(input.answer) &&
+    (input.rowsReturned ?? 0) === 0 &&
+    numericClaims(input.answer).size === 0 &&
+    input.answer.length <= DECLINE_MAX_LENGTH
+  );
 }
 
 /**

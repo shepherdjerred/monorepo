@@ -140,7 +140,7 @@ export function withPeriod(
   return {
     ...spec,
     window,
-    compare: window.kind === "all-history" ? false : spec.compare,
+    compare: window.kind !== "all-history" && spec.compare,
   };
 }
 
@@ -209,7 +209,7 @@ export function withBucket(
   // Same atomic reset as `withPeriod`: dropping to "No bucket" removes the
   // temporal axis comparison needs, so a query with compare left on would
   // become invalid ScoutQL the next time it is written out.
-  return { ...spec, bucket, compare: bucket === null ? false : spec.compare };
+  return { ...spec, bucket, compare: bucket !== null && spec.compare };
 }
 
 // ── Time zone ────────────────────────────────────────────────────────────────

@@ -23,10 +23,9 @@ function getRiot5xxSampleRate(): number {
     return DEFAULT_RIOT_5XX_SAMPLE_RATE;
   }
   const parsed = Number.parseFloat(raw);
-  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) {
-    return DEFAULT_RIOT_5XX_SAMPLE_RATE;
-  }
-  return parsed;
+  return !Number.isFinite(parsed) || parsed < 0 || parsed > 1
+    ? DEFAULT_RIOT_5XX_SAMPLE_RATE
+    : parsed;
 }
 
 /**

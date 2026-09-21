@@ -59,11 +59,9 @@ export function calculatePollingInterval(
   if (hoursSinceLastMatch < ACTIVITY_THRESHOLDS.DAY_14) {
     return POLLING_INTERVALS.DAY_14;
   }
-  if (hoursSinceLastMatch < ACTIVITY_THRESHOLDS.DAY_30) {
-    return POLLING_INTERVALS.DAY_30;
-  }
-
-  return POLLING_INTERVALS.MAX;
+  return hoursSinceLastMatch < ACTIVITY_THRESHOLDS.DAY_30
+    ? POLLING_INTERVALS.DAY_30
+    : POLLING_INTERVALS.MAX;
 }
 
 /**

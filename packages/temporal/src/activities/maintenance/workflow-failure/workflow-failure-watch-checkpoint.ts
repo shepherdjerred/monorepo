@@ -88,10 +88,9 @@ export function parseWorkflowFailureWatchLookbackSince(
   }
   const detailsRecord = z.record(z.string(), z.unknown()).parse(details);
   const lookbackSince = detailsRecord["lookbackSince"];
-  if (lookbackSince === undefined) {
-    return undefined;
-  }
-  return new Date(z.iso.datetime({ offset: true }).parse(lookbackSince));
+  return lookbackSince === undefined
+    ? undefined
+    : new Date(z.iso.datetime({ offset: true }).parse(lookbackSince));
 }
 
 function serializedCheckpoint(
@@ -99,8 +98,9 @@ function serializedCheckpoint(
     WorkflowFailureWatchCheckpoint | WorkflowFailureWatchCursor | undefined,
 ): Record<string, unknown> | null {
   if (checkpoint === undefined) return null;
-  if ("closeTime" in checkpoint) return serializeCursor(checkpoint);
-  return serializeDetailedCheckpoint(checkpoint);
+  return "closeTime" in checkpoint
+    ? serializeCursor(checkpoint)
+    : serializeDetailedCheckpoint(checkpoint);
 }
 
 function serializeDetailedCheckpoint(
@@ -128,8 +128,7 @@ function serializeOverflow(
 function serializeCursorField(
   cursor: WorkflowFailureWatchCursor | undefined,
 ): Record<string, unknown> {
-  if (cursor === undefined) return {};
-  return { cursor: serializeCursor(cursor) };
+  return cursor === undefined ? {} : { cursor: serializeCursor(cursor) };
 }
 
 function serializeCursor(

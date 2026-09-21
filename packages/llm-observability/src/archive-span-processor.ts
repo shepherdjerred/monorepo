@@ -246,8 +246,7 @@ function redactBodyAttributes(
 function redactBodyString(value: string): string {
   const parsed = safeJsonParse(value);
   const redacted = redactSecrets(parsed);
-  if (typeof redacted === "string") return redacted;
-  return JSON.stringify(redacted);
+  return typeof redacted === "string" ? redacted : JSON.stringify(redacted);
 }
 
 function refToAttributes(ref: ArchiveRef): Record<string, AttributeValue> {
@@ -326,10 +325,9 @@ function numberAttr(value: AttributeValue | undefined): number | undefined {
 function stringArrayAttr(
   value: AttributeValue | undefined,
 ): string[] | undefined {
-  if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
-    return value;
-  }
-  return undefined;
+  return Array.isArray(value) && value.every((v) => typeof v === "string")
+    ? value
+    : undefined;
 }
 
 /**
@@ -361,8 +359,7 @@ function copySpanWithAttributes(
     droppedEventsCount: span.droppedEventsCount,
     droppedLinksCount: span.droppedLinksCount,
   };
-  if (span.parentSpanContext === undefined) {
-    return common;
-  }
-  return { ...common, parentSpanContext: span.parentSpanContext };
+  return span.parentSpanContext === undefined
+    ? common
+    : { ...common, parentSpanContext: span.parentSpanContext };
 }

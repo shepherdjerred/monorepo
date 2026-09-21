@@ -185,9 +185,11 @@ function isIncludedByPackageFiles(
     return { isNegative, value };
   });
   const matches = (pattern: string): boolean => {
-    if (minimatch(relativePath, pattern, { dot: true })) return true;
-    if (/[!*?[\]{}()]/.test(pattern)) return false;
-    return minimatch(relativePath, `${pattern}/**`, { dot: true });
+    return (
+      minimatch(relativePath, pattern, { dot: true }) ||
+      (!/[!*?[\]{}()]/.test(pattern) &&
+        minimatch(relativePath, `${pattern}/**`, { dot: true }))
+    );
   };
   const included = patterns.some(
     ({ isNegative, value }) => !isNegative && matches(value),
@@ -431,13 +433,13 @@ async function classifyPackageReleaseFromTag(
     headRef,
     policy.packageJsonPath,
   );
-  const packageJsonChange = changedFiles.includes(policy.packageJsonPath)
-    ? packageJsonHasConsumerChange(
-        await packageJsonAtTag(root, tag, policy.packageJsonPath),
-        headPackageJson,
-        policy.packageJsonPath,
-      )
-    : false;
+  const packageJsonChange =
+    changedFiles.includes(policy.packageJsonPath) &&
+    packageJsonHasConsumerChange(
+      await packageJsonAtTag(root, tag, policy.packageJsonPath),
+      headPackageJson,
+      policy.packageJsonPath,
+    );
   const publishedFiles = z
     .array(z.string())
     .optional()

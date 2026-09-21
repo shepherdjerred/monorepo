@@ -28,10 +28,7 @@ import { prisma } from "#src/database/index.ts";
 const logger = createLogger("tasks-postmatch");
 
 function asError(error: unknown, message: string): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-  return new Error(message, { cause: error });
+  return error instanceof Error ? error : new Error(message, { cause: error });
 }
 
 export async function checkPostMatch(): Promise<{

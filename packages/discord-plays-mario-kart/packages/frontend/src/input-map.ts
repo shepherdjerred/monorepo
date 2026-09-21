@@ -92,8 +92,9 @@ export function resolveKeyboardCode(event: {
   code: string;
   key: string;
 }): string | undefined {
-  if (KEYMAP[event.code] !== undefined) return event.code;
-  return KEY_FALLBACKS[event.key];
+  return KEYMAP[event.code] === undefined
+    ? KEY_FALLBACKS[event.key]
+    : event.code;
 }
 
 export const STICK_X_CONTROLS: ControlDefinition[] = [

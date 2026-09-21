@@ -200,8 +200,7 @@ function formatEnrichmentContext(
   const parts = ENRICHMENT_RENDERERS.map((render) => render(enrichment)).filter(
     (part) => part !== undefined,
   );
-  if (parts.length === 0) return "";
-  return ` | Enrichment: ${parts.join(" | ")}`;
+  return parts.length === 0 ? "" : ` | Enrichment: ${parts.join(" | ")}`;
 }
 
 function buildTier2Prompt(

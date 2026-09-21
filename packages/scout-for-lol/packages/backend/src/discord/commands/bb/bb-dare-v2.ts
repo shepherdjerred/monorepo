@@ -46,10 +46,9 @@ export type BbDareV2Dependencies = {
 };
 
 function scopeText(plan: DareCompiledPlanV2): string {
-  if (plan.gameSets.length === 1) {
-    return "All conditions inside the single game set must hold in one qualifying game.";
-  }
-  return "Each game set may qualify in a different game; conditions inside one set stay bound to that same game.";
+  return plan.gameSets.length === 1
+    ? "All conditions inside the single game set must hold in one qualifying game."
+    : "Each game set may qualify in a different game; conditions inside one set stay bound to that same game.";
 }
 
 function relationshipText(plan: DareCompiledPlanV2) {

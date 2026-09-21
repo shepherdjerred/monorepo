@@ -148,8 +148,9 @@ function managerHarness(options?: {
     },
     isGuildEnabled: () => {
       const queued = state.guildEnabledQueue.shift();
-      if (queued instanceof Error) return Promise.reject(queued);
-      return Promise.resolve(queued ?? state.guildEnabled);
+      return queued instanceof Error
+        ? Promise.reject(queued)
+        : Promise.resolve(queued ?? state.guildEnabled);
     },
   };
   const manager = new VoiceAssistantManager(deps);

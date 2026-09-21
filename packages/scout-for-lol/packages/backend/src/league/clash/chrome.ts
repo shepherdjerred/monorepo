@@ -52,10 +52,7 @@ export async function loadClashChrome(input: {
     const team = teamByKey.get(
       `${registration.platform}:${registration.teamRiotId}`,
     );
-    if (team === undefined) {
-      return undefined;
-    }
-    return clashTeamLabels(team);
+    return team === undefined ? undefined : clashTeamLabels(team);
   };
   const first = registrations[0];
   const tournament =
@@ -88,8 +85,7 @@ export async function attachClashChrome(
     queueType: data.queueType,
     participants: data.participants,
   });
-  if (clashChrome === undefined) {
-    return data;
-  }
-  return LoadingScreenDataSchema.parse({ ...data, clashChrome });
+  return clashChrome === undefined
+    ? data
+    : LoadingScreenDataSchema.parse({ ...data, clashChrome });
 }

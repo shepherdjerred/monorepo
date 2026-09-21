@@ -209,10 +209,9 @@ function classifyConjunct(
       : { kind: "residual", touchesTime: true };
   }
   const relative = recognizeRelativeWindow(conjunct, timeColumn);
-  if (relative !== undefined && !alreadyHoisted) {
-    return { kind: "hoisted", window: relative };
-  }
-  return { kind: "residual", touchesTime: true };
+  return relative !== undefined && !alreadyHoisted
+    ? { kind: "hoisted", window: relative }
+    : { kind: "residual", touchesTime: true };
 }
 
 // ── Entry point ──────────────────────────────────────────────────────────────

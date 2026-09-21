@@ -282,14 +282,18 @@ function isAmazonMerchant(name: string): boolean {
 // cash-back rows into the P2P path, where the CSV could never describe them.
 export function isVenmoP2P(name: string, plaidName: string): boolean {
   const combined = `${name} ${plaidName}`.toLowerCase();
-  if (!combined.includes("venmo")) return false;
-  return !combined.includes("credit card") && !combined.includes("cash back");
+  return (
+    combined.includes("venmo") &&
+    !combined.includes("credit card") &&
+    !combined.includes("cash back")
+  );
 }
 
 export function isBiltTransaction(name: string, plaidName: string): boolean {
   const combined = `${name} ${plaidName}`.toLowerCase();
-  if (!combined.includes("bilt")) return false;
-  return !combined.includes("credit card cash back");
+  return (
+    combined.includes("bilt") && !combined.includes("credit card cash back")
+  );
 }
 
 export function isUsaaInsurance(name: string, plaidName: string): boolean {
@@ -330,8 +334,10 @@ const APPLE_NON_PURCHASE = [
 
 export function isAppleMerchant(name: string, plaidName: string): boolean {
   const combined = `${name} ${plaidName}`.toLowerCase();
-  if (!combined.includes("apple")) return false;
-  return !APPLE_NON_PURCHASE.some((p) => combined.includes(p));
+  return (
+    combined.includes("apple") &&
+    !APPLE_NON_PURCHASE.some((p) => combined.includes(p))
+  );
 }
 
 // Payroll deposits from the employer. The amount is part of the test: an

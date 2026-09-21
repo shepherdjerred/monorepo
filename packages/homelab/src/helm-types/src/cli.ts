@@ -206,10 +206,10 @@ export function toPascalCase(str: string): string {
 
 async function isMainModule(): Promise<boolean> {
   const entrypoint = process.argv[1];
-  if (entrypoint === undefined) return false;
   return (
+    entrypoint !== undefined &&
     (await realpath(entrypoint)) ===
-    (await realpath(fileURLToPath(import.meta.url)))
+      (await realpath(fileURLToPath(import.meta.url)))
   );
 }
 

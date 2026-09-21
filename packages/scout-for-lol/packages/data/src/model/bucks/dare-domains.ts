@@ -356,12 +356,11 @@ export function dareBooleanDomainIssuesV2(
     const issue = dareDomainIssue(column, expression.threshold);
     return issue === null ? issues : [...issues, issue];
   }
-  if (expression.kind === "not") {
-    return dareBooleanDomainIssuesV2(expression.operand);
-  }
-  return expression.operands.flatMap((operand) =>
-    dareBooleanDomainIssuesV2(operand),
-  );
+  return expression.kind === "not"
+    ? dareBooleanDomainIssuesV2(expression.operand)
+    : expression.operands.flatMap((operand) =>
+        dareBooleanDomainIssuesV2(operand),
+      );
 }
 
 /**

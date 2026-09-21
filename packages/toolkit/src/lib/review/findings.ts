@@ -131,8 +131,9 @@ export async function reviewStateFor(input: {
  */
 export function fallbackKey(thread: ReviewThread, index: number): string {
   if (thread.threadId !== null) return `thread:${thread.threadId}`;
-  if (thread.commentId !== null) return `comment:${String(thread.commentId)}`;
-  return `#${String(index + 1)}`;
+  return thread.commentId === null
+    ? `#${String(index + 1)}`
+    : `comment:${String(thread.commentId)}`;
 }
 
 function toFinding(

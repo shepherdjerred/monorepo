@@ -34,8 +34,7 @@ function postingDelayDays(
   const delay = (txnDate.getTime() - receiptDate.getTime()) / DAY_MS;
   if (delay > MAX_POSTING_DELAY_DAYS) return undefined;
   if (delay < -MAX_RECEIPT_LEAD_DAYS) return undefined;
-  if (Math.abs(txnAmount - receipt.total) > 0.01) return undefined;
-  return delay;
+  return Math.abs(txnAmount - receipt.total) > 0.01 ? undefined : delay;
 }
 
 export function matchAppleTransactions(

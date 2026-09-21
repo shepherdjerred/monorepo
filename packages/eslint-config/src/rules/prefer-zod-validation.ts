@@ -109,15 +109,11 @@ export const preferZodValidation = createRule({
       }
 
       // For binary expressions that contain typeof
-      if (
-        node.type === AST_NODE_TYPES.BinaryExpression &&
+      return node.type === AST_NODE_TYPES.BinaryExpression &&
         node.left.type === AST_NODE_TYPES.UnaryExpression &&
         node.left.operator === "typeof"
-      ) {
-        return 1;
-      }
-
-      return 0;
+        ? 1
+        : 0;
     }
 
     return {
@@ -196,8 +192,7 @@ export const preferZodValidation = createRule({
         // Detect object shape checking: typeof X === "object" && "field" in X
         // Both checks must reference the same variable
         function getIdentifierName(n: TSESTree.Node): string | null {
-          if (n.type === AST_NODE_TYPES.Identifier) return n.name;
-          return null;
+          return n.type === AST_NODE_TYPES.Identifier ? n.name : null;
         }
 
         const typeofObjectVars = new Set<string>();

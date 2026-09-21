@@ -202,9 +202,7 @@ export function buildResumeAnnouncement(
       : `🔄 I'm back online — couldn't safely resume the last video.`;
   }
 
-  if (queueCount > 0) {
-    return `🔄 I'm back online — restored the queue (${items}).`;
-  }
-
-  return null;
+  return queueCount > 0
+    ? `🔄 I'm back online — restored the queue (${items}).`
+    : null;
 }

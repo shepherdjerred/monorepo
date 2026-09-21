@@ -30,7 +30,7 @@ export type VeleroHelmValuesImage = {
    */
   repository?: string;
   /**
-   * @default "v1.18.1"
+   * @default "v1.18.2"
    */
   tag?: string;
   /**

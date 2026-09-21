@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 5da5c7bd9060fea8444e16948b7d586b6a199ae2..5464242d4c61a7e1052e39a40047b8fff878b7eb 100644
+index 7a7b20e437a62019268ada84cde9d1a6ea0fed5d..61495cedd2ee62eb02a777e08a63d082d3dd370e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -54,10 +54,15 @@ set(USE_GNUTLS ${USE_GNUTLS} CACHE BOOL "Use GnuTLS instead of OpenSSL" FORCE)
+@@ -33,10 +33,15 @@ find_package(OpenSSL REQUIRED)
  include(FetchContent)
  
  # Fetch libdatachannel
@@ -14,7 +14,7 @@ index 5da5c7bd9060fea8444e16948b7d586b6a199ae2..5464242d4c61a7e1052e39a40047b8ff
      libdatachannel
      GIT_REPOSITORY https://github.com/paullouisageneau/libdatachannel.git
      GIT_TAG a2627fb96c85c75064676ec2b1131d3779c1fc2a
-+    PATCH_COMMAND sh "${CMAKE_CURRENT_SOURCE_DIR}/scripts/patch-libdatachannel.sh"
++    PATCH_COMMAND sh "${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch-libdatachannel.sh"
  )
  
  option(NO_MEDIA "Disable media transport support in libdatachannel" OFF)
@@ -45,7 +45,7 @@ index 2635ec3e7a9b70a02e81eb789d793972948542ec..70004d60ea6825fea80637e1ee7bda26
  const nodeDataChannel = loadBinding(packageRoot, bindingOptions);
  
 diff --git a/dist/types/lib/index.d.ts b/dist/types/lib/index.d.ts
-index 58e492aa85bfe6327d80aa19a27848bf6bd998b5..eb39a4a40fae5409e7a92ddceaa6dc9ef222d73a 100644
+index e0345a1ee7b88e481f4cdaac81c45ba7852306a9..b047fcdecd9b63720f7485883027f99b38527ff4 100644
 --- a/dist/types/lib/index.d.ts
 +++ b/dist/types/lib/index.d.ts
 @@ -120,6 +120,7 @@ interface PeerConnection {
@@ -57,7 +57,7 @@ index 58e492aa85bfe6327d80aa19a27848bf6bd998b5..eb39a4a40fae5409e7a92ddceaa6dc9e
      state(): RTCPeerConnectionState;
      iceState(): RTCIceConnectionState;
 diff --git a/package.json b/package.json
-index f7fd277dcbf9dd8ea868a877a1a2c97ebcfb182e..c75091085abfd298d76877bc55ba81c9fc5efc02 100644
+index 118c7bf577f623b6ec64cb576621c4cb3e3aac75..f665af9bd494ed97665430fbc43f93ee03e9a49b 100644
 --- a/package.json
 +++ b/package.json
 @@ -33,7 +33,7 @@
@@ -65,37 +65,15 @@ index f7fd277dcbf9dd8ea868a877a1a2c97ebcfb182e..c75091085abfd298d76877bc55ba81c9
    },
    "scripts": {
 -    "install": "pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile)",
-+    "install": "sh scripts/overlay-patched-prebuild.sh && (pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile))",
-     "rebuild": "pkg-prebuilds-verify ./binding-options.js || (npm run build:mbedtls && cmake-js rebuild)",
-     "install:nice": "npm run clean && npm install --ignore-scripts --production=false && npm run build:mbedtls && cmake-js configure --CDUSE_NICE=1 && cmake-js build",
++    "install": "sh cmake/overlay-patched-prebuild.sh && (pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile))",
+     "rebuild": "pkg-prebuilds-verify ./binding-options.js || cmake-js rebuild",
+     "install:nice": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_NICE=1 && cmake-js build",
      "install:gnu": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_GNUTLS=1 && cmake-js build",
-@@ -84,7 +84,7 @@
-   ],
-   "contributors": [
-     {
--      "name": "Murat Doğan",
-+      "name": "Murat Do\u011fan",
-       "url": "https://github.com/murat-dogan"
-     },
-     {
-diff --git a/scripts/build-mbedtls.sh b/scripts/build-mbedtls.sh
-index 075c8e534f5c346ec9ccb286ad06eb486e30a28d..4ccd4923740d41bb36016b00effd9ba2194ecc06 100644
---- a/scripts/build-mbedtls.sh
-+++ b/scripts/build-mbedtls.sh
-@@ -38,7 +38,7 @@ fi
- 
- rm -rf "${MBEDTLS_BUILD_DIR}" "${MBEDTLS_INSTALL_DIR}"
- 
--CMAKE_ARGS="-S ${MBEDTLS_SRC_DIR} -B ${MBEDTLS_BUILD_DIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_STATIC_MBEDTLS_LIBRARY=ON -DUSE_SHARED_MBEDTLS_LIBRARY=OFF -DCMAKE_INSTALL_PREFIX=${MBEDTLS_INSTALL_DIR}"
-+CMAKE_ARGS="-S ${MBEDTLS_SRC_DIR} -B ${MBEDTLS_BUILD_DIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_STATIC_MBEDTLS_LIBRARY=ON -DUSE_SHARED_MBEDTLS_LIBRARY=OFF -DMBEDTLS_FATAL_WARNINGS=OFF -DCMAKE_INSTALL_PREFIX=${MBEDTLS_INSTALL_DIR}"
- 
- if [ -n "${NDC_MBEDTLS_CMAKE_ARGS:-}" ]; then
-   CMAKE_ARGS="${CMAKE_ARGS} ${NDC_MBEDTLS_CMAKE_ARGS}"
-diff --git a/scripts/overlay-patched-prebuild.sh b/scripts/overlay-patched-prebuild.sh
+diff --git a/cmake/overlay-patched-prebuild.sh b/cmake/overlay-patched-prebuild.sh
 new file mode 100644
 index 0000000000000000000000000000000000000000..a36e92fd0379e20b47e221d94116edc2fce51f1f
 --- /dev/null
-+++ b/scripts/overlay-patched-prebuild.sh
++++ b/cmake/overlay-patched-prebuild.sh
 @@ -0,0 +1,54 @@
 +#!/usr/bin/env sh
 +# Overlay the repo's vendored PATCHED prebuild onto the registry tarball's
@@ -151,11 +129,11 @@ index 0000000000000000000000000000000000000000..a36e92fd0379e20b47e221d94116edc2
 +mkdir -p "$dest_dir"
 +cp "$src" "$dest"
 +echo "[overlay-patched-prebuild] installed patched prebuild for ${key} from ${src}"
-diff --git a/scripts/patch-libdatachannel.sh b/scripts/patch-libdatachannel.sh
+diff --git a/cmake/patch-libdatachannel.sh b/cmake/patch-libdatachannel.sh
 new file mode 100644
 index 0000000000000000000000000000000000000000..065a89105cf7eb9b22d4badd67d61eff7a85921b
 --- /dev/null
-+++ b/scripts/patch-libdatachannel.sh
++++ b/cmake/patch-libdatachannel.sh
 @@ -0,0 +1,25 @@
 +#!/usr/bin/env sh
 +# Add rtc::PeerConnection::registerIncomingSsrc to the FetchContent'd

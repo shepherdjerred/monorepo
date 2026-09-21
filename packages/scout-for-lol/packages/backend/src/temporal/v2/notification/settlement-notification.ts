@@ -84,10 +84,9 @@ export async function postmatchReplyTargetV2(
     ),
   });
   const state = report?.intent.state;
-  if (state?.kind !== "delivered" || state.messageId === undefined) {
-    return undefined;
-  }
-  return DiscordMessageIdSchema.parse(state.messageId);
+  return state?.kind !== "delivered" || state.messageId === undefined
+    ? undefined
+    : DiscordMessageIdSchema.parse(state.messageId);
 }
 
 export async function buildSettlementNotificationMessageV2(

@@ -97,10 +97,7 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
  */
 export function getSeasonById(seasonId: string): SeasonData | undefined {
   const result = SeasonIdSchema.safeParse(seasonId);
-  if (!result.success) {
-    return undefined;
-  }
-  return SEASONS[result.data];
+  return result.success ? SEASONS[result.data] : undefined;
 }
 
 /**
@@ -170,10 +167,7 @@ export function hasSeasonEnded(
   now: Date = new Date(),
 ): boolean | undefined {
   const season = getSeasonById(seasonId);
-  if (!season) {
-    return undefined;
-  }
-  return isAfter(now, season.endDate);
+  return season ? isAfter(now, season.endDate) : undefined;
 }
 
 /**

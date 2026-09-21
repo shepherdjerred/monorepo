@@ -59,8 +59,7 @@ function requiredString(value: unknown, description: string): string {
 }
 
 function nullableString(value: unknown, description: string): string | null {
-  if (value === null || value === undefined) return null;
-  return requiredString(value, description);
+  return value === null || value === undefined ? null : requiredString(value, description);
 }
 
 function requiredBoolean(value: unknown, description: string): boolean {
@@ -195,10 +194,7 @@ export function dispatchDecision(
   }
 
   const nextIdleSinceMs = context.idleSinceMs ?? context.nowMs;
-  if (context.nowMs - nextIdleSinceMs >= maxIdleMs) {
-    return { kind: "timed-out", pending };
-  }
-  return { kind: "waiting", idleSinceMs: nextIdleSinceMs };
+  return context.nowMs - nextIdleSinceMs >= maxIdleMs ? { kind: "timed-out", pending } : { kind: "waiting", idleSinceMs: nextIdleSinceMs };
 }
 
 async function fetchJson(url: string, token: string): Promise<unknown> {

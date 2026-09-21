@@ -199,8 +199,7 @@ export function emitArithmetic(
 ): SqlFragment {
   // DuckDB `/` is float division. NULLIF keeps a zero denominator an empty
   // answer instead of a crashed report; same for `%`.
-  if (op === "/" || op === "%") {
-    return seq("((", left, `) ${op} nullif((`, right, "), 0))");
-  }
-  return seq("((", left, `) ${op} (`, right, "))");
+  return op === "/" || op === "%"
+    ? seq("((", left, `) ${op} nullif((`, right, "), 0))")
+    : seq("((", left, `) ${op} (`, right, "))");
 }

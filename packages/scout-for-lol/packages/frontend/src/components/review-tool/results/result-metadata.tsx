@@ -352,13 +352,12 @@ export function ResultMetadata({
   imageModel,
 }: ResultMetadataProps) {
   const pipelineCosts = useMemo((): PipelineCostBreakdown | null => {
-    if (!result.metadata.traces) {
-      return null;
-    }
-    return calculatePipelineCosts(
-      result.metadata.traces,
-      imageModel ?? "gemini-2.0-flash",
-    );
+    return result.metadata.traces
+      ? calculatePipelineCosts(
+          result.metadata.traces,
+          imageModel ?? "gemini-2.0-flash",
+        )
+      : null;
   }, [result.metadata.traces, imageModel]);
 
   const { metadata } = result;

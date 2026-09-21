@@ -163,7 +163,7 @@ function declarativeFlag(flag: ManagedFlag) {
     key: flag.key,
     name: flag.key,
     description: flag.purpose,
-    enabled: flag.type === "boolean" ? flag.default : true,
+    enabled: flag.type !== "boolean" || flag.default,
     metadata: {
       owner: flag.owner,
       source: flag.source,

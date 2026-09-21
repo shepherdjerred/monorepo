@@ -277,8 +277,9 @@ export class GoalMemory {
         const relB = this.toRel(b);
         const weightA = relA === MEMORY_FILE ? 0 : 1;
         const weightB = relB === MEMORY_FILE ? 0 : 1;
-        if (weightA !== weightB) return weightA - weightB;
-        return relB.localeCompare(relA);
+        return weightA === weightB
+          ? relB.localeCompare(relA)
+          : weightA - weightB;
       })
       .slice(0, GREP_MAX_FILES);
   }

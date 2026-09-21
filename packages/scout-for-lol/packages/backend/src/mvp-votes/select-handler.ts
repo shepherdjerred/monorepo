@@ -37,10 +37,7 @@ function parseNomineeIndex(values: readonly string[]): number | undefined {
   if (raw === undefined) {
     return undefined;
   }
-  if (!/^\d$/u.test(raw)) {
-    return undefined;
-  }
-  return Number.parseInt(raw, 10);
+  return /^\d$/u.test(raw) ? Number.parseInt(raw, 10) : undefined;
 }
 
 export async function handleMvpVoteSelect(

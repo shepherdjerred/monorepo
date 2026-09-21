@@ -40,10 +40,7 @@ export type WorkflowFailureDetail = {
 };
 
 function truncate(value: string, maxChars: number): string {
-  if (value.length <= maxChars) {
-    return value;
-  }
-  return `${value.slice(0, maxChars)}…`;
+  return value.length <= maxChars ? value : `${value.slice(0, maxChars)}…`;
 }
 
 /** Direct link to the failed run's history in the Temporal UI — not just "check the UI". */

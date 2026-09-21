@@ -89,7 +89,11 @@ function recordingRuntime(
         }
         return openRouterResponse(response);
       },
-      { preconnect: (url: string | URL) => void url },
+      {
+        preconnect: (_url: string | URL) => {
+          // No preconnect in tests.
+        },
+      },
     ),
   });
 }

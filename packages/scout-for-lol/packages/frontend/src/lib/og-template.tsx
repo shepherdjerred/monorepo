@@ -16,8 +16,7 @@ export function ogTemplate({
   title,
   description,
 }: RenderFunctionInput): ReactNode {
-  if (typeof description === "string") {
-    return scoutOgCard({ title, description });
-  }
-  return scoutOgCard({ title });
+  return typeof description === "string"
+    ? scoutOgCard({ title, description })
+    : scoutOgCard({ title });
 }

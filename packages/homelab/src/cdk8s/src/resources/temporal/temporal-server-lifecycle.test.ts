@@ -228,7 +228,7 @@ describe("Temporal server lifecycle", () => {
     const container = firstContainer(job.spec, "Schema migration");
     const command = container.args?.join("\n") ?? "";
 
-    expect(container.image).toContain("temporalio/admin-tools:1.30.6@sha256:");
+    expect(container.image).toContain("temporalio/admin-tools:1.31.2@sha256:");
     expect(command).toContain(
       "update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned",
     );
@@ -319,7 +319,7 @@ describe("Temporal server lifecycle", () => {
     const deployment = findResource("Deployment", "temporal-temporal-server");
     const container = firstContainer(deployment.spec, "Temporal server");
 
-    expect(container.image).toContain("temporalio/server:1.30.6@sha256:");
+    expect(container.image).toContain("temporalio/server:1.31.2@sha256:");
     expect(container.args?.join(" ") ?? "").not.toContain("autosetup");
     expect(container.securityContext.readOnlyRootFilesystem).toBe(true);
     expect(container.volumeMounts).toEqual(

@@ -198,19 +198,14 @@ function containsTextMatching(value: unknown, pattern: RegExp): boolean {
   if (typeof value === "string") {
     return pattern.test(value);
   }
-  if (Array.isArray(value)) {
-    return value.some((entry) => containsTextMatching(entry, pattern));
-  }
-  if (
-    value === null ||
-    typeof value !== "object" ||
-    ArrayBuffer.isView(value)
-  ) {
-    return false;
-  }
-  return Object.values(value).some((entry) =>
-    containsTextMatching(entry, pattern),
-  );
+  return Array.isArray(value)
+    ? value.some((entry) => containsTextMatching(entry, pattern))
+    : value !== null &&
+        typeof value === "object" &&
+        !ArrayBuffer.isView(value) &&
+        Object.values(value).some((entry) =>
+          containsTextMatching(entry, pattern),
+        );
 }
 
 function cjkFontLocale(value: unknown): CjkFontLocale {
@@ -220,12 +215,12 @@ function cjkFontLocale(value: unknown): CjkFontLocale {
   if (containsTextMatching(value, /\p{Script=Bopomofo}/u)) {
     return "tc";
   }
-  if (
-    containsTextMatching(value, /[\p{Script=Hiragana}\p{Script=Katakana}]/u)
-  ) {
-    return "jp";
-  }
-  return "sc";
+  return containsTextMatching(
+    value,
+    /[\p{Script=Hiragana}\p{Script=Katakana}]/u,
+  )
+    ? "jp"
+    : "sc";
 }
 
 export function fontFamilyForText(
@@ -283,17 +278,12 @@ export function containsCjkText(value: unknown): boolean {
   if (typeof value === "string") {
     return cjkCharacterPattern.test(value);
   }
-  if (Array.isArray(value)) {
-    return value.some((entry) => containsCjkText(entry));
-  }
-  if (
-    value === null ||
-    typeof value !== "object" ||
-    ArrayBuffer.isView(value)
-  ) {
-    return false;
-  }
-  return Object.values(value).some((entry) => containsCjkText(entry));
+  return Array.isArray(value)
+    ? value.some((entry) => containsCjkText(entry))
+    : value !== null &&
+        typeof value === "object" &&
+        !ArrayBuffer.isView(value) &&
+        Object.values(value).some((entry) => containsCjkText(entry));
 }
 
 export async function bunReportFonts(

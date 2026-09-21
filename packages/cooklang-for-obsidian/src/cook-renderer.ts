@@ -16,10 +16,8 @@ export function renderRecipe(
   const body = container.createDiv({ cls: "cook-body" });
 
   // If there are sections, render each section
-  if (recipe.sections.length > 0) {
-    for (const section of recipe.sections) {
-      renderSection(body, section, recipe, settings);
-    }
+  for (const section of recipe.sections) {
+    renderSection(body, section, recipe, settings);
   }
 }
 

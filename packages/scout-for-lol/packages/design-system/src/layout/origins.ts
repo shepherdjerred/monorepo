@@ -6,6 +6,7 @@ export function surfaceHref(
   origin: string | undefined,
   pathname: string,
 ): string {
-  if (origin === undefined || origin.length === 0) return pathname;
-  return `${origin.replace(/\/$/, "")}${pathname}`;
+  return origin === undefined || origin.length === 0
+    ? pathname
+    : `${origin.replace(/\/$/, "")}${pathname}`;
 }

@@ -85,7 +85,7 @@ export type SeaweedfsHelmValuesGlobalSeaweedfs = {
    */
   monitoring?: SeaweedfsHelmValuesGlobalSeaweedfsMonitoring;
   /**
-   * if enabled will use global.seaweedfs.replicationPlacement and override master & filer defaultReplicaPlacement config
+   * if enabled will use global.seaweedfs.replicationPlacement and override master.defaultReplication & filer.defaultReplicaPlacement config
    *
    * @default false
    */
@@ -492,7 +492,7 @@ export type SeaweedfsHelmValuesMaster = {
    */
   containerSecurityContext?: SeaweedfsHelmValuesMasterContainerSecurityContext;
   /**
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   ingress?: SeaweedfsHelmValuesMasterIngress;
   /**
@@ -594,6 +594,10 @@ export type SeaweedfsHelmValuesMasterIngress = {
    */
   pathType?: string;
   /**
+   * @default {}
+   */
+  labels?: SeaweedfsHelmValuesMasterIngressLabels;
+  /**
    * nginx.ingress.kubernetes.io/auth-type: "basic"
    * nginx.ingress.kubernetes.io/auth-secret: "default/ingress-basic-auth-secret"
    * nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - SW-Master'
@@ -614,6 +618,14 @@ export type SeaweedfsHelmValuesMasterIngress = {
    */
   annotations?: SeaweedfsHelmValuesMasterIngressAnnotations;
   tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesMasterIngressLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type SeaweedfsHelmValuesMasterIngressAnnotations = {
@@ -969,7 +981,7 @@ export type SeaweedfsHelmValuesVolume = {
    */
   readinessProbe?: SeaweedfsHelmValuesVolumeReadinessProbe;
   /**
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   ingress?: SeaweedfsHelmValuesVolumeIngress;
 };
@@ -1137,6 +1149,10 @@ export type SeaweedfsHelmValuesVolumeIngress = {
    */
   pathType?: string;
   /**
+   * @default {}
+   */
+  labels?: SeaweedfsHelmValuesVolumeIngressLabels;
+  /**
    * nginx.ingress.kubernetes.io/use-regex: "true"
    * nginx.ingress.kubernetes.io/rewrite-target: /$1
    * nginx.ingress.kubernetes.io/auth-type: "basic"
@@ -1161,6 +1177,14 @@ export type SeaweedfsHelmValuesVolumeIngress = {
    * @default {"nginx.ingress.kubernetes.io/app-root":"/ui/index.html"}
    */
   annotations?: SeaweedfsHelmValuesVolumeIngressAnnotations;
+};
+
+export type SeaweedfsHelmValuesVolumeIngressLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type SeaweedfsHelmValuesVolumeIngressAnnotations = {
@@ -1432,7 +1456,7 @@ export type SeaweedfsHelmValuesFiler = {
    */
   containerSecurityContext?: SeaweedfsHelmValuesFilerContainerSecurityContext;
   /**
-   * @default {"http":{"enabled":false,"className":"","host":"seaweedfs.cluster.local","path":"/sw-filer/?(.*)","pathType":"ImplementationSpecific","annotations":{},"tls":[]},"grpc":{"enabled":false,"className":"","host":"seaweedfs.cluster.local","path":"/","pathType":"Prefix","annotations":{"nginx.ingress.kubernetes.io/backend-protocol":"GRPC"},"tls":[]}}
+   * @default {"http":{"enabled":false,"className":"","host":"seaweedfs.cluster.local","path":"/sw-filer/?(.*)","pathType":"ImplementationSpecific","labels":{},"annotations":{},"tls":[]},"grpc":{"enabled":false,"className":"","host":"seaweedfs.cluster.local","path":"/","pathType":"Prefix","labels":{},"annotations":{"nginx.ingress.kubernetes.io/backend-protocol":"GRPC"},"tls":[]}}
    */
   ingresses?: SeaweedfsHelmValuesFilerIngresses;
   /**
@@ -1526,11 +1550,11 @@ export type SeaweedfsHelmValuesFilerContainerSecurityContext = object;
 
 export type SeaweedfsHelmValuesFilerIngresses = {
   /**
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   http?: SeaweedfsHelmValuesFilerIngressesHttp;
   /**
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   grpc?: SeaweedfsHelmValuesFilerIngressesGrpc;
 };
@@ -1557,6 +1581,10 @@ export type SeaweedfsHelmValuesFilerIngressesHttp = {
    */
   pathType?: string;
   /**
+   * @default {}
+   */
+  labels?: SeaweedfsHelmValuesFilerIngressesHttpLabels;
+  /**
    * nginx.ingress.kubernetes.io/backend-protocol: GRPC
    * nginx.ingress.kubernetes.io/auth-type: "basic"
    * nginx.ingress.kubernetes.io/auth-secret: "default/ingress-basic-auth-secret"
@@ -1578,6 +1606,14 @@ export type SeaweedfsHelmValuesFilerIngressesHttp = {
    */
   annotations?: SeaweedfsHelmValuesFilerIngressesHttpAnnotations;
   tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesFilerIngressesHttpLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type SeaweedfsHelmValuesFilerIngressesHttpAnnotations = {
@@ -1613,6 +1649,10 @@ export type SeaweedfsHelmValuesFilerIngressesGrpc = {
    */
   pathType?: string;
   /**
+   * @default {}
+   */
+  labels?: SeaweedfsHelmValuesFilerIngressesGrpcLabels;
+  /**
    * For end-to-end mTLS (the filer's own TLS reaches the client, not
    * terminated at the edge), drop backend-protocol above and use TLS
    * passthrough instead:
@@ -1624,6 +1664,14 @@ export type SeaweedfsHelmValuesFilerIngressesGrpc = {
    */
   annotations?: SeaweedfsHelmValuesFilerIngressesGrpcAnnotations;
   tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesFilerIngressesGrpcLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type SeaweedfsHelmValuesFilerIngressesGrpcAnnotations = {
@@ -1871,6 +1919,13 @@ export type SeaweedfsHelmValuesS3 = {
    */
   metricsPort?: number;
   icebergPort?: unknown;
+  /**
+   * Lance Namespace port; weed serves 9101 by default, 0 disables it
+   * (and, unless worker.namespaceUrl points elsewhere, the worker's Lance container)
+   *
+   * @default 9101
+   */
+  lancePort?: number;
   loggingOverrideLevel?: unknown;
   /**
    * enable user & permission to s3 (need to inject to all services)
@@ -2012,19 +2067,23 @@ export type SeaweedfsHelmValuesS3 = {
    */
   createBucketsHook?: SeaweedfsHelmValuesS3CreateBucketsHook;
   /**
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   ingress?: SeaweedfsHelmValuesS3Ingress;
   /**
    * Service settings
    *
-   * @default {"type":"ClusterIP","nodePorts":{"http":null,"https":null,"iceberg":null,"metrics":null}}
+   * @default {...} (5 keys)
    */
   service?: SeaweedfsHelmValuesS3Service;
   /**
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   icebergIngress?: SeaweedfsHelmValuesS3IcebergIngress;
+  /**
+   * @default {...} (8 keys)
+   */
+  lanceIngress?: SeaweedfsHelmValuesS3LanceIngress;
 };
 
 export type SeaweedfsHelmValuesS3AuditLogConfig = object;
@@ -2180,12 +2239,24 @@ export type SeaweedfsHelmValuesS3Ingress = {
    */
   pathType?: string;
   /**
+   * @default {}
+   */
+  labels?: SeaweedfsHelmValuesS3IngressLabels;
+  /**
    * additional ingress annotations for the s3 endpoint
    *
    * @default {}
    */
   annotations?: SeaweedfsHelmValuesS3IngressAnnotations;
   tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesS3IngressLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type SeaweedfsHelmValuesS3IngressAnnotations = {
@@ -2202,9 +2273,20 @@ export type SeaweedfsHelmValuesS3Service = {
    */
   type?: string;
   /**
+   * used only when type is LoadBalancer
+   *
+   * @default ""
+   */
+  loadBalancerClass?: string;
+  /**
+   * @default ""
+   */
+  loadBalancerIP?: string;
+  loadBalancerSourceRanges?: unknown[];
+  /**
    * fixed nodePorts, used only when type is NodePort or LoadBalancer
    *
-   * @default {...} (4 keys)
+   * @default {...} (5 keys)
    */
   nodePorts?: SeaweedfsHelmValuesS3ServiceNodePorts;
 };
@@ -2213,6 +2295,7 @@ export type SeaweedfsHelmValuesS3ServiceNodePorts = {
   http?: unknown;
   https?: unknown;
   iceberg?: unknown;
+  lance?: unknown;
   metrics?: unknown;
 };
 
@@ -2240,11 +2323,71 @@ export type SeaweedfsHelmValuesS3IcebergIngress = {
   /**
    * @default {}
    */
+  labels?: SeaweedfsHelmValuesS3IcebergIngressLabels;
+  /**
+   * @default {}
+   */
   annotations?: SeaweedfsHelmValuesS3IcebergIngressAnnotations;
   tls?: unknown[];
 };
 
+export type SeaweedfsHelmValuesS3IcebergIngressLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
 export type SeaweedfsHelmValuesS3IcebergIngressAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type SeaweedfsHelmValuesS3LanceIngress = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * @default ""
+   */
+  className?: string;
+  /**
+   * @default "seaweedfs-lance.cluster.local"
+   */
+  host?: string;
+  /**
+   * @default "/"
+   */
+  path?: string;
+  /**
+   * @default "Prefix"
+   */
+  pathType?: string;
+  /**
+   * @default {}
+   */
+  labels?: SeaweedfsHelmValuesS3LanceIngressLabels;
+  /**
+   * @default {}
+   */
+  annotations?: SeaweedfsHelmValuesS3LanceIngressAnnotations;
+  tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesS3LanceIngressLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type SeaweedfsHelmValuesS3LanceIngressAnnotations = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
    * This is common for config maps, custom settings, and extensible configurations.
@@ -2449,7 +2592,7 @@ export type SeaweedfsHelmValuesSftp = {
   /**
    * Service settings
    *
-   * @default {"type":"ClusterIP","nodePorts":{"sftp":null,"metrics":null}}
+   * @default {...} (5 keys)
    */
   service?: SeaweedfsHelmValuesSftpService;
 };
@@ -2543,6 +2686,17 @@ export type SeaweedfsHelmValuesSftpService = {
    */
   type?: string;
   /**
+   * used only when type is LoadBalancer
+   *
+   * @default ""
+   */
+  loadBalancerClass?: string;
+  /**
+   * @default ""
+   */
+  loadBalancerIP?: string;
+  loadBalancerSourceRanges?: unknown[];
+  /**
    * fixed nodePorts, used only when type is NodePort or LoadBalancer
    *
    * @default {"sftp":null,"metrics":null}
@@ -2578,6 +2732,24 @@ export type SeaweedfsHelmValuesAdmin = {
    * @default 33646
    */
   grpcPort?: number;
+  /**
+   * IP address the admin server listens on. Since `weed admin` 4.46 defaults to
+   * loopback (127.0.0.1), the chart must bind a non-loopback address for the
+   * kubelet's httpGet readiness/liveness probes (which dial the pod IP) to ever
+   * succeed. "0.0.0.0" restores the pre-4.46 behaviour of listening on all
+   * interfaces. A non-loopback address requires authentication: set
+   * admin.secret.adminPassword or admin.secret.existingSecret, or supply
+   * WEED_ADMIN_PASSWORD via admin.extraEnvironmentVars /
+   * admin.secretExtraEnvironmentVars; otherwise the admin container will exit
+   * with a clear error rather than silently staying unready. The whole
+   * 127.0.0.0/8 range and ::1 are treated as loopback (matching weed admin).
+   * Set to a loopback address only if you also replace the httpGet probes.
+   * Note: the -ip flag requires SeaweedFS 4.46 or newer; pinning
+   * admin.imageOverride to an older image is not supported with this chart.
+   *
+   * @default "0.0.0.0"
+   */
+  ip?: string;
   loggingOverrideLevel?: unknown;
   /**
    * Admin authentication
@@ -2722,11 +2894,11 @@ export type SeaweedfsHelmValuesAdmin = {
    */
   readinessProbe?: SeaweedfsHelmValuesAdminReadinessProbe;
   /**
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   ingress?: SeaweedfsHelmValuesAdminIngress;
   /**
-   * @default {"type":"ClusterIP","annotations":{},"nodePorts":{"http":null,"grpc":null}}
+   * @default {...} (6 keys)
    */
   service?: SeaweedfsHelmValuesAdminService;
   /**
@@ -2975,8 +3147,20 @@ export type SeaweedfsHelmValuesAdminIngress = {
   /**
    * @default {}
    */
+  labels?: SeaweedfsHelmValuesAdminIngressLabels;
+  /**
+   * @default {}
+   */
   annotations?: SeaweedfsHelmValuesAdminIngressAnnotations;
   tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesAdminIngressLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type SeaweedfsHelmValuesAdminIngressAnnotations = {
@@ -2996,6 +3180,17 @@ export type SeaweedfsHelmValuesAdminService = {
    * @default {}
    */
   annotations?: SeaweedfsHelmValuesAdminServiceAnnotations;
+  /**
+   * used only when type is LoadBalancer
+   *
+   * @default ""
+   */
+  loadBalancerClass?: string;
+  /**
+   * @default ""
+   */
+  loadBalancerIP?: string;
+  loadBalancerSourceRanges?: unknown[];
   /**
    * fixed nodePorts, used only when type is NodePort or LoadBalancer
    *
@@ -3054,6 +3249,20 @@ export type SeaweedfsHelmValuesWorker = {
    * @default ""
    */
   metricsIp?: string;
+  /**
+   * The lance_* jobs run in their own container, /usr/bin/weed-worker.
+   * amd64/arm64 only; pin mixed clusters with worker.affinity/nodeSelector.
+   * Lance namespace URL override; empty derives it from s3.lancePort.
+   *
+   * @default ""
+   */
+  namespaceUrl?: string;
+  /**
+   * Metrics port for the Lance worker container; the Go worker keeps metricsPort
+   *
+   * @default 9328
+   */
+  lanceMetricsPort?: number;
   /**
    * Admin server to connect to
    *
@@ -3437,7 +3646,7 @@ export type SeaweedfsHelmValuesAllInOne = {
   /**
    * Service settings
    *
-   * @default {...} (4 keys)
+   * @default {...} (7 keys)
    */
   service?: SeaweedfsHelmValuesAllInOneService;
   /**
@@ -3693,6 +3902,17 @@ export type SeaweedfsHelmValuesAllInOneService = {
    * @default "Cluster"
    */
   internalTrafficPolicy?: string;
+  /**
+   * used only when type is LoadBalancer
+   *
+   * @default ""
+   */
+  loadBalancerClass?: string;
+  /**
+   * @default ""
+   */
+  loadBalancerIP?: string;
+  loadBalancerSourceRanges?: unknown[];
   /**
    * fixed nodePorts, used only when type is NodePort or LoadBalancer
    *
@@ -4190,7 +4410,7 @@ export type SeaweedfsHelmValues = {
    */
   filer?: SeaweedfsHelmValuesFiler;
   /**
-   * @default {...} (39 keys)
+   * @default {...} (41 keys)
    */
   s3?: SeaweedfsHelmValuesS3;
   /**
@@ -4198,11 +4418,11 @@ export type SeaweedfsHelmValues = {
    */
   sftp?: SeaweedfsHelmValuesSftp;
   /**
-   * @default {...} (39 keys)
+   * @default {...} (40 keys)
    */
   admin?: SeaweedfsHelmValuesAdmin;
   /**
-   * @default {...} (36 keys)
+   * @default {...} (38 keys)
    */
   worker?: SeaweedfsHelmValuesWorker;
   /**
@@ -4519,6 +4739,7 @@ export type SeaweedfsHelmParameters = {
   "s3.tlsSecret"?: string;
   "s3.metricsPort"?: string;
   "s3.icebergPort"?: string;
+  "s3.lancePort"?: string;
   "s3.loggingOverrideLevel"?: string;
   "s3.enableAuth"?: string;
   "s3.existingConfigSecret"?: string;
@@ -4563,9 +4784,13 @@ export type SeaweedfsHelmParameters = {
   "s3.ingress.pathType"?: string;
   "s3.ingress.tls"?: string;
   "s3.service.type"?: string;
+  "s3.service.loadBalancerClass"?: string;
+  "s3.service.loadBalancerIP"?: string;
+  "s3.service.loadBalancerSourceRanges"?: string;
   "s3.service.nodePorts.http"?: string;
   "s3.service.nodePorts.https"?: string;
   "s3.service.nodePorts.iceberg"?: string;
+  "s3.service.nodePorts.lance"?: string;
   "s3.service.nodePorts.metrics"?: string;
   "s3.icebergIngress.enabled"?: string;
   "s3.icebergIngress.className"?: string;
@@ -4573,6 +4798,12 @@ export type SeaweedfsHelmParameters = {
   "s3.icebergIngress.path"?: string;
   "s3.icebergIngress.pathType"?: string;
   "s3.icebergIngress.tls"?: string;
+  "s3.lanceIngress.enabled"?: string;
+  "s3.lanceIngress.className"?: string;
+  "s3.lanceIngress.host"?: string;
+  "s3.lanceIngress.path"?: string;
+  "s3.lanceIngress.pathType"?: string;
+  "s3.lanceIngress.tls"?: string;
   "sftp.enabled"?: string;
   "sftp.imageOverride"?: string;
   "sftp.restartPolicy"?: string;
@@ -4622,6 +4853,9 @@ export type SeaweedfsHelmParameters = {
   "sftp.readinessProbe.failureThreshold"?: string;
   "sftp.readinessProbe.timeoutSeconds"?: string;
   "sftp.service.type"?: string;
+  "sftp.service.loadBalancerClass"?: string;
+  "sftp.service.loadBalancerIP"?: string;
+  "sftp.service.loadBalancerSourceRanges"?: string;
   "sftp.service.nodePorts.sftp"?: string;
   "sftp.service.nodePorts.metrics"?: string;
   "admin.enabled"?: string;
@@ -4630,6 +4864,7 @@ export type SeaweedfsHelmParameters = {
   "admin.replicas"?: string;
   "admin.port"?: string;
   "admin.grpcPort"?: string;
+  "admin.ip"?: string;
   "admin.loggingOverrideLevel"?: string;
   "admin.secret.existingSecret"?: string;
   "admin.secret.userKey"?: string;
@@ -4686,6 +4921,9 @@ export type SeaweedfsHelmParameters = {
   "admin.ingress.pathType"?: string;
   "admin.ingress.tls"?: string;
   "admin.service.type"?: string;
+  "admin.service.loadBalancerClass"?: string;
+  "admin.service.loadBalancerIP"?: string;
+  "admin.service.loadBalancerSourceRanges"?: string;
   "admin.service.nodePorts.http"?: string;
   "admin.service.nodePorts.grpc"?: string;
   "worker.enabled"?: string;
@@ -4695,6 +4933,8 @@ export type SeaweedfsHelmParameters = {
   "worker.loggingOverrideLevel"?: string;
   "worker.metricsPort"?: string;
   "worker.metricsIp"?: string;
+  "worker.namespaceUrl"?: string;
+  "worker.lanceMetricsPort"?: string;
   "worker.adminServer"?: string;
   "worker.jobType"?: string;
   "worker.maxDetect"?: string;
@@ -4775,6 +5015,9 @@ export type SeaweedfsHelmParameters = {
   "allInOne.sftp.existingCAKeysSecret"?: string;
   "allInOne.service.type"?: string;
   "allInOne.service.internalTrafficPolicy"?: string;
+  "allInOne.service.loadBalancerClass"?: string;
+  "allInOne.service.loadBalancerIP"?: string;
+  "allInOne.service.loadBalancerSourceRanges"?: string;
   "allInOne.service.nodePorts.master"?: string;
   "allInOne.service.nodePorts.masterGrpc"?: string;
   "allInOne.service.nodePorts.volume"?: string;

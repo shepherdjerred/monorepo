@@ -173,10 +173,7 @@ export async function loadMatchMvpRoster(
     where: { matchId },
     select: { roster: true },
   });
-  if (row === null) {
-    return undefined;
-  }
-  return MatchMvpRosterSchema.parse(row.roster);
+  return row === null ? undefined : MatchMvpRosterSchema.parse(row.roster);
 }
 
 const ReportMessageIdsSchema = z.record(z.string(), z.string().min(1));
@@ -187,10 +184,7 @@ export type MatchMvpReportRef = {
 };
 
 function parseReportMessageIds(value: unknown): Record<string, string> {
-  if (value == null) {
-    return {};
-  }
-  return ReportMessageIdsSchema.parse(value);
+  return value == null ? {} : ReportMessageIdsSchema.parse(value);
 }
 
 /**
@@ -308,10 +302,9 @@ export function parseJustification(
   if (trimmed.length === 0) {
     return { ok: true, value: null };
   }
-  if (trimmed.length > MVP_JUSTIFICATION_MAX_LENGTH) {
-    return { ok: false };
-  }
-  return { ok: true, value: trimmed };
+  return trimmed.length > MVP_JUSTIFICATION_MAX_LENGTH
+    ? { ok: false }
+    : { ok: true, value: trimmed };
 }
 
 export async function setMatchMvpJustification(

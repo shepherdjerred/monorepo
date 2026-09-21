@@ -109,10 +109,9 @@ export async function acceptDare(
     });
     if (claim.count !== 1) {
       const dareState = await currentDareState(tx, dare.id);
-      if (dareState === "pending_accept") {
-        return { kind: "accept_window_expired" } as const;
-      }
-      return { kind: "already_resolved", dareState } as const;
+      return dareState === "pending_accept"
+        ? ({ kind: "accept_window_expired" } as const)
+        : ({ kind: "already_resolved", dareState } as const);
     }
     const stamp = await tx.bucksDareTarget.updateMany({
       where: { id: target.id, acceptedAt: null },

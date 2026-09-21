@@ -117,10 +117,10 @@ async function lockIsStale(lockDir: string): Promise<boolean> {
   try {
     const parsed: unknown = JSON.parse(await ownerFile.text());
     const { acquiredAt, pid } = TemplateLockOwnerSchema.parse(parsed);
-    if (Date.now() - acquiredAt <= TEMPLATE_LOCK_STALE_MS) {
-      return false;
-    }
-    return Bun.spawnSync(["kill", "-0", pid.toString()]).exitCode !== 0;
+    return (
+      Date.now() - acquiredAt > TEMPLATE_LOCK_STALE_MS &&
+      Bun.spawnSync(["kill", "-0", pid.toString()]).exitCode !== 0
+    );
   } catch {
     return Date.now() - ownerFile.lastModified > TEMPLATE_LOCK_STALE_MS;
   }

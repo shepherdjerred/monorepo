@@ -442,14 +442,13 @@ async function reconcileConnectedGuildInstall(
       );
       return true;
     }
-    if (existingInstall !== null) {
-      return await reconcileExistingInstall(
-        context,
-        existingInstall.analyticsInstallationId,
-        existingInstall.analyticsLifecycleTracked,
-      );
-    }
-    return await createHistoricalInstall(context, ownerDiscordId);
+    return existingInstall === null
+      ? await createHistoricalInstall(context, ownerDiscordId)
+      : await reconcileExistingInstall(
+          context,
+          existingInstall.analyticsInstallationId,
+          existingInstall.analyticsLifecycleTracked,
+        );
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       return true;
@@ -482,10 +481,9 @@ export async function reconcileConnectedGuildInstalls(
       return;
     }
     pendingGuilds = failedGuilds.filter((guild) => {
-      if (options.getConnectedGuild === undefined) {
-        return guild.available;
-      }
-      return options.getConnectedGuild(guild.id) === guild && guild.available;
+      return options.getConnectedGuild === undefined
+        ? guild.available
+        : options.getConnectedGuild(guild.id) === guild && guild.available;
     });
     const retryDelay = RECONCILIATION_RETRY_DELAYS_MS[attempt];
     if (retryDelay === undefined || pendingGuilds.length === 0) {

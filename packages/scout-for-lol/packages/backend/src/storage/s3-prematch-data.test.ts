@@ -25,11 +25,7 @@ function getCounterValue(
         entry.includes(`status="${status}"`),
     );
 
-  if (line === undefined) {
-    return 0;
-  }
-
-  return Number(line.slice(line.lastIndexOf(" ") + 1));
+  return line === undefined ? 0 : Number(line.slice(line.lastIndexOf(" ") + 1));
 }
 
 function getHistogramCount(metrics: string, metricName: string): number {
@@ -37,11 +33,7 @@ function getHistogramCount(metrics: string, metricName: string): number {
     .split("\n")
     .find((entry) => entry.startsWith(`${metricName}_count`));
 
-  if (line === undefined) {
-    return 0;
-  }
-
-  return Number(line.slice(line.lastIndexOf(" ") + 1));
+  return line === undefined ? 0 : Number(line.slice(line.lastIndexOf(" ") + 1));
 }
 
 beforeEach(() => {

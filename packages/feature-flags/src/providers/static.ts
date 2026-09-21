@@ -67,12 +67,11 @@ export class StaticProvider implements Provider {
     if (stored === undefined) {
       return Promise.resolve(absent(flagKey, defaultValue));
     }
-    if (typeof stored !== "boolean") {
-      return Promise.resolve(
-        mismatch(flagKey, defaultValue, typeof stored, "boolean"),
-      );
-    }
-    return Promise.resolve({ value: stored, reason: "STATIC" });
+    return typeof stored === "boolean"
+      ? Promise.resolve({ value: stored, reason: "STATIC" })
+      : Promise.resolve(
+          mismatch(flagKey, defaultValue, typeof stored, "boolean"),
+        );
   }
 
   resolveStringEvaluation(
@@ -84,12 +83,11 @@ export class StaticProvider implements Provider {
     if (stored === undefined) {
       return Promise.resolve(absent(flagKey, defaultValue));
     }
-    if (typeof stored !== "string") {
-      return Promise.resolve(
-        mismatch(flagKey, defaultValue, typeof stored, "string"),
-      );
-    }
-    return Promise.resolve({ value: stored, reason: "STATIC" });
+    return typeof stored === "string"
+      ? Promise.resolve({ value: stored, reason: "STATIC" })
+      : Promise.resolve(
+          mismatch(flagKey, defaultValue, typeof stored, "string"),
+        );
   }
 
   resolveNumberEvaluation(
@@ -101,12 +99,11 @@ export class StaticProvider implements Provider {
     if (stored === undefined) {
       return Promise.resolve(absent(flagKey, defaultValue));
     }
-    if (typeof stored !== "number") {
-      return Promise.resolve(
-        mismatch(flagKey, defaultValue, typeof stored, "number"),
-      );
-    }
-    return Promise.resolve({ value: stored, reason: "STATIC" });
+    return typeof stored === "number"
+      ? Promise.resolve({ value: stored, reason: "STATIC" })
+      : Promise.resolve(
+          mismatch(flagKey, defaultValue, typeof stored, "number"),
+        );
   }
 
   resolveObjectEvaluation<T extends JsonValue>(

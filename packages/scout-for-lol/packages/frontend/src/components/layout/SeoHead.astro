@@ -101,12 +101,10 @@ const structuredData = {
 <meta name="twitter:image" content={ogImage} />
 
 {/* Structured data (marketing pages only) */}
-{
-  !noindex && (
-    <script
-      is:inline
-      type="application/ld+json"
-      set:html={JSON.stringify(structuredData)}
-    />
-  )
-}
+{!noindex && (
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  ></script>
+)}

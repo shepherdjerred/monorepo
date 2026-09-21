@@ -88,8 +88,9 @@ export function findRunes(query: string): RuneInfo[] {
       rune.key.toLowerCase() === normalized ||
       (Number.isInteger(numericId) && rune.id === numericId),
   );
-  if (exact.length > 0) return exact;
-  return all.filter((rune) => rune.name.toLowerCase().includes(normalized));
+  return exact.length > 0
+    ? exact
+    : all.filter((rune) => rune.name.toLowerCase().includes(normalized));
 }
 
 export function getRuneTreeName(treeId: number): string | undefined {

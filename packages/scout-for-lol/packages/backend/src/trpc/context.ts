@@ -72,10 +72,9 @@ function parseCookies(header: string | null): Map<string, string> {
  * Extract and validate bearer token from Authorization header
  */
 function extractBearerToken(authHeader: string | null): string | null {
-  if (authHeader?.startsWith("Bearer ") !== true) {
-    return null;
-  }
-  return authHeader.slice(7);
+  return authHeader?.startsWith("Bearer ") === true
+    ? authHeader.slice(7)
+    : null;
 }
 
 /**

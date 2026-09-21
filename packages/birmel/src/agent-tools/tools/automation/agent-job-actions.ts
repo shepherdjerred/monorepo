@@ -141,30 +141,12 @@ function unsupportedPayloadResolution(
   options: EditAgentJobOptions,
   lastStatus: string | null,
 ): { lastStatus: null; lastError: null } | Record<string, never> {
-  if (lastStatus === "unsupported_tool" && hasPayloadEdit(options)) {
-    return { lastStatus: null, lastError: null };
-  }
-  return {};
+  return lastStatus === "unsupported_tool" && hasPayloadEdit(options)
+    ? { lastStatus: null, lastError: null }
+    : {};
 }
 
-function wouldUnsafelyReactivateEffect(
-  options: EditAgentJobOptions,
-  lastStatus: string | null,
-): boolean {
-  if (lastStatus === "unsupported_tool") {
-    return options.status === "active" && !hasPayloadEdit(options);
-  }
-  if (
-    lastStatus === "cancelled_after_effect" ||
-    hasAmbiguousAgentJobEffect(lastStatus)
-  ) {
-    return options.status === "active";
-  }
-
-  if (lastStatus !== "effect_resolved_applied") {
-    return false;
-  }
-
+function hasEffectResolvingEdit(options: EditAgentJobOptions): boolean {
   return (
     options.scheduleKind !== undefined ||
     options.scheduleValue !== undefined ||
@@ -181,6 +163,22 @@ function wouldUnsafelyReactivateEffect(
     options.model !== undefined ||
     options.reasoningEffort !== undefined ||
     options.textVerbosity !== undefined
+  );
+}
+
+function wouldUnsafelyReactivateEffect(
+  options: EditAgentJobOptions,
+  lastStatus: string | null,
+): boolean {
+  return (
+    (lastStatus === "unsupported_tool" &&
+      options.status === "active" &&
+      !hasPayloadEdit(options)) ||
+    ((lastStatus === "cancelled_after_effect" ||
+      hasAmbiguousAgentJobEffect(lastStatus)) &&
+      options.status === "active") ||
+    (lastStatus === "effect_resolved_applied" &&
+      hasEffectResolvingEdit(options))
   );
 }
 
@@ -296,10 +294,9 @@ export async function showAgentJob(options: {
   const job = await prisma.agentJob.findFirst({
     where: { id: requireJobId(options.jobId), guildId },
   });
-  if (job == null) {
-    return { success: false, message: "Agent job not found" };
-  }
-  return { success: true, message: "Agent job found", data: { job } };
+  return job == null
+    ? { success: false, message: "Agent job not found" }
+    : { success: true, message: "Agent job found", data: { job } };
 }
 
 export async function editAgentJob(
@@ -423,10 +420,9 @@ export async function cancelAgentJob(options: {
       nextRunAt: null,
     },
   });
-  if (updated.count === 0) {
-    return { success: false, message: "Agent job not found" };
-  }
-  return { success: true, message: "Agent job cancelled" };
+  return updated.count === 0
+    ? { success: false, message: "Agent job not found" }
+    : { success: true, message: "Agent job cancelled" };
 }
 
 export async function getAgentJobRunHistory(options: {

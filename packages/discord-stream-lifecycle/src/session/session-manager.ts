@@ -95,18 +95,14 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
 
   /** Active session iff it's for `guildId`, otherwise null. */
   getActiveSessionForGuild(guildId: string): Session<TUserbot> | null {
-    if (this.active?.guildId !== guildId) {
-      return null;
-    }
-    return this.active;
+    return this.active?.guildId === guildId ? this.active : null;
   }
 
   /** Build the driver's welcome message for a freshly-started session. */
   buildWelcomeMessage(session: Session<TUserbot>): string {
-    if (this.driver.welcomeMessage !== undefined) {
-      return this.driver.welcomeMessage(session);
-    }
-    return `Starting ${this.driver.name} in voice channel <#${session.voiceChannelId}>…`;
+    return this.driver.welcomeMessage === undefined
+      ? `Starting ${this.driver.name} in voice channel <#${session.voiceChannelId}>…`
+      : this.driver.welcomeMessage(session);
   }
 
   /** The driver's human-readable name. */
@@ -252,8 +248,5 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
 }
 
 function toError(value: unknown): Error {
-  if (value instanceof Error) {
-    return value;
-  }
-  return new Error(String(value));
+  return value instanceof Error ? value : new Error(String(value));
 }

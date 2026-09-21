@@ -229,8 +229,7 @@ export function toolResultActivity(
   if (toolName === "resolve_player") {
     return playerResultActivity(input, inspection, fallback);
   }
-  if (toolName === "run_report_query") {
-    return queryResultActivity(inspection, fallback);
-  }
-  return fallback;
+  return toolName === "run_report_query"
+    ? queryResultActivity(inspection, fallback)
+    : fallback;
 }

@@ -190,10 +190,10 @@ function countCommandEvent(
 }
 
 function commandOutputText(item: z.infer<typeof ItemSchema>): string {
-  if (item.aggregated_output !== undefined) return item.aggregated_output;
-  return [item.stdout, item.stderr]
-    .filter((value) => value !== undefined)
-    .join("\n");
+  return (
+    item.aggregated_output ??
+    [item.stdout, item.stderr].filter((value) => value !== undefined).join("\n")
+  );
 }
 
 function commandText(command: string | unknown[] | undefined): string {

@@ -71,10 +71,7 @@ function gitChangeKind(statusCode: string): GitChangeKind {
   if (statusCode.includes("D")) {
     return "deleted";
   }
-  if (statusCode.includes("M")) {
-    return "modified";
-  }
-  return "other";
+  return statusCode.includes("M") ? "modified" : "other";
 }
 
 export function parseGitStatusLine(line: string): GitStatusEntry | undefined {
@@ -118,10 +115,7 @@ export function parseGitStatusLine(line: string): GitStatusEntry | undefined {
 
 function fileExtension(path: string): string {
   const dotIndex = path.lastIndexOf(".");
-  if (dotIndex === -1) {
-    return "";
-  }
-  return path.slice(dotIndex).toLowerCase();
+  return dotIndex === -1 ? "" : path.slice(dotIndex).toLowerCase();
 }
 
 function isWithinDirectory(path: string, directory: string): boolean {

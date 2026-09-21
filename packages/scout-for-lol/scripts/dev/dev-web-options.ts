@@ -96,14 +96,11 @@ function defaultDatabaseUrl(
   if (configured !== undefined) return parseDatabaseUrl(configured);
 
   const inherited = environment["DATABASE_URL"];
-  if (
-    backendPort === DEFAULT_BACKEND_PORT &&
+  return backendPort === DEFAULT_BACKEND_PORT &&
     inherited !== undefined &&
     inherited.length > 0
-  ) {
-    return parseDatabaseUrl(inherited);
-  }
-  return sharedServerUrl(backendPort, environment);
+    ? parseDatabaseUrl(inherited)
+    : sharedServerUrl(backendPort, environment);
 }
 
 const valueOptions = new Set([
@@ -166,16 +163,12 @@ function parseCliOverrides(args: readonly string[]): CliOverrides | undefined {
     temporalUiPort: parseOptionalValue(values, "--temporal-ui-port", (value) =>
       parsePort(value, "--temporal-ui-port"),
     ),
-    discordGatewayEnabled: flags.has("--discord-gateway")
-      ? true
-      : flags.has("--no-discord-gateway")
-        ? false
-        : undefined,
-    backgroundJobsEnabled: flags.has("--no-background-jobs")
-      ? false
-      : undefined,
-    webEnabled: flags.has("--no-web") ? false : undefined,
-    backendWatchEnabled: flags.has("--no-backend-watch") ? false : undefined,
+    discordGatewayEnabled:
+      flags.has("--discord-gateway") ||
+      (!flags.has("--no-discord-gateway") && undefined),
+    backgroundJobsEnabled: !flags.has("--no-background-jobs") && undefined,
+    webEnabled: !flags.has("--no-web") && undefined,
+    backendWatchEnabled: !flags.has("--no-backend-watch") && undefined,
     marketingOrigin: parseOptionalValue(values, "--marketing-origin", (value) =>
       parseDevOrigin(value, "--marketing-origin"),
     ),
@@ -259,9 +252,8 @@ export function parseDevWebArgs(
         cli.databaseUrl ?? defaultDatabaseUrl(backendPort, environment),
       discordGatewayEnabled:
         cli.discordGatewayEnabled ??
-        (environment["SCOUT_DEV_NO_GATEWAY"] === "true"
-          ? false
-          : environment["SCOUT_DEV_DISCORD_GATEWAY"] === "true"),
+        (environment["SCOUT_DEV_NO_GATEWAY"] !== "true" &&
+          environment["SCOUT_DEV_DISCORD_GATEWAY"] === "true"),
       backgroundJobsEnabled:
         cli.backgroundJobsEnabled ??
         environment["SCOUT_DEV_NO_BACKGROUND_JOBS"] !== "true",

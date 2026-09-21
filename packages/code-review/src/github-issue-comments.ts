@@ -181,11 +181,10 @@ export function reviewCommentBoundToHead(input: {
   // a named commit, so once it uses them it is the only trustworthy answer:
   // preferring it both admits a review whose findings link no commit and
   // refuses a findings comment merely relinked to the new head.
-  if (input.acknowledgement !== null) {
-    return commitsNamedBy(input.acknowledgement.body).has(input.head);
-  }
-  if (input.reportsFindings) return false;
-  return reactionBoundToHead(input.updatedAt, input.headPushedAt);
+  return input.acknowledgement === null
+    ? !input.reportsFindings &&
+        reactionBoundToHead(input.updatedAt, input.headPushedAt)
+    : commitsNamedBy(input.acknowledgement.body).has(input.head);
 }
 
 function commitsNamedBy(body: string): Set<string> {
@@ -231,9 +230,9 @@ export async function resolveIssueCommentReview(input: {
       : scanned.review;
   const { completion } = input.provider;
   const reportsFindings =
-    comment === null || completion.kind !== "issue-comment"
-      ? false
-      : completion.parseFindings(comment).length > 0;
+    comment !== null &&
+    completion.kind === "issue-comment" &&
+    completion.parseFindings(comment).length > 0;
   if (
     comment !== null &&
     reviewCommentBoundToHead({

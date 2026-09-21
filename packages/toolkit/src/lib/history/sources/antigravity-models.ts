@@ -98,12 +98,9 @@ export function normalizeModelName(raw: string): string {
     return mapped;
   }
   const dashed = truncated.replaceAll(" ", "-");
-  if (
-    dashed.startsWith("gemini-") ||
+  return dashed.startsWith("gemini-") ||
     dashed.startsWith("claude-") ||
     dashed.startsWith("gpt-")
-  ) {
-    return dashed;
-  }
-  return raw;
+    ? dashed
+    : raw;
 }

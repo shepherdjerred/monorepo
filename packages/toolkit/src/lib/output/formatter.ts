@@ -54,10 +54,8 @@ export function formatHealthReport(report: HealthReport): string {
       `### ${check.name}: ${getStatusEmoji(check.status)} ${getStatusText(check.status)}`,
     );
 
-    if (check.details.length > 0) {
-      for (const detail of check.details) {
-        lines.push(`- ${detail}`);
-      }
+    for (const detail of check.details) {
+      lines.push(`- ${detail}`);
     }
 
     if (check.commands != null && check.commands.length > 0) {

@@ -62,10 +62,9 @@ export async function findEligiblePlayer(
     select: { id: true, alias: true },
     orderBy: { id: "asc" },
   });
-  if (player === null) {
-    return undefined;
-  }
-  return { playerId: player.id, alias: player.alias };
+  return player === null
+    ? undefined
+    : { playerId: player.id, alias: player.alias };
 }
 
 export type BucksAccountRef = {

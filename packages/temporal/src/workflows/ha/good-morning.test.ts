@@ -93,18 +93,15 @@ function makeActivities(scenario: Scenario) {
       data,
     });
     const entityId = data["entity_id"];
-    if (
-      typeof entityId === "string" &&
+    return typeof entityId === "string" &&
       scenario.mediaPlayerFailures.has(`${service}:${entityId}`)
-    ) {
-      return Promise.reject(
-        ApplicationFailure.retryable(
-          `Home Assistant media_player.${service} unavailable for ${entityId}`,
-          HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
-        ),
-      );
-    }
-    return Promise.resolve();
+      ? Promise.reject(
+          ApplicationFailure.retryable(
+            `Home Assistant media_player.${service} unavailable for ${entityId}`,
+            HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
+          ),
+        )
+      : Promise.resolve();
   };
 
   return {

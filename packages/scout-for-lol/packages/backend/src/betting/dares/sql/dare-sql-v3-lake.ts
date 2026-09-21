@@ -209,13 +209,9 @@ export async function createDareSqlV3LakeRelations(
 
 function isTeamIdReference(value: JsonValue | undefined): boolean {
   const expression = objectValue(value);
-  if (
-    expression === null ||
-    stringValue(expression["class"]) !== "COLUMN_REF"
-  ) {
-    return false;
-  }
   return (
+    expression !== null &&
+    stringValue(expression["class"]) === "COLUMN_REF" &&
     stringValue(arrayValue(expression["column_names"]).at(-1)) === "team_id"
   );
 }
@@ -226,16 +222,16 @@ function containsOpponentTeamComparison(value: JsonValue): boolean {
   }
   const expression = objectValue(value);
   if (expression === null) return false;
-  if (
+  const isOpponentComparison =
     stringValue(expression["class"]) === "COMPARISON" &&
     stringValue(expression["type"]) === "COMPARE_NOTEQUAL" &&
     isTeamIdReference(expression["left"]) &&
-    isTeamIdReference(expression["right"])
-  ) {
-    return true;
-  }
-  return Object.values(expression).some((child) =>
-    containsOpponentTeamComparison(child),
+    isTeamIdReference(expression["right"]);
+  return (
+    isOpponentComparison ||
+    Object.values(expression).some((child) =>
+      containsOpponentTeamComparison(child),
+    )
   );
 }
 

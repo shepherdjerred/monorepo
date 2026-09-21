@@ -33,13 +33,11 @@ const containerClass = isPage
 
 <div class={containerClass}>
   {badge && <Badge text={badge} color="indigo" size="md" />}
-  {
-    isPage ? (
-      <h1 class={titleClass}>{title}</h1>
-    ) : (
-      <p class={`mt-2 ${titleClass}`}>{title}</p>
-    )
-  }
+  {isPage ? (
+    <h1 class={titleClass}>{title}</h1>
+  ) : (
+    <p class={`mt-2 ${titleClass}`}>{title}</p>
+  )}
   {subtitle && <p class={subtitleClass}>{subtitle}</p>}
   <slot />
 </div>

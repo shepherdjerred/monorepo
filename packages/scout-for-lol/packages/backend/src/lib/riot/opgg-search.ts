@@ -164,8 +164,9 @@ async function runSearch(
       },
       TIMEOUT_MS,
     );
-    if (!response.ok) return { kind: "stale" };
-    return { kind: "ok", summoners: extractSummoners(await response.text()) };
+    return response.ok
+      ? { kind: "ok", summoners: extractSummoners(await response.text()) }
+      : { kind: "stale" };
   } catch (error) {
     logger.warn("OP.GG search request failed", { error });
     return { kind: "error" };

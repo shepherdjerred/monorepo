@@ -92,8 +92,7 @@ function parseAttachment(
 ): Readonly<Record<string, unknown>> {
   try {
     const value: unknown = JSON.parse(attachment);
-    if (value === null) return {};
-    return AttachmentSchema.parse(value);
+    return value === null ? {} : AttachmentSchema.parse(value);
   } catch (error) {
     throw new Error(`invalid attachment JSON for variant ${variantKey}`, {
       cause: error,

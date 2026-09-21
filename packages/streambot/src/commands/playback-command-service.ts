@@ -101,10 +101,7 @@ function requestedPlayMode(
   }
   const unspecified = input.mode === undefined || input.mode === "auto";
   const modelVideo = input.spoken === true && input.mode === "video";
-  if (unspecified || modelVideo) {
-    return intent.mode;
-  }
-  return input.mode;
+  return unspecified || modelVideo ? intent.mode : input.mode;
 }
 
 /** Permission-checked operations shared by slash commands and the voice agent. */
@@ -113,9 +110,11 @@ export class PlaybackCommandService extends PlaybackControls {
 
   async isAssistantV2Enabled(userId: UserId): Promise<boolean> {
     const scope = this.scope(userId);
-    return scope === null || this.deps.featureGate === undefined
-      ? true
-      : await this.deps.featureGate.assistantV2(scope);
+    return (
+      scope === null ||
+      this.deps.featureGate === undefined ||
+      (await this.deps.featureGate.assistantV2(scope))
+    );
   }
 
   clarificationVersion(): number {
@@ -312,10 +311,9 @@ export class PlaybackCommandService extends PlaybackControls {
   private async discoveryEnabled(
     scope: DiscoveryScope | null,
   ): Promise<boolean> {
-    if (scope !== null && this.deps.featureGate !== undefined) {
-      return await this.deps.featureGate.assistantV2(scope);
-    }
-    return this.deps.discovery !== undefined;
+    return scope !== null && this.deps.featureGate !== undefined
+      ? await this.deps.featureGate.assistantV2(scope)
+      : this.deps.discovery !== undefined;
   }
 
   private async recordRequest(

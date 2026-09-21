@@ -53,8 +53,7 @@ function errorStatus(error: unknown): 400 | 404 | 409 | 500 {
   if (error instanceof SyntaxError) return 400;
   // An Invalid Date reaching `.toISOString()` throws RangeError — a client
   // input problem (a malformed date query param), not a server fault.
-  if (error instanceof RangeError) return 400;
-  return 500;
+  return error instanceof RangeError ? 400 : 500;
 }
 
 const DateQueryParamSchema = z.iso.date();
@@ -178,10 +177,9 @@ export function v2Routes(deps: V2Dependencies): Hono {
   app.get("/api/tasks/:id", (c) =>
     guard(c, () => {
       const entry = repo.get(c.req.param("id"));
-      if (entry === undefined) {
-        return c.json({ success: false, error: "Task not found" }, 404);
-      }
-      return c.json(withDetails(entry.task));
+      return entry === undefined
+        ? c.json({ success: false, error: "Task not found" }, 404)
+        : c.json(withDetails(entry.task));
     }),
   );
 

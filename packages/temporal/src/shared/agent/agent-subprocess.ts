@@ -93,10 +93,9 @@ export function computeSoftKillDelayMs(
   if (startToCloseTimeoutMs === undefined) {
     return undefined;
   }
-  if (startToCloseTimeoutMs <= SOFT_KILL_BEFORE_MS) {
-    return undefined;
-  }
-  return startToCloseTimeoutMs - SOFT_KILL_BEFORE_MS;
+  return startToCloseTimeoutMs <= SOFT_KILL_BEFORE_MS
+    ? undefined
+    : startToCloseTimeoutMs - SOFT_KILL_BEFORE_MS;
 }
 
 /**

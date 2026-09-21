@@ -375,10 +375,9 @@ function scoreRecord(
     if (aliases.includes(term)) return score + 20;
     if (tags.includes(term)) return score + 10;
     const bodyOccurrences = occurrences(body, term);
-    if (bodyOccurrences > 0) {
-      return score + Math.min(bodyOccurrences, 10) * 2;
-    }
-    return score;
+    return bodyOccurrences > 0
+      ? score + Math.min(bodyOccurrences, 10) * 2
+      : score;
   }, 0);
   return relevanceScore + evidenceScore;
 }

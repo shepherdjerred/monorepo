@@ -56,10 +56,7 @@ function tokenMatches(
   }
   const a = Buffer.from(presented);
   const b = Buffer.from(expected);
-  if (a.length !== b.length) {
-    return false;
-  }
-  return timingSafeEqual(a, b);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 /**

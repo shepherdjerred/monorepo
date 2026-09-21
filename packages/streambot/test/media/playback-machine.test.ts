@@ -770,10 +770,9 @@ describe("crash recovery — state cleanup", () => {
     let resolveCalls = 0;
     const resolveSource: PlaybackActors["resolveSource"] = (input, signal) => {
       resolveCalls += 1;
-      if (resolveCalls === 3) {
-        return Promise.reject(new Error("re-resolve failed (expired URL)"));
-      }
-      return makeActors().resolveSource(input, signal);
+      return resolveCalls === 3
+        ? Promise.reject(new Error("re-resolve failed (expired URL)"))
+        : makeActors().resolveSource(input, signal);
     };
     const { actor, stream } = await startFilePlayback(["a", "b"], {
       resolveSource,

@@ -160,10 +160,7 @@ function getRiskLevel(category: string, count: number): string {
   if (count <= threshold.low) {
     return "🟢";
   }
-  if (count <= threshold.medium) {
-    return "🟡";
-  }
-  return "🔴";
+  return count <= threshold.medium ? "🟡" : "🔴";
 }
 
 function printResults(results: AuditResults, verbose: boolean): void {

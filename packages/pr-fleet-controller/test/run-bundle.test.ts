@@ -1037,13 +1037,10 @@ describe("worker tick ancestry replay", () => {
       ) {
         return -1;
       }
-      if (
-        left.kind === "tool.completed" &&
+      return left.kind === "tool.completed" &&
         right.kind === "worker.attempt.completed"
-      ) {
-        return 1;
-      }
-      return left.sequence - right.sequence;
+        ? 1
+        : left.sequence - right.sequence;
     });
 
     expect(() =>

@@ -251,11 +251,9 @@ export function getPermissionErrorMessage(
 ): string {
   const baseMessage = `Unable to send message to channel <#${channelId}>`;
 
-  if (reason !== undefined && reason.length > 0) {
-    return `${baseMessage}: ${reason}`;
-  }
-
-  return `${baseMessage}. The bot may be missing the 'Send Messages' or 'View Channel' permission.`;
+  return reason !== undefined && reason.length > 0
+    ? `${baseMessage}: ${reason}`
+    : `${baseMessage}. The bot may be missing the 'Send Messages' or 'View Channel' permission.`;
 }
 
 /**

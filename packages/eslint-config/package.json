@@ -52,9 +52,9 @@
     "eslint-plugin-react-native": "^5.0.0",
     "eslint-plugin-regexp": "^3.0.0",
     "eslint-plugin-sonarjs": "^4.2.0",
-    "eslint-plugin-unicorn": "^73.0.0",
+    "eslint-plugin-unicorn": "^76.0.0",
     "jiti": "^2.7.0",
-    "typescript-eslint": "^8.67.0"
+    "typescript-eslint": "^8.70.0"
   },
   "peerDependencies": {
     "eslint": "^10.4.0",
@@ -64,7 +64,7 @@
     "@typescript-eslint/rule-tester": "^8.59.0",
     "@types/node": "^26.1.1",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   }
 }

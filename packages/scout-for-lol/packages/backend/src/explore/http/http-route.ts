@@ -269,8 +269,9 @@ const MESSAGE_MAX_LENGTH = 1000;
 function clampMessage(message: string): string {
   const trimmed = message.trim();
   if (trimmed.length === 0) return "Request failed.";
-  if (trimmed.length <= MESSAGE_MAX_LENGTH) return trimmed;
-  return `${trimmed.slice(0, MESSAGE_MAX_LENGTH - 1)}…`;
+  return trimmed.length <= MESSAGE_MAX_LENGTH
+    ? trimmed
+    : `${trimmed.slice(0, MESSAGE_MAX_LENGTH - 1)}…`;
 }
 
 function errorMessage(error: unknown): string {
