@@ -27,6 +27,7 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { getRecentMatchIds } from "#src/league/api/match-history.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
+import { createSuggestionCache } from "#src/lib/teammates/suggestion-cache.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("teammate-suggestions");
@@ -40,6 +41,12 @@ const MAX_TOP_N = 10;
 /** Concurrent match.get calls. A full-budget burst would turn every run into
  * 429 retries against the Riot rate limit. */
 const MATCH_FETCH_CONCURRENCY = 5;
+/** Freshness window for repeat suggestion runs over identical inputs. */
+const SUGGESTION_CACHE_TTL_MS = 5 * 60 * 1000;
+
+const suggestionCache = createSuggestionCache<SuggestTeammatesResult>({
+  ttlMs: SUGGESTION_CACHE_TTL_MS,
+});
 
 export const SuggestTeammatesInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
@@ -343,7 +350,17 @@ export async function suggestTeammates(
   rawInput: SuggestTeammatesInput,
 ): Promise<SuggestTeammatesResult> {
   const input = SuggestTeammatesInputSchema.parse(rawInput);
+  // Repeat runs (reloads, manual-add refetches) share one cached Riot
+  // workload per exact input; concurrent callers share one in-flight fetch.
+  return suggestionCache.getOrFetch(
+    [input.guildId, input.alias, input.matchCount, input.topN].join("\n"),
+    () => runSuggestion(input),
+  );
+}
 
+async function runSuggestion(
+  input: SuggestTeammatesInput,
+): Promise<SuggestTeammatesResult> {
   const selfAccounts = await loadSelfAccounts(input.guildId, input.alias);
   if (selfAccounts === null) return { kind: "player-not-found" };
   if (selfAccounts.length === 0) return { kind: "no-matches" };
@@ -355,8 +372,12 @@ export async function suggestTeammates(
   });
   const trackedPuuids = new Set(trackedRows.map((row) => row.puuid));
 
+  // History-list calls are part of the shared budget too: without a cap, one
+  // list call per account lets a many-account player blow past matchCount
+  // before any detail fetch. Exclusion still uses every self PUUID.
+  const budgetedAccounts = selfAccounts.slice(0, input.matchCount);
   const rounds = await collectMatchRounds(
-    selfAccounts,
+    budgetedAccounts,
     input.alias,
     input.matchCount,
   );

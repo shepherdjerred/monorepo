@@ -67,9 +67,11 @@ export const playerRouter = router({
     .query(async ({ input }) => getPlayerMatchHistory(input)),
 
   // First-time setup helper: frequent teammates for a tracked alias. Gated
-  // on accounts:read like the Riot search procedures that feed the same
-  // onboarding step. Creation still goes through subscription.add.
-  suggestTeammates: guildProcedure("accounts", "read")
+  // on subscriptions:create — the same permission the suggestion exists to
+  // exercise — so read-only viewers cannot spend the shared Riot budget, and
+  // repeat runs share a short server-side cache. Creation still goes through
+  // subscription.add.
+  suggestTeammates: guildProcedure("subscriptions", "create")
     .input(SuggestTeammatesInputSchema)
     .query(async ({ input }) => suggestTeammates(input)),
 

@@ -1,5 +1,7 @@
 import { useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-form";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -53,6 +55,8 @@ export function OnboardingSubscribeStep(props: {
   onSkip: () => void;
 }) {
   const initialChannel = props.channels[0]?.id ?? "";
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const formElement = useRef<HTMLFormElement>(null);
   // The alias and channel the user actually submitted. Reported via
   // onSelfAdded so the wizard anchors suggestions on the just-added
@@ -76,6 +80,12 @@ export function OnboardingSubscribeStep(props: {
         form.reset();
         props.onContinue();
       } else {
+        // A manual add may have tracked a suggested Riot ID (custom alias,
+        // Discord link). Refresh suggestions so the stale row disappears; the
+        // server-side cache makes this refetch cheap.
+        void queryClient.invalidateQueries({
+          queryKey: trpc.player.suggestTeammates.pathKey(),
+        });
         form.reset(emptySubscriptionFormValue(initialChannel));
       }
     },
