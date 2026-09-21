@@ -35,3 +35,21 @@ test("roster fallback considers only locally observed duel lobbies", async () =>
     }),
   );
 });
+
+test("retains tournament-code lookup for in-flight legacy duels", async () => {
+  const tournamentMatch = RawMatchSchema.parse({
+    ...fixture,
+    info: { ...fixture.info, tournamentCode: "LEGACY-DUEL-CODE" },
+  });
+
+  await expect(duelMatchNeedsTimeline(tournamentMatch)).resolves.toBe(false);
+
+  expect(mocks.findFirst).toHaveBeenNthCalledWith(
+    2,
+    expect.objectContaining({
+      where: expect.objectContaining({
+        tournamentLobby: { is: { code: "LEGACY-DUEL-CODE" } },
+      }),
+    }),
+  );
+});

@@ -5,7 +5,7 @@ use std::io::Read as _;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::Duration;
+use std::time::{Duration, UNIX_EPOCH};
 
 use directories::ProjectDirs;
 use scout_client_core::backend::ScoutBackendClient;
@@ -20,6 +20,7 @@ use serde_json::Value;
 use sha2::{Digest as _, Sha256};
 use tokio::runtime::Runtime;
 use tokio::sync::{mpsc, watch};
+use tokio::task::JoinHandle;
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -60,6 +61,8 @@ struct PendingPairing {
     id: Uuid,
     secret: String,
 }
+
+type ReplayUploadTask = JoinHandle<Result<(), String>>;
 
 /// Handle owned by the egui application.
 pub struct ClientRuntime {
@@ -143,19 +146,8 @@ async fn run_collector(
     mut commands: mpsc::UnboundedReceiver<RuntimeCommand>,
     backend_origin: String,
 ) {
-    let backend = match ScoutBackendClient::new(&backend_origin) {
-        Ok(backend) => backend,
-        Err(error) => {
-            set_error(&state, error.to_string());
-            return;
-        }
-    };
-    let outbox = match ObservationOutbox::open(outbox_path()) {
-        Ok(outbox) => outbox,
-        Err(error) => {
-            set_error(&state, format!("Could not open durable outbox: {error}"));
-            return;
-        }
+    let Some((backend, outbox)) = collector_resources(&state, &backend_origin) else {
+        return;
     };
     let mut credential = match DeviceCredential::load() {
         Ok(value) => value,
@@ -171,17 +163,22 @@ async fn run_collector(
     let live_client = create_live_client(&state);
     let mut tick_number = 0_u64;
     let mut checked_in_device: Option<Uuid> = None;
+    let mut replay_upload_task: Option<ReplayUploadTask> = None;
     let mut ticker = tokio::time::interval(Duration::from_secs(2));
 
     loop {
         tokio::select! {
             changed = shutdown.changed() => {
                 if changed.is_err() || *shutdown.borrow() {
+                    cancel_replay_upload(&mut replay_upload_task);
                     return;
                 }
             }
             command = commands.recv() => {
                 if let Some(command) = command {
+                    if matches!(&command, RuntimeCommand::Disconnect) {
+                        cancel_replay_upload(&mut replay_upload_task);
+                    }
                     handle_command(
                         command,
                         &state,
@@ -193,6 +190,7 @@ async fn run_collector(
             }
             _ = ticker.tick() => {
                 tick_number = tick_number.saturating_add(1);
+                finish_replay_upload(&state, &mut replay_upload_task).await;
                 if let Err(error) = poll_pairing(
                     &state,
                     &backend,
@@ -228,17 +226,64 @@ async fn run_collector(
                     }
                 }
                 if tick_number % 15 == 1
+                    && replay_upload_task.is_none()
                     && let Some(active_credential) = &credential
-                    && let Err(error) = upload_new_replays(
+                {
+                    replay_upload_task = Some(start_replay_upload(
                         &backend,
                         &outbox,
                         active_credential,
-                    ).await
-                {
-                    set_error(&state, error);
+                    ));
                 }
             }
         }
+    }
+}
+
+fn collector_resources(
+    state: &Arc<RwLock<RuntimeState>>,
+    backend_origin: &str,
+) -> Option<(ScoutBackendClient, ObservationOutbox)> {
+    let backend = ScoutBackendClient::new(backend_origin)
+        .map_err(|error| set_error(state, error.to_string()))
+        .ok()?;
+    let outbox = ObservationOutbox::open(outbox_path())
+        .map_err(|error| set_error(state, format!("Could not open durable outbox: {error}")))
+        .ok()?;
+    Some((backend, outbox))
+}
+
+fn start_replay_upload(
+    backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
+    credential: &DeviceCredential,
+) -> ReplayUploadTask {
+    let backend = backend.clone();
+    let outbox = outbox.clone();
+    let credential = credential.clone();
+    tokio::spawn(async move { upload_new_replays(&backend, &outbox, &credential).await })
+}
+
+fn cancel_replay_upload(task: &mut Option<ReplayUploadTask>) {
+    if let Some(active) = task.take() {
+        active.abort();
+    }
+}
+
+async fn finish_replay_upload(
+    state: &Arc<RwLock<RuntimeState>>,
+    task: &mut Option<ReplayUploadTask>,
+) {
+    if !task.as_ref().is_some_and(JoinHandle::is_finished) {
+        return;
+    }
+    let Some(finished) = task.take() else {
+        return;
+    };
+    match finished.await {
+        Ok(Ok(())) => {}
+        Ok(Err(error)) => set_error(state, error),
+        Err(error) => set_error(state, format!("Replay upload task failed: {error}")),
     }
 }
 
@@ -326,11 +371,32 @@ async fn upload_new_replays(
         let Some(game_id) = replay_game_id(&path) else {
             continue;
         };
+        let path_key = path.to_string_lossy().into_owned();
+        let bytes = i64::try_from(metadata.len())
+            .map_err(|_| "Replay size is outside the supported range".to_owned())?;
+        let modified_at_millis = i64::try_from(
+            metadata
+                .modified()
+                .map_err(|error| error.to_string())?
+                .duration_since(UNIX_EPOCH)
+                .map_err(|error| error.to_string())?
+                .as_millis(),
+        )
+        .map_err(|_| "Replay modification time is outside the supported range".to_owned())?;
+        if outbox
+            .replay_file_handled(&path_key, bytes, modified_at_millis)
+            .map_err(|error| error.to_string())?
+        {
+            continue;
+        }
         let digest = replay_sha256(path.clone()).await?;
         if outbox
             .replay_handled(&digest)
             .map_err(|error| error.to_string())?
         {
+            outbox
+                .mark_replay_file_handled(&path_key, bytes, modified_at_millis, &digest)
+                .map_err(|error| error.to_string())?;
             continue;
         }
         match backend
@@ -349,6 +415,9 @@ async fn upload_new_replays(
                     .map_err(|outbox_error| outbox_error.to_string())?;
             }
         }
+        outbox
+            .mark_replay_file_handled(&path_key, bytes, modified_at_millis, &digest)
+            .map_err(|error| error.to_string())?;
     }
     Ok(())
 }

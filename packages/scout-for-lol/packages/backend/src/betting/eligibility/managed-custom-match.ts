@@ -36,6 +36,7 @@ export async function isScoutManagedCustomMatch(
           { matchId: match.metadata.matchId },
           {
             matchId: null,
+            observedLobbyId: { not: null },
             state: { in: ["LOBBY_READY", "PLAYING", "RESULT_PENDING"] },
           },
         ],
@@ -48,6 +49,7 @@ export async function isScoutManagedCustomMatch(
           { matchId: match.metadata.matchId },
           {
             matchId: null,
+            observedLobbyId: { not: null },
             gameState: { in: ["code_ready", "in_progress"] },
           },
         ],

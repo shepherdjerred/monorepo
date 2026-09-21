@@ -8,6 +8,7 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
+import { convertLcuMatchHistoryRow } from "#src/scout-client/lcu-match.ts";
 
 const LOCAL_CANONICAL_DELAY_MS = 2 * 60 * 1000;
 
@@ -41,9 +42,8 @@ export function parseLocalCanonicalMatch(
   const payload = embeddedPayload(candidate.payload);
   const complete = RawMatchSchema.safeParse(payload);
   const infoOnly = complete.success ? null : RawInfoSchema.safeParse(payload);
-  const parsed = complete.success
-    ? complete
-    : infoOnly?.success === true
+  const infoMatch =
+    infoOnly?.success === true
       ? RawMatchSchema.safeParse({
           metadata: {
             dataVersion: "2",
@@ -55,8 +55,12 @@ export function parseLocalCanonicalMatch(
           info: infoOnly.data,
         })
       : null;
-  if (parsed?.success !== true) return null;
-  const match = parsed.data;
+  const match = complete.success
+    ? complete.data
+    : infoMatch?.success === true
+      ? infoMatch.data
+      : convertLcuMatchHistoryRow(riotMatchId, payload);
+  if (match === null) return null;
   if (
     match.metadata.matchId !== riotMatchId ||
     match.info.platformId.toUpperCase() !== platform ||

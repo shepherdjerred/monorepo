@@ -63,6 +63,13 @@ impl ObservationOutbox {
                game_id TEXT NOT NULL,
                status_code INTEGER NOT NULL,
                rejected_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+             );
+             CREATE TABLE IF NOT EXISTS handled_replay_file (
+               path TEXT PRIMARY KEY,
+               bytes INTEGER NOT NULL,
+               modified_at_millis INTEGER NOT NULL,
+               digest TEXT NOT NULL,
+               handled_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
              );",
         )?;
         Ok(outbox)
@@ -209,6 +216,53 @@ impl ObservationOutbox {
         Ok(count > 0)
     }
 
+    /// Return whether this unchanged file already has a durable terminal receipt.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local file identity state cannot be read.
+    pub fn replay_file_handled(
+        &self,
+        path: &str,
+        bytes: i64,
+        modified_at_millis: i64,
+    ) -> Result<bool, OutboxError> {
+        let connection = self.connection()?;
+        let count: i64 = connection.query_row(
+            "SELECT COUNT(*) FROM handled_replay_file
+             WHERE path = ?1 AND bytes = ?2 AND modified_at_millis = ?3",
+            params![path, bytes, modified_at_millis],
+            |row| row.get(0),
+        )?;
+        Ok(count == 1)
+    }
+
+    /// Associate an unchanged local replay with its durable terminal receipt.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local file identity state cannot be written.
+    pub fn mark_replay_file_handled(
+        &self,
+        path: &str,
+        bytes: i64,
+        modified_at_millis: i64,
+        digest: &str,
+    ) -> Result<(), OutboxError> {
+        let connection = self.connection()?;
+        connection.execute(
+            "INSERT INTO handled_replay_file (path, bytes, modified_at_millis, digest)
+             VALUES (?1, ?2, ?3, ?4)
+             ON CONFLICT(path) DO UPDATE SET
+               bytes = excluded.bytes,
+               modified_at_millis = excluded.modified_at_millis,
+               digest = excluded.digest,
+               handled_at = CURRENT_TIMESTAMP",
+            params![path, bytes, modified_at_millis, digest],
+        )?;
+        Ok(())
+    }
+
     /// Persist a successful content-addressed replay receipt.
     ///
     /// # Errors
@@ -307,6 +361,11 @@ mod tests {
         assert!(!outbox.replay_handled("rejected-digest")?);
         outbox.mark_replay_rejected("rejected-digest", "12345", 403)?;
         assert!(outbox.replay_handled("rejected-digest")?);
+        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 34)?);
+        outbox.mark_replay_file_handled("/replays/12345.rofl", 12, 34, "rejected-digest")?;
+        assert!(outbox.replay_file_handled("/replays/12345.rofl", 12, 34)?);
+        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 13, 34)?);
+        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 35)?);
         drop(outbox);
         fs::remove_file(path)?;
         Ok(())
