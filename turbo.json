@@ -114,7 +114,7 @@
         "packages/**/.opencode/**",
         "packages/**/skills/**",
         "packages/dotfiles/dot_agents/skills/**",
-        "packages/dotfiles/dot_claude/**",
+        "packages/dotfiles/private_dot_claude/**",
         "packages/dotfiles/dot_gemini/**",
         "packages/dotfiles/private_dot_codex/**",
         "packages/dotfiles/private_dot_cursor/**",

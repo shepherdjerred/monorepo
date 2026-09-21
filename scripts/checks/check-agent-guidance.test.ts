@@ -42,8 +42,14 @@ function validFixture(): GuidanceEntry[] {
     file("packages/dotfiles/AGENTS.md", "# Personal\n"),
     skill("packages/dotfiles/dot_agents/skills/personal/SKILL.md", "personal"),
     symlink("packages/dotfiles/CLAUDE.md", "AGENTS.md"),
-    file("packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md\n"),
-    file("packages/dotfiles/dot_claude/symlink_skills", "../.agents/skills\n"),
+    file(
+      "packages/dotfiles/private_dot_claude/symlink_CLAUDE.md",
+      "../AGENTS.md\n",
+    ),
+    file(
+      "packages/dotfiles/private_dot_claude/symlink_skills",
+      "../.agents/skills\n",
+    ),
     file(
       "packages/dotfiles/private_dot_codex/symlink_AGENTS.md",
       "../AGENTS.md\n",
