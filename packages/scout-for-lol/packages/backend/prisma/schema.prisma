@@ -609,6 +609,13 @@ model ExploreMessage {
   visualization  String?
   /// JSON array matching ExploreMatchCardSchema; frozen with the assistant turn.
   matchCards     String?
+  /// JSON string array of the guilds this turn's capabilities were resolved
+  /// from. A conversation belongs to a person, not a guild, but a *turn* ran
+  /// with a specific one and that decided which tools existed — which replay
+  /// needs and could otherwise only recover from a durable run payload, which
+  /// Discord and voice turns never create. Null on user turns and on every
+  /// row written before this column existed.
+  guildIds       String?
   /// JSON array of the tool calls this turn made, for the reasoning panel.
   trace          String?
   createdAt      DateTime @default(now())

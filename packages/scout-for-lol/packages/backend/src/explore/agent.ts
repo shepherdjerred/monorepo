@@ -194,7 +194,7 @@ async function streamExploreAgentInternal(
   };
 }
 
-type ExploreModelMessage =
+export type ExploreModelMessage =
   { role: "user"; content: string } | { role: "assistant"; content: string };
 
 type MatchCardReplayContext = {
@@ -229,8 +229,15 @@ export function matchCardReplayContext(
  * forge prior turns to steer an answer. Assistant turns replay their prose,
  * query, and compact card identities — not the full row set, which would blow
  * up context for questions that no longer depend on it.
+ *
+ * Exported so the Explore replay eval can record what the model was actually
+ * given, rather than a reconstruction of it. A bundle that shows an
+ * approximation of the prompt cannot answer "why did this turn differ", which
+ * is the only question it exists to answer.
  */
-function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
+export function buildMessages(
+  params: ExploreAgentParams,
+): ExploreModelMessage[] {
   const recent = params.history.slice(-EXPLORE_MAX_HISTORY_TURNS * 2);
   const messages = recent.map((message): ExploreModelMessage =>
     message.role === "assistant"

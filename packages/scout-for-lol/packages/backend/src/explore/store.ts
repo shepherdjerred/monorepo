@@ -327,6 +327,14 @@ export async function appendExploreAnswer(
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
     matchCards?: ExploreMatchCard[] | undefined;
+    /**
+     * The guilds this turn resolved its capabilities from.
+     *
+     * Recorded per turn rather than per conversation: a conversation belongs
+     * to a person, but the tools a turn had depended on this, and replaying it
+     * with the wrong guild silently changes which tools existed.
+     */
+    guildIds: readonly string[];
     trace: ExploreTraceEntry[];
     /**
      * Move the visible branch only if it still names the leaf this run began
@@ -356,6 +364,8 @@ export async function appendExploreAnswer(
         input.answer.includeVisualization && input.visualization !== null
           ? JSON.stringify(input.visualization)
           : null,
+      guildIds:
+        input.guildIds.length === 0 ? null : JSON.stringify(input.guildIds),
       matchCards:
         input.matchCards === undefined || input.matchCards.length === 0
           ? null

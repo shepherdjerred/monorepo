@@ -79,7 +79,15 @@ const defaultDependencies: ExploreTurnDependencies = {
  * the client refetches the complete transcript after `done`.
  */
 function toStreamMessage(message: ExploreMessage) {
-  const { matchCards: _matchCards, ...streamMessage } = message;
+  // Every field added to the persisted message has to be dropped here, not
+  // just the first one: the schema below is strict, so one unknown key makes
+  // the terminal event unparseable in a tab that is already open and the
+  // answer never lands there.
+  const {
+    matchCards: _matchCards,
+    guildIds: _guildIds,
+    ...streamMessage
+  } = message;
   return ExploreStreamMessageSchema.parse(streamMessage);
 }
 
@@ -200,6 +208,9 @@ export async function runPersistedExploreTurn(
     });
     throwIfAborted(abortController.signal);
     persistedMessage = await appendExploreAnswer(dependencies.client, {
+      // The same guilds the agent resolved its capabilities from, recorded on
+      // the turn so a later replay needs no archaeology to reproduce it.
+      guildIds: input.guildIds,
       conversationId: input.started.conversationId,
       parentMessageId: input.started.messageId,
       answer: result.answer,
@@ -245,6 +256,7 @@ export async function runPersistedExploreTurn(
     let salvaged: ExploreMessage | null = null;
     try {
       salvaged = await persistPartialAnswer(dependencies.client, {
+        guildIds: input.guildIds,
         stopped: outcome === "stopped",
         conversationId: input.started.conversationId,
         parentMessageId: input.started.messageId,

@@ -62,6 +62,9 @@ async function salvageAmbiguousExploreRun(input: {
     .parse(input.run.trace === null ? [] : JSON.parse(input.run.trace));
   const salvaged = await persistPartialAnswer(input.database, {
     stopped: false,
+    // The payload is what this turn actually ran with, which is exactly the
+    // guild context the salvaged answer should carry.
+    guildIds: parsedPayload.guildIds,
     conversationId: parsedPayload.started.conversationId,
     parentMessageId: parsedPayload.started.messageId,
     expectedCurrentLeafId: parsedPayload.started.expectedCurrentLeafId,
