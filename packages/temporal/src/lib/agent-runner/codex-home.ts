@@ -1,7 +1,10 @@
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { prepareProviderWorkspace } from "./provider-workspace.ts";
+import {
+  prepareProviderWorkspace,
+  restoreProviderWorkspace,
+} from "./provider-workspace.ts";
 import {
   prepareProviderHomeParent,
   restoreProviderHomeParentMode,
@@ -112,6 +115,9 @@ export async function rollbackCodexOpenRouterHome(
   try {
     if (home.providerHomeDirectory !== undefined) {
       await rm(home.providerHomeDirectory, { recursive: true, force: true });
+    }
+    if (home.subscriptionHome !== undefined) {
+      await restoreProviderWorkspace(home.subscriptionHome);
     }
     await restoreCodexSubscriptionParentMode(home.subscriptionParentMode);
   } catch (error: unknown) {

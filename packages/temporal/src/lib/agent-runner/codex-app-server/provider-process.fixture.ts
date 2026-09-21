@@ -123,6 +123,13 @@ for await (const message of readRpcMessages(Bun.stdin.stream())) {
     case "initialized":
       break;
     case "account/login/start": {
+      if (scenario === "redaction") {
+        emit({
+          id: 2,
+          error: { message: "caller-redaction-token" },
+        });
+        break;
+      }
       const params = z
         .object({
           type: z.literal("chatgptAuthTokens"),

@@ -54,6 +54,7 @@ export async function* runSubscriptionCodexEvents(input: {
 }): AsyncGenerator<ThreadEvent> {
   const auth = codexSubscriptionTokens(input.authJson);
   const secrets = [
+    ...(input.run.redactTokens ?? []),
     input.authJson,
     auth.access_token,
     auth.refresh_token,

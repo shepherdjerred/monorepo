@@ -54,6 +54,9 @@ async function withProvider(
     beforeEvent: () => Promise.resolve(true),
     onEvent: vi.fn(),
     skipGitRepoCheck: true,
+    ...(scenario === "redaction"
+      ? { redactTokens: ["caller-redaction-token"] }
+      : {}),
     ...(resume ? { resumeSessionId: "test-session" } : {}),
   };
   const onExecutionState = vi.fn();
@@ -187,6 +190,16 @@ describe("subscription App Server protocol", () => {
         })(),
       ).rejects.toThrow(message);
       expect(onExecutionState).toHaveBeenCalledWith(true);
+    });
+  });
+
+  test("redacts caller-provided tokens from protocol failures", async () => {
+    await withProvider("redaction", async ({ events }) => {
+      const failure = (async () => {
+        for await (const event of events) expect(event.type).toBeDefined();
+      })();
+      await expect(failure).rejects.toThrow("***");
+      await expect(failure).rejects.not.toThrow("caller-redaction-token");
     });
   });
 

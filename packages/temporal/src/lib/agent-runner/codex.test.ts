@@ -204,6 +204,48 @@ describe("runCodexAgentTurn failure classification", () => {
 });
 
 describe("runCodexAgentTurn preparation", () => {
+  test("restores a persistent OpenRouter home when setup fails", async () => {
+    const lifecycleDirectory = path.join(
+      os.tmpdir(),
+      `codex-openrouter-lifecycle-${crypto.randomUUID()}`,
+    );
+    const codexHome = path.join(lifecycleDirectory, "home");
+    await mkdir(lifecycleDirectory, { recursive: true, mode: 0o700 });
+    vi.stubEnv("AGENT_PROVIDER_UID", "1001");
+    mocks.createOpenRouterConfig.mockImplementation(() => {
+      throw new Error("OpenRouter setup failed");
+    });
+
+    try {
+      await expect(
+        runCodexAgentTurn({
+          service: "temporal",
+          callSite: "agent-chat",
+          prompt: "continue",
+          model: "openrouter/model",
+          maxTurns: 4,
+          turnBudgetKind: "turns",
+          cwd: "/work/session",
+          auth: { kind: "openrouter", apiKey: "openrouter-secret" },
+          env: { CODEX_HOME: codexHome },
+          signal: new AbortController().signal,
+          sandboxPolicy: {
+            sandboxMode: "danger-full-access",
+            networkAccessEnabled: true,
+            webSearchMode: "live",
+          },
+          resumeSessionId: "codex-session",
+          beforeEvent: () => Promise.resolve(true),
+          onEvent: vi.fn(),
+        }),
+      ).rejects.toMatchObject({ name: "AgentTurnExecutionError" });
+
+      expect(mocks.restoreProviderWorkspace).toHaveBeenCalledWith(codexHome);
+    } finally {
+      await rm(lifecycleDirectory, { recursive: true, force: true });
+    }
+  });
+
   test("rolls back subscription preparation when launcher setup fails", async () => {
     const lifecycleDirectory = path.join(
       os.tmpdir(),
