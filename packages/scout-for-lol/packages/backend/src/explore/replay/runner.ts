@@ -107,6 +107,33 @@ function agentParams(
   };
 }
 
+/**
+ * What was thrown, in a form a bundle can be diagnosed from.
+ *
+ * `String(error)` renders a plain object as "[object Object]", and that is
+ * exactly what a sweep recorded for fifty errored turns — the evidence said a
+ * turn failed and nothing about why, which is the one thing a bundle exists to
+ * preserve. The AI SDK throws structured errors that are not `Error`
+ * instances, so the non-Error path is the common one here, not the edge.
+ */
+function describeThrown(error: unknown): string {
+  if (error instanceof Error) {
+    const cause =
+      error.cause === undefined
+        ? ""
+        : ` (cause: ${describeThrown(error.cause)})`;
+    return `${error.message}${cause}`;
+  }
+  if (typeof error === "object" && error !== null) {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return Object.prototype.toString.call(error);
+    }
+  }
+  return String(error);
+}
+
 export async function runReplayCase(
   input: ReplayCaseInput,
   dependencies: ReplayRunnerDependencies,
@@ -166,7 +193,7 @@ export async function runReplayCase(
       trace: finalizeExploreTrace(trace),
       modelMessages,
       capabilities,
-      error: error instanceof Error ? error.message : String(error),
+      error: describeThrown(error),
     };
   } finally {
     clearTimeout(timer);
