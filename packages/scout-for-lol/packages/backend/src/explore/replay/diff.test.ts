@@ -147,6 +147,27 @@ describe("diffReplayCase tool calls", () => {
     expect(result.toolCalls.removed).toEqual(["run_report_query"]);
   });
 
+  test("reports a retry the candidate no longer needed", () => {
+    // The case set semantics got wrong: both sides use the same tools, but the
+    // baseline called one of them twice. Collapsing to sets reports nothing
+    // changed and hides the retry the trace is read for.
+    const result = diff(
+      { toolNames: ["load_skill", "run_report_query", "run_report_query"] },
+      { toolNames: ["load_skill", "run_report_query"] },
+    );
+    expect(result.toolCalls.removed).toEqual(["run_report_query"]);
+    expect(result.toolCalls.added).toEqual([]);
+  });
+
+  test("reports a retry the candidate newly needed", () => {
+    const result = diff(
+      { toolNames: ["load_skill", "run_report_query"] },
+      { toolNames: ["load_skill", "run_report_query", "run_report_query"] },
+    );
+    expect(result.toolCalls.added).toEqual(["run_report_query"]);
+    expect(result.toolCalls.removed).toEqual([]);
+  });
+
   test("reports reordering only when the tools themselves are unchanged", () => {
     const result = diff({}, { toolNames: ["run_report_query", "load_skill"] });
     expect(result.toolCalls.reordered).toBe(true);

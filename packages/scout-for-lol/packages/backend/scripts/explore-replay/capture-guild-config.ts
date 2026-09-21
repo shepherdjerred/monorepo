@@ -24,6 +24,8 @@ Options:
   --stage <beta|prod>   Stage whose dataset is on disk (default: beta)
   --top <n>             How many prod guilds to take, by Explore usage
                         (default: 3; ignored for beta, which has one guild)
+  --lake <dir>          Where the build was pulled, if not the default beside
+                        the pin (match dev:lake-pull --destination)
   --help                Show this help
 
 Pull the lake and the database first; this reads both.`;
@@ -33,11 +35,17 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-type Options = { readonly stage: ReplayStageName; readonly top: number };
+type Options = {
+  readonly stage: ReplayStageName;
+  readonly top: number;
+  /** Null means the default beside the pin. */
+  readonly lakeDir: string | null;
+};
 
 function parseArgs(args: readonly string[]): Options | "help" {
   let stage: ReplayStageName = "beta";
   let top = 3;
+  let lakeDir: string | null = null;
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     if (argument === "--help" || argument === "-h") return "help";
@@ -59,9 +67,18 @@ function parseArgs(args: readonly string[]): Options | "help" {
       index += 1;
       continue;
     }
+    if (argument === "--lake") {
+      const value = args[index + 1];
+      if (value === undefined || value === "") {
+        fail("--lake needs a directory");
+      }
+      lakeDir = value;
+      index += 1;
+      continue;
+    }
     fail(`Unknown argument ${argument ?? ""}`);
   }
-  return { stage, top };
+  return { stage, top, lakeDir };
 }
 
 async function main(): Promise<void> {
@@ -74,7 +91,13 @@ async function main(): Promise<void> {
 
   const pinPath = defaultDatasetPinPath(stage, Bun.env);
   const datasetDir = path.dirname(pinPath);
-  const lakeDir = path.join(datasetDir, "report-lake");
+  // `dev:lake-pull --destination` can put the build anywhere, and a capture
+  // that only ever reconstructs the default path cannot find it. Resolved
+  // against the working directory so a relative path means what it looks like.
+  const lakeDir =
+    parsed.lakeDir === null
+      ? path.join(datasetDir, "report-lake")
+      : path.resolve(process.cwd(), parsed.lakeDir);
   const databaseName = `scout_${stage}_snapshot`;
   const port = Bun.env["SCOUT_PG_PORT"] ?? "5471";
   const databaseUrl = `postgres://scout@127.0.0.1:${port}/${databaseName}`;

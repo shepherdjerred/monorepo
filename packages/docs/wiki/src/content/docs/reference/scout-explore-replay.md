@@ -83,7 +83,9 @@ baseline rather than comparing to one
 
 A chip id is a hash of its prompt, so it is the same in every bundle. A
 `--baseline` from another stage, guild or capability set is refused rather than
-compared.
+compared, and guilds are compared by id: `prod-top-1` is a rank label that can
+name a different guild in a later pin. A conversation case id survives
+re-curation, so the corpus hash must match too.
 
 ## Signals
 
@@ -132,8 +134,10 @@ corpus ([`plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/package
   excludes roughly the newest fifteen minutes of matches.
 - A bundle holds real conversation text and stays local; the committed corpus
   holds identifiers only.
-- Every case runs on the `web` surface, so curation takes only `legacy` and
-  `web` conversations
+- Every case runs on the `web` surface. Curation admits a conversation only
+  when that is proven: `origin` says `web`, or a durable run payload records
+  the surface. `origin` alone cannot, because the migration that added it
+  defaults every earlier row to `legacy`
   ([`curate-corpus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/curate-corpus.ts)).
 
 ## Related

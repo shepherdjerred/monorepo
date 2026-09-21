@@ -150,11 +150,41 @@ function queryDiff(
   };
 }
 
+/**
+ * Multiset difference: how many of each name one side has that the other does
+ * not, one entry per surplus call.
+ *
+ * Set semantics would be wrong here in the case that matters most. A baseline
+ * that retried `run_report_query` twice against a candidate that called it
+ * once shares the same *set* of tools, so a set difference reports nothing
+ * changed — hiding exactly the retry behaviour the trace is read for.
+ */
+function multisetDifference(
+  left: readonly string[],
+  right: readonly string[],
+): readonly string[] {
+  const remaining = new Map<string, number>();
+  for (const name of right) {
+    remaining.set(name, (remaining.get(name) ?? 0) + 1);
+  }
+  const surplus: string[] = [];
+  for (const name of left) {
+    const count = remaining.get(name) ?? 0;
+    if (count > 0) {
+      remaining.set(name, count - 1);
+    } else {
+      surplus.push(name);
+    }
+  }
+  return surplus.toSorted();
+}
+
 function toolCallDiff(
   baseline: readonly string[],
   candidate: readonly string[],
 ): ToolCallDiff {
-  const { added, removed } = setDiff([...baseline], [...candidate]);
+  const added = multisetDifference(candidate, baseline);
+  const removed = multisetDifference(baseline, candidate);
   // Only meaningful when nothing was added or removed: otherwise "reordered"
   // would be a second, confusing way of saying the tools changed.
   const reordered =

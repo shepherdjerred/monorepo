@@ -69,6 +69,7 @@ import {
 import {
   ReplayCaseIndexEntrySchema,
   ReplayManifestSchema,
+  type ReplayManifest,
   appendBundleLine,
   bundleLocationIssues,
   bundlePaths,
@@ -232,12 +233,23 @@ function observationSide(observation: ReplayObservation): ReplaySide {
  * than just a bundle. A case absent here is reported as new rather than
  * silently uncompared.
  */
+/** A bundle's manifest, or null when the run directory is new. */
+async function readManifestIfPresent(
+  manifestPath: string,
+): Promise<ReplayManifest | null> {
+  const file = Bun.file(manifestPath);
+  if (!(await file.exists())) return null;
+  return ReplayManifestSchema.parse(await file.json());
+}
+
 async function loadBaseline(
   runId: string,
   against: {
     readonly stage: ReplayStage;
-    readonly profile: string;
+    readonly guildId: string;
     readonly capabilities: ExploreCapabilitySet;
+    /** This run's corpus, or null when it replays chips only. */
+    readonly corpus: { readonly sha256: string } | null;
   },
 ): Promise<ReadonlyMap<string, ReplayBaseline>> {
   const runDir = path.join(replayBundleRoot(Bun.env), runId);
@@ -263,8 +275,14 @@ async function loadBaseline(
   if (manifest.stage !== against.stage) {
     conflicts.push(`stage ${manifest.stage}, not ${against.stage}`);
   }
-  if (manifest.profile !== against.profile) {
-    conflicts.push(`profile ${manifest.profile}, not ${against.profile}`);
+  // The guild id, not the label. "prod-top-1" is a rank that `capture-pin.ts`
+  // reassigns to whoever is busiest in the snapshot being captured, so two
+  // pins can give the same label to different guilds — and the chips would be
+  // compared across different data scopes without a word about it.
+  if (manifest.guildId !== against.guildId) {
+    conflicts.push(
+      `guild ${manifest.guildId} (labelled ${manifest.profile}), not ${against.guildId}`,
+    );
   }
   for (const capability of EXPLORE_REPLAY_CAPABILITIES) {
     const before = manifest.expectedCapabilities[capability];
@@ -273,6 +291,17 @@ async function loadBaseline(
       conflicts.push(`${capability} was ${String(before)}, now ${String(now)}`);
     }
   }
+  // A conversation case id is the conversation and turn index, which survives
+  // re-curation: repin a leaf and the same id carries a different question.
+  // Only the corpus hash can tell those apart.
+  const baselineCorpus = manifest.corpusSha256;
+  const thisCorpus = against.corpus?.sha256 ?? null;
+  if (baselineCorpus !== thisCorpus) {
+    conflicts.push(
+      `corpus ${baselineCorpus ?? "none"}, not ${thisCorpus ?? "none"}; a re-curated corpus can attach the same case id to a different question`,
+    );
+  }
+
   if (conflicts.length > 0) {
     throw new Error(
       [
@@ -471,6 +500,24 @@ async function runGuild(input: {
       );
     }
     const paths = bundlePaths(runDir);
+
+    // Before a single byte is written: a resume continues one specific
+    // bundle, and that bundle names the guild it ran as. Naming the wrong
+    // --guild would skip its chip ids (they are prompt hashes, shared by every
+    // profile) and then overwrite its manifest and summary with this guild's
+    // metadata — a bundle describing one guild and holding another's answers.
+    if (options.resumeRunId !== null) {
+      const existing = await readManifestIfPresent(paths.manifest);
+      if (existing !== null && existing.guildId !== config.guildId) {
+        throw new Error(
+          [
+            `Run ${runId} is a bundle for guild ${existing.guildId} (labelled ${existing.profile}), but --guild selected ${config.guildId} (${config.label}).`,
+            "Resume it as the guild it belongs to, or start a new run.",
+          ].join("\n"),
+        );
+      }
+    }
+
     const priorEntries =
       options.resumeRunId === null
         ? []
@@ -558,6 +605,7 @@ async function runGuild(input: {
           startedAt: new Date().toISOString(),
           stage: pin.stage,
           profile: config.label,
+          guildId: config.guildId,
           expectedCapabilities: config.capabilities,
           lake: {
             buildId: pin.lake.buildId,
@@ -595,7 +643,7 @@ async function runGuild(input: {
           },
           gitCommit: Bun.env["GIT_SHA"] ?? "unknown",
           concurrency: options.concurrency,
-          caseCount: cases.length,
+          caseCount: priorEntries.length + cases.length,
           baselineRunId: options.baselineRunId,
         }),
         null,
@@ -613,8 +661,9 @@ async function runGuild(input: {
     if (options.baselineRunId !== null) {
       const baselineEntries = await loadBaseline(options.baselineRunId, {
         stage: pin.stage,
-        profile: config.label,
+        guildId: config.guildId,
         capabilities: config.capabilities,
+        corpus: conversations.corpus,
       });
       for (const [caseId, entry] of baselineEntries) {
         baseline.set(caseId, entry);
@@ -721,7 +770,10 @@ async function runGuild(input: {
           stage: pin.stage,
           model,
           generatedAt: new Date().toISOString(),
-          caseCount: cases.length,
+          // The whole bundle, not this invocation. A resume executes only what
+          // the index lacks, so `cases.length` would report a completed
+          // 232-case bundle as zero.
+          caseCount: priorEntries.length + cases.length,
           integrityFailures,
           /** Harness integrity only — never "the answers were good". */
           passed,

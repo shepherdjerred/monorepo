@@ -1,88 +1,8 @@
 {
   "version": 1,
   "stage": "beta",
-  "capturedAt": "2026-09-20T20:38:41.986Z",
+  "capturedAt": "2026-09-21T00:46:23.329Z",
   "conversations": [
-    {
-      "conversationId": "a53b78bf-f194-42b3-8f86-af9ada9978f3",
-      "leafId": "f02dd350-cca3-4616-840d-cfb45d337c55",
-      "kind": "question",
-      "surface": "web",
-      "guildSource": "beta-allowlist",
-      "turns": [
-        {
-          "index": 0,
-          "questionMessageId": "ff115817-87f8-4fae-b5f6-3f113ebd6fb5",
-          "answerMessageId": "bfa9b9bc-4d4e-422a-9bf2-6c67a34e484e"
-        },
-        {
-          "index": 1,
-          "questionMessageId": "b301b3a8-4047-4ca9-a164-d2949d65a185",
-          "answerMessageId": "03cb7f1b-c6d8-4315-b032-cd3649ae74f9"
-        },
-        {
-          "index": 2,
-          "questionMessageId": "30dd83c2-9745-4d24-abc0-91569357030b",
-          "answerMessageId": "37af59ea-41fd-44f4-9bc6-8c82718be08d"
-        },
-        {
-          "index": 3,
-          "questionMessageId": "1eb7bfce-ed76-4b73-bfcd-6e05acf38770",
-          "answerMessageId": "967f8a57-0952-4de4-8c52-98540815627f"
-        },
-        {
-          "index": 4,
-          "questionMessageId": "7b1ef363-bd57-4dfa-9034-675c99cce604",
-          "answerMessageId": "9e1d8c1b-fdf7-40a6-bf0b-e3275756af4b"
-        },
-        {
-          "index": 5,
-          "questionMessageId": "10f55fcc-56d4-4b77-bf32-dbc440faf7bf",
-          "answerMessageId": "c5ca492a-05d7-48d7-982d-f43c9969e69e"
-        },
-        {
-          "index": 6,
-          "questionMessageId": "d9545042-e4bf-429f-b843-01ea3f41de4e",
-          "answerMessageId": "f02dd350-cca3-4616-840d-cfb45d337c55"
-        }
-      ],
-      "note": "7 turn(s), question"
-    },
-    {
-      "conversationId": "288014b6-8724-4d02-a7a0-74f916d48d29",
-      "leafId": "fab39fd0-5f75-4a8e-891d-018ed49f74a5",
-      "kind": "question",
-      "surface": "web",
-      "guildSource": "beta-allowlist",
-      "turns": [
-        {
-          "index": 0,
-          "questionMessageId": "c0f8c1af-79b0-465a-bc92-8a0418145d87",
-          "answerMessageId": "b511ca36-56a8-4146-9a6d-f890ef269f92"
-        },
-        {
-          "index": 1,
-          "questionMessageId": "73d731fb-d017-496d-a6d5-9200368a4ad6",
-          "answerMessageId": "3afbf473-2bfb-4b1a-a626-699b27e92f8b"
-        },
-        {
-          "index": 2,
-          "questionMessageId": "6cc82ec1-b99a-431a-b827-37baa545ba07",
-          "answerMessageId": "16c690cf-0316-4fe0-8a90-8c650dc48d5d"
-        },
-        {
-          "index": 3,
-          "questionMessageId": "64e83146-cf59-4bf8-b353-bb98704a1120",
-          "answerMessageId": "1fbe260c-f59d-4692-9784-44c6fe35474d"
-        },
-        {
-          "index": 4,
-          "questionMessageId": "21b65f14-7ce3-479e-90e2-fcded5352dee",
-          "answerMessageId": "fab39fd0-5f75-4a8e-891d-018ed49f74a5"
-        }
-      ],
-      "note": "5 turn(s), question"
-    },
     {
       "conversationId": "e434fde2-2c8d-46a6-827d-46a9b8e22af2",
       "leafId": "5446d1d1-a95c-4afb-a8a9-baa2e608247e",
@@ -109,29 +29,19 @@
       "note": "3 turn(s), dare-draft"
     },
     {
-      "conversationId": "40807ecc-d902-4347-8dd8-27143d3001a7",
-      "leafId": "7a93e4e9-bceb-4005-8912-639087eda384",
-      "kind": "question",
+      "conversationId": "403e9f24-186d-460a-882a-110e65c6f12b",
+      "leafId": "10d18d28-313f-4217-b210-c31c102fa2bd",
+      "kind": "dare-draft",
       "surface": "web",
-      "guildSource": "beta-allowlist",
+      "guildSource": "run-payload",
       "turns": [
         {
           "index": 0,
-          "questionMessageId": "f6df303d-8aa9-463c-8e92-707b88c1a1cd",
-          "answerMessageId": "00e3772b-0dd5-4d06-9721-d66e0a94a9c3"
-        },
-        {
-          "index": 1,
-          "questionMessageId": "f824329c-871a-4065-ab18-a9ffa56c2242",
-          "answerMessageId": "92adcff1-1ddb-4c0e-912f-8bf61d817fc9"
-        },
-        {
-          "index": 2,
-          "questionMessageId": "5a7c13e3-e77e-415b-9218-a5e7c9eefda1",
-          "answerMessageId": "7a93e4e9-bceb-4005-8912-639087eda384"
+          "questionMessageId": "c2008f9b-b9d1-4414-84e6-f94f5ad59db4",
+          "answerMessageId": "c5fbd132-145a-47d6-a950-441bdeb7dfa8"
         }
       ],
-      "note": "3 turn(s), question"
+      "note": "1 turn(s), dare-draft"
     }
   ]
 }

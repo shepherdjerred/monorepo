@@ -291,6 +291,7 @@ describe("ReplayManifestSchema", () => {
       startedAt: "2026-09-19T00:00:00.000Z",
       stage: "beta",
       profile: "full",
+      guildId: "1337623164146155593",
       expectedCapabilities: { bucks: true },
       lake: { buildId: "b1", puuidRemapFingerprint: "none" },
       database: { name: "scout_beta_snapshot" },

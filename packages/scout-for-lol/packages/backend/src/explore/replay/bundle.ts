@@ -135,7 +135,17 @@ export const ReplayManifestSchema = z
     runId: z.string().min(1),
     startedAt: z.iso.datetime(),
     stage: z.enum(["beta", "prod"]),
+    /**
+     * The guild's label in the pin: "mine", "prod-top-1", …
+     *
+     * A rank label, not an identity. `capture-pin.ts` assigns "prod-top-1" to
+     * whichever guild is busiest in the snapshot it is capturing, so the same
+     * label can name different guilds in two pins. Anything that has to mean
+     * "the same guild" compares `guildId`, never this.
+     */
     profile: z.string().min(1),
+    /** The guild this bundle actually ran as. The identity `profile` is not. */
+    guildId: z.string().min(1),
     /** What the profile promised, as resolved and asserted per case. */
     expectedCapabilities: z.record(z.string(), z.boolean()),
     lake: z

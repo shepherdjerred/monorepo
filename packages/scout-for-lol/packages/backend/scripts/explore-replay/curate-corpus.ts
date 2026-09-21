@@ -7,6 +7,7 @@ import {
   type ReplayCorpusEntry,
   type ReplayGuildSource,
 } from "#src/explore/replay/corpus.ts";
+import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
 import {
   ReplayPlanError,
   resolveTurnGuilds,
@@ -36,12 +37,54 @@ type Candidate = {
 };
 
 /**
- * Conversation origins the `web` replay surface reproduces faithfully.
+ * Whether this conversation provably ran on the surface a replay reproduces.
  *
- * `legacy` predates the column and is web by construction; `web` says so.
- * `discord` and `voice` ran with a different tool set and are left out.
+ * Every case is replayed on `web`, so a Discord or voice conversation would be
+ * answered with a tool set it never had — the web-only creation tools among
+ * them — and the comparison would measure the surface rather than the agent.
+ *
+ * The `origin` column alone cannot decide it. The migration that added it
+ * defaults every pre-existing row to `legacy`
+ * (`20260914000000_explore_conversation_origin`), so `legacy` means "written
+ * before the column", not "came from the web" — a `/scout ask` conversation
+ * from before that date is labelled `legacy` too.
+ *
+ * The durable run payload is the evidence that does decide it.
+ * `ExploreDurablePayloadSchema.surface` records it, and for rows predating
+ * that field it defaults to `web` on the documented grounds that only the web
+ * surface enqueued durable runs then. A `legacy` conversation with no run at
+ * all has no evidence either way, and is refused rather than assumed — the
+ * same rule guild recovery already follows.
  */
-const REPLAYABLE_ORIGINS = ["legacy", "web"];
+function replayableSurface(
+  origin: string,
+  runs: readonly PlanRunRow[],
+): { readonly ok: true } | { readonly ok: false; readonly reason: string } {
+  if (origin === "web") return { ok: true };
+  if (origin !== "legacy") {
+    return { ok: false, reason: `origin ${origin} is not the web surface` };
+  }
+  const surfaces = new Set(
+    runs.flatMap((run) => {
+      const parsed = ExploreDurablePayloadSchema.safeParse(
+        JSON.parse(run.payload) as unknown,
+      );
+      return parsed.success ? [parsed.data.surface] : [];
+    }),
+  );
+  if (surfaces.size === 0) {
+    return {
+      ok: false,
+      reason:
+        "origin legacy is the migration default and no durable run records a surface",
+    };
+  }
+  const other = [...surfaces].filter((surface) => surface !== "web");
+  if (other.length > 0) {
+    return { ok: false, reason: `ran on ${other.join(", ")}, not web` };
+  }
+  return { ok: true };
+}
 
 export async function curateCorpus(input: {
   readonly stage: "beta" | "prod";
@@ -54,16 +97,8 @@ export async function curateCorpus(input: {
   // it. Prod has no allowlist and must recover from the turn or its run.
   const soleAllowedGuildId = input.stage === "beta" ? MY_SERVER : null;
 
-  // Only origins a replay can actually reproduce. The harness runs every case
-  // on the `web` surface, so a Discord or voice conversation curated here
-  // would be replayed with a tool set it never had — the web-only creation
-  // tools among them — and every comparison against its stored answers would
-  // be measuring the surface rather than the agent.
   const conversations = await prisma.exploreConversation.findMany({
-    where: {
-      userId: { not: input.ownerId },
-      origin: { in: REPLAYABLE_ORIGINS },
-    },
+    where: { userId: { not: input.ownerId } },
     include: { messages: true },
     orderBy: { createdAt: "desc" },
   });
@@ -83,6 +118,14 @@ export async function curateCorpus(input: {
   const skipped: string[] = [];
 
   for (const conversation of conversations) {
+    const surface = replayableSurface(
+      conversation.origin,
+      runsByConversation.get(conversation.id) ?? [],
+    );
+    if (!surface.ok) {
+      skipped.push(`${conversation.id}: ${surface.reason}`);
+      continue;
+    }
     const leafId = conversation.currentLeafId;
     if (leafId === null) {
       skipped.push(`${conversation.id}: no leaf`);

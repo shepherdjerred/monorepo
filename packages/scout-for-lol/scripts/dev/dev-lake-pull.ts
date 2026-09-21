@@ -147,13 +147,27 @@ async function extractEntry(input: EntryPull): Promise<void> {
   }
 }
 
-/** Local file count for one extracted entry. */
+/**
+ * Local file count for one extracted entry.
+ *
+ * Counted in-process rather than through `sh -c`: interpolating a path into a
+ * shell pipeline means a destination like `/tmp/My Data/report-lake` is split
+ * into two `find` arguments, so every integrity check fails, and a path with
+ * shell metacharacters would run something else entirely. The count is the
+ * evidence a transfer arrived whole, so it must not depend on how the path is
+ * spelled.
+ */
 async function localFileCount(dir: string): Promise<number> {
-  const listing = await run(
-    ["sh", "-c", `find ${dir} -type f | wc -l`],
-    `Counting files in ${dir}`,
-  );
-  return Number(listing.trim());
+  let total = 0;
+  for await (const entry of new Bun.Glob("**/*").scan({
+    cwd: dir,
+    onlyFiles: true,
+    dot: true,
+  })) {
+    void entry;
+    total += 1;
+  }
+  return total;
 }
 
 /**
