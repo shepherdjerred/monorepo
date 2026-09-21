@@ -61,6 +61,12 @@ export type CaseScore = {
  * beta sweep twelve of thirteen failures recovered in the same turn and went
  * on to answer well. Only the turn that never got a query to run is worth
  * flagging.
+ *
+ * "Afterwards" is the whole rule, and it has to mean *after the last failure*.
+ * Asking whether any query anywhere succeeded lets an early success excuse a
+ * later failure — a turn that queried fine, then broke on its final attempt,
+ * and answered on partial data. That is the shape worth reading, so it must
+ * not be the shape that is silently suppressed.
  */
 export function queryFailedUnrecovered(
   trace: readonly { readonly toolName: string; readonly status: string }[],
@@ -68,10 +74,13 @@ export function queryFailedUnrecovered(
   const queries = trace.filter(
     (entry) => entry.toolName === "run_report_query",
   );
-  return (
-    queries.some((entry) => entry.status === "failed") &&
-    !queries.some((entry) => entry.status === "succeeded")
+  const lastFailure = queries.findLastIndex(
+    (entry) => entry.status === "failed",
   );
+  if (lastFailure === -1) return false;
+  return !queries
+    .slice(lastFailure + 1)
+    .some((entry) => entry.status === "succeeded");
 }
 
 export function scoreCase(input: ScorableCase): CaseScore {

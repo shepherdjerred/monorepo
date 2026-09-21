@@ -14,6 +14,7 @@ const CAPS: ExploreCapabilitySet = {
   creation: false,
   riotHistory: false,
   mvpVotes: false,
+  clash: false,
 };
 
 const SIDE: ReplaySide = {
@@ -45,6 +46,28 @@ function scorable(overrides: Partial<ScorableCase> = {}): ScorableCase {
 }
 
 describe("queryFailedUnrecovered", () => {
+  test("is true when the last query failed after an earlier success", () => {
+    // The shape an "any success" test suppresses: the turn queried fine, broke
+    // on its final attempt, and answered on partial data.
+    expect(
+      queryFailedUnrecovered([
+        { toolName: "run_report_query", status: "succeeded" },
+        { toolName: "run_report_query", status: "failed" },
+      ]),
+    ).toBe(true);
+  });
+
+  test("is false when a success follows the last of several failures", () => {
+    expect(
+      queryFailedUnrecovered([
+        { toolName: "run_report_query", status: "failed" },
+        { toolName: "run_report_query", status: "succeeded" },
+        { toolName: "run_report_query", status: "failed" },
+        { toolName: "run_report_query", status: "succeeded" },
+      ]),
+    ).toBe(false);
+  });
+
   test("is false when a failure was followed by a success", () => {
     // Twelve of thirteen failures in the first full beta sweep did exactly
     // this and went on to answer well.

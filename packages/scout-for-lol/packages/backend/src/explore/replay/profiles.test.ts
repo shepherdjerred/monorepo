@@ -19,6 +19,7 @@ const NOTHING: ExploreCapabilitySet = {
   creation: false,
   riotHistory: false,
   mvpVotes: false,
+  clash: false,
 };
 
 const EVERYTHING: ExploreCapabilitySet = {
@@ -28,6 +29,7 @@ const EVERYTHING: ExploreCapabilitySet = {
   creation: true,
   riotHistory: false,
   mvpVotes: true,
+  clash: true,
 };
 
 function config(
@@ -223,12 +225,12 @@ describe("capabilityMismatches", () => {
       config: config({ capabilities: EVERYTHING }),
       resolved: NOTHING,
     });
-    // Five, not six: riotHistory is false on both sides, because a replay
+    // Six, not seven: riotHistory is false on both sides, because a replay
     // never reproduces it.
-    expect(issues).toHaveLength(5);
+    expect(issues).toHaveLength(6);
   });
 
   test("checks every capability", () => {
-    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(6);
+    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(7);
   });
 });

@@ -26,6 +26,7 @@ export const EXPLORE_REPLAY_CAPABILITIES = [
   "creation",
   "riotHistory",
   "mvpVotes",
+  "clash",
 ] as const;
 
 export type ExploreReplayCapability =
@@ -39,6 +40,7 @@ export const ExploreCapabilitySetSchema = z
     creation: z.boolean(),
     riotHistory: z.boolean(),
     mvpVotes: z.boolean(),
+    clash: z.boolean(),
   })
   .strict();
 
@@ -155,6 +157,7 @@ export function flagOverridesFor(
     { flag: "scoutql_relational_enabled", value: capabilities.dares },
     { flag: "challenge_runs_enabled", value: capabilities.challenges },
     { flag: "mvp_votes_enabled", value: capabilities.mvpVotes },
+    { flag: "clash_surface", value: capabilities.clash },
     { flag: "explore_creation_enabled", value: capabilities.creation },
     {
       flag: "explore_on_demand_riot_enabled",

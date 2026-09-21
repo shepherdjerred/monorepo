@@ -259,22 +259,34 @@ export async function recordedCaseEntries(
   const file = Bun.file(indexPath);
   if (!(await file.exists())) return [];
   const indexText = await file.text();
+  const lines = indexText.split("\n").filter((line) => line.trim() !== "");
   const entries: ReplayCaseIndexEntry[] = [];
-  for (const line of indexText.split("\n")) {
-    if (line.trim() === "") continue;
-    // A truncated final line is expected after an interrupted run: the entry
-    // did not complete, so the case has to run again. `JSON.parse` throws on
-    // it, so the throw is caught here rather than failing the resume — but
-    // only a well-formed, schema-valid entry counts, so a partial record can
-    // never resume past a case that produced no result.
+  for (const [index, line] of lines.entries()) {
+    // A truncated *final* line is expected after an interrupted run: the
+    // append did not complete, so that case has to run again. Anywhere else a
+    // malformed line means the index itself is damaged, and silently dropping
+    // it would re-run a case at live-model cost and lose whatever integrity
+    // failure it recorded — a resumed summary would then certify a run whose
+    // evidence is missing. So only the last line may be partial.
+    const isFinal = index === lines.length - 1;
     let raw: unknown;
     try {
       raw = JSON.parse(line);
     } catch {
-      continue;
+      if (isFinal) continue;
+      throw new Error(
+        `${indexPath} line ${(index + 1).toString()} is not valid JSON. Only a truncated final line is recoverable; this index is damaged.`,
+      );
     }
     const parsed = ReplayCaseIndexEntrySchema.safeParse(raw);
-    if (parsed.success) entries.push(parsed.data);
+    if (parsed.success) {
+      entries.push(parsed.data);
+      continue;
+    }
+    if (isFinal) continue;
+    throw new Error(
+      `${indexPath} line ${(index + 1).toString()} is not a valid case entry: ${parsed.error.message}`,
+    );
   }
   return entries;
 }

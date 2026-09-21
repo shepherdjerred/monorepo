@@ -193,6 +193,29 @@ describe("recordedCaseEntries", () => {
     expect(entries[1]?.kind).toBe("conversation");
   });
 
+  test("refuses a malformed line that is not the last one", async () => {
+    // Only the tail can be partial. Damage anywhere else would re-run a case
+    // at live-model cost and lose whatever integrity failure it recorded.
+    const dir = await temporaryDir();
+    const indexPath = path.join(dir, "cases.jsonl");
+    await appendBundleLine(indexPath, '{"caseId":"chip:aa');
+    await appendBundleLine(
+      indexPath,
+      JSON.stringify(
+        ReplayCaseIndexEntrySchema.parse({
+          caseId: "chip:bbb",
+          kind: "chip",
+          status: "ok",
+          durationMs: 10,
+          signals: [],
+        }),
+      ),
+    );
+    await expect(recordedCaseEntries(indexPath)).rejects.toThrow(
+      /line 1 is not valid JSON/,
+    );
+  });
+
   test("skips a truncated final line, as an interrupted run leaves", async () => {
     const dir = await temporaryDir();
     const indexPath = path.join(dir, "cases.jsonl");

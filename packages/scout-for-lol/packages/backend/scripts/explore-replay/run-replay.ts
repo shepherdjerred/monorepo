@@ -234,6 +234,59 @@ function observationSide(observation: ReplayObservation): ReplaySide {
  * than just a bundle. A case absent here is reported as new rather than
  * silently uncompared.
  */
+/**
+ * Every input that decides what a case in this bundle means.
+ *
+ * Deliberately not the whole manifest: `runId`, `startedAt`, `caseCount` and
+ * `concurrency` describe the invocation, and a resume is expected to change
+ * them. These are the fields a retained case file was produced under, so a
+ * difference in any of them makes the old cases and the new metadata describe
+ * different runs.
+ */
+function manifestDifferences(
+  existing: ReplayManifest,
+  current: ReplayManifest,
+): readonly string[] {
+  const differences: string[] = [];
+  const compare = (label: string, before: string, now: string): void => {
+    if (before !== now) differences.push(`${label}: was ${before}, now ${now}`);
+  };
+  compare("stage", existing.stage, current.stage);
+  compare("guild", existing.guildId, current.guildId);
+  compare("lake build", existing.lake.buildId, current.lake.buildId);
+  compare(
+    "PUUID remap fingerprint",
+    existing.lake.puuidRemapFingerprint,
+    current.lake.puuidRemapFingerprint,
+  );
+  compare("database", existing.database.name, current.database.name);
+  compare("model", existing.model, current.model);
+  compare(
+    "chip catalog",
+    existing.chipCatalogSha256,
+    current.chipCatalogSha256,
+  );
+  compare(
+    "corpus",
+    existing.corpusSha256 ?? "none",
+    current.corpusSha256 ?? "none",
+  );
+  compare("prompt", existing.promptSha256, current.promptSha256);
+  compare(
+    "baseline",
+    existing.baselineRunId ?? "none",
+    current.baselineRunId ?? "none",
+  );
+  for (const capability of EXPLORE_REPLAY_CAPABILITIES) {
+    compare(
+      capability,
+      String(existing.expectedCapabilities[capability]),
+      String(current.expectedCapabilities[capability]),
+    );
+  }
+  return differences;
+}
+
 /** A bundle's manifest, or null when the run directory is new. */
 async function readManifestIfPresent(
   manifestPath: string,
@@ -490,23 +543,6 @@ async function runGuild(input: {
     }
     const paths = bundlePaths(runDir);
 
-    // Before a single byte is written: a resume continues one specific
-    // bundle, and that bundle names the guild it ran as. Naming the wrong
-    // --guild would skip its chip ids (they are prompt hashes, shared by every
-    // profile) and then overwrite its manifest and summary with this guild's
-    // metadata — a bundle describing one guild and holding another's answers.
-    if (options.resumeRunId !== null) {
-      const existing = await readManifestIfPresent(paths.manifest);
-      if (existing !== null && existing.guildId !== config.guildId) {
-        throw new Error(
-          [
-            `Run ${runId} is a bundle for guild ${existing.guildId} (labelled ${existing.profile}), but --guild selected ${config.guildId} (${config.label}).`,
-            "Resume it as the guild it belongs to, or start a new run.",
-          ].join("\n"),
-        );
-      }
-    }
-
     const priorEntries =
       options.resumeRunId === null
         ? []
@@ -585,59 +621,78 @@ async function runGuild(input: {
     const cases = options.limit === null ? all : all.slice(0, options.limit);
 
     const model = exploreModel();
+    const manifest = ReplayManifestSchema.parse({
+      schemaVersion: 1,
+      runId,
+      startedAt: new Date().toISOString(),
+      stage: pin.stage,
+      profile: config.label,
+      guildId: config.guildId,
+      expectedCapabilities: config.capabilities,
+      lake: {
+        buildId: pin.lake.buildId,
+        puuidRemapFingerprint: pin.lake.puuidRemapFingerprint,
+      },
+      database: { name: pin.database.name },
+      model,
+      chipCatalogSha256: exploreChipCatalogSha256(),
+      corpusSha256: conversations.corpus?.sha256 ?? null,
+      corpusVersion: conversations.corpus?.version ?? null,
+      promptSha256: sha256Hex(
+        exploreAgentInstructions({
+          bucks: config.capabilities.bucks ? { currentTime: "pinned" } : null,
+          dares: config.capabilities.dares,
+          challenges: config.capabilities.challenges,
+          creation: config.capabilities.creation,
+          riotHistory: config.capabilities.riotHistory,
+          // A non-null value adds the MVP instructions and skill entry to
+          // the prompt, so omitting it would hash the disabled prompt and
+          // record provenance the run did not have.
+          mvpVotes: config.capabilities.mvpVotes
+            ? { currentTime: "pinned" }
+            : null,
+          clash: config.capabilities.clash,
+          surface,
+        }),
+      ),
+      flagOverrides: flagOverridesFor(config.capabilities).map((override) => ({
+        flag: override.flag,
+        value: override.value,
+      })),
+      tokenBudgets: {
+        hourly: Number(Bun.env["LLM_HOURLY_TOKEN_BUDGET"] ?? 2_000_000),
+        daily: Number(Bun.env["LLM_DAILY_TOKEN_BUDGET"] ?? 20_000_000),
+      },
+      gitCommit: Bun.env["GIT_SHA"] ?? "unknown",
+      concurrency: options.concurrency,
+      caseCount: priorEntries.length + cases.length,
+      baselineRunId: options.baselineRunId,
+    });
+
+    // Before a single byte is written. A resume keeps the case files already
+    // in the bundle and overwrites the manifest, so every input that decides
+    // what a case *means* has to match — not just the guild. Resuming after
+    // the pin, corpus, capabilities, prompt or baseline changed would leave a
+    // bundle whose metadata describes inputs its retained cases never saw.
+    if (options.resumeRunId !== null) {
+      const existing = await readManifestIfPresent(paths.manifest);
+      const differences =
+        existing === null ? [] : manifestDifferences(existing, manifest);
+      if (differences.length > 0) {
+        throw new Error(
+          [
+            `Run ${runId} was produced with different inputs:`,
+            ...differences.map((difference) => `  - ${difference}`),
+            "",
+            "Resume it with the inputs it ran under, or start a new run.",
+          ].join("\n"),
+        );
+      }
+    }
+
     await writeBundleFile(
       paths.manifest,
-      `${JSON.stringify(
-        ReplayManifestSchema.parse({
-          schemaVersion: 1,
-          runId,
-          startedAt: new Date().toISOString(),
-          stage: pin.stage,
-          profile: config.label,
-          guildId: config.guildId,
-          expectedCapabilities: config.capabilities,
-          lake: {
-            buildId: pin.lake.buildId,
-            puuidRemapFingerprint: pin.lake.puuidRemapFingerprint,
-          },
-          database: { name: pin.database.name },
-          model,
-          chipCatalogSha256: exploreChipCatalogSha256(),
-          corpusSha256: conversations.corpus?.sha256 ?? null,
-          corpusVersion: conversations.corpus?.version ?? null,
-          promptSha256: sha256Hex(
-            exploreAgentInstructions({
-              bucks: config.capabilities.bucks
-                ? { currentTime: "pinned" }
-                : null,
-              dares: config.capabilities.dares,
-              challenges: config.capabilities.challenges,
-              creation: config.capabilities.creation,
-              riotHistory: config.capabilities.riotHistory,
-              // A non-null value adds the MVP instructions and skill entry to
-              // the prompt, so omitting it would hash the disabled prompt and
-              // record provenance the run did not have.
-              mvpVotes: config.capabilities.mvpVotes
-                ? { currentTime: "pinned" }
-                : null,
-              surface,
-            }),
-          ),
-          flagOverrides: flagOverridesFor(config.capabilities).map(
-            (override) => ({ flag: override.flag, value: override.value }),
-          ),
-          tokenBudgets: {
-            hourly: Number(Bun.env["LLM_HOURLY_TOKEN_BUDGET"] ?? 2_000_000),
-            daily: Number(Bun.env["LLM_DAILY_TOKEN_BUDGET"] ?? 20_000_000),
-          },
-          gitCommit: Bun.env["GIT_SHA"] ?? "unknown",
-          concurrency: options.concurrency,
-          caseCount: priorEntries.length + cases.length,
-          baselineRunId: options.baselineRunId,
-        }),
-        null,
-        2,
-      )}\n`,
+      `${JSON.stringify(manifest, null, 2)}\n`,
     );
 
     const chipByCaseId = new Map(
