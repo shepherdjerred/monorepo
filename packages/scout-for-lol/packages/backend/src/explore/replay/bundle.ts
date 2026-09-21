@@ -188,6 +188,34 @@ export type ReplayManifest = z.infer<typeof ReplayManifestSchema>;
  * A full matrix sweep is hours of live model spend and will be interrupted, so
  * the index is append-only and is read back to skip what already ran.
  */
+/**
+ * The candidate side of a stored case record.
+ *
+ * Declared once because two readers parse it: the run, loading an earlier
+ * bundle as a `--baseline`, and the summariser, re-scoring from stored
+ * evidence. A second copy would let one of them drift into reading a field the
+ * other does not write.
+ *
+ * Loose on purpose — a bundle written by a later version may carry fields this
+ * reader has never heard of, and refusing to read it would make old evidence
+ * unreadable for no gain.
+ */
+export const ReplayCaseCandidateSchema = z
+  .object({
+    answer: z.string().nullable(),
+    queryText: z.string().nullable(),
+    caveats: z.array(z.string()),
+    followUps: z.array(z.string()),
+    rowsReturned: z.number().nullable(),
+    rowsScanned: z.number().nullable(),
+    toolNames: z.array(z.string()),
+    matchCardIds: z.array(z.string()),
+    visualizationKind: z.string().nullable(),
+  })
+  .loose();
+
+export type ReplayCaseCandidate = z.infer<typeof ReplayCaseCandidateSchema>;
+
 export const ReplayCaseIndexEntrySchema = z
   .object({
     caseId: z.string().min(1),
@@ -230,10 +258,15 @@ export async function recordedCaseEntries(
 ): Promise<readonly ReplayCaseIndexEntry[]> {
   const file = Bun.file(indexPath);
   if (!(await file.exists())) return [];
-  const entries: ReplayCaseIndexEntry[] = [];
   const indexText = await file.text();
+  const entries: ReplayCaseIndexEntry[] = [];
   for (const line of indexText.split("\n")) {
     if (line.trim() === "") continue;
+    // A truncated final line is expected after an interrupted run: the entry
+    // did not complete, so the case has to run again. `JSON.parse` throws on
+    // it, so the throw is caught here rather than failing the resume — but
+    // only a well-formed, schema-valid entry counts, so a partial record can
+    // never resume past a case that produced no result.
     let raw: unknown;
     try {
       raw = JSON.parse(line);
@@ -250,25 +283,6 @@ export async function recordedCaseEntries(
 export async function completedCaseIds(
   indexPath: string,
 ): Promise<ReadonlySet<string>> {
-  const file = Bun.file(indexPath);
-  if (!(await file.exists())) return new Set();
-  const ids = new Set<string>();
-  const indexText = await file.text();
-  for (const line of indexText.split("\n")) {
-    if (line.trim() === "") continue;
-    // A truncated final line is expected after an interrupted run: the entry
-    // did not complete, so the case has to run again. `JSON.parse` throws on
-    // it, so the throw is caught here rather than failing the resume — but
-    // only a well-formed, schema-valid entry counts as done, so a partial
-    // record can never resume past a case that produced no result.
-    let raw: unknown;
-    try {
-      raw = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    const parsed = ReplayCaseIndexEntrySchema.safeParse(raw);
-    if (parsed.success) ids.add(parsed.data.caseId);
-  }
-  return ids;
+  const entries = await recordedCaseEntries(indexPath);
+  return new Set(entries.map((entry) => entry.caseId));
 }

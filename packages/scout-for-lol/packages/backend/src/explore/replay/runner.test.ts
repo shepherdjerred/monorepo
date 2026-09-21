@@ -6,10 +6,10 @@ import {
   ExploreStreamEventSchema,
   type ExploreMessage,
 } from "@scout-for-lol/data";
-import type {
-  ExploreAgentParams,
-  ExploreAgentResult,
-} from "#src/explore/agent.ts";
+// `ExploreAgentParams` is declared in agent-tools and only imported by
+// agent.ts, which does not re-export it.
+import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentResult } from "#src/explore/agent.ts";
 import {
   runReplayCase,
   runReplayCases,

@@ -68,6 +68,7 @@ import {
 } from "#src/explore/replay/signals.ts";
 import {
   ReplayCaseIndexEntrySchema,
+  ReplayCaseCandidateSchema,
   ReplayManifestSchema,
   type ReplayManifest,
   appendBundleLine,
@@ -315,19 +316,7 @@ async function loadBaseline(
   const BaselineCaseSchema = z
     .object({
       meta: z.object({ caseId: z.string() }).loose(),
-      candidate: z
-        .object({
-          answer: z.string().nullable(),
-          queryText: z.string().nullable(),
-          caveats: z.array(z.string()),
-          followUps: z.array(z.string()),
-          rowsReturned: z.number().nullable(),
-          rowsScanned: z.number().nullable(),
-          toolNames: z.array(z.string()),
-          matchCardIds: z.array(z.string()),
-          visualizationKind: z.string().nullable(),
-        })
-        .loose(),
+      candidate: ReplayCaseCandidateSchema,
     })
     .loose();
 

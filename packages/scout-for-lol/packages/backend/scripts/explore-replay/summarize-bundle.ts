@@ -6,6 +6,7 @@ import {
   ExploreCapabilitySetSchema,
   chipExpectation as chipExpectationFor,
 } from "#src/explore/replay/profiles.ts";
+import { ReplayCaseCandidateSchema } from "#src/explore/replay/bundle.ts";
 import { scoreCase } from "#src/explore/replay/scoring.ts";
 import {
   RollupCaseSchema,
@@ -49,19 +50,7 @@ const CaseFileSchema = z
         status: z.enum(["ok", "error", "timeout"]).optional(),
       })
       .loose(),
-    candidate: z
-      .object({
-        answer: z.string().nullable(),
-        queryText: z.string().nullable(),
-        caveats: z.array(z.string()),
-        followUps: z.array(z.string()),
-        rowsReturned: z.number().nullable(),
-        rowsScanned: z.number().nullable(),
-        toolNames: z.array(z.string()),
-        matchCardIds: z.array(z.string()),
-        visualizationKind: z.string().nullable(),
-      })
-      .loose(),
+    candidate: ReplayCaseCandidateSchema,
     trace: z.array(
       z.object({ toolName: z.string(), status: z.string() }).loose(),
     ),

@@ -344,6 +344,26 @@ async function appendCompleteAnswer(input: {
   });
 }
 
+/** Seed a question, answer it, then cancel over that answer with `text`. */
+async function cancelOverExistingAnswer(text: string) {
+  const seeded = await seedQuestion();
+  const persisted = await appendCompleteAnswer({
+    conversationId: seeded.conversationId,
+    parentMessageId: seeded.questionId,
+  });
+  const salvaged = await persistPartialAnswer(trpc.prisma, {
+    guildIds: [],
+    stopped: true,
+    conversationId: seeded.conversationId,
+    parentMessageId: seeded.questionId,
+    expectedCurrentLeafId: null,
+    text,
+    trace: [],
+    existingMessageId: persisted.id,
+  });
+  return { seeded, persisted, salvaged };
+}
+
 describe("explore salvage", () => {
   test("a stop before prose salvages nothing", async () => {
     const seeded = await seedQuestion();
@@ -424,22 +444,8 @@ describe("explore salvage", () => {
   });
 
   test("cancellation during persistence replaces the answer instead of adding a sibling", async () => {
-    const seeded = await seedQuestion();
-    const persisted = await appendCompleteAnswer({
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-    });
-
-    const salvaged = await persistPartialAnswer(trpc.prisma, {
-      guildIds: [],
-      stopped: true,
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-      expectedCurrentLeafId: null,
-      text: "Partial answer",
-      trace: [],
-      existingMessageId: persisted.id,
-    });
+    const { persisted, salvaged } =
+      await cancelOverExistingAnswer("Partial answer");
 
     expect(salvaged?.id).toBe(persisted.id);
     expect(salvaged?.content).toBe("Partial answer");
@@ -448,22 +454,7 @@ describe("explore salvage", () => {
   });
 
   test("cancellation during persistence removes an answer when no prose streamed", async () => {
-    const seeded = await seedQuestion();
-    const persisted = await appendCompleteAnswer({
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-    });
-
-    const salvaged = await persistPartialAnswer(trpc.prisma, {
-      guildIds: [],
-      stopped: true,
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-      expectedCurrentLeafId: null,
-      text: "",
-      trace: [],
-      existingMessageId: persisted.id,
-    });
+    const { seeded, salvaged } = await cancelOverExistingAnswer("");
 
     expect(salvaged).toBeNull();
     expect(await trpc.prisma.exploreMessage.count()).toBe(1);
