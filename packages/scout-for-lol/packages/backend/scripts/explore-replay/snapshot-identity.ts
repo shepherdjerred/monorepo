@@ -1,20 +1,5 @@
 import { prisma } from "#src/database/index.ts";
-
-/**
- * Tables whose contents identify a snapshot.
- *
- * Deliberately not the ones a replay writes: those change during a sweep by
- * design, and `writableRowCounts` covers them with its own message. These are
- * the rows every answer is computed from and which the runner never touches —
- * it calls `streamExploreAgent` rather than the persisted turn above it.
- */
-const IDENTITY_TABLES = [
-  "Account",
-  "Player",
-  "Subscription",
-  "ExploreConversation",
-  "ExploreMessage",
-] as const;
+import { REPLAY_WRITABLE_TABLES } from "#src/explore/replay/dataset.ts";
 
 /**
  * What this snapshot contains, as an identity that survives being restored.
@@ -27,26 +12,48 @@ const IDENTITY_TABLES = [
  * different datasets after exactly the restore the harness asked for, and the
  * A/B it exists to support could never run twice.
  *
- * Row counts alone were the next attempt and were not enough either: a later
- * pull can change balances, dare states or any other value without moving a
- * count, and two different datasets would have shared an identity. So this
- * hashes the rows themselves — ordered, so the digest does not depend on the
- * order Postgres returns them, and restoring the same dump reproduces it
- * exactly.
+ * Row counts were the next attempt and were not enough: a later pull can
+ * change a balance or a dare state without moving a count. Naming a handful of
+ * tables was the attempt after that, and was not enough either — the agent
+ * reads bucks ledgers, reports, competitions, permissions and more, so any
+ * list is a list of the tables somebody remembered.
+ *
+ * So this hashes *every* base table in the schema, discovered from the catalog
+ * rather than enumerated, minus the ones a replay itself writes — those change
+ * within a sweep by design and `writableRowCounts` covers them with its own
+ * message. `hashtext` summed per table is order-independent, so no sort is
+ * needed; across 109 tables of the prod snapshot it costs under a fifth of a
+ * second.
  */
 export async function databaseSnapshotId(): Promise<string> {
-  const digests: string[] = [];
-  for (const table of IDENTITY_TABLES) {
-    const rows = await prisma.$queryRawUnsafe<{ digest: string | null }[]>(
-      `select md5(coalesce(string_agg(t.row_text, '|' order by t.row_text), '')) as digest
-         from (select "${table}"::text as row_text from "${table}") t`,
+  const tables = await prisma.$queryRaw<{ relname: string }[]>`
+    select c.relname
+      from pg_class c
+      join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname = 'public' and c.relkind = 'r'
+     order by c.relname
+  `;
+  const writable = new Set<string>(REPLAY_WRITABLE_TABLES);
+  const identityTables = tables
+    .map((row) => row.relname)
+    .filter((name) => !writable.has(name));
+  if (identityTables.length === 0) {
+    throw new Error(
+      "The snapshot exposes no tables to fingerprint; it is not a Scout database.",
     );
-    const digest = rows[0]?.digest;
-    if (digest === undefined || digest === null) {
-      throw new Error(`Could not fingerprint ${table}.`);
-    }
-    digests.push(`${table}:${digest}`);
   }
+  const digests = await Promise.all(
+    identityTables.map(async (table) => {
+      const rows = await prisma.$queryRawUnsafe<{ digest: string }[]>(
+        `select coalesce(sum(hashtext(t::text)::bigint), 0)::text as digest from "${table}" t`,
+      );
+      const digest = rows[0]?.digest;
+      if (digest === undefined) {
+        throw new Error(`Could not fingerprint ${table}.`);
+      }
+      return `${table}:${digest}`;
+    }),
+  );
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(digests.join("\n"));
   return hasher.digest("hex").slice(0, 16);

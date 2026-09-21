@@ -12,6 +12,7 @@ import {
   createBundleDirectory,
   isInsideGitCheckout,
   recordedCaseEntries,
+  runIdIssues,
   replayBundleRoot,
   writeBundleFile,
 } from "./bundle.ts";
@@ -335,6 +336,24 @@ describe("completedCaseIds", () => {
     await expect(completedCaseIds(indexPath)).rejects.toThrow(
       /not a valid case entry/,
     );
+  });
+});
+
+describe("runIdIssues", () => {
+  test("accepts the ids this harness mints", () => {
+    expect(runIdIssues("beta-mine-2026-09-20T19-41-07-298Z")).toEqual([]);
+  });
+
+  test("refuses a traversal, which would escape the bundle root", () => {
+    // The directory is created and chmodded before any manifest is read, so a
+    // traversing --resume would mutate somewhere else entirely.
+    expect(runIdIssues("../../somewhere")).not.toEqual([]);
+    expect(runIdIssues("..")).not.toEqual([]);
+  });
+
+  test("refuses a path separator or an empty id", () => {
+    expect(runIdIssues("nested/run")).not.toEqual([]);
+    expect(runIdIssues("")).not.toEqual([]);
   });
 });
 

@@ -78,6 +78,7 @@ import {
   recordedCaseEntries,
   createBundleDirectory,
   replayBundleRoot,
+  runIdIssues,
   writeBundleFile,
 } from "#src/explore/replay/bundle.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
@@ -659,6 +660,16 @@ async function runGuild(input: {
     );
   }
 
+  // Before the id becomes a path. The directory is created and chmodded
+  // before any manifest is read, so a traversing id would mutate somewhere
+  // else entirely.
+  const idIssues = runIdIssues(runId);
+  if (idIssues.length > 0) {
+    throw new Error(
+      `Run id ${JSON.stringify(runId)} cannot name a bundle directory: ${idIssues.join(", ")}.`,
+    );
+  }
+
   const restoreFlags = applyGuildFlags(config);
   try {
     const runDir = path.join(replayBundleRoot(Bun.env), runId);
@@ -692,10 +703,31 @@ async function runGuild(input: {
         continue;
       }
       try {
-        ReplayCaseCandidateSchema.parse(
-          z.looseObject({ candidate: z.unknown() }).parse(await caseFile.json())
-            .candidate,
-        );
+        // The whole record, and its identity — not just a well-formed
+        // candidate. Two case files swapped leaves both candidates valid, and
+        // resume would skip both cases while their evidence describes the
+        // other's prompt.
+        const record = z
+          .looseObject({
+            meta: z.looseObject({
+              caseId: z.string(),
+              status: z.enum(["ok", "error", "timeout"]).optional(),
+            }),
+            candidate: ReplayCaseCandidateSchema,
+          })
+          .parse(await caseFile.json());
+        if (record.meta.caseId !== entry.caseId) {
+          missingEvidence.push(
+            `${entry.caseId}: its case file records ${record.meta.caseId}`,
+          );
+        } else if (
+          record.meta.status !== undefined &&
+          record.meta.status !== entry.status
+        ) {
+          missingEvidence.push(
+            `${entry.caseId}: indexed as ${entry.status}, recorded as ${record.meta.status}`,
+          );
+        }
       } catch {
         missingEvidence.push(`${entry.caseId}: case file is unreadable`);
       }

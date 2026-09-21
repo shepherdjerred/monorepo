@@ -261,6 +261,34 @@ export const ReplayCaseIndexEntrySchema = z
 
 export type ReplayCaseIndexEntry = z.infer<typeof ReplayCaseIndexEntrySchema>;
 
+/**
+ * Reasons this run id may not name a bundle directory.
+ *
+ * A run id becomes a path. `--resume ../../somewhere` would escape the bundle
+ * root, and the directory is created and chmodded to 0700 before any manifest
+ * is read — so a typo could mutate an arbitrary directory the user can write.
+ * Checked as a name rather than by resolving, because the safe answer here is
+ * narrow: the ids this harness mints are `<stage>-<label>-<stamp>`.
+ */
+export function runIdIssues(runId: string): readonly string[] {
+  const issues: string[] = [];
+  if (runId.trim() === "") issues.push("it is empty");
+  if (runId !== runId.trim()) issues.push("it has leading or trailing spaces");
+  if (runId.includes("/") || runId.includes("\\")) {
+    issues.push("it contains a path separator");
+  }
+  if (runId === "." || runId === ".." || runId.startsWith("..")) {
+    issues.push("it is a traversal component");
+  }
+  if (runId.startsWith("-")) issues.push("it starts with a dash");
+  if (!/^[\w.-]+$/.test(runId)) {
+    issues.push(
+      "it has characters outside letters, digits, dot, dash and underscore",
+    );
+  }
+  return issues;
+}
+
 export function bundlePaths(runDir: string): {
   readonly manifest: string;
   readonly index: string;
