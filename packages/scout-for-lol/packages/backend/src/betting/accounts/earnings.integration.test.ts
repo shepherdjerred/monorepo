@@ -122,10 +122,23 @@ function withQueue(queueId: number): RawMatch {
   });
 }
 
-function withDuration(seconds: number): RawMatch {
+/**
+ * A remake as Riot reports one: the early-surrender flags are set on every
+ * participant. Duration is not the signal — an AFK surrender is available from
+ * 2:55 and is a real result that still earns.
+ */
+function asRemake(): RawMatch {
   return RawMatchSchema.parse({
     ...fixture,
-    info: { ...fixture.info, gameDuration: seconds },
+    info: {
+      ...fixture.info,
+      gameDuration: 120,
+      participants: fixture.info.participants.map((participant) => ({
+        ...participant,
+        gameEndedInEarlySurrender: true,
+        teamEarlySurrendered: true,
+      })),
+    },
   });
 }
 
@@ -493,7 +506,7 @@ describe("awardBucksForMatch additional cases", () => {
       puuid: plainWinner.puuid,
     });
 
-    expect(await awardBucksForMatch(withDuration(120), db)).toEqual([]);
+    expect(await awardBucksForMatch(asRemake(), db)).toEqual([]);
     expect(await db.bucksMatchEarning.count()).toBe(0);
   });
 
