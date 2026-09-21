@@ -130,12 +130,12 @@ ALTER TABLE "CustomGame" ADD COLUMN "matchId" TEXT;
 ALTER TABLE "CustomGame" ADD COLUMN "observedLobbyId" TEXT;
 ALTER TABLE "CustomGame" ADD COLUMN "lobbyObservationId" TEXT;
 CREATE UNIQUE INDEX "CustomGame_matchId_key" ON "CustomGame"("matchId");
-CREATE UNIQUE INDEX "CustomGame_observedLobbyId_key" ON "CustomGame"("observedLobbyId");
+CREATE INDEX "CustomGame_observedLobbyId_idx" ON "CustomGame"("observedLobbyId");
 CREATE UNIQUE INDEX "CustomGame_lobbyObservationId_key" ON "CustomGame"("lobbyObservationId");
 
 ALTER TABLE "DuelGame" ADD COLUMN "observedLobbyId" TEXT;
 ALTER TABLE "DuelGame" ADD COLUMN "lobbyObservationId" TEXT;
-CREATE UNIQUE INDEX "DuelGame_observedLobbyId_key" ON "DuelGame"("observedLobbyId");
+CREATE INDEX "DuelGame_observedLobbyId_idx" ON "DuelGame"("observedLobbyId");
 CREATE UNIQUE INDEX "DuelGame_lobbyObservationId_key" ON "DuelGame"("lobbyObservationId");
 
 CREATE TABLE "ScoutClientReplayArtifact" (
@@ -151,7 +151,7 @@ CREATE TABLE "ScoutClientReplayArtifact" (
   "completedAt" TIMESTAMP(3),
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "ScoutClientReplayArtifact_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "ScoutClientReplayArtifact_state_check" CHECK ("uploadState" IN ('UPLOADING', 'COMPLETED', 'FAILED')),
+  CONSTRAINT "ScoutClientReplayArtifact_state_check" CHECK ("uploadState" IN ('UPLOADING', 'COMPLETED', 'FAILED', 'REJECTED')),
   CONSTRAINT "ScoutClientReplayArtifact_completion_check" CHECK (("uploadState" = 'COMPLETED') = ("completedAt" IS NOT NULL))
 );
 

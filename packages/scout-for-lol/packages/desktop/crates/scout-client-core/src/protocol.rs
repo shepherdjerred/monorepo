@@ -8,43 +8,10 @@ use serde_json::Value;
 use thiserror::Error;
 use uuid::Uuid;
 
-/// Current wire protocol version.
-pub const PROTOCOL_VERSION: u16 = 1;
-/// Maximum JSON request body accepted by the Scout ingress route.
-pub const MAX_OBSERVATION_BATCH_BYTES: usize = 4 * 1024 * 1024;
+include!(concat!(env!("OUT_DIR"), "/protocol_contract.rs"));
+
 /// Maximum serialized observation size accepted by the local outbox.
 pub const MAX_OBSERVATION_BYTES: usize = MAX_OBSERVATION_BATCH_BYTES - 19;
-const MAX_JSON_DEPTH: usize = 16;
-const MAX_ARRAY_ITEMS: usize = 100_000;
-const MAX_OBJECT_KEYS: usize = 4_096;
-const MAX_STRING_BYTES: usize = 16 * 1024;
-const MAX_KEY_BYTES: usize = 256;
-
-/// A curated, gameplay-only observation family.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ObservationKind {
-    /// Current local summoner identity.
-    AccountProfile,
-    /// Complete local champion mastery state.
-    ChampionMastery,
-    /// Challenge detail and summary state.
-    Challenges,
-    /// Clash player, roster, tournament, or history state.
-    Clash,
-    /// Current lobby state.
-    Lobby,
-    /// Current champion-select state.
-    ChampSelect,
-    /// Current gameflow phase or session.
-    Gameflow,
-    /// One sampled Live Client frame.
-    LiveGameFrame,
-    /// End-of-game state.
-    PostGame,
-    /// Replay capture/upload state.
-    ReplayStatus,
-}
 
 /// Wire envelope sent by the client and validated again by the backend.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -98,7 +65,7 @@ impl ObservationEnvelope {
     ) -> Result<Self, ProtocolError> {
         let envelope = Self {
             protocol_version: PROTOCOL_VERSION,
-            schema_version: 1,
+            schema_version: OBSERVATION_SCHEMA_VERSION,
             observation_id: Uuid::new_v4(),
             sequence,
             captured_at: Utc::now(),
@@ -125,13 +92,30 @@ impl ObservationEnvelope {
         if self.protocol_version != PROTOCOL_VERSION {
             return Err(ProtocolError::UnsupportedProtocol(self.protocol_version));
         }
-        bounded_string("appVersion", &self.app_version, 128)?;
+        if self.schema_version != OBSERVATION_SCHEMA_VERSION {
+            return Err(ProtocolError::UnsupportedObservationSchema(
+                self.schema_version,
+            ));
+        }
+        bounded_string("appVersion", &self.app_version, APP_VERSION_MAX_BYTES)?;
         for (name, value, limit) in [
-            ("leaguePatch", self.league_patch.as_deref(), 64),
-            ("platformId", self.platform_id.as_deref(), 16),
-            ("localPuuid", self.local_puuid.as_deref(), 128),
-            ("lobbyId", self.lobby_id.as_deref(), 128),
-            ("gameId", self.game_id.as_deref(), 32),
+            (
+                "leaguePatch",
+                self.league_patch.as_deref(),
+                LEAGUE_PATCH_MAX_BYTES,
+            ),
+            (
+                "platformId",
+                self.platform_id.as_deref(),
+                PLATFORM_ID_MAX_BYTES,
+            ),
+            (
+                "localPuuid",
+                self.local_puuid.as_deref(),
+                LOCAL_PUUID_MAX_BYTES,
+            ),
+            ("lobbyId", self.lobby_id.as_deref(), LOBBY_ID_MAX_BYTES),
+            ("gameId", self.game_id.as_deref(), GAME_ID_MAX_BYTES),
         ] {
             if let Some(value) = value {
                 bounded_string(name, value, limit)?;
@@ -195,7 +179,7 @@ fn validate_json(value: &Value, depth: usize) -> Result<(), ProtocolError> {
             for (key, value) in values {
                 if key.is_empty()
                     || key.len() > MAX_KEY_BYTES
-                    || matches!(key.as_str(), "__proto__" | "constructor" | "prototype")
+                    || UNSAFE_KEYS.contains(&key.as_str())
                 {
                     return Err(ProtocolError::JsonKey(key.clone()));
                 }
@@ -214,6 +198,9 @@ pub struct ObservationReceipt {
     pub observation_id: Uuid,
     /// Durable disposition.
     pub outcome: ObservationOutcome,
+    /// Typed reason when the durable disposition is quarantine.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quarantine_reason: Option<ObservationQuarantineReason>,
 }
 
 /// Durable server disposition of an observation.
@@ -247,7 +234,7 @@ impl ObservationBatch {
     ) -> Result<Self, ProtocolError> {
         let mut selected = Vec::new();
         let mut encoded_bytes = 19_usize;
-        for observation in observations.into_iter().take(100) {
+        for observation in observations.into_iter().take(MAX_OBSERVATION_BATCH_ITEMS) {
             let observation_bytes = observation.to_bytes()?.len();
             let separator_bytes = usize::from(!selected.is_empty());
             if encoded_bytes + separator_bytes + observation_bytes > MAX_OBSERVATION_BATCH_BYTES {
@@ -278,6 +265,8 @@ pub struct CheckInRequest {
 pub struct CheckInResponse {
     /// Whether the device record was refreshed.
     pub accepted: bool,
+    /// First sequence not already retained by the backend for this device.
+    pub next_sequence: u64,
 }
 
 /// Device self-revocation acknowledgement.
@@ -294,6 +283,8 @@ pub struct RevokeDeviceResponse {
 pub struct ObservationBatchReceipt {
     /// Receipt per submitted observation.
     pub receipts: Vec<ObservationReceipt>,
+    /// Backend wall-clock time used to correct a clock-skewed observation.
+    pub server_time: DateTime<Utc>,
 }
 
 /// Pairing creation request.
@@ -360,6 +351,9 @@ pub enum ProtocolError {
     /// Unsupported envelope protocol version.
     #[error("unsupported protocol version {0}")]
     UnsupportedProtocol(u16),
+    /// Unsupported observation envelope schema version.
+    #[error("unsupported observation schema version {0}")]
+    UnsupportedObservationSchema(u16),
     /// A bounded envelope string was empty or too long.
     #[error("{name} length {actual} is outside 1..={maximum}")]
     InvalidString {
@@ -401,8 +395,9 @@ mod tests {
     use serde_json::json;
 
     use super::{
-        MAX_OBSERVATION_BATCH_BYTES, ObservationBatch, ObservationEnvelope, ObservationKind,
-        ProtocolError,
+        MAX_OBSERVATION_BATCH_BYTES, OBSERVATION_SCHEMA_VERSION, ObservationBatch,
+        ObservationBatchReceipt, ObservationEnvelope, ObservationKind, ObservationOutcome,
+        ObservationQuarantineReason, ProtocolError,
     };
 
     #[test]
@@ -428,6 +423,23 @@ mod tests {
     }
 
     #[test]
+    fn rejects_an_incompatible_persisted_schema() -> Result<(), ProtocolError> {
+        let mut observation = ObservationEnvelope::new(
+            1,
+            ObservationKind::Gameflow,
+            "0.1.0",
+            json!({ "phase": "Lobby" }),
+        )?;
+        observation.schema_version = OBSERVATION_SCHEMA_VERSION + 1;
+
+        assert!(matches!(
+            observation.validate(),
+            Err(ProtocolError::UnsupportedObservationSchema(_))
+        ));
+        Ok(())
+    }
+
+    #[test]
     fn rejects_excessive_depth() {
         let mut value = json!(true);
         for _ in 0..18 {
@@ -435,6 +447,25 @@ mod tests {
         }
         let result = ObservationEnvelope::new(1, ObservationKind::Gameflow, "0.1.0", value);
         assert!(matches!(result, Err(ProtocolError::JsonDepth(_))));
+    }
+
+    #[test]
+    fn parses_a_typed_clock_quarantine_receipt() -> Result<(), Box<dyn std::error::Error>> {
+        let receipt: ObservationBatchReceipt = serde_json::from_value(json!({
+            "receipts": [{
+                "observationId": "018f47ef-3588-7b4e-b9b5-7b08091540df",
+                "outcome": "quarantined",
+                "quarantineReason": "future_timestamp"
+            }],
+            "serverTime": "2026-09-21T12:00:00Z"
+        }))?;
+
+        assert_eq!(receipt.receipts[0].outcome, ObservationOutcome::Quarantined);
+        assert_eq!(
+            receipt.receipts[0].quarantine_reason,
+            Some(ObservationQuarantineReason::FutureTimestamp)
+        );
+        Ok(())
     }
 
     #[test]

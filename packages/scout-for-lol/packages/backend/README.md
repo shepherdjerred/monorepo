@@ -161,7 +161,7 @@ The dual-write counters above say what the pipeline _did_. Five more families in
 it is still _holding_, which is the half the V2 acceptance checklist asks about:
 
 - `scout_durable_notification_intents{state}` — intents per state of the domain
-  machine, zero-filled across all eight. `state="unknown-delivery"` is the
+  machine, zero-filled across all nine. `state="unknown-delivery"` is the
   operator dead end and the unknown-delivery count in its own right.
 - `scout_durable_recovery_batches{state}` — batches per state, zero-filled
   across all six.

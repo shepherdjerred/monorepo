@@ -2,11 +2,21 @@
 
 use keyring::{Entry, Error as KeyringError};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use thiserror::Error;
 use uuid::Uuid;
 
 const SERVICE: &str = "com.scout-for-lol.client";
-const USERNAME: &str = "device-credential";
+const USERNAME_PREFIX: &str = "device-credential";
+
+fn credential_username(backend_origin: &str) -> String {
+    let digest = Sha256::digest(backend_origin.as_bytes());
+    format!("{USERNAME_PREFIX}-{digest:x}")
+}
+
+fn credential_entry(backend_origin: &str) -> Result<Entry, KeyringError> {
+    Entry::new(SERVICE, &credential_username(backend_origin))
+}
 
 /// Paired device identity kept in Keychain or Windows Credential Manager.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,8 +35,8 @@ impl DeviceCredential {
     ///
     /// Returns [`CredentialError`] when the platform credential store is
     /// unavailable or contains malformed Scout data.
-    pub fn load() -> Result<Option<Self>, CredentialError> {
-        let entry = Entry::new(SERVICE, USERNAME)?;
+    pub fn load(backend_origin: &str) -> Result<Option<Self>, CredentialError> {
+        let entry = credential_entry(backend_origin)?;
         match entry.get_password() {
             Ok(value) => serde_json::from_str(&value)
                 .map(Some)
@@ -41,9 +51,9 @@ impl DeviceCredential {
     /// # Errors
     ///
     /// Returns [`CredentialError`] when encoding or secure persistence fails.
-    pub fn save(&self) -> Result<(), CredentialError> {
+    pub fn save(&self, backend_origin: &str) -> Result<(), CredentialError> {
         let encoded = serde_json::to_string(self).map_err(CredentialError::Encode)?;
-        Entry::new(SERVICE, USERNAME)?.set_password(&encoded)?;
+        credential_entry(backend_origin)?.set_password(&encoded)?;
         Ok(())
     }
 
@@ -52,8 +62,8 @@ impl DeviceCredential {
     /// # Errors
     ///
     /// Returns [`CredentialError`] when the platform store cannot be changed.
-    pub fn delete() -> Result<(), CredentialError> {
-        let entry = Entry::new(SERVICE, USERNAME)?;
+    pub fn delete(backend_origin: &str) -> Result<(), CredentialError> {
+        let entry = credential_entry(backend_origin)?;
         match entry.delete_credential() {
             Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
             Err(error) => Err(CredentialError::Keyring(error)),
@@ -73,4 +83,21 @@ pub enum CredentialError {
     /// Credential serialization failed.
     #[error("could not encode Scout credential: {0}")]
     Encode(serde_json::Error),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::credential_username;
+
+    #[test]
+    fn credential_slots_are_stable_and_origin_scoped() {
+        let production = credential_username("https://scout.sjer.red/");
+
+        assert_eq!(production, credential_username("https://scout.sjer.red/"));
+        assert_ne!(
+            production,
+            credential_username("https://beta.scout.sjer.red/")
+        );
+        assert_ne!(production, credential_username("http://127.0.0.1:3000/"));
+    }
 }

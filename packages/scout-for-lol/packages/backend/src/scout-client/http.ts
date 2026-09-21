@@ -1,6 +1,7 @@
 import {
   SCOUT_CLIENT_MAX_BATCH_BYTES,
   ScoutClientCheckInSchema,
+  ScoutClientCheckInResponseSchema,
   ScoutClientCreatePairingSchema,
   ScoutClientObservationBatchSchema,
   ScoutClientPairingExchangeSchema,
@@ -20,6 +21,7 @@ import {
 import { pairingCreationAllowed } from "./pairing-rate-limit.ts";
 import {
   ingestObservationBatch,
+  nextScoutClientObservationSequence,
   ScoutClientObservationConflict,
   startAcceptedClientMatches,
 } from "./ingress.ts";
@@ -147,7 +149,7 @@ async function handleAuthenticatedRoute(
     );
     if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
     const checkedInAt = new Date();
-    await prisma.$transaction([
+    const checkIn = await prisma.$transaction([
       prisma.scoutClientDevice.update({
         where: { id: device.deviceId },
         data: { appVersion: input.data.appVersion, lastSeenAt: checkedInAt },
@@ -166,8 +168,20 @@ async function handleAuthenticatedRoute(
         },
         update: { lastSeenAt: checkedInAt },
       }),
+      prisma.scoutClientObservation.aggregate({
+        where: { deviceId: device.deviceId },
+        _max: { sequence: true },
+      }),
     ]);
-    return jsonResponse({ accepted: true });
+    const sequence = checkIn[2];
+    return jsonResponse(
+      ScoutClientCheckInResponseSchema.parse({
+        accepted: true,
+        nextSequence: nextScoutClientObservationSequence(
+          sequence._max.sequence,
+        ),
+      }),
+    );
   }
 
   if (pathname === SELF_REVOKE_PATH) {
@@ -182,7 +196,7 @@ async function handleAuthenticatedRoute(
     if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
     const receipts = await ingestObservationBatch(device, input.data);
     await startAcceptedClientMatches(input.data, receipts);
-    return jsonResponse({ receipts });
+    return jsonResponse({ receipts, serverTime: new Date().toISOString() });
   }
   return jsonResponse({ error: "not_found" }, 404);
 }

@@ -274,7 +274,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   },
   custom_nights_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   competition_builder_v2_enabled: {
     default: false,
@@ -441,8 +443,11 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     overrides: [],
   },
   scout_client_ingestion: {
+    // Pairing and ingestion are available to every account through Flipt's
+    // managed environment rollout. The compatibility registry remains off so
+    // a provider outage fails closed instead of opening a new ingress surface.
     default: false,
-    overrides: [{ value: true, attributes: { user: ME }, betaOnly: true }],
+    overrides: [],
   },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).

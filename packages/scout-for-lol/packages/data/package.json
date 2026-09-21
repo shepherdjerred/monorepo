@@ -9,7 +9,7 @@
     "./*": "./src/*"
   },
   "scripts": {
-    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check && bun run scripts/generate-dare-paraphrase-schema.ts",
+    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check && bun run scripts/generate-dare-paraphrase-schema.ts && bun run scripts/generate-scout-client-protocol.ts",
     "generate:asset-manifest": "bun run scripts/generate-asset-manifest.ts --write",
     "check:asset-manifest": "bun run scripts/generate-asset-manifest.ts --check",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",

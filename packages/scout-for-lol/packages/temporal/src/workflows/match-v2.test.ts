@@ -53,8 +53,14 @@ const SOURCE_PUUID = LeaguePuuidSchema.parse("s".repeat(78));
 function discovered(
   riotMatchId: RiotMatchId,
   deliveryMode: MatchDeliveryMode = "live",
+  gameEndTimestamp?: number,
 ): ScoutDiscoveredMatchV2 {
-  return { riotMatchId, sourcePuuid: SOURCE_PUUID, deliveryMode };
+  return {
+    riotMatchId,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode,
+    ...(gameEndTimestamp === undefined ? {} : { gameEndTimestamp }),
+  };
 }
 const SERIAL_CORE = [
   "readMatchPipelineStateV2",

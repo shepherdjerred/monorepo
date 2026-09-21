@@ -95,7 +95,7 @@ fn lockfile_candidates() -> Vec<PathBuf> {
         PathBuf::from(r"C:\Program Files\Riot Games\League of Legends\lockfile"),
     ];
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-    let mut candidates = Vec::new();
+    let candidates = Vec::new();
     #[cfg(target_os = "macos")]
     if let Some(install) = install_path_from_metadata(Path::new(
         "/Users/Shared/Riot Games/Metadata/league_of_legends.live/league_of_legends.live.product_settings.yaml",
@@ -113,6 +113,7 @@ fn lockfile_candidates() -> Vec<PathBuf> {
     candidates
 }
 
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 fn install_path_from_metadata(metadata: &Path) -> Option<PathBuf> {
     let contents = fs::read_to_string(metadata).ok()?;
     let raw = contents.lines().find_map(|line| {
@@ -258,6 +259,8 @@ pub enum LcuEndpoint {
     ChampSelect,
     /// Current end-of-game block.
     EndOfGame,
+    /// Game-client end-of-game block used while the richer summary catches up.
+    GameClientEndOfGame,
     /// Local player mastery list.
     ChampionMastery,
     /// Local player's mastery milestone sets and rewards.
@@ -307,6 +310,7 @@ impl LcuEndpoint {
             Self::Lobby => "/lol-lobby/v2/lobby",
             Self::ChampSelect => "/lol-champ-select/v1/session",
             Self::EndOfGame => "/lol-end-of-game/v1/eog-stats-block",
+            Self::GameClientEndOfGame => "/lol-end-of-game/v1/gameclient-eog-stats-block",
             Self::ChampionMastery => "/lol-champion-mastery/v1/local-player/champion-mastery",
             Self::ChampionMasteryMilestones => {
                 "/lol-champion-mastery/v1/local-player/champion-mastery-sets-and-rewards"

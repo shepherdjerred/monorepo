@@ -159,7 +159,7 @@ async function detachHistoricalLobby(seeded: {
   await testPrisma.tournamentLobby.delete({ where: { id: seeded.lobbyId } });
 }
 
-describe("Riot-only Customs results", () => {
+describe("managed Customs results", () => {
   test("does not finalize an unobserved local lobby by roster alone", async () => {
     const seeded = await seedPendingResult({ linkMatch: false });
     await detachHistoricalLobby(seeded);
@@ -215,7 +215,7 @@ describe("Riot-only Customs results", () => {
     });
 
     await expect(
-      finalizeManagedCustomResult(testPrisma, fixture),
+      finalizeManagedCustomResult(testPrisma, fixture, "SCOUT_CLIENT"),
     ).resolves.toBe(seeded.nightId);
 
     await expect(
@@ -224,6 +224,15 @@ describe("Riot-only Customs results", () => {
       state: "VERIFIED",
       matchId: fixture.metadata.matchId,
       observedLobbyId: "observed-local-lobby",
+    });
+    await expect(
+      testPrisma.customAuditEvent.findFirstOrThrow({
+        where: { gameId: seeded.gameId },
+      }),
+    ).resolves.toMatchObject({
+      actorId: "scout-client:canonical-match",
+      action: "SCOUT_CLIENT_RESULT_VERIFIED",
+      source: "SCOUT_CLIENT",
     });
   });
 

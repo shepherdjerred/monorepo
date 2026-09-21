@@ -12,6 +12,21 @@ const LobbyConfigurationSchema = z.object({
     pickType: z.string().min(1),
   }),
 });
+const LobbyTeamAssignmentsSchema = z.object({
+  members: z.array(
+    z.object({
+      puuid: z.string().min(1).optional(),
+      summonerPuuid: z.string().min(1).optional(),
+      teamId: z.number().int(),
+    }),
+  ),
+});
+const MatchTimingSchema = z.object({
+  gameEndTimestamp: z.number().int().positive(),
+});
+const MatchBundleTimingSchema = z.object({ timing: MatchTimingSchema });
+const MatchV5TimingSchema = z.object({ info: MatchTimingSchema });
+const GameflowSessionSchema = z.object({ phase: z.string() });
 
 function observationResource(payload: unknown): string | null {
   const parsed = ResourcePayloadSchema.safeParse(payload);
@@ -32,15 +47,21 @@ export function observedGameState(
   if (resource === "post_game" && observation.kind === "post_game") {
     return "RESULT_PENDING";
   }
-  if (resource !== "gameflow_phase" || observation.kind !== "gameflow") {
+  if (observation.kind !== "gameflow") {
     return null;
   }
   const data = observationData(observation.payload);
-  if (data === "InProgress") return "PLAYING";
+  const phase =
+    resource === "gameflow_phase"
+      ? data
+      : resource === "gameflow_session"
+        ? GameflowSessionSchema.safeParse(data).data?.phase
+        : null;
+  if (phase === "InProgress") return "PLAYING";
   if (
-    data === "PreEndOfGame" ||
-    data === "WaitingForStats" ||
-    data === "EndOfGame"
+    phase === "PreEndOfGame" ||
+    phase === "WaitingForStats" ||
+    phase === "EndOfGame"
   ) {
     return "RESULT_PENDING";
   }
@@ -79,6 +100,63 @@ export function sameRoster(
   return (
     observed.size === expected.length &&
     expected.every((participant) => observed.has(participant.puuid))
+  );
+}
+
+function observedLobbyTeams(payload: unknown): {
+  readonly blue: ReadonlySet<string>;
+  readonly red: ReadonlySet<string>;
+} | null {
+  const parsed = LobbyTeamAssignmentsSchema.safeParse(observationData(payload));
+  if (!parsed.success) return null;
+  const blue = new Set<string>();
+  const red = new Set<string>();
+  for (const member of parsed.data.members) {
+    const puuid = member.puuid ?? member.summonerPuuid;
+    if (puuid === undefined) return null;
+    // LCU lobby members use 0/1, while Match-V5 evidence uses 100/200.
+    // Accept both representations because the side, rather than the source
+    // representation, is what authenticates a scheduled lobby binding.
+    if (member.teamId === 0 || member.teamId === 100) {
+      blue.add(puuid);
+    } else if (member.teamId === 1 || member.teamId === 200) {
+      red.add(puuid);
+    } else {
+      return null;
+    }
+  }
+  return { blue, red };
+}
+
+/** Require every scheduled Custom participant to occupy the assigned side. */
+export function observedLobbyMatchesCustomTeams(
+  payload: unknown,
+  expected: readonly {
+    readonly puuid: string;
+    readonly side: string | null;
+  }[],
+): boolean {
+  const observed = observedLobbyTeams(payload);
+  if (observed === null) return false;
+  const blue = expected.filter((participant) => participant.side === "BLUE");
+  const red = expected.filter((participant) => participant.side === "RED");
+  if (blue.length + red.length !== expected.length) return false;
+  return sameRoster(observed.blue, blue) && sameRoster(observed.red, red);
+}
+
+/** Require each duel competitor to remain intact on one opposing lobby side. */
+export function observedLobbyMatchesDuelTeams(
+  payload: unknown,
+  competitorOne: readonly { readonly puuid: string }[],
+  competitorTwo: readonly { readonly puuid: string }[],
+): boolean {
+  const observed = observedLobbyTeams(payload);
+  if (observed === null) return false;
+  return (
+    (sameRoster(observed.blue, competitorOne) &&
+      sameRoster(observed.red, competitorTwo)) ||
+    (sameRoster(observed.blue, competitorTwo) &&
+      sameRoster(observed.red, competitorOne))
   );
 }
 
@@ -132,4 +210,19 @@ export function observedPostGameMatchId(
     `${observation.platformId.toUpperCase()}_${observation.gameId}`,
   );
   return parsed.success ? parsed.data : null;
+}
+
+/** End boundary used to ignore lobbies created only after this game finished. */
+export function observedMatchEndedAt(
+  observation: ScoutClientObservation,
+): Date {
+  const data = observationData(observation.payload);
+  const bundle = MatchBundleTimingSchema.safeParse(data);
+  if (bundle.success) {
+    return new Date(bundle.data.timing.gameEndTimestamp);
+  }
+  const match = MatchV5TimingSchema.safeParse(data);
+  return new Date(
+    match.success ? match.data.info.gameEndTimestamp : observation.capturedAt,
+  );
 }

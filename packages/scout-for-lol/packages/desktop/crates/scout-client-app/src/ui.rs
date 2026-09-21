@@ -28,7 +28,7 @@ pub struct ScoutApp {
     page: Page,
     quitting: bool,
     tray_commands: Receiver<TrayCommand>,
-    _tray: Option<TrayIcon>,
+    tray: Option<TrayIcon>,
 }
 
 impl ScoutApp {
@@ -36,12 +36,18 @@ impl ScoutApp {
     pub fn new(context: &eframe::CreationContext<'_>, runtime: ClientRuntime) -> Self {
         context.egui_ctx.set_theme(egui::Theme::Dark);
         let (tray, tray_commands) = create_tray(&context.egui_ctx);
+        if should_reveal_after_tray_creation(tray.is_some()) {
+            tracing::warn!("tray initialization failed; revealing the Scout Client window");
+            context
+                .egui_ctx
+                .send_viewport_cmd(egui::ViewportCommand::Visible(true));
+        }
         Self {
             runtime,
             page: Page::Overview,
             quitting: false,
             tray_commands,
-            _tray: tray,
+            tray,
         }
     }
 
@@ -77,7 +83,11 @@ impl eframe::App for ScoutApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let context = ui.ctx().clone();
         self.handle_tray(&context);
-        if !self.quitting && context.input(|input| input.viewport().close_requested()) {
+        if should_hide_on_close(
+            self.quitting,
+            self.tray.is_some(),
+            context.input(|input| input.viewport().close_requested()),
+        ) {
             context.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             context.send_viewport_cmd(egui::ViewportCommand::Visible(false));
         }
@@ -106,6 +116,14 @@ impl eframe::App for ScoutApp {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         self.runtime.shutdown();
     }
+}
+
+fn should_hide_on_close(quitting: bool, tray_available: bool, close_requested: bool) -> bool {
+    !quitting && tray_available && close_requested
+}
+
+fn should_reveal_after_tray_creation(tray_available: bool) -> bool {
+    !tray_available
 }
 
 fn overview(ui: &mut egui::Ui, state: &RuntimeState) {
@@ -249,4 +267,23 @@ fn create_tray(context: &egui::Context) -> (Option<TrayIcon>, Receiver<TrayComma
             .ok()
     });
     (tray, receiver)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{should_hide_on_close, should_reveal_after_tray_creation};
+
+    #[test]
+    fn hides_only_when_a_working_tray_can_reopen_the_window() {
+        assert!(should_hide_on_close(false, true, true));
+        assert!(!should_hide_on_close(false, false, true));
+        assert!(!should_hide_on_close(true, true, true));
+        assert!(!should_hide_on_close(false, true, false));
+    }
+
+    #[test]
+    fn reveals_the_window_when_tray_creation_fails() {
+        assert!(should_reveal_after_tray_creation(false));
+        assert!(!should_reveal_after_tray_creation(true));
+    }
 }

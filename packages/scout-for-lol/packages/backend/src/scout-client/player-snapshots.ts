@@ -1,16 +1,14 @@
 import { z } from "zod";
-import type { LeaguePuuid } from "@scout-for-lol/data";
+import {
+  RawChampionMasterySchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 
-const LocalMasteryRowSchema = z.object({
+const LocalMasteryRowSchema = RawChampionMasterySchema.omit({
+  chestGranted: true,
+}).extend({
   puuid: z.string().min(1).max(128),
-  championId: z.number().int().positive(),
-  championLevel: z.number().int().nonnegative(),
-  championPoints: z.number().int().nonnegative(),
-  lastPlayTime: z.number().int().nonnegative(),
-  championPointsSinceLastLevel: z.number().int(),
-  championPointsUntilNextLevel: z.number().int(),
-  tokensEarned: z.number().int().nonnegative(),
   championSeasonMilestone: z.number().int().nonnegative().optional(),
   highestGrade: z.string().max(16).optional(),
   markRequiredForNextLevel: z.number().int().nonnegative().optional(),

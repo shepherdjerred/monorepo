@@ -68,6 +68,14 @@ export const ScoutDiscoveredMatchV2Schema = z.strictObject({
    * back what was decided rather than guessing.
    */
   deliveryMode: MatchDeliveryModeSchema,
+  /**
+   * Completion time used by the shared post-match serializer.
+   *
+   * Optional only for replay: histories recorded before the shared
+   * dispatcher existed do not contain it and keep their original direct-child
+   * path. Every newly produced discovery result carries it.
+   */
+  gameEndTimestamp: z.int().nonnegative().optional(),
 });
 export type ScoutDiscoveredMatchV2 = z.infer<
   typeof ScoutDiscoveredMatchV2Schema
@@ -362,6 +370,10 @@ export const ScoutMatchPipelineStateV2ResultSchema = z.discriminatedUnion(
   "kind",
   [
     z.strictObject({ kind: z.literal("absent") }),
+    // A terminal dispatcher receipt can predate the observation when a child
+    // fails its source-account precondition. Keep that durable state distinct
+    // from both an unstarted match and a complete pipeline aggregate.
+    z.strictObject({ kind: z.literal("terminal") }),
     z.strictObject({
       kind: z.literal("present"),
       state: ScoutMatchPipelineStateV2Schema,
@@ -370,6 +382,20 @@ export const ScoutMatchPipelineStateV2ResultSchema = z.discriminatedUnion(
 );
 export type ScoutMatchPipelineStateV2Result = z.infer<
   typeof ScoutMatchPipelineStateV2ResultSchema
+>;
+
+/**
+ * The authoritative terminal state of a legacy match execution.
+ *
+ * Legacy durable receipts are deliberately fail-open, so they cannot prove
+ * that the owning Workflow finished. The execution itself can: v1 completes
+ * only after its effects and account cursors have been applied.
+ */
+export const ScoutLegacyMatchCompletionV2ResultSchema = z.strictObject({
+  completed: z.boolean(),
+});
+export type ScoutLegacyMatchCompletionV2Result = z.infer<
+  typeof ScoutLegacyMatchCompletionV2ResultSchema
 >;
 
 /**

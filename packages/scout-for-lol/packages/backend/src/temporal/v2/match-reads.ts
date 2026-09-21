@@ -17,7 +17,9 @@ import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts"
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getMatchPipelineState } from "#src/database/durable/match-pipeline-state.ts";
 import { getObservation } from "#src/database/durable/observation-repository.ts";
+import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import { discoverPostMatchIntents } from "#src/league/tasks/postmatch/match-history-polling.ts";
+import { SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND } from "@scout-for-lol/temporal/match-receipts-v2";
 
 /**
  * The V2 core's reads: what to process, where a run can resume from, and what
@@ -103,14 +105,22 @@ export async function discoverPostMatchIdsV2(options?: {
     );
   }
   const matches = discovery.matches
-    .map((intent) => ({
-      riotMatchId: RiotMatchIdSchema.parse(intent.matchId),
-      sourcePuuid: LeaguePuuidSchema.parse(intent.sourcePuuid),
-      // v1's own per-match call, carried rather than re-derived: a match it
-      // surfaced while filling a gap announces nothing, and this pass is the
-      // only place that knows which kind of pass found it.
-      deliveryMode: MatchDeliveryModeSchema.parse(intent.delivery),
-    }))
+    .map((intent) => {
+      if (intent.gameEndTimestamp === undefined) {
+        throw new Error(
+          `Current V2 discovery omitted the completion timestamp for ${intent.matchId}`,
+        );
+      }
+      return {
+        riotMatchId: RiotMatchIdSchema.parse(intent.matchId),
+        sourcePuuid: LeaguePuuidSchema.parse(intent.sourcePuuid),
+        // v1's own per-match call, carried rather than re-derived: a match it
+        // surfaced while filling a gap announces nothing, and this pass is the
+        // only place that knows which kind of pass found it.
+        deliveryMode: MatchDeliveryModeSchema.parse(intent.delivery),
+        gameEndTimestamp: intent.gameEndTimestamp,
+      };
+    })
     .slice(0, SCOUT_V2_PAGE_MAX);
   return ScoutPostMatchScanV2ResultSchema.parse({
     outcome: "scanned",
@@ -163,7 +173,14 @@ export async function readMatchPipelineStateV2(input: {
   const matchId = RiotMatchIdSchema.parse(input.riotMatchId);
   const aggregate = await getMatchPipelineState(prisma, { matchId });
   if (aggregate === null) {
-    return { kind: "absent" };
+    const receipts = await listReceipts(prisma, { matchId });
+    const terminal = receipts.some(
+      (record) =>
+        record.receipt.kind === SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+    );
+    return ScoutMatchPipelineStateV2ResultSchema.parse({
+      kind: terminal ? "terminal" : "absent",
+    });
   }
   const receiptKinds: ReceiptKind[] = [
     ...new Set(aggregate.processing.receipts.map((receipt) => receipt.kind)),

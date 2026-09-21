@@ -8,8 +8,12 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
+import {
+  LOCAL_MATCH_TIMING_DRIFT_MS,
+  convertLcuMatchBundle,
+} from "./canonical/lcu-match.ts";
 
-const LOCAL_CANONICAL_DELAY_MS = 2 * 60 * 1000;
+export const LOCAL_CANONICAL_DELAY_MS = 2 * 60 * 1000;
 
 type Candidate = {
   readonly observationId: string;
@@ -38,7 +42,8 @@ export function parseLocalCanonicalMatch(
 ): RawMatch | null {
   const platform = platformRouteOf(riotMatchId);
   const payload = embeddedPayload(candidate.payload);
-  const complete = RawMatchSchema.safeParse(payload);
+  const localBundle = convertLcuMatchBundle(riotMatchId, payload);
+  const complete = RawMatchSchema.safeParse(localBundle ?? payload);
   const infoOnly = complete.success ? null : RawInfoSchema.safeParse(payload);
   const infoMatch =
     infoOnly?.success === true
@@ -101,6 +106,32 @@ function conflictingCandidates(riotMatchId: RiotMatchId): never {
   );
 }
 
+function deterministicMatchJson(match: RawMatch): string {
+  return JSON.stringify({
+    ...match,
+    info: {
+      ...match.info,
+      gameEndTimestamp: 0,
+      gameStartTimestamp: 0,
+    },
+  });
+}
+
+/** Compare local evidence while tolerating bounded observer clock differences. */
+export function localCanonicalMatchesAgree(
+  first: RawMatch,
+  candidate: RawMatch,
+): boolean {
+  return (
+    deterministicMatchJson(first) === deterministicMatchJson(candidate) &&
+    Math.abs(
+      first.info.gameStartTimestamp - candidate.info.gameStartTimestamp,
+    ) <= LOCAL_MATCH_TIMING_DRIFT_MS &&
+    Math.abs(first.info.gameEndTimestamp - candidate.info.gameEndTimestamp) <=
+      LOCAL_MATCH_TIMING_DRIFT_MS
+  );
+}
+
 /**
  * Resolve or select an immutable local canonical payload. Selection is
  * allowed only after the observation has been present for two minutes, giving
@@ -113,6 +144,7 @@ export async function resolveLocalCanonicalMatch(
   const selected = await readSelectedLocalCanonicalMatch(riotMatchId);
   if (selected !== null) return selected;
 
+  const platform = platformRouteOf(riotMatchId);
   const gameId = riotMatchId.slice(riotMatchId.indexOf("_") + 1);
   const cutoff = new Date(now.getTime() - LOCAL_CANONICAL_DELAY_MS);
   const candidates = await prisma.scoutClientObservation.findMany({
@@ -120,10 +152,10 @@ export async function resolveLocalCanonicalMatch(
       kind: "post_game",
       disposition: "ACCEPTED",
       gameId,
+      platformId: { equals: platform, mode: "insensitive" },
       receivedAt: { lte: cutoff },
     },
     orderBy: [{ capturedAt: "asc" }, { observationId: "asc" }],
-    take: 32,
   });
   const valid = candidates.flatMap((candidate) => {
     const match = parseLocalCanonicalMatch(riotMatchId, candidate);
@@ -133,8 +165,9 @@ export async function resolveLocalCanonicalMatch(
 
   const first = valid[0];
   if (first === undefined) return null;
-  const canonical = JSON.stringify(first.match);
-  if (valid.some(({ match }) => JSON.stringify(match) !== canonical)) {
+  if (
+    valid.some(({ match }) => !localCanonicalMatchesAgree(first.match, match))
+  ) {
     conflictingCandidates(riotMatchId);
   }
 

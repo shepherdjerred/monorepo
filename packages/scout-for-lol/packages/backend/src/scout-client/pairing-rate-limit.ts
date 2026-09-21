@@ -28,12 +28,12 @@ export function pairingCreationAllowed(
     globalCalls = 0;
     callsByCaller.clear();
   }
-  globalCalls += 1;
-  if (globalCalls > GLOBAL_LIMIT) return false;
-
   const caller = callerKey(request);
   const calls = (callsByCaller.get(caller) ?? 0) + 1;
   if (calls > PER_CALLER_LIMIT) return false;
+
+  if (globalCalls >= GLOBAL_LIMIT) return false;
+  globalCalls += 1;
   if (calls > 1 || callsByCaller.size < MAX_TRACKED_CALLERS) {
     callsByCaller.set(caller, calls);
   }

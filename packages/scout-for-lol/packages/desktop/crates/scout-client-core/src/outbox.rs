@@ -2,11 +2,11 @@
 
 use std::path::{Path, PathBuf};
 
-use rusqlite::{Connection, TransactionBehavior, params};
+use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::protocol::{ObservationEnvelope, ProtocolError};
+use crate::protocol::{MAX_OBSERVATION_BYTES, ObservationEnvelope, ProtocolError};
 
 /// One pending outbox row.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,6 +19,15 @@ pub struct PendingObservation {
     pub body: Vec<u8>,
     /// Number of failed delivery attempts.
     pub attempt_count: u32,
+}
+
+/// Durable local timing evidence for a game observed from start through EOG.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PendingGameTiming {
+    /// Playable-game start derived from the live client clock.
+    pub started_at_millis: i64,
+    /// First local observation of the end-of-game transition.
+    pub ended_at_millis: i64,
 }
 
 /// SQLite-backed at-least-once queue.
@@ -52,7 +61,9 @@ impl ObservationOutbox {
              );
              CREATE TABLE IF NOT EXISTS outbox_metadata (
                singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
-               next_sequence INTEGER NOT NULL
+               next_sequence INTEGER NOT NULL,
+               sequence_synchronized INTEGER NOT NULL DEFAULT 0
+                 CHECK (sequence_synchronized IN (0, 1))
              );
              CREATE TABLE IF NOT EXISTS uploaded_replay (
                digest TEXT PRIMARY KEY,
@@ -71,6 +82,17 @@ impl ObservationOutbox {
                modified_at_millis INTEGER NOT NULL,
                digest TEXT NOT NULL,
                handled_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+             );
+             CREATE TABLE IF NOT EXISTS pending_end_of_game (
+               game_id TEXT PRIMARY KEY,
+               body BLOB NOT NULL,
+               captured_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+             );
+             CREATE TABLE IF NOT EXISTS pending_game_timing (
+               game_id TEXT PRIMARY KEY,
+               started_at_millis INTEGER,
+               ended_at_millis INTEGER,
+               updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
              );",
         )?;
         let has_coalesce_key = {
@@ -89,6 +111,28 @@ impl ObservationOutbox {
                 "ALTER TABLE observation_outbox ADD COLUMN coalesce_key TEXT",
                 [],
             )?;
+        }
+        let has_sequence_synchronized = {
+            let mut statement = connection.prepare("PRAGMA table_info(outbox_metadata)")?;
+            let columns = statement.query_map([], |row| row.get::<_, String>(1))?;
+            let mut found = false;
+            for column in columns {
+                if column? == "sequence_synchronized" {
+                    found = true;
+                }
+            }
+            found
+        };
+        if !has_sequence_synchronized {
+            connection.execute(
+                "ALTER TABLE outbox_metadata ADD COLUMN sequence_synchronized INTEGER NOT NULL DEFAULT 0
+                 CHECK (sequence_synchronized IN (0, 1))",
+                [],
+            )?;
+            // Older runtimes allocated observations only after a successful
+            // check-in. A legacy metadata row therefore proves that this
+            // device already learned its backend sequence floor.
+            connection.execute("UPDATE outbox_metadata SET sequence_synchronized = 1", [])?;
         }
         connection.execute_batch(
             "CREATE UNIQUE INDEX IF NOT EXISTS observation_outbox_coalesce_key
@@ -122,6 +166,65 @@ impl ObservationOutbox {
         )?;
         transaction.commit()?;
         u64::try_from(sequence).map_err(|_| OutboxError::SequenceRange)
+    }
+
+    /// Whether this outbox has learned the paired device's backend sequence floor.
+    ///
+    /// A freshly recreated database must not collect while check-in is
+    /// unavailable: allocating from one would collide with observations the
+    /// backend retained before the local file disappeared.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if metadata cannot be read.
+    pub fn sequence_is_synchronized(&self) -> Result<bool, OutboxError> {
+        let connection = self.connection()?;
+        connection
+            .query_row(
+                "SELECT sequence_synchronized FROM outbox_metadata WHERE singleton = 1",
+                [],
+                |row| row.get::<_, bool>(0),
+            )
+            .optional()
+            .map(|value| value.unwrap_or(false))
+            .map_err(OutboxError::Sqlite)
+    }
+
+    /// Raise the local allocator to a backend-confirmed sequence floor.
+    ///
+    /// Existing pending observations keep their immutable sequence and body;
+    /// only newly created observations use the synchronized floor.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed SQLite or numeric-range error.
+    pub fn ensure_next_sequence_at_least(&self, floor: u64) -> Result<(), OutboxError> {
+        let floor = i64::try_from(floor).map_err(|_| OutboxError::SequenceRange)?;
+        let mut connection = self.connection()?;
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let maximum: Option<i64> =
+            transaction.query_row("SELECT MAX(sequence) FROM observation_outbox", [], |row| {
+                row.get(0)
+            })?;
+        let local_floor = maximum.map_or(Ok(1_i64), |sequence| {
+            sequence.checked_add(1).ok_or(OutboxError::SequenceRange)
+        })?;
+        let synchronized_floor = floor.max(local_floor);
+        transaction.execute(
+            "INSERT OR IGNORE INTO outbox_metadata
+               (singleton, next_sequence, sequence_synchronized)
+             VALUES (1, ?1, 1)",
+            [synchronized_floor],
+        )?;
+        transaction.execute(
+            "UPDATE outbox_metadata
+             SET next_sequence = MAX(next_sequence, ?1),
+                 sequence_synchronized = 1
+             WHERE singleton = 1",
+            [synchronized_floor],
+        )?;
+        transaction.commit()?;
+        Ok(())
     }
 
     /// Insert a validated observation. Identical idempotent retries are harmless.
@@ -245,6 +348,159 @@ impl ObservationOutbox {
         Ok(changed == 1)
     }
 
+    /// Retain transient end-game evidence until match history can complete it.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed validation or SQLite error.
+    pub fn remember_end_of_game(&self, game_id: &str, body: &[u8]) -> Result<(), OutboxError> {
+        if game_id.is_empty() || game_id.len() > 32 {
+            return Err(OutboxError::InvalidGameId);
+        }
+        if body.len() > MAX_OBSERVATION_BYTES {
+            return Err(OutboxError::FragmentTooLarge(body.len()));
+        }
+        let connection = self.connection()?;
+        connection.execute(
+            "INSERT INTO pending_end_of_game (game_id, body) VALUES (?1, ?2)
+             ON CONFLICT(game_id) DO UPDATE SET
+               body = excluded.body,
+               captured_at = CURRENT_TIMESTAMP",
+            params![game_id, body],
+        )?;
+        Ok(())
+    }
+
+    /// Read retained end-game evidence for one Riot game id.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local state cannot be read.
+    pub fn pending_end_of_game(&self, game_id: &str) -> Result<Option<Vec<u8>>, OutboxError> {
+        let connection = self.connection()?;
+        connection
+            .query_row(
+                "SELECT body FROM pending_end_of_game WHERE game_id = ?1",
+                [game_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(OutboxError::Sqlite)
+    }
+
+    /// Remove an end-game fragment after its complete bundle is durable.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local state cannot be changed.
+    pub fn forget_end_of_game(&self, game_id: &str) -> Result<(), OutboxError> {
+        let connection = self.connection()?;
+        connection.execute(
+            "DELETE FROM pending_end_of_game WHERE game_id = ?1",
+            [game_id],
+        )?;
+        Ok(())
+    }
+
+    /// Retain the latest live-clock estimate until EOG freezes the timing pair.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed validation or SQLite error.
+    pub fn remember_game_start(
+        &self,
+        game_id: &str,
+        started_at_millis: i64,
+    ) -> Result<(), OutboxError> {
+        validate_game_timing(game_id, started_at_millis)?;
+        let connection = self.connection()?;
+        connection.execute(
+            "INSERT INTO pending_game_timing (game_id, started_at_millis)
+             VALUES (?1, ?2)
+             ON CONFLICT(game_id) DO UPDATE SET
+               started_at_millis = CASE
+                 WHEN pending_game_timing.started_at_millis IS NULL
+                   THEN excluded.started_at_millis
+                 WHEN pending_game_timing.ended_at_millis IS NULL
+                   THEN excluded.started_at_millis
+                 ELSE pending_game_timing.started_at_millis
+               END,
+               updated_at = CURRENT_TIMESTAMP",
+            params![game_id, started_at_millis],
+        )?;
+        Ok(())
+    }
+
+    /// Retain the earliest observation of a game's end-of-game transition.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed validation or SQLite error.
+    pub fn remember_game_end(
+        &self,
+        game_id: &str,
+        ended_at_millis: i64,
+    ) -> Result<(), OutboxError> {
+        validate_game_timing(game_id, ended_at_millis)?;
+        let connection = self.connection()?;
+        connection.execute(
+            "INSERT INTO pending_game_timing (game_id, ended_at_millis)
+             VALUES (?1, ?2)
+             ON CONFLICT(game_id) DO UPDATE SET
+               ended_at_millis = CASE
+                 WHEN pending_game_timing.ended_at_millis IS NULL
+                   THEN excluded.ended_at_millis
+                 ELSE MIN(pending_game_timing.ended_at_millis, excluded.ended_at_millis)
+               END,
+               updated_at = CURRENT_TIMESTAMP",
+            params![game_id, ended_at_millis],
+        )?;
+        Ok(())
+    }
+
+    /// Read timing only after both the playable start and EOG were observed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local state cannot be read.
+    pub fn pending_game_timing(
+        &self,
+        game_id: &str,
+    ) -> Result<Option<PendingGameTiming>, OutboxError> {
+        let connection = self.connection()?;
+        connection
+            .query_row(
+                "SELECT started_at_millis, ended_at_millis
+                 FROM pending_game_timing
+                 WHERE game_id = ?1
+                   AND started_at_millis IS NOT NULL
+                   AND ended_at_millis IS NOT NULL",
+                [game_id],
+                |row| {
+                    Ok(PendingGameTiming {
+                        started_at_millis: row.get(0)?,
+                        ended_at_millis: row.get(1)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(OutboxError::Sqlite)
+    }
+
+    /// Remove timing evidence after its complete post-game bundle is durable.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local state cannot be changed.
+    pub fn forget_game_timing(&self, game_id: &str) -> Result<(), OutboxError> {
+        let connection = self.connection()?;
+        connection.execute(
+            "DELETE FROM pending_game_timing WHERE game_id = ?1",
+            [game_id],
+        )?;
+        Ok(())
+    }
+
     /// Return whether a content-addressed replay has a durable server receipt.
     ///
     /// # Errors
@@ -360,6 +616,16 @@ impl ObservationOutbox {
     }
 }
 
+fn validate_game_timing(game_id: &str, timestamp_millis: i64) -> Result<(), OutboxError> {
+    if game_id.is_empty() || game_id.len() > 32 {
+        return Err(OutboxError::InvalidGameId);
+    }
+    if timestamp_millis <= 0 {
+        return Err(OutboxError::InvalidGameTimestamp);
+    }
+    Ok(())
+}
+
 /// Durable outbox failure.
 #[derive(Debug, Error)]
 pub enum OutboxError {
@@ -378,18 +644,28 @@ pub enum OutboxError {
     /// A coalescing key must be short and non-empty.
     #[error("outbox coalescing key is invalid")]
     InvalidCoalesceKey,
+    /// A retained end-game fragment must have a bounded game id.
+    #[error("end-game fragment has an invalid game id")]
+    InvalidGameId,
+    /// Local game timing must contain a positive Unix timestamp.
+    #[error("local game timing contains an invalid timestamp")]
+    InvalidGameTimestamp,
+    /// A retained end-game fragment exceeded the observation wire bound.
+    #[error("end-game fragment contains {0} bytes, exceeding the wire limit")]
+    FragmentTooLarge(usize),
 }
 
 #[cfg(test)]
 mod tests {
     use std::fs;
 
+    use rusqlite::Connection;
     use serde_json::json;
     use uuid::Uuid;
 
     use crate::protocol::{ObservationEnvelope, ObservationKind};
 
-    use super::ObservationOutbox;
+    use super::{ObservationOutbox, PendingGameTiming};
 
     fn temporary_database() -> std::path::PathBuf {
         std::env::temp_dir().join(format!("scout-outbox-{}.db", Uuid::new_v4()))
@@ -430,13 +706,81 @@ mod tests {
         assert!(outbox.replay_file_handled("/replays/12345.rofl", 12, 34)?);
         assert!(!outbox.replay_file_handled("/replays/12345.rofl", 13, 34)?);
         assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 35)?);
+        outbox.remember_end_of_game("12345", br#"{"gameId":12345}"#)?;
+        outbox.remember_game_start("12345", 1_000)?;
+        outbox.remember_game_start("12345", 1_250)?;
+        outbox.remember_game_end("12345", 5_000)?;
+        outbox.remember_game_start("12345", 1_500)?;
+        drop(outbox);
+        let outbox = ObservationOutbox::open(&path)?;
+        assert_eq!(
+            outbox.pending_end_of_game("12345")?,
+            Some(br#"{"gameId":12345}"#.to_vec())
+        );
+        assert_eq!(
+            outbox.pending_game_timing("12345")?,
+            Some(PendingGameTiming {
+                started_at_millis: 1_250,
+                ended_at_millis: 5_000,
+            })
+        );
+        outbox.forget_end_of_game("12345")?;
+        outbox.forget_game_timing("12345")?;
+        assert_eq!(outbox.pending_end_of_game("12345")?, None);
+        assert_eq!(outbox.pending_game_timing("12345")?, None);
         drop(outbox);
         fs::remove_file(path)?;
         Ok(())
     }
 
     #[test]
-    fn coalesces_unsent_live_frames_without_dropping_other_observations()
+    fn synchronizes_a_recreated_outbox_with_the_backend_sequence()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+
+        assert!(!outbox.sequence_is_synchronized()?);
+        assert_eq!(outbox.next_sequence()?, 1);
+        assert!(!outbox.sequence_is_synchronized()?);
+        outbox.ensure_next_sequence_at_least(42)?;
+        assert!(outbox.sequence_is_synchronized()?);
+        assert_eq!(outbox.next_sequence()?, 42);
+        outbox.ensure_next_sequence_at_least(10)?;
+        assert_eq!(outbox.next_sequence()?, 43);
+
+        drop(outbox);
+        let outbox = ObservationOutbox::open(&path)?;
+        assert!(outbox.sequence_is_synchronized()?);
+        drop(outbox);
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn treats_legacy_allocator_metadata_as_already_synchronized()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let connection = Connection::open(&path)?;
+        connection.execute_batch(
+            "CREATE TABLE outbox_metadata (
+               singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+               next_sequence INTEGER NOT NULL
+             );
+             INSERT INTO outbox_metadata (singleton, next_sequence) VALUES (1, 42);",
+        )?;
+        drop(connection);
+
+        let outbox = ObservationOutbox::open(&path)?;
+        assert!(outbox.sequence_is_synchronized()?);
+        assert_eq!(outbox.next_sequence()?, 42);
+
+        drop(outbox);
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn coalesces_unsent_resource_snapshots_without_dropping_other_observations()
     -> Result<(), Box<dyn std::error::Error>> {
         let path = temporary_database();
         let outbox = ObservationOutbox::open(&path)?;
@@ -458,15 +802,33 @@ mod tests {
             "test",
             json!({ "gameTime": 12 }),
         )?;
+        let first_lobby_refresh = ObservationEnvelope::new(
+            4,
+            ObservationKind::Lobby,
+            "test",
+            json!({ "lobbyId": "lobby-1" }),
+        )?;
+        let latest_lobby_refresh = ObservationEnvelope::new(
+            5,
+            ObservationKind::Lobby,
+            "test",
+            json!({ "lobbyId": "lobby-1" }),
+        )?;
 
         outbox.enqueue_coalesced("live_game_frame", &first_frame)?;
         outbox.enqueue(&phase)?;
         outbox.enqueue_coalesced("live_game_frame", &latest_frame)?;
+        outbox.enqueue_coalesced("lobby_refresh", &first_lobby_refresh)?;
+        outbox.enqueue_coalesced("lobby_refresh", &latest_lobby_refresh)?;
 
         let pending = outbox.pending(100)?;
-        assert_eq!(pending.len(), 2);
+        assert_eq!(pending.len(), 3);
         assert_eq!(pending[0].observation_id, phase.observation_id);
         assert_eq!(pending[1].observation_id, latest_frame.observation_id);
+        assert_eq!(
+            pending[2].observation_id,
+            latest_lobby_refresh.observation_id
+        );
         drop(outbox);
         fs::remove_file(path)?;
         Ok(())

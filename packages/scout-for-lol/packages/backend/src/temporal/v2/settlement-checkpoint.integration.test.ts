@@ -53,6 +53,7 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,
+      matchDataSource: "RIOT",
       matchData: {
         info: { gameCreation: Date.parse("2026-09-18T09:00:00.000Z") },
       },

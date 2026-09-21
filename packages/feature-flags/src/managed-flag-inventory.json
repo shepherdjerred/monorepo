@@ -1434,29 +1434,6 @@
       "key": "beta",
       "overrides": [
         {
-          "key": "scout_client_ingestion",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [
-            {
-              "segmentKey": "scout-user-160509172704739328",
-              "segmentOperator": "OR_SEGMENT_OPERATOR",
-              "matchType": "ALL_SEGMENT_MATCH_TYPE",
-              "constraints": [
-                {
-                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-                  "property": "user",
-                  "operator": "eq",
-                  "value": "160509172704739328"
-                }
-              ],
-              "result": true
-            }
-          ],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "explore_on_demand_riot_enabled",
           "type": "boolean",
           "default": false,
@@ -1532,6 +1509,14 @@
           ],
           "rules": [],
           "thresholdRollouts": []
+        },
+        {
+          "key": "scout_client_ingestion",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     },
@@ -1580,6 +1565,14 @@
         },
         {
           "key": "competition_builder_v2_enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "custom_nights_enabled",
           "type": "boolean",
           "default": false,
           "rollouts": [],
@@ -1644,6 +1637,20 @@
             {
               "rank": 1,
               "percentage": 100,
+              "result": true
+            }
+          ]
+        },
+        {
+          "key": "scout_client_ingestion",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": [
+            {
+              "rank": 1,
+              "percentage": 10,
               "result": true
             }
           ]

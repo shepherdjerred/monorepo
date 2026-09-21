@@ -13,6 +13,8 @@ import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { requireAuthoritativeMatchData } from "#src/league/tasks/postmatch/temporal-match-ingestion.ts";
+import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
+import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts";
 import {
   readSelectedLocalCanonicalMatch,
   resolveLocalCanonicalMatch,
@@ -37,11 +39,25 @@ export type ScoutV2MatchContext = {
   readonly matchId: MatchId;
   readonly riotMatchId: RiotMatchId;
   readonly matchData: RawMatch;
+  /** Durable provenance of the canonical match payload. */
+  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
   /** Every tracked account that played in this match. */
   readonly trackedPlayers: PlayerConfigEntry[];
   /** Every tracked account, which is what the v1 pipeline's steps take. */
   readonly allPlayerConfigs: PlayerConfigEntry[];
 };
+
+async function readArchivedCanonicalMatch(
+  riotMatchId: RiotMatchId,
+): Promise<RawMatch | null> {
+  const descriptor = await storedRawArchiveDescriptor(
+    prisma,
+    riotMatchId,
+    "match",
+  );
+  if (descriptor === null) return null;
+  return await readArchivedMatchPayload(descriptor, riotMatchId);
+}
 
 /**
  * The region to fetch a match through, taken from a tracked account on the
@@ -78,26 +94,33 @@ export async function resolveScoutV2MatchContext(
   const matchId = MatchIdSchema.parse(riotMatchId);
   const accounts = await getAccountsWithState(prisma, getActiveServerIds());
   const allPlayerConfigs = accounts.map((account) => account.config);
+  const archived = await readArchivedCanonicalMatch(riotMatchId);
   const selectedLocal = await readSelectedLocalCanonicalMatch(riotMatchId);
   const riotMatch =
-    selectedLocal === null
+    archived === null && selectedLocal === null
       ? await fetchMatchData(
           matchId,
           regionForPlatform(allPlayerConfigs, riotMatchId),
+          "return_undefined_on_404",
         )
       : undefined;
+  const resolvedLocal =
+    archived === null && selectedLocal === null && riotMatch === undefined
+      ? await resolveLocalCanonicalMatch(riotMatchId)
+      : null;
   const matchData =
+    archived ??
     selectedLocal ??
     riotMatch ??
-    requireAuthoritativeMatchData(
-      riotMatchId,
-      (await resolveLocalCanonicalMatch(riotMatchId)) ?? undefined,
-    );
+    requireAuthoritativeMatchData(riotMatchId, resolvedLocal ?? undefined);
+  const matchDataSource =
+    selectedLocal !== null || resolvedLocal !== null ? "SCOUT_CLIENT" : "RIOT";
   const participants = new Set<string>(matchData.metadata.participants);
   return {
     matchId,
     riotMatchId,
     matchData,
+    matchDataSource,
     trackedPlayers: allPlayerConfigs.filter((config) =>
       participants.has(config.league.leagueAccount.puuid),
     ),

@@ -1,17 +1,32 @@
 import { z } from "zod";
 import {
+  ScoutClientObservationQuarantineReasonSchema,
   type ScoutClientObservation,
   type ScoutClientObservationBatch,
+  type ScoutClientObservationQuarantineReason,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { Prisma } from "#generated/prisma/client/index.js";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  IsoInstantSchema,
+  type RiotMatchId,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import configuration from "#src/configuration.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
-import { startScoutMatchProcessingV2 } from "#src/temporal/starts-v2.ts";
+import { signalScoutClientMatchDispatchV2 } from "#src/temporal/starts-v2.ts";
+import {
+  ScoutClientMatchDispatchBatchV2Schema,
+  type ScoutClientMatchDispatchItemV2,
+} from "@scout-for-lol/temporal/workflow-contracts-v2";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
+import {
+  LOCAL_CANONICAL_DELAY_MS,
+  parseLocalCanonicalMatch,
+} from "./canonical-match.ts";
 import { reconcileProcessedClientBinding } from "./late-binding.ts";
+import { observedPostGameMatchId } from "./lobby-payload.ts";
 import {
   bindObservedLobby,
   bindObservedMatch,
@@ -22,9 +37,20 @@ const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
 export class ScoutClientObservationConflict extends Error {}
 
+export function nextScoutClientObservationSequence(
+  maximumSequence: bigint | null,
+): number {
+  const nextSequence = (maximumSequence ?? 0n) + 1n;
+  if (nextSequence > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new RangeError("Scout Client device sequence is exhausted");
+  }
+  return Number(nextSequence);
+}
+
 type Receipt = {
   readonly observationId: string;
   readonly outcome: "accepted" | "already_accepted" | "quarantined";
+  readonly quarantineReason?: ScoutClientObservationQuarantineReason;
 };
 
 type ObservationAttestation = {
@@ -106,33 +132,33 @@ export function observationQuarantineReason(
   verifiedPuuids: ReadonlySet<string>,
   acceptedAppVersions: ReadonlySet<string>,
   now: Date,
-): string | null {
+): ScoutClientObservationQuarantineReason | null {
   if (!acceptedAppVersions.has(observation.appVersion)) {
-    return "observation app version has not authenticated for this device";
+    return "unverified_app_version";
   }
   if (
     new Date(observation.capturedAt).getTime() >
     now.getTime() + 5 * 60 * 1000
   ) {
-    return "observation timestamp is more than five minutes in the future";
+    return "future_timestamp";
   }
   if (
     observation.localPuuid !== undefined &&
     !verifiedPuuids.has(observation.localPuuid)
   ) {
-    return "local PUUID is not linked to the paired Scout user";
+    return "unverified_local_puuid";
   }
   const participantKinds = new Set(["lobby", "champ_select", "post_game"]);
   if (participantKinds.has(observation.kind)) {
     if (observation.localPuuid === undefined) {
-      return "participant observation has no local PUUID";
+      return "missing_observer_puuid";
     }
     if (!payloadContainsPuuid(observation.payload, observation.localPuuid)) {
-      return "observer PUUID does not appear in the participant payload";
+      return "observer_puuid_not_in_payload";
     }
   }
   if (observation.kind === "post_game" && observation.gameId === undefined) {
-    return "post-game observation has no game ID";
+    return "missing_post_game_id";
   }
   return null;
 }
@@ -146,7 +172,12 @@ async function createObservation(
   const digest = bodyDigest(observation);
   const existing = await prisma.scoutClientObservation.findUnique({
     where: { observationId: observation.observationId },
-    select: { deviceId: true, bodyDigest: true, disposition: true },
+    select: {
+      deviceId: true,
+      bodyDigest: true,
+      disposition: true,
+      quarantineReason: true,
+    },
   });
   if (existing !== null) {
     if (
@@ -157,12 +188,19 @@ async function createObservation(
         "observation id was reused with different content",
       );
     }
+    const quarantineReason =
+      existing.disposition === "QUARANTINED"
+        ? ScoutClientObservationQuarantineReasonSchema.parse(
+            existing.quarantineReason,
+          )
+        : undefined;
     return {
       observationId: observation.observationId,
       outcome:
         existing.disposition === "QUARANTINED"
           ? "quarantined"
           : "already_accepted",
+      ...(quarantineReason === undefined ? {} : { quarantineReason }),
     };
   }
 
@@ -205,6 +243,7 @@ async function createObservation(
   return {
     observationId: observation.observationId,
     outcome: reason === null ? "accepted" : "quarantined",
+    ...(reason === null ? {} : { quarantineReason: reason }),
   };
 }
 
@@ -261,27 +300,37 @@ export async function ingestObservationBatch(
   return receipts;
 }
 
+function postGameDeliveryMode(
+  observation: ScoutClientObservation,
+): ScoutClientMatchDispatchItemV2["deliveryMode"] | null {
+  const resource = observationResource(observation.payload);
+  if (resource === "post_game") return "live";
+  if (/^match_history_game:\d{1,32}$/u.test(resource ?? "")) {
+    return "silent-backfill";
+  }
+  return null;
+}
+
 /**
- * Hand every accepted native post-game observation to the same durable match
- * pipeline used by Riot discovery. Failure is returned to the client so its
- * outbox retries the already-idempotent observation and start together.
+ * Select only complete, identity-consistent local matches for dispatch.
+ * Match-history discoveries are backfills even when the LCU happened to
+ * return enough fields to promote them; only an observed end-of-game bundle
+ * is a live completion.
  */
-export async function startAcceptedClientMatches(
+export function acceptedClientMatchDispatches(
   batch: ScoutClientObservationBatch,
   receipts: readonly Receipt[],
-): Promise<void> {
+  now = new Date(),
+): readonly ScoutClientMatchDispatchItemV2[] {
   const accepted = new Set(
     receipts
       .filter((receipt) => receipt.outcome !== "quarantined")
       .map((receipt) => receipt.observationId),
   );
-  const starts = new Map<
-    string,
-    {
-      riotMatchId: ReturnType<typeof RiotMatchIdSchema.parse>;
-      sourcePuuid: ReturnType<typeof LeaguePuuidSchema.parse>;
-    }
-  >();
+  const readyAt = IsoInstantSchema.parse(
+    new Date(now.getTime() + LOCAL_CANONICAL_DELAY_MS).toISOString(),
+  );
+  const starts = new Map<string, ScoutClientMatchDispatchItemV2>();
   for (const observation of batch.observations) {
     if (
       observation.kind !== "post_game" ||
@@ -296,29 +345,89 @@ export async function startAcceptedClientMatches(
       `${observation.platformId.toUpperCase()}_${observation.gameId}`,
     );
     if (!parsed.success) continue;
-    starts.set(parsed.data, {
-      riotMatchId: parsed.data,
-      sourcePuuid: LeaguePuuidSchema.parse(observation.localPuuid),
+    const deliveryMode = postGameDeliveryMode(observation);
+    if (deliveryMode === null) continue;
+    const sourcePuuid = LeaguePuuidSchema.parse(observation.localPuuid);
+    const match = parseLocalCanonicalMatch(parsed.data, {
+      observationId: observation.observationId,
+      platformId: observation.platformId,
+      localPuuid: observation.localPuuid,
+      payload: observation.payload,
+      bodyDigest: bodyDigest(observation),
     });
+    if (match === null) continue;
+    const candidate: ScoutClientMatchDispatchItemV2 = {
+      riotMatchId: parsed.data,
+      sourcePuuid,
+      deliveryMode,
+      gameEndTimestamp: match.info.gameEndTimestamp,
+      readyAt,
+      completionTargets: [],
+    };
+    const existing = starts.get(parsed.data);
+    if (existing === undefined || deliveryMode === "live") {
+      starts.set(parsed.data, candidate);
+    }
   }
-  if (starts.size === 0) return;
-  const supervisor = currentScoutTemporalSupervisor();
-  if (supervisor === undefined) {
-    throw new Error(
-      "Temporal is unavailable; native match start was not accepted",
+  return [...starts.values()].sort(
+    (left, right) =>
+      left.gameEndTimestamp - right.gameEndTimestamp ||
+      left.riotMatchId.localeCompare(right.riotMatchId),
+  );
+}
+
+/**
+ * Select accepted live match identities independently of whether their local
+ * payload is complete enough to promote as canonical match data. Binding uses
+ * exact roster and match identity evidence, so a late partial observation can
+ * still change already-processed Custom and duel projections.
+ */
+export function acceptedClientBindingMatchIds(
+  batch: ScoutClientObservationBatch,
+  receipts: readonly Receipt[],
+): readonly RiotMatchId[] {
+  const accepted = new Set(
+    receipts
+      .filter((receipt) => receipt.outcome !== "quarantined")
+      .map((receipt) => receipt.observationId),
+  );
+  const matchIds = new Set<RiotMatchId>();
+  for (const observation of batch.observations) {
+    if (!accepted.has(observation.observationId)) continue;
+    const matchId = observedPostGameMatchId(observation);
+    if (matchId !== null) matchIds.add(RiotMatchIdSchema.parse(matchId));
+  }
+  return [...matchIds].sort((left, right) => left.localeCompare(right));
+}
+
+/**
+ * Durably enqueue accepted native matches behind the same serialized ordering
+ * contract as Riot discovery. Failure is returned to the client so its outbox
+ * retries the already-idempotent observation and signal together.
+ */
+export async function startAcceptedClientMatches(
+  batch: ScoutClientObservationBatch,
+  receipts: readonly Receipt[],
+): Promise<void> {
+  const starts = acceptedClientMatchDispatches(batch, receipts);
+  if (starts.length > 0) {
+    const supervisor = currentScoutTemporalSupervisor();
+    if (supervisor === undefined) {
+      throw new Error(
+        "Temporal is unavailable; native match start was not accepted",
+      );
+    }
+    await signalScoutClientMatchDispatchV2(
+      supervisor.client(),
+      configuration.environment,
+      ScoutClientMatchDispatchBatchV2Schema.parse(starts),
     );
   }
-  for (const start of starts.values()) {
-    await startScoutMatchProcessingV2(supervisor.client(), {
-      stage: configuration.environment,
-      riotMatchId: start.riotMatchId,
-      sourcePuuid: start.sourcePuuid,
-      deliveryMode: "live",
-    });
+  for (const riotMatchId of acceptedClientBindingMatchIds(batch, receipts)) {
     // A binding can arrive after Riot's run has already passed the Custom and
     // duel stages. Once a durable observation exists, replay only those
     // binding-dependent, idempotent projectors; otherwise the newly started or
     // still-running match Workflow will observe the binding itself.
-    await reconcileProcessedClientBinding(start.riotMatchId);
+    await reconcileProcessedClientBinding(riotMatchId);
   }
 }

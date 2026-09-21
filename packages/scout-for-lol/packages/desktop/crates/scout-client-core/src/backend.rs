@@ -74,6 +74,12 @@ impl ScoutBackendClient {
         })
     }
 
+    /// Normalized backend origin used to scope operating-system credentials.
+    #[must_use]
+    pub fn credential_scope(&self) -> &str {
+        self.origin.as_str()
+    }
+
     fn endpoint(&self, path: &str) -> Result<Url, BackendError> {
         self.origin.join(path).map_err(|_| BackendError::Origin)
     }
@@ -165,7 +171,7 @@ impl ScoutBackendClient {
         &self,
         credential: &DeviceCredential,
         app_version: &str,
-    ) -> Result<(), BackendError> {
+    ) -> Result<u64, BackendError> {
         let receipt: CheckInResponse = self
             .http
             .post(self.endpoint("/api/scout-client/v1/check-ins")?)
@@ -185,7 +191,7 @@ impl ScoutBackendClient {
         if !receipt.accepted {
             return Err(BackendError::CheckInReceipt);
         }
-        Ok(())
+        Ok(receipt.next_sequence)
     }
 
     /// Revoke this bearer before removing it from the operating-system store.
@@ -204,7 +210,7 @@ impl ScoutBackendClient {
             .send()
             .await
             .map_err(BackendError::Request)?;
-        if response.status() == StatusCode::UNAUTHORIZED {
+        if revocation_is_complete_without_receipt(response.status()) {
             return Ok(());
         }
         let receipt: RevokeDeviceResponse = response
@@ -287,6 +293,15 @@ pub enum BackendError {
 }
 
 impl BackendError {
+    /// Whether this replay should be deferred while the scan continues.
+    #[must_use]
+    pub fn replay_should_be_deferred(&self) -> bool {
+        let Self::Request(error) = self else {
+            return false;
+        };
+        error.status().is_some_and(replay_status_should_be_deferred)
+    }
+
     /// Statuses that permanently reject one replay rather than the credential or service.
     #[must_use]
     pub fn terminal_replay_rejection_status(&self) -> Option<u16> {
@@ -302,5 +317,50 @@ impl BackendError {
                 | StatusCode::UNSUPPORTED_MEDIA_TYPE
         )
         .then(|| status.as_u16())
+    }
+}
+
+fn replay_status_should_be_deferred(status: StatusCode) -> bool {
+    status == StatusCode::CONFLICT
+}
+
+fn revocation_is_complete_without_receipt(status: StatusCode) -> bool {
+    status == StatusCode::UNAUTHORIZED
+}
+
+#[cfg(test)]
+mod tests {
+    use reqwest::StatusCode;
+
+    use super::{
+        BackendError, ScoutBackendClient, replay_status_should_be_deferred,
+        revocation_is_complete_without_receipt,
+    };
+
+    #[test]
+    fn defers_replay_conflicts_without_hiding_terminal_rejections() {
+        assert!(replay_status_should_be_deferred(StatusCode::CONFLICT));
+        assert!(!replay_status_should_be_deferred(StatusCode::BAD_REQUEST));
+        assert!(!replay_status_should_be_deferred(
+            StatusCode::PAYLOAD_TOO_LARGE
+        ));
+    }
+
+    #[test]
+    fn credential_scope_uses_the_normalized_backend_origin() -> Result<(), BackendError> {
+        let backend = ScoutBackendClient::new("https://scout.sjer.red/ignored/path")?;
+
+        assert_eq!(backend.credential_scope(), "https://scout.sjer.red/");
+        Ok(())
+    }
+
+    #[test]
+    fn treats_an_unauthorized_revocation_as_already_complete() {
+        assert!(revocation_is_complete_without_receipt(
+            StatusCode::UNAUTHORIZED
+        ));
+        assert!(!revocation_is_complete_without_receipt(
+            StatusCode::INTERNAL_SERVER_ERROR
+        ));
     }
 }

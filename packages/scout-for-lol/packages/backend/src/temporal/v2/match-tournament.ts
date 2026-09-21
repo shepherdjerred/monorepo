@@ -31,7 +31,11 @@ export async function finalizeTournamentResultV2(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutTournamentResultV2Result> {
   const context = await resolveScoutV2MatchContext(input.riotMatchId);
-  return await finalizeTournamentMatchV2(context.matchId, context.matchData);
+  return await finalizeTournamentMatchV2(
+    context.matchId,
+    context.matchData,
+    context.matchDataSource,
+  );
 }
 
 /**
@@ -44,6 +48,7 @@ export async function finalizeTournamentResultV2(input: {
 export async function finalizeTournamentMatchV2(
   matchId: MatchId,
   matchData: RawMatch,
+  matchDataSource: "RIOT" | "SCOUT_CLIENT" = "RIOT",
 ): Promise<ScoutTournamentResultV2Result> {
   // The same identity rule v1 finalizes on, so the gate and the work can never
   // disagree about which lobby this match belongs to.
@@ -64,7 +69,11 @@ export async function finalizeTournamentMatchV2(
 
   const alreadyReported =
     lobby?.state === "reported" || observedGame?.state === "VERIFIED";
-  await finalizeAndPublishManagedCustomResult(prisma, matchData);
+  await finalizeAndPublishManagedCustomResult(
+    prisma,
+    matchData,
+    matchDataSource,
+  );
 
   // Reported separately from the outcome because they are different claims:
   // whether THIS run finalized the result, and whether a Custom Night snapshot

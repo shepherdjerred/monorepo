@@ -4,18 +4,26 @@ import nodePath from "node:path";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod";
 import configuration from "#src/configuration.ts";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
+import {
+  ReplayContainerError,
+  validateReplayContainer,
+  type ReplayProvenance,
+} from "./replay/container.ts";
+import { parseObservedReplayProvenance } from "./replay/provenance.ts";
 import {
   replayUploadClaimIsStale,
   replayUploadLeaseCutoff,
 } from "./replay-lease.ts";
 
 export const MAX_REPLAY_BYTES = 512 * 1024 * 1024;
+export const MAX_OWNER_REPLAY_BYTES_PER_DAY = 2n * 1024n * 1024n * 1024n;
+export const MAX_OWNER_REPLAYS_PER_DAY = 20;
+const REPLAY_QUOTA_WINDOW_MS = 24 * 60 * 60 * 1000;
 const DigestSchema = z.string().regex(/^[0-9a-f]{64}$/);
 const GameIdSchema = z.string().regex(/^\d{1,32}$/);
-const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 const FileNotFoundSchema = z.object({ code: z.literal("ENOENT") });
 const BodyChunkSchema = z.instanceof(Uint8Array);
 const s3 = createS3Client();
@@ -55,20 +63,50 @@ type ReceivedReplay = {
   readonly digest: string;
 };
 
+type ReplayArtifactDatabase = Pick<Db, "scoutClientReplayArtifact">;
+type ReplayClaimDatabase = Pick<
+  Db,
+  "$executeRaw" | "scoutClientReplayArtifact"
+>;
+
+function completedReplay(
+  existing: {
+    readonly gameId: string;
+    readonly digest: string;
+    readonly bytes: bigint;
+  },
+  requestedGameId: string,
+): ReplayUploadResult {
+  if (existing.gameId !== requestedGameId) {
+    throw new ReplayUploadError(
+      "Replay digest already belongs to another game",
+      400,
+    );
+  }
+  return {
+    outcome: "already_accepted",
+    digest: existing.digest,
+    bytes: Number(existing.bytes),
+  };
+}
+
 async function existingReplay(
-  digest: string,
+  metadata: Pick<ReplayMetadata, "digest" | "gameId">,
+  database: ReplayArtifactDatabase = prisma,
   now = new Date(),
 ): Promise<ReplayUploadResult | null> {
-  const existing = await prisma.scoutClientReplayArtifact.findUnique({
-    where: { digest },
-    select: { uploadState: true, digest: true, bytes: true, updatedAt: true },
+  const existing = await database.scoutClientReplayArtifact.findUnique({
+    where: { digest: metadata.digest },
+    select: {
+      uploadState: true,
+      gameId: true,
+      digest: true,
+      bytes: true,
+      updatedAt: true,
+    },
   });
   if (existing?.uploadState === "COMPLETED") {
-    return {
-      outcome: "already_accepted",
-      digest: existing.digest,
-      bytes: Number(existing.bytes),
-    };
+    return completedReplay(existing, metadata.gameId);
   }
   if (
     existing?.uploadState === "UPLOADING" &&
@@ -111,21 +149,54 @@ function parseReplayMetadata(
 async function requireObservedMatch(
   metadata: ReplayMetadata,
   device: AuthenticatedScoutClient,
-): Promise<void> {
-  const observedMatch = await prisma.scoutClientObservation.findFirst({
+): Promise<ReplayProvenance> {
+  const observedMatches = await prisma.scoutClientObservation.findMany({
     where: {
       deviceId: device.deviceId,
       gameId: metadata.gameId,
       kind: "post_game",
       disposition: "ACCEPTED",
     },
-    select: { observationId: true },
+    select: { localPuuid: true, leaguePatch: true, payload: true },
   });
-  if (observedMatch === null) {
-    throw new ReplayUploadError(
-      "Replay has no accepted post-game observation from this device",
-      403,
-    );
+  for (const observedMatch of observedMatches) {
+    if (observedMatch.localPuuid === null) continue;
+    const provenance = parseObservedReplayProvenance({
+      payload: observedMatch.payload,
+      localPuuid: observedMatch.localPuuid,
+      leaguePatch: observedMatch.leaguePatch,
+      requestedGameId: metadata.gameId,
+    });
+    if (provenance !== null) return provenance;
+  }
+  throw new ReplayUploadError(
+    "Replay is waiting for accepted match-history evidence from this device",
+    409,
+  );
+}
+
+async function requireReplayQuota(
+  metadata: ReplayMetadata,
+  device: AuthenticatedScoutClient,
+  database: ReplayClaimDatabase,
+): Promise<void> {
+  const windowStart = new Date(Date.now() - REPLAY_QUOTA_WINDOW_MS);
+  const usage = await database.scoutClientReplayArtifact.aggregate({
+    where: {
+      device: { ownerId: device.ownerId },
+      createdAt: { gte: windowStart },
+      digest: { not: metadata.digest },
+    },
+    _count: { _all: true },
+    _sum: { bytes: true },
+  });
+  const reservedBytes = usage._sum.bytes ?? 0n;
+  if (
+    usage._count._all >= MAX_OWNER_REPLAYS_PER_DAY ||
+    reservedBytes + BigInt(metadata.declaredBytes) >
+      MAX_OWNER_REPLAY_BYTES_PER_DAY
+  ) {
+    throw new ReplayUploadError("Owner replay upload quota exceeded", 429);
   }
 }
 
@@ -135,57 +206,86 @@ async function claimReplayArtifact(
   device: AuthenticatedScoutClient,
 ): Promise<ReplayClaim> {
   const leasedAt = new Date();
-  try {
-    const artifact = await prisma.scoutClientReplayArtifact.create({
+  return prisma.$transaction(async (transaction) => {
+    await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${metadata.digest}, 0))`;
+    await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`scout-client-replay-owner:${device.ownerId}`}, 0))`;
+    const existing = await transaction.scoutClientReplayArtifact.findUnique({
+      where: { digest: metadata.digest },
+      select: {
+        id: true,
+        uploadState: true,
+        gameId: true,
+        digest: true,
+        bytes: true,
+        lastError: true,
+        updatedAt: true,
+      },
+    });
+    if (existing !== null && existing.gameId !== metadata.gameId) {
+      throw new ReplayUploadError(
+        "Replay digest belongs to a different game",
+        400,
+      );
+    }
+    if (existing?.uploadState === "COMPLETED") {
+      return {
+        state: "completed",
+        replay: completedReplay(existing, metadata.gameId),
+      };
+    }
+    if (
+      existing?.uploadState === "UPLOADING" &&
+      !replayUploadClaimIsStale(existing.updatedAt, leasedAt)
+    ) {
+      throw new ReplayUploadError("Replay upload is already in progress", 409);
+    }
+    if (existing?.uploadState === "REJECTED") {
+      throw new ReplayUploadError(
+        existing.lastError ?? "Replay was rejected",
+        400,
+      );
+    }
+    await requireReplayQuota(metadata, device, transaction);
+    if (existing === null) {
+      const artifact = await transaction.scoutClientReplayArtifact.create({
+        data: {
+          deviceId: device.deviceId,
+          gameId: metadata.gameId,
+          digest: metadata.digest,
+          objectKey,
+          bytes: BigInt(metadata.declaredBytes),
+          uploadState: "UPLOADING",
+          updatedAt: leasedAt,
+        },
+        select: { id: true },
+      });
+      return { state: "claimed", artifactId: artifact.id, leasedAt };
+    }
+    const reclaimed = await transaction.scoutClientReplayArtifact.updateMany({
+      where: {
+        digest: metadata.digest,
+        gameId: metadata.gameId,
+        OR: [
+          { uploadState: "FAILED" },
+          {
+            uploadState: "UPLOADING",
+            updatedAt: { lte: replayUploadLeaseCutoff(leasedAt) },
+          },
+        ],
+      },
       data: {
         deviceId: device.deviceId,
-        gameId: metadata.gameId,
-        digest: metadata.digest,
-        objectKey,
         bytes: BigInt(metadata.declaredBytes),
         uploadState: "UPLOADING",
+        lastError: null,
         updatedAt: leasedAt,
       },
-      select: { id: true },
     });
-    return { state: "claimed", artifactId: artifact.id, leasedAt };
-  } catch (error) {
-    if (!UniqueViolationSchema.safeParse(error).success) throw error;
-  }
-
-  const raced = await existingReplay(metadata.digest, leasedAt);
-  if (raced !== null) return { state: "completed", replay: raced };
-  const reclaimed = await prisma.scoutClientReplayArtifact.updateMany({
-    where: {
-      digest: metadata.digest,
-      OR: [
-        { uploadState: "FAILED" },
-        {
-          uploadState: "UPLOADING",
-          updatedAt: { lte: replayUploadLeaseCutoff(leasedAt) },
-        },
-      ],
-    },
-    data: {
-      deviceId: device.deviceId,
-      gameId: metadata.gameId,
-      bytes: BigInt(metadata.declaredBytes),
-      uploadState: "UPLOADING",
-      lastError: null,
-      updatedAt: leasedAt,
-    },
+    if (reclaimed.count !== 1) {
+      throw new ReplayUploadError("Replay upload cannot be resumed yet", 409);
+    }
+    return { state: "claimed", artifactId: existing.id, leasedAt };
   });
-  if (reclaimed.count !== 1) {
-    throw new ReplayUploadError("Replay upload cannot be resumed yet", 409);
-  }
-  const resumed = await prisma.scoutClientReplayArtifact.findUnique({
-    where: { digest: metadata.digest },
-    select: { id: true },
-  });
-  if (resumed === null) {
-    throw new ReplayUploadError("Replay upload claim disappeared", 409);
-  }
-  return { state: "claimed", artifactId: resumed.id, leasedAt };
 }
 
 function appendReplayHeader(header: Uint8Array, chunk: Uint8Array): Uint8Array {
@@ -276,10 +376,13 @@ async function markReplayFailed(
   leasedAt: Date,
   error: unknown,
 ): Promise<void> {
+  const terminalRejection =
+    error instanceof ReplayUploadError &&
+    [400, 403, 413, 415].includes(error.status);
   await prisma.scoutClientReplayArtifact.updateMany({
     where: { id: artifactId, uploadState: "UPLOADING", updatedAt: leasedAt },
     data: {
-      uploadState: "FAILED",
+      uploadState: terminalRejection ? "REJECTED" : "FAILED",
       lastError:
         error instanceof ReplayUploadError
           ? error.message
@@ -302,8 +405,8 @@ export async function uploadReplay(
   device: AuthenticatedScoutClient,
 ): Promise<ReplayUploadResult> {
   const metadata = parseReplayMetadata(request, gameIdInput);
-  await requireObservedMatch(metadata, device);
-  const duplicate = await existingReplay(metadata.digest);
+  const provenance = await requireObservedMatch(metadata, device);
+  const duplicate = await existingReplay(metadata);
   if (duplicate !== null) return duplicate;
 
   const objectKey = `replays/${metadata.gameId}/${metadata.digest}.rofl`;
@@ -316,6 +419,7 @@ export async function uploadReplay(
   );
   try {
     const received = await receiveReplay(metadata, temporaryPath);
+    await validateReplayContainer(temporaryPath, received.bytes, provenance);
     await uploadReplayObject(metadata, objectKey, temporaryPath, received);
     const completed = await prisma.scoutClientReplayArtifact.updateMany({
       where: {
@@ -338,8 +442,12 @@ export async function uploadReplay(
       bytes: received.bytes,
     };
   } catch (error) {
-    await markReplayFailed(claim.artifactId, claim.leasedAt, error);
-    throw error;
+    const uploadError =
+      error instanceof ReplayContainerError
+        ? new ReplayUploadError(error.message, error.status)
+        : error;
+    await markReplayFailed(claim.artifactId, claim.leasedAt, uploadError);
+    throw uploadError;
   } finally {
     await removeTemporaryReplay(temporaryPath);
   }

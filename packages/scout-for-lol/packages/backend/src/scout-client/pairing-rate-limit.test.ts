@@ -23,6 +23,19 @@ describe("pairing creation limiter", () => {
     expect(pairingCreationAllowed(request("192.0.2.11"), NOW)).toBe(true);
   });
 
+  test("does not charge caller-limit rejections to the global budget", () => {
+    for (let attempt = 0; attempt < 105; attempt += 1) {
+      pairingCreationAllowed(request("192.0.2.10"), NOW);
+    }
+
+    for (let caller = 0; caller < 95; caller += 1) {
+      expect(
+        pairingCreationAllowed(request(`198.51.100.${caller.toString()}`), NOW),
+      ).toBe(true);
+    }
+    expect(pairingCreationAllowed(request("203.0.113.1"), NOW)).toBe(false);
+  });
+
   test("resets the fixed window after one minute", () => {
     for (let attempt = 0; attempt < 6; attempt += 1) {
       pairingCreationAllowed(request(), NOW);

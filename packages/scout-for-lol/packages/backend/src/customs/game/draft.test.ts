@@ -8,6 +8,7 @@ import {
   activeDraftTeam,
   assertCustomTeamsComplete,
   assertRosterLockable,
+  assertSingleRiotRegion,
   pickCustomPlayer,
   selectCaptains,
   selectCustomRoster,
@@ -63,6 +64,18 @@ function gameParticipant(index: number): CustomGameParticipant {
 }
 
 describe("custom roster selection", () => {
+  test("requires every selected account to use one Riot region", () => {
+    expect(() =>
+      assertSingleRiotRegion(Array.from({ length: 10 }, () => "AMERICA_NORTH")),
+    ).not.toThrow();
+    expect(() =>
+      assertSingleRiotRegion([
+        ...Array.from({ length: 9 }, () => "AMERICA_NORTH"),
+        "EU_WEST",
+      ]),
+    ).toThrow("one Riot region");
+  });
+
   test("first ten is stable by ready time", () => {
     const participants = Array.from({ length: 12 }, (_, index) =>
       nightParticipant(index),

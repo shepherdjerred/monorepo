@@ -1,29 +1,27 @@
 import { z } from "zod";
+import { SCOUT_CLIENT_PROTOCOL_CONTRACT as protocolContract } from "./protocol.generated.ts";
 
-export const SCOUT_CLIENT_PROTOCOL_VERSION = 1;
-export const SCOUT_CLIENT_MAX_BATCH_BYTES = 4 * 1024 * 1024;
-export const SCOUT_CLIENT_MAX_BATCH_OBSERVATIONS = 100;
+export const SCOUT_CLIENT_PROTOCOL_VERSION = protocolContract.protocolVersion;
+export const SCOUT_CLIENT_OBSERVATION_SCHEMA_VERSION =
+  protocolContract.observationSchemaVersion;
+export const SCOUT_CLIENT_MAX_BATCH_BYTES = protocolContract.maxBatchBytes;
+export const SCOUT_CLIENT_MAX_BATCH_OBSERVATIONS =
+  protocolContract.maxBatchObservations;
 
-const MAX_JSON_DEPTH = 16;
-const MAX_ARRAY_ITEMS = 100_000;
-const MAX_OBJECT_KEYS = 4096;
-const MAX_STRING_BYTES = 16 * 1024;
-const MAX_KEY_BYTES = 256;
-const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+const MAX_JSON_DEPTH = protocolContract.payload.maxDepth;
+const MAX_ARRAY_ITEMS = protocolContract.payload.maxArrayItems;
+const MAX_OBJECT_KEYS = protocolContract.payload.maxObjectKeys;
+const MAX_STRING_BYTES = protocolContract.payload.maxStringBytes;
+const MAX_KEY_BYTES = protocolContract.payload.maxKeyBytes;
+const UNSAFE_KEYS = new Set<string>(protocolContract.payload.unsafeKeys);
 const textEncoder = new TextEncoder();
 
-export const ScoutClientObservationKindSchema = z.enum([
-  "account_profile",
-  "champion_mastery",
-  "challenges",
-  "clash",
-  "lobby",
-  "champ_select",
-  "gameflow",
-  "live_game_frame",
-  "post_game",
-  "replay_status",
-]);
+export const ScoutClientObservationKindSchema = z.enum(
+  protocolContract.observationKinds,
+);
+export const ScoutClientObservationQuarantineReasonSchema = z.enum(
+  protocolContract.quarantineReasons,
+);
 
 function arrayBoundaryError(
   value: readonly unknown[],
@@ -80,19 +78,44 @@ const BoundedJsonSchema = z
 
 export const ScoutClientObservationSchema = z.strictObject({
   protocolVersion: z.literal(SCOUT_CLIENT_PROTOCOL_VERSION),
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(SCOUT_CLIENT_OBSERVATION_SCHEMA_VERSION),
   observationId: z.uuid(),
   sequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
   capturedAt: z.iso.datetime({ offset: true }),
-  appVersion: z.string().min(1).max(128),
+  appVersion: z
+    .string()
+    .min(1)
+    .max(protocolContract.envelopeStringMaxBytes.appVersion),
   kind: ScoutClientObservationKindSchema,
-  leaguePatch: z.string().min(1).max(64).optional(),
-  platformId: z.string().min(1).max(16).optional(),
-  localPuuid: z.string().min(1).max(128).optional(),
-  lobbyId: z.string().min(1).max(128).optional(),
+  leaguePatch: z
+    .string()
+    .min(1)
+    .max(protocolContract.envelopeStringMaxBytes.leaguePatch)
+    .optional(),
+  platformId: z
+    .string()
+    .min(1)
+    .max(protocolContract.envelopeStringMaxBytes.platformId)
+    .optional(),
+  localPuuid: z
+    .string()
+    .min(1)
+    .max(protocolContract.envelopeStringMaxBytes.localPuuid)
+    .optional(),
+  lobbyId: z
+    .string()
+    .min(1)
+    .max(protocolContract.envelopeStringMaxBytes.lobbyId)
+    .optional(),
   gameId: z
     .string()
-    .regex(/^\d{1,32}$/)
+    .regex(
+      new RegExp(
+        String.raw`^\d{1,${String(
+          protocolContract.envelopeStringMaxBytes.gameId,
+        )}}$`,
+      ),
+    )
     .optional(),
   payload: BoundedJsonSchema,
 });
@@ -121,9 +144,17 @@ export const ScoutClientCheckInSchema = z.strictObject({
   protocolVersion: z.literal(SCOUT_CLIENT_PROTOCOL_VERSION),
 });
 
+export const ScoutClientCheckInResponseSchema = z.strictObject({
+  accepted: z.literal(true),
+  nextSequence: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+});
+
 export type ScoutClientObservation = z.infer<
   typeof ScoutClientObservationSchema
 >;
 export type ScoutClientObservationBatch = z.infer<
   typeof ScoutClientObservationBatchSchema
+>;
+export type ScoutClientObservationQuarantineReason = z.infer<
+  typeof ScoutClientObservationQuarantineReasonSchema
 >;

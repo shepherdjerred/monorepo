@@ -2048,7 +2048,7 @@ model CustomGame {
   activeCaptain      String?
   tournamentLobbyId  Int?      @unique
   matchId            String?   @unique
-  observedLobbyId    String?   @unique
+  observedLobbyId    String?
   lobbyObservationId String?   @unique
   voiceState         String    @default("IDLE")
   voiceReady         Boolean   @default(false)
@@ -2066,6 +2066,7 @@ model CustomGame {
   auditEvents     CustomAuditEvent[]
 
   @@unique([nightId, sequence])
+  @@index([observedLobbyId])
   @@index([nightId, state])
   @@index([voiceState, updatedAt])
 }
@@ -2620,7 +2621,7 @@ model DuelGame {
   seriesId             String
   gameNumber           Int
   tournamentLobbyId    Int?      @unique
-  observedLobbyId      String?   @unique
+  observedLobbyId      String?
   lobbyObservationId   String?   @unique
   matchId              String?   @unique
   gameState            String    @default("awaiting_readiness")
@@ -2638,6 +2639,7 @@ model DuelGame {
   tournamentLobby TournamentLobby? @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
 
   @@unique([seriesId, gameNumber])
+  @@index([observedLobbyId])
   @@index([seriesId, gameState])
 }
 
@@ -2905,7 +2907,7 @@ model MatchNotificationIntent {
 /// had its announcements minted and its rows are sweepable; see SJ-203.
 model MatchSettlementAnnouncement {
   riotMatchId String
-  /// closure | settlement | parlay | earnings | dare-summary
+  /// closure | settlement | parlay | earnings | late-earnings | dare-summary
   family      String
   /// The item's identity within its family: a guild id, or a Dare id.
   itemKey     String

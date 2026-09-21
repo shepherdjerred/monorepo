@@ -1,4 +1,6 @@
 import {
+  AccountIdSchema,
+  RegionSchema,
   type CustomActivityClaims,
   type CustomNightSnapshot,
   type DiscordAccountId,
@@ -7,6 +9,7 @@ import { type CustomActivityActor } from "#src/customs/activity/activity-actor.t
 import {
   assertCustomTeamsComplete,
   assertRosterLockable,
+  assertSingleRiotRegion,
   snapshotCustomParticipant,
 } from "#src/customs/game/draft.ts";
 import type { CustomRevisionInput as RevisionInput } from "#src/customs/activity/activity-mutation-context.ts";
@@ -21,12 +24,35 @@ import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { returnCustomVoiceToLobby } from "#src/customs/voice-service.ts";
 import { prisma } from "#src/database/index.ts";
 
-async function openObservedCustomLobby(
+async function assertObservedCustomLobbyRoster(
+  snapshot: CustomNightSnapshot,
+): Promise<void> {
+  const game = currentGame(snapshot);
+  assertCustomTeamsComplete(game.participants);
+  const accountIds = game.participants.map((participant) =>
+    AccountIdSchema.parse(participant.accountId),
+  );
+  const accounts = await prisma.account.findMany({
+    where: { id: { in: accountIds } },
+  });
+  const regionsByAccount = new Map(
+    accounts.map((account) => [account.id, RegionSchema.parse(account.region)]),
+  );
+  const regions = accountIds.map((accountId) => {
+    const region = regionsByAccount.get(accountId);
+    if (region === undefined) {
+      throw new Error("Custom lobby contains an unknown Riot account");
+    }
+    return region;
+  });
+  assertSingleRiotRegion(regions);
+}
+
+async function markObservedCustomLobbyReady(
   actor: CustomActivityActor,
   snapshot: CustomNightSnapshot,
 ): Promise<CustomNightSnapshot> {
   const game = currentGame(snapshot);
-  assertCustomTeamsComplete(game.participants);
   await commitCustomMutation(
     prisma,
     {
@@ -53,6 +79,14 @@ async function openObservedCustomLobby(
   return afterGameMutation(snapshot.id, actor);
 }
 
+async function openObservedCustomLobby(
+  actor: CustomActivityActor,
+  snapshot: CustomNightSnapshot,
+): Promise<CustomNightSnapshot> {
+  await assertObservedCustomLobbyRoster(snapshot);
+  return markObservedCustomLobbyReady(actor, snapshot);
+}
+
 export async function lockCustomTeams(
   claims: CustomActivityClaims,
   input: RevisionInput,
@@ -63,6 +97,7 @@ export async function lockCustomTeams(
     throw new Error("Teams cannot be locked in the current game state");
   }
   assertCustomTeamsComplete(game.participants);
+  await assertObservedCustomLobbyRoster(snapshot);
   await commitCustomMutation(
     prisma,
     {
@@ -90,7 +125,7 @@ export async function lockCustomTeams(
   if (pending === undefined) {
     throw new Error("Custom night disappeared before lobby provisioning");
   }
-  return openObservedCustomLobby(actor, pending);
+  return markObservedCustomLobbyReady(actor, pending);
 }
 
 export async function retryCustomCode(

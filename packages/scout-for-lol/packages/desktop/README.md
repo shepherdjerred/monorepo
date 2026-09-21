@@ -19,9 +19,11 @@ bun run test
 bun run lint
 ```
 
-Use `--server=http://127.0.0.1:<port>` for a local backend. Remote origins must
-use HTTPS. `bun run package` builds the platform-native installer from the
-workspace metadata and pinned repository toolchain.
+Preview packages target `https://beta.scout-for-lol.com`, where the ingestion
+flag is rolled out. Use `--server=http://127.0.0.1:<port>` for a local backend;
+an explicit server is also retained in start-at-login registration. Remote
+origins must use HTTPS. `bun run package` builds the platform-native installer
+from the workspace metadata and pinned repository toolchain.
 
 The Riot lockfile credential stays local and is redacted by construction. The
 client is not an arbitrary LCU proxy and does not collect chat, friends, social,

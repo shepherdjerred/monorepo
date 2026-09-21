@@ -50,6 +50,9 @@ paths = [
   '''node_modules/''',
   '''/dist/''',
   '''/target/''',
+  # Storybook output is gitignored generated code assembled from already-scanned
+  # source and third-party dependencies.
+  '''/storybook-static/''',
   '''\.turbo/''',
   '''\.venv/''',
   '''\.moon/''',

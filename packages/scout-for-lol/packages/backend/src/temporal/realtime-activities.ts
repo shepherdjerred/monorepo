@@ -35,6 +35,11 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
     ...createScoutV2PrematchActivities(),
     probeQueue,
     pollRealtime: async (input) => {
+      // The tournament poller was replaced by Scout client ingress, but an
+      // execution started by the former Schedule can still retry its recorded
+      // Activity. Complete that legacy command without calling the removed
+      // Tournament API; keeping it here also preserves workflow replay.
+      if (input.kind === "tournament-lobbies") return;
       if (temporalWorkHardDisabled(input.kind)) return;
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
         const { checkPreMatch } =

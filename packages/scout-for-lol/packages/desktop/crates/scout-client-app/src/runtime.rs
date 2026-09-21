@@ -1,6 +1,6 @@
 //! Background League observation, pairing, and upload runtime.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::io::Read as _;
 use std::path::Path;
 use std::path::PathBuf;
@@ -10,11 +10,13 @@ use std::time::{Duration, UNIX_EPOCH};
 use directories::ProjectDirs;
 use scout_client_core::backend::ScoutBackendClient;
 use scout_client_core::credentials::DeviceCredential;
-use scout_client_core::lcu::{LcuClient, LcuEndpoint, LiveClient, discover_lockfile};
+use scout_client_core::lcu::{
+    LcuClient, LcuEndpoint, LcuError, LeagueLockfile, LiveClient, discover_lockfile,
+};
 use scout_client_core::outbox::ObservationOutbox;
 use scout_client_core::protocol::{
     CreatePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationEnvelope,
-    ObservationKind,
+    ObservationKind, ObservationOutcome, ObservationQuarantineReason, ObservationReceipt,
 };
 use serde_json::Value;
 use sha2::{Digest as _, Sha256};
@@ -49,6 +51,8 @@ pub struct RuntimeState {
     pub last_upload_at: Option<String>,
     /// Last typed boundary error.
     pub last_error: Option<String>,
+    last_runtime_error: Option<String>,
+    last_replay_error: Option<String>,
 }
 
 enum RuntimeCommand {
@@ -146,18 +150,12 @@ async fn run_collector(
     mut commands: mpsc::UnboundedReceiver<RuntimeCommand>,
     backend_origin: String,
 ) {
-    let Some((backend, outbox)) = collector_resources(&state, &backend_origin) else {
+    let Some((backend, mut credential, mut outbox)) = collector_resources(&state, &backend_origin)
+    else {
         return;
     };
-    let mut credential = match DeviceCredential::load() {
-        Ok(value) => value,
-        Err(error) => {
-            set_error(&state, error.to_string());
-            None
-        }
-    };
     update_state(&state, |snapshot| snapshot.paired = credential.is_some());
-    load_startup_state(&state);
+    load_startup_state(&state, &backend_origin);
     let mut pending_pairing: Option<PendingPairing> = None;
     let mut payloads = HashMap::new();
     let live_client = create_live_client(&state);
@@ -183,6 +181,7 @@ async fn run_collector(
                         command,
                         &state,
                         &backend,
+                        &backend_origin,
                         &mut credential,
                         &mut pending_pairing,
                     ).await;
@@ -194,39 +193,31 @@ async fn run_collector(
                 if let Err(error) = poll_pairing(
                     &state,
                     &backend,
+                    &mut outbox,
+                    &mut payloads,
                     &mut credential,
                     &mut pending_pairing,
                 ).await {
                     set_error(&state, error);
                 }
-                if let Some(active_credential) = &credential {
-                    if let Err(error) = collect_once(
-                        &state,
-                        &outbox,
-                        &mut payloads,
-                        live_client.as_ref(),
+                if let Some(active_credential) = &credential
+                    && let Err(error) = collect_and_upload_observations(ObservationTickContext {
+                        state: &state,
+                        backend: &backend,
+                        outbox: &outbox,
+                        credential: active_credential,
+                        checked_in_device: &mut checked_in_device,
+                        payloads: &mut payloads,
+                        live_client: live_client.as_ref(),
                         tick_number,
-                    ).await {
-                        set_error(&state, error);
-                    } else if let Err(error) = ensure_checked_in(
-                        &backend,
-                        active_credential,
-                        &mut checked_in_device,
-                    ).await {
-                        set_error(&state, error);
-                    } else if let Err(error) = upload_pending(
-                            &state,
-                            &backend,
-                            &outbox,
-                            active_credential,
-                        ).await
-                    {
-                        set_error(&state, error);
-                    }
+                    }).await
+                {
+                    set_error(&state, error);
                 }
                 if tick_number % 15 == 1
                     && replay_upload_task.is_none()
                     && let Some(active_credential) = &credential
+                    && checked_in_device == Some(active_credential.device_id)
                 {
                     replay_upload_task = Some(start_replay_upload(
                         &backend,
@@ -239,17 +230,100 @@ async fn run_collector(
     }
 }
 
+struct ObservationTickContext<'a> {
+    state: &'a Arc<RwLock<RuntimeState>>,
+    backend: &'a ScoutBackendClient,
+    outbox: &'a ObservationOutbox,
+    credential: &'a DeviceCredential,
+    checked_in_device: &'a mut Option<Uuid>,
+    payloads: &'a mut HashMap<String, Vec<u8>>,
+    live_client: Option<&'a LiveClient>,
+    tick_number: u64,
+}
+
+async fn collect_and_upload_observations(
+    context: ObservationTickContext<'_>,
+) -> Result<(), String> {
+    let mut tick_error = None;
+    let upload_ready = if let Err(error) = ensure_checked_in(
+        context.backend,
+        context.outbox,
+        context.credential,
+        context.checked_in_device,
+    )
+    .await
+    {
+        tick_error.get_or_insert(error);
+        false
+    } else {
+        true
+    };
+    let collection_ready = if upload_ready {
+        true
+    } else {
+        match context.outbox.sequence_is_synchronized() {
+            Ok(synchronized) => synchronized,
+            Err(error) => {
+                tick_error.get_or_insert(error.to_string());
+                false
+            }
+        }
+    };
+    // Collection is local and durable once this database has learned the
+    // paired device's backend sequence floor. A recreated outbox must wait for
+    // its first check-in; an initialized one keeps preserving ephemeral LCU
+    // evidence throughout a later backend outage.
+    if collection_ready
+        && let Err(error) = collect_once(
+            context.state,
+            context.outbox,
+            context.payloads,
+            context.live_client,
+            context.tick_number,
+        )
+        .await
+    {
+        tick_error.get_or_insert(error);
+    }
+    if upload_ready
+        && let Err(error) = upload_pending(
+            context.state,
+            context.backend,
+            context.outbox,
+            context.credential,
+        )
+        .await
+    {
+        tick_error.get_or_insert(error);
+    }
+    tick_error.map_or(Ok(()), Err)
+}
+
 fn collector_resources(
     state: &Arc<RwLock<RuntimeState>>,
     backend_origin: &str,
-) -> Option<(ScoutBackendClient, ObservationOutbox)> {
+) -> Option<(
+    ScoutBackendClient,
+    Option<DeviceCredential>,
+    ObservationOutbox,
+)> {
     let backend = ScoutBackendClient::new(backend_origin)
         .map_err(|error| set_error(state, error.to_string()))
         .ok()?;
-    let outbox = ObservationOutbox::open(outbox_path())
-        .map_err(|error| set_error(state, format!("Could not open durable outbox: {error}")))
-        .ok()?;
-    Some((backend, outbox))
+    let credential = match DeviceCredential::load(backend.credential_scope()) {
+        Ok(value) => value,
+        Err(error) => {
+            set_error(state, error.to_string());
+            None
+        }
+    };
+    let outbox = ObservationOutbox::open(outbox_path(
+        backend.credential_scope(),
+        credential.as_ref().map(|value| value.device_id),
+    ))
+    .map_err(|error| set_error(state, format!("Could not open durable outbox: {error}")))
+    .ok()?;
+    Some((backend, credential, outbox))
 }
 
 fn start_replay_upload(
@@ -280,14 +354,14 @@ async fn finish_replay_upload(
         return;
     };
     match finished.await {
-        Ok(Ok(())) => {}
-        Ok(Err(error)) => set_error(state, error),
-        Err(error) => set_error(state, format!("Replay upload task failed: {error}")),
+        Ok(Ok(())) => update_state(state, clear_replay_error),
+        Ok(Err(error)) => set_replay_error(state, error),
+        Err(error) => set_replay_error(state, format!("Replay upload task failed: {error}")),
     }
 }
 
-fn load_startup_state(state: &Arc<RwLock<RuntimeState>>) {
-    match startup::is_enabled() {
+fn load_startup_state(state: &Arc<RwLock<RuntimeState>>, backend_origin: &str) {
+    match startup::is_enabled(backend_origin) {
         Ok(enabled) => update_state(state, |snapshot| snapshot.start_at_login = enabled),
         Err(error) => set_error(
             state,
@@ -298,15 +372,19 @@ fn load_startup_state(state: &Arc<RwLock<RuntimeState>>) {
 
 async fn ensure_checked_in(
     backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
     credential: &DeviceCredential,
     checked_in_device: &mut Option<Uuid>,
 ) -> Result<(), String> {
     if *checked_in_device == Some(credential.device_id) {
         return Ok(());
     }
-    backend
+    let next_sequence = backend
         .check_in(credential, env!("CARGO_PKG_VERSION"))
         .await
+        .map_err(|error| error.to_string())?;
+    outbox
+        .ensure_next_sequence_at_least(next_sequence)
         .map_err(|error| error.to_string())?;
     *checked_in_device = Some(credential.device_id);
     Ok(())
@@ -327,7 +405,9 @@ async fn upload_new_replays(
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
 ) -> Result<(), String> {
-    let (_, lockfile) = discover_lockfile().map_err(|error| error.to_string())?;
+    let Some(lockfile) = optional_lockfile(discover_lockfile())? else {
+        return Ok(());
+    };
     let client = LcuClient::new(&lockfile).map_err(|error| error.to_string())?;
     let replay_path = client
         .get(LcuEndpoint::ReplayPath)
@@ -406,6 +486,9 @@ async fn upload_new_replays(
                 .mark_replay_uploaded(&digest, &game_id)
                 .map_err(|error| error.to_string())?,
             Err(error) => {
+                if error.replay_should_be_deferred() {
+                    continue;
+                }
                 let Some(status) = error.terminal_replay_rejection_status() else {
                     return Err(error.to_string());
                 };
@@ -419,6 +502,16 @@ async fn upload_new_replays(
             .map_err(|error| error.to_string())?;
     }
     Ok(())
+}
+
+fn optional_lockfile(
+    discovered: Result<(PathBuf, LeagueLockfile), LcuError>,
+) -> Result<Option<LeagueLockfile>, String> {
+    match discovered {
+        Ok((_, lockfile)) => Ok(Some(lockfile)),
+        Err(LcuError::NotRunning) => Ok(None),
+        Err(error) => Err(error.to_string()),
+    }
 }
 
 fn replay_game_id(path: &Path) -> Option<String> {
@@ -452,6 +545,7 @@ async fn handle_command(
     command: RuntimeCommand,
     state: &Arc<RwLock<RuntimeState>>,
     backend: &ScoutBackendClient,
+    backend_origin: &str,
     credential: &mut Option<DeviceCredential>,
     pending_pairing: &mut Option<PendingPairing>,
 ) {
@@ -474,7 +568,7 @@ async fn handle_command(
                     update_state(state, |snapshot| {
                         snapshot.pairing_status = Some("Waiting for browser approval".to_owned());
                         snapshot.approval_url = Some(url.clone());
-                        snapshot.last_error = None;
+                        clear_runtime_error(snapshot);
                     });
                     if let Err(error) = open::that(&url) {
                         set_error(state, format!("Could not open approval page: {error}"));
@@ -486,13 +580,15 @@ async fn handle_command(
         RuntimeCommand::Disconnect => {
             disconnect(state, backend, credential, pending_pairing).await;
         }
-        RuntimeCommand::SetStartAtLogin(enabled) => match startup::set_enabled(enabled) {
-            Ok(()) => update_state(state, |snapshot| {
-                snapshot.start_at_login = enabled;
-                snapshot.last_error = None;
-            }),
-            Err(error) => set_error(state, format!("Could not change start-at-login: {error}")),
-        },
+        RuntimeCommand::SetStartAtLogin(enabled) => {
+            match startup::set_enabled(backend_origin, enabled) {
+                Ok(()) => update_state(state, |snapshot| {
+                    snapshot.start_at_login = enabled;
+                    clear_runtime_error(snapshot);
+                }),
+                Err(error) => set_error(state, format!("Could not change start-at-login: {error}")),
+            }
+        }
     }
 }
 
@@ -505,10 +601,19 @@ async fn disconnect(
     if let Some(active_credential) = credential.as_ref()
         && let Err(error) = backend.revoke_device(active_credential).await
     {
-        set_error(state, error.to_string());
+        // A 401 does not reach this branch: revoke_device treats an already
+        // revoked server credential as success so it can be deleted locally.
+        update_state(state, |snapshot| {
+            snapshot.paired = true;
+            snapshot.pairing_status = Some("Disconnect failed; retry to revoke device".to_owned());
+            snapshot.last_runtime_error = Some(format!(
+                "Could not revoke the server credential; it remains stored locally: {error}"
+            ));
+            synchronize_last_error(snapshot);
+        });
         return;
     }
-    match DeviceCredential::delete() {
+    match DeviceCredential::delete(backend.credential_scope()) {
         Ok(()) => {
             *credential = None;
             *pending_pairing = None;
@@ -516,7 +621,7 @@ async fn disconnect(
                 snapshot.paired = false;
                 snapshot.pairing_status = Some("Disconnected".to_owned());
                 snapshot.approval_url = None;
-                snapshot.last_error = None;
+                clear_runtime_error(snapshot);
             });
         }
         Err(error) => set_error(state, error.to_string()),
@@ -526,6 +631,8 @@ async fn disconnect(
 async fn poll_pairing(
     state: &Arc<RwLock<RuntimeState>>,
     backend: &ScoutBackendClient,
+    outbox: &mut ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
     credential: &mut Option<DeviceCredential>,
     pending_pairing: &mut Option<PendingPairing>,
 ) -> Result<(), String> {
@@ -540,14 +647,21 @@ async fn poll_pairing(
         ExchangePairingResponse::Pending => Ok(()),
         ExchangePairingResponse::Approved { device_id, token } => {
             let issued = DeviceCredential { device_id, token };
-            issued.save().map_err(|error| error.to_string())?;
+            let device_outbox =
+                ObservationOutbox::open(outbox_path(backend.credential_scope(), Some(device_id)))
+                    .map_err(|error| format!("Could not open paired device outbox: {error}"))?;
+            issued
+                .save(backend.credential_scope())
+                .map_err(|error| error.to_string())?;
+            *outbox = device_outbox;
+            payloads.clear();
             *credential = Some(issued);
             *pending_pairing = None;
             update_state(state, |snapshot| {
                 snapshot.paired = true;
                 snapshot.pairing_status = Some("Paired".to_owned());
                 snapshot.approval_url = None;
-                snapshot.last_error = None;
+                clear_runtime_error(snapshot);
             });
             Ok(())
         }
@@ -582,28 +696,87 @@ async fn upload_pending(
     if batch.observations.is_empty() {
         return Err("Durable observation does not fit the ingress wire limit".to_owned());
     }
-    let submitted: HashSet<Uuid> = batch
+    let submitted: HashMap<Uuid, ObservationEnvelope> = batch
         .observations
         .iter()
-        .map(|observation| observation.observation_id)
+        .cloned()
+        .map(|observation| (observation.observation_id, observation))
         .collect();
     let receipt = backend
         .upload_observations(credential, &batch)
         .await
         .map_err(|error| error.to_string())?;
     for item in receipt.receipts {
-        if submitted.contains(&item.observation_id) {
-            outbox
-                .acknowledge(item.observation_id)
-                .map_err(|error| error.to_string())?;
+        if let Some(observation) = submitted.get(&item.observation_id) {
+            apply_observation_receipt(outbox, observation, &item, &receipt.server_time)?;
         }
     }
     let remaining = outbox.pending(100).map_err(|error| error.to_string())?;
     update_state(state, |snapshot| {
         snapshot.pending_observations = remaining.len();
         snapshot.last_upload_at = Some(chrono::Utc::now().to_rfc3339());
-        snapshot.last_error = None;
+        clear_runtime_error(snapshot);
     });
+    Ok(())
+}
+
+fn apply_observation_receipt(
+    outbox: &ObservationOutbox,
+    observation: &ObservationEnvelope,
+    receipt: &ObservationReceipt,
+    server_time: &chrono::DateTime<chrono::Utc>,
+) -> Result<(), String> {
+    if receipt.outcome == ObservationOutcome::Quarantined {
+        let reason = receipt
+            .quarantine_reason
+            .ok_or_else(|| "Quarantine receipt omitted its typed reason".to_owned())?;
+        if reason == ObservationQuarantineReason::FutureTimestamp {
+            let mut replacement = observation.clone();
+            replacement.observation_id = Uuid::new_v4();
+            replacement.sequence = outbox.next_sequence().map_err(|error| error.to_string())?;
+            if replacement.kind == ObservationKind::PostGame {
+                let clock_delta_millis = server_time
+                    .timestamp_millis()
+                    .checked_sub(observation.captured_at.timestamp_millis())
+                    .ok_or_else(|| "Clock correction exceeds the supported range".to_owned())?;
+                adjust_post_game_timing(&mut replacement.payload, clock_delta_millis)?;
+            }
+            replacement.captured_at = *server_time;
+            replacement.validate().map_err(|error| error.to_string())?;
+            // The corrected payload is durable before the quarantined head is
+            // removed, so a crash cannot lose ephemeral post-game evidence.
+            outbox
+                .enqueue(&replacement)
+                .map_err(|error| error.to_string())?;
+        }
+    }
+    outbox
+        .acknowledge(receipt.observation_id)
+        .map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+fn adjust_post_game_timing(payload: &mut Value, clock_delta_millis: i64) -> Result<(), String> {
+    let Some(timing) = payload
+        .get_mut("data")
+        .and_then(|data| data.get_mut("timing"))
+        .and_then(Value::as_object_mut)
+    else {
+        return Ok(());
+    };
+    for key in ["gameStartTimestamp", "gameEndTimestamp"] {
+        let Some(timestamp) = timing.get_mut(key) else {
+            continue;
+        };
+        let current = timestamp
+            .as_i64()
+            .ok_or_else(|| format!("Post-game {key} is not an integer timestamp"))?;
+        *timestamp = Value::from(
+            current
+                .checked_add(clock_delta_millis)
+                .ok_or_else(|| format!("Post-game {key} exceeds the supported range"))?,
+        );
+    }
     Ok(())
 }
 
@@ -614,7 +787,7 @@ async fn collect_once(
     live_client: Option<&LiveClient>,
     tick_number: u64,
 ) -> Result<(), String> {
-    let Ok((_, lockfile)) = discover_lockfile() else {
+    let Some(lockfile) = optional_lockfile(discover_lockfile())? else {
         update_state(state, |snapshot| {
             snapshot.league_connected = false;
             snapshot.gameflow_phase = None;
@@ -639,6 +812,18 @@ async fn collect_once(
         Some(format!("{game_name}#{tag_line}"))
     });
 
+    let Some(local_puuid) = local_puuid else {
+        let pending = outbox.pending(100).map_err(|error| error.to_string())?;
+        update_state(state, |snapshot| {
+            snapshot.league_connected = true;
+            snapshot.gameflow_phase = None;
+            snapshot.account_label = account_label;
+            snapshot.pending_observations = pending.len();
+            clear_runtime_error(snapshot);
+        });
+        return Ok(());
+    };
+
     if let Some(payload) = account {
         enqueue_if_changed(
             outbox,
@@ -646,7 +831,7 @@ async fn collect_once(
             "account_profile",
             ObservationKind::AccountProfile,
             &payload,
-            local_puuid.as_deref(),
+            Some(&local_puuid),
         )?;
     }
 
@@ -657,44 +842,20 @@ async fn collect_once(
         LcuEndpoint::GameflowPhase,
         "gameflow_phase",
         ObservationKind::Gameflow,
-        local_puuid.as_deref(),
+        Some(&local_puuid),
     )
     .await?;
-    for (endpoint, key, kind) in [
-        (
-            LcuEndpoint::GameflowSession,
-            "gameflow_session",
-            ObservationKind::Gameflow,
-        ),
-        (LcuEndpoint::Lobby, "lobby", ObservationKind::Lobby),
-        (
-            LcuEndpoint::ChampSelect,
-            "champ_select",
-            ObservationKind::ChampSelect,
-        ),
-        (
-            LcuEndpoint::EndOfGame,
-            "post_game",
-            ObservationKind::PostGame,
-        ),
-    ] {
-        observe_endpoint(
-            &client,
-            outbox,
-            payloads,
-            endpoint,
-            key,
-            kind,
-            local_puuid.as_deref(),
-        )
-        .await?;
-    }
+    collect_match_state(&client, outbox, payloads, Some(&local_puuid), tick_number).await?;
 
-    collect_live_frame(live_client, outbox, payloads, local_puuid.as_deref()).await?;
+    collect_live_frame(live_client, outbox, payloads, Some(&local_puuid)).await?;
+    remember_game_start(outbox, payloads)?;
 
     if tick_number % 15 == 1 {
-        collect_profile_snapshots(&client, outbox, payloads, local_puuid.as_deref()).await?;
-        collect_recent_matches(&client, outbox, payloads, local_puuid.as_deref()).await?;
+        // Preserve the post-game bundle before querying optional profile
+        // surfaces: one unavailable mastery, Challenge, or Clash endpoint must
+        // not let a Riot-invisible match age out of recent history.
+        collect_recent_matches(&client, outbox, payloads, Some(&local_puuid)).await?;
+        collect_profile_snapshots(&client, outbox, payloads, Some(&local_puuid)).await?;
     }
 
     let phase_label = phase
@@ -708,9 +869,142 @@ async fn collect_once(
         snapshot.gameflow_phase = Some(phase_label);
         snapshot.account_label = account_label;
         snapshot.pending_observations = pending.len();
-        snapshot.last_error = None;
+        clear_runtime_error(snapshot);
     });
     Ok(())
+}
+
+async fn collect_match_state(
+    client: &LcuClient,
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    local_puuid: Option<&str>,
+    tick_number: u64,
+) -> Result<Option<Value>, String> {
+    for (endpoint, key, kind) in [
+        (
+            LcuEndpoint::GameflowSession,
+            "gameflow_session",
+            ObservationKind::Gameflow,
+        ),
+        (
+            LcuEndpoint::ChampSelect,
+            "champ_select",
+            ObservationKind::ChampSelect,
+        ),
+    ] {
+        observe_endpoint(client, outbox, payloads, endpoint, key, kind, local_puuid).await?;
+    }
+    let previous_lobby = payloads.get("lobby").cloned();
+    let lobby = observe_endpoint(
+        client,
+        outbox,
+        payloads,
+        LcuEndpoint::Lobby,
+        "lobby",
+        ObservationKind::Lobby,
+        local_puuid,
+    )
+    .await?;
+    if let Some(lobby) = &lobby {
+        let body = serde_json::to_vec(lobby).map_err(|error| error.to_string())?;
+        if should_refresh_lobby(previous_lobby.as_deref(), &body, tick_number) {
+            enqueue_coalesced_snapshot(
+                outbox,
+                "lobby_refresh",
+                "lobby",
+                ObservationKind::Lobby,
+                lobby,
+                local_puuid,
+            )?;
+        }
+    }
+    let end_of_game = observe_endpoint(
+        client,
+        outbox,
+        payloads,
+        LcuEndpoint::EndOfGame,
+        "post_game",
+        ObservationKind::PostGame,
+        local_puuid,
+    )
+    .await?;
+    if let Some(payload) = &end_of_game {
+        remember_end_of_game(outbox, payload)?;
+        return Ok(end_of_game);
+    }
+    let end_of_game = observe_endpoint(
+        client,
+        outbox,
+        payloads,
+        LcuEndpoint::GameClientEndOfGame,
+        "post_game",
+        ObservationKind::PostGame,
+        local_puuid,
+    )
+    .await?;
+    if let Some(payload) = &end_of_game {
+        remember_end_of_game(outbox, payload)?;
+    }
+    Ok(end_of_game)
+}
+
+fn remember_end_of_game(outbox: &ObservationOutbox, payload: &Value) -> Result<(), String> {
+    let Some(game_id) = find_string(payload, &["gameId", "reportGameId"]) else {
+        return Ok(());
+    };
+    let body = serde_json::to_vec(payload).map_err(|error| error.to_string())?;
+    outbox
+        .remember_game_end(&game_id, chrono::Utc::now().timestamp_millis())
+        .map_err(|error| error.to_string())?;
+    outbox
+        .remember_end_of_game(&game_id, &body)
+        .map_err(|error| error.to_string())
+}
+
+fn remember_game_start(
+    outbox: &ObservationOutbox,
+    payloads: &HashMap<String, Vec<u8>>,
+) -> Result<(), String> {
+    let (Some(session), Some(frame)) = (
+        payloads.get("gameflow_session"),
+        payloads.get("live_game_frame"),
+    ) else {
+        return Ok(());
+    };
+    let session = serde_json::from_slice::<Value>(session).map_err(|error| error.to_string())?;
+    let frame = serde_json::from_slice::<Value>(frame).map_err(|error| error.to_string())?;
+    let Some((game_id, started_at_millis)) =
+        game_start_evidence(&session, &frame, chrono::Utc::now().timestamp_millis())
+    else {
+        return Ok(());
+    };
+    outbox
+        .remember_game_start(&game_id, started_at_millis)
+        .map_err(|error| error.to_string())
+}
+
+fn game_start_evidence(
+    session: &Value,
+    frame: &Value,
+    observed_at_millis: i64,
+) -> Option<(String, i64)> {
+    if find_string(session, &["phase"]).as_deref() != Some("InProgress") {
+        return None;
+    }
+    let game_id = find_string(session, &["gameId"])?;
+    let game_time = frame.get("gameData")?.get("gameTime")?.as_f64()?;
+    if !game_time.is_finite() || !(0.0..=86_400.0).contains(&game_time) {
+        return None;
+    }
+    let elapsed = Duration::try_from_secs_f64(game_time).ok()?;
+    let elapsed_millis = i64::try_from(elapsed.as_millis()).ok()?;
+    let started_at_millis = observed_at_millis.checked_sub(elapsed_millis)?;
+    (started_at_millis > 0).then_some((game_id, started_at_millis))
+}
+
+fn should_refresh_lobby(previous: Option<&[u8]>, current: &[u8], tick_number: u64) -> bool {
+    tick_number % 15 == 1 && previous == Some(current)
 }
 
 async fn collect_live_frame(
@@ -727,18 +1021,30 @@ async fn collect_live_frame(
         .await
         .map_err(|error| error.to_string())?
     {
-        enqueue_if_changed(
-            outbox,
-            payloads,
-            "live_game_frame",
-            ObservationKind::LiveGameFrame,
-            &payload,
-            local_puuid,
-        )?;
+        let body = serde_json::to_vec(&payload).map_err(|error| error.to_string())?;
+        if should_emit_live_game_frame(payloads.get("live_game_frame").map(Vec::as_slice)) {
+            let observation = create_observation(
+                outbox,
+                "live_game_frame",
+                ObservationKind::LiveGameFrame,
+                &payload,
+                local_puuid,
+            )?;
+            outbox
+                .enqueue_coalesced("live_game_frame", &observation)
+                .map_err(|error| error.to_string())?;
+        }
+        // Keep the newest frame locally for game-start timing without turning
+        // continuously advancing gameTime into a durable server observation.
+        payloads.insert("live_game_frame".to_owned(), body);
     } else {
         payloads.remove("live_game_frame");
     }
     Ok(())
+}
+
+fn should_emit_live_game_frame(previous: Option<&[u8]>) -> bool {
+    previous.is_none()
 }
 
 async fn collect_profile_snapshots(
@@ -862,6 +1168,38 @@ async fn collect_recent_matches(
             game,
             local_puuid,
         )?;
+        if let Some(end_of_game) = outbox
+            .pending_end_of_game(&game_id)
+            .map_err(|error| error.to_string())?
+            && let Some(timing) = outbox
+                .pending_game_timing(&game_id)
+                .map_err(|error| error.to_string())?
+        {
+            let end_of_game =
+                serde_json::from_slice::<Value>(&end_of_game).map_err(|error| error.to_string())?;
+            enqueue_resource_if_changed(
+                outbox,
+                payloads,
+                &format!("post_game_bundle:{game_id}"),
+                "post_game",
+                ObservationKind::PostGame,
+                &serde_json::json!({
+                    "matchHistory": game,
+                    "endOfGame": end_of_game,
+                    "timing": {
+                        "gameStartTimestamp": timing.started_at_millis,
+                        "gameEndTimestamp": timing.ended_at_millis,
+                    },
+                }),
+                local_puuid,
+            )?;
+            outbox
+                .forget_end_of_game(&game_id)
+                .map_err(|error| error.to_string())?;
+            outbox
+                .forget_game_timing(&game_id)
+                .map_err(|error| error.to_string())?;
+        }
     }
     Ok(())
 }
@@ -895,16 +1233,63 @@ fn enqueue_if_changed(
     payload: &Value,
     local_puuid: Option<&str>,
 ) -> Result<(), String> {
+    enqueue_resource_if_changed(outbox, payloads, key, key, kind, payload, local_puuid)
+}
+
+fn enqueue_resource_if_changed(
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    cache_key: &str,
+    resource: &str,
+    kind: ObservationKind,
+    payload: &Value,
+    local_puuid: Option<&str>,
+) -> Result<(), String> {
     let body = serde_json::to_vec(&payload).map_err(|error| error.to_string())?;
-    if payloads.get(key) == Some(&body) {
+    if payloads.get(cache_key) == Some(&body) {
         return Ok(());
     }
+    let observation = create_observation(outbox, resource, kind, payload, local_puuid)?;
+    if kind == ObservationKind::LiveGameFrame {
+        outbox
+            .enqueue_coalesced(resource, &observation)
+            .map_err(|error| error.to_string())?;
+    } else {
+        outbox
+            .enqueue(&observation)
+            .map_err(|error| error.to_string())?;
+    }
+    payloads.insert(cache_key.to_owned(), body);
+    Ok(())
+}
+
+fn enqueue_coalesced_snapshot(
+    outbox: &ObservationOutbox,
+    coalesce_key: &str,
+    resource: &str,
+    kind: ObservationKind,
+    payload: &Value,
+    local_puuid: Option<&str>,
+) -> Result<(), String> {
+    let observation = create_observation(outbox, resource, kind, payload, local_puuid)?;
+    outbox
+        .enqueue_coalesced(coalesce_key, &observation)
+        .map_err(|error| error.to_string())
+}
+
+fn create_observation(
+    outbox: &ObservationOutbox,
+    resource: &str,
+    kind: ObservationKind,
+    payload: &Value,
+    local_puuid: Option<&str>,
+) -> Result<ObservationEnvelope, String> {
     let sequence = outbox.next_sequence().map_err(|error| error.to_string())?;
     let mut observation = ObservationEnvelope::new(
         sequence,
         kind,
         env!("CARGO_PKG_VERSION"),
-        serde_json::json!({ "resource": key, "data": payload }),
+        serde_json::json!({ "resource": resource, "data": payload }),
     )
     .map_err(|error| error.to_string())?;
     observation.local_puuid = local_puuid.map(str::to_owned);
@@ -913,17 +1298,7 @@ fn enqueue_if_changed(
     observation.platform_id = find_string(&observation.payload, &["platformId"]);
     observation.league_patch = find_string(&observation.payload, &["gameVersion"]);
     observation.validate().map_err(|error| error.to_string())?;
-    if kind == ObservationKind::LiveGameFrame {
-        outbox
-            .enqueue_coalesced(key, &observation)
-            .map_err(|error| error.to_string())?;
-    } else {
-        outbox
-            .enqueue(&observation)
-            .map_err(|error| error.to_string())?;
-    }
-    payloads.insert(key.to_owned(), body);
-    Ok(())
+    Ok(observation)
 }
 
 fn find_string(value: &Value, keys: &[&str]) -> Option<String> {
@@ -946,24 +1321,242 @@ fn find_string(value: &Value, keys: &[&str]) -> Option<String> {
     }
 }
 
-fn outbox_path() -> PathBuf {
+fn outbox_file_name(backend_origin: &str, device_id: Option<Uuid>) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(backend_origin.as_bytes());
+    hasher.update([0]);
+    if let Some(device_id) = device_id {
+        hasher.update(device_id.as_bytes());
+    }
+    format!("outbox-{:x}.db", hasher.finalize())
+}
+
+fn outbox_path(backend_origin: &str, device_id: Option<Uuid>) -> PathBuf {
+    let file_name = outbox_file_name(backend_origin, device_id);
     if let Some(project) = ProjectDirs::from("com", "Scout", "Scout Client") {
         let directory = project.data_local_dir();
         if let Err(error) = std::fs::create_dir_all(directory) {
             error!(%error, "could not create Scout Client data directory");
         }
-        return directory.join("outbox.db");
+        return directory.join(file_name);
     }
-    std::env::temp_dir().join("scout-client-outbox.db")
+    std::env::temp_dir().join(file_name)
 }
 
 fn set_error(state: &Arc<RwLock<RuntimeState>>, message: String) {
-    update_state(state, |snapshot| snapshot.last_error = Some(message));
+    update_state(state, |snapshot| {
+        snapshot.last_runtime_error = Some(message);
+        synchronize_last_error(snapshot);
+    });
+}
+
+fn set_replay_error(state: &Arc<RwLock<RuntimeState>>, message: String) {
+    update_state(state, |snapshot| {
+        snapshot.last_replay_error = Some(message);
+        synchronize_last_error(snapshot);
+    });
+}
+
+fn clear_runtime_error(snapshot: &mut RuntimeState) {
+    snapshot.last_runtime_error = None;
+    synchronize_last_error(snapshot);
+}
+
+fn clear_replay_error(snapshot: &mut RuntimeState) {
+    snapshot.last_replay_error = None;
+    synchronize_last_error(snapshot);
+}
+
+fn synchronize_last_error(snapshot: &mut RuntimeState) {
+    snapshot.last_error = match (
+        snapshot.last_runtime_error.as_deref(),
+        snapshot.last_replay_error.as_deref(),
+    ) {
+        (Some(runtime), Some(replay)) => Some(format!("{runtime}\nReplay capture: {replay}")),
+        (Some(runtime), None) => Some(runtime.to_owned()),
+        (None, Some(replay)) => Some(format!("Replay capture: {replay}")),
+        (None, None) => None,
+    };
 }
 
 fn update_state(state: &Arc<RwLock<RuntimeState>>, update: impl FnOnce(&mut RuntimeState)) {
     match state.write() {
         Ok(mut snapshot) => update(&mut snapshot),
         Err(error) => error!(%error, "Scout Client UI state lock was poisoned"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, RwLock};
+
+    use scout_client_core::lcu::LcuError;
+    use serde_json::json;
+    use uuid::Uuid;
+
+    use scout_client_core::outbox::ObservationOutbox;
+    use scout_client_core::protocol::{
+        ObservationEnvelope, ObservationKind, ObservationOutcome, ObservationQuarantineReason,
+        ObservationReceipt,
+    };
+
+    use super::{
+        RuntimeState, apply_observation_receipt, clear_replay_error, clear_runtime_error,
+        game_start_evidence, optional_lockfile, outbox_file_name, set_error, set_replay_error,
+        should_emit_live_game_frame, should_refresh_lobby, update_state,
+    };
+
+    #[test]
+    fn stopped_league_is_not_a_replay_upload_error() {
+        assert!(matches!(
+            optional_lockfile(Err(LcuError::NotRunning)),
+            Ok(None)
+        ));
+    }
+
+    #[test]
+    fn invalid_league_lockfile_remains_an_actionable_error() {
+        assert!(matches!(
+            optional_lockfile(Err(LcuError::InvalidLockfile)),
+            Err(message) if message == "League lockfile is invalid"
+        ));
+    }
+
+    #[test]
+    fn durable_outbox_files_are_backend_and_device_scoped() {
+        let first_device = Uuid::new_v4();
+        let second_device = Uuid::new_v4();
+        let production = outbox_file_name("https://scout.sjer.red/", Some(first_device));
+
+        assert_eq!(
+            production,
+            outbox_file_name("https://scout.sjer.red/", Some(first_device))
+        );
+        assert_ne!(
+            production,
+            outbox_file_name("https://scout.sjer.red/", Some(second_device))
+        );
+        assert_ne!(
+            production,
+            outbox_file_name("https://beta.scout.sjer.red/", Some(first_device))
+        );
+        assert_ne!(
+            production,
+            outbox_file_name("http://127.0.0.1:3000/", Some(first_device))
+        );
+        assert_ne!(
+            production,
+            outbox_file_name("https://scout.sjer.red/", None)
+        );
+    }
+
+    #[test]
+    fn only_unchanged_lobbies_are_periodically_reobserved() {
+        assert!(!should_refresh_lobby(Some(&[1]), &[1], 2));
+        assert!(should_refresh_lobby(Some(&[1]), &[1], 16));
+        assert!(!should_refresh_lobby(Some(&[1]), &[2], 16));
+        assert!(!should_refresh_lobby(None, &[1], 16));
+    }
+
+    #[test]
+    fn emits_one_live_frame_per_live_client_session() {
+        assert!(should_emit_live_game_frame(None));
+        assert!(!should_emit_live_game_frame(Some(&[1])));
+        assert!(!should_emit_live_game_frame(Some(&[2])));
+    }
+
+    #[test]
+    fn ordinary_collection_success_does_not_clear_a_replay_error() {
+        let state = Arc::new(RwLock::new(RuntimeState::default()));
+        set_replay_error(&state, "relay unavailable".to_owned());
+        set_error(&state, "League unavailable".to_owned());
+
+        update_state(&state, clear_runtime_error);
+        assert!(matches!(
+            state.read(),
+            Ok(snapshot)
+                if snapshot.last_error.as_deref()
+                    == Some("Replay capture: relay unavailable")
+        ));
+
+        update_state(&state, clear_replay_error);
+        assert!(matches!(state.read(), Ok(snapshot) if snapshot.last_error.is_none()));
+    }
+
+    #[test]
+    fn derives_playable_start_from_live_game_time() {
+        let session = json!({
+            "phase": "InProgress",
+            "gameData": { "gameId": 12345 },
+        });
+        let frame = json!({ "gameData": { "gameTime": 12.5 } });
+
+        assert_eq!(
+            game_start_evidence(&session, &frame, 20_000),
+            Some(("12345".to_owned(), 7_500))
+        );
+        assert_eq!(
+            game_start_evidence(
+                &json!({ "phase": "Lobby", "gameData": { "gameId": 12345 } }),
+                &frame,
+                20_000,
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn clock_quarantine_requeues_before_removing_the_original()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let mut observation = ObservationEnvelope::new(
+            outbox.next_sequence()?,
+            ObservationKind::PostGame,
+            "test",
+            json!({
+                "resource": "post_game",
+                "data": {
+                    "timing": {
+                        "gameStartTimestamp": 1_795_257_000_000_i64,
+                        "gameEndTimestamp": 1_795_257_300_000_i64,
+                    },
+                },
+            }),
+        )?;
+        observation.captured_at = "2026-09-21T12:10:00Z".parse()?;
+        let original_id = observation.observation_id;
+        outbox.enqueue(&observation)?;
+        let server_time = "2026-09-21T12:00:00Z".parse()?;
+
+        apply_observation_receipt(
+            &outbox,
+            &observation,
+            &ObservationReceipt {
+                observation_id: original_id,
+                outcome: ObservationOutcome::Quarantined,
+                quarantine_reason: Some(ObservationQuarantineReason::FutureTimestamp),
+            },
+            &server_time,
+        )?;
+
+        let pending = outbox.pending(100)?;
+        assert_eq!(pending.len(), 1);
+        assert_ne!(pending[0].observation_id, original_id);
+        assert_eq!(pending[0].sequence, 2);
+        let replacement: ObservationEnvelope = serde_json::from_slice(&pending[0].body)?;
+        assert_eq!(replacement.captured_at, server_time);
+        assert_eq!(
+            replacement.payload["data"]["timing"]["gameStartTimestamp"],
+            json!(1_795_256_400_000_i64)
+        );
+        assert_eq!(
+            replacement.payload["data"]["timing"]["gameEndTimestamp"],
+            json!(1_795_256_700_000_i64)
+        );
+
+        drop(outbox);
+        std::fs::remove_file(path)?;
+        Ok(())
     }
 }

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { ScoutClientObservationSchema } from "@scout-for-lol/data";
-import { observationQuarantineReason } from "./ingress.ts";
+import {
+  nextScoutClientObservationSequence,
+  observationQuarantineReason,
+} from "./ingress.ts";
 import { digestMatches, randomSecret, secretDigest } from "./secrets.ts";
 
 const NOW = new Date("2026-09-20T12:00:00Z");
@@ -49,7 +52,7 @@ describe("Scout Client ingress security", () => {
         new Set(["0.1.0"]),
         NOW,
       ),
-    ).toContain("does not appear");
+    ).toBe("observer_puuid_not_in_payload");
   });
 
   test("quarantines a PUUID not linked to the paired Discord user", () => {
@@ -60,7 +63,7 @@ describe("Scout Client ingress security", () => {
         new Set(["0.1.0"]),
         NOW,
       ),
-    ).toContain("not linked");
+    ).toBe("unverified_local_puuid");
   });
 
   test("accepts an observation from an authenticated pre-upgrade version", () => {
@@ -82,6 +85,29 @@ describe("Scout Client ingress security", () => {
         new Set(["0.2.0"]),
         NOW,
       ),
-    ).toContain("has not authenticated");
+    ).toBe("unverified_app_version");
+  });
+
+  test("classifies a future timestamp as a correctable clock quarantine", () => {
+    const future = {
+      ...observation({ participants: [{ puuid: PUUID }] }),
+      capturedAt: new Date(NOW.getTime() + 6 * 60 * 1000).toISOString(),
+    };
+    expect(
+      observationQuarantineReason(
+        future,
+        new Set([PUUID]),
+        new Set(["0.1.0"]),
+        NOW,
+      ),
+    ).toBe("future_timestamp");
+  });
+
+  test("advances a restored device beyond the backend high-water mark", () => {
+    expect(nextScoutClientObservationSequence(null)).toBe(1);
+    expect(nextScoutClientObservationSequence(41n)).toBe(42);
+    expect(() =>
+      nextScoutClientObservationSequence(BigInt(Number.MAX_SAFE_INTEGER)),
+    ).toThrow("sequence is exhausted");
   });
 });

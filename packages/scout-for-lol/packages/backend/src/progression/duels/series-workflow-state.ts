@@ -12,6 +12,7 @@ import type {
 } from "@scout-for-lol/temporal";
 import { prisma } from "#src/database/index.ts";
 import { duelRolloutAllowed } from "#src/progression/duels/access.ts";
+import { duelCompetitorsUseOneRiotRegion } from "#src/progression/duels/competitors.ts";
 import {
   duelSeriesOverdue,
   duelSeriesTransitions,
@@ -68,7 +69,10 @@ async function transitionSeries(options: {
   readonly seriesId: string;
   readonly currentState: string;
   readonly nextState:
-    "awaiting_acceptance" | "awaiting_readiness" | "code_ready";
+    | "awaiting_acceptance"
+    | "awaiting_readiness"
+    | "code_ready"
+    | "needs_review";
   readonly deadlineAt: Date;
   readonly windowStartsAt?: Date | null;
 }): Promise<ScoutDuelSeriesRefreshResult> {
@@ -223,6 +227,19 @@ export async function refreshDuelSeriesWorkflowState(
   const currentState = DuelSeriesStatusSchema.parse(series.seriesState);
   const closed = closedSeriesResult(currentState, deadlineAt);
   if (closed !== null) return closed;
+  if (
+    !duelCompetitorsUseOneRiotRegion([
+      series.competitorOne,
+      series.competitorTwo,
+    ])
+  ) {
+    return await transitionSeries({
+      seriesId: series.id,
+      currentState,
+      nextState: "needs_review",
+      deadlineAt,
+    });
+  }
   if (
     series.participants.some((participant) => participant.acceptedAt === null)
   ) {

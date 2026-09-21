@@ -118,6 +118,12 @@ export function assertRosterIdentity(
   }
 }
 
+export function assertSingleRiotRegion(regions: readonly string[]): void {
+  if (regions.length !== 10 || new Set(regions).size !== 1) {
+    throw new Error("Custom lobby players must use one Riot region");
+  }
+}
+
 export function snapshotRoster(
   roster: readonly CustomNightParticipant[],
 ): CustomGameParticipant[] {

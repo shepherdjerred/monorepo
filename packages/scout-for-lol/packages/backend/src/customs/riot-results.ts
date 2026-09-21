@@ -8,6 +8,17 @@ import {
 } from "@scout-for-lol/data";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 
+export type ManagedCustomResultSource = "RIOT" | "SCOUT_CLIENT";
+
+function resultAuditAttribution(source: ManagedCustomResultSource) {
+  return source === "SCOUT_CLIENT"
+    ? {
+        actorId: "scout-client:canonical-match",
+        action: "SCOUT_CLIENT_RESULT_VERIFIED",
+      }
+    : { actorId: "riot:match-v5", action: "RIOT_RESULT_VERIFIED" };
+}
+
 /**
  * Which historical Tournament API lobby, if any, a Match-V5 payload belongs
  * to. New managed customs are located by their observed roster instead.
@@ -69,7 +80,7 @@ function resultDisposition(
 function requireCompleteRoster(participantCount: number, gameId: string): void {
   if (participantCount !== 10) {
     throw new Error(
-      `Custom game ${gameId} must have 10 participants before Riot finalization`,
+      `Custom game ${gameId} must have 10 participants before result finalization`,
     );
   }
 }
@@ -156,6 +167,7 @@ async function projectParticipantResults(
 export async function finalizeManagedCustomResult(
   client: ExtendedPrismaClient,
   match: RawMatch,
+  resultSource: ManagedCustomResultSource = "RIOT",
 ): Promise<string | undefined> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const observedGame = await findObservedCustomGame(client, match);
@@ -219,7 +231,7 @@ export async function finalizeManagedCustomResult(
     });
     if (gameUpdated.count !== 1) {
       throw new Error(
-        `Custom game ${game.id} changed during Riot finalization`,
+        `Custom game ${game.id} changed during result finalization`,
       );
     }
 
@@ -244,18 +256,19 @@ export async function finalizeManagedCustomResult(
     });
     if (nightUpdated.count !== 1) {
       throw new Error(
-        `Custom night ${game.nightId} changed during Riot finalization`,
+        `Custom night ${game.nightId} changed during result finalization`,
       );
     }
+    const auditAttribution = resultAuditAttribution(resultSource);
     await transaction.customAuditEvent.create({
       data: {
         nightId: game.nightId,
         gameId: game.id,
         revision: nextRevision,
-        actorId: "riot:match-v5",
-        action: "RIOT_RESULT_VERIFIED",
+        actorId: auditAttribution.actorId,
+        action: auditAttribution.action,
         payload: JSON.stringify({ matchId, winner }),
-        source: "RIOT",
+        source: resultSource,
         createdAt: completedAt,
       },
     });

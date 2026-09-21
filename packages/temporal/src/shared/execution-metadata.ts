@@ -147,6 +147,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runScoutCompetitionUpdatesWorkflow: "scout",
   scoutRealtimePollWorkflow: "scout",
   scoutPostMatchDiscoveryWorkflow: "scout",
+  scoutPostMatchDiscoveryV2Workflow: "scout",
   scoutIngestionReconciliationWorkflow: "scout",
   scoutBackgroundJobWorkflow: "scout",
   scoutReportLakeWorkflow: "scout",

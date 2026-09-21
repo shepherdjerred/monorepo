@@ -6,11 +6,53 @@ import {
   lobbyParticipantPuuids,
   observedGameState,
   observedLobbyMatchesCustomSettings,
+  observedLobbyMatchesCustomTeams,
   observedLobbyMatchesDuelSettings,
+  observedLobbyMatchesDuelTeams,
+  observedMatchEndedAt,
   observedPostGameMatchId,
   sameRoster,
 } from "#src/scout-client/lobby-payload.ts";
-import { lobbyWasSuperseded } from "#src/scout-client/lobby-supersession.ts";
+import {
+  replaceableLobbyBindings,
+  withoutSupersededBindings,
+} from "#src/scout-client/lobby-supersession.ts";
+
+type LobbyBoundGame = {
+  readonly observedLobbyId: string | null;
+  readonly lobbyObservationId: string | null;
+};
+
+type BindingCandidates<Game extends LobbyBoundGame> = {
+  readonly games: readonly Game[];
+  readonly participantPuuids: (game: Game) => readonly string[];
+};
+
+async function currentBindingResolution<
+  Custom extends LobbyBoundGame,
+  Duel extends LobbyBoundGame,
+>(
+  customs: BindingCandidates<Custom>,
+  duels: BindingCandidates<Duel>,
+  capturedAt: Date,
+) {
+  const [eligibleCustoms, eligibleDuels] = await Promise.all([
+    withoutSupersededBindings(
+      customs.games,
+      customs.participantPuuids,
+      capturedAt,
+    ),
+    withoutSupersededBindings(duels.games, duels.participantPuuids, capturedAt),
+  ]);
+  if (eligibleCustoms.length + eligibleDuels.length > 1) {
+    return { kind: "ambiguous" } as const;
+  }
+  return {
+    kind: "resolved",
+    custom: eligibleCustoms[0],
+    duel: eligibleDuels[0],
+  } as const;
+}
 
 /**
  * Bind a complete observed lobby to one pending scheduled Custom game or duel.
@@ -19,22 +61,25 @@ import { lobbyWasSuperseded } from "#src/scout-client/lobby-supersession.ts";
  */
 export async function bindObservedLobby(
   observation: ScoutClientObservation,
-): Promise<void> {
+): Promise<"ambiguous" | "bound" | "ignored" | "unmatched"> {
   if (
     observation.kind !== "lobby" ||
     observation.lobbyId === undefined ||
     observation.localPuuid === undefined
   ) {
-    return;
+    return "ignored";
   }
+  const observedLobby = {
+    capturedAt: observation.capturedAt,
+    lobbyId: observation.lobbyId,
+  };
   const observed = lobbyParticipantPuuids(observation.payload);
-  if (!observed.has(observation.localPuuid)) return;
+  if (!observed.has(observation.localPuuid)) return "ignored";
 
   const [customGames, duelGames] = await Promise.all([
     prisma.customGame.findMany({
       where: {
         state: "LOBBY_READY",
-        observedLobbyId: null,
       },
       include: {
         participants: true,
@@ -49,7 +94,6 @@ export async function bindObservedLobby(
     prisma.duelGame.findMany({
       where: {
         gameState: "code_ready",
-        observedLobbyId: null,
         series: { seriesState: "code_ready" },
       },
       include: {
@@ -63,48 +107,83 @@ export async function bindObservedLobby(
     }),
   ]);
   const capturedAt = new Date(observation.capturedAt).getTime();
-  const matchingCustoms = customGames.filter(
+  const rosterMatchingCustoms = customGames.filter(
     (game) =>
       sameRoster(observed, game.participants) &&
       observedLobbyMatchesCustomSettings(observation.payload, game) &&
+      observedLobbyMatchesCustomTeams(observation.payload, game.participants) &&
       game.auditEvents[0] !== undefined &&
       game.auditEvents[0].createdAt.getTime() <= capturedAt,
   );
-  const matchingDuels = duelGames.filter(
+  const rosterMatchingDuels = duelGames.filter(
     (game) =>
       sameRoster(observed, [
         ...game.series.competitorOne.members,
         ...game.series.competitorTwo.members,
       ]) &&
       observedLobbyMatchesDuelSettings(observation.payload) &&
+      observedLobbyMatchesDuelTeams(
+        observation.payload,
+        game.series.competitorOne.members,
+        game.series.competitorTwo.members,
+      ) &&
       game.updatedAt.getTime() <= capturedAt,
   );
+  const [matchingCustoms, matchingDuels] = await Promise.all([
+    replaceableLobbyBindings(
+      rosterMatchingCustoms,
+      (game) => game.participants.map((participant) => participant.puuid),
+      observedLobby,
+    ),
+    replaceableLobbyBindings(
+      rosterMatchingDuels,
+      (game) =>
+        [
+          ...game.series.competitorOne.members,
+          ...game.series.competitorTwo.members,
+        ].map((participant) => participant.puuid),
+      observedLobby,
+    ),
+  ]);
   if (matchingCustoms.length + matchingDuels.length > 1) {
-    throw new Error(
-      `Observed lobby ${observation.lobbyId} matches more than one pending Scout game`,
-    );
+    return "ambiguous";
   }
   const custom = matchingCustoms[0];
   if (custom !== undefined) {
-    await prisma.customGame.updateMany({
-      where: { id: custom.id, observedLobbyId: null },
+    if (custom.lobbyObservationId === observation.observationId) return "bound";
+    const updated = await prisma.customGame.updateMany({
+      where: {
+        id: custom.id,
+        state: "LOBBY_READY",
+        observedLobbyId: custom.observedLobbyId,
+        lobbyObservationId: custom.lobbyObservationId,
+      },
       data: {
         observedLobbyId: observation.lobbyId,
         lobbyObservationId: observation.observationId,
       },
     });
-    return;
+    return updated.count === 1 ? "bound" : "unmatched";
   }
   const duel = matchingDuels[0];
   if (duel !== undefined) {
-    await prisma.duelGame.updateMany({
-      where: { id: duel.id, observedLobbyId: null },
+    if (duel.lobbyObservationId === observation.observationId) return "bound";
+    const updated = await prisma.duelGame.updateMany({
+      where: {
+        id: duel.id,
+        gameState: "code_ready",
+        observedLobbyId: duel.observedLobbyId,
+        lobbyObservationId: duel.lobbyObservationId,
+        series: { seriesState: "code_ready" },
+      },
       data: {
         observedLobbyId: observation.lobbyId,
         lobbyObservationId: observation.observationId,
       },
     });
+    return updated.count === 1 ? "bound" : "unmatched";
   }
+  return "unmatched";
 }
 
 async function eligibleBoundGames(
@@ -156,37 +235,28 @@ async function eligibleBoundGames(
       ...game.series.competitorTwo.members,
     ]),
   );
-  const capturedAt = new Date(observation.capturedAt);
-  const eligibleCustoms = [];
-  for (const game of customCandidates) {
-    const participantPuuids = game.participants.map(
-      (participant) => participant.puuid,
-    );
-    if (!(await lobbyWasSuperseded(game, participantPuuids, capturedAt))) {
-      eligibleCustoms.push(game);
-    }
-  }
-  const eligibleDuels = [];
-  for (const game of duelCandidates) {
-    const participantPuuids = [
-      ...game.series.competitorOne.members,
-      ...game.series.competitorTwo.members,
-    ].map((participant) => participant.puuid);
-    if (!(await lobbyWasSuperseded(game, participantPuuids, capturedAt))) {
-      eligibleDuels.push(game);
-    }
-  }
-  if (eligibleCustoms.length + eligibleDuels.length > 1) {
-    throw new Error(
-      `Observed post-game ${observation.gameId ?? "unknown"} matches more than one bound Scout game`,
-    );
-  }
-  return { custom: eligibleCustoms[0], duel: eligibleDuels[0] };
+  return currentBindingResolution(
+    {
+      games: customCandidates,
+      participantPuuids: (game) =>
+        game.participants.map((participant) => participant.puuid),
+    },
+    {
+      games: duelCandidates,
+      participantPuuids: (game) =>
+        [
+          ...game.series.competitorOne.members,
+          ...game.series.competitorTwo.members,
+        ].map((participant) => participant.puuid),
+    },
+    observedMatchEndedAt(observation),
+  );
 }
 
 async function projectionBoundGames(
   observation: ScoutClientObservation,
   localPuuid: ReturnType<typeof LeaguePuuidSchema.parse>,
+  postGameMatchId: string | null,
 ) {
   const [customGames, duelGames] = await Promise.all([
     prisma.customGame.findMany({
@@ -224,32 +294,40 @@ async function projectionBoundGames(
       },
     }),
   ]);
-  const capturedAt = new Date(observation.capturedAt);
-  const eligibleCustoms = [];
-  for (const game of customGames) {
-    const participantPuuids = game.participants.map(
-      (participant) => participant.puuid,
-    );
-    if (!(await lobbyWasSuperseded(game, participantPuuids, capturedAt))) {
-      eligibleCustoms.push(game);
-    }
-  }
-  const eligibleDuels = [];
-  for (const game of duelGames) {
-    const participantPuuids = [
-      ...game.series.competitorOne.members,
-      ...game.series.competitorTwo.members,
-    ].map((participant) => participant.puuid);
-    if (!(await lobbyWasSuperseded(game, participantPuuids, capturedAt))) {
-      eligibleDuels.push(game);
-    }
-  }
-  if (eligibleCustoms.length + eligibleDuels.length > 1) {
-    throw new Error(
-      `Observer ${localPuuid} belongs to more than one active bound Scout game`,
-    );
-  }
-  return { custom: eligibleCustoms[0], duel: eligibleDuels[0] };
+  const observedRoster = lobbyParticipantPuuids(observation.payload);
+  const matchingCustomGames =
+    postGameMatchId === null
+      ? customGames.filter((game) =>
+          sameRoster(observedRoster, game.participants),
+        )
+      : customGames.filter((game) => game.matchId === postGameMatchId);
+  const matchingDuelGames =
+    postGameMatchId === null
+      ? duelGames.filter((game) =>
+          sameRoster(observedRoster, [
+            ...game.series.competitorOne.members,
+            ...game.series.competitorTwo.members,
+          ]),
+        )
+      : duelGames.filter((game) => game.matchId === postGameMatchId);
+  return currentBindingResolution(
+    {
+      games: matchingCustomGames,
+      participantPuuids: (game) =>
+        game.participants.map((participant) => participant.puuid),
+    },
+    {
+      games: matchingDuelGames,
+      participantPuuids: (game) =>
+        [
+          ...game.series.competitorOne.members,
+          ...game.series.competitorTwo.members,
+        ].map((participant) => participant.puuid),
+    },
+    postGameMatchId === null
+      ? new Date(observation.capturedAt)
+      : observedMatchEndedAt(observation),
+  );
 }
 
 /**
@@ -259,9 +337,10 @@ async function projectionBoundGames(
  */
 export async function bindObservedMatch(
   observation: ScoutClientObservation,
-): Promise<void> {
+): Promise<"already_bound" | "ambiguous" | "bound" | "ignored" | "unmatched"> {
   const matchId = observedPostGameMatchId(observation);
-  if (matchId === null || observation.localPuuid === undefined) return;
+  if (matchId === null || observation.localPuuid === undefined)
+    return "ignored";
 
   const localPuuid = LeaguePuuidSchema.parse(observation.localPuuid);
   const [existingCustom, existingDuel] = await Promise.all([
@@ -271,9 +350,11 @@ export async function bindObservedMatch(
   if (existingCustom !== null && existingDuel !== null) {
     throw new Error(`Observed match ${matchId} is bound to two Scout games`);
   }
-  if (existingCustom !== null || existingDuel !== null) return;
+  if (existingCustom !== null || existingDuel !== null) return "already_bound";
 
-  const { custom, duel } = await eligibleBoundGames(observation, localPuuid);
+  const resolution = await eligibleBoundGames(observation, localPuuid);
+  if (resolution.kind === "ambiguous") return "ambiguous";
+  const { custom, duel } = resolution;
   if (custom !== undefined) {
     const updated = await prisma.customGame.updateMany({
       where: { id: custom.id, matchId: null },
@@ -284,7 +365,7 @@ export async function bindObservedMatch(
         `Custom game ${custom.id} changed while binding ${matchId}`,
       );
     }
-    return;
+    return "bound";
   }
   if (duel !== undefined) {
     const updated = await prisma.duelGame.updateMany({
@@ -294,7 +375,9 @@ export async function bindObservedMatch(
     if (updated.count !== 1) {
       throw new Error(`Duel game ${duel.id} changed while binding ${matchId}`);
     }
+    return "bound";
   }
+  return "unmatched";
 }
 
 /**
@@ -305,12 +388,27 @@ export async function bindObservedMatch(
  */
 export async function projectObservedGameState(
   observation: ScoutClientObservation,
-): Promise<void> {
+): Promise<"ambiguous" | "ignored" | "projected" | "unmatched"> {
   const projection = observedGameState(observation);
-  if (projection === null || observation.localPuuid === undefined) return;
+  if (projection === null || observation.localPuuid === undefined) {
+    return "ignored";
+  }
+  const postGameMatchId =
+    observation.kind === "post_game"
+      ? observedPostGameMatchId(observation)
+      : null;
+  if (postGameMatchId === null && observation.kind === "post_game") {
+    return "ignored";
+  }
 
   const localPuuid = LeaguePuuidSchema.parse(observation.localPuuid);
-  const { custom, duel } = await projectionBoundGames(observation, localPuuid);
+  const resolution = await projectionBoundGames(
+    observation,
+    localPuuid,
+    postGameMatchId,
+  );
+  if (resolution.kind === "ambiguous") return "ambiguous";
+  const { custom, duel } = resolution;
 
   if (custom !== undefined) {
     const nightId = await prisma.$transaction(async (transaction) => {
@@ -384,10 +482,10 @@ export async function projectObservedGameState(
       return current.nightId;
     });
     await publishCustomNightSnapshot(nightId);
-    return;
+    return "projected";
   }
 
-  if (duel === undefined) return;
+  if (duel === undefined) return "unmatched";
   await prisma.$transaction(async (transaction) => {
     await transaction.duelGame.updateMany({
       where: { id: duel.id, gameState: "code_ready" },
@@ -398,4 +496,5 @@ export async function projectObservedGameState(
       data: { seriesState: "in_progress" },
     });
   });
+  return "projected";
 }
