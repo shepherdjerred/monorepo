@@ -108,54 +108,26 @@ export function declinedToAnswer(input: {
 const DECLINE_MAX_LENGTH = 400;
 
 /**
- * Whether the answer handed the question back rather than answering it.
+ * A note on clarifying questions, and why there is no exemption for them.
  *
- * A gated chip has two acceptable outcomes, not one. Saying "that feature is
- * off here" is the obvious one. Asking what the person meant is the other: it
- * uses the gated feature exactly as much — which is not at all — and calling
- * it a failure to refuse says the agent did something it did not do.
+ * A gated chip answered with a question back to the user — "Do you mean League
+ * Challenges, or challenges in a Scout competition?" — uses the gated feature
+ * no more than a refusal does, and three attempts were made to let it pass:
+ * an answer ending in a question mark, then one whose statement prose was
+ * short, then one whose statement prose survived removing the questions.
  *
- * The prod sweep is where this showed up. Three chips for features prod has
- * switched off were flagged as answered. Two were questions back to the user:
- * "Do you mean League Challenges, or challenges in a Scout competition? The
- * answer depends on which challenge system and reward you're referring to."
- * and "I'm not sure what you mean by 'dare terms.' Do you mean popular terms
- * used in League dares, or something specific in Scout?" The third really did
- * draft a dare for a guild with dares off. That case is the finding; the other
- * two were the grader's.
+ * Each attempt was defeated by the same thing. The leak this signal exists to
+ * catch is prose, and prose can be shaped like a question: `Dare: Play Teemo
+ * support and get 10 kills, want to review it?` is a drafted dare for a guild
+ * with dares off, has no rows, fits any length ceiling, and leaves nothing
+ * behind once questions are removed. Separating it from a real clarification
+ * needs to understand what the text says, which a predicate here cannot.
  *
- * A question mark alone cannot separate them, because the leak this signal
- * exists to catch is prose — a drafted dare has no rows and fits well under
- * the length ceiling, so `Dare: "…" Want to review it?` would pass as a
- * clarification and suppress the very finding being looked for. So the
- * question has to be what the answer *is*, not something it ends with: the
- * prose outside the questions is capped, tightly.
- *
- * The ceiling comes from the evidence. The two real clarifications carry 76
- * and 42 characters of statement prose; the drafted dare carries 143 with a
- * question appended. This sits between them, nearer the clarifications,
- * because a clarification may add a sentence of context and not a paragraph of
- * output.
+ * So the exemption is gone. A clarifying question on a gated chip raises
+ * `gated_chip_did_not_refuse` and a person reads it — which costs a few known
+ * rows of noise per sweep, against a rule that can no longer hide the leak it
+ * was written to find.
  */
-const CLARIFICATION_MAX_STATEMENT_LENGTH = 120;
-
-function askedForClarification(input: {
-  readonly answer: string;
-  readonly rowsReturned: number | null;
-}): boolean {
-  if (!input.answer.includes("?")) return false;
-  if ((input.rowsReturned ?? 0) > 0) return false;
-  if (input.answer.length > DECLINE_MAX_LENGTH) return false;
-  // Everything the answer states rather than asks: remove each question — a
-  // run of text ending in a question mark — and weigh what is left.
-  //
-  // Not a sentence split. A closing quote after the full stop defeats one,
-  // which is how `…before 15 minutes.\u201d Want to review it?` first slipped
-  // through as a clarification: the drafted dare and the question landed in a
-  // single piece that was dropped whole for ending in a mark.
-  const statements = input.answer.replaceAll(/[^.!?]*\?/g, "").trim();
-  return statements.length <= CLARIFICATION_MAX_STATEMENT_LENGTH;
-}
 
 function answeredSomething(answer: string | null): boolean {
   return answer !== null && answer.trim() !== "";
@@ -212,14 +184,9 @@ function profileSignals(
     return [];
   }
   if (input.chipExpectation === "gated-off") {
-    // Absence of the vocabulary, which is the direction it is reliable in —
-    // plus the other way of not using a gated feature, which is to ask what
-    // the person meant instead of answering.
-    const rowsReturned = input.candidateRowsReturned;
-    const usedTheFeature =
-      !looksLikeExploreRefusal(answer) &&
-      !askedForClarification({ answer, rowsReturned });
-    return usedTheFeature ? ["gated_chip_did_not_refuse"] : [];
+    // Absence of the vocabulary, which is the direction it is reliable in. A
+    // clarifying question is not exempt; see the note above.
+    return looksLikeExploreRefusal(answer) ? [] : ["gated_chip_did_not_refuse"];
   }
   return declinedToAnswer({
     answer,

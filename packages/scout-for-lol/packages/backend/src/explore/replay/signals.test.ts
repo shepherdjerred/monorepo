@@ -227,17 +227,28 @@ describe("replaySignals profile assertions", () => {
     expect(result).not.toContain("gated_chip_did_not_refuse");
   });
 
-  test("accepts a gated chip that asked what the person meant", () => {
-    // Verbatim from the prod sweep, where prod has challenges switched off.
-    // Handing the question back uses the feature exactly as much as declining
-    // does, which is not at all.
+  test("flags a clarifying question too, which is known noise", () => {
+    // Verbatim from the prod sweep. Letting this pass needed a predicate that
+    // could tell a question from a drafted dare shaped like one, and three
+    // attempts could not; a few noisy rows beat a rule that hides a leak.
     const result = signals({
       chipExpectation: "gated-off",
       answer:
         "Do you mean League Challenges, or challenges in a Scout competition? The answer depends on which challenge system and reward you’re referring to.",
       candidateRowsReturned: null,
     });
-    expect(result).not.toContain("gated_chip_did_not_refuse");
+    expect(result).toContain("gated_chip_did_not_refuse");
+  });
+
+  test("flags produced output shaped like a question", () => {
+    // The case that defeated every exemption: a drafted dare for a guild with
+    // dares off, no rows, no sentence punctuation, ending in a question.
+    const result = signals({
+      chipExpectation: "gated-off",
+      answer: "Dare: Play Teemo support and get 10 kills, want to review it?",
+      candidateRowsReturned: null,
+    });
+    expect(result).toContain("gated_chip_did_not_refuse");
   });
 
   test("still flags a gated chip that produced the feature's output", () => {

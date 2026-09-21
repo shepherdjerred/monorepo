@@ -1,6 +1,22 @@
 import { prisma } from "#src/database/index.ts";
 
 /**
+ * Tables whose contents identify a snapshot.
+ *
+ * Deliberately not the ones a replay writes: those change during a sweep by
+ * design, and `writableRowCounts` covers them with its own message. These are
+ * the rows every answer is computed from and which the runner never touches —
+ * it calls `streamExploreAgent` rather than the persisted turn above it.
+ */
+const IDENTITY_TABLES = [
+  "Account",
+  "Player",
+  "Subscription",
+  "ExploreConversation",
+  "ExploreMessage",
+] as const;
+
+/**
  * What this snapshot contains, as an identity that survives being restored.
  *
  * A replay writes: drafting a dare or preparing a creation persists rows, and
@@ -11,19 +27,27 @@ import { prisma } from "#src/database/index.ts";
  * different datasets after exactly the restore the harness asked for, and the
  * A/B it exists to support could never run twice.
  *
- * So this counts content that a replay never writes — accounts, conversations
- * and their messages, which the runner deliberately leaves alone by calling
- * `streamExploreAgent` rather than the persisted turn above it. Restoring the
- * same dump reproduces these counts exactly; a later pull does not.
+ * Row counts alone were the next attempt and were not enough either: a later
+ * pull can change balances, dare states or any other value without moving a
+ * count, and two different datasets would have shared an identity. So this
+ * hashes the rows themselves — ordered, so the digest does not depend on the
+ * order Postgres returns them, and restoring the same dump reproduces it
+ * exactly.
  */
 export async function databaseSnapshotId(): Promise<string> {
-  const [accounts, conversations, messages, players] = await Promise.all([
-    prisma.account.count(),
-    prisma.exploreConversation.count(),
-    prisma.exploreMessage.count(),
-    prisma.player.count(),
-  ]);
-  return [accounts, conversations, messages, players]
-    .map((count) => count.toString())
-    .join("-");
+  const digests: string[] = [];
+  for (const table of IDENTITY_TABLES) {
+    const rows = await prisma.$queryRawUnsafe<{ digest: string | null }[]>(
+      `select md5(coalesce(string_agg(t.row_text, '|' order by t.row_text), '')) as digest
+         from (select "${table}"::text as row_text from "${table}") t`,
+    );
+    const digest = rows[0]?.digest;
+    if (digest === undefined || digest === null) {
+      throw new Error(`Could not fingerprint ${table}.`);
+    }
+    digests.push(`${table}:${digest}`);
+  }
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(digests.join("\n"));
+  return hasher.digest("hex").slice(0, 16);
 }

@@ -24,7 +24,7 @@ const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
     url: "postgres://scout@127.0.0.1:5471/scout_beta_snapshot",
     pulledAt: "2026-09-19T00:05:00.000Z",
     snapshotId: "1326601",
-    writableRows: { ConfirmationIntent: 4 },
+    writableRows: { ConfirmationIntent: "d41d8cd9" },
   },
   accountRows: { parquet: 100, database: 120 },
   flagSource: "static",
@@ -54,9 +54,9 @@ function facts(
   return {
     snapshotId: overrides.snapshotId ?? "1326601",
     pinnedSnapshotId: overrides.pinnedSnapshotId ?? "1326601",
-    writableRows: overrides.writableRows ?? { ConfirmationIntent: 4 },
+    writableRows: overrides.writableRows ?? { ConfirmationIntent: "d41d8cd9" },
     pinnedWritableRows: overrides.pinnedWritableRows ?? {
-      ConfirmationIntent: 4,
+      ConfirmationIntent: "d41d8cd9",
     },
     // `in` rather than `??`: an explicitly-undefined fingerprint is the case
     // under test, and a nullish fallback would quietly restore the default.
@@ -116,7 +116,7 @@ describe("datasetCoherenceIssues", () => {
     // intents, and nothing rolls them back between cases, so the next sweep
     // would not be measuring the world the pin describes.
     const issues = datasetCoherenceIssues(
-      facts({ writableRows: { ConfirmationIntent: 6 } }),
+      facts({ writableRows: { ConfirmationIntent: "0000ffff" } }),
     );
     expect(issues).toEqual([
       expect.stringContaining("restore the snapshot before running again"),

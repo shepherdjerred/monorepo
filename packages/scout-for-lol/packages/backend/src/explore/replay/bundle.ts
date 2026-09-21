@@ -311,15 +311,18 @@ export async function recordedCaseEntries(
         `${indexPath} line ${(index + 1).toString()} is not valid JSON. Only a truncated final line is recoverable; this index is damaged.`,
       );
     }
+    // Only a *byte-truncated* line is recoverable, and that fails JSON parsing
+    // above. A line that parses as JSON was written whole, so a shape the
+    // schema rejects means the index is damaged rather than interrupted —
+    // discarding it would re-run the case and drop the integrity failure it
+    // recorded, even on the last line.
     const parsed = ReplayCaseIndexEntrySchema.safeParse(raw);
-    if (parsed.success) {
-      entries.push(parsed.data);
-      continue;
+    if (!parsed.success) {
+      throw new Error(
+        `${indexPath} line ${(index + 1).toString()} is not a valid case entry: ${parsed.error.message}`,
+      );
     }
-    if (isFinal) continue;
-    throw new Error(
-      `${indexPath} line ${(index + 1).toString()} is not a valid case entry: ${parsed.error.message}`,
-    );
+    entries.push(parsed.data);
   }
   return entries;
 }

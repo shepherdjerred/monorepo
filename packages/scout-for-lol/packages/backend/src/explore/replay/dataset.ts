@@ -72,7 +72,7 @@ export const StageDatasetPinSchema = z
          */
         snapshotId: z.string().min(1),
         /**
-         * Row counts of the tables a replay can write into.
+         * A digest of each table a replay can write into.
          *
          * The agent's dare, challenge and creation tools persist: a draft and
          * the confirmation intent that would enact it. A replay runs them for
@@ -81,10 +81,7 @@ export const StageDatasetPinSchema = z
          * sweep would not be measuring the same world. Recorded here so a run
          * can refuse a snapshot that has moved since it was pinned.
          */
-        writableRows: z.record(
-          z.string().min(1),
-          z.number().int().nonnegative(),
-        ),
+        writableRows: z.record(z.string().min(1), z.string().min(1)),
       })
       .strict(),
     accountRows: z
@@ -131,8 +128,8 @@ export type DatasetCoherenceFacts = {
   readonly snapshotId: string;
   readonly pinnedSnapshotId: string;
   /** What the writable tables hold now, and held when the pin was captured. */
-  readonly writableRows: Readonly<Record<string, number>>;
-  readonly pinnedWritableRows: Readonly<Record<string, number>>;
+  readonly writableRows: Readonly<Record<string, string>>;
+  readonly pinnedWritableRows: Readonly<Record<string, string>>;
   /** `undefined` when the build predates the fingerprint, or its manifest is unreadable. */
   readonly lakeFingerprint: string | undefined;
   readonly databaseFingerprint: string;
@@ -175,10 +172,10 @@ export function datasetCoherenceIssues(
   for (const [table, pinned] of Object.entries(facts.pinnedWritableRows)) {
     const now = facts.writableRows[table];
     if (now === undefined) {
-      issues.push(`the snapshot no longer has a ${table} table to count`);
+      issues.push(`the snapshot no longer has a ${table} table to read`);
     } else if (now !== pinned) {
       issues.push(
-        `${table} holds ${now.toString()} rows, but ${pinned.toString()} when pinned; a replay writes drafts and intents, so restore the snapshot before running again`,
+        `${table} no longer matches the pin; a replay writes drafts and intents, so restore the snapshot before running again`,
       );
     }
   }

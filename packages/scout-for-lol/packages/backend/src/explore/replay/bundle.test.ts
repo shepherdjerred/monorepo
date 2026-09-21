@@ -211,6 +211,26 @@ describe("recordedCaseEntries", () => {
     expect(entries[1]?.kind).toBe("conversation");
   });
 
+  test("refuses a final line that parses but is not a valid entry", async () => {
+    // A whole line with a bad shape is damage, not an interrupted append; only
+    // a byte-truncated line is recoverable, and that fails JSON parsing.
+    const dir = await temporaryDir();
+    const indexPath = path.join(dir, "cases.jsonl");
+    await appendBundleLine(
+      indexPath,
+      JSON.stringify({
+        caseId: "chip:aaa",
+        kind: "chip",
+        status: "ok",
+        durationMs: 10,
+        signals: ["not_a_real_signal"],
+      }),
+    );
+    await expect(recordedCaseEntries(indexPath)).rejects.toThrow(
+      /not a valid case entry/,
+    );
+  });
+
   test("refuses a malformed line that is not the last one", async () => {
     // Only the tail can be partial. Damage anywhere else would re-run a case
     // at live-model cost and lose whatever integrity failure it recorded.
@@ -306,12 +326,15 @@ describe("completedCaseIds", () => {
     expect([...ids]).toEqual(["chip:aaa"]);
   });
 
-  test("ignores a well-formed line that is not a valid entry", async () => {
+  test("refuses a well-formed line that is not a valid entry", async () => {
+    // It was written whole, so a shape the schema rejects is damage. Ignoring
+    // it would re-run the case and lose the integrity failure it recorded.
     const dir = await temporaryDir();
     const indexPath = path.join(dir, "cases.jsonl");
     await appendBundleLine(indexPath, JSON.stringify({ caseId: "chip:aaa" }));
-    const ids = await completedCaseIds(indexPath);
-    expect(ids.size).toBe(0);
+    await expect(completedCaseIds(indexPath)).rejects.toThrow(
+      /not a valid case entry/,
+    );
   });
 });
 
