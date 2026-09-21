@@ -563,13 +563,28 @@ test("rejects a changed retry that reuses a binding operation identity", () => {
   };
 
   expect(
-    registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, update),
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry: firstEntry,
+      binding,
+      update,
+    }),
   ).toEqual(firstEntry);
   expect(
-    registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, update),
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry: firstEntry,
+      binding,
+      update,
+    }),
   ).toEqual(firstEntry);
   expect(() =>
-    registerAndBindAgentChatCatalogEntry(state, secondEntry, binding, update),
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry: secondEntry,
+      binding,
+      update,
+    }),
   ).toThrow(
     "binding operation binding-retry-1 was reused with different input",
   );

@@ -8,6 +8,7 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
+import { AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS } from "#shared/agent/agent-chat.ts";
 import {
   BlueBubblesCursorSchema,
   BlueBubblesPollResultSchema,
@@ -27,7 +28,7 @@ const duplicateCommandWait = proxyActivities<
   Pick<ImessageActivities, "waitForImessageCommand">
 >({
   taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE,
-  startToCloseTimeout: "30 minutes",
+  startToCloseTimeout: AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
   retry: { maximumAttempts: 1 },
 });
 async function settleCommand(command: ImessageCommand): Promise<void> {
