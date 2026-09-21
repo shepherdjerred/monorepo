@@ -57,13 +57,18 @@ export const StageDatasetPinSchema = z
         url: z.string().min(1),
         pulledAt: z.iso.datetime(),
         /**
-         * The database's own OID, which changes when it is restored.
+         * What the snapshot contains, not which instance holds it.
          *
-         * `pulledAt` records when the pin was captured, and the name is a slot
-         * that every pull restores in place — neither can tell a snapshot from
-         * its replacement. Postgres assigns a fresh OID to a recreated
-         * database, so comparing it catches a pin reused against data it never
-         * described.
+         * `pulledAt` records when the pin was captured and the name is a slot
+         * every pull restores in place, so neither can tell one snapshot from
+         * another. The database's OID can, but it is the wrong identity here:
+         * a sweep that drafts a dare writes to the snapshot, the coherence
+         * check then demands a restore, and `dev:db-pull` drops and recreates
+         * — so an OID would differ after restoring the very same data and the
+         * baseline A/B this harness exists for could never run twice.
+         *
+         * Derived from content instead: restoring the same dump reproduces it,
+         * and a different pull does not.
          */
         snapshotId: z.string().min(1),
         /**

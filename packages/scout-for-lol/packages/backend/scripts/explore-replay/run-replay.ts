@@ -6,6 +6,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
+import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
 import {
   MY_SERVER,
@@ -155,19 +156,18 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
     remap,
     databaseRows,
     lakeFacts,
-    snapshotRows,
+    snapshotId,
     writableRows,
   ] = await Promise.all([
     readBuildPuuidRemapFingerprint(buildDir),
     loadPuuidRemap(prisma),
     prisma.account.count(),
     lakeAccountFacts(pin),
-    // The live database's own identity, which a restore replaces. Checked
-    // here so a pin reused after a re-pull is refused rather than silently
-    // describing data it never saw.
-    prisma.$queryRaw<{ oid: string }[]>`
-        select oid::text as oid from pg_database where datname = current_database()
-      `,
+    // What this snapshot contains. Checked so a pin reused against a later
+    // pull is refused rather than silently describing data it never saw —
+    // while restoring the same dump, which the writable-row check demands
+    // between sweeps, reproduces it exactly.
+    databaseSnapshotId(),
     writableRowCounts(),
   ]);
 
@@ -178,7 +178,7 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
   const known = new Set(present.map((row) => row.puuid));
 
   const issues = datasetCoherenceIssues({
-    snapshotId: snapshotRows[0]?.oid ?? "unreadable",
+    snapshotId,
     pinnedSnapshotId: pin.database.snapshotId,
     writableRows,
     pinnedWritableRows: pin.database.writableRows,

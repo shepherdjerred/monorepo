@@ -5,6 +5,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { prisma } from "#src/database/index.ts";
+import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
 import { ME, MY_SERVER } from "#src/configuration/flags.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
@@ -175,28 +176,6 @@ async function busiestRequester(guildId: string): Promise<string> {
   // only id guaranteed to exist, so it is the honest fallback — recorded in
   // the pin either way, so a reader can see which it was.
   return busiest?.[0] ?? ME;
-}
-
-/**
- * The database's own identity, so a pin can tell its snapshot from a later one.
- *
- * Postgres assigns a fresh OID to a database it recreates, which is what a
- * restore does. Anything derived here instead — a capture timestamp, the
- * database name — describes the pin rather than the data, and would go on
- * matching after the snapshot underneath had been replaced.
- */
-
-async function databaseSnapshotId(): Promise<string> {
-  const rows = await prisma.$queryRaw<{ oid: string }[]>`
-    select oid::text as oid from pg_database where datname = current_database()
-  `;
-  const oid = rows[0]?.oid;
-  if (oid === undefined) {
-    throw new Error(
-      "Could not read the snapshot database's identity from pg_database.",
-    );
-  }
-  return oid;
 }
 
 export async function capturePinForStage(input: {

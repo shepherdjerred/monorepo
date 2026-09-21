@@ -55,6 +55,23 @@ function diff(
 }
 
 describe("numericClaims", () => {
+  test("keeps the sign, so a reversed result is a different claim", () => {
+    expect([...numericClaims("You are down -5 LP")]).toEqual(["-5"]);
+    expect([...numericClaims("You are up 5 LP")]).toEqual(["5"]);
+  });
+
+  test("does not read a range or a date as negative", () => {
+    expect([...numericClaims("between 10-20 games")].toSorted()).toEqual([
+      "10",
+      "20",
+    ]);
+    expect([...numericClaims("on 2024-05-01")].toSorted()).toEqual([
+      "1",
+      "2024",
+      "5",
+    ]);
+  });
+
   test("finds plain figures", () => {
     expect(
       [...numericClaims("Ezreal won 54% of 210 games")].toSorted(),

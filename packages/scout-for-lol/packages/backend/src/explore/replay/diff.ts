@@ -154,7 +154,11 @@ export type ReplayDiff = {
 export function numericClaims(text: string | null): ReadonlySet<string> {
   if (text === null) return new Set();
   const withoutSeparators = text.replaceAll(/(?<=\d),(?=\d{3}\b)/g, "");
-  const found = withoutSeparators.match(/\d+(?:\.\d+)?/g) ?? [];
+  // The sign is part of the claim: "-5 LP" and "5 LP" are opposite results,
+  // and dropping the minus made them compare as the same figure. A hyphen only
+  // counts when nothing numeric precedes it, so a range or a date keeps its
+  // parts positive rather than turning "2024-05" into a negative five.
+  const found = withoutSeparators.match(/(?<![\d.])-?\d+(?:\.\d+)?/g) ?? [];
   return new Set(
     found.map((token) => {
       const value = Number(token);

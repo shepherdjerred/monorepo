@@ -1,33 +1,8 @@
 {
   "version": 1,
   "stage": "beta",
-  "capturedAt": "2026-09-21T00:46:23.329Z",
+  "capturedAt": "2026-09-21T04:19:56.482Z",
   "conversations": [
-    {
-      "conversationId": "e434fde2-2c8d-46a6-827d-46a9b8e22af2",
-      "leafId": "5446d1d1-a95c-4afb-a8a9-baa2e608247e",
-      "kind": "dare-draft",
-      "surface": "web",
-      "guildSource": "beta-allowlist",
-      "turns": [
-        {
-          "index": 0,
-          "questionMessageId": "0ff85896-0f0b-43d0-a015-235b1e4cb9d7",
-          "answerMessageId": "8a6f8313-463e-4d85-aede-ca19c9f1d3e2"
-        },
-        {
-          "index": 1,
-          "questionMessageId": "0f6e5ec1-3fe5-4a9f-b536-f446c09fabe6",
-          "answerMessageId": "262c1f99-d4ca-4382-a918-a4652752f50b"
-        },
-        {
-          "index": 2,
-          "questionMessageId": "310addee-ba16-4079-901b-9582d1d0605d",
-          "answerMessageId": "1fc2369f-e2e0-4eec-a7e8-15d3fe687c62"
-        }
-      ],
-      "note": "3 turn(s), dare-draft"
-    },
     {
       "conversationId": "403e9f24-186d-460a-882a-110e65c6f12b",
       "leafId": "10d18d28-313f-4217-b210-c31c102fa2bd",

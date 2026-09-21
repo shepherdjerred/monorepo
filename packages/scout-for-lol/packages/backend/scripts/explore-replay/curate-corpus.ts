@@ -37,51 +37,48 @@ type Candidate = {
 };
 
 /**
- * Whether this conversation provably ran on the surface a replay reproduces.
+ * Whether this *turn* provably ran on the surface a replay reproduces.
  *
- * Every case is replayed on `web`, so a Discord or voice conversation would be
- * answered with a tool set it never had — the web-only creation tools among
- * them — and the comparison would measure the surface rather than the agent.
+ * Per turn, not per conversation. Every case is replayed on `web`, so a
+ * Discord or voice turn would be answered with a tool set it never had — the
+ * web-only creation tools among them — and the comparison would measure the
+ * surface rather than the agent.
  *
- * The `origin` column alone cannot decide it. The migration that added it
- * defaults every pre-existing row to `legacy`
+ * The `origin` column cannot decide it. The migration that added it defaults
+ * every pre-existing row to `legacy`
  * (`20260914000000_explore_conversation_origin`), so `legacy` means "written
- * before the column", not "came from the web" — a `/scout ask` conversation
- * from before that date is labelled `legacy` too.
+ * before the column" and nothing about where it came from. Worse, origin is a
+ * property of the conversation: a pre-migration `/scout ask` thread continued
+ * on the web later has web runs, and judging the transcript as a whole would
+ * admit the original Discord turn along with them.
  *
- * The durable run payload is the evidence that does decide it.
- * `ExploreDurablePayloadSchema.surface` records it, and for rows predating
- * that field it defaults to `web` on the documented grounds that only the web
- * surface enqueued durable runs then. A `legacy` conversation with no run at
- * all has no evidence either way, and is refused rather than assumed — the
+ * So each answer must name its own run. `ExploreDurablePayloadSchema.surface`
+ * records it, and for rows predating that field it defaults to `web` on the
+ * documented grounds that only the web surface enqueued durable runs then. A
+ * turn with no run of its own has no evidence either way and is refused — the
  * same rule guild recovery already follows.
  */
-function replayableSurface(
-  origin: string,
+function turnRanOnWeb(
+  answer: { readonly id: string },
   runs: readonly PlanRunRow[],
 ): { readonly ok: true } | { readonly ok: false; readonly reason: string } {
-  if (origin === "web") return { ok: true };
-  if (origin !== "legacy") {
-    return { ok: false, reason: `origin ${origin} is not the web surface` };
-  }
-  const surfaces = new Set(
-    runs.flatMap((run) => {
-      const parsed = ExploreDurablePayloadSchema.safeParse(
-        JSON.parse(run.payload) as unknown,
-      );
-      return parsed.success ? [parsed.data.surface] : [];
-    }),
-  );
-  if (surfaces.size === 0) {
+  const own = runs.filter((run) => run.resultMessageId === answer.id);
+  if (own.length === 0) {
     return {
       ok: false,
-      reason:
-        "origin legacy is the migration default and no durable run records a surface",
+      reason: "no durable run records the surface this turn ran on",
     };
   }
-  const other = [...surfaces].filter((surface) => surface !== "web");
-  if (other.length > 0) {
-    return { ok: false, reason: `ran on ${other.join(", ")}, not web` };
+  for (const run of own) {
+    const parsed = ExploreDurablePayloadSchema.safeParse(
+      JSON.parse(run.payload) as unknown,
+    );
+    if (!parsed.success) {
+      return { ok: false, reason: "its durable run payload is unreadable" };
+    }
+    if (parsed.data.surface !== "web") {
+      return { ok: false, reason: `it ran on ${parsed.data.surface}, not web` };
+    }
   }
   return { ok: true };
 }
@@ -118,14 +115,6 @@ export async function curateCorpus(input: {
   const skipped: string[] = [];
 
   for (const conversation of conversations) {
-    const surface = replayableSurface(
-      conversation.origin,
-      runsByConversation.get(conversation.id) ?? [],
-    );
-    if (!surface.ok) {
-      skipped.push(`${conversation.id}: ${surface.reason}`);
-      continue;
-    }
     const leafId = conversation.currentLeafId;
     if (leafId === null) {
       skipped.push(`${conversation.id}: no leaf`);
@@ -145,6 +134,14 @@ export async function curateCorpus(input: {
       const question = path[index * 2];
       const answer = path[index * 2 + 1];
       if (question?.role !== "user" || answer?.role !== "assistant") break;
+      const surface = turnRanOnWeb(
+        answer,
+        runsByConversation.get(conversation.id) ?? [],
+      );
+      if (!surface.ok) {
+        unresolvable = `turn ${index.toString()}: ${surface.reason}`;
+        break;
+      }
       try {
         const resolved = resolveTurnGuilds({
           answer,

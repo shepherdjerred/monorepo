@@ -149,10 +149,11 @@ corpus ([`plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/package
 - `explore:capture-guilds` reads static flag configuration unless
   `FEATURE_FLAGS_MODE=flipt` points it at the stage's provider. `flagSource`
   records which, because a static capture is not evidence of live targeting.
-- Every case runs on the `web` surface. Curation admits a conversation only
-  when that is proven: `origin` says `web`, or a durable run payload records
-  the surface. `origin` alone cannot, because the migration that added it
-  defaults every earlier row to `legacy`
+- Every case runs on the `web` surface. Curation admits a turn only when its
+  own durable run records that surface. The conversation's `origin` cannot
+  prove it: the migration that added the column defaults every earlier row to
+  `legacy`, and a pre-migration Discord thread continued on the web later would
+  carry web runs for its newer turns only
   ([`curate-corpus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/curate-corpus.ts)).
 
 ## Related
