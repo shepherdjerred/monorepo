@@ -57,6 +57,12 @@ impl ObservationOutbox {
                digest TEXT PRIMARY KEY,
                game_id TEXT NOT NULL,
                uploaded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+             );
+             CREATE TABLE IF NOT EXISTS rejected_replay (
+               digest TEXT PRIMARY KEY,
+               game_id TEXT NOT NULL,
+               status_code INTEGER NOT NULL,
+               rejected_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
              );",
         )?;
         Ok(outbox)
@@ -186,6 +192,23 @@ impl ObservationOutbox {
         Ok(count == 1)
     }
 
+    /// Return whether a replay has a successful or terminal server receipt.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if local receipt state cannot be read.
+    pub fn replay_handled(&self, digest: &str) -> Result<bool, OutboxError> {
+        let connection = self.connection()?;
+        let count: i64 = connection.query_row(
+            "SELECT
+               (SELECT COUNT(*) FROM uploaded_replay WHERE digest = ?1) +
+               (SELECT COUNT(*) FROM rejected_replay WHERE digest = ?1)",
+            [digest],
+            |row| row.get(0),
+        )?;
+        Ok(count > 0)
+    }
+
     /// Persist a successful content-addressed replay receipt.
     ///
     /// # Errors
@@ -197,6 +220,26 @@ impl ObservationOutbox {
             "INSERT INTO uploaded_replay (digest, game_id) VALUES (?1, ?2)
              ON CONFLICT(digest) DO NOTHING",
             params![digest, game_id],
+        )?;
+        Ok(())
+    }
+
+    /// Persist a terminal file-specific rejection so later replays can proceed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if the rejection cannot be persisted.
+    pub fn mark_replay_rejected(
+        &self,
+        digest: &str,
+        game_id: &str,
+        status_code: u16,
+    ) -> Result<(), OutboxError> {
+        let connection = self.connection()?;
+        connection.execute(
+            "INSERT INTO rejected_replay (digest, game_id, status_code)
+             VALUES (?1, ?2, ?3) ON CONFLICT(digest) DO NOTHING",
+            params![digest, game_id, status_code],
         )?;
         Ok(())
     }
@@ -261,6 +304,9 @@ mod tests {
         assert_eq!(outbox.next_sequence()?, 4);
         assert!(outbox.acknowledge(second.observation_id)?);
         assert_eq!(outbox.next_sequence()?, 5);
+        assert!(!outbox.replay_handled("rejected-digest")?);
+        outbox.mark_replay_rejected("rejected-digest", "12345", 403)?;
+        assert!(outbox.replay_handled("rejected-digest")?);
         drop(outbox);
         fs::remove_file(path)?;
         Ok(())

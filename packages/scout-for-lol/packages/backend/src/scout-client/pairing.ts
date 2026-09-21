@@ -8,6 +8,7 @@ import { getAppOrigin } from "#src/trpc/auth-web-helpers.ts";
 import { digestMatches, randomSecret, secretDigest } from "./secrets.ts";
 
 const PAIRING_TTL_MS = 10 * 60 * 1000;
+const ABANDONED_PAIRING_RETENTION_MS = 24 * 60 * 60 * 1000;
 const PairingStateSchema = z.enum([
   "PENDING",
   "APPROVED",
@@ -34,6 +35,14 @@ export type PairingExchange =
     };
 
 export async function createPairing(input: PairingInput, now = new Date()) {
+  await prisma.scoutClientPairing.deleteMany({
+    where: {
+      state: { in: ["PENDING", "APPROVED", "EXPIRED"] },
+      expiresAt: {
+        lt: new Date(now.getTime() - ABANDONED_PAIRING_RETENTION_MS),
+      },
+    },
+  });
   const pairingSecret = randomSecret("scp_");
   const expiresAt = new Date(now.getTime() + PAIRING_TTL_MS);
   const pairing = await prisma.scoutClientPairing.create({

@@ -138,6 +138,8 @@ describe("production hard-disable policy", () => {
     expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
       MY_SERVER,
     ]);
+    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(true);
+    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
   });
 
   test("leaves every other surface to its ordinary flag", async () => {

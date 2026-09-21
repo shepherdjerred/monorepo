@@ -11,9 +11,12 @@ use uuid::Uuid;
 
 use crate::credentials::DeviceCredential;
 use crate::protocol::{
-    CreatePairingRequest, CreatePairingResponse, ExchangePairingRequest, ExchangePairingResponse,
-    ObservationBatch, ObservationBatchReceipt,
+    CheckInRequest, CheckInResponse, CreatePairingRequest, CreatePairingResponse,
+    ExchangePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationBatchReceipt,
+    PROTOCOL_VERSION, RevokeDeviceResponse,
 };
+
+const REPLAY_UPLOAD_TIMEOUT: Duration = Duration::from_hours(1);
 
 /// HTTP client restricted to a single validated Scout origin.
 #[derive(Debug, Clone)]
@@ -153,6 +156,69 @@ impl ScoutBackendClient {
             .map_err(BackendError::Request)
     }
 
+    /// Refresh the paired device's running build before sending observations.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed transport, server-status, or invalid-receipt error.
+    pub async fn check_in(
+        &self,
+        credential: &DeviceCredential,
+        app_version: &str,
+    ) -> Result<(), BackendError> {
+        let receipt: CheckInResponse = self
+            .http
+            .post(self.endpoint("/api/scout-client/v1/check-ins")?)
+            .bearer_auth(&credential.token)
+            .json(&CheckInRequest {
+                app_version: app_version.to_owned(),
+                protocol_version: PROTOCOL_VERSION,
+            })
+            .send()
+            .await
+            .map_err(BackendError::Request)?
+            .error_for_status()
+            .map_err(BackendError::Request)?
+            .json()
+            .await
+            .map_err(BackendError::Request)?;
+        if !receipt.accepted {
+            return Err(BackendError::CheckInReceipt);
+        }
+        Ok(())
+    }
+
+    /// Revoke this bearer before removing it from the operating-system store.
+    ///
+    /// An unauthorized response means the credential is already unusable and
+    /// is therefore safe to delete locally.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed transport, server-status, or invalid-receipt error.
+    pub async fn revoke_device(&self, credential: &DeviceCredential) -> Result<(), BackendError> {
+        let response = self
+            .http
+            .post(self.endpoint("/api/scout-client/v1/devices/current/revoke")?)
+            .bearer_auth(&credential.token)
+            .send()
+            .await
+            .map_err(BackendError::Request)?;
+        if response.status() == StatusCode::UNAUTHORIZED {
+            return Ok(());
+        }
+        let receipt: RevokeDeviceResponse = response
+            .error_for_status()
+            .map_err(BackendError::Request)?
+            .json()
+            .await
+            .map_err(BackendError::Request)?;
+        if !receipt.revoked {
+            return Err(BackendError::RevokeReceipt);
+        }
+        Ok(())
+    }
+
     /// Stream one completed ROFL through the Scout backend relay.
     ///
     /// # Errors
@@ -181,6 +247,7 @@ impl ScoutBackendClient {
             .header("Content-Length", bytes)
             .header("X-Scout-SHA256", digest)
             .body(reqwest::Body::from(file))
+            .timeout(REPLAY_UPLOAD_TIMEOUT)
             .send()
             .await
             .map_err(BackendError::Request)?
@@ -211,4 +278,29 @@ pub enum BackendError {
     /// Server acknowledged different replay metadata.
     #[error("Scout backend returned inconsistent replay metadata")]
     ReplayReceipt,
+    /// Server returned a syntactically valid but negative check-in receipt.
+    #[error("Scout backend did not accept the device check-in")]
+    CheckInReceipt,
+    /// Server returned a syntactically valid but negative revocation receipt.
+    #[error("Scout backend did not revoke the device")]
+    RevokeReceipt,
+}
+
+impl BackendError {
+    /// Statuses that permanently reject one replay rather than the credential or service.
+    #[must_use]
+    pub fn terminal_replay_rejection_status(&self) -> Option<u16> {
+        let Self::Request(error) = self else {
+            return None;
+        };
+        let status = error.status()?;
+        matches!(
+            status,
+            StatusCode::BAD_REQUEST
+                | StatusCode::FORBIDDEN
+                | StatusCode::PAYLOAD_TOO_LARGE
+                | StatusCode::UNSUPPORTED_MEDIA_TYPE
+        )
+        .then(|| status.as_u16())
+    }
 }

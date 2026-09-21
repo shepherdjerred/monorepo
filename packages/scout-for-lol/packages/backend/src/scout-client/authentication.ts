@@ -14,6 +14,7 @@ export type AuthenticatedScoutClient = {
 
 export async function authenticateScoutClient(
   request: Request,
+  requireEnabledPolicy = true,
 ): Promise<AuthenticatedScoutClient | null> {
   const authorization = request.headers.get("Authorization");
   if (authorization?.startsWith("Bearer sct_") !== true) return null;
@@ -24,7 +25,10 @@ export async function authenticateScoutClient(
   });
   if (device?.deviceState !== "ACTIVE") return null;
   const ownerId = DiscordAccountIdSchema.parse(device.ownerId);
-  if (!(await isPolicyEnabled("scout_client_ingestion", { user: ownerId }))) {
+  if (
+    requireEnabledPolicy &&
+    !(await isPolicyEnabled("scout_client_ingestion", { user: ownerId }))
+  ) {
     return null;
   }
   return { deviceId: device.id, ownerId, appVersion: device.appVersion };

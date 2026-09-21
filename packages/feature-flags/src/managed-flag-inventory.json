@@ -574,7 +574,7 @@
       "source": "scout-policy",
       "purpose": "Accept observations from paired Scout native clients.",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

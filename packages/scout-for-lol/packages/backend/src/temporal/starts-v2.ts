@@ -1,4 +1,5 @@
 import {
+  WorkflowExecutionAlreadyStartedError,
   WorkflowIdConflictPolicy,
   type WorkflowStartOptions,
 } from "@temporalio/client";
@@ -67,6 +68,9 @@ const JOIN_RUNNING_EXECUTION = {
   workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
 } as const;
 
+/** Give Riot first refusal before a native payload may become canonical. */
+export const SCOUT_CLIENT_MATCH_START_DELAY = "2 minutes";
+
 /**
  * The slice of `Client` these starts need, and the handle field the caller
  * reads back. Structural so a test can pass a plain object and assert the exact
@@ -120,23 +124,32 @@ function apiStartMetadata(
 export async function startScoutMatchProcessingV2(
   client: ScoutV2WorkflowStarter,
   input: ScoutMatchProcessingV2Input,
-): Promise<{ firstExecutionRunId: string }> {
-  return await client.workflow.start(SCOUT_WORKFLOW_NAMES.matchProcessingV2, {
-    ...JOIN_RUNNING_EXECUTION,
-    workflowIdReusePolicy:
-      SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.matchProcessingV2],
-    workflowId: scoutMatchProcessingV2WorkflowId(
-      input.stage,
-      input.riotMatchId,
-    ),
-    taskQueue: scoutTaskQueues(input.stage).workflow,
-    args: [scoutMatchProcessingV2InputCodec.serialize(input)],
-    ...apiStartMetadata(
-      input.stage,
-      "Ingest a native Scout match observation",
-      "Runs the existing post-match pipeline with Riot-first, paired-client gap filling.",
-    ),
-  });
+): Promise<{ firstExecutionRunId: string } | null> {
+  try {
+    return await client.workflow.start(SCOUT_WORKFLOW_NAMES.matchProcessingV2, {
+      ...JOIN_RUNNING_EXECUTION,
+      workflowIdReusePolicy:
+        SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.matchProcessingV2],
+      workflowId: scoutMatchProcessingV2WorkflowId(
+        input.stage,
+        input.riotMatchId,
+      ),
+      taskQueue: scoutTaskQueues(input.stage).workflow,
+      startDelay: SCOUT_CLIENT_MATCH_START_DELAY,
+      args: [scoutMatchProcessingV2InputCodec.serialize(input)],
+      ...apiStartMetadata(
+        input.stage,
+        "Ingest a native Scout match observation",
+        "Runs the existing post-match pipeline with Riot-first, paired-client gap filling.",
+      ),
+    });
+  } catch (error) {
+    // A successfully completed deterministic match workflow is the durable
+    // receipt. Historical observations must be acknowledged rather than
+    // poisoning the whole client batch with a permanent start conflict.
+    if (error instanceof WorkflowExecutionAlreadyStartedError) return null;
+    throw error;
+  }
 }
 
 export async function startScoutPipelineReconciliationV2(

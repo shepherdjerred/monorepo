@@ -165,17 +165,12 @@ async fn run_collector(
         }
     };
     update_state(&state, |snapshot| snapshot.paired = credential.is_some());
-    match startup::is_enabled() {
-        Ok(enabled) => update_state(&state, |snapshot| snapshot.start_at_login = enabled),
-        Err(error) => set_error(
-            &state,
-            format!("Could not read start-at-login setting: {error}"),
-        ),
-    }
+    load_startup_state(&state);
     let mut pending_pairing: Option<PendingPairing> = None;
     let mut payloads = HashMap::new();
     let live_client = create_live_client(&state);
     let mut tick_number = 0_u64;
+    let mut checked_in_device: Option<Uuid> = None;
     let mut ticker = tokio::time::interval(Duration::from_secs(2));
 
     loop {
@@ -215,15 +210,22 @@ async fn run_collector(
                 ).await {
                     set_error(&state, error);
                 }
-                if let Some(active_credential) = &credential
-                    && let Err(error) = upload_pending(
-                        &state,
+                if let Some(active_credential) = &credential {
+                    if let Err(error) = ensure_checked_in(
                         &backend,
-                        &outbox,
                         active_credential,
-                    ).await
-                {
-                    set_error(&state, error);
+                        &mut checked_in_device,
+                    ).await {
+                        set_error(&state, error);
+                    } else if let Err(error) = upload_pending(
+                            &state,
+                            &backend,
+                            &outbox,
+                            active_credential,
+                        ).await
+                    {
+                        set_error(&state, error);
+                    }
                 }
                 if tick_number % 15 == 1
                     && let Some(active_credential) = &credential
@@ -238,6 +240,32 @@ async fn run_collector(
             }
         }
     }
+}
+
+fn load_startup_state(state: &Arc<RwLock<RuntimeState>>) {
+    match startup::is_enabled() {
+        Ok(enabled) => update_state(state, |snapshot| snapshot.start_at_login = enabled),
+        Err(error) => set_error(
+            state,
+            format!("Could not read start-at-login setting: {error}"),
+        ),
+    }
+}
+
+async fn ensure_checked_in(
+    backend: &ScoutBackendClient,
+    credential: &DeviceCredential,
+    checked_in_device: &mut Option<Uuid>,
+) -> Result<(), String> {
+    if *checked_in_device == Some(credential.device_id) {
+        return Ok(());
+    }
+    backend
+        .check_in(credential, env!("CARGO_PKG_VERSION"))
+        .await
+        .map_err(|error| error.to_string())?;
+    *checked_in_device = Some(credential.device_id);
+    Ok(())
 }
 
 fn create_live_client(state: &Arc<RwLock<RuntimeState>>) -> Option<LiveClient> {
@@ -300,18 +328,27 @@ async fn upload_new_replays(
         };
         let digest = replay_sha256(path.clone()).await?;
         if outbox
-            .replay_uploaded(&digest)
+            .replay_handled(&digest)
             .map_err(|error| error.to_string())?
         {
             continue;
         }
-        backend
+        match backend
             .upload_replay(credential, &game_id, &digest, &path)
             .await
-            .map_err(|error| error.to_string())?;
-        outbox
-            .mark_replay_uploaded(&digest, &game_id)
-            .map_err(|error| error.to_string())?;
+        {
+            Ok(_) => outbox
+                .mark_replay_uploaded(&digest, &game_id)
+                .map_err(|error| error.to_string())?,
+            Err(error) => {
+                let Some(status) = error.terminal_replay_rejection_status() else {
+                    return Err(error.to_string());
+                };
+                outbox
+                    .mark_replay_rejected(&digest, &game_id, status)
+                    .map_err(|outbox_error| outbox_error.to_string())?;
+            }
+        }
     }
     Ok(())
 }
@@ -378,19 +415,9 @@ async fn handle_command(
                 Err(error) => set_error(state, error.to_string()),
             }
         }
-        RuntimeCommand::Disconnect => match DeviceCredential::delete() {
-            Ok(()) => {
-                *credential = None;
-                *pending_pairing = None;
-                update_state(state, |snapshot| {
-                    snapshot.paired = false;
-                    snapshot.pairing_status = Some("Disconnected".to_owned());
-                    snapshot.approval_url = None;
-                    snapshot.last_error = None;
-                });
-            }
-            Err(error) => set_error(state, error.to_string()),
-        },
+        RuntimeCommand::Disconnect => {
+            disconnect(state, backend, credential, pending_pairing).await;
+        }
         RuntimeCommand::SetStartAtLogin(enabled) => match startup::set_enabled(enabled) {
             Ok(()) => update_state(state, |snapshot| {
                 snapshot.start_at_login = enabled;
@@ -398,6 +425,33 @@ async fn handle_command(
             }),
             Err(error) => set_error(state, format!("Could not change start-at-login: {error}")),
         },
+    }
+}
+
+async fn disconnect(
+    state: &Arc<RwLock<RuntimeState>>,
+    backend: &ScoutBackendClient,
+    credential: &mut Option<DeviceCredential>,
+    pending_pairing: &mut Option<PendingPairing>,
+) {
+    if let Some(active_credential) = credential.as_ref()
+        && let Err(error) = backend.revoke_device(active_credential).await
+    {
+        set_error(state, error.to_string());
+        return;
+    }
+    match DeviceCredential::delete() {
+        Ok(()) => {
+            *credential = None;
+            *pending_pairing = None;
+            update_state(state, |snapshot| {
+                snapshot.paired = false;
+                snapshot.pairing_status = Some("Disconnected".to_owned());
+                snapshot.approval_url = None;
+                snapshot.last_error = None;
+            });
+        }
+        Err(error) => set_error(state, error.to_string()),
     }
 }
 
@@ -455,11 +509,20 @@ async fn upload_pending(
         .map(|row| serde_json::from_slice::<ObservationEnvelope>(&row.body))
         .collect::<Result<Vec<_>, _>>()
         .map_err(|error| format!("Could not decode durable observation: {error}"))?;
+    let batch = ObservationBatch::bounded(observations)
+        .map_err(|error| format!("Could not build bounded observation batch: {error}"))?;
+    if batch.observations.is_empty() {
+        return Err("Durable observation does not fit the ingress wire limit".to_owned());
+    }
+    let submitted: HashSet<Uuid> = batch
+        .observations
+        .iter()
+        .map(|observation| observation.observation_id)
+        .collect();
     let receipt = backend
-        .upload_observations(credential, &ObservationBatch { observations })
+        .upload_observations(credential, &batch)
         .await
         .map_err(|error| error.to_string())?;
-    let submitted: HashSet<Uuid> = pending.iter().map(|row| row.observation_id).collect();
     for item in receipt.receipts {
         if submitted.contains(&item.observation_id) {
             outbox

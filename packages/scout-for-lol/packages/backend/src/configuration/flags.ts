@@ -441,8 +441,8 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     overrides: [],
   },
   scout_client_ingestion: {
-    default: true,
-    overrides: [],
+    default: false,
+    overrides: [{ value: true, attributes: { user: ME }, betaOnly: true }],
   },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).

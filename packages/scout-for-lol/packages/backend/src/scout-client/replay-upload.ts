@@ -7,6 +7,10 @@ import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
+import {
+  replayUploadClaimIsStale,
+  replayUploadLeaseCutoff,
+} from "./replay-lease.ts";
 
 export const MAX_REPLAY_BYTES = 512 * 1024 * 1024;
 const DigestSchema = z.string().regex(/^[0-9a-f]{64}$/);
@@ -39,7 +43,11 @@ type ReplayMetadata = {
 };
 
 type ReplayClaim =
-  | { readonly state: "claimed"; readonly artifactId: string }
+  | {
+      readonly state: "claimed";
+      readonly artifactId: string;
+      readonly leasedAt: Date;
+    }
   | { readonly state: "completed"; readonly replay: ReplayUploadResult };
 
 type ReceivedReplay = {
@@ -49,10 +57,11 @@ type ReceivedReplay = {
 
 async function existingReplay(
   digest: string,
+  now = new Date(),
 ): Promise<ReplayUploadResult | null> {
   const existing = await prisma.scoutClientReplayArtifact.findUnique({
     where: { digest },
-    select: { uploadState: true, digest: true, bytes: true },
+    select: { uploadState: true, digest: true, bytes: true, updatedAt: true },
   });
   if (existing?.uploadState === "COMPLETED") {
     return {
@@ -61,7 +70,10 @@ async function existingReplay(
       bytes: Number(existing.bytes),
     };
   }
-  if (existing?.uploadState === "UPLOADING") {
+  if (
+    existing?.uploadState === "UPLOADING" &&
+    !replayUploadClaimIsStale(existing.updatedAt, now)
+  ) {
     throw new ReplayUploadError("Replay upload is already in progress", 409);
   }
   return null;
@@ -122,6 +134,7 @@ async function claimReplayArtifact(
   objectKey: string,
   device: AuthenticatedScoutClient,
 ): Promise<ReplayClaim> {
+  const leasedAt = new Date();
   try {
     const artifact = await prisma.scoutClientReplayArtifact.create({
       data: {
@@ -131,24 +144,35 @@ async function claimReplayArtifact(
         objectKey,
         bytes: BigInt(metadata.declaredBytes),
         uploadState: "UPLOADING",
+        updatedAt: leasedAt,
       },
       select: { id: true },
     });
-    return { state: "claimed", artifactId: artifact.id };
+    return { state: "claimed", artifactId: artifact.id, leasedAt };
   } catch (error) {
     if (!UniqueViolationSchema.safeParse(error).success) throw error;
   }
 
-  const raced = await existingReplay(metadata.digest);
+  const raced = await existingReplay(metadata.digest, leasedAt);
   if (raced !== null) return { state: "completed", replay: raced };
   const reclaimed = await prisma.scoutClientReplayArtifact.updateMany({
-    where: { digest: metadata.digest, uploadState: "FAILED" },
+    where: {
+      digest: metadata.digest,
+      OR: [
+        { uploadState: "FAILED" },
+        {
+          uploadState: "UPLOADING",
+          updatedAt: { lte: replayUploadLeaseCutoff(leasedAt) },
+        },
+      ],
+    },
     data: {
       deviceId: device.deviceId,
       gameId: metadata.gameId,
       bytes: BigInt(metadata.declaredBytes),
       uploadState: "UPLOADING",
       lastError: null,
+      updatedAt: leasedAt,
     },
   });
   if (reclaimed.count !== 1) {
@@ -161,7 +185,7 @@ async function claimReplayArtifact(
   if (resumed === null) {
     throw new ReplayUploadError("Replay upload claim disappeared", 409);
   }
-  return { state: "claimed", artifactId: resumed.id };
+  return { state: "claimed", artifactId: resumed.id, leasedAt };
 }
 
 function appendReplayHeader(header: Uint8Array, chunk: Uint8Array): Uint8Array {
@@ -249,10 +273,11 @@ async function uploadReplayObject(
 
 async function markReplayFailed(
   artifactId: string,
+  leasedAt: Date,
   error: unknown,
 ): Promise<void> {
-  await prisma.scoutClientReplayArtifact.update({
-    where: { id: artifactId },
+  await prisma.scoutClientReplayArtifact.updateMany({
+    where: { id: artifactId, uploadState: "UPLOADING", updatedAt: leasedAt },
     data: {
       uploadState: "FAILED",
       lastError:
@@ -292,21 +317,28 @@ export async function uploadReplay(
   try {
     const received = await receiveReplay(metadata, temporaryPath);
     await uploadReplayObject(metadata, objectKey, temporaryPath, received);
-    await prisma.scoutClientReplayArtifact.update({
-      where: { id: claim.artifactId },
+    const completed = await prisma.scoutClientReplayArtifact.updateMany({
+      where: {
+        id: claim.artifactId,
+        uploadState: "UPLOADING",
+        updatedAt: claim.leasedAt,
+      },
       data: {
         uploadState: "COMPLETED",
         completedAt: new Date(),
         bytes: BigInt(received.bytes),
       },
     });
+    if (completed.count !== 1) {
+      throw new ReplayUploadError("Replay upload claim expired", 409);
+    }
     return {
       outcome: "accepted",
       digest: received.digest,
       bytes: received.bytes,
     };
   } catch (error) {
-    await markReplayFailed(claim.artifactId, error);
+    await markReplayFailed(claim.artifactId, claim.leasedAt, error);
     throw error;
   } finally {
     await removeTemporaryReplay(temporaryPath);

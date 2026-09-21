@@ -10,8 +10,10 @@ use uuid::Uuid;
 
 /// Current wire protocol version.
 pub const PROTOCOL_VERSION: u16 = 1;
+/// Maximum JSON request body accepted by the Scout ingress route.
+pub const MAX_OBSERVATION_BATCH_BYTES: usize = 4 * 1024 * 1024;
 /// Maximum serialized observation size accepted by the local outbox.
-pub const MAX_OBSERVATION_BYTES: usize = 4 * 1024 * 1024;
+pub const MAX_OBSERVATION_BYTES: usize = MAX_OBSERVATION_BATCH_BYTES - 19;
 const MAX_JSON_DEPTH: usize = 16;
 const MAX_ARRAY_ITEMS: usize = 100_000;
 const MAX_OBJECT_KEYS: usize = 4_096;
@@ -234,6 +236,58 @@ pub struct ObservationBatch {
     pub observations: Vec<ObservationEnvelope>,
 }
 
+impl ObservationBatch {
+    /// Select the largest ordered prefix that fits the backend wire limit.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ProtocolError`] if a durable observation no longer validates.
+    pub fn bounded(
+        observations: impl IntoIterator<Item = ObservationEnvelope>,
+    ) -> Result<Self, ProtocolError> {
+        let mut selected = Vec::new();
+        let mut encoded_bytes = 19_usize;
+        for observation in observations.into_iter().take(100) {
+            let observation_bytes = observation.to_bytes()?.len();
+            let separator_bytes = usize::from(!selected.is_empty());
+            if encoded_bytes + separator_bytes + observation_bytes > MAX_OBSERVATION_BATCH_BYTES {
+                break;
+            }
+            encoded_bytes += separator_bytes + observation_bytes;
+            selected.push(observation);
+        }
+        Ok(Self {
+            observations: selected,
+        })
+    }
+}
+
+/// Authenticated device-version refresh sent before observation delivery.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CheckInRequest {
+    /// Running client build version.
+    pub app_version: String,
+    /// Wire protocol version.
+    pub protocol_version: u16,
+}
+
+/// Check-in acknowledgement.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CheckInResponse {
+    /// Whether the device record was refreshed.
+    pub accepted: bool,
+}
+
+/// Device self-revocation acknowledgement.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RevokeDeviceResponse {
+    /// Whether the backend accepted the revocation request.
+    pub revoked: bool,
+}
+
 /// Batch response body.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -346,7 +400,10 @@ pub type ProtocolMap<T> = BTreeMap<String, T>;
 mod tests {
     use serde_json::json;
 
-    use super::{ObservationEnvelope, ObservationKind, ProtocolError};
+    use super::{
+        MAX_OBSERVATION_BATCH_BYTES, ObservationBatch, ObservationEnvelope, ObservationKind,
+        ProtocolError,
+    };
 
     #[test]
     fn accepts_a_bounded_gameplay_observation() -> Result<(), ProtocolError> {
@@ -378,5 +435,27 @@ mod tests {
         }
         let result = ObservationEnvelope::new(1, ObservationKind::Gameflow, "0.1.0", value);
         assert!(matches!(result, Err(ProtocolError::JsonDepth(_))));
+    }
+
+    #[test]
+    fn splits_an_ordered_batch_before_the_wire_limit() -> Result<(), ProtocolError> {
+        let observations = (0..100)
+            .map(|sequence| {
+                ObservationEnvelope::new(
+                    sequence,
+                    ObservationKind::Challenges,
+                    "0.1.0",
+                    json!({ "values": vec!["x".repeat(16 * 1024); 3] }),
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let batch = ObservationBatch::bounded(observations)?;
+        let encoded = serde_json::to_vec(&batch).map_err(ProtocolError::Serialize)?;
+
+        assert!(!batch.observations.is_empty());
+        assert!(batch.observations.len() < 100);
+        assert!(encoded.len() <= MAX_OBSERVATION_BATCH_BYTES);
+        Ok(())
     }
 }

@@ -148,7 +148,61 @@ async function expectReportedAndVerified(seeded: {
   ).resolves.toMatchObject({ state: "VERIFIED" });
 }
 
+async function detachHistoricalLobby(seeded: {
+  readonly lobbyId: number;
+  readonly gameId: string;
+}): Promise<void> {
+  await testPrisma.customGame.update({
+    where: { id: seeded.gameId },
+    data: { tournamentLobbyId: null },
+  });
+  await testPrisma.tournamentLobby.delete({ where: { id: seeded.lobbyId } });
+}
+
 describe("Riot-only Customs results", () => {
+  test("does not finalize an unobserved local lobby by roster alone", async () => {
+    const seeded = await seedPendingResult({ linkMatch: false });
+    await detachHistoricalLobby(seeded);
+
+    await expect(
+      finalizeManagedCustomResult(testPrisma, fixture),
+    ).resolves.toBeUndefined();
+
+    await expect(
+      testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
+    ).resolves.toMatchObject({
+      state: "RESULT_PENDING",
+      matchId: null,
+      observedLobbyId: null,
+    });
+    await expect(
+      testPrisma.customNight.findUniqueOrThrow({
+        where: { id: seeded.nightId },
+      }),
+    ).resolves.toMatchObject({ state: "PLAYING", revision: 0 });
+  });
+
+  test("finalizes an observed local lobby by its exact roster", async () => {
+    const seeded = await seedPendingResult({ linkMatch: false });
+    await detachHistoricalLobby(seeded);
+    await testPrisma.customGame.update({
+      where: { id: seeded.gameId },
+      data: { observedLobbyId: "observed-local-lobby" },
+    });
+
+    await expect(
+      finalizeManagedCustomResult(testPrisma, fixture),
+    ).resolves.toBe(seeded.nightId);
+
+    await expect(
+      testPrisma.customGame.findUniqueOrThrow({ where: { id: seeded.gameId } }),
+    ).resolves.toMatchObject({
+      state: "VERIFIED",
+      matchId: fixture.metadata.matchId,
+      observedLobbyId: "observed-local-lobby",
+    });
+  });
+
   test("projects Match-V5 and opens intermission in one transaction", async () => {
     const seeded = await seedPendingResult();
 

@@ -11,6 +11,7 @@ import {
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   startScoutLakeProjectionV2,
+  SCOUT_CLIENT_MATCH_START_DELAY,
   startScoutMatchProcessingV2,
   startScoutNotificationV2,
   startScoutPipelineReconciliationV2,
@@ -100,6 +101,29 @@ test("native ingress starts the same durable per-match workflow", async () => {
   expect(start?.options.workflowIdReusePolicy).toBe(
     SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.matchProcessingV2],
   );
+  expect(start?.options.startDelay).toBe(SCOUT_CLIENT_MATCH_START_DELAY);
+});
+
+test("native ingress treats an already-completed match workflow as acknowledged", async () => {
+  const temporal = fakeTemporal();
+  const first = await startScoutMatchProcessingV2(temporal.client, {
+    stage: "beta",
+    riotMatchId: MATCH_ID,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode: "live",
+  });
+  temporal.close(`scout-beta-match-v2-${MATCH_ID}`, "completed");
+
+  const historical = await startScoutMatchProcessingV2(temporal.client, {
+    stage: "beta",
+    riotMatchId: MATCH_ID,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode: "live",
+  });
+
+  expect(first).not.toBeNull();
+  expect(historical).toBeNull();
+  expect(temporal.starts).toHaveLength(1);
 });
 
 describe("notification and projection answer reuse differently", () => {

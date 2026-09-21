@@ -35,7 +35,8 @@ const observedCustomGameInclude = {
 /**
  * Resolve a scheduled Custom game from its bound match id or exact ten-player
  * roster. The roster path is the local-client replacement for tournament-code
- * identity and deliberately fails on ambiguity rather than guessing.
+ * identity, so it is available only after a client bound the scheduled game to
+ * an observed lobby. It deliberately fails on ambiguity rather than guessing.
  */
 export async function findObservedCustomGame(
   client: ExtendedPrismaClient,
@@ -50,6 +51,7 @@ export async function findObservedCustomGame(
   const candidates = await client.customGame.findMany({
     where: {
       matchId: null,
+      observedLobbyId: { not: null },
       state: { in: ["LOBBY_READY", "PLAYING", "RESULT_PENDING"] },
     },
     include: observedCustomGameInclude,

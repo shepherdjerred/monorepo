@@ -14,8 +14,10 @@ import {
 import {
   createPairing,
   exchangePairing,
+  revokeDevice,
   type PairingInput,
 } from "./pairing.ts";
+import { pairingCreationAllowed } from "./pairing-rate-limit.ts";
 import {
   ingestObservationBatch,
   ScoutClientObservationConflict,
@@ -27,6 +29,7 @@ const API_PREFIX = "/api/scout-client/v1";
 const EXCHANGE_PATH =
   /^\/api\/scout-client\/v1\/pairings\/([0-9a-f-]{36})\/exchange$/;
 const REPLAY_PATH = /^\/api\/scout-client\/v1\/replays\/(\d{1,32})$/;
+const SELF_REVOKE_PATH = `${API_PREFIX}/devices/current/revoke`;
 const BodyChunkSchema = z.instanceof(Uint8Array);
 
 class ScoutClientRequestError extends Error {
@@ -97,6 +100,11 @@ async function handlePairingRoute(
   pathname: string,
 ): Promise<Response | null> {
   if (pathname === `${API_PREFIX}/pairings`) {
+    if (!pairingCreationAllowed(request)) {
+      const response = jsonResponse({ error: "rate_limited" }, 429);
+      response.headers.set("Retry-After", "60");
+      return response;
+    }
     const input = ScoutClientCreatePairingSchema.safeParse(
       await boundedJson(request),
     );
@@ -145,6 +153,11 @@ async function handleAuthenticatedRoute(
     return jsonResponse({ accepted: true });
   }
 
+  if (pathname === SELF_REVOKE_PATH) {
+    await revokeDevice(device.deviceId, device.ownerId);
+    return jsonResponse({ revoked: true });
+  }
+
   if (pathname === `${API_PREFIX}/observations/batch`) {
     const input = ScoutClientObservationBatchSchema.safeParse(
       await boundedJson(request),
@@ -181,7 +194,10 @@ export async function handleScoutClientRoute(
     const pairingResponse = await handlePairingRoute(request, url.pathname);
     if (pairingResponse !== null) return pairingResponse;
 
-    const device = await authenticateScoutClient(request);
+    const device = await authenticateScoutClient(
+      request,
+      url.pathname !== SELF_REVOKE_PATH,
+    );
     if (device === null) return jsonResponse({ error: "unauthorized" }, 401);
     return await handleAuthenticatedRoute(
       request,
