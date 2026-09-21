@@ -66,3 +66,16 @@ export function sightingOutcomeLabel(
   }
   return "Loss · scored through Feb 2026";
 }
+
+export function clashTeamLabel(input: {
+  teamAbbreviation?: string | undefined;
+  teamName?: string | undefined;
+}): string | undefined {
+  if (input.teamAbbreviation !== undefined && input.teamName !== undefined) {
+    return `${input.teamAbbreviation} · ${input.teamName}`;
+  }
+  if (input.teamAbbreviation !== undefined) {
+    return input.teamAbbreviation;
+  }
+  return input.teamName;
+}

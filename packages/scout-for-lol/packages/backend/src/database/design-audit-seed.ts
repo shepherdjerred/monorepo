@@ -11,6 +11,7 @@ import {
   ReportIdSchema,
 } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 
@@ -221,6 +222,7 @@ export async function seedDesignAuditDatabase(
       region,
       now,
     });
+    await seedDesignAuditClashHistory({ prisma, puuid, region });
 
     await prisma.subscription.create({
       data: {

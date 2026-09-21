@@ -101,11 +101,37 @@ function ClashScheduleSection(props: {
   );
 }
 
-function ClashRosterSection(props: {
-  roster: QueryView<RouterOutputs["clash"]["roster"]>;
+function ClashGuildPicker(props: {
   guilds: readonly ClashGuild[];
   rosterGuildId: string | undefined;
   onSelectGuild: (guildId: string) => void;
+}) {
+  if (props.guilds.length <= 1) {
+    return null;
+  }
+  return (
+    <label className="grid gap-1 text-sm" htmlFor="clash-guild">
+      <span className="text-scout-subtle">Server</span>
+      <select
+        id="clash-guild"
+        className="rounded-lg border border-scout-border/60 bg-scout-canvas px-2.5 py-2 text-sm"
+        value={props.rosterGuildId ?? ""}
+        onChange={(event) => {
+          props.onSelectGuild(event.currentTarget.value);
+        }}
+      >
+        {props.guilds.map((guild) => (
+          <option key={guild.id} value={guild.id}>
+            {guild.name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ClashRosterSection(props: {
+  roster: QueryView<RouterOutputs["clash"]["roster"]>;
   registrationOpen: boolean;
 }) {
   const teams = props.roster.data?.teams ?? [];
@@ -114,35 +140,14 @@ function ClashRosterSection(props: {
     : "No tracked player in this server is registered in the current snapshot.";
   return (
     <section className="space-y-3" aria-labelledby="clash-roster-title">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 id="clash-roster-title" className="text-xl font-semibold">
-            Roster
-          </h2>
-          <p className="text-sm text-scout-subtle">
-            Tracked players registered this weekend. Untracked teammates stay
-            unresolved.
-          </p>
-        </div>
-        {props.guilds.length > 1 ? (
-          <label className="grid gap-1 text-sm" htmlFor="clash-roster-guild">
-            <span className="text-scout-subtle">Server</span>
-            <select
-              id="clash-roster-guild"
-              className="rounded-lg border border-scout-border/60 bg-scout-canvas px-2.5 py-2 text-sm"
-              value={props.rosterGuildId ?? ""}
-              onChange={(event) => {
-                props.onSelectGuild(event.currentTarget.value);
-              }}
-            >
-              {props.guilds.map((guild) => (
-                <option key={guild.id} value={guild.id}>
-                  {guild.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
+      <div>
+        <h2 id="clash-roster-title" className="text-xl font-semibold">
+          Roster
+        </h2>
+        <p className="text-sm text-scout-subtle">
+          Tracked players registered this weekend. Untracked teammates stay
+          unresolved.
+        </p>
       </div>
       {props.roster.isPending ? (
         <p className="text-sm text-scout-subtle">Loading roster…</p>
@@ -267,10 +272,17 @@ export function ConsumerClash() {
 
   return (
     <ClashShell>
-      <header className="space-y-2">
-        <p className="text-sm font-medium text-primary">This weekend</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Clash</h1>
-        <p className="max-w-2xl text-scout-subtle">{RESULTS_NOTE}</p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-primary">This weekend</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Clash</h1>
+          <p className="max-w-2xl text-scout-subtle">{RESULTS_NOTE}</p>
+        </div>
+        <ClashGuildPicker
+          guilds={guilds}
+          rosterGuildId={rosterGuildId}
+          onSelectGuild={setSelectedGuildId}
+        />
       </header>
       <ClashScheduleSection
         schedule={{
@@ -290,9 +302,6 @@ export function ConsumerClash() {
           error: roster.error,
           data: roster.data,
         }}
-        guilds={guilds}
-        rosterGuildId={rosterGuildId}
-        onSelectGuild={setSelectedGuildId}
         registrationOpen={registrationOpen}
       />
       <ClashHistorySection
