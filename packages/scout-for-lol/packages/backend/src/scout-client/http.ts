@@ -110,11 +110,12 @@ async function handlePairingRoute(
     const input = ScoutClientCreatePairingSchema.safeParse(
       await boundedJson(request),
     );
-    if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
-    return jsonResponse(
-      await createPairing(input.data satisfies PairingInput),
-      201,
-    );
+    return input.success
+      ? jsonResponse(
+          await createPairing(input.data satisfies PairingInput),
+          201,
+        )
+      : jsonResponse({ error: "invalid_request" }, 400);
   }
 
   const exchangeMatch = EXCHANGE_PATH.exec(pathname);
@@ -205,8 +206,7 @@ function requestMethodAllowed(
   method: string,
   replayMatch: RegExpExecArray | null,
 ): boolean {
-  if (method === "POST") return true;
-  return method === "PUT" && replayMatch !== null;
+  return method === "POST" || (method === "PUT" && replayMatch !== null);
 }
 
 export async function handleScoutClientRoute(
@@ -229,13 +229,14 @@ export async function handleScoutClientRoute(
       request,
       url.pathname !== SELF_REVOKE_PATH,
     );
-    if (device === null) return jsonResponse({ error: "unauthorized" }, 401);
-    return await handleAuthenticatedRoute(
-      request,
-      url.pathname,
-      replayMatch,
-      device,
-    );
+    return device === null
+      ? jsonResponse({ error: "unauthorized" }, 401)
+      : await handleAuthenticatedRoute(
+          request,
+          url.pathname,
+          replayMatch,
+          device,
+        );
   } catch (error) {
     if (error instanceof ScoutClientRequestError) {
       return new Response(error.message, { status: error.status });

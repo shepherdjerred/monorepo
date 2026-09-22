@@ -23,17 +23,15 @@ function accountLabel(account: ProfileAccount): string {
   if (account.riotGameName === null || account.riotGameName.length === 0) {
     return "Unknown account";
   }
-  if (account.riotTagLine === null || account.riotTagLine.length === 0) {
-    return account.riotGameName;
-  }
-  return `${account.riotGameName}#${account.riotTagLine}`;
+  return account.riotTagLine === null || account.riotTagLine.length === 0
+    ? account.riotGameName
+    : `${account.riotGameName}#${account.riotTagLine}`;
 }
 
 function parseStoredRank(serialized: string | null): Rank | undefined {
-  if (serialized === null || serialized.length === 0) {
-    return undefined;
-  }
-  return RankSchema.parse(JSON.parse(serialized));
+  return serialized === null || serialized.length === 0
+    ? undefined
+    : RankSchema.parse(JSON.parse(serialized));
 }
 
 type RankSnapshotRow = {
@@ -49,8 +47,9 @@ function snapshotRank(
   queue: RankedQueueType,
 ): Rank | undefined {
   if (queue === "solo") return parseStoredRank(snapshot.soloRank);
-  if (queue === "flex") return parseStoredRank(snapshot.flexRank);
-  return parseStoredRank(snapshot.ranked5sRank);
+  return queue === "flex"
+    ? parseStoredRank(snapshot.flexRank)
+    : parseStoredRank(snapshot.ranked5sRank);
 }
 
 function matchObservations(

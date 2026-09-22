@@ -25,11 +25,8 @@ export async function authenticateScoutClient(
   });
   if (device?.deviceState !== "ACTIVE") return null;
   const ownerId = DiscordAccountIdSchema.parse(device.ownerId);
-  if (
-    requireEnabledPolicy &&
+  return requireEnabledPolicy &&
     !(await isPolicyEnabled("scout_client_ingestion", { user: ownerId }))
-  ) {
-    return null;
-  }
-  return { deviceId: device.id, ownerId, appVersion: device.appVersion };
+    ? null
+    : { deviceId: device.id, ownerId, appVersion: device.appVersion };
 }
