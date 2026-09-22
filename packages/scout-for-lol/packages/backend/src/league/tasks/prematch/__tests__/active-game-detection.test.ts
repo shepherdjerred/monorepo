@@ -179,6 +179,10 @@ await vi.doMock("#src/report-store/live-ingest.ts", () => ({
   },
 }));
 
+await vi.doMock("#src/league/clash/sighting.ts", () => ({
+  recordClashPrematchSightings: () => Promise.resolve(),
+}));
+
 // Import AFTER mocks so the function under test wires up to the mocked deps
 const { checkActiveGames } =
   await import("#src/league/tasks/prematch/active-game-detection.ts");

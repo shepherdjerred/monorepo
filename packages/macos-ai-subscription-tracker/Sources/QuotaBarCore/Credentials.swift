@@ -54,6 +54,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let grokHome: URL?
   private let cursorStateDatabase: URL?
   private let claudeKeychain: any KeychainReading
+  private let museKeychain: any KeychainReading
   private let selectionLock = NSLock()
   private var rejectedTokens: [ProviderID: Set<String>] = [:]
 
@@ -63,7 +64,8 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     kimiCodeHome: URL? = nil,
     grokHome: URL? = nil,
     cursorStateDatabase: URL? = nil,
-    claudeKeychain: any KeychainReading = SecurityToolKeychainClient()
+    claudeKeychain: any KeychainReading = SecurityToolKeychainClient(),
+    museKeychain: any KeychainReading = SecurityToolKeychainClient()
   ) {
     self.fileManager = fileManager
     self.homeDirectory = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
@@ -71,6 +73,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     self.grokHome = Self.configuredHome(grokHome, environmentKey: "GROK_HOME")
     self.cursorStateDatabase = cursorStateDatabase
     self.claudeKeychain = claudeKeychain
+    self.museKeychain = museKeychain
   }
 
   private static func configuredHome(_ explicit: URL?, environmentKey: String) -> URL? {
@@ -95,6 +98,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     case .antigravity: credential = nil
     case .cursor: credential = try readCursor(excluding: excludedTokens)
     case .kimi: credential = try readCurrentKimiCredential(excluding: excludedTokens)
+    case .muse: credential = try readMuse(excluding: excludedTokens)
     case .grok:
       credential = try GrokCLICredentialDiscovery.read(
         grokHome: grokHome,
@@ -401,5 +405,37 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       throw QuotaError.commandFailed("SQLite")
     }
     return value
+  }
+}
+
+private extension LocalCredentialStore {
+  var museAuthFileURL: URL {
+    let environment = ProcessInfo.processInfo.environment
+    if let override = environment["MUSE_AUTH_PATH"], !override.isEmpty {
+      return URL(fileURLWithPath: override)
+    }
+    if let configured = environment["XDG_CONFIG_HOME"], !configured.isEmpty {
+      return URL(fileURLWithPath: configured, isDirectory: true)
+        .appendingPathComponent("muse/auth.json")
+    }
+    return homeDirectory.appendingPathComponent(".config/muse/auth.json")
+  }
+
+  func readMuse(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
+    guard let file = try decodeFile(MuseAuthFile.self, at: museAuthFileURL, provider: .muse)
+    else { return nil }
+    let source = museAuthFileURL.path
+    if let token = file.providers?.meta?.oauthToken {
+      let credential = try makeCredential(token, source: source)
+      return excludedTokens.contains(credential.accessToken) ? nil : credential
+    }
+    guard file.providers?.meta?.usesKeychain == true else { return nil }
+    guard
+      let data = try museKeychain.read(service: "ai.meta.dev.credentials", account: "meta")
+    else { return nil }
+    let bundle = try decode(MuseKeychainBundle.self, from: data, provider: .muse)
+    guard let token = bundle.oauthToken else { return nil }
+    let credential = try makeCredential(token, source: "macOS Keychain")
+    return excludedTokens.contains(credential.accessToken) ? nil : credential
   }
 }

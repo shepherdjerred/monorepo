@@ -51,8 +51,8 @@ const CURSOR_ADAPTER_CONTENT =
   "---\ndescription: Use the canonical personal and repository agent guidance\nalwaysApply: true\n---\n\n" +
   "Follow `~/AGENTS.md`, then the nearest repository `AGENTS.md`. Load matching\nskills from `.agents/skills`; do not duplicate their instructions here.";
 const REQUIRED_SOURCE_ADAPTERS = new Map([
-  ["packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
-  ["packages/dotfiles/dot_claude/symlink_skills", "../.agents/skills"],
+  ["packages/dotfiles/private_dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
+  ["packages/dotfiles/private_dot_claude/symlink_skills", "../.agents/skills"],
   ["packages/dotfiles/private_dot_codex/symlink_AGENTS.md", "../AGENTS.md"],
   [GEMINI_SOURCE_ADAPTER_PATH, "../AGENTS.md"],
   [

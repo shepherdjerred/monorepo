@@ -11,7 +11,7 @@ import type {
   InteractionReplyOptions,
 } from "discord.js";
 import { MessageFlags } from "discord.js";
-import type { ExploreAgentParams } from "#src/explore/agent.ts";
+import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   executeScout,

@@ -149,8 +149,16 @@ On macOS, play one speaker file with:
 afplay "${capture_id}/speaker-001.wav"
 ```
 
-For a wake candidate, the file is `speaker.wav`. A rejected candidate contains
-the verifier window; an accepted candidate contains the endpointed utterance.
+For a wake candidate, the files are `speaker.wav` (the user) and `reply.wav`
+(the assistant's generated reply, when it was enqueued). Packet counts on the
+manifest say whether Discord heard it. A rejected candidate contains the verifier
+window in `speaker.wav`; an accepted candidate contains the endpointed
+utterance. `sessionId` in the manifest groups consecutive turns from the same
+playback session. Play the assistant clip with:
+
+```bash
+afplay "${capture_id}/reply.wav"
+```
 
 ## 6. Clean up local copies
 

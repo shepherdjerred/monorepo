@@ -10,12 +10,26 @@ const ResourceSchema = z
     metadata: z
       .object({
         name: z.string(),
+        namespace: z.string().optional(),
         annotations: z.record(z.string(), z.string()).optional(),
       })
       .loose(),
     spec: z.unknown().optional(),
   })
   .loose();
+
+const RbacRulesSchema = z.object({
+  rules: z.array(
+    z
+      .object({
+        apiGroups: z.array(z.string()),
+        resources: z.array(z.string()),
+        resourceNames: z.array(z.string()).optional(),
+        verbs: z.array(z.string()),
+      })
+      .loose(),
+  ),
+});
 
 function resources() {
   const app = new App({ outdir: ".test-synth-temporal-server-lifecycle" });
@@ -34,6 +48,27 @@ function findResource(kind: string, name: string) {
     throw new Error(`Missing ${kind}/${name}`);
   }
   return resource;
+}
+
+// The preflight's RBAC reuses one name across three namespaces, so a
+// kind-and-name lookup would silently assert against whichever came first.
+function findNamespacedResource(kind: string, name: string, namespace: string) {
+  const resource = resources().find(
+    (candidate) =>
+      candidate.kind === kind &&
+      candidate.metadata.name === name &&
+      candidate.metadata.namespace === namespace,
+  );
+  if (resource === undefined) {
+    throw new Error(`Missing ${kind}/${name} in namespace ${namespace}`);
+  }
+  return resource;
+}
+
+function backupPreflightRules(namespace: string) {
+  return RbacRulesSchema.parse(
+    findNamespacedResource("Role", "temporal-backup-preflight", namespace),
+  ).rules;
 }
 
 const ContainerSchema = z.object({
@@ -94,11 +129,25 @@ describe("Temporal server lifecycle", () => {
 
     // Aggregate counters alone can be positive purely because OTHER
     // backup-enabled PVCs succeeded; the preflight must specifically confirm
-    // the Temporal PVC's own snapshot, not just any completed snapshot.
+    // the Temporal PVC's own snapshot, not just any completed snapshot. The
+    // per-PVC proof is the ZFSBackup object openebs zfs-localpv writes per
+    // volume, keyed by the PVC's bound PV and the Velero backup name.
     expect(command).toContain("pgdata-temporal-postgresql-0");
     expect(command).toContain("velero.io/backup=enabled");
-    expect(command).toContain("enabled_pvc_count");
-    expect(command).toContain('snapshots_attempted" -ne "$enabled_pvc_count');
+    expect(command).toContain("{.spec.volumeName}");
+    expect(command).toContain(
+      'zfsbackups.zfs.openebs.io "$temporal_pv_name.$backup_name"',
+    );
+    expect(command).toContain('volume_backup_status" != "Done');
+
+    // Comparing the backup's snapshot count against the CURRENT number of
+    // backup-enabled PVCs asserted that cluster inventory never changes
+    // between a backup and a release, which is not an invariant: retiring or
+    // adding any backup-enabled PVC anywhere failed every Temporal release
+    // until the next backup ran. The ZFSBackup lookup above proves the same
+    // thing directly, so that inference must not come back.
+    expect(command).not.toContain("enabled_pvc_count");
+    expect(command).not.toContain("--all-namespaces");
   });
 
   test("stages backup-preflight RBAC as an earlier PreSync hook than the Job it serves", () => {
@@ -111,21 +160,17 @@ describe("Temporal server lifecycle", () => {
       findResource("ServiceAccount", "temporal-backup-preflight").metadata
         .annotations,
     ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("Role", "temporal-backup-preflight").metadata.annotations,
-    ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("RoleBinding", "temporal-backup-preflight").metadata
-        .annotations,
-    ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("ClusterRole", "temporal-backup-preflight-pvc-reader")
-        .metadata.annotations,
-    ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("ClusterRoleBinding", "temporal-backup-preflight-pvc-reader")
-        .metadata.annotations,
-    ).toMatchObject(rbacAnnotations);
+
+    // One Role per namespace that owns the objects the script reads: the Velero
+    // Backup, this PVC, and its ZFSBackup each live somewhere different.
+    for (const namespace of ["velero", "temporal", "openebs"]) {
+      for (const kind of ["Role", "RoleBinding"]) {
+        expect(
+          findNamespacedResource(kind, "temporal-backup-preflight", namespace)
+            .metadata.annotations,
+        ).toMatchObject(rbacAnnotations);
+      }
+    }
 
     // The RBAC's wave (-3) must sort strictly before the Job's own wave (-2)
     // within the shared PreSync hook phase.
@@ -136,6 +181,36 @@ describe("Temporal server lifecycle", () => {
       ],
     );
     expect(rbacWave).toBeLessThan(jobWave);
+  });
+
+  test("reads only the objects the backup preflight proof needs", () => {
+    expect(backupPreflightRules("temporal")).toEqual([
+      {
+        apiGroups: [""],
+        resources: ["persistentvolumeclaims"],
+        resourceNames: ["pgdata-temporal-postgresql-0"],
+        verbs: ["get"],
+      },
+    ]);
+    expect(backupPreflightRules("openebs")).toEqual([
+      {
+        apiGroups: ["zfs.openebs.io"],
+        resources: ["zfsbackups"],
+        verbs: ["get"],
+      },
+    ]);
+
+    // Listing every PVC in the cluster was only ever needed by the
+    // inventory-count inference the ZFSBackup lookup replaced, so the hook must
+    // no longer hold a cluster-scoped grant at all.
+    expect(
+      resources().filter(
+        (resource) =>
+          (resource.kind === "ClusterRole" ||
+            resource.kind === "ClusterRoleBinding") &&
+          resource.metadata.name.startsWith("temporal-backup-preflight"),
+      ),
+    ).toEqual([]);
   });
 
   test("migrates both schemas in a blocking Sync hook", () => {

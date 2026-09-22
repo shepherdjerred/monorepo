@@ -11,6 +11,7 @@ import {
 import { z } from "zod";
 import { FleetMaster, NativeWorkerRunner } from "#controller/agents.ts";
 import { combineFailures, normalizeFailure } from "#domain/failures.ts";
+import { describeFailure } from "#cli/describe-failure.ts";
 import { HELP } from "./help.ts";
 import { createTerminalLineHandler } from "./terminal.ts";
 import { settleCliResources } from "./shutdown.ts";
@@ -504,8 +505,6 @@ async function main(): Promise<void> {
 try {
   await main();
 } catch (error) {
-  const message =
-    error instanceof Error ? (error.stack ?? error.message) : String(error);
-  process.stderr.write(`${message}\n`);
+  process.stderr.write(`${describeFailure(error)}\n`);
   process.exitCode = 1;
 }

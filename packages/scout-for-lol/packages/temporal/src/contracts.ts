@@ -180,6 +180,7 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "prediction-ingest",
     "legacy-backfill",
     "progression-outbox",
+    "clash-snapshot",
   ]),
 });
 export type ScoutBackgroundJobInput = z.infer<
@@ -188,7 +189,7 @@ export type ScoutBackgroundJobInput = z.infer<
 
 export const ScoutDetachedWorkInputSchema = z.object({
   stage: ScoutStageSchema,
-  kind: z.literal("parlay-generation"),
+  kind: z.enum(["parlay-generation", "champion-mastery-refresh"]),
   workId: OpaqueIdentifierSchema,
 });
 export type ScoutDetachedWorkInput = z.infer<

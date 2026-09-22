@@ -1,94 +1,18 @@
-import { z } from "zod";
-import rawSuggestions from "./explore-suggestions.json" with { type: "json" };
-
-export const SuggestionCategorySchema = z.enum([
-  "bucks",
-  "competitions",
-  "hall_of_fame",
-  "customs",
-  "challenges",
-  "creation",
-  "champions",
-  "roles",
-  "queues",
-  "players",
-  "trivia",
-]);
-
-export type SuggestionCategory = z.infer<typeof SuggestionCategorySchema>;
-
-export const SuggestionConditionSchema = z.enum([
-  "always",
-  "bucks",
-  "dares",
-  "competitions",
-  "hall_of_fame",
-  "customs",
-  "challenges",
-  "reports",
-]);
-
-export type SuggestionCondition = z.infer<typeof SuggestionConditionSchema>;
-
-export const ExploreSuggestionSchema = z.object({
-  prompt: z.string().min(1),
-  category: SuggestionCategorySchema,
-  condition: SuggestionConditionSchema,
-});
-
-export type ExploreSuggestion = z.infer<typeof ExploreSuggestionSchema>;
-
-export const PERSISTENT_EXPLORE_SUGGESTION = "What can you do?";
-
-export type ExploreFeatureContext = {
-  readonly bucksEnabled?: boolean;
-  readonly daresEnabled?: boolean;
-  readonly competitionsEnabled?: boolean;
-  readonly reportsEnabled?: boolean;
-  readonly customsEnabled?: boolean;
-  readonly hallOfFameEnabled?: boolean;
-  readonly challengesEnabled?: boolean;
-};
-
-export const EXPLORE_SUGGESTIONS: readonly ExploreSuggestion[] = z
-  .array(ExploreSuggestionSchema)
-  .parse(rawSuggestions);
-
-export function isSuggestionEligible(
-  suggestion: ExploreSuggestion,
-  context: ExploreFeatureContext,
-): boolean {
-  switch (suggestion.condition) {
-    case "always":
-      return true;
-    case "bucks":
-      return context.bucksEnabled ?? false;
-    case "dares":
-      return context.daresEnabled ?? false;
-    case "competitions":
-      return context.competitionsEnabled ?? false;
-    case "reports":
-      return context.reportsEnabled ?? false;
-    case "customs":
-      return context.customsEnabled ?? false;
-    case "hall_of_fame":
-      return context.hallOfFameEnabled ?? false;
-    case "challenges":
-      return context.challengesEnabled ?? false;
-  }
-}
+import {
+  filterSuggestions,
+  type ExploreFeatureContext,
+  type ExploreSuggestion,
+  type SuggestionCategory,
+} from "@scout-for-lol/data";
 
 /**
- * Filter suggestions to those matching the user's enabled capabilities.
+ * Picking which starter chips a screen shows.
+ *
+ * The catalog and the eligibility rule moved to `@scout-for-lol/data` so the
+ * Explore replay eval can drive the same prompts through the real agent
+ * without a second copy of the condition table. What stays here is the part
+ * that is purely presentation: choosing a diverse handful to render.
  */
-export function filterSuggestions(
-  suggestions: readonly ExploreSuggestion[],
-  context: ExploreFeatureContext,
-): ExploreSuggestion[] {
-  return suggestions.filter((suggestion) =>
-    isSuggestionEligible(suggestion, context),
-  );
-}
 
 function shuffle<T>(array: readonly T[], random: () => number): T[] {
   const result = [...array];

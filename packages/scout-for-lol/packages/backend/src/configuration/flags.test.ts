@@ -48,6 +48,7 @@ const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reports_unlimited",
   "ai_reviews_enabled",
   "challenge_runs_enabled",
+  "clash_surface",
   "competition_builder_v2_enabled",
   "explore_on_demand_riot_enabled",
   "hall_of_fame_enabled",
@@ -134,6 +135,7 @@ describe("production hard-disable policy", () => {
     expect(getFlag("hall_of_fame_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("mvp_votes_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("challenge_runs_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("clash_surface", { server: MY_SERVER })).toBe(true);
     expect(getFlag("ai_reports_unlimited", { user: ME })).toBe(true);
     expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
       MY_SERVER,
@@ -150,6 +152,7 @@ describe("production hard-disable policy", () => {
         ai_reports_unlimited: true,
         ai_reviews_enabled: true,
         challenge_runs_enabled: true,
+        clash_surface: true,
         competition_builder_v2_enabled: true,
         explore_on_demand_riot_enabled: true,
         hall_of_fame_enabled: true,

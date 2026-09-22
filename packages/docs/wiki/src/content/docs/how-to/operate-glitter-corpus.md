@@ -110,8 +110,8 @@ request digest rather than by run, so a local run reuses everything a production
 run already paid for. Pin `--snapshot-id`/`--snapshot-sha256` to reuse the most
 cache; omit both to read the latest verified snapshot.
 
-The weekly schedule passes a $1 uncached-cost kill switch. Extraction and
-synthesis use Luna so one bounded generation reservation can fit under that
+The weekly schedule passes a $10 uncached-cost kill switch. Extraction and
+synthesis use Luna so bounded generation reservations can fit under that
 cap while retaining the existing semantic retries and completion-token
 headroom. Budget exhaustion is expected bounded progress: exact current v3
 request artifacts remain available to later weekly runs, but no PR is opened
@@ -163,7 +163,7 @@ higher, split graph verification into per-channel activities; do not raise the
 
 Then run the pinned cache audit and confirm there are no new OpenRouter spans or
 cost metrics and no artifact or spend-receipt writes. On the next weekly
-refresh, confirm actual uncached spend is at most $1. Budget exhaustion is an
+refresh, confirm actual uncached spend is at most $10. Budget exhaustion is an
 acceptable bounded-progress result; a completed run must produce a reviewable
 PR and valid generation summary.
 

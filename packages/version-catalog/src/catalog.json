@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16506@sha256:dcd5c6ec4cae5bebb993359ac09fc8f82a0a8b8e8c0ac5499ab58be2e25fcacb",
+      "value": "2.0.0-16743@sha256:715b38548e36589da6de6fd840df794a9ed0ea154d2ffb424146f5ab5ec3b136",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -667,7 +667,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16512@sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
+      "value": "2.0.0-16867@sha256:d77322bd6f49ba83c7f70584f5107776e44c3695ef8e3eb16b11ee50eb27429c",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
         "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
@@ -823,7 +823,15 @@
         "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
         "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
         "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
-        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd"
+        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
+        "database contract: postgresql sha256:bc24c9d6c46c2d2c343a26493b55d5e3408aabab58c54a51c89e85b59001e99c",
+        "database contract: postgresql sha256:d6f1de94543542e0572a008dac99fbd5cef15f65499124a545c41405f73e9ab9",
+        "database contract: postgresql sha256:295e7af1cdf933de7597e883e2db8905109e3227410bb87534e1ae9fb46ad752",
+        "database contract: postgresql sha256:cb81789547c64a7da10cc9ae4a70178dc90c904e1bbbf1c555d0b10d8e55c128",
+        "database contract: postgresql sha256:5e3548e3012ca58364369fff2ab16b711f8f7cafc88618131bafbca4f2267610",
+        "database contract: postgresql sha256:83d3776e58a004d24172af38def91164c0c7102c5eeed3ebfde7340709b19126",
+        "database contract: postgresql sha256:d7a2551840dcbecaf7823c490379e95abda9c8a8a63d17b9e2f3b071f99bbc3a",
+        "database contract: postgresql sha256:d77322bd6f49ba83c7f70584f5107776e44c3695ef8e3eb16b11ee50eb27429c"
       ]
     },
     {
@@ -907,7 +915,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16506@sha256:9c012c3f83f21794b53a7f7e0d8c83b46354e2489a6ae10a867871e0cfd91106",
+      "value": "2.0.0-16718@sha256:3d2b55aca66715299e531e87d20aaec7014b694c7568799ec89ca3a218c3c43f",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -930,7 +938,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16506@sha256:b117ebc3911bd01313e76fc39986b9ffc7749a6f39b65626c13a9d0ed81d6076",
+      "value": "2.0.0-16718@sha256:2dfafdd82c5caaeb9d11eb71cb03fb836c5f5337d937cc1311ae0359f1d99fe9",
       "notes": ["not managed by renovate"]
     },
     {
@@ -940,7 +948,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16339@sha256:7e54b8980e49e54ec64d30286860f7852591e6ed212e9facf5862a48abd05a65",
+      "value": "2.0.0-16711@sha256:70c696ae651dbc2c6bed5c80276f346d5b6843aeba1811f391348ba04ab5e84e",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -953,24 +961,11 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16257@sha256:300ad5041b0dffb37e3ba8539a23d729c579830181deb64c52fdfe8299d77465",
+      "value": "2.0.0-16711@sha256:34f99fb2f5b2d77bb1614262b57beb0790257e4968176a94cbc509d9e582becc",
       "notes": [
         "not managed by renovate — pre-first-publish placeholder. The main image",
         "release injects the built digest into chart synthesis and version",
         "commit-back replaces this pin before a later release can use source state."
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-evals",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-16257@sha256:4cda369fee4627518f3aab20024de39d405e5632de6c4de81ba5835dadbe7f52",
-      "notes": [
-        "not managed by renovate — placeholder digest; CI version-commit-back fills",
-        "the real digest after the first successful scout-evals image push."
       ]
     },
     {
@@ -980,7 +975,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16257@sha256:14b97f9299066bad9516945062baabd20092644a0de2f60075d3f6f65608c647",
+      "value": "2.0.0-16711@sha256:da8fc397571bbc76ae6cde5e7f3d0fd93794cb3c01906344def0806c40603c11",
       "notes": ["not managed by renovate"]
     },
     {
@@ -990,7 +985,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16257@sha256:80aeabf931a32644345b3c7629a632e3651a22ccfc5cb291e8a443ab283c4254",
+      "value": "2.0.0-16711@sha256:88e55d4d6ee5aca4717f284d5d212ab5864cf8428b5ccbb734c07c8539a3e6f9",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
@@ -1188,6 +1183,21 @@
         "builds (e.g. \"26.1.2\"); strict semver drops the 2-part ones, so it never",
         "surfaced \"26.2\". semver-coerced compares them all, and the datasource",
         "transform now filters pre-releases (-rc/-pre) so only stable builds appear."
+      ]
+    },
+    {
+      "name": "mc2discord-forge-1.12.2",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "custom.mc2discord-forge-1-12-2",
+        "versioning": "regex:^https://cdn[.]modrinth[.]com/data/Cfbcv7uF/versions/[A-Za-z0-9]+/mc2discord-forge-1[.]12[.]2-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)[.]jar$"
+      },
+      "value": "https://cdn.modrinth.com/data/Cfbcv7uF/versions/lABepxc4/mc2discord-forge-1.12.2-3.3.2.jar",
+      "notes": [
+        "Forge 1.12.2 releases only; the custom datasource carries each immutable Modrinth",
+        "version ID in the file URL while ordering upgrades by the semantic filename version."
       ]
     },
     {
@@ -1506,7 +1516,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16257@sha256:29ad8cab924015dd58e890d55d3fc28c8003658ccd1f8d24ae60f1507f98e3f2",
+      "value": "2.0.0-16711@sha256:fcdce9c33eece403b4ee6bda5eac3965583349a0d98350ee6ab27e5a9c1e842b",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1568,7 +1578,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16541@sha256:2fd05c4b0cda9e4a320d507df3384441965d1577a31cc1a272df1625ad5aa795",
+      "value": "2.0.0-16867@sha256:77588e947a9da88ff5fff8cb1c0fcd26ff75c1dad2916ec9f95c0b7b073add6e",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1607,7 +1617,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16506@sha256:2793d71e42275732f8b1297b0dc2160e80f70a585da512fe8641f6c13ecd74b3",
+      "value": "2.0.0-16718@sha256:4f86da87cbfc0f1f6f83466a8c60556638041636ad1deaba2a6cd438c40157e4",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"

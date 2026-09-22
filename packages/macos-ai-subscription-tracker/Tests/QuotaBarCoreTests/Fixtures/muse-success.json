@@ -1,0 +1,22 @@
+{
+  "base_url": "https://api.meta.ai/v1",
+  "has_payment_method": false,
+  "require_payment": false,
+  "is_subs_active": true,
+  "can_subscribe": false,
+  "show_subs_upsell": true,
+  "payment_method": null,
+  "action_url": null,
+  "subs_tier_id": "1000000000000001",
+  "subs_tier_name": "Muse Code High Usage",
+  "is_subs_upgrade_available": false,
+  "subs_usage": {
+    "window": {
+      "used_percent": 62,
+      "window_duration_mins": 300,
+      "resets_at": 1789923600
+    },
+    "weekly": { "used_percent": 25, "resets_at": 1790035200 },
+    "tier": "1000000000000001"
+  }
+}

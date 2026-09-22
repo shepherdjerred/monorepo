@@ -132,3 +132,20 @@ export async function withDuckDBConnection<T>(
     connection.closeSync();
   }
 }
+
+/**
+ * Release the process-wide instance.
+ *
+ * The server never calls this: the instance is meant to live as long as the
+ * process, and connections are already closed per query. A CLI is the other
+ * case — left open, the native instance is only released by finalization,
+ * which measurably delays exit after the work is done. Idempotent, and a
+ * later query simply creates a new instance.
+ */
+export async function closeDuckDB(): Promise<void> {
+  const pending = instancePromise;
+  if (pending === undefined) return;
+  instancePromise = undefined;
+  const instance = await pending;
+  instance.closeSync();
+}

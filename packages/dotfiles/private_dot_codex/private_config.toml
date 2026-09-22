@@ -1,5 +1,5 @@
-model = "gpt-5.6-luna"
-model_reasoning_effort = "xhigh"
+model = "gpt-5.6-terra"
+model_reasoning_effort = "high"
 plan_mode_reasoning_effort = "xhigh"
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
@@ -36,6 +36,12 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/jerred/git/league-kart"]
+trust_level = "trusted"
+
+[projects."/private/tmp"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/Library/Application Support/AgentForum/threads/verification-codex-1789428766460"]
 trust_level = "trusted"
 
 [plugins."github@openai-curated"]
@@ -199,3 +205,6 @@ trusted_hash = "sha256:8fa5975ee559d019faf357e2e7880255e6b26a108505ece97171c4988
 [hooks.state."/Users/jerred/.codex/hooks.json:session_start:0:0"]
 trusted_hash = "sha256:2fd60e7d52ce693fb066fd8d1377bd725975f8f8188c8fabefee39f6ae5bea6f"
 enabled = true
+
+[hooks.state."/Users/jerred/.codex/hooks.json:stop:1:0"]
+trusted_hash = "sha256:78fcb869674f6f70e81f030def01d4b87584c66f001532fa47b63d6c042936cc"

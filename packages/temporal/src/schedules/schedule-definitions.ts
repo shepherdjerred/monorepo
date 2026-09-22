@@ -338,7 +338,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   {
     id: "glitter-context-refresh-weekly",
     workflowType: "runGlitterContextRefresh",
-    args: [{ maxEstimatedCostUsd: 1 }],
+    args: [{ maxEstimatedCostUsd: 10 }],
     // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
     timing: {
       kind: "cron",

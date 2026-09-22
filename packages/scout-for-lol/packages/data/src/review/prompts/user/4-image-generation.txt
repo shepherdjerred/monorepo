@@ -2,7 +2,12 @@ Generate a creative and visually striking image based on this art direction:
 
 <IMAGE_DESCRIPTION>
 
+Render it in this art style:
+<ART_STYLE>
+
 Important guidelines:
-- Create the image exactly as described above
+- Create the image exactly as described above, fully committing to the art style
 - Focus on visual storytelling and emotional impact
 - Make it feel like cover art or a key moment illustration
+- One clear focal subject with high contrast, readable even at chat-thumbnail size
+- No readable text, words, letters, or numbers unless the art style itself demands words (posters, memes, thumbnails) — never garbled half-text

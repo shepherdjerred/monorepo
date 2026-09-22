@@ -51,6 +51,8 @@ function vote(
     serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
     voterDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
     voterTeamId: 100,
+    nomineePuuid: puuid(overrides.nomineeIndex),
+    nomineeTeamId: overrides.nomineeIndex < 5 ? 100 : 200,
     justification: null,
     ...overrides,
   };

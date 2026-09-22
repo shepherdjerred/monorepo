@@ -139,7 +139,6 @@
     "packages/scout-for-lol/packages/design-system",
     "packages/scout-for-lol/packages/docs-site",
     "packages/scout-for-lol/packages/domain",
-    "packages/scout-for-lol/packages/evals",
     "packages/scout-for-lol/packages/frontend",
     "packages/scout-for-lol/packages/report",
     "packages/scout-for-lol/packages/temporal",
@@ -222,7 +221,8 @@
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.11.4": "patches/react-native-worklets@0.11.4.patch",
     "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch",
-    "@lng2004/node-datachannel@0.32.3-20260815.3": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.3.patch"
+    "@lng2004/node-datachannel@0.32.3-20260815.3": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.3.patch",
+    "@astrojs/internal-helpers@0.11.0": "patches/@astrojs%2Finternal-helpers@0.11.0.patch"
   },
   "packageManager": "bun@1.4.0"
 }

@@ -63,6 +63,33 @@ describe("Home Assistant rules", () => {
     ).toBe("trmnl_petcare_litter_waste_percent > 80");
   });
 
+  test("will not report a hopper state read from a stale source", () => {
+    // The exporter holds the last known hopper status when Whisker stops
+    // answering, so an ungated rule pages critical for a fault the hopper may
+    // already have cleared — observed live as HopperFault firing while
+    // trmnl_petcare_litter_fault was 0 and source_fresh was 0.
+    const litterRules = getHomeAssistantRuleGroups().find(
+      (group) => group.name === "homeassistant-litter-robot",
+    )?.rules;
+    if (litterRules === undefined) throw new Error("Missing litter rule group");
+
+    for (const alert of [
+      "LitterRobotHopperFault",
+      "LitterRobotHopperLowOrDisconnected",
+    ]) {
+      expect(
+        litterRules.find((rule) => rule.alert === alert)?.expr.value,
+      ).toContain("and on () trmnl_petcare_litter_source_fresh == 1");
+    }
+
+    // Staleness stays the business of the rule that owns it, so the same
+    // condition is not reported twice.
+    expect(
+      litterRules.find((rule) => rule.alert === "LitterRobotDiagnosticsStale")
+        ?.expr.value,
+    ).toContain("trmnl_petcare_litter_source_fresh == 0");
+  });
+
   test("monitors both PetLibro feeders and all three Roborocks for missing entities", () => {
     const groups = getHomeAssistantRuleGroups();
     const feederRules = groups.find(
@@ -105,7 +132,11 @@ describe("Home Assistant rules", () => {
     expect(serialized).not.toContain("litter_robot_4");
     expect(serialized).not.toContain("Eversweet");
   });
+});
 
+// Split from the pet-care rules above only to stay within the per-function
+// line budget; these cover the rest of the Home Assistant surface.
+describe("Home Assistant rules — environment and automation dependencies", () => {
   test("alerts when the master bathroom temperature is unavailable or absent", () => {
     const availabilityGroup = getHomeAssistantRuleGroups().find(
       (group) => group.name === "homeassistant-availability",
@@ -176,17 +207,6 @@ describe("Home Assistant rules", () => {
     }
   });
 
-  test("does not keep the retired self-referential availability sensor", async () => {
-    const configuration = await Bun.file(
-      new URL(
-        "../../../../../config/homeassistant/configuration.yaml",
-        import.meta.url,
-      ),
-    ).text();
-
-    expect(configuration).not.toContain("unavailable_entities_count");
-  });
-
   test("alerts on every entity the Temporal HA workflows depend on", async () => {
     const workflowEntities = await collectWorkflowEntityIds();
     expect(workflowEntities.size).toBeGreaterThan(0);
@@ -248,5 +268,35 @@ describe("Home Assistant rules", () => {
     expect(configuration).toContain(
       "select.dockstream_2_smart_fountain_water_dispensing_mode') != 'Flowing Water (Constant)'",
     );
+  });
+});
+
+describe("Home Assistant prometheus exporter", () => {
+  test("excludes stateless domains from availability inventory", async () => {
+    const configuration = await Bun.file(
+      new URL(
+        "../../../../../config/homeassistant/configuration.yaml",
+        import.meta.url,
+      ),
+    ).text();
+
+    expect(configuration).not.toContain("unavailable_entities_count");
+    const prometheus = configuration
+      .split("prometheus:")[1]
+      ?.split("\nlight:")[0];
+    expect(prometheus).toBeDefined();
+    expect(prometheus).toContain("exclude_domains:");
+    for (const domain of ["button", "event", "conversation", "stt", "tts"]) {
+      expect(prometheus).toContain(`- ${domain}`);
+    }
+    const automationDomains = new Set(
+      TEMPORAL_AUTOMATION_ENTITY_IDS.flatMap((entity) => {
+        const domain = entity.split(".", 1)[0];
+        return domain === undefined ? [] : [domain];
+      }),
+    );
+    for (const domain of automationDomains) {
+      expect(prometheus).not.toContain(`- ${domain}`);
+    }
   });
 });

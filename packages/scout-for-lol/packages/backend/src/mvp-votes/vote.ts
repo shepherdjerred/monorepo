@@ -5,6 +5,7 @@ import {
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
   MatchIdSchema,
+  resolveQueueTypeFromGame,
   RiotTeamIdSchema,
   type DiscordAccountId,
   type DiscordChannelId,
@@ -34,6 +35,8 @@ export type StoredMatchMvpVote = {
   voterDiscordId: DiscordAccountId;
   category: MatchMvpCategory;
   nomineeIndex: number;
+  nomineePuuid: LeaguePuuid | null;
+  nomineeTeamId: RiotTeamId | null;
   voterPuuid: LeaguePuuid;
   voterTeamId: RiotTeamId;
   justification: string | null;
@@ -45,6 +48,8 @@ const StoredMatchMvpVoteRowSchema = z.object({
   voterDiscordId: DiscordAccountIdSchema,
   category: MatchMvpCategorySchema,
   nomineeIndex: z.number().int().min(0).max(9),
+  nomineePuuid: LeaguePuuidSchema.nullable(),
+  nomineeTeamId: RiotTeamIdSchema.nullable(),
   voterPuuid: LeaguePuuidSchema,
   voterTeamId: RiotTeamIdSchema,
   justification: z.string().max(MVP_JUSTIFICATION_MAX_LENGTH).nullable(),
@@ -75,22 +80,64 @@ function storedRosterMatching(
   return stored;
 }
 
+type ContestQueryColumns = {
+  gameCreationAt: Date | null;
+  queueType: string | null;
+};
+
+async function backfillContestQueryColumns(
+  matchId: MatchId,
+  stored: ContestQueryColumns,
+  next: { gameCreationAt: Date; queueType: string | null },
+  prismaClient: ExtendedPrismaClient,
+): Promise<void> {
+  if (stored.gameCreationAt !== null && stored.queueType !== null) {
+    return;
+  }
+  await prismaClient.matchMvpContest.update({
+    where: { matchId },
+    data: {
+      gameCreationAt: stored.gameCreationAt ?? next.gameCreationAt,
+      queueType: stored.queueType ?? next.queueType,
+    },
+  });
+}
+
 export async function ensureMatchMvpContest(
   match: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<MatchMvpRoster> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const roster = freezeMatchMvpRoster(match);
+  const gameCreationAt = new Date(match.info.gameCreation);
+  const queueType = resolveQueueTypeFromGame(
+    match.info.queueId,
+    match.info.gameMode,
+    match.info.gameType,
+  );
+  const queryColumns = { gameCreationAt, queueType: queueType ?? null };
   const existing = await prismaClient.matchMvpContest.findUnique({
     where: { matchId },
-    select: { roster: true },
+    select: { roster: true, gameCreationAt: true, queueType: true },
   });
   if (existing !== null) {
-    return storedRosterMatching(matchId, existing.roster, roster);
+    const stored = storedRosterMatching(matchId, existing.roster, roster);
+    await backfillContestQueryColumns(
+      matchId,
+      existing,
+      queryColumns,
+      prismaClient,
+    );
+    return stored;
   }
   try {
     await prismaClient.matchMvpContest.create({
-      data: { matchId, roster },
+      data: {
+        matchId,
+        roster,
+        gameCreationAt,
+        queueType: queueType ?? null,
+      },
     });
   } catch (error) {
     if (!isUniqueConstraintError(error)) {
@@ -98,7 +145,7 @@ export async function ensureMatchMvpContest(
     }
     const raced = await prismaClient.matchMvpContest.findUnique({
       where: { matchId },
-      select: { roster: true },
+      select: { roster: true, gameCreationAt: true, queueType: true },
     });
     if (raced === null) {
       throw new Error(
@@ -106,7 +153,14 @@ export async function ensureMatchMvpContest(
         { cause: error },
       );
     }
-    return storedRosterMatching(matchId, raced.roster, roster);
+    const stored = storedRosterMatching(matchId, raced.roster, roster);
+    await backfillContestQueryColumns(
+      matchId,
+      raced,
+      queryColumns,
+      prismaClient,
+    );
+    return stored;
   }
   return roster;
 }
@@ -211,7 +265,7 @@ export async function upsertMatchMvpVote(
   // name any of the ten participants on either ballot. The public tally
   // groups by the nominee's side, so two ballots for the same person both
   // count there.
-  nomineeAt(roster, input.nomineeIndex);
+  const nominee = nomineeAt(roster, input.nomineeIndex);
   const justification =
     input.justification === undefined ? null : input.justification;
   const row = await prismaClient.matchMvpVote.upsert({
@@ -229,12 +283,16 @@ export async function upsertMatchMvpVote(
       voterDiscordId: input.voterDiscordId,
       category: input.category,
       nomineeIndex: input.nomineeIndex,
+      nomineePuuid: nominee.puuid,
+      nomineeTeamId: nominee.teamId,
       voterPuuid: input.voterPuuid,
       voterTeamId: input.voterTeamId,
       justification,
     },
     update: {
       nomineeIndex: input.nomineeIndex,
+      nomineePuuid: nominee.puuid,
+      nomineeTeamId: nominee.teamId,
       voterPuuid: input.voterPuuid,
       voterTeamId: input.voterTeamId,
       justification,

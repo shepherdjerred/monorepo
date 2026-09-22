@@ -4,6 +4,7 @@ import { z } from "zod";
 import { App } from "cdk8s";
 import { rm } from "node:fs/promises";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   BATCH_PRIORITY,
   BURST_SERVICE_PRIORITY,
@@ -13,6 +14,12 @@ import {
   BEST_EFFORT_CONTAINER_ALLOWLIST,
   PARTIAL_REQUEST_CONTAINER_ALLOWLIST,
 } from "./container-resource-allowlist.ts";
+
+const LEGACY_DISCORD_MOD_PATH =
+  "/data/mods/dcintegration-forge-2.4.7.1-1.12.jar";
+const LEGACY_DISCORD_MOD_CLEANUP = expect.arrayContaining([
+  expect.stringContaining(LEGACY_DISCORD_MOD_PATH),
+]);
 
 /**
  * Container Resources Backstop
@@ -454,9 +461,7 @@ describe("Burst-memory sharing policy", () => {
       (item) => item.metadata.name === SERVICE_PRIORITY,
     );
     const batch = classes.find((item) => item.metadata.name === BATCH_PRIORITY);
-    expect(burst).toBeDefined();
-    expect(standard).toBeDefined();
-    expect(batch).toBeDefined();
+    expect([burst, standard, batch].every(Boolean)).toBe(true);
     expect(burst?.value).toBe(100_000);
     expect(burst?.value).toBe(standard?.value);
     expect(batch?.value).toBe(1000);
@@ -468,7 +473,6 @@ describe("Burst-memory sharing policy", () => {
     expect(standard?.globalDefault).toBe(true);
     expect(standard?.preemptionPolicy).toBe("Never");
     expect(batch?.preemptionPolicy).toBe("Never");
-
     const expected = new Map([
       ["media-plex", BURST_SERVICE_PRIORITY],
       ["mario-kart", BURST_SERVICE_PRIORITY],
@@ -497,7 +501,6 @@ describe("Burst-memory sharing policy", () => {
       expect(container?.priorityClassName, name).toBeUndefined();
     }
   });
-
   it("keeps Minecraft heaps and reservations while enabling burst preemption", () => {
     const applications = documents.flatMap((doc) => {
       const result = MinecraftApplicationSchema.safeParse(doc);
@@ -555,7 +558,7 @@ describe("Burst-memory sharing policy", () => {
       },
       modUrls: [
         "https://github.com/webbukkit/dynmap/releases/download/v3.3-beta-2/Dynmap-3.3-beta-2-forge-1.12.2.jar",
-        "https://cdn.modrinth.com/data/rbJ7eS5V/versions/xLuSqQki/dcintegration-forge-2.4.7.1-1.12.jar",
+        versions["mc2discord-forge-1.12.2"],
       ],
       gameMode: "survival",
       onlineMode: true,
@@ -579,10 +582,18 @@ describe("Burst-memory sharing policy", () => {
     expect(sjerred?.["extraDeploy"]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
+          metadata: { name: "minecraft-sjerred-dynmap-config" },
+          data: expect.objectContaining({
+            "configuration.txt": expect.stringMatching(
+              /defaultzoom: 3\ndefaultworld: world\ndefaultmap: flat/,
+            ),
+          }),
+        }),
+        expect.objectContaining({
           metadata: { name: "minecraft-sjerred-discord-integration-config" },
           data: {
-            "Discord-Integration.toml": expect.stringContaining(
-              'botToken = "${CFG_DISCORD_BOT_TOKEN}"',
+            "mc2discord.toml": expect.stringMatching(
+              /token = "\$\{CFG_DISCORD_BOT_TOKEN\}"[\s\S]*\[Messages\][\s\S]*start = ""[\s\S]*stop = ""[\s\S]*\[Status\.Channels\][\s\S]*Channel = \[\]/,
             ),
           },
         }),
@@ -592,6 +603,7 @@ describe("Burst-memory sharing policy", () => {
       expect.arrayContaining([
         expect.objectContaining({
           name: "configure-discord-integration",
+          command: LEGACY_DISCORD_MOD_CLEANUP,
           env: [
             {
               name: "CFG_DISCORD_BOT_TOKEN",

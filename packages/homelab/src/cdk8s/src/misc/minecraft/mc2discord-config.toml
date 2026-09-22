@@ -1,0 +1,23 @@
+lang = "en_us"
+
+[General]
+token = "${CFG_DISCORD_BOT_TOKEN}"
+
+[[Channels.Channel]]
+id = ${CFG_DISCORD_CHANNEL_ID}
+subscriptions = ["info", "chat"]
+mode = "PLAIN_TEXT"
+
+[Messages]
+# Mc2Discord 3.3.2's Forge 1.12.2 lifecycle formatter cannot format a server
+# start or stop event because neither supplies an entity.
+start = ""
+stop = ""
+
+[Status.Channels]
+# Do not register a placeholder channel with ID 0. This deployment has no
+# Discord status-channel requirement.
+Channel = []
+
+[Features]
+account_linking = false

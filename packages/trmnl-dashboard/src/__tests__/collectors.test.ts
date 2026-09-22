@@ -26,6 +26,7 @@ const config: AppConfig = {
       "text",
       "update",
     ],
+    unavailableIgnoredEntityGlobs: [],
     presence: [{ entityId: "person.jerred", label: "Jerred" }],
     security: [{ entityId: "lock.front_door", label: "Front Door" }],
     climate: [{ entityId: "climate.downstairs", label: "Downstairs" }],

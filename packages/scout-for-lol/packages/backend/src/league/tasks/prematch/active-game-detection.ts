@@ -33,6 +33,7 @@ import {
 } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 import { recordPrematchForReportStore } from "#src/report-store/live-ingest.ts";
+import { recordClashPrematchSightings } from "#src/league/clash/sighting.ts";
 
 const logger = createLogger("prematch-active-game-detection");
 
@@ -177,6 +178,12 @@ async function processPrematchWithRetryCleanup(input: {
       source: "prematch_live",
       trackedPlayerAliases: input.trackedPlayers.map((p) => p.alias),
     });
+    await recordClashPrematchSightings(
+      input.gameInfo,
+      new Set(
+        input.trackedPlayers.map((player) => player.league.leagueAccount.puuid),
+      ),
+    );
     return await sendPrematchNotification(input.gameInfo, input.trackedPlayers);
   } catch (error) {
     if (!(error instanceof PrematchNotificationPostDeliveryError)) {

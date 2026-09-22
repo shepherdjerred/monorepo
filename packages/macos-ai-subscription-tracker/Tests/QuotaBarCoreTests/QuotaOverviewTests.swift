@@ -18,7 +18,7 @@ final class QuotaOverviewTests: XCTestCase {
 
     XCTAssertEqual(
       overview.providers.map(\.provider),
-      [.kimi, .claudeCode, .grok, .codex, .antigravity, .cursor]
+      [.kimi, .claudeCode, .grok, .codex, .antigravity, .cursor, .muse]
     )
     XCTAssertEqual(overview.providers[0].tightestWindow?.remainingPercent, 10)
     XCTAssertNil(overview.providers[2].tightestWindow)
@@ -44,7 +44,7 @@ final class QuotaOverviewTests: XCTestCase {
 
     XCTAssertEqual(
       overview.providers.map(\.provider),
-      [.codex, .claudeCode, .grok, .antigravity, .cursor, .kimi]
+      [.codex, .claudeCode, .grok, .antigravity, .cursor, .kimi, .muse]
     )
     XCTAssertEqual(overview.providers[2].badges.map(\.kind), [.partial, .noResets])
   }

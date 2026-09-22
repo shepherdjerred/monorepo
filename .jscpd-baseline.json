@@ -20,18 +20,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/better-skill-capped/src/components/ui/badge.tsx|packages/scout-for-lol/packages/evals/src/components/ui/badge.tsx": {
-      "clones": 1,
-      "tokens": 146
-    },
-    "packages/better-skill-capped/src/components/ui/button.tsx|packages/scout-for-lol/packages/evals/src/components/ui/button.tsx": {
-      "clones": 1,
-      "tokens": 166
-    },
-    "packages/better-skill-capped/src/components/ui/card.tsx|packages/scout-for-lol/packages/evals/src/components/ui/card.tsx": {
-      "clones": 1,
-      "tokens": 139
-    },
     "packages/better-skill-capped/src/lib/local-store.test.ts|packages/better-skill-capped/src/lib/safe-storage.test.ts": {
       "clones": 1,
       "tokens": 114
@@ -44,17 +32,17 @@
       "clones": 1,
       "tokens": 254
     },
-    "packages/birmel/scripts/smoke.ts|packages/scout-for-lol/packages/evals/scripts/smoke.ts": {
-      "clones": 1,
-      "tokens": 142
-    },
     "packages/birmel/scripts/smoke.ts|packages/starlight-karma-bot/scripts/smoke.ts": {
       "clones": 1,
       "tokens": 127
     },
     "packages/birmel/scripts/smoke.ts|packages/streambot/scripts/smoke.ts": {
       "clones": 2,
-      "tokens": 225
+      "tokens": 242
+    },
+    "packages/birmel/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 142
     },
     "packages/birmel/scripts/smoke.ts|packages/temporal/scripts/smoke.ts": {
       "clones": 1,
@@ -616,10 +604,6 @@
       "clones": 1,
       "tokens": 82
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
       "clones": 1,
       "tokens": 126
@@ -641,10 +625,6 @@
       "tokens": 131
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
-      "clones": 1,
-      "tokens": 75
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
       "clones": 1,
       "tokens": 75
     },
@@ -1008,10 +988,6 @@
       "clones": 1,
       "tokens": 78
     },
-    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/evals/src/materialization/openrouter-client.ts": {
-      "clones": 1,
-      "tokens": 108
-    },
     "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/openrouter-clients.ts": {
       "clones": 1,
       "tokens": 73
@@ -1039,10 +1015,6 @@
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
       "clones": 1,
       "tokens": 76
-    },
-    "packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-loading-screen.ts|packages/scout-for-lol/packages/backend/src/league/tasks/prematch/prematch-notification.ts": {
-      "clones": 1,
-      "tokens": 119
     },
     "packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.test.ts|packages/scout-for-lol/packages/backend/src/lib/player-admin/player-mutations.test.ts": {
       "clones": 2,
@@ -1172,22 +1144,6 @@
       "clones": 1,
       "tokens": 77
     },
-    "packages/scout-for-lol/packages/data/src/review/timeline/timeline-pipeline.test.ts|packages/scout-for-lol/packages/evals/src/materialization/s3-source.test.ts": {
-      "clones": 1,
-      "tokens": 97
-    },
-    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/starlight-karma-bot/scripts/smoke.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
-      "clones": 4,
-      "tokens": 464
-    },
-    "packages/scout-for-lol/packages/evals/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
-      "clones": 2,
-      "tokens": 253
-    },
     "packages/scout-for-lol/packages/frontend/src/components/review-tool/results/history-panel.tsx|packages/scout-for-lol/packages/frontend/src/components/review-tool/results/ratings-analytics.tsx": {
       "clones": 1,
       "tokens": 151
@@ -1223,6 +1179,14 @@
     "packages/seaweedfs-backup/test/gc.test.ts|packages/seaweedfs-backup/test/s3-endpoints.integration.test.ts": {
       "clones": 1,
       "tokens": 80
+    },
+    "packages/starlight-karma-bot/scripts/smoke.ts|packages/tasknotes-server/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
+    "packages/starlight-karma-bot/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
+      "clones": 1,
+      "tokens": 86
     },
     "packages/streambot/e2e/run.ts|packages/streambot/e2e/voice-recovery.ts": {
       "clones": 1,
@@ -1283,6 +1247,10 @@
     "packages/tasknotes-core/ci/coverage-ratchet.ts|packages/tasknotes-windows/scripts/coverage-ratchet.ts": {
       "clones": 1,
       "tokens": 93
+    },
+    "packages/tasknotes-server/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
+      "clones": 3,
+      "tokens": 335
     },
     "packages/tasknotes-server/src/__tests__/concurrency.test.ts|packages/tasknotes-server/src/__tests__/v2-routes.test.ts": {
       "clones": 1,

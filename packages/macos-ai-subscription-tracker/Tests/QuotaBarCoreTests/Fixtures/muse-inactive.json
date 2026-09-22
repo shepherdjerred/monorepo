@@ -1,0 +1,11 @@
+{
+  "base_url": "https://api.meta.ai/v1",
+  "has_payment_method": false,
+  "require_payment": false,
+  "is_subs_active": false,
+  "can_subscribe": true,
+  "show_subs_upsell": true,
+  "subs_tier_id": null,
+  "subs_tier_name": null,
+  "subs_usage": null
+}

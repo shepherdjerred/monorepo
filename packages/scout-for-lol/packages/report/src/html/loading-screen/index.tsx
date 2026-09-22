@@ -1,6 +1,7 @@
 import satori from "satori";
 import type { LoadingScreenData } from "@scout-for-lol/data";
 import { LoadingScreen } from "#src/html/loading-screen/loading-screen.tsx";
+import { ClashLoadingScreen } from "#src/html/loading-screen/clash-layout.tsx";
 import {
   bunCjkFonts,
   bunReportFonts,
@@ -12,6 +13,7 @@ import { getClassicBackgroundBase64 } from "@scout-for-lol/data";
 import {
   preloadChampionLoadingImages,
   preloadChampionImages,
+  preloadChampionSplashImages,
 } from "#src/dataDragon/image-cache.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
@@ -40,6 +42,13 @@ const ARENA_COMPACT_MAX_COLUMNS = 6;
 const ARENA_STANDARD_CARD_WIDTH = 280;
 const ARENA_COMPACT_CARD_WIDTH = 210;
 const ARENA_COMPACT_CARD_HEIGHT = 360;
+
+function usesClashCanvas(data: LoadingScreenData): boolean {
+  if (data.layout === "classic" || data.layout === "arena") {
+    return false;
+  }
+  return data.clashChrome !== undefined;
+}
 
 type CanvasDimensions = {
   width: number;
@@ -118,7 +127,7 @@ function getStandardCanvasDimensions(
 
   return {
     width: Math.max(STANDARD_MIN_WIDTH, width),
-    height: STANDARD_HEIGHT,
+    height: STANDARD_HEIGHT + (usesClashCanvas(data) ? 140 : 0),
   };
 }
 
@@ -153,6 +162,15 @@ async function preloadLoadingScreenImages(
     const banChampionNames = data.bans.map((b) => b.championName);
     await preloadChampionImages(banChampionNames);
   }
+
+  if (usesClashCanvas(data)) {
+    const tracked = data.participants.find(
+      (participant) => participant.isTrackedPlayer,
+    );
+    if (tracked !== undefined) {
+      await preloadChampionSplashImages([tracked.championName]);
+    }
+  }
 }
 
 export async function loadingScreenToSvg(
@@ -177,6 +195,18 @@ export async function loadingScreenToSvg(
     );
   }
 
+  if (
+    usesClashCanvas(data) &&
+    (data.layout === "standard" || data.layout === "aram")
+  ) {
+    const fonts = await bunReportFonts(containsCjkText(data), data);
+    return satori(<ClashLoadingScreen data={data} />, {
+      width,
+      height,
+      fonts,
+    });
+  }
+
   const fonts = await bunReportFonts(containsCjkText(data), data);
   const svg = await satori(<LoadingScreen data={data} />, {
     width,
@@ -192,7 +222,7 @@ export async function loadingScreenToImage(
   const svg = await loadingScreenToSvg(data);
   const png = await svgToPng(
     svg,
-    data.layout === "classic" ? { crop: false } : {},
+    data.layout === "classic" || usesClashCanvas(data) ? { crop: false } : {},
   );
   return png;
 }

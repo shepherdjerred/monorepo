@@ -24,6 +24,7 @@ const KNOWN_URLS = [
   "/halls",
   "/halls/1",
   "/challenges",
+  "/clash",
   "/challenges/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/challenges/drafts/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/challenge-runs/1b4e28ba-2fa1-41d2-883f-0016d3cca427",

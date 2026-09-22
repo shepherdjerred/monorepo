@@ -137,7 +137,6 @@ packages/
   backend/      - Discord bot, tRPC/HTTP server, report lake, cron jobs
   data/         - Shared data models, schemas, and Data Dragon assets
   docs-site/    - User documentation site
-  evals/        - Post-match review eval datasets and rating app
   frontend/     - Astro marketing site
   report/       - Match report image generation (React + Satori)
 ```

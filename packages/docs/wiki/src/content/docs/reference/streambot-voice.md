@@ -103,7 +103,8 @@ All keys use UTC dates:
 
 ```text
 voice-captures/YYYY/MM/DD/<capture-id>/
-├── speaker.wav          # wake-candidate capture
+├── speaker.wav          # wake-candidate user utterance
+├── reply.wav            # generated assistant reply, when any PCM was enqueued
 ├── speaker-001.wav      # manual window, one file per decoded speaker
 ├── speaker-002.wav
 └── manifest.json        # uploaded last; capture commit marker
@@ -117,15 +118,16 @@ decoded samples supplied to wake processing. It does not mix speakers.
 The private bucket expires objects below `voice-captures/` after 90 days. It is
 not public and is not backed up outside SeaweedFS.
 
-## Manifest version 1
+## Manifest version 2
 
 `manifest.json` is a strict JSON object. Unknown fields fail validation in the
-writer.
+writer. Older objects in the bucket remain version 1 until they expire.
 
 | Field                                 | Content                                                                                              |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `schemaVersion`                       | Literal `1`.                                                                                         |
+| `schemaVersion`                       | Literal `2`.                                                                                         |
 | `captureId`, `kind`                   | UUID and `wake-candidate` or `debug-window`.                                                         |
+| `sessionId`                           | Playback-session UUID that groups consecutive wake turns.                                            |
 | `startedAt`, `endedAt`, `committedAt` | ISO 8601 timestamps.                                                                                 |
 | `guildId`, `channelId`, `userId`      | Discord identity; `userId` is present for a wake candidate.                                          |
 | `traceId`                             | 32-character trace ID when telemetry produced one.                                                   |
@@ -136,7 +138,8 @@ writer.
 | `wake`                                | Fragment, score, fragment timestamp, detection time, and verifier evidence.                          |
 | `endpoint`                            | Terminal reason, speech flag, sample count, duration, and DTX duration.                              |
 | `transcript`, `normalizedCommand`     | Cloud transcript and command after prefix normalization.                                             |
-| `tools[]`                             | Validated name, arguments, result, outcome, and duration.                                            |
+| `replyTranscript`                     | Assistant output transcript when Realtime emitted one.                                               |
+| `tools[]`                             | Validated name, real arguments (`query`, `mode`, `source`), result, outcome, and duration.           |
 | `cloudOutcome`, `cloudUsage`          | Cloud terminal class and validated usage record.                                                     |
 | `reply`                               | Reply outcome, packets, bytes, and duration.                                                         |
 | `errors[]`                            | Stage, bounded error class, and message.                                                             |
@@ -153,11 +156,18 @@ endpointing, OpenAI connect/transcription/response, every tool, and reply
 delivery. OpenAI SDK tracing remains disabled.
 
 Structured stdout JSON is retained. When telemetry is enabled, the same log
-record is emitted through OTLP with its active trace and span IDs. Private
-traces and logs may contain guild, channel, and speaker IDs; transcripts;
-normalized commands; capture IDs; scores and timings; validated tool
-arguments/results; and bounded error classes. They never contain credentials
-or raw audio.
+record is emitted through OTLP with its active trace and span IDs.
+
+| Surface                  | Contents                                                                                                                            | Not present                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Traces and logs          | Guild, channel, and speaker IDs; capture and session IDs; scores and timings; tool field counts, names, and outcomes; error classes | Credentials, raw audio, transcripts, normalized commands, reply transcripts, tool payloads |
+| Private capture manifest | Transcripts, reply transcripts, validated tool arguments/results, `reply.wav`                                                       | Credentials                                                                                |
+
+Finish-log and tool-span fields are defined in
+[`attempt-context.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/voice/attempt-context.ts)
+and
+[`voice-tools.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/voice/voice-tools.ts).
+The capture field inventory is the table in the previous section.
 
 ## Prometheus metrics
 

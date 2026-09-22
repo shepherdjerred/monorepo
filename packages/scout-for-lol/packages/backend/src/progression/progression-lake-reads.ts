@@ -50,6 +50,7 @@ const ProgressionMatchRowSchema = z.strictObject({
   longest_time_spent_living: LakeIntSchema,
   total_time_spent_dead: LakeIntSchema,
   penta_kills: LakeIntSchema,
+  placement: LakeIntSchema.nullable(),
   timeline_complete: z.boolean(),
 });
 
@@ -93,6 +94,7 @@ const MATCH_COLUMNS = [
   "m.longest_time_spent_living",
   "m.total_time_spent_dead",
   "m.penta_kills",
+  "CASE WHEN m.queue = 'arena' THEN COALESCE(NULLIF(m.subteam_placement, 0), NULLIF(m.placement, 0)) ELSE NULL END AS placement",
 ].join(", ");
 
 function cursorPredicate(cursor: ProgressionMatchCursor | undefined): {

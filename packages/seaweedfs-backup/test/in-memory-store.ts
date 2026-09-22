@@ -38,8 +38,15 @@ async function readBody(body: Readable | Uint8Array): Promise<Uint8Array> {
 export class InMemoryObjectStore implements ObjectStore {
   private readonly buckets = new Map<string, Map<string, MemoryObject>>();
   private readonly unavailableReads = new Map<string, number>();
+  /**
+   * Source keys whose next N reads fail as a dropped connection, standing in
+   * for the resets a multi-hour transfer hits. Distinct from
+   * `unavailableReads`, which models a destination object not yet visible.
+   */
+  public readonly transportFailures = new Map<string, number>();
   public corruptWrites = false;
   public failPutPrefix: string | undefined;
+  public transientGetFailures = 0;
   public unavailableReadsAfterPut = 0;
 
   public createBucket(name: string): void {
@@ -106,7 +113,20 @@ export class InMemoryObjectStore implements ObjectStore {
     key: string,
     conditions: GetObjectConditions = {},
   ): Promise<StoredObject> {
+    if (this.transientGetFailures > 0) {
+      this.transientGetFailures -= 1;
+      const error = new Error("connect ECONNREFUSED 10.0.0.1:8333");
+      Object.defineProperty(error, "code", { value: "ECONNREFUSED" });
+      throw error;
+    }
     const objectId = `${bucket}\0${key}`;
+    const transportFailures = this.transportFailures.get(key) ?? 0;
+    if (transportFailures > 0) {
+      this.transportFailures.set(key, transportFailures - 1);
+      const error = new Error("socket hang up");
+      Reflect.set(error, "code", "ECONNRESET");
+      throw error;
+    }
     const unavailableReads = this.unavailableReads.get(objectId) ?? 0;
     if (unavailableReads > 0) {
       this.unavailableReads.set(objectId, unavailableReads - 1);

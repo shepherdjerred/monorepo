@@ -13,6 +13,7 @@ const config: AppConfig = {
     token: "ha-token",
     batteryThreshold: 20,
     unavailableIgnoredDomains: [],
+    unavailableIgnoredEntityGlobs: [],
     presence: [],
     security: [],
     climate: [],

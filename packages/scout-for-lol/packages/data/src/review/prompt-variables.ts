@@ -156,6 +156,10 @@ export const STAGE_PROMPT_VARIABLES = {
         description: "Output from Stage 2 (the generated review)",
       },
       { name: "ART_STYLE", description: "Selected art style description" },
+      {
+        name: "IMAGE_INSPIRATIONS",
+        description: "Random personality image prompts shaping the art concept",
+      },
     ],
   },
 

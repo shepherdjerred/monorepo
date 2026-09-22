@@ -1,10 +1,14 @@
 import { createHash, randomBytes } from "node:crypto";
 import { Transform } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import {
+  type CopyAttemptState,
+  type CopyResult,
+  getConditionalSourceObject,
   getUploadedObject,
   hashStoredObject,
-  OPAQUE_OBJECT_HEADERS,
+  hashStoredObjectPair,
+  uploadOpaqueObject,
+  withTransientObjectStoreRetries,
 } from "./backup-object.ts";
 import {
   CompletionMarkerSchema,
@@ -26,7 +30,7 @@ import {
   objectIsProtected,
   policyForCadence,
 } from "./policy.ts";
-import type { ListedObject, ObjectStore } from "./store.ts";
+import type { ListedObject, ObjectStore, StoredObject } from "./store.ts";
 
 export type SnapshotBucketResult = {
   bucket: string;
@@ -61,11 +65,7 @@ export type RunBackupInput = {
   now?: Date;
   onProgress?: (progress: BackupProgress) => void;
   onBytes?: (progress: BackupByteProgress) => void;
-};
-
-type CopyResult = {
-  entry: ManifestEntry;
-  copied: boolean;
+  delay?: (milliseconds: number) => Promise<void>;
 };
 
 // Object storage round trips dominate this path. Keeping a small fixed pool
@@ -107,16 +107,9 @@ async function copyChangedObject(input: {
   backupBucket: string;
   sourceBucket: string;
   sourceObject: ListedObject;
+  attemptState: CopyAttemptState;
   onBytes?: (progress: BackupByteProgress) => void;
 }): Promise<CopyResult> {
-  const source = await input.source.getObject(
-    input.sourceBucket,
-    input.sourceObject.key,
-    {
-      etag: input.sourceObject.etag,
-      unmodifiedSince: input.sourceObject.lastModified,
-    },
-  );
   const backupObjectKey = opaqueObjectKey(
     input.sourceBucket,
     input.sourceObject,
@@ -130,33 +123,32 @@ async function copyChangedObject(input: {
       input.backupBucket,
       backupObjectKey,
     );
-    const [sourceHash, destinationHash] = await Promise.all([
-      hashStoredObject(source, (bytes) =>
-        input.onBytes?.({
-          stage: "verify",
-          bucket: input.sourceBucket,
-          bytes,
-        }),
-      ),
-      hashStoredObject(destination, (bytes) =>
-        input.onBytes?.({
-          stage: "verify",
-          bucket: input.sourceBucket,
-          bytes,
-        }),
-      ),
-    ]);
+    let source: StoredObject;
+    try {
+      source = await getConditionalSourceObject(input);
+    } catch (error: unknown) {
+      destination.body.destroy();
+      throw error;
+    }
+    const hashes = await hashStoredObjectPair({
+      source,
+      destination,
+      onSourceBytes: (bytes) =>
+        input.onBytes?.({ stage: "verify", bucket: input.sourceBucket, bytes }),
+      onDestinationBytes: (bytes) =>
+        input.onBytes?.({ stage: "verify", bucket: input.sourceBucket, bytes }),
+    });
     if (
-      sourceHash.bytes !== input.sourceObject.size ||
-      destinationHash.bytes !== input.sourceObject.size ||
-      destinationHash.sha256 !== sourceHash.sha256
+      hashes.source.bytes !== input.sourceObject.size ||
+      hashes.destination.bytes !== input.sourceObject.size ||
+      hashes.destination.sha256 !== hashes.source.sha256
     ) {
       throw new Error(
         `Existing immutable R2 object failed verification while backing up ${input.sourceBucket}`,
       );
     }
     return {
-      copied: false,
+      copied: input.attemptState.uploaded,
       entry: {
         schemaVersion: 1,
         sourceBucket: input.sourceBucket,
@@ -165,11 +157,12 @@ async function copyChangedObject(input: {
         sourceEtag: input.sourceObject.etag,
         sourceLastModified: input.sourceObject.lastModified.toISOString(),
         backupObjectKey,
-        sha256: sourceHash.sha256,
+        sha256: hashes.source.sha256,
         headers: source.headers,
       },
     };
   }
+  const source = await getConditionalSourceObject(input);
   const hash = createHash("sha256");
   let copiedBytes = 0;
   const hashingStream = new Transform({
@@ -192,14 +185,15 @@ async function copyChangedObject(input: {
       callback(undefined, value);
     },
   });
-  const upload = input.destination.putObject({
-    bucket: input.backupBucket,
-    key: backupObjectKey,
-    body: hashingStream,
+  await uploadOpaqueObject({
+    destination: input.destination,
+    backupBucket: input.backupBucket,
+    backupObjectKey,
+    sourceBody: source.body,
+    hashingStream,
     contentLength: input.sourceObject.size,
-    headers: OPAQUE_OBJECT_HEADERS,
   });
-  await Promise.all([pipeline(source.body, hashingStream), upload]);
+  input.attemptState.uploaded = true;
   if (copiedBytes !== input.sourceObject.size) {
     throw new Error(
       `Conditional source read changed size while backing up ${input.sourceBucket}`,
@@ -243,13 +237,14 @@ async function copyChangedObject(input: {
   };
 }
 
-async function copyOrReuseObject(input: {
+async function copyWithSourceVersionRefresh(input: {
   source: ObjectStore;
   destination: ObjectStore;
   backupBucket: string;
   sourceBucket: string;
   sourceObject: ListedObject;
   prior: ManifestEntry | undefined;
+  attemptState: CopyAttemptState;
   onBytes?: (progress: BackupByteProgress) => void;
 }): Promise<CopyResult> {
   let sourceObject = input.sourceObject;
@@ -267,6 +262,7 @@ async function copyOrReuseObject(input: {
         backupBucket: input.backupBucket,
         sourceBucket: input.sourceBucket,
         sourceObject,
+        attemptState: input.attemptState,
         ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
       });
     } catch (error: unknown) {
@@ -366,6 +362,7 @@ async function backupSourceBucket(input: {
   bucketPolicy: BucketPolicy;
   onProgress?: (progress: BackupProgress) => void;
   onBytes?: (progress: BackupByteProgress) => void;
+  delay: (milliseconds: number) => Promise<void>;
 }): Promise<{ entries: ManifestEntry[]; result: SnapshotBucketResult }> {
   const startedAt = performance.now();
   input.onProgress?.({ stage: "bucket", bucket: input.bucketPolicy.name });
@@ -386,15 +383,28 @@ async function backupSourceBucket(input: {
   let copiedBytes = 0;
   let completed = 0;
   await runObjectWorkers(protectedObjects, async (object) => {
-    const result = await copyOrReuseObject({
-      source: input.source,
-      destination: input.destination,
-      backupBucket: input.backupBucket,
-      sourceBucket: input.bucketPolicy.name,
-      sourceObject: object,
-      prior: previous.get(object.key),
-      ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
-    });
+    const attemptState: CopyAttemptState = { uploaded: false };
+    const result = await withTransientObjectStoreRetries(
+      () =>
+        copyWithSourceVersionRefresh({
+          source: input.source,
+          destination: input.destination,
+          backupBucket: input.backupBucket,
+          sourceBucket: input.bucketPolicy.name,
+          sourceObject: object,
+          prior: previous.get(object.key),
+          attemptState,
+          ...(input.onBytes === undefined ? {} : { onBytes: input.onBytes }),
+        }),
+      () =>
+        input.onBytes?.({
+          stage: "verify",
+          bucket: input.bucketPolicy.name,
+          bytes: 0,
+        }),
+      input.delay,
+      () => `copy ${input.bucketPolicy.name}/${object.key}`,
+    );
     copiedObjects += result.copied ? 1 : 0;
     reusedObjects += result.copied ? 0 : 1;
     copiedBytes += result.copied ? result.entry.sourceSize : 0;
@@ -459,6 +469,7 @@ export async function runBackup(input: RunBackupInput): Promise<{
       backupBucket: input.backupBucket,
       snapshotId,
       bucketPolicy,
+      delay: input.delay ?? ((milliseconds) => Bun.sleep(milliseconds)),
       ...(input.onProgress === undefined
         ? {}
         : { onProgress: input.onProgress }),

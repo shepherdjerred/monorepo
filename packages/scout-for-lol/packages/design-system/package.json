@@ -25,6 +25,7 @@
     "./satori/og-card": "./src/brand/og-card.ts",
     "./satori/classic-fonts": "./src/satori/classic-fonts.ts",
     "./satori/classic-style": "./src/satori/classic-style.ts",
+    "./satori/clash-style": "./src/satori/clash-style.ts",
     "./satori/colors": "./src/satori/colors.ts",
     "./satori/file-assets": "./src/satori/file-assets.ts",
     "./satori/fonts": "./src/satori/fonts.ts",

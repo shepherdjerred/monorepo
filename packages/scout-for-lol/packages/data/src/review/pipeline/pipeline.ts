@@ -282,6 +282,7 @@ async function runStage4ImageGeneration(
   try {
     const result = await generateImage({
       imageDescription: imageDescriptionText,
+      artStyle: stages.imageGeneration.artStyle.description,
       client: clients.image,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,

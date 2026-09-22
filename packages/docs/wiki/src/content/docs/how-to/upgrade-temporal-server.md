@@ -51,7 +51,10 @@ Argo runs two ordered PreSync hooks before touching the server Deployment:
 
 1. `temporal-backup-preflight` requires the newest `6hourly-backup` to be less
    than seven hours old, completed without errors, and to have completed every
-   attempted volume snapshot.
+   attempted volume snapshot. It then proves that backup covered the PostgreSQL
+   volume specifically, by reading the `ZFSBackup` object openebs zfs-localpv
+   writes for the PVC's bound PV under that backup's name and requiring status
+   `Done`.
 2. `temporal-schema-migration` runs the matching admin-tools image and updates
    both the core and visibility PostgreSQL schemas over verified TLS.
 

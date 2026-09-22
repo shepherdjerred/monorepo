@@ -164,6 +164,7 @@ export type FlagName =
   | "betting_settlement_dm_enabled"
   | "competition_builder_v2_enabled"
   | "challenge_runs_enabled"
+  | "clash_surface"
   | "custom_nights_enabled"
   | "debug"
   | "duels_enabled"
@@ -255,6 +256,12 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     ],
   },
   challenge_runs_enabled: {
+    default: false,
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
+  },
+  clash_surface: {
     default: false,
     overrides: [
       { value: true, attributes: { server: MY_SERVER }, betaOnly: true },

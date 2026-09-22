@@ -353,7 +353,7 @@ export async function resolveWithYtdlp(
     throw new BlockedSourceError(info.webpage_url ?? info.title);
   }
 
-  let decision = classifyYtdlpInfo(info, source.mode, firstPass);
+  let decision = classifyYtdlpInfo(info, source.mode, firstPass, source.spoken);
   let passes = 1;
   if (firstKind === "music" && decision.kind === "video") {
     info = await runInfoPass(
@@ -365,11 +365,15 @@ export async function resolveWithYtdlp(
       },
       signal,
     );
-    decision = classifyYtdlpInfo(info, source.mode, "video");
+    decision = classifyYtdlpInfo(info, source.mode, "video", source.spoken);
     passes = 2;
   }
 
-  const base = toResolvedSource(info, { mediaKind: decision.kind });
+  const base = toResolvedSource(info, {
+    mediaKind: decision.kind,
+    decidedBy: decision.decidedBy,
+    ...(source.spoken === true ? { spoken: true } : {}),
+  });
   // The only durable record of a classification. `decidedBy` explains a music/video call a user
   // disputes, and the split-input flag explains a silent or picture-less play — both long after the
   // signed URLs in this response have expired and the resolve can no longer be reproduced.
@@ -378,6 +382,7 @@ export async function resolveWithYtdlp(
     mediaKind: decision.kind,
     decidedBy: decision.decidedBy,
     mode: source.mode,
+    spoken: source.spoken,
     passes,
     splitAudioInput: base.audioInput !== undefined,
   });

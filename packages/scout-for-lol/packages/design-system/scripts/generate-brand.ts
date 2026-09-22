@@ -20,9 +20,6 @@ const fontsDir = `${packageRoot}assets/fonts/`;
 const frontendPublic = fileURLToPath(
   new URL("../../frontend/public/", import.meta.url),
 );
-const evalsPublic = fileURLToPath(
-  new URL("../../evals/public/", import.meta.url),
-);
 const docsPublic = fileURLToPath(
   new URL("../../docs-site/public/", import.meta.url),
 );
@@ -232,7 +229,6 @@ const discordBanner = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 
 `;
 
 await mkdir(brandDir, { recursive: true });
-await mkdir(evalsPublic, { recursive: true });
 
 await emit(`${brandDir}emblem.svg`, emblem);
 await emit(`${brandDir}compass.svg`, compass);
@@ -266,7 +262,6 @@ await emit(
     { size: 48, png: png48 },
   ]),
 );
-await emit(`${evalsPublic}favicon.svg`, compass);
 await emit(`${docsPublic}favicon.svg`, compass);
 
 const ogSvg = await satori(

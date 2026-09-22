@@ -162,6 +162,120 @@ model CurrentRankSnapshot {
   updatedAt    DateTime @updatedAt
 }
 
+// Clash-v1 current snapshot. Riot returns empty registrations when Clash is
+// inactive; rows are replaced on each poll rather than accumulated.
+model ClashTournament {
+  id               Int      @id @default(autoincrement())
+  platform         String
+  riotId           Int
+  themeId          Int
+  nameKey          String
+  nameKeySecondary String
+  scheduleJson     String
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([platform, riotId])
+}
+
+model ClashTeam {
+  id               Int      @id @default(autoincrement())
+  platform         String
+  riotId           String
+  tournamentRiotId Int
+  name             String
+  abbreviation     String
+  iconId           Int
+  tier             Int
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([platform, riotId])
+  @@index([platform, tournamentRiotId])
+}
+
+model ClashRegistration {
+  id               Int      @id @default(autoincrement())
+  puuid            String
+  region           String
+  platform         String
+  teamRiotId       String
+  tournamentRiotId Int
+  position         String
+  role             String
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([puuid, region, tournamentRiotId])
+  @@index([puuid])
+  @@index([platform, teamRiotId])
+}
+
+// Append-only Clash-v1 membership. Current ClashTournament/Team/Registration
+// rows still replace on each poll; this table keeps the named team after Riot
+// returns empty.
+model ClashMembershipHistory {
+  id               Int      @id @default(autoincrement())
+  puuid            String
+  region           String
+  platform         String
+  tournamentRiotId Int
+  teamRiotId       String
+  teamName         String
+  teamAbbreviation String
+  position         String
+  role             String
+  nameKey          String
+  nameKeySecondary String
+  windowStartAt    DateTime
+  windowEndAt      DateTime
+  firstSeenAt      DateTime
+  lastSeenAt       DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([puuid, platform, tournamentRiotId])
+  @@index([puuid])
+  @@index([platform, windowStartAt, windowEndAt])
+}
+
+// One Clash lobby or finished match Scout saw a tracked player in.
+// source=prematch has no outcome; source=match may set win (pre-Feb leftover).
+model ClashGameSighting {
+  id         Int       @id @default(autoincrement())
+  platform   String
+  gameId     String
+  puuid      String
+  source     String
+  queue      String
+  championId Int
+  teamId     Int
+  observedAt DateTime
+  win        Boolean?
+  teamRiotId String?
+  cupKey     String?
+  cupDay     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([platform, gameId, puuid])
+  @@index([puuid, observedAt])
+  @@index([cupKey, cupDay])
+}
+
+// Champion mastery is public, current account state rather than match history.
+// One PUUID snapshot is shared by every guild that tracks that Riot account.
+model ChampionMasterySnapshot {
+  puuid        String   @id
+  entriesJson  String
+  fetchedAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Report {
   id                     Int       @id @default(autoincrement())
   serverId               String
@@ -505,6 +619,13 @@ model ExploreMessage {
   visualization  String?
   /// JSON array matching ExploreMatchCardSchema; frozen with the assistant turn.
   matchCards     String?
+  /// JSON string array of the guilds this turn's capabilities were resolved
+  /// from. A conversation belongs to a person, not a guild, but a *turn* ran
+  /// with a specific one and that decided which tools existed — which replay
+  /// needs and could otherwise only recover from a durable run payload, which
+  /// Discord and voice turns never create. Null on user turns and on every
+  /// row written before this column existed.
+  guildIds       String?
   /// JSON array of the tool calls this turn made, for the reasoning panel.
   trace          String?
   createdAt      DateTime @default(now())
@@ -2477,13 +2598,22 @@ model MatchObservation {
 /// `reportMessageIds` is the durable channel→message map for tally edits;
 /// ActiveGame.postmatchMessageIds expires with the 3-hour active-game TTL.
 model MatchMvpContest {
-  matchId          String   @id
+  matchId          String    @id
   roster           Json
   reportMessageIds Json?
-  createdAt        DateTime @default(now())
+  /// Riot `info.gameCreation`. Backfilled from MatchObservation / rank history
+  /// for contests that existed before this column; writers fill any remainder.
+  gameCreationAt   DateTime?
+  /// Resolved Scout queue type (`flex`, `ranked 5s`, …). Pre-column contests
+  /// were Flex-only attach and backfill to `flex`.
+  queueType        String?
+  createdAt        DateTime  @default(now())
+
+  @@index([gameCreationAt])
+  @@index([queueType, gameCreationAt])
 }
 
-/// One guild member's vote in one category for one Flex match.
+/// One guild member's vote in one category for one community MVP contest.
 model MatchMvpVote {
   id             Int      @id @default(autoincrement())
   matchId        String
@@ -2493,6 +2623,9 @@ model MatchMvpVote {
   category       String
   /// Index into MatchMvpContest.roster.participants.
   nomineeIndex   Int
+  /// Copied from the frozen roster at vote time so leaderboards skip JSON.
+  nomineePuuid   String?
+  nomineeTeamId  Int?
   voterPuuid     String
   voterTeamId    Int
   justification  String?
@@ -2501,6 +2634,7 @@ model MatchMvpVote {
 
   @@unique([matchId, serverId, voterDiscordId, category])
   @@index([matchId, serverId, category])
+  @@index([serverId, nomineePuuid])
 }
 
 /// Association between an observation and one tracked account seen in the

@@ -42,10 +42,11 @@ An import can complete the run immediately. The coverage panel always shows the
 selected period, evaluated match count, and missing timeline evidence, so a
 partial history never looks complete by implication.
 
-The built-in **Win on every current champion A–Z** challenge freezes the current
-champion list when you start. A champion released later does not move that
-run's finish line. Champion coverage is shown as portraits: completed in color,
-remaining in grayscale.
+The built-in **Win on every current champion A–Z** challenges (Ranked Solo/Duo,
+Ranked Flex, Arena Top 3, and Arena 1st Place) freeze the current champion list
+when you start. A champion released later does not move that run's finish line.
+Champion coverage is shown as portraits: completed in color, remaining in
+grayscale.
 
 ## Change contributing accounts
 

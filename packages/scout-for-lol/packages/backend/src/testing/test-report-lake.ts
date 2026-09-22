@@ -5,6 +5,7 @@ import {
   computeKda,
   type AccountLakeRow,
   type MatchLakeRow,
+  type MatchTeamLakeRow,
   type PrematchLakeRow,
   type TimelineCoverageLakeRow,
   type TimelineEventParticipantLakeRow,
@@ -23,6 +24,7 @@ import {
 } from "#src/report-lake/paths.ts";
 import {
   matchStagingFilePath,
+  matchTeamStagingFilePath,
   prematchStagingFilePath,
   timelineStagingFilePath,
 } from "#src/report-lake/staging.ts";
@@ -65,6 +67,7 @@ export type TestLakeMatchFact = {
   playerSubteamId?: number;
   championId?: number;
   championName?: string;
+  teamPosition?: string | undefined;
   /**
    * The Riot ID recorded on this match row.
    *
@@ -124,7 +127,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     summoner_name: fact.playerAlias,
     champion_id: fact.championId ?? 22,
     champion_name: fact.championName ?? "Ashe",
-    team_position: "BOTTOM",
+    team_position: fact.teamPosition ?? "BOTTOM",
     individual_position: "BOTTOM",
     lane: null,
     role: null,
@@ -192,6 +195,44 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     placement: null,
     subteam_placement: null,
     player_subteam_id: fact.playerSubteamId ?? null,
+  };
+}
+
+function teamRowFromFacts(
+  matchId: string,
+  teamId: number,
+  facts: readonly TestLakeMatchFact[],
+): MatchTeamLakeRow {
+  const first = facts[0];
+  if (first === undefined) {
+    throw new Error(
+      `Test lake team ${String(teamId)} for ${matchId} has no participants`,
+    );
+  }
+  return {
+    match_id: matchId,
+    month: lakeMonth(first.gameCreationAt.getTime()),
+    team_id: teamId,
+    win: first.win,
+    baron_kills: 0,
+    first_baron: false,
+    champion_kills: facts.reduce((sum, fact) => sum + fact.kills, 0),
+    first_champion_kill: false,
+    dragon_kills: 0,
+    first_dragon: false,
+    inhibitor_kills: 0,
+    first_inhibitor: false,
+    rift_herald_kills: 0,
+    first_rift_herald: false,
+    tower_kills: 1,
+    first_tower: false,
+    void_grub_kills: null,
+    first_void_grub: null,
+    atakhan_kills: null,
+    first_atakhan: null,
+    epic_monster_feat_state: null,
+    first_blood_feat_state: null,
+    first_turret_feat_state: null,
   };
 }
 
@@ -313,6 +354,33 @@ async function writeTestMatches(
   }
 }
 
+async function writeTestMatchTeams(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
+  const byMatch = new Map<string, Map<number, TestLakeMatchFact[]>>();
+  for (const fact of [
+    ...(input.matchFacts ?? []),
+    ...(input.untrackedMatchFacts ?? []),
+  ]) {
+    const teams = byMatch.get(fact.matchId) ?? new Map();
+    const teamId = fact.teamId ?? 100;
+    const facts = teams.get(teamId) ?? [];
+    facts.push(fact);
+    teams.set(teamId, facts);
+    byMatch.set(fact.matchId, teams);
+  }
+  for (const [matchId, teams] of byMatch) {
+    const rows = [...teams.entries()]
+      .toSorted(([left], [right]) => left - right)
+      .map(([teamId, facts]) => teamRowFromFacts(matchId, teamId, facts));
+    await Bun.write(
+      matchTeamStagingFilePath(lakeDir, matchId),
+      rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+    );
+  }
+}
+
 async function writeTestPrematches(
   lakeDir: string,
   input: TestLakeInput,
@@ -361,6 +429,7 @@ export async function writeTestLake(
   await ensureLakeScaffold(lakeDir);
   await writeTestAccounts(lakeDir, input);
   await writeTestMatches(lakeDir, input);
+  await writeTestMatchTeams(lakeDir, input);
   await writeTestPrematches(lakeDir, input);
   await writeTestTimelineRows(
     lakeDir,

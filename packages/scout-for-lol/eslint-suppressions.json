@@ -525,11 +525,6 @@
       "count": 1
     }
   },
-  "packages/evals/src/materialization/materialize-case.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/frontend/src/components/review-tool/match/match-reviewer-info.tsx": {
     "sonarjs/cognitive-complexity": {
       "count": 1
