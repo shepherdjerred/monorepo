@@ -19,8 +19,14 @@ import {
  * account deregistered in between answers it by vanishing — the mint succeeds
  * with fewer channels and the run looks complete.
  *
- * So the match context is made to disagree with the durable snapshot on
- * purpose: the context knows one account, the snapshot recorded two.
+ * The resolver is REAL here and reads this file's own database. It used to be
+ * mocked, with the snapshot read living in the Activity beside it, so the two
+ * could be made to disagree from the test. The snapshot read now lives inside
+ * the resolver, and mocking it would have left this asserting only that the
+ * Activity passes through whatever the mock said. So the disagreement is built
+ * where it actually occurs: the snapshot records two accounts and NEITHER has
+ * an `Account` row, which is what a deregistration leaves behind, and the mint
+ * must still name both.
  */
 
 const { prisma } = createTestDatabase("scout-v2-postmatch-mint-audience");
@@ -29,33 +35,26 @@ const MATCH_ID = RiotMatchIdSchema.parse("NA1_9601");
 const STILL_TRACKED = LeaguePuuidSchema.parse("s".repeat(78));
 const DEREGISTERED = LeaguePuuidSchema.parse("d".repeat(78));
 
+const RIFT_PATH = `${import.meta.dir}/../../../../../testdata/rift.json`;
+
 const minted = vi.hoisted((): { puuids: string[][] } => ({ puuids: [] }));
+const riot = vi.hoisted((): { response: unknown } => ({ response: undefined }));
 
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
-vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  // Only the account that is STILL tracked; the other has deregistered since
-  // the match was observed.
-  resolveScoutV2MatchContext: (riotMatchId: string) =>
-    Promise.resolve({
-      matchId: riotMatchId,
-      riotMatchId,
-      matchData: {
-        metadata: { participants: [] },
-        info: {
-          gameCreation: Date.parse("2026-09-18T09:00:00.000Z"),
-          queueId: 420,
-          gameMode: "CLASSIC",
-          gameType: "MATCHED_GAME",
-        },
-      },
-      trackedPlayers: [
-        {
-          alias: "still",
-          league: { leagueAccount: { puuid: "s".repeat(78) } },
-        },
-      ],
-    }),
+// The resolver imports this module; the observed path never calls it, and
+// stubbing it keeps the Discord client out of the test.
+vi.mock("#src/discord/utils/guild-membership.ts", () => ({
+  getActiveServerIds: () => [],
+}));
+
+vi.mock("#src/league/api/api.ts", () => ({
+  riotClient: {
+    match: {
+      get: () => Promise.resolve(riot.response),
+      timeline: () => Promise.resolve(undefined),
+    },
+  },
 }));
 
 vi.mock("#src/temporal/v2/notification/match-intents.ts", async () => {
@@ -90,6 +89,7 @@ const { recordTrackedAccounts } =
   await import("#src/database/durable/tracked-account-repository.ts");
 const { observeMatch } =
   await import("#src/database/durable/observation-repository.ts");
+const { RawMatchSchema } = await import("@scout-for-lol/data");
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -97,6 +97,9 @@ afterAll(async () => {
 
 beforeEach(async () => {
   minted.puuids.length = 0;
+  riot.response = RawMatchSchema.parse(
+    JSON.parse(await Bun.file(RIFT_PATH).text()),
+  );
   await prisma.matchTrackedAccount.deleteMany({});
   await prisma.matchObservation.deleteMany({});
 });

@@ -26,13 +26,13 @@ import { MatchIdSchema } from "@scout-for-lol/data";
  */
 
 const stubs = vi.hoisted(() => ({
-  resolveScoutV2MatchContext: vi.fn(),
+  resolveScoutV2ObservedMatchContext: vi.fn(),
   resolvePostmatchDeliveryChannels: vi.fn(),
   generateMatchReport: vi.fn(),
 }));
 
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: stubs.resolveScoutV2MatchContext,
+  resolveScoutV2ObservedMatchContext: stubs.resolveScoutV2ObservedMatchContext,
 }));
 vi.mock("#src/league/tasks/notification-filters.ts", () => ({
   resolvePostmatchDeliveryChannels: stubs.resolvePostmatchDeliveryChannels,
@@ -90,7 +90,7 @@ const GuildIdsSchema = z.object({ targetGuildIds: z.array(z.string()) });
 
 beforeEach(() => {
   vi.clearAllMocks();
-  stubs.resolveScoutV2MatchContext.mockResolvedValue({
+  stubs.resolveScoutV2ObservedMatchContext.mockResolvedValue({
     matchId: MATCH,
     riotMatchId: RIOT_MATCH,
     matchData: {

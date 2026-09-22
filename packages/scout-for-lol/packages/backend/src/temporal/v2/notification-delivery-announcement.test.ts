@@ -29,7 +29,7 @@ const stubs = vi.hoisted(() => ({
   afterDareSummaryDeliveredV2: vi.fn(),
   readAttestedReportArtifactV2: vi.fn(),
   readAttestedPrematchArtifactV2: vi.fn(),
-  resolveScoutV2MatchContext: vi.fn(),
+  resolveScoutV2ObservedMatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
   fetchChannelForDelivery: vi.fn(),
   send: vi.fn(),
@@ -66,7 +66,7 @@ vi.mock("#src/temporal/v2/notification/notification-artifact.ts", async () => {
   };
 });
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: stubs.resolveScoutV2MatchContext,
+  resolveScoutV2ObservedMatchContext: stubs.resolveScoutV2ObservedMatchContext,
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
   generateMatchReport: stubs.generateMatchReport,

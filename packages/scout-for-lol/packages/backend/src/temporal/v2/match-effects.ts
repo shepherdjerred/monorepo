@@ -24,12 +24,11 @@ import {
 } from "#src/betting/notify/announcement-sink.ts";
 import { runGuardedEffectV2 } from "#src/temporal/v2/effect-fence.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
-import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import {
   readMatchReceiptEvidenceV2,
   recordMatchReceiptV2,
 } from "#src/temporal/v2/match-commits.ts";
-import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-context.ts";
 import {
   matchMayAnnounce,
   mintDareSummaryIntentsV2,
@@ -295,8 +294,12 @@ export async function settleMatchMarketsV2(input: {
     },
     apply: async (fence) => {
       // Resolved inside the guard so a replay whose claim is already complete
-      // costs no Riot read at all.
-      const context = await resolveScoutV2MatchContext(input.riotMatchId);
+      // costs no Riot read at all. The OBSERVED roster, because settlement runs
+      // after the observation commits: a live rebuild would settle only for the
+      // accounts whose guild this worker's gateway cache happens to hold.
+      const context = await resolveScoutV2ObservedMatchContext(
+        input.riotMatchId,
+      );
       // Settlement is ENTERED even when checkpoints already stand.
       //
       // A standing checkpoint used to short-circuit this, on the reasoning
@@ -439,7 +442,14 @@ export async function applyMatchProgressionV2(input: {
       };
     },
     apply: async (fence) => {
-      const context = await resolveScoutV2MatchContext(input.riotMatchId);
+      // The OBSERVED roster. This stage is the one where a live rebuild does
+      // lasting damage rather than transient: `trackedAccountCount` below is
+      // written into the receipt, so a roster narrowed by this worker's gateway
+      // cache would become durable evidence attesting the wrong number, and a
+      // later reader has no way to tell it from the truth.
+      const context = await resolveScoutV2ObservedMatchContext(
+        input.riotMatchId,
+      );
       const evidence = {
         participantCount: context.matchData.metadata.participants.length,
         trackedAccountCount: context.trackedPlayers.length,
@@ -486,7 +496,6 @@ export async function applyMatchProgressionV2(input: {
 export async function mintPostmatchNotificationIntentsV2(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutMintedIntentsV2Result> {
-  const context = await resolveScoutV2MatchContext(input.riotMatchId);
   // The audience is read from the SNAPSHOT the observation recorded, not
   // rebuilt from who is tracked now.
   //
@@ -502,12 +511,15 @@ export async function mintPostmatchNotificationIntentsV2(input: {
   // it much later than the observation; `MatchTrackedAccount` exists to make
   // the answer durable rather than time-dependent, which is why the
   // observation writes it in the same call that commits.
-  const tracked = await listTrackedAccounts(prisma, {
-    matchId: input.riotMatchId,
-  });
+  //
+  // This reasoning was always right and was for a long time written only here.
+  // The resolver now carries it, so the render — which had rebuilt the roster
+  // and failed on the empty result — agrees with it instead of contradicting
+  // it, and the PUUID set is derived once rather than beside the payload read.
+  const context = await resolveScoutV2ObservedMatchContext(input.riotMatchId);
   const summary = await mintPostmatchIntentsV2(prisma, {
     matchId: input.riotMatchId,
-    puuids: tracked.map((account) => account.puuid),
+    puuids: context.observedPuuids,
     queue: {
       queueId: context.matchData.info.queueId,
       gameMode: context.matchData.info.gameMode,

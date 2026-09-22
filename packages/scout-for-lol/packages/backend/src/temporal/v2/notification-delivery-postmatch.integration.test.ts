@@ -78,7 +78,7 @@ const stubs = vi.hoisted(() => ({
 // read it did is not available here, and its absence would fail the test for
 // the wrong reason. The fixed delivery never calls it, which is asserted.
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: (riotMatchId: string) => {
+  resolveScoutV2ObservedMatchContext: (riotMatchId: string) => {
     stubs.matchContextReads += 1;
     return Promise.resolve({
       matchId: riotMatchId,
