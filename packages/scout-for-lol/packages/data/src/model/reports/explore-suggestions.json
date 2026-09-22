@@ -10,21 +10,6 @@
     "condition": "bucks"
   },
   {
-    "prompt": "Who has the most Bryan Bucks in the server?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "What is my Bryan Bucks transaction history?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Show the Bryan Bucks leaderboard",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
     "prompt": "What are the biggest winning bets in Bryan Bucks history?",
     "category": "bucks",
     "condition": "bucks"
@@ -35,17 +20,7 @@
     "condition": "bucks"
   },
   {
-    "prompt": "Who owes the most Bryan Bucks?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
     "prompt": "Show recent Bryan Bucks transfers",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "What is the server's total Bryan Bucks bankroll?",
     "category": "bucks",
     "condition": "bucks"
   },
@@ -605,11 +580,6 @@
     "condition": "always"
   },
   {
-    "prompt": "Who are the best counter picks against Yasuo in our match history?",
-    "category": "champions",
-    "condition": "always"
-  },
-  {
     "prompt": "Which champions have the lowest win rate across all matches?",
     "category": "champions",
     "condition": "always"
@@ -660,11 +630,6 @@
     "condition": "always"
   },
   {
-    "prompt": "Which champions have the highest kill participation?",
-    "category": "champions",
-    "condition": "always"
-  },
-  {
     "prompt": "What champion is most likely to win when getting first blood?",
     "category": "champions",
     "condition": "always"
@@ -696,11 +661,6 @@
   },
   {
     "prompt": "Which champion has the highest average vision score?",
-    "category": "champions",
-    "condition": "always"
-  },
-  {
-    "prompt": "What are the most frequent champion matchups in top lane?",
     "category": "champions",
     "condition": "always"
   },
@@ -935,26 +895,6 @@
     "condition": "always"
   },
   {
-    "prompt": "Which duo has the highest win rate together?",
-    "category": "players",
-    "condition": "always"
-  },
-  {
-    "prompt": "Who is my best duo partner by win rate?",
-    "category": "players",
-    "condition": "always"
-  },
-  {
-    "prompt": "Who has played the most games together as a duo?",
-    "category": "players",
-    "condition": "always"
-  },
-  {
-    "prompt": "Which bot lane duo combination has the best synergy?",
-    "category": "players",
-    "condition": "always"
-  },
-  {
     "prompt": "Who has the deepest champion pool in our group?",
     "category": "players",
     "condition": "always"
@@ -991,11 +931,6 @@
   },
   {
     "prompt": "Who is our most consistent player based on KDA variance?",
-    "category": "players",
-    "condition": "always"
-  },
-  {
-    "prompt": "Which mid-jungle duo has the best win rate?",
     "category": "players",
     "condition": "always"
   },
@@ -1141,11 +1076,6 @@
   },
   {
     "prompt": "Who has the highest win rate on late night games?",
-    "category": "trivia",
-    "condition": "always"
-  },
-  {
-    "prompt": "What is the longest win streak anyone in our group has had?",
     "category": "trivia",
     "condition": "always"
   },
