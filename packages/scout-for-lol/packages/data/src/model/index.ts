@@ -27,6 +27,7 @@ export * from "./matches/match-helpers.ts";
 export * from "./riot/player.ts";
 export * from "./riot/player-config.ts";
 export * from "./riot/player-profile.ts";
+export * from "./riot/player-rank-history.ts";
 export * from "./competitions/clash-cups.schema.ts";
 export * from "./competitions/clash-cups.ts";
 export * from "./competitions/queue-availability.ts";

@@ -175,3 +175,120 @@ export function hasSeasonEnded(
   }
   return isAfter(now, season.endDate);
 }
+
+/**
+ * Ranked split ids are the act prefix `YYYY_SEASON_N`. Rank is continuous
+ * across acts in a split, so LP graphs and previous-season summaries group
+ * by this id rather than by competition act.
+ */
+export const RankedSplitIdSchema = z
+  .string()
+  .regex(/^\d{4}_SEASON_\d+$/u, "Ranked split id must be YYYY_SEASON_N");
+export type RankedSplitId = z.infer<typeof RankedSplitIdSchema>;
+
+export const EARLIER_RANKED_SPLIT_ID = "earlier";
+
+export type RankedSplit = {
+  id: RankedSplitId;
+  displayName: string;
+  startDate: Date;
+  endDate: Date;
+};
+
+export type EarlierRankedSplit = {
+  id: typeof EARLIER_RANKED_SPLIT_ID;
+  displayName: "Earlier";
+};
+
+export type RankedSplitRef = RankedSplit | EarlierRankedSplit;
+
+const SEASON_ACT_ID = /^(\d{4}_SEASON_\d+)_ACT_\d+$/u;
+const SPLIT_ID_PARTS = /^(\d{4})_SEASON_(\d+)$/u;
+
+export function rankedSplitIdFromSeasonId(seasonId: SeasonId): RankedSplitId {
+  const grouped = SEASON_ACT_ID.exec(seasonId);
+  const splitId = grouped?.[1];
+  if (splitId === undefined) {
+    throw new Error(`Season id ${seasonId} is not a ranked act`);
+  }
+  return RankedSplitIdSchema.parse(splitId);
+}
+
+export function rankedSplitDisplayName(splitId: RankedSplitId): string {
+  const parts = SPLIT_ID_PARTS.exec(splitId);
+  const year = parts?.[1];
+  const season = parts?.[2];
+  if (year === undefined || season === undefined) {
+    throw new Error(`Ranked split id ${splitId} is not YYYY_SEASON_N`);
+  }
+  return `${year} Season ${season}`;
+}
+
+/**
+ * Ranked splits newest-first, one row per `YYYY_SEASON_N` covering every
+ * bundled act in that split.
+ */
+export function getRankedSplits(): RankedSplit[] {
+  const actsBySplit = new Map<RankedSplitId, SeasonData[]>();
+  for (const season of getAllSeasons()) {
+    const splitId = rankedSplitIdFromSeasonId(season.id);
+    const acts = actsBySplit.get(splitId);
+    if (acts === undefined) {
+      actsBySplit.set(splitId, [season]);
+    } else {
+      acts.push(season);
+    }
+  }
+  const splits: RankedSplit[] = [];
+  for (const [id, acts] of actsBySplit) {
+    const startTimes = acts.map((act) => act.startDate.getTime());
+    const endTimes = acts.map((act) => act.endDate.getTime());
+    const start = startTimes[0];
+    const end = endTimes[0];
+    if (start === undefined || end === undefined) {
+      throw new Error(`Ranked split ${id} has no acts`);
+    }
+    splits.push({
+      id,
+      displayName: rankedSplitDisplayName(id),
+      startDate: new Date(Math.min(...startTimes)),
+      endDate: new Date(Math.max(...endTimes)),
+    });
+  }
+  return splits.toSorted(
+    (left, right) => right.startDate.getTime() - left.startDate.getTime(),
+  );
+}
+
+/**
+ * Split whose start is the latest start at or before `now`. After the last
+ * bundled act ends, that split stays current until a newer split starts.
+ * Before every bundled split, fall back to the newest configured split so
+ * callers always have a graph window.
+ */
+export function getCurrentRankedSplit(now: Date = new Date()): RankedSplit {
+  const splits = getRankedSplits();
+  const started = splits.find(
+    (split) => split.startDate.getTime() <= now.getTime(),
+  );
+  const current = started ?? splits[0];
+  if (current === undefined) {
+    throw new Error("Scout has no ranked splits configured");
+  }
+  return current;
+}
+
+/**
+ * Assign an observation to a split by the latest split that has started at
+ * `at`. Timestamps before the first bundled act are `earlier`.
+ */
+export function rankedSplitForTimestamp(at: Date): RankedSplitRef {
+  const splits = getRankedSplits();
+  const started = splits.find(
+    (split) => split.startDate.getTime() <= at.getTime(),
+  );
+  if (started !== undefined) {
+    return started;
+  }
+  return { id: EARLIER_RANKED_SPLIT_ID, displayName: "Earlier" };
+}
