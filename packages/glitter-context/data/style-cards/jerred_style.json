@@ -1,22 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "source_snapshot_sha256": "4f1a3d22f3cadd5b3252185fbd1c29fff932974e7b190f775e51e08f55e1cd46",
     "corpus": {
-      "messages": 10863,
+      "messages": 11003,
       "date_range": {
         "start": "2020-03-12T04:08:23.182000+00:00",
-        "end": "2026-07-29T03:42:19.532000+00:00"
+        "end": "2026-09-21T04:10:23.522000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 6746,
-      "summarized_messages": 6746,
-      "chunks": 73,
+      "safe_messages": 6820,
+      "summarized_messages": 6820,
+      "chunks": 75,
       "direct_recent_messages": 500,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
+      "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2020-03-12T04:08:23.182000+00:00",
-        "end": "2026-07-29T02:05:40.718000+00:00"
+        "end": "2026-09-21T02:41:22.481000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -168,85 +171,89 @@
   ],
   "quotes": [
     "what's up guys",
+    "yeah...",
     "pros:\ndon't have to drain savings to fix\ndon't have to risk breaking the jeep\n\ncons:\nwill get less for it",
-    "I like the simplicity of gaining karma. it would be nice to have some way to spend it, but the problem is that once you provide an incentive to earn karma then the simplicity of gaining has to go away otherwise it's easily abused",
+    "would you rather get a guaranteed lower value, or a possible $0?",
+    "i don't need PRs. my code is always perfect.",
+    "I think if we add spending karma we will also need to change the rules around earning karma",
     "i am a programming GOD",
-    "there's no way to know...",
+    "i'm just really good at landing skillshots",
+    ".stop",
     "who played this banger?",
+    "i'll play flex",
+    "i'm really good at league of legends",
+    "btw the leaderboard site is out-of-date. for some reason uploads to the S3 bucket have been failing which is also why the post-match reports haven't been getting posted (and pre-match reports require the post-match reports otherwise the pre-match reports are only shown for the first game you get into after the bot is restarted)",
+    "# CUSTOMS AT 6PM TONIGHT. NO DRUNK PEOPLE.",
+    "we just need two more",
+    "do you use chatgpt to study? i find it very helpful for this kind of thing",
+    "love you guys!",
+    "```\nMy first 3 bans:\n\nGangplank — CaptainsOranges has 1.2M mastery. This is the clearest ban by far.\nAnnie — AnimalLord has 655k mastery; removes a major comfort pick and reliable engage/burst.\nKayn — Zephyr has 551k mastery and looks like a strong jungle comfort.\n\nNext priorities if you get more bans: Karma (HighInOrbit, 571k), then Alistar (BenYup, 424k).\n```",
+    "surely we can find two more in the next hour",
+    "this server sucks"
+  ],
+  "sample_messages": [
+    "what's up guys",
+    "yeah...",
+    "first you won't duo with me",
+    "pros:\ndon't have to drain savings to fix\ndon't have to risk breaking the jeep\n\ncons:\nwill get less for it",
+    "i don't need PRs. my code is always perfect.",
+    "I think if we add spending karma we will also need to change the rules around earning karma",
+    "i am a programming GOD",
+    "i'm just really good at landing skillshots",
+    "no. moved the bot to deno today which broke things.",
+    ".stop",
+    "who played this banger?",
+    "are you guys busy saturday night?",
+    "i'll play flex",
     "btw the leaderboard site is out-of-date. for some reason uploads to the S3 bucket have been failing which is also why the post-match reports haven't been getting posted (and pre-match reports require the post-match reports otherwise the pre-match reports are only shown for the first game you get into after the bot is restarted)",
     "# CUSTOMS AT 6PM TONIGHT. NO DRUNK PEOPLE.",
     "# TENDY NIGHT CANCELLED. REPLACED WITH BONELESS KOREAN FRIED CHICKEN NIGHT.",
-    "sell the jeep",
-    "buy a tungsten cube instead",
-    "I made it to the front page of Hacker News",
-    "I'm famous",
-    "I've stopped using the free LP hack",
-    "instead I've chosen the happiness hack",
-    "which is to not play league of legends solo/duo",
-    "looks balanced to me. ship it!",
-    "Wordle 1480 5/6\n\n⬜⬜⬜⬜🟨\n🟨⬜⬜⬜🟨\n⬜🟩🟩🟩⬜\n⬜🟩🟩🟩🟩\n🟩🟩🟩🟩🟩\n\ni'm emerald at wordle",
-    "not like 'give me the answer' but help me understand",
-    "love you guys!"
-  ],
-  "sample_messages": [
-    "one last game, double or nothing?",
-    "2/17 neapolitan pizza night",
-    "usually it's \"lighter\" on the toppings because the crust is thin and a little floppy",
-    "anyway, for tonight we have enough dough for 15 pizzas",
-    "yup, ship it",
-    "customs tonight?",
-    "just reinstall your OS",
-    "are people done playing palworld? if so i'll turn the server off until people want it again",
-    "yeah...",
-    "first cortado rating: 7/10",
-    "i got a 92% on my exam",
-    "i didn't study at all",
-    "minecraft?",
-    "i'm already getting coffee",
-    "who played this banger",
-    "congrats dude",
-    "compilers are so fun guys",
-    "first you won't duo with me",
-    "you want us to tell you it's okay to do the thing you want to do even though it's a bad idea",
-    "i can add it to the next sprint if the PM agrees",
-    "i don't need PRs. my code is always perfect.",
-    "glitter bucks",
-    "what do you guys want to listen to next?",
-    "ship it",
-    "i'll play flex",
-    "i'm really good at league of legends",
-    "could do karaage again",
     "we just need two more",
-    "let's celebrate by deleting it?",
-    "i am SICK and TIRED of carrying every game"
+    "do you use chatgpt to study? i find it very helpful for this kind of thing",
+    "not like 'give me the answer' but help me understand",
+    "# BIRTHDAY CUSTOMS TONIGHT",
+    "!stop",
+    "love you guys!",
+    "can you stay in the appropriate channel. thanks!",
+    "and then let's play flex?",
+    "who wants to play league classic today",
+    "i am SICK and TIRED of carrying every game",
+    "if you can prove the data is wrong lmk",
+    "```\nMy first 3 bans:\n\nGangplank — CaptainsOranges has 1.2M mastery. This is the clearest ban by far.\nAnnie — AnimalLord has 655k mastery; removes a major comfort pick and reliable engage/burst.\nKayn — Zephyr has 551k mastery and looks like a strong jungle comfort.\n\nNext priorities if you get more bans: Karma (HighInOrbit, 571k), then Alistar (BenYup, 424k).\n```",
+    "surely we can find two more in the next hour",
+    "ONE MORE FOR CLASH"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "it works",
-      "this is the coolest thing i have ever made",
-      "who played this banger?"
+      "oh this is actually sick lol",
+      "we got the whole team. ship it",
+      "can't wait for customs tonight"
     ],
     "angry_or_frustrated": [
-      "what the",
-      "this bot is broken rn",
-      "i am SICK and TIRED of carrying every game"
+      "what the heck is this bot doing",
+      "i am SICK of fixing the same thing",
+      "this server sucks man"
     ],
-    "sad_or_disappointed": ["yeah...", "i didn't wim", "dead server man"],
+    "sad_or_disappointed": [
+      "yeah... guess that plan is dead",
+      "i thought we had enough people",
+      "welp. that did not work"
+    ],
     "supportive_or_caring": [
-      "congrats dude",
-      "it's okay, we can figure it out",
-      "& yeah feel free to pop in for a lil, you don't gotta stay the whole time"
+      "you're good dude, we'll figure it out",
+      "thanks for hosting everyone",
+      "you can use chatgpt to understand it, not just get the answer"
     ],
     "playful_or_teasing": [
-      "im really good",
-      "surely you guys are winning all of these games?",
-      "sell it and buy a tungsten cube instead"
+      "i am a programming GOD obviously",
+      "who says no to flex with this team",
+      "imagine not knowing how to use the bot"
     ],
     "neutral_or_logistical": [
-      "customs at 8?",
-      "we just need one more",
-      "okay plan is: meet at 7, bring whatever you want"
+      "customs at 8:15",
+      "plan is pizza at 7, bring drinks if you want",
+      "pros: easier setup\ncons: less control"
     ]
   },
   "concerns": [
