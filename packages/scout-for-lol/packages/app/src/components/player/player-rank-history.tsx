@@ -1,5 +1,3 @@
-import { useEffect, useRef } from "react";
-import * as echarts from "echarts";
 import { format as echartsFormat } from "echarts";
 import { z } from "zod";
 import {
@@ -8,6 +6,34 @@ import {
   type Rank,
   type RankedQueueType,
 } from "@scout-for-lol/data";
+import { VISUALIZATION_BODY_FONT } from "@scout-for-lol/report/browser";
+import {
+  ProfileEchartsHost,
+  profileChartChrome,
+} from "#src/lib/echarts/profile-chart.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@scout-for-lol/design-system/components/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@scout-for-lol/design-system/components/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@scout-for-lol/design-system/components/table";
+import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 
 type RankHistoryPointView = {
   at: Date | string;
@@ -34,33 +60,6 @@ export type RankHistoryView = {
   };
   queues: Record<RankedQueueType, QueueRankHistoryView>;
 };
-import {
-  VISUALIZATION_BODY_FONT,
-  VISUALIZATION_DISPLAY_FONT,
-} from "@scout-for-lol/report/browser";
-import { Button } from "@scout-for-lol/design-system/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@scout-for-lol/design-system/components/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@scout-for-lol/design-system/components/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@scout-for-lol/design-system/components/table";
-import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 
 const QUEUE_TABS = [
   { queue: "solo", label: "Solo / duo" },
@@ -210,97 +209,65 @@ function RankHistoryChart(props: {
   end: Date;
   series: QueueRankHistoryView["series"];
 }) {
-  const container = useRef<HTMLDivElement | null>(null);
   const values = props.series.flatMap((series) =>
     series.points.map((point) => point.leaguePoints),
   );
   const bounds = yBounds(values);
   const showLegend = props.series.length > 1;
-
-  useEffect(() => {
-    if (container.current === null) return;
-    const chart = echarts.init(container.current);
-    chart.setOption({
-      textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
-      title: {
-        text: props.title,
-        left: 12,
-        top: 8,
-        textStyle: {
-          fontSize: 14,
-          fontFamily: VISUALIZATION_DISPLAY_FONT,
-          fontWeight: 700,
-        },
-      },
-      tooltip: {
-        trigger: "axis",
-        textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
-        formatter: (items: unknown) => formatTooltip(items),
-      },
-      legend: showLegend
-        ? {
-            top: 34,
-            textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
-          }
-        : { show: false },
-      grid: {
-        top: showLegend ? 70 : 48,
-        left: 72,
-        right: 18,
-        bottom: 36,
-      },
-      xAxis: {
-        type: "time",
-        min: props.start.getTime(),
-        max: props.end.getTime(),
-        axisLabel: {
-          hideOverlap: true,
-          fontFamily: VISUALIZATION_BODY_FONT,
-        },
-      },
-      yAxis: {
-        type: "value",
-        min: bounds.min,
-        max: bounds.max,
-        axisLabel: {
-          fontFamily: VISUALIZATION_BODY_FONT,
-          formatter: (value: number) => leaguePointsToRankLabel(value),
-        },
-      },
-      series: props.series.map((series) => ({
-        name: series.accountLabel,
-        type: "line" as const,
-        showSymbol: series.points.length <= 40,
-        data: series.points.map((point) => ({
-          value: [asDate(point.at).getTime(), point.leaguePoints],
-          rankLabel: rankToString(point.rank),
-        })),
-      })),
-    });
-    const observer = new ResizeObserver(() => {
-      chart.resize();
-    });
-    observer.observe(container.current);
-    return () => {
-      observer.disconnect();
-      chart.dispose();
-    };
-  }, [
-    bounds.max,
-    bounds.min,
-    props.end,
-    props.series,
-    props.start,
-    props.title,
-    showLegend,
-  ]);
-
   return (
-    <div
-      ref={container}
-      className="h-72 rounded-md border bg-card"
-      role="img"
-      aria-label={props.title}
+    <ProfileEchartsHost
+      title={props.title}
+      revision={[
+        bounds.max,
+        bounds.min,
+        props.end,
+        props.series,
+        props.start,
+        props.title,
+        showLegend,
+      ]}
+      option={{
+        ...profileChartChrome(props.title, { formatter: formatTooltip }),
+        legend: showLegend
+          ? {
+              top: 34,
+              textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
+            }
+          : { show: false },
+        grid: {
+          top: showLegend ? 70 : 48,
+          left: 72,
+          right: 18,
+          bottom: 36,
+        },
+        xAxis: {
+          type: "time",
+          min: props.start.getTime(),
+          max: props.end.getTime(),
+          axisLabel: {
+            hideOverlap: true,
+            fontFamily: VISUALIZATION_BODY_FONT,
+          },
+        },
+        yAxis: {
+          type: "value",
+          min: bounds.min,
+          max: bounds.max,
+          axisLabel: {
+            fontFamily: VISUALIZATION_BODY_FONT,
+            formatter: (value: number) => leaguePointsToRankLabel(value),
+          },
+        },
+        series: props.series.map((series) => ({
+          name: series.accountLabel,
+          type: "line" as const,
+          showSymbol: series.points.length <= 40,
+          data: series.points.map((point) => ({
+            value: [asDate(point.at).getTime(), point.leaguePoints],
+            rankLabel: rankToString(point.rank),
+          })),
+        })),
+      }}
     />
   );
 }
