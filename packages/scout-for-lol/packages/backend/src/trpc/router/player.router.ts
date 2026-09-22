@@ -30,6 +30,10 @@ import {
   getPlayerProfileSummary,
 } from "#src/lib/player-profile/queries.ts";
 import {
+  SuggestTeammatesInputSchema,
+  suggestTeammates,
+} from "#src/lib/teammates/suggest.ts";
+import {
   LinkDiscordInput,
   MergePlayersInput,
   RenamePlayerInput,
@@ -61,6 +65,15 @@ export const playerRouter = router({
   matchHistory: guildProcedure("players", "read")
     .input(PlayerMatchHistoryInput)
     .query(async ({ input }) => getPlayerMatchHistory(input)),
+
+  // First-time setup helper: frequent teammates for a tracked alias. Gated
+  // on subscriptions:create — the same permission the suggestion exists to
+  // exercise — so read-only viewers cannot spend the shared Riot budget, and
+  // repeat runs share a short server-side cache. Creation still goes through
+  // subscription.add.
+  suggestTeammates: guildProcedure("subscriptions", "create")
+    .input(SuggestTeammatesInputSchema)
+    .query(async ({ input }) => suggestTeammates(input)),
 
   getCurrentLinkedPlayer: guildProcedure("players", "read")
     .input(GuildIdInput)
