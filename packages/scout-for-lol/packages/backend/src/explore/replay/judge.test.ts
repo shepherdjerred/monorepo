@@ -3,6 +3,7 @@ import {
   JUDGE_FAILURES,
   JudgeObservationSchema,
   gradeCase,
+  judgeEvidenceFromTrace,
   judgePromptSha256,
   judgeSystemPrompt,
   judgeUserPrompt,
@@ -277,28 +278,111 @@ describe("the judge prompt", () => {
     const rendered = judgeUserPrompt({
       question: "Which champions have the highest ban rate?",
       answer: "Yasuo at 54% across 210 games.",
-      queryText: null,
-      rowsReturned: null,
+      queries: [],
+      toolResults: [],
       toolNames: [],
       expectation: "answerable",
       capabilities: { bucks: true, dares: false },
     });
     expect(rendered).toContain("FIGURES THE ANSWER ASSERTS: 54, 210");
     expect(rendered).toContain("FEATURES OFF FOR THIS GUILD: dares");
-    expect(rendered).toContain("QUERY THE AGENT RAN: (no query)");
+    expect(rendered).toContain("(the turn ran no query)");
   });
 
   test("says plainly when a turn produced no answer", () => {
     const rendered = judgeUserPrompt({
       question: "Compare vision score between our support players",
       answer: null,
-      queryText: "from matches select champion",
-      rowsReturned: 0,
+      queries: [{ queryText: "from matches select champion", rowsReturned: 0 }],
+      toolResults: [],
       toolNames: ["run_report_query"],
       expectation: "answerable",
       capabilities: {},
     });
     expect(rendered).toContain("(the turn produced no answer)");
     expect(rendered).toContain("FEATURES OFF FOR THIS GUILD: (none)");
+  });
+});
+
+describe("judgeEvidenceFromTrace", () => {
+  test("carries every successful query, not just the last", () => {
+    // One case ran four queries returning 25, 1, 5 and 1 rows; showing only one
+    // made the judge say "the shown query returns only one role" about a figure
+    // a different query produced.
+    const evidence = judgeEvidenceFromTrace([
+      {
+        toolName: "run_report_query",
+        status: "succeeded",
+        details: { kind: "execution", queryText: "first", rowsReturned: 25 },
+      },
+      {
+        toolName: "run_report_query",
+        status: "succeeded",
+        details: { kind: "execution", queryText: "second", rowsReturned: 1 },
+      },
+    ]);
+    expect(evidence.queries).toEqual([
+      { queryText: "first", rowsReturned: 25 },
+      { queryText: "second", rowsReturned: 1 },
+    ]);
+  });
+
+  test("ignores a failed query, which produced nothing to ground on", () => {
+    const evidence = judgeEvidenceFromTrace([
+      {
+        toolName: "run_report_query",
+        status: "failed",
+        details: { kind: "execution", queryText: "broken", rowsReturned: null },
+      },
+    ]);
+    expect(evidence.queries).toEqual([]);
+  });
+
+  test("surfaces what a feature tool returned", () => {
+    // Bucks, dares and MVP answers never touch ScoutQL, so without this the
+    // judge sees no evidence and calls them unsupported.
+    const evidence = judgeEvidenceFromTrace([
+      {
+        toolName: "query_bucks_bets",
+        status: "succeeded",
+        rawOutput: { kind: "value", value: { winRate: 0.6418, bets: 67 } },
+      },
+    ]);
+    expect(evidence.toolResults).toHaveLength(1);
+    expect(evidence.toolResults[0]?.toolName).toBe("query_bucks_bets");
+    expect(evidence.toolResults[0]?.summary).toContain("0.6418");
+  });
+
+  test("bounds a tool result so it cannot crowd out the answer", () => {
+    const evidence = judgeEvidenceFromTrace([
+      {
+        toolName: "get_bucks_dataset",
+        status: "succeeded",
+        rawOutput: { kind: "value", value: { rows: "x".repeat(4000) } },
+      },
+    ]);
+    expect(evidence.toolResults[0]?.summary.length).toBeLessThanOrEqual(500);
+  });
+
+  test("skips an omitted payload rather than inventing one", () => {
+    const evidence = judgeEvidenceFromTrace([
+      {
+        toolName: "query_bucks_ledger",
+        status: "succeeded",
+        rawOutput: { kind: "omitted", reason: "payload_limit", byteLength: 90 },
+      },
+    ]);
+    expect(evidence.toolResults).toEqual([]);
+  });
+
+  test("ignores tools that carry no data, like load_skill", () => {
+    const evidence = judgeEvidenceFromTrace([
+      {
+        toolName: "load_skill",
+        status: "succeeded",
+        rawOutput: { kind: "value", value: { body: "..." } },
+      },
+    ]);
+    expect(evidence.toolResults).toEqual([]);
   });
 });

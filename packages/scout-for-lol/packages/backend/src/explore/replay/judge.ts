@@ -245,13 +245,104 @@ export function scoreBundle(judged: readonly JudgedCase[]): BundleScore {
 export type JudgeCaseInput = {
   readonly question: string;
   readonly answer: string | null;
-  readonly queryText: string | null;
-  readonly rowsReturned: number | null;
+  /**
+   * Every successful query the turn ran, in order, with what each returned.
+   *
+   * Not one query. An answer commonly synthesises several — one case ran four,
+   * returning 25, 1, 5 and 1 rows — and showing the judge only the last made it
+   * say "the shown query returns only one role" about a figure a different
+   * query had produced. Eight cases failed on exactly that.
+   */
+  readonly queries: readonly {
+    readonly queryText: string | null;
+    readonly rowsReturned: number | null;
+  }[];
+  /**
+   * What the non-ScoutQL tools returned, bounded.
+   *
+   * Bucks, dares, MVP votes, challenges and Clash answer from their own tools
+   * and never touch ScoutQL, so a judge shown only queries sees no evidence at
+   * all and calls a well-grounded answer unsupported. Fifteen of beta's
+   * thirty-three did precisely that.
+   */
+  readonly toolResults: readonly {
+    readonly toolName: string;
+    readonly summary: string;
+  }[];
   readonly toolNames: readonly string[];
   readonly expectation: ChipExpectation | null;
   /** Which features this guild actually has, so gating can be judged. */
   readonly capabilities: Readonly<Record<string, boolean>>;
 };
+
+/** Tools that answer from their own data rather than through ScoutQL. */
+const CAPABILITY_TOOL_PATTERN =
+  /^(?:get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|preview_challenge|get_clash)/;
+
+/**
+ * How much of one tool result the judge is shown.
+ *
+ * Enough to see whether the figures in an answer could have come from it, and
+ * bounded because a bucks dataset or a Clash roster is unbounded and would
+ * crowd out the answer being judged.
+ */
+const TOOL_RESULT_MAX_LENGTH = 500;
+
+/**
+ * The evidence a stored trace holds, in the shape the judge is shown.
+ *
+ * Everything here has always been in the bundle. It went unread because the
+ * case record's `candidate` carries one query and no tool output at all.
+ */
+export function judgeEvidenceFromTrace(
+  trace: readonly {
+    readonly toolName: string;
+    readonly status: string;
+    readonly details?: unknown;
+    readonly rawOutput?: unknown;
+  }[],
+): Pick<JudgeCaseInput, "queries" | "toolResults"> {
+  const queries: { queryText: string | null; rowsReturned: number | null }[] =
+    [];
+  const toolResults: { toolName: string; summary: string }[] = [];
+
+  for (const entry of trace) {
+    if (entry.status !== "succeeded") continue;
+    if (entry.toolName === "run_report_query") {
+      const parsed = TraceExecutionSchema.safeParse(entry.details);
+      if (parsed.success) {
+        queries.push({
+          queryText: parsed.data.queryText ?? null,
+          rowsReturned: parsed.data.rowsReturned,
+        });
+      }
+      continue;
+    }
+    if (!CAPABILITY_TOOL_PATTERN.test(entry.toolName)) continue;
+    const output = TraceRawOutputSchema.safeParse(entry.rawOutput);
+    if (!output.success || output.data === null) continue;
+    if (output.data.kind !== "value") continue;
+    toolResults.push({
+      toolName: entry.toolName,
+      summary: JSON.stringify(output.data.value).slice(
+        0,
+        TOOL_RESULT_MAX_LENGTH,
+      ),
+    });
+  }
+
+  return { queries, toolResults };
+}
+
+const TraceExecutionSchema = z.looseObject({
+  kind: z.literal("execution"),
+  queryText: z.string().nullable().optional(),
+  rowsReturned: z.number().nullable(),
+});
+
+const TraceRawOutputSchema = z
+  .looseObject({ kind: z.string(), value: z.unknown() })
+  .nullable();
 
 /**
  * What Scout holds that Explore's query surface cannot reach.
@@ -324,16 +415,32 @@ export function judgeUserPrompt(input: JudgeCaseInput): string {
     .filter(([, enabled]) => !enabled)
     .map(([name]) => name);
   const figures = [...numericClaims(input.answer)];
+  const queries =
+    input.queries.length === 0
+      ? ["(the turn ran no query)"]
+      : input.queries.map(
+          (query, index) =>
+            `  ${(index + 1).toString()}. returned ${query.rowsReturned === null ? "an unrecorded number of" : query.rowsReturned.toString()} rows: ${query.queryText ?? "(query text not recorded)"}`,
+        );
+  const toolResults =
+    input.toolResults.length === 0
+      ? ["(no feature tools returned data)"]
+      : input.toolResults.map(
+          (result) => `  ${result.toolName}: ${result.summary}`,
+        );
   return [
     `QUESTION: ${input.question}`,
     "",
     `FEATURES OFF FOR THIS GUILD: ${gatedOff.length === 0 ? "(none)" : gatedOff.join(", ")}`,
     `THIS CHIP WAS EXPECTED TO BE: ${input.expectation ?? "(no expectation — a conversation turn)"}`,
     "",
-    `QUERY THE AGENT RAN: ${input.queryText ?? "(no query)"}`,
-    `ROWS THAT QUERY RETURNED: ${input.rowsReturned === null ? "(none recorded)" : input.rowsReturned.toString()}`,
-    `TOOLS CALLED: ${input.toolNames.length === 0 ? "(none)" : input.toolNames.join(", ")}`,
+    "QUERIES THE AGENT RAN:",
+    ...queries,
     "",
+    "WHAT ITS FEATURE TOOLS RETURNED:",
+    ...toolResults,
+    "",
+    `TOOLS CALLED: ${input.toolNames.length === 0 ? "(none)" : input.toolNames.join(", ")}`,
     `FIGURES THE ANSWER ASSERTS: ${figures.length === 0 ? "(none)" : figures.join(", ")}`,
     "",
     "ANSWER:",

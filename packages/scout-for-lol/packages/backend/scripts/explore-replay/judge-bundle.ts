@@ -13,6 +13,7 @@ import {
   ExploreJudgeReportSchema,
   JudgeObservationSchema,
   gradeCase,
+  judgeEvidenceFromTrace,
   judgePromptSha256,
   judgeSystemPrompt,
   judgeUserPrompt,
@@ -21,7 +22,6 @@ import {
   type JudgedCase,
 } from "#src/explore/replay/judge.ts";
 import { emitEvalReport } from "#src/explore/eval-report-output.ts";
-import { queryFactsFromTrace } from "#src/explore/replay/runner.ts";
 import { ExploreTraceEntrySchema } from "@scout-for-lol/data";
 
 /**
@@ -65,7 +65,7 @@ const CaseFileSchema = z
      * those bundles correctly instead of calling well-grounded answers
      * unsupported.
      */
-    trace: z.array(z.looseObject({ toolName: z.string() })).default([]),
+    trace: z.array(z.unknown()).default([]),
   })
   .loose();
 
@@ -92,22 +92,6 @@ function isEmptyResponse(error: unknown): boolean {
   );
 }
 
-/**
- * The row count this case actually returned, wherever it was recorded.
- *
- * Prefers the candidate, falls back to the trace. Both are in the bundle; only
- * the trace was reliable before the runner stopped reading counts from the
- * visualization-gated preview.
- */
-function rowsFor(record: CaseFile): number | null {
-  if (record.candidate.rowsReturned !== null) {
-    return record.candidate.rowsReturned;
-  }
-  return queryFactsFromTrace(
-    ExploreTraceEntrySchema.array().parse(record.trace),
-  ).rowsReturned;
-}
-
 async function observeOnce(
   runtime: ReturnType<typeof createOpenRouterRuntime>,
   record: CaseFile,
@@ -118,8 +102,9 @@ async function observeOnce(
     prompt: judgeUserPrompt({
       question: questionFrom(record),
       answer: record.candidate.answer,
-      queryText: record.candidate.queryText,
-      rowsReturned: rowsFor(record),
+      ...judgeEvidenceFromTrace(
+        ExploreTraceEntrySchema.array().parse(record.trace),
+      ),
       toolNames: record.candidate.toolNames,
       expectation: record.meta.expectation,
       capabilities: record.meta.capabilities,
