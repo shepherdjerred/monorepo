@@ -19,7 +19,6 @@ function championMasteryResponse(puuid: string): Response {
       lastPlayTime: 1_700_000_000_000,
       championPointsSinceLastLevel: 101_856,
       championPointsUntilNextLevel: 0,
-      chestGranted: true,
       tokensEarned: 2,
     },
   ]);
