@@ -56,6 +56,7 @@ import {
 } from "#src/explore/replay/chips.ts";
 import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
 import {
+  queryFactsFromTrace,
   runReplayCases,
   type ReplayCaseInput,
   type ReplayObservation,
@@ -238,8 +239,10 @@ function observationSide(observation: ReplayObservation): ReplaySide {
     queryText: observation.answer?.queryText ?? null,
     caveats: observation.answer?.caveats ?? [],
     followUps: observation.answer?.followUps ?? [],
-    rowsReturned: observation.preview?.rowsReturned ?? null,
-    rowsScanned: observation.preview?.rowsScanned ?? null,
+    // From the trace, not the preview: the preview is present only when the
+    // answer rendered a visualization, so reading it there recorded null for
+    // most successful queries.
+    ...queryFactsFromTrace(observation.trace),
     toolNames: observation.trace.map((entry) => entry.toolName),
     matchCardIds: observation.matchCards.map((card) => card.match.matchId),
     visualizationKind: observation.visualization?.kind ?? null,

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import type { ExploreTraceEntry } from "@scout-for-lol/data";
 import {
   DiscordAccountIdSchema,
   ExploreAnswerSchema,
@@ -11,6 +12,7 @@ import {
 import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
 import type { ExploreAgentResult } from "#src/explore/agent.ts";
 import {
+  queryFactsFromTrace,
   runReplayCase,
   runReplayCases,
   type ReplayCaseInput,
@@ -296,5 +298,59 @@ describe("runReplayCases", () => {
     expect(
       await runReplayCases([], dependencies(), { concurrency: 4 }),
     ).toEqual([]);
+  });
+});
+
+function execution(
+  rowsReturned: number,
+  status: "succeeded" | "failed" = "succeeded",
+): ExploreTraceEntry {
+  return {
+    toolCallId: "call_1",
+    toolName: "run_report_query",
+    message: "ok",
+    status,
+    durationMs: 10,
+    details: {
+      kind: "execution",
+      queryText: "from matches select champion",
+      ok: true,
+      rowsReturned,
+      rowsScanned: 900,
+      renderKind: null,
+    },
+    rawInput: null,
+    rawOutput: null,
+  };
+}
+
+describe("queryFactsFromTrace", () => {
+  test("reads the row count the preview used to hide", () => {
+    // The preview is only present when the answer rendered a visualization,
+    // so reading counts there recorded null for most successful queries — and
+    // a judge then called well-grounded answers unsupported.
+    expect(queryFactsFromTrace([execution(5)])).toEqual({
+      rowsReturned: 5,
+      rowsScanned: 900,
+    });
+  });
+
+  test("takes the last successful query, which is the one answered from", () => {
+    expect(queryFactsFromTrace([execution(2), execution(7)]).rowsReturned).toBe(
+      7,
+    );
+  });
+
+  test("ignores a failed execution", () => {
+    expect(
+      queryFactsFromTrace([execution(4, "failed")]).rowsReturned,
+    ).toBeNull();
+  });
+
+  test("is null when nothing queried, which an honest decline looks like", () => {
+    expect(queryFactsFromTrace([])).toEqual({
+      rowsReturned: null,
+      rowsScanned: null,
+    });
   });
 });

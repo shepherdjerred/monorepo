@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type {
   DiscordAccountId,
   DiscordChannelId,
@@ -132,6 +133,47 @@ function describeThrown(error: unknown): string {
     }
   }
   return String(error);
+}
+
+/**
+ * What the last successful query actually returned.
+ *
+ * Not from `result.preview`: the agent returns that only when the answer
+ * includes a visualization (`agent.ts:191`), so for every answer that queried
+ * and drew no chart the row count was recorded as null. In one 233-case sweep
+ * 124 cases ran a query and 19 kept their counts — and a judge reading the
+ * bundle then called 127 well-grounded answers unsupported, because the
+ * evidence said no rows came back.
+ *
+ * The trace has always carried it. A successful `run_report_query` entry
+ * records `rowsReturned` and `rowsScanned` in its execution details, which is
+ * the same number the preview would have held, without depending on what the
+ * answer chose to render.
+ */
+const QueryExecutionDetailsSchema = z.looseObject({
+  kind: z.literal("execution"),
+  rowsReturned: z.number(),
+  rowsScanned: z.number().optional(),
+});
+
+export function queryFactsFromTrace(trace: readonly ExploreTraceEntry[]): {
+  readonly rowsReturned: number | null;
+  readonly rowsScanned: number | null;
+} {
+  const executions = trace.filter(
+    (entry) =>
+      entry.toolName === "run_report_query" && entry.status === "succeeded",
+  );
+  for (const entry of executions.toReversed()) {
+    const parsed = QueryExecutionDetailsSchema.safeParse(entry.details);
+    if (parsed.success) {
+      return {
+        rowsReturned: parsed.data.rowsReturned,
+        rowsScanned: parsed.data.rowsScanned ?? null,
+      };
+    }
+  }
+  return { rowsReturned: null, rowsScanned: null };
 }
 
 export async function runReplayCase(
