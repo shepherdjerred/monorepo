@@ -63,11 +63,6 @@ export function messageBudgetFooter(params: {
   /** 1-based position of the message being sent. */
   messageNumber: number;
 }): string {
-  const isFinal = params.messageNumber >= NON_CORE_MESSAGE_BUDGET;
   const budget = NON_CORE_MESSAGE_BUDGET.toString();
-  const lead = `Message ${params.messageNumber.toString()} of ${budget} for **${params.serverName}**.`;
-  const promise = isFinal
-    ? "This is the last message Scout will ever send about this server."
-    : `Scout sends at most ${budget} setup messages per server, ever — then never again.`;
-  return `\n\n━━━━━━━━━━━━━━━━━━━━\n${lead} ${promise} This is automated; replies aren't monitored.`;
+  return `\n\n*Scout · ${params.messageNumber.toString()} of ${budget} for **${params.serverName}** · automated*`;
 }

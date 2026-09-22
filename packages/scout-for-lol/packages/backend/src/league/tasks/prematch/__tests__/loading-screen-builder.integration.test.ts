@@ -31,6 +31,13 @@ vi.doMock("#src/league/model/rank.ts", () => ({
   },
 }));
 
+// Builder fixtures exercise layout transforms. Keep their mastery dependency
+// fixture-backed as well, rather than reaching the production Prisma singleton.
+vi.doMock("#src/league/tasks/prematch/loading-screen-mastery.ts", () => ({
+  fetchParticipantMasteries: async () => new Map(),
+  withSelectedChampionMastery: () => ({}),
+}));
+
 const { buildLoadingScreenData, fetchParticipantRanks } =
   await import("#src/league/tasks/prematch/loading-screen-builder.ts");
 

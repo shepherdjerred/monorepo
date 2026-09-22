@@ -127,24 +127,37 @@ test("observedLobbyMatchesDuelSettings requires tournament draft on Summoner's R
   ).toBe(false);
 });
 
-test("observed lobby teams preserve Custom side assignments", () => {
-  const payload = {
+/**
+ * A four-player lobby split evenly across the two sides.
+ *
+ * Both spellings of the side id reach this builder: the Custom lobby numbers
+ * them 100/200 and the LCU numbers the same lobby 0/1, so the two cases differ
+ * only in the ids they are given.
+ */
+function twoSidedLobby(blueTeamId: number, redTeamId: number) {
+  return {
     resource: "lobby",
     data: {
       members: [
-        { puuid: "blue-one", teamId: 100 },
-        { puuid: "blue-two", teamId: 100 },
-        { puuid: "red-one", teamId: 200 },
-        { puuid: "red-two", teamId: 200 },
+        { puuid: "blue-one", teamId: blueTeamId },
+        { puuid: "blue-two", teamId: blueTeamId },
+        { puuid: "red-one", teamId: redTeamId },
+        { puuid: "red-two", teamId: redTeamId },
       ],
     },
   };
-  const expected = [
-    { puuid: "blue-one", side: "BLUE" },
-    { puuid: "blue-two", side: "BLUE" },
-    { puuid: "red-one", side: "RED" },
-    { puuid: "red-two", side: "RED" },
-  ];
+}
+
+const twoSidedLobbySides = [
+  { puuid: "blue-one", side: "BLUE" },
+  { puuid: "blue-two", side: "BLUE" },
+  { puuid: "red-one", side: "RED" },
+  { puuid: "red-two", side: "RED" },
+];
+
+test("observed lobby teams preserve Custom side assignments", () => {
+  const payload = twoSidedLobby(100, 200);
+  const expected = twoSidedLobbySides;
 
   expect(observedLobbyMatchesCustomTeams(payload, expected)).toBe(true);
   expect(
@@ -157,23 +170,8 @@ test("observed lobby teams preserve Custom side assignments", () => {
 });
 
 test("observed LCU lobby teams normalize zero-based side IDs", () => {
-  const payload = {
-    resource: "lobby",
-    data: {
-      members: [
-        { puuid: "blue-one", teamId: 0 },
-        { puuid: "blue-two", teamId: 0 },
-        { puuid: "red-one", teamId: 1 },
-        { puuid: "red-two", teamId: 1 },
-      ],
-    },
-  };
-  const expected = [
-    { puuid: "blue-one", side: "BLUE" },
-    { puuid: "blue-two", side: "BLUE" },
-    { puuid: "red-one", side: "RED" },
-    { puuid: "red-two", side: "RED" },
-  ];
+  const payload = twoSidedLobby(0, 1);
+  const expected = twoSidedLobbySides;
 
   expect(observedLobbyMatchesCustomTeams(payload, expected)).toBe(true);
   expect(

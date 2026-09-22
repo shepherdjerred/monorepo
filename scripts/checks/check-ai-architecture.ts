@@ -89,6 +89,7 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   "packages/llm-observability/src/redact.ts",
   "packages/scout-for-lol/packages/data/scripts/patch-analysis.ts",
   "packages/temporal/src/activities/agent/agent-task-env.ts",
+  "packages/temporal/src/shared/agent/provider-credentials.ts",
   "scripts/lib/release-refiner.ts",
 ]);
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
@@ -97,6 +98,18 @@ const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.ts",
   "packages/discord-plays-pokemon/packages/backend/src/goal/goal-runtime-env.ts",
   "packages/homelab/src/cdk8s/src/resources/pokemon.ts",
+]);
+// The durable Temporal chat primitive intentionally offers both first-party
+// coding-agent subscriptions. Credential names are allowed only in the
+// reviewed adapters; the manifest exception applies only to the Claude SDK
+// dependency declaration.
+const DURABLE_AGENT_CREDENTIAL_PATHS = new Set([
+  "packages/temporal/src/lib/agent-runner/claude.ts",
+  "packages/temporal/src/lib/agent-runner/codex.ts",
+]);
+const DURABLE_AGENT_CLAUDE_SDK_PATHS = new Set([
+  "packages/temporal/package.json",
+  "packages/temporal/src/lib/agent-runner/claude.ts",
 ]);
 
 // These homelab files describe provider-specific OpenTofu resources and their
@@ -188,6 +201,7 @@ function isAllowedViolation(
       isTestOrFixture(filePath) ||
       CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
       POKEMON_CODEX_SUBSCRIPTION_PATHS.has(filePath) ||
+      DURABLE_AGENT_CREDENTIAL_PATHS.has(filePath) ||
       HOMELAB_PLATFORM_METADATA_PATHS.has(filePath) ||
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       OPENAI_NATIVE_REALTIME_PATHS.has(filePath)
@@ -202,7 +216,9 @@ function isAllowedViolation(
   }
 
   if (rule.id === "legacy-agent-sdk") {
-    return isTestOrFixture(filePath);
+    return (
+      isTestOrFixture(filePath) || DURABLE_AGENT_CLAUDE_SDK_PATHS.has(filePath)
+    );
   }
 
   if (rule.id === "direct-provider-endpoint") {

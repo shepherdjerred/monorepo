@@ -3,14 +3,13 @@ import { z } from "zod";
 import {
   LeaguePuuidSchema,
   getChampionList,
-  regionToPlatformRoute,
   type DiscordAccountId,
+  type Region,
 } from "@scout-for-lol/data";
 import {
   RankedHistoryTargetSchema,
   resolveRiotPlayerTarget,
 } from "#src/explore/tools/riot-history-tools.ts";
-import { riotClient } from "#src/league/api/api.ts";
 import { fetchCurrentRanks } from "#src/league/initial-history/riot.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -23,6 +22,10 @@ import {
   scalarParam,
 } from "#src/reports/duckdb/lake.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  getChampionMasterySnapshot,
+  topChampionMastery,
+} from "#src/league/champion-mastery/snapshots.ts";
 import { readLocalMasterySnapshot } from "#src/scout-client/player-snapshots.ts";
 
 const LakeCountSchema = z.union([z.bigint(), z.number()]).transform(Number);
@@ -122,45 +125,52 @@ export function resolveMasteryChampionName(
   return name;
 }
 
+/**
+ * The freshest mastery Scout can answer with, and where it came from.
+ *
+ * A recent paired-client capture wins: it carries the season-milestone fields
+ * Riot omits. Otherwise Riot answers through its persisted snapshot, so this
+ * tool shares the cache, freshness accounting and metrics the rest of the
+ * mastery surface uses rather than re-fetching behind their backs. Riot is an
+ * expected external boundary: when it has nothing, a stale local capture is
+ * still useful, and `null` — not a throw — reports that neither source could
+ * answer.
+ */
 async function currentMastery(
   puuid: ReturnType<typeof LeaguePuuidSchema.parse>,
-  region: Parameters<typeof regionToPlatformRoute>[0],
+  region: Region,
   count: number,
 ) {
   const local = await readLocalMasterySnapshot(puuid);
+  const fromLocal = (snapshot: NonNullable<typeof local>) => ({
+    source: "scout-client" as const,
+    capturedAt: snapshot.capturedAt,
+    fetchedAt: null,
+    freshness: null,
+    rows: snapshot.rows
+      .toSorted((left, right) => right.championPoints - left.championPoints)
+      .slice(0, count),
+  });
   if (
     local !== null &&
     Date.now() - local.capturedAt.getTime() <= LOCAL_MASTERY_FRESHNESS_MS
   ) {
-    return {
-      source: "scout-client" as const,
-      capturedAt: local.capturedAt,
-      rows: local.rows
-        .toSorted((left, right) => right.championPoints - left.championPoints)
-        .slice(0, count),
-    };
+    return fromLocal(local);
   }
-  try {
+  const snapshot = await getChampionMasterySnapshot({ puuid, region });
+  if (snapshot !== undefined) {
     return {
       source: "riot" as const,
       capturedAt: null,
-      rows: await riotClient.championMastery.topByPuuid(
-        puuid,
-        regionToPlatformRoute(region),
-        count,
-        { maxRetries: 0 },
-      ),
-    };
-  } catch (error) {
-    if (local === null) throw error;
-    return {
-      source: "scout-client" as const,
-      capturedAt: local.capturedAt,
-      rows: local.rows
-        .toSorted((left, right) => right.championPoints - left.championPoints)
-        .slice(0, count),
+      fetchedAt: snapshot.fetchedAt,
+      freshness: snapshot.freshness,
+      rows: topChampionMastery(snapshot.entries, count),
     };
   }
+  if (local === null) {
+    return null;
+  }
+  return fromLocal(local);
 }
 
 export function createRiotPlayerExploreTools(input: {
@@ -247,6 +257,8 @@ export function createRiotPlayerExploreTools(input: {
       outputSchema: ResultBaseSchema.extend({
         source: z.enum(["riot", "scout-client"]).nullable(),
         capturedAt: z.string().nullable(),
+        fetchedAt: z.string().nullable(),
+        freshness: z.enum(["fresh", "stale"]).nullable(),
         champions: z.array(
           z.object({
             championId: z.number().int().positive(),
@@ -274,6 +286,8 @@ export function createRiotPlayerExploreTools(input: {
               player: null,
               source: null,
               capturedAt: null,
+              fetchedAt: null,
+              freshness: null,
               champions: [],
               message: targetResult.message,
             };
@@ -283,6 +297,18 @@ export function createRiotPlayerExploreTools(input: {
             targetResult.region,
             count,
           );
+          if (mastery === null) {
+            return {
+              ok: false,
+              player: targetResult.label,
+              source: null,
+              capturedAt: null,
+              fetchedAt: null,
+              freshness: null,
+              champions: [],
+              message: `Mastery is unavailable for ${targetResult.label}.`,
+            };
+          }
           const championList = await getChampionList();
           const championNames = new Map(
             championList.map((champion) => [
@@ -321,6 +347,8 @@ export function createRiotPlayerExploreTools(input: {
             player: targetResult.label,
             source: mastery.source,
             capturedAt: mastery.capturedAt?.toISOString() ?? null,
+            fetchedAt: mastery.fetchedAt?.toISOString() ?? null,
+            freshness: mastery.freshness,
             champions,
             message: `Fetched ${champions.length.toString()} mastery entries for ${targetResult.label} from ${mastery.source === "riot" ? "Riot" : "their paired Scout Client"}.`,
           };

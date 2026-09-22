@@ -461,9 +461,7 @@ describe("Burst-memory sharing policy", () => {
       (item) => item.metadata.name === SERVICE_PRIORITY,
     );
     const batch = classes.find((item) => item.metadata.name === BATCH_PRIORITY);
-    expect(burst).toBeDefined();
-    expect(standard).toBeDefined();
-    expect(batch).toBeDefined();
+    expect([burst, standard, batch].every(Boolean)).toBe(true);
     expect(burst?.value).toBe(100_000);
     expect(burst?.value).toBe(standard?.value);
     expect(batch?.value).toBe(1000);
@@ -475,7 +473,6 @@ describe("Burst-memory sharing policy", () => {
     expect(standard?.globalDefault).toBe(true);
     expect(standard?.preemptionPolicy).toBe("Never");
     expect(batch?.preemptionPolicy).toBe("Never");
-
     const expected = new Map([
       ["media-plex", BURST_SERVICE_PRIORITY],
       ["mario-kart", BURST_SERVICE_PRIORITY],
@@ -504,7 +501,6 @@ describe("Burst-memory sharing policy", () => {
       expect(container?.priorityClassName, name).toBeUndefined();
     }
   });
-
   it("keeps Minecraft heaps and reservations while enabling burst preemption", () => {
     const applications = documents.flatMap((doc) => {
       const result = MinecraftApplicationSchema.safeParse(doc);
@@ -588,14 +584,16 @@ describe("Burst-memory sharing policy", () => {
         expect.objectContaining({
           metadata: { name: "minecraft-sjerred-dynmap-config" },
           data: expect.objectContaining({
-            "configuration.txt": expect.stringContaining("defaultworld: world"),
+            "configuration.txt": expect.stringMatching(
+              /defaultzoom: 3\ndefaultworld: world\ndefaultmap: flat/,
+            ),
           }),
         }),
         expect.objectContaining({
           metadata: { name: "minecraft-sjerred-discord-integration-config" },
           data: {
-            "mc2discord.toml": expect.stringContaining(
-              'token = "${CFG_DISCORD_BOT_TOKEN}"',
+            "mc2discord.toml": expect.stringMatching(
+              /token = "\$\{CFG_DISCORD_BOT_TOKEN\}"[\s\S]*\[Messages\][\s\S]*start = ""[\s\S]*stop = ""[\s\S]*\[Status\.Channels\][\s\S]*Channel = \[\]/,
             ),
           },
         }),

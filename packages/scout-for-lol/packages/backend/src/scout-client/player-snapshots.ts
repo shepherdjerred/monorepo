@@ -5,9 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 
-const LocalMasteryRowSchema = RawChampionMasterySchema.omit({
-  chestGranted: true,
-}).extend({
+const LocalMasteryRowSchema = RawChampionMasterySchema.extend({
   puuid: z.string().min(1).max(128),
   championSeasonMilestone: z.number().int().nonnegative().optional(),
   highestGrade: z.string().max(16).optional(),

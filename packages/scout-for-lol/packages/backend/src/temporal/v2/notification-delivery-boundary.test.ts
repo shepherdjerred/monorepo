@@ -37,7 +37,7 @@ import {
 
 const stubs = vi.hoisted(() => ({
   requireIntentRecordV2: vi.fn(),
-  resolveScoutV2MatchContext: vi.fn(),
+  resolveScoutV2ObservedMatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
   generateAiReviewIfEnabled: vi.fn(),
   readAttestedReportArtifactV2: vi.fn(),
@@ -53,7 +53,7 @@ vi.mock("#src/temporal/v2/notification-reads.ts", () => ({
   requireIntentRecordV2: stubs.requireIntentRecordV2,
 }));
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: stubs.resolveScoutV2MatchContext,
+  resolveScoutV2ObservedMatchContext: stubs.resolveScoutV2ObservedMatchContext,
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
   generateMatchReport: stubs.generateMatchReport,
@@ -438,7 +438,7 @@ describe("the prematch-shaped path", () => {
     );
     expect(stubs.readAttestedReportArtifactV2).not.toHaveBeenCalled();
     expect(stubs.generateMatchReport).not.toHaveBeenCalled();
-    expect(stubs.resolveScoutV2MatchContext).not.toHaveBeenCalled();
+    expect(stubs.resolveScoutV2ObservedMatchContext).not.toHaveBeenCalled();
     const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
     expect(sent.content).toBe("someone started a game");
   });
@@ -471,7 +471,7 @@ describe("what the send assembles", () => {
     await deliverNotificationV2(attemptRef());
 
     expect(stubs.generateMatchReport).not.toHaveBeenCalled();
-    expect(stubs.resolveScoutV2MatchContext).not.toHaveBeenCalled();
+    expect(stubs.resolveScoutV2ObservedMatchContext).not.toHaveBeenCalled();
     expect(stubs.generateAiReviewIfEnabled).not.toHaveBeenCalled();
   });
 

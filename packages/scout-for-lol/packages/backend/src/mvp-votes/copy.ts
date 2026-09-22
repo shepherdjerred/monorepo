@@ -5,9 +5,9 @@ export const MVP_VOTE_GUILD_ONLY = "MVP voting only works inside a server.";
 export const MVP_VOTE_NOT_ENABLED = "MVP voting is not enabled in this server.";
 
 export const MVP_VOTE_NOT_ELIGIBLE =
-  "You can vote only if you played in this Flex game and your Discord is linked to the player who played.";
+  "You can vote only if you played in this game and your Discord is linked to the player who played.";
 
-export const MVP_VOTE_NO_CONTEST = "This Flex game is not open for MVP votes.";
+export const MVP_VOTE_NO_CONTEST = "This game is not open for MVP votes.";
 
 export const MVP_VOTE_SELECT_PLACEHOLDER = "Pick any player";
 

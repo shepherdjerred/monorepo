@@ -40,7 +40,6 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
         alias: puuid.slice(0, 4),
         league: { leagueAccount: { puuid } },
       })),
-      allPlayerConfigs: [],
     }),
 }));
 

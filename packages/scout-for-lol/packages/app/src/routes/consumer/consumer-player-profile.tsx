@@ -15,6 +15,7 @@ import {
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
 import { ConsumerPlayerChallengeRuns } from "#src/components/challenge/player-challenge-runs.tsx";
 import { CombinedPerformance } from "#src/components/player/player-combined-performance.tsx";
+import { PlayerRankHistoryPanel } from "#src/components/player/player-rank-history.tsx";
 import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
@@ -93,6 +94,13 @@ function observedAt(value: Date | string | null): string {
   return new Date(value).toLocaleString();
 }
 
+function masteryPoints(points: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(points);
+}
+
 export function ConsumerPlayerProfile() {
   const { filters, setFilters } = usePlayerProfileUrlState();
   return (
@@ -168,6 +176,12 @@ function ConsumerPlayerProfileContent(props: {
   // `refetchOnMount: "always"`), and `Loaded`'s `degraded` says the exact
   // opposite — keep rendering the last known answer when the refresh fails.
   // That is right for a match list and wrong for an authorization check.
+  const rankHistoryQuery = useQuery(
+    trpc.consumerPlayer.rankHistory.queryOptions(
+      { playerId },
+      { enabled: accessIsFresh },
+    ),
+  );
   const historyQuery = useQuery(
     trpc.consumerPlayer.matchHistory.queryOptions(
       {
@@ -334,11 +348,56 @@ function ConsumerPlayerProfileContent(props: {
                 <RankValue rank={account.ranks.ranked5s} compact />
               </div>
             </CardContent>
+            {account.mastery !== null && (
+              <CardContent className="border-t pt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium">Champion mastery</p>
+                  <p className="text-xs text-scout-subtle">
+                    {account.mastery.freshness === "stale" ? "Last known " : ""}
+                    {observedAt(account.mastery.fetchedAt)}
+                  </p>
+                </div>
+                {account.mastery.champions.length === 0 ? (
+                  <p className="mt-2 text-sm text-scout-subtle">
+                    No champion mastery recorded.
+                  </p>
+                ) : (
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {account.mastery.champions.map((champion) => (
+                      <li
+                        key={champion.championId}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <span>{champion.championName}</span>
+                        <span className="text-scout-subtle">
+                          M{champion.level.toString()} ·{" "}
+                          {masteryPoints(champion.points)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>
 
       <ConsumerPlayerChallengeRuns playerId={playerId} />
+
+      <PlayerRankHistoryPanel
+        status={
+          rankHistoryQuery.isPending
+            ? "loading"
+            : rankHistoryQuery.isError
+              ? "error"
+              : "ready"
+        }
+        history={rankHistoryQuery.data}
+        onRetry={() => {
+          void rankHistoryQuery.refetch();
+        }}
+      />
 
       <CombinedPerformance
         filters={props.filters}

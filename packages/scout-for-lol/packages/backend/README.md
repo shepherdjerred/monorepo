@@ -44,7 +44,11 @@ bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 Detached prediction and parlay work is inserted once before its Temporal
 workflow starts. Reconciliation starts only never-accepted `queued` rows.
 After Temporal exhausts the activity's four-attempt budget, the row remains
-terminal `failed`; normal producers cannot restart the same work ID.
+terminal `failed`; normal producers cannot restart the same work ID. The
+champion-mastery refresh producer is the sole exception: a later champion-page
+visit atomically requeues the same failed refresh with its newly validated
+payload, then requests a new start. This lets an expected Riot outage recover
+without an operator action while preserving the durable work identity.
 
 An operator may explicitly requeue one reviewed failed row. The command is a
 dry run unless `--confirm` is supplied, requires a reason, and atomically

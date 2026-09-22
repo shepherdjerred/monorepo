@@ -51,7 +51,7 @@ export function mvpVoteButtonRow(
   );
 }
 
-export function withFlexMvpVoteFurniture(
+export function withMvpVoteFurniture(
   message: MessageCreateOptions,
   matchId: MatchId,
 ): MessageCreateOptions {

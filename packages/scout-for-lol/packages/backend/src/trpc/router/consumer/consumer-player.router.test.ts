@@ -113,6 +113,7 @@ registerConsumerProfileFeatureTestLifecycle({
   prepare: async () => {
     resetFlagOverrides("challenge_runs_enabled");
     trpc.setMembership([{ guildId, asAdmin: false }]);
+    await testPrisma.currentRankSnapshot.deleteMany();
     await testPrisma.matchRankHistory.deleteMany();
     await testPrisma.account.deleteMany();
     await testPrisma.player.deleteMany();
@@ -328,6 +329,9 @@ describe("consumerPlayer search and direct lookup", () => {
         .authedCaller()
         .consumerPlayer.matchHistory({ playerId: hidden.id, limit: 20 }),
     ).rejects.toThrow("Player was not found");
+    await expect(
+      trpc.authedCaller().consumerPlayer.rankHistory({ playerId: hidden.id }),
+    ).rejects.toThrow("Player was not found");
   });
 
   test("lost membership is enforced on the next request", async () => {
@@ -349,6 +353,25 @@ describe("consumerPlayer search and direct lookup", () => {
         .authedCaller()
         .consumerPlayer.profileSummary({ playerId: player.id }),
     ).rejects.toThrow(/not available/i);
+    await expect(
+      trpc.authedCaller().consumerPlayer.rankHistory({ playerId: player.id }),
+    ).rejects.toThrow(/not available/i);
+  });
+
+  test("returns empty queue series when Scout has no rank snapshots", async () => {
+    enableProfiles(guildId);
+    const player = await seedPlayer({
+      serverId: guildId,
+      alias: "Unranked",
+      puuids: [MAIN],
+    });
+    const history = await trpc
+      .authedCaller()
+      .consumerPlayer.rankHistory({ playerId: player.id });
+    expect(history.currentSplit.displayName.length).toBeGreaterThan(0);
+    expect(history.queues.solo).toEqual({ series: [], previous: [] });
+    expect(history.queues.flex).toEqual({ series: [], previous: [] });
+    expect(history.queues["ranked 5s"]).toEqual({ series: [], previous: [] });
   });
 });
 
