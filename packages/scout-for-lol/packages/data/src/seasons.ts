@@ -281,8 +281,5 @@ export function rankedSplitForTimestamp(at: Date): RankedSplitRef {
   const started = splits.find(
     (split) => split.startDate.getTime() <= at.getTime(),
   );
-  if (started !== undefined) {
-    return started;
-  }
-  return { id: EARLIER_RANKED_SPLIT_ID, displayName: "Earlier" };
+  return started ?? { id: EARLIER_RANKED_SPLIT_ID, displayName: "Earlier" };
 }
