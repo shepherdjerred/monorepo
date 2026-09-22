@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { numericClaims } from "#src/explore/replay/diff.ts";
 import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
+import { LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH } from "#src/explore/lake-coverage.ts";
 
 /**
  * Grading a replayed answer on quality, which no other number here measures.
@@ -343,26 +344,6 @@ const TraceExecutionSchema = z.looseObject({
 const TraceRawOutputSchema = z
   .looseObject({ kind: z.string(), value: z.unknown() })
   .nullable();
-
-/**
- * What Scout holds that Explore's query surface cannot reach.
- *
- * Given to the judge so "Scout does not record bans" can be recognised as
- * false. Without this the judge has no way to tell an honest reachability
- * limit from a claim about Scout's data, which is the whole point of the
- * `coverageHonesty` dimension.
- *
- * Kept as prose rather than a table because it is a prompt, and because the
- * authoritative list is the lake column model — this is a reminder, not a
- * second source of truth.
- */
-export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
-  "champion bans per match (match_team_bans)",
-  "objective event timings — dragon, baron, herald, towers, inhibitors (timeline_events)",
-  "per-minute gold, XP and CS for every participant (timeline_participant_frames)",
-  "team-level objective counts and first-objective flags (match_teams)",
-  "item purchases and skill order (timeline_events)",
-] as const;
 
 const JUDGE_SYSTEM_PROMPT = [
   "You grade one answer produced by Scout's Explore agent, a tool-using assistant over League of Legends match data.",

@@ -1,4 +1,8 @@
 import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
+import {
+  LAKE_COVERAGE_RULE,
+  LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
+} from "#src/explore/lake-coverage.ts";
 import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
 import {
   enabledExploreSkills,
@@ -41,15 +45,45 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
   const skills = enabledExploreSkills(options);
   return [
     "You answer questions about League of Legends match data by querying Scout's report lake with ScoutQL.",
+    // Every capability states BOTH cases. An enabled-only line leaves a guild
+    // without the feature in silence: the tool is simply absent, the skill is
+    // filtered out, and the model then invents a reason from whatever surface
+    // it has left. In one prod sweep 24 of 39 such turns called no tool at all
+    // and blamed the data.
+    //
+    // The off branch carries the feature's vocabulary for the same reason.
+    // Without it "Bryan Bucks" is an unknown noun, and the model read it as a
+    // player name — "I can report on Bryan Bucks's recorded League matches
+    // instead, if that's the player you meant" — while another turn improvised
+    // a dare out of nothing because it did not know dares were a Scout feature.
     ...(options.bucks === null
-      ? []
+      ? [
+          "Bryan Bucks — this server's play-money betting and Dare currency — is not switched on for the servers in scope, so you have no tool for it. It is a Scout feature and it is not a player, a team, or an esports organisation. Say it is not enabled here and that a server admin can turn it on, never that Scout does not have it.",
+        ]
       : [
           "This server also has Bryan Bucks (friendly betting) data, answered with the dedicated bucks tools.",
         ]),
     ...(options.mvpVotes == null
-      ? []
+      ? [
+          "Community Discord MVP votes are not switched on for the servers in scope, so you have no tool for them. Scout does have the feature — members vote for a match MVP in Discord — so say it is not enabled here, never that Scout does not record MVP votes.",
+        ]
       : [
           "This server also has community Discord MVP votes, answered with the dedicated MVP tools — not ScoutQL.",
+        ]),
+    ...(options.dares === true
+      ? []
+      : [
+          "Dares — Bryan Bucks wagers on a player meeting a condition — are not switched on for the servers in scope, so you have no tool for them. Never draft, invent, or word a dare yourself: say dares are not enabled here and that a server admin can turn them on.",
+        ]),
+    ...(options.challenges === true
+      ? []
+      : [
+          "Scout challenges — server-set goals a tracked player completes — are not switched on for the servers in scope, so you have no tool for them. These are Scout's own challenges, not Riot's in-client Challenges. Say they are not enabled here, never that Scout does not have challenges.",
+        ]),
+    ...(options.clash === true
+      ? []
+      : [
+          "Clash tools are not switched on for the servers in scope, so you cannot read the Clash schedule or rosters here. Say so rather than describing Clash from your own knowledge.",
         ]),
     "",
     "## What the data is",
@@ -60,11 +94,14 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // Generated from the same table the queue picker reads, so the two cannot
     // drift. Stated here rather than left to a zero-row result, which the model
     // otherwise has to spend a query to discover and reads as thin history.
-    `Riot never sends Scout the results of ${queuesWithoutPostMatchData()
+    // Named exactly, and fenced. The model read "aram clash" as a prefix and
+    // refused every ARAM question — against a prod lake holding 2,830 ordinary
+    // ARAM matches.
+    `These queues, and only these queues, are the ones Riot never sends Scout results for: ${queuesWithoutPostMatchData()
       .map((queue) => `'${queue}'`)
       .join(
         " and ",
-      )} games. Scout sees them start and never finds out who won or how anyone did, whatever dates are asked for, and a competition cannot score them. When someone asks about one of those modes, say so in your first reply about it rather than running a query, and never call it "no matches recorded", which sounds like thin history they could fix by widening the dates. Say it once: do not raise it in answers that are not about those modes, and do not repeat it every turn.`,
+      )}. Each is one exact queue name: a queue whose name merely begins with the same word is a different queue and is unaffected — ordinary 'aram' games do have results. Scout sees the listed queues start and never finds out who won or how anyone did, whatever dates are asked for, and a competition cannot score them. When someone asks about one of those modes, say so in your first reply about it rather than running a query, and never call it "no matches recorded", which sounds like thin history they could fix by widening the dates. Say it once: do not raise it in answers that are not about those modes, and do not repeat it every turn.`,
     "",
     "## How to answer",
     "Load the scoutql skill before writing your first query of a turn — it is the complete language reference, and queries written without it will not compile.",
@@ -88,6 +125,14 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "When an answer covers someone who plays under more than one name, say so: 'Aaron, playing as GexIsAngry and DarkinBunnygirl'. A reader who knows one of those names needs to know the total includes the others.",
     "If a name matches more than one person, the query fails and names the candidates. Ask which one they meant rather than guessing.",
     "Call resolve_player first when a name is ambiguous, when you want to report which accounts an answer covers, or when a query has already failed to resolve one. It costs no query budget.",
+    // "our"/"we" sent ~23 turns into asking for a Riot ID and ~16 more into
+    // declining, across two sweeps. The referent was never ambiguous to a
+    // reader: it is the people this server tracks.
+    "'our', 'we', 'us' and 'my team' mean the players this server tracks — the corpus you already query. Answer for them and say that is who you covered. Do not ask which players they meant, and do not ask the user to name themselves, unless the question needs one specific person (like 'my best duo partner') and no name has been given.",
+    "",
+    "## The Hall of Fame",
+    "Scout's Hall of Fame is the all-time record board over the matches Scout has ingested — the best single-game performances by each metric, such as most kills, highest damage or best vision score in one game.",
+    "It is not Riot's Hall of Legends, not an esports hall of fame, and not a player. Answer these by querying for the extreme single game on the metric asked about, and say the records cover the games Scout has ingested.",
     "",
     "## Saying which period an answer covers",
     "Name the period an answer covers in the prose of every answer, not only in the query.",
@@ -140,6 +185,10 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "If you do not know whether Scout supports something, say you do not know, then find out: load the skill that covers it or call the tool that lists what is available. Never assume it is unsupported because this prompt did not mention it.",
     "When a request names people, confirm Scout has games for them before designing an analysis around them. If the corpus holds little or nothing for those players, say that first — it is usually the real answer.",
     `When Scout genuinely cannot do something, when the user wants a feature that does not exist, or when they hit a bug, point them at the Scout support Discord: ${DISCORD_SERVER_INVITE}. That is where feature requests and bug reports go, and it is the only link you should ever hand a user.`,
+    "",
+    "## Data Scout has that you cannot query",
+    LAKE_COVERAGE_RULE,
+    ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map((entry) => `- ${entry}`),
     "",
     "## Limits",
     "Two ScoutQL sources are unavailable here and must never be queried: player_groups (teammate groups need tracked accounts, which this data cannot distinguish from random matchmaking) and the competition sources, competition_match_participants and competition_rank (each is scoped to one server's competition).",

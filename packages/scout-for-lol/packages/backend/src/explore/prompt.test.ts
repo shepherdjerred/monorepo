@@ -1,4 +1,10 @@
 import { describe, expect, test } from "vitest";
+import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
+import {
+  LAKE_COVERAGE_RULE,
+  LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
+} from "#src/explore/lake-coverage.ts";
+import { judgeSystemPrompt } from "#src/explore/replay/judge.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { reportAgentInstructions } from "#src/reports/ai/report-query-agent.ts";
 import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
@@ -153,5 +159,108 @@ describe("ScoutQL field guide", () => {
 
     expect(section.length).toBeGreaterThan(0);
     expect(reportAgentInstructions()).toContain(section);
+  });
+});
+
+describe("data Scout has that Explore cannot query", () => {
+  test("names each unreachable dataset and the rule about it", () => {
+    // The agent used to infer "I cannot query bans" and then tell the user
+    // "Scout records champion selections, not bans" — against 229,330 ban rows.
+    const instructions = exploreAgentInstructions({ bucks: null });
+
+    for (const entry of LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH) {
+      expect(instructions).toContain(entry);
+    }
+    expect(instructions).toContain(LAKE_COVERAGE_RULE);
+  });
+
+  test("the judge grades against the same list the agent is given", () => {
+    // Two copies would drift, and the two halves would then disagree about
+    // what Scout holds — the exact failure this list exists to stop.
+    expect(judgeSystemPrompt()).toContain(
+      LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH[0],
+    );
+  });
+});
+
+describe("gated-off capabilities", () => {
+  test("every capability says so when it is off, not only when it is on", () => {
+    // A guild without the feature used to get silence: the tool vanished, the
+    // skill was filtered out, and the model invented a data reason.
+    const off = exploreAgentInstructions({
+      bucks: null,
+      mvpVotes: null,
+      dares: false,
+      challenges: false,
+      clash: false,
+      surface: "web",
+    });
+
+    for (const phrase of [
+      "Bryan Bucks",
+      "MVP votes are not switched on",
+      "Dares",
+      "challenges",
+      "Clash tools are not switched on",
+    ]) {
+      expect(off).toContain(phrase);
+    }
+    expect(off).toContain("not switched on for the servers in scope");
+  });
+
+  test("says Bryan Bucks is a feature and not a person", () => {
+    // Three chips read it as a player name: "I can report on Bryan Bucks's
+    // recorded League matches instead, if that's the player you meant".
+    const off = exploreAgentInstructions({ bucks: null });
+    expect(off).toContain("not a player");
+  });
+
+  test("forbids improvising a dare when dares are off", () => {
+    // With dares gated off, a turn answered "I dare our mid laner to lock in
+    // an assassin and win lane—or buy the team snacks."
+    const off = exploreAgentInstructions({ bucks: null, dares: false });
+    expect(off).toContain("Never draft, invent, or word a dare yourself");
+  });
+
+  test("keeps the enabled wording when a capability is on", () => {
+    const on = exploreAgentInstructions({
+      bucks: { currentTime: "now" },
+      mvpVotes: { currentTime: "now" },
+      dares: true,
+      challenges: true,
+      clash: true,
+    });
+    expect(on).toContain("dedicated bucks tools");
+    expect(on).not.toContain("not switched on for the servers in scope");
+  });
+});
+
+describe("unresolved concepts", () => {
+  test("defines who 'our' and 'we' mean", () => {
+    // ~23 turns asked for a Riot ID and ~16 declined, for a referent no reader
+    // would have found ambiguous.
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("the players this server tracks");
+    expect(instructions).toContain("Do not ask which players they meant");
+  });
+
+  test("defines the Hall of Fame, which was once read as a player name", () => {
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("Hall of Fame");
+    expect(instructions).toContain("all-time record board");
+    expect(instructions).toContain("not a player");
+  });
+});
+
+describe("queues Riot sends no results for", () => {
+  test("fences the list so a prefix cannot be generalised", () => {
+    // "aram clash" was read as all ARAM, and every ARAM question refused —
+    // against 2,830 ordinary ARAM matches in the prod lake.
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("and only these queues");
+    expect(instructions).toContain("ordinary 'aram' games do have results");
+    for (const queue of queuesWithoutPostMatchData()) {
+      expect(instructions).toContain(queue);
+    }
   });
 });
