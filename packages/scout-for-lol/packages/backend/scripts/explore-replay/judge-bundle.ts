@@ -21,6 +21,8 @@ import {
   type JudgedCase,
 } from "#src/explore/replay/judge.ts";
 import { emitEvalReport } from "#src/explore/eval-report-output.ts";
+import { queryFactsFromTrace } from "#src/explore/replay/runner.ts";
+import { ExploreTraceEntrySchema } from "@scout-for-lol/data";
 
 /**
  * Score a replay bundle on answer quality.
@@ -54,6 +56,16 @@ const CaseFileSchema = z
     }),
     prompt: z.array(z.looseObject({ role: z.string(), content: z.string() })),
     candidate: ReplayCaseCandidateSchema,
+    /**
+     * Read for the row counts the candidate may not carry.
+     *
+     * Bundles written before the runner took its counts from the trace record
+     * `candidate.rowsReturned: null` for any answer that drew no chart. The
+     * trace held the real number all along, so taking it from there grades
+     * those bundles correctly instead of calling well-grounded answers
+     * unsupported.
+     */
+    trace: z.array(z.looseObject({ toolName: z.string() })).default([]),
   })
   .loose();
 
@@ -65,7 +77,38 @@ function questionFrom(record: CaseFile): string {
   return asked.at(-1)?.content ?? "(no question recorded)";
 }
 
-async function observe(
+/**
+ * The provider's wording when a call came back with nothing to decode.
+ *
+ * A harness artifact, not a judgement: the same condition the capability eval
+ * retries for, and for the same reason.
+ */
+function isEmptyResponse(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("empty response") ||
+    message.includes("No output generated") ||
+    message.includes("No object generated")
+  );
+}
+
+/**
+ * The row count this case actually returned, wherever it was recorded.
+ *
+ * Prefers the candidate, falls back to the trace. Both are in the bundle; only
+ * the trace was reliable before the runner stopped reading counts from the
+ * visualization-gated preview.
+ */
+function rowsFor(record: CaseFile): number | null {
+  if (record.candidate.rowsReturned !== null) {
+    return record.candidate.rowsReturned;
+  }
+  return queryFactsFromTrace(
+    ExploreTraceEntrySchema.array().parse(record.trace),
+  ).rowsReturned;
+}
+
+async function observeOnce(
   runtime: ReturnType<typeof createOpenRouterRuntime>,
   record: CaseFile,
 ): Promise<JudgeObservation> {
@@ -76,7 +119,7 @@ async function observe(
       question: questionFrom(record),
       answer: record.candidate.answer,
       queryText: record.candidate.queryText,
-      rowsReturned: record.candidate.rowsReturned,
+      rowsReturned: rowsFor(record),
       toolNames: record.candidate.toolNames,
       expectation: record.meta.expectation,
       capabilities: record.meta.capabilities,
@@ -85,6 +128,28 @@ async function observe(
     ...runtime.callOptions({ workload: "scout.explore.replay-judge" }),
   });
   return result.output;
+}
+
+/**
+ * Observe one case, retrying only an empty provider response.
+ *
+ * Bounded, and only for that condition, so a judge that genuinely cannot read
+ * an answer still fails rather than being retried into a verdict.
+ */
+async function observe(
+  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  record: CaseFile,
+): Promise<JudgeObservation> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await observeOnce(runtime, record);
+    } catch (error) {
+      lastError = error;
+      if (!isEmptyResponse(error)) throw error;
+    }
+  }
+  throw lastError;
 }
 
 /**
@@ -98,10 +163,14 @@ async function observeAll(
   runtime: ReturnType<typeof createOpenRouterRuntime>,
   records: readonly CaseFile[],
   concurrency: number,
-): Promise<readonly JudgedCase[]> {
+): Promise<{
+  readonly judged: readonly JudgedCase[];
+  readonly unjudged: readonly { caseId: string; reason: string }[];
+}> {
   const results: (JudgedCase | undefined)[] = Array.from({
     length: records.length,
   });
+  const unjudged: { caseId: string; reason: string }[] = [];
   let next = 0;
   let judged = 0;
 
@@ -111,7 +180,19 @@ async function observeAll(
       next += 1;
       const record = records[index];
       if (record === undefined) return;
-      const observation = await observe(runtime, record);
+      let observation: JudgeObservation;
+      try {
+        observation = await observe(runtime, record);
+      } catch (error) {
+        // One case the provider will not return is not a reason to discard
+        // the other 232. The report names what went unjudged and the score
+        // covers only what was, so coverage is visible rather than implied.
+        unjudged.push({
+          caseId: record.meta.caseId,
+          reason: error instanceof Error ? error.message : String(error),
+        });
+        continue;
+      }
       results[index] = {
         caseId: record.meta.caseId,
         condition: record.meta.condition,
@@ -138,12 +219,10 @@ async function observeAll(
     ),
   );
 
-  return results.map((entry, index) => {
-    if (entry === undefined) {
-      throw new Error(`Case at index ${index.toString()} was never judged.`);
-    }
-    return entry;
-  });
+  return {
+    judged: results.filter((entry) => entry !== undefined),
+    unjudged,
+  };
 }
 
 function parseArgs(args: readonly string[]): {
@@ -202,8 +281,13 @@ async function main(): Promise<void> {
     service: "scout-explore-replay-judge",
     appName: "Scout Explore Replay Judge",
   });
-  const judged = await observeAll(runtime, records, concurrency);
+  const { judged, unjudged } = await observeAll(runtime, records, concurrency);
   const bundle = scoreBundle(judged);
+  if (unjudged.length > 0) {
+    process.stderr.write(
+      `  ${unjudged.length.toString()} case(s) could not be judged; the score covers ${judged.length.toString()} of ${records.length.toString()}\n`,
+    );
+  }
 
   const report = ExploreJudgeReportSchema.parse({
     version: 1,
@@ -222,9 +306,10 @@ async function main(): Promise<void> {
       failures: [...entry.grade.failures],
       observation: entry.observation,
     })),
-    // The judge graded everything it was handed. The quality number is
-    // `bundle.score`, and it deliberately carries no threshold.
-    passed: true,
+    unjudged,
+    // Whether the judge read every case it was handed — not whether Explore is
+    // good. The quality number is `bundle.score`, and it carries no threshold.
+    passed: unjudged.length === 0,
   });
 
   await emitEvalReport(report, new URL(`file://${bundleDir}/judge.json`));

@@ -281,10 +281,12 @@ const JUDGE_SYSTEM_PROMPT = [
   "1. addressed — did it answer the question, decline it, or deflect?",
   "   'deflected' means it neither answered nor said it could not: a clarifying question in response to a concrete request deflects.",
   "",
-  "2. grounded — are the figures traceable to the query result shown to you?",
-  "   'unsupported' when the answer states numbers that no query could have produced, including a query that returned zero rows.",
+  "2. grounded — could the query shown have produced the figures at all?",
+  "   You are shown how many rows the query returned. You are NOT shown the rows.",
+  "   So do not mark an answer unsupported merely because you cannot check a specific name or number against data you cannot see — that is a limit of this evidence, not a fault in the answer.",
+  "   'unsupported' when the answer states figures and no query ran, or every query returned zero rows, or the figures contradict the row count it was given.",
   "   'not_applicable' when the answer states no figures.",
-  "   A wrong formula presented as a real statistic is 'unsupported'.",
+  "   Judge only whether the figures could have come from the query. Do not grade the choice of method, the grouping, or whether you would have written the query differently.",
   "",
   "3. coverageHonesty — did it claim Scout LACKS data that Scout actually holds?",
   "   Scout's data lake holds the following, which Explore's query language cannot currently reach:",
@@ -365,6 +367,15 @@ export const ExploreJudgeReportSchema = z
         failures: z.array(z.enum(JUDGE_FAILURES)),
         observation: JudgeObservationSchema,
       }),
+    ),
+    /**
+     * Cases the judge could not read, with why.
+     *
+     * Named rather than dropped: a score over an unstated subset of the bundle
+     * would look like a score over the bundle.
+     */
+    unjudged: z.array(
+      z.object({ caseId: z.string().min(1), reason: z.string() }),
     ),
     /**
      * Whether the judging run itself completed, not whether Explore is good.
