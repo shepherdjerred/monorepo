@@ -46,6 +46,7 @@ export class InMemoryObjectStore implements ObjectStore {
   public readonly transportFailures = new Map<string, number>();
   public corruptWrites = false;
   public failPutPrefix: string | undefined;
+  public transientGetFailures = 0;
   public unavailableReadsAfterPut = 0;
 
   public createBucket(name: string): void {
@@ -112,6 +113,12 @@ export class InMemoryObjectStore implements ObjectStore {
     key: string,
     conditions: GetObjectConditions = {},
   ): Promise<StoredObject> {
+    if (this.transientGetFailures > 0) {
+      this.transientGetFailures -= 1;
+      const error = new Error("connect ECONNREFUSED 10.0.0.1:8333");
+      Object.defineProperty(error, "code", { value: "ECONNREFUSED" });
+      throw error;
+    }
     const objectId = `${bucket}\0${key}`;
     const transportFailures = this.transportFailures.get(key) ?? 0;
     if (transportFailures > 0) {
