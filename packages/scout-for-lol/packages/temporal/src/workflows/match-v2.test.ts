@@ -53,8 +53,14 @@ const SOURCE_PUUID = LeaguePuuidSchema.parse("s".repeat(78));
 function discovered(
   riotMatchId: RiotMatchId,
   deliveryMode: MatchDeliveryMode = "live",
+  gameEndTimestamp?: number,
 ): ScoutDiscoveredMatchV2 {
-  return { riotMatchId, sourcePuuid: SOURCE_PUUID, deliveryMode };
+  return {
+    riotMatchId,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode,
+    ...(gameEndTimestamp === undefined ? {} : { gameEndTimestamp }),
+  };
 }
 const SERIAL_CORE = [
   "readMatchPipelineStateV2",
@@ -409,7 +415,7 @@ describe("a contested archive attestation", () => {
 });
 
 describe("the V2 tournament finalization stage", () => {
-  test("finalizes a tournament-code custom game before the cursor advances", async () => {
+  test("finalizes a managed custom game before the cursor advances", async () => {
     // v1 finalizes at exactly this point and is the only caller repo-wide.
     // Advancing the cursor first would leave the result unreported and the
     // Custom Night snapshot unpublished, with nothing left to rediscover the

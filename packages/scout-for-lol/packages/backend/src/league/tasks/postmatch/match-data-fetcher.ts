@@ -28,28 +28,39 @@ const logger = createLogger("match-data-fetcher");
  * Fetch match data from Riot API
  *
  * Validates the response against our schema to ensure type safety and catch API changes.
+ *
+ * Takes either spelling of the route because the only thing it does with the
+ * value is hand it to `platformToRegionalRoute`, which parses which one it was
+ * given. A caller holding a match id already knows the platform — it is the
+ * id's own prefix — and should pass that rather than finding an account whose
+ * region maps to it. The region spelling is strictly narrower: `ME1` is a
+ * platform no `Region` maps to, so a region-derived route cannot express a
+ * match played on it at all.
  */
 export async function fetchMatchData(
   matchId: MatchId,
-  playerRegion: Region,
+  route: PlatformRoute | Region,
+  failureMode:
+    "return_undefined" | "return_undefined_on_404" = "return_undefined",
 ): Promise<RawMatch | undefined> {
-  const regionalRoute = platformToRegionalRoute(playerRegion);
-
-  const match = await callRiotOrUndefined(
-    {
-      source: "match-data",
-      schema: RawMatchSchema,
-      schemaLabel: "match",
-      context: { matchId, region: playerRegion },
-      onValidationFailure: {
-        kind: "save-to-s3",
-        assetType: "match",
-        id: matchId,
-      },
-      sentry: true,
+  const regionalRoute = platformToRegionalRoute(route);
+  const config: CallRiotConfig<RawMatch> = {
+    source: "match-data",
+    schema: RawMatchSchema,
+    schemaLabel: "match",
+    context: { matchId, region: route },
+    onValidationFailure: {
+      kind: "save-to-s3",
+      assetType: "match",
+      id: matchId,
     },
-    () => riotClient.match.get(matchId, regionalRoute),
-  );
+    sentry: true,
+  };
+  const fetch = () => riotClient.match.get(matchId, regionalRoute);
+  const match =
+    failureMode === "return_undefined_on_404"
+      ? await callRiotOrUndefinedOn404(config, fetch)
+      : await callRiotOrUndefined(config, fetch);
   if (match === undefined) {
     return undefined;
   }
@@ -92,6 +103,11 @@ export async function fetchMatchData(
       })),
     },
   });
+  if (failureMode === "return_undefined_on_404") {
+    throw new Error(
+      `Matchmade game ${matchId} is missing required fields: ${missing.join(", ")}`,
+    );
+  }
   return undefined;
 }
 

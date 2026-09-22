@@ -9,6 +9,7 @@ import {
   omitFields,
   toCustomLobby,
 } from "@scout-for-lol/data/testing/custom-match-fixture.ts";
+import { RiotHttpError } from "#src/league/api/client/errors.ts";
 
 const RIFT_PATH = `${import.meta.dir}/../../../../../../testdata/rift.json`;
 
@@ -19,11 +20,15 @@ const EXPECTED_FIELDS = [
 
 const savedPayloads: { matchId: string; issueCount: number }[] = [];
 let matchResponse: unknown;
+let matchFailure: Error | null = null;
 
 vi.doMock("#src/league/api/api.ts", () => ({
   riotClient: {
     match: {
-      get: () => Promise.resolve(matchResponse),
+      get: () =>
+        matchFailure === null
+          ? Promise.resolve(matchResponse)
+          : Promise.reject(matchFailure),
       timeline: () => Promise.resolve(undefined),
     },
   },
@@ -57,6 +62,7 @@ async function riftMatch() {
 describe("fetchMatchData completeness gate", () => {
   beforeEach(() => {
     savedPayloads.length = 0;
+    matchFailure = null;
   });
 
   test("returns a complete matchmade payload", async () => {
@@ -68,6 +74,29 @@ describe("fetchMatchData completeness gate", () => {
     expect(savedPayloads).toHaveLength(0);
   });
 
+  test("throws a transient Riot failure in 404-only mode", async () => {
+    const failure = new Error("temporary transport failure");
+    matchFailure = failure;
+
+    await expect(
+      fetchMatchData(matchId, region, "return_undefined_on_404"),
+    ).rejects.toBe(failure);
+  });
+
+  test("returns undefined for a definitive Riot 404 in 404-only mode", async () => {
+    matchFailure = new RiotHttpError({
+      status: 404,
+      statusText: "Not Found",
+      body: null,
+      url: "https://riot.invalid/match",
+      headers: new Headers(),
+    });
+
+    await expect(
+      fetchMatchData(matchId, region, "return_undefined_on_404"),
+    ).resolves.toBeUndefined();
+  });
+
   test("REJECTS a matchmade payload missing expected fields", async () => {
     // The most important assertion in this change: making those fields
     // optional so custom games parse must not weaken matchmade validation by
@@ -77,6 +106,17 @@ describe("fetchMatchData completeness gate", () => {
     const result = await fetchMatchData(matchId, region);
 
     expect(result).toBeUndefined();
+    expect(savedPayloads).toEqual([
+      { matchId: "NA1_5421167767", issueCount: EXPECTED_FIELDS.length },
+    ]);
+  });
+
+  test("throws incomplete matchmade data in 404-only mode", async () => {
+    matchResponse = omitFields(await riftMatch(), EXPECTED_FIELDS);
+
+    await expect(
+      fetchMatchData(matchId, region, "return_undefined_on_404"),
+    ).rejects.toThrow("missing required fields");
     expect(savedPayloads).toEqual([
       { matchId: "NA1_5421167767", issueCount: EXPECTED_FIELDS.length },
     ]);

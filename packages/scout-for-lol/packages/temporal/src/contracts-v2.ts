@@ -23,7 +23,7 @@ import { ScoutStageSchema } from "./contracts.ts";
  * Workflow contracts live in `workflow-contracts-v2.ts` and the Activity
  * contracts in `activity-contracts-v2.ts`.
  *
- * The eight V2 Workflow Types are NEW types alongside the v1 ones in
+ * The nine V2 Workflow Types are NEW types alongside the v1 ones in
  * `contracts.ts`. No v1 contract changes: open v1 executions recorded the v1
  * shapes and replay them forever.
  *

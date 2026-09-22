@@ -26,7 +26,6 @@ import {
   MINIMUM_BUCKS_TRANSFER,
   MIN_STAKE,
   PARLAY_BETTING_WINDOW_MS,
-  REMAKE_MAX_DURATION_SECONDS,
   SEED_GRANT,
   VOID_GRACE_MS,
 } from "@scout-for-lol/backend/betting/constants.ts";
@@ -183,8 +182,11 @@ League Classic is a special case: it awards a participation point but carries
 that cannot be settled reliably should not be opened. ARAM and Arena are not
 eligible at all.
 
-A game shorter than {REMAKE_MAX_DURATION_SECONDS / 60} minutes is treated as a
-remake: no Bucks are earned and every stake is refunded.
+A remake — a game Riot ended through the early-surrender vote, or one that did
+not complete — earns no Bucks and refunds every stake. An ordinary surrender is
+not a remake, however early it happens: Riot offers an AFK surrender from 2:55
+and counts the result as a real win and loss, so those games earn and settle
+normally.
 
 ## Earnings
 

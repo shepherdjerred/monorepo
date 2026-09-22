@@ -26,6 +26,7 @@ import {
   type TemporalBootstrapMetadata,
 } from "#shared/execution-metadata.ts";
 import * as workflowEntrypoint from "#workflows/index.ts";
+import { scoutPostMatchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -97,6 +98,23 @@ test("every declared schedule workflow is exported by the workflow bundle", () =
 
   expect(missingWorkflowTypes).toEqual([]);
 });
+
+test.each(["beta", "prod"] as const)(
+  "the %s post-match schedule keeps its ID while routing through V2 dispatch",
+  (stage) => {
+    const schedule = findScheduleById(`scout-${stage}-postmatch-discovery`);
+    expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryV2Workflow");
+    expect(schedule.args).toEqual([
+      scoutPostMatchDiscoveryV2InputCodec.serialize({
+        stage,
+        trigger: "schedule",
+      }),
+    ]);
+    expect(schedule.taskQueue).toBe(
+      stage === "beta" ? TASK_QUEUES.SCOUT_BETA : TASK_QUEUES.SCOUT_PROD,
+    );
+  },
+);
 
 describe("central Workflow schedule routing", () => {
   const definitions = [
@@ -456,7 +474,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // activities or child workflows. Their activity retry budgets are bounded
   // independently; none sleeps inside Workflow code.
   "scoutRealtimePollWorkflow",
-  "scoutPostMatchDiscoveryWorkflow",
+  "scoutPostMatchDiscoveryV2Workflow",
   "scoutIngestionReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",

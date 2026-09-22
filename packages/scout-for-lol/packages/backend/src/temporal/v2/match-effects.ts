@@ -24,19 +24,20 @@ import {
 } from "#src/betting/notify/announcement-sink.ts";
 import { runGuardedEffectV2 } from "#src/temporal/v2/effect-fence.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
-import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import {
   readMatchReceiptEvidenceV2,
   recordMatchReceiptV2,
 } from "#src/temporal/v2/match-commits.ts";
-import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-context.ts";
 import {
   matchMayAnnounce,
+  mintLateBindingEarningIntentsV2,
   mintDareSummaryIntentsV2,
   recoveredSettlementRecordsOf,
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
   recoveredAnnouncementsOf,
+  recoveredLateBindingEarningsOf,
 } from "#src/temporal/v2/notification/match-intents.ts";
 import {
   listSettlementAnnouncementItems,
@@ -179,6 +180,33 @@ function checkpointingSettlementSink(
 }
 
 /**
+ * Checkpoint earnings created after the ordinary settlement lane completed.
+ *
+ * The distinct family keeps a retry from folding old settlement earnings into
+ * the new earnings-only notification and announcing them twice.
+ */
+export function lateBindingEarningsCheckpointSink(
+  riotMatchId: RiotMatchId,
+  mayAnnounce: boolean,
+): SettlementAnnouncementSink {
+  const sink = checkpointingSettlementSink(riotMatchId, mayAnnounce);
+  return {
+    ...sink,
+    recordAnnouncementItem: async (db, item) => {
+      if (item.family !== "earnings") {
+        throw new Error(
+          `Late-binding earnings attempted to checkpoint unexpected ${item.family} announcement`,
+        );
+      }
+      await sink.recordAnnouncementItem(db, {
+        ...item,
+        family: "late-earnings",
+      });
+    },
+  };
+}
+
+/**
  * Mint both announcement families from the instructions one settlement
  * produced, as one transaction.
  *
@@ -218,6 +246,30 @@ async function mintFromInstructions(
   logger.info(
     `🔔 Settlement notifications for ${riotMatchId}: ${String(announced.minted)} recap(s) and ${String(dareSummaries.minted)} Dare summary(ies) minted, ${String(announced.silent + dareSummaries.silent)} withheld as silent-backfill, ${String(announced.undeliverable)} undeliverable`,
   );
+}
+
+/**
+ * Mint every late-binding earnings instruction currently standing for a match.
+ *
+ * Late binding can add earnings after the ordinary match Workflow has already
+ * planned fan-out. Persisting the instruction with the earning makes that
+ * transition recoverable; the distinct family excludes earnings the ordinary
+ * settlement recap already announced. Minting the late-binding set is
+ * idempotent, and the reconciliation sweep drives any newly created intent.
+ */
+export async function mintStandingLateBindingEarningIntentsV2(input: {
+  riotMatchId: RiotMatchId;
+  gameCreation: number;
+}): Promise<void> {
+  const standing = await listSettlementAnnouncementItems(prisma, {
+    matchId: input.riotMatchId,
+  });
+  await mintLateBindingEarningIntentsV2(prisma, {
+    matchId: input.riotMatchId,
+    earnings: recoveredLateBindingEarningsOf(standing),
+    gameCreation: input.gameCreation,
+    createdAt: new Date(),
+  });
 }
 
 /**
@@ -295,8 +347,12 @@ export async function settleMatchMarketsV2(input: {
     },
     apply: async (fence) => {
       // Resolved inside the guard so a replay whose claim is already complete
-      // costs no Riot read at all.
-      const context = await resolveScoutV2MatchContext(input.riotMatchId);
+      // costs no Riot read at all. The OBSERVED roster, because settlement runs
+      // after the observation commits: a live rebuild would settle only for the
+      // accounts whose guild this worker's gateway cache happens to hold.
+      const context = await resolveScoutV2ObservedMatchContext(
+        input.riotMatchId,
+      );
       // Settlement is ENTERED even when checkpoints already stand.
       //
       // A standing checkpoint used to short-circuit this, on the reasoning
@@ -334,6 +390,7 @@ export async function settleMatchMarketsV2(input: {
         async () =>
           await settleBucksWithDareTimelineV2({
             matchData: context.matchData,
+            matchDataSource: context.matchDataSource,
             trackedPlayers: context.trackedPlayers,
             prismaClient: prisma,
             // One sink either way, because the two concerns it used to fuse
@@ -439,7 +496,14 @@ export async function applyMatchProgressionV2(input: {
       };
     },
     apply: async (fence) => {
-      const context = await resolveScoutV2MatchContext(input.riotMatchId);
+      // The OBSERVED roster. This stage is the one where a live rebuild does
+      // lasting damage rather than transient: `trackedAccountCount` below is
+      // written into the receipt, so a roster narrowed by this worker's gateway
+      // cache would become durable evidence attesting the wrong number, and a
+      // later reader has no way to tell it from the truth.
+      const context = await resolveScoutV2ObservedMatchContext(
+        input.riotMatchId,
+      );
       const evidence = {
         participantCount: context.matchData.metadata.participants.length,
         trackedAccountCount: context.trackedPlayers.length,
@@ -450,6 +514,7 @@ export async function applyMatchProgressionV2(input: {
         async () => {
           await processCompetitiveProgressionMatch({
             match: context.matchData,
+            matchDataSource: context.matchDataSource,
             timeline: undefined,
             trackedPlayers: context.trackedPlayers,
           });
@@ -486,7 +551,6 @@ export async function applyMatchProgressionV2(input: {
 export async function mintPostmatchNotificationIntentsV2(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutMintedIntentsV2Result> {
-  const context = await resolveScoutV2MatchContext(input.riotMatchId);
   // The audience is read from the SNAPSHOT the observation recorded, not
   // rebuilt from who is tracked now.
   //
@@ -502,12 +566,15 @@ export async function mintPostmatchNotificationIntentsV2(input: {
   // it much later than the observation; `MatchTrackedAccount` exists to make
   // the answer durable rather than time-dependent, which is why the
   // observation writes it in the same call that commits.
-  const tracked = await listTrackedAccounts(prisma, {
-    matchId: input.riotMatchId,
-  });
+  //
+  // This reasoning was always right and was for a long time written only here.
+  // The resolver now carries it, so the render — which had rebuilt the roster
+  // and failed on the empty result — agrees with it instead of contradicting
+  // it, and the PUUID set is derived once rather than beside the payload read.
+  const context = await resolveScoutV2ObservedMatchContext(input.riotMatchId);
   const summary = await mintPostmatchIntentsV2(prisma, {
     matchId: input.riotMatchId,
-    puuids: tracked.map((account) => account.puuid),
+    puuids: context.observedPuuids,
     queue: {
       queueId: context.matchData.info.queueId,
       gameMode: context.matchData.info.gameMode,

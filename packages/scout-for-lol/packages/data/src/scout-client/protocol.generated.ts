@@ -1,0 +1,43 @@
+// Generated from protocol.contract.json. Do not edit.
+export const SCOUT_CLIENT_PROTOCOL_CONTRACT = {
+  protocolVersion: 1,
+  observationSchemaVersion: 1,
+  maxBatchBytes: 4_194_304,
+  maxBatchObservations: 100,
+  payload: {
+    maxDepth: 16,
+    maxArrayItems: 100_000,
+    maxObjectKeys: 4096,
+    maxStringBytes: 16_384,
+    maxKeyBytes: 256,
+    unsafeKeys: ["__proto__", "constructor", "prototype"],
+  },
+  envelopeStringMaxBytes: {
+    appVersion: 128,
+    leaguePatch: 64,
+    platformId: 16,
+    localPuuid: 128,
+    lobbyId: 128,
+    gameId: 32,
+  },
+  observationKinds: [
+    "account_profile",
+    "champion_mastery",
+    "challenges",
+    "clash",
+    "lobby",
+    "champ_select",
+    "gameflow",
+    "live_game_frame",
+    "post_game",
+    "replay_status",
+  ],
+  quarantineReasons: [
+    "unverified_app_version",
+    "future_timestamp",
+    "unverified_local_puuid",
+    "missing_observer_puuid",
+    "observer_puuid_not_in_payload",
+    "missing_post_game_id",
+  ],
+} as const;

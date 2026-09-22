@@ -11,7 +11,9 @@ import { testGuildId } from "#src/testing/test-ids.ts";
 import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   deliveryIntentKey,
+  lateBindingEarningsDeliveryKeyPrefix,
   prematchDeliveryKeyPrefix,
+  settlementDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
 import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
@@ -31,6 +33,7 @@ const { prisma } = createTestDatabase("scout-v2-match-intents");
 const MATCH = RiotMatchIdSchema.parse("NA1_8300");
 const SILENT_MATCH = RiotMatchIdSchema.parse("NA1_8301");
 const CHANNEL = "100000000000000021";
+const SETTLEMENT_CHANNEL = "100000000000000031";
 const GUILD = testGuildId("4200");
 
 vi.mock("#src/database/index.ts", async () => {
@@ -83,6 +86,7 @@ vi.mock("#src/league/tasks/notification-filters.ts", () => ({
 
 const {
   mintDareSummaryIntentsV2,
+  mintLateBindingEarningIntentsV2,
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
 } = await import("#src/temporal/v2/notification/match-intents.ts");
@@ -296,6 +300,47 @@ describe("what the settlement effect mints", () => {
     const intents = await listIntentsForMatch(prisma, { matchId: MATCH });
     expect(intents[0]?.intent.kind).toBe("settlement");
     expect(intents[0]?.intent.announcement).toBeDefined();
+  });
+
+  test("mints late-binding earnings under a distinct durable intent", async () => {
+    await observe(MATCH, "live");
+    prepared.kind = "message";
+
+    await mintSettlementIntentsV2(prisma, {
+      matchId: MATCH,
+      closures: [],
+      settlements: [settlement],
+      parlaySettlements: [],
+      earnings: [],
+      gameCreation: GAME_CREATED_AT,
+      createdAt: new Date("2026-09-19T09:35:00.000Z"),
+    });
+    await mintLateBindingEarningIntentsV2(prisma, {
+      matchId: MATCH,
+      earnings: [
+        {
+          serverId: GUILD,
+          discordId: "100000000000000051",
+          alias: "late player",
+          reasons: ["played"],
+          total: 1,
+        },
+      ],
+      gameCreation: GAME_CREATED_AT,
+      createdAt: new Date("2026-09-19T09:40:00.000Z"),
+    });
+
+    const intents = await listIntentsForMatch(prisma, { matchId: MATCH });
+    const keys = intents.map((record) => record.intent.key);
+    expect(keys).toContain(
+      deliveryIntentKey(settlementDeliveryKeyPrefix(MATCH), SETTLEMENT_CHANNEL),
+    );
+    expect(keys).toContain(
+      deliveryIntentKey(
+        lateBindingEarningsDeliveryKeyPrefix(MATCH),
+        SETTLEMENT_CHANNEL,
+      ),
+    );
   });
 
   test("mints nothing when v1 has nothing to announce", async () => {

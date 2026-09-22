@@ -11,6 +11,7 @@ import {
 } from "#src/contracts-v2.ts";
 import {
   scoutLakeProjectionV2InputCodec,
+  scoutClientMatchDispatchV2InputCodec,
   scoutMatchProcessingV2InputCodec,
   scoutNotificationV2InputCodec,
   scoutPipelineReconciliationV2InputCodec,
@@ -23,6 +24,7 @@ import {
   SCOUT_WORKFLOW_NAMES,
   SCOUT_V2_WORKFLOW_NAMES,
   scoutLakeProjectionV2WorkflowId,
+  scoutClientMatchDispatchV2WorkflowId,
   scoutMatchProcessingV2WorkflowId,
   scoutNotificationV2WorkflowId,
   scoutPipelineReconciliationV2WorkflowId,
@@ -88,6 +90,17 @@ const registrations = [
     implemented: true,
   },
   {
+    name: SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2,
+    workflowId: scoutClientMatchDispatchV2WorkflowId(stage),
+    input: scoutClientMatchDispatchV2InputCodec.serialize({
+      stage,
+      pending: [],
+      lateArrivals: [],
+      orderingWatermark: null,
+    }),
+    implemented: true,
+  },
+  {
     name: SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
     workflowId: scoutPrematchDiscoveryV2WorkflowId(stage),
     input: scoutPrematchDiscoveryV2InputCodec.serialize({ stage }),
@@ -131,7 +144,7 @@ const registrations = [
   },
 ] as const;
 
-test("registers all eight V2 types, and every unimplemented one refuses to run", async () => {
+test("registers all nine V2 types, and every unimplemented one refuses to run", async () => {
   expect(registrations.map((entry) => entry.name)).toEqual([
     ...SCOUT_V2_WORKFLOW_NAMES,
   ]);

@@ -31,6 +31,7 @@ import type {
 } from "./contracts.ts";
 import type {
   ScoutGameRefV2,
+  ScoutDurableCommitV2,
   ScoutIntentAttemptRefV2,
   ScoutIntentRefV2,
   ScoutMatchRefV2,
@@ -46,6 +47,7 @@ import type {
   ScoutFanOutV2Result,
   ScoutGuardedEffectV2Result,
   ScoutLakeStagingV2Result,
+  ScoutLegacyMatchCompletionV2Result,
   ScoutMatchCursorV2Result,
   ScoutMintedIntentsV2Result,
   ScoutMatchObservationV2Input,
@@ -126,7 +128,7 @@ export type ScoutTemporalActivities = {
 };
 
 /**
- * Activities the eight V2 Workflow Types call.
+ * Activities the nine V2 Workflow Types call.
  *
  * Every signature is identifier-in, summary-out: an input carries references
  * the backend can resolve, and a result carries domain state unions,
@@ -151,6 +153,9 @@ export type ScoutTemporalV2Activities = {
   readMatchPipelineStateV2: (
     input: ScoutMatchRefV2,
   ) => Promise<ScoutMatchPipelineStateV2Result>;
+  readLegacyMatchCompletionV2: (
+    input: ScoutMatchRefV2,
+  ) => Promise<ScoutLegacyMatchCompletionV2Result>;
   readNotificationIntentV2: (
     input: ScoutIntentRefV2,
   ) => Promise<ScoutNotificationIntentV2Result>;
@@ -177,6 +182,9 @@ export type ScoutTemporalV2Activities = {
   recordMatchReceiptsV2: (
     input: ScoutMatchReceiptsV2Input,
   ) => Promise<ScoutReceiptsV2Result>;
+  recordClientMatchTerminalV2: (
+    input: ScoutMatchRefV2,
+  ) => Promise<ScoutDurableCommitV2>;
   advanceMatchCursorV2: (
     input: ScoutMatchRefV2,
   ) => Promise<ScoutMatchCursorV2Result>;

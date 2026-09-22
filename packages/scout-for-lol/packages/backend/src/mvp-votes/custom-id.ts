@@ -2,7 +2,7 @@ import { z } from "zod";
 import { MatchIdSchema, type MatchId } from "@scout-for-lol/data";
 
 /**
- * Discord custom IDs for Flex MVP vote controls.
+ * Discord custom IDs for post-match MVP vote controls.
  *
  * Format:
  * - button: `vote:1:<a|e>:<matchId>`

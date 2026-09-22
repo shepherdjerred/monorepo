@@ -28,6 +28,9 @@ describe("classifyRoute", () => {
     "/api/summoner-icon",
     "/api/reports/query-agent/stream",
     "/api/internal/bryan-bucks/analytics-sync",
+    "/api/scout-client/v1/pairings",
+    "/api/scout-client/v1/check-ins",
+    "/api/scout-client/v1/observations/batch",
   ])("maps the known route %s to itself", (path) => {
     expect(classifyRoute(path)).toBe(path);
   });
@@ -47,6 +50,14 @@ describe("classifyRoute", () => {
     );
     expect(classifyRoute("/api/report/7/runs/1234.png")).toBe(
       "/api/report/:id/runs/:id.png",
+    );
+    expect(
+      classifyRoute(
+        "/api/scout-client/v1/pairings/4fa2a856-53af-42a4-85af-5cc085a942a3/exchange",
+      ),
+    ).toBe("/api/scout-client/v1/pairings/:id/exchange");
+    expect(classifyRoute("/api/scout-client/v1/replays/123456789")).toBe(
+      "/api/scout-client/v1/replays/:gameId",
     );
   });
 

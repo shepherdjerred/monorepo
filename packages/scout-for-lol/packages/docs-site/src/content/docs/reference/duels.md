@@ -28,6 +28,8 @@ sidebar:
 | Match window     | 24 hours–14 days; seven-day default                        |
 | Elimination cap  | 64 entrants                                                |
 | Round-robin cap  | 16 entrants                                                |
+| Lobby creation   | Either participant creates a normal custom lobby           |
+| Client coverage  | At least one assigned player runs a paired Scout Client    |
 
 At least one objective is required. Kill and first-turret timestamps use exact
 timeline events. Lane-CS crossings use participant frames and exclude jungle
@@ -44,6 +46,11 @@ head, then game differential; a remaining tie requires a tiebreak series.
 A duel result needs a complete roster and timeline. Exact events identify kill
 and turret crossings; participant frames identify lane-CS crossings. Scout
 compares the first configured objective to occur.
+
+The observed lobby roster must exactly match one pending duel. Scout does not
+guess when more than one pending duel matches. Riot result data wins when it is
+available; complete local evidence may fill the gap after Riot has had two
+minutes to provide the match.
 
 Simultaneous crossings, missing evidence, unexpected players, or a complete
 game with no winning objective cannot produce a trustworthy automatic result.

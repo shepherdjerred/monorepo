@@ -40,6 +40,8 @@ export type ScoutWorkflowStatus = z.infer<typeof ScoutWorkflowStatusSchema>;
 
 export const ScoutRealtimePollInputSchema = z.object({
   stage: ScoutStageSchema,
+  // Keep the retired tournament discriminator while executions created by the
+  // former Schedule can still replay or retry their recorded Activity.
   kind: z.enum(["prematch", "tournament-lobbies"]),
   scheduledStartAt: IsoInstantSchema.optional(),
   maximumAgeSeconds: z.number().int().positive(),
@@ -189,7 +191,7 @@ export type ScoutBackgroundJobInput = z.infer<
 
 export const ScoutDetachedWorkInputSchema = z.object({
   stage: ScoutStageSchema,
-  kind: z.literal("parlay-generation"),
+  kind: z.enum(["parlay-generation", "champion-mastery-refresh"]),
   workId: OpaqueIdentifierSchema,
 });
 export type ScoutDetachedWorkInput = z.infer<

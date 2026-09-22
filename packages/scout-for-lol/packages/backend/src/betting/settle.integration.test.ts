@@ -150,10 +150,23 @@ async function makeBalancedPool(stake = 10) {
   return { pool, winner, loser };
 }
 
-function withDuration(seconds: number): RawMatch {
+/**
+ * A remake as Riot reports one: the early-surrender flags are set on every
+ * participant. Duration is not the signal — an AFK surrender is available from
+ * 2:55 and is a real result that bets must still settle against.
+ */
+function asRemake(): RawMatch {
   return RawMatchSchema.parse({
     ...fixture,
-    info: { ...fixture.info, gameDuration: seconds },
+    info: {
+      ...fixture.info,
+      gameDuration: 120,
+      participants: fixture.info.participants.map((participant) => ({
+        ...participant,
+        gameEndedInEarlySurrender: true,
+        teamEarlySurrendered: true,
+      })),
+    },
   });
 }
 
@@ -406,7 +419,7 @@ describe("settlement claims and idempotency", () => {
 describe("refunds and house settlement", () => {
   test("refunds matched stake without fees on a remake", async () => {
     const { winner, loser } = await makeBalancedPool();
-    const [summary] = await settleBettingForMatch(withDuration(120), db);
+    const [summary] = await settleBettingForMatch(asRemake(), db);
     expect(summary?.voidReason).toBe("remake");
     expect(summary?.houseCut).toBe(0);
     expect(

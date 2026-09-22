@@ -7,7 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
-import { withFlexMvpVoteFurniture } from "#src/mvp-votes/components.ts";
+import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
 import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
@@ -17,7 +17,7 @@ import {
   reportImageAttachmentName,
 } from "#src/league/tasks/postmatch/match-report-image.ts";
 import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
-import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-context.ts";
 import type { ScoutV2AttestedReportArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
 import type { ScoutV2ReportComponentsSchema } from "#src/temporal/v2/notification-receipts.ts";
 import type { z } from "zod";
@@ -116,7 +116,7 @@ function classifyComponents(
   ) {
     return "match-link";
   }
-  const voteFurniture = withFlexMvpVoteFurniture(
+  const voteFurniture = withMvpVoteFurniture(
     { components: matchLinkComponents(matchId) },
     matchId,
   );
@@ -182,7 +182,18 @@ function disassembleReport(
 export async function renderPostmatchNotificationV2(
   riotMatchId: RiotMatchId,
 ): Promise<ScoutV2PostmatchRender> {
-  const context = await resolveScoutV2MatchContext(riotMatchId);
+  // The OBSERVED roster, which is the one the minter used to decide this
+  // report was owed. Rebuilding it here asked a different question and could
+  // answer it differently for reasons outside the match: the live roster is
+  // narrowed by the Discord gateway's guild cache, and this Activity runs on
+  // the `background` queue while the mint runs on `realtime`, so the two are
+  // different worker pools. An empty rebuild produced no report at all, after
+  // the cursor had already advanced past the match.
+  //
+  // The subscription lookup below still asks who subscribes NOW, which is
+  // right — a channel that unsubscribed should not receive this. It is only
+  // the PUUIDs it is keyed by that belong to the past.
+  const context = await resolveScoutV2ObservedMatchContext(riotMatchId);
   const audience = await resolvePostmatchDeliveryChannels({
     puuids: context.trackedPlayers.map(
       (player) => player.league.leagueAccount.puuid,
@@ -238,7 +249,7 @@ export function buildPostmatchNotificationMessageV2(
     case "match-link":
       return { ...message, components: matchLinkComponents(matchId) };
     case "match-link-mvp-vote":
-      return withFlexMvpVoteFurniture(
+      return withMvpVoteFurniture(
         { ...message, components: matchLinkComponents(matchId) },
         matchId,
       );

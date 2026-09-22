@@ -2,7 +2,10 @@ import type { MatchId, PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
 import type { ScoutMatchIngestionInput } from "@scout-for-lol/temporal";
 import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-processing.ts";
 
-export type DiscoveredMatchIntent = Omit<ScoutMatchIngestionInput, "stage">;
+export type DiscoveredMatchIntent = Omit<ScoutMatchIngestionInput, "stage"> & {
+  /** Populated after Riot confirms the match completion used for ordering. */
+  gameEndTimestamp?: number;
+};
 
 export type MatchDiscovery = {
   complete: boolean;
@@ -63,7 +66,10 @@ export async function orderMatchIntentsByCompletion(
           left.gameEndTimestamp - right.gameEndTimestamp ||
           left.intent.matchId.localeCompare(right.intent.matchId),
       )
-      .map(({ intent }) => intent),
+      .map(({ gameEndTimestamp, intent }) => ({
+        ...intent,
+        gameEndTimestamp,
+      })),
   };
 }
 

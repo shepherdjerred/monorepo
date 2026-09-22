@@ -36,7 +36,6 @@ import {
   getRollingDuelRecords,
   listGuildDuels,
 } from "#src/progression/duels/read.ts";
-import { getDuelCode } from "#src/progression/duels/code.ts";
 import { decideDuelSeries } from "#src/progression/duels/review.ts";
 import {
   acceptDuelChallenge,
@@ -215,23 +214,6 @@ export const duelRouter = router({
       await assertMemberAndFeature(ctx.user, input.guildId);
       try {
         return await getDuelSeries(
-          prisma,
-          input.seriesId,
-          viewerId(ctx.user.discordId),
-          input.guildId,
-        );
-      } catch (error) {
-        return domainError(error);
-      }
-    }),
-  code: webProcedure
-    .input(
-      z.strictObject({ guildId: DiscordGuildIdSchema, seriesId: z.uuid() }),
-    )
-    .query(async ({ ctx, input }) => {
-      await assertMemberAndFeature(ctx.user, input.guildId);
-      try {
-        return await getDuelCode(
           prisma,
           input.seriesId,
           viewerId(ctx.user.discordId),

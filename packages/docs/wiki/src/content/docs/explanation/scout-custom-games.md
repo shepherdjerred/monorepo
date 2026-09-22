@@ -1,132 +1,118 @@
 ---
-title: Why Scout can only see custom games through the Tournament API
-description: Riot removed custom games from the public API, so Scout mints tournament codes to get them back — and that constraint shapes the whole design.
+title: Why Scout observes League locally
+description: Riot omits important custom-game and player data, so a paired desktop client contributes bounded evidence to Scout's existing ingestion pipeline.
 sidebar:
   order: 6
 ---
 
-Scout reports on League matches by watching two Riot endpoints: Spectator, for
-a game in progress, and Match-V5, for the finished result. Neither of them
-reliably answers for a **custom game**.
+Scout uses a paired desktop client to observe League data that Riot's public
+APIs omit or deliver inconsistently. The local evidence enters the same match
+pipeline as Riot data without becoming an unrestricted proxy.
 
-Riot removed custom-game data from the public API for privacy reasons. Match-V5
-does not carry customs at all, and Spectator surfaces them only inconsistently.
-The practical effect for Scout was lopsided: a custom lobby would sometimes
-produce a prematch card, and then never produce a post-match report, because
-the match simply was not there to fetch.
+This reverses the old Tournament API workflow. Scout does not create a lobby
+and tell players where to go. Players create or join an ordinary League lobby,
+and Scout recognizes the game from what paired clients observe.
 
-The one sanctioned exception is the **Tournament API**. A game created from a
-_tournament code_ is recorded in Match-V5 like any other, with
-`info.tournamentCode` populated. So Scout mints the code itself, with
-`/lobby create`, and the game becomes visible to the pipeline that already
-exists.
+## Observation follows the players
 
-Tournament-code custom games are a permanent **beta-only** Scout feature. The
-production command surface hard-disables them before any beta flag or operator
-override is evaluated.
+Custom nights begin with teams assigned in Scout. Either duel participant can
+create a lobby. Other customs can begin through the normal social flow in the
+League client.
 
-The beta Customs Activity uses the same foundation. Its draft produces the
-two locked teams, then calls the same retry-safe lobby service that backs
-`/lobby create`. Tournament-V5 owns `PLAYING` and `RESULT_PENDING`; only the
-ordinary Match-V5 ingest, after the canonical S3 write, can produce `VERIFIED`
-and open intermission. The Activity has no manual winner path.
+The backend binds an observed lobby only when its exact PUUID roster matches
+one pending Custom or duel game. An ambiguous roster fails instead of being
+guessed. This permits one client in a duel and several independent observers in
+a ten-player lobby.
 
-That single constraint explains almost every other decision in the feature.
+After binding, explicit League gameflow phases project the game to `PLAYING`
+and `RESULT_PENDING`. These are lifecycle facts, not final results; only the
+canonical postgame path can verify a winner.
 
-## An open code is more useful than a predeclared roster
+The lobby-binding service in
+`packages/scout-for-lol/packages/backend/src/scout-client/lobby-binding.ts`
+owns that decision. Neither the desktop client nor a lobby creator assigns the
+canonical Scout game.
 
-Riot will not reveal custom-game teams before the game starts. Its lobby events
-say that a PUUID joined, but never which side they joined. Spectator can show a
-roster sometimes, but not reliably enough to make it a dependency.
+## Riot remains the preferred match source
 
-Scout used to ask the person creating a lobby for Blue and Red player lists.
-That made the code an allow-list and turned a spontaneous custom into a setup
-task. An open Tournament code better matches the way friends start a game: the
-creator shares it, then decides teams in League.
+Local observations supplement Riot rather than replacing it. A client postgame
+event starts the same durable Temporal match workflow used by Riot discovery.
+The workflow asks Riot for Match-V5 first.
 
-The tradeoff is explicit. Scout can announce the map, pick type, intended team
-size, and the Riot IDs of people Riot says joined. It cannot honestly draw Blue
-and Red rosters, so an open lobby does not open a pregame Bryan Bucks market.
+A complete local Match-V5-shaped payload can become canonical only after Riot
+has been absent for two minutes. Scout validates the match ID, platform,
+participant list, and observing player before selection. Conflicting complete
+payloads fail rather than producing a blended match.
 
-The identifying data is useful without being persistent tracking. Scout
-reverse-resolves the event PUUIDs only for the lobby card. If Riot cannot
-resolve everyone, Scout shows the exact joined-player count instead; it never
-posts encrypted identifiers or a partial roster.
-
-Once a tracked player in the server joins, Scout uses that actual participant to
-link the game to its normal match-history ingest. Everyone else may be
-untracked; the tracked participant is enough for the resulting match to reach
-the report pipeline. A lobby with no tracked participant produces no Scout
-report, rather than falsely promising one.
-
-## Notifying exactly once, from an endpoint that repeats itself
-
-`lobby-events/by-code` replays its **entire** event list on every call. A naive
-poller that reacted to "there is a `ChampSelectStartedEvent`" would send the
-prematch card every twenty seconds for the life of the lobby.
-
-Scout does not track which events it has seen. Instead it recomputes the
-highest lifecycle state the whole list implies, and acts only on the
-difference:
+Legacy local match history can still reveal a missing match ID. Scout then
+retries the ordinary Riot path without inventing fields that the local payload
+does not contain. The canonical-source selector in
+`packages/scout-for-lol/packages/backend/src/scout-client/canonical-match.ts`
+keeps the chosen local source immutable.
 
 ```mermaid
-stateDiagram-v2
-  direction LR
-  created --> lobby_open
-  lobby_open --> champ_select
-  champ_select --> allocating
-  allocating --> in_game
-  in_game --> resolved
-  resolved --> reported
+flowchart LR
+  accTitle: Scout match source selection
+  accDescr: A paired client and Riot both feed the match workflow. Riot wins when complete; otherwise a complete local match can become immutable canonical data after two minutes. Both sources feed the same Scout products.
+  client[Paired Scout Client] --> ingress[Bounded observation ingress]
+  riot[Riot APIs] --> workflow[Match workflow]
+  ingress --> workflow
+  workflow --> choice{Complete Riot match?}
+  choice -->|yes| canonical[Riot canonical data]
+  choice -->|no, after two minutes| local{Complete local match?}
+  local -->|yes| canonicalLocal[Immutable local canonical data]
+  local -->|no| retry[Retry without fabricating fields]
+  canonical --> products[Reports, Explore, Hall, Challenges, competitions]
+  canonicalLocal --> products
 ```
 
-A state is only ever _entered_ once, and entering `champ_select` is what sends
-the card. A replay, a crash mid-tick, a restart, out-of-order delivery, or a
-tie in Riot's string-typed millisecond timestamp all produce no transitions and
-therefore no second notification. That property is the reason the state machine
-is a pure function with no I/O: it can be proven in CI, which matters because
-almost nothing else about the feature can be.
+## One ingress feeds the existing products
 
-## The poller links; it never ingests
+Once a match reaches the V2 workflow, it follows the established archive,
+timeline, report-lake, report, notification, competition, duel, and challenge
+stages. Bryan Bucks uses a separate anti-farming gate: a custom match must have
+the exact roster of a scheduled Custom or duel game.
 
-When the game starts, the poller resolves its Riot match ID and writes an
-`ActiveGame` row — and stops there.
+Mastery, season milestones, Clash, and challenge observations are latest-value
+player snapshots. Clash snapshots include check-in eligibility, invitations,
+registration state, rewards, and historical winners. Explore prefers a fresh
+paired-client mastery snapshot and falls back to Riot. This preserves richer
+local fields without changing the meaning of older Riot-backed data.
 
-Ingest stays with the existing per-player match-history cursor, whose write to
-S3 is what allows that cursor to advance. That gate is the strongest durability
-property Scout has: a storage outage stalls the cursor instead of losing a
-match. A second ingest path would have to re-establish exactly-once against it
-and would gain nothing, since tournament games appear in the ordinary
-by-PUUID matchlist anyway.
+## The client is a narrow sensor
 
-This is why an open lobby still needs one tracked participant before it becomes
-a reportable Scout game. The requirement is discovered from who actually joins,
-not imposed on the person creating the code.
+The Rust client accepts no caller-selected League URL. Its adapter exposes a
+fixed read-only allowlist for account, lobby, champion select, gameflow,
+postgame, Clash, mastery, challenges, recent matches, and replay settings. Live
+game data uses Riot's fixed loopback endpoint through a separate adapter.
 
-## Betting requires a code Scout minted
+The League lockfile credential never leaves the machine. Device tokens live in
+the operating-system credential store. Pairing requires an authenticated Scout
+browser session, and a device can upload player observations only for Riot
+accounts linked to its owner.
 
-Bryan Bucks pays real balance for participation, and a custom game is trivially
-farmable: ten accounts, instant surrender, repeat. So `"custom"` is
-deliberately **not** an earning queue. An open code also has no pregame market:
-the Tournament API cannot tell Scout Blue and Red sides, and guessing would
-make settlement unfair.
+Ingress applies strict schemas, body and collection limits, depth limits,
+prototype-pollution rejection, immutable observation IDs and sequence numbers,
+and quarantine checks. These controls make local evidence useful without
+pretending a player-controlled machine is Riot infrastructure.
 
-After the game, a recognised Scout-created tournament code can still establish
-eligible 5v5 participation from the finished match. Smaller lobbies get
-reports, stats, and AI review; they do not get a market because the MVP formula
-normalises each player's contribution against a five-man team.
+The wire schemas in
+`packages/scout-for-lol/packages/data/src/scout-client/protocol.schema.ts` and
+ingress validation in
+`packages/scout-for-lol/packages/backend/src/scout-client/ingress.ts` define
+this trust boundary.
 
-## What the stub cannot tell us
+## Replays are attached evidence
 
-Riot offers `tournament-stub-v5`, which any development key may call. Scout can
-run its whole request and parsing layer against it today. But stub codes do not
-create a real in-client lobby, its events are canned, and `games/by-code` does
-not exist there at all.
+The client discovers completed ROFL files from League's configured replay
+directory and hashes each file before upload. The backend accepts a replay only
+from a device that already supplied accepted postgame evidence for that game.
 
-So the stub proves the client is correct. It proves nothing about a lobby. The
-first real tournament-enabled key is also the first evidence for how often
-spectator enriches a custom card, how long champ select actually takes, and
-whether `platformId + gameId` composes a valid Match-V5 ID — which is the
-assumption the entire linkage rests on.
+The backend streams the body through a bounded temporary file, checks its Riot
+magic and declared digest, then stores it by content digest in SeaweedFS through
+Scout's S3 boundary. A replay is evidence for review and future features; it
+does not override the canonical structured match.
 
-The setup and recovery procedure is in [Operate Scout custom nights](/how-to/operate-scout-custom-nights/).
+The replay relay in
+`packages/scout-for-lol/packages/backend/src/scout-client/replay-upload.ts`
+enforces those constraints.

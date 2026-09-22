@@ -44,7 +44,11 @@ bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 Detached prediction and parlay work is inserted once before its Temporal
 workflow starts. Reconciliation starts only never-accepted `queued` rows.
 After Temporal exhausts the activity's four-attempt budget, the row remains
-terminal `failed`; normal producers cannot restart the same work ID.
+terminal `failed`; normal producers cannot restart the same work ID. The
+champion-mastery refresh producer is the sole exception: a later champion-page
+visit atomically requeues the same failed refresh with its newly validated
+payload, then requests a new start. This lets an expected Riot outage recover
+without an operator action while preserving the durable work identity.
 
 An operator may explicitly requeue one reviewed failed row. The command is a
 dry run unless `--confirm` is supplied, requires a reason, and atomically
@@ -161,7 +165,7 @@ The dual-write counters above say what the pipeline _did_. Five more families in
 it is still _holding_, which is the half the V2 acceptance checklist asks about:
 
 - `scout_durable_notification_intents{state}` — intents per state of the domain
-  machine, zero-filled across all eight. `state="unknown-delivery"` is the
+  machine, zero-filled across all nine. `state="unknown-delivery"` is the
   operator dead end and the unknown-delivery count in its own right.
 - `scout_durable_recovery_batches{state}` — batches per state, zero-filled
   across all six.
@@ -645,23 +649,15 @@ observations — so the gate is the contract a later recovery lane delivers into
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client
-secret, JWT signing secret, Tournament lobby service, Match-V5 cursor, and S3
-ingest boundary. It has no second bot, callback result mutation, or manual
-winner endpoint.
+secret, JWT signing secret, Match-V5 cursor, Scout Client ingress, and S3
+ingest boundary. It has no second bot or manual winner endpoint.
 
 Before enabling `custom_nights_enabled`, configure the existing beta Discord
 Activity at `/customs/`, grant the beta install Manage Channels and Move
-Members, and persist the live Tournament registration:
-
-```bash
-bun run scripts/register-tournament-provider.ts \
-  --mode=live \
-  --region=AMERICA_NORTH
-```
-
-Keep `tournament_lobbies_enabled` off until `/lobby create` proves the Riot key
-can create a real code. Production hard-disables both flags and its site
-archive rejects any `/customs/index.html` artifact.
+Members, and enable `scout_client_ingestion` for participating users. A player
+creates the normal custom lobby in League. A paired client then binds the exact
+observed roster to the pending Customs game. Production hard-disables the
+Customs flag and its site archive rejects any `/customs/index.html` artifact.
 
 The beta `custom-nights-expiry` Temporal schedule closes unfinished nights
 after their 12-hour database deadline, writes an audit event, and releases the

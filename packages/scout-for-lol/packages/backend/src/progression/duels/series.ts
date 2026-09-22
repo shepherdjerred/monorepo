@@ -17,6 +17,7 @@ import {
 } from "@scout-for-lol/temporal";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
+  duelCompetitorsUseOneRiotRegion,
   duelCompetitorCreateData,
   parseDuelCompetitor,
   resolveDuelCompetitorSelection,
@@ -102,9 +103,10 @@ export async function createDirectDuel(
     throw new Error("A player cannot appear on both sides of a duel");
   }
   if (
-    new Set(
-      [...first.accounts, ...second.accounts].map((account) => account.region),
-    ).size !== 1
+    !duelCompetitorsUseOneRiotRegion([
+      { members: first.accounts },
+      { members: second.accounts },
+    ])
   ) {
     throw new Error("Duel competitors must use accounts in one Riot region");
   }

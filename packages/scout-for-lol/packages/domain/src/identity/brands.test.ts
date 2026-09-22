@@ -198,6 +198,11 @@ describe("moved identity brands keep their runtime rules", () => {
 
   test("LeaguePuuid requires exactly 78 characters", () => {
     expect(LeaguePuuidSchema.safeParse("p".repeat(78)).success).toBe(true);
+    expect(
+      LeaguePuuidSchema.safeParse("9d1e9752-b938-4293-8466-21cb523410a5")
+        .success,
+    ).toBe(true);
+    expect(LeaguePuuidSchema.safeParse("p".repeat(36)).success).toBe(false);
     expect(LeaguePuuidSchema.safeParse("p".repeat(77)).success).toBe(false);
   });
 

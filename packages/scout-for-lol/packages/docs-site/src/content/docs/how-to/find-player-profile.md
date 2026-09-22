@@ -63,6 +63,22 @@ may have a queue Riot had not mapped at ingest time. A custom selection includes
 only the checked queues. The address bar keeps the selected window and queues,
 so you can bookmark or share the same view.
 
+## Read ranked history
+
+The **Ranked history** section is independent of the game-window and queue
+filters. It graphs Scout's live post-match rank snapshots for the current
+ranked split (for example 2026 Season 3), not a Riot career graph and not
+imported match history.
+
+1. Choose **Solo / duo**, **Flex**, or **Ranked 5s**.
+2. Read the line as ladder position over the current split. Hover a point for
+   the recorded rank and date.
+3. Previous splits, when Scout has snapshots, appear as peak and last-observed
+   ranks under the graph.
+
+An empty queue means Scout has not processed a live ranked game in that queue
+during the current split. Rank history starts when Scout records one.
+
 ## Read combined performance
 
 The summary combines matching games from every Riot account in the profile.

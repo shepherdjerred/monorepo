@@ -78,7 +78,7 @@ describe("the V2 tournament finalization stage", () => {
 
   test("reports a lobby this pipeline already reported as already-finalized", async () => {
     // The resume case: a crash between this stage and the cursor advance means
-    // the stage runs again. `finalizeTournamentResult` refuses to re-report a
+    // the stage runs again. The managed-custom projector refuses to re-report a
     // lobby in `reported`, so the second pass changes nothing — which is what
     // makes resuming safe rather than a double-finalization.
     const fixture = await loadRawMatchFixture();

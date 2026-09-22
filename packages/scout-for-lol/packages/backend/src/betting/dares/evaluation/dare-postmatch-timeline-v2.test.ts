@@ -80,7 +80,7 @@ describe("Dare v2 post-match timeline ordering", () => {
       },
     };
     const result = await settleBucksWithDareTimelineV2(
-      { matchData, trackedPlayers: [] },
+      { matchData, matchDataSource: "RIOT", trackedPlayers: [] },
       dependencies,
     );
 
@@ -104,13 +104,39 @@ describe("Dare v2 post-match timeline ordering", () => {
       },
     };
     const result = await settleBucksWithDareTimelineV2(
-      { matchData, trackedPlayers: [] },
+      { matchData, matchDataSource: "RIOT", trackedPlayers: [] },
       dependencies,
     );
 
     expect(fetched).toBe(false);
     expect(receivedTimeline).toBe(false);
     expect(result.prefetchedTimeline).toBeUndefined();
+  });
+
+  test("settles a client-sourced match with explicit missing timeline evidence", async () => {
+    let fetched = false;
+    let receivedCoverage: string | undefined;
+    const dependencies: DarePostmatchTimelineV2Dependencies = {
+      needsTimeline: async () => true,
+      fetchTimeline: async () => {
+        fetched = true;
+        return timeline;
+      },
+      captureRanks: async () => ({ players: [], changes: new Map() }),
+      settleBucks: async (_match, _prisma, options) => {
+        receivedCoverage = options?.dareTimeline?.coverage;
+        return EMPTY_BUCKS_RESULT;
+      },
+    };
+
+    const result = await settleBucksWithDareTimelineV2(
+      { matchData, matchDataSource: "SCOUT_CLIENT", trackedPlayers: [] },
+      dependencies,
+    );
+
+    expect(fetched).toBe(false);
+    expect(receivedCoverage).toBe("missing");
+    expect(result.prefetchedTimeline).toBeNull();
   });
 
   test("does not settle Dare evidence when required rank capture fails", async () => {
@@ -128,7 +154,7 @@ describe("Dare v2 post-match timeline ordering", () => {
     };
     await expect(
       settleBucksWithDareTimelineV2(
-        { matchData, trackedPlayers: [] },
+        { matchData, matchDataSource: "RIOT", trackedPlayers: [] },
         dependencies,
       ),
     ).rejects.toThrow("Riot unavailable");

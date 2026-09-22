@@ -151,7 +151,7 @@ async function refreshOnce(
   ]);
   if (refs.length === 0) {
     logger.info(
-      `No delivered Flex reports to update for ${input.matchId} in ${input.serverId}`,
+      `No delivered match reports to update for ${input.matchId} in ${input.serverId}`,
     );
     return;
   }
@@ -207,7 +207,7 @@ async function refreshOnce(
   }
   if (updated === 0) {
     logger.info(
-      `No delivered Flex reports in ${input.serverId} to update for ${input.matchId}`,
+      `No delivered match reports in ${input.serverId} to update for ${input.matchId}`,
     );
   }
 }

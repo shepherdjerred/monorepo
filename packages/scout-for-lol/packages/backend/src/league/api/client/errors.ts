@@ -54,6 +54,21 @@ export class RiotHttpError extends Error {
 }
 
 /**
+ * A request that did not receive an HTTP response from Riot. These failures
+ * are an expected external-boundary condition, distinct from local database
+ * and persisted-contract failures that callers must surface.
+ */
+export class RiotTransportError extends Error {
+  public readonly url: string;
+
+  constructor(url: string, cause: unknown) {
+    super(`Riot API transport failure for ${url}`, { cause });
+    this.name = "RiotTransportError";
+    this.url = url;
+  }
+}
+
+/**
  * Extract an HTTP status only from the error type owned by the Riot client.
  * This keeps similarly shaped errors from Discord and other APIs out of Riot's
  * upstream-error policy.

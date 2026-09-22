@@ -14,6 +14,8 @@ node = "24.19.0"
 # temporalio/temporal release layout, which has no Darwin arm64 artifact.
 "aqua:temporalio/cli" = "1.8.1"
 rust = "1.98.0"
+# renovate: datasource=crate depName=cargo-packager
+"cargo:cargo-packager" = "0.11.8"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
 dotnet = "10.0.302"
 # The C# UniFFI generator is built by tasknotes-core's xtask from its

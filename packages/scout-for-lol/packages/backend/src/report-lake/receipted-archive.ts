@@ -292,6 +292,20 @@ export async function readArchivedPrematchSnapshot(
   });
 }
 
+/** Read a receipted canonical match back from raw storage. */
+export async function readArchivedMatchPayload(
+  descriptor: ArtifactDescriptor,
+  matchId: string,
+): Promise<RawMatch> {
+  return await readArchivedPayload({
+    descriptor,
+    matchId,
+    abortSignal: AbortSignal.timeout(ARCHIVE_FENCE_BUDGET.externalDeadlineMs),
+    parse: (value) => RawMatchSchema.safeParse(value),
+    expected: "a Match-V5 payload",
+  });
+}
+
 /**
  * Run external work, and refuse to let it outlive the lock fencing it.
  *

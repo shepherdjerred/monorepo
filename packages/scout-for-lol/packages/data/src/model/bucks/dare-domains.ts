@@ -40,7 +40,7 @@ export type DareTeamPosition = z.infer<typeof DareTeamPositionSchema>;
  * (`raw-timeline.schema.ts`) and the lake column stay open strings, because a
  * new Riot event type modelled as an enum at ingestion would fail the parse and
  * take down timeline processing entirely — the argument already written down for
- * tournament lobby events in `raw-tournament.schema.ts`. Recognising an event is
+ * managed custom-game events. Recognising an event is
  * a decision one layer up; here, at the point someone writes a contract, an
  * unrecognised type can only ever produce a count of zero, which settles as a
  * real loss.

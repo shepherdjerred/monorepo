@@ -1,13 +1,18 @@
 import { describe, expect, test } from "vitest";
 import {
+  EARLIER_RANKED_SPLIT_ID,
   SEASONS,
   SeasonIdSchema,
   getSeasonById,
   getAllSeasons,
   getCurrentSeason,
+  getCurrentRankedSplit,
+  getRankedSplits,
   getSeasonChoices,
   getSeasonDates,
   hasSeasonEnded,
+  rankedSplitForTimestamp,
+  rankedSplitIdFromSeasonId,
 } from "#src/seasons.ts";
 
 describe("seasons", () => {
@@ -199,5 +204,46 @@ describe("seasons", () => {
       const ended = hasSeasonEnded("INVALID_SEASON");
       expect(ended).toBeUndefined();
     });
+  });
+});
+
+describe("ranked splits", () => {
+  test("groups acts by YYYY_SEASON_N", () => {
+    expect(rankedSplitIdFromSeasonId("2026_SEASON_3_ACT_1")).toBe(
+      "2026_SEASON_3",
+    );
+    const seasonThree = getRankedSplits().find(
+      (split) => split.id === "2026_SEASON_3",
+    );
+    expect(seasonThree).toEqual({
+      id: "2026_SEASON_3",
+      displayName: "2026 Season 3",
+      startDate: new Date("2026-07-29T12:00:00-07:00"),
+      endDate: new Date("2026-09-22T23:59:59-07:00"),
+    });
+  });
+
+  test("treats a timestamp after the last act end as the last split", () => {
+    expect(
+      getCurrentRankedSplit(new Date("2026-09-20T12:00:00-07:00")).id,
+    ).toBe("2026_SEASON_3");
+    expect(
+      getCurrentRankedSplit(new Date("2026-09-23T00:00:00-07:00")).id,
+    ).toBe("2026_SEASON_3");
+    expect(
+      getCurrentRankedSplit(new Date("2026-06-15T12:00:00-07:00")).id,
+    ).toBe("2026_SEASON_2");
+  });
+
+  test("assigns observations before the first act to earlier", () => {
+    expect(
+      rankedSplitForTimestamp(new Date("2025-08-01T00:00:00-07:00")).id,
+    ).toBe(EARLIER_RANKED_SPLIT_ID);
+    expect(
+      rankedSplitForTimestamp(new Date("2026-07-29T08:00:00-07:00")).id,
+    ).toBe("2026_SEASON_2");
+    expect(
+      rankedSplitForTimestamp(new Date("2026-09-23T12:00:00-07:00")).id,
+    ).toBe("2026_SEASON_3");
   });
 });

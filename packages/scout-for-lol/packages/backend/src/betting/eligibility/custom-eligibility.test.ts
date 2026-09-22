@@ -23,17 +23,17 @@ describe("custom games and Bryan Bucks", () => {
     ).toBe(false);
   });
 
-  test("a Scout-minted 5v5 custom is bettable", () => {
+  test("a Scout-managed 5v5 custom is bettable", () => {
     expect(
       isBettableGame({
         queueType: "custom",
         participants: lobby(5, 5),
-        isScoutTournamentLobby: true,
+        isScoutManagedCustom: true,
       }),
     ).toBe(true);
   });
 
-  test("a Scout-minted lobby below 5v5 is not", () => {
+  test("a Scout-managed lobby below 5v5 is not", () => {
     // The MVP formula normalizes each player's share against a hardcoded
     // five-man baseline, so a smaller lobby produces systematically wrong
     // grades and payouts rather than merely noisy ones.
@@ -47,7 +47,7 @@ describe("custom games and Bryan Bucks", () => {
         isBettableGame({
           queueType: "custom",
           participants: lobby(blue ?? 0, red ?? 0),
-          isScoutTournamentLobby: true,
+          isScoutManagedCustom: true,
         }),
       ).toBe(false);
     }
@@ -58,7 +58,7 @@ describe("custom games and Bryan Bucks", () => {
       isBettableGame({
         queueType: "aram",
         participants: lobby(5, 5),
-        isScoutTournamentLobby: true,
+        isScoutManagedCustom: true,
       }),
     ).toBe(false);
   });

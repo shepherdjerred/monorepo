@@ -49,15 +49,15 @@ const settlement = vi.hoisted(
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: (riotMatchId: string) =>
+  resolveScoutV2ObservedMatchContext: (riotMatchId: string) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,
+      matchDataSource: "RIOT",
       matchData: {
         info: { gameCreation: Date.parse("2026-09-18T09:00:00.000Z") },
       },
       trackedPlayers: [],
-      allPlayerConfigs: [],
     }),
 }));
 

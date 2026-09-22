@@ -75,6 +75,12 @@ function formatRankText(rank: Rank | undefined): string | undefined {
   return `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
 }
 
+function formatMasteryPoints(points: number): string {
+  if (points >= 1_000_000) return `${(points / 1_000_000).toFixed(1)}M`;
+  if (points >= 1000) return `${Math.round(points / 1000).toString()}K`;
+  return points.toString();
+}
+
 export function resolveParticipantRankDisplay(
   participant: LoadingScreenParticipant,
   queueType?: QueueType,
@@ -383,6 +389,22 @@ export function PlayerCard({
             >
               {rankDisplay.text}
             </span>
+            {participant.mastery !== undefined && (
+              <span
+                style={{
+                  fontSize: `${Math.max(9, sizing.rankFontSize - 1).toString()}px`,
+                  fontFamily: font.body,
+                  fontWeight: 700,
+                  color: palette.gold[2],
+                  textShadow: "0 1px 2px rgba(0,0,0,0.9)",
+                  letterSpacing: "0.5px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                M{participant.mastery.level.toString()} ·{" "}
+                {formatMasteryPoints(participant.mastery.points)}
+              </span>
+            )}
           </div>
 
           <SummonerSpells

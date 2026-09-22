@@ -16,6 +16,7 @@ import {
   getConsumerPlayerMatchHistory,
   getConsumerPlayerProfileSummary,
 } from "#src/lib/player-profile/queries.ts";
+import { getConsumerPlayerRankHistory } from "#src/lib/player-profile/rank-history.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const ConsumerPlayerInput = z.object({
@@ -351,6 +352,16 @@ export const consumerPlayerRouter = router({
       });
       const { guildId, ...profile } = summary;
       return { ...profile, guild: guildProfileDisplay(guilds, guildId) };
+    }),
+
+  rankHistory: protectedProcedure
+    .input(ConsumerPlayerInput)
+    .query(async ({ ctx, input }) => {
+      const guilds = await assertConsumerPlayerScope(ctx.user);
+      return getConsumerPlayerRankHistory({
+        playerId: input.playerId,
+        guildIds: guilds.map((guild) => DiscordGuildIdSchema.parse(guild.id)),
+      });
     }),
 
   matchHistory: protectedProcedure

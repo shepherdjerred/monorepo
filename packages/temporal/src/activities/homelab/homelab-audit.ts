@@ -234,19 +234,19 @@ async function runAuditAgent(
   homelabAuditSubprocessExitTotal.inc({ exit_code: "sdk_success" });
   homelabAuditTokensTotal.inc(
     { model, direction: "input" },
-    result.usage.input_tokens,
+    result.usage.inputTokens,
   );
   homelabAuditTokensTotal.inc(
     { model, direction: "output" },
-    result.usage.output_tokens,
+    result.usage.outputTokens,
   );
   homelabAuditTokensTotal.inc(
     { model, direction: "cache_create" },
-    result.usage.cache_write_input_tokens,
+    result.usage.cacheWriteInputTokens,
   );
   homelabAuditTokensTotal.inc(
     { model, direction: "cache_read" },
-    result.usage.cached_input_tokens,
+    result.usage.cachedInputTokens,
   );
 
   jsonLog("info", "homelab audit agent completed", {
