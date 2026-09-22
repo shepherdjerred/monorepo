@@ -408,14 +408,11 @@ function advanceClientDispatchWatermark(
   current: ScoutClientMatchDispatchOrderKeyV2 | null,
   next: ScoutClientMatchDispatchItemV2,
 ): ScoutClientMatchDispatchOrderKeyV2 {
-  if (
-    current === null ||
+  return current === null ||
     (next.riotMatchId !== current.riotMatchId &&
       compareClientDispatchItemToOrderKey(next, current) > 0)
-  ) {
-    return clientDispatchOrderKey(next);
-  }
-  return current;
+    ? clientDispatchOrderKey(next)
+    : current;
 }
 
 /**

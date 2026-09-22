@@ -61,9 +61,11 @@ function messageType(message: SDKMessage): string {
 }
 
 function messageMayApplyEffect(message: SDKMessage): boolean {
-  if (message.type !== "assistant") return false;
-  return message.message.content.some(
-    (block) => block.type === "tool_use" || block.type === "server_tool_use",
+  return (
+    message.type === "assistant" &&
+    message.message.content.some(
+      (block) => block.type === "tool_use" || block.type === "server_tool_use",
+    )
   );
 }
 
@@ -116,11 +118,11 @@ function redactMessageValues(
 }
 
 function isToolResultMessage(message: SDKMessage): boolean {
-  if (message.type !== "user") return false;
-  if (message.tool_use_result !== undefined) return true;
   return (
-    Array.isArray(message.message.content) &&
-    message.message.content.some((block) => block.type === "tool_result")
+    message.type === "user" &&
+    (message.tool_use_result !== undefined ||
+      (Array.isArray(message.message.content) &&
+        message.message.content.some((block) => block.type === "tool_result")))
   );
 }
 
