@@ -39,8 +39,8 @@ reference. Load `scout-development` for its working procedure.
   selection orders by game end, match, and player identity.
 - Validate Riot, Discord, model, database, and object-store boundaries. Internal
   contract violations fail loudly; user input gets a useful response.
-- Prisma tests disconnect clients. Local routine tests use fixtures and the
-  documented dev-session/bootstrap path, not a real Discord login.
+- Local routine tests use fixtures and the documented dev-session/bootstrap path,
+  not a real Discord login.
 - Temporal owns recurring polling, refresh, maintenance, and evaluation jobs.
   Preserve Workflow determinism and versioning for open histories.
 

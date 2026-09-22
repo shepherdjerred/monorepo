@@ -20,9 +20,6 @@ for cross-package workflow.
 
 ## Swift and UI
 
-- Authored code uses strict Swift 6, SwiftLint, and swift-format without source
-  suppressions or unsafe flags. Generated code keeps its measured exemptions.
-- Exhaustive switches have no `default`; `@unknown default` is allowed.
 - In binding-importing files, use `CoreTask`/`CoreClock` and
   `_Concurrency.Task` to avoid generated-name collisions.
 - Durable failures must be visible and actionable in the UI, not merely parked

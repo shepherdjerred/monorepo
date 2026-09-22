@@ -19,7 +19,7 @@ architecture, media, voice, and diagnostics reference.
 - Transport is per item: music over the ordinary voice connection, video over
   Go Live. Exactly one component may call `sendAudioFrame` — two writers on one
   RTP timestamp interleave into noise, and both writers succeed while doing it.
-  An eslint rule enforces this; do not add an exemption.
+  An eslint rule enforces this.
 - A dropped audio frame is silent: the pacer keeps pace and playback reports a
   clean end while nobody hears anything. Keep the boolean send result and the
   send-side watchdog; they are the only signal that path has.
