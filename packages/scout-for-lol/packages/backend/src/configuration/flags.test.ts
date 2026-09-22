@@ -33,7 +33,6 @@ const PRODUCTION_DENIED_FLAGS = [
   "dare_extended_contracts_enabled",
   "dare_notifications_enabled",
   "custom_nights_enabled",
-  "tournament_lobbies_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
 ] as const;
@@ -104,7 +103,6 @@ describe("production hard-disable policy", () => {
         dare_extended_contracts_enabled: true,
         dare_notifications_enabled: true,
         custom_nights_enabled: true,
-        tournament_lobbies_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
       }),
@@ -128,6 +126,14 @@ describe("production hard-disable policy", () => {
     }
   });
 
+  test("fails native-client ingress closed without the production provider", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
+    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
+  });
+
   test("keeps those same beta rollouts outside production", () => {
     Bun.env["ENVIRONMENT"] = "beta";
     resetConfigurationForTests();
@@ -136,10 +142,13 @@ describe("production hard-disable policy", () => {
     expect(getFlag("mvp_votes_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("challenge_runs_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("clash_surface", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("custom_nights_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("ai_reports_unlimited", { user: ME })).toBe(true);
     expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
       MY_SERVER,
     ]);
+    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
+    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
   });
 
   test("leaves every other surface to its ordinary flag", async () => {

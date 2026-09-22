@@ -1,4 +1,4 @@
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import { resolveQueueTypeFromGame, sumToPoolTotal } from "@scout-for-lol/data";
 import {
   NotificationIntentKeySchema,
   type RiotMatchId,
@@ -17,6 +17,7 @@ import { getObservation } from "#src/database/durable/observation-repository.ts"
 import {
   dareSummaryDeliveryKeyPrefix,
   deliveryIntentKey,
+  lateBindingEarningsDeliveryKeyPrefix,
   postmatchDeliveryKeyPrefix,
   settlementDeliveryKeyPrefix,
 } from "#src/durable/match/delivery-intents.ts";
@@ -58,6 +59,7 @@ import type {
 } from "#src/database/durable/settlement-announcement-repository.ts";
 
 const logger = createLogger("scout-v2-match-intents");
+const EMPTY_POOL_TOTAL = sumToPoolTotal([]);
 
 /**
  * The post-match lane's notification intents: one durable row per decision to
@@ -400,6 +402,52 @@ export function recoveredSettlementRecordsOf(
   };
 }
 
+/** Earnings checkpointed specifically by post-pipeline client late binding. */
+export function recoveredLateBindingEarningsOf(
+  items: readonly SettlementAnnouncementItem[],
+): readonly EarnedAward[] {
+  return payloadsOfFamily(items, "late-earnings").flatMap((payload) =>
+    z.array(EarnedAwardSchema).parse(payload),
+  );
+}
+
+/**
+ * Build earnings-only settlement carriers, one per guild.
+ *
+ * These use a distinct intent key from the ordinary settlement recap because
+ * that recap may already be delivered before a client observation binds the
+ * match to a managed game.
+ */
+export function lateBindingEarningAnnouncementInputs(input: {
+  matchId: RiotMatchId;
+  earnings: readonly EarnedAward[];
+}): readonly SettlementAnnouncementInput[] {
+  const byGuild = new Map<string, EarnedAward[]>();
+  for (const award of input.earnings) {
+    byGuild.set(award.serverId, [
+      ...(byGuild.get(award.serverId) ?? []),
+      award,
+    ]);
+  }
+  return [...byGuild.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([serverId, earnings]) => ({
+      summary: {
+        matchId: input.matchId,
+        serverId,
+        winningTeamId: undefined,
+        voidReason: undefined,
+        winnersPool: EMPTY_POOL_TOTAL,
+        losersPool: EMPTY_POOL_TOTAL,
+        houseCut: EMPTY_POOL_TOTAL,
+        bets: [],
+      },
+      includeOutcome: true,
+      parlay: undefined,
+      earnings,
+    }));
+}
+
 export function recoveredAnnouncementsOf(
   items: readonly SettlementAnnouncementItem[],
 ): {
@@ -482,19 +530,9 @@ export function monetaryAnnouncementFreshnessDeadline(
   );
 }
 
-export async function mintSettlementIntentsV2(
+async function mintSettlementAnnouncementIntentsV2(
   db: Db,
-  args: {
-    matchId: RiotMatchId;
-    /** Recovered instructions; when present the summaries below are unused. */
-    announcements?: readonly SettlementAnnouncementInput[] | undefined;
-    closures?: readonly ClosedPool[] | undefined;
-    settlements?: readonly SettlementSummary[] | undefined;
-    parlaySettlements?: readonly ParlaySettlementSummary[] | undefined;
-    earnings?: readonly EarnedAward[] | undefined;
-    gameCreation: number;
-    createdAt: Date;
-  },
+  args: SettlementIntentMintInput & { readonly keyPrefix: string },
 ): Promise<MatchIntentsV2Summary> {
   const summary = emptySummary();
   const freshnessDeadline = monetaryAnnouncementFreshnessDeadline(
@@ -529,10 +567,7 @@ export async function mintSettlementIntentsV2(
         summary,
         await mintMatchIntent(db, {
           matchId: args.matchId,
-          key: deliveryIntentKey(
-            settlementDeliveryKeyPrefix(args.matchId),
-            ref.channelId,
-          ),
+          key: deliveryIntentKey(args.keyPrefix, ref.channelId),
           kind: "settlement",
           channelId: ref.channelId,
           createdAt: args.createdAt,
@@ -543,6 +578,47 @@ export async function mintSettlementIntentsV2(
     }
   }
   return summary;
+}
+
+type SettlementIntentMintInput = {
+  matchId: RiotMatchId;
+  /** Recovered instructions; when present the summaries below are unused. */
+  announcements?: readonly SettlementAnnouncementInput[] | undefined;
+  closures?: readonly ClosedPool[] | undefined;
+  settlements?: readonly SettlementSummary[] | undefined;
+  parlaySettlements?: readonly ParlaySettlementSummary[] | undefined;
+  earnings?: readonly EarnedAward[] | undefined;
+  gameCreation: number;
+  createdAt: Date;
+};
+
+export async function mintSettlementIntentsV2(
+  db: Db,
+  args: SettlementIntentMintInput,
+): Promise<MatchIntentsV2Summary> {
+  return await mintSettlementAnnouncementIntentsV2(db, {
+    ...args,
+    keyPrefix: settlementDeliveryKeyPrefix(args.matchId),
+  });
+}
+
+/** Mint the separate earnings-only recap created by client late binding. */
+export async function mintLateBindingEarningIntentsV2(
+  db: Db,
+  args: {
+    matchId: RiotMatchId;
+    earnings: readonly EarnedAward[];
+    gameCreation: number;
+    createdAt: Date;
+  },
+): Promise<MatchIntentsV2Summary> {
+  return await mintSettlementAnnouncementIntentsV2(db, {
+    matchId: args.matchId,
+    announcements: lateBindingEarningAnnouncementInputs(args),
+    gameCreation: args.gameCreation,
+    createdAt: args.createdAt,
+    keyPrefix: lateBindingEarningsDeliveryKeyPrefix(args.matchId),
+  });
 }
 
 /** Resolutions that announce nothing: nothing was staked, or nothing settled. */

@@ -18,10 +18,18 @@ import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { requireAuthoritativeMatchData } from "#src/league/tasks/postmatch/temporal-match-ingestion.ts";
+import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
+import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts";
+import {
+  readSelectedLocalCanonicalMatch,
+  resolveLocalCanonicalMatch,
+} from "#src/scout-client/canonical-match.ts";
 
 /**
  * What every V2 per-match Activity needs before it can do anything: the
- * authoritative Riot payload, and which tracked accounts are in it.
+ * authoritative match payload, and which tracked accounts are in it. Riot is
+ * preferred; a complete paired-client payload may fill the gap only after the
+ * source-selection delay and is then fixed for retries.
  *
  * Each Activity resolves this for itself rather than receiving it from the
  * one before. That is not redundancy to be optimised away — it is what makes
@@ -47,6 +55,8 @@ export type ScoutV2MatchContext = {
   readonly matchId: MatchId;
   readonly riotMatchId: RiotMatchId;
   readonly matchData: RawMatch;
+  /** Durable provenance of the canonical match payload. */
+  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
   /**
    * The tracked accounts in this match, as the roster stands NOW.
    *
@@ -55,6 +65,18 @@ export type ScoutV2MatchContext = {
    */
   readonly trackedPlayers: PlayerConfigEntry[];
 };
+
+async function readArchivedCanonicalMatch(
+  riotMatchId: RiotMatchId,
+): Promise<RawMatch | null> {
+  const descriptor = await storedRawArchiveDescriptor(
+    prisma,
+    riotMatchId,
+    "match",
+  );
+  if (descriptor === null) return null;
+  return await readArchivedMatchPayload(descriptor, riotMatchId);
+}
 
 /**
  * The same payload, over the roster the observation recorded for this match.
@@ -71,6 +93,8 @@ export type ScoutV2ObservedMatchContext = {
   readonly matchId: MatchId;
   readonly riotMatchId: RiotMatchId;
   readonly matchData: RawMatch;
+  /** Durable provenance of the canonical match payload. */
+  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
   /** Every PUUID the observation recorded as tracked in this match. */
   readonly observedPuuids: LeaguePuuid[];
   /** Those PUUIDs' configs, for the ones still registered. */
@@ -90,30 +114,59 @@ export type ScoutV2ObservedMatchContext = {
  * `MatchObservationRecordSchema` accepts, so the id is the source of truth for
  * this by construction.
  */
-async function authoritativeMatchData(
+async function canonicalMatchData(
   matchId: MatchId,
   riotMatchId: RiotMatchId,
-): Promise<RawMatch> {
-  return requireAuthoritativeMatchData(
-    riotMatchId,
-    await fetchMatchData(matchId, platformRouteOf(riotMatchId)),
-  );
+): Promise<{
+  readonly matchData: RawMatch;
+  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
+}> {
+  const archived = await readArchivedCanonicalMatch(riotMatchId);
+  const selectedLocal = await readSelectedLocalCanonicalMatch(riotMatchId);
+  const riotMatch =
+    archived === null && selectedLocal === null
+      ? await fetchMatchData(
+          matchId,
+          platformRouteOf(riotMatchId),
+          "return_undefined_on_404",
+        )
+      : undefined;
+  const resolvedLocal =
+    archived === null && selectedLocal === null && riotMatch === undefined
+      ? await resolveLocalCanonicalMatch(riotMatchId)
+      : null;
+  return {
+    matchData:
+      archived ??
+      selectedLocal ??
+      riotMatch ??
+      requireAuthoritativeMatchData(riotMatchId, resolvedLocal ?? undefined),
+    matchDataSource:
+      selectedLocal !== null || resolvedLocal !== null
+        ? "SCOUT_CLIENT"
+        : "RIOT",
+  };
 }
 
 export async function resolveScoutV2MatchContext(
   riotMatchId: RiotMatchId,
 ): Promise<ScoutV2MatchContext> {
   const matchId = MatchIdSchema.parse(riotMatchId);
-  const matchData = await authoritativeMatchData(matchId, riotMatchId);
   const accounts = await getAccountsWithState(prisma, getActiveServerIds());
+  const allPlayerConfigs = accounts.map((account) => account.config);
+  const { matchData, matchDataSource } = await canonicalMatchData(
+    matchId,
+    riotMatchId,
+  );
   const participants = new Set<string>(matchData.metadata.participants);
   return {
     matchId,
     riotMatchId,
     matchData,
-    trackedPlayers: accounts
-      .map((account) => account.config)
-      .filter((config) => participants.has(config.league.leagueAccount.puuid)),
+    matchDataSource,
+    trackedPlayers: allPlayerConfigs.filter((config) =>
+      participants.has(config.league.leagueAccount.puuid),
+    ),
   };
 }
 
@@ -166,12 +219,16 @@ export async function resolveScoutV2ObservedMatchContext(
   riotMatchId: RiotMatchId,
 ): Promise<ScoutV2ObservedMatchContext> {
   const matchId = MatchIdSchema.parse(riotMatchId);
-  const matchData = await authoritativeMatchData(matchId, riotMatchId);
+  const { matchData, matchDataSource } = await canonicalMatchData(
+    matchId,
+    riotMatchId,
+  );
   const observedPuuids = await observedTrackedPuuids(riotMatchId);
   return {
     matchId,
     riotMatchId,
     matchData,
+    matchDataSource,
     observedPuuids,
     // The client is passed rather than defaulted, as every other read here
     // does: a default parameter closes over the database module's own `prisma`

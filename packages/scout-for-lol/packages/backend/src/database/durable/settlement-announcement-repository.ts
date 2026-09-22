@@ -22,6 +22,7 @@ export const SETTLEMENT_ANNOUNCEMENT_FAMILIES = [
   "settlement",
   "parlay",
   "earnings",
+  "late-earnings",
   "dare-summary",
 ] as const;
 

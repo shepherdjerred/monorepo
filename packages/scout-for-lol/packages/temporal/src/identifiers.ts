@@ -36,6 +36,7 @@ export const SCOUT_WORKFLOW_NAMES = {
   duelSeries: "scoutDuelSeriesWorkflow",
   postMatchDiscoveryV2: "scoutPostMatchDiscoveryV2Workflow",
   matchProcessingV2: "scoutMatchProcessingV2Workflow",
+  clientMatchDispatchV2: "scoutClientMatchDispatchV2Workflow",
   prematchDiscoveryV2: "scoutPrematchDiscoveryV2Workflow",
   prematchGameV2: "scoutPrematchGameV2Workflow",
   notificationV2: "scoutNotificationV2Workflow",
@@ -45,7 +46,7 @@ export const SCOUT_WORKFLOW_NAMES = {
 } as const;
 
 /**
- * The eight V2 Workflow Types, as a closed set.
+ * The nine V2 Workflow Types, as a closed set.
  *
  * They are NEW types: the v1 entries above keep their names and their inputs
  * because open v1 executions recorded them. The task queue NAMES are likewise
@@ -55,6 +56,7 @@ export const SCOUT_WORKFLOW_NAMES = {
 export const SCOUT_V2_WORKFLOW_NAMES = [
   SCOUT_WORKFLOW_NAMES.postMatchDiscoveryV2,
   SCOUT_WORKFLOW_NAMES.matchProcessingV2,
+  SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2,
   SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
   SCOUT_WORKFLOW_NAMES.prematchGameV2,
   SCOUT_WORKFLOW_NAMES.notificationV2,
@@ -123,10 +125,12 @@ export type ScoutV2RedrivableWorkflowName =
 /** Every V2 Workflow whose start terms this table decides. */
 export type ScoutV2ReusePolicyWorkflowName =
   | ScoutV2RedrivableWorkflowName
+  | typeof SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2
   | typeof SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2;
 
 export const SCOUT_V2_REUSE_POLICIES = {
   [SCOUT_WORKFLOW_NAMES.matchProcessingV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
+  [SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
   [SCOUT_WORKFLOW_NAMES.notificationV2]: "ALLOW_DUPLICATE",
   [SCOUT_WORKFLOW_NAMES.lakeProjectionV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
   [SCOUT_WORKFLOW_NAMES.recoveryBatchV2]: "ALLOW_DUPLICATE",
@@ -290,6 +294,13 @@ export function scoutMatchProcessingV2WorkflowId(
   return `scout-${stage}-match-v2-${riotMatchId}`;
 }
 
+/** One serialized native-match dispatcher per environment. */
+export function scoutClientMatchDispatchV2WorkflowId(
+  stage: ScoutStage,
+): string {
+  return `scout-${stage}-client-match-dispatch-v2`;
+}
+
 /** One prematch poller per stage; the poll itself carries no identity. */
 export function scoutPrematchDiscoveryV2WorkflowId(stage: ScoutStage): string {
   return `scout-${stage}-prematch-discovery-v2`;
@@ -393,6 +404,7 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   discoverPostMatchIdsV2: "realtime",
   discoverPrematchGamesV2: "realtime",
   readMatchPipelineStateV2: "realtime",
+  readLegacyMatchCompletionV2: "realtime",
   readNotificationIntentV2: "realtime",
   readRecoveryBatchV2: "background",
   archiveMatchArtifactsV2: "realtime",
@@ -401,6 +413,7 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   applyMatchProgressionV2: "realtime",
   finalizeTournamentResultV2: "realtime",
   recordMatchReceiptsV2: "realtime",
+  recordClientMatchTerminalV2: "realtime",
   advanceMatchCursorV2: "realtime",
   mintPostmatchNotificationIntentsV2: "realtime",
   planMatchFanOutV2: "realtime",

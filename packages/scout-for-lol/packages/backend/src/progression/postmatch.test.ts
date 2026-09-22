@@ -93,6 +93,7 @@ describe("competitive progression post-match ordering", () => {
   test("stages timeline evidence before queueing and launching revisions", async () => {
     await processCompetitiveProgressionMatch({
       match: matchFixture(),
+      matchDataSource: "RIOT",
       timeline: null,
       trackedPlayers: [],
     });
@@ -118,6 +119,7 @@ describe("competitive progression post-match ordering", () => {
 
     await processCompetitiveProgressionMatch({
       match: matchFixture(),
+      matchDataSource: "RIOT",
       timeline: null,
       trackedPlayers: [],
     });
@@ -133,6 +135,34 @@ describe("competitive progression post-match ordering", () => {
       "launch",
     ]);
     expect(mocks.fetchTimelineForProgression).not.toHaveBeenCalled();
+    expect(mocks.processDuelResult).toHaveBeenCalledWith(
+      expect.any(Object),
+      undefined,
+      "beta",
+    );
+  });
+
+  test("queues local challenge gaps and sends local duel evidence to review", async () => {
+    mocks.duelMatchNeedsTimeline.mockResolvedValue(true);
+
+    await processCompetitiveProgressionMatch({
+      match: matchFixture(),
+      matchDataSource: "SCOUT_CLIENT",
+      timeline: undefined,
+      trackedPlayers: [],
+    });
+
+    expect(mocks.calls).toEqual([
+      "prepare",
+      "prepare",
+      "duel",
+      "hall",
+      "prepare",
+      "queue",
+      "launch",
+    ]);
+    expect(mocks.fetchTimelineForProgression).not.toHaveBeenCalled();
+    expect(mocks.fetchTimelineForDuelProgression).not.toHaveBeenCalled();
     expect(mocks.processDuelResult).toHaveBeenCalledWith(
       expect.any(Object),
       undefined,

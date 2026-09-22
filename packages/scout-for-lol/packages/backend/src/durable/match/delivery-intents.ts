@@ -157,6 +157,14 @@ export function settlementDeliveryKeyPrefix(matchId: string): string {
 }
 
 /**
+ * A late binding's earnings-only recap is a separate delivery decision from
+ * the settlement recap the completed match pipeline may already have sent.
+ */
+export function lateBindingEarningsDeliveryKeyPrefix(matchId: string): string {
+  return `late-earnings-discord:${matchId}`;
+}
+
+/**
  * The shared prefix of one DARE's summary key.
  *
  * Keyed by the Dare rather than by the match, because a Dare resolves exactly

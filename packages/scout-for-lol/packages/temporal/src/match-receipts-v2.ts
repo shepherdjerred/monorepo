@@ -44,9 +44,9 @@ export const SCOUT_V2_MATCH_RECEIPT_KINDS = {
  * The phases of the per-match serial core that leave a durable effect behind,
  * in the order the Workflow runs them.
  *
- * `tournament` is the tournament-code finalization stage, which runs last
- * because it publishes a Custom Night projection and must not do so before the
- * domain effects it describes have committed.
+ * `tournament` is the durable legacy name for managed-custom finalization. It
+ * runs last because it publishes a Custom Night projection and must not do so
+ * before the domain effects it describes have committed.
  *
  * The cursor advance is deliberately absent. It has no stage receipt because
  * it already has a better durable signal: `MatchTrackedAccount.cursorAdvancedAt`
@@ -110,6 +110,28 @@ export const scoutV2MatchStageConflictEvidenceCodec = defineVersionedCodec({
   kind: "scout-v2-match-stage-conflict-evidence",
   version: SCOUT_V2_CONTRACT_VERSION,
   schema: ScoutV2MatchStageConflictEvidenceSchema,
+});
+
+/**
+ * The shared client dispatcher reached a deterministic failure that requires
+ * operator review. This lives beside the match's other durable receipts so an
+ * HTTP retry can distinguish a terminal reconciliation from work that is
+ * merely still in flight.
+ */
+export const SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND: ReceiptKind =
+  ReceiptKindSchema.parse("v2-client-match-terminal");
+
+export const ScoutV2ClientMatchTerminalEvidenceSchema = z.strictObject({
+  riotMatchId: RiotMatchIdSchema,
+});
+export type ScoutV2ClientMatchTerminalEvidence = z.infer<
+  typeof ScoutV2ClientMatchTerminalEvidenceSchema
+>;
+
+export const scoutV2ClientMatchTerminalEvidenceCodec = defineVersionedCodec({
+  kind: "scout-v2-client-match-terminal-evidence",
+  version: SCOUT_V2_CONTRACT_VERSION,
+  schema: ScoutV2ClientMatchTerminalEvidenceSchema,
 });
 
 const PHASE_BY_RECEIPT_KIND = new Map<ReceiptKind, ScoutV2MatchPhase>(

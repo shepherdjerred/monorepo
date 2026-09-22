@@ -174,10 +174,10 @@ export type FlagName =
   | "hall_of_fame_enabled"
   | "mvp_votes_enabled"
   | "initial_match_history_import_enabled"
+  | "scout_client_ingestion"
   | "scout_operations_console_enabled"
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
-  | "tournament_lobbies_enabled"
   | "voice_assistant_enabled";
 
 const _assertFlagNameSubset: FlagName extends ScoutBooleanFlagKey
@@ -196,8 +196,8 @@ export type PolicyFlagName = FlagName;
  *
  * The set is deliberately narrow: real-money-shaped Bryan Bucks surfaces
  * (wallets, betting, parlays, transfers, and the Dares funded from them),
- * custom games and duels, which both issue tournament-code lobbies, and the
- * voice assistant, which captures audio. Everything else is governed by its
+ * custom games and duels, and the voice assistant, which captures audio.
+ * Everything else is governed by its
  * ordinary flag, so a surface that is merely beta today stays a Flipt
  * decision rather than a code change.
  */
@@ -212,7 +212,6 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "dare_extended_contracts_enabled",
     "dare_notifications_enabled",
     "custom_nights_enabled",
-    "tournament_lobbies_enabled",
     "duels_enabled",
     "voice_assistant_enabled",
   ],
@@ -275,7 +274,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   },
   custom_nights_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   competition_builder_v2_enabled: {
     default: false,
@@ -296,17 +297,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   ai_reports_unlimited: {
     default: false,
     overrides: [{ value: true, attributes: { user: ME }, betaOnly: true }],
-  },
-  /**
-   * Tournament-code custom lobbies (`/lobby`).
-   *
-   * The local override enables the beta test guild. This is permanently
-   * beta-only: production's hard-disable policy wins before this registry or
-   * Flipt is evaluated.
-   */
-  tournament_lobbies_enabled: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   ai_reviews_enabled: {
     default: false,
@@ -449,6 +439,13 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     overrides: [],
   },
   "scout-consumer-player-profiles-enabled": {
+    default: false,
+    overrides: [],
+  },
+  scout_client_ingestion: {
+    // Pairing and ingestion are available to every account through Flipt's
+    // managed environment rollout. The compatibility registry remains off so
+    // a provider outage fails closed instead of opening a new ingress surface.
     default: false,
     overrides: [],
   },

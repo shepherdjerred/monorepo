@@ -31,7 +31,7 @@ export function LobbyOperationControls(props: GameControlProps) {
         }}
         type="button"
       >
-        Recover tournament code
+        Retry lobby setup
       </button>
     );
   }
@@ -87,8 +87,8 @@ export function LobbyOperationControls(props: GameControlProps) {
         {props.game.voiceOverride ? "Require voice recovery" : "Override voice"}
       </button>
       <p className="waiting">
-        Start the lobby in League. Scout advances only when Riot observes the
-        game.
+        A player can create the custom lobby normally in League. Scout advances
+        when a paired Scout Client observes this exact roster.
       </p>
     </div>
   );

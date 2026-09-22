@@ -76,7 +76,7 @@ export type ScoutV2MatchStore = {
   applied: string[];
   calls: string[];
   completedClaims: Set<string>;
-  /** Whether this match belongs to a tournament-code custom game. */
+  /** Whether this match belongs to a managed custom game. */
   tournamentMatch: boolean;
   /** The committed delivery mode the resume point and the commit report. */
   deliveryMode: MatchDeliveryMode;

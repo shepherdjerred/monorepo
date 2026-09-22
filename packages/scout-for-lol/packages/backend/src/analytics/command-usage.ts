@@ -26,7 +26,6 @@ const DiscordCommandNameSchema = z.enum([
   "track",
   "list",
   "bb",
-  "lobby",
   "scout",
 ]);
 
@@ -46,9 +45,6 @@ const DiscordCommandSubcommandSchema = z.enum([
   "ask",
   "join",
   "leave",
-  "create",
-  "status",
-  "cancel",
 ]);
 
 /**

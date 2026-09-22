@@ -1460,6 +1460,9 @@
         "react-dom": "19.2.8",
       },
     },
+    "packages/scout-for-lol/packages/desktop": {
+      "name": "@scout-for-lol/desktop",
+    },
     "packages/scout-for-lol/packages/docs-site": {
       "name": "@scout-for-lol/docs-site",
       "version": "0.0.1",
@@ -3800,6 +3803,8 @@
     "@scout-for-lol/design-audit": ["@scout-for-lol/design-audit@workspace:packages/scout-for-lol/packages/design-audit"],
 
     "@scout-for-lol/design-system": ["@scout-for-lol/design-system@workspace:packages/scout-for-lol/packages/design-system"],
+
+    "@scout-for-lol/desktop": ["@scout-for-lol/desktop@workspace:packages/scout-for-lol/packages/desktop"],
 
     "@scout-for-lol/docs-site": ["@scout-for-lol/docs-site@workspace:packages/scout-for-lol/packages/docs-site"],
 

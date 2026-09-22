@@ -35,6 +35,7 @@ const DEFAULT_DEPENDENCIES: DarePostmatchTimelineV2Dependencies = {
 export async function settleBucksWithDareTimelineV2(
   input: {
     matchData: RawMatch;
+    matchDataSource: "RIOT" | "SCOUT_CLIENT";
     trackedPlayers: PlayerConfigEntry[];
     prismaClient?: ExtendedPrismaClient | undefined;
     /** Passed straight through; see `settleAndAwardBucks`. */
@@ -52,13 +53,26 @@ export async function settleBucksWithDareTimelineV2(
     input.matchData,
     prismaClient,
   );
-  const timeline = timelineRequired
-    ? await dependencies.fetchTimeline(
-        input.matchData,
-        MatchIdSchema.parse(input.matchData.metadata.matchId),
-        input.trackedPlayers,
-      )
-    : undefined;
+  // A canonical client result can fill Riot's match gap, but it cannot make a
+  // Riot timeline exist. Carry explicit missing coverage into Dare evaluation
+  // so those contracts enter their evidence-review path while every
+  // match-payload-only market can still settle and the managed result can
+  // finalize. Retrying Riot forever here would pin the shared client-match
+  // dispatcher on a resource that cannot appear.
+  const timeline =
+    timelineRequired && input.matchDataSource === "RIOT"
+      ? await dependencies.fetchTimeline(
+          input.matchData,
+          MatchIdSchema.parse(input.matchData.metadata.matchId),
+          input.trackedPlayers,
+        )
+      : undefined;
+  const dareTimeline =
+    timelineRequired && input.matchDataSource === "SCOUT_CLIENT"
+      ? { coverage: "missing" as const, events: [], participants: [] }
+      : timeline === undefined
+        ? undefined
+        : dareTimelineEvidenceFromRawV2(timeline);
   const rankCapture = await (
     dependencies.captureRanks ?? capturePostmatchRanksForDaresV3
   )(
@@ -69,9 +83,7 @@ export async function settleBucksWithDareTimelineV2(
     { prismaClient, getRank: getRankByPuuid },
   );
   const bucks = await dependencies.settleBucks(input.matchData, prismaClient, {
-    ...(timeline === undefined
-      ? {}
-      : { dareTimeline: dareTimelineEvidenceFromRawV2(timeline) }),
+    ...(dareTimeline === undefined ? {} : { dareTimeline }),
     ...(input.announcementSink === undefined
       ? {}
       : { announcementSink: input.announcementSink }),

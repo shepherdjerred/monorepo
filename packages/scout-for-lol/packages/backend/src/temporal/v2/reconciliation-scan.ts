@@ -118,16 +118,16 @@ function requestedInputEnvelope(
  * between a new Workflow Type and a stranded request for it that no sweep ever
  * looks at.
  *
- * Four of the eight map to nothing, and that is a statement about the result
+ * Five of the nine map to nothing, and that is a statement about the result
  * contract rather than about the work. `ScoutReconciliationScanV2Result` names
- * four families and those four are none of them. They are also the four keyed
- * by stage, trigger or a live game rather than by a durable row, so their own
- * schedule re-requests the identical Workflow ID on its next tick and collapses
- * onto whatever is already in flight; a stranded request there is re-driven by
- * the poller that owns it, not dropped.
+ * four families and those five are none of them. They are keyed by stage,
+ * trigger or a live game rather than by a durable row, so their schedule or
+ * next client signal re-requests the identical Workflow ID and collapses onto
+ * whatever is already in flight; no durable row is stranded by omitting them.
  */
 const V2_START_FOLDS = {
   [SCOUT_WORKFLOW_NAMES.postMatchDiscoveryV2]: null,
+  [SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2]: null,
   [SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2]: null,
   [SCOUT_WORKFLOW_NAMES.prematchGameV2]: null,
   [SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2]: null,

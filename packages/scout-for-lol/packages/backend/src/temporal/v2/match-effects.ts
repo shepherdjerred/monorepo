@@ -31,11 +31,13 @@ import {
 import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-context.ts";
 import {
   matchMayAnnounce,
+  mintLateBindingEarningIntentsV2,
   mintDareSummaryIntentsV2,
   recoveredSettlementRecordsOf,
   mintPostmatchIntentsV2,
   mintSettlementIntentsV2,
   recoveredAnnouncementsOf,
+  recoveredLateBindingEarningsOf,
 } from "#src/temporal/v2/notification/match-intents.ts";
 import {
   listSettlementAnnouncementItems,
@@ -178,6 +180,33 @@ function checkpointingSettlementSink(
 }
 
 /**
+ * Checkpoint earnings created after the ordinary settlement lane completed.
+ *
+ * The distinct family keeps a retry from folding old settlement earnings into
+ * the new earnings-only notification and announcing them twice.
+ */
+export function lateBindingEarningsCheckpointSink(
+  riotMatchId: RiotMatchId,
+  mayAnnounce: boolean,
+): SettlementAnnouncementSink {
+  const sink = checkpointingSettlementSink(riotMatchId, mayAnnounce);
+  return {
+    ...sink,
+    recordAnnouncementItem: async (db, item) => {
+      if (item.family !== "earnings") {
+        throw new Error(
+          `Late-binding earnings attempted to checkpoint unexpected ${item.family} announcement`,
+        );
+      }
+      await sink.recordAnnouncementItem(db, {
+        ...item,
+        family: "late-earnings",
+      });
+    },
+  };
+}
+
+/**
  * Mint both announcement families from the instructions one settlement
  * produced, as one transaction.
  *
@@ -217,6 +246,30 @@ async function mintFromInstructions(
   logger.info(
     `🔔 Settlement notifications for ${riotMatchId}: ${String(announced.minted)} recap(s) and ${String(dareSummaries.minted)} Dare summary(ies) minted, ${String(announced.silent + dareSummaries.silent)} withheld as silent-backfill, ${String(announced.undeliverable)} undeliverable`,
   );
+}
+
+/**
+ * Mint every late-binding earnings instruction currently standing for a match.
+ *
+ * Late binding can add earnings after the ordinary match Workflow has already
+ * planned fan-out. Persisting the instruction with the earning makes that
+ * transition recoverable; the distinct family excludes earnings the ordinary
+ * settlement recap already announced. Minting the late-binding set is
+ * idempotent, and the reconciliation sweep drives any newly created intent.
+ */
+export async function mintStandingLateBindingEarningIntentsV2(input: {
+  riotMatchId: RiotMatchId;
+  gameCreation: number;
+}): Promise<void> {
+  const standing = await listSettlementAnnouncementItems(prisma, {
+    matchId: input.riotMatchId,
+  });
+  await mintLateBindingEarningIntentsV2(prisma, {
+    matchId: input.riotMatchId,
+    earnings: recoveredLateBindingEarningsOf(standing),
+    gameCreation: input.gameCreation,
+    createdAt: new Date(),
+  });
 }
 
 /**
@@ -337,6 +390,7 @@ export async function settleMatchMarketsV2(input: {
         async () =>
           await settleBucksWithDareTimelineV2({
             matchData: context.matchData,
+            matchDataSource: context.matchDataSource,
             trackedPlayers: context.trackedPlayers,
             prismaClient: prisma,
             // One sink either way, because the two concerns it used to fuse
@@ -460,6 +514,7 @@ export async function applyMatchProgressionV2(input: {
         async () => {
           await processCompetitiveProgressionMatch({
             match: context.matchData,
+            matchDataSource: context.matchDataSource,
             timeline: undefined,
             trackedPlayers: context.trackedPlayers,
           });

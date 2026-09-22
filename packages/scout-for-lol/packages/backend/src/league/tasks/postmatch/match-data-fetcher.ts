@@ -40,24 +40,27 @@ const logger = createLogger("match-data-fetcher");
 export async function fetchMatchData(
   matchId: MatchId,
   route: PlatformRoute | Region,
+  failureMode:
+    "return_undefined" | "return_undefined_on_404" = "return_undefined",
 ): Promise<RawMatch | undefined> {
   const regionalRoute = platformToRegionalRoute(route);
-
-  const match = await callRiotOrUndefined(
-    {
-      source: "match-data",
-      schema: RawMatchSchema,
-      schemaLabel: "match",
-      context: { matchId, region: route },
-      onValidationFailure: {
-        kind: "save-to-s3",
-        assetType: "match",
-        id: matchId,
-      },
-      sentry: true,
+  const config: CallRiotConfig<RawMatch> = {
+    source: "match-data",
+    schema: RawMatchSchema,
+    schemaLabel: "match",
+    context: { matchId, region: route },
+    onValidationFailure: {
+      kind: "save-to-s3",
+      assetType: "match",
+      id: matchId,
     },
-    () => riotClient.match.get(matchId, regionalRoute),
-  );
+    sentry: true,
+  };
+  const fetch = () => riotClient.match.get(matchId, regionalRoute);
+  const match =
+    failureMode === "return_undefined_on_404"
+      ? await callRiotOrUndefinedOn404(config, fetch)
+      : await callRiotOrUndefined(config, fetch);
   if (match === undefined) {
     return undefined;
   }
@@ -100,6 +103,11 @@ export async function fetchMatchData(
       })),
     },
   });
+  if (failureMode === "return_undefined_on_404") {
+    throw new Error(
+      `Matchmade game ${matchId} is missing required fields: ${missing.join(", ")}`,
+    );
+  }
   return undefined;
 }
 

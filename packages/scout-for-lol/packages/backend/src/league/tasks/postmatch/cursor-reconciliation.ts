@@ -3,6 +3,10 @@ import type {
   ScoutMatchIngestionInput,
 } from "@scout-for-lol/temporal";
 import { scoutMatchWorkflowId } from "@scout-for-lol/temporal";
+import type { ScoutMatchRefV2 } from "@scout-for-lol/temporal/contracts-v2";
+import type { ScoutLegacyMatchCompletionV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
+import { ScoutLegacyMatchCompletionV2ResultSchema } from "@scout-for-lol/temporal/activity-contracts-v2";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
 
 import { prisma, updateLastProcessedMatch } from "#src/database/index.ts";
@@ -10,6 +14,32 @@ import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
 import { recordCursorAdvanced } from "#src/durable/match/progression-facts.ts";
 import { logger } from "#src/logger.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
+
+/**
+ * Read the only strict completion marker the legacy ingestion owns.
+ *
+ * Its durable receipts are observability writes and intentionally fail open;
+ * the Workflow execution reaches COMPLETED only after archival, settlement,
+ * delivery, progression, and the authoritative player cursor loop return.
+ */
+export async function readLegacyMatchCompletionV2(
+  input: ScoutMatchRefV2,
+): Promise<ScoutLegacyMatchCompletionV2Result> {
+  const childWorkflowId = scoutMatchWorkflowId(input.stage, input.riotMatchId);
+  const supervisor = currentScoutTemporalSupervisor();
+  if (supervisor === undefined) {
+    throw new Error(
+      `Temporal supervisor is unavailable while reading ${childWorkflowId}`,
+    );
+  }
+  const description = await supervisor
+    .client()
+    .workflow.getHandle(childWorkflowId)
+    .describe();
+  return ScoutLegacyMatchCompletionV2ResultSchema.parse({
+    completed: description.status.name === "COMPLETED",
+  });
+}
 
 /**
  * Move a discovering account past a match that another execution already
@@ -42,29 +72,19 @@ export async function reconcileIngestedMatchCursor(
   input: ScoutMatchIngestionInput,
 ): Promise<IngestedMatchCursorReconciliation> {
   const matchId = MatchIdSchema.parse(input.matchId);
+  const riotMatchId = RiotMatchIdSchema.parse(input.matchId);
   const puuid = LeaguePuuidSchema.parse(input.sourcePuuid);
   const childWorkflowId = scoutMatchWorkflowId(input.stage, matchId);
-
-  const supervisor = currentScoutTemporalSupervisor();
-  if (supervisor === undefined) {
-    // Reached only from a Workflow running on this worker, which cannot be
-    // true without a supervisor. A broken internal contract, not a condition
-    // to paper over with a "not completed" answer that would stall the cursor.
-    throw new Error(
-      `Temporal supervisor is unavailable while reconciling ${childWorkflowId}`,
-    );
-  }
-
   // The caller only reaches this after Temporal refused the start because the
   // ID is taken, so the execution exists; a missing one is a broken contract
   // and `describe` throwing is the correct report of it.
-  const description = await supervisor
-    .client()
-    .workflow.getHandle(childWorkflowId)
-    .describe();
-  if (description.status.name !== "COMPLETED") {
+  const completion = await readLegacyMatchCompletionV2({
+    stage: input.stage,
+    riotMatchId,
+  });
+  if (!completion.completed) {
     logger.warn(
-      `[cursorReconciliation] ${childWorkflowId} is ${description.status.name}, not COMPLETED; leaving ${puuid}'s cursor where it is`,
+      `[cursorReconciliation] ${childWorkflowId} is not COMPLETED; leaving ${puuid}'s cursor where it is`,
     );
     return { outcome: "not-completed" };
   }

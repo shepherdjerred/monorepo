@@ -2,7 +2,6 @@ import "dotenv/config";
 import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
-import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
 import {
   DEFAULT_EXPLORE_QUOTA_LIMITS,
   ExploreQuotaLimitsInputSchema,
@@ -318,16 +317,6 @@ function computeConfiguration() {
         .default(JSON.stringify(DEFAULT_EXPLORE_QUOTA_LIMITS))
         .asString(),
     ),
-    // Seeds the dynamic-config snapshot so a read before the first flag
-    // refresh matches the env layer. "stub" is the safe default: stub codes
-    // cannot create a real game.
-    tournamentApiMode: TournamentApiModeSchema.parse(
-      env.get("TOURNAMENT_API_MODE").default("stub").asString(),
-    ),
-    tournamentMaxOpenLobbies: env
-      .get("TOURNAMENT_MAX_OPEN_LOBBIES")
-      .default("10")
-      .asIntPositive(),
     // env-var's asIntPositive admits zero, which matters here: 0 silences
     // tips without removing the feature.
     featureTipPercent: env
@@ -491,17 +480,11 @@ const configuration: Configuration = {
   get llmDailyTokenBudget() {
     return getConfiguration().llmDailyTokenBudget;
   },
-  get tournamentApiMode() {
-    return getConfiguration().tournamentApiMode;
-  },
   get featureTipPercent() {
     return getConfiguration().featureTipPercent;
   },
   get featureTipCooldownHours() {
     return getConfiguration().featureTipCooldownHours;
-  },
-  get tournamentMaxOpenLobbies() {
-    return getConfiguration().tournamentMaxOpenLobbies;
   },
   get voiceAssistant() {
     return getConfiguration().voiceAssistant;
