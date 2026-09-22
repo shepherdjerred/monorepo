@@ -386,7 +386,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable post-match Flex community MVP voting on Discord reports.",
+      "purpose": "Enable post-match community MVP voting on Discord reports for ranked 5-stacks.",
       "type": "boolean",
       "default": false,
       "rollouts": [

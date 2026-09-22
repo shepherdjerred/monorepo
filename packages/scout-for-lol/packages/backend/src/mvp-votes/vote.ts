@@ -194,7 +194,7 @@ function parseReportMessageIds(value: unknown): Record<string, string> {
 }
 
 /**
- * Persist delivered Flex report message IDs on the contest so tally refresh
+ * Persist delivered report message IDs on the contest so tally refresh
  * still has a target after ActiveGame rows expire. No-op when this match has
  * no contest (no vote furniture).
  */

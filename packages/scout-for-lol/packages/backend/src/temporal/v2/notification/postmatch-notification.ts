@@ -7,7 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
-import { withFlexMvpVoteFurniture } from "#src/mvp-votes/components.ts";
+import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
 import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
@@ -116,7 +116,7 @@ function classifyComponents(
   ) {
     return "match-link";
   }
-  const voteFurniture = withFlexMvpVoteFurniture(
+  const voteFurniture = withMvpVoteFurniture(
     { components: matchLinkComponents(matchId) },
     matchId,
   );
@@ -238,7 +238,7 @@ export function buildPostmatchNotificationMessageV2(
     case "match-link":
       return { ...message, components: matchLinkComponents(matchId) };
     case "match-link-mvp-vote":
-      return withFlexMvpVoteFurniture(
+      return withMvpVoteFurniture(
         { ...message, components: matchLinkComponents(matchId) },
         matchId,
       );

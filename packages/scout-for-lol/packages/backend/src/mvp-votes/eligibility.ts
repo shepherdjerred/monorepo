@@ -2,6 +2,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
+  RiotTeamIdSchema,
   type DiscordAccountId,
   type DiscordGuildId,
   type LeaguePuuid,
@@ -12,20 +13,60 @@ import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { indexOfPuuid, type MatchMvpRoster } from "#src/mvp-votes/roster.ts";
 
+export const MIN_TRACKED_PLAYERS_ON_ONE_TEAM = 3;
+
 export async function isMvpVotesEnabledForGuild(
   guildId: DiscordGuildId,
 ): Promise<boolean> {
   return await isPolicyEnabled("mvp_votes_enabled", { server: guildId });
 }
 
-export async function shouldAttachFlexMvpVotes(input: {
+export function isMvpVoteQueue(queueType: QueueType | undefined): boolean {
+  return queueType === "flex" || queueType === "ranked 5s";
+}
+
+export function hasTrackedSideForMvpVotes(input: {
+  participants: readonly { puuid: string; teamId: number }[];
+  trackedPuuids: readonly LeaguePuuid[];
+}): boolean {
+  const tracked = new Set<string>(input.trackedPuuids);
+  const counts = new Map<RiotTeamId, number>();
+  for (const participant of input.participants) {
+    if (!tracked.has(participant.puuid)) {
+      continue;
+    }
+    const teamId = RiotTeamIdSchema.safeParse(participant.teamId);
+    if (!teamId.success) {
+      continue;
+    }
+    counts.set(teamId.data, (counts.get(teamId.data) ?? 0) + 1);
+  }
+  for (const count of counts.values()) {
+    if (count >= MIN_TRACKED_PLAYERS_ON_ONE_TEAM) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export async function shouldAttachMvpVotes(input: {
   queueType: QueueType | undefined;
   targetGuildIds: readonly DiscordGuildId[];
+  participants: readonly { puuid: string; teamId: number }[];
+  trackedPuuids: readonly LeaguePuuid[];
 }): Promise<boolean> {
   // V2 attests one postmatch message for every destination. Furniture that
   // went out because *any* audience guild had the flag would also land in
   // guilds where the flag is off. Require every destination instead.
-  if (input.queueType !== "flex" || input.targetGuildIds.length === 0) {
+  if (!isMvpVoteQueue(input.queueType) || input.targetGuildIds.length === 0) {
+    return false;
+  }
+  if (
+    !hasTrackedSideForMvpVotes({
+      participants: input.participants,
+      trackedPuuids: input.trackedPuuids,
+    })
+  ) {
     return false;
   }
   for (const guildId of input.targetGuildIds) {
@@ -46,7 +87,7 @@ export type MatchMvpVoter = {
 };
 
 /**
- * The linked guild player whose Riot account is in this Flex match, or
+ * The linked guild player whose Riot account is in this match, or
  * undefined if this Discord user did not play it on a tracked account.
  */
 export async function findMatchMvpVoter(
