@@ -32,22 +32,33 @@ export function packagesSection(lockText: string): string {
   let inString = false;
   for (let i = start + marker.length - 1; i < lockText.length; i++) {
     const c = lockText[i];
+    if (c === undefined) continue;
     if (inString) {
-      if (c === "\\") i++;
-      else if (c === '"') inString = false;
+      if (c === "\\") {
+        i++;
+      } else if (c === '"') {
+        inString = false;
+      }
       continue;
     }
-    if (c === '"') {
-      inString = true;
-      continue;
+    switch (c) {
+      case '"': {
+        inString = true;
+        break;
+      }
+      case "{": {
+        depth++;
+        break;
+      }
+      case "}": {
+        depth--;
+        if (depth === 0) return lockText.slice(start, i + 1);
+        break;
+      }
+      default: {
+        break;
+      }
     }
-    if (c === "{") {
-      depth++;
-      continue;
-    }
-    if (c !== "}") continue;
-    depth--;
-    if (depth === 0) return lockText.slice(start, i + 1);
   }
   throw new Error('bun.lock "packages" section is unterminated');
 }
@@ -212,14 +223,37 @@ const generatedDirectoryNames = new Set([
   "coverage",
   "dist",
   "node_modules",
+  // Rust build output: cargo creates and deletes `.tmp*.temp-archive`
+  // directories under target/ while parallel builds run, which the walker
+  // below must never descend into.
+  "target",
 ]);
+
+/**
+ * Sorted directory entries, tolerating directories that vanish mid-walk.
+ * Parallel builds create and delete directories (cargo temp archives, test
+ * outputs) while the patch-file walk runs; a vanished directory cannot hold
+ * a tracked patch file, so the walker skips it instead of failing.
+ */
+async function readDirEntries(directory: string) {
+  try {
+    const entries = await readdir(directory, { withFileTypes: true });
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+    return entries;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return;
+    }
+    throw error;
+  }
+}
 
 async function packagePatchFiles(root: string): Promise<string[]> {
   const files: string[] = [];
 
   async function visit(directory: string, relative: string): Promise<void> {
-    const entries = await readdir(directory, { withFileTypes: true });
-    entries.sort((a, b) => a.name.localeCompare(b.name));
+    const entries = await readDirEntries(directory);
+    if (entries === undefined) return;
 
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
