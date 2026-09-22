@@ -16,7 +16,6 @@ test("selects only the lobby champion's mastery", () => {
             lastPlayTime: 1_700_000_000_000,
             championPointsSinceLastLevel: 100_000,
             championPointsUntilNextLevel: 0,
-            chestGranted: true,
             tokensEarned: 2,
           },
         ],
