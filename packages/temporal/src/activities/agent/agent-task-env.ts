@@ -1,4 +1,8 @@
 import type { AgentTaskProvider } from "#shared/agent/agent-task.ts";
+import {
+  isProviderCredentialKey,
+  PROVIDER_CREDENTIAL_KEYS,
+} from "#shared/agent/provider-credentials.ts";
 
 const MOUNTED_SECRET_PATHS = [
   "/var/run/secrets/kubernetes.io/serviceaccount/token",
@@ -32,38 +36,6 @@ const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
   "GITHUB_WEBHOOK_SECRET",
   "XCODE_CLOUD_WEBHOOK_TOKEN",
 ]);
-
-// Direct inference-provider keys. No agent may inherit one from the worker.
-const DIRECT_PROVIDER_CREDENTIAL_KEYS = new Set([
-  "ANTHROPIC_API_KEY",
-  "CODEX_API_KEY",
-  "GEMINI_API_KEY",
-  "GOOGLE_GENERATIVE_AI_API_KEY",
-  "GROQ_API_KEY",
-  "OPENAI_API_KEY",
-  "OPENROUTER_API_KEY",
-  "XAI_API_KEY",
-]);
-
-// Legacy subscription credentials are scrubbed even though fresh tasks no
-// longer receive them.
-const PROVIDER_CREDENTIAL_KEYS = {
-  claude: "CLAUDE_CODE_OAUTH_TOKEN",
-  codex: "OPENROUTER_API_KEY",
-} as const satisfies Record<AgentTaskProvider, string>;
-const AGENT_SUBSCRIPTION_CREDENTIAL_KEYS = new Set<string>(
-  Object.values(PROVIDER_CREDENTIAL_KEYS),
-);
-
-// Every inference credential the worker holds, direct or subscription. An
-// agent is given exactly one of these explicitly; it must never inherit
-// another provider's credential just because the worker also holds it.
-function isProviderCredentialKey(key: string): boolean {
-  return (
-    DIRECT_PROVIDER_CREDENTIAL_KEYS.has(key) ||
-    AGENT_SUBSCRIPTION_CREDENTIAL_KEYS.has(key)
-  );
-}
 
 export function isReportDeliveryBoundaryEnvironmentKey(key: string): boolean {
   return (

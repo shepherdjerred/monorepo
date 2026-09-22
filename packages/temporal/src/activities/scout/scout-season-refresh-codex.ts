@@ -139,10 +139,10 @@ export async function runSeasonAgent(
 
   scoutSeasonRefreshSubprocessExitTotal.inc({ exit_code: "sdk_success" });
   for (const [direction, count] of [
-    ["input", result.usage.input_tokens],
-    ["output", result.usage.output_tokens],
-    ["cache_create", result.usage.cache_write_input_tokens],
-    ["cache_read", result.usage.cached_input_tokens],
+    ["input", result.usage.inputTokens],
+    ["output", result.usage.outputTokens],
+    ["cache_create", result.usage.cacheWriteInputTokens],
+    ["cache_read", result.usage.cachedInputTokens],
   ] as const) {
     scoutSeasonRefreshTokensTotal.inc({ model: input.model, direction }, count);
   }

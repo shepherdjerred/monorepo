@@ -145,7 +145,7 @@ ip6tables -L OUTPUT -n`,
         readOnlyRootFilesystem: false,
         capabilities: {
           drop: [Capability.ALL],
-          add: [Capability.SETUID],
+          add: [Capability.CHOWN, Capability.DAC_OVERRIDE, Capability.SETUID],
         },
       },
       resources: {
