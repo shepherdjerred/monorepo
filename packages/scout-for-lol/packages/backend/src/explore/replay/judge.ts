@@ -23,7 +23,20 @@ import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
  * reason: assertions inside the script that calls the model are never tested.
  */
 
-export const EXPLORE_JUDGE_MODEL = "gpt-5.6-luna";
+/**
+ * Deliberately not the model under test.
+ *
+ * Explore runs on `gpt-5.6-luna`, and a model is a lenient grader of its own
+ * output — most of all on the honesty dimension here, where the judgement is
+ * about whether an answer overstated what it knew. Grading luna with luna
+ * would fold that bias straight into the only quality number this harness
+ * produces.
+ *
+ * Terra costs ten times luna per token, which does not matter at this shape:
+ * the judge makes one short call per case against text already on disk, where
+ * a sweep makes many long tool-using turns against a live lake.
+ */
+export const EXPLORE_JUDGE_MODEL = "gpt-5.6-terra";
 
 /**
  * What the judge is asked to observe, and nothing more.
