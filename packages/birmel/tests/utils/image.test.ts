@@ -77,7 +77,11 @@ describe("downloadImage", () => {
       }),
     );
 
-    const result = await downloadImage("https://example.com/test.png");
+    const result = await downloadImage(
+      "https://example.com/test.png",
+      undefined,
+      mockPublicResolver,
+    );
     expect(result.contentType).toBe("image/png");
     expect(Buffer.from(result.buffer)).toEqual(PNG_HEADER);
   });
@@ -90,7 +94,11 @@ describe("downloadImage", () => {
       }),
     );
 
-    const result = await downloadImage("https://example.com/test.bin");
+    const result = await downloadImage(
+      "https://example.com/test.bin",
+      undefined,
+      mockPublicResolver,
+    );
     expect(result.contentType).toBe("image/jpeg");
     expect(Buffer.from(result.buffer)).toEqual(JPEG_HEADER);
   });
@@ -103,7 +111,11 @@ describe("downloadImage", () => {
       }),
     );
 
-    const webpResult = await downloadImage("https://example.com/unknown");
+    const webpResult = await downloadImage(
+      "https://example.com/unknown",
+      undefined,
+      mockPublicResolver,
+    );
     expect(webpResult.contentType).toBe("image/webp");
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
@@ -113,7 +125,11 @@ describe("downloadImage", () => {
       }),
     );
 
-    const gifResult = await downloadImage("https://example.com/unknown");
+    const gifResult = await downloadImage(
+      "https://example.com/unknown",
+      undefined,
+      mockPublicResolver,
+    );
     expect(gifResult.contentType).toBe("image/gif");
   });
 
@@ -126,7 +142,11 @@ describe("downloadImage", () => {
     );
 
     await expect(
-      downloadImage("https://example.com/error-page"),
+      downloadImage(
+        "https://example.com/error-page",
+        undefined,
+        mockPublicResolver,
+      ),
     ).rejects.toThrow("Unsupported image type");
   });
 
@@ -150,7 +170,11 @@ describe("downloadImage", () => {
         }),
       );
 
-    const result = await downloadImageWithRetry("https://example.com/test.png");
+    const result = await downloadImageWithRetry(
+      "https://example.com/test.png",
+      undefined,
+      mockPublicResolver,
+    );
     expect(result.contentType).toBe("image/png");
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
@@ -174,9 +198,13 @@ describe("downloadImage", () => {
       }),
     );
 
-    await expect(downloadImage("https://example.com/huge.png")).rejects.toThrow(
-      /Image too large/,
-    );
+    await expect(
+      downloadImage(
+        "https://example.com/huge.png",
+        undefined,
+        mockPublicResolver,
+      ),
+    ).rejects.toThrow(/Image too large/);
   });
 
   test("rejects non-HTTPS download URLs", async () => {
@@ -194,7 +222,11 @@ describe("downloadImage", () => {
     );
 
     await expect(
-      downloadImage("https://example.com/redirect.png"),
+      downloadImage(
+        "https://example.com/redirect.png",
+        undefined,
+        mockPublicResolver,
+      ),
     ).rejects.toThrow(/private or reserved IP/);
   });
 
@@ -213,7 +245,11 @@ describe("downloadImage", () => {
         }),
       );
 
-    const result = await downloadImage("https://example.com/initial.png");
+    const result = await downloadImage(
+      "https://example.com/initial.png",
+      undefined,
+      mockPublicResolver,
+    );
     expect(result.contentType).toBe("image/png");
     expect(Buffer.from(result.buffer)).toEqual(PNG_HEADER);
   });
