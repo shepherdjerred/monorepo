@@ -1,13 +1,138 @@
 import { createHash } from "node:crypto";
-import type { ObjectHeaders } from "./schemas.ts";
-import type { ObjectStore, StoredObject } from "./store.ts";
+import type { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ManifestEntry, ObjectHeaders } from "./schemas.ts";
+import type { ListedObject, ObjectStore, StoredObject } from "./store.ts";
 
 const DESTINATION_READ_ATTEMPTS = 6;
+const TRANSIENT_OPERATION_ATTEMPTS = 12;
+const TRANSIENT_ERROR_CODES = new Set([
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "ECONNABORTED",
+  "EPIPE",
+  "ENOTFOUND",
+  "ETIMEDOUT",
+]);
 
 export const OPAQUE_OBJECT_HEADERS: ObjectHeaders = {
   contentType: "application/octet-stream",
   metadata: {},
 };
+
+export type CopyAttemptState = {
+  uploaded: boolean;
+};
+
+export type CopyResult = {
+  entry: ManifestEntry;
+  copied: boolean;
+};
+
+export function getConditionalSourceObject(input: {
+  source: ObjectStore;
+  sourceBucket: string;
+  sourceObject: ListedObject;
+}): Promise<StoredObject> {
+  return input.source.getObject(input.sourceBucket, input.sourceObject.key, {
+    etag: input.sourceObject.etag,
+    unmodifiedSince: input.sourceObject.lastModified,
+  });
+}
+
+function streamError(error: unknown): Error {
+  return error instanceof Error
+    ? error
+    : new Error("Object upload failed", { cause: error });
+}
+
+async function awaitUploadWithPipelineCancellation(
+  upload: Promise<void>,
+  hashingStream: Transform,
+): Promise<void> {
+  try {
+    await upload;
+  } catch (error: unknown) {
+    hashingStream.destroy(streamError(error));
+    throw error;
+  }
+}
+
+export async function uploadOpaqueObject(input: {
+  destination: ObjectStore;
+  backupBucket: string;
+  backupObjectKey: string;
+  sourceBody: Readable;
+  hashingStream: Transform;
+  contentLength: number;
+}): Promise<void> {
+  const upload = input.destination.putObject({
+    bucket: input.backupBucket,
+    key: input.backupObjectKey,
+    body: input.hashingStream,
+    contentLength: input.contentLength,
+    headers: OPAQUE_OBJECT_HEADERS,
+  });
+  const uploadWithPipelineCancellation = awaitUploadWithPipelineCancellation(
+    upload,
+    input.hashingStream,
+  );
+  const [streamResult, uploadResult] = await Promise.allSettled([
+    pipeline(input.sourceBody, input.hashingStream),
+    uploadWithPipelineCancellation,
+  ]);
+  if (uploadResult.status === "rejected") throw uploadResult.reason;
+  if (streamResult.status === "rejected") throw streamResult.reason;
+}
+
+function errorCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null || !("code" in error)) {
+    return undefined;
+  }
+  const code = Reflect.get(error, "code");
+  return typeof code === "string" ? code : undefined;
+}
+
+function isTransientObjectStoreError(error: unknown): boolean {
+  return (
+    TRANSIENT_ERROR_CODES.has(errorCode(error) ?? "") ||
+    (error instanceof Error &&
+      (error.name === "AbortError" ||
+        error.name === "TimeoutError" ||
+        error.message === "aborted" ||
+        error.message.includes("ECONNRESET") ||
+        error.message.includes("socket hang up")))
+  );
+}
+
+export async function withTransientObjectStoreRetries<Result>(
+  operation: () => Promise<Result>,
+  onWait?: () => void,
+  delay: (milliseconds: number) => Promise<void> = (milliseconds) =>
+    Bun.sleep(milliseconds),
+  describe: () => string = () => "complete an object operation",
+): Promise<Result> {
+  for (let attempt = 1; attempt <= TRANSIENT_OPERATION_ATTEMPTS; attempt += 1) {
+    const heartbeat =
+      onWait === undefined ? undefined : setInterval(onWait, 30_000);
+    try {
+      return await operation();
+    } catch (error: unknown) {
+      if (!isTransientObjectStoreError(error)) throw error;
+      if (attempt === TRANSIENT_OPERATION_ATTEMPTS) {
+        throw new Error(
+          `SeaweedFS backup could not ${describe()} after ${String(TRANSIENT_OPERATION_ATTEMPTS)} transient transport attempts`,
+          { cause: error },
+        );
+      }
+      onWait?.();
+      await delay(Math.min(500 * attempt, 3000));
+    } finally {
+      if (heartbeat !== undefined) clearInterval(heartbeat);
+    }
+  }
+  throw new Error("Transient object operation retry loop exited unexpectedly");
+}
 
 export async function hashStoredObject(
   object: StoredObject,
@@ -26,6 +151,24 @@ export async function hashStoredObject(
     onBytes?.(bytes);
   }
   return { sha256: hash.digest("hex"), bytes };
+}
+
+export async function hashStoredObjectPair(input: {
+  source: StoredObject;
+  destination: StoredObject;
+  onSourceBytes?: (bytes: number) => void;
+  onDestinationBytes?: (bytes: number) => void;
+}): Promise<{
+  source: { sha256: string; bytes: number };
+  destination: { sha256: string; bytes: number };
+}> {
+  const [sourceResult, destinationResult] = await Promise.allSettled([
+    hashStoredObject(input.source, input.onSourceBytes),
+    hashStoredObject(input.destination, input.onDestinationBytes),
+  ]);
+  if (sourceResult.status === "rejected") throw sourceResult.reason;
+  if (destinationResult.status === "rejected") throw destinationResult.reason;
+  return { source: sourceResult.value, destination: destinationResult.value };
 }
 
 function isObjectNotVisible(error: unknown): boolean {
@@ -54,78 +197,4 @@ export async function getUploadedObject(input: {
     }
   }
   throw new Error("Destination read retry loop exited unexpectedly");
-}
-
-/**
- * Attempts per object when the transport, rather than the object, fails.
- *
- * A multi-hour transfer loses a connection sooner or later, and an
- * `ECONNRESET` partway through a large bucket used to end the whole run: the
- * Activity retries, but its unit is the entire run, so three attempts spend
- * hours re-copying from the start and still produce no manifest. Retrying the
- * object costs seconds instead.
- *
- * Repeating a copy is safe — the destination key is the content hash, so a
- * partial upload is overwritten rather than appended to, and the read-back
- * verification still gates the result. This sits outside `copyOrReuseObject`
- * so that its source-version handling keeps its own budget: a connection reset
- * is not evidence that the source moved.
- */
-const TRANSPORT_ATTEMPTS = 4;
-
-/**
- * Whether a failure describes the connection rather than the data.
- *
- * Matches the shape of `isObjectNotVisible` in `backup-object.ts`: node's
- * socket errors carry a `code`, and the S3 client surfaces aborted requests by
- * name. Anything unrecognised is treated as a real failure and propagates.
- */
-export function isTransportFailure(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  const code: unknown = Reflect.get(error, "code");
-  if (
-    typeof code === "string" &&
-    ["ECONNRESET", "ECONNABORTED", "EPIPE", "ETIMEDOUT", "ENOTFOUND"].includes(
-      code,
-    )
-  ) {
-    return true;
-  }
-  return (
-    error.name === "TimeoutError" ||
-    error.name === "AbortError" ||
-    error.message === "aborted" ||
-    error.message.includes("socket hang up") ||
-    error.message.includes("ECONNRESET")
-  );
-}
-
-/**
- * Run `operation`, retrying it while the transport rather than the data is at
- * fault. `describe` names the work in the error raised once attempts run out.
- */
-export async function withTransportRetry<T>(
-  operation: () => Promise<T>,
-  delay: (milliseconds: number) => Promise<void>,
-  describe: () => string,
-): Promise<T> {
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= TRANSPORT_ATTEMPTS; attempt += 1) {
-    try {
-      return await operation();
-    } catch (error: unknown) {
-      // Only the transport is worth another attempt. A source that keeps
-      // moving, or bytes that come back different from what was sent, describe
-      // data rather than a connection, and `copyOrReuseObject` and the
-      // verification inside it have already had their say.
-      if (!isTransportFailure(error)) throw error;
-      lastError = error;
-      if (attempt === TRANSPORT_ATTEMPTS) break;
-      await delay(1000 * 2 ** (attempt - 1));
-    }
-  }
-  throw new Error(
-    `SeaweedFS backup could not ${describe()} after ${String(TRANSPORT_ATTEMPTS)} transport attempts`,
-    { cause: lastError },
-  );
 }

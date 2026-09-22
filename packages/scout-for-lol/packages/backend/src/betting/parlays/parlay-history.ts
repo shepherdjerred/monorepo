@@ -4,7 +4,6 @@ import {
   BLUE_TEAM_ID,
   PARTICIPANTS_PER_TEAM,
   RED_TEAM_ID,
-  REMAKE_MAX_DURATION_SECONDS,
   STANDARD_LOBBY_SIZE,
 } from "#src/betting/constants.ts";
 import {
@@ -252,14 +251,6 @@ function isVoidMatch(participants: readonly unknown[]): boolean {
   if (
     parsedParticipants.some(
       (participant) => participant.end_of_game_result !== "GameComplete",
-    )
-  ) {
-    return true;
-  }
-  if (
-    parsedParticipants.some(
-      (participant) =>
-        participant.game_duration_seconds < REMAKE_MAX_DURATION_SECONDS,
     )
   ) {
     return true;

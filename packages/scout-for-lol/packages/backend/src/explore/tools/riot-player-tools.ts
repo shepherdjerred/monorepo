@@ -3,14 +3,12 @@ import { z } from "zod";
 import {
   LeaguePuuidSchema,
   getChampionList,
-  regionToPlatformRoute,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import {
   RankedHistoryTargetSchema,
   resolveRiotPlayerTarget,
 } from "#src/explore/tools/riot-history-tools.ts";
-import { riotClient } from "#src/league/api/api.ts";
 import { fetchCurrentRanks } from "#src/league/initial-history/riot.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -23,6 +21,10 @@ import {
   scalarParam,
 } from "#src/reports/duckdb/lake.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  getChampionMasterySnapshot,
+  topChampionMastery,
+} from "#src/league/champion-mastery/snapshots.ts";
 
 const LakeCountSchema = z.union([z.bigint(), z.number()]).transform(Number);
 const CoverageRowSchema = z.object({
@@ -202,6 +204,8 @@ export function createRiotPlayerExploreTools(input: {
         })
         .strict(),
       outputSchema: ResultBaseSchema.extend({
+        fetchedAt: z.string().nullable(),
+        freshness: z.enum(["fresh", "stale"]).nullable(),
         champions: z.array(
           z.object({
             championId: z.number().int().positive(),
@@ -219,16 +223,26 @@ export function createRiotPlayerExploreTools(input: {
             return {
               ok: false,
               player: null,
+              fetchedAt: null,
+              freshness: null,
               champions: [],
               message: targetResult.message,
             };
           }
-          const mastery = await riotClient.championMastery.topByPuuid(
-            LeaguePuuidSchema.parse(targetResult.puuid),
-            regionToPlatformRoute(targetResult.region),
-            count,
-            { maxRetries: 0 },
-          );
+          const snapshot = await getChampionMasterySnapshot({
+            puuid: LeaguePuuidSchema.parse(targetResult.puuid),
+            region: targetResult.region,
+          });
+          if (snapshot === undefined) {
+            return {
+              ok: false,
+              player: targetResult.label,
+              fetchedAt: null,
+              freshness: null,
+              champions: [],
+              message: `Riot mastery is unavailable for ${targetResult.label}.`,
+            };
+          }
           const championList = await getChampionList();
           const championNames = new Map(
             championList.map((champion) => [
@@ -236,16 +250,23 @@ export function createRiotPlayerExploreTools(input: {
               champion.name,
             ]),
           );
-          const champions = mastery.map((row) => ({
-            championId: row.championId,
-            champion: resolveMasteryChampionName(championNames, row.championId),
-            level: row.championLevel,
-            points: row.championPoints,
-            lastPlayedAt: new Date(row.lastPlayTime).toISOString(),
-          }));
+          const champions = topChampionMastery(snapshot.entries, count).map(
+            (row) => ({
+              championId: row.championId,
+              champion: resolveMasteryChampionName(
+                championNames,
+                row.championId,
+              ),
+              level: row.championLevel,
+              points: row.championPoints,
+              lastPlayedAt: new Date(row.lastPlayTime).toISOString(),
+            }),
+          );
           return {
             ok: true,
             player: targetResult.label,
+            fetchedAt: snapshot.fetchedAt.toISOString(),
+            freshness: snapshot.freshness,
             champions,
             message: `Fetched ${champions.length.toString()} mastery entries for ${targetResult.label}.`,
           };

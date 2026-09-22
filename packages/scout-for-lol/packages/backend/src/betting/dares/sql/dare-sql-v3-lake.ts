@@ -9,7 +9,6 @@ import {
   type DareTargetBindingV2,
   type DuckDbColumnType,
 } from "@scout-for-lol/data";
-import { REMAKE_MAX_DURATION_SECONDS } from "#src/betting/constants.ts";
 import { duckDbEmptySelect } from "#src/report-lake/schema.ts";
 import { relationalScoutQlStatementFromImmutableAst } from "#src/reports/duckdb/relational-scoutql.ts";
 import {
@@ -118,11 +117,9 @@ export async function createDareSqlV3LakeRelations(
      GROUP BY match_id
      HAVING BOOL_OR(
        COALESCE(end_of_game_result <> 'GameComplete', TRUE)
-       OR COALESCE(game_duration_seconds < ?, TRUE)
        OR COALESCE(game_ended_in_early_surrender, FALSE)
        OR COALESCE(team_early_surrendered, FALSE)
      )`,
-    [REMAKE_MAX_DURATION_SECONDS],
   );
   const allTargetAccounts = input.targets.flatMap((target) => target.accounts);
   const targetMembership = allTargetAccounts.map(

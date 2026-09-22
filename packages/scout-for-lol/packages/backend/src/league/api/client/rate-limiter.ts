@@ -3,7 +3,11 @@ import {
   riotApiAppRateLimitCount,
   riotApiAppRateLimitLimit,
 } from "#src/metrics/riot-rate-limit.ts";
-import { isExpectedUpstreamError, RiotHttpError } from "./errors.ts";
+import {
+  isExpectedUpstreamError,
+  RiotHttpError,
+  RiotTransportError,
+} from "./errors.ts";
 import { parseAppRateLimitWindows } from "./rate-limit-headers.ts";
 
 const logger = createLogger("rate-limiter");
@@ -147,12 +151,18 @@ export class RateLimiter {
   }
 
   private async executeAttempt(
+    url: string,
     executeRequest: RequestExecutor,
   ): Promise<Response> {
     await this.acquire();
     try {
       await this.waitForCooldown();
-      const response = await executeRequest();
+      let response: Response;
+      try {
+        response = await executeRequest();
+      } catch (error) {
+        throw new RiotTransportError(url, error);
+      }
 
       for (const window of parseAppRateLimitWindows(response.headers)) {
         const labels = { window_seconds: window.windowSeconds.toString() };
@@ -186,7 +196,7 @@ export class RateLimiter {
     while (attempts <= maxRetries) {
       attempts += 1;
 
-      const response = await this.executeAttempt(executeRequest);
+      const response = await this.executeAttempt(url, executeRequest);
 
       if (response.ok) {
         return response;
