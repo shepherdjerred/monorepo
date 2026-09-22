@@ -106,7 +106,7 @@ test("uses local evidence only after Riot definitively lacks the match", async (
   expect(context.matchDataSource).toBe("SCOUT_CLIENT");
   expect(mocks.fetchMatchData).toHaveBeenCalledWith(
     riotMatchId,
-    "AMERICA_NORTH",
+    "NA1",
     "return_undefined_on_404",
   );
   expect(mocks.resolveLocalCanonicalMatch).toHaveBeenCalledWith(riotMatchId);
