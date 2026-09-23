@@ -3,9 +3,10 @@
 ## [1.20.3](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.2...astro-opengraph-images-v1.20.3) (2026-09-23)
 
 
-### Bug Fixes
+No public API changes.
 
-* **root:** take astro past the AVIF image-optimization RCE ([#3014](https://github.com/shepherdjerred/monorepo/issues/3014)) ([e74579f](https://github.com/shepherdjerred/monorepo/commit/e74579f20c853f1c634d84fada71c73b1993f855))
+- Runtime dep `react` bumped to exact `19.3.0` (was `19.2.8`) ([5ff4f9e](https://github.com/shepherdjerred/monorepo/commit/5ff4f9e4e5d9ee17d65779452f6a24e6ec4ac89c))
+- Metadata extraction keeps returning `null` for missing or empty values while using a more compact source implementation ([5ff4f9e](https://github.com/shepherdjerred/monorepo/commit/5ff4f9e4e5d9ee17d65779452f6a24e6ec4ac89c))
 
 ## [1.20.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.1...astro-opengraph-images-v1.20.2) (2026-09-14)
 

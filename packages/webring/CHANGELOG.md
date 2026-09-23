@@ -8,14 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.11.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.10.1...webring-v1.11.0) (2026-09-23)
 
 
-### Features
-
-* **config:** route browser PostHog traffic through managed proxy ([#2835](https://github.com/shepherdjerred/monorepo/issues/2835)) ([33736ec](https://github.com/shepherdjerred/monorepo/commit/33736ecde965c8144b1b216a6147d40e35224597))
-
-
-### Bug Fixes
-
-* **root:** tighten the jscpd baseline to the current clone count ([#2817](https://github.com/shepherdjerred/monorepo/issues/2817)) ([0b2d74d](https://github.com/shepherdjerred/monorepo/commit/0b2d74d1096aeb828145b1f8c861e86923000181))
+No library behavior changes. The shipped code and published metadata are identical to 1.10.1; this release exists only because of repo-level housekeeping that release-please picked up.
 
 ## [1.10.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.10.0...webring-v1.10.1) (2026-08-13)
 
