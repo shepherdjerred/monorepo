@@ -91,6 +91,9 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   "packages/temporal/src/activities/agent/agent-task-env.ts",
   "packages/temporal/src/shared/agent/provider-credentials.ts",
   "scripts/lib/release-refiner.ts",
+  // Brim's fish launcher scrubs provider keys from spawned agent sessions
+  // (mirroring the user's fish wrappers). It never reads the credentials.
+  "packages/toolkit/src/lib/brim/fish.ts",
 ]);
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/discord-plays-pokemon/config.example.toml",
