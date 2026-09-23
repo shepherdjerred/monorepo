@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { numericClaims } from "#src/explore/replay/diff.ts";
-import { describeThrown } from "#src/explore/replay/runner.ts";
+import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
 import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
 import { LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH } from "#src/explore/lake-coverage.ts";
 

@@ -427,3 +427,24 @@ describe("crashed turns", () => {
     ).toBe('{"code":500}');
   });
 });
+
+describe("the judge stays offline", () => {
+  // It reads stored bundles and calls one model. Importing anything from the
+  // runner gave it the whole agent runtime — and with it a hard requirement
+  // for Riot credentials and a Temporal namespace, which turned every
+  // re-judge into a configuration error until `describe-thrown.ts` split the
+  // one helper they share out of the runner.
+  test("imports nothing that pulls in backend configuration", async () => {
+    const source = await Bun.file(
+      new URL("judge.ts", import.meta.url).pathname,
+    ).text();
+    const imports = [...source.matchAll(/from "([^"]+)"/g)].map(
+      (entry) => entry[1] ?? "",
+    );
+    expect(imports).not.toContain("#src/explore/replay/runner.ts");
+    for (const specifier of imports) {
+      expect(specifier).not.toContain("/configuration");
+      expect(specifier).not.toContain("/league/");
+    }
+  });
+});

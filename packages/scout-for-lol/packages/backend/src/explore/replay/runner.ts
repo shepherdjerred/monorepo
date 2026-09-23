@@ -19,6 +19,7 @@ import {
   finalizeExploreTrace,
   recordExploreTraceEvent,
 } from "#src/explore/trace.ts";
+import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
 
@@ -117,30 +118,6 @@ function agentParams(
  * preserve. The AI SDK throws structured errors that are not `Error`
  * instances, so the non-Error path is the common one here, not the edge.
  */
-/**
- * What was actually thrown, as text.
- *
- * Exported because the judge needs the same answer: a crashed turn is named
- * by its error, and a second implementation drifted into `[object Object]`
- * once already.
- */
-export function describeThrown(error: unknown): string {
-  if (error instanceof Error) {
-    const cause =
-      error.cause === undefined
-        ? ""
-        : ` (cause: ${describeThrown(error.cause)})`;
-    return `${error.message}${cause}`;
-  }
-  if (typeof error === "object" && error !== null) {
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return Object.prototype.toString.call(error);
-    }
-  }
-  return String(error);
-}
 
 /**
  * What the last successful query actually returned.
