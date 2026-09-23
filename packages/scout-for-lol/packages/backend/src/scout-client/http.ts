@@ -25,7 +25,11 @@ import {
   ScoutClientObservationConflict,
   startAcceptedClientMatches,
 } from "./ingress.ts";
-import { ReplayUploadError, uploadReplay } from "./replay-upload.ts";
+import {
+  ReplayUploadError,
+  drainRequestBody,
+  uploadReplay,
+} from "./replay-upload.ts";
 
 const API_PREFIX = "/api/scout-client/v1";
 const EXCHANGE_PATH =
@@ -229,7 +233,12 @@ export async function handleScoutClientRoute(
       request,
       url.pathname !== SELF_REVOKE_PATH,
     );
-    if (device === null) return jsonResponse({ error: "unauthorized" }, 401);
+    if (device === null) {
+      // An unauthorized replay PUT is refused before a body byte is read, and
+      // closing under an in-flight upload is what the proxy turns into a 502.
+      if (replayMatch !== null) await drainRequestBody(request);
+      return jsonResponse({ error: "unauthorized" }, 401);
+    }
     return await handleAuthenticatedRoute(
       request,
       url.pathname,

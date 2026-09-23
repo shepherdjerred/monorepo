@@ -240,6 +240,38 @@ test("keeps a replay retryable until its post-game observation arrives", async (
   expect(mocks.create).not.toHaveBeenCalled();
 });
 
+test("consumes the upload it refuses before the body is read", async () => {
+  // This rejection happens three database round-trips before the first body
+  // byte. Answering while the client is still sending leaves the reverse proxy
+  // with an upstream close on a request it cannot replay, which reached the
+  // desktop client as `502 Bad Gateway` rather than this 409.
+  mocks.findMany.mockResolvedValue([]);
+  const request = replayRequest(replayFixture());
+
+  await expect(uploadReplay(request, "123", DEVICE)).rejects.toMatchObject({
+    status: 409,
+  });
+  expect(request.bodyUsed).toBe(true);
+});
+
+test("consumes the upload a duplicate digest makes unnecessary", async () => {
+  const body = replayFixture();
+  const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
+  mocks.findUnique.mockResolvedValue({
+    uploadState: "COMPLETED",
+    gameId: "123",
+    digest,
+    bytes: BigInt(body.byteLength),
+    updatedAt: new Date(),
+  });
+  const request = replayRequest(body);
+
+  await expect(uploadReplay(request, "123", DEVICE)).resolves.toMatchObject({
+    outcome: "already_accepted",
+  });
+  expect(request.bodyUsed).toBe(true);
+});
+
 test("requires the post-game payload to name the requested game", async () => {
   mocks.findMany.mockResolvedValue([
     {

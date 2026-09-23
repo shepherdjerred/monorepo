@@ -9,7 +9,12 @@ mod runtime;
 mod startup;
 mod ui;
 
+use std::sync::Arc;
+
 use eframe::egui;
+use scout_client_core::diagnostics::{
+    DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics,
+};
 use tracing_subscriber::EnvFilter;
 
 use crate::runtime::ClientRuntime;
@@ -25,17 +30,55 @@ fn backend_origin(arguments: &[String]) -> String {
         .unwrap_or_else(|| DEFAULT_BACKEND_ORIGIN.to_owned())
 }
 
-fn main() -> eframe::Result {
+/// Install the console logger.
+///
+/// The release Windows build is a GUI-subsystem binary with no valid stdout
+/// handle, so this reaches a human only under `cargo run`. The durable record
+/// is the JSONL log the runtime writes; see `scout_client_core::diagnostics`.
+/// The filter defaults to `info` because an unset `RUST_LOG` otherwise silences
+/// everything below `error`, including the warnings worth seeing.
+fn install_logging() {
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
+        .with_env_filter(filter)
         .with_target(false)
         .compact()
         .init();
+}
+
+/// Record a panic before the process unwinds.
+///
+/// A crash is the one failure a user can always see and never report usefully,
+/// so it must survive in the same file as everything else.
+fn install_panic_hook(diagnostics: Arc<Diagnostics>) {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        // The payload can carry arbitrary text; the location is bounded and is
+        // what actually identifies the fault.
+        let detail = info
+            .location()
+            .map_or_else(|| "unknown location".to_owned(), ToString::to_string);
+        diagnostics.record(
+            DiagnosticEvent::new(
+                DiagnosticLevel::Critical,
+                DiagnosticCategory::Runtime,
+                "panic",
+                DiagnosticOutcome::Failed,
+            )
+            .with_detail(detail),
+        );
+        previous(info);
+    }));
+}
+
+fn main() -> eframe::Result {
+    install_logging();
 
     let arguments = std::env::args().skip(1).collect::<Vec<_>>();
     let background = arguments.iter().any(|argument| argument == "--background");
     let backend_origin = backend_origin(&arguments);
     let runtime = ClientRuntime::start(backend_origin);
+    install_panic_hook(Arc::clone(runtime.diagnostics()));
     let viewport = egui::ViewportBuilder::default()
         .with_app_id(APP_ID)
         .with_title("Scout Client")

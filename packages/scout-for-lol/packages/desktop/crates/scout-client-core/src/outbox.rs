@@ -76,6 +76,13 @@ impl ObservationOutbox {
                status_code INTEGER NOT NULL,
                rejected_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
              );
+             CREATE TABLE IF NOT EXISTS deferred_replay (
+               digest TEXT PRIMARY KEY,
+               game_id TEXT NOT NULL,
+               attempts INTEGER NOT NULL DEFAULT 0,
+               first_deferred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+               last_deferred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+             );
              CREATE TABLE IF NOT EXISTS handled_replay_file (
                path TEXT PRIMARY KEY,
                bytes INTEGER NOT NULL,
@@ -614,6 +621,49 @@ impl ObservationOutbox {
         )?;
         Ok(())
     }
+
+    /// Count one deferral of a replay and return how many it has now had.
+    ///
+    /// A deferral is the backend saying "not yet", so the file stays unhandled
+    /// and is offered again next scan. Without a tally that loop is invisible:
+    /// a replay the backend will never accept looks exactly like one that is
+    /// about to succeed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if the tally cannot be persisted.
+    pub fn record_replay_deferral(&self, digest: &str, game_id: &str) -> Result<i64, OutboxError> {
+        let connection = self.connection()?;
+        connection.execute(
+            "INSERT INTO deferred_replay (digest, game_id, attempts)
+             VALUES (?1, ?2, 1)
+             ON CONFLICT(digest) DO UPDATE SET
+               attempts = attempts + 1,
+               last_deferred_at = CURRENT_TIMESTAMP",
+            params![digest, game_id],
+        )?;
+        let attempts = connection.query_row(
+            "SELECT attempts FROM deferred_replay WHERE digest = ?1",
+            [digest],
+            |row| row.get(0),
+        )?;
+        Ok(attempts)
+    }
+
+    /// How many times this replay has been deferred so far.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if the tally cannot be read.
+    pub fn replay_deferrals(&self, digest: &str) -> Result<i64, OutboxError> {
+        let connection = self.connection()?;
+        let attempts = connection.query_row(
+            "SELECT COALESCE((SELECT attempts FROM deferred_replay WHERE digest = ?1), 0)",
+            [digest],
+            |row| row.get(0),
+        )?;
+        Ok(attempts)
+    }
 }
 
 fn validate_game_timing(game_id: &str, timestamp_millis: i64) -> Result<(), OutboxError> {
@@ -669,6 +719,37 @@ mod tests {
 
     fn temporary_database() -> std::path::PathBuf {
         std::env::temp_dir().join(format!("scout-outbox-{}.db", Uuid::new_v4()))
+    }
+
+    #[test]
+    fn deferrals_accumulate_per_replay() -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+
+        assert_eq!(outbox.replay_deferrals("digest-a")?, 0);
+        assert_eq!(outbox.record_replay_deferral("digest-a", "game-1")?, 1);
+        assert_eq!(outbox.record_replay_deferral("digest-a", "game-1")?, 2);
+        assert_eq!(outbox.record_replay_deferral("digest-a", "game-1")?, 3);
+        assert_eq!(outbox.replay_deferrals("digest-a")?, 3);
+
+        // A second replay keeps its own tally.
+        assert_eq!(outbox.record_replay_deferral("digest-b", "game-2")?, 1);
+        assert_eq!(outbox.replay_deferrals("digest-a")?, 3);
+
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn a_deferred_replay_is_not_recorded_as_handled() -> Result<(), Box<dyn std::error::Error>> {
+        // Deferral means "ask again later", so the durable receipts that would
+        // stop a retry must stay empty.
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.record_replay_deferral("digest-a", "game-1")?;
+        assert!(!outbox.replay_handled("digest-a")?);
+        let _ = std::fs::remove_file(&path);
+        Ok(())
     }
 
     #[test]

@@ -1,5 +1,6 @@
 //! Bounded Scout backend client for pairing and durable observation delivery.
 
+use std::future::Future;
 use std::path::Path;
 use std::time::Duration;
 
@@ -10,6 +11,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::credentials::DeviceCredential;
+use crate::diagnostics::sanitize_detail;
 use crate::protocol::{
     CheckInRequest, CheckInResponse, CreatePairingRequest, CreatePairingResponse,
     ExchangePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationBatchReceipt,
@@ -99,8 +101,8 @@ impl ScoutBackendClient {
             .send()
             .await
             .map_err(BackendError::Request)?
-            .error_for_status()
-            .map_err(BackendError::Request)?
+            .checked()
+            .await?
             .json()
             .await
             .map_err(BackendError::Request)
@@ -131,8 +133,8 @@ impl ScoutBackendClient {
             return Ok(ExchangePairingResponse::Consumed);
         }
         response
-            .error_for_status()
-            .map_err(BackendError::Request)?
+            .checked()
+            .await?
             .json()
             .await
             .map_err(BackendError::Request)
@@ -155,8 +157,8 @@ impl ScoutBackendClient {
             .send()
             .await
             .map_err(BackendError::Request)?
-            .error_for_status()
-            .map_err(BackendError::Request)?
+            .checked()
+            .await?
             .json()
             .await
             .map_err(BackendError::Request)
@@ -183,8 +185,8 @@ impl ScoutBackendClient {
             .send()
             .await
             .map_err(BackendError::Request)?
-            .error_for_status()
-            .map_err(BackendError::Request)?
+            .checked()
+            .await?
             .json()
             .await
             .map_err(BackendError::Request)?;
@@ -214,8 +216,8 @@ impl ScoutBackendClient {
             return Ok(());
         }
         let receipt: RevokeDeviceResponse = response
-            .error_for_status()
-            .map_err(BackendError::Request)?
+            .checked()
+            .await?
             .json()
             .await
             .map_err(BackendError::Request)?;
@@ -257,8 +259,8 @@ impl ScoutBackendClient {
             .send()
             .await
             .map_err(BackendError::Request)?
-            .error_for_status()
-            .map_err(BackendError::Request)?
+            .checked()
+            .await?
             .json()
             .await
             .map_err(BackendError::Request)?;
@@ -266,6 +268,32 @@ impl ScoutBackendClient {
             return Err(BackendError::ReplayReceipt);
         }
         Ok(receipt.outcome)
+    }
+}
+
+/// Turns a non-success response into a [`BackendError::Rejected`].
+///
+/// `Response::error_for_status` discards the body, which is where Scout puts
+/// the reason — "Replay is waiting for accepted match-history evidence from
+/// this device" never reached a human because of it. Reading the body costs one
+/// await and turns an opaque status into an actionable sentence.
+trait CheckedResponse: Sized {
+    /// Succeed on a 2xx, otherwise fail carrying the server's own message.
+    fn checked(self) -> impl Future<Output = Result<Self, BackendError>> + Send;
+}
+
+impl CheckedResponse for reqwest::Response {
+    async fn checked(self) -> Result<Self, BackendError> {
+        let status = self.status();
+        if status.is_success() {
+            return Ok(self);
+        }
+        // A body we cannot read is not worth losing the status over.
+        let message = self.text().await.unwrap_or_default();
+        Err(BackendError::Rejected {
+            status: status.as_u16(),
+            message: sanitize_detail(message.trim()),
+        })
     }
 }
 
@@ -278,6 +306,14 @@ pub enum BackendError {
     /// HTTP request or response decoding failed.
     #[error("Scout backend request failed: {0}")]
     Request(reqwest::Error),
+    /// Server answered with a non-success status and said why.
+    #[error("Scout backend returned HTTP {status}: {message}")]
+    Rejected {
+        /// The HTTP status the server answered with.
+        status: u16,
+        /// The server's own bounded explanation, empty when it gave none.
+        message: String,
+    },
     /// Local replay could not be opened or inspected.
     #[error("local replay file could not be read: {0}")]
     ReplayFile(std::io::Error),
@@ -293,22 +329,40 @@ pub enum BackendError {
 }
 
 impl BackendError {
+    /// The HTTP status this failure carried, if it reached a response at all.
+    ///
+    /// `None` distinguishes a transport failure — DNS, TLS, timeout — from a
+    /// server that answered, which is a difference diagnostics must keep.
+    #[must_use]
+    pub fn status(&self) -> Option<u16> {
+        match self {
+            Self::Rejected { status, .. } => Some(*status),
+            Self::Request(error) => error.status().map(|status| status.as_u16()),
+            _ => None,
+        }
+    }
+
+    /// The server's own explanation, when it gave one.
+    #[must_use]
+    pub fn server_message(&self) -> Option<&str> {
+        match self {
+            Self::Rejected { message, .. } if !message.is_empty() => Some(message),
+            _ => None,
+        }
+    }
+
     /// Whether this replay should be deferred while the scan continues.
     #[must_use]
     pub fn replay_should_be_deferred(&self) -> bool {
-        let Self::Request(error) = self else {
-            return false;
-        };
-        error.status().is_some_and(replay_status_should_be_deferred)
+        self.status()
+            .and_then(|status| StatusCode::from_u16(status).ok())
+            .is_some_and(replay_status_should_be_deferred)
     }
 
     /// Statuses that permanently reject one replay rather than the credential or service.
     #[must_use]
     pub fn terminal_replay_rejection_status(&self) -> Option<u16> {
-        let Self::Request(error) = self else {
-            return None;
-        };
-        let status = error.status()?;
+        let status = StatusCode::from_u16(self.status()?).ok()?;
         matches!(
             status,
             StatusCode::BAD_REQUEST
@@ -344,6 +398,49 @@ mod tests {
         assert!(!replay_status_should_be_deferred(
             StatusCode::PAYLOAD_TOO_LARGE
         ));
+    }
+
+    fn rejection(status: u16, message: &str) -> BackendError {
+        BackendError::Rejected {
+            status,
+            message: message.to_owned(),
+        }
+    }
+
+    #[test]
+    fn a_rejection_keeps_the_status_and_the_servers_own_words() {
+        let error = rejection(
+            409,
+            "Replay is waiting for accepted match-history evidence from this device",
+        );
+        assert_eq!(error.status(), Some(409));
+        assert_eq!(
+            error.server_message(),
+            Some("Replay is waiting for accepted match-history evidence from this device")
+        );
+        assert!(error.replay_should_be_deferred());
+        assert_eq!(error.terminal_replay_rejection_status(), None);
+    }
+
+    #[test]
+    fn a_rejection_classifies_the_same_way_a_transport_status_does() {
+        assert_eq!(
+            rejection(413, "").terminal_replay_rejection_status(),
+            Some(413)
+        );
+        // The status that started all of this: neither deferrable nor
+        // terminal, so the scan records it and carries on.
+        let gateway = rejection(502, "Bad Gateway");
+        assert!(!gateway.replay_should_be_deferred());
+        assert_eq!(gateway.terminal_replay_rejection_status(), None);
+        assert_eq!(gateway.status(), Some(502));
+    }
+
+    #[test]
+    fn a_silent_server_leaves_no_message_to_report() {
+        let error = rejection(500, "");
+        assert_eq!(error.server_message(), None);
+        assert_eq!(error.status(), Some(500));
     }
 
     #[test]

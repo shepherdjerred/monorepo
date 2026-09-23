@@ -108,7 +108,7 @@ impl eframe::App for ScoutApp {
             Page::Overview => overview(ui, &snapshot),
             Page::Activity => activity(ui, &snapshot),
             Page::Settings => settings(ui, &self.runtime, &snapshot),
-            Page::Diagnostics => diagnostics(ui, &snapshot),
+            Page::Diagnostics => diagnostics(ui, &self.runtime, &snapshot),
         });
         context.request_repaint_after(std::time::Duration::from_secs(1));
     }
@@ -211,7 +211,7 @@ fn settings(ui: &mut egui::Ui, runtime: &ClientRuntime, state: &RuntimeState) {
     ui.label("Scout observes gameplay state only while League is running.");
 }
 
-fn diagnostics(ui: &mut egui::Ui, state: &RuntimeState) {
+fn diagnostics(ui: &mut egui::Ui, runtime: &ClientRuntime, state: &RuntimeState) {
     ui.heading("Diagnostics");
     ui.add_space(12.0);
     ui.monospace(format!("Client version: {}", env!("CARGO_PKG_VERSION")));
@@ -221,8 +221,54 @@ fn diagnostics(ui: &mut egui::Ui, state: &RuntimeState) {
     ));
     ui.monospace(format!("League connected: {}", state.league_connected));
     ui.monospace(format!("Outbox depth: {}", state.pending_observations));
+
+    ui.add_space(12.0);
+    ui.horizontal(|ui| {
+        if let Some(directory) = runtime.log_directory()
+            && ui.button("Open log folder").clicked()
+            && let Err(error) = open::that_detached(directory)
+        {
+            tracing::warn!(%error, "could not open the Scout Client log folder");
+        }
+        if ui.button("Copy diagnostics").clicked() {
+            ui.ctx().copy_text(runtime.diagnostics().bundle());
+        }
+    });
+
+    ui.add_space(12.0);
+    ui.strong("Counters");
+    egui::Grid::new("diagnostic-counters")
+        .num_columns(2)
+        .striped(true)
+        .show(ui, |ui| {
+            for (name, value) in runtime.diagnostics().counters().readings() {
+                ui.monospace(name);
+                ui.monospace(value.to_string());
+                ui.end_row();
+            }
+        });
+
+    ui.add_space(12.0);
+    ui.strong("Recent activity");
+    let events = runtime.diagnostics().recent(RECENT_EVENT_ROWS);
+    if events.is_empty() {
+        ui.label("Nothing recorded yet.");
+    } else {
+        egui::ScrollArea::vertical()
+            .max_height(220.0)
+            .show(ui, |ui| {
+                for record in &events {
+                    ui.monospace(record.summary());
+                }
+            });
+    }
+
+    ui.add_space(12.0);
     ui.label("Credentials, PUUIDs, and local filesystem paths are excluded from diagnostics.");
 }
+
+/// Recent events shown on the Diagnostics page.
+const RECENT_EVENT_ROWS: usize = 100;
 
 fn status_row(ui: &mut egui::Ui, label: &str, value: &str) {
     ui.horizontal(|ui| {
