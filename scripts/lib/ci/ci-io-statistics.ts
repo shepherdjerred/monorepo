@@ -20,10 +20,9 @@ export function percentile(values: number[], quantile: number): number | null {
   if (lower === undefined || upper === undefined) {
     throw new Error("percentile index fell outside the sorted values");
   }
-  if (lowerIndex === upperIndex) {
-    return lower;
-  }
-  return lower + (upper - lower) * (rank - lowerIndex);
+  return lowerIndex === upperIndex
+    ? lower
+    : lower + (upper - lower) * (rank - lowerIndex);
 }
 
 function measuredWrites(jobs: JobIoReport[]): number[] {
@@ -51,10 +50,9 @@ function sumWrites(
   predicate: (job: JobIoReport) => boolean,
 ): number {
   return jobs.reduce((total, job) => {
-    if (!predicate(job) || job.writeBytes === null) {
-      return total;
-    }
-    return total + job.writeBytes;
+    return !predicate(job) || job.writeBytes === null
+      ? total
+      : total + job.writeBytes;
   }, 0);
 }
 
@@ -151,10 +149,7 @@ export function summarizeBranchSteps(
 }
 
 function percentChange(candidate: number, baseline: number): number | null {
-  if (baseline === 0) {
-    return null;
-  }
-  return ((candidate - baseline) / baseline) * 100;
+  return baseline === 0 ? null : ((candidate - baseline) / baseline) * 100;
 }
 
 export function compareWindows(

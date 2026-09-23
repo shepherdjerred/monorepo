@@ -92,13 +92,10 @@ export function mergeDuplicateFindings(
         const leftReview = left.raisedInReview;
         const rightReview = right.raisedInReview;
         if (leftReview === null || rightReview === null) return 0;
-        if (leftReview.ordinal !== rightReview.ordinal) {
-          return leftReview.ordinal - rightReview.ordinal;
-        }
-        return (
-          Number(rightReview.hadBlockingSeverity) -
-          Number(leftReview.hadBlockingSeverity)
-        );
+        return leftReview.ordinal === rightReview.ordinal
+          ? Number(rightReview.hadBlockingSeverity) -
+              Number(leftReview.hadBlockingSeverity)
+          : leftReview.ordinal - rightReview.ordinal;
       });
     finding.raisedInReview = attributionCopies[0]?.raisedInReview ?? null;
   }

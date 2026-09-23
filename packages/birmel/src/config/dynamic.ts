@@ -12,17 +12,11 @@ import { featureFlagMetrics } from "@shepherdjerred/birmel/observability/metrics
 import { getConfig } from "./index.ts";
 import type { Config } from "./schema.ts";
 
-const DynamicBooleanSchema = z.preprocess(
-  (value) =>
-    typeof value === "string"
-      ? value.toLowerCase() === "true"
-        ? true
-        : value.toLowerCase() === "false"
-          ? false
-          : value
-      : value,
-  z.boolean(),
-);
+const DynamicBooleanSchema = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const lowered = value.toLowerCase();
+  return lowered === "true" || (lowered !== "false" && value);
+}, z.boolean());
 const PositiveIntegerSchema = z.coerce.number().int().positive();
 const MaxStepsSchema = z.coerce.number().int().min(1).max(24);
 const ReasoningEffortSchema = z.enum(["minimal", "low", "medium", "high"]);

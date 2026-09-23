@@ -55,14 +55,13 @@ function assertGitSuccess(result: GitResult, description: string): void {
 
 function conflictingFilesFromMergeTree(output: string): string[] {
   const header = output.split("\n\n", 1)[0];
-  if (header === undefined) {
-    return [];
-  }
-  return header
-    .split("\n")
-    .slice(1)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+  return header === undefined
+    ? []
+    : header
+        .split("\n")
+        .slice(1)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
 }
 
 async function deleteTemporaryRefs(

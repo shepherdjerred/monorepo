@@ -47,10 +47,9 @@ export function resolveLakeDir(): string {
   // write-up in trpc/auth-web.test.ts); in real runs env-var's .default()
   // guarantees a string.
   const configured: unknown = configuration.reportLakeDir;
-  if (typeof configured === "string") {
-    return configured;
-  }
-  return Bun.env["REPORT_LAKE_DIR"] ?? "./report-lake";
+  return typeof configured === "string"
+    ? configured
+    : (Bun.env["REPORT_LAKE_DIR"] ?? "./report-lake");
 }
 
 let buildCounter = 0;

@@ -7,14 +7,16 @@ import type { RootStackParamList } from "./types";
 // Task IDs are vault-relative paths. Allow internal separators while rejecting
 // absolute paths, empty segments, and traversal.
 function isValidTaskId(value: string): boolean {
-  if (value.length === 0 || value.startsWith("/") || value.includes("\\")) {
-    return false;
-  }
-  return value
-    .split("/")
-    .every(
-      (segment) => segment.length > 0 && segment !== "." && segment !== "..",
-    );
+  return (
+    value.length > 0 &&
+    !value.startsWith("/") &&
+    !value.includes("\\") &&
+    value
+      .split("/")
+      .every(
+        (segment) => segment.length > 0 && segment !== "." && segment !== "..",
+      )
+  );
 }
 
 const screens: PathConfigMap<RootStackParamList> = {
@@ -33,8 +35,7 @@ const screens: PathConfigMap<RootStackParamList> = {
     path: "task/:taskId",
     parse: {
       taskId: (value: string) => {
-        if (!isValidTaskId(value)) return taskId("");
-        return taskId(value);
+        return isValidTaskId(value) ? taskId(value) : taskId("");
       },
     },
   },

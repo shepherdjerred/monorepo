@@ -145,10 +145,9 @@ function componentBytes(children: ChildDeviceMetric[]): Record<string, number> {
 }
 
 function sumNetwork(metrics: NetworkMetric[]): number | null {
-  if (metrics.length === 0) {
-    return null;
-  }
-  return metrics.reduce((total, metric) => total + metric.value, 0);
+  return metrics.length === 0
+    ? null
+    : metrics.reduce((total, metric) => total + metric.value, 0);
 }
 
 function minSamples(

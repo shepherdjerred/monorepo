@@ -295,15 +295,13 @@ describe("Claude structured output contract", () => {
     );
 
     const containsFormat = (value: unknown): boolean => {
-      if (Array.isArray(value)) {
-        return value.some((entry) => containsFormat(entry));
-      }
-      if (typeof value !== "object" || value === null) {
-        return false;
-      }
-      return Object.entries(value).some(
-        ([key, entry]) => key === "format" || containsFormat(entry),
-      );
+      return Array.isArray(value)
+        ? value.some((entry) => containsFormat(entry))
+        : typeof value === "object" &&
+            value !== null &&
+            Object.entries(value).some(
+              ([key, entry]) => key === "format" || containsFormat(entry),
+            );
     };
     expect(containsFormat(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE)).toBe(false);
   });

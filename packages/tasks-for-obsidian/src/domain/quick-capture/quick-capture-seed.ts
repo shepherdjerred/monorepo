@@ -78,16 +78,14 @@ export function captureSeedFromRouteParams(
   }
 
   const seed = CaptureSeedSchema.safeParse(captureSeedInput(routeParams.data));
-  if (!seed.success) {
-    return err(
-      new ValidationError(
-        "This Quick Add link contains invalid task details.",
-        seed.error.issues,
-      ),
-    );
-  }
-
-  return ok(seed.data);
+  return seed.success
+    ? ok(seed.data)
+    : err(
+        new ValidationError(
+          "This Quick Add link contains invalid task details.",
+          seed.error.issues,
+        ),
+      );
 }
 
 export function clearCaptureSeedField(

@@ -32,8 +32,7 @@ function requireEnv(env: EnvLookup, key: string): string {
 }
 
 function parseBool(value: string | undefined, fallback: boolean): boolean {
-  if (value === undefined) return fallback;
-  return value !== "false" && value !== "0";
+  return value === undefined ? fallback : value !== "false" && value !== "0";
 }
 
 /**
@@ -57,11 +56,8 @@ export function loadLlmObservabilityConfig(
   const s3EndpointPresent =
     env["S3_ENDPOINT"] !== undefined && env["S3_ENDPOINT"] !== "";
 
-  const enabled = explicitlyDisabled
-    ? false
-    : explicitlyEnabled
-      ? true
-      : s3EndpointPresent;
+  const enabled =
+    !explicitlyDisabled && (explicitlyEnabled || s3EndpointPresent);
 
   if (!enabled) {
     // Return a stub config with the disabled flag — fields are still required

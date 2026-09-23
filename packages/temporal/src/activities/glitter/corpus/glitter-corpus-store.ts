@@ -66,25 +66,21 @@ export function isTransientCorpusStorageError(error: unknown): boolean {
 
 export function isNotFoundError(error: unknown): boolean {
   const parsed = S3ErrorShapeSchema.safeParse(error);
-  if (!parsed.success) {
-    return false;
-  }
   return (
-    parsed.data.name === "NotFound" ||
-    parsed.data.name === "NoSuchKey" ||
-    parsed.data.$metadata?.httpStatusCode === 404
+    parsed.success &&
+    (parsed.data.name === "NotFound" ||
+      parsed.data.name === "NoSuchKey" ||
+      parsed.data.$metadata?.httpStatusCode === 404)
   );
 }
 
 export function isPreconditionFailedError(error: unknown): boolean {
   const parsed = S3ErrorShapeSchema.safeParse(error);
-  if (!parsed.success) {
-    return false;
-  }
   return (
-    parsed.data.name === "PreconditionFailed" ||
-    parsed.data.$metadata?.httpStatusCode === 409 ||
-    parsed.data.$metadata?.httpStatusCode === 412
+    parsed.success &&
+    (parsed.data.name === "PreconditionFailed" ||
+      parsed.data.$metadata?.httpStatusCode === 409 ||
+      parsed.data.$metadata?.httpStatusCode === 412)
   );
 }
 

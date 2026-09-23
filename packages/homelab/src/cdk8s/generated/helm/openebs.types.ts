@@ -1039,7 +1039,7 @@ export type OpenebsHelmValuesAlloyLoggingconfig = {
    */
   labels?: OpenebsHelmValuesAlloyLoggingconfigLabels;
   /**
-   * X-Scope-OrgID to pe populated which pushing logs. Make sure the caller also uses the same.
+   * X-Scope-OrgID to be populated when pushing logs. Make sure the caller also uses the same.
    *
    * @default "openebs"
    */

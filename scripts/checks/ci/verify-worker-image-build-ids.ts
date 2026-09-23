@@ -293,8 +293,9 @@ async function digestForCommitTag(
       headers: { Authorization: `Bearer ${token}`, Accept: MANIFEST_ACCEPT },
     },
   );
-  if (!response.ok) return undefined;
-  return response.headers.get("docker-content-digest") ?? undefined;
+  return response.ok
+    ? (response.headers.get("docker-content-digest") ?? undefined)
+    : undefined;
 }
 
 async function verifyAgainstRegistry(pin: WorkflowPin): Promise<string[]> {

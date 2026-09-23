@@ -23,16 +23,13 @@ export function reviewGateSkipReasonForAuthor(input: {
   provider: ReviewProvider;
 }): "bot-author" | null {
   if (input.author.type !== "Bot") return null;
-  if (
-    input.provider.botAuthoredPullRequestPolicy === "review" &&
+  return input.provider.botAuthoredPullRequestPolicy === "review" &&
     (input.provider.botAuthorAllowlist === undefined ||
       input.provider.botAuthorAllowlist.some(
         (login) => login.toLowerCase() === input.author.login.toLowerCase(),
       ))
-  ) {
-    return null;
-  }
-  return "bot-author";
+    ? null
+    : "bot-author";
 }
 
 /**
@@ -95,9 +92,9 @@ function lowSeverityBlocks(
   thread: ReviewThread,
   policy: LowSeverityPolicy,
 ): boolean {
-  if (policy === "always") return true;
-  if (thread.raisedInReview === null) return true;
   return (
+    policy === "always" ||
+    thread.raisedInReview === null ||
     thread.raisedInReview.ordinal === 1 ||
     thread.raisedInReview.hadBlockingSeverity
   );
@@ -115,12 +112,15 @@ export function isBlocking(
   provider: ReviewProvider,
   policy: BlockingPolicy,
 ): boolean {
-  if (!isProviderAuthor(provider, thread.authorLogin)) return false;
-  if (thread.isResolved || thread.isOutdated) return false;
-  if (thread.priority === null) return false;
-  if (thread.priority > policy.maxBlockingPriority) return false;
-  if (thread.priority <= policy.alwaysBlockingPriority) return true;
-  return lowSeverityBlocks(thread, policy.lowSeverity);
+  return (
+    isProviderAuthor(provider, thread.authorLogin) &&
+    !thread.isResolved &&
+    !thread.isOutdated &&
+    thread.priority !== null &&
+    thread.priority <= policy.maxBlockingPriority &&
+    (thread.priority <= policy.alwaysBlockingPriority ||
+      lowSeverityBlocks(thread, policy.lowSeverity))
+  );
 }
 
 /**

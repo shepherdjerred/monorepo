@@ -108,14 +108,15 @@ function arithmetic(
   left: number | null,
   right: number | null,
 ): number | null {
-  if (left === null || right === null) return null;
-  return match(op)
-    .with("+", () => left + right)
-    .with("-", () => left - right)
-    .with("*", () => left * right)
-    .with("/", () => (right === 0 ? null : left / right))
-    .with("%", () => (right === 0 ? null : left % right))
-    .exhaustive();
+  return left === null || right === null
+    ? null
+    : match(op)
+        .with("+", () => left + right)
+        .with("-", () => left - right)
+        .with("*", () => left * right)
+        .with("/", () => (right === 0 ? null : left / right))
+        .with("%", () => (right === 0 ? null : left % right))
+        .exhaustive();
 }
 
 /**
@@ -193,22 +194,24 @@ function scalarCall(
     })
     .with("floor", "ceil", "abs", (name) => {
       const numeric = asNumber(args[0] ?? null, name.toUpperCase());
-      if (numeric === null) return null;
-      return match(name)
-        .with("floor", () => Math.floor(numeric))
-        .with("ceil", () => Math.ceil(numeric))
-        .with("abs", () => Math.abs(numeric))
-        .exhaustive();
+      return numeric === null
+        ? null
+        : match(name)
+            .with("floor", () => Math.floor(numeric))
+            .with("ceil", () => Math.ceil(numeric))
+            .with("abs", () => Math.abs(numeric))
+            .exhaustive();
     })
     .exhaustive();
 }
 
 function extremum(args: LakeScalar[], direction: 1 | -1): LakeScalar {
   const present = args.filter((value) => value !== null);
-  if (present.length === 0) return null;
-  return present.reduce((best, candidate) =>
-    compareScalars(candidate, best) * direction > 0 ? candidate : best,
-  );
+  return present.length === 0
+    ? null
+    : present.reduce((best, candidate) =>
+        compareScalars(candidate, best) * direction > 0 ? candidate : best,
+      );
 }
 
 function compareScalars(left: LakeScalar, right: LakeScalar): number {
@@ -429,8 +432,9 @@ export function evaluateAggregate(
 }
 
 function mean(values: number[]): number | null {
-  if (values.length === 0) return null;
-  return values.reduce((total, value) => total + value, 0) / values.length;
+  return values.length === 0
+    ? null
+    : values.reduce((total, value) => total + value, 0) / values.length;
 }
 
 /** Sample standard deviation, as DuckDB's STDDEV: NULL below two values. */

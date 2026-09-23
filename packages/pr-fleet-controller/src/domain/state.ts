@@ -166,10 +166,9 @@ export class FleetStore {
       return activeRestack.localHeadSha;
     }
     const controlled = this.controlledWorktreeHeads.get(pr.identity.number);
-    if (controlled?.remoteHeadSha === pr.identity.headSha) {
-      return controlled.localHeadSha;
-    }
-    return pr.worktreeContext.localHeadSha;
+    return controlled?.remoteHeadSha === pr.identity.headSha
+      ? controlled.localHeadSha
+      : pr.worktreeContext.localHeadSha;
   }
 
   clearControlledWorktreeHead(prNumber: number): void {

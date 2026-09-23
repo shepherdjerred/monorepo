@@ -40,17 +40,11 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
  * fall back to the passed-in `Config` value until startup initializes the
  * snapshot — so this is a no-op until a flag exists.
  */
-const DynamicBooleanSchema = z.preprocess(
-  (value) =>
-    typeof value === "string"
-      ? value.toLowerCase() === "true"
-        ? true
-        : value.toLowerCase() === "false"
-          ? false
-          : value
-      : value,
-  z.boolean(),
-);
+const DynamicBooleanSchema = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const lowered = value.toLowerCase();
+  return lowered === "true" || (lowered !== "false" && value);
+}, z.boolean());
 
 const DEFINITION = {
   playerCardEnabled: {

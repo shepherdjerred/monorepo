@@ -26,10 +26,7 @@ function leaderboardScoreToNumber(
   score: CachedLeaderboard["entries"][number]["score"],
 ): number {
   const rank = RankSchema.safeParse(score);
-  if (rank.success) {
-    return rankToLeaguePoints(rank.data);
-  }
-  return Number(score);
+  return rank.success ? rankToLeaguePoints(rank.data) : Number(score);
 }
 
 function latestSnapshot(snapshots: CachedLeaderboard[]): CachedLeaderboard {

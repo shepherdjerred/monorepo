@@ -55,15 +55,11 @@ function playerProfileOutcome(options: {
   accessSuccess: boolean;
   accessState: "available" | "feature_disabled" | "no_shared_guild" | undefined;
 }): "succeeded" | "failed" | null {
-  if (options.summarySuccess) return "succeeded";
-  if (
+  const failed =
     options.summaryError ||
     options.accessError ||
-    (options.accessSuccess && options.accessState !== "available")
-  ) {
-    return "failed";
-  }
-  return null;
+    (options.accessSuccess && options.accessState !== "available");
+  return options.summarySuccess ? "succeeded" : failed ? "failed" : null;
 }
 
 function profileFilterInput(filters: PlayerProfileFilters) {
@@ -90,8 +86,7 @@ function profileUnavailable(
 }
 
 function observedAt(value: Date | string | null): string {
-  if (value === null) return "Not observed yet";
-  return new Date(value).toLocaleString();
+  return value === null ? "Not observed yet" : new Date(value).toLocaleString();
 }
 
 function masteryPoints(points: number): string {

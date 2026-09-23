@@ -30,9 +30,10 @@ function admitsClosedRun(
   reuse: WorkflowStartOptions["workflowIdReusePolicy"],
   closed: FakeExecutionStatus,
 ): boolean {
-  if (reuse === "ALLOW_DUPLICATE") return true;
-  if (reuse === "ALLOW_DUPLICATE_FAILED_ONLY") return closed === "failed";
-  return false;
+  return (
+    reuse === "ALLOW_DUPLICATE" ||
+    (reuse === "ALLOW_DUPLICATE_FAILED_ONLY" && closed === "failed")
+  );
 }
 
 export function fakeV2Temporal(): FakeV2Temporal {

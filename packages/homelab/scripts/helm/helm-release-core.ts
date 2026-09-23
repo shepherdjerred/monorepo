@@ -422,8 +422,7 @@ export function planCharts(
       .map((entry) => entry.name)
       .sort((left, right) => {
         if (left === "apps") return 1;
-        if (right === "apps") return -1;
-        return left.localeCompare(right);
+        return right === "apps" ? -1 : left.localeCompare(right);
       }),
   };
 }

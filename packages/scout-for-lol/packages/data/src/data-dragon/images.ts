@@ -17,8 +17,7 @@ export function championNameToDisplayName(championName: string): string {
   const entry =
     getChampionByKey(normalized) ??
     (Number.isFinite(numericId) ? getChampionById(numericId) : undefined);
-  if (entry) return entry.name;
-  return normalized;
+  return entry ? entry.name : normalized;
 }
 
 export function getChampionDisplayNameById(championId: number): string {

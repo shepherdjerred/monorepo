@@ -93,13 +93,18 @@ function evidence(input: {
 }
 
 function expectedAnd(left: DareTruthValue, right: DareTruthValue) {
-  if (left === false || right === false) return false;
-  return left === null || right === null ? null : true;
+  return (
+    !(left === false || right === false) &&
+    ((left === true && right === true) || null)
+  );
 }
 
 function expectedOr(left: DareTruthValue, right: DareTruthValue) {
-  if (left === true || right === true) return true;
-  return left === null || right === null ? null : false;
+  return (
+    left === true ||
+    right === true ||
+    (!(left === false && right === false) && null)
+  );
 }
 
 describe("Dare v2 evaluator properties", () => {

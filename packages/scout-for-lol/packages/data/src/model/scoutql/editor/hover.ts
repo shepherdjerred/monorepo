@@ -147,10 +147,9 @@ function aliasMarkdown(
   const grouping = analysis.groupings.find(
     (candidate) => candidate.grouping.name === name,
   );
-  if (grouping === undefined) {
-    return undefined;
-  }
-  return `**\`${name}\`** — a ${grouping.grouping.kind} grouping of this query.`;
+  return grouping === undefined
+    ? undefined
+    : `**\`${name}\`** — a ${grouping.grouping.kind} grouping of this query.`;
 }
 
 function sourceMarkdown(name: string): string | undefined {

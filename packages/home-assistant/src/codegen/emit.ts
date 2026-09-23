@@ -95,10 +95,7 @@ function sampleValueLiteral(value: unknown): string | undefined {
   if (Array.isArray(value)) {
     return `[] as readonly unknown[]`;
   }
-  if (typeof value === "object") {
-    return `{}`;
-  }
-  return undefined;
+  return typeof value === "object" ? `{}` : undefined;
 }
 
 function emitServices(intro: HaIntrospection): string {

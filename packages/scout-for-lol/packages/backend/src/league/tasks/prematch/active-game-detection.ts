@@ -77,10 +77,10 @@ const LOBBY_RETRY_DELAY_MS = 2000;
  * started-but-undersized lobby rather than throw on it.
  */
 function isLikelyPreStartLobby(gameInfo: RawCurrentGameInfo): boolean {
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return false;
-  }
-  return gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT;
+  return (
+    !isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) &&
+    gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT
+  );
 }
 
 async function refetchLobbyUntilFilled(

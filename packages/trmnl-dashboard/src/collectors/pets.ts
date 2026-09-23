@@ -350,10 +350,10 @@ function litterValuesMismatch(
   const status = states.find((state) =>
     state.entity_id.endsWith("_status_code"),
   );
-  if (litter === undefined || waste === undefined || status === undefined) {
-    return true;
-  }
   return (
+    litter === undefined ||
+    waste === undefined ||
+    status === undefined ||
     Math.abs(Number(litter.state) - robot.litterPercent) > 1 ||
     Math.abs(Number(waste.state) - robot.wastePercent) > 1 ||
     (robot.ready && !["rdy", "ready"].includes(status.state.toLowerCase()))

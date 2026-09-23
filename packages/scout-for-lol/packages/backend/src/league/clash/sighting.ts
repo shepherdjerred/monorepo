@@ -100,10 +100,9 @@ export async function resolveClashSightingLabels(input: {
     at: input.observedAt,
     platform: input.platform,
   });
-  if (cup === undefined) {
-    return { cupKey: null, cupDay: null, teamRiotId: null };
-  }
-  return { cupKey: cup.nameKey, cupDay: cup.cupDay, teamRiotId: null };
+  return cup === undefined
+    ? { cupKey: null, cupDay: null, teamRiotId: null }
+    : { cupKey: cup.nameKey, cupDay: cup.cupDay, teamRiotId: null };
 }
 
 export async function upsertClashGameSighting(

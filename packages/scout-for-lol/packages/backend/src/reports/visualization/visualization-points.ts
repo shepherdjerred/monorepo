@@ -124,10 +124,9 @@ export function pointLabel(
   if (context.temporalIndex !== null) {
     return row.dimensions[context.temporalIndex] ?? row.label;
   }
-  if (axes !== undefined) {
-    return row.dimensions[axes.pointDim] ?? row.label;
-  }
-  return row.label;
+  return axes === undefined
+    ? row.label
+    : (row.dimensions[axes.pointDim] ?? row.label);
 }
 
 export function seriesLabel(
@@ -141,8 +140,9 @@ export function seriesLabel(
     );
     return rest.length === 0 ? "All" : rest.join(" • ");
   }
-  if (context.plan.groupings.length <= 1) return "All";
-  return row.dimensions[axes?.seriesDim ?? 0] ?? "All";
+  return context.plan.groupings.length <= 1
+    ? "All"
+    : (row.dimensions[axes?.seriesDim ?? 0] ?? "All");
 }
 
 export type PointInput = {

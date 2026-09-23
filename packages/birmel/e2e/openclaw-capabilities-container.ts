@@ -77,10 +77,9 @@ function startMockServer() {
       if (url.pathname === "/tabs/tab-1/action") {
         return Response.json({ ok: true });
       }
-      if (url.pathname === "/tabs/tab-1/close") {
-        return Response.json({ ok: true });
-      }
-      return new Response("not found", { status: 404 });
+      return url.pathname === "/tabs/tab-1/close"
+        ? Response.json({ ok: true })
+        : new Response("not found", { status: 404 });
     },
   });
 }

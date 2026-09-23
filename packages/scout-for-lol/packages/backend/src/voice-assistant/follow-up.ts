@@ -35,8 +35,9 @@ export class VoiceFollowUpWindow {
     if (verified !== null) {
       return { command: verified.command, usedFollowUp: false };
     }
-    if (!lifecycleFollowUp || !this.isAllowed(userId)) return null;
-    return { command: normalizeTranscript(transcript), usedFollowUp: true };
+    return !lifecycleFollowUp || !this.isAllowed(userId)
+      ? null
+      : { command: normalizeTranscript(transcript), usedFollowUp: true };
   }
 
   consume(userId: string, usedFollowUp: boolean): void {

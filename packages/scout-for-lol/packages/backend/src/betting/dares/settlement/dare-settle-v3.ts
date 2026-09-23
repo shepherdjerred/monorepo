@@ -77,10 +77,9 @@ export function dareFinalityForEvidenceV3(
   ) {
     return { value: true, final: true, reason: "monotone_success" };
   }
-  if (evidence.sourceMatchIds.length >= contract.maxEligibleGames) {
-    return { value: evidence.achieved, final: true, reason: "game_cap" };
-  }
-  return { value: evidence.achieved, final: false, reason: "reversible" };
+  return evidence.sourceMatchIds.length >= contract.maxEligibleGames
+    ? { value: evidence.achieved, final: true, reason: "game_cap" }
+    : { value: evidence.achieved, final: false, reason: "reversible" };
 }
 
 export function dareRaceFinalityV3(

@@ -59,8 +59,9 @@ function projectedName(value: JsonValue | undefined): string | null {
   const expression = objectValue(value);
   if (expression === null) return null;
   const alias = lowerString(expression["alias"]);
-  if (alias !== null && alias.length > 0) return alias;
-  return lowerString(arrayValue(expression["column_names"]).at(-1));
+  return alias !== null && alias.length > 0
+    ? alias
+    : lowerString(arrayValue(expression["column_names"]).at(-1));
 }
 
 function cteDefinitions(

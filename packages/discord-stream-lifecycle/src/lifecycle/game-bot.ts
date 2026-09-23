@@ -259,8 +259,9 @@ type VoiceStateUpdateOptions<TUserbot extends PooledUserbot> = {
 function handleVoiceStateUpdate<TUserbot extends PooledUserbot>(
   params: VoiceStateUpdateOptions<TUserbot>,
 ): void {
-  const { oldState, newState, sessionManager, aloneWatcher, peerUserbotIds } =
-    params;
+  // `newState` is intentionally not destructured: it is kept in
+  // `VoiceStateUpdateOptions` for future expansion to detect moves.
+  const { oldState, sessionManager, aloneWatcher, peerUserbotIds } = params;
   const session = sessionManager.getActiveSession();
   if (session === null) {
     return;
@@ -319,6 +320,4 @@ function handleVoiceStateUpdate<TUserbot extends PooledUserbot>(
     }
     void sessionManager.stop("aloneInVoice");
   });
-  // Suppress unused-param warning for newState (kept for future expansion to detect moves).
-  void newState;
 }

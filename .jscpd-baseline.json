@@ -69,12 +69,12 @@
       "tokens": 77
     },
     "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
-      "clones": 1,
-      "tokens": 76
+      "clones": 2,
+      "tokens": 146
     },
     "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
       "clones": 1,
-      "tokens": 94
+      "tokens": 93
     },
     "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/events.ts": {
       "clones": 1,
@@ -441,8 +441,8 @@
       "tokens": 78
     },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
-      "clones": 1,
-      "tokens": 89
+      "clones": 2,
+      "tokens": 158
     },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
       "clones": 1,
@@ -453,8 +453,8 @@
       "tokens": 163
     },
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
-      "clones": 1,
-      "tokens": 77
+      "clones": 2,
+      "tokens": 146
     },
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts": {
       "clones": 1,
@@ -545,12 +545,12 @@
       "tokens": 262
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 8,
-      "tokens": 763
+      "clones": 10,
+      "tokens": 901
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 11,
-      "tokens": 1285
+      "clones": 13,
+      "tokens": 1391
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
       "clones": 2,
@@ -558,11 +558,11 @@
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
       "clones": 6,
-      "tokens": 553
+      "tokens": 527
     },
     "packages/homelab/src/cdk8s/src/argocd-script-support.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 2,
-      "tokens": 239
+      "clones": 3,
+      "tokens": 267
     },
     "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
       "clones": 11,
@@ -570,11 +570,11 @@
     },
     "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 2,
-      "tokens": 247
+      "tokens": 216
     },
     "packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
-      "clones": 4,
-      "tokens": 478
+      "clones": 6,
+      "tokens": 688
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts": {
       "clones": 1,
@@ -582,15 +582,15 @@
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/freshrss.ts": {
       "clones": 1,
-      "tokens": 107
+      "tokens": 87
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts": {
       "clones": 1,
-      "tokens": 118
+      "tokens": 87
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
       "clones": 1,
-      "tokens": 107
+      "tokens": 87
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts": {
       "clones": 1,
@@ -598,39 +598,71 @@
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
       "clones": 1,
-      "tokens": 126
+      "tokens": 87
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/flipt.ts": {
       "clones": 1,
       "tokens": 82
     },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts": {
+      "clones": 1,
+      "tokens": 120
+    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
       "clones": 1,
-      "tokens": 126
+      "tokens": 87
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts": {
       "clones": 1,
-      "tokens": 99
+      "tokens": 87
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/freshrss.ts": {
-      "clones": 1,
-      "tokens": 71
+      "clones": 2,
+      "tokens": 160
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/media.ts": {
       "clones": 1,
       "tokens": 73
     },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts": {
       "clones": 1,
-      "tokens": 131
+      "tokens": 80
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
+      "clones": 1,
+      "tokens": 100
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts": {
+      "clones": 1,
+      "tokens": 81
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
       "clones": 1,
       "tokens": 75
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
       "clones": 1,
-      "tokens": 75
+      "tokens": 77
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
+      "clones": 2,
+      "tokens": 152
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
       "clones": 1,
@@ -642,11 +674,15 @@
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts": {
       "clones": 1,
-      "tokens": 87
+      "tokens": 79
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
-      "clones": 3,
-      "tokens": 339
+      "clones": 2,
+      "tokens": 270
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts": {
+      "clones": 1,
+      "tokens": 77
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
       "clones": 1,
@@ -861,8 +897,8 @@
       "tokens": 101
     },
     "packages/scout-for-lol/packages/backend/src/betting/parlays/model/parlay-criteria.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/model/parlay-criteria.test.ts": {
-      "clones": 3,
-      "tokens": 237
+      "clones": 5,
+      "tokens": 375
     },
     "packages/scout-for-lol/packages/backend/src/betting/parlays/parlay.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
       "clones": 1,
@@ -930,7 +966,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/explore/http/http-auth.ts|packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts": {
       "clones": 1,
-      "tokens": 203
+      "tokens": 190
     },
     "packages/scout-for-lol/packages/backend/src/explore/http/http-auth.ts|packages/scout-for-lol/packages/backend/src/trpc/trpc.ts": {
       "clones": 1,
@@ -994,7 +1030,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
       "clones": 1,
-      "tokens": 92
+      "tokens": 80
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts": {
       "clones": 1,
@@ -1006,7 +1042,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts": {
       "clones": 3,
-      "tokens": 272
+      "tokens": 245
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
       "clones": 1,
@@ -1086,7 +1122,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.no-bucket.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-prematch-data.test.ts": {
       "clones": 1,
-      "tokens": 86
+      "tokens": 81
     },
     "packages/scout-for-lol/packages/backend/src/storage/s3-query.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
       "clones": 1,
@@ -1182,7 +1218,7 @@
     },
     "packages/starlight-karma-bot/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
       "clones": 1,
-      "tokens": 86
+      "tokens": 72
     },
     "packages/streambot/e2e/run.ts|packages/streambot/e2e/voice-recovery.ts": {
       "clones": 1,
@@ -1298,7 +1334,7 @@
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/job-search-board.test.ts": {
       "clones": 1,
-      "tokens": 75
+      "tokens": 70
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts": {
       "clones": 1,
@@ -1306,15 +1342,31 @@
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
       "clones": 1,
-      "tokens": 77
+      "tokens": 70
+    },
+    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/job-search-board.test.ts": {
+      "clones": 1,
+      "tokens": 74
     },
     "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/saved-view/saved-view-collection.test.ts": {
       "clones": 1,
-      "tokens": 83
+      "tokens": 81
+    },
+    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
+      "clones": 1,
+      "tokens": 74
     },
     "packages/tasks-for-obsidian/src/domain/base-schemas.ts|packages/tasks-for-obsidian/src/domain/wire.ts": {
       "clones": 2,
       "tokens": 166
+    },
+    "packages/tasks-for-obsidian/src/domain/job-search-board.test.ts|packages/tasks-for-obsidian/src/domain/saved-view/saved-view-collection.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/tasks-for-obsidian/src/domain/job-search-board.test.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
+      "clones": 1,
+      "tokens": 71
     },
     "packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts|packages/tasks-for-obsidian/src/domain/recurrence.test.ts": {
       "clones": 1,
@@ -1374,7 +1426,7 @@
     },
     "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
       "clones": 1,
-      "tokens": 75
+      "tokens": 72
     },
     "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts": {
       "clones": 2,
@@ -1394,11 +1446,15 @@
     },
     "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
-      "tokens": 127
+      "tokens": 122
     },
     "packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
       "clones": 1,
       "tokens": 95
+    },
+    "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
+      "clones": 1,
+      "tokens": 72
     },
     "packages/temporal/src/activities/maintenance/deps-summary/deps-summary.ts|packages/version-catalog/src/index.ts": {
       "clones": 1,
@@ -1407,14 +1463,6 @@
     "packages/temporal/src/activities/maintenance/tasknotes-canary.ts|packages/temporal/src/activities/reports/report-freshness.ts": {
       "clones": 1,
       "tokens": 105
-    },
-    "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/temporal/src/event-bridge/sleep-webhook.ts|packages/temporal/src/event-bridge/xcode-cloud-webhook.ts": {
-      "clones": 1,
-      "tokens": 74
     },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,
@@ -1452,21 +1500,17 @@
       "clones": 1,
       "tokens": 80
     },
-    "packages/toolkit/src/lib/github/pr.ts|packages/toolkit/src/lib/github/pr.ts": {
-      "clones": 1,
-      "tokens": 75
-    },
     "packages/toolkit/test/bugsink/client.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
-      "tokens": 89
+      "tokens": 84
     },
     "packages/toolkit/test/lib/git-conflicts.test.ts|scripts/lib/test-git.ts": {
       "clones": 1,
       "tokens": 76
     },
     "packages/toolkit/test/lib/http.test.ts|packages/toolkit/test/lib/http.test.ts": {
-      "clones": 2,
-      "tokens": 166
+      "clones": 3,
+      "tokens": 235
     },
     "packages/voice-assistant/src/local-models.ts|packages/voice-assistant/src/local-models.ts": {
       "clones": 2,

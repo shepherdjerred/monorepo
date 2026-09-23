@@ -28,10 +28,7 @@ export function groupMatchMvpVotesForTeam(
   return [...byIndex.entries()]
     .toSorted((left, right) => {
       const countDelta = right[1].length - left[1].length;
-      if (countDelta !== 0) {
-        return countDelta;
-      }
-      return left[0] - right[0];
+      return countDelta === 0 ? left[0] - right[0] : countDelta;
     })
     .map(([nomineeIndex, grouped]) => ({
       nomineeIndex,

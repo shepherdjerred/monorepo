@@ -44,10 +44,7 @@ export async function resolveMvpVotesCapability(
     }
   }
   const serverId = enabled[0];
-  if (serverId === undefined || enabled.length !== 1) {
-    return null;
-  }
-  return { serverId };
+  return serverId === undefined || enabled.length !== 1 ? null : { serverId };
 }
 
 const LeaderboardToolInputSchema = z.strictObject({

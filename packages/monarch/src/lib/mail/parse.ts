@@ -27,8 +27,7 @@ function findHeaderEnd(raw: string): number {
   const crlf = raw.indexOf("\r\n\r\n");
   const lf = raw.indexOf("\n\n");
   if (crlf === -1) return lf === -1 ? raw.length : lf;
-  if (lf === -1) return crlf;
-  return Math.min(crlf, lf);
+  return lf === -1 ? crlf : Math.min(crlf, lf);
 }
 
 function bodyOf(raw: string): string {
@@ -126,16 +125,16 @@ export function extractTextBody(raw: string): string {
   const html = parts.find((p) =>
     p.contentType.toLowerCase().includes("text/html"),
   );
-  if (html) {
-    return stripHtml(decodeBody(html.body, html.encoding)).slice(0, BODY_CAP);
-  }
-  return "";
+  return html
+    ? stripHtml(decodeBody(html.body, html.encoding)).slice(0, BODY_CAP)
+    : "";
 }
 
 export function parseEmailDateHeader(value: string): string {
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "";
-  return parsed.toISOString().split("T")[0] ?? "";
+  return Number.isNaN(parsed.getTime())
+    ? ""
+    : (parsed.toISOString().split("T")[0] ?? "");
 }
 
 export function parseEmail(raw: string): ParsedEmail {

@@ -222,22 +222,17 @@ function isAllowedViolation(
   }
 
   if (rule.id === "direct-provider-endpoint") {
-    if (filePath === BRIM_API_BILLING_ENDPOINTS) {
-      return brimBillingLineIsAllowed(source);
-    }
-    return (
-      filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
-      filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
-      filePath === OPENAI_BILLING_RECONCILIATION_PATH ||
-      OPENAI_NATIVE_VOICE_AUDIO_PATHS.has(filePath)
-    );
+    return filePath === BRIM_API_BILLING_ENDPOINTS
+      ? brimBillingLineIsAllowed(source)
+      : filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
+          filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
+          filePath === OPENAI_BILLING_RECONCILIATION_PATH ||
+          OPENAI_NATIVE_VOICE_AUDIO_PATHS.has(filePath);
   }
 
-  if (rule.id === "agent-cli-dependency") {
-    return filePath === NATIVE_SDK_CONTRACT_TEST;
-  }
-
-  return false;
+  return (
+    rule.id === "agent-cli-dependency" && filePath === NATIVE_SDK_CONTRACT_TEST
+  );
 }
 
 export function findAiArchitectureViolations(
@@ -303,17 +298,18 @@ function isActiveRuntimePath(
   filePath: string,
   workspaceRoots: readonly string[],
 ): boolean {
-  if (filePath === "package.json" || filePath.startsWith(".buildkite/")) {
-    return true;
-  }
-  if (filePath.startsWith("packages/docs/")) return false;
-  if (filePath.startsWith("packages/dotfiles/dot_agents/skills/")) return false;
-  if (filePath.includes("/node_modules/") || filePath.includes("/dist/")) {
-    return false;
-  }
-  return workspaceRoots.some(
-    (workspaceRoot) =>
-      filePath === workspaceRoot || filePath.startsWith(`${workspaceRoot}/`),
+  return (
+    filePath === "package.json" ||
+    filePath.startsWith(".buildkite/") ||
+    (!filePath.startsWith("packages/docs/") &&
+      !filePath.startsWith("packages/dotfiles/dot_agents/skills/") &&
+      !filePath.includes("/node_modules/") &&
+      !filePath.includes("/dist/") &&
+      workspaceRoots.some(
+        (workspaceRoot) =>
+          filePath === workspaceRoot ||
+          filePath.startsWith(`${workspaceRoot}/`),
+      ))
   );
 }
 

@@ -54,10 +54,10 @@ const STANDARD_PARTICIPANT_COUNT = 10;
 export function isPrematchRosterComplete(
   gameInfo: RawCurrentGameInfo,
 ): boolean {
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return true;
-  }
-  return gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT;
+  return (
+    isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
+    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT
+  );
 }
 
 /**

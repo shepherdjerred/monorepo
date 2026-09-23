@@ -98,20 +98,15 @@ function helpLine(): string {
 }
 
 function onboardingNudge(serverName: string, state: GuildState): string {
-  if (state.subscriptions === 0) {
-    return (
-      `👋 Thanks for adding Scout to **${serverName}**! It isn't tracking anyone yet, ` +
-      `so it won't post anything.\n\nAdd your first player from the dashboard: ${DASHBOARD}\n` +
-      `Step-by-step guide: ${GETTING_STARTED}` +
-      helpLine()
-    );
-  }
-  return (
-    `👋 You've made a start on Scout in **${serverName}** — nice.\n\n` +
-    `Add more players from the dashboard (${DASHBOARD}) and Scout will post a report ` +
-    `after each of their games.` +
-    helpLine()
-  );
+  return state.subscriptions === 0
+    ? `👋 Thanks for adding Scout to **${serverName}**! It isn't tracking anyone yet, ` +
+        `so it won't post anything.\n\nAdd your first player from the dashboard: ${DASHBOARD}\n` +
+        `Step-by-step guide: ${GETTING_STARTED}` +
+        helpLine()
+    : `👋 You've made a start on Scout in **${serverName}** — nice.\n\n` +
+        `Add more players from the dashboard (${DASHBOARD}) and Scout will post a report ` +
+        `after each of their games.` +
+        helpLine();
 }
 
 function feedbackAsk(serverName: string, state: GuildState): string {

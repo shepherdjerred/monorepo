@@ -478,8 +478,7 @@ export class N64Emulator {
     const rt = this.rt;
     if (rt === undefined) return undefined;
     const base = rt.rdramBase();
-    if (!base) return undefined;
-    return { base, heap: rt.heap() };
+    return base ? { base, heap: rt.heap() } : undefined;
   }
 
   /** Read the current frame as RGBA (for screenshots). */

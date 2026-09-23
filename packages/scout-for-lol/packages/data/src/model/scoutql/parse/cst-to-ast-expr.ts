@@ -45,10 +45,9 @@ export function visitExpr(
 ): ScoutQlExprAst {
   const span = cstSpan(node, fallback);
   const [orNode] = ruleChildren(node, "orExpr");
-  if (orNode === undefined) {
-    return errorNode(span);
-  }
-  return visitOr(orNode, depth, state, span);
+  return orNode === undefined
+    ? errorNode(span)
+    : visitOr(orNode, depth, state, span);
 }
 
 type ChainSpec = {
@@ -105,20 +104,16 @@ function visitNot(
   const span = cstSpan(node, fallback);
   const [innerNot] = ruleChildren(node, "notExpr");
   if (innerNot !== undefined || tokenChildren(node, "Not").length > 0) {
-    if (
-      innerNot === undefined ||
+    return innerNot === undefined ||
       !guardDepth(state, depth + 1, span) ||
       !countNode(state, span)
-    ) {
-      return errorNode(span);
-    }
-    return notNode(visitNot(innerNot, depth + 1, state, span), span);
+      ? errorNode(span)
+      : notNode(visitNot(innerNot, depth + 1, state, span), span);
   }
   const [comparisonNode] = ruleChildren(node, "comparison");
-  if (comparisonNode === undefined) {
-    return errorNode(span);
-  }
-  return visitComparison(comparisonNode, depth, state, span);
+  return comparisonNode === undefined
+    ? errorNode(span)
+    : visitComparison(comparisonNode, depth, state, span);
 }
 
 function additiveOr(
@@ -127,10 +122,9 @@ function additiveOr(
   state: VisitState,
   fallback: ScoutQlSpan,
 ): ScoutQlExprAst {
-  if (node === undefined) {
-    return errorNode(fallback);
-  }
-  return visitAdditive(node, depth, state, fallback);
+  return node === undefined
+    ? errorNode(fallback)
+    : visitAdditive(node, depth, state, fallback);
 }
 
 function comparisonHasSuffix(node: CstNode, negated: boolean): boolean {
@@ -201,10 +195,9 @@ function visitComparison(
 
 function typeNameOf(typeNode: CstNode): string {
   const [identifier] = tokenChildren(typeNode, "Identifier");
-  if (identifier === undefined) {
-    return "";
-  }
-  return decodeScoutQlIdentifier(identifier.image);
+  return identifier === undefined
+    ? ""
+    : decodeScoutQlIdentifier(identifier.image);
 }
 
 function visitPostfix(
@@ -295,10 +288,9 @@ function visitUnary(
     return { kind: "unary", op: "-", operand, span };
   }
   const [primaryNode] = ruleChildren(node, "primary");
-  if (primaryNode === undefined) {
-    return errorNode(span);
-  }
-  return visitPrimary(primaryNode, depth, state, span);
+  return primaryNode === undefined
+    ? errorNode(span)
+    : visitPrimary(primaryNode, depth, state, span);
 }
 
 function intervalNode(node: CstNode, span: ScoutQlSpan): ScoutQlExprAst {
@@ -373,10 +365,9 @@ function visitPrimary(
   }
   if (hasChild(node, "LParen")) {
     const [exprNode] = ruleChildren(node, "expr");
-    if (exprNode === undefined || !guardDepth(state, depth + 1, span)) {
-      return errorNode(span);
-    }
-    return visitExpr(exprNode, depth + 1, state, span);
+    return exprNode === undefined || !guardDepth(state, depth + 1, span)
+      ? errorNode(span)
+      : visitExpr(exprNode, depth + 1, state, span);
   }
   const [numberToken] = tokenChildren(node, "NumberLiteral");
   if (numberToken !== undefined) {
@@ -402,10 +393,9 @@ function visitPrimary(
   if (hasChild(node, "CurrentTimestamp")) {
     return { kind: "now", which: "timestamp", span };
   }
-  if (hasChild(node, "CurrentDate")) {
-    return { kind: "now", which: "date", span };
-  }
-  return errorNode(span);
+  return hasChild(node, "CurrentDate")
+    ? { kind: "now", which: "date", span }
+    : errorNode(span);
 }
 
 function visitCallOrColumn(

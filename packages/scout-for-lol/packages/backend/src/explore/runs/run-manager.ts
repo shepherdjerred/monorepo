@@ -198,8 +198,9 @@ export class ExploreRunManager {
 
   async listDurable(userId: DiscordAccountId): Promise<ExploreActiveRun[]> {
     const local = this.list(userId);
-    if (this.#inlineExecutionForTests) return local;
-    return await listDurableExploreRuns(this.#client, userId, local);
+    return this.#inlineExecutionForTests
+      ? local
+      : await listDurableExploreRuns(this.#client, userId, local);
   }
 
   subscribe(
@@ -224,13 +225,14 @@ export class ExploreRunManager {
     subscriber: Subscriber,
   ): Promise<(() => void) | null> {
     const local = this.subscribe(runId, userId, subscriber);
-    if (local !== null || this.#inlineExecutionForTests) return local;
-    return await subscribeDurableExploreRun(
-      this.#client,
-      runId,
-      userId,
-      subscriber,
-    );
+    return local !== null || this.#inlineExecutionForTests
+      ? local
+      : await subscribeDurableExploreRun(
+          this.#client,
+          runId,
+          userId,
+          subscriber,
+        );
   }
 
   async stop(runId: string, userId: DiscordAccountId): Promise<boolean> {
@@ -346,8 +348,9 @@ export class ExploreRunManager {
     userId: DiscordAccountId,
   ): Promise<ExploreRunOutcome | null> {
     const local = this.outcome(runId, userId);
-    if (local !== null || this.#inlineExecutionForTests) return local;
-    return await durableExploreOutcome(this.#client, runId, userId);
+    return local !== null || this.#inlineExecutionForTests
+      ? local
+      : await durableExploreOutcome(this.#client, runId, userId);
   }
 
   async deleteConversationAndWait(

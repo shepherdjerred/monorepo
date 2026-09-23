@@ -53,10 +53,9 @@ function queueHeadline(
   if (state.changed) {
     return `${result.editCount.toString()} queue-window edits published in ${result.prUrl ?? "an unknown PR"}.`;
   }
-  if (state.hasWarnings) {
-    return `${result.warningCount.toString()} warnings with fingerprint ${result.warningFingerprint ?? "unavailable"} (${result.warningConsecutiveRuns.toString()} consecutive runs).`;
-  }
-  return "Match evidence produced no queue-window changes or warnings.";
+  return state.hasWarnings
+    ? `${result.warningCount.toString()} warnings with fingerprint ${result.warningFingerprint ?? "unavailable"} (${result.warningConsecutiveRuns.toString()} consecutive runs).`
+    : "Match evidence produced no queue-window changes or warnings.";
 }
 
 function queueChecks(

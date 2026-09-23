@@ -166,10 +166,9 @@ function editedPayload(options: PayloadOptions): AgentJobPayload | null {
   if (options.agentPrompt != null) {
     return { kind: "agent", prompt: options.agentPrompt };
   }
-  if (options.message != null) {
-    return { kind: "message", message: options.message };
-  }
-  return null;
+  return options.message == null
+    ? null
+    : { kind: "message", message: options.message };
 }
 
 export async function serializeEditPayload(

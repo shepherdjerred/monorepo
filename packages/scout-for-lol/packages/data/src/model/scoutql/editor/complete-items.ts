@@ -137,7 +137,7 @@ export function functionItems(options: {
       return true;
     }
     const aggregate = info.kind === "aggregate" || info.kind === "macro";
-    return aggregate ? options.aggregates : true;
+    return !aggregate || options.aggregates;
   }).map((info) => {
     const body = functionBody(info);
     const aggregate = info.kind === "aggregate" || info.kind === "macro";
@@ -247,10 +247,7 @@ export function renderOptionNames(kind: ReportOutputFormat): readonly string[] {
   if (kind === "TABLE") {
     return ["sparkline"];
   }
-  if (kind === "LEADERBOARD") {
-    return ["mentions"];
-  }
-  return SCOUTQL_CHART_OPTION_NAMES;
+  return kind === "LEADERBOARD" ? ["mentions"] : SCOUTQL_CHART_OPTION_NAMES;
 }
 
 export function renderOptionItems(

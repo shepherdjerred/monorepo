@@ -47,10 +47,9 @@ async function readOptionalSummary(
   runDirectory: string,
 ): Promise<RunSummary | null> {
   const file = Bun.file(path.join(runDirectory, "summary.json"));
-  if (!(await file.exists())) {
-    return null;
-  }
-  return RunSummarySchema.parse(JSON.parse(await file.text()));
+  return (await file.exists())
+    ? RunSummarySchema.parse(JSON.parse(await file.text()))
+    : null;
 }
 
 /**

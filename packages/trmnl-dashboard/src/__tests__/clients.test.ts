@@ -20,10 +20,7 @@ function requestUrl(input: Parameters<typeof fetch>[0]): string {
   if (typeof input === "string") {
     return input;
   }
-  if (input instanceof URL) {
-    return input.href;
-  }
-  return input.url;
+  return input instanceof URL ? input.href : input.url;
 }
 
 afterEach(() => {

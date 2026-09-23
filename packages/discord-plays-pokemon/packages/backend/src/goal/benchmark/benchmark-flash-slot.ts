@@ -114,8 +114,7 @@ function readSlot(
   }
   if (counter === undefined || sectors.size !== SLOT_SECTORS) return null;
   const layout = matchingLayout(physicalSectors);
-  if (layout === null) return null;
-  return { counter, layout: layout.name, sectors };
+  return layout === null ? null : { counter, layout: layout.name, sectors };
 }
 
 export function readValidatedEmeraldSaveSlots(bytes: Uint8Array): Readonly<{

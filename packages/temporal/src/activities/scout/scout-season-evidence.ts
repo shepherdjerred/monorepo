@@ -60,9 +60,9 @@ function isSpecificSeasonSource(url: string): boolean {
   const segments = parsed.pathname.split("/").filter((part) => part !== "");
   const family = seasonSourceFamily(url);
   if (family === "wiki") return segments.length >= 2;
-  if (parsed.hostname === "support-leagueoflegends.riotgames.com")
-    return segments.includes("articles") && segments.length >= 4;
-  return family === "riot" && segments.length >= 4;
+  return parsed.hostname === "support-leagueoflegends.riotgames.com"
+    ? segments.includes("articles") && segments.length >= 4
+    : family === "riot" && segments.length >= 4;
 }
 
 export function hasIndependentSeasonSources(urls: string[]): boolean {

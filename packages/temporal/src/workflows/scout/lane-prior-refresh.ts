@@ -59,8 +59,7 @@ function publicationStatus(
   state: ReturnType<typeof evaluation>,
 ): ActivityReportInput["checks"][number]["status"] {
   if (state.publicationFailed || state.autoMergeFailed) return "failed";
-  if (state.changed || state.pending) return "passed";
-  return "skipped";
+  return state.changed || state.pending ? "passed" : "skipped";
 }
 
 function reportVerdict(
@@ -68,8 +67,7 @@ function reportVerdict(
 ): ActivityReportInput["verdict"] {
   if (state.publicationFailed || state.autoMergeFailed) return "attention";
   if (state.changed) return "changed";
-  if (state.pending) return "pending";
-  return "clear";
+  return state.pending ? "pending" : "clear";
 }
 
 function reportChecks(

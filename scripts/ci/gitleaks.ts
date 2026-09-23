@@ -26,8 +26,9 @@ async function readChangedFiles(
     child.exited,
     new Response(child.stdout).text(),
   ]);
-  if (exitCode !== 0) return undefined;
-  return output.split("\n").filter((path) => path !== "");
+  return exitCode === 0
+    ? output.split("\n").filter((path) => path !== "")
+    : undefined;
 }
 
 function fullTreeScanCommand(): string[] {

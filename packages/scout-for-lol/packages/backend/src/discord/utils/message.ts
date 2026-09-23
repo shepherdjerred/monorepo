@@ -38,11 +38,9 @@ export function truncateDiscordMessage(
   message: string,
   maxLength: number = DISCORD_MESSAGE_MAX_LENGTH - SAFE_MESSAGE_BUFFER,
 ): string {
-  if (message.length <= maxLength) {
-    return message;
-  }
-
-  return `${message.slice(0, maxLength)}...`;
+  return message.length <= maxLength
+    ? message
+    : `${message.slice(0, maxLength)}...`;
 }
 
 /**
@@ -58,11 +56,7 @@ export function truncateEmbedFieldValue(text: string): string {
   const FIELD_BUFFER = 20;
   const maxLength = MAX_FIELD_VALUE_LENGTH - FIELD_BUFFER;
 
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  return `${text.slice(0, maxLength)}...`;
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength)}...`;
 }
 
 /**
@@ -78,11 +72,7 @@ export function truncateEmbedDescription(text: string): string {
   const DESCRIPTION_BUFFER = 20;
   const maxLength = MAX_DESCRIPTION_LENGTH - DESCRIPTION_BUFFER;
 
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  return `${text.slice(0, maxLength)}...`;
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength)}...`;
 }
 
 /**

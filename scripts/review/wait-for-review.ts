@@ -99,10 +99,9 @@ export function resolveReviewGateProvider(
       `CI review gate requires Codex; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
     );
   }
-  if (normalized === undefined || normalized === "") {
-    return resolveRequiredReviewProvider();
-  }
-  return resolveProvider(normalized);
+  return normalized === undefined || normalized === ""
+    ? resolveRequiredReviewProvider()
+    : resolveProvider(normalized);
 }
 
 function parsePositiveIntegerEnv(name: string, fallback: number): number {
@@ -143,8 +142,7 @@ function repoFromEnvironment(): string {
   const httpsMatch = /github\.com\/([^/]+\/[^/.]+)(?:\.git)?$/u.exec(
     buildkiteRepo,
   );
-  if (httpsMatch?.[1] !== undefined) return httpsMatch[1];
-  return DEFAULT_REPO;
+  return httpsMatch?.[1] ?? DEFAULT_REPO;
 }
 
 /**
@@ -181,8 +179,7 @@ const TRANSPORT_FAILURE_CODES = new Set<string>([
 function errorCode(error: unknown): string | null {
   if (typeof error !== "object" || error === null) return null;
   if ("code" in error && typeof error.code === "string") return error.code;
-  if ("cause" in error) return errorCode(error.cause);
-  return null;
+  return "cause" in error ? errorCode(error.cause) : null;
 }
 
 /**
@@ -204,8 +201,10 @@ function isRetryablePollError(error: Error): boolean {
     return code >= 500 && code <= 599;
   }
   const code = errorCode(error);
-  if (code !== null && TRANSPORT_FAILURE_CODES.has(code)) return true;
-  return TRANSPORT_FAILURE_RE.test(message);
+  return (
+    (code !== null && TRANSPORT_FAILURE_CODES.has(code)) ||
+    TRANSPORT_FAILURE_RE.test(message)
+  );
 }
 
 async function waitForReview(): Promise<void> {

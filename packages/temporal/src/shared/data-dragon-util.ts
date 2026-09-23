@@ -57,10 +57,10 @@ export function isDataDragonBranch(
     return true;
   }
   const legacyPrefix = `${deterministic}-`;
-  if (!headRefName.startsWith(legacyPrefix)) {
-    return false;
-  }
-  return /^[0-9a-f]{8}$/.test(headRefName.slice(legacyPrefix.length));
+  return (
+    headRefName.startsWith(legacyPrefix) &&
+    /^[0-9a-f]{8}$/.test(headRefName.slice(legacyPrefix.length))
+  );
 }
 
 /**
@@ -202,10 +202,9 @@ export function failureReason(error: unknown): string {
   if (message.includes("bun install")) {
     return "install-failed";
   }
-  if (message.includes("Postal") || message.includes("email configuration")) {
-    return "email-failed";
-  }
-  return "exception";
+  return message.includes("Postal") || message.includes("email configuration")
+    ? "email-failed"
+    : "exception";
 }
 
 /**

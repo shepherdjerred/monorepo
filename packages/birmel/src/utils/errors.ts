@@ -2,20 +2,14 @@
  * Safely extract an error message from an unknown error value.
  */
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
+  return error instanceof Error ? error.message : String(error);
 }
 
 /**
  * Safely convert an unknown error value to an Error instance.
  */
 export function toError(error: unknown): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-  return new Error(String(error));
+  return error instanceof Error ? error : new Error(String(error));
 }
 
 /**
@@ -32,10 +26,9 @@ export function parseJson(text: string): unknown {
  */
 export function parseJsonStringArray(text: string): string[] {
   const parsed: unknown = JSON.parse(text);
-  if (Array.isArray(parsed)) {
-    return parsed.filter((item) => typeof item === "string");
-  }
-  return [];
+  return Array.isArray(parsed)
+    ? parsed.filter((item) => typeof item === "string")
+    : [];
 }
 
 /**

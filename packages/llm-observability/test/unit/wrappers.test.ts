@@ -110,7 +110,7 @@ test("traceClaudeAgent runs SDK iteration beneath its repository-owned span", as
     };
   }
 
-  for await (const message of traceClaudeAgent(
+  for await (const _message of traceClaudeAgent(
     {
       service: "temporal",
       callSite: "agent-task",
@@ -118,7 +118,7 @@ test("traceClaudeAgent runs SDK iteration beneath its repository-owned span", as
     },
     contextQuery,
   )) {
-    void message;
+    // Drain the stream; assertions read the exported spans.
   }
 
   const root = exporter
@@ -149,7 +149,7 @@ test("traceClaudeAgent closes its span when SDK iterator cleanup fails", async (
 
   await expect(
     (async () => {
-      for await (const message of traceClaudeAgent(
+      for await (const _message of traceClaudeAgent(
         {
           service: "temporal",
           callSite: "agent-task",
@@ -161,7 +161,7 @@ test("traceClaudeAgent closes its span when SDK iterator cleanup fails", async (
         },
         () => iterable,
       )) {
-        void message;
+        // Take the first message, then stop draining.
         break;
       }
     })(),

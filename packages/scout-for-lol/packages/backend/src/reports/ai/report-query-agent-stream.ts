@@ -72,10 +72,9 @@ function toolCallMessage(toolName: string): string {
   if (toolName === "preview_report_query") {
     return "Previewing the query against server data.";
   }
-  if (toolName === "format_report_query") {
-    return "Formatting the query.";
-  }
-  return `Running ${toolName}.`;
+  return toolName === "format_report_query"
+    ? "Formatting the query."
+    : `Running ${toolName}.`;
 }
 
 function toolResultMessage(toolName: string, ok: boolean): string {
@@ -85,8 +84,7 @@ function toolResultMessage(toolName: string, ok: boolean): string {
   if (toolName === "preview_report_query") {
     return "Preview completed.";
   }
-  if (toolName === "validate_report_query") {
-    return "Validation completed.";
-  }
-  return `${toolName} completed.`;
+  return toolName === "validate_report_query"
+    ? "Validation completed."
+    : `${toolName} completed.`;
 }

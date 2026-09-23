@@ -5,8 +5,9 @@ export type FallbackResult<T> =
   | { ok: false; error: ZodError };
 
 function getProp(node: unknown, key: PropertyKey): unknown {
-  if (node === null || typeof node !== "object") return undefined;
-  return Reflect.get(node, key);
+  return node === null || typeof node !== "object"
+    ? undefined
+    : Reflect.get(node, key);
 }
 
 function walkAndDeleteKeys(
@@ -85,8 +86,7 @@ export function parseWithUnknownKeyFallback<T>(
     }
   }
   const second = schema.safeParse(clone);
-  if (!second.success) {
-    return { ok: false, error: second.error };
-  }
-  return { ok: true, data: second.data, unknownKeyPaths };
+  return second.success
+    ? { ok: true, data: second.data, unknownKeyPaths }
+    : { ok: false, error: second.error };
 }

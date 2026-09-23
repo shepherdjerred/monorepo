@@ -10,8 +10,9 @@ function requestFromFetch(
   input: string | URL | Request,
   init: RequestInit | undefined,
 ): Request {
-  if (input instanceof Request) return new Request(input, init);
-  return new Request(input.toString(), init);
+  return input instanceof Request
+    ? new Request(input, init)
+    : new Request(input.toString(), init);
 }
 
 describe("OpenAI voice audio adapter", () => {

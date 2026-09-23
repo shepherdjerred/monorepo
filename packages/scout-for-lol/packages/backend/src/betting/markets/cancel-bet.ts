@@ -159,10 +159,9 @@ async function cancelBetInner(
       if (current.poolState === "settled") {
         return { kind: "already_resolved", poolState: "settled" };
       }
-      if (current.poolState === "voided") {
-        return { kind: "already_resolved", poolState: "voided" };
-      }
-      return { kind: "window_closed" };
+      return current.poolState === "voided"
+        ? { kind: "already_resolved", poolState: "voided" }
+        : { kind: "window_closed" };
     }
 
     const activePosition = await tx.bucksOpenPosition.findUnique({

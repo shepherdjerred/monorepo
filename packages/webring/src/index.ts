@@ -27,14 +27,12 @@ export async function run(config: Configuration): Promise<Result> {
     R.reverse(),
     R.filter((entry) => {
       const filterFn = entry.source.filter;
-      if (
+      return (
         filterFn === undefined ||
         entry.preview === undefined ||
-        entry.preview === ""
-      ) {
-        return true;
-      }
-      return filterFn(entry.preview);
+        entry.preview === "" ||
+        filterFn(entry.preview)
+      );
     }),
   );
 

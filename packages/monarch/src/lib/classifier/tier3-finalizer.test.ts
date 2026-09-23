@@ -44,7 +44,11 @@ describe("finalizeTier3", () => {
           requests += 1;
           return Promise.resolve(invalidResultResponse());
         },
-        { preconnect: (url: string | URL) => void url },
+        {
+          preconnect: (_url: string | URL) => {
+            // No preconnect in tests.
+          },
+        },
       ),
     });
     const tracker = createUsageTracker(MODEL);

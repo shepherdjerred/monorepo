@@ -70,10 +70,11 @@ function mapChanged(
   before: GameObservationV2,
   after: GameObservationV2,
 ): boolean {
-  if (before.world === null || after.world === null) return false;
   return (
-    before.world.mapGroup !== after.world.mapGroup ||
-    before.world.mapNum !== after.world.mapNum
+    before.world !== null &&
+    after.world !== null &&
+    (before.world.mapGroup !== after.world.mapGroup ||
+      before.world.mapNum !== after.world.mapNum)
   );
 }
 

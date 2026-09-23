@@ -145,10 +145,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const createTask = useCallback(
     async (req: CreateTaskRequest): Promise<Result<Task, AppError>> => {
       const created = await store.dispatch({ type: "create", payload: req });
-      if (created === undefined) {
-        return err(new NotFoundError("Task", "optimistic create"));
-      }
-      return ok(created);
+      return created === undefined
+        ? err(new NotFoundError("Task", "optimistic create"))
+        : ok(created);
     },
     [store],
   );
@@ -163,10 +162,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         taskId: id,
         payload: req,
       });
-      if (updated === undefined) {
-        return err(new NotFoundError("Task", String(id)));
-      }
-      return ok(updated);
+      return updated === undefined
+        ? err(new NotFoundError("Task", String(id)))
+        : ok(updated);
     },
     [store],
   );
@@ -186,10 +184,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         taskId: id,
         status,
       });
-      if (updated === undefined) {
-        return err(new NotFoundError("Task", String(id)));
-      }
-      return ok(updated);
+      return updated === undefined
+        ? err(new NotFoundError("Task", String(id)))
+        : ok(updated);
     },
     [store],
   );
@@ -198,10 +195,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     async (id: TaskId): Promise<Result<Task, AppError>> => {
       const target = store.resolveTaskId(id);
       const existing = store.getSnapshot().tasks.get(target);
-      if (existing === undefined) {
-        return err(new NotFoundError("Task", String(id)));
-      }
-      return setStatus(target, getNextStatus(existing.status));
+      return existing === undefined
+        ? err(new NotFoundError("Task", String(id)))
+        : setStatus(target, getNextStatus(existing.status));
     },
     [setStatus, store],
   );
@@ -224,10 +220,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         completed,
         ...(restore === undefined ? {} : { restore }),
       });
-      if (updated === undefined) {
-        return err(new NotFoundError("Task", String(id)));
-      }
-      return ok(updated);
+      return updated === undefined
+        ? err(new NotFoundError("Task", String(id)))
+        : ok(updated);
     },
     [store],
   );

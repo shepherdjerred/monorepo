@@ -298,8 +298,7 @@ export function compare(
   threshold: number,
 ): boolean {
   if (operator === "gte") return actual >= threshold;
-  if (operator === "lte") return actual <= threshold;
-  return actual === threshold;
+  return operator === "lte" ? actual <= threshold : actual === threshold;
 }
 
 export function participantNumericValue(

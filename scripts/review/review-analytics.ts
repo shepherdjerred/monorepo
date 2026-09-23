@@ -40,8 +40,9 @@ const QODO_ACKNOWLEDGEMENT = "was updated up to the latest commit";
 
 function acknowledgedHead(body: string): string | null {
   const markerAt = body.indexOf(QODO_ACKNOWLEDGEMENT);
-  if (markerAt === -1) return null;
-  return /\b([0-9a-f]{40})\b/iu.exec(body.slice(markerAt))?.[1] ?? null;
+  return markerAt === -1
+    ? null
+    : (/\b([0-9a-f]{40})\b/iu.exec(body.slice(markerAt))?.[1] ?? null);
 }
 
 /** Distinct reviewed heads in chronological order, with per-provider counts. */

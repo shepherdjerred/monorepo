@@ -165,6 +165,5 @@ export function classifyBuild(e: XcodeCloudBuildEvent): BuildOutcome {
   if (!terminal) return "ignore";
   if (e.completionStatus === undefined) return "ignore";
   if (FAILURE_STATUSES.has(e.completionStatus)) return "firing";
-  if (e.completionStatus === "SUCCEEDED") return "resolved";
-  return "ignore";
+  return e.completionStatus === "SUCCEEDED" ? "resolved" : "ignore";
 }

@@ -153,13 +153,10 @@ export function decideWorkflowStartRequest(
       ? { outcome: "adopt", record: inFlight }
       : { outcome: "conflict", reason: "request-differs" };
   }
-  if (
-    latestAccepted !== null &&
+  return latestAccepted !== null &&
     !sameWorkflowStartIdentity(latestAccepted, incoming)
-  ) {
-    return { outcome: "conflict", reason: "request-differs" };
-  }
-  return { outcome: "record" };
+    ? { outcome: "conflict", reason: "request-differs" }
+    : { outcome: "record" };
 }
 
 export type WorkflowStartLostInsertDecision =

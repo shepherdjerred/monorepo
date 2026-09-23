@@ -53,10 +53,9 @@ describe("GitWorkspace conflict publication", () => {
       commands.push([...command]);
       if (command.includes("--cached")) return Promise.resolve(result());
       if (command.includes("--others")) return Promise.resolve(result());
-      if (command.includes("--name-only")) {
-        return Promise.resolve(result("src/fixed.ts\0"));
-      }
-      return Promise.resolve(result());
+      return command.includes("--name-only")
+        ? Promise.resolve(result("src/fixed.ts\0"))
+        : Promise.resolve(result());
     };
     const workspace = new GitWorkspace(config, run);
     await workspace.continueRestackAndSubmit({

@@ -42,11 +42,12 @@ const MINIMUM_HEARTBEAT_INTERVAL_MS = 1000;
 const UNTIMED_HEARTBEAT_INTERVAL_MS = 10_000;
 
 function heartbeatIntervalMs(heartbeatTimeoutMs: number | undefined): number {
-  if (heartbeatTimeoutMs === undefined) return UNTIMED_HEARTBEAT_INTERVAL_MS;
-  return Math.max(
-    MINIMUM_HEARTBEAT_INTERVAL_MS,
-    Math.floor(heartbeatTimeoutMs / HEARTBEAT_INTERVAL_DIVISOR),
-  );
+  return heartbeatTimeoutMs === undefined
+    ? UNTIMED_HEARTBEAT_INTERVAL_MS
+    : Math.max(
+        MINIMUM_HEARTBEAT_INTERVAL_MS,
+        Math.floor(heartbeatTimeoutMs / HEARTBEAT_INTERVAL_DIVISOR),
+      );
 }
 
 export async function heartbeatWhile<T>(

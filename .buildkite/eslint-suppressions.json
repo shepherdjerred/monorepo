@@ -19,11 +19,6 @@
       "count": 1
     }
   },
-  ".buildkite/scripts/selectors/select-image-targets-lockfile.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 4
-    }
-  },
   ".buildkite/scripts/selectors/select-main-pipeline.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

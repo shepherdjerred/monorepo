@@ -137,8 +137,7 @@ export function changedFilesForShard(
     .toString()
     .split("\0")
     .filter((file) => file !== "");
-  if (
-    changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file)) ||
+  return changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file)) ||
     (check === "prettier" &&
       changed.some(
         (file) =>
@@ -150,10 +149,8 @@ export function changedFilesForShard(
       changed.some(
         (file) => file === ".gitattributes" || file.endsWith("/.gitattributes"),
       ))
-  ) {
-    return null;
-  }
-  return changed.filter((file) => matchShard(file) === shard);
+    ? null
+    : changed.filter((file) => matchShard(file) === shard);
 }
 
 export function chunk<T>(items: readonly T[], size: number): T[][] {

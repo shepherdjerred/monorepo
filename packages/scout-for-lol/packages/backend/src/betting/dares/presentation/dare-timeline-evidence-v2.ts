@@ -41,9 +41,9 @@ function needsTimelinePredicate(
   if (expression.kind === "comparison") {
     return dareValueNeedsTimeline(expression.value);
   }
-  if (expression.kind === "not")
-    return needsTimelinePredicate(expression.operand);
-  return expression.operands.some((operand) => needsTimelinePredicate(operand));
+  return expression.kind === "not"
+    ? needsTimelinePredicate(expression.operand)
+    : expression.operands.some((operand) => needsTimelinePredicate(operand));
 }
 
 export function darePlanNeedsTimeline(plan: DareCompiledPlanV2): boolean {

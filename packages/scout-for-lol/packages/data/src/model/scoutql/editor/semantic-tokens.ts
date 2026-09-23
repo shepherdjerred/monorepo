@@ -160,10 +160,7 @@ function baseKind(token: IToken): ScoutQlTokenKind {
   if (OPERATOR_TOKEN_NAMES.has(name)) {
     return "operator";
   }
-  if (KEYWORD_WORDS.has(token.image.toUpperCase())) {
-    return "keyword";
-  }
-  return "plain";
+  return KEYWORD_WORDS.has(token.image.toUpperCase()) ? "keyword" : "plain";
 }
 
 /**

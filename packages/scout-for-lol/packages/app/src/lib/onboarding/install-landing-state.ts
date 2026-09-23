@@ -27,14 +27,11 @@ export type InstallLandingResult = {
 export function installLandingResult(
   response: InstallCompleteResponse,
 ): InstallLandingResult {
-  if (
-    response.outcome === "attributed" ||
+  return response.outcome === "attributed" ||
     response.outcome === "already_installed" ||
     response.outcome === "pending"
-  ) {
-    return { outcome: response.outcome, guildId: response.guildId };
-  }
-  return { outcome: response.outcome, guildId: null };
+    ? { outcome: response.outcome, guildId: response.guildId }
+    : { outcome: response.outcome, guildId: null };
 }
 
 /**
@@ -91,8 +88,7 @@ export function installLandingCopy(result: InstallLandingResult | null): {
 export function installContinueTarget(
   result: InstallLandingResult | null,
 ): string {
-  if (result?.guildId == null) {
-    return "/welcome";
-  }
-  return `/welcome?guild=${encodeURIComponent(result.guildId)}`;
+  return result?.guildId == null
+    ? "/welcome"
+    : `/welcome?guild=${encodeURIComponent(result.guildId)}`;
 }

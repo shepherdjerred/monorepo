@@ -226,8 +226,7 @@ export function aggregateTeammates(input: {
 
 function compareStrings(left: string, right: string): number {
   if (left < right) return -1;
-  if (left > right) return 1;
-  return 0;
+  return left > right ? 1 : 0;
 }
 
 type SelfAccount = { puuid: LeaguePuuid; region: Region };

@@ -59,25 +59,25 @@ const tableLabel = label ?? columns.map((column) => column.header).join(", ");
   <table>
     <thead>
       <tr>
-        {columns.map((column) => <th>{column.header}</th>)}
+        {columns.map((column) => (
+          <th>{column.header}</th>
+        ))}
       </tr>
     </thead>
     <tbody>
-      {
-        rowIndexes.map((rowIndex) => (
-          <tr>
-            {columns.map((column) => (
-              <td>
-                {column.code === true ? (
-                  <code>{column.values[rowIndex]}</code>
-                ) : (
-                  column.values[rowIndex]
-                )}
-              </td>
-            ))}
-          </tr>
-        ))
-      }
+      {rowIndexes.map((rowIndex) => (
+        <tr>
+          {columns.map((column) => (
+            <td>
+              {column.code === true ? (
+                <code>{column.values[rowIndex]}</code>
+              ) : (
+                column.values[rowIndex]
+              )}
+            </td>
+          ))}
+        </tr>
+      ))}
     </tbody>
   </table>
 </div>

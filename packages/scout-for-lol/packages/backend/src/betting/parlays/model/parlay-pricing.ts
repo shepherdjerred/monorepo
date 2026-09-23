@@ -224,10 +224,8 @@ export function numericThresholdsAreMeasured(
   subjects: readonly ParlaySubject[],
   history: ParlayHistory,
 ): boolean {
-  if (subjects[0] === undefined) {
-    return false;
-  }
   return (
+    subjects[0] !== undefined &&
     numericThresholdDiagnostics(conditions, subjects, history).length === 0
   );
 }

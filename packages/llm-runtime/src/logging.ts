@@ -22,8 +22,9 @@ export const defaultOpenRouterRuntimeLogger: OpenRouterRuntimeLogger = (
 };
 
 function stableModelId(modelId: string | undefined): string {
-  if (modelId === undefined) return "unknown";
-  return modelIdForOpenRouterRoute(modelId) ?? modelId;
+  return modelId === undefined
+    ? "unknown"
+    : (modelIdForOpenRouterRoute(modelId) ?? modelId);
 }
 
 export function logOpenRouterResponse(input: {

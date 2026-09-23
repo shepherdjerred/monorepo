@@ -366,8 +366,9 @@ function generationStatusForError(
   const shared = sharedLlmFailureKind(deadline, error);
   if (shared !== undefined) return shared;
   if (error instanceof ParlayPersistenceError) return "persistence_error";
-  if (error instanceof ParlayUnpriceableError) return "unpriceable";
-  return "provider_error";
+  return error instanceof ParlayUnpriceableError
+    ? "unpriceable"
+    : "provider_error";
 }
 
 /** Start the caught background task only after normal prematch delivery and

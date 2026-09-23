@@ -21,10 +21,7 @@ export function parseDivision(input: string): Division | undefined {
   if (normalized === "II") {
     return 2;
   }
-  if (normalized === "I") {
-    return 1;
-  }
-  return undefined;
+  return normalized === "I" ? 1 : undefined;
 }
 
 export function divisionToString(division: Division): string {

@@ -70,10 +70,9 @@ function buildRawMatch(
           if (index === 0) {
             return { ...participant, ...firstPerformance };
           }
-          if (index === 1) {
-            return { ...participant, ...secondPerformance };
-          }
-          return participant;
+          return index === 1
+            ? { ...participant, ...secondPerformance }
+            : participant;
         },
       ),
     },

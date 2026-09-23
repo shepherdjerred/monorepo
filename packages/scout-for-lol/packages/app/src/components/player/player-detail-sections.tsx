@@ -40,8 +40,7 @@ type AccountRow = {
 };
 
 function formatDate(value: Date | string | null): string {
-  if (value === null) return "—";
-  return new Date(value).toLocaleString();
+  return value === null ? "—" : new Date(value).toLocaleString();
 }
 
 function channelLabel(

@@ -8,12 +8,11 @@ const rank: Record<Status, number> = {
 };
 
 export function worstStatus(statuses: readonly Status[]): Status {
-  if (statuses.length === 0) {
-    return "unknown";
-  }
-  return statuses.reduce((worst, status) =>
-    rank[status] > rank[worst] ? status : worst,
-  );
+  return statuses.length === 0
+    ? "unknown"
+    : statuses.reduce((worst, status) =>
+        rank[status] > rank[worst] ? status : worst,
+      );
 }
 
 export function statusFromCount(
@@ -24,10 +23,7 @@ export function statusFromCount(
   if (count >= errorThreshold) {
     return "error";
   }
-  if (count >= warningThreshold) {
-    return "warning";
-  }
-  return "ok";
+  return count >= warningThreshold ? "warning" : "ok";
 }
 
 export function isUnavailableState(state: string): boolean {

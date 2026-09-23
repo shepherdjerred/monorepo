@@ -300,8 +300,9 @@ export async function fetchHeadPushedAt(input: {
     prNumber: input.prNumber,
     token: input.token,
   });
-  if (currentHeadRefOid !== input.sha) return null;
-  return resolveHeadPushedAt(repository, input.sha, refUpdateTime);
+  return currentHeadRefOid === input.sha
+    ? resolveHeadPushedAt(repository, input.sha, refUpdateTime)
+    : null;
 }
 
 /**
@@ -318,6 +319,7 @@ export function reactionBoundToHead(
   if (reactionCreatedAt === null || headPushedAt === null) return false;
   const reacted = Date.parse(reactionCreatedAt);
   const pushed = Date.parse(headPushedAt);
-  if (!Number.isFinite(reacted) || !Number.isFinite(pushed)) return false;
-  return reacted >= pushed;
+  return (
+    Number.isFinite(reacted) && Number.isFinite(pushed) && reacted >= pushed
+  );
 }

@@ -745,11 +745,10 @@ describe("capture and settlement: retry and partial failure", () => {
     // reads `.$transaction` off the object THIS TEST passed in is fooled.
     const failingClient = new Proxy(db, {
       get(target, prop) {
-        if (prop === "$transaction") {
-          return () =>
-            Promise.reject(new Error("simulated persistent database failure"));
-        }
-        return Reflect.get(target, prop, target);
+        return prop === "$transaction"
+          ? () =>
+              Promise.reject(new Error("simulated persistent database failure"))
+          : Reflect.get(target, prop, target);
       },
     });
     let caught: unknown;
@@ -793,10 +792,9 @@ describe("capture and settlement: retry and partial failure", () => {
         if (prop === "$transaction") {
           return (...args: Parameters<typeof db.$transaction>) => {
             transactionCalls += 1;
-            if (transactionCalls === 1) {
-              return Reflect.apply(target.$transaction, target, args);
-            }
-            return Promise.reject(new Error("simulated outage, dare two"));
+            return transactionCalls === 1
+              ? Reflect.apply(target.$transaction, target, args)
+              : Promise.reject(new Error("simulated outage, dare two"));
           };
         }
         return Reflect.get(target, prop, target);

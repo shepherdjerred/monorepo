@@ -236,17 +236,14 @@ function isTemporal(type: ScoutQlExprType): boolean {
 
 /** DuckDB comparison compatibility, including its implicit temporal casts. */
 export function comparable(a: ScoutQlExprType, b: ScoutQlExprType): boolean {
-  if (a === "unknown" || b === "unknown" || a === b) {
-    return true;
-  }
-  if (isNumeric(a) && isNumeric(b)) {
-    return true;
-  }
-  if (isTemporal(a) && isTemporal(b)) {
-    return true;
-  }
   return (
-    (isTemporal(a) && b === "varchar") || (isTemporal(b) && a === "varchar")
+    a === "unknown" ||
+    b === "unknown" ||
+    a === b ||
+    (isNumeric(a) && isNumeric(b)) ||
+    (isTemporal(a) && isTemporal(b)) ||
+    (isTemporal(a) && b === "varchar") ||
+    (isTemporal(b) && a === "varchar")
   );
 }
 

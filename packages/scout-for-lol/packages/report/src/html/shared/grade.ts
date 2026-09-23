@@ -16,8 +16,7 @@ export function gradeFromKda(kda: number): Grade {
   if (kda >= 4.5) return "S";
   if (kda >= 3) return "A";
   if (kda >= 2) return "B";
-  if (kda >= 1) return "C";
-  return "D";
+  return kda >= 1 ? "C" : "D";
 }
 
 export function gradeForPlayer(

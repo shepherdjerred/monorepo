@@ -17,8 +17,7 @@ export function resolveMemberDestination(input: {
   profilesAvailable: boolean;
 }): "/explore" | "/players" | null {
   if (input.exploreAvailable) return "/explore";
-  if (input.profilesAvailable) return "/players";
-  return null;
+  return input.profilesAvailable ? "/players" : null;
 }
 
 export function GuildPicker() {

@@ -84,12 +84,9 @@ function expressionNeedsTimeline(
   if (expression.kind === "comparison") {
     return dareValueNeedsTimeline(expression.value);
   }
-  if (expression.kind === "not") {
-    return expressionNeedsTimeline(expression.operand);
-  }
-  return expression.operands.some((operand) =>
-    expressionNeedsTimeline(operand),
-  );
+  return expression.kind === "not"
+    ? expressionNeedsTimeline(expression.operand)
+    : expression.operands.some((operand) => expressionNeedsTimeline(operand));
 }
 
 function gameSetNeedsTimeline(

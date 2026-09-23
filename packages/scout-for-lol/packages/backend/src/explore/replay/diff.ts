@@ -261,8 +261,7 @@ function delta(
   baseline: number | null,
   candidate: number | null,
 ): number | null {
-  if (baseline === null || candidate === null) return null;
-  return candidate - baseline;
+  return baseline === null || candidate === null ? null : candidate - baseline;
 }
 
 export function diffReplayCase(input: {

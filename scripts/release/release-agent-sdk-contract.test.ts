@@ -20,7 +20,7 @@ describe("release refiner native SDK contract", () => {
     expect(
       manifest.dependencies["@anthropic-ai/claude-agent-sdk"],
     ).toBeUndefined();
-    expect(manifest.dependencies["@openai/codex-sdk"]).toBe("0.149.0");
+    expect(manifest.dependencies["@openai/codex-sdk"]).toBe("0.155.1");
     expect(manifest.dependencies["@shepherdjerred/llm-runtime"]).toBe(
       "workspace:*",
     );

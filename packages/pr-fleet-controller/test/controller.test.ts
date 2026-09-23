@@ -343,16 +343,15 @@ class OneHeadChangeEnvironment extends FakeEnvironment {
 
   override refreshEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
     this.refreshes += 1;
-    if (this.refreshes === 1) {
-      return Promise.reject(
-        new PrHeadChangedDuringRefreshError(
-          pr.number,
-          pr.headSha,
-          "b".repeat(40),
-        ),
-      );
-    }
-    return super.refreshEvidence(pr);
+    return this.refreshes === 1
+      ? Promise.reject(
+          new PrHeadChangedDuringRefreshError(
+            pr.number,
+            pr.headSha,
+            "b".repeat(40),
+          ),
+        )
+      : super.refreshEvidence(pr);
   }
 }
 

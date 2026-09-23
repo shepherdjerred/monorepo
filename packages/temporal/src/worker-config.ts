@@ -159,13 +159,10 @@ function roleOwnsDefinition(
   if (definition.kind === "workflow") {
     return false;
   }
-  if (role === "glitter") {
-    return (
-      definition.role === "glitter-corpus" ||
-      definition.role === "glitter-context"
-    );
-  }
-  return role === definition.role;
+  return role === "glitter"
+    ? definition.role === "glitter-corpus" ||
+        definition.role === "glitter-context"
+    : role === definition.role;
 }
 
 export type WorkerRoleContract = {

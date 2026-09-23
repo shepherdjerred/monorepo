@@ -663,8 +663,7 @@ function parseQodoSeverity(body: string | null): number | null {
   if (body === null) return null;
   if (/action required/iu.test(body)) return 1;
   if (/remediation recommended/iu.test(body)) return 2;
-  if (/informational/iu.test(body)) return 3;
-  return null;
+  return /informational/iu.test(body) ? 3 : null;
 }
 
 export const qodoProvider: ReviewProvider = {

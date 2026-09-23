@@ -58,8 +58,7 @@ function optionalText(value: string): string | null {
 function parseTimeEstimate(value: string): number | null | undefined {
   if (value.trim().length === 0) return null;
   const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) return undefined;
-  return parsed;
+  return !Number.isFinite(parsed) || parsed < 0 ? undefined : parsed;
 }
 
 export function buildTaskDetailPatch(
@@ -159,8 +158,7 @@ export function taskDetailDraftIsDirty(
   draft: TaskDetailDraft,
 ): boolean {
   const result = buildTaskDetailPatch(task, draft);
-  if (!result.ok) return true;
-  return Object.keys(result.patch).length > 0;
+  return !result.ok || Object.keys(result.patch).length > 0;
 }
 
 export function rebaseTaskDetailDraft(

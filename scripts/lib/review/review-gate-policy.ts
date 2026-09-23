@@ -123,8 +123,10 @@ export async function shouldEscalateReviewRequest(input: {
       input.headPushedAt === null
         ? input.startedAt
         : Date.parse(input.headPushedAt);
-    if (!Number.isFinite(since)) return true;
-    return (Date.now() - since) / 1000 >= input.graceSeconds;
+    return (
+      !Number.isFinite(since) ||
+      (Date.now() - since) / 1000 >= input.graceSeconds
+    );
   }
   const previous = await findReviewRequest({
     ...input,

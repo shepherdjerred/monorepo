@@ -30,10 +30,9 @@ function checkpointForPolling(
   checkpoint: WorkflowFailureWatchCheckpoints[TemporalNamespace],
 ): WorkflowFailureWatchCheckpoint | undefined {
   if (checkpoint === undefined) return undefined;
-  if ("closeTime" in checkpoint) {
-    return { detailedAlertsConsumed: 0, cursor: checkpoint };
-  }
-  return checkpoint;
+  return "closeTime" in checkpoint
+    ? { detailedAlertsConsumed: 0, cursor: checkpoint }
+    : checkpoint;
 }
 
 async function runPollWorkflowFailuresImpl(

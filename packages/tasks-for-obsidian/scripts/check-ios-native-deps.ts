@@ -78,9 +78,7 @@ function isOptionalPeer(
   if (parsedPeerMeta === undefined) return false;
 
   const entry = jsonObjectOrUndefined(parsedPeerMeta[peerName]);
-  if (entry === undefined) return false;
-
-  return entry["optional"] === true;
+  return entry?.["optional"] === true;
 }
 
 function isNativePeerDependency(peerName: string): boolean {
@@ -211,11 +209,9 @@ function ensureNodeModules(rootDir: string): string[] {
     ];
   }
 
-  if (!statSync(nodeModules).isDirectory()) {
-    return ["node_modules exists but is not a directory."];
-  }
-
-  return [];
+  return statSync(nodeModules).isDirectory()
+    ? []
+    : ["node_modules exists but is not a directory."];
 }
 
 function loadReactNativeConfig(rootDir: string): unknown {

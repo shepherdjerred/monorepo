@@ -160,10 +160,9 @@ function parseWorkload(
     return undefined; // non-resource documents (e.g. Helm-templated strings)
   }
   const result = WorkloadSchema.safeParse(parsed);
-  if (!result.success || !WORKLOAD_KINDS.has(result.data.kind)) {
-    return undefined;
-  }
-  return result.data;
+  return !result.success || !WORKLOAD_KINDS.has(result.data.kind)
+    ? undefined
+    : result.data;
 }
 
 function hasRequests(container: z.infer<typeof ContainerSchema>): boolean {

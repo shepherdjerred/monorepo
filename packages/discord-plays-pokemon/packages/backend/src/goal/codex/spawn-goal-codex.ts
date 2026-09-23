@@ -58,13 +58,12 @@ function fixtureProcess(
   runtimeDirectory: string,
   environment: Record<string, string>,
 ): GoalProcess | undefined {
-  if (input.spawner === undefined) {
-    return undefined;
-  }
-  return input.spawner(
-    ["codex-sdk-fixture", "--output-last-message", outputPath],
-    { cwd: runtimeDirectory, env: environment },
-  );
+  return input.spawner === undefined
+    ? undefined
+    : input.spawner(
+        ["codex-sdk-fixture", "--output-last-message", outputPath],
+        { cwd: runtimeDirectory, env: environment },
+      );
 }
 
 export async function spawnGoalCodex(

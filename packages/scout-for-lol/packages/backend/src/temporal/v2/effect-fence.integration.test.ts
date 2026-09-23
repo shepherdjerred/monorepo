@@ -50,8 +50,9 @@ function clientWhoseCompletionAckIsLost(): ExtendedPrismaClient {
       if (property !== "scoutEffectClaim") return passThrough(target, property);
       return new Proxy(target.scoutEffectClaim, {
         get(delegate, call) {
-          if (call !== "update") return passThrough(delegate, call);
-          return commitThenLoseAck;
+          return call === "update"
+            ? commitThenLoseAck
+            : passThrough(delegate, call);
         },
       });
     },

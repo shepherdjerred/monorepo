@@ -229,10 +229,9 @@ function rankOutputValue(
   group: RankGroup,
   ctx: AggregateEvalContext,
 ): LakeScalar {
-  if (output.expr.kind === "grouping-ref") {
-    return group.keys[output.expr.index] ?? null;
-  }
-  return evaluateAggregate(output.expr, ctx);
+  return output.expr.kind === "grouping-ref"
+    ? (group.keys[output.expr.index] ?? null)
+    : evaluateAggregate(output.expr, ctx);
 }
 
 /**

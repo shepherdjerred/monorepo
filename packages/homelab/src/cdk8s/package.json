@@ -49,18 +49,18 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@temporalio/testing": "1.22.0",
-    "@types/bun": "1.4.0",
+    "@temporalio/testing": "1.24.0",
+    "@types/bun": "1.4.2",
     "@types/lodash": "^4.17.24",
     "@typescript/native": "npm:typescript@7.0.2",
-    "cdk8s-cli": "2.207.55",
+    "cdk8s-cli": "2.207.58",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "prettier": "^3.9.6",
     "type-fest": "^5.6.0",
     "typescript": "^6.0.3",
     "yaml": "^2.8.3",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   }
 }

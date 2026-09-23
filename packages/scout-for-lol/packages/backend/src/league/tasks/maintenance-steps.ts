@@ -33,10 +33,7 @@ export type MaintenanceStep = {
 /** A lone failure is re-thrown as-is so callers keep their `instanceof`
  * checks; a non-Error throw is wrapped rather than re-thrown raw. */
 function asMaintenanceError(error: unknown, message: string): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-  return new Error(message, { cause: error });
+  return error instanceof Error ? error : new Error(message, { cause: error });
 }
 
 export async function runMaintenanceSteps(

@@ -44,10 +44,11 @@ const ARENA_COMPACT_CARD_WIDTH = 210;
 const ARENA_COMPACT_CARD_HEIGHT = 360;
 
 function usesClashCanvas(data: LoadingScreenData): boolean {
-  if (data.layout === "classic" || data.layout === "arena") {
-    return false;
-  }
-  return data.clashChrome !== undefined;
+  return (
+    data.layout !== "classic" &&
+    data.layout !== "arena" &&
+    data.clashChrome !== undefined
+  );
 }
 
 type CanvasDimensions = {
@@ -56,11 +57,10 @@ type CanvasDimensions = {
 };
 
 function getArenaTrackedParticipantCount(data: LoadingScreenData): number {
-  if (data.layout !== "arena") {
-    return 0;
-  }
-  return data.participants.filter((participant) => participant.isTrackedPlayer)
-    .length;
+  return data.layout === "arena"
+    ? data.participants.filter((participant) => participant.isTrackedPlayer)
+        .length
+    : 0;
 }
 
 function rowWidth(params: {
@@ -137,11 +137,9 @@ export function getLoadingScreenCanvasDimensions(
   if (data.layout === "classic") {
     return { width: 1920, height: 1280 };
   }
-  if (data.layout === "arena") {
-    return getArenaCanvasDimensions(data);
-  }
-
-  return getStandardCanvasDimensions(data);
+  return data.layout === "arena"
+    ? getArenaCanvasDimensions(data)
+    : getStandardCanvasDimensions(data);
 }
 
 async function preloadLoadingScreenImages(

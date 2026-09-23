@@ -116,11 +116,9 @@ export function visualizationPointClickDetails(
     return heatmapPointClickDetails(snapshot, tuple, params.seriesName);
   }
 
-  if (snapshot.kind === "CALENDAR_HEATMAP") {
-    return calendarPointClickDetails(snapshot, tuple, params.seriesName);
-  }
-
-  return emptyPointClickDetails(params.seriesName);
+  return snapshot.kind === "CALENDAR_HEATMAP"
+    ? calendarPointClickDetails(snapshot, tuple, params.seriesName)
+    : emptyPointClickDetails(params.seriesName);
 }
 
 function numericValue(value: unknown): number | null {

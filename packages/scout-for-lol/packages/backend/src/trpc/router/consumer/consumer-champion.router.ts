@@ -158,8 +158,7 @@ function comparisonOrder(
       if (alias !== 0) return alias;
     }
     const guild = left.guild.name.localeCompare(right.guild.name);
-    if (guild !== 0) return guild;
-    return left.playerId - right.playerId;
+    return guild === 0 ? left.playerId - right.playerId : guild;
   };
 }
 
@@ -216,8 +215,7 @@ export const consumerChampionRouter = router({
             snapshot.entries,
             input.championId,
           );
-          if (mastery === undefined) return [];
-          return [{ account, snapshot, mastery }];
+          return mastery === undefined ? [] : [{ account, snapshot, mastery }];
         });
         const best = candidates.toSorted((left, right) => {
           const points =

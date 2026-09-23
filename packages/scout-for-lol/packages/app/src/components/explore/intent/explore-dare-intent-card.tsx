@@ -91,10 +91,9 @@ function persistedDareOutcome(
       result: status.result,
     });
   }
-  if (status?.state === "expired") {
-    return classifyDareIntentConfirmation(action, { kind: "intent_expired" });
-  }
-  return null;
+  return status?.state === "expired"
+    ? classifyDareIntentConfirmation(action, { kind: "intent_expired" })
+    : null;
 }
 
 function dareIntentHeading(

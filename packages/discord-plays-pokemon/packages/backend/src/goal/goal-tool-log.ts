@@ -73,10 +73,7 @@ export function truncateForToolLog(
   value: string,
   max = GENERIC_BODY_MAX,
 ): string {
-  if (value.length <= max) {
-    return value;
-  }
-  return `${value.slice(0, max)}…`;
+  return value.length <= max ? value : `${value.slice(0, max)}…`;
 }
 
 export function truncateStateForToolLog(value: string): string {

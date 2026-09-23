@@ -73,18 +73,46 @@ export function findSingletonViolations(
   return violations;
 }
 
-const SourcemapSchema = z.object({ sources: z.array(z.string()) });
+const FlatSourcemapSchema = z.object({ sources: z.array(z.string()) });
+const IndexedSourcemapSchema = z.object({
+  sections: z.array(z.object({ map: z.unknown() })),
+});
+
+/**
+ * Collect every `sources` entry from a Metro sourcemap. Metro 0.87 emits an
+ * indexed map (`{ sections: [{ map }] }`) instead of the flat `{ sources }`
+ * shape older versions wrote, so walk sections recursively. Pure + exported
+ * so it can be unit-tested without a full bundle.
+ */
+export function collectSourcemapSources(node: unknown): string[] {
+  const sources: string[] = [];
+  const collect = (current: unknown): void => {
+    const flat = FlatSourcemapSchema.safeParse(current);
+    if (flat.success) {
+      sources.push(...flat.data.sources);
+      return;
+    }
+    const indexed = IndexedSourcemapSchema.safeParse(current);
+    if (indexed.success) {
+      for (const section of indexed.data.sections) {
+        collect(section.map);
+      }
+    }
+  };
+  collect(node);
+  return sources;
+}
 
 function assertSingletons(sourcemapPath: string): void {
-  const parsed = SourcemapSchema.safeParse(
-    JSON.parse(readFileSync(sourcemapPath, "utf8")),
+  const sources = collectSourcemapSources(
+    JSON.parse(readFileSync(sourcemapPath, "utf8")) as unknown,
   );
-  if (!parsed.success) {
+  if (sources.length === 0) {
     throw new Error(
       `Sourcemap ${sourcemapPath} has no usable "sources" array.`,
     );
   }
-  const violations = findSingletonViolations(parsed.data.sources);
+  const violations = findSingletonViolations(sources);
   if (violations.length > 0) {
     const details = violations
       .map(({ pkg, roots }) =>

@@ -57,8 +57,9 @@ import {
 } from "@scout-for-lol/design-system/components/forms/field";
 
 function roleLabel(role: Role | "custom"): string {
-  if (role === "custom") return "Custom";
-  return ROLES.find((r) => r.id === role)?.label ?? role;
+  return role === "custom"
+    ? "Custom"
+    : (ROLES.find((r) => r.id === role)?.label ?? role);
 }
 
 function canDelegateSelection(
@@ -66,8 +67,9 @@ function canDelegateSelection(
   selection: RoleSelection,
   customPermissions: readonly Permission[],
 ): boolean {
-  if (selection === "custom") return customPermissions.length > 0;
-  return canDelegateRole(permissions, selection);
+  return selection === "custom"
+    ? customPermissions.length > 0
+    : canDelegateRole(permissions, selection);
 }
 
 export function GuildAccess() {
