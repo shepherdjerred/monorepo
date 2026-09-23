@@ -23,6 +23,9 @@ use scout_client_core::protocol::{
     CreatePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationEnvelope,
     ObservationKind, ObservationOutcome, ObservationQuarantineReason, ObservationReceipt,
 };
+use scout_client_core::reporting::{
+    BugsinkSink, ReportingGuard, reporting_environment, start_error_reporting,
+};
 use serde_json::Value;
 use sha2::{Digest as _, Sha256};
 use tokio::runtime::Runtime;
@@ -79,6 +82,8 @@ pub struct ClientRuntime {
     pub state: Arc<RwLock<RuntimeState>>,
     diagnostics: Arc<Diagnostics>,
     log_directory: Option<PathBuf>,
+    /// Flushes queued error reports when the runtime is dropped.
+    _reporting: Option<ReportingGuard>,
     commands: mpsc::UnboundedSender<RuntimeCommand>,
     shutdown: watch::Sender<bool>,
     _thread: std::thread::JoinHandle<()>,
@@ -90,10 +95,17 @@ impl ClientRuntime {
     pub fn start(backend_origin: String) -> Self {
         let state = Arc::new(RwLock::new(RuntimeState::default()));
         let log_directory = log_directory();
-        let diagnostics = Arc::new(match log_directory.clone().and_then(FileSink::new) {
-            Some(sink) => Diagnostics::in_memory().with_sink(Box::new(sink)),
-            None => Diagnostics::in_memory(),
-        });
+        let mut diagnostics = Diagnostics::in_memory();
+        if let Some(sink) = log_directory.clone().and_then(FileSink::new) {
+            diagnostics = diagnostics.with_sink(Box::new(sink));
+        }
+        // Only when this build has somewhere to report to; the guard must
+        // outlive the process, so it is held here.
+        let reporting = start_error_reporting(reporting_environment(&backend_origin));
+        if reporting.is_some() {
+            diagnostics = diagnostics.with_sink(Box::new(BugsinkSink));
+        }
+        let diagnostics = Arc::new(diagnostics);
         let (shutdown, shutdown_receiver) = watch::channel(false);
         let (commands, command_receiver) = mpsc::unbounded_channel();
         let worker_state = Arc::clone(&state);
@@ -130,6 +142,7 @@ impl ClientRuntime {
             state,
             diagnostics,
             log_directory,
+            _reporting: reporting,
             commands,
             shutdown,
             _thread: thread,
