@@ -55,11 +55,20 @@ final class InspectorEditingUITests: XCTestCase {
             element(AccessibilityIdentifier.Inspector.recurrenceSheet, in: app)
                 .waitForExistence(timeout: 5)
         )
-        element(
+        // The sheet publishes its identifier before its controls finish
+        // animating in: the radio exists while still not hittable, and
+        // clicking it then fails the tap.
+        let weekly = element(
             AccessibilityIdentifier.Inspector.recurrenceFrequencyOption("weekly"),
             in: app
-        ).click()
-        element(AccessibilityIdentifier.Inspector.recurrenceApply, in: app).click()
+        )
+        XCTAssertTrue(weekly.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForHittable(weekly, timeout: 5))
+        weekly.click()
+        let apply = element(AccessibilityIdentifier.Inspector.recurrenceApply, in: app)
+        XCTAssertTrue(apply.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForHittable(apply, timeout: 5))
+        apply.click()
         try waitForVault(server, containing: "recurrence: DTSTART:")
         try waitForVault(server, containing: ";FREQ=WEEKLY;BYDAY=")
         try waitForVault(server, containing: "recurrence_anchor: scheduled")
@@ -128,6 +137,10 @@ final class InspectorEditingUITests: XCTestCase {
         let nativeRow = app.outlines[AccessibilityIdentifier.TaskList.list]
             .outlineRows.containing(.staticText, identifier: title).firstMatch
         XCTAssertTrue(nativeRow.waitForExistence(timeout: 5), "missing native row \(title)")
+        // A row matched during an outline reload can vanish before the tap
+        // resolves its query — after a relaunch the snapshot fails with no
+        // matches. Hittability re-resolves immediately before the tap.
+        XCTAssertTrue(waitForHittable(nativeRow, timeout: 5), "row never hittable \(title)")
         // `XCUIElement.click()` chooses the trailing edge of this outline row,
         // where the hover actions live. The leading cell inset is owned by the
         // native table and therefore exercises selection directly.
@@ -170,6 +183,23 @@ final class InspectorEditingUITests: XCTestCase {
 
     private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any)[identifier]
+    }
+
+    /// Poll until the element can receive a click, or give up.
+    ///
+    /// Existence only means the query resolves. A sheet radio still animating
+    /// in exists but is not hittable, and an outline row matched during a
+    /// reload can vanish before the tap resolves. Bounded poll, not a fixed
+    /// sleep — QuickAdd's activation wait explains why.
+    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if element.isHittable {
+                return true
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return element.isHittable
     }
 
     private func waitForVault(
