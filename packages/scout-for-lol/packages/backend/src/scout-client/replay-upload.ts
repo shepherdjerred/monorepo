@@ -12,7 +12,8 @@ import {
   validateReplayContainer,
   type ReplayProvenance,
 } from "./replay/container.ts";
-import { parseObservedReplayProvenance } from "./replay/provenance.ts";
+import { drainRequestBody } from "./replay/drain.ts";
+import { resolveReplayProvenance } from "./replay/evidence.ts";
 import {
   replayUploadClaimIsStale,
   replayUploadLeaseCutoff,
@@ -24,6 +25,8 @@ export const MAX_OWNER_REPLAYS_PER_DAY = 20;
 const REPLAY_QUOTA_WINDOW_MS = 24 * 60 * 60 * 1000;
 const DigestSchema = z.string().regex(/^[0-9a-f]{64}$/);
 const GameIdSchema = z.string().regex(/^\d{1,32}$/);
+/** Platform routes look like `NA1`, `EUW1`, `ME1`, `RU`. */
+const PlatformHeaderSchema = z.string().regex(/^[a-z]{2,4}\d{0,2}$/i);
 const FileNotFoundSchema = z.object({ code: z.literal("ENOENT") });
 const BodyChunkSchema = z.instanceof(Uint8Array);
 const s3 = createS3Client();
@@ -45,6 +48,8 @@ type ReplayUploadResult = {
 
 type ReplayMetadata = {
   readonly gameId: string;
+  /** Platform the replay names, when the client could recover it. */
+  readonly platformId: string | null;
   readonly digest: string;
   readonly declaredBytes: number;
   readonly body: ReadableStream<Uint8Array>;
@@ -140,37 +145,30 @@ function parseReplayMetadata(
   }
   return {
     gameId: gameId.data,
+    platformId:
+      PlatformHeaderSchema.safeParse(request.headers.get("X-Scout-Platform"))
+        .data ?? null,
     digest: digest.data,
     declaredBytes: declaredBytes.data,
     body: request.body,
   };
 }
 
-async function requireObservedMatch(
+/**
+ * Refuse the replay when nothing can vouch for the game it claims to be.
+ *
+ * Deliberately a 409 rather than a 400: evidence that has not arrived is not
+ * evidence that never will. Riot may still archive the match, or another of
+ * this owner's clients may still report it.
+ */
+async function requireReplayProvenance(
   metadata: ReplayMetadata,
   device: AuthenticatedScoutClient,
 ): Promise<ReplayProvenance> {
-  const observedMatches = await prisma.scoutClientObservation.findMany({
-    where: {
-      deviceId: device.deviceId,
-      gameId: metadata.gameId,
-      kind: "post_game",
-      disposition: "ACCEPTED",
-    },
-    select: { localPuuid: true, leaguePatch: true, payload: true },
-  });
-  for (const observedMatch of observedMatches) {
-    if (observedMatch.localPuuid === null) continue;
-    const provenance = parseObservedReplayProvenance({
-      payload: observedMatch.payload,
-      localPuuid: observedMatch.localPuuid,
-      leaguePatch: observedMatch.leaguePatch,
-      requestedGameId: metadata.gameId,
-    });
-    if (provenance !== null) return provenance;
-  }
+  const provenance = await resolveReplayProvenance(metadata, device);
+  if (provenance !== null) return provenance;
   throw new ReplayUploadError(
-    "Replay is waiting for accepted match-history evidence from this device",
+    "Replay has no match evidence yet: neither this account's clients nor Riot have reported the game",
     409,
   );
 }
@@ -399,45 +397,6 @@ async function removeTemporaryReplay(temporaryPath: string): Promise<void> {
   }
 }
 
-/**
- * Read and discard whatever is left of an upload we are about to refuse.
- *
- * A replay is refused by three database round-trips that all finish before the
- * first body byte is read. Answering there leaves the client mid-PUT, and the
- * reverse proxy in front of this service sees the upstream close on a request
- * it cannot replay — so a deliberate 409 reached the desktop client as an
- * inscrutable `502 Bad Gateway`. Draining costs no bandwidth that was not
- * already being spent: those bytes are on the wire either way. It only decides
- * whether we read them or reset the connection underneath them.
- */
-export async function drainRequestBody(request: Request): Promise<void> {
-  const body = request.body;
-  if (body === null || request.bodyUsed) return;
-  const reader = body.getReader();
-  let drained = 0;
-  try {
-    for (;;) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      const bytes = BodyChunkSchema.safeParse(chunk.value);
-      if (!bytes.success) break;
-      drained += bytes.data.byteLength;
-      // A sender that keeps going past the size we would ever accept has
-      // stopped being worth waiting for.
-      if (drained > MAX_REPLAY_BYTES) break;
-    }
-  } catch {
-    // The client hung up mid-drain, which is the outcome draining exists to
-    // avoid and nothing more can be done about.
-  } finally {
-    try {
-      await reader.cancel();
-    } catch {
-      // Already closed or errored; the body is done with either way.
-    }
-  }
-}
-
 export async function uploadReplay(
   request: Request,
   gameIdInput: string,
@@ -447,10 +406,10 @@ export async function uploadReplay(
     const result = await acceptReplay(request, gameIdInput, device);
     // A content-addressed duplicate answers 200 without ever reading the body,
     // so the happy path needs the same treatment as the refusals.
-    await drainRequestBody(request);
+    await drainRequestBody(request, MAX_REPLAY_BYTES);
     return result;
   } catch (error) {
-    await drainRequestBody(request);
+    await drainRequestBody(request, MAX_REPLAY_BYTES);
     throw error;
   }
 }
@@ -461,7 +420,7 @@ async function acceptReplay(
   device: AuthenticatedScoutClient,
 ): Promise<ReplayUploadResult> {
   const metadata = parseReplayMetadata(request, gameIdInput);
-  const provenance = await requireObservedMatch(metadata, device);
+  const provenance = await requireReplayProvenance(metadata, device);
   const duplicate = await existingReplay(metadata);
   if (duplicate !== null) return duplicate;
 

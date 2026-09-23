@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { RawMatch } from "@scout-for-lol/data";
 import type {
   ReplayParticipantFingerprint,
   ReplayProvenance,
@@ -89,6 +90,63 @@ function participantFingerprint(
       stats.item5,
       stats.item6,
     ],
+  };
+}
+
+/**
+ * The same fingerprint, taken from a canonical Match-V5 payload.
+ *
+ * A replay is worth keeping whenever anyone can vouch for the game, not only
+ * when the uploading device happened to witness it. The server already holds
+ * an authoritative payload for most games — archived from Riot, or promoted
+ * from another paired client — and it carries every field the container check
+ * compares against. Reading it here is what lets a device offer a replay for a
+ * game it played before it was ever paired.
+ *
+ * `uploaderPuuids` is the set of accounts the offering owner has registered.
+ * The uploader must be one of the ten, because the container binds the file to
+ * that player's exact stat line; a game none of the owner's accounts played is
+ * not theirs to hand over.
+ */
+export function replayProvenanceFromMatch(
+  match: RawMatch,
+  uploaderPuuids: readonly string[],
+): ReplayProvenance | null {
+  const owned = new Set(uploaderPuuids);
+  const participant = match.info.participants.find((candidate) =>
+    owned.has(candidate.puuid),
+  );
+  if (participant === undefined) return null;
+  return {
+    localPuuid: participant.puuid,
+    leaguePatch: match.info.gameVersion,
+    gameDurationSeconds: match.info.gameDuration,
+    participant: {
+      puuid: participant.puuid,
+      teamId: participant.teamId,
+      kills: participant.kills,
+      deaths: participant.deaths,
+      assists: participant.assists,
+      goldEarned: participant.goldEarned,
+      goldSpent: participant.goldSpent,
+      totalDamageDealtToChampions: participant.totalDamageDealtToChampions,
+      totalMinionsKilled: participant.totalMinionsKilled,
+      visionScore: participant.visionScore,
+      wardsPlaced: participant.wardsPlaced,
+      wardsKilled: participant.wardsKilled,
+      championLevel: participant.champLevel,
+      // Riot answers with a boolean where the replay container spells it out.
+      win: participant.win ? "Win" : "Fail",
+      items: [
+        participant.item0,
+        participant.item1,
+        participant.item2,
+        participant.item3,
+        participant.item4,
+        participant.item5,
+        participant.item6,
+      ],
+    },
   };
 }
 
