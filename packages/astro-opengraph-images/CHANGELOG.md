@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.3](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.2...astro-opengraph-images-v1.20.3) (2026-09-23)
+
+
+### Bug Fixes
+
+* **root:** take astro past the AVIF image-optimization RCE ([#3014](https://github.com/shepherdjerred/monorepo/issues/3014)) ([e74579f](https://github.com/shepherdjerred/monorepo/commit/e74579f20c853f1c634d84fada71c73b1993f855))
+
 ## [1.20.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.1...astro-opengraph-images-v1.20.2) (2026-09-14)
 
 No library behavior changes. The shipped code is identical to 1.20.1; this release exists only because of repo-level housekeeping that release-please picked up.
