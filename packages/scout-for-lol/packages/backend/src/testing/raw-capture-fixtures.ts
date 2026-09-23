@@ -80,6 +80,36 @@ export function rawCurrentGameInfoFixture(): RawCurrentGameInfo {
   });
 }
 
+/**
+ * A spectator snapshot with a complete ten-player roster, `trackedPuuids`
+ * seated first.
+ *
+ * {@link rawCurrentGameInfoFixture} carries one participant, which
+ * `isPrematchRosterComplete` correctly refuses as a lobby that has not finished
+ * loading in. Any suite driving the capture past that gate needs ten, and the
+ * nine seats after the tracked ones are filler.
+ */
+export function fullPrematchRosterFixture(
+  trackedPuuids: readonly string[],
+): RawCurrentGameInfo {
+  const base = rawCurrentGameInfoFixture();
+  const seat = base.participants[0];
+  if (seat === undefined) {
+    throw new Error("The spectator fixture lost its participant template");
+  }
+  return RawCurrentGameInfoSchema.parse({
+    ...base,
+    gameLength: 12,
+    participants: Array.from({ length: 10 }, (_unused, index) => ({
+      ...seat,
+      puuid: trackedPuuids[index] ?? `filler-puuid-${index.toString()}`,
+      teamId: index < 5 ? 100 : 200,
+      championId: index + 1,
+      riotId: `Player${index.toString()}#NA1`,
+    })),
+  });
+}
+
 /** A descriptor standing in for an object some earlier step archived. */
 export function artifactDescriptorFixture(
   kind: ArtifactKind,
