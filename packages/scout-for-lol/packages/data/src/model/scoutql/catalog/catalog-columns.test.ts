@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "#src/model/reports/lake-columns.ts";
@@ -30,6 +31,7 @@ const LAKE_MAPS: Record<string, Record<string, DuckDbColumnType>> = {
   competition_match_participants: MATCH_LAKE_COLUMNS,
   player_groups: MATCH_LAKE_COLUMNS,
   prematch_participants: PREMATCH_LAKE_COLUMNS,
+  match_teams: MATCH_TEAM_LAKE_COLUMNS,
 };
 
 describe("physical catalog columns come from the lake schema", () => {

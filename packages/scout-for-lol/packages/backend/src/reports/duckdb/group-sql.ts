@@ -7,11 +7,13 @@ import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import {
   collectScalarColumnNames,
   compileScalarExpr,
-  resolveColumn,
   walkScalarExpr,
+} from "#src/reports/duckdb/expr-sql.ts";
+import {
+  resolveColumn,
   type ColumnMap,
   type PlanColumnSource,
-} from "#src/reports/duckdb/expr-sql.ts";
+} from "#src/reports/duckdb/column-map.ts";
 import { frag, joinFragments, seq } from "#src/reports/duckdb/sql-fragment.ts";
 
 /**
@@ -63,6 +65,11 @@ function requireColumns(columns: ColumnMap, names: string[]): void {
 }
 
 function playerGrouping(input: GroupingInput): CompiledGrouping {
+  if (input.source === "match-team") {
+    throw new Error(
+      "GROUP BY player is not available on match_teams: a team row names no player. Group by side, outcome or a first-objective flag instead.",
+    );
+  }
   if (input.scope.kind === "global") {
     return {
       key: frag("puuid"),
@@ -99,6 +106,11 @@ function championGrouping(input: GroupingInput): CompiledGrouping {
         columnNames: ["champion_id"],
       };
     })
+    .with("match-team", (): CompiledGrouping => {
+      throw new Error(
+        "GROUP BY champion is not available on match_teams: a team row names no champion. Use match_participants for champion analysis.",
+      );
+    })
     .exhaustive();
 }
 
@@ -119,79 +131,86 @@ function compileColumnGrouping(
   name: string,
   input: GroupingInput,
 ): CompiledGrouping {
-  return match(name)
-    .with("player", () => playerGrouping(input))
-    .with("champion", () => championGrouping(input))
-    .with(
-      "queue",
-      "team_position",
-      "individual_position",
-      "lane",
-      "role",
-      "game_mode",
-      "game_type",
-      (column) => nullableTextGrouping(column, input),
-    )
-    .with("patch", (): CompiledGrouping => {
-      requireColumns(input.columns, ["game_version"]);
-      return {
-        key: frag(String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`),
-        label: (keyRef) => frag(keyRef),
-        playerIdentity: false,
-        columnNames: ["game_version"],
-      };
-    })
-    .with("outcome", (): CompiledGrouping => {
-      requireColumns(input.columns, ["win"]);
-      return {
-        key: frag("win"),
-        label: (keyRef) =>
-          frag(`CASE WHEN ${keyRef} THEN 'Win' ELSE 'Loss' END`),
-        playerIdentity: false,
-        columnNames: ["win"],
-      };
-    })
-    .with("surrender_state", (): CompiledGrouping => {
-      requireColumns(input.columns, ["early_surrendered", "surrendered"]);
-      return {
-        key: frag(
-          "CASE WHEN early_surrendered THEN 'Early surrender' WHEN surrendered THEN 'Surrender' ELSE 'Played out' END",
-        ),
-        label: (keyRef) => frag(keyRef),
-        playerIdentity: false,
-        columnNames: ["early_surrendered", "surrendered"],
-      };
-    })
-    .with("arena_placement", (): CompiledGrouping => {
-      requireColumns(input.columns, ["placement"]);
-      return {
-        key: frag("placement"),
-        label: (keyRef) => frag(`coalesce((${keyRef})::VARCHAR, 'Not Arena')`),
-        playerIdentity: false,
-        columnNames: ["placement"],
-      };
-    })
-    .with("map", (): CompiledGrouping => {
-      requireColumns(input.columns, ["map_id"]);
-      return {
-        key: frag("map_id"),
-        label: (keyRef) => frag(`(${keyRef})::VARCHAR`),
-        playerIdentity: false,
-        columnNames: ["map_id"],
-      };
-    })
-    .otherwise((): CompiledGrouping => {
-      const binding = resolveColumn(input.columns, name);
-      if (binding.identity) {
-        throw new Error(`Cannot group by identity column "${name}".`);
-      }
-      return {
-        key: frag(`(${binding.sql})`),
-        label: (keyRef) => frag(`coalesce((${keyRef})::VARCHAR, 'unknown')`),
-        playerIdentity: false,
-        columnNames: [...binding.dependencies],
-      };
-    });
+  return (
+    match(name)
+      .with("player", () => playerGrouping(input))
+      .with("champion", () => championGrouping(input))
+      .with(
+        "queue",
+        "team_position",
+        "individual_position",
+        "lane",
+        "role",
+        "game_mode",
+        "game_type",
+        (column) => nullableTextGrouping(column, input),
+      )
+      // Resolved through the column map rather than spelled out, because what
+      // computes a patch differs by source: participant rows parse it out of
+      // game_version, while a team row has it looked up from its match. Naming
+      // game_version here would break the second on a column it does not have.
+      .with("patch", (): CompiledGrouping => {
+        const binding = resolveColumn(input.columns, "patch");
+        return {
+          key: frag(binding.sql),
+          label: (keyRef) => frag(keyRef),
+          playerIdentity: false,
+          columnNames: [...binding.dependencies, "patch"],
+        };
+      })
+      .with("outcome", (): CompiledGrouping => {
+        requireColumns(input.columns, ["win"]);
+        return {
+          key: frag("win"),
+          label: (keyRef) =>
+            frag(`CASE WHEN ${keyRef} THEN 'Win' ELSE 'Loss' END`),
+          playerIdentity: false,
+          columnNames: ["win"],
+        };
+      })
+      .with("surrender_state", (): CompiledGrouping => {
+        requireColumns(input.columns, ["early_surrendered", "surrendered"]);
+        return {
+          key: frag(
+            "CASE WHEN early_surrendered THEN 'Early surrender' WHEN surrendered THEN 'Surrender' ELSE 'Played out' END",
+          ),
+          label: (keyRef) => frag(keyRef),
+          playerIdentity: false,
+          columnNames: ["early_surrendered", "surrendered"],
+        };
+      })
+      .with("arena_placement", (): CompiledGrouping => {
+        requireColumns(input.columns, ["placement"]);
+        return {
+          key: frag("placement"),
+          label: (keyRef) =>
+            frag(`coalesce((${keyRef})::VARCHAR, 'Not Arena')`),
+          playerIdentity: false,
+          columnNames: ["placement"],
+        };
+      })
+      .with("map", (): CompiledGrouping => {
+        const binding = resolveColumn(input.columns, "map");
+        return {
+          key: frag(binding.sql),
+          label: (keyRef) => frag(`(${keyRef})::VARCHAR`),
+          playerIdentity: false,
+          columnNames: [...binding.dependencies, "map"],
+        };
+      })
+      .otherwise((): CompiledGrouping => {
+        const binding = resolveColumn(input.columns, name);
+        if (binding.identity) {
+          throw new Error(`Cannot group by identity column "${name}".`);
+        }
+        return {
+          key: frag(`(${binding.sql})`),
+          label: (keyRef) => frag(`coalesce((${keyRef})::VARCHAR, 'unknown')`),
+          playerIdentity: false,
+          columnNames: [...binding.dependencies],
+        };
+      })
+  );
 }
 
 function containsNow(expr: ScoutQlScalarExpr): boolean {

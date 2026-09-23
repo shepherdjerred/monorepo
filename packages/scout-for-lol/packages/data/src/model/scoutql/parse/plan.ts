@@ -36,6 +36,7 @@ export type ScoutQlSource = z.infer<typeof ScoutQlSourceSchema>;
 export const ScoutQlSourceSchema = z.enum([
   "match_participants",
   "prematch_participants",
+  "match_teams",
   "player_groups",
   "rank_current",
   "competition_match_participants",

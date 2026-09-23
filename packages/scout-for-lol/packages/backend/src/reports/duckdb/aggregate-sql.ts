@@ -11,14 +11,16 @@ import {
   compilePredicate,
   compileScalarExpr,
   recordColumnNames,
-  resolveColumn,
   walkPredicate,
   walkScalarExpr,
-  type ColumnMap,
   type ExprContext,
   type PredicateWalkNode,
-  type SqlTypeClass,
 } from "#src/reports/duckdb/expr-sql.ts";
+import {
+  resolveColumn,
+  type ColumnMap,
+  type SqlTypeClass,
+} from "#src/reports/duckdb/column-map.ts";
 import {
   EMPTY_FRAGMENT,
   emitArithmetic,

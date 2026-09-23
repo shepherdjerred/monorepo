@@ -19,9 +19,8 @@
  */
 export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
   "champion bans, and the order they were picked in (match_team_bans)",
-  "objective event timings — first dragon, baron, herald, towers, inhibitors, and when each was taken (timeline_events)",
+  "WHEN an objective was taken — the clock time of a dragon, baron, herald, tower or inhibitor (timeline_events). Which team took each first is queryable, from match_teams",
   "per-minute gold, XP, level and CS for every participant (timeline_participant_frames)",
-  "team-level objective counts and first-objective flags (match_teams)",
   "item purchases and skill-up order (timeline_events)",
 ] as const;
 

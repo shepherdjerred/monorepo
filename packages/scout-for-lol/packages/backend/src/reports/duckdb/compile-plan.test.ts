@@ -713,3 +713,176 @@ describe("group facts projection", () => {
     ).toThrow(/requires exactly GROUP BY group/);
   });
 });
+
+// ── match_teams ──────────────────────────────────────────────────────────────
+// A team row has no timestamp, no puuid and no champion. Everything here pins
+// one of those three consequences: the window moves to the joined match
+// dimension, guild scope and player/champion groupings are refused outright.
+
+function teamPlan(overrides: Partial<ScoutQlPlan> = {}): ScoutQlPlan {
+  return makePlan({
+    source: "match_teams",
+    outputs: [countOutput("teams")],
+    ...overrides,
+  });
+}
+
+describe("patch and map groupings on participant rows", () => {
+  test("patch still parses game_version, and map still keys map_id", () => {
+    for (const [column, expected] of [
+      ["patch", "regexp_extract(game_version"],
+      ["map", "m.map_id AS map_id"],
+    ] as const) {
+      const compiled = compileScoutQlPlanQuery(
+        makeInput({
+          plan: makePlan({
+            groupings: [{ kind: "column", column, name: column }],
+          }),
+          scope: GLOBAL_SCOPE,
+        }),
+      );
+      expect(compiled?.aggregateSql ?? "").toContain(expected);
+    }
+  });
+});
+
+describe("match_teams", () => {
+  test("windows the match dimension, not the team scan", () => {
+    const compiled = compileScoutQlPlanQuery(
+      makeInput({ plan: teamPlan(), scope: GLOBAL_SCOPE }),
+    );
+    expect(compiled).toBeDefined();
+    const sql = compiled?.aggregateSql ?? "";
+    expect(sql).toContain("WITH match_dim AS");
+    expect(sql).toContain("GROUP BY match_id");
+    expect(sql).toContain("JOIN match_dim d ON d.match_id = m.match_id");
+    // Once per union branch of the dimension, and nowhere in the team scan —
+    // which has no timestamp to compare.
+    const boundary = sql.indexOf(", facts AS (");
+    const dimension = sql.slice(0, boundary);
+    const teams = sql.slice(boundary);
+    expect(occurrences(dimension, "epoch_ms(game_creation_at) BETWEEN")).toBe(
+      2,
+    );
+    expect(teams).not.toContain("epoch_ms(game_creation_at)");
+    expect(paramValues(compiled?.aggregateParams ?? [])).toContain(
+      1_700_000_000_000,
+    );
+  });
+
+  test("reads the team table, and looks the match facts up beside it", () => {
+    const compiled = compileScoutQlPlanQuery(
+      makeInput({ plan: teamPlan(), scope: GLOBAL_SCOPE }),
+    );
+    const sql = compiled?.aggregateSql ?? "";
+    // Lake paths travel as bound parameters, so the table shows up there.
+    expect(
+      paramValues(compiled?.aggregateParams ?? [])
+        .flat()
+        .join(" "),
+    ).toContain("/match_teams/");
+    expect(sql).toContain(
+      "QUALIFY row_number() OVER (PARTITION BY match_id, team_id",
+    );
+    expect(sql).toContain("d.queue AS queue");
+    expect(sql).toContain("d.patch AS patch");
+    // No player exists on a team row, and the columns are held open as NULL so
+    // the facts shape does not vary by source.
+    expect(sql).toContain("NULL::VARCHAR AS puuid");
+    expect(sql).toContain("NULL::VARCHAR AS player_alias");
+  });
+
+  test("filters on a looked-up match column against the facts CTE", () => {
+    const queueIsAram: ScoutQlPredicate = eq("queue", "aram");
+    const compiled = compileScoutQlPlanQuery(
+      makeInput({
+        plan: teamPlan({ where: queueIsAram }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const sql = compiled?.aggregateSql ?? "";
+    // Pushing it into the team scan would bind a column that is not there.
+    expect(sql).toContain("filtered AS (SELECT * FROM facts WHERE");
+    expect(paramValues(compiled?.aggregateParams ?? [])).toContain("aram");
+  });
+
+  test("refuses a server scope rather than silently widening to the lake", () => {
+    expect(() =>
+      compileScoutQlPlanQuery(
+        makeInput({ plan: teamPlan(), scope: guildScope(TEST_GUILD_ID) }),
+      ),
+    ).toThrow(/cannot be scoped to a server/);
+  });
+
+  test("refuses to group by player or champion", () => {
+    for (const [column, message] of [
+      ["player", /names no player/],
+      ["champion", /names no champion/],
+    ] as const) {
+      expect(() =>
+        compileScoutQlPlanQuery(
+          makeInput({
+            plan: teamPlan({
+              groupings: [{ kind: "column", column, name: column }],
+            }),
+            scope: GLOBAL_SCOPE,
+          }),
+        ),
+      ).toThrow(message);
+    }
+  });
+
+  test("groups by patch and map, which are looked up rather than parsed", () => {
+    // Both arms used to name game_version / map_id outright, which a team row
+    // does not have. On this source they resolve to the joined dimension.
+    for (const column of ["patch", "map"] as const) {
+      const compiled = compileScoutQlPlanQuery(
+        makeInput({
+          plan: teamPlan({
+            groupings: [{ kind: "column", column, name: column }],
+          }),
+          scope: GLOBAL_SCOPE,
+        }),
+      );
+      const sql = compiled?.aggregateSql ?? "";
+      expect(sql).not.toContain("m.game_version");
+      expect(sql).not.toContain("m.map_id");
+      expect(sql).toContain("__key_0");
+    }
+  });
+
+  test("groups by a first-objective flag, which is the point of the source", () => {
+    const compiled = compileScoutQlPlanQuery(
+      makeInput({
+        plan: teamPlan({
+          groupings: [
+            { kind: "column", column: "first_dragon", name: "first_dragon" },
+          ],
+          outputs: [
+            countOutput("teams"),
+            {
+              name: "win_rate",
+              expr: {
+                kind: "aggregate",
+                func: "avg",
+                arg: {
+                  kind: "cast",
+                  to: "int",
+                  operand: { kind: "column", column: "win" },
+                },
+                distinct: false,
+              },
+              displayKind: "percent",
+              additive: false,
+              evidence: { kind: "sample" },
+            },
+          ],
+        }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const sql = compiled?.aggregateSql ?? "";
+    expect(sql).toContain("first_dragon");
+    expect(sql).toContain("m.win AS win");
+  });
+});

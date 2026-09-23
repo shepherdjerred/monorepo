@@ -4,15 +4,17 @@ import type {
   ScoutQlScalarExpr,
 } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
-  buildPlanColumnMap,
   compilePredicate,
   compileScalarExpr,
   countPredicateNodes,
   countScalarNodes,
   predicateTouchesIdentity,
-  resolveColumn,
   type ExprContext,
 } from "#src/reports/duckdb/expr-sql.ts";
+import {
+  buildPlanColumnMap,
+  resolveColumn,
+} from "#src/reports/duckdb/column-map.ts";
 import { scalarParam } from "#src/reports/duckdb/lake.ts";
 import {
   combineAnd,

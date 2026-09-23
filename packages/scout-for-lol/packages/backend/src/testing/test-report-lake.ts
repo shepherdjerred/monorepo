@@ -63,6 +63,9 @@ export type TestLakeMatchFact = {
   /** Override to make per-participant CS vary, e.g. for CS-per-minute tests. */
   creepScore?: number;
   teamId?: number;
+  /** Team objective flags for the match_teams row this fact rolls up into. */
+  firstDragon?: boolean;
+  firstBaron?: boolean;
   /** Arena subteam (1-8); leave unset for non-Arena queues. */
   playerSubteamId?: number;
   championId?: number;
@@ -214,12 +217,12 @@ function teamRowFromFacts(
     month: lakeMonth(first.gameCreationAt.getTime()),
     team_id: teamId,
     win: first.win,
-    baron_kills: 0,
-    first_baron: false,
+    baron_kills: first.firstBaron === true ? 1 : 0,
+    first_baron: first.firstBaron ?? false,
     champion_kills: facts.reduce((sum, fact) => sum + fact.kills, 0),
     first_champion_kill: false,
-    dragon_kills: 0,
-    first_dragon: false,
+    dragon_kills: first.firstDragon === true ? 1 : 0,
+    first_dragon: first.firstDragon ?? false,
     inhibitor_kills: 0,
     first_inhibitor: false,
     rift_herald_kills: 0,

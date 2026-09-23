@@ -183,6 +183,24 @@ describe("data Scout has that Explore cannot query", () => {
   });
 });
 
+describe("team objectives", () => {
+  test("points at match_teams and bounds what it can claim", () => {
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("match_teams holds one row per team");
+    // The trap this exists for: answering "do we win more with first dragon?"
+    // from a source that covers the whole lake, as if it were their record.
+    expect(instructions).toContain("never present it as this server's record");
+  });
+
+  test("no longer calls first-objective flags unreachable", () => {
+    // They were on the unreachable list until match_teams became a source.
+    // Leaving them there would have Explore decline what it can now answer.
+    const listed = LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.join(" ");
+    expect(listed).not.toContain("team-level objective counts");
+    expect(listed).toContain("WHEN an objective was taken");
+  });
+});
+
 describe("gated-off capabilities", () => {
   test("every capability says so when it is off, not only when it is on", () => {
     // A guild without the feature used to get silence: the tool vanished, the

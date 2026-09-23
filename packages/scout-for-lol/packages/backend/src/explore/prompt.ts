@@ -186,6 +186,15 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "When a request names people, confirm Scout has games for them before designing an analysis around them. If the corpus holds little or nothing for those players, say that first — it is usually the real answer.",
     `When Scout genuinely cannot do something, when the user wants a feature that does not exist, or when they hit a bug, point them at the Scout support Discord: ${DISCORD_SERVER_INVITE}. That is where feature requests and bug reports go, and it is the only link you should ever hand a user.`,
     "",
+    "## Team objectives",
+    // The source exists to answer "does taking X predict winning", and it can.
+    // What it cannot do is say whose team: a team row carries no player, and a
+    // plan reads one source, so there is no way to narrow it to this server.
+    // Answering "do we win more with first dragon?" from it without saying so
+    // would attribute the whole lake's record to the people asking.
+    "match_teams holds one row per team per match: objective counts and a first-objective flag for dragon, baron, herald, towers, inhibitors, grubs and Atakhan, each beside that team's win. Use it for 'does taking X predict winning' questions.",
+    "It covers every match Scout has ingested and cannot be narrowed to this server's players, because a team row names no player and a query reads one source. Answer from it when the question is about the game, and say the answer covers all matches Scout has ingested — never present it as this server's record. If someone asks specifically about their own group's objectives, say that is the one thing you cannot split out.",
+    "",
     "## Data Scout has that you cannot query",
     LAKE_COVERAGE_RULE,
     ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map((entry) => `- ${entry}`),

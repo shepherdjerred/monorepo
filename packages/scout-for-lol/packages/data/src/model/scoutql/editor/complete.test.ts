@@ -31,6 +31,7 @@ describe("clause vocabulary", () => {
       "competition_match_participants",
       "competition_rank",
       "match_participants",
+      "match_teams",
       "player_groups",
       "prematch_participants",
       "rank_current",

@@ -331,6 +331,37 @@ export function buildPrematchSource(
   });
 }
 
+/**
+ * The match-level columns a team row needs, and nothing else.
+ *
+ * A team row carries no timestamp, queue or version, so `match_teams` queries
+ * look them up from the participant table. Reading them through
+ * `buildMatchesSource` would project all ninety-odd participant columns and
+ * defeat parquet's column pruning on every objective query; this narrow map
+ * reads six. `puuid` earns its place by being half the dedupe key.
+ */
+const MATCH_DIMENSION_LAKE_COLUMNS = {
+  match_id: MATCH_LAKE_COLUMNS.match_id,
+  puuid: MATCH_LAKE_COLUMNS.puuid,
+  game_creation_at: MATCH_LAKE_COLUMNS.game_creation_at,
+  queue: MATCH_LAKE_COLUMNS.queue,
+  game_version: MATCH_LAKE_COLUMNS.game_version,
+  map_id: MATCH_LAKE_COLUMNS.map_id,
+} as const;
+
+export function buildMatchDimensionSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.matchesParquet,
+    stagingFiles: files.matchesStaging,
+    columns: MATCH_DIMENSION_LAKE_COLUMNS,
+    dedupe: "matches",
+    predicate,
+  });
+}
+
 export function buildMatchTeamsSource(
   files: LakeFiles,
   predicate: SqlFragment,

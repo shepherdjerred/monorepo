@@ -75,6 +75,7 @@ beforeAll(async () => {
         queue: "solo",
         win: true,
         kills: 2,
+        firstDragon: true,
         gameCreationAt: WEEK1,
       },
       {
@@ -93,6 +94,7 @@ beforeAll(async () => {
         kills: 7,
         championId: 222,
         championName: "Jinx",
+        firstDragon: true,
         gameCreationAt: WEEK1B,
       },
       {
@@ -615,5 +617,97 @@ describe("group facts projection end-to-end", () => {
     }
     expect(compiled.columns.raw).toEqual(["kills"]);
     expect(scanned).toBe(5);
+  });
+});
+
+// ── match_teams ──────────────────────────────────────────────────────────────
+
+function teamPlan(overrides: Partial<ScoutQlPlan> = {}): ScoutQlPlan {
+  return makePlan({
+    source: "match_teams",
+    outputs: [countOutput("teams")],
+    ...overrides,
+  });
+}
+
+describe("match_teams end-to-end", () => {
+  test("counts team rows, two per match, over the real lake", async () => {
+    const { rows } = await run(
+      makeInput({ plan: teamPlan(), scope: GLOBAL_SCOPE }),
+    );
+    expect(rows).toHaveLength(1);
+    // Six matches are seeded; each writes one team row per distinct team id.
+    expect(number_(rows[0]?.["expr_0"])).toBeGreaterThan(0);
+  });
+
+  test("splits win rate by a first-objective flag", async () => {
+    const winRate: ScoutQlOutput = {
+      name: "win_rate",
+      expr: {
+        kind: "aggregate",
+        func: "avg",
+        arg: { kind: "cast", to: "int", operand: col("win") },
+        distinct: false,
+      },
+      displayKind: "percent",
+      additive: false,
+      evidence: { kind: "sample" },
+    };
+    const { rows } = await run(
+      makeInput({
+        plan: teamPlan({
+          outputs: [countOutput("teams"), winRate],
+          groupings: [
+            { kind: "column", column: "first_dragon", name: "first_dragon" },
+          ],
+        }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    // Both buckets exist, which is the whole point of the source.
+    expect(rows.length).toBe(2);
+    const byKey = new Map(
+      rows.map((row) => [String(row["__key_0"]), row] as const),
+    );
+    expect([...byKey.keys()].toSorted()).toEqual(["false", "true"]);
+    // The two seeded first-dragon teams both won.
+    expect(number_(byKey.get("true")?.["expr_1"])).toBe(1);
+  });
+
+  test("filters on queue, which lives on the match and not the team row", async () => {
+    const solo = await run(
+      makeInput({
+        plan: teamPlan({ where: eq("queue", "solo") }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const flex = await run(
+      makeInput({
+        plan: teamPlan({ where: eq("queue", "flex") }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const soloTeams = number_(solo.rows[0]?.["expr_0"]);
+    const flexTeams = number_(flex.rows[0]?.["expr_0"]);
+    // One seeded match is flex; the rest are solo. Without the looked-up
+    // column this query could not be written at all.
+    expect(flexTeams).toBeGreaterThan(0);
+    expect(soloTeams).toBeGreaterThan(flexTeams);
+  });
+
+  test("the time window reaches team rows through the match", async () => {
+    const week1Only = await run(
+      makeInput({
+        plan: teamPlan(),
+        scope: GLOBAL_SCOPE,
+        range: { start: WEEK1, end: WEEK1B },
+      }),
+    );
+    const everything = await run(
+      makeInput({ plan: teamPlan(), scope: GLOBAL_SCOPE }),
+    );
+    expect(number_(week1Only.rows[0]?.["expr_0"])).toBeLessThan(
+      number_(everything.rows[0]?.["expr_0"]),
+    );
   });
 });
