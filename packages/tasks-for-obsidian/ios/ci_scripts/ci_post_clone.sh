@@ -29,7 +29,11 @@ fi
 if ! command -v bun >/dev/null 2>&1; then
   echo "[ci_post_clone] Installing Bun..."
   # renovate: datasource=github-releases depName=oven-sh/bun
-  BUN_INSTALL_TAG="bun-v1.3.13"
+  # Must match `bun = "<version>"` in the root .mise.toml: an older bun cannot
+  # parse newer bun.lock versions (lockfileVersion 2 from bun 1.4 failed every
+  # Archive from #92 to #100 with "Unknown lockfile version"). Enforced by
+  # `bun run check:ios-native-deps`.
+  BUN_INSTALL_TAG="bun-v1.4.2"
   curl -fsSL https://bun.sh/install | bash -s "$BUN_INSTALL_TAG"
   export BUN_INSTALL="$HOME/.bun"
   export PATH="$BUN_INSTALL/bin:$PATH"

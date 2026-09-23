@@ -11,7 +11,10 @@
         "ios/**",
         "!ios/Pods/**",
         "!ios/build/**",
-        "scripts/check-ios-native-deps.ts"
+        "scripts/check-ios-native-deps.ts",
+        // The bun-pin drift guard reads the root mise toolchain; a toolchain
+        // bump must re-run this task (same $TURBO_ROOT$ escape as `test`).
+        "$TURBO_ROOT$/.mise.toml"
       ]
     },
     // Runs the exact Release Metro bundle Xcode Cloud runs during Archive (pure

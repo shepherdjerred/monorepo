@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  findBunVersionDriftMessages,
   findMissingIosPodspecMessages,
   findMissingNativePeerDependencyMessages,
 } from "./check-ios-native-deps.ts";
@@ -103,6 +104,45 @@ describe("check-ios-native-deps", () => {
 
     expect(findMissingIosPodspecMessages(config, () => false)).toEqual([
       "react-native-worklets iOS podspec is missing at /missing/RNWorklets.podspec.",
+    ]);
+  });
+
+  it("accepts a bun pin matching the mise toolchain", () => {
+    expect(
+      findBunVersionDriftMessages({
+        miseToml: '[tools]\nbun = "1.4.2"\n',
+        postCloneScript: 'BUN_INSTALL_TAG="bun-v1.4.2"\n',
+      }),
+    ).toEqual([]);
+  });
+
+  it("reports drift between the mise toolchain and the Xcode Cloud bun pin", () => {
+    expect(
+      findBunVersionDriftMessages({
+        miseToml: '[tools]\nbun = "1.4.2"\n',
+        postCloneScript: 'BUN_INSTALL_TAG="bun-v1.3.13"\n',
+      }),
+    ).toEqual([
+      "Xcode Cloud installs bun 1.3.13 but the repo pins bun 1.4.2 in .mise.toml. Align BUN_INSTALL_TAG in ios/ci_scripts/ci_post_clone.sh — an older bun cannot parse the current bun.lock and fails the Archive during post-clone install.",
+    ]);
+  });
+
+  it("fails loudly when either bun version is unparseable", () => {
+    expect(
+      findBunVersionDriftMessages({
+        miseToml: '[tools]\nnode = "24.19.0"\n',
+        postCloneScript: 'BUN_INSTALL_TAG="bun-v1.4.2"\n',
+      }),
+    ).toEqual([
+      'Could not find `bun = "<version>"` in the root .mise.toml; the Xcode Cloud bun pin cannot be validated.',
+    ]);
+    expect(
+      findBunVersionDriftMessages({
+        miseToml: '[tools]\nbun = "1.4.2"\n',
+        postCloneScript: "# no bun pin here\n",
+      }),
+    ).toEqual([
+      'Could not find BUN_INSTALL_TAG="bun-v<version>" in ios/ci_scripts/ci_post_clone.sh; the Xcode Cloud bun pin cannot be validated.',
     ]);
   });
 });
