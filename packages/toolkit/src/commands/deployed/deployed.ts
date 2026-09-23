@@ -139,10 +139,7 @@ export function computeVerdict(args: {
     args.pinBuild != null &&
     args.argo.revisionBuild != null &&
     args.argo.revisionBuild >= args.pinBuild;
-  if (argoAhead) {
-    return "SYNCED";
-  }
-  return "PINNED";
+  return argoAhead ? "SYNCED" : "PINNED";
 }
 
 type PrInfo = { number: number; state: string; url: string };

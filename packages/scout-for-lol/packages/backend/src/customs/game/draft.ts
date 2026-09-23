@@ -19,8 +19,9 @@ export const CUSTOM_DRAFT_ORDER: readonly CustomTeam[] = [
 
 function readyTime(participant: CustomNightParticipant): number {
   if (participant.held) return Number.MIN_SAFE_INTEGER;
-  if (participant.readyAt === null) return Number.MAX_SAFE_INTEGER;
-  return new Date(participant.readyAt).getTime();
+  return participant.readyAt === null
+    ? Number.MAX_SAFE_INTEGER
+    : new Date(participant.readyAt).getTime();
 }
 
 function rosterEligible(participant: CustomNightParticipant): boolean {

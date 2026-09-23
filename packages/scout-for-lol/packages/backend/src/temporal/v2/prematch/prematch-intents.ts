@@ -152,7 +152,7 @@ function requireIntentMatches(
 ): void {
   const target = standing.intent.target;
   const sameTarget =
-    target.kind === "channel" ? target.channelId === channelId : false;
+    target.kind === "channel" && target.channelId === channelId;
   if (sameTarget && standing.matchId === matchId) return;
   throw new Error(
     `Prematch intent ${standing.intent.key} stands for ${standing.matchId} → ${target.kind === "channel" ? target.channelId : target.kind}, not for ${matchId} → ${channelId}; refusing to treat it as this game's instruction`,

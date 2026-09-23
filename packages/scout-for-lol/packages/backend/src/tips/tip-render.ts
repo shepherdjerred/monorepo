@@ -34,8 +34,9 @@ export function withFeatureTipOnEmbed(
 ): EmbedBuilder | undefined {
   const data = embed.toJSON();
   if (data.footer !== undefined) return undefined;
-  if (tip.text.length > MAX_FOOTER_LENGTH) return undefined;
-  return new EmbedBuilder(data).setFooter({ text: tip.text });
+  return tip.text.length > MAX_FOOTER_LENGTH
+    ? undefined
+    : new EmbedBuilder(data).setFooter({ text: tip.text });
 }
 
 /**

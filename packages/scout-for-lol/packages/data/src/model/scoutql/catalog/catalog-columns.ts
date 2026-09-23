@@ -471,10 +471,7 @@ const CATALOGS = new Map<ScoutQlSource, SourceCatalog>(
 
 export function scoutQlSourceCatalog(name: string): SourceCatalog | undefined {
   const parsed = ScoutQlSourceSchema.safeParse(name.toLowerCase());
-  if (!parsed.success) {
-    return undefined;
-  }
-  return CATALOGS.get(parsed.data);
+  return parsed.success ? CATALOGS.get(parsed.data) : undefined;
 }
 
 export function scoutQlSourceCatalogs(): SourceCatalog[] {

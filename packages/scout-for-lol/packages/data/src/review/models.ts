@@ -37,10 +37,7 @@ function categorize(id: string): ModelInfo["category"] {
   if (id.startsWith("gpt-3.5")) {
     return "gpt-3.5";
   }
-  if (/^o\d/.test(id)) {
-    return "o-series";
-  }
-  return "other";
+  return /^o\d/.test(id) ? "o-series" : "other";
 }
 
 function toModelInfo(entry: ModelEntry, pricing: TextPricing): ModelInfo {
@@ -268,8 +265,5 @@ export function calculateCost(
  * Format cost as USD string
  */
 export function formatCost(cost: number): string {
-  if (cost < 0.01) {
-    return `$${cost.toFixed(4)}`;
-  }
-  return `$${cost.toFixed(2)}`;
+  return cost < 0.01 ? `$${cost.toFixed(4)}` : `$${cost.toFixed(2)}`;
 }

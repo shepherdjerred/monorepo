@@ -84,10 +84,9 @@ function missingNoteLimitation(missing: MissingReleaseNote): string {
 
 function dependencySection(change: DependencyChange): string {
   if (change.kind === "upstream-upgrade") return "Upstream upgrades";
-  if (change.kind === "internal-promotion") {
-    return "Internal image and digest promotions";
-  }
-  return "Additions, removals, and reverts";
+  return change.kind === "internal-promotion"
+    ? "Internal image and digest promotions"
+    : "Additions, removals, and reverts";
 }
 
 function failureReport(startedAt: string, error: unknown): ActivityReportInput {

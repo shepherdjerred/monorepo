@@ -152,8 +152,8 @@ export function GuildSectionIndex() {
   const guild = guildsQuery.data?.find((candidate) => candidate.id === guildId);
   const first = resolveGuildWorkspaceLanding(
     (permission) => perms.can(permission.resource, permission.action),
-    guildsQuery.isError ? false : (guild?.customNightsEnabled ?? false),
-    guildsQuery.isError ? false : (guild?.hallOfFameEnabled ?? false),
+    guild?.customNightsEnabled ?? false,
+    guild?.hallOfFameEnabled ?? false,
   );
   if (first === undefined) {
     return (

@@ -14,22 +14,21 @@ await Promise.all(
   ),
 );
 const s3rver = new S3rver({
-  hostname: "127.0.0.1",
+  address: "127.0.0.1",
   port: 0,
   silent: true,
   directory,
 });
-let server;
-const port = await new Promise((resolve, reject) => {
-  server = s3rver.run((error, _hostname, listeningPort) => {
-    if (error) {
-      reject(error);
-      return;
-    }
-    resolve(listeningPort);
-  });
-});
-console.log(port);
+const server = s3rver;
+const addressInfo = await s3rver.run();
+if (
+  addressInfo === null ||
+  typeof addressInfo !== "object" ||
+  !("port" in addressInfo)
+) {
+  throw new Error("S3 test server returned invalid startup output");
+}
+console.log(addressInfo.port);
 
 async function shutdown() {
   await new Promise((resolve, reject) => {

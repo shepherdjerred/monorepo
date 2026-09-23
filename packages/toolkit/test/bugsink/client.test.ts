@@ -23,10 +23,7 @@ function fetchInputToUrl(input: FetchInput): string {
   if (typeof input === "string") {
     return input;
   }
-  if (input instanceof URL) {
-    return input.toString();
-  }
-  return input.url;
+  return input instanceof URL ? input.toString() : input.url;
 }
 
 afterEach(() => {
@@ -85,10 +82,9 @@ describe("Bugsink client", () => {
     installFetchMock(async (input) => {
       const url = fetchInputToUrl(input);
       requestedUrls.push(url);
-      if (url.endsWith("/projects/")) {
-        return bugsinkPage([project()]);
-      }
-      return bugsinkPage([]);
+      return url.endsWith("/projects/")
+        ? bugsinkPage([project()])
+        : bugsinkPage([]);
     });
     Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
     Bun.env["BUGSINK_TOKEN"] = "token";
@@ -106,10 +102,9 @@ describe("Bugsink client", () => {
     installFetchMock(async (input) => {
       const url = fetchInputToUrl(input);
       requestedUrls.push(url);
-      if (url.endsWith("/projects/")) {
-        return bugsinkPage([project()]);
-      }
-      return bugsinkPage([]);
+      return url.endsWith("/projects/")
+        ? bugsinkPage([project()])
+        : bugsinkPage([]);
     });
     Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
     Bun.env["BUGSINK_TOKEN"] = "token";

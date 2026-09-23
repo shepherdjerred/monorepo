@@ -39,15 +39,12 @@ function innermostTemporalFailure(failure: TemporalFailure): TemporalFailure {
 }
 
 function failureTypeName(failure: TemporalFailure): string {
-  if (
-    failure instanceof ApplicationFailure &&
+  return failure instanceof ApplicationFailure &&
     failure.type !== undefined &&
     failure.type !== null &&
     failure.type !== ""
-  ) {
-    return failure.type;
-  }
-  return failure.name;
+    ? failure.type
+    : failure.name;
 }
 
 type TimeoutInspection = {
@@ -91,10 +88,9 @@ function workerTaskQueueUnavailableReason(
   if (classification.workflowTaskScheduledButNotStarted) {
     return "a scheduled workflow task has not started";
   }
-  if (!classification.workflowTaskStarted && !classification.activityStarted) {
-    return "no activity reached execution";
-  }
-  return undefined;
+  return !classification.workflowTaskStarted && !classification.activityStarted
+    ? "no activity reached execution"
+    : undefined;
 }
 
 function timeoutFailureFields(

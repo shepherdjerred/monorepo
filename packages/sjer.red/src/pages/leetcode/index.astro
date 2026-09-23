@@ -46,13 +46,11 @@ const counts = R.pipe(
         <p>
           {entries.length} questions:
           {
-            (
-              <ul class="list-disc list-inside">
-                {R.map(counts, (count) => (
-                  <li>{count}</li>
-                ))}
-              </ul>
-            )
+            <ul class="list-disc list-inside">
+              {R.map(counts, (count) => (
+                <li>{count}</li>
+              ))}
+            </ul>
           }
         </p>
         <p class="text mt-6 italic">
@@ -61,11 +59,9 @@ const counts = R.pipe(
         </p>
       </div>
       <div class="flex flex-col gap-12 mt-6 mb-6">
-        {
-          R.map(groups, ([date, entries]): JSX.Element => (
-            <LeetCodeDay date={new Date(date)} entries={entries} />
-          ))
-        }
+        {R.map(groups, ([date, entries]): JSX.Element => (
+          <LeetCodeDay date={new Date(date)} entries={entries} />
+        ))}
       </div>
     </Container>
   </Background>

@@ -111,16 +111,16 @@ function targetMatchesLive(
     if (!liveObject.success) {
       return false;
     }
-    if (
+    const removesManagedKey =
       liveOnlyKeys === "removes-managed-key" &&
       Object.keys(liveObject.data).some(
         (key) => !Object.hasOwn(targetObject.data, key),
+      );
+    return (
+      !removesManagedKey &&
+      Object.entries(targetObject.data).every(([key, value]) =>
+        targetMatchesLive(value, liveObject.data[key], liveOnlyKeys),
       )
-    ) {
-      return false;
-    }
-    return Object.entries(targetObject.data).every(([key, value]) =>
-      targetMatchesLive(value, liveObject.data[key], liveOnlyKeys),
     );
   }
   return JSON.stringify(target) === JSON.stringify(live);
@@ -297,10 +297,9 @@ function arrayEntrySegments(entries: readonly unknown[]): readonly string[] {
     const name = parsed.data["name"];
     return typeof name === "string" && name !== "" ? [name] : [];
   });
-  if (names.length !== entries.length || new Set(names).size !== names.length) {
-    return entries.map((_entry, index) => index.toString());
-  }
-  return names.map((name) => `[name=${name}]`);
+  return names.length !== entries.length || new Set(names).size !== names.length
+    ? entries.map((_entry, index) => index.toString())
+    : names.map((name) => `[name=${name}]`);
 }
 
 /**
@@ -376,10 +375,9 @@ function parseReleaseImage(value: unknown): ReleaseImage | null {
   const match = RELEASE_IMAGE_PATTERN.exec(value);
   const repository = match?.groups?.["repository"];
   const build = match?.groups?.["build"];
-  if (repository === undefined || build === undefined) {
-    return null;
-  }
-  return { repository, build: Number.parseInt(build, 10) };
+  return repository === undefined || build === undefined
+    ? null
+    : { repository, build: Number.parseInt(build, 10) };
 }
 
 function collectReleaseImages(

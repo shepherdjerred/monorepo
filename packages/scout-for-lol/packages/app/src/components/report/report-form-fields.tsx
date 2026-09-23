@@ -257,9 +257,7 @@ export const ReportFormFields = withScoutForm({
                               ? "report-query-description"
                               : "report-query-description report-query-error"
                           }
-                          aria-invalid={
-                            message === undefined ? undefined : true
-                          }
+                          aria-invalid={message !== undefined || undefined}
                           tabIndex={message === undefined ? undefined : -1}
                         >
                           <ReportQueryEditor

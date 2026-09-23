@@ -145,12 +145,11 @@ function encodeTypeUrl(typeUrl: string): string {
 
 function fliptError(status: number, body: unknown): Error {
   const parsed = FliptErrorSchema.safeParse(body);
-  if (!parsed.success) {
-    return new Error(`Flipt request failed: ${status.toString()}`);
-  }
-  return new Error(
-    `Flipt request failed: ${status.toString()} code ${parsed.data.code.toString()} ${parsed.data.message}`,
-  );
+  return parsed.success
+    ? new Error(
+        `Flipt request failed: ${status.toString()} code ${parsed.data.code.toString()} ${parsed.data.message}`,
+      )
+    : new Error(`Flipt request failed: ${status.toString()}`);
 }
 
 async function readJson(response: Response): Promise<unknown> {

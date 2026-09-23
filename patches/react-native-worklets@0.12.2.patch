@@ -1,0 +1,48 @@
+diff --git a/plugin/index.js b/plugin/index.js
+--- a/plugin/index.js
++++ b/plugin/index.js
+@@ -594,7 +594,7 @@
+     };
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.workletTransformSync = workletTransformSync;
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+     function workletTransformSync(code, opts) {
+       const { extraPlugins = [], extraPresets = [] } = opts, rest = __rest(opts, ["extraPlugins", "extraPresets"]);
+       return (0, core_1.transformSync)(code, Object.assign(Object.assign({}, rest), { plugins: [...defaultPlugins, ...extraPlugins], presets: [...defaultPresets, ...extraPresets] }));
+@@ -1305,7 +1305,7 @@
+     exports2.canForwardModuleImport = canForwardModuleImport;
+     exports2.canForwardRelativeImport = canForwardRelativeImport;
+     exports2.createImportPathLiteral = createImportPathLiteral;
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+     var types_12 = require("@babel/types");
+     var path_1 = require("path");
+     var types_2 = require_types();
+@@ -1447,7 +1447,7 @@
+     };
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.generateWorkletFile = generateWorkletFile;
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+     var types_12 = require("@babel/types");
+     var assert_1 = __importDefault(require("assert"));
+     var fs_1 = require("fs");
+@@ -1509,7 +1509,7 @@
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.compileWorkletToHbc = compileWorkletToHbc;
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+     var child_process_1 = require("child_process");
+     function compileWorkletToHbc(funString, workletHash, state) {
+       if (compilationCache.has(workletHash)) {
+@@ -1664,7 +1664,7 @@
+     };
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.buildWorkletString = buildWorkletString;
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+     var generator_1 = __importDefault(require("@babel/generator"));
+     var types_12 = require("@babel/types");
+     var assert_1 = require("assert");

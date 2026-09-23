@@ -95,8 +95,8 @@ function catalogRoot(entryPath: string): string | undefined {
   const marker = "/.agents/skills/";
   if (entryPath.startsWith(".agents/skills/")) return ".agents/skills";
   const index = entryPath.indexOf(marker);
-  if (index === -1) return undefined;
-  return entryPath.slice(0, index + marker.length - 1);
+  const end = index + marker.length - 1;
+  return index === -1 ? undefined : entryPath.slice(0, end);
 }
 function parseSkillFrontmatter(
   entry: GuidanceEntry,

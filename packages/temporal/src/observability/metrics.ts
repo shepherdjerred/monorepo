@@ -416,10 +416,9 @@ export function startMetricsServer(): number {
           headers: { "content-type": register.contentType },
         });
       }
-      if (url.pathname === "/healthz") {
-        return new Response("ok\n", { status: 200 });
-      }
-      return new Response("not found\n", { status: 404 });
+      return url.pathname === "/healthz"
+        ? new Response("ok\n", { status: 200 })
+        : new Response("not found\n", { status: 404 });
     },
   });
 

@@ -96,12 +96,11 @@ export function siblingsOf<T extends TreeNode>(
   messageId: string,
 ): T[] {
   const node = nodes.find((candidate) => candidate.id === messageId);
-  if (node === undefined) {
-    return [];
-  }
-  return sortedByAge(
-    nodes.filter((candidate) => candidate.parentId === node.parentId),
-  );
+  return node === undefined
+    ? []
+    : sortedByAge(
+        nodes.filter((candidate) => candidate.parentId === node.parentId),
+      );
 }
 
 function groupByParent<T extends TreeNode>(nodes: T[]): Map<string, T[]> {

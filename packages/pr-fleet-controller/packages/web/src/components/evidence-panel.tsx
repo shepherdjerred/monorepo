@@ -10,14 +10,11 @@ function checkClass(bucket: string): string {
   ) {
     return "ok";
   }
-  if (
-    value.includes("fail") ||
+  return value.includes("fail") ||
     value.includes("error") ||
     value.includes("red")
-  ) {
-    return "bad";
-  }
-  return "pending";
+    ? "bad"
+    : "pending";
 }
 
 export function EvidencePanel({ pr }: { pr: PrState }): ReactElement {

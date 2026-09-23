@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   View,
+  type TextInputInstance,
 } from "react-native";
 import type { FeatherIconName } from "@react-native-vector-icons/feather";
 
@@ -56,7 +57,7 @@ export function QuickCaptureComposer({
   availableContexts,
   availableTags,
 }: QuickCaptureComposerProps) {
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const { colors, isDarkMode } = useSettings();
   const suggestions = useMemo(
     () =>

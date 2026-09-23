@@ -24,8 +24,9 @@ const MAX_RESULTS = 15;
  * never hotlinks OP.GG's CDN. The route re-validates the host.
  */
 function proxiedIconUrl(raw: string | null): string | null {
-  if (raw === null) return null;
-  return `/api/summoner-icon?u=${encodeURIComponent(raw)}`;
+  return raw === null
+    ? null
+    : `/api/summoner-icon?u=${encodeURIComponent(raw)}`;
 }
 
 export async function searchSummoners(

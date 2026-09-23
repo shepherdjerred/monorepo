@@ -32,10 +32,7 @@ export function assignTier(
     kb.confidence === "high"
   ) {
     // If enrichment suggests something different, bump to tier 2
-    if (enrichment) {
-      return 2;
-    }
-    return 1;
+    return enrichment ? 2 : 1;
   }
 
   // Tier 3: Cryptic merchant name with no KB and no enrichment
@@ -60,9 +57,5 @@ export function assignTier(
 
   // Default: Tier 2 for most recognizable merchants
   // Tier 3 only for truly unknown/cryptic ones
-  if (isCrypticMerchant(txn.merchant.name)) {
-    return 3;
-  }
-
-  return 2;
+  return isCrypticMerchant(txn.merchant.name) ? 3 : 2;
 }

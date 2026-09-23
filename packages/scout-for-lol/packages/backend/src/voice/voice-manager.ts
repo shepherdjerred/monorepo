@@ -172,11 +172,9 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     ) {
       return existingConnection;
     }
-    if (existingConnection?.state.status === VoiceConnectionStatus.Ready) {
-      return existingConnection;
-    }
-
-    return await this.joinChannelLocked(guildId, channelId, "playback");
+    return existingConnection?.state.status === VoiceConnectionStatus.Ready
+      ? existingConnection
+      : await this.joinChannelLocked(guildId, channelId, "playback");
   }
 
   /**

@@ -30,8 +30,7 @@ function actionCode(
 ): string {
   if (action === "accept") return "a";
   if (action === "decline") return "d";
-  if (action === "contribute") return "p";
-  return "n";
+  return action === "contribute" ? "p" : "n";
 }
 
 export function formatDareV2CustomId(input: DareV2CustomId): string {

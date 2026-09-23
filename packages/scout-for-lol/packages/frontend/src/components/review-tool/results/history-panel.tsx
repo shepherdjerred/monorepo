@@ -82,10 +82,7 @@ function formatTimestamp(date: Date) {
   if (hours < 24) {
     return `${hours.toString()}h ago`;
   }
-  if (days < 7) {
-    return `${days.toString()}d ago`;
-  }
-  return format(date, "MMM d");
+  return days < 7 ? `${days.toString()}d ago` : format(date, "MMM d");
 }
 
 async function handleDelete(id: string, event: React.MouseEvent) {
@@ -201,10 +198,9 @@ export function HistoryPanel({
                   if (isPending) {
                     return "border-scout-warning bg-scout-warning hover:bg-scout-warning";
                   }
-                  if (hasError) {
-                    return "border-scout-danger bg-scout-danger hover:bg-scout-danger";
-                  }
-                  return "border-scout-border hover:bg-scout-raised";
+                  return hasError
+                    ? "border-scout-danger bg-scout-danger hover:bg-scout-danger"
+                    : "border-scout-border hover:bg-scout-raised";
                 })()}`}
               >
                 <div className="flex items-start justify-between gap-2">

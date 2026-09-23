@@ -17,8 +17,7 @@ export function severityLabel(level: number | null): string {
 export function severityFromLevel(
   level: number | null,
 ): ReviewSeverity | undefined {
-  if (level === null) return undefined;
-  return REVIEW_SEVERITIES[level];
+  return level === null ? undefined : REVIEW_SEVERITIES[level];
 }
 
 const GENERIC_SEVERITY_RE = /\bP([0-3])\b/gu;
@@ -51,8 +50,9 @@ export function parseGreptileSeverity(body: string | null): number | null {
   const altMatch = /alt="P([0-3])"/iu.exec(body);
   if (altMatch?.[1] !== undefined) return Number.parseInt(altMatch[1], 10);
   const badgeMatch = /badges\/p([0-3])\.svg/iu.exec(body);
-  if (badgeMatch?.[1] !== undefined) return Number.parseInt(badgeMatch[1], 10);
-  return null;
+  return badgeMatch?.[1] === undefined
+    ? null
+    : Number.parseInt(badgeMatch[1], 10);
 }
 
 /**
@@ -65,6 +65,5 @@ export function parseCodexSeverity(body: string | null): number | null {
   const badgeMatch = /badge\/P([0-3])-/iu.exec(body);
   if (badgeMatch?.[1] !== undefined) return Number.parseInt(badgeMatch[1], 10);
   const altMatch = /!\[P([0-3]) Badge\]/iu.exec(body);
-  if (altMatch?.[1] !== undefined) return Number.parseInt(altMatch[1], 10);
-  return null;
+  return altMatch?.[1] === undefined ? null : Number.parseInt(altMatch[1], 10);
 }

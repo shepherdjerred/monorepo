@@ -29,8 +29,7 @@ export function getAppOrigin(): string {
 
 export function safeReturnTo(value: string | null): string {
   if (value === null) return "/app/";
-  if (value.startsWith("/app/")) return value;
-  return "/app/";
+  return value.startsWith("/app/") ? value : "/app/";
 }
 
 /** 32 random bytes, hex-encoded. Shared by every flow that mints a CSRF token. */

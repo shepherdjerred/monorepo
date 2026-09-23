@@ -223,10 +223,9 @@ export class VoiceAudioMixer {
     this.updateSpeaking();
     return {
       sendAudioFrame: (frame, frametimeMs) => {
-        if (token !== this.musicToken) {
-          return this.drop("stale-port");
-        }
-        return this.handleMusicFrame(frame, frametimeMs);
+        return token === this.musicToken
+          ? this.handleMusicFrame(frame, frametimeMs)
+          : this.drop("stale-port");
       },
       close: () => {
         if (token !== this.musicToken) return;
@@ -242,12 +241,11 @@ export class VoiceAudioMixer {
     let closed = false;
     return {
       send: (opus) => {
-        if (closed) {
-          return Promise.reject(
-            new Error("Assistant audio port is closed; cannot send"),
-          );
-        }
-        return this.enqueueAssistant(opus, owner);
+        return closed
+          ? Promise.reject(
+              new Error("Assistant audio port is closed; cannot send"),
+            )
+          : this.enqueueAssistant(opus, owner);
       },
       setSpeaking: (value) => {
         if (closed || value === speaking) return;

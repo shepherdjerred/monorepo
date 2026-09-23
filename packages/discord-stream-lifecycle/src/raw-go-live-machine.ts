@@ -36,10 +36,9 @@ function terminalError(event: RawGoLiveEvent): string | null {
   if (event.type === "PRODUCER_FAILED") {
     return event.reason;
   }
-  if (event.type === "STREAMER_VOICE_DETACHED") {
-    return event.reason ?? "streamer voice detached";
-  }
-  return null;
+  return event.type === "STREAMER_VOICE_DETACHED"
+    ? (event.reason ?? "streamer voice detached")
+    : null;
 }
 
 export function createRawGoLiveMachine(deps: RawGoLiveDeps) {

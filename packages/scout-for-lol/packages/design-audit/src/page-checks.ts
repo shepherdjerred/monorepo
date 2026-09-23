@@ -329,12 +329,11 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
         const alpha = alphaValue.endsWith("%")
           ? Number.parseFloat(alphaValue) / 100
           : Number.parseFloat(alphaValue);
-        if (
-          [red, green, blue, alpha].some((component) => Number.isNaN(component))
-        ) {
-          return null;
-        }
-        return [red, green, blue, alpha];
+        return [red, green, blue, alpha].some((component) =>
+          Number.isNaN(component),
+        )
+          ? null
+          : [red, green, blue, alpha];
       };
       const rgba = /^rgba?\(([^)]+)\)$/.exec(value);
       if (rgba !== null) {

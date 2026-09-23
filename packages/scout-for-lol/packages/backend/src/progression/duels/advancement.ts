@@ -287,17 +287,16 @@ function singleEliminationRoundWinners(
       event.entrants.map((entrant) => entrant.competitorId),
     );
     return initial.map((pairing) => {
-      if (pairing.byeWinnerEntrantId !== null) {
-        return pairing.byeWinnerEntrantId;
-      }
       return (
+        pairing.byeWinnerEntrantId ??
         event.series.find(
           (series) =>
             series.bracket === "winners" &&
             series.roundNumber === 1 &&
             series.position === pairing.position &&
             series.seriesState === "completed",
-        )?.winnerCompetitorId ?? null
+        )?.winnerCompetitorId ??
+        null
       );
     });
   }

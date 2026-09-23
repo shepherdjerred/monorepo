@@ -99,8 +99,7 @@ function usesTestCollector(plugins: readonly unknown[]): boolean {
 
 function secretKeyRefFrom(entry: z.infer<typeof EnvEntrySchema>): unknown {
   const valueFrom = RecordSchema.safeParse(entry.valueFrom);
-  if (!valueFrom.success) return undefined;
-  return valueFrom.data["secretKeyRef"];
+  return valueFrom.success ? valueFrom.data["secretKeyRef"] : undefined;
 }
 
 type ContainerAudit = {

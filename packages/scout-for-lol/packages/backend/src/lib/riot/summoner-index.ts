@@ -28,8 +28,9 @@ export function parseRiotId(
   riotId: string,
 ): { gameName: string; tagLine: string } | null {
   const hash = riotId.lastIndexOf("#");
-  if (hash <= 0 || hash === riotId.length - 1) return null;
-  return { gameName: riotId.slice(0, hash), tagLine: riotId.slice(hash + 1) };
+  return hash <= 0 || hash === riotId.length - 1
+    ? null
+    : { gameName: riotId.slice(0, hash), tagLine: riotId.slice(hash + 1) };
 }
 
 /**

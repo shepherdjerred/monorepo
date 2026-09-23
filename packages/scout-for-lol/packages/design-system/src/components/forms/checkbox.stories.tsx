@@ -24,9 +24,7 @@ const queues = [
 type QueueKey = (typeof queues)[number]["key"];
 
 function summaryState(selectedCount: number, total: number): CheckedState {
-  if (selectedCount === 0) return false;
-  if (selectedCount === total) return true;
-  return "indeterminate";
+  return selectedCount !== 0 && (selectedCount === total || "indeterminate");
 }
 
 function LabelledCheckbox({

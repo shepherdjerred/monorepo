@@ -37,10 +37,7 @@ function str(value: string | undefined): string | undefined {
 }
 
 function bool(value: string | undefined): boolean | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  return value.toLowerCase() === "true";
+  return value === undefined ? undefined : value.toLowerCase() === "true";
 }
 
 /**

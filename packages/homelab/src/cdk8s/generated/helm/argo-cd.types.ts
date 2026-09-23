@@ -280,7 +280,7 @@ export type ArgocdHelmValuesConfigs = {
    * General Argo CD configuration. Any values you put under `.configs.cm` are passed to argocd-cm ConfigMap.
    * Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
    *
-   * @default {...} (19 keys)
+   * @default {...} (20 keys)
    */
   cm?: ArgocdHelmValuesConfigsCm;
   /**
@@ -517,6 +517,7 @@ export type ArgocdHelmValuesConfigsCm = {
    * @default "### Network resources created by the Kubernetes..."
    */
   "resource.exclusions"?: string;
+  resourceExclusionsAdditional?: unknown[];
 };
 
 export type ArgocdHelmValuesConfigsCmAnnotations = {
@@ -906,14 +907,14 @@ export type ArgocdHelmValuesController = {
    * Application controller Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   pdb?: ArgocdHelmValuesControllerPdb;
   /**
    * Application controller Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesControllerVpa;
   /**
@@ -1017,6 +1018,17 @@ export type ArgocdHelmValuesController = {
    */
   readinessProbe?: ArgocdHelmValuesControllerReadinessProbe;
   /**
+   * Liveness probe for the application controller.
+   * Disabled by default, matching upstream: Argo CD removed this probe deliberately
+   * (argoproj/argo-cd#9557) because restarting an overloaded controller usually makes
+   * things worse. Enable only if you have a known failure mode (e.g. deadlock) where
+   * a restart is the correct remediation, and size the thresholds generously.
+   * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+   *
+   * @default {...} (7 keys)
+   */
+  livenessProbe?: ArgocdHelmValuesControllerLivenessProbe;
+  /**
    * Startup probe for application controller (optional)
    * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
    *
@@ -1109,6 +1121,13 @@ export type ArgocdHelmValuesControllerPdb = {
    * @default ""
    */
   maxUnavailable?: string;
+  /**
+   * Policy for evicting unhealthy (not ready) pods, either `IfHealthyBudget` or `AlwaysAllow`
+   * Defaults to `IfHealthyBudget` if not set
+   *
+   * @default ""
+   */
+  unhealthyPodEvictionPolicy?: string;
 };
 
 export type ArgocdHelmValuesControllerPdbLabels = {
@@ -1158,6 +1177,13 @@ export type ArgocdHelmValuesControllerVpa = {
    */
   containerPolicy?: ArgocdHelmValuesControllerVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesControllerVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesControllerVpaLabels = {
@@ -1177,6 +1203,8 @@ export type ArgocdHelmValuesControllerVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesControllerVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesControllerVpaStartupBoost = object;
 
 export type ArgocdHelmValuesControllerImage = {
   /**
@@ -1300,6 +1328,51 @@ export type ArgocdHelmValuesControllerReadinessProbe = {
    * Number of seconds after which the [probe] times out
    *
    * @default 1
+   */
+  timeoutSeconds?: number;
+};
+
+export type ArgocdHelmValuesControllerLivenessProbe = {
+  /**
+   * Enable Kubernetes liveness probe for Application controller
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Http path to use for the liveness probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 5
+   */
+  failureThreshold?: number;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 30
+   */
+  periodSeconds?: number;
+  /**
+   * Minimum consecutive successes for the [probe] to be considered successful after having failed
+   *
+   * @default 1
+   */
+  successThreshold?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 5
    */
   timeoutSeconds?: number;
 };
@@ -1666,14 +1739,14 @@ export type ArgocdHelmValuesDex = {
    * Dex Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   pdb?: ArgocdHelmValuesDexPdb;
   /**
    * Dex Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesDexVpa;
   /**
@@ -2018,6 +2091,13 @@ export type ArgocdHelmValuesDexPdb = {
    * @default ""
    */
   maxUnavailable?: string;
+  /**
+   * Policy for evicting unhealthy (not ready) pods, either `IfHealthyBudget` or `AlwaysAllow`
+   * Defaults to `IfHealthyBudget` if not set
+   *
+   * @default ""
+   */
+  unhealthyPodEvictionPolicy?: string;
 };
 
 export type ArgocdHelmValuesDexPdbLabels = {
@@ -2067,6 +2147,13 @@ export type ArgocdHelmValuesDexVpa = {
    */
   containerPolicy?: ArgocdHelmValuesDexVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesDexVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesDexVpaLabels = {
@@ -2086,6 +2173,8 @@ export type ArgocdHelmValuesDexVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesDexVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesDexVpaStartupBoost = object;
 
 export type ArgocdHelmValuesDexImage = {
   /**
@@ -2509,14 +2598,14 @@ export type ArgocdHelmValuesRedis = {
    * Redis Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   pdb?: ArgocdHelmValuesRedisPdb;
   /**
    * Redis Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesRedisVpa;
   /**
@@ -2593,6 +2682,12 @@ export type ArgocdHelmValuesRedis = {
    * @default {"redis":6379,"metrics":9121}
    */
   containerPorts?: ArgocdHelmValuesRedisContainerPorts;
+  /**
+   * Host Network for redis pods
+   *
+   * @default false
+   */
+  hostNetwork?: boolean;
   /**
    * [DNS configuration]
    *
@@ -2700,6 +2795,13 @@ export type ArgocdHelmValuesRedisPdb = {
    * @default ""
    */
   maxUnavailable?: string;
+  /**
+   * Policy for evicting unhealthy (not ready) pods, either `IfHealthyBudget` or `AlwaysAllow`
+   * Defaults to `IfHealthyBudget` if not set
+   *
+   * @default ""
+   */
+  unhealthyPodEvictionPolicy?: string;
 };
 
 export type ArgocdHelmValuesRedisPdbLabels = {
@@ -2749,6 +2851,13 @@ export type ArgocdHelmValuesRedisVpa = {
    */
   containerPolicy?: ArgocdHelmValuesRedisVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesRedisVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesRedisVpaLabels = {
@@ -2768,6 +2877,8 @@ export type ArgocdHelmValuesRedisVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesRedisVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesRedisVpaStartupBoost = object;
 
 export type ArgocdHelmValuesRedisImage = {
   /**
@@ -2802,7 +2913,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.89.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.91.1","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2841,7 +2952,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.89.0"
+   * @default "v1.91.1"
    */
   tag?: string;
   /**
@@ -3343,7 +3454,7 @@ export type ArgocdHelmValuesRedisha = {
   /**
    * Redis image
    *
-   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.2.3-alpine"}
+   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.6.4-alpine"}
    */
   image?: ArgocdHelmValuesRedishaImage;
   /**
@@ -3362,6 +3473,12 @@ export type ArgocdHelmValuesRedisha = {
    * @default {"masterGroupName":"argocd","config":{"save":"\"\""}}
    */
   redis?: ArgocdHelmValuesRedishaRedis;
+  /**
+   * Redis sentinel specific configuration options
+   *
+   * @default {"lifecycle":{"postStart":{"exec":{"command":["/bin/sh","-c","sleep 30; redis-cli -p 26379 sentinel reset argocd"]}}}}
+   */
+  sentinel?: ArgocdHelmValuesRedishaSentinel;
   /**
    * Enables a HA Proxy for better LoadBalancing / Sentinel Master support. Automatically proxies to Redis master.
    *
@@ -3427,9 +3544,11 @@ export type ArgocdHelmValuesRedishaImage = {
   repository?: string;
   /**
    * Redis tag
-   * Do not upgrade to >= 7.4.0, otherwise you are no longer using an open source version of Redis
+   * Do not use 7.4.0 <= v < 8.0.0, otherwise you are no longer using an open source version of Redis
+   * Runs ahead of the upstream HA manifests' pin: the redis 8.2.x line is only built on Alpine 3.22,
+   * whose OpenSSL carries known vulnerabilities (GHSA-5p3w-hgjv-f6q3 report); 8.6.x is the patched base.
    *
-   * @default "8.2.3-alpine"
+   * @default "8.6.4-alpine"
    */
   tag?: string;
 };
@@ -3491,6 +3610,33 @@ export type ArgocdHelmValuesRedishaRedisConfig = {
    * @default """"
    */
   save?: string;
+};
+
+export type ArgocdHelmValuesRedishaSentinel = {
+  /**
+   * @default {"postStart":{"exec":{"command":["/bin/sh","-c","sleep 30; redis-cli -p 26379 sentinel reset argocd"]}}}
+   */
+  lifecycle?: ArgocdHelmValuesRedishaSentinelLifecycle;
+};
+
+export type ArgocdHelmValuesRedishaSentinelLifecycle = {
+  /**
+   * Sentinel container lifecycle hooks. The default `postStart` hook resets the sentinel state after a rolling update to prevent high CPU usage
+   *
+   * @default {"exec":{"command":["/bin/sh","-c","sleep 30; redis-cli -p 26379 sentinel reset argocd"]}}
+   */
+  postStart?: ArgocdHelmValuesRedishaSentinelLifecyclePostStart;
+};
+
+export type ArgocdHelmValuesRedishaSentinelLifecyclePostStart = {
+  /**
+   * @default {"command":["/bin/sh","-c","sleep 30; redis-cli -p 26379 sentinel reset argocd"]}
+   */
+  exec?: ArgocdHelmValuesRedishaSentinelLifecyclePostStartExec;
+};
+
+export type ArgocdHelmValuesRedishaSentinelLifecyclePostStartExec = {
+  command?: string[];
 };
 
 export type ArgocdHelmValuesRedishaHaproxy = {
@@ -3734,6 +3880,24 @@ export type ArgocdHelmValuesRedisSecretInit = {
    */
   priorityClassName?: string;
   /**
+   * Host Network for redis-secret-init pods
+   *
+   * @default false
+   */
+  hostNetwork?: boolean;
+  /**
+   * [DNS configuration]
+   *
+   * @default {}
+   */
+  dnsConfig?: ArgocdHelmValuesRedisSecretInitDnsConfig;
+  /**
+   * Alternative DNS policy for Redis secret-init Job
+   *
+   * @default "ClusterFirst"
+   */
+  dnsPolicy?: string;
+  /**
    * Assign custom [affinity] rules to the Redis secret-init Job
    */
   affinity?: Record<string, unknown>;
@@ -3849,6 +4013,8 @@ export type ArgocdHelmValuesRedisSecretInitServiceAccountAnnotations = {
   [key: string]: unknown;
 };
 
+export type ArgocdHelmValuesRedisSecretInitDnsConfig = object;
+
 export type ArgocdHelmValuesServer = {
   /**
    * Argo CD server name
@@ -3878,14 +4044,14 @@ export type ArgocdHelmValuesServer = {
    * Argo CD server Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   pdb?: ArgocdHelmValuesServerPdb;
   /**
    * Argo CD server Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesServerVpa;
   /**
@@ -4204,6 +4370,13 @@ export type ArgocdHelmValuesServerPdb = {
    * @default ""
    */
   maxUnavailable?: string;
+  /**
+   * Policy for evicting unhealthy (not ready) pods, either `IfHealthyBudget` or `AlwaysAllow`
+   * Defaults to `IfHealthyBudget` if not set
+   *
+   * @default ""
+   */
+  unhealthyPodEvictionPolicy?: string;
 };
 
 export type ArgocdHelmValuesServerPdbLabels = {
@@ -4253,6 +4426,13 @@ export type ArgocdHelmValuesServerVpa = {
    */
   containerPolicy?: ArgocdHelmValuesServerVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesServerVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesServerVpaLabels = {
@@ -4272,6 +4452,8 @@ export type ArgocdHelmValuesServerVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesServerVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesServerVpaStartupBoost = object;
 
 export type ArgocdHelmValuesServerImage = {
   /**
@@ -4308,7 +4490,7 @@ export type ArgocdHelmValuesServerExtensions = {
   /**
    * Argo CD extension installer image
    *
-   * @default {"repository":"quay.io/argoprojlabs/argocd-extension-installer","tag":"v1.0.1","imagePullPolicy":""}
+   * @default {"repository":"quay.io/argoprojlabs/argocd-extension-installer","tag":"v1.1.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesServerExtensionsImage;
   extensionList?: unknown[];
@@ -4337,7 +4519,7 @@ export type ArgocdHelmValuesServerExtensionsImage = {
   /**
    * Tag to use for extension installer image
    *
-   * @default "v1.0.1"
+   * @default "v1.1.0"
    */
   tag?: string;
   /**
@@ -5685,14 +5867,14 @@ export type ArgocdHelmValuesRepoServer = {
    * Repo server Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   pdb?: ArgocdHelmValuesRepoServerPdb;
   /**
    * Repo server Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesRepoServerVpa;
   /**
@@ -5966,6 +6148,13 @@ export type ArgocdHelmValuesRepoServerPdb = {
    * @default ""
    */
   maxUnavailable?: string;
+  /**
+   * Policy for evicting unhealthy (not ready) pods, either `IfHealthyBudget` or `AlwaysAllow`
+   * Defaults to `IfHealthyBudget` if not set
+   *
+   * @default ""
+   */
+  unhealthyPodEvictionPolicy?: string;
 };
 
 export type ArgocdHelmValuesRepoServerPdbLabels = {
@@ -6015,6 +6204,13 @@ export type ArgocdHelmValuesRepoServerVpa = {
    */
   containerPolicy?: ArgocdHelmValuesRepoServerVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesRepoServerVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesRepoServerVpaLabels = {
@@ -6034,6 +6230,8 @@ export type ArgocdHelmValuesRepoServerVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesRepoServerVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesRepoServerVpaStartupBoost = object;
 
 export type ArgocdHelmValuesRepoServerImage = {
   /**
@@ -6630,14 +6828,14 @@ export type ArgocdHelmValuesApplicationSet = {
    * ApplicationSet controller Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   pdb?: ArgocdHelmValuesApplicationSetPdb;
   /**
    * ApplicationSet controller Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesApplicationSetVpa;
   /**
@@ -6856,6 +7054,13 @@ export type ArgocdHelmValuesApplicationSetPdb = {
    * @default ""
    */
   maxUnavailable?: string;
+  /**
+   * Policy for evicting unhealthy (not ready) pods, either `IfHealthyBudget` or `AlwaysAllow`
+   * Defaults to `IfHealthyBudget` if not set
+   *
+   * @default ""
+   */
+  unhealthyPodEvictionPolicy?: string;
 };
 
 export type ArgocdHelmValuesApplicationSetPdbLabels = {
@@ -6905,6 +7110,13 @@ export type ArgocdHelmValuesApplicationSetVpa = {
    */
   containerPolicy?: ArgocdHelmValuesApplicationSetVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesApplicationSetVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesApplicationSetVpaLabels = {
@@ -6924,6 +7136,8 @@ export type ArgocdHelmValuesApplicationSetVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesApplicationSetVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesApplicationSetVpaStartupBoost = object;
 
 export type ArgocdHelmValuesApplicationSetImage = {
   /**
@@ -7788,14 +8002,14 @@ export type ArgocdHelmValuesNotifications = {
    * Notifications controller Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   pdb?: ArgocdHelmValuesNotificationsPdb;
   /**
    * Notifications controller Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesNotificationsVpa;
   /**
@@ -8015,6 +8229,13 @@ export type ArgocdHelmValuesNotificationsPdb = {
    * @default ""
    */
   maxUnavailable?: string;
+  /**
+   * Policy for evicting unhealthy (not ready) pods, either `IfHealthyBudget` or `AlwaysAllow`
+   * Defaults to `IfHealthyBudget` if not set
+   *
+   * @default ""
+   */
+  unhealthyPodEvictionPolicy?: string;
 };
 
 export type ArgocdHelmValuesNotificationsPdbLabels = {
@@ -8064,6 +8285,13 @@ export type ArgocdHelmValuesNotificationsVpa = {
    */
   containerPolicy?: ArgocdHelmValuesNotificationsVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesNotificationsVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesNotificationsVpaLabels = {
@@ -8083,6 +8311,8 @@ export type ArgocdHelmValuesNotificationsVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesNotificationsVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesNotificationsVpaStartupBoost = object;
 
 export type ArgocdHelmValuesNotificationsImage = {
   /**
@@ -8715,7 +8945,7 @@ export type ArgocdHelmValuesCommitServer = {
    * Commit server Vertical Pod Autoscaler
    * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   vpa?: ArgocdHelmValuesCommitServerVpa;
 };
@@ -9105,6 +9335,13 @@ export type ArgocdHelmValuesCommitServerVpa = {
    */
   containerPolicy?: ArgocdHelmValuesCommitServerVpaContainerPolicy;
   recommenders?: unknown[];
+  /**
+   * Configures a startup resource boost for faster cold-start (application boot) resource allocation. NOTE: startupBoost is currently a GKE-specific extension to the VPA API and is only honored on GKE clusters; it is rendered only when set
+   * Ref: https://cloud.google.com/kubernetes-engine/docs/how-to/boost-application-startup
+   *
+   * @default {}
+   */
+  startupBoost?: ArgocdHelmValuesCommitServerVpaStartupBoost;
 };
 
 export type ArgocdHelmValuesCommitServerVpaLabels = {
@@ -9124,6 +9361,8 @@ export type ArgocdHelmValuesCommitServerVpaAnnotations = {
 };
 
 export type ArgocdHelmValuesCommitServerVpaContainerPolicy = object;
+
+export type ArgocdHelmValuesCommitServerVpaStartupBoost = object;
 
 export type ArgocdHelmValues = {
   /**
@@ -9205,7 +9444,7 @@ export type ArgocdHelmValues = {
    * Specific implementation for ingress controller. One of `generic`, `aws` or `gke`
    * Additional configuration might be required in related configuration sections
    *
-   * @default {...} (44 keys)
+   * @default {...} (45 keys)
    */
   controller?: ArgocdHelmValuesController;
   /**
@@ -9221,14 +9460,14 @@ export type ArgocdHelmValues = {
   /**
    * Redis container port
    *
-   * @default {...} (39 keys)
+   * @default {...} (40 keys)
    */
   redis?: ArgocdHelmValuesRedis;
   /**
    * Redis-HA subchart replaces custom redis deployment when `redis-ha.enabled=true`
    * Ref: https://github.com/DandyDeveloper/charts/blob/master/charts/redis-ha/values.yaml
    *
-   * @default {...} (14 keys)
+   * @default {...} (15 keys)
    */
   "redis-ha"?: ArgocdHelmValuesRedisha;
   /**
@@ -9238,7 +9477,7 @@ export type ArgocdHelmValues = {
    */
   externalRedis?: ArgocdHelmValuesExternalRedis;
   /**
-   * @default {...} (17 keys)
+   * @default {...} (20 keys)
    */
   redisSecretInit?: ArgocdHelmValuesRedisSecretInit;
   /**
@@ -9323,6 +9562,7 @@ export type ArgocdHelmParameters = {
   "configs.cm.resource.customizations.ignoreResourceUpdates.discovery.k8s.io_EndpointSlice"?: string;
   "configs.cm.resource.customizations.ignoreResourceUpdates.Endpoints"?: string;
   "configs.cm.resource.exclusions"?: string;
+  "configs.cm.resourceExclusionsAdditional"?: string;
   "configs.params.create"?: string;
   "configs.rbac.create"?: string;
   "configs.rbac.policy.default"?: string;
@@ -9355,6 +9595,7 @@ export type ArgocdHelmParameters = {
   "controller.pdb.enabled"?: string;
   "controller.pdb.minAvailable"?: string;
   "controller.pdb.maxUnavailable"?: string;
+  "controller.pdb.unhealthyPodEvictionPolicy"?: string;
   "controller.vpa.enabled"?: string;
   "controller.vpa.updateMode"?: string;
   "controller.vpa.recommenders"?: string;
@@ -9385,6 +9626,13 @@ export type ArgocdHelmParameters = {
   "controller.readinessProbe.periodSeconds"?: string;
   "controller.readinessProbe.successThreshold"?: string;
   "controller.readinessProbe.timeoutSeconds"?: string;
+  "controller.livenessProbe.enabled"?: string;
+  "controller.livenessProbe.httpPath"?: string;
+  "controller.livenessProbe.failureThreshold"?: string;
+  "controller.livenessProbe.initialDelaySeconds"?: string;
+  "controller.livenessProbe.periodSeconds"?: string;
+  "controller.livenessProbe.successThreshold"?: string;
+  "controller.livenessProbe.timeoutSeconds"?: string;
   "controller.startupProbe.enabled"?: string;
   "controller.startupProbe.httpPath"?: string;
   "controller.startupProbe.failureThreshold"?: string;
@@ -9440,6 +9688,7 @@ export type ArgocdHelmParameters = {
   "dex.pdb.enabled"?: string;
   "dex.pdb.minAvailable"?: string;
   "dex.pdb.maxUnavailable"?: string;
+  "dex.pdb.unhealthyPodEvictionPolicy"?: string;
   "dex.vpa.enabled"?: string;
   "dex.vpa.updateMode"?: string;
   "dex.vpa.recommenders"?: string;
@@ -9522,6 +9771,7 @@ export type ArgocdHelmParameters = {
   "redis.pdb.enabled"?: string;
   "redis.pdb.minAvailable"?: string;
   "redis.pdb.maxUnavailable"?: string;
+  "redis.pdb.unhealthyPodEvictionPolicy"?: string;
   "redis.vpa.enabled"?: string;
   "redis.vpa.updateMode"?: string;
   "redis.vpa.recommenders"?: string;
@@ -9577,6 +9827,7 @@ export type ArgocdHelmParameters = {
   "redis.securityContext.seccompProfile.type"?: string;
   "redis.containerPorts.redis"?: string;
   "redis.containerPorts.metrics"?: string;
+  "redis.hostNetwork"?: string;
   "redis.dnsPolicy"?: string;
   "redis.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "redis.containerSecurityContext.allowPrivilegeEscalation"?: string;
@@ -9614,6 +9865,7 @@ export type ArgocdHelmParameters = {
   "redis-ha.persistentVolume.enabled"?: string;
   "redis-ha.redis.masterGroupName"?: string;
   "redis-ha.redis.config.save"?: string;
+  "redis-ha.sentinel.lifecycle.postStart.exec.command"?: string;
   "redis-ha.haproxy.enabled"?: string;
   "redis-ha.haproxy.labels.app.kubernetes.io/name"?: string;
   "redis-ha.haproxy.image.repository"?: string;
@@ -9655,6 +9907,8 @@ export type ArgocdHelmParameters = {
   "redisSecretInit.serviceAccount.name"?: string;
   "redisSecretInit.serviceAccount.automountServiceAccountToken"?: string;
   "redisSecretInit.priorityClassName"?: string;
+  "redisSecretInit.hostNetwork"?: string;
+  "redisSecretInit.dnsPolicy"?: string;
   "redisSecretInit.affinity"?: string;
   "redisSecretInit.nodeSelector"?: string;
   "redisSecretInit.tolerations"?: string;
@@ -9670,6 +9924,7 @@ export type ArgocdHelmParameters = {
   "server.pdb.enabled"?: string;
   "server.pdb.minAvailable"?: string;
   "server.pdb.maxUnavailable"?: string;
+  "server.pdb.unhealthyPodEvictionPolicy"?: string;
   "server.vpa.enabled"?: string;
   "server.vpa.updateMode"?: string;
   "server.vpa.recommenders"?: string;
@@ -9850,6 +10105,7 @@ export type ArgocdHelmParameters = {
   "repoServer.pdb.enabled"?: string;
   "repoServer.pdb.minAvailable"?: string;
   "repoServer.pdb.maxUnavailable"?: string;
+  "repoServer.pdb.unhealthyPodEvictionPolicy"?: string;
   "repoServer.vpa.enabled"?: string;
   "repoServer.vpa.updateMode"?: string;
   "repoServer.vpa.recommenders"?: string;
@@ -9939,6 +10195,7 @@ export type ArgocdHelmParameters = {
   "applicationSet.pdb.enabled"?: string;
   "applicationSet.pdb.minAvailable"?: string;
   "applicationSet.pdb.maxUnavailable"?: string;
+  "applicationSet.pdb.unhealthyPodEvictionPolicy"?: string;
   "applicationSet.vpa.enabled"?: string;
   "applicationSet.vpa.updateMode"?: string;
   "applicationSet.vpa.recommenders"?: string;
@@ -10054,6 +10311,7 @@ export type ArgocdHelmParameters = {
   "notifications.pdb.enabled"?: string;
   "notifications.pdb.minAvailable"?: string;
   "notifications.pdb.maxUnavailable"?: string;
+  "notifications.pdb.unhealthyPodEvictionPolicy"?: string;
   "notifications.vpa.enabled"?: string;
   "notifications.vpa.updateMode"?: string;
   "notifications.vpa.recommenders"?: string;

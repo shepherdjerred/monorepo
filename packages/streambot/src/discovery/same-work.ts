@@ -17,7 +17,7 @@ export function canonicalWorkKey(title: string): string {
       " ",
     )
     .replaceAll(/\s+-\s+topic\b/giu, " ")
-    .replaceAll(/\b(video|audio)$/giu, " ")
+    .replaceAll(/\b(?:video|audio)$/giu, " ")
     .replaceAll(/[^\p{L}\p{N}\s]/gu, " ")
     .replaceAll(/\s+/gu, " ")
     .trim();
@@ -44,8 +44,7 @@ function workTitleKey(title: string): string {
 
 function leftoverPrefix(title: string): string {
   const separator = title.lastIndexOf(" - ");
-  if (separator === -1) return "";
-  return canonicalWorkKey(title.slice(0, separator));
+  return separator === -1 ? "" : canonicalWorkKey(title.slice(0, separator));
 }
 
 function channelKey(candidate: MediaCandidate): string {
@@ -70,9 +69,11 @@ function dashPrefixIsArtist(
   prefix: string,
   group: readonly MediaCandidate[],
 ): boolean {
-  if (prefix.length === 0) return true;
-  return group.some((candidate) =>
-    prefixMatchesChannel(prefix, channelKey(candidate)),
+  return (
+    prefix.length === 0 ||
+    group.some((candidate) =>
+      prefixMatchesChannel(prefix, channelKey(candidate)),
+    )
   );
 }
 
@@ -89,10 +90,10 @@ function sameWorkTitle(
   if (leftKey !== rightKey || leftKey.length === 0) return false;
   const leftPrefix = leftoverPrefix(left);
   const rightPrefix = leftoverPrefix(right);
-  if (leftPrefix === rightPrefix) return true;
   return (
-    dashPrefixIsArtist(leftPrefix, group) &&
-    dashPrefixIsArtist(rightPrefix, group)
+    leftPrefix === rightPrefix ||
+    (dashPrefixIsArtist(leftPrefix, group) &&
+      dashPrefixIsArtist(rightPrefix, group))
   );
 }
 
@@ -112,18 +113,16 @@ export function pickOfficialSameWork(
   const first = candidates[0];
   if (first === undefined || workTitleKey(first.title).length === 0)
     return undefined;
-  if (
-    !candidates.every((candidate) =>
-      sameWorkTitle(first.title, candidate.title, candidates),
-    )
+  return candidates.every((candidate) =>
+    sameWorkTitle(first.title, candidate.title, candidates),
   )
-    return undefined;
-  return [...candidates].toSorted(
-    (left, right) =>
-      ownedMatchScore(right) - ownedMatchScore(left) ||
-      officialScore(right) - officialScore(left) ||
-      right.score - left.score,
-  )[0];
+    ? [...candidates].toSorted(
+        (left, right) =>
+          ownedMatchScore(right) - ownedMatchScore(left) ||
+          officialScore(right) - officialScore(left) ||
+          right.score - left.score,
+      )[0]
+    : undefined;
 }
 
 function levenshtein(left: string, right: string): number {
@@ -159,8 +158,7 @@ function searchable(value: string): string {
 
 function tokenRatio(left: string, right: string): number {
   const max = Math.max(left.length, right.length);
-  if (max === 0) return 0;
-  return 1 - levenshtein(left, right) / max;
+  return max === 0 ? 0 : 1 - levenshtein(left, right) / max;
 }
 
 function asrScore(query: string, title: string): number {
@@ -200,10 +198,9 @@ function asrScore(query: string, title: string): number {
     if (!queryToken.startsWith(bestTitleToken.slice(0, 1))) return 0;
   }
   const minimum = queryTokens.length === 1 ? 0.6 : 0.4;
-  if (weakest >= minimum && (best >= 0.5 || exactCount > 0)) {
-    return Math.round(average * 100);
-  }
-  return 0;
+  return weakest >= minimum && (best >= 0.5 || exactCount > 0)
+    ? Math.round(average * 100)
+    : 0;
 }
 
 /**
@@ -227,6 +224,5 @@ export function fuzzyMatchCandidate(
       best = { candidate, score };
     }
   }
-  if (best === null || best.score < 50) return null;
-  return best.candidate;
+  return best === null || best.score < 50 ? null : best.candidate;
 }

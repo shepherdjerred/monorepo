@@ -96,10 +96,7 @@ export async function readMatchReceiptEvidenceV2(
 ): Promise<unknown> {
   const receipts = await listReceipts(prisma, { matchId });
   const standing = receipts.find((record) => record.receipt.kind === kind);
-  if (standing?.evidence == null) {
-    return null;
-  }
-  return JSON.parse(standing.evidence);
+  return standing?.evidence == null ? null : JSON.parse(standing.evidence);
 }
 
 /**

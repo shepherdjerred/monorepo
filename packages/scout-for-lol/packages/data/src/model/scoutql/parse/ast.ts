@@ -214,10 +214,9 @@ export function collapsedSpan(offset: number): ScoutQlSpan {
  * single conjunct). Used by time-window recognition over top-level WHERE.
  */
 export function flattenAnd(expr: ScoutQlExprAst): ScoutQlExprAst[] {
-  if (expr.kind === "binary" && expr.op === "and") {
-    return [...flattenAnd(expr.left), ...flattenAnd(expr.right)];
-  }
-  return [expr];
+  return expr.kind === "binary" && expr.op === "and"
+    ? [...flattenAnd(expr.left), ...flattenAnd(expr.right)]
+    : [expr];
 }
 
 function exprKeyList(exprs: ScoutQlExprAst[]): string | null {
@@ -325,8 +324,5 @@ function exprKey(expr: ScoutQlExprAst): string | null {
  */
 export function sameExpr(a: ScoutQlExprAst, b: ScoutQlExprAst): boolean {
   const keyA = exprKey(a);
-  if (keyA === null) {
-    return false;
-  }
-  return keyA === exprKey(b);
+  return keyA !== null && keyA === exprKey(b);
 }

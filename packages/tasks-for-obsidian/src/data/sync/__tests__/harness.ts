@@ -251,9 +251,9 @@ export class FakeServer implements CommandClient {
 
   listTasks(): Promise<Result<Task[], AppError>> {
     const gate = this.gate("listTasks", null, null, null);
-    if (gate !== null && "error" in gate)
-      return Promise.resolve(err(gate.error));
-    return Promise.resolve(ok([...this.tasks.values()].map((t) => ({ ...t }))));
+    return gate !== null && "error" in gate
+      ? Promise.resolve(err(gate.error))
+      : Promise.resolve(ok([...this.tasks.values()].map((t) => ({ ...t }))));
   }
 
   createTask(
@@ -315,8 +315,9 @@ export class FakeServer implements CommandClient {
     const mutationId = options?.mutationId ?? null;
     const gate = this.gate("deleteTask", String(id), null, mutationId);
     if (gate !== null) {
-      if ("error" in gate) return Promise.resolve(err(gate.error));
-      return Promise.resolve(OK_VOID);
+      return "error" in gate
+        ? Promise.resolve(err(gate.error))
+        : Promise.resolve(OK_VOID);
     }
     if (!this.tasks.has(id)) {
       return Promise.resolve(err(new NotFoundError("Task", String(id))));

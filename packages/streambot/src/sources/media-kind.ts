@@ -125,17 +125,15 @@ function isYoutubeTieCategory(category: string): boolean {
 function isSpokenYoutubeTie(input: MediaKindInput): boolean {
   if (input.spoken !== true || input.provider !== "youtube") return false;
   const categories = input.categories;
-  if (
-    categories === undefined ||
-    categories === null ||
-    categories.length === 0
-  ) {
-    return false;
-  }
-  return categories.every(
-    (category) =>
-      category.trim().toLowerCase() === "music" ||
-      isYoutubeTieCategory(category),
+  return (
+    categories !== undefined &&
+    categories !== null &&
+    categories.length > 0 &&
+    categories.every(
+      (category) =>
+        category.trim().toLowerCase() === "music" ||
+        isYoutubeTieCategory(category),
+    )
   );
 }
 
@@ -269,10 +267,9 @@ export function classifyMediaKind(
   //    typical of AI covers and lyric uploads, so they follow the music default instead of
   //    forcing Go Live. Film, TV, Gaming, Sports, and News still go to video.
   if (category === "video") {
-    if (isSpokenYoutubeTie(input)) {
-      return { kind: "music", decidedBy: "spoken-youtube-tie" };
-    }
-    return { kind: "video", decidedBy: "categories" };
+    return isSpokenYoutubeTie(input)
+      ? { kind: "music", decidedBy: "spoken-youtube-tie" }
+      : { kind: "video", decidedBy: "categories" };
   }
   // 7. Provider default. YouTube leans music: the overwhelming majority of what gets queued from it
   //    is listened to rather than watched, and getting it wrong costs a full video encode plus a

@@ -114,8 +114,9 @@ export async function latestRanks(puuids: string[]): Promise<{
   ): Rank | undefined {
     const snapshot = current.find((entry) => {
       if (queueType === "solo") return entry.soloRank !== null;
-      if (queueType === "flex") return entry.flexRank !== null;
-      return entry.ranked5sRank !== null;
+      return queueType === "flex"
+        ? entry.flexRank !== null
+        : entry.ranked5sRank !== null;
     });
     const snapshotValue =
       queueType === "solo"
@@ -123,13 +124,10 @@ export async function latestRanks(puuids: string[]): Promise<{
         : queueType === "flex"
           ? snapshot?.flexRank
           : snapshot?.ranked5sRank;
-    if (
-      snapshot !== undefined &&
+    return snapshot !== undefined &&
       (live == null || snapshot.fetchedAt > live.capturedAt)
-    ) {
-      return parseRank(snapshotValue ?? null);
-    }
-    return parseRank(live?.rankAfter ?? null);
+      ? parseRank(snapshotValue ?? null)
+      : parseRank(live?.rankAfter ?? null);
   }
 
   return {

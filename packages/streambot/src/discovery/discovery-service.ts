@@ -190,10 +190,11 @@ export class DiscoveryService {
   }
 
   private async isHistoryEnabled(scope: DiscoveryScope): Promise<boolean> {
-    if (this.deps.history === undefined) return false;
-    return this.deps.historyEnabled === undefined
-      ? true
-      : await this.deps.historyEnabled(scope);
+    return (
+      this.deps.history !== undefined &&
+      (this.deps.historyEnabled === undefined ||
+        (await this.deps.historyEnabled(scope)))
+    );
   }
 
   async resolve(

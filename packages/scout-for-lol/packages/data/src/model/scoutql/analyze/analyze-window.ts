@@ -68,14 +68,11 @@ function nowMinusInterval(
   const normalized = normalizeIntervalUnit(interval.unit);
   const unit =
     normalized === undefined ? undefined : RELATIVE_UNITS.get(normalized);
-  if (
-    unit === undefined ||
+  return unit === undefined ||
     !Number.isInteger(interval.amount) ||
     interval.amount <= 0
-  ) {
-    return undefined;
-  }
-  return { kind: "relative", amount: interval.amount, unit };
+    ? undefined
+    : { kind: "relative", amount: interval.amount, unit };
 }
 
 function isTimeColumn(expr: ScoutQlExprAst, timeColumn: string): boolean {
@@ -98,10 +95,9 @@ export function recognizeRelativeWindow(
   if ((op === ">=" || op === ">") && isTimeColumn(left, timeColumn)) {
     return nowMinusInterval(right);
   }
-  if ((op === "<=" || op === "<") && isTimeColumn(right, timeColumn)) {
-    return nowMinusInterval(left);
-  }
-  return undefined;
+  return (op === "<=" || op === "<") && isTimeColumn(right, timeColumn)
+    ? nowMinusInterval(left)
+    : undefined;
 }
 
 /** The `t::DATE` / `(t AT TIME ZONE 'Z')::DATE` operand of a calendar BETWEEN. */
@@ -120,15 +116,12 @@ function calendarOperand(
   if (isTimeColumn(inner, timeColumn)) {
     return { timezone: "UTC" };
   }
-  if (
-    inner.kind === "binary" &&
+  return inner.kind === "binary" &&
     inner.op === "at-time-zone" &&
     isTimeColumn(inner.left, timeColumn) &&
     inner.right.kind === "string"
-  ) {
-    return { timezone: inner.right.value };
-  }
-  return undefined;
+    ? { timezone: inner.right.value }
+    : undefined;
 }
 
 export type CalendarRecognition =

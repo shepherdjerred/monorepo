@@ -779,7 +779,7 @@ steps:
       - "packages/homelab/src/cdk8s/dist/*"
     retry: *retry
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 0 # selector skips are reportless; executed runs validate above
@@ -1211,7 +1211,7 @@ steps:
       - "playwright-selection-report.json"
     retry: *retry
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 0 # cache hits are reportless and recorded in the selection artifact
@@ -1305,7 +1305,7 @@ steps:
       - "packages/docs/wiki/dist/*"
     retry: *retry
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 0 # selector skips are reportless; executed runs validate above

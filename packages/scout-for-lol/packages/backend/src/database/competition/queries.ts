@@ -155,11 +155,7 @@ export async function getCompetitionById(
     include: competitionWithSeasonInclude,
   });
 
-  if (!raw) {
-    return undefined;
-  }
-
-  return parseCompetition(raw);
+  return raw ? parseCompetition(raw) : undefined;
 }
 
 /**

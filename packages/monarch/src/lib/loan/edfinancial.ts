@@ -25,8 +25,9 @@ const CENT = 0.005;
 
 function parseUsDate(raw: string): string | undefined {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw.trim());
-  if (match === null) return undefined;
-  return `${match[3] ?? ""}-${match[1] ?? ""}-${match[2] ?? ""}`;
+  return match === null
+    ? undefined
+    : `${match[3] ?? ""}-${match[1] ?? ""}-${match[2] ?? ""}`;
 }
 
 function parseMoney(raw: string): number {

@@ -42,10 +42,9 @@ export function agentTaskFailureStageFor(input: {
   if (!input.reportAttempted) {
     return "execution";
   }
-  if (input.reportDelivered && input.postDeliveryFailureReporting) {
-    return "follow-up-dispatch";
-  }
-  return undefined;
+  return input.reportDelivered && input.postDeliveryFailureReporting
+    ? "follow-up-dispatch"
+    : undefined;
 }
 
 function agentActivitiesFor(

@@ -337,10 +337,9 @@ async function enumeratePrs(
     }));
   }
   const single = pickSinglePr(input);
-  if (single === null) {
-    return { skipped: true, reason: "base-not-main" };
-  }
-  return [single];
+  return single === null
+    ? { skipped: true, reason: "base-not-main" }
+    : [single];
 }
 
 export async function runCheckPrMergeConflictsImpl(

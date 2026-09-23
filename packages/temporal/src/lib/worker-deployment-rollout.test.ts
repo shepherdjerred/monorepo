@@ -167,10 +167,9 @@ function metricValue(expression: string, fixture: Fixture): number {
   if (expression.includes("max_over_time")) {
     return fixture.historicalAlerts ?? 0;
   }
-  if (expression.includes("ALERTS")) {
-    return fixture.alerts ?? 0;
-  }
-  return fixture.workflowPollers ?? 1;
+  return expression.includes("ALERTS")
+    ? (fixture.alerts ?? 0)
+    : (fixture.workflowPollers ?? 1);
 }
 
 function fixtureRunner(

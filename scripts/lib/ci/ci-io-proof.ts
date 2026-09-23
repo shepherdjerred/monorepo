@@ -6,10 +6,7 @@ import type {
 export type FixedCorpusProofKind = "exact" | "baseline-lower-bound" | null;
 
 export function reductionPercent(change: number | null): number | null {
-  if (change === null || change === 0) {
-    return change;
-  }
-  return -change;
+  return change === null || change === 0 ? change : -change;
 }
 
 const BASELINE_LOWER_BOUND_ISSUE_CODES: ReadonlySet<IntegrityIssueCode> =

@@ -90,8 +90,9 @@ export function setLlmSubject(ctx: Context, subject: LlmSubject): Context {
  */
 export function activeLlmSubject(): LlmSubject | undefined {
   const value = context.active().getValue(SUBJECT_CONTEXT_KEY);
-  if (value === undefined) return undefined;
-  return LlmSubjectContextValueSchema.parse(value);
+  return value === undefined
+    ? undefined
+    : LlmSubjectContextValueSchema.parse(value);
 }
 
 /**

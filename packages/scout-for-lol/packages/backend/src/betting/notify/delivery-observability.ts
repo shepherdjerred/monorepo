@@ -64,10 +64,7 @@ function classify(
   if (isPermissionError(error)) {
     return "permission_error";
   }
-  if (isMissingChannelError(error)) {
-    return "channel_missing";
-  }
-  return "error";
+  return isMissingChannelError(error) ? "channel_missing" : "error";
 }
 
 /**

@@ -136,7 +136,8 @@ export function targetClosureDirs(
     if (pkg === undefined) {
       throw new Error(`workspace disappeared while selecting images: ${name}`);
     }
-    if (NON_IMAGE_WORKSPACE_DIRS.has(pkg.dir)) return [];
-    return [pkg.dir.replace(/\/$/, "")];
+    return NON_IMAGE_WORKSPACE_DIRS.has(pkg.dir)
+      ? []
+      : [pkg.dir.replace(/\/$/, "")];
   });
 }

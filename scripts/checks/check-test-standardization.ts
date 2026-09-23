@@ -32,10 +32,9 @@ export function sourceViolation(
   if (forbiddenTestImport.test(contents)) {
     return `${file}: JavaScript and TypeScript tests must import from vitest, not bun:test or node:test`;
   }
-  if (nativeBunTestInvocation.test(contents)) {
-    return `${file}: invoke the workspace's Vitest script instead of spawning bun test`;
-  }
-  return undefined;
+  return nativeBunTestInvocation.test(contents)
+    ? `${file}: invoke the workspace's Vitest script instead of spawning bun test`
+    : undefined;
 }
 
 export function packageScriptViolations(
@@ -94,8 +93,11 @@ function isInvalidNodeHostedVitestStep(
   packageName: string,
   step: TestStep,
 ): boolean {
-  if (step.runner !== "vitest" || step.runtime !== "node") return false;
-  return !isExpectedTemporalWorkflowStep(packageName, step);
+  return (
+    step.runner === "vitest" &&
+    step.runtime === "node" &&
+    !isExpectedTemporalWorkflowStep(packageName, step)
+  );
 }
 
 function isExpectedTemporalWorkflowStep(

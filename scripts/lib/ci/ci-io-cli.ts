@@ -19,8 +19,9 @@ const IsoTimestampSchema = z.preprocess(
     const groups = MINUTE_PRECISION_ISO.exec(value)?.groups;
     const instant = groups?.["instant"];
     const offset = groups?.["offset"];
-    if (instant === undefined || offset === undefined) return value;
-    return `${instant}:00${offset}`;
+    return instant === undefined || offset === undefined
+      ? value
+      : `${instant}:00${offset}`;
   },
   z.iso.datetime({ offset: true }),
 );

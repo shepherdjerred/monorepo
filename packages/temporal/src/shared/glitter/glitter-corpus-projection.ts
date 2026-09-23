@@ -12,10 +12,9 @@ export function sha256(value: string | Uint8Array): string {
 }
 
 export function compareSnowflakes(left: string, right: string): number {
-  if (left.length !== right.length) {
-    return left.length - right.length;
-  }
-  return left.localeCompare(right);
+  return left.length === right.length
+    ? left.localeCompare(right)
+    : left.length - right.length;
 }
 
 function instantMilliseconds(value: string): number {
@@ -154,12 +153,11 @@ function observationPreference(
   const sourceKeyComparison = selected.sourceKey.localeCompare(
     candidate.sourceKey,
   );
-  if (sourceKeyComparison !== 0) {
-    return sourceKeyComparison;
-  }
-  return selectedRawChecksum(selected).localeCompare(
-    selectedRawChecksum(candidate),
-  );
+  return sourceKeyComparison === 0
+    ? selectedRawChecksum(selected).localeCompare(
+        selectedRawChecksum(candidate),
+      )
+    : sourceKeyComparison;
 }
 
 function selectedRawChecksum(observation: CorpusObservation): string {
@@ -308,10 +306,9 @@ function currentMessagePreference(
   const sourceKeyComparison = selected.selectedObservationKey.localeCompare(
     candidate.selectedObservationKey,
   );
-  if (sourceKeyComparison !== 0) {
-    return sourceKeyComparison;
-  }
-  return selected.rawSha256.localeCompare(candidate.rawSha256);
+  return sourceKeyComparison === 0
+    ? selected.rawSha256.localeCompare(candidate.rawSha256)
+    : sourceKeyComparison;
 }
 
 export function mergeCurrentProjection(

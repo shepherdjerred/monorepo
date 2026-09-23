@@ -141,10 +141,9 @@ export function periodStart(
   if (period === "all") {
     return undefined;
   }
-  if (period === "year") {
-    return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-  }
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  return period === "year"
+    ? new Date(Date.UTC(now.getUTCFullYear(), 0, 1))
+    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
 /** How many entries fit on one leaderboard page.

@@ -39,10 +39,11 @@ describe("wiki structure", () => {
 
   test("every page is the home page or lives in a Diátaxis section", () => {
     const misplaced = relativePaths.filter((page) => {
-      if (page === "index.md" || page === "index.mdx") {
-        return false;
-      }
-      return !SECTIONS.some((section) => page.startsWith(`${section}/`));
+      return (
+        page !== "index.md" &&
+        page !== "index.mdx" &&
+        !SECTIONS.some((section) => page.startsWith(`${section}/`))
+      );
     });
 
     expect(misplaced).toEqual([]);

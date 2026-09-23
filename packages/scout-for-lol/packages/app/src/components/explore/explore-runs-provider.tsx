@@ -430,11 +430,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
       startTurn,
       stop,
       status: (conversationId) => {
-        if (runs.has(conversationId)) return "running";
-        return (
-          markers.find((marker) => marker.conversationId === conversationId)
-            ?.state ?? null
-        );
+        return runs.has(conversationId)
+          ? "running"
+          : (markers.find((marker) => marker.conversationId === conversationId)
+              ?.state ?? null);
       },
     }),
     [

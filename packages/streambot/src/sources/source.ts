@@ -166,10 +166,10 @@ export function withSpoken(
 ): Source {
   switch (source.kind) {
     case "file":
-      return { ...source, spoken: spoken === true ? true : undefined };
+      return { ...source, spoken: spoken === true || undefined };
     case "url":
-      return { ...source, spoken: spoken === true ? true : undefined };
+      return { ...source, spoken: spoken === true || undefined };
     case "search":
-      return { ...source, spoken: spoken === true ? true : undefined };
+      return { ...source, spoken: spoken === true || undefined };
   }
 }

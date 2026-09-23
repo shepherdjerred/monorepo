@@ -42,8 +42,9 @@ export function ReportRunStatusBadge({ status }: { status: string | null }) {
   if (status === null) {
     return <Badge variant="outline">—</Badge>;
   }
-  if (status === "SUCCESS" || status === "RUNNING" || status === "FAILED") {
-    return <Badge variant={reportRunVariant(status)}>{status}</Badge>;
-  }
-  return <Badge variant="outline">{status}</Badge>;
+  return status === "SUCCESS" || status === "RUNNING" || status === "FAILED" ? (
+    <Badge variant={reportRunVariant(status)}>{status}</Badge>
+  ) : (
+    <Badge variant="outline">{status}</Badge>
+  );
 }

@@ -16,8 +16,7 @@ function page(results: readonly unknown[], input?: { next?: string }) {
 
 function requestUrl(request: Parameters<OpenAiUsageFetch>[0]): URL {
   if (typeof request === "string") return new URL(request);
-  if (request instanceof URL) return request;
-  return new URL(request.url);
+  return request instanceof URL ? request : new URL(request.url);
 }
 
 const malformedPaginationFetcher: OpenAiUsageFetch = () =>

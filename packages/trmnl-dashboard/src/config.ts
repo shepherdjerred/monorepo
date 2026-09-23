@@ -155,10 +155,10 @@ export function isExpectedUnavailable(
   ignoredGlobs: readonly string[],
 ): boolean {
   const domain = entityId.split(".", 1)[0] ?? "";
-  if (ignoredDomains.includes(domain)) {
-    return true;
-  }
-  return ignoredGlobs.some((glob) => entityIdMatchesGlob(entityId, glob));
+  return (
+    ignoredDomains.includes(domain) ||
+    ignoredGlobs.some((glob) => entityIdMatchesGlob(entityId, glob))
+  );
 }
 
 export function parseEntities(value: string): ConfiguredEntity[] {

@@ -52,7 +52,11 @@ test("charges every billable attempt when the finalizer exhausts its retries", a
         requests += 1;
         return Promise.resolve(invalidDraftResponse());
       },
-      { preconnect: (url: string | URL) => void url },
+      {
+        preconnect: (_url: string | URL) => {
+          // No connection warmup in tests; the stub fetch resolves immediately.
+        },
+      },
     ),
   });
 

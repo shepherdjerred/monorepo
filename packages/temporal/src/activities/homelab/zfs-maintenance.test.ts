@@ -144,10 +144,7 @@ describe("runZfsMaintenanceWithDependencies", () => {
         if (command === "zpool list -H -o name") {
           return "zfspv-pool-nvme\n";
         }
-        if (command.startsWith("zpool status")) {
-          return "state: ONLINE\n";
-        }
-        return "";
+        return command.startsWith("zpool status") ? "state: ONLINE\n" : "";
       },
       (details) => {
         heartbeats.push(details);
@@ -176,10 +173,7 @@ describe("runZfsMaintenanceWithDependencies", () => {
             ? "zfspv-pool-nvme\n"
             : "zfspv-pool-hdd\nzfspv-pool-nvme\n";
         }
-        if (command.startsWith("zpool status")) {
-          return "state: ONLINE\n";
-        }
-        return "";
+        return command.startsWith("zpool status") ? "state: ONLINE\n" : "";
       },
     );
 
@@ -211,10 +205,9 @@ describe("runZfsMaintenanceWithDependencies", () => {
         if (command === "zpool list -H -o name") {
           return "zfspv-pool-nvme\n";
         }
-        if (command.startsWith("zpool status")) {
-          return "scan: scrub in progress\n";
-        }
-        return "";
+        return command.startsWith("zpool status")
+          ? "scan: scrub in progress\n"
+          : "";
       },
     );
 

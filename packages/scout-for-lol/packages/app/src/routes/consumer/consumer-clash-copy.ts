@@ -31,51 +31,45 @@ export function phaseLabel(input: {
   startTime: number;
   now: number;
 }): string {
-  if (input.cancelled) return "Cancelled";
   const startMs = clashEpochMs(input.startTime);
   const registrationMs = clashEpochMs(input.registrationTime);
-  if (startMs > 0 && input.now >= startMs) return "Started";
-  if (registrationMs > 0 && input.now >= registrationMs) {
-    return "Registration open";
-  }
-  return "Upcoming";
+  return input.cancelled
+    ? "Cancelled"
+    : startMs > 0 && input.now >= startMs
+      ? "Started"
+      : registrationMs > 0 && input.now >= registrationMs
+        ? "Registration open"
+        : "Upcoming";
 }
 
 export function formatClashIso(value: string): string {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-  return date.toLocaleString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : date.toLocaleString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
 }
 
 export function sightingOutcomeLabel(
   outcome: "lobby" | "win" | "loss",
 ): string {
-  if (outcome === "lobby") {
-    return "Lobby only";
-  }
-  if (outcome === "win") {
-    return "Win · scored through Feb 2026";
-  }
-  return "Loss · scored through Feb 2026";
+  return outcome === "lobby"
+    ? "Lobby only"
+    : outcome === "win"
+      ? "Win · scored through Feb 2026"
+      : "Loss · scored through Feb 2026";
 }
 
 export function clashTeamLabel(input: {
   teamAbbreviation?: string | undefined;
   teamName?: string | undefined;
 }): string | undefined {
-  if (input.teamAbbreviation !== undefined && input.teamName !== undefined) {
-    return `${input.teamAbbreviation} · ${input.teamName}`;
-  }
-  if (input.teamAbbreviation !== undefined) {
-    return input.teamAbbreviation;
-  }
-  return input.teamName;
+  return input.teamAbbreviation !== undefined && input.teamName !== undefined
+    ? `${input.teamAbbreviation} · ${input.teamName}`
+    : (input.teamAbbreviation ?? input.teamName);
 }

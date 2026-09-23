@@ -66,10 +66,9 @@ export function createHandler(config: AppConfig, deps: AppDeps = {}) {
     }
 
     if (url.pathname === "/api/pets") {
-      if (!(await isPetDashboardEnabled())) {
-        return json({ error: "not found" }, 404);
-      }
-      return json(await collectPets());
+      return (await isPetDashboardEnabled())
+        ? json(await collectPets())
+        : json({ error: "not found" }, 404);
     }
 
     if (url.pathname === "/api/diagnostics") {

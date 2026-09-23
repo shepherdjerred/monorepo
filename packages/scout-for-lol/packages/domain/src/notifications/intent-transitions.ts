@@ -166,10 +166,9 @@ export function confirmDelivered(
   const state = intent.state;
   switch (state.kind) {
     case "sending":
-      if (state.attemptNonce !== args.attemptNonce) {
-        return conflict("attempt-nonce-mismatch");
-      }
-      return applied(withState(intent, deliveredState(args)));
+      return state.attemptNonce === args.attemptNonce
+        ? applied(withState(intent, deliveredState(args)))
+        : conflict("attempt-nonce-mismatch");
     case "delivered":
       return instantsEqual(state.deliveredAt, args.deliveredAt) &&
         state.messageId === args.messageId
@@ -275,12 +274,9 @@ export function suppressStale(
   switch (state.kind) {
     case "pending":
     case "ready": {
-      if (!isInstantAfter(args.at, intent.freshnessDeadline)) {
-        return conflict("not-stale");
-      }
-      return applied(
-        withState(intent, { kind: "suppressed", reason: "stale" }),
-      );
+      return isInstantAfter(args.at, intent.freshnessDeadline)
+        ? applied(withState(intent, { kind: "suppressed", reason: "stale" }))
+        : conflict("not-stale");
     }
     case "sending":
       return conflict("send-in-flight");

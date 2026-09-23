@@ -103,10 +103,9 @@ function achievedSentence(achieved: boolean | null): string {
   if (achieved === true) {
     return "The contract itself evaluated to achieved over this window.";
   }
-  if (achieved === false) {
-    return "The contract itself evaluated to not achieved over this window.";
-  }
-  return "The contract itself could not be evaluated over this window.";
+  return achieved === false
+    ? "The contract itself evaluated to not achieved over this window."
+    : "The contract itself could not be evaluated over this window.";
 }
 
 /**

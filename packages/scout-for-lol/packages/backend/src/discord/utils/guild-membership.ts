@@ -24,8 +24,7 @@ import { client } from "#src/discord/client.ts";
  * account, so it fails open instead.
  */
 export function getActiveServerIds(): Set<string> | undefined {
-  if (!client.isReady() || client.guilds.cache.size === 0) {
-    return undefined;
-  }
-  return new Set(client.guilds.cache.keys());
+  return !client.isReady() || client.guilds.cache.size === 0
+    ? undefined
+    : new Set(client.guilds.cache.keys());
 }

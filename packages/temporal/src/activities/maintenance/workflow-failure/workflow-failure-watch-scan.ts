@@ -58,10 +58,12 @@ function isAfterVisibilityCursor(
   if (cursor === undefined) return true;
   const executionCloseTimeMs = execution.closeTime.getTime();
   const checkpointCloseTimeMs = cursor.closeTime.getTime();
-  if (executionCloseTimeMs < checkpointCloseTimeMs) return true;
-  if (executionCloseTimeMs > checkpointCloseTimeMs) return false;
-  return !(cursor.processedExecutionKeys ?? []).includes(
-    workflowExecutionKey(execution.workflowId, execution.runId),
+  return (
+    executionCloseTimeMs <= checkpointCloseTimeMs &&
+    (executionCloseTimeMs < checkpointCloseTimeMs ||
+      !(cursor.processedExecutionKeys ?? []).includes(
+        workflowExecutionKey(execution.workflowId, execution.runId),
+      ))
   );
 }
 

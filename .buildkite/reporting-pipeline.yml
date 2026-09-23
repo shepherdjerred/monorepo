@@ -34,7 +34,7 @@ steps:
     artifact_paths:
       - ".ci-reports/**/*"
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 1
@@ -119,7 +119,7 @@ steps:
     artifact_paths:
       - ".ci-reports/**/*"
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/scout-for-lol__design-audit/*.xml"
           format: junit
           missing-error: 1
@@ -199,7 +199,7 @@ steps:
     artifact_paths:
       - ".ci-reports/**/*"
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 1

@@ -51,8 +51,7 @@ export function shardTurboInputs(shard: ShardName): readonly string[] {
 export function matchShard(path: string): ShardName {
   if (path.startsWith("packages/scout-for-lol/")) return "scout";
   if (path.startsWith("packages/homelab/")) return "homelab";
-  if (path.startsWith("packages/")) return "packages";
-  return "root";
+  return path.startsWith("packages/") ? "packages" : "root";
 }
 
 export function parseShardName(value: string): ShardName {

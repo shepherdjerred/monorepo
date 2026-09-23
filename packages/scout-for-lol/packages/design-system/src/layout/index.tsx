@@ -82,8 +82,7 @@ export function parseNavbarSessionState(payload: unknown): boolean | undefined {
   if (typeof data !== "object" || data === null || !("user" in data))
     return undefined;
   const user: unknown = data.user;
-  if (user === null) return false;
-  return typeof user === "object" ? true : undefined;
+  return user !== null && (typeof user === "object" || undefined);
 }
 
 export function useNavbarSessionState(): boolean {

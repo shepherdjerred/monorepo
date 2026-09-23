@@ -20,10 +20,9 @@ import { cn } from "#src/lib/cn.ts";
 
 /** Build a filter spec from a set of queues (empty selection = null). */
 function queuesToSpec(queues: QueueType[]): SubscriptionFilterSpec | null {
-  if (queues.length === 0) {
-    return null;
-  }
-  return { version: 1, filters: [{ type: "queue", queues }] };
+  return queues.length === 0
+    ? null
+    : { version: 1, filters: [{ type: "queue", queues }] };
 }
 
 /**
@@ -36,10 +35,7 @@ export function summarizeFilters(
   spec: SubscriptionFilterSpec | null | undefined,
 ): string {
   const queues = subscriptionFilterQueues(spec);
-  if (queues.length === 0) {
-    return "All queues";
-  }
-  return describeSubscriptionFilters(spec);
+  return queues.length === 0 ? "All queues" : describeSubscriptionFilters(spec);
 }
 
 /**

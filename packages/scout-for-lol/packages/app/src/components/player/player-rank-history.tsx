@@ -304,10 +304,9 @@ function tooltipDate(
       day: "numeric",
     });
   }
-  if (typeof axisValue === "string" && axisValue.length > 0) {
-    return axisValue;
-  }
-  return undefined;
+  return typeof axisValue === "string" && axisValue.length > 0
+    ? axisValue
+    : undefined;
 }
 
 function formatTooltip(items: unknown): string {

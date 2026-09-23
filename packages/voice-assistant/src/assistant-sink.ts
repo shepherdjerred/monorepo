@@ -149,8 +149,9 @@ export class PacedAssistantSender implements AssistantAudioSink {
   }
 
   private capturedReplyPcm(): { readonly pcm24k?: Uint8Array } {
-    if (this.capturedPcm.length === 0) return {};
-    return { pcm24k: concatBytes(this.capturedPcm) };
+    return this.capturedPcm.length === 0
+      ? {}
+      : { pcm24k: concatBytes(this.capturedPcm) };
   }
 
   private start(): void {

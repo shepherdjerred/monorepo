@@ -1,5 +1,5 @@
 // renovate: datasource=npm depName=pyright
-export const PYRIGHT_VERSION = "1.1.413";
+export const PYRIGHT_VERSION = "1.1.414";
 
 export function deckCommand(deck: string): string[] {
   return [
@@ -127,18 +127,15 @@ const environmentVariableExcludedPaths = new Set([
 ]);
 
 export function isSearchableEnvironmentVariablePath(path: string): boolean {
-  if (
-    path.startsWith("sandbox/archive/") ||
-    path.startsWith("sandbox/practice/") ||
-    path.startsWith(".build/") ||
-    path.includes("/generated/")
-  ) {
-    return false;
-  }
   return (
+    !path.startsWith("sandbox/archive/") &&
+    !path.startsWith("sandbox/practice/") &&
+    !path.startsWith(".build/") &&
+    !path.includes("/generated/") &&
     environmentVariableSearchExtensions.some((extension) =>
       path.endsWith(extension),
-    ) && !environmentVariableExcludedPaths.has(path)
+    ) &&
+    !environmentVariableExcludedPaths.has(path)
   );
 }
 

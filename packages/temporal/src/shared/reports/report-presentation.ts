@@ -54,8 +54,7 @@ type SubjectPolicy = (report: ReportEnvelopeV1) => string;
 
 function subjectFromCopy(report: ReportEnvelopeV1, copy: SubjectCopy): string {
   if (report.execution === "failed") return copy.failed;
-  if (report.execution === "partial") return copy.partial;
-  return copy[report.verdict];
+  return report.execution === "partial" ? copy.partial : copy[report.verdict];
 }
 
 function agentTaskTitle(title: string): string {
@@ -72,8 +71,9 @@ function agentTaskSubject(report: ReportEnvelopeV1): string {
   ) {
     return `${title} could not finish`;
   }
-  if (report.verdict === "attention") return `Action needed: ${title}`;
-  return `${title}: report ready`;
+  return report.verdict === "attention"
+    ? `Action needed: ${title}`
+    : `${title}: report ready`;
 }
 
 const SUBJECT_POLICIES = {
@@ -199,8 +199,9 @@ function genericSubject(report: ReportEnvelopeV1): string {
     return `Action needed: ${report.title}`;
   }
   if (report.verdict === "pending") return `${report.title} is still pending`;
-  if (report.verdict === "changed") return `${report.title}: changes found`;
-  return `${report.title}: no action needed`;
+  return report.verdict === "changed"
+    ? `${report.title}: changes found`
+    : `${report.title}: no action needed`;
 }
 
 export function hasTailoredReportPresentation(reportType: string): boolean {
@@ -226,10 +227,7 @@ function presentationTone(
   ) {
     return "incomplete";
   }
-  if (report.verdict === "attention" || actionCount > 0) {
-    return "review";
-  }
-  return "ok";
+  return report.verdict === "attention" || actionCount > 0 ? "review" : "ok";
 }
 
 function checkStatus(

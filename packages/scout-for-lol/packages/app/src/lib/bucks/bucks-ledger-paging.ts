@@ -22,10 +22,9 @@ export function adoptSnapshot(
   state: BucksLedgerPagingState,
   serverSnapshotId: number | null,
 ): BucksLedgerPagingState {
-  if (serverSnapshotId === null || state.snapshotId !== undefined) {
-    return state;
-  }
-  return { ...state, snapshotId: serverSnapshotId };
+  return serverSnapshotId === null || state.snapshotId !== undefined
+    ? state
+    : { ...state, snapshotId: serverSnapshotId };
 }
 
 export function clampPage(page: number, totalPages: number): number {

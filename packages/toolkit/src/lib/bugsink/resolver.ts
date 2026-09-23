@@ -119,10 +119,9 @@ async function preflightIssue(
         error: { id: issueId, message: "Issue is muted" },
       };
     }
-    if (issue.is_resolved) {
-      return { kind: "skipped" };
-    }
-    return { kind: "eligible", issue };
+    return issue.is_resolved
+      ? { kind: "skipped" }
+      : { kind: "eligible", issue };
   } catch (error) {
     return {
       kind: "error",
@@ -164,10 +163,9 @@ function verificationError(issue: BugsinkIssue | null): string | null {
   if (issue == null) {
     return "Issue disappeared during verification";
   }
-  if (!issue.is_resolved || issue.is_muted) {
-    return "Verification failed: issue is not resolved and unmuted";
-  }
-  return null;
+  return !issue.is_resolved || issue.is_muted
+    ? "Verification failed: issue is not resolved and unmuted"
+    : null;
 }
 
 async function resolveEligibleIssues(

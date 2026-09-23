@@ -66,18 +66,15 @@ const PLAYER_SNAPSHOT_KINDS = new Set([
 ]);
 
 function observationResource(payload: unknown): string | null {
-  if (
-    payload === null ||
+  return payload === null ||
     typeof payload !== "object" ||
     Array.isArray(payload) ||
     !("resource" in payload) ||
     typeof payload.resource !== "string" ||
     payload.resource.length === 0 ||
     payload.resource.length > 80
-  ) {
-    return null;
-  }
-  return payload.resource;
+    ? null
+    : payload.resource;
 }
 
 async function projectPlayerSnapshot(
@@ -116,15 +113,15 @@ function bodyDigest(observation: ScoutClientObservation): string {
 
 function payloadContainsPuuid(payload: unknown, puuid: string): boolean {
   if (payload === puuid) return true;
-  if (Array.isArray(payload)) {
-    return payload.some((value) => payloadContainsPuuid(value, puuid));
-  }
-  if (payload === null || typeof payload !== "object") return false;
-  return Object.entries(payload).some(
-    ([key, value]) =>
-      ((key === "puuid" || key === "summonerPuuid") && value === puuid) ||
-      payloadContainsPuuid(value, puuid),
-  );
+  return Array.isArray(payload)
+    ? payload.some((value) => payloadContainsPuuid(value, puuid))
+    : payload !== null &&
+        typeof payload === "object" &&
+        Object.entries(payload).some(
+          ([key, value]) =>
+            ((key === "puuid" || key === "summonerPuuid") && value === puuid) ||
+            payloadContainsPuuid(value, puuid),
+        );
 }
 
 export function observationQuarantineReason(
@@ -157,10 +154,9 @@ export function observationQuarantineReason(
       return "observer_puuid_not_in_payload";
     }
   }
-  if (observation.kind === "post_game" && observation.gameId === undefined) {
-    return "missing_post_game_id";
-  }
-  return null;
+  return observation.kind === "post_game" && observation.gameId === undefined
+    ? "missing_post_game_id"
+    : null;
 }
 
 async function createObservation(
@@ -305,10 +301,9 @@ function postGameDeliveryMode(
 ): ScoutClientMatchDispatchItemV2["deliveryMode"] | null {
   const resource = observationResource(observation.payload);
   if (resource === "post_game") return "live";
-  if (/^match_history_game:\d{1,32}$/u.test(resource ?? "")) {
-    return "silent-backfill";
-  }
-  return null;
+  return /^match_history_game:\d{1,32}$/u.test(resource ?? "")
+    ? "silent-backfill"
+    : null;
 }
 
 /**

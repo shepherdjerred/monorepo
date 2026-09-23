@@ -169,10 +169,9 @@ function formatDefaultValue(value: unknown): string | null {
   const stringCheck = StringSchema.safeParse(value);
   if (stringCheck.success) {
     // Truncate long strings
-    if (stringCheck.data.length > 50) {
-      return `"${stringCheck.data.slice(0, 47)}..."`;
-    }
-    return `"${stringCheck.data}"`;
+    return stringCheck.data.length > 50
+      ? `"${stringCheck.data.slice(0, 47)}..."`
+      : `"${stringCheck.data}"`;
   }
 
   // Handle other primitives (numbers, booleans, etc.)

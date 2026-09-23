@@ -60,10 +60,9 @@ export function narrowToSendable(
   if (channel == null) {
     return { kind: "not-found" };
   }
-  if (channel.isSendable()) {
-    return { kind: "ok", channel };
-  }
-  return { kind: "wrong-type", actualType: describeChannelType(channel) };
+  return channel.isSendable()
+    ? { kind: "ok", channel }
+    : { kind: "wrong-type", actualType: describeChannelType(channel) };
 }
 
 /**
@@ -78,10 +77,9 @@ export function narrowToTextBased(
   if (channel == null) {
     return { kind: "not-found" };
   }
-  if (channel.isTextBased()) {
-    return { kind: "ok", channel };
-  }
-  return { kind: "wrong-type", actualType: describeChannelType(channel) };
+  return channel.isTextBased()
+    ? { kind: "ok", channel }
+    : { kind: "wrong-type", actualType: describeChannelType(channel) };
 }
 
 /**
@@ -118,10 +116,9 @@ export async function validateChannelInGuild(
   if (channel == null) {
     return `Channel ${channelId} not found (deleted or no access)`;
   }
-  if (!("guildId" in channel) || channel.guildId !== guildId) {
-    return `Channel ${channelId} is not in this server`;
-  }
-  return null;
+  return !("guildId" in channel) || channel.guildId !== guildId
+    ? `Channel ${channelId} is not in this server`
+    : null;
 }
 
 /** Validate every present channel ID against the guild that admitted the turn. */

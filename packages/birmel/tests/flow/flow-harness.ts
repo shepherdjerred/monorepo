@@ -220,10 +220,9 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/agent.ts", () => ({
 vi.doMock("@shepherdjerred/birmel/agent-runtime/memory-extraction.ts", () => ({
   extractAndApplyTurnMemory: () => {
     state.memoryExtractionCalls += 1;
-    if (state.scenario === "memory-extraction-failure") {
-      return Promise.reject(new Error("MEMORY_EXTRACTION_SECRET_EXCEPTION"));
-    }
-    return Promise.resolve();
+    return state.scenario === "memory-extraction-failure"
+      ? Promise.reject(new Error("MEMORY_EXTRACTION_SECRET_EXCEPTION"))
+      : Promise.resolve();
   },
 }));
 vi.doMock("@shepherdjerred/birmel/persona/guild-persona.ts", () => ({
@@ -250,13 +249,10 @@ vi.doMock("@shepherdjerred/birmel/sessions/service.ts", () => ({
   appendSessionEvent: (rawOptions: unknown) => {
     const options = SessionEventOptionsSchema.parse(rawOptions);
     state.sessionEventCalls += 1;
-    if (
-      state.scenario === "session-persistence-failure" &&
+    return state.scenario === "session-persistence-failure" &&
       options.role === "assistant"
-    ) {
-      return Promise.reject(new Error("SESSION_PERSISTENCE_SECRET_EXCEPTION"));
-    }
-    return Promise.resolve();
+      ? Promise.reject(new Error("SESSION_PERSISTENCE_SECRET_EXCEPTION"))
+      : Promise.resolve();
   },
   isSessionActiveForThread: (rawOptions: unknown) => {
     const options = SessionRevalidationOptionsSchema.parse(rawOptions);

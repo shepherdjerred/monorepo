@@ -147,7 +147,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem(STORAGE_KEYS.feedbackEnabled, String(enabled));
   }, []);
 
-  const isDarkMode = resolveAppearance(appearance, systemAppearance) === "dark";
+  const isDarkMode =
+    resolveAppearance(appearance, systemAppearance ?? "unspecified") === "dark";
 
   const theColors = useMemo(
     () => (isDarkMode ? darkColors : lightColors),

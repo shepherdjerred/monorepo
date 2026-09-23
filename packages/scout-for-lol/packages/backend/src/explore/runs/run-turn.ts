@@ -94,8 +94,9 @@ function toStreamMessage(message: ExploreMessage) {
 function toStreamTerminal(
   terminal: ExploreTurnTerminalEvent,
 ): ExploreStreamEvent {
-  if (terminal.type === "error") return terminal;
-  return { ...terminal, message: toStreamMessage(terminal.message) };
+  return terminal.type === "error"
+    ? terminal
+    : { ...terminal, message: toStreamMessage(terminal.message) };
 }
 
 /**

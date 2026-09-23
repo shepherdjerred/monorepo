@@ -31,13 +31,10 @@ function centralWorkflowPinTargets(
   if (stable === candidate && isLegacyWorkflowPin(stable)) {
     return [CENTRAL_WORKFLOW_STABLE, CENTRAL_WORKFLOW_CANDIDATE];
   }
-  if (
-    stable === candidate ||
+  return stable === candidate ||
     (!isLegacyWorkflowPin(stable) && isLegacyWorkflowPin(candidate))
-  ) {
-    return [CENTRAL_WORKFLOW_CANDIDATE];
-  }
-  return [];
+    ? [CENTRAL_WORKFLOW_CANDIDATE]
+    : [];
 }
 
 function scoutBetaWorkflowPinTargets(
@@ -54,13 +51,10 @@ function scoutBetaWorkflowPinTargets(
   if (stable === candidate && isLegacyWorkflowPin(stable)) {
     return [SCOUT_BETA_WORKFLOW_STABLE, SCOUT_BETA_WORKFLOW_CANDIDATE];
   }
-  if (
-    stable === candidate ||
+  return stable === candidate ||
     (!isLegacyWorkflowPin(stable) && isLegacyWorkflowPin(candidate))
-  ) {
-    return [SCOUT_BETA_WORKFLOW_CANDIDATE];
-  }
-  return [];
+    ? [SCOUT_BETA_WORKFLOW_CANDIDATE]
+    : [];
 }
 
 export function pinCandidatesForDigests(

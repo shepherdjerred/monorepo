@@ -2,13 +2,14 @@ import type { Feedback, PrHealth, TaskState } from "#src/domain/schemas.ts";
 import { linearCommentBodies } from "./public-output.ts";
 
 function feedbackSection(feedback: readonly Feedback[]): string {
-  if (feedback.length === 0) return "No new human feedback.";
-  return feedback
-    .map(
-      (item) =>
-        `- ${item.source} at ${item.createdAt}${item.url === null ? "" : ` (${item.url})`}:\n${item.body}`,
-    )
-    .join("\n\n");
+  return feedback.length === 0
+    ? "No new human feedback."
+    : feedback
+        .map(
+          (item) =>
+            `- ${item.source} at ${item.createdAt}${item.url === null ? "" : ` (${item.url})`}:\n${item.body}`,
+        )
+        .join("\n\n");
 }
 
 /**

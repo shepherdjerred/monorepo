@@ -58,13 +58,11 @@ async function existingSubscription(
     where: { serverId_alias: { serverId: input.guildId, alias: input.alias } },
     include: { subscriptions: { select: { channelId: true } } },
   });
-  if (
-    player?.subscriptions.some((row) => row.channelId === input.channelId) ===
-    true
-  ) {
-    return `${input.alias} is already subscribed in that channel. Adding this account would only attach it to the existing player.`;
-  }
-  return null;
+  return player?.subscriptions.some(
+    (row) => row.channelId === input.channelId,
+  ) === true
+    ? `${input.alias} is already subscribed in that channel. Adding this account would only attach it to the existing player.`
+    : null;
 }
 
 /**

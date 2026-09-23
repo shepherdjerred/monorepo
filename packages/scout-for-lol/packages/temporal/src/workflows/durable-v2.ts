@@ -405,10 +405,9 @@ function recoveryCounts(
   if (state.kind === "processing") {
     return { kind: "observed", counts: state.counts };
   }
-  if (observed?.kind === "processing") {
-    return { kind: "observed", counts: observed.counts };
-  }
-  return { kind: "unobserved" };
+  return observed?.kind === "processing"
+    ? { kind: "observed", counts: observed.counts }
+    : { kind: "unobserved" };
 }
 
 /**

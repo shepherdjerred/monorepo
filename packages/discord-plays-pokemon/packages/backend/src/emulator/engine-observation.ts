@@ -159,8 +159,7 @@ function movementModeFromFlags(flags: number): string {
   if ((flags & 0x10) !== 0) return "diving";
   if ((flags & 0x02) !== 0) return "mach bike";
   if ((flags & 0x04) !== 0) return "acro bike";
-  if ((flags & 0x80) !== 0) return "running";
-  return "on foot";
+  return (flags & 0x80) === 0 ? "on foot" : "running";
 }
 
 function collision(code: number): CollisionObservation {

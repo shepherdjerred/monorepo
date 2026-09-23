@@ -181,16 +181,14 @@ function playlistItemPlacement(
   next: boolean,
 ): MediaPlacement {
   if (index === 0 && placement === "now") return "now";
-  if (placement === "next" || next) return "next";
-  return "queue";
+  return placement === "next" || next ? "next" : "queue";
 }
 
 function playlistEventType(
   placement: MediaPlacement,
 ): "PLAY_NOW" | "ADD_NEXT" | "ADD" {
   if (placement === "now") return "PLAY_NOW";
-  if (placement === "next") return "ADD_NEXT";
-  return "ADD";
+  return placement === "next" ? "ADD_NEXT" : "ADD";
 }
 
 async function playlistHistoryEnabled(
@@ -201,9 +199,10 @@ async function playlistHistoryEnabled(
     readonly userId: string;
   } | null,
 ): Promise<boolean> {
-  if (scope === null || deps.history === undefined) return false;
   return (
-    deps.featureGate === undefined || (await deps.featureGate.history(scope))
+    scope !== null &&
+    deps.history !== undefined &&
+    (deps.featureGate === undefined || (await deps.featureGate.history(scope)))
   );
 }
 

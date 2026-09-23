@@ -108,14 +108,12 @@ function operationIsReadyForCurrentRevision(
   operationRevision: string | undefined,
   currentRevision: string | undefined,
 ): boolean {
-  if (operationIsReady(phase)) {
-    return true;
-  }
   return (
-    (phase === "Failed" || phase === "Error") &&
-    operationRevision !== undefined &&
-    currentRevision !== undefined &&
-    operationRevision !== currentRevision
+    operationIsReady(phase) ||
+    ((phase === "Failed" || phase === "Error") &&
+      operationRevision !== undefined &&
+      currentRevision !== undefined &&
+      operationRevision !== currentRevision)
   );
 }
 
@@ -213,10 +211,9 @@ function expectedApplicationFailure(
   if (!itemOperationIsReady(item)) {
     return `${wanted.name}: Operation=${operationPhase ?? "?"}`;
   }
-  if (wanted.revision !== undefined && revision !== wanted.revision) {
-    return `${wanted.name}: Revision=${revision ?? "?"} Expected=${wanted.revision}`;
-  }
-  return undefined;
+  return wanted.revision !== undefined && revision !== wanted.revision
+    ? `${wanted.name}: Revision=${revision ?? "?"} Expected=${wanted.revision}`
+    : undefined;
 }
 
 export function releaseTreeReadiness(

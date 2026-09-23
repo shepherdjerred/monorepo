@@ -57,7 +57,7 @@ function LabeledControl(
   props: CommonFieldProps & {
     error: string | undefined;
     children: (presentation: {
-      invalid: true | undefined;
+      invalid: boolean;
       describedBy: string | undefined;
     }) => ReactNode;
   },
@@ -69,7 +69,7 @@ function LabeledControl(
     <Field className={props.fieldClassName}>
       <Label htmlFor={props.id}>{props.label}</Label>
       {props.children({
-        invalid: props.error === undefined ? undefined : true,
+        invalid: props.error !== undefined,
         describedBy: describedBy(
           descriptionId,
           errorId,
@@ -142,7 +142,7 @@ function setRef<TValue>(ref: Ref<TValue> | undefined, value: TValue | null) {
 function nativeControlProps<TControl extends NativeControl>(props: {
   name: string;
   value: string;
-  presentation: { invalid: true | undefined; describedBy: string | undefined };
+  presentation: { invalid: boolean; describedBy: string | undefined };
   onValueChange: (value: string) => void;
   onBlur: () => void;
   updateNativeError: (control: TControl) => void;

@@ -167,10 +167,7 @@ async function currentMastery(
       rows: topChampionMastery(snapshot.entries, count),
     };
   }
-  if (local === null) {
-    return null;
-  }
-  return fromLocal(local);
+  return local === null ? null : fromLocal(local);
 }
 
 export function createRiotPlayerExploreTools(input: {

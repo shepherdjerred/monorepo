@@ -361,10 +361,9 @@ function usage(): never {
 }
 
 function parseAction(value: string | undefined): TofuAction {
-  if (value === "validate" || value === "plan" || value === "apply") {
-    return value;
-  }
-  return usage();
+  return value === "validate" || value === "plan" || value === "apply"
+    ? value
+    : usage();
 }
 
 async function plan(

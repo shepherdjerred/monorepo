@@ -66,8 +66,9 @@ export function codexFinalizationToolViolation(input: {
   ) {
     return undefined;
   }
-  if (!CODEX_TOOL_ITEM_TYPES.has(input.event.item.type)) return undefined;
-  return `Codex finalization invoked the ${input.event.item.type} tool; the finalization phase may only reason over the captured evidence catalog`;
+  return CODEX_TOOL_ITEM_TYPES.has(input.event.item.type)
+    ? `Codex finalization invoked the ${input.event.item.type} tool; the finalization phase may only reason over the captured evidence catalog`
+    : undefined;
 }
 
 export function codexAgentStepViolation(input: {

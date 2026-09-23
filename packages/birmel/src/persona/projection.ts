@@ -7,10 +7,9 @@ function toSingleLine(value: string): string {
 
 function renderList(title: string, values: readonly string[], limit: number) {
   const selected = values.slice(0, limit);
-  if (selected.length === 0) {
-    return "";
-  }
-  return `${title}:\n${selected.map((value) => `- ${toSingleLine(value)}`).join("\n")}`;
+  return selected.length === 0
+    ? ""
+    : `${title}:\n${selected.map((value) => `- ${toSingleLine(value)}`).join("\n")}`;
 }
 
 function renderSummary(summary: string | string[]): string {

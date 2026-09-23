@@ -403,8 +403,7 @@ async function runChild(key: ScenarioKey, romPath: string): Promise<void> {
 // ---- parent mode -----------------------------------------------------------
 
 function fmtNum(n: number, digits = 2): string {
-  if (!Number.isFinite(n)) return "∞";
-  return n.toFixed(digits);
+  return Number.isFinite(n) ? n.toFixed(digits) : "∞";
 }
 
 function evaluateThresholds(r: ChildResult): {
@@ -538,8 +537,7 @@ async function runParent(romPath: string, only?: ScenarioKey): Promise<number> {
 
 function argValue(flag: string): string | undefined {
   const idx = process.argv.indexOf(flag);
-  if (idx === -1) return undefined;
-  return process.argv[idx + 1];
+  return idx === -1 ? undefined : process.argv[idx + 1];
 }
 
 const isChild = process.argv.includes("--child");

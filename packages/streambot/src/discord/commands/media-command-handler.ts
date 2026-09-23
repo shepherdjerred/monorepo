@@ -312,15 +312,18 @@ export class MediaCommandHandler {
     interaction: CommandInteraction,
   ): Promise<boolean> {
     const scope = this.scope(interaction);
-    return scope !== null && this.deps.featureGate !== undefined
-      ? await this.deps.featureGate.assistantV2(scope)
-      : true;
+    return (
+      scope === null ||
+      this.deps.featureGate === undefined ||
+      (await this.deps.featureGate.assistantV2(scope))
+    );
   }
 
   private async historyEnabled(scope: DiscoveryScope): Promise<boolean> {
-    return this.deps.featureGate === undefined
-      ? true
-      : await this.deps.featureGate.history(scope);
+    return (
+      this.deps.featureGate === undefined ||
+      (await this.deps.featureGate.history(scope))
+    );
   }
 
   private async runBoundary(

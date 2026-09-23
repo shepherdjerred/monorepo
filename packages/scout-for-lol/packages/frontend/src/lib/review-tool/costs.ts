@@ -78,10 +78,7 @@ function calculateStageCost(trace: StageTrace): StageCost {
  * Calculate cost for image generation stage
  */
 function calculateImageCost(trace: ImageGenerationTrace): number {
-  if (!trace.response.imageGenerated) {
-    return 0;
-  }
-  return getImagePricing(trace.model);
+  return trace.response.imageGenerated ? getImagePricing(trace.model) : 0;
 }
 
 /**

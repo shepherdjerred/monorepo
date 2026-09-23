@@ -51,13 +51,9 @@ async function checkSpf(domain: string): Promise<DnsRecordResult> {
     // Count DNS lookups (each include/a/mx/exists is a lookup, max 10)
     const lookupTerms = spf.match(/\b(?:include|a|mx|exists|redirect)[:=]/g);
     const lookupCount = lookupTerms?.length ?? 0;
-    if (lookupCount > 10) {
-      return error(
-        `SPF exceeds 10-lookup limit: ${String(lookupCount)} lookups`,
-      );
-    }
-
-    return ok(`SPF valid: ${spf}`);
+    return lookupCount > 10
+      ? error(`SPF exceeds 10-lookup limit: ${String(lookupCount)} lookups`)
+      : ok(`SPF valid: ${spf}`);
   } catch (error_) {
     return error(`SPF lookup failed: ${String(error_)}`);
   }
@@ -78,11 +74,9 @@ async function checkDmarc(domain: string): Promise<DnsRecordResult> {
     const policyMatch = /;\s*p=(\w+)/.exec(dmarc);
     const policy = policyMatch?.[1] ?? "none";
 
-    if (policy === "none") {
-      return warning("DMARC policy is none (monitoring only)");
-    }
-
-    return ok(`DMARC valid: policy=${policy}`);
+    return policy === "none"
+      ? warning("DMARC policy is none (monitoring only)")
+      : ok(`DMARC valid: policy=${policy}`);
   } catch (error_) {
     return error(`DMARC lookup failed: ${String(error_)}`);
   }
@@ -97,12 +91,9 @@ async function checkMx(
 
     if (parked) {
       // Parked domains should have null MX (0 .) or no MX
-      if (records.length === 0) {
-        return ok("No MX records (correct for parked domain)");
-      }
-      return warning(
-        `Parked domain has ${String(records.length)} MX record(s)`,
-      );
+      return records.length === 0
+        ? ok("No MX records (correct for parked domain)")
+        : warning(`Parked domain has ${String(records.length)} MX record(s)`);
     }
 
     if (records.length === 0) {
@@ -115,10 +106,9 @@ async function checkMx(
       .join(", ");
     return ok(`MX records: ${mxList}`);
   } catch {
-    if (parked) {
-      return ok("No MX records (correct for parked domain)");
-    }
-    return error("MX lookup failed");
+    return parked
+      ? ok("No MX records (correct for parked domain)")
+      : error("MX lookup failed");
   }
 }
 

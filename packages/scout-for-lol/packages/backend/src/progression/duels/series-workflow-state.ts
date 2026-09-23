@@ -47,8 +47,7 @@ function closedSeriesResult(
   deadlineAt: Date,
 ): ScoutDuelSeriesRefreshResult | null {
   if (TERMINAL_STATES.has(state)) return refreshResult(state, deadlineAt);
-  if (deadlineAt <= new Date()) return refreshResult(state, deadlineAt);
-  return null;
+  return deadlineAt <= new Date() ? refreshResult(state, deadlineAt) : null;
 }
 
 async function currentRefreshResult(

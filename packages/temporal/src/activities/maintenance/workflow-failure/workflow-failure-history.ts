@@ -33,10 +33,9 @@ const TIMEOUT_CLASSIFICATIONS: Readonly<
 };
 
 function eventRecord(event: unknown): Record<string, unknown> | undefined {
-  if (typeof event !== "object" || event === null) {
-    return undefined;
-  }
-  return UnknownRecordSchema.parse(event);
+  return typeof event !== "object" || event === null
+    ? undefined
+    : UnknownRecordSchema.parse(event);
 }
 
 function eventId(value: unknown): string | undefined {
@@ -143,10 +142,9 @@ function timedOutActivityTaskScheduledEventId(
 }
 
 function isScheduleToStartTimeout(value: unknown): boolean {
-  if (typeof value === "string") {
-    return value.toUpperCase().includes("SCHEDULE_TO_START");
-  }
-  return value === 2;
+  return typeof value === "string"
+    ? value.toUpperCase().includes("SCHEDULE_TO_START")
+    : value === 2;
 }
 
 function activityTaskTimedOutAsScheduleToStart(event: unknown): boolean {
@@ -179,10 +177,9 @@ function historyEvents(history: unknown): readonly unknown[] {
   if (Array.isArray(history)) {
     return history;
   }
-  if (typeof history !== "object" || history === null) {
-    return [];
-  }
-  return HistorySchema.parse(history).events ?? [];
+  return typeof history !== "object" || history === null
+    ? []
+    : (HistorySchema.parse(history).events ?? []);
 }
 
 function eventTypeName(value: unknown): string | undefined {

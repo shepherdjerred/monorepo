@@ -106,6 +106,7 @@ export async function handleCustomAuthRoutes(
     return new Response("Method Not Allowed", { status: 405, headers });
   }
   const parsed = await parseRequestBody(request, headers);
-  if ("response" in parsed) return parsed.response;
-  return authenticate(route.exchange, parsed.body, headers);
+  return "response" in parsed
+    ? parsed.response
+    : authenticate(route.exchange, parsed.body, headers);
 }

@@ -13,10 +13,9 @@ function applyOverwrite(
   permissions: bigint,
   overwrite: { allow: string; deny: string } | undefined,
 ): bigint {
-  if (overwrite === undefined) {
-    return permissions;
-  }
-  return (permissions & ~BigInt(overwrite.deny)) | BigInt(overwrite.allow);
+  return overwrite === undefined
+    ? permissions
+    : (permissions & ~BigInt(overwrite.deny)) | BigInt(overwrite.allow);
 }
 
 export function effectiveChannelPermissions(input: {

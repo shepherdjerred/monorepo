@@ -262,8 +262,9 @@ export function attributeRaisedInReview(
     if (left.submittedAt === right.submittedAt)
       return left.seenAt - right.seenAt;
     if (left.submittedAt === null) return 1;
-    if (right.submittedAt === null) return -1;
-    return left.submittedAt.localeCompare(right.submittedAt);
+    return right.submittedAt === null
+      ? -1
+      : left.submittedAt.localeCompare(right.submittedAt);
   });
 
   for (const [index, group] of ordered.entries()) {

@@ -3,17 +3,17 @@ import type { AmazonCharge } from "./types.ts";
 export function parseAmazonDate(text: string): string {
   const cleaned = text.replaceAll(/\s+/g, " ").trim();
   const parsed = new Date(cleaned);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toISOString().split("T")[0] ?? cleaned;
-  }
-  return cleaned;
+  return Number.isNaN(parsed.getTime())
+    ? cleaned
+    : (parsed.toISOString().split("T")[0] ?? cleaned);
 }
 
 export function parsePrice(text: string): number {
   const cleaned = text.replaceAll(/[^\d,.]/g, "");
   const match = /[\d,]+\.\d{2}/.exec(cleaned);
-  if (match?.[0] === undefined) return 0;
-  return Number.parseFloat(match[0].replaceAll(",", ""));
+  return match?.[0] === undefined
+    ? 0
+    : Number.parseFloat(match[0].replaceAll(",", ""));
 }
 
 // Rows extracted in document order from the payments transaction-history

@@ -70,8 +70,7 @@ function renderableQuery(id: string): string {
   if (id === "bump_chart") {
     return `SELECT DATE_TRUNC('week', game_creation_at) AS week, champion, COUNT(*) AS games ${from} ${bound} GROUP BY DATE_TRUNC('week', game_creation_at), champion RENDER bump_chart`;
   }
-  if (id === "calendar_heatmap") {
-    return `SELECT DATE_TRUNC('day', game_creation_at) AS day, COUNT(*) AS games ${from} ${bound} GROUP BY DATE_TRUNC('day', game_creation_at) RENDER calendar_heatmap`;
-  }
-  return `SELECT COUNT(*) AS games ${from} ${bound} GROUP BY champion RENDER ${id}`;
+  return id === "calendar_heatmap"
+    ? `SELECT DATE_TRUNC('day', game_creation_at) AS day, COUNT(*) AS games ${from} ${bound} GROUP BY DATE_TRUNC('day', game_creation_at) RENDER calendar_heatmap`
+    : `SELECT COUNT(*) AS games ${from} ${bound} GROUP BY champion RENDER ${id}`;
 }
