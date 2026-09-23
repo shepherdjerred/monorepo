@@ -261,8 +261,8 @@
       "project": ["src/**/*.ts"]
     },
     "packages/toolkit": {
-      "entry": ["src/**/*.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/**/*.ts", "src/**/*.tsx"],
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "packages/tasknotes-macos": {
       "entry": ["scripts/*.ts"],

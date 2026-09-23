@@ -30,6 +30,7 @@ Platform commands (native CLI passthroughs):
   tailscale   Tailscale CLI
 
 Monorepo workflows:
+  brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
   pr health [PR_NUMBER]        Check merge, exact-head Buildkite CI, and review
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
@@ -56,6 +57,7 @@ Examples:
   toolkit prom query 'up == 0'
   toolkit loki query '{namespace="temporal"}'
   toolkit pr health
+  toolkit brim --dry-run
   toolkit deployed scout/prod
   toolkit history recent --since 7d
   toolkit history search "kubernetes" --since 30d
@@ -142,6 +144,11 @@ async function main(): Promise<void> {
     case "backup": {
       const { handleBackupCommand } = await import("./handlers/backup.ts");
       await handleBackupCommand(subcommand, args.slice(2));
+      return;
+    }
+    case "brim": {
+      const { handleBrimCommand } = await import("./handlers/brim.ts");
+      await handleBrimCommand(args.slice(1));
       return;
     }
     default:

@@ -32,13 +32,22 @@ if (import.meta.main) {
     ],
     root,
   );
+  await run(
+    ["bun", "build", "./src/brim.ts", "--compile", "--outfile=dist/brim"],
+    root,
+  );
   await mkdir(`${home}/.local/bin`, { recursive: true });
   await rm(paths.binary, { force: true });
   await Bun.write(paths.binary, Bun.file(`${root}/dist/toolkit`));
   await chmod(paths.binary, 0o755);
+  await rm(paths.brimBinary, { force: true });
+  await Bun.write(paths.brimBinary, Bun.file(`${root}/dist/brim`));
+  await chmod(paths.brimBinary, 0o755);
   if (process.platform === "darwin") {
     await run(["codesign", "--force", "--sign", "-", paths.binary], root);
+    await run(["codesign", "--force", "--sign", "-", paths.brimBinary], root);
   }
   await rm(paths.legacyBinary, { force: true });
   console.log(`Installed toolkit to ${paths.binary}`);
+  console.log(`Installed brim to ${paths.brimBinary}`);
 }
