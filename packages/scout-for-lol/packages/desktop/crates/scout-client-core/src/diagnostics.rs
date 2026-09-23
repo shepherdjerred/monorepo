@@ -237,6 +237,7 @@ pub struct Counters {
     replay_uploads: AtomicU64,
     replay_deferrals: AtomicU64,
     replay_rejections: AtomicU64,
+    replay_abandonments: AtomicU64,
     http_2xx: AtomicU64,
     http_4xx: AtomicU64,
     http_5xx: AtomicU64,
@@ -291,6 +292,11 @@ impl Counters {
         counter.fetch_add(1, Ordering::Relaxed);
     }
 
+    /// Count a replay this client has stopped offering.
+    pub fn replay_abandoned(&self) {
+        self.replay_abandonments.fetch_add(1, Ordering::Relaxed);
+    }
+
     /// Count a failed exchange with the local League client.
     pub fn lcu_error(&self) {
         self.lcu_errors.fetch_add(1, Ordering::Relaxed);
@@ -323,6 +329,10 @@ impl Counters {
             (
                 "replay_rejections",
                 self.replay_rejections.load(Ordering::Relaxed),
+            ),
+            (
+                "replay_abandoned",
+                self.replay_abandonments.load(Ordering::Relaxed),
             ),
             ("http_2xx", self.http_2xx.load(Ordering::Relaxed)),
             ("http_4xx", self.http_4xx.load(Ordering::Relaxed)),

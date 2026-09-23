@@ -5,7 +5,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use reqwest::{Client, StatusCode};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use url::Url;
 use uuid::Uuid;
@@ -35,6 +35,39 @@ pub enum ReplayUploadOutcome {
     Accepted,
     /// Content-addressed replay was already present.
     AlreadyAccepted,
+}
+
+/// What this device is holding, offered before any of it is sent.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReplayOffer<'a> {
+    /// SHA-256 of the file, which is also how the server addresses it.
+    pub digest: &'a str,
+    /// Size on disk.
+    pub bytes: u64,
+    /// Platform the replay names, when the filename carried one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub platform_id: Option<&'a str>,
+}
+
+/// What the server wants done with an offered replay.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReplayOfferDecision {
+    /// Send it.
+    Want,
+    /// Already stored; stop offering.
+    Have,
+    /// Refused for good; never offer this file again.
+    Never,
+    /// Nothing can vouch for the game yet, but something still might.
+    Later,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ReplayOfferResponse {
+    decision: ReplayOfferDecision,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -232,11 +265,55 @@ impl ScoutBackendClient {
     /// # Errors
     ///
     /// Returns a typed file, transport, or server-status error.
+    /// Ask whether a replay is worth sending before sending any of it.
+    ///
+    /// Only the server can answer: it knows whether the file is already
+    /// stored, whether anything can vouch for the game, and whether this
+    /// account is over quota. Asking first turns a refusal into one small
+    /// round trip instead of a multi-megabyte upload that is rejected before
+    /// its body is read — the shape that reached this client as
+    /// `502 Bad Gateway`, because the proxy saw the origin close underneath a
+    /// request still being written.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed transport or server-status error.
+    pub async fn offer_replay(
+        &self,
+        credential: &DeviceCredential,
+        game_id: &str,
+        offer: &ReplayOffer<'_>,
+    ) -> Result<ReplayOfferDecision, BackendError> {
+        let response: ReplayOfferResponse = self
+            .http
+            .post(self.endpoint(&format!("/api/scout-client/v1/replays/{game_id}/offer"))?)
+            .bearer_auth(&credential.token)
+            .json(offer)
+            .send()
+            .await
+            .map_err(BackendError::Request)?
+            .checked()
+            .await?
+            .json()
+            .await
+            .map_err(BackendError::Request)?;
+        Ok(response.decision)
+    }
+
+    /// Stream one completed ROFL through the Scout backend relay.
+    ///
+    /// Call [`Self::offer_replay`] first: this sends the whole file, and the
+    /// server's refusals happen before it reads any of it.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed file, transport, or server-status error.
     pub async fn upload_replay(
         &self,
         credential: &DeviceCredential,
         game_id: &str,
         digest: &str,
+        platform_id: Option<&str>,
         path: &Path,
     ) -> Result<ReplayUploadOutcome, BackendError> {
         let file = tokio::fs::File::open(path)
@@ -254,6 +331,13 @@ impl ScoutBackendClient {
             .header("Content-Type", "application/vnd.riot.rofl")
             .header("Content-Length", bytes)
             .header("X-Scout-SHA256", digest)
+            // The route carries a bare game id, so the platform the replay
+            // names would otherwise be lost and the server could not resolve
+            // the canonical match id it needs to look the game up.
+            .header(
+                "X-Scout-Platform",
+                platform_id.unwrap_or_default().to_owned(),
+            )
             .body(reqwest::Body::from(file))
             .timeout(REPLAY_UPLOAD_TIMEOUT)
             .send()

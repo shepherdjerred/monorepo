@@ -8,7 +8,9 @@ use std::sync::{Arc, RwLock};
 use std::time::{Duration, UNIX_EPOCH};
 
 use directories::ProjectDirs;
-use scout_client_core::backend::{BackendError, ScoutBackendClient};
+use scout_client_core::backend::{
+    BackendError, ReplayOffer, ReplayOfferDecision, ScoutBackendClient,
+};
 use scout_client_core::credentials::DeviceCredential;
 use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics, FileSink,
@@ -552,6 +554,7 @@ async fn scan_replay_entry(
         if !is_stable {
             return Ok(ReplayDelivery::Settled);
         }
+        let platform_id = replay_platform_id(&path);
         let Some(game_id) = replay_game_id(&path) else {
             return Ok(ReplayDelivery::Settled);
         };
@@ -590,6 +593,7 @@ async fn scan_replay_entry(
             diagnostics,
             &ReplayCandidate {
                 game_id: &game_id,
+                platform_id: platform_id.as_deref(),
                 digest: &digest,
                 path: &path,
                 bytes: metadata.len(),
@@ -614,6 +618,26 @@ async fn scan_replay_entry(
 
 /// Number of deferrals after which a replay is worth a warning.
 const REPLAY_DEFERRAL_ATTENTION_ATTEMPTS: i64 = 5;
+/// Deferrals after which a replay stops being offered at all.
+///
+/// A game nobody can vouch for is usually a game nobody ever will: it was
+/// played before this account had a client watching, and it has already aged
+/// out of the twenty-game match history the client can read. Retrying it every
+/// scan forever costs a request each time and buries everything else in the
+/// diagnostics.
+const REPLAY_DEFERRAL_LIMIT: i64 = 12;
+
+/// What the offer settled, before any bytes are read.
+enum ReplayOfferOutcome {
+    /// The server wants it; upload.
+    Send,
+    /// Nothing more to do for this file, now or ever.
+    Settled,
+    /// Ask again on a later scan.
+    Deferred,
+    /// The offer itself failed; record it and move to the next file.
+    Unresolved(String),
+}
 
 /// Record one Scout backend call and hand back its result as a message.
 ///
@@ -656,9 +680,187 @@ fn record_backend_outcome<T>(
     outcome.map_err(|error| error.to_string())
 }
 
+/// Ask before sending, and record what the server said.
+async fn offer_replay(
+    backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
+    credential: &DeviceCredential,
+    diagnostics: &Diagnostics,
+    candidate: &ReplayCandidate<'_>,
+) -> Result<ReplayOfferOutcome, String> {
+    let started = std::time::Instant::now();
+    let outcome = backend
+        .offer_replay(
+            credential,
+            candidate.game_id,
+            &ReplayOffer {
+                digest: candidate.digest,
+                bytes: candidate.bytes,
+                platform_id: candidate.platform_id,
+            },
+        )
+        .await;
+    let duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let status = outcome.as_ref().err().and_then(BackendError::status);
+    diagnostics.counters().http_response(status);
+
+    let decision = match outcome {
+        Ok(decision) => decision,
+        // A backend that predates the offer route has no opinion to give, so
+        // fall back to the behaviour that existed before it: upload and let
+        // the server refuse. This keeps a client that ships ahead of its
+        // server working rather than stalling every replay on a 404.
+        Err(error) if status == Some(404) => {
+            record_replay_event(
+                diagnostics,
+                ReplayEvent {
+                    level: DiagnosticLevel::Info,
+                    operation: "offer_replay",
+                    outcome: DiagnosticOutcome::Skipped,
+                    status,
+                    duration_ms,
+                    bytes: candidate.bytes,
+                    detail: Some("backend does not accept offers yet".to_owned()),
+                },
+            );
+            let _ = error;
+            return Ok(ReplayOfferOutcome::Send);
+        }
+        Err(error) => {
+            let detail = error
+                .server_message()
+                .map_or_else(|| error.to_string(), str::to_owned);
+            record_replay_event(
+                diagnostics,
+                ReplayEvent {
+                    level: DiagnosticLevel::Error,
+                    operation: "offer_replay",
+                    outcome: DiagnosticOutcome::Failed,
+                    status,
+                    duration_ms,
+                    bytes: candidate.bytes,
+                    detail: Some(detail.clone()),
+                },
+            );
+            return Ok(ReplayOfferOutcome::Unresolved(detail));
+        }
+    };
+
+    let (level, result, detail) = match decision {
+        ReplayOfferDecision::Want => (
+            DiagnosticLevel::Info,
+            DiagnosticOutcome::Succeeded,
+            "wanted",
+        ),
+        ReplayOfferDecision::Have => (
+            DiagnosticLevel::Info,
+            DiagnosticOutcome::Skipped,
+            "already stored",
+        ),
+        ReplayOfferDecision::Never => (
+            DiagnosticLevel::Warn,
+            DiagnosticOutcome::Failed,
+            "refused for good",
+        ),
+        ReplayOfferDecision::Later => (
+            DiagnosticLevel::Info,
+            DiagnosticOutcome::Deferred,
+            "no evidence yet",
+        ),
+    };
+    record_replay_event(
+        diagnostics,
+        ReplayEvent {
+            level,
+            operation: "offer_replay",
+            outcome: result,
+            status,
+            duration_ms,
+            bytes: candidate.bytes,
+            detail: Some(detail.to_owned()),
+        },
+    );
+    apply_offer_decision(outbox, diagnostics, candidate, decision, duration_ms)
+}
+
+/// Turn the server's answer into a durable local receipt.
+fn apply_offer_decision(
+    outbox: &ObservationOutbox,
+    diagnostics: &Diagnostics,
+    candidate: &ReplayCandidate<'_>,
+    decision: ReplayOfferDecision,
+    duration_ms: u64,
+) -> Result<ReplayOfferOutcome, String> {
+    match decision {
+        ReplayOfferDecision::Want => Ok(ReplayOfferOutcome::Send),
+        ReplayOfferDecision::Have => {
+            outbox
+                .mark_replay_uploaded(candidate.digest, candidate.game_id)
+                .map_err(|error| error.to_string())?;
+            Ok(ReplayOfferOutcome::Settled)
+        }
+        ReplayOfferDecision::Never => {
+            diagnostics.counters().replay_abandoned();
+            abandon_replay(outbox, candidate)?;
+            Ok(ReplayOfferOutcome::Settled)
+        }
+        ReplayOfferDecision::Later => {
+            diagnostics.counters().replay_deferred();
+            let attempts = outbox
+                .record_replay_deferral(candidate.digest, candidate.game_id)
+                .map_err(|error| error.to_string())?;
+            if attempts < REPLAY_DEFERRAL_LIMIT {
+                if attempts >= REPLAY_DEFERRAL_ATTENTION_ATTEMPTS {
+                    // Still retryable, but long enough to be worth noticing.
+                    record_replay_event(
+                        diagnostics,
+                        ReplayEvent {
+                            level: DiagnosticLevel::Warn,
+                            operation: "offer_replay",
+                            outcome: DiagnosticOutcome::Deferred,
+                            status: None,
+                            duration_ms,
+                            bytes: candidate.bytes,
+                            detail: Some(format!("still no evidence after {attempts} offers")),
+                        },
+                    );
+                }
+                return Ok(ReplayOfferOutcome::Deferred);
+            }
+            diagnostics.counters().replay_abandoned();
+            record_replay_event(
+                diagnostics,
+                ReplayEvent {
+                    level: DiagnosticLevel::Warn,
+                    operation: "abandon_replay",
+                    outcome: DiagnosticOutcome::Failed,
+                    status: None,
+                    duration_ms,
+                    bytes: candidate.bytes,
+                    detail: Some(format!("no evidence after {attempts} offers")),
+                },
+            );
+            abandon_replay(outbox, candidate)?;
+            Ok(ReplayOfferOutcome::Settled)
+        }
+    }
+}
+
+/// Write the terminal receipt that stops a replay being offered ever again.
+fn abandon_replay(
+    outbox: &ObservationOutbox,
+    candidate: &ReplayCandidate<'_>,
+) -> Result<(), String> {
+    outbox
+        .mark_replay_rejected(candidate.digest, candidate.game_id, 409)
+        .map_err(|error| error.to_string())
+}
+
 /// One discovered replay, ready to offer to the backend.
 struct ReplayCandidate<'a> {
     game_id: &'a str,
+    /// Platform the filename named, when it carried one.
+    platform_id: Option<&'a str>,
     digest: &'a str,
     path: &'a Path,
     bytes: u64,
@@ -685,6 +887,14 @@ async fn deliver_replay(
     diagnostics: &Diagnostics,
     candidate: &ReplayCandidate<'_>,
 ) -> Result<ReplayDelivery, String> {
+    match offer_replay(backend, outbox, credential, diagnostics, candidate).await? {
+        ReplayOfferOutcome::Send => {}
+        ReplayOfferOutcome::Settled => return Ok(ReplayDelivery::Settled),
+        ReplayOfferOutcome::Deferred => return Ok(ReplayDelivery::Deferred),
+        ReplayOfferOutcome::Unresolved(detail) => {
+            return Ok(ReplayDelivery::Unresolved(detail));
+        }
+    }
     diagnostics.counters().replay_attempted();
     let started = std::time::Instant::now();
     let outcome = backend
@@ -692,6 +902,7 @@ async fn deliver_replay(
             credential,
             candidate.game_id,
             candidate.digest,
+            candidate.platform_id,
             candidate.path,
         )
         .await;
@@ -703,12 +914,15 @@ async fn deliver_replay(
         diagnostics.counters().replay_uploaded();
         record_replay_event(
             diagnostics,
-            DiagnosticLevel::Info,
-            DiagnosticOutcome::Succeeded,
-            status,
-            elapsed,
-            candidate.bytes,
-            None,
+            ReplayEvent {
+                level: DiagnosticLevel::Info,
+                operation: "upload_replay",
+                outcome: DiagnosticOutcome::Succeeded,
+                status,
+                duration_ms: elapsed,
+                bytes: candidate.bytes,
+                detail: None,
+            },
         );
         outbox
             .mark_replay_uploaded(candidate.digest, candidate.game_id)
@@ -723,25 +937,21 @@ async fn deliver_replay(
         .map_or_else(|| error.to_string(), str::to_owned);
 
     if error.replay_should_be_deferred() {
-        // A deferral used to loop every scan forever, recording nothing. Count
-        // the attempt so a replay that can never land is visible rather than
-        // merely quiet.
+        // The offer already cleared this replay, so a 409 here is a race —
+        // another device holding the claim — not missing evidence. It is not
+        // counted against the evidence tally the offer keeps.
         diagnostics.counters().replay_deferred();
-        let attempts = outbox
-            .record_replay_deferral(candidate.digest, candidate.game_id)
-            .map_err(|outbox_error| outbox_error.to_string())?;
         record_replay_event(
             diagnostics,
-            if attempts >= REPLAY_DEFERRAL_ATTENTION_ATTEMPTS {
-                DiagnosticLevel::Warn
-            } else {
-                DiagnosticLevel::Info
+            ReplayEvent {
+                level: DiagnosticLevel::Info,
+                operation: "upload_replay",
+                outcome: DiagnosticOutcome::Deferred,
+                status,
+                duration_ms: elapsed,
+                bytes: candidate.bytes,
+                detail: Some(detail),
             },
-            DiagnosticOutcome::Deferred,
-            status,
-            elapsed,
-            candidate.bytes,
-            Some(format!("attempt {attempts}: {detail}")),
         );
         return Ok(ReplayDelivery::Deferred);
     }
@@ -752,12 +962,15 @@ async fn deliver_replay(
         // whole scan.
         record_replay_event(
             diagnostics,
-            DiagnosticLevel::Error,
-            DiagnosticOutcome::Failed,
-            status,
-            elapsed,
-            candidate.bytes,
-            Some(detail.clone()),
+            ReplayEvent {
+                level: DiagnosticLevel::Error,
+                operation: "upload_replay",
+                outcome: DiagnosticOutcome::Failed,
+                status,
+                duration_ms: elapsed,
+                bytes: candidate.bytes,
+                detail: Some(detail.clone()),
+            },
         );
         return Ok(ReplayDelivery::Unresolved(detail));
     };
@@ -765,12 +978,15 @@ async fn deliver_replay(
     diagnostics.counters().replay_rejected();
     record_replay_event(
         diagnostics,
-        DiagnosticLevel::Error,
-        DiagnosticOutcome::Failed,
-        Some(terminal),
-        elapsed,
-        candidate.bytes,
-        Some(detail),
+        ReplayEvent {
+            level: DiagnosticLevel::Error,
+            operation: "upload_replay",
+            outcome: DiagnosticOutcome::Failed,
+            status: Some(terminal),
+            duration_ms: elapsed,
+            bytes: candidate.bytes,
+            detail: Some(detail),
+        },
     );
     outbox
         .mark_replay_rejected(candidate.digest, candidate.game_id, terminal)
@@ -778,30 +994,36 @@ async fn deliver_replay(
     Ok(ReplayDelivery::Settled)
 }
 
-/// Record one replay upload attempt.
+/// One thing that happened to one replay.
 ///
 /// The game id and digest are deliberately absent: they identify a player's
 /// match, and the counters plus status already answer what diagnostics are for.
-fn record_replay_event(
-    diagnostics: &Diagnostics,
+struct ReplayEvent {
     level: DiagnosticLevel,
+    operation: &'static str,
     outcome: DiagnosticOutcome,
     status: Option<u16>,
     duration_ms: u64,
     bytes: u64,
     detail: Option<String>,
-) {
-    let mut event =
-        DiagnosticEvent::new(level, DiagnosticCategory::Replay, "upload_replay", outcome)
-            .with_duration_ms(duration_ms)
-            .with_bytes(bytes);
-    if let Some(status) = status {
-        event = event.with_status(status);
+}
+
+fn record_replay_event(diagnostics: &Diagnostics, event: ReplayEvent) {
+    let mut record = DiagnosticEvent::new(
+        event.level,
+        DiagnosticCategory::Replay,
+        event.operation,
+        event.outcome,
+    )
+    .with_duration_ms(event.duration_ms)
+    .with_bytes(event.bytes);
+    if let Some(status) = event.status {
+        record = record.with_status(status);
     }
-    if let Some(detail) = detail {
-        event = event.with_detail(detail);
+    if let Some(detail) = event.detail {
+        record = record.with_detail(detail);
     }
-    diagnostics.record(event);
+    diagnostics.record(record);
 }
 
 fn optional_lockfile(
@@ -821,6 +1043,24 @@ fn replay_game_id(path: &Path) -> Option<String> {
         .filter(|part| part.len() >= 5)
         .max_by_key(|part| part.len())
         .map(str::to_owned)
+}
+
+/// The platform a replay filename names, as in the `NA1` of `NA1-123456.rofl`.
+///
+/// Riot names a match `NA1_123456`, but the upload route carries only the
+/// digits. Dropping the prefix leaves the server unable to build the canonical
+/// match id it needs to look the game up, so it is recovered here and sent
+/// alongside. A stem without one is not an error — the server falls back to the
+/// regions the account has registered.
+fn replay_platform_id(path: &Path) -> Option<String> {
+    let stem = path.file_stem()?.to_str()?;
+    let head = stem.split(['-', '_']).next()?;
+    let letters = head.chars().take_while(char::is_ascii_alphabetic).count();
+    let digits = head.get(letters..)?;
+    let shaped = (2..=4).contains(&letters)
+        && digits.len() <= 2
+        && digits.chars().all(|character| character.is_ascii_digit());
+    shaped.then(|| head.to_ascii_uppercase())
 }
 
 async fn replay_sha256(path: PathBuf) -> Result<String, String> {
@@ -1719,6 +1959,7 @@ fn update_state(state: &Arc<RwLock<RuntimeState>>, update: impl FnOnce(&mut Runt
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
     use std::sync::{Arc, RwLock};
 
     use scout_client_core::lcu::LcuError;
@@ -1733,9 +1974,38 @@ mod tests {
 
     use super::{
         RuntimeState, apply_observation_receipt, clear_replay_error, clear_runtime_error,
-        find_string, game_start_evidence, optional_lockfile, outbox_file_name, set_error,
-        set_replay_error, should_emit_live_game_frame, should_refresh_lobby, update_state,
+        find_string, game_start_evidence, optional_lockfile, outbox_file_name, replay_platform_id,
+        set_error, set_replay_error, should_emit_live_game_frame, should_refresh_lobby,
+        update_state,
     };
+
+    #[test]
+    fn recovers_the_platform_a_replay_filename_names() {
+        // Riot names a match NA1_123456 but the upload route carries only the
+        // digits, so the prefix has to travel separately or the server cannot
+        // build the canonical match id.
+        assert_eq!(
+            replay_platform_id(Path::new("NA1-5565990955.rofl")),
+            Some("NA1".to_owned())
+        );
+        assert_eq!(
+            replay_platform_id(Path::new("euw1-123456.rofl")),
+            Some("EUW1".to_owned())
+        );
+        assert_eq!(
+            replay_platform_id(Path::new("RU_987654.rofl")),
+            Some("RU".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_nameless_replay_reports_no_platform_rather_than_a_wrong_one() {
+        // Absence is fine: the server falls back to the regions the account
+        // has registered. A guess would not be.
+        assert_eq!(replay_platform_id(Path::new("5565990955.rofl")), None);
+        assert_eq!(replay_platform_id(Path::new("replay.rofl")), None);
+        assert_eq!(replay_platform_id(Path::new("TOOLONG1-123.rofl")), None);
+    }
 
     #[test]
     fn empty_league_strings_are_absent_rather_than_zero_length_values() {

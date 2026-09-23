@@ -39,6 +39,10 @@ const PATTERN_ROUTES: readonly { pattern: RegExp; label: string }[] = [
     label: "/api/scout-client/v1/pairings/:id/exchange",
   },
   {
+    pattern: /^\/api\/scout-client\/v1\/replays\/\d+\/offer$/,
+    label: "/api/scout-client/v1/replays/:gameId/offer",
+  },
+  {
     pattern: /^\/api\/scout-client\/v1\/replays\/\d+$/,
     label: "/api/scout-client/v1/replays/:gameId",
   },
