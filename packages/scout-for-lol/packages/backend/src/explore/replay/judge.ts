@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { numericClaims } from "#src/explore/replay/diff.ts";
+import { describeThrown } from "#src/explore/replay/runner.ts";
 import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
 import { LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH } from "#src/explore/lake-coverage.ts";
 
@@ -391,6 +392,24 @@ export function judgePromptSha256(): string {
  * judge to spot, because `numericClaims` already does it deterministically and
  * a model counting numbers is a model that will miscount one.
  */
+/**
+ * Whether the turn crashed rather than answering.
+ *
+ * Both halves matter. An error with an answer beside it is a tool that failed
+ * mid-turn, which the agent recovered from and which the answer should own up
+ * to — that is behaviour, and it gets graded. An error with no answer is the
+ * run falling over, and there is nothing to grade.
+ */
+export function crashReason(record: {
+  readonly candidate: { readonly answer: string | null };
+  readonly error?: unknown;
+}): string | null {
+  if (record.candidate.answer !== null) return null;
+  if (record.error === undefined || record.error === null) return null;
+  const described = describeThrown(record.error);
+  return described === "" ? "the turn produced no answer" : described;
+}
+
 export function judgeUserPrompt(input: JudgeCaseInput): string {
   const gatedOff = Object.entries(input.capabilities)
     .filter(([, enabled]) => !enabled)
@@ -463,6 +482,20 @@ export const ExploreJudgeReportSchema = z
      * would look like a score over the bundle.
      */
     unjudged: z.array(
+      z.object({ caseId: z.string().min(1), reason: z.string() }),
+    ),
+    /**
+     * Cases whose turn crashed, so there is no answer to grade.
+     *
+     * Separate from `unjudged` because the cause is the opposite end: the
+     * judge works fine, the run did not. Kept out of the score because a
+     * crash is not a way of answering — graded, the one on prod scored as
+     * `deflected`, which reads as a behaviour the model chose.
+     *
+     * The replay summary already counts these as integrity failures; naming
+     * them here says which of the bundle's cases the quality number omits.
+     */
+    crashed: z.array(
       z.object({ caseId: z.string().min(1), reason: z.string() }),
     ),
     /**

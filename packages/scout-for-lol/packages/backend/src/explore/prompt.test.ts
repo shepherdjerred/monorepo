@@ -183,6 +183,21 @@ describe("data Scout has that Explore cannot query", () => {
   });
 });
 
+describe("sample sizes on records", () => {
+  test("a single extreme value is not given a corpus-sized sample", () => {
+    // "52 kills in a single game, across 25,442 games in Scout's data" — the
+    // count was the corpus, not the games holding that record, and the judge
+    // was right to call the figure unsupported.
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("A single extreme value");
+    expect(instructions).toContain(
+      "never as 'across N games' beside the record",
+    );
+    // The rule it qualifies has to survive: it is what grounds every rate.
+    expect(instructions).toContain("'N games in Scout's data'");
+  });
+});
+
 describe("team objectives", () => {
   test("points at match_teams and bounds what it can claim", () => {
     const instructions = exploreAgentInstructions({ bucks: null });

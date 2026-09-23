@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   JUDGE_FAILURES,
   JudgeObservationSchema,
+  crashReason,
   gradeCase,
   judgeEvidenceFromTrace,
   judgePromptSha256,
@@ -384,5 +385,45 @@ describe("judgeEvidenceFromTrace", () => {
       },
     ]);
     expect(evidence.toolResults).toEqual([]);
+  });
+});
+
+describe("crashed turns", () => {
+  // The prod bundle's one crash was graded `deflected` — a 25-point failure
+  // that reads as a model dodging the question, when the turn had fallen over
+  // after seven failed validations and produced nothing at all.
+  test("a turn with no answer and a recorded error is not gradable", () => {
+    expect(crashReason({ candidate: { answer: null }, error: "boom" })).toBe(
+      "boom",
+    );
+  });
+
+  test("an answer beside an error is behaviour, and is graded", () => {
+    // A tool failed mid-turn and the agent recovered. Whether the answer owns
+    // up to that is exactly what the judge is for.
+    expect(
+      crashReason({
+        candidate: { answer: "Alice has 12 wins." },
+        error: "get_clash_schedule failed",
+      }),
+    ).toBeNull();
+  });
+
+  test("no answer and no error stays gradable", () => {
+    // Nothing crashed, so an empty answer is a way of responding, and a bad
+    // one. Excluding it would hide a real failure behind a harness category.
+    expect(crashReason({ candidate: { answer: null } })).toBeNull();
+  });
+
+  test("an error that stringifies to nothing still names the case", () => {
+    expect(crashReason({ candidate: { answer: null }, error: "" })).toBe(
+      "the turn produced no answer",
+    );
+  });
+
+  test("a non-Error throw is described rather than stringified to [object Object]", () => {
+    expect(
+      crashReason({ candidate: { answer: null }, error: { code: 500 } }),
+    ).toBe('{"code":500}');
   });
 });

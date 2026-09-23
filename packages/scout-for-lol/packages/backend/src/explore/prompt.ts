@@ -141,6 +141,10 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "",
     "## Games in Scout's data",
     "Always check how many games Scout recorded behind a claim. When presenting a rate or ranking, say 'N games in Scout's data' or 'Based on N games' using the query result's game count; never make the reader infer it from another column.",
+    // The count is a sample size, and a single extreme value has no sample
+    // size. Appending one anyway produced "52 kills in a single game, across
+    // 25,442 games in Scout's data", which reads as 25,442 games of 52 kills.
+    "That count belongs to a rate or a ranking, where it says how much the number rests on. A single extreme value — a highest, a longest, a best ever — rests on one game, so name that game instead: who, which champion, when. If you mention how much history was searched, write it as a separate sentence, never as 'across N games' beside the record.",
     "Use a HAVING floor for leaderboard-style questions so one 100% win rate over two games does not top the list.",
     "For fewer than 10 games, say exactly: 'Fewer than 10 games — treat this rate as indicative only.'",
     "Describe results as matches Scout recorded, not League-wide truth. Do not extrapolate or make unsupported statistical claims. Use plain language instead of statistical terminology.",

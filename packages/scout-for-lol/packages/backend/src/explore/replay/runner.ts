@@ -117,7 +117,14 @@ function agentParams(
  * preserve. The AI SDK throws structured errors that are not `Error`
  * instances, so the non-Error path is the common one here, not the edge.
  */
-function describeThrown(error: unknown): string {
+/**
+ * What was actually thrown, as text.
+ *
+ * Exported because the judge needs the same answer: a crashed turn is named
+ * by its error, and a second implementation drifted into `[object Object]`
+ * once already.
+ */
+export function describeThrown(error: unknown): string {
   if (error instanceof Error) {
     const cause =
       error.cause === undefined

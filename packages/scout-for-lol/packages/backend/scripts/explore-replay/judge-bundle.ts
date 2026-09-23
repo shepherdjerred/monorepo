@@ -17,6 +17,7 @@ import {
   judgePromptSha256,
   judgeSystemPrompt,
   judgeUserPrompt,
+  crashReason,
   scoreBundle,
   type JudgeObservation,
   type JudgedCase,
@@ -56,6 +57,12 @@ const CaseFileSchema = z
     }),
     prompt: z.array(z.looseObject({ role: z.string(), content: z.string() })),
     candidate: ReplayCaseCandidateSchema,
+    /**
+     * Whatever the runner recorded when the turn threw.
+     *
+     * A crashed turn has no answer, and an answer is what this file grades.
+     */
+    error: z.unknown().optional(),
     /**
      * Read for the row counts the candidate may not carry.
      *
@@ -151,11 +158,13 @@ async function observeAll(
 ): Promise<{
   readonly judged: readonly JudgedCase[];
   readonly unjudged: readonly { caseId: string; reason: string }[];
+  readonly crashed: readonly { caseId: string; reason: string }[];
 }> {
   const results: (JudgedCase | undefined)[] = Array.from({
     length: records.length,
   });
   const unjudged: { caseId: string; reason: string }[] = [];
+  const crashed: { caseId: string; reason: string }[] = [];
   let next = 0;
   let judged = 0;
 
@@ -165,6 +174,14 @@ async function observeAll(
       next += 1;
       const record = records[index];
       if (record === undefined) return;
+      const crash = crashReason(record);
+      if (crash !== null) {
+        // Grading this would score a crash as a way of answering. The one in
+        // the prod bundle came back `deflected`, indistinguishable from a
+        // model that dodged the question.
+        crashed.push({ caseId: record.meta.caseId, reason: crash });
+        continue;
+      }
       let observation: JudgeObservation;
       try {
         observation = await observe(runtime, record);
@@ -207,6 +224,7 @@ async function observeAll(
   return {
     judged: results.filter((entry) => entry !== undefined),
     unjudged,
+    crashed,
   };
 }
 
@@ -266,8 +284,17 @@ async function main(): Promise<void> {
     service: "scout-explore-replay-judge",
     appName: "Scout Explore Replay Judge",
   });
-  const { judged, unjudged } = await observeAll(runtime, records, concurrency);
+  const { judged, unjudged, crashed } = await observeAll(
+    runtime,
+    records,
+    concurrency,
+  );
   const bundle = scoreBundle(judged);
+  if (crashed.length > 0) {
+    process.stderr.write(
+      `  ${crashed.length.toString()} case(s) crashed and have no answer to grade; the score covers the rest\n`,
+    );
+  }
   if (unjudged.length > 0) {
     process.stderr.write(
       `  ${unjudged.length.toString()} case(s) could not be judged; the score covers ${judged.length.toString()} of ${records.length.toString()}\n`,
@@ -292,6 +319,7 @@ async function main(): Promise<void> {
       observation: entry.observation,
     })),
     unjudged,
+    crashed,
     // Whether the judge read every case it was handed — not whether Explore is
     // good. The quality number is `bundle.score`, and it carries no threshold.
     passed: unjudged.length === 0,
