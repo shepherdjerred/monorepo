@@ -1320,6 +1320,22 @@
       "value": "2.6.0@sha256:46fc01ffbd6054f2d493a25fd9de6efbddd9092d0fef363bfdb8117cf9ac61f5"
     },
     {
+      "name": "arizephoenix/phoenix",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
+      },
+      "value": "version-20.16.0-nonroot@sha256:e4a41a209b07289581a5d48167a11051c12704ac48983056fe0989b6f13b467a",
+      "notes": [
+        "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
+        "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
+      ]
+    },
+    {
       "name": "relay-server",
       "category": "upstream",
       "artifactType": "image",
