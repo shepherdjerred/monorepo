@@ -576,113 +576,25 @@
       "clones": 6,
       "tokens": 688
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts": {
-      "clones": 1,
-      "tokens": 79
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/freshrss.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts": {
-      "clones": 1,
-      "tokens": 81
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/flipt.ts": {
-      "clones": 1,
-      "tokens": 82
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts": {
-      "clones": 1,
-      "tokens": 120
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/freshrss.ts": {
-      "clones": 2,
-      "tokens": 160
+      "clones": 1,
+      "tokens": 71
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/media.ts": {
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts": {
-      "clones": 1,
-      "tokens": 100
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
-      "clones": 1,
-      "tokens": 89
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
-      "clones": 1,
-      "tokens": 100
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
-      "clones": 1,
-      "tokens": 100
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts": {
-      "clones": 1,
-      "tokens": 81
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
       "clones": 1,
       "tokens": 75
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
-      "clones": 2,
-      "tokens": 152
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
       "clones": 1,
-      "tokens": 77
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts": {
-      "clones": 1,
-      "tokens": 79
+      "tokens": 75
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
-      "clones": 2,
-      "tokens": 270
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts": {
       "clones": 1,
-      "tokens": 77
+      "tokens": 97
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
       "clones": 1,
