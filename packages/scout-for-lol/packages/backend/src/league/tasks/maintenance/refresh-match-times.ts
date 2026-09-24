@@ -1,8 +1,9 @@
 /**
- * Startup task to refresh lastMatchTime for all tracked accounts.
+ * Scheduled task to refresh lastMatchTime for tracked accounts without a cursor.
  *
- * This runs slowly in the background on startup to ensure all accounts
- * have accurate lastMatchTime values for proper polling intervals.
+ * This runs slowly in the background so accounts that no match has advanced
+ * yet still get a realistic polling interval. Accounts with a cursor get
+ * lastMatchTime from the cursor writers alone.
  */
 
 import { prisma } from "#src/database/index.ts";
@@ -44,9 +45,12 @@ export async function refreshMatchTimes(): Promise<void> {
     Date.now() - STALE_THRESHOLD_HOURS * 60 * 60 * 1000,
   );
 
-  // Find accounts that need refreshing
+  // Find accounts that need refreshing. An account with a cursor is excluded:
+  // its lastMatchTime belongs to the cursor writers (see updateLastMatchTime),
+  // so refreshing it would spend Riot calls on a write that is refused.
   const accountsToRefresh = await prisma.account.findMany({
     where: {
+      lastProcessedMatchId: null,
       OR: [{ lastMatchTime: null }, { lastMatchTime: { lt: staleThreshold } }],
     },
     include: {
