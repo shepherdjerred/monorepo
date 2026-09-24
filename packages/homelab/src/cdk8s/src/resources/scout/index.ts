@@ -30,6 +30,7 @@ import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/r
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { createScoutGatewayDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import { createScoutGatewayRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway-retirement-gate.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import {
   gatewayTopologyRunsRole,
@@ -456,6 +457,8 @@ export function createScoutDeployment(
   //
   // Rendered while retiring as well as while split — at zero replicas, which is
   // how the rollback retires the pod without an operator scaling it by hand.
+  // Retiring also renders the gate that holds the backend's return to
+  // `combined` until that pod has actually exited.
   // The claim is still declared on a retiring Deployment; with no pod it is
   // never mounted, so the read-only co-mount argument above is unaffected.
   if (gatewayTopology !== "absent") {
@@ -468,5 +471,8 @@ export function createScoutDeployment(
       colocateWith: deployment,
       voiceSecretMount,
     });
+  }
+  if (gatewayTopology === "retiring") {
+    createScoutGatewayRetirementGate(chart, stage);
   }
 }

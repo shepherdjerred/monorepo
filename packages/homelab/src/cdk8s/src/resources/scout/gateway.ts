@@ -32,35 +32,35 @@ export const SCOUT_GATEWAY_APP_LABEL = "scout-gateway";
  *
  * The backend Deployment deliberately carries no annotation, so it is in the
  * default wave 0. ArgoCD starts a wave only once every resource in the previous
- * one reports Healthy, which makes these two numbers the whole ordering
- * contract between the roles — and the contract runs in OPPOSITE directions
- * depending on which way the topology is moving.
+ * one reports Healthy, which makes these numbers (plus the retirement gate
+ * below) the ordering contract between the roles — and the contract runs in
+ * OPPOSITE directions depending on which way the topology is moving.
  *
  * `split` is wave 1: the backend's wave-0 Recreate rollout terminates the
  * combined pod and brings up the `application` pod, so the shard handover is a
- * precondition of the gateway pod existing at all, even on a fully automated
- * sync.
+ * precondition of the gateway pod existing at all, on any full sync of the
+ * Application — release-root's exact-revision child sync or a manual one.
  *
- * `retiring` is wave -1, BEFORE the backend, for the mirror image of the same
+ * `retiring` is wave -2, BEFORE the backend, for the mirror image of the same
  * reason. On the retirement sync the backend returns to `combined` and its
  * Recreate rollout opens a Discord session. If the scale-to-zero were still in
  * wave 1 it would be applied *after* that, so the rolled-back backend would
  * connect while the gateway pod was still logged in — two sessions on one
  * token, caused by the rollback itself and on every rollback rather than only
- * when an operator forgot a step. Wave -1 is the declarative spelling of the
- * runbook's "scale gateway to 0, wait, revert the backend to combined".
+ * when an operator forgot a step.
  *
- * Known limit, stated because an operator reading an overstated guarantee
- * during a rollback is worse off than one reading an honest one: this orders
- * the APPLY, not the termination. A Deployment at zero replicas can report
- * Healthy while its last pod is still terminating, so wave -1 does not prove
- * the token is released before wave 0 proceeds. It strictly dominates the
- * status quo — nothing here previously scaled the gateway down at all — and it
- * removes the manual step, but it is not atomic.
+ * Ordering the apply is not enough on its own. A Deployment at zero replicas
+ * reports Healthy while its last pod is still terminating, because the
+ * ReplicaSet's replica count excludes terminating pods. So the retiring render
+ * also carries a Sync-hook Job in wave -1 that completes only once no gateway
+ * pod exists (`gateway-retirement-gate.ts`), which makes "the token has been
+ * released" — not merely "the scale-down was applied" — the precondition of
+ * wave 0. Together they are the declarative spelling of the runbook's "scale
+ * gateway to 0, wait for termination, revert the backend to combined".
  */
-const GATEWAY_SYNC_WAVE = {
+export const SCOUT_GATEWAY_SYNC_WAVE = {
   split: "1",
-  retiring: "-1",
+  retiring: "-2",
 } as const;
 
 /**
@@ -176,9 +176,10 @@ export function createScoutGatewayDeployment(
 ) {
   const { topology } = options;
   const deployment = new Deployment(chart, "scout-gateway", {
-    // Zero while retiring, so automated sync scales the shard's pod away by
-    // itself. The Deployment stays rendered rather than disappearing because
-    // this Application does not prune — see SCOUT_GATEWAY_TOPOLOGY.
+    // Zero while retiring, so the retirement sync itself scales the shard's
+    // pod away. The Deployment stays rendered rather than disappearing so the
+    // scale-down is ordered and gated ahead of the backend — see
+    // SCOUT_GATEWAY_TOPOLOGY.
     replicas: topology === "split" ? 1 : 0,
     // One Discord identity per token. Recreate keeps the old shard fully
     // terminated before the replacement logs in; a rolling update would put
@@ -202,10 +203,11 @@ export function createScoutGatewayDeployment(
         // One Discord identity, enforced by the sync rather than by an operator
         // running the cutover in the right order.
         //
-        // scout-beta auto-syncs, so on the sync that introduces the split
-        // ArgoCD would otherwise be free to create this pod while the old
-        // combined pod still holds the shard — two sessions on one token, which
-        // Discord resolves by dropping one and which reads as a flapping bot.
+        // Whatever starts the sync — release-root's exact-revision child sync
+        // or an operator — ArgoCD would otherwise be free to create this pod
+        // while the old combined pod still holds the shard: two sessions on
+        // one token, which Discord resolves by dropping one and which reads as
+        // a flapping bot.
         // Everything else in this chart sits in the default wave 0, including
         // the backend Deployment whose Recreate rollout terminates the combined
         // pod and brings up the `application` pod. ArgoCD starts a wave only
@@ -217,10 +219,10 @@ export function createScoutGatewayDeployment(
         // stay in wave 0: the policy governing this pod should exist before the
         // pod does.
         //
-        // Retiring inverts this to wave -1 so the scale-to-zero is applied
-        // BEFORE the backend returns to combined. See GATEWAY_SYNC_WAVE, which
-        // also records what that ordering does and does not prove.
-        [ARGOCD_SYNC_WAVE_ANNOTATION]: GATEWAY_SYNC_WAVE[topology],
+        // Retiring inverts this to wave -2 so the scale-to-zero is applied,
+        // and gated on termination, BEFORE the backend returns to combined.
+        // See SCOUT_GATEWAY_SYNC_WAVE.
+        [ARGOCD_SYNC_WAVE_ANNOTATION]: SCOUT_GATEWAY_SYNC_WAVE[topology],
       },
     },
   });

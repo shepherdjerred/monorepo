@@ -259,12 +259,10 @@ export function createScoutChart(
   // matches, and the two above deliberately select `app: scout-backend` alone
   // to keep the operator-managed Patroni/Spilo pods unselected.
   //
-  // Kept rendered through retirement, unlike the voice rule above. This
-  // Application does not prune, so a policy that stopped being rendered would
-  // stop being managed and linger; keeping it means the stage stays fully
-  // managed and the policy simply selects no pods once the Deployment is at
-  // zero replicas. It is deleted with the Deployment when the stage goes
-  // `absent`.
+  // Kept rendered through retirement, unlike the voice rule above: it must
+  // keep governing the gateway pod for as long as that pod is terminating, and
+  // it simply selects no pods once the Deployment is at zero replicas. It is
+  // deleted with the Deployment when the stage goes `absent`.
   if (gatewayTopology !== "absent") {
     new KubeNetworkPolicy(chart, "scout-gateway-netpol", {
       metadata: { name: "scout-gateway-netpol" },

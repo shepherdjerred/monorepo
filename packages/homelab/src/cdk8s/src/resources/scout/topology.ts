@@ -2,8 +2,8 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 
 /**
  * Whether a stage runs the Discord shard in its own pod, and — the state that
- * exists only because ArgoCD does not prune here — whether it is on its way
- * back from having done so.
+ * exists so a rollback can be ordered — whether it is on its way back from
+ * having done so.
  *
  * `split`    the gateway role runs in scout-gateway; the backend is
  *            `application` and holds no shard.
@@ -11,28 +11,37 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
  *            the gateway Deployment is still rendered but scaled to zero.
  * `absent`   nothing gateway-shaped is rendered at all.
  *
+ * ## How a topology change reaches the cluster
+ *
+ * Not by automated sync. The repository release policy
+ * (`application-release-policy.ts`) rewrites every repository-chart
+ * Application, scout-beta included, to `automated: { enabled: false }`, so
+ * ArgoCD never syncs this stage on its own. The change lands through the main
+ * build's `argocd-sync` step: `release-root` runs a full-source child sync of
+ * scout-beta at the exact published chart revision, with pruning, because
+ * scout-beta is in `PRUNED_RELEASE_CHARTS`
+ * (`scripts/helm/helm-release-core.ts`). An operator can also run
+ * `argocd app sync scout-beta`, with or without `--prune`. Both are full syncs,
+ * so sync waves and Sync hooks apply to both; a selective `--resource` sync
+ * runs no hooks and must not be used for this transition.
+ *
  * ## Why `retiring` has to exist
  *
- * scout-beta's Application enables automated sync and does NOT enable pruning
- * (`resources/argo-applications/apps/scout-beta.ts`). A resource that stops
- * being rendered therefore stops being managed and keeps running. For most
- * resources that is untidy; for this one it is an outage. The gateway pod holds
- * the Discord token, so a rollback that merely stopped rendering it would leave
- * it logged in while the rolled-back backend returned to `combined` and opened
- * a second session on the same token. Discord resolves that by dropping one,
- * which reads as a flapping bot.
+ * The gateway pod holds the Discord token. A rollback that merely stopped
+ * rendering it would leave the live Deployment carrying its `split` sync wave
+ * of 1, so even a pruning sync would delete it only AFTER the wave-0 backend
+ * had returned to `combined` and opened a second session on the same token —
+ * and a sync without prune would not delete it at all. Discord resolves two
+ * sessions by dropping one, which reads as a flapping bot.
  *
  * So retirement is a rendered state rather than an absence: the Deployment
- * stays in the manifest at zero replicas, automated sync scales it down on its
- * own, and the token is released without an operator scaling anything by hand.
- * The resource is deleted outright in a later change, once the rollback has
- * been proven once — which is what `absent` is for.
- *
- * This is the same answer the chart already gives the same problem for the
- * workflow-worker candidate Deployment, which is kept rendered "so promotion
- * does not leave unmanaged candidate resources behind when pruning is
- * disabled" (`cdk8s-charts/scout.ts`). Keep-rendering is the established idiom
- * here, not a new one.
+ * stays in the manifest at zero replicas in a wave before the backend, and a
+ * Sync-hook gate between them waits until the gateway pod has actually exited
+ * (`gateway.ts#SCOUT_GATEWAY_SYNC_WAVE`, `gateway-retirement-gate.ts`). The
+ * token is released before the backend reclaims it, without an operator
+ * scaling anything by hand. The resource is deleted outright in a later
+ * change, once the rollback has been proven once — which is what `absent` is
+ * for; the release path's prune removes it then, when no pod remains to race.
  *
  * ## Why this is a table and not a predicate
  *

@@ -456,12 +456,14 @@ describe("Scout gateway observability", () => {
 /**
  * The rollback the `retiring` topology exists for.
  *
- * scout-beta's ArgoCD Application enables automated sync and does NOT enable
- * pruning, so a resource that stops being rendered stops being managed and goes
- * on running. For the gateway pod that is not untidiness — it holds the Discord
- * token, and a rolled-back backend returning to `combined` would open a second
- * session on the same token. Retirement therefore has to be a rendered state,
- * and these assertions are what keep it one.
+ * The gateway pod holds the Discord token, and a rolled-back backend returning
+ * to `combined` would open a second session on the same token if that pod were
+ * still running. Simply un-rendering the gateway would leave its deletion (by
+ * a pruning release sync) ordered after the wave-0 backend, or not happen at
+ * all (a sync without prune). Retirement therefore has to be a rendered,
+ * ordered state, and these assertions are what keep it one. The termination
+ * gate between the two waves is covered in
+ * `scout-gateway-retirement-gate.test.ts`.
  *
  * Every case renders the real chart through the documented topology override
  * rather than mocking the module that decides the topology: a mocked decision
@@ -499,9 +501,9 @@ function syncWave(
 
 describe("Scout gateway retirement", () => {
   /**
-   * The whole point: automated sync scales the shard's pod away by itself. If
-   * this Deployment ever stops being rendered instead, the pod survives the
-   * rollback and keeps holding the token.
+   * The whole point: the retirement sync scales the shard's pod away by
+   * itself. If this Deployment ever stops being rendered instead, the pod is
+   * deleted too late or not at all and keeps holding the token.
    */
   test("retiring renders the gateway Deployment at zero replicas", () => {
     const gateway = annotatedDeployment(
