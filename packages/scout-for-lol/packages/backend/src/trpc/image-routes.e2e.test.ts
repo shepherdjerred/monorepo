@@ -131,8 +131,22 @@ afterAll(async () => {
 });
 
 describe("image-route RBAC authorization", () => {
-  test("member without a grant is denied (403) for both charts", async () => {
+  test("a member without a grant passes as a Player (404, image absent)", async () => {
     trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedGrants();
+
+    const lb = await get(
+      `/api/competition/${String(competitionId)}/leaderboard.png`,
+    );
+    expect(lb?.status).toBe(404);
+    const rr = await get(
+      `/api/report/${String(reportId)}/runs/${String(runId)}.png`,
+    );
+    expect(rr?.status).toBe(404);
+  });
+
+  test("a non-member is denied (403) for both charts", async () => {
+    trpc.setMembership([]);
     await seedGrants();
 
     const lb = await get(
@@ -160,16 +174,6 @@ describe("image-route RBAC authorization", () => {
       `/api/report/${String(reportId)}/runs/${String(runId)}.png`,
     );
     expect(rr?.status).toBe(404);
-  });
-
-  test("a reports:read holder is still denied the leaderboard (wrong resource)", async () => {
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await seedGrants(permissionKey({ resource: "reports", action: "read" }));
-
-    const lb = await get(
-      `/api/competition/${String(competitionId)}/leaderboard.png`,
-    );
-    expect(lb?.status).toBe(403);
   });
 
   test("Discord admin (root) is allowed without any grant", async () => {

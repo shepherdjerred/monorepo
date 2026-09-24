@@ -34,7 +34,8 @@ corpus.
 ## Server workspace sections
 
 Each section requires the corresponding `read` permission; a section you cannot
-read is not shown.
+read is not shown. Every member holds the Player role, so **Players**,
+**Competitions**, and **Reports** are readable by anyone in the server.
 
 | Section           | Route           | Contents                                                               |
 | ----------------- | --------------- | ---------------------------------------------------------------------- |
