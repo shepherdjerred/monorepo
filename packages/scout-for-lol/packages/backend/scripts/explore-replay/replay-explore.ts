@@ -102,6 +102,12 @@ async function main(): Promise<void> {
   // its own cannot reach a server — nothing in a replay may start a workflow.
   Bun.env["TEMPORAL_NAMESPACE"] ??= pin.stage;
   delete Bun.env["TEMPORAL_ADDRESS"];
+  // A replay holds no S3 credentials, so the SDK walks its provider chain to
+  // the EC2 metadata probe, which under bun can hang for minutes: competition
+  // turns that read a cached leaderboard timed out mid-sweep. Disabled, the
+  // chain fails in milliseconds and the load reports no cached board, as
+  // test-setup.ts arranges for tests.
+  Bun.env["AWS_EC2_METADATA_DISABLED"] = "true";
 
   // Only now is it safe to pull in the agent and everything it binds at import
   // time. Keeping this dynamic is what makes the guard above load-bearing
