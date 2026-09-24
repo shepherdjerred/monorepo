@@ -279,7 +279,7 @@ export type JudgeCaseInput = {
 
 /** Tools that answer from their own data rather than through ScoutQL. */
 const CAPABILITY_TOOL_PATTERN =
-  /^(?:get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|preview_challenge|get_clash)/;
+  /^(?:get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition)/;
 
 /**
  * How much of one tool result the judge is shown.

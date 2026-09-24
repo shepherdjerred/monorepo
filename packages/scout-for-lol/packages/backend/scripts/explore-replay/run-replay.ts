@@ -874,6 +874,7 @@ async function runGuild(input: {
             ? { currentTime: "pinned" }
             : null,
           clash: config.capabilities.clash,
+          hallOfFame: config.capabilities.hallOfFame,
           surface,
         }),
       ),

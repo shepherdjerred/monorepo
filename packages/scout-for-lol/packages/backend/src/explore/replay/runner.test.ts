@@ -54,6 +54,7 @@ const CAPABILITIES: ExploreCapabilitySet = {
   riotHistory: false,
   mvpVotes: false,
   clash: false,
+  hallOfFame: false,
 };
 
 function message(input: {

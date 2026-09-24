@@ -28,6 +28,7 @@ export const EXPLORE_REPLAY_CAPABILITIES = [
   "riotHistory",
   "mvpVotes",
   "clash",
+  "hallOfFame",
 ] as const;
 
 export type ExploreReplayCapability =
@@ -42,6 +43,7 @@ export const ExploreCapabilitySetSchema = z
     riotHistory: z.boolean(),
     mvpVotes: z.boolean(),
     clash: z.boolean(),
+    hallOfFame: z.boolean(),
   })
   .strict();
 
@@ -77,15 +79,19 @@ export type ExploreReplayFlagOverride = {
 /**
  * Which capability gates a chip's condition — where one does at all.
  *
- * `customs` and `hall_of_fame` map to nothing. Those chips are gated in the
- * web app because the *guild* has the feature, but the questions themselves
- * are ordinary lake analytics that ScoutQL answers with no extra tool. Mapping
- * them onto a capability would make the eval demand a refusal that Explore is
- * right not to give.
+ * `customs` maps to nothing: its chips are ordinary lake analytics that
+ * ScoutQL answers with no extra tool.
  *
- * `competitions` maps to `creation`: making one genuinely needs that tool, and
- * the run bears it out — all twenty competition chips declined when creation
- * was off.
+ * `hall_of_fame` maps to `hallOfFame`. It used to map to nothing, on the view
+ * that Hall questions were lake analytics — but the Hall is a board with its
+ * own records, families and eligibility, which Explore now reads with a tool
+ * that exists only where the server switched the Hall on.
+ *
+ * Competitions are split. Reading them is a core feature with no flag, done by
+ * permission-checked tools every turn has, so `competitions` maps to nothing.
+ * Creating one needs the creation tool, so `competition_creation` maps to
+ * `creation`. Both used to map to `creation`, which graded "show the current
+ * standings" against a flag unrelated to reading them.
  *
  * `reports` is deliberately NOT mapped. Its chips are a mix: "subscribe me to
  * a weekly report" needs the creation tool, while "generate a role
@@ -99,11 +105,12 @@ const CONDITION_CAPABILITY: Readonly<
 > = {
   always: null,
   customs: null,
-  hall_of_fame: null,
+  hall_of_fame: "hallOfFame",
   bucks: "bucks",
   dares: "dares",
   challenges: "challenges",
-  competitions: "creation",
+  competitions: null,
+  competition_creation: "creation",
   mvp_votes: "mvpVotes",
   reports: null,
 };
@@ -159,6 +166,7 @@ export function flagOverridesFor(
     { flag: "challenge_runs_enabled", value: capabilities.challenges },
     { flag: "mvp_votes_enabled", value: capabilities.mvpVotes },
     { flag: "clash_surface", value: capabilities.clash },
+    { flag: "hall_of_fame_enabled", value: capabilities.hallOfFame },
     { flag: "explore_creation_enabled", value: capabilities.creation },
     {
       flag: "explore_on_demand_riot_enabled",

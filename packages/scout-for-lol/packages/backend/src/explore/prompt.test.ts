@@ -265,6 +265,7 @@ describe("gated-off capabilities", () => {
       dares: true,
       challenges: true,
       clash: true,
+      hallOfFame: true,
     });
     expect(on).toContain("dedicated bucks tools");
     expect(on).not.toContain("not switched on for the servers in scope");
@@ -301,6 +302,47 @@ describe("unresolved concepts", () => {
     );
     expect(instructions).toContain("never by role, position or champion");
     expect(instructions).toContain("never ask which record they meant");
+  });
+});
+
+describe("reading features rather than re-deriving them", () => {
+  test("the Hall is read from the board when it is on, and called off when not", () => {
+    const on = exploreAgentInstructions({ bucks: null, hallOfFame: true });
+    expect(on).toContain(
+      "Use get_hall_of_fame for every Hall of Fame question",
+    );
+    expect(on).not.toContain("The Hall of Fame is not switched on");
+    const off = exploreAgentInstructions({ bucks: null, hallOfFame: false });
+    expect(off).toContain("The Hall of Fame is not switched on");
+    expect(off).not.toContain("get_hall_of_fame");
+  });
+
+  test("competitions can be read whatever the creation flag says", () => {
+    // Reading used to be impossible and was blamed on the query surface;
+    // creation being off says nothing about reading.
+    for (const creation of [true, false]) {
+      const instructions = exploreAgentInstructions({
+        bucks: null,
+        creation,
+        surface: "web",
+      });
+      expect(instructions).toContain("list_competitions");
+      expect(instructions).toContain("get_competition_standings");
+      expect(instructions).toContain("competitions:read");
+    }
+    expect(
+      exploreAgentInstructions({
+        bucks: null,
+        creation: false,
+        surface: "web",
+      }),
+    ).toContain("Reading existing competitions is unaffected");
+  });
+
+  test("challenge runs can be read when challenges are on", () => {
+    const on = exploreAgentInstructions({ bucks: null, challenges: true });
+    expect(on).toContain("list_my_challenge_runs");
+    expect(on).toContain("challenge_leaderboard");
   });
 });
 

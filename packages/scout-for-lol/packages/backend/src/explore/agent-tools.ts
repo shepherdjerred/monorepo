@@ -19,6 +19,7 @@ import { prisma } from "#src/database/index.ts";
 import type { CreationCapability } from "#src/explore/creation/capability.ts";
 import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
 import { createGatedExploreTools } from "#src/explore/gated-tools.ts";
+import type { HallExploreCapability } from "#src/explore/tools/hall-tools.ts";
 import {
   enabledExploreSkills,
   type ExploreSkillOptions,
@@ -107,6 +108,7 @@ type ExploreToolsOptions = {
   creationCapability: CreationCapability | null;
   riotHistoryEnabled: boolean;
   clashEnabled: boolean;
+  hallCapability: HallExploreCapability | null;
 };
 
 export function createExploreTools(options: ExploreToolsOptions) {
@@ -121,6 +123,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
     creationCapability,
     riotHistoryEnabled,
     clashEnabled,
+    hallCapability,
   } = options;
   const track: ToolTracker = async (toolName, work) => {
     state.toolCalls++;
@@ -315,7 +318,9 @@ export function createExploreTools(options: ExploreToolsOptions) {
       daresEnabled,
       challengesEnabled,
       creationCapability,
+      hallCapability,
       requesterId: params.requesterId,
+      guildIds: params.guildIds,
       conversationId: params.conversationId,
       originChannelId: params.originChannelId,
       track,

@@ -56,7 +56,7 @@ import {
  * which record the user meant. The real board is a closed list of records,
  * kept per queue family and never per role.
  */
-function hallOfFameSection(): readonly string[] {
+function hallOfFameSection(canReadBoard: boolean): readonly string[] {
   const { records, queueFamilies } = COMPETITIVE_PROGRESSION_CATALOG.hall;
   const recordLabels = records.map((record) => record.label).join("; ");
   const familyLabels = queueFamilies
@@ -73,7 +73,13 @@ function hallOfFameSection(): readonly string[] {
     "Anything else — KDA, kill participation, longest or fastest game, multi-kill counts, a role's board — is not a Hall record. Say so in one sentence and answer with the nearest real record instead of declining.",
     "'Who is in the Hall of Fame?' and 'show all records' mean every record's current holder, for the default-on families unless the user names one. Answer that; never ask which record they meant.",
     "It is not Riot's Hall of Legends, not an esports hall of fame, and not a player.",
-    "You have no tool that reads the board itself, so compute each record from match data: the extreme single game for that metric, within that queue family, under the rules above. Say the result is computed from Scout's match data and may differ from the board shown in the Scout web app, which only counts games since the server began tracking.",
+    ...(canReadBoard
+      ? [
+          "Use get_hall_of_fame for every Hall of Fame question: it reads the server's actual board — its enabled families and records, each holder, and the game that set it. Never recompute a record from match data when the board can be read. A record still building or failed is not available yet; say so rather than that nobody holds it.",
+        ]
+      : [
+          "The Hall of Fame is not switched on for the servers in scope, so there is no board to read. Say that a server admin can turn it on. If the user wants it anyway, you may find the best single game for a metric from match data under the rules above — and say that is not the Hall.",
+        ]),
   ];
 }
 
@@ -117,6 +123,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
           // the contract schema has no window. "Challenges ending soon" was
           // declined as unqueryable when the true answer is that none end.
           "Scout challenges have no end date: a challenge run stays active until it is completed or archived. Asked what is ending soon, say that plainly.",
+          "Challenges can be read as well as drafted: list_my_challenge_runs for the user's own runs and progress, list_challenge_catalog for what is available and how often players here complete each one, challenge_leaderboard for who has completed the most.",
         ]
       : [
           "Scout challenges — server-set goals a tracked player completes — are not switched on for the servers in scope, so you have no tool for them. These are Scout's own challenges, not Riot's in-client Challenges. Say they are not enabled here, never that Scout does not have challenges.",
@@ -177,7 +184,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // just as easily.
     "When a question needs a threshold or definition the user did not give — what counts as late night, newly released, a top player, a leaderboard's ranking, a minimum number of games — choose the sensible reading yourself, say in one clause which one you used, and answer. Do not ask them to choose first; they can correct you in the next turn.",
     "",
-    ...hallOfFameSection(),
+    ...hallOfFameSection(options.hallOfFame === true),
     "",
     "## Saying which period an answer covers",
     "Name the period an answer covers in the prose of every answer, not only in the query.",
@@ -254,7 +261,11 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "",
     "## Limits",
     "Two ScoutQL sources are unavailable here and must never be queried: player_groups (teammate groups need tracked accounts, which this data cannot distinguish from random matchmaking) and the competition sources, competition_match_participants and competition_rank (each is scoped to one server's competition).",
-    "That restriction is about those two query sources and nothing else. It does NOT mean competitions are out of scope: creating one is a Scout feature. Never tell a user Scout cannot do competitions.",
+    // Competitions had a tool to prepare one and nothing to read one, so every
+    // "what competitions are active" and "show the standings" was declined —
+    // in the servers that run them, which are the only ones shown those chips.
+    "That restriction is about those two query sources and nothing else. Competitions are a Scout feature and you can read them: list_competitions shows a server's competitions with status, scoring, dates and, on request, each one's leader or winner; get_competition_standings shows one competition's ranked standings. Use them for any question about competitions that exist. Never tell a user Scout cannot do competitions.",
+    "Reading a competition needs the competitions:read permission in that server, as it does in the web app. When the tool says the user lacks it, say that and that a server admin can grant it — never that the competition does not exist.",
     ...(options.creation === true
       ? [
           "The creation skill listed above is how you prepare a competition here. Load it before answering any question about what a competition can score.",
@@ -263,7 +274,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
           options.surface === "web"
             ? // Web with no capability means the operator has not switched the
               // flag on for any server in scope.
-              "Preparing a creation is not switched on for the servers in scope, so you have no tool for it. Scout still has reports, subscriptions, tracked players and competitions as features — say creating one is not available to you here and that a server admin can do it in the Scout web app, never that the feature does not exist."
+              "Setting up a new competition, report or subscription from Explore is not switched on for the servers in scope, so you cannot prepare one here. Say exactly that — creating it is not enabled here, and a server admin can create it in the Scout web app — never that the feature does not exist. Reading existing competitions is unaffected."
             : // Discord and voice never get creation tools at all: it is a
               // surface rule, not a per-server setting, so blaming the server
               // would send the user to an admin who can change nothing.

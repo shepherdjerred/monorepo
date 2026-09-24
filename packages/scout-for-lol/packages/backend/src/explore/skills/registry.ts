@@ -49,6 +49,7 @@ export type ExploreSkillOptions = {
   creation?: boolean | undefined;
   riotHistory?: boolean | undefined;
   clash?: boolean | undefined;
+  hallOfFame?: boolean | undefined;
   surface?: ExploreSurface | undefined;
 };
 
