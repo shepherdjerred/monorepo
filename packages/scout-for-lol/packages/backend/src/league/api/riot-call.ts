@@ -14,6 +14,7 @@ import { parseWithUnknownKeyFallback } from "#src/league/api/strict-with-loose-f
 import {
   extractHttpStatus,
   isExpectedUpstreamError,
+  RiotTransportError,
 } from "#src/league/api/client/errors.ts";
 
 const logger = createLogger("riot-call");
@@ -138,10 +139,16 @@ async function runRiotCall<T>(
         status: isTimeoutError(error) ? "timeout" : "error",
       });
       const status = extractHttpStatus(error);
-      // Retry only failures with no HTTP response: the client below already
-      // retried 429 and expected upstream statuses, and non-transport
-      // failures (404, auth, validation) recur identically on retry.
-      if (status === undefined && attempt < RIOT_CALL_MAX_ATTEMPTS) {
+      // Retry only recognized transient failures: a client timeout or a
+      // transport failure from the HTTP layer below (which already retried
+      // 429 and expected upstream statuses). Anything else without a
+      // status — malformed JSON, client bugs — recurs identically on
+      // retry, so it fails fast below.
+      if (
+        status === undefined &&
+        (error instanceof RiotTransportError || isTimeoutError(error)) &&
+        attempt < RIOT_CALL_MAX_ATTEMPTS
+      ) {
         logger.warn(
           `[${source}] ⚠️ Transient failure (attempt ${attempt.toString()}/${RIOT_CALL_MAX_ATTEMPTS.toString()})${contextSuffix}; retrying`,
         );
