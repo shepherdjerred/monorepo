@@ -4,7 +4,6 @@ import {
   DeploymentStrategy,
   EnvValue,
   type ISecret,
-  Probe,
   Protocol,
   Secret,
   Service,
@@ -30,6 +29,13 @@ import {
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { createScoutGatewayDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import { createScoutGatewayRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway-retirement-gate.ts";
+import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import {
+  gatewayTopologyRunsRole,
+  type ScoutGatewayTopology,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -45,7 +51,11 @@ function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
-export function createScoutDeployment(chart: Chart, stage: Stage) {
+export function createScoutDeployment(
+  chart: Chart,
+  stage: Stage,
+  gatewayTopology: ScoutGatewayTopology,
+) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
@@ -180,22 +190,39 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       localPathVolume.claim,
     ),
   };
-  const volumeMounts =
+  // Voice is a gateway-role capability: the table gives voiceAssistant and
+  // voiceStateAccess to `combined` and `gateway`, never to `application`. So on
+  // a split stage the credential follows the shard into scout-gateway, and this
+  // pod — which runs `application` — neither mounts nor needs it. On an unsplit
+  // stage the combined pod keeps it exactly as #2870 wired it.
+  const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
+  const voiceSecretMount =
     stage === "beta"
-      ? [
-          dataVolumeMount,
-          {
-            path: "/run/secrets/scout-openai",
-            volume: Volume.fromSecret(
-              chart,
-              "scout-openai-volume",
-              requiredVoiceOpenAiSecret(voiceOpenAiSecret),
-              {
-                optional: true,
-              },
-            ),
-          },
-        ]
+      ? {
+          path: "/run/secrets/scout-openai",
+          volume: Volume.fromSecret(
+            chart,
+            "scout-openai-volume",
+            requiredVoiceOpenAiSecret(voiceOpenAiSecret),
+            {
+              // Deliberately optional, not an oversight of the fail-fast
+              // secrets rule. The backend treats an absent credential as the
+              // designed `unconfigured` status reported at `/scout join`, and
+              // loads voice lazily rather than at boot. Requiring it would
+              // leave the pod unschedulable until the Secret exists — and
+              // since the split that is the pod holding the Discord shard, so
+              // a rotation would take every slash command down for the sake of
+              // a flag-gated feature. The full argument, with its sources in
+              // the backend, is on the test that pins this in
+              // scout-voice-boundary.test.ts.
+              optional: true,
+            },
+          ),
+        }
+      : undefined;
+  const volumeMounts =
+    voiceSecretMount !== undefined && !splitTopology
+      ? [dataVolumeMount, voiceSecretMount]
       : [dataVolumeMount];
 
   const baseEnvVariables = {
@@ -331,24 +358,43 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           // Discord servers. An unset or empty list denies everyone, so this
           // must be present for anyone to reach /app/explore in beta.
           EXPLORE_GUILD_ALLOWLIST: EnvValue.fromValue("1337623164146155593"),
-          // Hey Scout's credential and bootstrap surface. Activation itself is
-          // the `voice_assistant_enabled` Flipt flag and lives nowhere here:
-          // the backend loads its models lazily on first `/scout join`, so
-          // there is no env gate to duplicate the flag's authority. Production
-          // omits these because it has no voice credential and is hard-disabled
-          // for the flag in code.
-          //
-          // A Secret volume is updated in a running pod when 1Password
-          // populates the key. The lazy loader reads it on every attempt, so
-          // the credential handoff needs neither an unschedulable pod nor an
-          // imperative restart.
+        }
+      : baseEnvVariables;
+
+  // Hey Scout's credential and bootstrap surface. Activation itself is the
+  // `voice_assistant_enabled` Flipt flag and lives nowhere here: the backend
+  // loads its models lazily on first `/scout join`, so there is no env gate to
+  // duplicate the flag's authority. Production omits these because it has no
+  // voice credential and is hard-disabled for the flag in code.
+  //
+  // A Secret volume is updated in a running pod when 1Password populates the
+  // key. The lazy loader reads it on every attempt, so the credential handoff
+  // needs neither an unschedulable pod nor an imperative restart.
+  //
+  // Held separately from envVariables because these follow the shard: on a
+  // split stage they belong to scout-gateway, which is the process that
+  // actually runs `/scout join`.
+  const voiceEnvVariables: Record<string, EnvValue> =
+    stage === "beta"
+      ? {
           OPENAI_API_KEY_FILE: EnvValue.fromValue(
             "/run/secrets/scout-openai/OPENAI_API_KEY",
           ),
           VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/scout/voice"),
           VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
         }
-      : baseEnvVariables;
+      : {};
+
+  // A split stage runs this Deployment as the `application` role, with the
+  // Discord shard — and therefore voice — moved to scout-gateway. Every other
+  // stage stays on the combined role, which is what an unset SCOUT_RUNTIME_ROLE
+  // resolves to, so an unsplit stage's manifest is unchanged by the split.
+  const roleEnvVariables: Record<string, EnvValue> = splitTopology
+    ? {
+        ...envVariables,
+        SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
+      }
+    : { ...envVariables, ...voiceEnvVariables };
 
   deployment.addContainer(
     withCommonProps({
@@ -375,23 +421,9 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           limit: Size.gibibytes(8),
         },
       },
-      startup: Probe.fromHttpGet("/ping", {
-        port: 3000,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 240,
-      }),
-      liveness: Probe.fromHttpGet("/livez", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/healthz", {
-        port: 3000,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
+      ...scoutRuntimeProbes(),
       volumeMounts,
-      envVariables,
+      envVariables: roleEnvVariables,
     }),
   );
 
@@ -417,4 +449,30 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     name: `scout-${stage}`,
     matchLabels: { app: "scout", stage },
   });
+
+  // The gateway role shares this stage's claim and SELinux level by design;
+  // see createScoutGatewayDeployment for why that is safe for this role and
+  // not for activity-worker. The pin is already proven safe for a second pod
+  // above, before any of this stage's resources were built.
+  //
+  // Rendered while retiring as well as while split — at zero replicas, which is
+  // how the rollback retires the pod without an operator scaling it by hand.
+  // Retiring also renders the gate that holds the backend's return to
+  // `combined` until that pod has actually exited.
+  // The claim is still declared on a retiring Deployment; with no pod it is
+  // never mounted, so the read-only co-mount argument above is unaffected.
+  if (gatewayTopology !== "absent") {
+    createScoutGatewayDeployment(chart, stage, {
+      topology: gatewayTopology,
+      imageVersion,
+      envVariables: { ...envVariables, ...voiceEnvVariables },
+      claim: localPathVolume.claim,
+      selinuxLevel,
+      colocateWith: deployment,
+      voiceSecretMount,
+    });
+  }
+  if (gatewayTopology === "retiring") {
+    createScoutGatewayRetirementGate(chart, stage);
+  }
 }

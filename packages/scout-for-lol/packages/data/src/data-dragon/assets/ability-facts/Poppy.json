@@ -30,7 +30,7 @@
         "SlowDuration": [0.5, 0.5, 0.5, 0.5, 0.5],
         "BaseMoveSpeedMod": [0.2, 0.23, 0.26, 0.29, 0.32],
         "DelayBetweenTwoHits": [1, 1, 1, 1, 1],
-        "MaxHealthDamageToNonHeroes": [85, 120, 155, 190, 225]
+        "MaxHealthDamageToNonHeroes": [70, 105, 140, 175, 210]
       },
       "resolvedDescription": "Poppy smashes the ground, dealing 30/55/80/105/130 (+75% bonus AD) plus 7/7.5/8/8.5/9% max Health physical damage and making the ground unstable. The unstable area Slows enemies by {{ movespeedmod }} and erupts after 1 second, dealing 30/55/80/105/130 (+75% bonus AD) plus 7/7.5/8/8.5/9% max Health physical damage again.",
       "unresolved": ["movespeedmod"]

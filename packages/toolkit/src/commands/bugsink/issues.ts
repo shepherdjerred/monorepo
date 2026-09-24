@@ -7,6 +7,7 @@ export type IssuesOptions = {
   json?: boolean | undefined;
   project?: string | undefined;
   limit?: number | undefined;
+  maxPages?: number | undefined;
 };
 
 function formatIssue(issue: BugsinkIssue): string {
@@ -83,6 +84,7 @@ export async function issuesCommand(
     const issues = await getIssues({
       project: options.project,
       limit: options.limit,
+      maxPages: options.maxPages,
     });
 
     if (options.json === true) {

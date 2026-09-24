@@ -13,6 +13,25 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 09 24",
+    banner: "Updated for League patch 26.19",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.19",
+          "League Classic adds Fizz, Graves, Nami, and Nautilus, plus the returning items Cloak and Dagger, Moonflair Spellblade, and Zz'Rot Portal.",
+          "Arena adds 13 new Augments (including Hellbent, Shark Bait, Surge Field, Titan's Resolve, Death Dealer, and Got That Dog In Em) and three new Guests of Honor: Ivern, Senna, and Thresh.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.19 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-19-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 09 13",
     banner: "In beta: Explore, player profiles, Hall of Fame, and Hey Scout",
     sections: [

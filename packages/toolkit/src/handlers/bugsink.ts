@@ -36,6 +36,7 @@ async function handleIssues(args: string[]): Promise<void> {
       json: { type: "boolean", default: false },
       project: { type: "string" },
       limit: { type: "string" },
+      "max-pages": { type: "string" },
     },
     allowPositionals: true,
   });
@@ -43,7 +44,16 @@ async function handleIssues(args: string[]): Promise<void> {
     values.limit != null && values.limit.length > 0
       ? Number.parseInt(values.limit, 10)
       : undefined;
-  await issuesCommand({ json: values.json, project: values.project, limit });
+  const maxPages =
+    values["max-pages"] != null && values["max-pages"].length > 0
+      ? Number.parseInt(values["max-pages"], 10)
+      : undefined;
+  await issuesCommand({
+    json: values.json,
+    project: values.project,
+    limit,
+    maxPages,
+  });
 }
 
 async function handleIssue(args: string[]): Promise<void> {
@@ -175,7 +185,8 @@ Options:
   --json                Output as JSON
   --project <slug|id>   (issues/releases) Filter by project
   --team <uuid>         (projects) Filter by team UUID
-  --limit <n>           Maximum number of results
+  --limit <n>           Maximum total results (client-side cap)
+  --max-pages <n>       Maximum pages to fetch (default 100)
 
 Environment:
   BUGSINK_URL           Required. Your Bugsink instance URL.

@@ -384,8 +384,16 @@ export async function getLastProcessedMatch(
 }
 
 /**
- * Update the lastMatchTime for an account.
- * This is called when we process a match to track player activity for dynamic polling.
+ * Seed the polling-activity timestamp of an account that has no cursor yet.
+ *
+ * Once an account has a `lastProcessedMatchId`, `lastMatchTime` is the
+ * creation time OF THAT MATCH, and only the cursor writers may move it: V2's
+ * `advanceAccountCursor` orders its monotonic guard on this column. Moving it
+ * ahead on its own — to the newest match in Riot's history, which is exactly
+ * what a stale-account refresh finds while ingestion is behind — makes every
+ * older unprocessed match answer `already-applied`, freezes
+ * `lastProcessedMatchId`, and has discovery return the same processed matches
+ * on every poll. So rows that already carry a cursor are left untouched.
  *
  * @param puuid - Player PUUID to update
  * @param matchTime - The game creation timestamp from the match
@@ -404,6 +412,7 @@ export async function updateLastMatchTime(
     await prismaClient.account.updateMany({
       where: {
         puuid,
+        lastProcessedMatchId: null,
       },
       data: {
         lastMatchTime: matchTime,

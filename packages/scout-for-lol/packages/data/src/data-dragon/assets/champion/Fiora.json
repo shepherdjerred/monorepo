@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Fiora": {
       "id": "Fiora",
@@ -722,7 +722,7 @@
       },
       "stats": {
         "hp": 620,
-        "hpperlevel": 99,
+        "hpperlevel": 105,
         "mp": 300,
         "mpperlevel": 60,
         "movespeed": 345,

@@ -201,8 +201,13 @@
       // pipeline: the checker treats literal `.buildkite/scripts/*.ts`
       // commands as entry points and follows their imports, so a requireEnv
       // added there would otherwise reuse a green cached result.
+      // The check iterates every pipeline in secret-grants.json, so every
+      // one of those files must invalidate it — reporting-pipeline.yml was
+      // missing here, which let a grant violation ride main green on cache.
       "inputs": [
         ".buildkite/pipeline.yml",
+        ".buildkite/main-bootstrap.yml",
+        ".buildkite/reporting-pipeline.yml",
         ".buildkite/scripts/**",
         "scripts/**",
         "!scripts/node_modules/**",

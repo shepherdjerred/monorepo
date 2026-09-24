@@ -3,6 +3,7 @@ import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import analyticsRegistryJson from "@shepherdjerred/monorepo/config/analytics-sites.json" with { type: "json" };
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
+import { SCOUT_GATEWAY_TOPOLOGY } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 const RegistrySchema = z.object({
   projectToken: z.string(),
@@ -36,7 +37,7 @@ describe("Scout PostHog deployment configuration", () => {
         namespace: `scout-${stage}`,
         disableResourceNameHashes: true,
       });
-      createScoutDeployment(chart, stage);
+      createScoutDeployment(chart, stage, SCOUT_GATEWAY_TOPOLOGY[stage]);
       const manifests = z.array(z.unknown()).parse(Testing.synth(chart));
       const deployment = DeploymentSchema.parse(
         manifests.find((manifest) => {

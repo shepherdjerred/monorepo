@@ -170,21 +170,27 @@ describe("Scout bot-health alert rules", () => {
       throw new Error("Missing ScoutDiscordDisconnected rule");
     }
     const expression = JSON.stringify(rule.expr);
-    // Both stages run `combined` today. The selector has to describe the
-    // DEPLOYED topology, not the capability table: a role that is
-    // split-capable but has no Deployment produces no series, so naming it
-    // here would make the absent() guard fire continuously against a healthy
-    // stage. The split PR flips beta to `gateway` in the same diff that ships
-    // the pod, so the two change at one ArgoCD revision.
+    // The selector has to describe the DEPLOYED topology, not the capability
+    // table: a role that is split-capable but has no Deployment produces no
+    // series, so naming it here would make the absent() guard fire
+    // continuously against a healthy stage.
+    //
+    // Beta now names `gateway` because the scout-gateway Deployment ships in
+    // this same revision — the flip and the pod land together, so neither is
+    // briefly true alone. Prod stays `combined` until its own split gate.
     expect(expression).toContain(
-      String.raw`environment=\"beta\",role=\"combined\"`,
+      String.raw`environment=\"beta\",role=\"gateway\"`,
     );
     expect(expression).toContain(
       String.raw`environment=\"prod\",role=\"combined\"`,
     );
-    // Neither the deferred role nor the not-yet-deployed one may appear.
+    // Prod must NOT have moved with beta: the stages split independently, and
+    // naming a role prod does not run is exactly the continuous page above.
+    expect(expression).not.toContain(
+      String.raw`environment=\"prod\",role=\"gateway\"`,
+    );
+    // The deferred role still owns no pod in either stage.
     expect(expression).not.toContain("activity-worker");
-    expect(expression).not.toContain(String.raw`role=\"gateway\"`);
     // Every read of the gauge must be scoped, not just the first.
     const gaugeReads = expression.split("discord_connection_status").length - 1;
     const scopedReads = expression.split(String.raw`role=\"`).length - 1;

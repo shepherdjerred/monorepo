@@ -1,3 +1,8 @@
+import {
+  SCOUT_STAGES,
+  scoutGatewayOwnerRole,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+
 export const SCOUT_TRPC_NON_FAULT_CODES = [
   "OK",
   "UNAUTHORIZED",
@@ -18,29 +23,46 @@ export const SCOUT_TRPC_NON_FAULT_CODES = [
  *
  * It is per stage because the owner is a property of the DEPLOYED topology, not
  * of the capability table, and the two are not the same thing at every moment.
- * A role can be split-capable and still have no pod: `gateway` exists in the
- * capability table today, but the Deployment that would run it ships in the
- * runtime-split PR, which is merge-held for an operator gate.
+ * A role can be split-capable and still have no pod: every role in the
+ * capability table has existed since the runtime-role work, but only the ones
+ * with a rendered Deployment are running anywhere.
  *
- * So this table describes what is actually running, and right now that is
- * `combined` in both stages. Pointing beta at `gateway` ahead of the split
- * would not degrade gracefully — the series simply would not exist, the
- * `absent()` guard would fire, and beta would page continuously while perfectly
- * healthy. An alert that is right about the future and wrong about the present
- * is wrong.
+ * So this table describes what is actually running. Beta runs `gateway`: its
+ * scout-gateway Deployment ships in the same revision as this line, which is
+ * the whole reason the flip lives here rather than in a follow-up — the alert
+ * and the topology change together and neither is briefly true alone. Prod
+ * stays `combined`; its split is a later gate, blocked on nothing now that
+ * Scout is PostgreSQL-only, but not taken yet.
  *
- * The split PR flips beta to `gateway` in its own diff, so the alert and the
- * topology change at the same ArgoCD revision and neither is briefly true
- * alone. That is also why this stays a table rather than being folded into a
- * single selector: the flip has to be one obvious line.
+ * Pointing a stage at a role it does not run would not degrade gracefully — the
+ * series simply would not exist, the `absent()` guard would fire, and that
+ * stage would page continuously while perfectly healthy. An alert that is right
+ * about the future and wrong about the present is wrong.
+ *
+ * ## Why this is derived rather than typed out
+ *
+ * That failure mode is not hypothetical, and until this became a derivation it
+ * was one edit away in the rollback direction. `SCOUT_GATEWAY_TOPOLOGY` and
+ * this table were two hand-maintained lists describing the same fact, and
+ * nothing coupled them. Retiring beta's gateway while this still said `gateway`
+ * would delete the only pod exporting
+ * `discord_connection_status{role="gateway"}`, so `absent()` would fire and
+ * beta would page critical continuously — during a rollback, and without
+ * clearing, because beta's combined series is not in its own selector.
+ *
+ * Deriving it from the topology gives the backward direction the guarantee the
+ * forward one already had: one edit moves the pods, this alert and the
+ * dashboard connection panel at a single ArgoCD revision, and neither is
+ * briefly true alone. A `retiring` stage answers `combined` because the backend
+ * has already taken the shard back by the time its gateway scales away.
  *
  * `activity-worker` is deliberately absent, and not only because it owns no
  * gateway — its Deployment is deferred out of this wave entirely.
  */
-export const SCOUT_GATEWAY_OWNER_BY_STAGE = [
-  { environment: "beta", role: "combined" },
-  { environment: "prod", role: "combined" },
-];
+export const SCOUT_GATEWAY_OWNER_BY_STAGE = SCOUT_STAGES.map((environment) => ({
+  environment,
+  role: scoutGatewayOwnerRole(environment),
+}));
 
 /**
  * The same answer as a role set, for callers that cannot phrase a per-stage

@@ -17,6 +17,13 @@ import type { PrIdentity } from "#domain/schemas.ts";
 export type HostedReviewCompletion = {
   complete: boolean;
   issueComment: ReviewIssueComment | null;
+  /**
+   * Provider-side block slug (e.g. `"usage-limited"`) when the review cannot
+   * run, or null. The controller keeps waiting — a human resolves quota out of
+   * band and the review then completes — but callers can tell a blocked wait
+   * apart from a review that is still running.
+   */
+  blockedReason: string | null;
 };
 
 export async function resolveHostedReviewCompletion(options: {
@@ -32,7 +39,7 @@ export async function resolveHostedReviewCompletion(options: {
       provider,
     }) !== null
   ) {
-    return { complete: true, issueComment: null };
+    return { complete: true, issueComment: null, blockedReason: null };
   }
 
   const tokenOutput = await readToken();
@@ -54,5 +61,6 @@ export async function resolveHostedReviewCompletion(options: {
   return {
     complete: reviewState.state === "reviewed",
     issueComment: reviewState.issueComment ?? null,
+    blockedReason: reviewState.blockedReason,
   };
 }

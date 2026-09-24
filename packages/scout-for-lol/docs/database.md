@@ -157,7 +157,10 @@ A League of Legends account linked to a player.
 **Match Tracking Fields**:
 
 - `lastProcessedMatchId`: Prevents duplicate processing
-- `lastMatchTime`: Used for dynamic polling frequency
+- `lastMatchTime`: Used for dynamic polling frequency. Once
+  `lastProcessedMatchId` is set, it is that match's creation time and only the
+  cursor writers move it, because the V2 cursor's monotonic guard orders on it.
+  The stale-account refresh seeds it only for accounts without a cursor.
 - `lastCheckedAt`: Tracks polling intervals
 
 ### Subscription
