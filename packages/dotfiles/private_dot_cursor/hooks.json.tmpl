@@ -4,13 +4,7 @@
       {
         "command": "bash '/Users/jerred/.cursor/herdr-agent-state.sh' session"
       }
-    ]{{ if eq .chezmoi.os "darwin" }},
-    "sessionEnd": [
-      {
-        "command": "{{ .chezmoi.homeDir }}/.local/bin/plannotator-cursor-session-end-hook",
-        "timeout": 345600
-      }
-    ]{{ end }}
+    ]
   },
   "version": 1
 }

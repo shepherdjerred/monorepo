@@ -7,14 +7,5 @@
         "type": "command"
       }
     ]
-  }{{ if eq .chezmoi.os "darwin" }},
-  "plannotator": {
-    "Stop": [
-      {
-        "type": "command",
-        "command": "{{ .chezmoi.homeDir }}/.local/bin/plannotator-antigravity-stop-hook",
-        "timeout": 345600
-      }
-    ]
-  }{{ end }}
+  }
 }
