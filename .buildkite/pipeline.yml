@@ -2086,6 +2086,7 @@ steps:
       - tofu-platforms-validate
       - tofu-posthog-plan
       - images-pr
+      - windows-cross-compiler-pr
     allow_dependency_failure: true
     env:
       REVIEW_PROVIDER: codex
