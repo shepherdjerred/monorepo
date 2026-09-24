@@ -167,7 +167,9 @@ session: Brim never rotates, refreshes, logs, or persists the token, and an
 expired token surfaces as a sign-in state that a fresh `muse login` clears. An
 API-key login bills the Model API instead and carries no subscription, so Brim
 reports it as signed out. Over-quota percentages above 100 are shown as fully
-used with a note.
+used with a note. Brim caches the keychain token in memory and re-reads only
+when the auth file changes or the cached token is rejected, so macOS prompts
+at most once per rotation; a failed read backs off for an hour.
 
 Cursor reads only `cursorAuth/accessToken` from Cursor's local `state.vscdb`
 and sends an empty Connect JSON request to Cursor's current-period usage
