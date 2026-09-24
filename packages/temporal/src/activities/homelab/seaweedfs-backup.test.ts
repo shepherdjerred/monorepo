@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isTransientBackupStorageError } from "./seaweedfs-backup.ts";
+import { isTransientStorageError } from "#shared/infra/s3.ts";
 
 function s3Error(input: {
   name?: string;
@@ -24,15 +24,15 @@ function s3Error(input: {
   return Object.assign(error, extra);
 }
 
-describe("isTransientBackupStorageError", () => {
+describe("isTransientStorageError", () => {
   test("rejects S3 access denials so restoration fails fast", () => {
     expect(
-      isTransientBackupStorageError(
+      isTransientStorageError(
         s3Error({ name: "AccessDenied", httpStatusCode: 403 }),
       ),
     ).toBe(false);
     expect(
-      isTransientBackupStorageError(
+      isTransientStorageError(
         s3Error({ code: "AccessDenied", message: "Access Denied" }),
       ),
     ).toBe(false);
@@ -40,28 +40,26 @@ describe("isTransientBackupStorageError", () => {
 
   test("retries retryable statuses", () => {
     for (const httpStatusCode of [408, 429, 500, 503]) {
-      expect(isTransientBackupStorageError(s3Error({ httpStatusCode }))).toBe(
-        true,
-      );
+      expect(isTransientStorageError(s3Error({ httpStatusCode }))).toBe(true);
     }
   });
 
   test("retries transport failures by code", () => {
-    expect(
-      isTransientBackupStorageError(s3Error({ code: "ECONNREFUSED" })),
-    ).toBe(true);
+    expect(isTransientStorageError(s3Error({ code: "ECONNREFUSED" }))).toBe(
+      true,
+    );
   });
 
   test("finds a transient cause wrapped in a generic error", () => {
     const wrapped = new Error("request failed", {
       cause: s3Error({ code: "ECONNRESET" }),
     });
-    expect(isTransientBackupStorageError(wrapped)).toBe(true);
+    expect(isTransientStorageError(wrapped)).toBe(true);
   });
 
   test("rejects anything else", () => {
-    expect(isTransientBackupStorageError(new Error("boom"))).toBe(false);
-    expect(isTransientBackupStorageError(null)).toBe(false);
-    expect(isTransientBackupStorageError("ECONNREFUSED")).toBe(false);
+    expect(isTransientStorageError(new Error("boom"))).toBe(false);
+    expect(isTransientStorageError(null)).toBe(false);
+    expect(isTransientStorageError("ECONNREFUSED")).toBe(false);
   });
 });
