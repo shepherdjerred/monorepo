@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { items } from "@scout-for-lol/data";
+import {
+  getPatchChangeset,
+  getPatchChangesets,
+  items,
+} from "@scout-for-lol/data";
 import {
   comparePatchChangesText,
   lookupItemText,
@@ -68,10 +72,24 @@ describe("League reference tools", () => {
   });
 
   test("compares the current patch with its immediate predecessor", () => {
+    const history = getPatchChangesets().map((patch) => patch.patch);
+    const current = getPatchChangeset()?.patch;
+    if (current === undefined) {
+      throw new Error("bundled patch-notes.json has no current patch");
+    }
+    const previous = history[history.indexOf(current) + 1];
+    if (previous === undefined) {
+      throw new Error(`patch history has no predecessor for ${current}`);
+    }
+    // The history is newest-first, so the next entry must be an older patch.
+    expect(
+      previous.localeCompare(current, undefined, { numeric: true }),
+    ).toBeLessThan(0);
+
     const result = comparePatchChangesText({});
-    expect(result).toContain("Comparing patch 26.17 to 26.18");
-    expect(result).toContain("Patch 26.17:");
-    expect(result).toContain("Patch 26.18:");
+    expect(result).toContain(`Comparing patch ${previous} to ${current}`);
+    expect(result).toContain(`Patch ${previous}:`);
+    expect(result).toContain(`Patch ${current}:`);
   });
 });
 
