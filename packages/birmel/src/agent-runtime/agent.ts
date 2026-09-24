@@ -23,6 +23,7 @@ import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
+import { recoverTurnAnswer } from "./turn-answer-recovery.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
 
@@ -363,62 +364,98 @@ export async function executeTurn(
         output: Output.object({ schema: TurnAnswerSchema }),
       });
       const progress = options.progress;
-      const result = await agent.generate({
-        messages: taskMessages(packet),
-        abortSignal,
-        ...(progress === undefined
-          ? {}
-          : {
-              onToolExecutionStart: ({ toolCall }) => {
-                progress.toolStarted(
-                  toolCall.toolCallId,
-                  toolCall.toolName,
-                  toolCall.input,
-                );
-              },
-              onToolExecutionEnd: ({
-                toolCall,
-                toolOutput,
-                toolExecutionMs,
-              }) => {
-                // A tool that resolves rather than throws still reports its
-                // own success/failure inside the resolved value (the same
-                // field summarizeToolResultForSession reads), so a validation
-                // failure inside the tool would otherwise render as a
-                // misleading ✓. Fall back to "resolved at all" only for a
-                // shape this check does not recognize.
-                const domainResult = ToolDomainResultSchema.safeParse(
-                  toolOutput.type === "tool-result"
-                    ? toolOutput.output
-                    : undefined,
-                );
-                const succeeded = domainResult.success
-                  ? domainResult.data.success
-                  : toolOutput.type !== "tool-error";
-                progress.toolFinished(
-                  toolCall.toolCallId,
-                  succeeded,
+      let result: Awaited<ReturnType<typeof agent.generate>>;
+      try {
+        result = await agent.generate({
+          messages: taskMessages(packet),
+          abortSignal,
+          ...(progress === undefined
+            ? {}
+            : {
+                onToolExecutionStart: ({ toolCall }) => {
+                  progress.toolStarted(
+                    toolCall.toolCallId,
+                    toolCall.toolName,
+                    toolCall.input,
+                  );
+                },
+                onToolExecutionEnd: ({
+                  toolCall,
+                  toolOutput,
                   toolExecutionMs,
-                );
-              },
-              onStepStart: ({ stepNumber }) => {
-                progress.stepStarted(stepNumber);
-              },
-              onStepFinish: ({ stepNumber, text, toolCalls }) => {
-                // The finishing step answers with structured TurnAnswer JSON
-                // and calls no tool, so its "text" is wire JSON, not the
-                // requested plain-language sentence. Narration only ever
-                // comes from a step that actually did something.
-                if (toolCalls.length > 0) {
-                  progress.stepFinished(stepNumber, text);
-                }
-              },
-            }),
-        ...runtime.callOptions({
-          workload: "birmel.agent.turn",
-          sessionId: packet.threadId ?? packet.channelId,
-        }),
-      });
+                }) => {
+                  // A tool that resolves rather than throws still reports its
+                  // own success/failure inside the resolved value (the same
+                  // field summarizeToolResultForSession reads), so a validation
+                  // failure inside the tool would otherwise render as a
+                  // misleading ✓. Fall back to "resolved at all" only for a
+                  // shape this check does not recognize.
+                  const domainResult = ToolDomainResultSchema.safeParse(
+                    toolOutput.type === "tool-result"
+                      ? toolOutput.output
+                      : undefined,
+                  );
+                  const succeeded = domainResult.success
+                    ? domainResult.data.success
+                    : toolOutput.type !== "tool-error";
+                  progress.toolFinished(
+                    toolCall.toolCallId,
+                    succeeded,
+                    toolExecutionMs,
+                  );
+                },
+                onStepStart: ({ stepNumber }) => {
+                  progress.stepStarted(stepNumber);
+                },
+                onStepFinish: ({ stepNumber, text, toolCalls }) => {
+                  // The finishing step answers with structured TurnAnswer JSON
+                  // and calls no tool, so its "text" is wire JSON, not the
+                  // requested plain-language sentence. Narration only ever
+                  // comes from a step that actually did something.
+                  if (toolCalls.length > 0) {
+                    progress.stepFinished(stepNumber, text);
+                  }
+                },
+              }),
+          ...runtime.callOptions({
+            workload: "birmel.agent.turn",
+            sessionId: packet.threadId ?? packet.channelId,
+          }),
+        });
+      } catch (error) {
+        const recovered = recoverTurnAnswer(error);
+        if (recovered === null) {
+          throw error;
+        }
+        span.setAttribute(
+          "gen_ai.response.finish_reasons",
+          recovered.finishReason,
+        );
+        span.setAttribute("gen_ai.usage.input_tokens", recovered.inputTokens);
+        span.setAttribute("gen_ai.usage.output_tokens", recovered.outputTokens);
+        span.setAttribute("birmel.agent_steps", 0);
+        span.setAttribute(
+          "birmel.turn_disposition",
+          recovered.answer.disposition,
+        );
+        logger.warn("Agent turn output unparseable; delivering model text", {
+          disposition: recovered.answer.disposition,
+          personaId: packet.personaId,
+          finishReason: recovered.finishReason,
+          inputTokens: recovered.inputTokens,
+          outputTokens: recovered.outputTokens,
+          durationMs: performance.now() - startedAt,
+        });
+        return {
+          text: recovered.answer.answer,
+          disposition: recovered.answer.disposition,
+          finishReason: recovered.finishReason,
+          inputTokens: recovered.inputTokens,
+          outputTokens: recovered.outputTokens,
+          stepCount: 0,
+          toolEvents: [],
+        };
+      }
       const toolEvents = result.steps.flatMap((step) =>
         step.toolResults.map((toolResult) =>
           summarizeToolResultForSession(toolResult, registeredToolIds),
