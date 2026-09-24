@@ -15,10 +15,15 @@ ARG LLVM_VERSION=22
 # the SDK's .tbd stubs. Built from the same Swift image as the final stage: it
 # links that image's libdispatch and BlocksRuntime.
 FROM ${SWIFT_IMAGE} AS cctools
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG LLVM_VERSION
 # apple-libtapi (Apple's .tbd stub library) and cctools-port, pinned by commit.
 ARG TBD_LIBRARY_COMMIT=fa9443738c1a18accef4244732ec6d6ee97a8133
 ARG CCTOOLS_COMMIT=904de2a71d4da6a9b30d2efaf912a10ddc7d9ddb
+# Unpinned on purpose: Ubuntu drops superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure. LLVM is pinned by major version (LLVM_VERSION).
+# hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git cmake ninja-build python3 autoconf automake make uuid-dev libssl-dev curl gnupg ca-certificates \
  && curl -sSf https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm.gpg \
@@ -38,6 +43,7 @@ RUN mkdir -p /tmp/include/block && ln -s /usr/lib/swift/Block/Block.h /tmp/inclu
 
 # ── The toolchain.
 FROM ${SWIFT_IMAGE} AS image
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG LLVM_VERSION
 ARG SDK=27
 ARG RUST_VERSION=1.98.1
@@ -46,6 +52,10 @@ ARG APPLE_CODESIGN_VERSION=0.29.0
 
 # LLVM matching rustc's (1.98.1 → LLVM 22.1): the Rust static archive carries
 # bitcode that older LLVM tools (lipo, ar, LTO) cannot read.
+# Unpinned on purpose: Ubuntu drops superseded point releases from the
+# archive, so an exact `pkg=version` pin turns every upstream security respin
+# into a build failure. LLVM is pinned by major version (LLVM_VERSION).
+# hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get install -y --no-install-recommends file jq curl ca-certificates xz-utils zip gnupg \
  && curl -sSf https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm.gpg \
@@ -113,8 +123,7 @@ ENV DEVELOPER_DIR=/opt/apple/Developer \
     IOS_SDK=/opt/apple/sdks/iPhoneOS.sdk
 
 # clang, clang++, and swiftc per Apple target, under friendly and Rust-target names.
-COPY scripts/apple-target.sh /usr/local/lib/apple-target.sh
-COPY scripts/apple-clang scripts/apple-swiftc /usr/local/bin/
+COPY scripts/apple-target scripts/apple-clang scripts/apple-swiftc /usr/local/bin/
 RUN for t in arm64-apple-macos x86_64-apple-macos arm64-apple-ios arm64-apple-ios-macabi x86_64-apple-ios-macabi; do \
       ln -s apple-clang "/usr/local/bin/$t-clang"; ln -s apple-clang "/usr/local/bin/$t-clang++"; \
       ln -s apple-swiftc "/usr/local/bin/$t-swiftc"; \

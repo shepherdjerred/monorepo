@@ -1,10 +1,15 @@
-# Sourced by the <triple>-clang / <triple>-swiftc wrappers: resolves the
-# invoked name to an Apple target triple with its deployment version.
+#!/usr/bin/env bash
+# Used by the <triple>-clang / <triple>-swiftc wrappers: resolves the name a
+# wrapper was invoked as to an Apple target.
 #
-# Sets: arch, os (macos | ios | macabi), triple (versioned unless the caller
-# passes its own -m*-version-min, as rustc and cc-rs do), sdk.
+#   apple-target <invoked name> [compiler arguments…]
+#
+# Prints one line: arch, os (macos | ios | macabi), triple (versioned unless
+# the arguments carry their own -m*-version-min, as rustc and cc-rs pass), sdk.
+set -euo pipefail
 
-name=$(basename "$0")
+name=$(basename "$1")
+shift
 case "$name" in
   *-clang++) prefix=${name%-clang++} ;;
   *-clang) prefix=${name%-clang} ;;
@@ -32,3 +37,4 @@ case "$os" in
   macabi) version=${IPHONEOS_DEPLOYMENT_TARGET:-18.0} sdk=/opt/apple/sdks/MacOSX.sdk base="$arch-apple-ios" suffix=-macabi ;;
 esac
 if [ "$explicit_minimum" = true ]; then triple="$base$suffix"; else triple="$base$version$suffix"; fi
+printf '%s %s %s %s\n' "$arch" "$os" "$triple" "$sdk"

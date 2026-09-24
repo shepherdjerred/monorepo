@@ -20,6 +20,7 @@ export const summarySteps = [
   "docker-e2e-main",
   "images",
   "sites",
+  "macos-cross-compiler",
   "homelab-release-admission",
   "helm-push",
   "tofu-apply-seaweedfs",

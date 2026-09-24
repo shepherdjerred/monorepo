@@ -6,7 +6,8 @@
 # resource directory, and the Linux builds of the SwiftUI macros. Linking goes
 # through clang, whose per-triple configuration selects ld64.
 set -euo pipefail
-source /usr/local/lib/apple-target.sh
+target=$(apple-target "$0" "$@")
+read -r arch os triple sdk <<<"$target"
 arguments=(-target "$triple" -sdk "$sdk" -resource-dir /opt/apple/swift-resource
   -load-plugin-executable "/opt/apple/plugins/AppleMacros#SwiftUIMacros,PreviewsMacros")
 if [ "$os" = macabi ]; then

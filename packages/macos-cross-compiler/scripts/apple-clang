@@ -8,7 +8,8 @@
 # clang's per-triple configuration (/usr/bin/<triple>.cfg), so plain
 # `clang --target=arm64-apple-macos15` works the same way.
 set -euo pipefail
-source /usr/local/lib/apple-target.sh
+target=$(apple-target "$0" "$@")
+read -r arch os triple sdk <<<"$target"
 driver=clang
-[[ $name == *-clang++ ]] && driver=clang++
+[[ $0 == *-clang++ ]] && driver=clang++
 exec "$driver" --target="$triple" "$@"

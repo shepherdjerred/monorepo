@@ -2832,6 +2832,7 @@ steps:
               - <<: *pod_buildkit_container
                 env:
                   - *env_buildkite_shell
+                  - *grant_github_download
                   - *grant_seaweedfs_deploy_access
                   - *grant_seaweedfs_deploy_secret
 
@@ -2863,6 +2864,7 @@ steps:
               - <<: *pod_buildkit_container
                 env:
                   - *env_buildkite_shell
+                  - *grant_github_download
                   - *grant_github_packages
                   - *grant_seaweedfs_deploy_access
                   - *grant_seaweedfs_deploy_secret
@@ -4089,6 +4091,7 @@ steps:
       - docker-e2e-main
       - images
       - sites
+      - macos-cross-compiler
       - homelab-release-admission
       - helm-push
       - tofu-apply-seaweedfs
