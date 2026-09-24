@@ -229,7 +229,7 @@ describe("version catalog integrity", () => {
     expect(serializePinCandidatesState(state).endsWith("\n")).toBe(true);
   });
 
-  test("records the Scout beta database contract with the pin", async () => {
+  test("leaves Scout beta notes untouched when rewriting the pin", async () => {
     const state = mergePinCandidates(
       parsePinCandidatesState('{"schema":"pin-candidates-state/v1","pins":{}}'),
       batch(12, "v12", B, "shepherdjerred/scout-for-lol/beta"),
@@ -239,13 +239,13 @@ describe("version catalog integrity", () => {
         {
           name: "shepherdjerred/scout-for-lol/beta",
           value: `old@${A}`,
-          notes: [`database contract: postgresql ${A}`],
+          notes: ["not managed"],
         },
       ]),
       state,
     );
-    expect(rewritten).toContain(`"database contract: postgresql ${B}"`);
-    expect(rewritten).toContain(`"database contract: postgresql ${A}"`);
+    expect(rewritten).toContain(`"value": "v12@${B}"`);
+    expect(rewritten).toContain('"notes": ["not managed"]');
   });
 
   test("fails closed when state and versions drift", () => {

@@ -5,10 +5,7 @@ import {
   versionCatalogMap,
 } from "@shepherdjerred/version-catalog";
 import { VersionMapSchema } from "./version-map.generated.ts";
-import {
-  applyCurrentBuildImageOverrides,
-  catalogScoutPostgresImageDigests,
-} from "./release-configuration.ts";
+import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
 
 const catalogOverride = Bun.env["HOMELAB_VERSION_CATALOG_JSON"];
 export const versionCatalog =
@@ -17,10 +14,9 @@ export const versionCatalog =
     : parseVersionCatalogText(catalogOverride);
 const versions = VersionMapSchema.parse(versionCatalogMap(versionCatalog));
 
-export const postgresImageDigests = new Set([
-  ...catalogScoutPostgresImageDigests(versionCatalog),
-  ...applyCurrentBuildImageOverrides(versions),
-]);
+// Overlays the current build's image digests onto the catalog pins in place.
+// Scout is PostgreSQL-only, so no per-image database contract is derived here.
+applyCurrentBuildImageOverrides(versions);
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned
