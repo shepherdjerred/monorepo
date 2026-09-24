@@ -175,7 +175,7 @@ Options:
   --json                Output as JSON
   --project <slug|id>   (issues/releases) Filter by project
   --team <uuid>         (projects) Filter by team UUID
-  --limit <n>           Maximum number of results
+  --limit <n>           Maximum total results (client-side cap)
 
 Environment:
   BUGSINK_URL           Required. Your Bugsink instance URL.

@@ -1,4 +1,8 @@
-import { bugsinkRequest, bugsinkRequestRaw } from "./client.ts";
+import {
+  bugsinkRequest,
+  bugsinkRequestPaginated,
+  bugsinkRequestRaw,
+} from "./client.ts";
 import {
   BugsinkTeamSchema,
   BugsinkProjectDetailSchema,
@@ -6,7 +10,6 @@ import {
   BugsinkEventDetailSchema,
   BugsinkReleaseListSchema,
   BugsinkReleaseDetailSchema,
-  BugsinkPaginatedResponseSchema,
 } from "./schemas.ts";
 import type {
   BugsinkTeam,
@@ -18,16 +21,13 @@ import type {
 } from "./types.ts";
 
 export async function getTeams(): Promise<BugsinkTeam[]> {
-  const result = await bugsinkRequest(
-    "/teams/",
-    BugsinkPaginatedResponseSchema(BugsinkTeamSchema),
-  );
+  const result = await bugsinkRequestPaginated("/teams/", BugsinkTeamSchema);
 
   if (!result.success || !result.data) {
     throw new Error(result.error ?? "Failed to fetch teams");
   }
 
-  return result.data.results;
+  return result.data;
 }
 
 export async function getTeam(uuid: string): Promise<BugsinkTeam | null> {
@@ -52,9 +52,9 @@ export async function getProjects(
     params["team"] = teamUuid;
   }
 
-  const result = await bugsinkRequest(
+  const result = await bugsinkRequestPaginated(
     "/projects/",
-    BugsinkPaginatedResponseSchema(BugsinkProjectDetailSchema),
+    BugsinkProjectDetailSchema,
     params,
   );
 
@@ -62,7 +62,7 @@ export async function getProjects(
     throw new Error(result.error ?? "Failed to fetch projects");
   }
 
-  return result.data.results;
+  return result.data;
 }
 
 export async function getProject(
@@ -86,9 +86,9 @@ export async function getProject(
 export async function getEvents(
   issueUuid: string,
 ): Promise<BugsinkEventListItem[]> {
-  const result = await bugsinkRequest(
+  const result = await bugsinkRequestPaginated(
     "/events/",
-    BugsinkPaginatedResponseSchema(BugsinkEventListSchema),
+    BugsinkEventListSchema,
     { issue: issueUuid },
   );
 
@@ -96,7 +96,7 @@ export async function getEvents(
     throw new Error(result.error ?? "Failed to fetch events");
   }
 
-  return result.data.results;
+  return result.data;
 }
 
 export async function getEvent(
@@ -139,9 +139,9 @@ export async function getReleases(
         : await resolveProjectSlug(project);
   }
 
-  const result = await bugsinkRequest(
+  const result = await bugsinkRequestPaginated(
     "/releases/",
-    BugsinkPaginatedResponseSchema(BugsinkReleaseListSchema),
+    BugsinkReleaseListSchema,
     params,
   );
 
@@ -149,7 +149,7 @@ export async function getReleases(
     throw new Error(result.error ?? "Failed to fetch releases");
   }
 
-  return result.data.results;
+  return result.data;
 }
 
 async function resolveProjectSlug(project: string): Promise<string> {

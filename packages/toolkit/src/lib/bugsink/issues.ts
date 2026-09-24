@@ -1,8 +1,5 @@
-import { bugsinkRequest, bugsinkRequestPostRaw } from "./client.ts";
-import {
-  BugsinkIssueSchema,
-  BugsinkPaginatedResponseSchema,
-} from "./schemas.ts";
+import { bugsinkRequest, bugsinkRequestPaginated, bugsinkRequestPostRaw } from "./client.ts";
+import { BugsinkIssueSchema } from "./schemas.ts";
 import type { BugsinkIssue } from "./types.ts";
 import { getProjects } from "./queries.ts";
 
@@ -20,21 +17,18 @@ export async function getIssues(
     params["project"] = await resolveProjectFilter(options.project);
   }
 
-  if (options.limit != null) {
-    params["limit"] = String(options.limit);
-  }
-
-  const result = await bugsinkRequest(
+  const result = await bugsinkRequestPaginated(
     "/issues/",
-    BugsinkPaginatedResponseSchema(BugsinkIssueSchema),
+    BugsinkIssueSchema,
     params,
+    { limit: options.limit },
   );
 
   if (!result.success || !result.data) {
     throw new Error(result.error ?? "Failed to fetch issues");
   }
 
-  return result.data.results;
+  return result.data;
 }
 
 async function resolveProjectFilter(project: string): Promise<string> {
