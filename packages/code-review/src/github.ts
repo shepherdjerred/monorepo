@@ -11,6 +11,7 @@ import {
   asRecord,
   type CheckConclusion,
   conclusionField,
+  eachIssueComment,
   GITHUB_API_URL,
   getJsonWithLink,
   graphqlRequest,
@@ -255,25 +256,16 @@ export async function fetchSkipReason(input: {
 }): Promise<string | null> {
   const skip = input.provider.detectSkip;
   if (skip === null) return null;
-  let url: string | null =
-    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
-  while (url !== null) {
-    const { payload, linkNext } = await getJsonWithLink(url, input.token);
-    const comments = Array.isArray(payload) ? payload : [];
-    for (const rawItem of comments) {
-      const item = asRecord(rawItem);
-      if (item === null) continue;
-      const user = recordField(item, "user");
-      const login = user === null ? null : stringField(user, "login");
-      if (!isProviderAuthor(input.provider, login)) continue;
-      const body = stringField(item, "body");
-      if (body === null) continue;
-      if (!body.includes(skip.marker)) continue;
-      for (const { match, reason } of skip.reasons) {
-        if (body.includes(match)) return reason;
-      }
+  for await (const item of eachIssueComment(input)) {
+    const user = recordField(item, "user");
+    const login = user === null ? null : stringField(user, "login");
+    if (!isProviderAuthor(input.provider, login)) continue;
+    const body = stringField(item, "body");
+    if (body === null) continue;
+    if (!body.includes(skip.marker)) continue;
+    for (const { match, reason } of skip.reasons) {
+      if (body.includes(match)) return reason;
     }
-    url = linkNext;
   }
   return null;
 }

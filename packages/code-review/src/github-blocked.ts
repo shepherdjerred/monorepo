@@ -6,13 +6,7 @@
  * review happened — reported with the provider's remediation, never a pass.
  */
 
-import {
-  asRecord,
-  GITHUB_API_URL,
-  getJsonWithLink,
-  recordField,
-  stringField,
-} from "./github-http.ts";
+import { eachIssueComment, recordField, stringField } from "./github-http.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
 import { isProviderAuthor } from "./identity.ts";
 import type { BlockedSignalStrategy, ReviewProvider } from "./types.ts";
@@ -68,30 +62,21 @@ export async function fetchBlockedReason(input: {
 }): Promise<string | null> {
   const blocked = input.provider.detectBlocked;
   if (blocked === null) return null;
-  let url: string | null =
-    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
-  while (url !== null) {
-    const { payload, linkNext } = await getJsonWithLink(url, input.token);
-    const comments = Array.isArray(payload) ? payload : [];
-    for (const rawItem of comments) {
-      const item = asRecord(rawItem);
-      if (item === null) continue;
-      const user = recordField(item, "user");
-      if (
-        isBoundBlockedComment({
-          strategy: blocked,
-          provider: input.provider,
-          login: user === null ? null : stringField(user, "login"),
-          body: stringField(item, "body"),
-          updatedAt:
-            stringField(item, "updated_at") ?? stringField(item, "created_at"),
-          headPushedAt: input.headPushedAt,
-        })
-      ) {
-        return blocked.reason;
-      }
+  for await (const item of eachIssueComment(input)) {
+    const user = recordField(item, "user");
+    if (
+      isBoundBlockedComment({
+        strategy: blocked,
+        provider: input.provider,
+        login: user === null ? null : stringField(user, "login"),
+        body: stringField(item, "body"),
+        updatedAt:
+          stringField(item, "updated_at") ?? stringField(item, "created_at"),
+        headPushedAt: input.headPushedAt,
+      })
+    ) {
+      return blocked.reason;
     }
-    url = linkNext;
   }
   return null;
 }

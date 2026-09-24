@@ -148,10 +148,6 @@
       "clones": 1,
       "tokens": 87
     },
-    "packages/code-review/src/github-issue-comments.ts|packages/code-review/src/github.ts": {
-      "clones": 1,
-      "tokens": 76
-    },
     "packages/code-review/src/github-review-threads.ts|packages/code-review/src/github-review-threads.ts": {
       "clones": 1,
       "tokens": 88
