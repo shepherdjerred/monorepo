@@ -136,6 +136,32 @@ function clientForExecutions(
   );
 }
 
+/** A promise that never settles, standing in for a hung downstream RPC. */
+function hang(): Promise<never> {
+  return new Promise<never>(() => {
+    // Deliberately never resolved or rejected: only the timeout race ends it.
+  });
+}
+
+/** Makes the visibility scan hang before yielding its first execution. */
+function hangVisibilityList(client: WorkflowVisibilityClient): void {
+  client.workflow.list = () => ({
+    async *[Symbol.asyncIterator]() {
+      await hang();
+      // Unreachable at runtime; present so the yielded shape matches the
+      // visibility seam without a cast.
+      yield {
+        workflowId: "unreachable",
+        runId: "unreachable",
+        type: "unreachable",
+        taskQueue: "unreachable",
+        startTime: new Date(0),
+        status: { name: "FAILED" },
+      };
+    },
+  });
+}
+
 /** Makes the visibility scan throw once the current page is exhausted. */
 function failListAfterCurrentPage(
   client: WorkflowVisibilityClient,
@@ -211,7 +237,7 @@ function pollingScenario(client: WorkflowVisibilityClient) {
     run: (
       options: Pick<
         PollWorkflowFailuresOptions,
-        "checkpoint" | "onCheckpoint"
+        "checkpoint" | "onCheckpoint" | "rpcTimeoutMs"
       > = {},
     ) =>
       pollWorkflowFailuresOnce(client, poster, {
@@ -1170,6 +1196,93 @@ describe("pollWorkflowFailuresOnce failure handling", () => {
       overflowed: false,
     });
     expect(scenario.calls.length).toBe(0);
+  });
+});
+
+describe("rpc timeouts", () => {
+  it("fails fast with an attributed error when the visibility list hangs", async () => {
+    const client = fakeClient([], {});
+    hangVisibilityList(client);
+    const scenario = pollingScenario(client);
+
+    await expect(scenario.run({ rpcTimeoutMs: 10 })).rejects.toThrow(
+      /visibility-list-next timed out after 10ms/,
+    );
+  });
+
+  it("treats a hung detail fetch as an extraction error without stalling the batch", async () => {
+    const client = fakeClient(closedExecutions(2), {
+      "wf-0/run-0": hang,
+      "wf-1/run-1": rejectWithApplicationFailure("golink 500"),
+    });
+    const scenario = pollingScenario(client);
+
+    const result = await scenario.run({ rpcTimeoutMs: 10 });
+
+    expect(result).toEqual({
+      scanned: 2,
+      alerted: 1,
+      errored: 1,
+      overflowed: false,
+    });
+    expect(scenario.calls[0]?.alerts[0]?.labels["workflowId"]).toBe("wf-1");
+  });
+
+  it("throws a systematic failure when every detail fetch hangs", async () => {
+    const client = fakeClient(closedExecutions(1), { "wf-0/run-0": hang });
+    const scenario = pollingScenario(client);
+
+    await expect(scenario.run({ rpcTimeoutMs: 10 })).rejects.toThrow(
+      /systematic failure/,
+    );
+    expect(scenario.calls.length).toBe(0);
+  });
+
+  it("records a history error when fetchHistory hangs on a timed-out execution", async () => {
+    const client = fakeClient(
+      closedExecutions(1, { statusName: "TIMED_OUT" }),
+      { "wf-0/run-0": rejectWithApplicationFailure("timed out") },
+    );
+    const originalGetHandle = client.workflow.getHandle;
+    client.workflow.getHandle = (workflowId, runId) => {
+      const handle = originalGetHandle(workflowId, runId);
+      return { result: handle.result, fetchHistory: hang };
+    };
+    const capture = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, capture.poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+      rpcTimeoutMs: 10,
+    });
+
+    expect(result).toEqual({
+      scanned: 1,
+      alerted: 1,
+      errored: 0,
+      overflowed: false,
+    });
+    const description = capture.calls.at(0)?.alerts.at(0)?.annotations[
+      "description"
+    ];
+    expect(description).toContain("historyError");
+    expect(description).toContain("fetch-history timed out after 10ms");
+  });
+
+  it("fails fast when the Alertmanager post hangs", async () => {
+    const executions = closedExecutions(1);
+    const client = clientForExecutions(executions, () =>
+      rejectWithApplicationFailure("golink 500"),
+    );
+    await expect(
+      pollWorkflowFailuresOnce(client, hang, {
+        now: NOW,
+        lookbackMs: LOOKBACK_MS,
+        ttlMs: TTL_MS,
+        rpcTimeoutMs: 10,
+      }),
+    ).rejects.toThrow(/alertmanager-post timed out after 10ms/);
   });
 });
 
