@@ -119,3 +119,50 @@ describe("Alloy gateway tailnet metrics receiver", () => {
     ]);
   });
 });
+
+describe("Alloy gateway Phoenix branches", () => {
+  const PROJECTS = [
+    "scout-beta",
+    "scout-prod",
+    "birmel",
+    "temporal",
+    "discord-plays",
+    "misc",
+  ];
+
+  it("routes each allowlisted project to Phoenix by header", () => {
+    for (const project of PROJECTS) {
+      expect(ALLOY_GATEWAY_CONFIG).toContain(
+        `"x-project-name" = "${project}",`,
+      );
+    }
+    const exporters = ALLOY_GATEWAY_CONFIG.match(
+      /otelcol\.exporter\.otlphttp "px_\w+"/g,
+    );
+    expect(exporters).toHaveLength(PROJECTS.length);
+    expect(ALLOY_GATEWAY_CONFIG).toContain(
+      'endpoint = "http://phoenix.phoenix.svc.cluster.local:6006"',
+    );
+    expect(ALLOY_GATEWAY_CONFIG).toContain('sys.env("PHOENIX_API_KEY")');
+  });
+
+  it("keeps protobuf encoding and never names a removed consumer", () => {
+    // Phoenix's OTLP route rejects JSON bodies; otlphttp defaults to proto.
+    expect(ALLOY_GATEWAY_CONFIG).not.toMatch(/encoding\s*=\s*"json"/);
+    expect(ALLOY_GATEWAY_CONFIG.toLowerCase()).not.toContain("braintrust");
+    expect(ALLOY_GATEWAY_CONFIG).not.toContain("x-bt-parent");
+  });
+
+  it("sends every span to Tempo and has no catch-all Phoenix branch", () => {
+    expect(ALLOY_GATEWAY_CONFIG).toContain(
+      'endpoint = "http://tempo.tempo.svc.cluster.local:4318"',
+    );
+    const filters = ALLOY_GATEWAY_CONFIG.match(
+      /otelcol\.processor\.filter "px_\w+" \{[\s\S]*?span = \[([\s\S]*?)\]/g,
+    );
+    expect(filters).toHaveLength(PROJECTS.length);
+    for (const filter of filters ?? []) {
+      expect(filter).toMatch(/span = \[\s*"/);
+    }
+  });
+});
