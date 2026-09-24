@@ -43,6 +43,7 @@ export const SCOUT_WORKFLOW_NAMES = {
   lakeProjectionV2: "scoutLakeProjectionV2Workflow",
   recoveryBatchV2: "scoutRecoveryBatchV2Workflow",
   pipelineReconciliationV2: "scoutPipelineReconciliationV2Workflow",
+  silentPostmatchBackfillV2: "scoutSilentPostmatchBackfillV2Workflow",
 } as const;
 
 /**
@@ -351,6 +352,21 @@ export function scoutPipelineReconciliationV2WorkflowId(
 }
 
 /**
+ * One operator-started silent post-match backfill per label.
+ *
+ * The label is the operator's name for the batch (a date, an incident), so a
+ * repeated start of the same batch collapses onto the execution already
+ * running it, and a rerun after it closed is a deliberate new label or a
+ * reuse the Workflow is idempotent under.
+ */
+export function scoutSilentPostmatchBackfillV2WorkflowId(
+  stage: ScoutStage,
+  label: string,
+): string {
+  return `scout-${stage}-silent-postmatch-backfill-v2-${label}`;
+}
+
+/**
  * The Riot match id a live game will be assigned.
  *
  * The id is not unknown before MatchV5 publishes the game, only unassembled:
@@ -431,4 +447,5 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   digestRecoveryBatchV2: "background",
   closeRecoveryBatchV2: "background",
   scanPipelineReconciliationPageV2: "background",
+  backfillSilentPostmatchArtifactV2: "background",
 } as const satisfies Record<ScoutV2ActivityName, ScoutQueueClass>;

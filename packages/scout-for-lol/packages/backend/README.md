@@ -629,6 +629,44 @@ that cannot produce a message. Evidence that is merely unreachable — a timed-o
 object store, a database that did not answer — stays retryable, because the next
 attempt genuinely may succeed.
 
+### The silent post-match backfill renders and announces nothing
+
+`scoutSilentPostmatchBackfillV2Workflow` is an operator tool with no Schedule.
+It takes an explicit list of match ids and, for each, runs the same fenced
+render a `postmatch` intent's notification child runs, committing the same
+report objects and the same `v2-notification-render-postmatch` receipt. It
+exists for matches whose V2 core finished without minting their report intents,
+which leaves no notification child to render them.
+
+It cannot announce anything. The Workflow proxies one Activity,
+`backfillSilentPostmatchArtifactV2`, and starts no child. The backend Activity
+(`notification/silent-postmatch-backfill.ts`) imports neither the minter nor
+the delivery code. It reads the pipeline state first and skips the match,
+giving the reason, in any of these cases:
+
+- a render receipt already stands;
+- the match is not `temporal-v2`-owned;
+- the match is `ARCHIVE_ONLY` or was observed `silent-backfill`;
+- the core has not attested every phase and advanced every cursor;
+- a postmatch intent already stands, so the live lane owns the render;
+- no channel is deliverable, so a normal run would have rendered nothing.
+
+It renders in `historical` mode: the generator receives the rank changes that
+settlement already recorded for the match and does not re-capture today's rank
+over them. The objects are filed under the game's creation date. Reruns are
+idempotent, because a receipt that already stands turns the match into a skip.
+
+```bash
+toolkit temporal workflow start --namespace <stage> \
+  --task-queue scout-<stage> --type scoutSilentPostmatchBackfillV2Workflow \
+  --workflow-id scout-<stage>-silent-postmatch-backfill-v2-<label> \
+  --input-file <envelope.json>
+```
+
+The input is the `scout-silent-postmatch-backfill-v2-input` envelope:
+`{"kind":…,"version":1,"data":{"stage":…,"riotMatchIds":[…]}}`, with at most
+500 unique ids.
+
 ### The recovery policy gates delivery
 
 A recovery batch's `RecoveryPolicy` means something here and nowhere else. The

@@ -17,6 +17,7 @@
     "./identifiers": "./src/identifiers.ts",
     "./match-receipts-v2": "./src/match-receipts-v2.ts",
     "./signals": "./src/signals.ts",
+    "./silent-postmatch-backfill-v2": "./src/silent-postmatch-backfill-v2.ts",
     "./workflow-ui-interceptor": "./src/workflow-ui-interceptor.ts",
     "./workflows": "./src/workflows/index.ts"
   },

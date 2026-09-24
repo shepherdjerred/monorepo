@@ -18,7 +18,10 @@ import {
   type ScoutEffectFenceV2,
 } from "#src/temporal/v2/effect-fence.ts";
 import { durableCommitV2 } from "#src/temporal/v2/match-commits.ts";
-import { renderPostmatchNotificationV2 } from "#src/temporal/v2/notification/postmatch-notification.ts";
+import {
+  renderPostmatchNotificationV2,
+  type ScoutV2PostmatchRenderMode,
+} from "#src/temporal/v2/notification/postmatch-notification.ts";
 import { renderPrematchNotificationV2 } from "#src/temporal/v2/notification/prematch-notification.ts";
 import {
   readNotificationArtifactV2,
@@ -105,7 +108,12 @@ import {
 async function commitNotificationImage(
   riotMatchId: RiotMatchId,
   image: Uint8Array,
-  asset: { assetType: string; metadata: Record<string, string> },
+  asset: {
+    assetType: string;
+    metadata: Record<string, string>;
+    /** The date the object key is filed under; the render's own when absent. */
+    keyDate?: Date | undefined;
+  },
   fence: ScoutEffectFenceV2,
 ): Promise<StoredObject> {
   // The render above may have taken as long as Satori takes; the put must
@@ -114,6 +122,7 @@ async function commitNotificationImage(
   await fence.assertHeld();
   const stored = await saveToS3({
     abortSignal: fence.signal,
+    ...(asset.keyDate === undefined ? {} : { keyDate: asset.keyDate }),
     matchId: MatchIdSchema.parse(riotMatchId),
     assetType: asset.assetType,
     extension: "png",
@@ -188,13 +197,20 @@ function imageEvidence(
 async function renderPostmatchArtifact(
   riotMatchId: RiotMatchId,
   fence: ScoutEffectFenceV2,
+  mode: ScoutV2PostmatchRenderMode,
 ): Promise<ScoutV2NotificationRenderEvidence> {
-  const rendered = await renderPostmatchNotificationV2(riotMatchId);
+  const rendered = await renderPostmatchNotificationV2(riotMatchId, mode);
   const metadata = { queueId: String(rendered.queueId) };
+  // A live render files its objects under the day it rendered, which is the
+  // day of the game. A historical one files them under the game's own day,
+  // beside the match's archived payload, so a retry that crosses midnight
+  // writes the same key again rather than a second copy under another date.
+  const keyDate =
+    mode.kind === "historical" ? new Date(rendered.gameCreation) : undefined;
   const image = await commitNotificationImage(
     riotMatchId,
     rendered.image,
-    { assetType: "report", metadata },
+    { assetType: "report", metadata, keyDate },
     fence,
   );
   const review =
@@ -203,7 +219,7 @@ async function renderPostmatchArtifact(
       : await commitNotificationImage(
           riotMatchId,
           rendered.review,
-          { assetType: "ai-review", metadata },
+          { assetType: "ai-review", metadata, keyDate },
           fence,
         );
   return {
@@ -249,10 +265,11 @@ async function renderByKind(
   kind: NotificationIntentKind,
   riotMatchId: RiotMatchId,
   fence: ScoutEffectFenceV2,
+  postmatchMode: ScoutV2PostmatchRenderMode,
 ): Promise<ScoutV2NotificationRenderEvidence> {
   switch (kind) {
     case "postmatch":
-      return await renderPostmatchArtifact(riotMatchId, fence);
+      return await renderPostmatchArtifact(riotMatchId, fence, postmatchMode);
     case "prematch":
       return await renderPrematchArtifact(riotMatchId, fence);
     case "settlement":
@@ -286,18 +303,45 @@ export async function renderNotificationArtifactV2(
   input: ScoutIntentRefV2,
 ): Promise<ScoutNotificationRenderV2Result> {
   const record = await requireIntentRecordV2(input.intentKey);
-  const riotMatchId = record.matchId;
-  const kind = record.intent.kind;
+  return ScoutNotificationRenderV2ResultSchema.parse({
+    outcome: await renderMatchNotificationArtifactV2({
+      riotMatchId: record.matchId,
+      kind: record.intent.kind,
+      postmatchMode: { kind: "live" },
+    }),
+  });
+}
 
+/**
+ * The render itself, keyed by the artifact's identity `(match, kind)` alone.
+ *
+ * Every render of a match's artifact goes through here — an intent's, and the
+ * silent post-match backfill's, which has no intent — so both read-gate on
+ * the same receipt, serialize on the same fence key, and attest under the
+ * same receipt kind. A backfill racing a live render for one match is
+ * therefore the ordinary "two children asked at once" case: one renders, the
+ * other reports `reused`, and one receipt stands.
+ */
+export async function renderMatchNotificationArtifactV2(args: {
+  riotMatchId: RiotMatchId;
+  kind: NotificationIntentKind;
+  postmatchMode: ScoutV2PostmatchRenderMode;
+}): Promise<"rendered" | "reused"> {
+  const { riotMatchId, kind } = args;
   if ((await readNotificationArtifactV2(riotMatchId, kind)) !== null) {
-    return ScoutNotificationRenderV2ResultSchema.parse({ outcome: "reused" });
+    return "reused";
   }
   const guarded = await runGuardedEffectV2({
     key: notificationRenderEffectKey(riotMatchId, kind),
     kind: NOTIFICATION_RENDER_EFFECT_KIND,
     alreadyApplied: async () => await standingArtifact(riotMatchId, kind),
     apply: async (fence) => {
-      const evidence = await renderByKind(kind, riotMatchId, fence);
+      const evidence = await renderByKind(
+        kind,
+        riotMatchId,
+        fence,
+        args.postmatchMode,
+      );
       // The receipt is the last write and lands before the fence releases; a
       // follower that acquires the fence after this sees the completed claim.
       await fence.assertHeld();
@@ -309,7 +353,5 @@ export async function renderNotificationArtifactV2(
       return { fact, effects: fact.outcome === "applied" ? 1 : 0 };
     },
   });
-  return ScoutNotificationRenderV2ResultSchema.parse({
-    outcome: guarded.fact.outcome === "applied" ? "rendered" : "reused",
-  });
+  return guarded.fact.outcome === "applied" ? "rendered" : "reused";
 }
