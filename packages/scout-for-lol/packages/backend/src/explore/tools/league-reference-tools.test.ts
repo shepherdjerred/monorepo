@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { items } from "@scout-for-lol/data";
+import {
+  getPatchChangeset,
+  getPatchChangesets,
+  items,
+} from "@scout-for-lol/data";
 import {
   comparePatchChangesText,
   lookupItemText,
@@ -68,10 +72,27 @@ describe("League reference tools", () => {
   });
 
   test("compares the current patch with its immediate predecessor", () => {
+    const current = getPatchChangeset();
+    if (current === undefined) {
+      throw new Error("Bundled current patch changeset is missing");
+    }
+    const history = getPatchChangesets();
+    const currentIndex = history.findIndex(
+      (patch) => patch.patch === current.patch,
+    );
+    const previous =
+      currentIndex === -1 ? undefined : history[currentIndex + 1];
+    if (previous === undefined) {
+      throw new Error(
+        "Bundled patch history needs a predecessor of the current patch",
+      );
+    }
     const result = comparePatchChangesText({});
-    expect(result).toContain("Comparing patch 26.17 to 26.18");
-    expect(result).toContain("Patch 26.17:");
-    expect(result).toContain("Patch 26.18:");
+    expect(result).toContain(
+      `Comparing patch ${previous.patch} to ${current.patch}`,
+    );
+    expect(result).toContain(`Patch ${previous.patch}:`);
+    expect(result).toContain(`Patch ${current.patch}:`);
   });
 });
 
