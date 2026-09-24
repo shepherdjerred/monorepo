@@ -31,6 +31,16 @@ export const codexProvider: ReviewProvider = {
   findingKey: null,
   completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },
   detectSkip: null,
+  // When the account's review quota is exhausted Codex answers with an issue
+  // comment ("You have reached your Codex usage limits … add credits …")
+  // instead of a review, so without this the gate polls to its deadline and
+  // times out. Both halves must match so that a partial quote cannot trip it.
+  detectBlocked: {
+    matches: ["reached your Codex usage limits", "add credits"],
+    reason: "usage-limited",
+    remediation:
+      "Add credits to the Codex account and enable them for code reviews (see the Codex usage dashboard)",
+  },
   // Codex's "Automatic reviews" setting reviews a pull request when it is
   // opened, not on every push, so a new head still has to be asked for
   // explicitly. There is no per-push configuration to move this to.

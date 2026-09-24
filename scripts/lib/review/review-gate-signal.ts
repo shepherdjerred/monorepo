@@ -91,6 +91,7 @@ export function buildSignalEvent(input: {
     gate_wait_s: input.gateWaitSeconds,
     timed_out: input.timedOut,
     stale_reaction: input.state.staleReaction,
+    blocked_reason: input.state.blockedReason,
     decision: input.decision === null ? null : input.decision.state,
     request_attempts: input.requestAttempts,
     parser_commit: parserCommit(),

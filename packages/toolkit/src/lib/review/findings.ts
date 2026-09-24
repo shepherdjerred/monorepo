@@ -95,7 +95,11 @@ export async function reviewStateFor(input: {
   token: string;
   head: string;
   provider?: ReviewProvider;
-}): Promise<{ reviewedAtHead: boolean; completionSignal: string }> {
+}): Promise<{
+  reviewedAtHead: boolean;
+  completionSignal: string;
+  blockedReason: string | null;
+}> {
   const provider = input.provider ?? resolveRequiredReviewProvider();
   const state = await resolveReviewState({
     provider,
@@ -113,6 +117,7 @@ export async function reviewStateFor(input: {
   return {
     reviewedAtHead: state.reviewedCommit === input.head,
     completionSignal: state.completionSignal,
+    blockedReason: state.blockedReason,
   };
 }
 

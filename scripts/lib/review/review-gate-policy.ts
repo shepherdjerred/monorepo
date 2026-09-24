@@ -204,7 +204,14 @@ export async function ensureReviewRequested(input: {
   headPushedAt: string | null;
   startedAt: number;
   reviewedCommit: string | null;
+  /**
+   * Provider-side block slug (e.g. `"usage-limited"`), or null. When set the
+   * provider cannot review this head, so asking again only draws another limit
+   * notice on the pull request.
+   */
+  blockedReason: string | null;
 }): Promise<number> {
+  if (input.blockedReason !== null) return input.attempt;
   if (input.attempt > MAX_REVIEW_REQUEST_ATTEMPTS) return input.attempt;
   if (input.reviewedCommit === input.head) return input.attempt;
   if (!(await shouldEscalateReviewRequest(input))) return input.attempt;
