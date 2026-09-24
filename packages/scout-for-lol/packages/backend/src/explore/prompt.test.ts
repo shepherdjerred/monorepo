@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
+import {
+  COMPETITIVE_PROGRESSION_CATALOG,
+  queuesWithoutPostMatchData,
+} from "@scout-for-lol/data";
 import {
   LAKE_COVERAGE_RULE,
   LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
@@ -280,8 +283,48 @@ describe("unresolved concepts", () => {
   test("defines the Hall of Fame, which was once read as a player name", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
     expect(instructions).toContain("Hall of Fame");
-    expect(instructions).toContain("all-time record board");
     expect(instructions).toContain("not a player");
+  });
+
+  test("names every Hall record and queue family, from the catalog", () => {
+    // The loose definition made any extreme a record, so "the kill
+    // participation record" was attempted rather than recognised as absent,
+    // and "who is in the Hall of Fame?" had no finite answer.
+    const instructions = exploreAgentInstructions({ bucks: null });
+    const { records, queueFamilies } = COMPETITIVE_PROGRESSION_CATALOG.hall;
+    for (const record of records) expect(instructions).toContain(record.label);
+    for (const family of queueFamilies) {
+      expect(instructions).toContain(family.label);
+    }
+    expect(instructions).toContain(
+      `exactly these ${records.length.toString()} records and no others`,
+    );
+    expect(instructions).toContain("never by role, position or champion");
+    expect(instructions).toContain("never ask which record they meant");
+  });
+});
+
+describe("assumptions instead of clarifying questions", () => {
+  test("a missing threshold is chosen and stated, not asked for", () => {
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("choose the sensible reading yourself");
+    expect(instructions).toContain("Do not ask them to choose first");
+  });
+
+  test("no corpus-wide total without a query that returned it", () => {
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain(
+      "unless a query in this turn returned that exact count",
+    );
+  });
+
+  test("challenges are said to have no end date when they are on", () => {
+    expect(
+      exploreAgentInstructions({ bucks: null, challenges: true }),
+    ).toContain("Scout challenges have no end date");
+    expect(
+      exploreAgentInstructions({ bucks: null, challenges: false }),
+    ).not.toContain("Scout challenges have no end date");
   });
 });
 

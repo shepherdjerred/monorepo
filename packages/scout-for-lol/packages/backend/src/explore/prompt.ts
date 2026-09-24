@@ -1,4 +1,7 @@
-import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
+import {
+  COMPETITIVE_PROGRESSION_CATALOG,
+  queuesWithoutPostMatchData,
+} from "@scout-for-lol/data";
 import {
   LAKE_COVERAGE_RULE,
   LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
@@ -41,6 +44,39 @@ import {
  * hold even when its body is never loaded). This keeps a stats question from
  * paying attention to dare SQL minutiae, and vice versa.
  */
+/**
+ * The Hall of Fame as Scout actually defines it.
+ *
+ * Rendered from the competitive-progression catalog rather than written out,
+ * because the loose version this replaced — "the best single-game
+ * performance by each metric" — was wrong in a way that cost answers: it
+ * made any extreme a record, so "the kill participation record" and "the
+ * support records" were attempted instead of recognised as not existing, and
+ * "who is in the Hall of Fame?" had no finite answer, so the model asked
+ * which record the user meant. The real board is a closed list of records,
+ * kept per queue family and never per role.
+ */
+function hallOfFameSection(): readonly string[] {
+  const { records, queueFamilies } = COMPETITIVE_PROGRESSION_CATALOG.hall;
+  const recordLabels = records.map((record) => record.label).join("; ");
+  const familyLabels = queueFamilies
+    .map(
+      (family) =>
+        `${family.label}${family.defaultEnabled ? " (on by default)" : ""}`,
+    )
+    .join("; ");
+  return [
+    "## The Hall of Fame",
+    `Scout's Hall of Fame is a per-server board of single-game records. It holds exactly these ${records.length.toString()} records and no others: ${recordLabels}.`,
+    `Each record is kept separately for every queue family the server has switched on: ${familyLabels}. Records are split by queue family, never by role, position or champion — there are no 'support records', only records that support players may hold.`,
+    "A game counts only if it finished normally, lasted at least five minutes, did not end in an early surrender, was not a custom game, and ended after the server started tracking.",
+    "Anything else — KDA, kill participation, longest or fastest game, multi-kill counts, a role's board — is not a Hall record. Say so in one sentence and answer with the nearest real record instead of declining.",
+    "'Who is in the Hall of Fame?' and 'show all records' mean every record's current holder, for the default-on families unless the user names one. Answer that; never ask which record they meant.",
+    "It is not Riot's Hall of Legends, not an esports hall of fame, and not a player.",
+    "You have no tool that reads the board itself, so compute each record from match data: the extreme single game for that metric, within that queue family, under the rules above. Say the result is computed from Scout's match data and may differ from the board shown in the Scout web app, which only counts games since the server began tracking.",
+  ];
+}
+
 export function exploreAgentInstructions(options: ExploreSkillOptions): string {
   const skills = enabledExploreSkills(options);
   return [
@@ -76,7 +112,12 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
           "Dares — Bryan Bucks wagers on a player meeting a condition — are not switched on for the servers in scope, so you have no tool for them. Never draft, invent, or word a dare yourself: say dares are not enabled here and that a server admin can turn them on.",
         ]),
     ...(options.challenges === true
-      ? []
+      ? [
+          // No end date exists anywhere: ChallengeRun has only a start, and
+          // the contract schema has no window. "Challenges ending soon" was
+          // declined as unqueryable when the true answer is that none end.
+          "Scout challenges have no end date: a challenge run stays active until it is completed or archived. Asked what is ending soon, say that plainly.",
+        ]
       : [
           "Scout challenges — server-set goals a tracked player completes — are not switched on for the servers in scope, so you have no tool for them. These are Scout's own challenges, not Riot's in-client Challenges. Say they are not enabled here, never that Scout does not have challenges.",
         ]),
@@ -129,10 +170,14 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // declining, across two sweeps. The referent was never ambiguous to a
     // reader: it is the people this server tracks.
     "'our', 'we', 'us' and 'my team' mean the players this server tracks — the corpus you already query. Answer for them and say that is who you covered. Do not ask which players they meant, and do not ask the user to name themselves, unless the question needs one specific person (like 'my best duo partner') and no name has been given.",
+    // "Late night", "newly released", "our top two players" and "the
+    // leaderboard" each sent turns into a clarifying question — six across the
+    // round-1 sweeps — though every one has an obvious reading. Asking costs
+    // the user a turn; a stated assumption costs one clause and is corrected
+    // just as easily.
+    "When a question needs a threshold or definition the user did not give — what counts as late night, newly released, a top player, a leaderboard's ranking, a minimum number of games — choose the sensible reading yourself, say in one clause which one you used, and answer. Do not ask them to choose first; they can correct you in the next turn.",
     "",
-    "## The Hall of Fame",
-    "Scout's Hall of Fame is the all-time record board over the matches Scout has ingested — the best single-game performances by each metric, such as most kills, highest damage or best vision score in one game.",
-    "It is not Riot's Hall of Legends, not an esports hall of fame, and not a player. Answer these by querying for the extreme single game on the metric asked about, and say the records cover the games Scout has ingested.",
+    ...hallOfFameSection(),
     "",
     "## Saying which period an answer covers",
     "Name the period an answer covers in the prose of every answer, not only in the query.",
@@ -145,6 +190,10 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // size. Appending one anyway produced "52 kills in a single game, across
     // 25,442 games in Scout's data", which reads as 25,442 games of 52 kills.
     "That count belongs to a rate or a ranking, where it says how much the number rests on. A single extreme value — a highest, a longest, a best ever — rests on one game, so name that game instead: who, which champion, when. If you mention how much history was searched, write it as a separate sentence, never as 'across N games' beside the record.",
+    // Three round-1 answers stated how much data Scout holds overall — "90,082
+    // participant records", an ARAM total — which no query in the turn had
+    // returned. The number came from an earlier query or from nowhere.
+    "Never state how many games, matches or records Scout holds overall unless a query in this turn returned that exact count. A figure from an earlier turn, or a total you did not select, is not evidence for this answer.",
     "Use a HAVING floor for leaderboard-style questions so one 100% win rate over two games does not top the list.",
     "For fewer than 10 games, say exactly: 'Fewer than 10 games — treat this rate as indicative only.'",
     "Describe results as matches Scout recorded, not League-wide truth. Do not extrapolate or make unsupported statistical claims. Use plain language instead of statistical terminology.",
