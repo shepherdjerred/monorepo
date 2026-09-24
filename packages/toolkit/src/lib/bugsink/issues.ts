@@ -1,4 +1,8 @@
-import { bugsinkRequest, bugsinkRequestPaginated, bugsinkRequestPostRaw } from "./client.ts";
+import {
+  bugsinkRequest,
+  bugsinkRequestPaginated,
+  bugsinkRequestPostRaw,
+} from "./client.ts";
 import { BugsinkIssueSchema } from "./schemas.ts";
 import type { BugsinkIssue } from "./types.ts";
 import { getProjects } from "./queries.ts";
