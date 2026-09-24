@@ -32,7 +32,13 @@ const RoleDeploymentSchema = z.object({
           env: z.array(EnvEntrySchema),
           volumeMounts: z
             .array(
-              z.object({ mountPath: z.string(), name: z.string() }).loose(),
+              z
+                .object({
+                  mountPath: z.string(),
+                  name: z.string(),
+                  readOnly: z.boolean().optional(),
+                })
+                .loose(),
             )
             .optional(),
         }),
@@ -176,7 +182,9 @@ describe("Scout gateway report-lake sharing", () => {
    * The gateway declares `reportLakeAccess` and does not fold, so its boot gate
    * refuses to start without a published lake. It therefore must mount the
    * volume — and must do so read-only, because the application role is the sole
-   * publisher.
+   * publisher. The claim itself stays read-write: ZFS refuses a second mount of
+   * the dataset with a different ro/rw flag, so read-only is enforced on the
+   * container's volumeMount instead.
    */
   test("gateway mounts the application role's claim read-only", () => {
     const gateway = roleDeployment("beta", "scout-beta-scout-gateway");
@@ -195,13 +203,17 @@ describe("Scout gateway report-lake sharing", () => {
     expect(gatewayVolume?.persistentVolumeClaim?.claimName).toBe(
       backendVolume?.persistentVolumeClaim?.claimName,
     );
-    expect(gatewayVolume?.persistentVolumeClaim?.readOnly).toBe(true);
+    // A read-only claim becomes an `ro` CSI mount, which ZFS rejects beside
+    // the publisher's `rw` mount of the same dataset.
+    expect(gatewayVolume?.persistentVolumeClaim?.readOnly).not.toBe(true);
     // The publisher keeps write access; only the reader is constrained.
     expect(backendVolume?.persistentVolumeClaim?.readOnly).not.toBe(true);
 
-    expect(gateway.template.spec.containers[0]?.volumeMounts).toEqual(
-      expect.arrayContaining([expect.objectContaining({ mountPath: "/data" })]),
+    const dataMount = gateway.template.spec.containers[0]?.volumeMounts?.find(
+      (mount) => mount.mountPath === "/data",
     );
+    expect(dataMount?.name).toBe(gatewayVolume?.name);
+    expect(dataMount?.readOnly).toBe(true);
     expect(envValue(gateway, "REPORT_LAKE_DIR")).toBe("/data/report-lake");
   });
 

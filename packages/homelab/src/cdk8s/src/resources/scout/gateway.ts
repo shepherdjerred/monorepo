@@ -139,10 +139,10 @@ export type ScoutGatewayDeploymentOptions = {
  * `deferredTemporalWorkers` are both empty) and does not fold, so it never
  * writes a staging directory and never moves the `CURRENT` pointer. That
  * leaves exactly one publisher — the `application` role — and N readers, which
- * is what an atomic build-pointer layout is for. `readOnly` is the enforcement
- * rather than the assumption.
+ * is what an atomic build-pointer layout is for. The container's read-only
+ * `/data` mount is the enforcement rather than the assumption.
  *
- * Mounting it `readOnly` is verified, not assumed. The role's two lake paths
+ * Read-only access is verified, not assumed. The role's two lake paths
  * are the boot gate (`report-lake/paths.ts#readCurrentBuildDir` — a pointer
  * read, a `readdir`, no writes) and Explore queries
  * (`reports/duckdb/lake.ts`, which only builds `read_parquet` sources against
@@ -159,15 +159,31 @@ export type ScoutGatewayDeploymentOptions = {
  * reader moved behind the `lake` queue) first." Until one of those lands there
  * is nothing to render, so nothing here renders it.
  *
+ * ## How two pods share one ReadWriteOnce ZFS volume
+ *
+ * ReadWriteOnce alone does not make the claim shareable. OpenEBS ZFS LocalPV
+ * mounts a volume's dataset once per node and refuses a second mount
+ * (`verifyMount: device already mounted`) unless the volume's
+ * `ZFSVolume.spec.shared` is `yes`. The StorageClass sets that default for new
+ * volumes; a volume created or imported before the default applied has to be
+ * patched — see the wiki how-to "Share a ZFS volume between pods".
+ *
+ * Even when shared, OpenZFS on Linux returns EBUSY for a second mount of a
+ * mounted dataset whose ro/rw flag differs (`zpl_super.c`). A read-only claim
+ * would ask CSI for an `ro` mount beside the application pod's `rw` one, so the
+ * claim here is read-write at the pod level and `readOnly` sits on the
+ * container's `/data` volumeMount instead. The container runtime turns that
+ * into a read-only bind mount, so this container still cannot write the lake.
+ *
  * ## Why it is required onto the application pod's node
  *
- * ReadWriteOnce is a per-NODE constraint, not a per-pod one: pods co-located on
- * one node may share the claim, pods on different nodes may not. The taint on
- * `liskov` happens to force both pods onto `torvalds` today, but that is the
- * cluster being single-node for this workload, not a guarantee. A required
- * podAffinity onto the application Deployment makes the co-location the
- * scheduler's constraint, so the pair cannot be silently split apart by a
- * future node — the gateway stays Pending instead of failing to mount.
+ * A ZFS LocalPV dataset exists on one node's pool, so both pods must run on
+ * that node to mount it. The taint on `liskov` happens to force both pods onto
+ * `torvalds` today, but that is the cluster being single-node for this
+ * workload, not a guarantee. A required podAffinity onto the application
+ * Deployment makes the co-location the scheduler's constraint, so the pair
+ * cannot be silently split apart by a future node — the gateway stays Pending
+ * instead of failing to mount.
  */
 export function createScoutGatewayDeployment(
   chart: Chart,
@@ -228,8 +244,7 @@ export function createScoutGatewayDeployment(
   });
 
   // Required (not preferred) podAffinity on the hostname topology: the shared
-  // ReadWriteOnce claim is only mountable by both pods while they are on one
-  // node.
+  // ZFS LocalPV dataset is only mountable by pods on the node that holds it.
   deployment.scheduling.colocate(options.colocateWith);
 
   deployment.addContainer(
@@ -265,12 +280,16 @@ export function createScoutGatewayDeployment(
       volumeMounts: [
         {
           path: "/data",
+          // The pod-level claim is read-write on purpose: ZFS refuses to mount
+          // a dataset that is already mounted with the opposite ro/rw flag, so
+          // a read-only claim cannot share the application pod's mount.
+          // Read-only is enforced here, as a read-only bind into the container.
           volume: Volume.fromPersistentVolumeClaim(
             chart,
             "scout-gateway-volume",
             options.claim,
-            { readOnly: true },
           ),
+          readOnly: true,
         },
         ...(options.voiceSecretMount === undefined
           ? []
