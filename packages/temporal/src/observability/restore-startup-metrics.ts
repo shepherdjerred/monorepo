@@ -1,6 +1,9 @@
 import * as Sentry from "@sentry/bun";
 import { restoreGlitterCorpusSnapshotMetrics } from "#activities/glitter/corpus/glitter-corpus-snapshot.ts";
-import { restoreSeaweedFsBackupMetrics } from "#activities/homelab/seaweedfs-backup.ts";
+import {
+  isTransientBackupStorageError,
+  restoreSeaweedFsBackupMetrics,
+} from "#activities/homelab/seaweedfs-backup.ts";
 import { isTransientCorpusStorageError } from "#activities/glitter/corpus/glitter-corpus-store.ts";
 import { formatError } from "#shared/format-error.ts";
 import { retryUntilReady } from "#shared/startup-retry.ts";
@@ -47,7 +50,7 @@ export async function restoreSeaweedFsMetricsAfterWorkerStart(
   try {
     const result = await retryUntilReady({
       operation: restoreSeaweedFsBackupMetrics,
-      shouldRetry: () => true,
+      shouldRetry: isTransientBackupStorageError,
       isClosed,
       onRetry: ({ attempt, delayMs, error }) => {
         jsonLog(

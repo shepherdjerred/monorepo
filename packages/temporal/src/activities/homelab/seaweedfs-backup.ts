@@ -1,4 +1,5 @@
 import { Context } from "@temporalio/activity";
+import { z } from "zod/v4";
 import { runGcCycle } from "@shepherdjerred/seaweedfs-backup/gc";
 import { listCompletionMarkers } from "@shepherdjerred/seaweedfs-backup/manifest";
 import {
@@ -38,6 +39,54 @@ const log = createStructuredLogger("seaweedfs-backup");
 const STAGES = ["inventory", "bucket", "copy", "verify", "complete"] as const;
 
 export type SeaweedFsBackupActivities = typeof seaweedFsBackupActivities;
+
+const S3ErrorShapeSchema = z.object({
+  name: z.string().optional(),
+  code: z.string().optional(),
+  $metadata: z.object({ httpStatusCode: z.number().optional() }).optional(),
+});
+
+const TRANSIENT_STORAGE_ERROR_PATTERN =
+  /\b(?:ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND)\b/i;
+
+function isTransientStorageFailure(error: unknown): boolean {
+  const parsed = S3ErrorShapeSchema.safeParse(error);
+  if (!parsed.success) {
+    return false;
+  }
+  const statusCode = parsed.data.$metadata?.httpStatusCode;
+  if (
+    statusCode !== undefined &&
+    (statusCode === 408 || statusCode === 429 || statusCode >= 500)
+  ) {
+    return true;
+  }
+  const code = parsed.data.code ?? "";
+  return TRANSIENT_STORAGE_ERROR_PATTERN.test(
+    error instanceof Error ? `${code} ${error.name} ${error.message}` : code,
+  );
+}
+
+/**
+ * Allowlist for retrying backup metric restoration: only transport failures
+ * and retryable statuses. Everything else — notably S3 AccessDenied from a
+ * broken credential or bucket policy — is permanent and must fail fast with
+ * a single error instead of retrying forever. Mirrors
+ * `isTransientCorpusStorageError`; walks the `.cause` chain because an HTTP
+ * handler may wrap the transport failure.
+ */
+export function isTransientBackupStorageError(error: unknown): boolean {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current !== undefined && current !== null && !seen.has(current)) {
+    seen.add(current);
+    if (isTransientStorageFailure(current)) {
+      return true;
+    }
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return false;
+}
 
 function setStage(
   cadence: BackupCadence,
