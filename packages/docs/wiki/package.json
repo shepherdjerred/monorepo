@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
-    "@astrojs/markdown-satteri": "0.3.7",
+    "@astrojs/markdown-satteri": "0.4.2",
     "@astrojs/sitemap": "^3.7.3",
     "@astrojs/starlight": "^0.42.0",
     "astro": "^7.3.3",

@@ -23,7 +23,7 @@
     "@openrouter/ai-sdk-provider": "^3.0.0",
     "@shepherdjerred/llm-models": "workspace:*",
     "@shepherdjerred/llm-observability": "workspace:*",
-    "ai": "7.0.107",
+    "ai": "7.0.114",
     "prom-client": "^15.1.3",
     "zod": "^4.4.3"
   },

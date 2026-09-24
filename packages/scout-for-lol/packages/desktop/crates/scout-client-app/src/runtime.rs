@@ -535,7 +535,7 @@ async fn replay_sha256(path: PathBuf) -> Result<String, String> {
             }
             hasher.update(&buffer[..count]);
         }
-        Ok(format!("{:x}", hasher.finalize()))
+        Ok(hex::encode(hasher.finalize()))
     })
     .await
     .map_err(|error| format!("Replay hashing task failed: {error}"))?
@@ -1328,7 +1328,7 @@ fn outbox_file_name(backend_origin: &str, device_id: Option<Uuid>) -> String {
     if let Some(device_id) = device_id {
         hasher.update(device_id.as_bytes());
     }
-    format!("outbox-{:x}.db", hasher.finalize())
+    format!("outbox-{}.db", hex::encode(hasher.finalize()))
 }
 
 fn outbox_path(backend_origin: &str, device_id: Option<Uuid>) -> PathBuf {
@@ -1402,8 +1402,8 @@ mod tests {
 
     use super::{
         RuntimeState, apply_observation_receipt, clear_replay_error, clear_runtime_error,
-        game_start_evidence, optional_lockfile, outbox_file_name, set_error, set_replay_error,
-        should_emit_live_game_frame, should_refresh_lobby, update_state,
+        game_start_evidence, optional_lockfile, outbox_file_name, replay_sha256, set_error,
+        set_replay_error, should_emit_live_game_frame, should_refresh_lobby, update_state,
     };
 
     #[test]
@@ -1448,6 +1448,35 @@ mod tests {
             production,
             outbox_file_name("https://scout.sjer.red/", None)
         );
+    }
+
+    #[test]
+    fn outbox_file_names_match_persisted_databases() -> Result<(), uuid::Error> {
+        let device = Uuid::parse_str("00000000-0000-4000-8000-000000000001")?;
+
+        assert_eq!(
+            outbox_file_name("https://scout.sjer.red/", Some(device)),
+            "outbox-40889348c35a9742e33afe72090bb52b06193e3200cfa3181b3e6198e4922c81.db"
+        );
+        assert_eq!(
+            outbox_file_name("https://scout.sjer.red/", None),
+            "outbox-c0946c92d24dd4e6623c7d20a280d2d4dbe353ae2ec788d10824fc54711af925.db"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn replay_digests_are_lowercase_sha256_hex() -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-replay-{}.rofl", Uuid::new_v4()));
+        std::fs::write(&path, b"scout replay fixture")?;
+        let digest = replay_sha256(path.clone()).await;
+        std::fs::remove_file(&path)?;
+
+        assert_eq!(
+            digest?,
+            "f19101066a2b69c3f27c11a55b3b9dc753e5ede5feccb37e41170ea6dcdfb33f"
+        );
+        Ok(())
     }
 
     #[test]
