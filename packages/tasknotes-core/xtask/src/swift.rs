@@ -7,9 +7,15 @@
 //! cargo build (per Apple target)
 //!   → lipo, PER PLATFORM
 //!   → uniffi-bindgen-swift
-//!   → headers namespaced into headers/<Module>/
-//!   → xcodebuild -create-xcframework
+//!   → headers namespaced into Headers/<Module>/
+//!   → the XCFramework directory and Info.plist, written directly
 //! ```
+//!
+//! The XCFramework is written here rather than by `xcodebuild
+//! -create-xcframework` so packaging runs on any host with `lipo` (Xcode's, or
+//! `llvm-lipo` on Linux). The layout and Info.plist are byte-for-byte what
+//! `xcodebuild` writes for a static library with headers; the unit test pins
+//! them against its output.
 //!
 //! # Four things that are not optional
 //!
@@ -93,7 +99,7 @@ const GENERATED_PATHSPECS: [&str; 2] = ["bindings/Sources", "bindings/ffi"];
 /// One Apple platform slice of the XCFramework.
 ///
 /// A slice is a *platform*, not an architecture: several architectures are
-/// `lipo`d into one static library per slice, and `xcodebuild` keys the slices
+/// `lipo`d into one static library per slice, and the XCFramework keys the slices
 /// on platform + variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Platform {
@@ -298,12 +304,11 @@ pub fn check_bindings(profile: &str) -> Result<String, String> {
 
 /// Build the Apple static libraries and package them as an XCFramework.
 ///
-/// macOS-only: needs `lipo` and `xcodebuild`.
+/// Needs the Apple Rust targets and `lipo` (or `llvm-lipo` under that name).
 ///
 /// # Errors
 ///
-/// Returns a message when a build, `lipo`, `xcodebuild`, or a filesystem
-/// operation fails.
+/// Returns a message when a build, `lipo`, or a filesystem operation fails.
 pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String, String> {
     let root = workspace_root()?;
 
@@ -314,6 +319,15 @@ pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String
     let staging = root.join("target").join("xcframework");
     recreate_directory(&staging)?;
 
+    let output = root
+        .join("bindings")
+        .join("artifacts")
+        .join(XCFRAMEWORK_NAME);
+    create_directory(&root.join("bindings").join("artifacts"))?;
+    remove_directory(&output)?;
+    create_directory(&output)?;
+
+    let ffi = root.join("bindings").join("ffi");
     let mut libraries = Vec::new();
     for platform in platforms {
         let mut slices = Vec::new();
@@ -323,61 +337,142 @@ pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String
             )?);
         }
 
-        let slice_directory = staging.join(platform.name());
-        create_directory(&slice_directory)?;
-        let fat = slice_directory.join(APPLE_LIBRARY_FILE);
+        let slice = XcframeworkSlice::new(*platform);
+        let slice_directory = output.join(&slice.identifier);
+        // Headers are namespaced into `Headers/<Module>/` so the slice holds
+        // one directory per module rather than a flat pile — which is what
+        // lets more than one UniFFI component share an XCFramework later
+        // without their headers colliding.
+        let module_headers = slice_directory.join("Headers").join(FFI_MODULE);
+        create_directory(&module_headers)?;
+        copy(&ffi.join(HEADER_FILE), &module_headers.join(HEADER_FILE))?;
+        copy(
+            &ffi.join(MODULEMAP_FILE),
+            &module_headers.join(MODULEMAP_FILE),
+        )?;
 
         // One `lipo` per platform. Never one across platforms: macOS arm64 and
         // iOS-Simulator arm64 are the same architecture, and `lipo` rejects a
         // fat file with two slices of one architecture.
         let mut arguments: Vec<String> = vec!["-create".to_owned()];
-        for slice in &slices {
-            arguments.push(slice.to_string_lossy().into_owned());
+        for library in &slices {
+            arguments.push(library.to_string_lossy().into_owned());
         }
         arguments.push("-output".to_owned());
-        arguments.push(fat.to_string_lossy().into_owned());
+        arguments.push(
+            slice_directory
+                .join(APPLE_LIBRARY_FILE)
+                .to_string_lossy()
+                .into_owned(),
+        );
         process::run("lipo", &arguments, &root)?;
 
-        libraries.push(fat);
+        libraries.push(slice);
     }
-
-    // Headers are namespaced into `headers/<Module>/` so the slice's `Headers/`
-    // directory contains one directory per module rather than a flat pile —
-    // which is what lets more than one UniFFI component share an XCFramework
-    // later without their headers colliding.
-    let headers = staging.join("headers");
-    let module_headers = headers.join(FFI_MODULE);
-    create_directory(&module_headers)?;
-    let ffi = root.join("bindings").join("ffi");
-    copy(&ffi.join(HEADER_FILE), &module_headers.join(HEADER_FILE))?;
-    copy(
-        &ffi.join(MODULEMAP_FILE),
-        &module_headers.join(MODULEMAP_FILE),
+    write(
+        &output.join("Info.plist"),
+        &xcframework_info_plist(&libraries, APPLE_LIBRARY_FILE),
     )?;
-
-    let output = root
-        .join("bindings")
-        .join("artifacts")
-        .join(XCFRAMEWORK_NAME);
-    create_directory(&root.join("bindings").join("artifacts"))?;
-    remove_directory(&output)?;
-
-    let mut arguments: Vec<String> = vec!["-create-xcframework".to_owned()];
-    for library in &libraries {
-        arguments.push("-library".to_owned());
-        arguments.push(library.to_string_lossy().into_owned());
-        arguments.push("-headers".to_owned());
-        arguments.push(headers.to_string_lossy().into_owned());
-    }
-    arguments.push("-output".to_owned());
-    arguments.push(output.to_string_lossy().into_owned());
-    process::run("xcodebuild", &arguments, &root)?;
 
     let names: Vec<&str> = platforms.iter().map(|platform| platform.name()).collect();
     Ok(format!(
         "built bindings/artifacts/{XCFRAMEWORK_NAME} with slices: {}\n",
         names.join(", ")
     ))
+}
+
+/// One library entry of an XCFramework's Info.plist.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct XcframeworkSlice {
+    /// `macos-arm64_x86_64`, `ios-arm64_x86_64-simulator`, …
+    identifier: String,
+    architectures: Vec<&'static str>,
+    platform: &'static str,
+    variant: Option<&'static str>,
+}
+
+impl XcframeworkSlice {
+    fn new(platform: Platform) -> Self {
+        let mut architectures: Vec<&'static str> = platform
+            .targets()
+            .iter()
+            .map(|target| {
+                if target.starts_with("aarch64-") {
+                    "arm64"
+                } else {
+                    "x86_64"
+                }
+            })
+            .collect();
+        architectures.sort_unstable();
+        let (platform_name, variant) = match platform {
+            Platform::MacOs => ("macos", None),
+            Platform::Ios => ("ios", None),
+            Platform::IosSimulator => ("ios", Some("simulator")),
+        };
+        let mut identifier = format!("{platform_name}-{}", architectures.join("_"));
+        if let Some(variant) = variant {
+            identifier.push('-');
+            identifier.push_str(variant);
+        }
+        Self {
+            identifier,
+            architectures,
+            platform: platform_name,
+            variant,
+        }
+    }
+}
+
+/// The Info.plist `xcodebuild -create-xcframework` writes for static
+/// libraries with headers, in its exact formatting.
+fn xcframework_info_plist(slices: &[XcframeworkSlice], library: &str) -> String {
+    let mut lines = vec![
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>".to_owned(),
+        "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">".to_owned(),
+        "<plist version=\"1.0\">".to_owned(),
+        "<dict>".to_owned(),
+        "\t<key>AvailableLibraries</key>".to_owned(),
+        "\t<array>".to_owned(),
+    ];
+    let entry = |key: &str, value: &str| {
+        [
+            format!("\t\t\t<key>{key}</key>"),
+            format!("\t\t\t<string>{value}</string>"),
+        ]
+    };
+    for slice in slices {
+        lines.push("\t\t<dict>".to_owned());
+        lines.extend(entry("BinaryPath", library));
+        lines.extend(entry("HeadersPath", "Headers"));
+        lines.extend(entry("LibraryIdentifier", &slice.identifier));
+        lines.extend(entry("LibraryPath", library));
+        lines.push("\t\t\t<key>SupportedArchitectures</key>".to_owned());
+        lines.push("\t\t\t<array>".to_owned());
+        for architecture in &slice.architectures {
+            lines.push(format!("\t\t\t\t<string>{architecture}</string>"));
+        }
+        lines.push("\t\t\t</array>".to_owned());
+        lines.extend(entry("SupportedPlatform", slice.platform));
+        if let Some(variant) = slice.variant {
+            lines.extend(entry("SupportedPlatformVariant", variant));
+        }
+        lines.push("\t\t</dict>".to_owned());
+    }
+    lines.extend(
+        [
+            "\t</array>",
+            "\t<key>CFBundlePackageType</key>",
+            "\t<string>XFWK</string>",
+            "\t<key>XCFrameworkFormatVersion</key>",
+            "\t<string>1.0</string>",
+            "</dict>",
+            "</plist>",
+            "",
+        ]
+        .map(str::to_owned),
+    );
+    lines.join("\n")
 }
 
 /// Fail if the built XCFramework is older than the committed bindings.
@@ -388,7 +483,7 @@ pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String
 /// committed; `bindings/artifacts/` is a **gitignored build artifact**. Nothing
 /// couples them, because [`generate_bindings`] deliberately runs on any host —
 /// that is what makes [`check_bindings`] a Linux per-PR gate — while
-/// [`build_xcframework`] needs `xcodebuild` and `lipo`. So regenerating without
+/// [`build_xcframework`] needs the Apple Rust targets and `lipo`. So regenerating without
 /// rebuilding leaves the Swift package declaring symbols the static library does
 /// not export.
 ///
@@ -1495,9 +1590,19 @@ fn write(path: &Path, contents: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        FFI_MODULE, HOSTS_SOURCE, Platform, SMOKE_SOURCE, SWIFT_MODULE, profile_directory,
-        smoke_manifest, workspace_root,
+        FFI_MODULE, HOSTS_SOURCE, Platform, SMOKE_SOURCE, SWIFT_MODULE, XcframeworkSlice,
+        profile_directory, smoke_manifest, workspace_root, xcframework_info_plist,
     };
+
+    #[test]
+    fn xcframework_info_plist_matches_xcodebuild() {
+        // Captured from `xcodebuild -create-xcframework` (Xcode 27.0, 27A5228h)
+        // given a macOS, an iOS, and an iOS-Simulator static library.
+        let expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>AvailableLibraries</key>\n\t<array>\n\t\t<dict>\n\t\t\t<key>BinaryPath</key>\n\t\t\t<string>libx.a</string>\n\t\t\t<key>HeadersPath</key>\n\t\t\t<string>Headers</string>\n\t\t\t<key>LibraryIdentifier</key>\n\t\t\t<string>macos-arm64_x86_64</string>\n\t\t\t<key>LibraryPath</key>\n\t\t\t<string>libx.a</string>\n\t\t\t<key>SupportedArchitectures</key>\n\t\t\t<array>\n\t\t\t\t<string>arm64</string>\n\t\t\t\t<string>x86_64</string>\n\t\t\t</array>\n\t\t\t<key>SupportedPlatform</key>\n\t\t\t<string>macos</string>\n\t\t</dict>\n\t\t<dict>\n\t\t\t<key>BinaryPath</key>\n\t\t\t<string>libx.a</string>\n\t\t\t<key>HeadersPath</key>\n\t\t\t<string>Headers</string>\n\t\t\t<key>LibraryIdentifier</key>\n\t\t\t<string>ios-arm64</string>\n\t\t\t<key>LibraryPath</key>\n\t\t\t<string>libx.a</string>\n\t\t\t<key>SupportedArchitectures</key>\n\t\t\t<array>\n\t\t\t\t<string>arm64</string>\n\t\t\t</array>\n\t\t\t<key>SupportedPlatform</key>\n\t\t\t<string>ios</string>\n\t\t</dict>\n\t\t<dict>\n\t\t\t<key>BinaryPath</key>\n\t\t\t<string>libx.a</string>\n\t\t\t<key>HeadersPath</key>\n\t\t\t<string>Headers</string>\n\t\t\t<key>LibraryIdentifier</key>\n\t\t\t<string>ios-arm64_x86_64-simulator</string>\n\t\t\t<key>LibraryPath</key>\n\t\t\t<string>libx.a</string>\n\t\t\t<key>SupportedArchitectures</key>\n\t\t\t<array>\n\t\t\t\t<string>arm64</string>\n\t\t\t\t<string>x86_64</string>\n\t\t\t</array>\n\t\t\t<key>SupportedPlatform</key>\n\t\t\t<string>ios</string>\n\t\t\t<key>SupportedPlatformVariant</key>\n\t\t\t<string>simulator</string>\n\t\t</dict>\n\t</array>\n\t<key>CFBundlePackageType</key>\n\t<string>XFWK</string>\n\t<key>XCFrameworkFormatVersion</key>\n\t<string>1.0</string>\n</dict>\n</plist>\n";
+        let slices =
+            [Platform::MacOs, Platform::Ios, Platform::IosSimulator].map(XcframeworkSlice::new);
+        assert_eq!(xcframework_info_plist(&slices, "libx.a"), expected);
+    }
 
     #[test]
     fn platforms_round_trip_through_their_cli_spelling() {
