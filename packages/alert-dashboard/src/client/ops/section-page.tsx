@@ -53,7 +53,7 @@ function SectionBlock({
 }
 
 /** A page of snapshot sections followed by Prometheus trend charts. */
-export function SectionPage({
+function SectionPage({
   definition,
 }: {
   readonly definition: SectionPageDefinition;
@@ -84,16 +84,24 @@ export function SectionPage({
   );
 }
 
-export const DELIVERY_PAGE: SectionPageDefinition = {
+const DELIVERY_PAGE: SectionPageDefinition = {
   title: "Delivery",
   eyebrow: "Flow",
   sections: ["delivery", "work"],
   charts: ["prs-open", "prs-merged", "renovate-pending", "linear-open"],
 };
 
-export const MAINTENANCE_PAGE: SectionPageDefinition = {
+const MAINTENANCE_PAGE: SectionPageDefinition = {
   title: "Maintenance",
   eyebrow: "What's rotting",
   sections: ["maintenance", "errors", "platform", "observability"],
   charts: ["bugsink-unresolved", "alerts-firing", "node-cpu", "node-memory"],
 };
+
+export function DeliveryPage(): React.JSX.Element {
+  return <SectionPage definition={DELIVERY_PAGE} />;
+}
+
+export function MaintenancePage(): React.JSX.Element {
+  return <SectionPage definition={MAINTENANCE_PAGE} />;
+}

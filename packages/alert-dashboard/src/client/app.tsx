@@ -19,15 +19,11 @@ const ServicePage = lazy(async () => {
 });
 const DeliveryPage = lazy(async () => {
   const module = await import("./ops/section-page.tsx");
-  return {
-    default: () => <module.SectionPage definition={module.DELIVERY_PAGE} />,
-  };
+  return { default: module.DeliveryPage };
 });
 const MaintenancePage = lazy(async () => {
   const module = await import("./ops/section-page.tsx");
-  return {
-    default: () => <module.SectionPage definition={module.MAINTENANCE_PAGE} />,
-  };
+  return { default: module.MaintenancePage };
 });
 const AiPage = lazy(async () => {
   const module = await import("./ops/ai-page.tsx");

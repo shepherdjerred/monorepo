@@ -6,7 +6,6 @@ import {
 import type { z } from "zod";
 
 import {
-  ChangeListResponseSchema,
   CursorResponseSchema,
   DigestReportSchema,
   OpsErrorSchema,
@@ -70,21 +69,6 @@ export function snapshotQuery() {
     queryKey: opsKeys.snapshot(),
     queryFn: () =>
       request("/api/v1/ops/snapshot?consumer=web", SnapshotResponseSchema),
-    refetchInterval: REFRESH_MS,
-  });
-}
-
-export function changesQuery(input: { service?: string; limit?: number }) {
-  const params = new URLSearchParams();
-  if (input.service !== undefined) params.set("service", input.service);
-  params.set("limit", String(input.limit ?? 50));
-  return queryOptions({
-    queryKey: [...opsKeys.all, "changes", input] as const,
-    queryFn: () =>
-      request(
-        `/api/v1/ops/changes?${params.toString()}`,
-        ChangeListResponseSchema,
-      ),
     refetchInterval: REFRESH_MS,
   });
 }

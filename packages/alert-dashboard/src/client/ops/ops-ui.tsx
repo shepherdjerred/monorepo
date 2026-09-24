@@ -93,21 +93,6 @@ export function ExternalLink({
   );
 }
 
-export function LinkChips({
-  links,
-}: {
-  readonly links: readonly OpsLink[];
-}): React.JSX.Element | null {
-  if (links.length === 0) return null;
-  return (
-    <div className="link-chips">
-      {links.map((link) => (
-        <ExternalLink className="chip" key={link.url} link={link} />
-      ))}
-    </div>
-  );
-}
-
 export function ServiceLink({
   id,
 }: {

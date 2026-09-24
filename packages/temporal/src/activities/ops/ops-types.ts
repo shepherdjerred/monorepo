@@ -28,10 +28,6 @@ export type OpsContext = {
   services: ServiceIndex;
 };
 
-export function emptyCollection(): OpsCollection {
-  return { signals: [], metrics: [], changes: [] };
-}
-
 export function metric(input: {
   section: SectionId;
   source: SourceId;
