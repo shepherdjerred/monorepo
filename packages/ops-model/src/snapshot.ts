@@ -102,6 +102,7 @@ export const METRIC_UNITS = [
   "ratio",
   "percent",
   "seconds",
+  "hours",
   "tokens",
 ] as const;
 

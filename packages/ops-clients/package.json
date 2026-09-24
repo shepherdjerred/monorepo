@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build ./src/http.ts ./src/prometheus.ts --target bun --outdir dist",
+    "build": "bun build ./src/http.ts ./src/prometheus.ts ./src/graphql.ts ./src/kubernetes.ts ./src/alertmanager.ts ./src/bugsink.ts ./src/github.ts ./src/renovate.ts ./src/linear.ts ./src/posthog.ts ./src/loki.ts ./src/buildkite.ts --target bun --outdir dist",
     "lint": "bunx --no-install eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
