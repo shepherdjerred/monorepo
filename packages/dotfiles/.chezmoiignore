@@ -12,11 +12,6 @@ Library/
 # The tailscale CLI ships inside the macOS app bundle, so the wrapper that
 # execs it is meaningless off darwin.
 .local/bin/tailscale
-# plannotator is only installed on darwin (run_onchange_after_install-plannotator.sh.tmpl);
-# these paths exist solely to wire it into agent hooks and are meaningless without it.
-.grok/hooks/plannotator.json
-.local/bin/plannotator-antigravity-stop-hook
-.local/bin/plannotator-cursor-session-end-hook
 {{- end }}
 
 scripts
