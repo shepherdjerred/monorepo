@@ -243,19 +243,21 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
     ).toBe(true);
   });
 
-  // Regression: ci-io-post-merge-impact was created as a dynamic agent task and
-  // later promoted into SCHEDULES. Temporal memos are immutable after creation,
-  // so its live memo still carries the marker while its action starts
-  // runCiIoImpact. Reconciling it threw "must start agentTaskWorkflow" and
-  // crash-looped the worker before it could register any schedule.
+  // Regression: ci-io-post-merge-impact (retired 2026-09) was created as a
+  // dynamic agent task and later promoted into SCHEDULES. Temporal memos are
+  // immutable after creation, so its live memo still carried the marker while
+  // its action started runCiIoImpact. Reconciling it threw "must start
+  // agentTaskWorkflow" and crash-looped the worker before it could register
+  // any schedule. The behavior pin now uses dns-audit-daily since the
+  // original schedule is deleted.
   test("a declared schedule with a stale marker is skipped", () => {
-    expect(declaredIds.has("ci-io-post-merge-impact")).toBe(true);
+    expect(declaredIds.has("dns-audit-daily")).toBe(true);
     expect(
       isReconcilableDynamicAgentTaskSchedule(
-        "ci-io-post-merge-impact",
+        "dns-audit-daily",
         {
           ...DYNAMIC_AGENT_TASK_MEMO,
-          description: "Agent task: Measure CI I/O optimization impact",
+          description: "Agent task: stale marker on a declared schedule",
         },
         declaredIds,
       ),
@@ -279,7 +281,7 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
   test("declared precedence matches orphan detection", () => {
     expect(
       isOrphanSchedule({
-        scheduleId: "ci-io-post-merge-impact",
+        scheduleId: "dns-audit-daily",
         memo: DYNAMIC_AGENT_TASK_MEMO,
         namespace: "prod",
         declaredIds,
@@ -428,7 +430,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "generateDependencySummary",
   "runProtobufWatch",
   "runTasknotesCanary",
-  "runCiIoImpact",
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
@@ -627,6 +628,7 @@ test("terminates running executions of retired workflow types", async () => {
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
   ]);
   expect(terminated).toEqual(
     Array.from(
@@ -684,6 +686,7 @@ test("terminates a retired workflow in the namespace it actually ran in", async 
   );
   expect(prodQueries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
   ]);
 });
 
@@ -864,6 +867,13 @@ describe("orphan schedule detection", () => {
     expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
     expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
       "review-signals-collect",
+    );
+  });
+
+  test("retired CI I/O schedule is queued for deletion", () => {
+    expect(DELETED_SCHEDULE_IDS).toContain("ci-io-post-merge-impact");
+    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
+      "ci-io-post-merge-impact",
     );
   });
 

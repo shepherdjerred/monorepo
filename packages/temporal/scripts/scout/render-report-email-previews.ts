@@ -30,13 +30,6 @@ const PREVIEWS = [
     headline: "Every declared production check passed.",
   },
   {
-    reportType: "ci-io-impact",
-    title: "CI I/O optimization impact",
-    execution: "complete",
-    verdict: "pending",
-    headline: "The comparison window is still collecting enough builds.",
-  },
-  {
     reportType: "dependency-summary",
     title: "Weekly dependency summary",
     execution: "complete",
