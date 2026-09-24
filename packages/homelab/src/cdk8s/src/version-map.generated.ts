@@ -108,6 +108,7 @@ export const VersionMapSchema = z
     "library/debian": z.string(),
     "library/nginx": z.string(),
     "bugsink/bugsink": z.string(),
+    "arizephoenix/phoenix": z.string(),
     "relay-server": z.string(),
     "shepherdjerred/caddy-s3proxy": z.string(),
     "shepherdjerred/tasknotes-server": z.string(),

@@ -640,7 +640,7 @@
       "clones": 2,
       "tokens": 206
     },
-    "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts": {
+    "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts": {
       "clones": 1,
       "tokens": 90
     },
