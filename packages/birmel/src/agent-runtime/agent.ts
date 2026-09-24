@@ -294,6 +294,28 @@ export function summarizeToolResultForSession(
   });
 }
 
+/** Minimal completed-step surface needed to rebuild session tool events. */
+export type CompletedStepForSession = {
+  toolResults: readonly unknown[];
+};
+
+/**
+ * Summarize every tool result across completed steps for session
+ * persistence. Shared by the success path (from `result.steps`) and the
+ * unparseable-output recovery path (from steps collected via
+ * `onStepFinish`), so a recovered turn never drops executed tool effects.
+ */
+export function summarizeStepsForSession(
+  steps: readonly CompletedStepForSession[],
+  registeredToolIds: readonly string[],
+): SessionToolEvent[] {
+  return steps.flatMap((step) =>
+    step.toolResults.map((toolResult) =>
+      summarizeToolResultForSession(toolResult, registeredToolIds),
+    ),
+  );
+}
+
 function taskPrompt(packet: TaskPacket): string {
   const referenceFailureText =
     packet.referenceResolutionError == null
@@ -364,11 +386,26 @@ export async function executeTurn(
         output: Output.object({ schema: TurnAnswerSchema }),
       });
       const progress = options.progress;
+      // Steps completed before a terminal output failure.
+      // NoObjectGeneratedError carries no step history, so without this a
+      // recovered turn would persist stepCount 0 with no tool events and
+      // hide executed tool effects from session state.
+      const completedSteps: CompletedStepForSession[] = [];
       let result: Awaited<ReturnType<typeof agent.generate>>;
       try {
         result = await agent.generate({
           messages: taskMessages(packet),
           abortSignal,
+          onStepFinish: ({ stepNumber, text, toolCalls, toolResults }) => {
+            completedSteps.push({ toolResults: [...toolResults] });
+            // The finishing step answers with structured TurnAnswer JSON
+            // and calls no tool, so its "text" is wire JSON, not the
+            // requested plain-language sentence. Narration only ever
+            // comes from a step that actually did something.
+            if (progress !== undefined && toolCalls.length > 0) {
+              progress.stepFinished(stepNumber, text);
+            }
+          },
           ...(progress === undefined
             ? {}
             : {
@@ -407,15 +444,6 @@ export async function executeTurn(
                 onStepStart: ({ stepNumber }) => {
                   progress.stepStarted(stepNumber);
                 },
-                onStepFinish: ({ stepNumber, text, toolCalls }) => {
-                  // The finishing step answers with structured TurnAnswer JSON
-                  // and calls no tool, so its "text" is wire JSON, not the
-                  // requested plain-language sentence. Narration only ever
-                  // comes from a step that actually did something.
-                  if (toolCalls.length > 0) {
-                    progress.stepFinished(stepNumber, text);
-                  }
-                },
               }),
           ...runtime.callOptions({
             workload: "birmel.agent.turn",
@@ -427,13 +455,17 @@ export async function executeTurn(
         if (recovered === null) {
           throw error;
         }
+        const toolEvents = summarizeStepsForSession(
+          completedSteps,
+          registeredToolIds,
+        );
         span.setAttribute(
           "gen_ai.response.finish_reasons",
           recovered.finishReason,
         );
         span.setAttribute("gen_ai.usage.input_tokens", recovered.inputTokens);
         span.setAttribute("gen_ai.usage.output_tokens", recovered.outputTokens);
-        span.setAttribute("birmel.agent_steps", 0);
+        span.setAttribute("birmel.agent_steps", completedSteps.length);
         span.setAttribute(
           "birmel.turn_disposition",
           recovered.answer.disposition,
@@ -444,6 +476,8 @@ export async function executeTurn(
           finishReason: recovered.finishReason,
           inputTokens: recovered.inputTokens,
           outputTokens: recovered.outputTokens,
+          stepCount: completedSteps.length,
+          toolCallCount: toolEvents.length,
           durationMs: performance.now() - startedAt,
         });
         return {
@@ -452,14 +486,13 @@ export async function executeTurn(
           finishReason: recovered.finishReason,
           inputTokens: recovered.inputTokens,
           outputTokens: recovered.outputTokens,
-          stepCount: 0,
-          toolEvents: [],
+          stepCount: completedSteps.length,
+          toolEvents,
         };
       }
-      const toolEvents = result.steps.flatMap((step) =>
-        step.toolResults.map((toolResult) =>
-          summarizeToolResultForSession(toolResult, registeredToolIds),
-        ),
+      const toolEvents = summarizeStepsForSession(
+        result.steps,
+        registeredToolIds,
       );
       const inputTokens = result.usage.inputTokens ?? 0;
       const outputTokens = result.usage.outputTokens ?? 0;

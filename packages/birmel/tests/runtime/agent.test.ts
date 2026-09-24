@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { NoObjectGeneratedError } from "ai";
-import { summarizeToolResultForSession } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
+import {
+  summarizeStepsForSession,
+  summarizeToolResultForSession,
+} from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import {
   recoverTurnAnswer,
   repairTurnAnswer,
@@ -780,5 +783,49 @@ describe("recoverTurnAnswer", () => {
     expect(recoverTurnAnswer(new Error("boom"))).toBeNull();
     expect(recoverTurnAnswer(objectError(undefined))).toBeNull();
     expect(recoverTurnAnswer(objectError(""))).toBeNull();
+  });
+});
+
+describe("summarizeStepsForSession", () => {
+  test("flattens tool results across steps in order", () => {
+    const events = summarizeStepsForSession(
+      [
+        {
+          toolResults: [
+            {
+              toolCallId: "call-1",
+              toolName: "manage-message",
+              input: { channelId: "123" },
+              output: { success: true, message: "Message sent" },
+            },
+          ],
+        },
+        // The answering step calls no tool; it contributes no event.
+        { toolResults: [] },
+        {
+          toolResults: [
+            {
+              toolCallId: "call-2",
+              toolName: "manage-message",
+              input: { channelId: "456" },
+              output: { success: false, message: "Send failed" },
+            },
+          ],
+        },
+      ],
+      registeredToolIds,
+    );
+    expect(events.map((event) => event.toolCallId)).toEqual([
+      "call-1",
+      "call-2",
+    ]);
+    expect(events[1]?.success).toBe(false);
+  });
+
+  test("returns no events when no step ran a tool", () => {
+    expect(summarizeStepsForSession([], registeredToolIds)).toEqual([]);
+    expect(
+      summarizeStepsForSession([{ toolResults: [] }], registeredToolIds),
+    ).toEqual([]);
   });
 });
