@@ -164,154 +164,171 @@ export async function settleOnePool(input: {
   voidReason: BucksVoidReason | undefined;
   sink: SettlementAnnouncementSink;
 }): Promise<SettlementSummary | undefined> {
-  return await input.prismaClient.$transaction(async (tx) => {
-    const settledAt = new Date();
-    const claim = await tx.bucksMatchPool.updateMany({
-      where: {
-        id: input.poolId,
-        poolState: "closed",
-        matchedAt: { not: null },
-      },
-      data: { updatedAt: settledAt },
-    });
-    if (claim.count !== 1) {
-      return;
-    }
-
-    const rows = await tx.bucksBet.findMany({
-      where: {
-        poolId: input.poolId,
-        betOutcome: "pending",
-      },
-      orderBy: { id: "asc" },
-      select: {
-        id: true,
-        bucksAccountId: true,
-        bucksAccount: { select: { discordId: true, isHouse: true } },
-        predictedTeamId: true,
-        stake: true,
-        humanMatchedStake: true,
-        houseMatchedStake: true,
-        matchedStake: true,
-        unmatchedStake: true,
-        subjectPuuid: true,
-      },
-    });
-    const pending: PendingMatchedBet[] = rows.map((row) => {
-      const allocation = requireValidBucksAllocation({
-        betId: row.id,
-        submittedStake: row.stake,
-        humanMatchedStake: row.humanMatchedStake,
-        houseMatchedStake: row.houseMatchedStake,
-        matchedStake: row.matchedStake,
-        unmatchedStake: row.unmatchedStake,
+  // Explicit timeout: settlement runs sequential per-bet updates and credits
+  // whose count scales with pool size, and production pools outgrew the 5s
+  // interactive-transaction default (observed expiry at 5.4s). The two loops
+  // below must stay sequential and ordered — marking every bet settled first
+  // releases refund reservations the later credits depend on.
+  return await input.prismaClient.$transaction(
+    async (tx) => {
+      const settledAt = new Date();
+      const claim = await tx.bucksMatchPool.updateMany({
+        where: {
+          id: input.poolId,
+          poolState: "closed",
+          matchedAt: { not: null },
+        },
+        data: { updatedAt: settledAt },
       });
-      if (allocation.matchedStake === 0) {
+      if (claim.count !== 1) {
+        return;
+      }
+
+      const rows = await tx.bucksBet.findMany({
+        where: {
+          poolId: input.poolId,
+          betOutcome: "pending",
+        },
+        orderBy: { id: "asc" },
+        select: {
+          id: true,
+          bucksAccountId: true,
+          bucksAccount: { select: { discordId: true, isHouse: true } },
+          predictedTeamId: true,
+          stake: true,
+          humanMatchedStake: true,
+          houseMatchedStake: true,
+          matchedStake: true,
+          unmatchedStake: true,
+          subjectPuuid: true,
+        },
+      });
+      const pending: PendingMatchedBet[] = rows.map((row) => {
+        const allocation = requireValidBucksAllocation({
+          betId: row.id,
+          submittedStake: row.stake,
+          humanMatchedStake: row.humanMatchedStake,
+          houseMatchedStake: row.houseMatchedStake,
+          matchedStake: row.matchedStake,
+          unmatchedStake: row.unmatchedStake,
+        });
+        if (allocation.matchedStake === 0) {
+          throw new Error(
+            `Matched pool ${input.matchId} contains pending unmatched bet ${row.id.toString()}`,
+          );
+        }
+        return {
+          id: row.id,
+          bucksAccountId: row.bucksAccountId,
+          discordId: parseStoredIdentity(
+            DiscordAccountIdSchema,
+            row.bucksAccount.discordId,
+            { field: "discord_id", betId: row.id },
+          ),
+          isHouse: row.bucksAccount.isHouse,
+          // Also a stored value read back into settlement arithmetic: a team id
+          // outside the Riot enum would otherwise raise a bare ZodError and be
+          // retried forever as a transient pool failure.
+          predictedTeamId: parseStoredIdentity(
+            RiotTeamIdSchema,
+            row.predictedTeamId,
+            { field: "predicted_team_id", betId: row.id },
+          ),
+          submittedStake: allocation.submittedStake,
+          matchedStake: allocation.matchedStake,
+          unmatchedStake: allocation.unmatchedStake,
+          subjectPuuid: parseStoredIdentity(
+            LeaguePuuidSchema,
+            row.subjectPuuid,
+            {
+              field: "subject_puuid",
+              betId: row.id,
+            },
+          ),
+        };
+      });
+      const settled = settleMatchedBets({
+        rows: pending,
+        winningTeamId: input.winningTeamId,
+        voidReason: input.voidReason,
+      });
+
+      await tx.bucksMatchPool.update({
+        where: { id: input.poolId },
+        data: {
+          poolState: input.voidReason === undefined ? "settled" : "voided",
+          winningTeamId:
+            input.voidReason === undefined
+              ? (input.winningTeamId ?? null)
+              : null,
+          voidReason: input.voidReason ?? null,
+          settledAt,
+        },
+      });
+
+      // Release every now-impossible refund reservation before any account is
+      // credited. In particular, a losing synthetic house stake must not consume
+      // Int32 headroom needed for a winner fee credited later in this transaction.
+      for (const bet of settled.bets) {
+        await markBetSettled(tx, bet, settledAt);
+      }
+
+      for (const bet of settled.bets) {
+        await creditBet(tx, {
+          bet,
+          matchId: input.matchId,
+          serverId: input.serverId,
+          roster: input.roster,
+          winningTeamId: input.winningTeamId,
+          voidReason: input.voidReason,
+          winnersPool: settled.winnersPool,
+          losersPool: settled.losersPool,
+        });
+      }
+
+      const staked = settled.bets.reduce(
+        (sum, bet) => sum + bet.matchedStake,
+        0,
+      );
+      const paid = settled.bets.reduce((sum, bet) => sum + bet.payout, 0);
+      if (paid + settled.houseCut !== staked) {
+        // Counted before throwing: the throw aborts the transaction, so without
+        // this the invariant violation only surfaces two frames up.
+        bettingSettlementConservationFailuresTotal.inc({ stage: "settlement" });
+        Sentry.captureMessage("Bryan Bucks settlement did not conserve Bucks", {
+          level: "error",
+          tags: { source: "betting-settle-pool", matchId: input.matchId },
+          extra: { staked, paid, houseCut: settled.houseCut },
+        });
         throw new Error(
-          `Matched pool ${input.matchId} contains pending unmatched bet ${row.id.toString()}`,
+          `Settlement for ${input.matchId} did not conserve matched Bucks: staked ${staked.toString()}, paid ${paid.toString()}, winner fees ${settled.houseCut.toString()}`,
         );
       }
-      return {
-        id: row.id,
-        bucksAccountId: row.bucksAccountId,
-        discordId: parseStoredIdentity(
-          DiscordAccountIdSchema,
-          row.bucksAccount.discordId,
-          { field: "discord_id", betId: row.id },
-        ),
-        isHouse: row.bucksAccount.isHouse,
-        // Also a stored value read back into settlement arithmetic: a team id
-        // outside the Riot enum would otherwise raise a bare ZodError and be
-        // retried forever as a transient pool failure.
-        predictedTeamId: parseStoredIdentity(
-          RiotTeamIdSchema,
-          row.predictedTeamId,
-          { field: "predicted_team_id", betId: row.id },
-        ),
-        submittedStake: allocation.submittedStake,
-        matchedStake: allocation.matchedStake,
-        unmatchedStake: allocation.unmatchedStake,
-        subjectPuuid: parseStoredIdentity(LeaguePuuidSchema, row.subjectPuuid, {
-          field: "subject_puuid",
-          betId: row.id,
-        }),
-      };
-    });
-    const settled = settleMatchedBets({
-      rows: pending,
-      winningTeamId: input.winningTeamId,
-      voidReason: input.voidReason,
-    });
 
-    await tx.bucksMatchPool.update({
-      where: { id: input.poolId },
-      data: {
-        poolState: input.voidReason === undefined ? "settled" : "voided",
-        winningTeamId:
-          input.voidReason === undefined ? (input.winningTeamId ?? null) : null,
-        voidReason: input.voidReason ?? null,
-        settledAt,
-      },
-    });
-
-    // Release every now-impossible refund reservation before any account is
-    // credited. In particular, a losing synthetic house stake must not consume
-    // Int32 headroom needed for a winner fee credited later in this transaction.
-    for (const bet of settled.bets) {
-      await markBetSettled(tx, bet, settledAt);
-    }
-
-    for (const bet of settled.bets) {
-      await creditBet(tx, {
-        bet,
+      logger.info(
+        `💸 Settled ${settled.bets.length.toString()} matched Bryan Bucks position(s) for ${input.matchId}`,
+      );
+      const summary: SettlementSummary = {
         matchId: input.matchId,
         serverId: input.serverId,
-        roster: input.roster,
-        winningTeamId: input.winningTeamId,
+        winningTeamId:
+          input.voidReason === undefined ? input.winningTeamId : undefined,
         voidReason: input.voidReason,
         winnersPool: settled.winnersPool,
         losersPool: settled.losersPool,
+        houseCut: settled.houseCut,
+        bets: settled.bets,
+      };
+      // With `tx`, so settlement and its instruction commit together.
+      await recordAnnouncement({
+        sink: input.sink,
+        db: tx,
+        family: "settlement",
+        itemKey: summary.serverId,
+        payload: summary,
       });
-    }
-
-    const staked = settled.bets.reduce((sum, bet) => sum + bet.matchedStake, 0);
-    const paid = settled.bets.reduce((sum, bet) => sum + bet.payout, 0);
-    if (paid + settled.houseCut !== staked) {
-      // Counted before throwing: the throw aborts the transaction, so without
-      // this the invariant violation only surfaces two frames up.
-      bettingSettlementConservationFailuresTotal.inc({ stage: "settlement" });
-      Sentry.captureMessage("Bryan Bucks settlement did not conserve Bucks", {
-        level: "error",
-        tags: { source: "betting-settle-pool", matchId: input.matchId },
-        extra: { staked, paid, houseCut: settled.houseCut },
-      });
-      throw new Error(
-        `Settlement for ${input.matchId} did not conserve matched Bucks: staked ${staked.toString()}, paid ${paid.toString()}, winner fees ${settled.houseCut.toString()}`,
-      );
-    }
-
-    logger.info(
-      `💸 Settled ${settled.bets.length.toString()} matched Bryan Bucks position(s) for ${input.matchId}`,
-    );
-    const summary: SettlementSummary = {
-      matchId: input.matchId,
-      serverId: input.serverId,
-      winningTeamId:
-        input.voidReason === undefined ? input.winningTeamId : undefined,
-      voidReason: input.voidReason,
-      winnersPool: settled.winnersPool,
-      losersPool: settled.losersPool,
-      houseCut: settled.houseCut,
-      bets: settled.bets,
-    };
-    // With `tx`, so settlement and its instruction commit together.
-    await recordAnnouncement({
-      sink: input.sink,
-      db: tx,
-      family: "settlement",
-      itemKey: summary.serverId,
-      payload: summary,
-    });
-    return summary;
-  });
+      return summary;
+    },
+    { timeout: 30_000, maxWait: 10_000 },
+  );
 }
