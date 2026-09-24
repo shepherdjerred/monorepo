@@ -3,6 +3,7 @@ import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.t
 import type { ScoutQlPredicate } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   buildMatchDimensionSource,
+  buildMatchTeamBansSource,
   buildMatchTeamsSource,
   buildMatchesSource,
   buildPrematchSource,
@@ -23,9 +24,9 @@ import {
 import {
   TEAM_LOOKUP_COLUMNS,
   buildPlanColumnMap,
+  readsMatchDimension,
   resolveColumn,
   type ColumnMap,
-  type PlanColumnSource,
 } from "#src/reports/duckdb/column-map.ts";
 import {
   compilePlanGrouping,
@@ -33,9 +34,14 @@ import {
 } from "#src/reports/duckdb/group-sql.ts";
 import {
   buildAggregateTail,
-  buildFactsCte,
   type CompiledPlanColumns,
 } from "#src/reports/duckdb/select-sql.ts";
+import { buildFactsCte } from "#src/reports/duckdb/facts-cte.ts";
+import {
+  enforceScopeGuards,
+  planSourceKind,
+  type SourceKind,
+} from "#src/reports/duckdb/plan-source.ts";
 import { combineAnd, frag, seq } from "#src/reports/duckdb/sql-fragment.ts";
 import {
   enforcePlanNodeBudget,
@@ -82,76 +88,6 @@ export type PlanQueryInput = {
   /** Effective limit, already policy-capped. */
   limit: number;
 };
-
-type SourceKind = {
-  columnSource: PlanColumnSource;
-  timeColumn: "game_creation_at" | "observed_at";
-};
-
-function planSourceKind(plan: ScoutQlPlan, forGroupFacts: boolean): SourceKind {
-  const kind = match(plan.source)
-    .with(
-      "match_participants",
-      "competition_match_participants",
-      "player_groups",
-      (): SourceKind => ({
-        columnSource: "match",
-        timeColumn: "game_creation_at",
-      }),
-    )
-    .with("prematch_participants", (): SourceKind => ({
-      columnSource: "prematch",
-      timeColumn: "observed_at",
-    }))
-    // Team rows hold no timestamp of their own; game_creation_at is looked up
-    // from the match, and the time window is applied there (buildFactsCte).
-    .with("match_teams", (): SourceKind => ({
-      columnSource: "match-team",
-      timeColumn: "game_creation_at",
-    }))
-    .with("rank_current", "competition_rank", () => {
-      throw new Error(`rank sources are not lake-backed: ${plan.source}`);
-    })
-    .exhaustive();
-  if ((plan.source === "player_groups") !== forGroupFacts) {
-    throw new Error(
-      forGroupFacts
-        ? `${plan.source} does not use the group-facts projection.`
-        : "player_groups compiles through compileGroupFactsProjection.",
-    );
-  }
-  return kind;
-}
-
-function enforceScopeGuards(input: PlanQueryInput): void {
-  if (input.scope.kind === "global" && input.playerIds !== undefined) {
-    throw new Error(
-      "playerIds scoping requires a guild scope — player ids are per-server.",
-    );
-  }
-  // A team row has no puuid, so there is nothing to join the server's accounts
-  // dimension on. Throwing is the only safe answer: degrading to global would
-  // silently widen a server's scheduled report to every match in the lake.
-  if (input.plan.source === "match_teams") {
-    if (input.scope.kind === "guild") {
-      throw new Error(
-        "match_teams cannot be scoped to a server: team rows carry no player identity. Query it in global scope, or use match_participants for a server's players.",
-      );
-    }
-    if (input.playerIds !== undefined) {
-      throw new Error("match_teams cannot be filtered by player.");
-    }
-  }
-  // Rank sources threw in planSourceKind, so only the match flavor remains.
-  if (input.plan.source === "competition_match_participants") {
-    if (input.scope.kind === "global") {
-      throw new Error("Competition reports are not available in global scope.");
-    }
-    if (input.plan.competitionId === undefined) {
-      throw new Error(`${input.plan.source} requires a competition_id.`);
-    }
-  }
-}
 
 type SplitWhere = {
   /** Identity-free conjuncts, pushed into both union branches. */
@@ -252,20 +188,22 @@ function buildFactsPipeline(
   // team row has no timestamp, so for match_teams the window belongs to the
   // match dimension the facts CTE joins, and only the team-side conjuncts are
   // pushed here.
-  const pushdown =
-    kind.columnSource === "match-team"
-      ? combineAnd(pushedFragments)
-      : combineAnd([range, ...pushedFragments]);
+  const pushdown = readsMatchDimension(kind.columnSource)
+    ? combineAnd(pushedFragments)
+    : combineAnd([range, ...pushedFragments]);
   const source = match(kind.columnSource)
     .with("match", () => buildMatchesSource(input.files, pushdown))
     .with("prematch", () => buildPrematchSource(input.files, pushdown))
     .with("match-team", () => buildMatchTeamsSource(input.files, pushdown))
+    .with("match-team-ban", () =>
+      buildMatchTeamBansSource(input.files, pushdown),
+    )
     .exhaustive();
   if (source === undefined) {
     return undefined;
   }
   let matchDimension: SqlFragment | undefined;
-  if (kind.columnSource === "match-team") {
+  if (readsMatchDimension(kind.columnSource)) {
     matchDimension = buildMatchDimensionSource(input.files, range);
     if (matchDimension === undefined) {
       // No participant rows in the window means no match to attribute a team
@@ -356,7 +294,7 @@ export function compileScoutQlPlanQuery(
   // puuid is always projected separately as `m.puuid AS puuid`. On match_teams
   // neither is a column of `m` — the time comes from the joined dimension and
   // there is no player — so nothing is added here.
-  if (kind.columnSource !== "match-team") {
+  if (!readsMatchDimension(kind.columnSource)) {
     projected.add(kind.timeColumn);
   }
   projected.delete("puuid");

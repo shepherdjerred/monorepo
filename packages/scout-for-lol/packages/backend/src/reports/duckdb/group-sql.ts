@@ -10,6 +10,7 @@ import {
   walkScalarExpr,
 } from "#src/reports/duckdb/expr-sql.ts";
 import {
+  readsMatchDimension,
   resolveColumn,
   type ColumnMap,
   type PlanColumnSource,
@@ -65,9 +66,9 @@ function requireColumns(columns: ColumnMap, names: string[]): void {
 }
 
 function playerGrouping(input: GroupingInput): CompiledGrouping {
-  if (input.source === "match-team") {
+  if (readsMatchDimension(input.source)) {
     throw new Error(
-      "GROUP BY player is not available on match_teams: a team row names no player. Group by side, outcome or a first-objective flag instead.",
+      "GROUP BY player is not available here: a team or ban row names no player. Group by side, outcome, champion or a first-objective flag instead.",
     );
   }
   if (input.scope.kind === "global") {
@@ -87,31 +88,44 @@ function playerGrouping(input: GroupingInput): CompiledGrouping {
 }
 
 function championGrouping(input: GroupingInput): CompiledGrouping {
-  return match(input.source)
-    .with("match", (): CompiledGrouping => {
-      requireColumns(input.columns, ["champion_id", "champion_name"]);
-      return {
-        key: frag("champion_id"),
-        label: () => frag("any_value(champion_name)"),
-        playerIdentity: false,
-        columnNames: ["champion_id", "champion_name"],
-      };
-    })
-    .with("prematch", (): CompiledGrouping => {
-      requireColumns(input.columns, ["champion_id"]);
-      return {
-        key: frag("champion_id"),
-        label: (keyRef) => frag(`(${keyRef})::VARCHAR`),
-        playerIdentity: false,
-        columnNames: ["champion_id"],
-      };
-    })
-    .with("match-team", (): CompiledGrouping => {
-      throw new Error(
-        "GROUP BY champion is not available on match_teams: a team row names no champion. Use match_participants for champion analysis.",
-      );
-    })
-    .exhaustive();
+  return (
+    match(input.source)
+      .with("match", (): CompiledGrouping => {
+        requireColumns(input.columns, ["champion_id", "champion_name"]);
+        return {
+          key: frag("champion_id"),
+          label: () => frag("any_value(champion_name)"),
+          playerIdentity: false,
+          columnNames: ["champion_id", "champion_name"],
+        };
+      })
+      .with("prematch", (): CompiledGrouping => {
+        requireColumns(input.columns, ["champion_id"]);
+        return {
+          key: frag("champion_id"),
+          label: (keyRef) => frag(`(${keyRef})::VARCHAR`),
+          playerIdentity: false,
+          columnNames: ["champion_id"],
+        };
+      })
+      // A ban names a champion by id; its name is joined into facts from the
+      // champion registry, so it labels exactly like a participant's champion.
+      .with("match-team-ban", (): CompiledGrouping => {
+        requireColumns(input.columns, ["champion_id"]);
+        return {
+          key: frag("champion_id"),
+          label: () => frag("any_value(champion_name)"),
+          playerIdentity: false,
+          columnNames: ["champion_id"],
+        };
+      })
+      .with("match-team", (): CompiledGrouping => {
+        throw new Error(
+          "GROUP BY champion is not available on match_teams: a team row names no champion. Use match_participants for champion analysis.",
+        );
+      })
+      .exhaustive()
+  );
 }
 
 function nullableTextGrouping(

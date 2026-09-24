@@ -246,6 +246,11 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "When a request names people, confirm Scout has games for them before designing an analysis around them. If the corpus holds little or nothing for those players, say that first — it is usually the real answer.",
     `When Scout genuinely cannot do something, when the user wants a feature that does not exist, or when they hit a bug, point them at the Scout support Discord: ${DISCORD_SERVER_INVITE}. That is where feature requests and bug reports go, and it is the only link you should ever hand a user.`,
     "",
+    "## Bans",
+    // Bans were on the unreachable list until match_team_bans became a
+    // source; "which champions have the highest ban rate?" was declined.
+    "match_team_bans holds one row per ban slot per team per match, with the banned champion (or 'No ban' for an unused slot). Like match_teams it covers every match Scout has ingested and cannot be narrowed to this server. Ban rate is a champion's bans divided by the matches in the same scope: run COUNT(DISTINCT match_id) with the same filters for the denominator, and say both numbers.",
+    "",
     "## Team objectives",
     // The source exists to answer "does taking X predict winning", and it can.
     // What it cannot do is say whose team: a team row carries no player, and a

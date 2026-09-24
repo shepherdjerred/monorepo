@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 import {
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
@@ -32,7 +33,18 @@ export type ColumnBinding = {
 
 export type ColumnMap = ReadonlyMap<string, ColumnBinding>;
 
-export type PlanColumnSource = "match" | "prematch" | "match-team";
+export type PlanColumnSource =
+  "match" | "prematch" | "match-team" | "match-team-ban";
+
+/**
+ * Sources whose rows hold no match facts of their own — no timestamp, queue
+ * or version, and no player — and read them from the match dimension. Both
+ * are global-only and refuse player and champion-by-participant groupings for
+ * the same reason, so every such rule is keyed on this rather than on a name.
+ */
+export function readsMatchDimension(source: PlanColumnSource): boolean {
+  return source === "match-team" || source === "match-team-ban";
+}
 
 const LAKE_TYPE_CLASS: Record<DuckDbColumnType, SqlTypeClass> = {
   VARCHAR: "text",
@@ -147,21 +159,34 @@ const PREMATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["map", virtual("map_id", "numeric", ["map_id"])],
 ];
 
+// Arena and other modes put team ids outside the 100/200 pair, so an
+// `ELSE 'Red'` would label them wrongly rather than admit it does not know.
+const SIDE_BINDING = virtual(
+  "CASE team_id WHEN 100 THEN 'Blue' WHEN 200 THEN 'Red' ELSE team_id::VARCHAR END",
+  "text",
+  ["team_id"],
+);
+
 const MATCH_TEAM_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   [
     "outcome",
     virtual("CASE WHEN win THEN 'Win' ELSE 'Loss' END", "text", ["win"]),
   ],
-  [
-    // Arena and other modes put team ids outside the 100/200 pair, so an
-    // `ELSE 'Red'` would label them wrongly rather than admit it does not know.
-    "side",
-    virtual(
-      "CASE team_id WHEN 100 THEN 'Blue' WHEN 200 THEN 'Red' ELSE team_id::VARCHAR END",
-      "text",
-      ["team_id"],
-    ),
-  ],
+  ["side", SIDE_BINDING],
+  ["game_creation_at", lookedUp("game_creation_at", "timestamp")],
+  ["queue", lookedUp("queue", "text")],
+  ["patch", lookedUp("patch", "text")],
+  ["map", lookedUp("map_id", "numeric")],
+];
+
+/**
+ * A ban row names a champion by id alone; its name comes from the bundled
+ * champion registry, joined in the facts CTE as `champion_name` (see
+ * select-sql.ts), so grouping by champion labels it like a participant row.
+ */
+const MATCH_TEAM_BAN_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
+  ["champion", lookedUp("champion_name", "text")],
+  ["side", SIDE_BINDING],
   ["game_creation_at", lookedUp("game_creation_at", "timestamp")],
   ["queue", lookedUp("queue", "text")],
   ["patch", lookedUp("patch", "text")],
@@ -192,6 +217,14 @@ export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
         new Map([
           ...sourceColumnEntries(MATCH_TEAM_LAKE_COLUMNS),
           ...MATCH_TEAM_VIRTUAL_COLUMNS,
+        ]),
+    )
+    .with(
+      "match-team-ban",
+      () =>
+        new Map([
+          ...sourceColumnEntries(MATCH_TEAM_BAN_LAKE_COLUMNS),
+          ...MATCH_TEAM_BAN_VIRTUAL_COLUMNS,
         ]),
     )
     .exhaustive();

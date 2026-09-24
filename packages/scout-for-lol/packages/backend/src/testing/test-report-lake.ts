@@ -5,6 +5,7 @@ import {
   computeKda,
   type AccountLakeRow,
   type MatchLakeRow,
+  type MatchTeamBanLakeRow,
   type MatchTeamLakeRow,
   type PrematchLakeRow,
   type TimelineCoverageLakeRow,
@@ -24,6 +25,7 @@ import {
 } from "#src/report-lake/paths.ts";
 import {
   matchStagingFilePath,
+  matchTeamBanStagingFilePath,
   matchTeamStagingFilePath,
   prematchStagingFilePath,
   timelineStagingFilePath,
@@ -282,6 +284,8 @@ type TestLakeInput = {
   timelineEventParticipants?: TimelineEventParticipantLakeRow[];
   timelineFrames?: TimelineParticipantFrameLakeRow[];
   timelineCoverage?: TimelineCoverageLakeRow[];
+  /** Raw ban rows, written as staging files one per match. */
+  bans?: MatchTeamBanLakeRow[];
 };
 
 async function writeTestAccounts(
@@ -425,6 +429,24 @@ async function writeTestTimelineRows(
   }
 }
 
+async function writeTestMatchTeamBans(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
+  const byMatch = new Map<string, MatchTeamBanLakeRow[]>();
+  for (const row of input.bans ?? []) {
+    const rows = byMatch.get(row.match_id) ?? [];
+    rows.push(row);
+    byMatch.set(row.match_id, rows);
+  }
+  for (const [matchId, rows] of byMatch) {
+    await Bun.write(
+      matchTeamBanStagingFilePath(lakeDir, matchId),
+      rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+    );
+  }
+}
+
 export async function writeTestLake(
   lakeDir: string,
   input: TestLakeInput,
@@ -433,6 +455,7 @@ export async function writeTestLake(
   await writeTestAccounts(lakeDir, input);
   await writeTestMatches(lakeDir, input);
   await writeTestMatchTeams(lakeDir, input);
+  await writeTestMatchTeamBans(lakeDir, input);
   await writeTestPrematches(lakeDir, input);
   await writeTestTimelineRows(
     lakeDir,

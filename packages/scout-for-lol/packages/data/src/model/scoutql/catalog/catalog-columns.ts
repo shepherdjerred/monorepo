@@ -1,11 +1,13 @@
 import {
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "#src/model/reports/lake-columns.ts";
 import type { ReportDisplayKind } from "#src/model/reports/report.ts";
 import {
+  MATCH_TEAM_BAN_DESCRIPTIONS,
   MATCH_TEAM_DESCRIPTIONS,
   describe,
 } from "#src/model/scoutql/catalog/catalog-descriptions.ts";
@@ -246,6 +248,16 @@ const MATCH_TEAM_VIRTUALS: ScoutQlColumnInfo[] = [
   virtualColumn("map", "integer", "Map dimension (map_id) of the match."),
 ];
 
+/** A ban row reads the same looked-up match facts as a team row, plus a champion name. */
+const MATCH_TEAM_BAN_VIRTUALS: ScoutQlColumnInfo[] = [
+  virtualColumn(
+    "champion",
+    "varchar",
+    "Banned champion's name, from Scout's champion registry ('No ban' for an unused slot).",
+  ),
+  ...MATCH_TEAM_VIRTUALS.filter((column) => column.name !== "outcome"),
+];
+
 const COMPETITION_ID_COLUMN = virtualColumn(
   "competition_id",
   "integer",
@@ -391,6 +403,22 @@ const CATALOG_LIST: SourceCatalog[] = [
     requiresCompetitionId: false,
     // No puuid exists on a team row, so there is nothing for player('…') to
     // resolve against and no accounts join to scope a server by.
+    playerRefAllowed: false,
+    groupCall: false,
+  },
+  {
+    id: "match_team_bans",
+    description:
+      "Champion bans, one row per ban slot per team per match; no player identity, so global scope only. Ban rate is bans of a champion divided by matches in the same scope — run COUNT(DISTINCT match_id) with the same filters for the denominator.",
+    columns: toMap([
+      ...physicalColumns(
+        MATCH_TEAM_BAN_LAKE_COLUMNS,
+        MATCH_TEAM_BAN_DESCRIPTIONS,
+      ),
+      ...MATCH_TEAM_BAN_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
     playerRefAllowed: false,
     groupCall: false,
   },

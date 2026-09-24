@@ -114,6 +114,13 @@ const DESCRIPTIONS: Record<string, string> = {
  * columns collide states its own wording here rather than silently inheriting
  * the participant reading.
  */
+export const MATCH_TEAM_BAN_DESCRIPTIONS: Record<string, string> = {
+  team_id: "The banning team (100 blue, 200 red).",
+  pick_turn: "Which ban slot this was, in draft order (1-10).",
+  champion_id:
+    "Banned champion's numeric id (compare with champion('Name')); -1 is an unused ban slot.",
+};
+
 export const MATCH_TEAM_DESCRIPTIONS: Record<string, string> = {
   team_id: "Team id (100 blue, 200 red) — one row per team, two per match.",
   win: "Whether this team won.",

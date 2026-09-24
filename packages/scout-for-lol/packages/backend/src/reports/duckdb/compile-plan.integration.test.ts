@@ -26,6 +26,7 @@ import {
 } from "#src/reports/duckdb/lake.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import { lakeMonth } from "#src/report-lake/schema.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 
 /**
@@ -68,6 +69,37 @@ beforeAll(async () => {
   };
   await writeTestLake(lakeDir, {
     serverId: SERVER_ID,
+    // Yasuo banned in two games, Zed in one, and one slot left unused.
+    bans: [
+      {
+        match_id: "NA1_100",
+        month: lakeMonth(WEEK1.getTime()),
+        team_id: 100,
+        pick_turn: 1,
+        champion_id: 157,
+      },
+      {
+        match_id: "NA1_100",
+        month: lakeMonth(WEEK1.getTime()),
+        team_id: 200,
+        pick_turn: 2,
+        champion_id: 238,
+      },
+      {
+        match_id: "NA1_101",
+        month: lakeMonth(WEEK1B.getTime()),
+        team_id: 100,
+        pick_turn: 1,
+        champion_id: 157,
+      },
+      {
+        match_id: "NA1_101",
+        month: lakeMonth(WEEK1B.getTime()),
+        team_id: 200,
+        pick_turn: 2,
+        champion_id: -1,
+      },
+    ],
     matchFacts: [
       {
         ...alice,
@@ -750,5 +782,43 @@ describe("kill participation end-to-end", () => {
   test("does not join the team table unless a query names a team column", async () => {
     const { compiled } = await run(makeInput());
     expect(compiled.aggregateSql).not.toContain("team_dim");
+  });
+});
+
+describe("match_team_bans end-to-end", () => {
+  test("counts bans per champion, named from the registry", async () => {
+    const { rows } = await run(
+      makeInput({
+        plan: makePlan({
+          source: "match_team_bans",
+          outputs: [countOutput("bans")],
+          groupings: [{ kind: "column", column: "champion", name: "champion" }],
+        }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const byChampion = new Map(
+      rows.map(
+        (row) => [String(row["label"]), number_(row["expr_0"])] as const,
+      ),
+    );
+    expect(byChampion.get("Yasuo")).toBe(2);
+    expect(byChampion.get("Zed")).toBe(1);
+    // Riot's -1 is an empty slot, and says so rather than showing a number.
+    expect(byChampion.get("No ban")).toBe(1);
+  });
+
+  test("champion('Name') filters bans by id, like participant rows", async () => {
+    const { rows } = await run(
+      makeInput({
+        plan: makePlan({
+          source: "match_team_bans",
+          outputs: [countOutput("bans")],
+          where: eq("champion_id", 157),
+        }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    expect(number_(rows[0]?.["expr_0"])).toBe(2);
   });
 });
