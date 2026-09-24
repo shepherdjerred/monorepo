@@ -1,0 +1,10 @@
+{
+  "$comment": "One published image per entry. The key is the macOS SDK major version and the image tag. sha256 pins the staged tarball (scripts/stage-xcode.sh) that CI downloads from the private apple-sdks bucket. swiftImage is the Linux Swift toolchain: the Swift that shipped with that Xcode, or the oldest later one with Swift Build (Swift 6.1 has none). latest marks the tag also published as :latest.",
+  "27": {
+    "xcode": "27.0",
+    "xcodeBuild": "27A5228h",
+    "swiftImage": "swift:6.4.0-noble",
+    "sha256": "6f3970c2243088ada5ab6c89a46ab034a729babc4b8115eb07a94d06deddfc7e",
+    "latest": true
+  }
+}

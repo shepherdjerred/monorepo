@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# clang / clang++ for an Apple target, by name: <arch>-apple-macos-clang,
+# arm64-apple-ios-clang++, <arch>-apple-ios-macabi-clang, and the Rust target
+# names (aarch64-apple-darwin-clang, …) cargo and cc-rs use.
+#
+# Deployment target: MACOSX_DEPLOYMENT_TARGET / IPHONEOS_DEPLOYMENT_TARGET
+# (defaults 15.0 / 18.0). The SDK, ld64, and Catalyst search paths come from
+# clang's per-triple configuration (/usr/bin/<triple>.cfg), so plain
+# `clang --target=arm64-apple-macos15` works the same way.
+set -euo pipefail
+source /usr/local/lib/apple-target.sh
+driver=clang
+[[ $name == *-clang++ ]] && driver=clang++
+exec "$driver" --target="$triple" "$@"

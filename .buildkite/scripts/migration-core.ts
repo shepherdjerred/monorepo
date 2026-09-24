@@ -233,6 +233,11 @@ const sitePaths = {
     "packages/stocks-sjer-red",
     ...deployScripts,
   ],
+  "site-macos-cross": [
+    ...workspacePaths,
+    "packages/macos-cross-site",
+    ...deployScripts,
+  ],
   "site-wiki": [...workspacePaths, "packages/docs/wiki", ...deployScripts],
   "site-better-skill-capped": [
     ...workspacePaths,
@@ -414,6 +419,12 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   sites: Object.entries(sitePaths)
     .filter(([lane]) => lane !== "site-scout")
     .flatMap(([, paths]) => paths),
+  "macos-cross-compiler": [
+    "packages/macos-cross-compiler",
+    "scripts/release/macos-cross-compiler.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/s3-static-site.ts",
+  ],
   "scout-reconcile": [
     ...workspacePaths,
     "packages/scout-for-lol",
@@ -468,11 +479,14 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
 };
 
-// windows-cross-compiler images are content-addressed from their own sources;
-// pipeline edits cannot change them, so they do not re-trigger the long build.
+// These lanes' images are built only from their own sources and publish
+// scripts. A rebuild costs hours of long builds (multi-platform for
+// macos-cross-compiler), so CI plumbing edits (pipeline.yml, selectors) must
+// not re-trigger them.
 const lanesWithoutGlobalPaths = new Set([
   "site-scout",
   "windows-cross-compiler",
+  "macos-cross-compiler",
 ]);
 
 export function selectorPathsForLane(

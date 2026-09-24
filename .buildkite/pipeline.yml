@@ -2180,6 +2180,7 @@ steps:
         - "packages/loaded/**"
         - "packages/cooklang-rich-preview/**"
         - "packages/stocks-sjer-red/**"
+        - "packages/macos-cross-site/**"
         - "packages/docs/wiki/**"
         - "packages/better-skill-capped/**"
         - "packages/glitter/**"
@@ -2208,7 +2209,7 @@ steps:
       fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
       # scout release path, helm chart push, and release-please.
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red wiki better-skill-capped glitter scout-design-system; do
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red macos-cross-site wiki better-skill-capped glitter scout-design-system; do
         bun --no-install scripts/release/deploy-site.ts "$$site" --dry-run
       done
       scout_backend=$$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest)
@@ -2795,6 +2796,74 @@ steps:
                   - *grant_github_packages
                   - *grant_buildkite_read
 
+  # ── macos-cross-compiler: the public Apple toolchain images ──────────────
+  # A product rather than a cluster workload, so it has its own path: the SDK
+  # tarballs come from the private apple-sdks bucket (sha256-pinned in
+  # sdks.json), and main publishes the moving tags users pull (:<sdk>,
+  # :<sdk>-<sha>, :latest) for linux/amd64 and linux/arm64. See
+  # scripts/release/macos-cross-compiler.ts.
+  - label: ":apple: macos-cross-compiler — smoke (PR)"
+    key: macos-cross-compiler-pr
+    timeout_in_minutes: 120
+    if: build.pull_request.id != null
+    if_changed:
+      include:
+        - "packages/macos-cross-compiler/**"
+        - "scripts/release/macos-cross-compiler.ts"
+        - "scripts/lib/run.ts"
+        - "scripts/lib/s3-static-site.ts"
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
+      bun --no-install scripts/release/macos-cross-compiler.ts smoke
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: macos-cross-compiler-pr
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
+
+  - label: ":apple: macos-cross-compiler — build, smoke, publish"
+    key: macos-cross-compiler
+    timeout_in_minutes: 240
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-cross-compiler-push
+    command: |
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts macos-cross-compiler; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
+      bun --no-install scripts/release/macos-cross-compiler.ts push
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: macos-cross-compiler
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_packages
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
+
   # ── Main-only: static sites ───────────────────────────────────────────────
   - label: ":rocket: deploy sites"
     key: sites
@@ -2818,7 +2887,7 @@ steps:
         # result is discarded (all of them are unaffected by construction);
         # only the recorded decision matters here.
         for site_lane in site-sjer-red site-resume site-webring site-cooklang \
-          site-stocks site-wiki site-better-skill-capped site-glitter \
+          site-stocks site-macos-cross site-wiki site-better-skill-capped site-glitter \
           site-scout-design-system; do
           if bun --no-install .buildkite/scripts/selectors/ci-changed.ts "$$site_lane"; then :; fi
         done
@@ -2832,6 +2901,7 @@ steps:
       site_better_skill_capped=false
       site_cooklang=false
       site_stocks=false
+      site_macos_cross=false
       site_wiki=false
       site_glitter=false
       site_scout_design_system=false
@@ -2848,6 +2918,10 @@ steps:
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-stocks; then
         site_stocks=true
         filters+=(--filter stocks-sjer-red)
+      fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-macos-cross; then
+        site_macos_cross=true
+        filters+=(--filter '@shepherdjerred/macos-cross-site')
       fi
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-wiki; then
         site_wiki=true
@@ -2891,6 +2965,7 @@ steps:
       if $$site_better_skill_capped; then bun --no-install scripts/release/deploy-site.ts better-skill-capped; fi
       if $$site_cooklang; then bun --no-install scripts/release/deploy-site.ts cooklang-rich-preview; fi
       if $$site_stocks; then bun --no-install scripts/release/deploy-site.ts stocks-sjer-red; fi
+      if $$site_macos_cross; then bun --no-install scripts/release/deploy-site.ts macos-cross-site; fi
       if $$site_wiki; then
         buildkite-agent artifact download "packages/docs/wiki/dist/**/*" . --step playwright-e2e-main
         buildkite-agent artifact download "packages/docs/wiki/dist/*" . --step playwright-e2e-main

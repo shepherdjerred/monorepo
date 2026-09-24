@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# swiftc for an Apple target, by name: <arch>-apple-macos-swiftc,
+# arm64-apple-ios-swiftc, <arch>-apple-ios-macabi-swiftc.
+#
+# Adds what an Xcode toolchain would supply: the SDK, the Darwin Swift
+# resource directory, and the Linux builds of the SwiftUI macros. Linking goes
+# through clang, whose per-triple configuration selects ld64.
+set -euo pipefail
+source /usr/local/lib/apple-target.sh
+arguments=(-target "$triple" -sdk "$sdk" -resource-dir /opt/apple/swift-resource
+  -load-plugin-executable "/opt/apple/plugins/AppleMacros#SwiftUIMacros,PreviewsMacros")
+if [ "$os" = macabi ]; then
+  # Apple's compiler adds the iOSSupport tree for a macabi target; upstream does not.
+  support=$sdk/System/iOSSupport
+  arguments+=(-Fsystem "$support/System/Library/Frameworks" -I "$support/usr/lib/swift" -L "$support/usr/lib/swift")
+fi
+exec swiftc "${arguments[@]}" "$@"

@@ -1034,6 +1034,28 @@
       "name": "@shepherdjerred/quotabar",
       "version": "1.0.0",
     },
+    "packages/macos-cross-compiler": {
+      "name": "@shepherdjerred/macos-cross-compiler",
+      "version": "0.1.0",
+    },
+    "packages/macos-cross-site": {
+      "name": "@shepherdjerred/macos-cross-site",
+      "version": "0.0.1",
+      "dependencies": {
+        "@iconify-json/heroicons": "^1.2.3",
+        "@tailwindcss/vite": "^4.2.4",
+        "astro": "^7.3.3",
+        "astro-icon": "^1.1.5",
+        "tailwindcss": "^4.2.4",
+      },
+      "devDependencies": {
+        "@astrojs/check": "^0.9.8",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+      },
+    },
     "packages/monarch": {
       "name": "@shepherdjerred/monarch",
       "version": "0.1.0",
@@ -3958,6 +3980,10 @@
     "@shepherdjerred/llm-runtime": ["@shepherdjerred/llm-runtime@workspace:packages/llm-runtime"],
 
     "@shepherdjerred/loaded": ["@shepherdjerred/loaded@workspace:packages/loaded"],
+
+    "@shepherdjerred/macos-cross-compiler": ["@shepherdjerred/macos-cross-compiler@workspace:packages/macos-cross-compiler"],
+
+    "@shepherdjerred/macos-cross-site": ["@shepherdjerred/macos-cross-site@workspace:packages/macos-cross-site"],
 
     "@shepherdjerred/monarch": ["@shepherdjerred/monarch@workspace:packages/monarch"],
 

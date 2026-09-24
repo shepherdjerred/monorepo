@@ -61,6 +61,8 @@ export const summaryLanes = [
   "site-webring",
   "site-cooklang",
   "site-stocks",
+  "site-macos-cross",
+  "macos-cross-compiler",
   "site-wiki",
   "site-better-skill-capped",
   "site-glitter",
