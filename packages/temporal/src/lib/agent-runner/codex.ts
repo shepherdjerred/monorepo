@@ -116,7 +116,10 @@ async function prepareCodex(
       return {
         options: {
           ...openRouter.codexOptions,
-          config: CODEX_TOOL_ENVIRONMENT_CONFIG,
+          config: {
+            ...CODEX_TOOL_ENVIRONMENT_CONFIG,
+            ...openRouter.providerConfig,
+          },
           ...providerPath.pathOverride,
         },
         model: openRouter.routeModelId,

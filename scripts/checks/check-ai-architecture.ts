@@ -114,6 +114,13 @@ const DURABLE_AGENT_CLAUDE_SDK_PATHS = new Set([
   "packages/temporal/package.json",
   "packages/temporal/src/lib/agent-runner/claude.ts",
 ]);
+// The shared Codex-through-OpenRouter config factory. The Codex CLI mandates
+// the CODEX_API_KEY env var name for custom providers (`env_key`), and the
+// value routed through it is the OpenRouter key — not a native OpenAI
+// credential. Only this factory may name it outside the reviewed adapters.
+const CODEX_OPENROUTER_CONFIG_PATHS = new Set([
+  "packages/llm-runtime/src/codex.ts",
+]);
 
 // These homelab files describe provider-specific OpenTofu resources and their
 // credential handoffs. They are infrastructure metadata, not inference paths.
@@ -205,6 +212,7 @@ function isAllowedViolation(
       CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
       POKEMON_CODEX_SUBSCRIPTION_PATHS.has(filePath) ||
       DURABLE_AGENT_CREDENTIAL_PATHS.has(filePath) ||
+      CODEX_OPENROUTER_CONFIG_PATHS.has(filePath) ||
       HOMELAB_PLATFORM_METADATA_PATHS.has(filePath) ||
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       OPENAI_NATIVE_REALTIME_PATHS.has(filePath)

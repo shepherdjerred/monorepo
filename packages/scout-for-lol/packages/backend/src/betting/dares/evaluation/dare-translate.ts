@@ -78,6 +78,7 @@ export type DareTranslationResult =
   | { kind: "timeout" }
   | { kind: "budget_refused" }
   | { kind: "invalid_output" }
+  | { kind: "provider_quota" }
   | { kind: "provider_error" };
 
 /** The `generateValidatedObject`-shaped boundary tests mock (zero network). */
@@ -127,6 +128,7 @@ const SHARED_FAILURE_MESSAGES = {
   budget_refused: "refused by the LLM budget",
   timeout: "timed out",
   invalid_output: "produced no valid object",
+  provider_quota: "hit the provider quota",
 } as const;
 
 function failureResult(

@@ -14,9 +14,30 @@ import { parseWithUnknownKeyFallback } from "#src/league/api/strict-with-loose-f
 import {
   extractHttpStatus,
   isExpectedUpstreamError,
+  RiotTransportError,
 } from "#src/league/api/client/errors.ts";
 
 const logger = createLogger("riot-call");
+
+/**
+ * Attempts for a single Riot call when the failure never produced an HTTP
+ * response (timeout or transport error). The HTTP layer below already retries
+ * 429 and expected upstream statuses, so this covers only the failures it
+ * cannot see. One retry: a second consecutive transport failure is either a
+ * real outage or a hung route, and hammering it helps neither.
+ */
+const RIOT_CALL_MAX_ATTEMPTS = 2;
+const RIOT_CALL_RETRY_DELAY_MS = 1000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("timed out");
+}
 
 type ValidationFailureSaveToS3 = {
   kind: "save-to-s3";
@@ -106,46 +127,68 @@ async function runRiotCall<T>(
   });
 
   let payload: unknown;
-  try {
-    payload = await withTimeout(fn());
-  } catch (error) {
-    const isTimeout =
-      error instanceof Error && error.message.includes("timed out");
-    riotApiRequestsTotal.inc({
-      source,
-      status: isTimeout ? "timeout" : "error",
-    });
-    updateRiotApiHealth(false);
+  let attempt = 0;
+  for (;;) {
+    attempt += 1;
+    try {
+      payload = await withTimeout(fn());
+      break;
+    } catch (error) {
+      riotApiRequestsTotal.inc({
+        source,
+        status: isTimeoutError(error) ? "timeout" : "error",
+      });
+      const status = extractHttpStatus(error);
+      // Retry only recognized transient failures: a client timeout or a
+      // transport failure from the HTTP layer below (which already retried
+      // 429 and expected upstream statuses). Anything else without a
+      // status — malformed JSON, client bugs — recurs identically on
+      // retry, so it fails fast below.
+      if (
+        status === undefined &&
+        (error instanceof RiotTransportError || isTimeoutError(error)) &&
+        attempt < RIOT_CALL_MAX_ATTEMPTS
+      ) {
+        logger.warn(
+          `[${source}] ⚠️ Transient failure (attempt ${attempt.toString()}/${RIOT_CALL_MAX_ATTEMPTS.toString()})${contextSuffix}; retrying`,
+        );
+        await sleep(RIOT_CALL_RETRY_DELAY_MS);
+        continue;
+      }
+      updateRiotApiHealth(false);
 
-    const status = extractHttpStatus(error);
-    if (status === undefined) {
-      logger.error(`[${source}] ❌ Error during call${contextSuffix}:`, error);
-      riotApiErrorsTotal.inc({ source, http_status: "unknown" });
-      return { kind: "transport-error", error };
-    }
-    if (status === 404) {
-      logger.info(`[${source}] ℹ️  404 not found${contextSuffix}`);
-      return { kind: "http-404", error };
-    }
-    if (isExpectedUpstreamError(status)) {
-      logger.warn(
-        `[${source}] Riot API returned ${status.toString()}${contextSuffix} (expected upstream error)`,
-      );
+      if (status === undefined) {
+        logger.error(
+          `[${source}] ❌ Error during call${contextSuffix}:`,
+          error,
+        );
+        riotApiErrorsTotal.inc({ source, http_status: "unknown" });
+        return { kind: "transport-error", error };
+      }
+      if (status === 404) {
+        logger.info(`[${source}] ℹ️  404 not found${contextSuffix}`);
+        return { kind: "http-404", error };
+      }
+      if (isExpectedUpstreamError(status)) {
+        logger.warn(
+          `[${source}] Riot API returned ${status.toString()}${contextSuffix} (expected upstream error)`,
+        );
+        riotApiErrorsTotal.inc({ source, http_status: status.toString() });
+        return { kind: "http-error", status, error };
+      }
+      logger.error(`[${source}] ❌ HTTP ${status.toString()}${contextSuffix}`);
       riotApiErrorsTotal.inc({ source, http_status: status.toString() });
+      if (sentry) {
+        Sentry.captureException(error, {
+          tags: {
+            source,
+            httpStatus: status.toString(),
+            ...contextAsTags(context),
+          },
+        });
+      }
       return { kind: "http-error", status, error };
     }
-    logger.error(`[${source}] ❌ HTTP ${status.toString()}${contextSuffix}`);
-    riotApiErrorsTotal.inc({ source, http_status: status.toString() });
-    if (sentry) {
-      Sentry.captureException(error, {
-        tags: {
-          source,
-          httpStatus: status.toString(),
-          ...contextAsTags(context),
-        },
-      });
-    }
-    return { kind: "http-error", status, error };
   }
 
   riotApiRequestsTotal.inc({ source, status: "success" });

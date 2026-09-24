@@ -300,6 +300,44 @@ describe("settleBettingForMatch", () => {
     ).toEqual(["principal", "profit"]);
   });
 
+  test("settles a large pool inside one settlement transaction", async () => {
+    // Production pools outgrew the 5s interactive-transaction default
+    // (observed expiry at 5.4s): settlement runs sequential per-bet updates
+    // and credits whose count scales with pool size. This pins the
+    // many-bet path end to end; the local database is too fast to
+    // reproduce the expiry itself, so the raised timeout is covered by
+    // inspection plus the production issue going quiet.
+    const pool = await makePool();
+    const bettors = 30;
+    for (let i = 0; i < bettors; i += 1) {
+      await makeBettor({
+        poolId: pool.id,
+        discordId: bucksTestDiscordId(100 + i),
+        teamId: WINNING_TEAM,
+        stake: 10,
+      });
+      await makeBettor({
+        poolId: pool.id,
+        discordId: bucksTestDiscordId(200 + i),
+        teamId: LOSING_TEAM,
+        stake: 10,
+      });
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary).toMatchObject({
+      winnersPool: 300,
+      losersPool: 300,
+      houseCut: 60,
+      voidReason: undefined,
+    });
+    expect(summary?.bets).toHaveLength(bettors * 2);
+    const staked =
+      summary?.bets.reduce((sum, bet) => sum + bet.matchedStake, 0) ?? 0;
+    const paid = summary?.bets.reduce((sum, bet) => sum + bet.payout, 0) ?? 0;
+    expect(paid + (summary?.houseCut ?? 0)).toBe(staked);
+  });
+
   test("keeps a one-Buck winning match profitable", async () => {
     const { winner } = await makeBalancedPool(1);
     const [summary] = await settleBettingForMatch(fixture, db);

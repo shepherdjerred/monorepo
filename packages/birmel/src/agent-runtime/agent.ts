@@ -23,6 +23,7 @@ import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
+import { recoverTurnAnswer } from "./turn-answer-recovery.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
 
@@ -293,6 +294,28 @@ export function summarizeToolResultForSession(
   });
 }
 
+/** Minimal completed-step surface needed to rebuild session tool events. */
+export type CompletedStepForSession = {
+  toolResults: readonly unknown[];
+};
+
+/**
+ * Summarize every tool result across completed steps for session
+ * persistence. Shared by the success path (from `result.steps`) and the
+ * unparseable-output recovery path (from steps collected via
+ * `onStepFinish`), so a recovered turn never drops executed tool effects.
+ */
+export function summarizeStepsForSession(
+  steps: readonly CompletedStepForSession[],
+  registeredToolIds: readonly string[],
+): SessionToolEvent[] {
+  return steps.flatMap((step) =>
+    step.toolResults.map((toolResult) =>
+      summarizeToolResultForSession(toolResult, registeredToolIds),
+    ),
+  );
+}
+
 function taskPrompt(packet: TaskPacket): string {
   const referenceFailureText =
     packet.referenceResolutionError == null
@@ -363,66 +386,113 @@ export async function executeTurn(
         output: Output.object({ schema: TurnAnswerSchema }),
       });
       const progress = options.progress;
-      const result = await agent.generate({
-        messages: taskMessages(packet),
-        abortSignal,
-        ...(progress === undefined
-          ? {}
-          : {
-              onToolExecutionStart: ({ toolCall }) => {
-                progress.toolStarted(
-                  toolCall.toolCallId,
-                  toolCall.toolName,
-                  toolCall.input,
-                );
-              },
-              onToolExecutionEnd: ({
-                toolCall,
-                toolOutput,
-                toolExecutionMs,
-              }) => {
-                // A tool that resolves rather than throws still reports its
-                // own success/failure inside the resolved value (the same
-                // field summarizeToolResultForSession reads), so a validation
-                // failure inside the tool would otherwise render as a
-                // misleading ✓. Fall back to "resolved at all" only for a
-                // shape this check does not recognize.
-                const domainResult = ToolDomainResultSchema.safeParse(
-                  toolOutput.type === "tool-result"
-                    ? toolOutput.output
-                    : undefined,
-                );
-                const succeeded = domainResult.success
-                  ? domainResult.data.success
-                  : toolOutput.type !== "tool-error";
-                progress.toolFinished(
-                  toolCall.toolCallId,
-                  succeeded,
+      // Steps completed before a terminal output failure.
+      // NoObjectGeneratedError carries no step history, so without this a
+      // recovered turn would persist stepCount 0 with no tool events and
+      // hide executed tool effects from session state.
+      const completedSteps: CompletedStepForSession[] = [];
+      let result: Awaited<ReturnType<typeof agent.generate>>;
+      try {
+        result = await agent.generate({
+          messages: taskMessages(packet),
+          abortSignal,
+          onStepFinish: ({ stepNumber, text, toolCalls, toolResults }) => {
+            completedSteps.push({ toolResults: [...toolResults] });
+            // The finishing step answers with structured TurnAnswer JSON
+            // and calls no tool, so its "text" is wire JSON, not the
+            // requested plain-language sentence. Narration only ever
+            // comes from a step that actually did something.
+            if (progress !== undefined && toolCalls.length > 0) {
+              progress.stepFinished(stepNumber, text);
+            }
+          },
+          ...(progress === undefined
+            ? {}
+            : {
+                onToolExecutionStart: ({ toolCall }) => {
+                  progress.toolStarted(
+                    toolCall.toolCallId,
+                    toolCall.toolName,
+                    toolCall.input,
+                  );
+                },
+                onToolExecutionEnd: ({
+                  toolCall,
+                  toolOutput,
                   toolExecutionMs,
-                );
-              },
-              onStepStart: ({ stepNumber }) => {
-                progress.stepStarted(stepNumber);
-              },
-              onStepFinish: ({ stepNumber, text, toolCalls }) => {
-                // The finishing step answers with structured TurnAnswer JSON
-                // and calls no tool, so its "text" is wire JSON, not the
-                // requested plain-language sentence. Narration only ever
-                // comes from a step that actually did something.
-                if (toolCalls.length > 0) {
-                  progress.stepFinished(stepNumber, text);
-                }
-              },
-            }),
-        ...runtime.callOptions({
-          workload: "birmel.agent.turn",
-          sessionId: packet.threadId ?? packet.channelId,
-        }),
-      });
-      const toolEvents = result.steps.flatMap((step) =>
-        step.toolResults.map((toolResult) =>
-          summarizeToolResultForSession(toolResult, registeredToolIds),
-        ),
+                }) => {
+                  // A tool that resolves rather than throws still reports its
+                  // own success/failure inside the resolved value (the same
+                  // field summarizeToolResultForSession reads), so a validation
+                  // failure inside the tool would otherwise render as a
+                  // misleading ✓. Fall back to "resolved at all" only for a
+                  // shape this check does not recognize.
+                  const domainResult = ToolDomainResultSchema.safeParse(
+                    toolOutput.type === "tool-result"
+                      ? toolOutput.output
+                      : undefined,
+                  );
+                  const succeeded = domainResult.success
+                    ? domainResult.data.success
+                    : toolOutput.type !== "tool-error";
+                  progress.toolFinished(
+                    toolCall.toolCallId,
+                    succeeded,
+                    toolExecutionMs,
+                  );
+                },
+                onStepStart: ({ stepNumber }) => {
+                  progress.stepStarted(stepNumber);
+                },
+              }),
+          ...runtime.callOptions({
+            workload: "birmel.agent.turn",
+            sessionId: packet.threadId ?? packet.channelId,
+          }),
+        });
+      } catch (error) {
+        const recovered = recoverTurnAnswer(error);
+        if (recovered === null) {
+          throw error;
+        }
+        const toolEvents = summarizeStepsForSession(
+          completedSteps,
+          registeredToolIds,
+        );
+        span.setAttribute(
+          "gen_ai.response.finish_reasons",
+          recovered.finishReason,
+        );
+        span.setAttribute("gen_ai.usage.input_tokens", recovered.inputTokens);
+        span.setAttribute("gen_ai.usage.output_tokens", recovered.outputTokens);
+        span.setAttribute("birmel.agent_steps", completedSteps.length);
+        span.setAttribute(
+          "birmel.turn_disposition",
+          recovered.answer.disposition,
+        );
+        logger.warn("Agent turn output unparseable; delivering model text", {
+          disposition: recovered.answer.disposition,
+          personaId: packet.personaId,
+          finishReason: recovered.finishReason,
+          inputTokens: recovered.inputTokens,
+          outputTokens: recovered.outputTokens,
+          stepCount: completedSteps.length,
+          toolCallCount: toolEvents.length,
+          durationMs: performance.now() - startedAt,
+        });
+        return {
+          text: recovered.answer.answer,
+          disposition: recovered.answer.disposition,
+          finishReason: recovered.finishReason,
+          inputTokens: recovered.inputTokens,
+          outputTokens: recovered.outputTokens,
+          stepCount: completedSteps.length,
+          toolEvents,
+        };
+      }
+      const toolEvents = summarizeStepsForSession(
+        result.steps,
+        registeredToolIds,
       );
       const inputTokens = result.usage.inputTokens ?? 0;
       const outputTokens = result.usage.outputTokens ?? 0;
