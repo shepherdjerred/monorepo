@@ -838,7 +838,8 @@
         "database contract: postgresql sha256:b7118fd3148a74a7b8cdc43e18aaa0aadb52e18074736e2eeaf472cab31815fb",
         "database contract: postgresql sha256:cd8f183cb95ab7bf2e79759e3ec4fee06a743dba08aae066696140b0f642f2f3",
         "database contract: postgresql sha256:a408ea432e42c580636179469e54258c2da73a1d0c6e6cc9e61b641eed51664e",
-        "database contract: postgresql sha256:f23fffaab8e7ceae9e0fdbf08fae4314fcd7edbd826e415efaab8231ca172db5"
+        "database contract: postgresql sha256:f23fffaab8e7ceae9e0fdbf08fae4314fcd7edbd826e415efaab8231ca172db5",
+        "database contract: postgresql sha256:8abb031de6cf4ab2c3e2ce79edc449856507edecf9ff00f52c4c0ae37bc2586c"
       ]
     },
     {

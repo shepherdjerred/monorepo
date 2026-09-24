@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
+import {
+  catalogScoutPostgresImageDigests,
+  scoutImageUsesPostgres,
+} from "./release-configuration.ts";
 import { VersionMapSchema } from "./version-map.generated.ts";
 import versions from "./versions.ts";
 
@@ -74,6 +78,22 @@ describe("version catalog static validation", () => {
       const digest = entry.value.split("@sha256:")[1];
       expect(digest).toBeDefined();
       expect(SHA256_PATTERN.test(digest ?? "")).toBe(true);
+    }
+  });
+
+  it("marks every deployed scout backend image with postgres provenance", () => {
+    // The chart renders DATABASE_URL through scoutImageUsesPostgres: a pin
+    // whose digest carries no "database contract: postgresql" marker gets the
+    // SQLite URL, and every post-migration image crash-loops on it (Prisma
+    // P1013) — exactly how the unmarked 2.0.0-16677 prod promotion took
+    // scout-prod down in build 16982. Tags mint per build but markers land
+    // via commit-back, so a promotion can offer an image that never earned
+    // its note; this gates the promotion at verify time using the chart's
+    // own predicate, so gate and chart cannot disagree.
+    const markers = catalogScoutPostgresImageDigests(catalog);
+    for (const stage of ["beta", "prod"] as const) {
+      const pin = versions[`shepherdjerred/scout-for-lol/${stage}`];
+      expect(scoutImageUsesPostgres(pin, markers)).toBe(true);
     }
   });
 
