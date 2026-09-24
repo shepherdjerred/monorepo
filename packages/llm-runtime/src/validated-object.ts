@@ -11,21 +11,23 @@ import {
   serializeBodyAttribute,
 } from "@shepherdjerred/llm-observability/span-helpers";
 import { z } from "zod";
+import { requireNativeRoute } from "@shepherdjerred/llm-models";
+import { reasoningProviderOptions, type ProviderOptions } from "./reasoning.ts";
 import {
   addTokenBreakdown,
   emptyTokenBreakdown,
-  parseOpenRouterMetadata,
-} from "./metadata.ts";
-import type { OpenRouterRuntime } from "./runtime.ts";
+  parseNativeUsage,
+} from "./usage.ts";
+import type { LlmRuntime } from "./runtime.ts";
 import {
   MAX_CORRECTIVE_PROMPT_CHARS,
   MAX_SEMANTIC_ATTEMPTS,
   StructuredOutputExhaustionError,
   StructuredOutputTransportError,
-  type AggregateOpenRouterUsage,
+  type AggregateLlmUsage,
   type GenerateValidatedObjectInput,
   type GenerateValidatedObjectResult,
-  type OpenRouterCallMetadata,
+  type LlmCallMetadata,
   type StructuredOutputAttempt,
 } from "./types.ts";
 
@@ -130,27 +132,56 @@ function outputTokenLimit(input: {
 
 function aggregateUsage(
   attempts: readonly StructuredOutputAttempt[],
-): AggregateOpenRouterUsage {
+): AggregateLlmUsage {
   let tokens = emptyTokenBreakdown();
-  let actualCostUsd = 0;
   let catalogCostUsd = 0;
-  let upstreamCostUsd = 0;
   for (const attempt of attempts) {
     tokens = addTokenBreakdown(tokens, attempt.usage);
-    actualCostUsd += attempt.metadata?.actualCostUsd ?? 0;
     catalogCostUsd += attempt.metadata?.catalogCostUsd ?? 0;
-    upstreamCostUsd += attempt.metadata?.upstreamCostUsd ?? 0;
   }
-  return { tokens, actualCostUsd, catalogCostUsd, upstreamCostUsd };
+  return { tokens, catalogCostUsd };
+}
+
+/**
+ * Merge reasoning options into the runtime's call options without either set
+ * clobbering the other's provider bucket.
+ */
+function mergeProviderOptions<
+  T extends { providerOptions?: Record<string, Record<string, unknown>> },
+>(callOptions: T, reasoning: ProviderOptions | undefined): T {
+  if (reasoning === undefined) return callOptions;
+  const merged: Record<string, Record<string, unknown>> = {
+    ...callOptions.providerOptions,
+  };
+  for (const [provider, values] of Object.entries(reasoning)) {
+    merged[provider] = { ...merged[provider], ...values };
+  }
+  return { ...callOptions, providerOptions: merged };
+}
+
+/**
+ * Reasoning options for whichever provider serves this model, or nothing when
+ * the request cannot be expressed there. See `reasoningProviderOptions`.
+ */
+function providerOptionsFor(
+  modelId: string,
+  effort: GenerateValidatedObjectInput<z.ZodType>["reasoningEffort"],
+): { providerOptions?: ProviderOptions } {
+  if (effort === undefined) return {};
+  const options = reasoningProviderOptions(
+    requireNativeRoute(modelId, "language").provider,
+    modelId,
+    effort,
+  );
+  return options === undefined ? {} : { providerOptions: options };
 }
 
 async function generateStructuredAttempt<SCHEMA extends z.ZodType>(input: {
-  runtime: OpenRouterRuntime;
+  runtime: LlmRuntime;
   request: GenerateValidatedObjectInput<SCHEMA>;
   semanticAttempt: number;
   priorIssueSummary: string | undefined;
   priorFinishReason: string | undefined;
-  observationId: string;
 }) {
   const maxOutputTokens = outputTokenLimit({
     initial: input.request.maxOutputTokens,
@@ -176,34 +207,30 @@ async function generateStructuredAttempt<SCHEMA extends z.ZodType>(input: {
     output,
     ...(maxOutputTokens === undefined ? {} : { maxOutputTokens }),
     ...(input.request.seed === undefined ? {} : { seed: input.request.seed }),
-    ...(input.request.reasoningEffort === undefined
-      ? {}
-      : {
-          providerOptions: {
-            openrouter: {
-              reasoning: { effort: input.request.reasoningEffort },
-            },
-          },
-        }),
     ...(input.request.abortSignal === undefined
       ? {}
       : { abortSignal: input.request.abortSignal }),
     maxRetries: input.semanticAttempt === 1 ? MAX_TRANSPORT_RETRIES : 0,
-    ...input.runtime.callOptions({
-      workload: input.request.workload,
-      sessionId: input.request.sessionId,
-      traceContext: input.request.traceContext,
-      observationId: input.observationId,
-    }),
+    ...mergeProviderOptions(
+      input.runtime.callOptions({
+        workload: input.request.workload,
+        model: input.request.model,
+        sessionId: input.request.sessionId,
+        traceContext: input.request.traceContext,
+      }),
+      providerOptionsFor(input.request.model, input.request.reasoningEffort)
+        .providerOptions,
+    ),
   });
 }
 
 export async function generateValidatedObject<SCHEMA extends z.ZodType>(
-  runtime: OpenRouterRuntime,
+  runtime: LlmRuntime,
   input: GenerateValidatedObjectInput<SCHEMA>,
 ): Promise<GenerateValidatedObjectResult<SCHEMA>> {
+  const { provider } = requireNativeRoute(input.model, "language");
   const attempts: StructuredOutputAttempt[] = [];
-  const metadata: OpenRouterCallMetadata[] = [];
+  const metadata: LlmCallMetadata[] = [];
   let priorIssueSummary: string | undefined;
   let priorFinishReason: string | undefined;
 
@@ -211,7 +238,7 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
     {
       service: runtime.service,
       callSite: input.workload,
-      system: "openrouter",
+      system: provider,
     },
     {
       model: input.model,
@@ -231,7 +258,6 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
         semanticAttempt <= MAX_SEMANTIC_ATTEMPTS;
         semanticAttempt += 1
       ) {
-        const observationId = crypto.randomUUID();
         span.addEvent("llm.structured_output.attempt", {
           "llm.structured_output.attempt": semanticAttempt,
         });
@@ -242,17 +268,13 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
             semanticAttempt,
             priorIssueSummary,
             priorFinishReason,
-            observationId,
           });
-          const observation = await runtime.responseObservation(observationId);
-          const callMetadata = parseOpenRouterMetadata({
+          const callMetadata = parseNativeUsage({
             requestedModel: input.model,
+            provider,
             responseId: result.finalStep.response.id,
             resolvedModel: result.finalStep.response.modelId,
             usage: result.usage,
-            providerMetadata: result.finalStep.providerMetadata,
-            responseBody:
-              observation?.responseBody ?? result.finalStep.response.body,
           });
           const object = requireObjectOutput(() => result.output, {
             text: result.finalStep.text,
@@ -285,7 +307,6 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
             attempts,
           };
         } catch (error: unknown) {
-          const observation = await runtime.responseObservation(observationId);
           if (isImmediateFailure(error)) {
             // A 400–404 on a corrective attempt (e.g. a 402 after the first
             // billable call drained the balance) still follows billable
@@ -329,12 +350,12 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
           }
           if (!NoObjectGeneratedError.isInstance(error)) throw error;
 
-          const callMetadata = parseOpenRouterMetadata({
+          const callMetadata = parseNativeUsage({
             requestedModel: input.model,
+            provider,
             responseId: error.response?.id,
             resolvedModel: error.response?.modelId,
             usage: error.usage,
-            responseBody: observation?.responseBody,
           });
 
           priorIssueSummary = issueSummary(error);

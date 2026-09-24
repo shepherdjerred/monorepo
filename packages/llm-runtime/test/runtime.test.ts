@@ -1,824 +1,412 @@
 import { generateText } from "ai";
 import { describe, expect, test } from "vitest";
-import { getPricing } from "@shepherdjerred/llm-models";
 import { Registry } from "prom-client";
 import { z } from "zod";
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
   generateValidatedObject,
   MAX_CORRECTIVE_PROMPT_CHARS,
-  openRouterWebSearchTool,
-  StructuredOutputUsageError,
-  parseOpenRouterMetadata,
   StructuredOutputExhaustionError,
   StructuredOutputTransportError,
-  type OpenRouterRuntimeLogRecord,
+  StructuredOutputUsageError,
+  webSearchTool,
+  type LlmRuntimeLogRecord,
 } from "@shepherdjerred/llm-runtime";
-import { executeWebSearchContinuation } from "#src/openrouter-tools.ts";
 
-const RequestBodySchema = z
-  .object({
-    model: z.string(),
-    provider: z
-      .object({
-        allow_fallbacks: z.boolean(),
-        data_collection: z.string(),
-        require_parameters: z.boolean(),
-      })
-      .loose(),
-    response_format: z.object({ type: z.string() }).loose().optional(),
-    max_tokens: z.number().int().positive().optional(),
-    seed: z.number().int().optional(),
-    reasoning: z.object({ effort: z.string() }).optional(),
-    session_id: z.string().optional(),
-    trace: z.record(z.string(), z.string()),
-  })
-  .loose();
+type Fetcher = (
+  input: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1],
+) => Promise<Response>;
 
-function openRouterResponse(
-  content: string,
-  finishReason: "stop" | "length" = "stop",
-): Response {
-  return Response.json({
-    id: "gen-test",
-    model: "openai/gpt-5.6-luna",
-    choices: [
+function usage(inputTokens = 12, outputTokens = 4) {
+  return {
+    input_tokens: inputTokens,
+    input_tokens_details: { cached_tokens: 0, cache_write_tokens: 0 },
+    output_tokens: outputTokens,
+    output_tokens_details: { reasoning_tokens: 0 },
+    total_tokens: inputTokens + outputTokens,
+  };
+}
+
+function responsesBody(text: string, incomplete = false) {
+  return {
+    id: "resp_test",
+    object: "response",
+    model: "gpt-5.6-luna",
+    status: incomplete ? "incomplete" : "completed",
+    ...(incomplete
+      ? { incomplete_details: { reason: "max_output_tokens" } }
+      : {}),
+    output: [
       {
-        index: 0,
-        message: { role: "assistant", content },
-        finish_reason: finishReason,
+        type: "message",
+        id: "msg_test",
+        role: "assistant",
+        status: incomplete ? "incomplete" : "completed",
+        content: [{ type: "output_text", text, annotations: [] }],
       },
     ],
-    usage: {
-      prompt_tokens: 12,
-      completion_tokens: 4,
-      total_tokens: 16,
-      cost: 0.0001,
-      cost_details: { upstream_inference_cost: 0.00008 },
-    },
-    openrouter_metadata: {
-      requested: "openai/gpt-5.6-luna",
-      is_byok: true,
-      strategy: "direct",
-      region: "iad",
-      attempt: 2,
-      attempts: [
-        {
-          provider: "Provider A",
-          model: "openai/gpt-5.6-luna",
-          status: 503,
-        },
-        {
-          provider: "Provider B",
-          model: "openai/gpt-5.6-luna",
-          status: 200,
-        },
-      ],
-    },
-  });
+    usage: usage(),
+  };
 }
 
-function createResponseSequenceRuntime(
-  responses: Response[],
-  captureRequestBody: (body: unknown) => void,
-  options: {
-    logger?: (record: OpenRouterRuntimeLogRecord) => void;
-    metricsRegister?: Registry;
-  } = {},
+function ok(text: string, incomplete = false): Response {
+  return Response.json(responsesBody(text, incomplete));
+}
+
+function llmRuntime(
+  fetcher: Fetcher,
+  options?: {
+    register?: Registry;
+    logger?: (record: LlmRuntimeLogRecord) => void;
+  },
 ) {
-  return createOpenRouterRuntime({
-    apiKey: "test-key",
-    service: "test",
-    appName: "test",
-    ...options,
-    fetch: Object.assign(
-      async (
-        _input: Parameters<typeof fetch>[0],
-        init?: Parameters<typeof fetch>[1],
-      ) => {
-        if (typeof init?.body !== "string") {
-          throw new TypeError("expected JSON request body");
-        }
-        captureRequestBody(JSON.parse(init.body));
-        const response = responses.shift();
-        if (response === undefined) throw new Error("unexpected request");
-        return response;
-      },
-      {
-        preconnect: (_url: string | URL) => {
-          // No preconnect in tests.
-        },
-      },
-    ),
-  });
-}
-
-function createPostSemanticFailureRuntime(input: {
-  status: 402 | 503;
-  message: string;
-  headers?: ResponseInit["headers"];
-}) {
-  let requestCount = 0;
-  const runtime = createOpenRouterRuntime({
-    apiKey: "test-key",
-    service: "test",
-    appName: "test",
-    fetch: () => {
-      requestCount += 1;
-      if (requestCount === 1) {
-        return Promise.resolve(openRouterResponse('{"count":"bad"}'));
-      }
-      const responseInit: ResponseInit =
-        input.headers === undefined
-          ? { status: input.status }
-          : { status: input.status, headers: input.headers };
-      return Promise.resolve(
-        Response.json(
-          { error: { code: input.status, message: input.message } },
-          responseInit,
-        ),
-      );
+  return createLlmRuntime({
+    credentials: {
+      openai: { apiKey: "sk-test" },
+      anthropic: { kind: "apiKey", apiKey: "sk-ant-test" },
+      google: { project: "test-project" },
     },
+    service: "runtime-test",
+    appName: "Runtime Test",
+    fetch: fetcher,
+    ...(options?.register === undefined
+      ? {}
+      : { metricsRegister: options.register }),
+    ...(options?.logger === undefined ? {} : { logger: options.logger }),
   });
-  return { runtime, requestCount: () => requestCount };
 }
 
-describe("catalog-aware runtime", () => {
-  test("resolves exact endpoint and capability contracts", () => {
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-    });
-    expect(runtime.languageModel("gpt-5.6-luna").modelId).toBe(
-      "openai/gpt-5.6-luna",
+const OBJECT_SCHEMA = z.object({ answer: z.string() });
+
+function validObject(): string {
+  return JSON.stringify({ answer: "yes" });
+}
+
+describe("catalog-aware routing", () => {
+  test("resolves each endpoint to the provider that serves it", () => {
+    const llm = llmRuntime(() => Promise.resolve(ok("x")));
+    expect(llm.languageModel("gpt-5.6-luna").modelId).toBe("gpt-5.6-luna");
+    expect(llm.languageModel("claude-sonnet-5").modelId).toBe(
+      "claude-sonnet-5",
     );
-    expect(runtime.embeddingModel("text-embedding-3-small").modelId).toBe(
-      "openai/text-embedding-3-small",
+    expect(llm.embeddingModel("text-embedding-3-small").modelId).toBe(
+      "text-embedding-3-small",
     );
-    expect(runtime.imageModel("gemini-2.5-flash-image").modelId).toBe(
-      "google/gemini-2.5-flash-image",
+    expect(llm.imageModel("gemini-2.5-flash-image").modelId).toBe(
+      "gemini-2.5-flash-image",
     );
-    expect(() => runtime.embeddingModel("gpt-5.6-luna")).toThrow(
-      "uses OpenRouter language, not embedding",
-    );
-    expect(() =>
-      runtime.languageModel("text-embedding-3-small", ["tools"]),
-    ).toThrow("uses OpenRouter embedding, not language");
   });
 
-  test("call options always enable body telemetry and correlation", () => {
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
+  test("refuses an endpoint or capability the catalog does not claim", () => {
+    const llm = llmRuntime(() => Promise.resolve(ok("x")));
+    expect(() => llm.languageModel("text-embedding-3-small")).toThrow(
+      "not language",
+    );
+    expect(() => llm.imageModel("gpt-5.6-luna")).toThrow("not image");
+    expect(() => llm.languageModel("gpt-9000")).toThrow("Unknown model id");
+    expect(() => llm.embeddingModel("gemini-2.5-flash-image")).toThrow(
+      "not embedding",
+    );
+  });
+
+  test("a model routed to an unconfigured provider fails at use, not at construction", () => {
+    // A service that only calls OpenAI should not have to hold Anthropic
+    // configuration, so this cannot be a constructor check.
+    const llm = createLlmRuntime({
+      credentials: { openai: { apiKey: "sk-test" } },
+      service: "openai-only",
+      appName: "OpenAI Only",
+      fetch: () => Promise.resolve(ok("x")),
     });
-    const options = runtime.callOptions({
-      workload: "unit-test",
-      sessionId: "session-1",
-      traceContext: {
-        traceId: "0123456789abcdef0123456789abcdef",
-        parentSpanId: "0123456789abcdef",
-      },
+    expect(() => llm.languageModel("gpt-5.6-luna")).not.toThrow();
+    expect(() => llm.languageModel("claude-sonnet-5")).toThrow(
+      "no Anthropic credentials were configured",
+    );
+  });
+});
+
+describe("credential safety", () => {
+  test("refuses to start federated while a static Anthropic key is present", () => {
+    const previous = Bun.env["ANTHROPIC_API_KEY"];
+    Bun.env["ANTHROPIC_API_KEY"] = "sk-ant-leftover";
+    try {
+      expect(() =>
+        createLlmRuntime({
+          credentials: {
+            anthropic: {
+              kind: "federation",
+              identityTokenFile: "/var/run/secrets/anthropic.com/token",
+              federationRuleId: "fdrl_x",
+              organizationId: "org",
+              serviceAccountId: "svac_x",
+            },
+          },
+          service: "federated",
+          appName: "Federated",
+        }),
+      ).toThrow("shadows federation");
+    } finally {
+      if (previous === undefined) delete Bun.env["ANTHROPIC_API_KEY"];
+      else Bun.env["ANTHROPIC_API_KEY"] = previous;
+    }
+  });
+});
+
+describe("call options", () => {
+  test("always enable body telemetry and carry the workload", () => {
+    const llm = llmRuntime(() => Promise.resolve(ok("x")));
+    const options = llm.callOptions({
+      workload: "test.workload",
+      model: "gpt-5.6-luna",
     });
     expect(options.telemetry.isEnabled).toBe(true);
     expect(options.telemetry.recordInputs).toBe(true);
     expect(options.telemetry.recordOutputs).toBe(true);
-    expect(options.include).toEqual({ requestBody: true, responseBody: true });
-    expect(options.headers["x-session-id"]).toBe("session-1");
-    expect(options.headers["x-sjerred-llm-workload"]).toBe("unit-test");
-    expect(options.headers["x-sjerred-llm-trace-id"]).toBe(
-      "0123456789abcdef0123456789abcdef",
-    );
-  });
-
-  test("maps the provider-defined web-search tool with a bounded result count", async () => {
-    let requestBody: unknown;
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: async (_input, init) => {
-        if (typeof init?.body !== "string") {
-          throw new TypeError("expected JSON request body");
-        }
-        requestBody = JSON.parse(init.body);
-        return openRouterResponse("Research evidence");
-      },
+    expect(options.telemetry.functionId).toBe("test.workload");
+    expect(options.include).toEqual({
+      requestBody: true,
+      responseBody: true,
     });
-    await generateText({
-      model: runtime.languageModel("claude-sonnet-5", ["tools", "webSearch"]),
-      prompt: "Research an unfamiliar merchant.",
-      tools: { web_search: openRouterWebSearchTool(runtime, 3) },
-      ...runtime.callOptions({ workload: "web-search-unit-test" }),
-    });
-    expect(
-      z
-        .object({
-          tools: z.array(
-            z.object({
-              type: z.literal("openrouter:web_search"),
-              max_results: z.literal(3),
-            }),
-          ),
-        })
-        .loose()
-        .parse(requestBody).tools,
-    ).toEqual([{ type: "openrouter:web_search", max_results: 3 }]);
-  });
-
-  test("web-search local continuation without provider results fails loudly", () => {
-    // Server-supplied results pass through untouched, including a genuine
-    // empty result set; an absent results field means the provider never
-    // executed the search and must not be silently coerced to "no evidence".
-    expect(
-      executeWebSearchContinuation({
-        results: [{ url: "https://example.com" }],
-      }),
-    ).toEqual([{ url: "https://example.com" }]);
-    expect(executeWebSearchContinuation({ results: [] })).toEqual([]);
-    expect(() => executeWebSearchContinuation({})).toThrow(
-      "without server-supplied results",
-    );
-  });
-
-  test("logs correlated accounting metadata without request or response bodies", async () => {
-    const records: OpenRouterRuntimeLogRecord[] = [];
-    const runtime = createOpenRouterRuntime({
-      apiKey: "super-secret-key",
-      service: "test",
-      appName: "test",
-      logger: (record) => records.push(record),
-      fetch: () => Promise.resolve(openRouterResponse("sensitive output")),
-    });
-
-    await generateText({
-      model: runtime.languageModel("gpt-5.6-luna"),
-      prompt: "sensitive prompt",
-      ...runtime.callOptions({
-        workload: "logging-unit-test",
-        traceContext: {
-          traceId: "0123456789abcdef0123456789abcdef",
-        },
-      }),
-    });
-    for (let attempt = 0; records.length === 0 && attempt < 20; attempt += 1) {
-      await Bun.sleep(1);
-    }
-
-    expect(records).toHaveLength(1);
-    expect(records[0]).toMatchObject({
-      event: "llm.openrouter.response",
-      model: "gpt-5.6-luna",
-      resolvedModel: "openai/gpt-5.6-luna",
-      upstreamProvider: "Provider B",
-      isByok: true,
-      generationId: "gen-test",
-      fallbackAttempts: 1,
-      inputTokens: 12,
-      outputTokens: 4,
-      actualCostUsd: 0.0001,
-      traceId: "0123456789abcdef0123456789abcdef",
-      outcome: "success",
-    });
-    const serialized = JSON.stringify(records);
-    expect(serialized).not.toContain("sensitive prompt");
-    expect(serialized).not.toContain("sensitive output");
-    expect(serialized).not.toContain("super-secret-key");
   });
 });
 
-describe("OpenRouter metadata", () => {
-  test("decodes additive router and accounting fields", () => {
-    const metadata = parseOpenRouterMetadata({
-      requestedModel: "gpt-5.6-luna",
-      responseId: "gen-test",
-      resolvedModel: "openai/gpt-5.6-luna",
-      usage: {
-        inputTokens: 12,
-        inputTokenDetails: {
-          noCacheTokens: 10,
-          cacheReadTokens: 2,
-          cacheWriteTokens: undefined,
-        },
-        outputTokens: 4,
-        outputTokenDetails: { textTokens: 3, reasoningTokens: 1 },
-        totalTokens: 16,
-      },
-      providerMetadata: {
-        openrouter: {
-          provider: "Provider B",
-          usage: {
-            cost: 0.0001,
-            costDetails: { upstreamInferenceCost: 0.00008 },
-          },
-          futureField: "ignored",
-        },
-      },
-      responseBody: {
-        id: "gen-test",
-        model: "openai/gpt-5.6-luna",
-        openrouter_metadata: {
-          requested: "openai/gpt-5.6-luna",
-          is_byok: true,
-          strategy: "direct",
-          region: "iad",
-          attempt: 2,
-          attempts: [
-            {
-              provider: "Provider A",
-              model: "openai/gpt-5.6-luna",
-              status: 503,
-            },
-            {
-              provider: "Provider B",
-              model: "openai/gpt-5.6-luna",
-              status: 200,
-            },
-          ],
-          futureField: { accepted: true },
-        },
-      },
-    });
-    expect(metadata.fallbackAttempts).toBe(1);
-    expect(metadata.upstreamProvider).toBe("Provider B");
-    expect(metadata.isByok).toBe(true);
-    expect(metadata.region).toBe("iad");
-    expect(metadata.actualCostUsd).toBe(0.0001);
-    expect(metadata.upstreamCostUsd).toBe(0.00008);
-    expect(metadata.routerMetadataPresent).toBe(true);
+describe("web search", () => {
+  test("picks each provider's own server-side tool", () => {
+    const llm = llmRuntime(() => Promise.resolve(ok("x")));
+    // Provider-executed, unlike the gateway's tool, which needed a local
+    // continuation shim.
+    expect(webSearchTool(llm, "gpt-5.6-luna", 5)).toBeDefined();
+    expect(webSearchTool(llm, "claude-sonnet-5", 5)).toBeDefined();
+    expect(webSearchTool(llm, "gemini-3.8-flash", 5)).toBeDefined();
   });
+});
 
-  test("preserves false and absent BYOK metadata", () => {
-    expect(
-      parseOpenRouterMetadata({
-        requestedModel: "gpt-5.6-luna",
-        responseBody: { openrouter_metadata: { is_byok: false } },
-      }).isByok,
-    ).toBe(false);
-    expect(
-      parseOpenRouterMetadata({
-        requestedModel: "gpt-5.6-luna",
-        responseBody: { openrouter_metadata: {} },
-      }).isByok,
-    ).toBeUndefined();
-  });
-
-  test("uses raw OpenRouter token details when AI SDK usage is unavailable", () => {
-    const metadata = parseOpenRouterMetadata({
-      requestedModel: "gpt-5.6-luna",
-      responseBody: {
-        usage: {
-          prompt_tokens: 20,
-          completion_tokens: 7,
-          total_tokens: 27,
-          prompt_tokens_details: { cached_tokens: 5 },
-          completion_tokens_details: { reasoning_tokens: 3 },
-        },
-      },
+describe("observability", () => {
+  test("logs correlated accounting without prompt or response bodies", async () => {
+    const records: LlmRuntimeLogRecord[] = [];
+    const register = new Registry();
+    const llm = llmRuntime(() => Promise.resolve(ok("hello")), {
+      register,
+      logger: (record) => records.push(record),
     });
 
-    expect(metadata.tokens).toEqual({
-      input: 20,
-      output: 7,
-      cachedInput: 5,
-      cacheWrite: 0,
-      reasoning: 3,
-      total: 27,
-    });
-    expect(metadata.catalogCostUsd).toBeDefined();
-  });
-
-  test("prices Anthropic cache reads and writes with their catalog rates", () => {
-    // claude-sonnet-5: input 2, output 10, cacheRead 0.2, cacheWrite 2.5 per 1M.
-    const metadata = parseOpenRouterMetadata({
-      requestedModel: "claude-sonnet-5",
-      responseBody: {
-        usage: {
-          prompt_tokens: 1_000_000,
-          completion_tokens: 0,
-          total_tokens: 1_000_000,
-          prompt_tokens_details: {
-            cached_tokens: 800_000,
-            cache_write_tokens: 100_000,
-          },
-        },
-      },
+    await generateText({
+      model: llm.languageModel("gpt-5.6-luna"),
+      prompt: "hi",
+      ...llm.callOptions({ workload: "test.logging", model: "gpt-5.6-luna" }),
     });
 
-    expect(metadata.tokens.cachedInput).toBe(800_000);
-    expect(metadata.tokens.cacheWrite).toBe(100_000);
-    // 200k uncached @ $2 + 800k cache-read @ $0.20 + 100k cache-write @ $2.50.
-    expect(metadata.catalogCostUsd).toBeCloseTo(0.4 + 0.16 + 0.25, 10);
-  });
-
-  test("prices OpenAI cached input as a subset of the inclusive prompt count", () => {
-    // gpt-5.4-nano declares `cachedInput`, so cache reads stay inside `input`.
-    const metadata = parseOpenRouterMetadata({
-      requestedModel: "gpt-5.4-nano",
-      responseBody: {
-        usage: {
-          prompt_tokens: 1_000_000,
-          completion_tokens: 0,
-          total_tokens: 1_000_000,
-          prompt_tokens_details: { cached_tokens: 800_000 },
-        },
-      },
-    });
-
-    const pricing = getPricing("gpt-5.4-nano");
-    if (pricing?.modality !== "text" || pricing.cachedInput === undefined) {
-      throw new Error("gpt-5.4-nano must declare OpenAI cached-input pricing");
-    }
-    expect(metadata.catalogCostUsd).toBeCloseTo(
-      (200_000 * pricing.input + 800_000 * pricing.cachedInput) / 1_000_000,
-      10,
+    const record = records.find(
+      (candidate) => candidate.event === "llm.provider.response",
     );
-  });
-
-  test("infers fallback count from additive attempts when attempt is absent", () => {
-    const metadata = parseOpenRouterMetadata({
-      requestedModel: "gpt-5.6-luna",
-      responseBody: {
-        openrouter_metadata: {
-          attempts: [
-            {
-              provider: "Provider A",
-              model: "openai/gpt-5.6-luna",
-              status: 503,
-            },
-            {
-              provider: "Provider B",
-              model: "openai/gpt-5.6-luna",
-              status: 200,
-            },
-          ],
-        },
-      },
+    expect(record).toMatchObject({
+      outcome: "success",
+      provider: "openai",
+      model: "gpt-5.6-luna",
+      workload: "test.logging",
+      inputTokens: 12,
+      outputTokens: 4,
     });
+    const serialized = JSON.stringify(records);
+    expect(serialized).not.toContain("hi");
+    expect(serialized).not.toContain("hello");
 
-    expect(metadata.fallbackAttempts).toBe(1);
-    expect(metadata.upstreamProvider).toBe("Provider B");
+    const metrics = await register.metrics();
+    expect(metrics).toContain('provider="openai"');
+    expect(metrics).toContain("llm_cost_usd_total");
   });
 });
 
 describe("generateValidatedObject", () => {
-  test("uses strict OpenRouter routing and repairs only semantic output", async () => {
-    const bodies: z.infer<typeof RequestBodySchema>[] = [];
-    const logRecords: OpenRouterRuntimeLogRecord[] = [];
-    const responses = [
-      openRouterResponse('{"count":"bad"}'),
-      openRouterResponse('{"count":2}'),
-    ];
-    const runtime = createResponseSequenceRuntime(
-      responses,
-      (body) => bodies.push(RequestBodySchema.parse(body)),
-      {
-        metricsRegister: new Registry(),
-        logger: (record) => logRecords.push(record),
-      },
-    );
-
-    const result = await generateValidatedObject(runtime, {
+  test("returns the parsed object and charges catalog cost", async () => {
+    const llm = llmRuntime(() => Promise.resolve(ok(validObject())));
+    const result = await generateValidatedObject(llm, {
       model: "gpt-5.6-luna",
-      schema: z.object({ count: z.number().int() }),
-      schemaName: "CountResult",
-      prompt: "Return a count.",
-      workload: "structured-unit-test",
-      sessionId: "session-1",
+      schema: OBJECT_SCHEMA,
+      schemaName: "answer",
+      prompt: "is it?",
+      workload: "test.object",
+    });
+    expect(result.object).toEqual({ answer: "yes" });
+    expect(result.attempts).toHaveLength(1);
+    expect(result.usage.catalogCostUsd).toBeGreaterThan(0);
+  });
+
+  test("repairs only semantic failures, and charges every attempt", async () => {
+    let call = 0;
+    const llm = llmRuntime(() => {
+      call += 1;
+      return Promise.resolve(
+        call === 1 ? ok(JSON.stringify({ wrong: 1 })) : ok(validObject()),
+      );
     });
 
-    expect(result.object).toEqual({ count: 2 });
-    expect(result.attempts.map((attempt) => attempt.outcome)).toEqual([
+    const result = await generateValidatedObject(llm, {
+      model: "gpt-5.6-luna",
+      schema: OBJECT_SCHEMA,
+      schemaName: "answer",
+      prompt: "is it?",
+      workload: "test.repair",
+    });
+
+    expect(result.object).toEqual({ answer: "yes" });
+    expect(result.attempts.map((a) => a.outcome)).toEqual([
       "semantic-error",
       "success",
     ]);
-    expect(result.metadata).toHaveLength(2);
-    expect(result.attempts[0]?.metadata?.generationId).toBe("gen-test");
-    expect(result.usage.tokens.total).toBe(32);
-    expect(result.usage.actualCostUsd).toBe(0.0002);
-    expect(result.usage.catalogCostUsd).toBeCloseTo(0.000072);
-    expect(result.usage.upstreamCostUsd).toBe(0.00016);
-    expect(bodies).toHaveLength(2);
-    expect(bodies[0]?.model).toBe("openai/gpt-5.6-luna");
-    expect(bodies[0]?.provider).toEqual({
-      allow_fallbacks: false,
-      data_collection: "deny",
-      require_parameters: true,
-    });
-    expect(bodies[0]?.response_format?.type).toBe("json_schema");
-    expect(bodies[0]?.session_id).toBe("session-1");
-    expect(
-      logRecords.some(
-        (record) => record.event === "llm.openrouter.call_failed",
-      ),
-    ).toBe(false);
+    // Both generations were billed even though only one produced an object.
+    expect(result.usage.tokens.input).toBe(24);
   });
 
-  test("fails authentication immediately without semantic replay", async () => {
-    let requestCount = 0;
-    const runtime = createOpenRouterRuntime({
-      apiKey: "bad-key",
-      service: "test",
-      appName: "test",
-      fetch: Object.assign(
-        () => {
-          requestCount += 1;
-          return Promise.resolve(
-            Response.json(
-              { error: { code: 401, message: "invalid key" } },
-              { status: 401 },
-            ),
-          );
-        },
-        {
-          preconnect: (_url: string | URL) => {
-            // No preconnect in tests.
-          },
-        },
-      ),
-    });
-
-    await expect(
-      generateValidatedObject(runtime, {
-        model: "gpt-5.6-luna",
-        schema: z.object({ count: z.number() }),
-        schemaName: "CountResult",
-        prompt: "Return a count.",
-        workload: "auth-test",
-      }),
-    ).rejects.toThrow();
-    expect(requestCount).toBe(1);
-  });
-});
-
-describe("generateValidatedObject retries", () => {
   test("uses exactly two transport retries before succeeding", async () => {
-    let requestCount = 0;
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: (_input, _init) => {
-        requestCount += 1;
-        return requestCount < 3
-          ? Promise.resolve(
-              Response.json(
-                { error: { code: 503, message: "provider unavailable" } },
-                { status: 503, headers: { "Retry-After": "0" } },
-              ),
-            )
-          : Promise.resolve(openRouterResponse('{"count":3}'));
-      },
+    let calls = 0;
+    const llm = llmRuntime(() => {
+      calls += 1;
+      return calls <= 2
+        ? Promise.resolve(new Response("upstream", { status: 503 }))
+        : Promise.resolve(ok(validObject()));
     });
 
-    const result = await generateValidatedObject(runtime, {
+    const result = await generateValidatedObject(llm, {
       model: "gpt-5.6-luna",
-      schema: z.object({ count: z.number().int() }),
-      schemaName: "CountResult",
-      prompt: "Return a count.",
-      workload: "transport-retry-test",
+      schema: OBJECT_SCHEMA,
+      schemaName: "answer",
+      prompt: "is it?",
+      workload: "test.retry",
     });
-
-    expect(result.object).toEqual({ count: 3 });
-    expect(result.attempts).toHaveLength(1);
-    expect(requestCount).toBe(3);
-  });
+    expect(result.object).toEqual({ answer: "yes" });
+    expect(calls).toBe(3);
+    // The SDK backs off between transport retries, so this outlasts the
+    // default per-test timeout.
+  }, 30_000);
 
   test("does not multiply transport retries across semantic repairs", async () => {
-    const scenario = createPostSemanticFailureRuntime({
-      status: 503,
-      message: "provider unavailable",
-      headers: { "Retry-After": "0" },
+    // Only the first semantic attempt may retry transport failures. Otherwise
+    // three semantic attempts each retrying twice is nine billable calls.
+    let calls = 0;
+    const llm = llmRuntime(() => {
+      calls += 1;
+      return calls === 1
+        ? Promise.resolve(ok(JSON.stringify({ no: 1 })))
+        : Promise.resolve(new Response("upstream", { status: 503 }));
     });
 
     await expect(
-      generateValidatedObject(scenario.runtime, {
+      generateValidatedObject(llm, {
         model: "gpt-5.6-luna",
-        schema: z.object({ count: z.number().int() }),
-        schemaName: "CountResult",
-        prompt: "Return a count.",
-        workload: "bounded-retry-test",
+        schema: OBJECT_SCHEMA,
+        schemaName: "answer",
+        prompt: "is it?",
+        workload: "test.no-multiply",
       }),
-    ).rejects.toThrow();
-    expect(scenario.requestCount()).toBe(2);
-  });
-});
-
-describe("generateValidatedObject transport failures", () => {
-  test("wraps a mid-retry transport failure with the usage already charged", async () => {
-    const scenario = createPostSemanticFailureRuntime({
-      status: 503,
-      message: "provider unavailable",
-      headers: { "Retry-After": "0" },
-    });
-    let thrown: unknown;
-
-    try {
-      await generateValidatedObject(scenario.runtime, {
-        model: "gpt-5.6-luna",
-        schema: z.object({ count: z.number().int() }),
-        schemaName: "CountResult",
-        prompt: "Return a count.",
-        workload: "transport-after-semantic-test",
-      });
-    } catch (error: unknown) {
-      thrown = error;
-    }
-
-    // The first attempt billed a semantic failure; the 503 on the corrective
-    // attempt must not discard that spend from budget-metering callers.
-    expect(thrown).toBeInstanceOf(StructuredOutputTransportError);
-    if (!(thrown instanceof StructuredOutputTransportError)) {
-      throw new Error("expected structured-output transport error");
-    }
-    expect(thrown instanceof StructuredOutputUsageError).toBe(true);
-    expect(thrown.attempts.map((attempt) => attempt.outcome)).toEqual([
-      "semantic-error",
-      "transport-error",
-    ]);
-    expect(thrown.usage.tokens.total).toBe(16);
-    expect(thrown.cause).toBeDefined();
+    ).rejects.toBeInstanceOf(StructuredOutputTransportError);
+    expect(calls).toBe(2);
   });
 
-  test("wraps an immediate API failure that follows a billable attempt", async () => {
-    const scenario = createPostSemanticFailureRuntime({
-      status: 402,
-      message: "insufficient credits",
-    });
-    let thrown: unknown;
-
-    try {
-      await generateValidatedObject(scenario.runtime, {
-        model: "gpt-5.6-luna",
-        schema: z.object({ count: z.number().int() }),
-        schemaName: "CountResult",
-        prompt: "Return a count.",
-        workload: "immediate-after-semantic-test",
-      });
-    } catch (error: unknown) {
-      thrown = error;
-    }
-
-    // A 402 right after the first billable call drained the balance is the
-    // exact moment budget metering must still see that first attempt's spend.
-    expect(thrown).toBeInstanceOf(StructuredOutputTransportError);
-    if (!(thrown instanceof StructuredOutputTransportError)) {
-      throw new Error("expected structured-output transport error");
-    }
-    expect(thrown.usage.tokens.total).toBe(16);
-    expect(thrown.cause).toBeDefined();
-  });
-
-  test("first-attempt transport failures still throw the raw error", async () => {
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: () =>
-        Promise.resolve(
-          Response.json(
-            { error: { code: 503, message: "provider unavailable" } },
-            { status: 503, headers: { "Retry-After": "0" } },
-          ),
-        ),
+  test("a mid-retry transport failure reports the usage already charged", async () => {
+    let calls = 0;
+    const llm = llmRuntime(() => {
+      calls += 1;
+      return calls === 1
+        ? Promise.resolve(ok(JSON.stringify({ no: 1 })))
+        : Promise.resolve(new Response("upstream", { status: 503 }));
     });
 
-    // No billable prior attempt exists, so callers keep the untouched
-    // transport error their retry classification already understands.
-    let thrown: unknown;
     try {
-      await generateValidatedObject(runtime, {
+      await generateValidatedObject(llm, {
         model: "gpt-5.6-luna",
-        schema: z.object({ count: z.number().int() }),
-        schemaName: "CountResult",
-        prompt: "Return a count.",
-        workload: "transport-first-attempt-test",
+        schema: OBJECT_SCHEMA,
+        schemaName: "answer",
+        prompt: "is it?",
+        workload: "test.mid-transport",
       });
+      expect.unreachable("expected a transport failure");
     } catch (error: unknown) {
-      thrown = error;
-    }
-    expect(thrown).toBeDefined();
-    expect(thrown instanceof StructuredOutputTransportError).toBe(false);
-  });
-});
-
-describe("generateValidatedObject exhaustion", () => {
-  test("throws typed exhaustion with every charged semantic attempt", async () => {
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: () => Promise.resolve(openRouterResponse('{"count":"still bad"}')),
-    });
-    let thrown: unknown;
-
-    try {
-      await generateValidatedObject(runtime, {
-        model: "gpt-5.6-luna",
-        schema: z.object({ count: z.number().int() }),
-        schemaName: "CountResult",
-        prompt: "Return a count.",
-        workload: "exhaustion-test",
+      expect(error).toBeInstanceOf(StructuredOutputUsageError);
+      // The first attempt was billed; a budget-metering caller must see it.
+      expect(error).toBeInstanceOf(StructuredOutputTransportError);
+      if (!(error instanceof StructuredOutputUsageError)) throw error;
+      expect(error.usage.tokens.input).toBe(12);
+      expect(error.attempts[0]).toMatchObject({
+        attempt: 1,
+        outcome: "semantic-error",
       });
-    } catch (error: unknown) {
-      thrown = error;
+      expect(error.attempts.at(-1)).toMatchObject({
+        outcome: "transport-error",
+      });
     }
-
-    expect(thrown).toBeInstanceOf(StructuredOutputExhaustionError);
-    if (!(thrown instanceof StructuredOutputExhaustionError)) {
-      throw new Error("expected structured-output exhaustion");
-    }
-    expect(thrown.attempts).toHaveLength(3);
-    expect(
-      thrown.attempts.every(
-        (attempt) =>
-          attempt.outcome === "semantic-error" &&
-          attempt.metadata?.generationId === "gen-test",
-      ),
-    ).toBe(true);
-    expect(thrown.usage.tokens.total).toBe(48);
-    expect(thrown.usage.actualCostUsd).toBeCloseTo(0.0003);
-    expect(thrown.usage.catalogCostUsd).toBeCloseTo(0.000108);
-    expect(thrown.usage.upstreamCostUsd).toBeCloseTo(0.00024);
   });
 
-  test("raises a truncated retry cap without multiplying semantic attempts", async () => {
-    const bodies: z.infer<typeof RequestBodySchema>[] = [];
-    const responses = [
-      openRouterResponse('{"count":', "length"),
-      openRouterResponse('{"count":2}'),
-    ];
-    const runtime = createResponseSequenceRuntime(responses, (body) =>
-      bodies.push(RequestBodySchema.parse(body)),
+  test("a first-attempt transport failure throws raw, since nothing was billed", async () => {
+    const llm = llmRuntime(() =>
+      Promise.resolve(new Response("nope", { status: 401 })),
     );
-
-    const result = await generateValidatedObject(runtime, {
-      model: "gpt-5.6-luna",
-      schema: z.object({ count: z.number().int() }),
-      schemaName: "CountResult",
-      prompt: "Return a count.",
-      workload: "truncation-unit-test",
-      maxOutputTokens: 100,
-      semanticRetryMaxOutputTokens: 200,
-      reasoningEffort: "medium",
-      seed: 7,
-    });
-
-    expect(result.object).toEqual({ count: 2 });
-    expect(bodies.map((body) => body.max_tokens)).toEqual([100, 200]);
-    expect(bodies.map((body) => body.seed)).toEqual([7, 7]);
-    expect(bodies.map((body) => body.reasoning?.effort)).toEqual([
-      "medium",
-      "medium",
-    ]);
-    expect(result.attempts).toHaveLength(2);
-    expect(result.attempts[0]?.finishReason).toBe("length");
+    await expect(
+      generateValidatedObject(llm, {
+        model: "gpt-5.6-luna",
+        schema: OBJECT_SCHEMA,
+        schemaName: "answer",
+        prompt: "is it?",
+        workload: "test.first-fail",
+      }),
+    ).rejects.not.toBeInstanceOf(StructuredOutputUsageError);
   });
-});
 
-describe("generateValidatedObject corrective prompts", () => {
-  test("keeps a semantic retry's added prompt within the declared bound", async () => {
-    const PromptBodySchema = z
-      .object({
-        messages: z.array(
-          z.object({ role: z.string(), content: z.string() }).loose(),
-        ),
-      })
-      .loose();
-    const prompts: string[] = [];
-    const responses = [
-      openRouterResponse('{"count":1}'),
-      openRouterResponse('{"count":2}'),
-    ];
-    const runtime = createResponseSequenceRuntime(responses, (requestBody) => {
-      const body = PromptBodySchema.parse(requestBody);
-      const user = body.messages.findLast((message) => message.role === "user");
-      if (user === undefined) throw new Error("expected a user message");
-      prompts.push(user.content);
-    });
-
-    // A validation message far larger than the bound forces the truncation path.
-    const result = await generateValidatedObject(runtime, {
-      model: "gpt-5.6-luna",
-      schema: z
-        .object({ count: z.number().int() })
-        .refine((value) => value.count > 1, { message: "z".repeat(20_000) }),
-      schemaName: "CountResult",
-      prompt: "Return a count.",
-      workload: "corrective-prompt-bound-test",
-    });
-
-    expect(result.object).toEqual({ count: 2 });
-    expect(prompts).toHaveLength(2);
-    const [first, retry] = prompts;
-    if (first === undefined || retry === undefined) {
-      throw new Error("expected two recorded prompts");
+  test("exhaustion exposes every charged attempt", async () => {
+    const llm = llmRuntime(() =>
+      Promise.resolve(ok(JSON.stringify({ no: 1 }))),
+    );
+    try {
+      await generateValidatedObject(llm, {
+        model: "gpt-5.6-luna",
+        schema: OBJECT_SCHEMA,
+        schemaName: "answer",
+        prompt: "is it?",
+        workload: "test.exhaust",
+      });
+      expect.unreachable("expected exhaustion");
+    } catch (error: unknown) {
+      expect(error).toBeInstanceOf(StructuredOutputExhaustionError);
+      if (!(error instanceof StructuredOutputUsageError)) throw error;
+      expect(error.attempts).toHaveLength(3);
+      expect(error.usage.tokens.input).toBe(36);
     }
-    const added = retry.length - first.length;
-    // Truncation engaged (otherwise the 20k message would flow through), and
-    // the result still respects the bound budget callers reserve against.
-    expect(added).toBeGreaterThan(MAX_CORRECTIVE_PROMPT_CHARS / 2);
-    expect(added).toBeLessThanOrEqual(MAX_CORRECTIVE_PROMPT_CHARS);
+  });
+
+  test("keeps a corrective retry's added prompt within the declared bound", async () => {
+    const prompts: string[] = [];
+    const llm = llmRuntime((_input, init) => {
+      if (typeof init?.body !== "string") {
+        throw new TypeError("expected a JSON request body");
+      }
+      const body = z
+        .object({ input: z.unknown() })
+        .loose()
+        .parse(JSON.parse(init.body));
+      prompts.push(JSON.stringify(body.input));
+      return Promise.resolve(ok(JSON.stringify({ no: 1 })));
+    });
+
+    await expect(
+      generateValidatedObject(llm, {
+        model: "gpt-5.6-luna",
+        schema: z.object({
+          answer: z.string(),
+          reason: z.string(),
+          score: z.number(),
+        }),
+        schemaName: "answer",
+        prompt: "base prompt",
+        workload: "test.bound",
+      }),
+    ).rejects.toBeInstanceOf(StructuredOutputExhaustionError);
+
+    const first = prompts[0]?.length ?? 0;
+    for (const prompt of prompts.slice(1)) {
+      expect(prompt.length - first).toBeLessThanOrEqual(
+        MAX_CORRECTIVE_PROMPT_CHARS,
+      );
+    }
   });
 });

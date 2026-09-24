@@ -5,173 +5,26 @@ import type {
   LanguageModelCallStartEvent,
   Telemetry,
 } from "ai";
-import {
-  costForTextUsage,
-  modelIdForOpenRouterRoute,
-} from "@shepherdjerred/llm-models";
+import { costForTextUsage, type Provider } from "@shepherdjerred/llm-models";
 import {
   commonLlmMetrics,
   type CommonLlmMetrics,
 } from "@shepherdjerred/llm-observability/metrics";
 import { Counter, type Registry } from "prom-client";
-import { parseOpenRouterMetadata } from "./metadata.ts";
-import { logOpenRouterCallFailure } from "./logging.ts";
-import type { OpenRouterRuntimeLogger } from "./types.ts";
+import { parseNativeUsage } from "./usage.ts";
+import {
+  logLlmCallFailure,
+  logLlmResponse,
+  normalizeProvider,
+  stableModelId,
+} from "./logging.ts";
+import type { LlmRuntimeLogger } from "./types.ts";
 
 type RuntimeMetrics = CommonLlmMetrics & {
-  routerAttempts: Counter<
-    "service" | "workload" | "model" | "upstream_provider" | "outcome"
-  >;
-  metadataMissing: Counter<"service" | "workload" | "model">;
-  byokRequests: Counter<
-    "service" | "workload" | "model" | "upstream_provider" | "byok"
-  >;
   structuredAttempts: Counter<"service" | "workload" | "model" | "outcome">;
 };
 
 const metricsByRegister = new WeakMap<Registry, RuntimeMetrics>();
-
-function stableModelId(modelId: string): string {
-  return modelIdForOpenRouterRoute(modelId) ?? modelId;
-}
-
-function recordByokResponse(
-  metrics: RuntimeMetrics,
-  input: {
-    readonly service: string;
-    readonly workload: string;
-    readonly model: string;
-    readonly upstreamProvider: string | undefined;
-    readonly isByok: boolean | undefined;
-  },
-): void {
-  metrics.byokRequests.inc({
-    service: input.service,
-    workload: input.workload,
-    model: input.model,
-    upstream_provider: input.upstreamProvider ?? "unknown",
-    byok: input.isByok === undefined ? "unknown" : String(input.isByok),
-  });
-}
-
-function recordLanguageRouterMetadata(
-  metrics: RuntimeMetrics,
-  input: {
-    readonly successful: boolean;
-    readonly endpoint: "language" | "embedding" | "image" | "unknown";
-    readonly service: string;
-    readonly workload: string;
-    readonly model: string;
-    readonly metadata: ReturnType<typeof parseOpenRouterMetadata>;
-  },
-): void {
-  if (!input.successful || input.endpoint !== "language") return;
-  if (!input.metadata.routerMetadataPresent) {
-    metrics.metadataMissing.inc({
-      service: input.service,
-      workload: input.workload,
-      model: input.model,
-    });
-    return;
-  }
-  recordByokResponse(metrics, {
-    service: input.service,
-    workload: input.workload,
-    model: input.model,
-    upstreamProvider: input.metadata.upstreamProvider,
-    isByok: input.metadata.isByok,
-  });
-}
-
-export function recordRouterResponse(
-  metrics: RuntimeMetrics | undefined,
-  input: {
-    service: string;
-    workload: string;
-    requestedModel: string | undefined;
-    responseBody: unknown;
-    responseStatus: number | undefined;
-    durationMs: number;
-    endpoint: "language" | "embedding" | "image" | "unknown";
-  },
-): void {
-  const model = stableModelId(input.requestedModel ?? "unknown");
-  const metadata = parseOpenRouterMetadata({
-    requestedModel: model,
-    responseBody: input.responseBody,
-  });
-  if (metrics === undefined) return;
-  const successful =
-    input.responseStatus !== undefined &&
-    input.responseStatus >= 200 &&
-    input.responseStatus < 400;
-  // OpenRouter currently emits router metadata only on completion routes, not
-  // embeddings or images. Do not turn unsupported endpoints into false alerts.
-  recordLanguageRouterMetadata(metrics, {
-    successful,
-    endpoint: input.endpoint,
-    service: input.service,
-    workload: input.workload,
-    model,
-    metadata,
-  });
-  for (const attempt of metadata.attempts) {
-    metrics.routerAttempts.inc({
-      service: input.service,
-      workload: input.workload,
-      model,
-      upstream_provider: attempt.provider,
-      outcome:
-        attempt.status >= 200 && attempt.status < 300 ? "success" : "error",
-    });
-  }
-  const labels = {
-    service: input.service,
-    workload: input.workload,
-    provider: "openrouter",
-    model,
-  };
-  if (successful && metadata.actualCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "actual" }, metadata.actualCostUsd);
-  }
-  if (successful && metadata.upstreamCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "upstream" }, metadata.upstreamCostUsd);
-  }
-  // Everything below is the *common* LLM request instrumentation, and for
-  // language and embedding calls `OpenRouterMetricsTelemetry` already records
-  // it from the AI SDK's own call-end events (`onLanguageModelCallEnd`,
-  // `onEmbedEnd`). Recording it here as well would double every
-  // `llm_requests_total`, `llm_request_duration_seconds`, and
-  // `llm_tokens_total` for the two most common endpoints. Image generation has
-  // no AI SDK telemetry event, so this fetch observer is its only source — that
-  // is what this branch exists for, not an oversight. Router attempts, missing
-  // metadata, and actual/upstream cost above are OpenRouter-specific and are
-  // recorded for every endpoint.
-  if (input.endpoint !== "image") return;
-  metrics.requests.inc({
-    ...labels,
-    outcome: successful ? "success" : "error",
-  });
-  metrics.duration.observe(labels, input.durationMs / 1000);
-  if (!successful) return;
-  metrics.tokens.inc({ ...labels, type: "input" }, metadata.tokens.input);
-  metrics.tokens.inc({ ...labels, type: "output" }, metadata.tokens.output);
-  metrics.tokens.inc(
-    { ...labels, type: "cached_input" },
-    metadata.tokens.cachedInput,
-  );
-  metrics.tokens.inc(
-    { ...labels, type: "cache_write" },
-    metadata.tokens.cacheWrite,
-  );
-  metrics.tokens.inc(
-    { ...labels, type: "reasoning" },
-    metadata.tokens.reasoning,
-  );
-  if (metadata.catalogCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "catalog" }, metadata.catalogCostUsd);
-  }
-}
 
 export function runtimeMetrics(
   register: Registry | undefined,
@@ -182,30 +35,6 @@ export function runtimeMetrics(
 
   const metrics: RuntimeMetrics = {
     ...commonLlmMetrics(register),
-    routerAttempts: new Counter({
-      name: "llm_router_attempts_total",
-      help: "OpenRouter upstream routing attempts.",
-      labelNames: [
-        "service",
-        "workload",
-        "model",
-        "upstream_provider",
-        "outcome",
-      ],
-      registers: [register],
-    }),
-    metadataMissing: new Counter({
-      name: "llm_openrouter_metadata_missing_total",
-      help: "Successful OpenRouter calls without router metadata.",
-      labelNames: ["service", "workload", "model"],
-      registers: [register],
-    }),
-    byokRequests: new Counter({
-      name: "llm_openrouter_byok_requests_total",
-      help: "Successful OpenRouter language calls by BYOK status.",
-      labelNames: ["service", "workload", "model", "upstream_provider", "byok"],
-      registers: [register],
-    }),
     structuredAttempts: new Counter({
       name: "llm_structured_output_attempts_total",
       help: "Structured output semantic attempts by outcome.",
@@ -217,15 +46,24 @@ export function runtimeMetrics(
   return metrics;
 }
 
-export class OpenRouterMetricsTelemetry implements Telemetry {
+/**
+ * Records metrics and the correlated success/failure log for one logical call.
+ *
+ * This is now the single source for both. Under the gateway, metrics came from
+ * the telemetry integration while logging came from a fetch wrapper that read
+ * the raw response body, and the two could disagree. Providers report
+ * everything we need through the SDK's own usage, so one observer covers it.
+ */
+export class LlmMetricsTelemetry implements Telemetry {
   readonly #metrics: RuntimeMetrics | undefined;
   readonly #service: string;
   readonly #workload: string;
-  readonly #logger: OpenRouterRuntimeLogger;
+  readonly #logger: LlmRuntimeLogger;
   readonly #traceId: string | undefined;
   readonly #embedStartedAt = new Map<string, number>();
   #startedAt: number | undefined;
   #model: string | undefined;
+  #provider: Provider | "unknown" = "unknown";
   #languageModelCallSucceeded = false;
   #operation: "language" | "embedding" | undefined;
 
@@ -233,7 +71,7 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
     metrics: RuntimeMetrics | undefined;
     service: string;
     workload: string;
-    logger: OpenRouterRuntimeLogger;
+    logger: LlmRuntimeLogger;
     traceId: string | undefined;
   }) {
     this.#metrics = options.metrics;
@@ -244,7 +82,7 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
   }
 
   onLanguageModelCallStart(event: LanguageModelCallStartEvent): void {
-    this.rememberModel(event.modelId);
+    this.remember(event.provider, event.modelId);
     this.#startedAt = performance.now();
     this.#languageModelCallSucceeded = false;
     this.#operation = "language";
@@ -252,20 +90,32 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
 
   onLanguageModelCallEnd(event: LanguageModelCallEndEvent): void {
     this.#languageModelCallSucceeded = true;
-    this.rememberModel(event.modelId);
-    const metrics = this.#metrics;
-    if (metrics === undefined) return;
-    const metadata = parseOpenRouterMetadata({
-      requestedModel: stableModelId(event.modelId),
+    this.remember(event.provider, event.modelId);
+
+    const provider = normalizeProvider(event.provider);
+    const metadata = parseNativeUsage({
+      requestedModel: stableModelId(provider, event.modelId),
+      provider,
       responseId: event.responseId,
       resolvedModel: event.modelId,
       usage: event.usage,
-      providerMetadata: event.providerMetadata,
     });
+
+    logLlmResponse({
+      logger: this.#logger,
+      service: this.#service,
+      workload: this.#workload,
+      metadata,
+      traceId: this.#traceId,
+      durationMs: event.performance.responseTimeMs,
+    });
+
+    const metrics = this.#metrics;
+    if (metrics === undefined) return;
     const labels = {
       service: this.#service,
       workload: this.#workload,
-      provider: "openrouter",
+      provider,
       model: metadata.requestedModel,
     };
     metrics.requests.inc({ ...labels, outcome: "success" });
@@ -290,27 +140,25 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
   }
 
   onEmbedStart(event: EmbeddingModelCallStartEvent): void {
-    this.rememberModel(event.modelId);
+    this.remember(event.provider, event.modelId);
     this.#startedAt ??= performance.now();
     this.#embedStartedAt.set(event.embedCallId, performance.now());
     this.#operation = "embedding";
   }
 
   onEmbedEnd(event: EmbeddingModelCallEndEvent): void {
-    this.rememberModel(event.modelId);
+    this.remember(event.provider, event.modelId);
     const metrics = this.#metrics;
     if (metrics === undefined) return;
-    const model = stableModelId(event.modelId);
+    const provider = normalizeProvider(event.provider);
+    const model = stableModelId(provider, event.modelId);
     const labels = {
       service: this.#service,
       workload: this.#workload,
-      provider: "openrouter",
+      provider,
       model,
     };
-    metrics.requests.inc({
-      ...labels,
-      outcome: "success",
-    });
+    metrics.requests.inc({ ...labels, outcome: "success" });
     const startedAt = this.#embedStartedAt.get(event.embedCallId);
     this.#embedStartedAt.delete(event.embedCallId);
     if (startedAt !== undefined) {
@@ -333,14 +181,15 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
     this.#metrics?.requests.inc({
       service: this.#service,
       workload: this.#workload,
-      provider: "openrouter",
+      provider: this.#provider,
       model: this.#model ?? "unknown",
       outcome: "error",
     });
-    logOpenRouterCallFailure({
+    logLlmCallFailure({
       logger: this.#logger,
       service: this.#service,
       workload: this.#workload,
+      provider: this.#provider,
       model: this.#model ?? "unknown",
       traceId: this.#traceId,
       durationMs:
@@ -351,8 +200,10 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
     });
   }
 
-  private rememberModel(routeModelId: string): void {
-    const model = stableModelId(routeModelId);
+  private remember(sdkProvider: string, routeModelId: string): void {
+    const provider = normalizeProvider(sdkProvider);
+    if (this.#provider === "unknown") this.#provider = provider;
+    const model = stableModelId(provider, routeModelId);
     if (this.#model === undefined) this.#model = model;
     else if (this.#model !== model) this.#model = "multiple";
   }

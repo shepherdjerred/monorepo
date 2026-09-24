@@ -1,4 +1,9 @@
-import type { OpenRouterEndpoint } from "@shepherdjerred/llm-models";
+import type {
+  CacheTtl,
+  ModelEndpoint,
+  Provider,
+  ServiceTier,
+} from "@shepherdjerred/llm-models";
 import type { Registry } from "prom-client";
 import type { z } from "zod";
 
@@ -7,29 +12,24 @@ export type RuntimeFetch = (
   init?: Parameters<typeof fetch>[1],
 ) => Promise<Response>;
 
-export type OpenRouterRuntimeLogRecord = {
+export type LlmRuntimeLogRecord = {
   level: "info" | "error";
-  event: "llm.openrouter.response" | "llm.openrouter.call_failed";
+  event: "llm.provider.response" | "llm.provider.call_failed";
   message: string;
   service: string;
   workload: string;
+  provider: Provider | "unknown";
   model: string;
   resolvedModel?: string | undefined;
-  upstreamProvider?: string | undefined;
-  isByok?: boolean | undefined;
-  generationId?: string | undefined;
-  route?: string | undefined;
-  region?: string | undefined;
-  fallbackAttempts: number;
+  responseId?: string | undefined;
+  serviceTier?: ServiceTier | undefined;
   inputTokens: number;
   outputTokens: number;
   cachedInputTokens: number;
   cacheWriteTokens: number;
   reasoningTokens: number;
   totalTokens: number;
-  actualCostUsd?: number | undefined;
   catalogCostUsd?: number | undefined;
-  upstreamCostUsd?: number | undefined;
   traceId?: string | undefined;
   outcome: "success" | "error";
   responseStatus?: number | undefined;
@@ -37,9 +37,7 @@ export type OpenRouterRuntimeLogRecord = {
   errorType?: string | undefined;
 };
 
-export type OpenRouterRuntimeLogger = (
-  record: OpenRouterRuntimeLogRecord,
-) => void;
+export type LlmRuntimeLogger = (record: LlmRuntimeLogRecord) => void;
 
 export const REQUIRED_MODEL_CAPABILITIES = [
   "tools",
@@ -66,17 +64,58 @@ export type RequiredModelCapability =
   (typeof REQUIRED_MODEL_CAPABILITIES)[number];
 
 export type ModelRequirements = {
-  endpoint: OpenRouterEndpoint;
+  endpoint: ModelEndpoint;
   capabilities?: readonly RequiredModelCapability[] | undefined;
 };
 
-export type OpenRouterRuntimeOptions = {
-  apiKey: string;
-  service: string;
-  appName: string;
-  metricsRegister?: Registry | undefined;
-  fetch?: RuntimeFetch | undefined;
-  logger?: OpenRouterRuntimeLogger | undefined;
+/**
+ * How a workload proves it may call Anthropic.
+ *
+ * `federation` is what deployed workloads use: the pod presents a projected
+ * Kubernetes service-account token and Anthropic returns a short-lived
+ * `sk-ant-oat...`. `apiKey` exists for CI and local development, where no
+ * projected token is available.
+ */
+export type AnthropicCredentials =
+  | { readonly kind: "apiKey"; readonly apiKey: string }
+  | {
+      readonly kind: "federation";
+      /** Path to the projected identity token; re-read on every exchange. */
+      readonly identityTokenFile: string;
+      readonly federationRuleId: string;
+      readonly organizationId: string;
+      readonly serviceAccountId: string;
+      /** Required only when the rule spans more than one workspace. */
+      readonly workspaceId?: string | undefined;
+    };
+
+/**
+ * Vertex needs no secret: `@ai-sdk/google-vertex` resolves Application Default
+ * Credentials, which in-cluster is an external-account config pointing at the
+ * same projected token Anthropic federation uses.
+ *
+ * `location` defaults to `global` because several Gemini 3.x preview models are
+ * served only from the global endpoint and return model-not-found on a regional
+ * one.
+ */
+export type GoogleCredentials = {
+  readonly project: string;
+  readonly location?: string | undefined;
+};
+
+export type ProviderCredentials = {
+  readonly openai?: { readonly apiKey: string } | undefined;
+  readonly anthropic?: AnthropicCredentials | undefined;
+  readonly google?: GoogleCredentials | undefined;
+};
+
+export type LlmRuntimeOptions = {
+  readonly credentials: ProviderCredentials;
+  readonly service: string;
+  readonly appName: string;
+  readonly metricsRegister?: Registry | undefined;
+  readonly fetch?: RuntimeFetch | undefined;
+  readonly logger?: LlmRuntimeLogger | undefined;
 };
 
 export type RuntimeTraceContext = {
@@ -87,6 +126,11 @@ export type RuntimeTraceContext = {
 
 export type CallOptionsInput = {
   workload: string;
+  /**
+   * The catalog model this call targets. Optional, but supplying it lets the
+   * runtime attach the provider-specific options that keep JSON schemas strict.
+   */
+  model?: string | undefined;
   sessionId?: string | undefined;
   /**
    * The provider prompt-cache partition. Requests share cached prefixes only
@@ -97,15 +141,19 @@ export type CallOptionsInput = {
    */
   promptCacheKey?: string | undefined;
   traceContext?: RuntimeTraceContext | undefined;
-  observationId?: string | undefined;
 };
 
 /**
- * The AI SDK's normalized usage shape: `input` counts every prompt token
- * including cache reads, `cachedInput` is the cache-read subset of it, and
- * `cacheWrite` counts cache-creation tokens the upstream reports separately.
+ * The AI SDK's normalized usage shape, flattened.
+ *
+ * Every provider reports these as NON-OVERLAPPING quantities: `input` is the
+ * uncached prompt tokens only, with `cachedInput` (reads) and `cacheWrite`
+ * counted beside it. The SDK reconciles the two upstream conventions — OpenAI
+ * reports cached tokens as a subset of its prompt total, Anthropic reports them
+ * separately — so downstream code never has to know which provider it is
+ * pricing.
  */
-export type OpenRouterTokenBreakdown = {
+export type TokenBreakdown = {
   input: number;
   output: number;
   cachedInput: number;
@@ -114,27 +162,26 @@ export type OpenRouterTokenBreakdown = {
   total: number;
 };
 
-export type OpenRouterRouterAttempt = {
-  provider: string;
-  model: string;
-  status: number;
-};
-
-export type OpenRouterCallMetadata = {
-  generationId?: string | undefined;
+export type LlmCallMetadata = {
+  responseId?: string | undefined;
+  /** The repository's stable catalog id. */
   requestedModel: string;
+  /** What the provider says it actually served. */
   resolvedModel?: string | undefined;
-  upstreamProvider?: string | undefined;
-  isByok?: boolean | undefined;
-  route?: string | undefined;
-  region?: string | undefined;
-  fallbackAttempts: number;
-  attempts: readonly OpenRouterRouterAttempt[];
-  tokens: OpenRouterTokenBreakdown;
-  actualCostUsd?: number | undefined;
+  provider: Provider | "unknown";
+  /** Absent means the provider did not report a tier, which bills as standard. */
+  serviceTier?: ServiceTier | undefined;
+  /** Cache writes split by TTL, where the provider reports the split. */
+  cacheWriteByTtl?: Partial<Record<CacheTtl, number>> | undefined;
+  /** Server-side tools billed per request rather than per token. */
+  serverToolRequests?: { webSearch: number } | undefined;
+  tokens: TokenBreakdown;
+  /**
+   * Catalog-priced cost for this call. Undefined when the catalog cannot price
+   * it honestly — an unpriced service tier or an unpriced billed tool — rather
+   * than silently reporting a number that omits a charge.
+   */
   catalogCostUsd?: number | undefined;
-  upstreamCostUsd?: number | undefined;
-  routerMetadataPresent: boolean;
 };
 
 export type StructuredOutputAttempt = {
@@ -142,17 +189,15 @@ export type StructuredOutputAttempt = {
   outcome: "success" | "semantic-error" | "transport-error";
   issueSummary?: string | undefined;
   error?: string | undefined;
-  usage: OpenRouterTokenBreakdown;
-  metadata?: OpenRouterCallMetadata | undefined;
+  usage: TokenBreakdown;
+  metadata?: LlmCallMetadata | undefined;
   finishReason?: string | undefined;
   generatedText?: string | undefined;
 };
 
-export type AggregateOpenRouterUsage = {
-  tokens: OpenRouterTokenBreakdown;
-  actualCostUsd: number;
+export type AggregateLlmUsage = {
+  tokens: TokenBreakdown;
   catalogCostUsd: number;
-  upstreamCostUsd: number;
 };
 
 export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = {
@@ -175,8 +220,8 @@ export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = {
 
 export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = {
   object: z.output<SCHEMA>;
-  usage: AggregateOpenRouterUsage;
-  metadata: readonly OpenRouterCallMetadata[];
+  usage: AggregateLlmUsage;
+  metadata: readonly LlmCallMetadata[];
   attempts: readonly StructuredOutputAttempt[];
 };
 
@@ -187,12 +232,12 @@ export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = {
  */
 export class StructuredOutputUsageError extends Error {
   readonly attempts: readonly StructuredOutputAttempt[];
-  readonly usage: AggregateOpenRouterUsage;
+  readonly usage: AggregateLlmUsage;
 
   constructor(
     message: string,
     attempts: readonly StructuredOutputAttempt[],
-    usage: AggregateOpenRouterUsage,
+    usage: AggregateLlmUsage,
     options?: ErrorOptions,
   ) {
     super(message, options);
@@ -206,7 +251,7 @@ export class StructuredOutputExhaustionError extends StructuredOutputUsageError 
   constructor(
     message: string,
     attempts: readonly StructuredOutputAttempt[],
-    usage: AggregateOpenRouterUsage,
+    usage: AggregateLlmUsage,
   ) {
     super(message, attempts, usage);
     this.name = "StructuredOutputExhaustionError";
@@ -225,7 +270,7 @@ export class StructuredOutputTransportError extends StructuredOutputUsageError {
   constructor(
     message: string,
     attempts: readonly StructuredOutputAttempt[],
-    usage: AggregateOpenRouterUsage,
+    usage: AggregateLlmUsage,
     options?: ErrorOptions,
   ) {
     super(message, attempts, usage, options);
