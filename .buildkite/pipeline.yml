@@ -2815,6 +2815,7 @@ steps:
         - "scripts/lib/s3-static-site.ts"
     command: |
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts'
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
       bun --no-install scripts/release/macos-cross-compiler.ts smoke
     retry: *retry
@@ -2845,6 +2846,7 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts macos-cross-compiler; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts'
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
       bun --no-install scripts/release/macos-cross-compiler.ts push
     retry: *retry
