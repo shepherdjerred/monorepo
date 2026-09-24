@@ -6,6 +6,7 @@ import {
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createAlertDashboardDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/alert-dashboard/index.ts";
+import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 
 const tcp = (port: number) => ({
   port: IntOrString.fromNumber(port),
@@ -88,7 +89,19 @@ export function createAlertDashboardChart(app: App) {
               },
             },
           ],
-          ports: [tcp(80), tcp(9093)],
+          // Grafana (80), Alertmanager (9093), and the ops series presets
+          // proxied from Prometheus (9090).
+          ports: [tcp(80), tcp(9090), tcp(9093)],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+            },
+          ],
+          ports: [tcp(FLIPT_PORT)],
         },
         {
           to: [

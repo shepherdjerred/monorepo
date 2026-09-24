@@ -33,6 +33,8 @@
         "@prisma/adapter-libsql": "7.10.0",
         "@prisma/client": "^7.10.0",
         "@prisma/client-runtime-utils": "7.10.0",
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/loaded": "workspace:*",
         "@shepherdjerred/ops-clients": "workspace:*",
         "@shepherdjerred/ops-model": "workspace:*",

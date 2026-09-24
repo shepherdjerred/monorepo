@@ -138,6 +138,15 @@ export function createAlertDashboardDeployment(chart: Chart) {
         GRAFANA_URL: EnvValue.fromValue(
           "http://prometheus-grafana.prometheus.svc.cluster.local:80",
         ),
+        PROMETHEUS_URL: EnvValue.fromValue(
+          "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
+        ),
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_NAMESPACE: EnvValue.fromValue("alert-dashboard"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         POSTAL_HOST: EnvValue.fromValue(
           "http://postal-postal-web-service.postal.svc.cluster.local:5000",
         ),
@@ -148,6 +157,13 @@ export function createAlertDashboardDeployment(chart: Chart) {
         ALERT_DASHBOARD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "WEBHOOK_TOKEN",
+        }),
+        // Bearer token the Temporal ops-snapshot workflow presents on
+        // /internal/v1/ops/snapshots and /internal/v1/digests/:kind. The same
+        // value lives on the Temporal item.
+        OPS_INGEST_TOKEN: EnvValue.fromSecretValue({
+          secret,
+          key: "OPS_INGEST_TOKEN",
         }),
         GRAFANA_API_KEY: EnvValue.fromSecretValue({
           secret,
@@ -184,6 +200,12 @@ export function createAlertDashboardDeployment(chart: Chart) {
   new TailscaleIngress(chart, "alert-dashboard-ingress", {
     service,
     host: "alerts",
+    probePath: "/healthz",
+  });
+  // The same app serves the ops overview. `alerts` stays for existing links.
+  new TailscaleIngress(chart, "alert-dashboard-ops-ingress", {
+    service,
+    host: "ops",
     probePath: "/healthz",
   });
   return deployment;
