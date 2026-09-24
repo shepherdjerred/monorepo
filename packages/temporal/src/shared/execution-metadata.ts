@@ -85,6 +85,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   // TASK_QUEUES.INFRA
   runBugsinkHousekeepingWorkflow: "infra",
   runVeleroOrphanAuditWorkflow: "infra",
+  runVeleroR2OrphanAuditWorkflow: "infra",
   runZfsMaintenanceWorkflow: "infra",
   syncGolinks: "infra",
   runTasknotesCanary: "infra",

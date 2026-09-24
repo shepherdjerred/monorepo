@@ -27,6 +27,7 @@ import type {
   ScoutImageGcResult,
 } from "#activities/scout/scout-image-gc.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./homelab/velero-orphan-audit.ts";
+import { runVeleroR2OrphanAuditWorkflow as _runVeleroR2OrphanAuditWorkflow } from "./homelab/velero-r2-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./scout/data-dragon.ts";
 import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./scout/lane-prior-refresh.ts";
 import type { DataDragonUpdateResult } from "#shared/data-dragon-types.ts";
@@ -253,6 +254,10 @@ export async function runScoutImageGcWorkflow(
 
 export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
+}
+
+export async function runVeleroR2OrphanAuditWorkflow(): Promise<void> {
+  return _runVeleroR2OrphanAuditWorkflow();
 }
 
 export async function runScoutDataDragonVersionCheck(

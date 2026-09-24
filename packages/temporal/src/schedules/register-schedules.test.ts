@@ -462,6 +462,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
+  // Awaits a single runVeleroR2OrphanAudit activity (Backup CR + two R2
+  // prefix listings). No workflow-level sleeps; the activity carries its own
+  // startToCloseTimeout + retry budget.
+  "runVeleroR2OrphanAuditWorkflow",
   "runSeaweedFsBackupWorkflow",
   "runSeaweedFsBackupRetentionAndGcWorkflow",
   "syncGolinks",

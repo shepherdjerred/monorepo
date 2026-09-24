@@ -310,6 +310,42 @@ export const veleroLiveBackupCount = new Gauge({
   registers: [register],
 });
 
+// ---------------------------------------------------------------------------
+// velero-r2-orphan-audit workflow metrics
+//
+// Detection-only metrics for orphan R2 objects under zfspv-incr/backups/ —
+// prefixes named by neither a live Velero Backup CR nor R2 backup metadata,
+// older than the 24h safety fence. Same orphan definition as the operator
+// cleanup tool (packages/homelab/src/cdk8s/scripts/r2-orphan-cleanup-core.ts).
+// Operator remediation lives in `runbooks/r2-capacity-remediation.md`.
+// ---------------------------------------------------------------------------
+
+export const veleroR2OrphanAuditRunsTotal = new Counter({
+  name: "velero_r2_orphan_audit_runs_total",
+  help: "Number of velero-r2-orphan-audit workflow runs by outcome (success | failure)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const veleroR2OrphanAuditDurationSeconds = new Histogram({
+  name: "velero_r2_orphan_audit_duration_seconds",
+  help: "Wall-clock duration of velero-r2-orphan-audit runs",
+  buckets: [10, 30, 60, 120, 300, 600],
+  registers: [register],
+});
+
+export const veleroOrphanR2PrefixesTotal = new Gauge({
+  name: "velero_orphan_r2_prefixes_total",
+  help: "Orphan R2 backup prefixes under zfspv-incr/backups/ with no live Backup CR or metadata",
+  registers: [register],
+});
+
+export const veleroOrphanR2BytesTotal = new Gauge({
+  name: "velero_orphan_r2_bytes_total",
+  help: "Total bytes in orphan R2 backup prefixes under zfspv-incr/backups/",
+  registers: [register],
+});
+
 export const zfsDatasetSnapshotCount = new Gauge({
   name: "zfs_dataset_snapshot_count",
   help: "Total ZFS snapshot count per PVC dataset (live + orphan)",
