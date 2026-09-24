@@ -303,16 +303,29 @@ operator turns it off, the run starts v1's `scoutPostMatchDiscoveryWorkflow`
 as a child and returns its outcome. Turning the flag back on returns the next
 pass to V2, and no deploy is needed in either direction.
 
-Only one pipeline discovers at a time. The Schedule's SKIP overlap keeps a run
-from starting until the previous one, V2 or delegated v1, has closed, and a V2
-run stays open until every match it handed to the dispatcher is acknowledged.
-v1 opens its poll without claiming it, so the handoff defers (`defer-v1`, a
-`no-op` result) while any live poll still holds `BotState`, and it only starts
-v1 once nothing does. In the other direction, V2's claim already refuses a
-poll v1 opened. Match children V2 started keep running under `ABANDON`, and
-their observation owner still decides who applies each match. The gate is
-behind the `scout-v2-postmatch-ownership` patch, so a discovery recorded
-before it replays straight into V2 discovery.
+Only one pipeline discovers at a time, because both take the same durable
+poll claim (`claimPostMatchPoll`) before discovering. V2 takes it in its scan.
+The v1 handoff takes it in the ownership Activity, before the v1 child starts,
+and passes it to the child as `pollOwner`. v1's discovery then re-presents the
+claim instead of opening the poll unconditionally, and its maintenance closes
+exactly that claim. A run that finds the claim held does nothing: V2 reports
+`skipped`, the handoff reports `defer-v1`, and both return `no-op`. So two
+overlapping handoffs (the scheduled run and an operator's), or a handoff and a
+V2 run, cannot both own a pass. If the v1 child fails, the Workflow closes the
+claim as failed (`releasePostMatchPollClaimV2`) rather than leaving it until
+the staleness bound. v1 runs the gate did not start carry no `pollOwner` and
+keep v1's original open and close. Match children V2 started keep running
+under `ABANDON`, and their observation owner still decides who applies each
+match. The gate is behind the `scout-v2-postmatch-ownership` patch, so a
+discovery recorded before it replays straight into V2 discovery.
+
+The recurring Flipt inventory check compares each live flag with
+`managed-flag-inventory.json`, and the inventory has no class of flag whose
+live value may differ. A rollback is therefore two changes: switch the flag off
+for the stage in Flipt, which takes effect on the next pass, and commit a
+matching `default: false` override for that environment in the inventory,
+the same way `explore_creation_enabled` records its production value. Until
+that commit lands, the check reports the flag as drift.
 
 `ScoutEffectClaim` keeps taking the top-level Prisma client, and
 `src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an

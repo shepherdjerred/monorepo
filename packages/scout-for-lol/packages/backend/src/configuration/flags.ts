@@ -444,7 +444,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * instead. On here and in Flipt, because V2 is what runs today and an
    * unreachable provider must not flip discovery to the other pipeline.
    * Deliberately absent from `PRODUCTION_HARD_DISABLED_FLAGS`: production is
-   * the environment the switch exists for.
+   * the environment the switch exists for. A rollback flips it in Flipt and
+   * records the same value as an environment override in
+   * `managed-flag-inventory.json`, or the inventory check reports drift.
    */
   scout_v2_postmatch_ownership_enabled: {
     default: true,
