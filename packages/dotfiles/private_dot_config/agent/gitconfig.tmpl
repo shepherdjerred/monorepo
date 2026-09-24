@@ -1,19 +1,25 @@
 # Agent gitconfig — pointed at by GIT_CONFIG_GLOBAL in AI-agent sessions
 # (Claude Code via packages/dotfiles/claude-managed/managed-settings.json,
 # Codex via packages/dotfiles/private_dot_codex/private_config.toml,
-# OpenCode via the fish opencode() wrapper in
+# OpenCode, Antigravity, Grok, and Muse via the fish agent wrappers in
 # packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl).
 #
-# A curated subset of ~/.gitconfig (private_dot_gitconfig.tmpl) that keeps
-# everything agents need to operate — identity, GitHub credentials, git-spice
+# Agents commit and authenticate as the `derrej` machine account, not as
+# Jerred. The credential helpers pin gh to the agent config directory
+# (~/.config/gh-agent, logged in as derrej) so git pushes as derrej even when
+# GH_CONFIG_DIR is missing from the environment; the same launchers also set
+# GH_CONFIG_DIR so gh itself (and git-spice's CLI auth) resolves to derrej.
+#
+# Otherwise a curated subset of ~/.gitconfig (private_dot_gitconfig.tmpl) that
+# keeps everything agents need to operate — GitHub credentials, git-spice
 # settings, fetch/push/pull behavior — while dropping the interactive
 # customizations that confuse agents: delta pager, difftastic external diff,
 # column UI, aliases, and sort-order overrides. Note git cannot UNSET a key
 # via env-based config (GIT_CONFIG_KEY_n/GIT_CONFIG_VALUE_n), which is why
 # this file exists: an empty diff.external is an error, not an unset.
 [user]
-	name = Jerred Shepherd
-	email = github@sjer.red
+	name = Derrej Drehpehs
+	email = derrej@sjer.red
 
 [core]
 	pager = cat
@@ -26,16 +32,16 @@
 [credential "https://github.com"]
 	helper =
 {{- if eq .chezmoi.os "darwin" }}
-	helper = !/opt/homebrew/bin/gh auth git-credential
+	helper = !GH_CONFIG_DIR="$HOME/.config/gh-agent" /opt/homebrew/bin/gh auth git-credential
 {{- else }}
-	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
+	helper = !GH_CONFIG_DIR="$HOME/.config/gh-agent" /home/linuxbrew/.linuxbrew/bin/gh auth git-credential
 {{- end }}
 [credential "https://gist.github.com"]
 	helper =
 {{- if eq .chezmoi.os "darwin" }}
-	helper = !/opt/homebrew/bin/gh auth git-credential
+	helper = !GH_CONFIG_DIR="$HOME/.config/gh-agent" /opt/homebrew/bin/gh auth git-credential
 {{- else }}
-	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
+	helper = !GH_CONFIG_DIR="$HOME/.config/gh-agent" /home/linuxbrew/.linuxbrew/bin/gh auth git-credential
 {{- end }}
 
 [http]
