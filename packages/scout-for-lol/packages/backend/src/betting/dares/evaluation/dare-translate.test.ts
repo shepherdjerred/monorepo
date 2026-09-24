@@ -245,9 +245,12 @@ describe("translateDare", () => {
     const { deps } = makeDeps({
       generate: () =>
         Promise.reject(
-          Object.assign(new Error("Key limit exceeded (weekly limit)"), {
-            statusCode: 403,
-          }),
+          Object.assign(
+            new Error(
+              "You exceeded your current quota, please check your plan and billing details.",
+            ),
+            { statusCode: 429 },
+          ),
         ),
     });
     await expect(translateDare(INPUT, deps)).resolves.toEqual({

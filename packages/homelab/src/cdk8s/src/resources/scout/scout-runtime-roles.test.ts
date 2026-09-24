@@ -590,7 +590,7 @@ describe("Scout gateway retirement", () => {
     const backend = RoleDeploymentSchema.parse(
       findResource(resources, "Deployment", "scout-beta-scout-backend").spec,
     );
-    expect(envValue(backend, "OPENAI_API_KEY_FILE")).toBe(
+    expect(envValue(backend, "VOICE_OPENAI_API_KEY_FILE")).toBe(
       "/run/secrets/scout-openai/OPENAI_API_KEY",
     );
     expect(

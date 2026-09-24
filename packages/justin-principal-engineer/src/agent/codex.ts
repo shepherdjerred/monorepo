@@ -18,7 +18,6 @@ export async function runCodexTurn(input: {
   const codex = new Codex({
     ...codexConfig.codexOptions,
     config: {
-      ...openRouter.providerConfig,
       features: { apps: false, plugins: false, multi_agent: false },
     },
   });

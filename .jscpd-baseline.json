@@ -664,14 +664,6 @@
       "clones": 1,
       "tokens": 91
     },
-    "packages/llm-runtime/src/metrics.ts|packages/llm-runtime/src/metrics.ts": {
-      "clones": 1,
-      "tokens": 145
-    },
-    "packages/llm-runtime/test/attributed-fetch.test.ts|packages/llm-runtime/test/attributed-fetch.test.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
     "packages/macos-ai-subscription-tracker/scripts/verify-app.ts|packages/macos-ai-subscription-tracker/scripts/verify-notarized-app.ts": {
       "clones": 1,
       "tokens": 192
@@ -685,10 +677,6 @@
       "tokens": 71
     },
     "packages/monarch/src/lib/display.test.ts|packages/monarch/src/lib/display.test.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/openrouter-broadcast-ingest/test/app.test.ts|packages/openrouter-broadcast-ingest/test/app.test.ts": {
       "clones": 1,
       "tokens": 71
     },
@@ -924,9 +912,9 @@
       "clones": 1,
       "tokens": 78
     },
-    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/openrouter-clients.ts": {
+    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/provider-clients.ts": {
       "clones": 1,
-      "tokens": 73
+      "tokens": 77
     },
     "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.ts": {
       "clones": 1,
