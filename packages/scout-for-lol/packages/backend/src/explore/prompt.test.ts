@@ -298,9 +298,10 @@ describe("unresolved concepts", () => {
     for (const family of queueFamilies) {
       expect(instructions).toContain(family.label);
     }
-    expect(instructions).toContain(
-      `exactly these ${records.length.toString()} records and no others`,
-    );
+    expect(instructions).toContain("these records and no others");
+    // The count is left out on purpose: stated only in the prompt, it reached
+    // answers as a figure no query produced.
+    expect(instructions).not.toContain(`${records.length.toString()} records`);
     expect(instructions).toContain("never by role, position or champion");
     expect(instructions).toContain("never ask which record they meant");
   });
@@ -315,8 +316,9 @@ describe("reading features rather than re-deriving them", () => {
     expect(on).not.toContain("The Hall of Fame is not switched on");
     const off = exploreAgentInstructions({ bucks: null, hallOfFame: false });
     expect(off).toContain("The Hall of Fame is not switched on");
-    // Off is not a refusal: a record question is answered from match data.
-    expect(off).toContain("Answer a record question anyway");
+    // Off is not a refusal: even board questions are reconstructed.
+    expect(off).toContain("Answer anyway by reconstructing it from match data");
+    expect(off).toContain("'broken this month'");
     expect(off).not.toContain("get_hall_of_fame");
   });
 

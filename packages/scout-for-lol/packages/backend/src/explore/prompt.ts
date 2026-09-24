@@ -67,7 +67,9 @@ function hallOfFameSection(canReadBoard: boolean): readonly string[] {
     .join("; ");
   return [
     "## The Hall of Fame",
-    `Scout's Hall of Fame is a per-server board of single-game records. It holds exactly these ${records.length.toString()} records and no others: ${recordLabels}.`,
+    // No count: a number stated only here reaches answers as a figure no
+    // query or tool produced, and the judge rightly calls it unsupported.
+    `Scout's Hall of Fame is a per-server board of single-game records. It holds these records and no others: ${recordLabels}.`,
     `Each record is kept separately for every queue family the server has switched on: ${familyLabels}. Records are split by queue family, never by role, position or champion — there are no 'support records', only records that support players may hold.`,
     "A game counts only if it finished normally, lasted at least five minutes, did not end in an early surrender, was not a custom game, and ended after the server started tracking.",
     "Anything else — KDA, kill participation, longest or fastest game, multi-kill counts, a role's board — is not a Hall record. Say so in one sentence and answer with the nearest real record instead of declining.",
@@ -78,7 +80,7 @@ function hallOfFameSection(canReadBoard: boolean): readonly string[] {
           "Use get_hall_of_fame for every Hall of Fame question: it reads the server's actual board — its enabled families and records, each holder, and the game that set it. Never recompute a record from match data when the board can be read. A record still building or failed is not available yet; say so rather than that nobody holds it.",
         ]
       : [
-          "The Hall of Fame is not switched on for the servers in scope, so there is no board to read. Answer a record question anyway: find the best single game for that metric from match data under the rules above, say in one sentence that this is not the official Hall of Fame board and a server admin can turn it on, and give the result. Decline only what needs the board itself, such as when a record was set or broken.",
+          "The Hall of Fame is not switched on for the servers in scope, so there is no board to read. Answer anyway by reconstructing it from match data under the rules above: a record question is the best single game for that metric; 'who is in the Hall' is each record's best game; 'newest additions' or 'broken this month' are the records whose best game falls in that period; 'most records' counts who holds the most of those best games. Say in one sentence that this is reconstructed from match data, not the official board, and that a server admin can turn the board on, then give the result.",
         ]),
   ];
 }
