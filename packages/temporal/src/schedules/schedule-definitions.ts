@@ -377,7 +377,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
-    memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology.",
+    memo: "Daily Velero orphan ZFS snapshot and ZFSBackup-CR detection — emits Prometheus metrics for both orphan pathologies.",
   },
   {
     id: "golink-sync",

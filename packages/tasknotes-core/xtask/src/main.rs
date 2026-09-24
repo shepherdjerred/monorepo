@@ -6,9 +6,10 @@
 //!   `cargo` and runs anywhere the workspace compiles, Linux included. That is
 //!   the per-PR CI story: `check-bindings` is gate 7, the only mechanical guard
 //!   against UniFFI's silent `Record`-reordering corruption.
-//! * **Packaging** (`build-xcframework`, `verify-swift`) needs `lipo`,
-//!   `xcodebuild`, and a Swift toolchain, so it is macOS-only and is not on the
-//!   Linux path.
+//! * **Packaging.** `build-xcframework` needs the Apple Rust targets and
+//!   `lipo`, so it runs on macOS or in the `packages/apple-cross` Linux image
+//!   (which provides `llvm-lipo` as `lipo`). `verify-swift` builds and runs a
+//!   Swift smoke test, so it stays macOS-only.
 //!
 //! Cargo must never run from an Xcode build phase; this binary is the only
 //! entry point that drives it.
@@ -42,7 +43,8 @@ OPTIONS:
 NOTES:
     generate-bindings and check-bindings run on any host, Linux included. They
     build the source-controlled, pinned C# UniFFI generator retarget.
-    build-xcframework and verify-swift require macOS.
+    build-xcframework needs the Apple Rust targets and lipo (macOS, or the
+    apple-cross Linux image); verify-swift requires macOS.
     check-xcframework only compares timestamps, so it runs anywhere — but it
     can only pass where build-xcframework has run.
 ";
