@@ -161,7 +161,8 @@
           "versionKey": "shepherdjerred/caddy-s3proxy",
           "argoApp": "s3-static-sites"
         }
-      ]
+      ],
+      "aliases": ["caddy-s3proxy"]
     },
     {
       "id": "minecraft",

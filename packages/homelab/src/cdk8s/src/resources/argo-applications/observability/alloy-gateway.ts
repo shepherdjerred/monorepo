@@ -4,6 +4,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { Namespace } from "cdk8s-plus-31";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 // Braintrust ingests whole LLM traces per project; the project is selected by
@@ -112,6 +113,68 @@ otelcol.exporter.otlphttp "${branch.river}" {
 }`;
 }
 
+/** OTLP/HTTP metrics port published on the tailnet as `otlp-metrics`. */
+export const TAILNET_METRICS_PORT = 4319;
+
+/**
+ * Metric-name prefixes the tailnet receiver admits. The toolkit history
+ * daemon on Jerred's Mac pushes AI usage and subscription quota; nothing else
+ * may write into cluster Prometheus through this door.
+ */
+export const TAILNET_METRIC_NAME_PATTERN = "^(ai_usage_|ai_subscription_)";
+
+// Metrics-only OTLP/HTTP receiver for workstation pushes arriving over the
+// Tailscale ingress. It is a separate receiver on its own port so the tailnet
+// can reach metrics without exposing the trace receiver on 4318, and so a
+// tailnet client can never inject spans into Tempo or Braintrust.
+//
+// The Tailscale ingress is unauthenticated beyond tailnet ACLs, so the filter
+// is the allowlist: anything whose name does not match the prefix is dropped
+// before it reaches Prometheus. Metric names arrive already in their final
+// Prometheus spelling, so suffixes stay off. `service.name` and
+// `service.instance.id` map to `job` and `instance` by the exporter itself;
+// target_info and scope labels would only add noise series and labels.
+const TAILNET_METRICS_CONFIG = `otelcol.receiver.otlp "tailnet_metrics" {
+  http {
+    endpoint = "0.0.0.0:${String(TAILNET_METRICS_PORT)}"
+  }
+
+  output {
+    metrics = [otelcol.processor.filter.tailnet_metrics.input]
+  }
+}
+
+otelcol.processor.filter "tailnet_metrics" {
+  metrics {
+    metric = [
+      ${riverString(`not IsMatch(name, "${TAILNET_METRIC_NAME_PATTERN}")`)},
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.tailnet_metrics.input]
+  }
+}
+
+otelcol.processor.batch "tailnet_metrics" {
+  output {
+    metrics = [otelcol.exporter.prometheus.tailnet.input]
+  }
+}
+
+otelcol.exporter.prometheus "tailnet" {
+  add_metric_suffixes  = false
+  include_target_info  = false
+  include_scope_labels = false
+  forward_to           = [prometheus.remote_write.cluster.receiver]
+}
+
+prometheus.remote_write "cluster" {
+  endpoint {
+    url = "http://prometheus-operated.prometheus:9090/api/v1/write"
+  }
+}`;
+
 // Grafana Alloy River config: receive OTLP/HTTP from every in-cluster trace
 // producer, forward ALL spans to Tempo unconditionally, and tail-sample whole
 // traces containing LLM spans into per-service-stage Braintrust projects.
@@ -193,6 +256,8 @@ otelcol.auth.bearer "braintrust" {
 }
 
 ${BRAINTRUST_BRANCHES.map((branch) => renderBraintrustBranch(branch)).join("\n\n")}
+
+${TAILNET_METRICS_CONFIG}
 `;
 
 /**
@@ -227,6 +292,17 @@ export function createAlloyGatewayApp(chart: Chart) {
     spec: {
       itemPath: vaultItemPath("braintrust"),
     },
+  });
+
+  // Only the metrics port is published on the tailnet; the trace receiver on
+  // 4318 stays cluster-internal. The OTLP receiver answers 404/405 on "/",
+  // so the probe checks the TCP listener instead.
+  createIngress(chart, "alloy-gateway-otlp-metrics-ingress", {
+    namespace: "alloy-gateway",
+    service: "alloy-gateway",
+    port: TAILNET_METRICS_PORT,
+    hosts: ["otlp-metrics"],
+    probeModule: "tcp_connect",
   });
 
   const alloyGatewayValues: HelmValuesForChart<"alloy"> = {
@@ -284,6 +360,12 @@ export function createAlloyGatewayApp(chart: Chart) {
           name: "otlp-http",
           port: 4318,
           targetPort: 4318,
+          protocol: "TCP",
+        },
+        {
+          name: "otlp-metrics",
+          port: TAILNET_METRICS_PORT,
+          targetPort: TAILNET_METRICS_PORT,
           protocol: "TCP",
         },
       ],
