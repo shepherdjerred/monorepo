@@ -7,41 +7,27 @@ const headPushedAt = "2026-09-23T18:00:00Z";
 const afterPush = "2026-09-23T18:01:00Z";
 const beforePush = "2026-09-23T17:59:00Z";
 
-// Verbatim from a live chatgpt-codex-connector comment: both halves must match
-// so that a partial quote (either sentence on its own) cannot trip the detector.
+// Verbatim live chatgpt-codex-connector bodies (PR #3058): the full code-review
+// notice and a shorter usage-limits one. Both must match — a head that draws
+// only the short wording is just as blocked.
 const USAGE_LIMIT_COMMENT =
   "You have reached your Codex usage limits for code reviews. " +
-  "You can see your limits in the Codex usage dashboard. " +
+  "You can see your limits in the [Codex usage dashboard](https://chatgpt.com/codex/cloud/settings/usage).\n" +
   "To continue using code reviews, add credits to your account " +
-  "and enable them for code reviews in your settings.";
+  "and enable them for code reviews in your [settings](https://chatgpt.com/codex/cloud/settings/code-review).\n";
+const SHORT_USAGE_LIMIT_COMMENT =
+  "You have reached your Codex usage limits. " +
+  "You can see your limits in the [Codex usage dashboard](https://chatgpt.com/codex/cloud/settings/usage).\n";
 
 describe("matchesBlockedSignal", () => {
-  test("matches the verbatim usage-limit comment", () => {
-    expect(
-      matchesBlockedSignal(
-        codexProvider.detectBlocked ?? {
-          matches: [],
-          reason: "missing-fixture",
-          remediation: "missing-fixture",
-        },
-        USAGE_LIMIT_COMMENT,
-      ),
-    ).toBe(true);
-  });
-
-  test("rejects a comment quoting only one half", () => {
+  test("matches both observed usage-limit wordings", () => {
     const strategy = codexProvider.detectBlocked;
     expect(strategy).not.toBeNull();
     if (strategy === null) return;
-    expect(
-      matchesBlockedSignal(
-        strategy,
-        "You have reached your Codex usage limits for code reviews.",
-      ),
-    ).toBe(false);
-    expect(
-      matchesBlockedSignal(strategy, "Please add credits to your account."),
-    ).toBe(false);
+    expect(matchesBlockedSignal(strategy, USAGE_LIMIT_COMMENT)).toBe(true);
+    expect(matchesBlockedSignal(strategy, SHORT_USAGE_LIMIT_COMMENT)).toBe(
+      true,
+    );
   });
 
   test("rejects a null or unrelated body", () => {
@@ -50,6 +36,9 @@ describe("matchesBlockedSignal", () => {
     if (strategy === null) return;
     expect(matchesBlockedSignal(strategy, null)).toBe(false);
     expect(matchesBlockedSignal(strategy, "### 💡 Codex Review")).toBe(false);
+    expect(
+      matchesBlockedSignal(strategy, "Please add credits to your account."),
+    ).toBe(false);
   });
 });
 

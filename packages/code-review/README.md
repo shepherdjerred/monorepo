@@ -31,8 +31,9 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
 - **`detectSkip: SkipStrategy | null`** — how a deliberate skip ("no
   reviewable files", excluded author, …) is recognized on issue comments.
 - **`detectBlocked: BlockedSignalStrategy | null`** — how a provider-side
-  block (Codex quota exhaustion: "reached your Codex usage limits … add
-  credits") is recognized on issue comments. Unlike a skip this is a FAILING
+  block (Codex quota exhaustion: "reached your Codex usage limits", in
+  either the full or the short notice wording) is recognized on issue
+  comments. Unlike a skip this is a FAILING
   terminal state — no review happened — so the gate fails fast with the
   provider's remediation instead of polling to its deadline. Only a
   provider-authored match posted at/after the head push counts, so a stale
