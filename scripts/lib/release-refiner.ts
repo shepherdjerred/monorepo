@@ -225,6 +225,7 @@ async function runCodexSdk(
   const codex = new Codex({
     ...openRouter.codexOptions,
     config: {
+      ...openRouter.providerConfig,
       project_doc_max_bytes: 0,
       features: { apps: false, plugins: false, multi_agent: false },
     },
