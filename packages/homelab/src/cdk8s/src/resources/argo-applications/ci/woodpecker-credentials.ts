@@ -17,7 +17,7 @@ export const WOODPECKER_NAMESPACE = "woodpecker";
  * session. The repo's existing GITHUB_APP_* credential is unrelated and stays
  * in use for the review gate and PR operations.
  */
-export const WOODPECKER_SERVER_ITEM_ID = "REPLACE_WITH_1PASSWORD_ITEM_ID";
+export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
 
 /**
  * Per-step credential boundary, carried over from the Buildkite stack.
