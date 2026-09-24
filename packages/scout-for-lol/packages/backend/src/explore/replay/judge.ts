@@ -354,12 +354,18 @@ const JUDGE_SYSTEM_PROMPT = [
   "1. addressed — did it answer the question, decline it, or deflect?",
   "   'deflected' means it neither answered nor said it could not: a clarifying question in response to a concrete request deflects.",
   "",
-  "2. grounded — could the query shown have produced the figures at all?",
-  "   You are shown how many rows the query returned. You are NOT shown the rows.",
+  "2. grounded — could the evidence shown have produced the figures at all?",
+  "   Evidence is the queries it ran AND what its feature tools returned. A figure a feature tool returned is grounded exactly as one a query returned.",
+  "   You are shown how many rows each query returned, not the rows, and a truncated excerpt of each tool result.",
   "   So do not mark an answer unsupported merely because you cannot check a specific name or number against data you cannot see — that is a limit of this evidence, not a fault in the answer.",
-  "   'unsupported' when the answer states figures and no query ran, or every query returned zero rows, or the figures contradict the row count it was given.",
-  "   'not_applicable' when the answer states no figures.",
-  "   Judge only whether the figures could have come from the query. Do not grade the choice of method, the grouping, or whether you would have written the query differently.",
+  "   Only FINDINGS count: figures the answer reports as true about the data. These are not findings, and never make an answer unsupported:",
+  "     - a number the user wrote in the question and the answer repeats (listed below as FIGURES THE QUESTION CONTAINS);",
+  "     - a parameter the answer proposes for something it is drafting or offering to run — a deadline, a stake, a game floor, a time window;",
+  "     - an example inside a clarifying question or an offer, such as 'did you mean 10 PM to 5 AM?';",
+  "     - the period the answer says it covered.",
+  "   'unsupported' when the answer reports findings and there is no query and no tool output, or every query returned zero rows and no tool returned data, or the findings contradict the evidence.",
+  "   'not_applicable' when the answer reports no findings.",
+  "   Judge only whether the findings could have come from the evidence. Do not grade the choice of method, the grouping, or whether you would have written the query differently.",
   "",
   "3. coverageHonesty — did it claim Scout LACKS data that Scout actually holds?",
   "   Scout's data lake holds the following, which Explore's query language cannot currently reach:",
@@ -386,13 +392,6 @@ export function judgePromptSha256(): string {
 }
 
 /**
- * The case, rendered for the judge.
- *
- * The figures the answer asserts are extracted here rather than left for the
- * judge to spot, because `numericClaims` already does it deterministically and
- * a model counting numbers is a model that will miscount one.
- */
-/**
  * Whether the turn crashed rather than answering.
  *
  * Both halves matter. An error with an answer beside it is a tool that failed
@@ -410,11 +409,25 @@ export function crashReason(record: {
   return described === "" ? "the turn produced no answer" : described;
 }
 
+/**
+ * The case, rendered for the judge.
+ *
+ * The figures are extracted here rather than left for the judge to spot,
+ * because `numericClaims` already does it deterministically and a model
+ * counting numbers is a model that will miscount one.
+ *
+ * The question's own figures are listed separately so "the answer only
+ * repeated the user's number" is something the judge reads, not something it
+ * has to notice. Without it, "a competition for most kills across 10 games"
+ * came back unsupported for restating the 10.
+ */
 export function judgeUserPrompt(input: JudgeCaseInput): string {
   const gatedOff = Object.entries(input.capabilities)
     .filter(([, enabled]) => !enabled)
     .map(([name]) => name);
+  const questionFigures = numericClaims(input.question);
   const figures = [...numericClaims(input.answer)];
+  const echoed = figures.filter((figure) => questionFigures.has(figure));
   const queries =
     input.queries.length === 0
       ? ["(the turn ran no query)"]
@@ -442,6 +455,8 @@ export function judgeUserPrompt(input: JudgeCaseInput): string {
     "",
     `TOOLS CALLED: ${input.toolNames.length === 0 ? "(none)" : input.toolNames.join(", ")}`,
     `FIGURES THE ANSWER ASSERTS: ${figures.length === 0 ? "(none)" : figures.join(", ")}`,
+    `FIGURES THE QUESTION CONTAINS: ${questionFigures.size === 0 ? "(none)" : [...questionFigures].join(", ")}`,
+    `ANSWER FIGURES ALSO IN THE QUESTION: ${echoed.length === 0 ? "(none)" : echoed.join(", ")}`,
     "",
     "ANSWER:",
     input.answer ?? "(the turn produced no answer)",

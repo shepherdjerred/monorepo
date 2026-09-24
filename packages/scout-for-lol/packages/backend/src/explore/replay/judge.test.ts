@@ -303,6 +303,47 @@ describe("the judge prompt", () => {
     expect(rendered).toContain("(the turn produced no answer)");
     expect(rendered).toContain("FEATURES OFF FOR THIS GUILD: (none)");
   });
+
+  test("separates the user's own numbers from the answer's findings", () => {
+    // "Create a competition for most kills across 10 games" was scored
+    // unsupported for restating the 10. The judge now reads which figures
+    // came from the question instead of having to notice.
+    const rendered = judgeUserPrompt({
+      question: "Create a competition for most kills across 10 games",
+      answer:
+        "Competitions are not enabled here. Most kills across 10 games would need an admin to switch them on; the last one ran 14 days.",
+      queries: [],
+      toolResults: [],
+      toolNames: [],
+      expectation: "gated-off",
+      capabilities: { creation: false },
+    });
+    expect(rendered).toContain("FIGURES THE QUESTION CONTAINS: 10");
+    expect(rendered).toContain("ANSWER FIGURES ALSO IN THE QUESTION: 10");
+    expect(rendered).toContain("FIGURES THE ANSWER ASSERTS: 10, 14");
+  });
+
+  test("grounds findings in feature-tool output, not only in queries", () => {
+    // Six beta answers read straight from list_dares and query_bucks were
+    // scored unsupported because the rubric said "unsupported when no query
+    // ran" while the evidence it was handed showed the tool result.
+    const prompt = judgeSystemPrompt();
+    expect(prompt).toContain(
+      "A figure a feature tool returned is grounded exactly as one a query returned.",
+    );
+    expect(prompt).not.toContain("the answer states figures and no query ran");
+  });
+
+  test("does not count proposed parameters or examples as findings", () => {
+    // A dare's 7-day default and "did you mean 10 PM to 5 AM?" propose or
+    // ask; neither reports anything about the data.
+    const prompt = judgeSystemPrompt();
+    expect(prompt).toContain("Only FINDINGS count");
+    expect(prompt).toContain(
+      "a deadline, a stake, a game floor, a time window",
+    );
+    expect(prompt).toContain("an example inside a clarifying question");
+  });
 });
 
 describe("judgeEvidenceFromTrace", () => {
