@@ -198,6 +198,7 @@ type StandardMatchContext = {
   targetGuildIds: DiscordGuildId[];
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
   prerenderedImage?: Uint8Array | undefined;
+  omitMvpVotes?: boolean | undefined;
 };
 
 /**
@@ -327,14 +328,15 @@ async function processStandardMatch(
     components: matchLinkComponents(matchId),
   };
   if (
-    await shouldAttachMvpVotes({
+    ctx.omitMvpVotes !== true &&
+    (await shouldAttachMvpVotes({
       queueType: completedMatch.queueType,
       targetGuildIds,
       participants: matchData.info.participants,
       trackedPuuids: playersInMatch.map(
         (player) => player.league.leagueAccount.puuid,
       ),
-    })
+    }))
   ) {
     await ensureMatchMvpContest(matchData);
     return withMvpVoteFurniture(message, matchId);
@@ -355,6 +357,14 @@ export type GenerateMatchReportOptions = {
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
   /** An already-rendered, verified report image; see `createMatchImage`. */
   prerenderedImage?: Uint8Array | undefined;
+  /**
+   * Build the report without community-MVP vote controls, and so without
+   * creating the `MatchMvpContest` they vote into. For a report that will
+   * never be posted, where a contest would be orphaned: no message carries
+   * its buttons, so nobody can vote, yet anything counting contests would
+   * read it as real.
+   */
+  omitMvpVotes?: boolean | undefined;
 };
 
 export type GenerateMatchReportDependencies = {
@@ -481,6 +491,7 @@ export async function generateMatchReport(
             ? {}
             : { prefetchedRankChanges: options.prefetchedRankChanges }),
           prerenderedImage: options.prerenderedImage,
+          omitMvpVotes: options.omitMvpVotes,
         });
 
     if (result === undefined) {

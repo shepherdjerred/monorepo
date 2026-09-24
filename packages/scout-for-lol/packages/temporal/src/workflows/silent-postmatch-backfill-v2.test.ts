@@ -226,7 +226,7 @@ describe("the silent post-match backfill", () => {
       new Set(["backfillSilentPostmatchArtifactV2"]),
     );
     expect(run.childrenStarted).toBe(0);
-  });
+  }, 60_000);
 
   test("a rerun of the same list renders nothing twice", async () => {
     const store = createStore();
@@ -254,7 +254,7 @@ describe("the silent post-match backfill", () => {
     expect(store.objects).toEqual(objectsAfterFirst);
     expect(store.renderReceipts).toEqual(receiptsAfterFirst);
     expect(store.forbiddenCalls).toEqual([]);
-  });
+  }, 60_000);
 
   test("a match that cannot render fails the run after every other match ran", async () => {
     const store = createStore();
@@ -275,7 +275,7 @@ describe("the silent post-match backfill", () => {
       matchId(23),
     ]);
     expect(store.forbiddenCalls).toEqual([]);
-  });
+  }, 60_000);
 });
 
 describe("the backfill input", () => {

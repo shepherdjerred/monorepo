@@ -1,5 +1,11 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import {
+  PlayerConfigEntrySchema,
+  RawMatchSchema,
+  type MatchId,
+} from "@scout-for-lol/data";
+import type * as GeneratorModule from "#src/league/tasks/postmatch/match-report-generator.ts";
+import type * as ImageModule from "#src/league/tasks/postmatch/match-report-image.ts";
 import {
   IsoInstantSchema,
   NotificationIntentKeySchema,
@@ -38,15 +44,32 @@ import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
  * `match-effects.ts`) before the render in `backfillSilentPostmatchArtifactV2`
  * — the normal run's step this backfill deliberately leaves out — and
  * "renders and attests" fails on the intent count.
+ *
+ * v1's report generator runs for real on a Flex match with MVP votes enabled
+ * for every destination, so it WOULD create a `MatchMvpContest`. Mutation
+ * proof for the contest omission: drop `omitMvpVotes: true` from the
+ * historical render in `postmatch-notification.ts`, and "creates no MVP
+ * contest" fails on a real contest row (1, not 0) while "renders and attests"
+ * fails on the attested components.
  */
 const { prisma } = createTestDatabase("scout-v2-silent-postmatch-backfill");
 
-const PUUID = LeaguePuuidSchema.parse("b".repeat(78));
+const RIFT = RawMatchSchema.parse(
+  await Bun.file(
+    new URL("../../../../../../testdata/rift.json", import.meta.url),
+  ).json(),
+);
+const PUUID = LeaguePuuidSchema.parse(RIFT.info.participants[0]?.puuid);
+const TRACKED_PLAYER = PlayerConfigEntrySchema.parse({
+  alias: "Backfilled",
+  league: { leagueAccount: { puuid: PUUID, region: "AMERICA_NORTH" } },
+});
 const GAME_CREATION = Date.parse("2026-09-23T04:00:00.000Z");
 
 const world = vi.hoisted(() => ({
   puts: new Array<{ key: string; keyDate: Date | undefined }>(),
   renderOptions: new Array<Record<string, unknown>>(),
+  aiReviews: 0,
   deliverable: 1,
   discordCalls: new Array<string>(),
 }));
@@ -74,24 +97,62 @@ vi.mock("#src/discord/utils/channel.ts", () => ({
   asTextChannel: forbidden("discord/utils/channel.asTextChannel"),
 }));
 
+// A real Flex match, so v1's own generator runs end to end — the queue
+// community-MVP votes attach to — with only its expensive leaves stubbed.
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
   resolveScoutV2ObservedMatchContext: (riotMatchId: string) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,
       matchData: {
-        metadata: { matchId: riotMatchId, participants: [PUUID] },
-        info: {
-          queueId: 420,
-          gameMode: "CLASSIC",
-          gameType: "MATCHED_GAME",
-          gameCreation: GAME_CREATION,
-        },
+        ...RIFT,
+        metadata: { ...RIFT.metadata, matchId: riotMatchId },
+        info: { ...RIFT.info, gameCreation: GAME_CREATION },
       },
       matchDataSource: "RIOT",
       observedPuuids: [PUUID],
-      trackedPlayers: [],
+      trackedPlayers: [TRACKED_PLAYER],
     }),
+}));
+vi.mock("#src/league/model/player.ts", () => ({
+  getPlayer: (config: unknown) =>
+    Promise.resolve({
+      config,
+      ranks: { solo: undefined, flex: undefined, ranked5s: undefined },
+    }),
+}));
+vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
+  fetchTimelineIfStandardMatch: () => Promise.resolve(undefined),
+}));
+// The AI review is KEPT on a historical render; recording the call is what
+// shows the backfill still asks for it.
+vi.mock("#src/league/tasks/postmatch/match-report-ai-review.ts", () => ({
+  generateAiReviewIfEnabled: () => {
+    world.aiReviews += 1;
+    return Promise.resolve({ text: undefined, image: undefined });
+  },
+}));
+vi.mock(
+  "#src/league/tasks/postmatch/match-report-image.ts",
+  async (importActual) => {
+    const actual: typeof ImageModule = await importActual();
+    return {
+      ...actual,
+      // The Satori pass, replaced by fixed bytes through v1's own furniture.
+      createMatchImage: (_match: unknown, matchId: MatchId) =>
+        Promise.resolve(
+          actual.attachReportImage(
+            new Uint8Array([137, 80, 78, 71, 7]),
+            matchId,
+          ),
+        ),
+    };
+  },
+);
+// Every destination guild has MVP votes on, so v1's generator WOULD create a
+// contest here; only the historical render's omission keeps it from doing so.
+vi.mock("#src/mvp-votes/eligibility.ts", () => ({
+  shouldAttachMvpVotes: () => Promise.resolve(true),
 }));
 vi.mock("#src/league/tasks/notification-filters.ts", () => ({
   resolvePostmatchDeliveryChannels: () =>
@@ -108,26 +169,22 @@ vi.mock("#src/league/tasks/notification-filters.ts", () => ({
       guildIds: [testGuildId("5")],
     }),
 }));
-vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
-  generateMatchReport: async (
-    matchData: { metadata: { matchId: string } },
-    _players: unknown,
-    options: Record<string, unknown>,
-  ) => {
-    const { attachReportImage } =
-      await import("#src/league/tasks/postmatch/match-report-image.ts");
-    world.renderOptions.push(options);
-    const [attachment, embed] = attachReportImage(
-      new Uint8Array([137, 80, 78, 71, 7]),
-      MatchIdSchema.parse(matchData.metadata.matchId),
-    );
+vi.mock(
+  "#src/league/tasks/postmatch/match-report-generator.ts",
+  async (importActual) => {
+    const actual: typeof GeneratorModule = await importActual();
     return {
-      content: "someone finished a game",
-      files: [attachment],
-      embeds: [embed],
+      ...actual,
+      // v1's real generator, with the options it was handed recorded.
+      generateMatchReport: async (
+        ...args: Parameters<typeof actual.generateMatchReport>
+      ) => {
+        world.renderOptions.push({ ...args[2] });
+        return await actual.generateMatchReport(...args);
+      },
     };
   },
-}));
+);
 vi.mock("#src/storage/s3-helpers.ts", () => ({
   saveToS3: (config: {
     matchId: string;
@@ -238,7 +295,7 @@ async function seedCapturedRank(matchId: RiotMatchId): Promise<string> {
     data: {
       matchId,
       puuid: PUUID,
-      queueType: "solo",
+      queueType: "flex",
       rankBefore: JSON.stringify({ ...RANK, lp: 20 }),
       rankAfter: JSON.stringify(RANK),
       matchGameCreationAt: new Date(GAME_CREATION),
@@ -260,12 +317,16 @@ async function durableSideEffects(matchId: RiotMatchId) {
     renderReceipts: await prisma.matchProcessingReceipt.count({
       where: { riotMatchId: matchId, kind: "v2-notification-render-postmatch" },
     }),
+    mvpContests: await prisma.matchMvpContest.count({
+      where: { matchId },
+    }),
   };
 }
 
 beforeEach(() => {
   world.puts.length = 0;
   world.renderOptions.length = 0;
+  world.aiReviews = 0;
   world.deliverable = 1;
   world.discordCalls.length = 0;
 });
@@ -293,13 +354,19 @@ describe("a match the mint-less core finished", () => {
       artifact: "report",
       riotMatchId: matchId,
       image: { objectKey: `games/2026/09/22/${matchId}/report.png` },
+      // No vote controls on a report nobody will see.
+      components: "match-link",
     });
+    // The full post-match output: the AI review is still asked for.
+    expect(world.aiReviews).toBe(1);
 
-    // And nothing that could ever announce it.
+    // And nothing that could ever announce it, nor an MVP contest that no
+    // message could be voted from.
     expect(await durableSideEffects(matchId)).toEqual({
       intents: 0,
       discordClaims: 0,
       renderReceipts: 1,
+      mvpContests: 0,
     });
     expect(world.discordCalls).toEqual([]);
 
@@ -312,6 +379,17 @@ describe("a match the mint-less core finished", () => {
       where: { matchId },
     });
     expect(JSON.stringify(standing)).toBe(captured);
+  });
+
+  test("creates no MVP contest, though v1's generator would have", async () => {
+    const matchId = await seedMatch();
+
+    await backfillSilentPostmatchArtifactV2({
+      stage: STAGE,
+      riotMatchId: matchId,
+    });
+
+    expect(await prisma.matchMvpContest.count({ where: { matchId } })).toBe(0);
   });
 
   test("a rerun renders nothing, writes nothing, and says why", async () => {
@@ -381,6 +459,7 @@ describe("what the backfill refuses, before any effect", () => {
         intents: 0,
         discordClaims: 0,
         renderReceipts: 0,
+        mvpContests: 0,
       });
     },
   );

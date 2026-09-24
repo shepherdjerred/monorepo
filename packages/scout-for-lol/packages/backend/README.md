@@ -653,7 +653,9 @@ giving the reason, in any of these cases:
 
 It renders in `historical` mode: the generator receives the rank changes that
 settlement already recorded for the match and does not re-capture today's rank
-over them. The objects are filed under the game's creation date. Reruns are
+over them. It also builds the report without community-MVP vote controls, so no
+`MatchMvpContest` is created for a message that will never be posted. It keeps
+the AI review. The objects are filed under the game's creation date. Reruns are
 idempotent, because a receipt that already stands turns the match into a skip.
 
 ```bash

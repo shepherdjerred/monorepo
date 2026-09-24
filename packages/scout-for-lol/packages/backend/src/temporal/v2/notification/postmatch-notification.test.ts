@@ -195,7 +195,10 @@ describe("what the render evaluates", () => {
       (call) => z.record(z.string(), z.unknown()).parse(call[2]),
     );
     expect(live).not.toHaveProperty("prefetchedRankChanges");
+    expect(live).not.toHaveProperty("omitMvpVotes");
     expect(historical?.["prefetchedRankChanges"]).toBe(recorded);
+    // A report nobody will see gets no vote controls and no contest.
+    expect(historical?.["omitMvpVotes"]).toBe(true);
   });
 
   test("reports the game's creation instant for dating its objects", async () => {

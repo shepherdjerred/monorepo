@@ -100,6 +100,13 @@ export type ScoutV2PostmatchRender = {
  * the changes already recorded for the match and never captures one. A
  * player with no recorded row is rendered without a rank change rather than
  * with an invented one.
+ *
+ * A historical render also omits the community-MVP vote controls, and with
+ * them the `MatchMvpContest` row they vote into: the report is never posted,
+ * so a contest would have no message to be voted from and would sit in the
+ * table as an orphan that anything counting contests reads as real. The
+ * receipt then truthfully attests `match-link` rather than
+ * `match-link-mvp-vote`. The AI review is kept.
  */
 export type ScoutV2PostmatchRenderMode =
   | { readonly kind: "live" }
@@ -238,7 +245,7 @@ export async function renderPostmatchNotificationV2(
     {
       targetGuildIds: audience.guildIds,
       ...(mode.kind === "historical"
-        ? { prefetchedRankChanges: mode.rankChanges }
+        ? { prefetchedRankChanges: mode.rankChanges, omitMvpVotes: true }
         : {}),
     },
   );
