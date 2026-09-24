@@ -69,6 +69,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   publish: ["npm", "cooklang"],
   "ci-base-refresh": ["ci-base"],
   "ci-playwright-refresh": ["ci-playwright"],
+  "windows-cross-compiler-refresh": ["windows-cross-compiler"],
   "helm-push": ["helm", "argocd", "images"],
   "tofu-apply-seaweedfs": ["tofu"],
   "tofu-apply-tailscale": ["tofu"],

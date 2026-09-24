@@ -787,6 +787,16 @@
       ]
     },
     {
+      "package": "windows-cross-compiler",
+      "directory": "packages/windows-cross-compiler",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/root-scripts",
       "directory": "scripts",
       "coverageSourceDirectories": ["scripts", ".buildkite/scripts"],

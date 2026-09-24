@@ -46,6 +46,14 @@ any two of them would lose information the pipeline is built to preserve.
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites. The
   `scout-*` steps are ordered in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
+- **Toolchain image candidates** rebuild the images other steps run inside:
+  `ci-base`, `ci-playwright`, and the two
+  [`windows-cross-compiler`](https://github.com/shepherdjerred/monorepo/tree/main/packages/windows-cross-compiler)
+  images. Main builds publish a content-addressed candidate and open a pull
+  request that moves the committed digest, so a consumer changes toolchains
+  only when that pull request's CI passes on the new image. The
+  windows-cross-compiler images also run their sample self-tests on pull
+  requests, because their consumers do not exercise every compiler they ship.
 
 ## Native Apple checks are a separate execution surface
 

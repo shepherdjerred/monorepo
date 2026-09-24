@@ -2683,6 +2683,49 @@ steps:
                   - *grant_github_download
                   - *grant_github_packages
 
+  - label: ":window: windows-cross-compiler self-test"
+    key: windows-cross-compiler-pr
+    timeout_in_minutes: 90
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - "packages/windows-cross-compiler/**"
+        - ".buildkite/scripts/images/application-image-runtime.ts"
+        - ".buildkite/scripts/images/bake-retry.ts"
+        - ".buildkite/scripts/images/build-ci-image-core.ts"
+        - ".buildkite/scripts/images/build-ci-image.ts"
+        - ".buildkite/scripts/images/selftest-ci-image.ts"
+        - ".buildkite/scripts/images/update-ci-image-pin-core.ts"
+        - ".buildkite/scripts/images/update-ci-image-pin-github.ts"
+        - ".buildkite/scripts/images/update-ci-image-pin.ts"
+        - ".buildkite/scripts/reporting/buildkit-env.ts"
+        - "scripts/lib/transient-error.ts"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
+      # Builds the samples inside the base and winui images; no push, no cache write.
+      bun --no-install .buildkite/scripts/images/selftest-ci-image.ts
+    artifact_paths:
+      - "windows-cross-compiler-selftest/*.log"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: windows-cross-compiler-pr
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+
   # ── Main-only: images (parallel bake + smoke + push) ─────────────────────
   - label: ":docker: images — build, smoke, push"
     key: images
@@ -3915,6 +3958,42 @@ steps:
                   - *grant_github_app_installation_id
                   - *grant_github_app_private_key
 
+  - label: ":window: windows-cross-compiler candidates"
+    key: windows-cross-compiler-refresh
+    timeout_in_minutes: 120
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/windows-cross-compiler-refresh
+    command: |
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts windows-cross-compiler; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
+      bun --no-install .buildkite/scripts/images/build-ci-image.ts --image windows-cross-compiler --candidate-out windows-cross-compiler-candidate.json
+      bun --no-install .buildkite/scripts/images/update-ci-image-pin.ts --candidate windows-cross-compiler-candidate.json
+      bun --no-install .buildkite/scripts/images/build-ci-image.ts --image windows-cross-compiler-winui --candidate-out windows-cross-compiler-winui-candidate.json
+      bun --no-install .buildkite/scripts/images/update-ci-image-pin.ts --candidate windows-cross-compiler-winui-candidate.json
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: windows-cross-compiler-refresh
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+                  - *grant_github_app_id
+                  - *grant_github_app_installation_id
+                  - *grant_github_app_private_key
+
   # ── Main-only: build summary annotation (runs even when deploys fail) ─────
   - label: ":memo: build summary"
     key: build-summary
@@ -3954,6 +4033,7 @@ steps:
       - version-commit-back
       - ci-base-refresh
       - ci-playwright-refresh
+      - windows-cross-compiler-refresh
     allow_dependency_failure: true
     command: bun --no-install .buildkite/scripts/reporting/annotate-build-summary.ts
     plugins:
