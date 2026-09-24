@@ -1,0 +1,398 @@
+{
+  "$schema": "./services.schema.json",
+  "services": [
+    {
+      "id": "scout-for-lol",
+      "title": "Scout for LoL",
+      "kind": "product",
+      "package": "scout-for-lol",
+      "aliases": ["scout"],
+      "namespaces": ["scout-beta", "scout-prod"],
+      "argoApps": ["scout-beta", "scout-prod"],
+      "bugsinkProjects": ["scout-for-lol", "sentinel"],
+      "analyticsSites": ["scout-prod", "scout-beta"],
+      "grafanaDashboards": ["scout-for-lol-durable"],
+      "deploy": [
+        {
+          "name": "beta",
+          "versionKey": "shepherdjerred/scout-for-lol/beta",
+          "argoApp": "scout-beta"
+        },
+        {
+          "name": "prod",
+          "versionKey": "shepherdjerred/scout-for-lol/prod",
+          "argoApp": "scout-prod"
+        }
+      ]
+    },
+    {
+      "id": "birmel",
+      "title": "Birmel",
+      "kind": "product",
+      "package": "birmel",
+      "namespaces": ["birmel"],
+      "argoApps": ["birmel"],
+      "bugsinkProjects": ["birmel"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/birmel",
+          "argoApp": "birmel"
+        }
+      ]
+    },
+    {
+      "id": "tasknotes-server",
+      "title": "TaskNotes",
+      "kind": "product",
+      "package": "tasknotes-server",
+      "aliases": ["tasknotes"],
+      "namespaces": ["tasknotes"],
+      "argoApps": ["tasknotes"],
+      "bugsinkProjects": ["tasknotes-api", "tasknotes-app"],
+      "grafanaDashboards": ["tasknotes-dashboard"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/tasknotes-server",
+          "argoApp": "tasknotes"
+        }
+      ]
+    },
+    {
+      "id": "discord-plays-pokemon",
+      "title": "Discord Plays Pokémon",
+      "kind": "product",
+      "package": "discord-plays-pokemon",
+      "aliases": ["pokemon"],
+      "namespaces": ["pokemon"],
+      "argoApps": ["pokemon"],
+      "bugsinkProjects": ["discord-plays-pokemon"],
+      "analyticsSites": ["pokemon"],
+      "grafanaDashboards": ["discord-plays-stream-health"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/discord-plays-pokemon",
+          "argoApp": "pokemon"
+        }
+      ]
+    },
+    {
+      "id": "discord-plays-mario-kart",
+      "title": "Discord Plays Mario Kart",
+      "kind": "product",
+      "package": "discord-plays-mario-kart",
+      "aliases": ["mario-kart"],
+      "namespaces": ["mario-kart"],
+      "argoApps": ["mario-kart"],
+      "bugsinkProjects": ["discord-plays-mario-kart"],
+      "analyticsSites": ["mario-kart"],
+      "grafanaDashboards": ["discord-plays-stream-health"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/discord-plays-mario-kart",
+          "argoApp": "mario-kart"
+        }
+      ]
+    },
+    {
+      "id": "starlight-karma-bot",
+      "title": "Starlight Karma Bot",
+      "kind": "product",
+      "package": "starlight-karma-bot",
+      "aliases": ["karma", "starlight"],
+      "namespaces": ["starlight-karma-bot-beta", "starlight-karma-bot-prod"],
+      "argoApps": ["starlight-karma-bot-beta", "starlight-karma-bot-prod"],
+      "bugsinkProjects": ["starlight"],
+      "deploy": [
+        {
+          "name": "beta",
+          "versionKey": "shepherdjerred/starlight-karma-bot/beta",
+          "argoApp": "starlight-karma-bot-beta"
+        },
+        {
+          "name": "prod",
+          "versionKey": "shepherdjerred/starlight-karma-bot/prod",
+          "argoApp": "starlight-karma-bot-prod"
+        }
+      ]
+    },
+    {
+      "id": "streambot",
+      "title": "Streambot & media",
+      "kind": "product",
+      "package": "streambot",
+      "namespaces": ["media"],
+      "argoApps": ["media"],
+      "bugsinkProjects": ["streambot"],
+      "grafanaDashboards": ["streambot", "streambot-voice"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/streambot",
+          "argoApp": "media"
+        }
+      ]
+    },
+    {
+      "id": "static-sites",
+      "title": "Static sites",
+      "kind": "product",
+      "package": "homelab",
+      "namespaces": ["s3-static-sites"],
+      "argoApps": ["s3-static-sites"],
+      "bugsinkProjects": ["sjerred", "better-skill-capped"],
+      "analyticsSites": [
+        "sjer-red",
+        "resume",
+        "webring",
+        "better-skill-capped",
+        "glitter-boys-ppl",
+        "cook",
+        "stocks",
+        "wiki"
+      ],
+      "grafanaDashboards": ["static-site-probes"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/caddy-s3proxy",
+          "argoApp": "s3-static-sites"
+        }
+      ]
+    },
+    {
+      "id": "minecraft",
+      "title": "Minecraft",
+      "kind": "product",
+      "namespaces": [
+        "minecraft-shuxin",
+        "minecraft-sjerred",
+        "minecraft-tsmc",
+        "mc-router"
+      ],
+      "argoApps": [
+        "minecraft-shuxin",
+        "minecraft-sjerred",
+        "minecraft-tsmc",
+        "mc-router"
+      ],
+      "analyticsSites": ["ts-mc"]
+    },
+    {
+      "id": "temporal",
+      "title": "Temporal",
+      "kind": "workload",
+      "package": "temporal",
+      "aliases": ["temporal-worker", "worker"],
+      "namespaces": ["temporal"],
+      "argoApps": ["temporal"],
+      "bugsinkProjects": ["temporal"],
+      "grafanaDashboards": ["temporal-dashboard"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/temporal-worker",
+          "argoApp": "temporal"
+        }
+      ]
+    },
+    {
+      "id": "trmnl-dashboard",
+      "title": "TRMNL dashboard",
+      "kind": "workload",
+      "package": "trmnl-dashboard",
+      "aliases": ["trmnl"],
+      "namespaces": ["trmnl-dashboard"],
+      "argoApps": ["trmnl-dashboard"],
+      "bugsinkProjects": ["trmnl-dashboard"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/trmnl-dashboard",
+          "argoApp": "trmnl-dashboard"
+        }
+      ]
+    },
+    {
+      "id": "ops-dashboard",
+      "title": "Ops dashboard",
+      "kind": "workload",
+      "package": "alert-dashboard",
+      "aliases": ["alert-dashboard", "ops"],
+      "namespaces": ["alert-dashboard"],
+      "argoApps": ["alert-dashboard"],
+      "grafanaDashboards": ["alert-dashboard"]
+    },
+    {
+      "id": "openrouter-broadcast-ingest",
+      "title": "OpenRouter broadcast ingest",
+      "kind": "workload",
+      "package": "openrouter-broadcast-ingest",
+      "namespaces": ["openrouter-broadcast-ingest"],
+      "argoApps": ["openrouter-broadcast-ingest"],
+      "grafanaDashboards": ["ai-provider-health"]
+    },
+    {
+      "id": "home",
+      "title": "Home Assistant",
+      "kind": "workload",
+      "namespaces": ["home"],
+      "argoApps": ["home"],
+      "bugsinkProjects": ["home-assistant-workflows"]
+    },
+    {
+      "id": "self-hosted-apps",
+      "title": "Self-hosted apps",
+      "kind": "workload",
+      "namespaces": [
+        "freshrss",
+        "golink",
+        "redlib",
+        "relay",
+        "stash",
+        "syncthing",
+        "pinchtab"
+      ],
+      "argoApps": [
+        "freshrss",
+        "golink",
+        "redlib",
+        "relay",
+        "stash",
+        "syncthing",
+        "pinchtab"
+      ]
+    },
+    {
+      "id": "obsidian-headless",
+      "title": "Obsidian headless",
+      "kind": "workload",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/obsidian-headless",
+          "argoApp": "apps"
+        }
+      ]
+    },
+    {
+      "id": "gitops",
+      "title": "GitOps & charts",
+      "kind": "platform",
+      "namespaces": ["argocd", "chartmuseum"],
+      "argoApps": ["apps", "argocd", "chartmuseum"]
+    },
+    {
+      "id": "observability",
+      "title": "Observability stack",
+      "kind": "platform",
+      "namespaces": [
+        "prometheus",
+        "loki",
+        "tempo",
+        "pyroscope",
+        "alloy",
+        "alloy-gateway",
+        "promtail"
+      ],
+      "argoApps": [
+        "prometheus",
+        "prometheus-adapter",
+        "blackbox-exporter",
+        "service-probes",
+        "grafana-db",
+        "loki",
+        "tempo",
+        "pyroscope",
+        "alloy",
+        "alloy-gateway",
+        "promtail"
+      ]
+    },
+    {
+      "id": "bugsink",
+      "title": "Bugsink",
+      "kind": "platform",
+      "namespaces": ["bugsink"],
+      "argoApps": ["bugsink"]
+    },
+    {
+      "id": "ci",
+      "title": "CI (Buildkite)",
+      "kind": "platform",
+      "namespaces": ["buildkite", "buildkitd", "turbo-cache", "kueue-system"],
+      "argoApps": ["buildkite", "buildkitd", "turbo-cache", "kueue"],
+      "grafanaDashboards": ["buildkite-ci-dashboard", "buildkitd-dashboard"]
+    },
+    {
+      "id": "storage",
+      "title": "Storage & backups",
+      "kind": "platform",
+      "namespaces": [
+        "openebs",
+        "seaweedfs",
+        "velero",
+        "postgres-operator",
+        "gickup"
+      ],
+      "argoApps": [
+        "openebs",
+        "seaweedfs",
+        "velero",
+        "postgres-operator",
+        "gickup"
+      ],
+      "grafanaDashboards": ["zfs-dashboard", "gitckup-dashboard"]
+    },
+    {
+      "id": "networking",
+      "title": "Networking & edge",
+      "kind": "platform",
+      "namespaces": [
+        "tailscale",
+        "cloudflare-tunnel",
+        "cloudflare-operator-system",
+        "cert-manager",
+        "ddns"
+      ],
+      "argoApps": [
+        "tailscale",
+        "cloudflare-tunnel",
+        "cloudflare-operator",
+        "cert-manager",
+        "ddns"
+      ]
+    },
+    {
+      "id": "mail",
+      "title": "Postal mail",
+      "kind": "platform",
+      "namespaces": ["postal"],
+      "argoApps": ["postal", "postal-mariadb"]
+    },
+    {
+      "id": "platform-services",
+      "title": "Platform services",
+      "kind": "platform",
+      "namespaces": [
+        "1password",
+        "flipt",
+        "intel-device-plugin-operator",
+        "node-feature-discovery"
+      ],
+      "argoApps": [
+        "1password",
+        "flipt",
+        "intel-device-plugin-operator",
+        "intel-gpu-device-plugin",
+        "nfd"
+      ]
+    }
+  ]
+}

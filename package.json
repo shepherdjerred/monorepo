@@ -124,6 +124,8 @@
     "packages/loaded",
     "packages/macos-ai-subscription-tracker",
     "packages/openrouter-broadcast-ingest",
+    "packages/ops-clients",
+    "packages/ops-model",
     "packages/monarch",
     "packages/pr-fleet-controller",
     "packages/pr-fleet-controller/packages/web",

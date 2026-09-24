@@ -50,6 +50,12 @@
     "discord.js-selfbot-v13": "^3.7",
     "ink": "7.1.1",
     "react": "19.3.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/ops-model": "workspace:*",
+    "@shepherdjerred/config": "workspace:*",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/resources": "^2.7.1",
+    "@opentelemetry/sdk-metrics": "^2.10.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.222.0"
   }
 }
