@@ -5,6 +5,8 @@ import {
   veleroLiveBackupCount,
   veleroOrphanAuditDurationSeconds,
   veleroOrphanAuditRunsTotal,
+  veleroOrphanBackupCrOldestAgeSeconds,
+  veleroOrphanBackupCrsTotal,
   veleroOrphanLocalBytes,
   veleroOrphanLocalBytesTotal,
   veleroOrphanLocalSnapshots,
@@ -32,6 +34,14 @@ const ZFS_NODE_CONTAINER = "openebs-zfs-plugin";
 const VELERO_API_GROUP = "velero.io";
 const VELERO_API_VERSION = "v1";
 const VELERO_NAMESPACE = "velero";
+const ZFS_API_GROUP = "zfs.openebs.io";
+const ZFS_API_VERSION = "v1";
+const ZFS_BACKUP_PLURAL = "zfsbackups";
+// A ZFSBackup CR counts as orphan only when its parent Velero Backup is gone
+// AND the CR is older than this fence. The fence mirrors the R2 cleanup
+// tool's 24h fence and protects in-flight backups whose Backup CR may lag
+// the per-volume ZFSBackup objects.
+const ORPHAN_BACKUP_CR_FENCE_MS = 24 * 60 * 60 * 1000;
 
 export type VeleroOrphanDataset = {
   node: string;
@@ -44,12 +54,31 @@ export type VeleroOrphanDataset = {
 
 type ZfsNodePod = KubernetesNodePod;
 
+export type ZfsBackupCrSummary = {
+  name: string;
+  creationTimestamp: string | undefined;
+};
+
+export type VeleroOrphanBackupCr = {
+  name: string;
+  ageSeconds: number;
+};
+
+export type VeleroOrphanBackupCrSelection = {
+  orphan: VeleroOrphanBackupCr[];
+  blocked: string[];
+  liveAttached: number;
+};
+
 export type VeleroOrphanAuditResult = {
   liveBackupCount: number;
   totalSnapshotCount: number;
   totalOrphanCount: number;
   totalOrphanBytes: number;
   datasets: VeleroOrphanDataset[];
+  orphanBackupCrCount: number;
+  orphanBackupCrOldestAgeSeconds: number;
+  blockedBackupCrCount: number;
   workflowDurationSeconds: number;
 };
 
@@ -68,6 +97,18 @@ export const veleroOrphanAuditActivities = {
 
       Context.current().heartbeat({ phase: "list-zfs-orphans" });
       const datasets = await listZfsOrphanSnapshots(nodePods, liveBackups);
+
+      Context.current().heartbeat({ phase: "list-zfsbackup-crs" });
+      const backupCrs = await listZfsBackupCrs();
+      const crSelection = selectOrphanZfsBackupCrs(
+        backupCrs,
+        liveBackups,
+        Date.now(),
+      );
+      const orphanCrOldestAgeSeconds =
+        crSelection.orphan.length === 0
+          ? 0
+          : Math.max(...crSelection.orphan.map((entry) => entry.ageSeconds));
 
       const totalOrphanCount = datasets.reduce(
         (sum, d) => sum + d.orphanCount,
@@ -104,6 +145,8 @@ export const veleroOrphanAuditActivities = {
       veleroOrphanLocalSnapshotsTotal.set(totalOrphanCount);
       veleroOrphanLocalBytesTotal.set(totalOrphanBytes);
       veleroLiveBackupCount.set(liveBackups.length);
+      veleroOrphanBackupCrsTotal.set(crSelection.orphan.length);
+      veleroOrphanBackupCrOldestAgeSeconds.set(orphanCrOldestAgeSeconds);
 
       outcome = "success";
       return {
@@ -112,6 +155,9 @@ export const veleroOrphanAuditActivities = {
         totalOrphanCount,
         totalOrphanBytes,
         datasets,
+        orphanBackupCrCount: crSelection.orphan.length,
+        orphanBackupCrOldestAgeSeconds: orphanCrOldestAgeSeconds,
+        blockedBackupCrCount: crSelection.blocked.length,
         workflowDurationSeconds: (Date.now() - startedAt) / 1000,
       };
     } finally {
@@ -164,6 +210,96 @@ async function listLiveVeleroBackups(): Promise<string[]> {
     }
   }
   return names.toSorted();
+}
+
+const ZfsBackupListSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        metadata: z
+          .object({
+            name: z.string().min(1).optional(),
+            creationTimestamp: z.string().min(1).optional(),
+          })
+          .optional(),
+      }),
+    )
+    .optional(),
+});
+
+async function listZfsBackupCrs(): Promise<ZfsBackupCrSummary[]> {
+  const api = loadCustomObjectsApi();
+  const response: unknown = await api.listNamespacedCustomObject({
+    group: ZFS_API_GROUP,
+    version: ZFS_API_VERSION,
+    namespace: NAMESPACE_OPENEBS,
+    plural: ZFS_BACKUP_PLURAL,
+  });
+  const parsed = ZfsBackupListSchema.parse(response);
+  const summaries: ZfsBackupCrSummary[] = [];
+  for (const item of parsed.items ?? []) {
+    const name = item.metadata?.name;
+    if (typeof name === "string" && name.length > 0) {
+      summaries.push({
+        name,
+        creationTimestamp: item.metadata?.creationTimestamp,
+      });
+    }
+  }
+  return summaries.toSorted((left, right) =>
+    left.name.localeCompare(right.name),
+  );
+}
+
+// The velero-plugin names each per-volume record `<pv-name>.<backup-name>`
+// (see `GenerateResourceName`), and neither side contains a dot. A CR is
+// orphan when its suffix matches no live Velero Backup AND the CR is older
+// than the 24h fence. Unparseable names and CRs without a timestamp fail
+// closed into `blocked`: they are counted for visibility but never reported
+// as orphans.
+export function selectOrphanZfsBackupCrs(
+  summaries: readonly ZfsBackupCrSummary[],
+  liveBackups: readonly string[],
+  nowMs: number,
+): VeleroOrphanBackupCrSelection {
+  const liveSet = new Set(liveBackups);
+  const orphan: VeleroOrphanBackupCr[] = [];
+  const blocked: string[] = [];
+  let liveAttached = 0;
+  for (const summary of summaries) {
+    const parts = summary.name.split(".");
+    if (
+      parts.length !== 2 ||
+      parts[0] === undefined ||
+      parts[0].length === 0 ||
+      parts[1] === undefined ||
+      parts[1].length === 0
+    ) {
+      blocked.push(summary.name);
+      continue;
+    }
+    if (liveSet.has(parts[1])) {
+      liveAttached += 1;
+      continue;
+    }
+    if (summary.creationTimestamp === undefined) {
+      blocked.push(summary.name);
+      continue;
+    }
+    const ageMs = nowMs - Date.parse(summary.creationTimestamp);
+    if (!Number.isFinite(ageMs) || ageMs <= ORPHAN_BACKUP_CR_FENCE_MS) {
+      blocked.push(summary.name);
+      continue;
+    }
+    orphan.push({ name: summary.name, ageSeconds: Math.floor(ageMs / 1000) });
+  }
+  return {
+    orphan: orphan.toSorted((left, right) =>
+      left.name.localeCompare(right.name),
+    ),
+    blocked: blocked.toSorted(),
+    liveAttached,
+  };
 }
 
 async function findZfsNodePods(): Promise<ZfsNodePod[]> {

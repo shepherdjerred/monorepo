@@ -290,6 +290,102 @@ If the trigger for orphan accumulation was a Velero re-deploy, follow this proce
 2. **Verify zero orphans before tear-down** (use Step 2 of this runbook).
 3. **Then** uninstall / re-deploy Velero.
 
+## Appendix: orphan ZFSBackup CRs (etcd bloat)
+
+The same audit workflow also lists `zfsbackups.zfs.openebs.io` CRs in
+`openebs` and reports `velero_orphan_backup_crs_total` — CRs whose parent
+Velero Backup is gone and which are older than the 24h fence. Unpruned CRs
+bloat etcd (1,797 orphans drove the DB to 516 MiB / 16% in-use in 2026-09 and
+fired `EtcdHighFragmentation`). Remediation stays manual, same as snapshots.
+
+Trigger: `VeleroOrphanBackupCRs` (any, > 24h) or
+`VeleroOrphanBackupCRsExcessive` (> 100, > 24h).
+
+### Prune predicate
+
+Orphan = CR name suffix (after the single `.` in `<pv-name>.<backup-name>`)
+matches no live `backups.velero.io` name AND `creationTimestamp` is older
+than 24h. Status is not part of the predicate. Unparseable names stay out of
+the prune list. The Temporal `temporal-backup-preflight` hook only reads the
+newest `6hourly-backup`'s per-PV object, which is always live, so the
+live-name check subsumes its needs — but re-verify the hook inputs below
+before and after.
+
+Deleting a CR is the same path Velero TTL expiry takes (the plugin deletes
+only the CR): the zfs-localpv controller then `zfs destroy`s the matching
+local snapshot and drops the finalizer. Already-absent snapshots and deleted
+volumes succeed silently, so this also reaps any corresponding local orphan
+snapshots. R2 data is untouched — handle it via Step 5 if the R2 inspection
+flags the same backups.
+
+### Procedure
+
+```bash
+# 1. Inventory (read-only). Expect: newest 6hourly Completed < 7h old,
+# 48/48 snapshots, its <pv>.<backup> ZFSBackup Done.
+kubectl get zfsbackups.zfs.openebs.io -n openebs -o json > /tmp/zfsbackups.json
+velero backup get -o json | jq -r '.items[].metadata.name' | sort -u > /tmp/live.txt
+talosctl etcd status  # record DB SIZE vs IN USE
+
+# 2. Build the reviewed manifest (orphans) + blocked list (live/young/unparseable).
+# Keep the manifest file for the whole operation; every delete below names it.
+bun -e '
+const live = new Set((await Bun.file("/tmp/live.txt").text()).split("\n").map((s) => s.trim()).filter(Boolean));
+const items = (await Bun.file("/tmp/zfsbackups.json").json()).items ?? [];
+const now = Date.now(), fence = 24 * 3600 * 1000, orphan = [], blocked = [];
+for (const it of items) {
+  const name = it.metadata?.name ?? "";
+  const parts = name.split(".");
+  const suffix = parts.length === 2 ? parts[1] : "";
+  if (!suffix || live.has(suffix)) { blocked.push(name); continue; }
+  const age = now - Date.parse(it.metadata?.creationTimestamp ?? "");
+  (Number.isFinite(age) && age > fence ? orphan : blocked).push(name);
+}
+await Bun.write("/tmp/orphan-manifest.txt", orphan.sort().join("\n") + "\n");
+await Bun.write("/tmp/orphan-blocked.txt", blocked.sort().join("\n") + "\n");
+console.log(`orphan=${orphan.length} blocked=${blocked.length}`);
+'
+
+# 3. Snapshot etcd first (point-in-time restore artifact; retain until done).
+talosctl etcd snapshot etcd-pre-prune-$(date +%Y%m%d).snapshot
+
+# 4. Canary: delete the single oldest manifest entry, confirm it leaves
+# Terminating within minutes with no controller error storm. If it sticks, stop.
+head -n 1 /tmp/orphan-manifest.txt | xargs kubectl delete zfsbackups.zfs.openebs.io -n openebs
+
+# 5. Waves of ~250, oldest first, 30s pauses. After each wave: no CR
+# Terminating older than 15m, live backup count sane (25-35), no new firing
+# backup alerts. Any violation stops the line.
+while [ -s /tmp/orphan-manifest.txt ]; do
+  head -n 250 /tmp/orphan-manifest.txt | xargs kubectl delete zfsbackups.zfs.openebs.io -n openebs --ignore-not-found
+  tail -n +251 /tmp/orphan-manifest.txt > /tmp/orphan-rest.txt && mv /tmp/orphan-rest.txt /tmp/orphan-manifest.txt
+  sleep 30
+done
+
+# 6. Verify: zero orphans, zero stuck, live set intact.
+kubectl get zfsbackups.zfs.openebs.io -n openebs -o json \
+  | jq '[.items[] | select(.metadata.deletionTimestamp != null)] | length'
+```
+
+Do not strip finalizers to clear a stuck deletion — debug the plugin or
+controller instead. Expect the next backups per schedule to go full (the
+incremental grouping math resets when old `Done` CRs disappear): slower
+backups are acceptable, a failed backup is a stop-and-investigate signal.
+
+### Defrag after the prune
+
+Pruning marks space free; only a defrag reclaims it. With the prune complete
+and no backup running:
+
+```bash
+talosctl etcd defrag  # blocks API reads/writes on the single member while rebuilding
+talosctl etcd status  # DB SIZE should now ≈ IN USE
+toolkit prom query 'etcd_mvcc_db_total_size_in_use_in_bytes / etcd_mvcc_db_total_size_in_bytes'  # want > 0.2
+```
+
+`EtcdHighFragmentation` clears once the ratio recovers. Retain the step-3
+etcd snapshot until the alert clears.
+
 ## Cross-References
 
 - Workflow source: `packages/temporal/src/workflows/homelab/velero-orphan-audit.ts`
