@@ -6,7 +6,7 @@ import {
   initialCompetitionBuilderState,
 } from "#src/lib/bucks/competition-builder-state.ts";
 import { buildCompetitionScenarios } from "#src/lib/bucks/competition-scenarios.ts";
-import { COMPETITION_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
+import { buildCompetitionExamples } from "#src/lib/onboarding/onboarding-examples.ts";
 import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
 import { competitionReviewSummary } from "#src/components/competition/competition-builder-review.tsx";
 
@@ -106,7 +106,9 @@ describe("competition builder reducer and submission", () => {
   });
 
   test("the legacy rank starter also builds and validates HIGHEST_RANK", () => {
-    const rank = COMPETITION_EXAMPLES.find((example) => example.id === "rank");
+    const rank = buildCompetitionExamples("2026_SEASON_3_ACT_1").find(
+      (example) => example.id === "rank",
+    );
     expect(rank).toBeDefined();
     if (rank === undefined) return;
     const result = validateForm(rank.build("200000000000000005"));
@@ -117,6 +119,14 @@ describe("competition builder reducer and submission", () => {
       queues: ["solo"],
       aggregation: "MAX",
     });
+  });
+
+  test("omits the rank starter when no season can be selected", () => {
+    expect(
+      buildCompetitionExamples(undefined).some(
+        (example) => example.id === "rank",
+      ),
+    ).toBe(false);
   });
 
   test("preset switching is atomic and preserves roster and delivery settings", () => {
