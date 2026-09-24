@@ -9,6 +9,7 @@ import { assertExploreAccess } from "#src/explore/access.ts";
 import {
   exploreMatchSnapshot,
   isExploreMatchSnapshotSupported,
+  inferFrameTeamId,
 } from "#src/explore-match/match-view.ts";
 import {
   fetchFullMatch,
@@ -92,9 +93,15 @@ export const exploreMatchRouter = router({
       );
       const points = new Map<number, Map<number, number>>();
       for (const frame of frames) {
-        const teamId = teamByParticipant.get(frame.participant_id);
+        const teamId =
+          teamByParticipant.get(frame.participant_id) ??
+          inferFrameTeamId(rows, frame.participant_id);
         if (teamId === undefined) {
-          throw new Error("Timeline frame references an unknown participant");
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message:
+              "Match timeline covers participants missing from this match",
+          });
         }
         const teamGold = points.get(frame.frame_timestamp_ms) ?? new Map();
         teamGold.set(teamId, (teamGold.get(teamId) ?? 0) + frame.total_gold);
