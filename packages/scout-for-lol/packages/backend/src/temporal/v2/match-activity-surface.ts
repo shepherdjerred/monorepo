@@ -23,6 +23,7 @@ import type { ScoutTemporalV2Activities } from "@scout-for-lol/temporal/activiti
 export type ScoutV2MatchActivities = Pick<
   ScoutTemporalV2Activities,
   | "resolvePostMatchDiscoveryOwnerV2"
+  | "releasePostMatchPollClaimV2"
   | "discoverPostMatchIdsV2"
   | "readMatchPipelineStateV2"
   | "readLegacyMatchCompletionV2"

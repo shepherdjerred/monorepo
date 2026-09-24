@@ -165,28 +165,6 @@ export async function claimPostMatchPoll(
 }
 
 /**
- * When the poll that holds `BotState` right now was opened, or `null` when
- * nothing holds it.
- *
- * "Holds" means what {@link claimPostMatchPoll} would refuse: a running poll
- * with a start instant inside the staleness bound. A running row with no
- * instant, or one older than the bound, is claimable, so it is not held.
- * Read-only: this never opens or closes anything.
- */
-export async function readHeldPostMatchPoll(
-  now: Date,
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<Date | null> {
-  const row = await prismaClient.botState.findUnique({
-    where: { id: BOT_STATE_ID },
-    select: { pollStatus: true, pollStartedAt: true },
-  });
-  if (row?.pollStatus !== "running" || row.pollStartedAt === null) return null;
-  const staleBefore = now.getTime() - POST_MATCH_POLL_STALE_AFTER_MS;
-  return row.pollStartedAt.getTime() < staleBefore ? null : row.pollStartedAt;
-}
-
-/**
  * A poll write presented by a holder the row no longer names.
  *
  * Thrown rather than returned because it is a durable-write conflict: the

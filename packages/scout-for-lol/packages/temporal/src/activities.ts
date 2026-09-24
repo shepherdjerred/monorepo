@@ -61,6 +61,8 @@ import type {
   ScoutNotificationRenderV2Result,
   ScoutNotificationTransitionV2Result,
   ScoutPostMatchDiscoveryOwnerV2Result,
+  ScoutPostMatchPollReleaseV2Input,
+  ScoutPostMatchPollReleaseV2Result,
   ScoutPostMatchScanV2Result,
   ScoutPrematchArchiveV2Result,
   ScoutPrematchScanV2Result,
@@ -146,6 +148,9 @@ export type ScoutTemporalV2Activities = {
   resolvePostMatchDiscoveryOwnerV2: (
     input: ScoutPostMatchDiscoveryV2Input,
   ) => Promise<ScoutPostMatchDiscoveryOwnerV2Result>;
+  releasePostMatchPollClaimV2: (
+    input: ScoutPostMatchPollReleaseV2Input,
+  ) => Promise<ScoutPostMatchPollReleaseV2Result>;
   discoverPostMatchIdsV2: (
     input: ScoutPostMatchDiscoveryV2Input,
   ) => Promise<ScoutPostMatchScanV2Result>;

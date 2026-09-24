@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { ApplicationFailure } from "@temporalio/common";
 import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import type {
@@ -16,22 +17,35 @@ import {
   MATCH_ID,
 } from "./match-v2.test-fixtures.ts";
 import { legacyPostMatchDiscoveryWorkflowId } from "./postmatch-ownership-v2.ts";
-import { useScoutV2WorkflowHarness } from "./workflow-harness.test-fixtures.ts";
+import {
+  settleWorkflow,
+  useScoutV2WorkflowHarness,
+} from "./workflow-harness.test-fixtures.ts";
 
 const harness = useScoutV2WorkflowHarness();
 
 const stage = "dev" as const;
+// The claim V2 discovery takes in its own scan.
 const POLL_OWNER = IsoInstantSchema.parse("2026-09-23T07:59:00.000Z");
+// The claim the v1 handoff takes before its child starts.
+const HANDOFF_CLAIM = IsoInstantSchema.parse("2026-09-23T08:00:00.000Z");
 const SOURCE_PUUID = LeaguePuuidSchema.parse("s".repeat(78));
 const LEGACY_MATCHES = ["NA1_100", "NA1_101"];
 
+const DELEGATE: ScoutPostMatchDiscoveryOwnerV2Result = {
+  decision: "delegate-v1",
+  pollOwner: HANDOFF_CLAIM,
+};
+
 /**
  * Both pipelines' discovery and ingestion Activities on one worker, each
- * logging the call, so a test can see which pipeline did the work.
+ * logging the call and the poll claim it was handed, so a test can see which
+ * pipeline did the work and under which claim.
  */
 function bothPipelines(
   owner: ScoutPostMatchDiscoveryOwnerV2Result,
   calls: string[],
+  options: { failLegacyIngest?: boolean } = {},
 ) {
   const store = createScoutV2MatchStore();
   return {
@@ -39,6 +53,10 @@ function bothPipelines(
     resolvePostMatchDiscoveryOwnerV2: () => {
       calls.push("resolvePostMatchDiscoveryOwnerV2");
       return owner;
+    },
+    releasePostMatchPollClaimV2: (input: { pollOwner: string }) => {
+      calls.push(`releasePostMatchPollClaimV2:${input.pollOwner}`);
+      return { outcome: "released" };
     },
     discoverPostMatchIdsV2: (): ScoutPostMatchScanV2Result => {
       calls.push("discoverPostMatchIdsV2");
@@ -56,8 +74,8 @@ function bothPipelines(
         pollOwner: POLL_OWNER,
       };
     },
-    discoverPostMatchIds: () => {
-      calls.push("discoverPostMatchIds");
+    discoverPostMatchIds: (input: { pollOwner?: string }) => {
+      calls.push(`discoverPostMatchIds:${input.pollOwner ?? "unclaimed"}`);
       return {
         evidenceComplete: true,
         matches: LEGACY_MATCHES.map((matchId) => ({
@@ -70,13 +88,15 @@ function bothPipelines(
     },
     ingestMatch: (input: { matchId: string }) => {
       calls.push(`ingestMatch:${input.matchId}`);
+      if (options.failLegacyIngest === true) {
+        throw ApplicationFailure.nonRetryable(
+          `injected ingest failure for ${input.matchId}`,
+          "InjectedCrash",
+        );
+      }
     },
     runPostMatchMaintenance: (input: { pollOwner?: string }) => {
-      calls.push(
-        input.pollOwner === undefined
-          ? "runPostMatchMaintenance:v1"
-          : "runPostMatchMaintenance:v2",
-      );
+      calls.push(`runPostMatchMaintenance:${input.pollOwner ?? "unclaimed"}`);
     },
   };
 }
@@ -105,8 +125,10 @@ describe("post-match discovery ownership", () => {
 
     expect(calls[0]).toBe("resolvePostMatchDiscoveryOwnerV2");
     expect(calls).toContain("discoverPostMatchIdsV2");
-    expect(calls).toContain("runPostMatchMaintenance:v2");
-    expect(calls).not.toContain("discoverPostMatchIds");
+    expect(calls).toContain(`runPostMatchMaintenance:${POLL_OWNER}`);
+    expect(calls.some((call) => call.startsWith("discoverPostMatchIds:"))).toBe(
+      false,
+    );
     expect(calls.filter((call) => call.startsWith("ingestMatch"))).toEqual([]);
     expect(result).toEqual(
       scoutPostMatchDiscoveryV2ResultCodec.serialize({
@@ -118,21 +140,23 @@ describe("post-match discovery ownership", () => {
     );
   }, 90_000);
 
-  test("hands the pass to v1 discovery when v1 owns it, and runs no V2 discovery", async () => {
+  test("runs v1 under the handoff's claim when v1 owns the pass", async () => {
     const calls: string[] = [];
-    await harness.startWorkers(
-      bothPipelines({ decision: "delegate-v1" }, calls),
-    );
+    await harness.startWorkers(bothPipelines(DELEGATE, calls));
 
     const result = await discover("ownership-v1");
 
     const legacyId = legacyPostMatchDiscoveryWorkflowId("ownership-v1");
+    // v1 discovers and closes under exactly the claim the handoff took, so
+    // its open cannot clobber that claim and its close cannot land on
+    // another run's poll. No V2 discovery runs, and nothing is released
+    // because v1's own maintenance closed the claim.
     expect(calls).toEqual([
       "resolvePostMatchDiscoveryOwnerV2",
-      "discoverPostMatchIds",
+      `discoverPostMatchIds:${HANDOFF_CLAIM}`,
       "ingestMatch:NA1_100",
       "ingestMatch:NA1_101",
-      "runPostMatchMaintenance:v1",
+      `runPostMatchMaintenance:${HANDOFF_CLAIM}`,
     ]);
     expect(result).toEqual(
       scoutPostMatchDiscoveryV2ResultCodec.serialize({
@@ -156,7 +180,19 @@ describe("post-match discovery ownership", () => {
     expect(legacy.status.name).toBe("COMPLETED");
   }, 90_000);
 
-  test("defers when v1 owns the pass but a poll still holds the row", async () => {
+  test("releases the handoff's claim when the v1 pass fails", async () => {
+    const calls: string[] = [];
+    await harness.startWorkers(
+      bothPipelines(DELEGATE, calls, { failLegacyIngest: true }),
+    );
+
+    const settled = await settleWorkflow(discover("ownership-v1-failed"));
+
+    expect(settled).toBeInstanceOf(Error);
+    expect(calls.at(-1)).toBe(`releasePostMatchPollClaimV2:${HANDOFF_CLAIM}`);
+  }, 90_000);
+
+  test("does nothing when v1 owns the pass but another run holds the claim", async () => {
     const calls: string[] = [];
     await harness.startWorkers(
       bothPipelines({ decision: "defer-v1", pollHeldSince: POLL_OWNER }, calls),
@@ -164,7 +200,7 @@ describe("post-match discovery ownership", () => {
 
     const result = await discover("ownership-deferred");
 
-    // Neither pipeline discovers, and nothing closes the poll another run
+    // Neither pipeline discovers, and nothing closes the claim another run
     // still holds.
     expect(calls).toEqual(["resolvePostMatchDiscoveryOwnerV2"]);
     expect(result).toEqual(

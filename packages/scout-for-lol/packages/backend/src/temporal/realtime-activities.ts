@@ -48,13 +48,31 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },
-    discoverPostMatchIds: async () =>
+    discoverPostMatchIds: async (input) =>
       await heartbeatWhile(
         { phase: "discovering-postmatch-intents" },
         async () => {
           const { discoverPostMatchIntents } =
             await import("#src/league/tasks/postmatch/match-history-polling.ts");
-          return await discoverPostMatchIntents();
+          if (input.pollOwner === undefined) {
+            return await discoverPostMatchIntents();
+          }
+          // A pass the V2 ownership gate delegated: the gate already holds
+          // the durable claim, so re-present it rather than opening the poll
+          // over it. The claim's identity stays the gate's, and maintenance
+          // closes exactly that claim.
+          const discovery = await discoverPostMatchIntents({
+            ownership: "durable",
+            startedAt: new Date(input.pollOwner),
+          });
+          return {
+            outcome: discovery.outcome,
+            matches: discovery.matches,
+            evidenceComplete: discovery.evidenceComplete,
+            ...(discovery.evidenceWatermark === undefined
+              ? {}
+              : { evidenceWatermark: discovery.evidenceWatermark }),
+          };
         },
       ),
     runPostMatchMaintenance: async (input) => {

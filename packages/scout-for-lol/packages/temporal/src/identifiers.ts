@@ -402,6 +402,7 @@ export function scoutNotificationAttemptNonce(
  */
 export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   resolvePostMatchDiscoveryOwnerV2: "realtime",
+  releasePostMatchPollClaimV2: "realtime",
   discoverPostMatchIdsV2: "realtime",
   discoverPrematchGamesV2: "realtime",
   readMatchPipelineStateV2: "realtime",

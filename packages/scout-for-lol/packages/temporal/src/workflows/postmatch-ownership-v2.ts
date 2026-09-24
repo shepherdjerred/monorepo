@@ -1,4 +1,5 @@
 import { executeChild, patched, workflowInfo } from "@temporalio/workflow";
+import type { IsoInstant } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   scoutPostMatchDiscoveryV2ResultCodec,
   type ScoutPostMatchDiscoveryV2Input,
@@ -33,22 +34,22 @@ export function legacyPostMatchDiscoveryWorkflowId(parentId: string): string {
  * discovery. Otherwise returns this run's finished result.
  *
  * The Schedule always starts the V2 Workflow Type, so the ownership switch
- * lives here rather than in the Schedule definition. The backend answers
- * from the `scout_v2_postmatch_ownership_enabled` flag (see
+ * lives here, in the Scout worker's own bundle, rather than in the Schedule
+ * definition. The backend answers from the
+ * `scout_v2_postmatch_ownership_enabled` flag (see
  * `resolvePostMatchDiscoveryOwnerV2`), which is on by default.
  *
- * Only one pipeline discovers at a time, for three reasons:
+ * Only one pipeline discovers at a time, because both take the same durable
+ * poll claim on `BotState` before discovering:
  *
- * - The Schedule's SKIP overlap policy keeps this run from starting while
- *   the previous scheduled run, V2 or delegated v1, is still open. A V2 run
- *   stays open until the dispatcher has acknowledged every match it handed
- *   over, and a delegated v1 run is awaited here.
- * - A run started by another trigger (an operator, say) passes through this
- *   same gate. When v1 owns discovery, the backend defers while any live
- *   poll still holds `BotState`, because v1's discovery overwrites the poll
- *   row rather than claiming it.
- * - In the other direction, V2's durable claim already refuses a poll that
- *   v1 opened, so V2 skips while a v1 pass is running.
+ * - V2 discovery claims the poll in its discovery Activity and holds the
+ *   claim until its maintenance closes it.
+ * - The v1 handoff claims the poll in the ownership Activity, before the v1
+ *   child starts. The child re-presents that claim instead of opening the
+ *   poll unconditionally, and its maintenance closes it.
+ *
+ * A run that finds the claim held does nothing: V2 discovery reports
+ * `skipped`, and the handoff reports `defer-v1`. Both return `no-op`.
  *
  * Match-processing children already started by V2 are left alone. They run
  * under `ABANDON` from the dispatcher, keep their per-match observation
@@ -65,7 +66,7 @@ export async function delegateWhenV1OwnsDiscovery(
   if (owner.decision === "run-v2") return null;
   if (owner.decision === "defer-v1") {
     setWorkflowPhase(
-      `**Phase:** v1 owns discovery; deferring while the poll opened at ${owner.pollHeldSince} still runs`,
+      `**Phase:** v1 owns discovery; deferring while another run holds the poll claimed at ${owner.pollHeldSince ?? "an unknown time"}`,
     );
     return scoutPostMatchDiscoveryV2ResultCodec.serialize({
       status: "no-op",
@@ -74,21 +75,47 @@ export async function delegateWhenV1OwnsDiscovery(
       complete: false,
     });
   }
+  return await runDelegatedV1Pass(input, owner.pollOwner);
+}
+
+/**
+ * Run v1 discovery as a child under the claim the handoff took.
+ *
+ * On success, v1's maintenance has closed the claim. If the child fails, the
+ * claim is closed here as failed, so the next pass need not wait out the
+ * staleness bound, and the failure then propagates.
+ */
+async function runDelegatedV1Pass(
+  input: ScoutPostMatchDiscoveryV2Input,
+  pollOwner: IsoInstant,
+): Promise<ScoutPostMatchDiscoveryV2ResultEnvelope> {
   setWorkflowPhase(
     "**Phase:** v1 owns discovery; running v1 post-match discovery",
   );
   const workflowId = legacyPostMatchDiscoveryWorkflowId(
     workflowInfo().workflowId,
   );
-  const legacy = await executeChild(scoutPostMatchDiscoveryWorkflow, {
-    workflowId,
-    workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
-    taskQueue: scoutTaskQueues(input.stage).workflow,
-    // v1's own match-ingestion children run under ABANDON, so ending this
-    // run early never cancels a match in flight; it only ends the pass.
-    parentClosePolicy: "TERMINATE",
-    args: [{ stage: input.stage }],
-  });
+  let legacy: Awaited<ReturnType<typeof scoutPostMatchDiscoveryWorkflow>>;
+  try {
+    legacy = await executeChild(scoutPostMatchDiscoveryWorkflow, {
+      workflowId,
+      workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
+      taskQueue: scoutTaskQueues(input.stage).workflow,
+      // v1's own match-ingestion children run under ABANDON, so ending this
+      // run early never cancels a match in flight; it only ends the pass.
+      parentClosePolicy: "TERMINATE",
+      args: [{ stage: input.stage, pollOwner }],
+    });
+  } catch (error) {
+    setWorkflowPhase(
+      "**Phase:** v1 post-match discovery failed; releasing its poll claim",
+    );
+    await realtimeV2Activities(input.stage).releasePostMatchPollClaimV2({
+      stage: input.stage,
+      pollOwner,
+    });
+    throw error;
+  }
   return scoutPostMatchDiscoveryV2ResultCodec.serialize({
     status: legacy.status,
     discovered: 0,

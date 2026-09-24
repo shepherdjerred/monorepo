@@ -9,7 +9,7 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma } = createTestDatabase("scout-postmatch-ownership");
 
-// The handoff reads the poll row through the process client, as the Activity
+// The handoff claims the poll through the process client, as the Activity
 // does in production.
 vi.mock("#src/database/index.ts", async () => {
   const actual = await vi.importActual<typeof DatabaseModule>(
@@ -23,16 +23,21 @@ const {
   markPostMatchPollCompleted,
   POST_MATCH_POLL_STALE_AFTER_MS,
 } = await import("#src/league/tasks/recovery/app-state.ts");
-const { resolvePostMatchDiscoveryOwnerV2 } =
+const { releasePostMatchPollClaimV2, resolvePostMatchDiscoveryOwnerV2 } =
   await import("#src/temporal/v2/postmatch-ownership.ts");
 
 const FLAG = "scout_v2_postmatch_ownership_enabled";
-const CLAIMED_AT = new Date("2026-09-23T10:00:00.000Z");
-const SHORTLY_AFTER = new Date(CLAIMED_AT.getTime() + 60_000);
+const BOT_STATE_ID = 1;
+const SCHEDULED = new Date("2026-09-23T10:00:00.000Z");
+const OPERATOR = new Date("2026-09-23T10:00:20.000Z");
 
 function turnV2OwnershipOff(): void {
   clearFlagOverrides(FLAG);
   addFlagOverride(FLAG, false, {});
+}
+
+async function pollRow() {
+  return await prisma.botState.findUnique({ where: { id: BOT_STATE_ID } });
 }
 
 beforeEach(async () => {
@@ -44,63 +49,141 @@ afterEach(() => {
 });
 
 describe("resolvePostMatchDiscoveryOwnerV2", () => {
-  test("keeps V2 as the owner by default, even while a poll is held", async () => {
-    await claimPostMatchPoll({ startedAt: CLAIMED_AT });
-
+  test("keeps V2 as the owner by default, and takes no claim for it", async () => {
     await expect(
-      resolvePostMatchDiscoveryOwnerV2({ now: SHORTLY_AFTER }),
+      resolvePostMatchDiscoveryOwnerV2({ claimAt: SCHEDULED }),
     ).resolves.toEqual({ decision: "run-v2" });
+    // V2 discovery takes its own claim; the gate must not take one for it.
+    expect(await pollRow()).toBeNull();
   });
 
-  test("hands the pass to v1 when V2 ownership is off and nothing holds the poll", async () => {
+  test("claims the poll for v1 before handing the pass over", async () => {
     turnV2OwnershipOff();
 
     await expect(
-      resolvePostMatchDiscoveryOwnerV2({ now: SHORTLY_AFTER }),
-    ).resolves.toEqual({ decision: "delegate-v1" });
+      resolvePostMatchDiscoveryOwnerV2({ claimAt: SCHEDULED }),
+    ).resolves.toEqual({
+      decision: "delegate-v1",
+      pollOwner: SCHEDULED.toISOString(),
+    });
+    const claimed = await pollRow();
+    expect(claimed?.pollStatus).toBe("running");
+    expect(claimed?.pollStartedAt).toEqual(SCHEDULED);
+
+    // The v1 child re-presents the same instant and re-acquires the claim,
+    // while a V2 discovery starting meanwhile is refused.
+    expect(await claimPostMatchPoll({ startedAt: SCHEDULED })).toEqual({
+      outcome: "claimed",
+      owner: { startedAt: SCHEDULED },
+    });
+    expect(await claimPostMatchPoll({ startedAt: OPERATOR })).toEqual({
+      outcome: "held",
+      since: SCHEDULED,
+    });
   });
 
-  test("hands the pass to v1 once the last poll has closed", async () => {
+  test("lets exactly one of two concurrent handoffs delegate", async () => {
+    // The overlap SKIP cannot stop: a scheduled run and an operator's run
+    // both reach the gate with the flag off and nothing holding the poll.
     turnV2OwnershipOff();
-    const claim = await claimPostMatchPoll({ startedAt: CLAIMED_AT });
+
+    const decisions = await Promise.all([
+      resolvePostMatchDiscoveryOwnerV2({ claimAt: SCHEDULED }),
+      resolvePostMatchDiscoveryOwnerV2({ claimAt: OPERATOR }),
+    ]);
+
+    const delegated = decisions.filter(
+      (decision) => decision.decision === "delegate-v1",
+    );
+    const deferred = decisions.filter(
+      (decision) => decision.decision === "defer-v1",
+    );
+    expect(delegated).toHaveLength(1);
+    expect(deferred).toHaveLength(1);
+    const winner = delegated[0];
+    if (winner?.decision !== "delegate-v1") throw new Error("no winner");
+    expect(deferred[0]).toEqual({
+      decision: "defer-v1",
+      pollHeldSince: winner.pollOwner,
+    });
+    const standing = await pollRow();
+    expect(standing?.pollStartedAt?.toISOString()).toBe(winner.pollOwner);
+  });
+
+  test("defers v1 while a V2 run still holds its poll claim", async () => {
+    turnV2OwnershipOff();
+    await claimPostMatchPoll({ startedAt: SCHEDULED });
+
+    await expect(
+      resolvePostMatchDiscoveryOwnerV2({ claimAt: OPERATOR }),
+    ).resolves.toEqual({
+      decision: "defer-v1",
+      pollHeldSince: SCHEDULED.toISOString(),
+    });
+    // The held claim is untouched.
+    const standing = await pollRow();
+    expect(standing?.pollStartedAt).toEqual(SCHEDULED);
+  });
+
+  test("delegates once the last poll has closed", async () => {
+    turnV2OwnershipOff();
+    const claim = await claimPostMatchPoll({ startedAt: SCHEDULED });
     if (claim.outcome !== "claimed") throw new Error("expected a claim");
     await markPostMatchPollCompleted({
-      completedAt: SHORTLY_AFTER,
+      completedAt: OPERATOR,
       evidenceComplete: true,
       owner: claim.owner,
     });
 
     await expect(
-      resolvePostMatchDiscoveryOwnerV2({ now: SHORTLY_AFTER }),
-    ).resolves.toEqual({ decision: "delegate-v1" });
-  });
-
-  test("defers v1 while a V2 run still holds its poll claim", async () => {
-    // The in-flight V2 run is still processing what it discovered. v1 opens
-    // its poll without claiming it, so starting v1 now would rediscover the
-    // same matches.
-    turnV2OwnershipOff();
-    await claimPostMatchPoll({ startedAt: CLAIMED_AT });
-
-    await expect(
-      resolvePostMatchDiscoveryOwnerV2({ now: SHORTLY_AFTER }),
+      resolvePostMatchDiscoveryOwnerV2({ claimAt: OPERATOR }),
     ).resolves.toEqual({
-      decision: "defer-v1",
-      pollHeldSince: CLAIMED_AT.toISOString(),
+      decision: "delegate-v1",
+      pollOwner: OPERATOR.toISOString(),
     });
   });
 
-  test("stops deferring once a standing claim passes the staleness bound", async () => {
-    // Only a terminated run leaves a claim standing this long. The bound frees
-    // it for V2's claim, and it frees it for the v1 handoff the same way.
+  test("takes over a claim left standing past the staleness bound", async () => {
     turnV2OwnershipOff();
-    await claimPostMatchPoll({ startedAt: CLAIMED_AT });
+    await claimPostMatchPoll({ startedAt: SCHEDULED });
     const afterStale = new Date(
-      CLAIMED_AT.getTime() + POST_MATCH_POLL_STALE_AFTER_MS + 1,
+      SCHEDULED.getTime() + POST_MATCH_POLL_STALE_AFTER_MS + 1,
     );
 
     await expect(
-      resolvePostMatchDiscoveryOwnerV2({ now: afterStale }),
-    ).resolves.toEqual({ decision: "delegate-v1" });
+      resolvePostMatchDiscoveryOwnerV2({ claimAt: afterStale }),
+    ).resolves.toEqual({
+      decision: "delegate-v1",
+      pollOwner: afterStale.toISOString(),
+    });
+  });
+});
+
+describe("releasePostMatchPollClaimV2", () => {
+  test("closes the delegated claim as failed", async () => {
+    await claimPostMatchPoll({ startedAt: SCHEDULED });
+
+    await expect(
+      releasePostMatchPollClaimV2({
+        pollOwner: SCHEDULED,
+        releasedAt: OPERATOR,
+      }),
+    ).resolves.toEqual({ outcome: "released" });
+    const released = await pollRow();
+    expect(released?.pollStatus).toBe("failed");
+  });
+
+  test("closes nothing when the claim is already closed or someone else's", async () => {
+    await claimPostMatchPoll({ startedAt: OPERATOR });
+
+    await expect(
+      releasePostMatchPollClaimV2({
+        pollOwner: SCHEDULED,
+        releasedAt: OPERATOR,
+      }),
+    ).resolves.toEqual({ outcome: "not-held" });
+    const standing = await pollRow();
+    expect(standing?.pollStatus).toBe("running");
+    expect(standing?.pollStartedAt).toEqual(OPERATOR);
   });
 });
