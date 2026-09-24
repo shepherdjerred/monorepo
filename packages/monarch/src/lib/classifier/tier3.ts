@@ -2,7 +2,7 @@ import { stepCountIs, ToolLoopAgent } from "ai";
 import {
   generateValidatedObject,
   StructuredOutputUsageError,
-  openRouterWebSearchTool,
+  webSearchTool,
   type GenerateValidatedObjectResult,
 } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
@@ -155,7 +155,7 @@ async function runToolLoop(
   const tools = isWebSearchEnabled()
     ? {
         ...localTools,
-        web_search: openRouterWebSearchTool(openRouter, 3),
+        web_search: webSearchTool(openRouter, modelId, 3),
       }
     : localTools;
   const agent = new ToolLoopAgent({

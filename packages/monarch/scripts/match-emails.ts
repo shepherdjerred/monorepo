@@ -63,7 +63,7 @@ const apiKey = Bun.env["OPENROUTER_API_KEY"];
 if (apiKey === undefined || apiKey === "") {
   throw new Error("OPENROUTER_API_KEY environment variable is required");
 }
-initLlm(apiKey, values.model);
+initLlm(values.model);
 
 const CHECKPOINT_PATH = await resolveCachePath(
   EMAIL_MATCH_CHECKPOINT_PATH,

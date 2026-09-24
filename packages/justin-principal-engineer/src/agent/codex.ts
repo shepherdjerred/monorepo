@@ -1,5 +1,5 @@
 import { Codex } from "@openai/codex-sdk";
-import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
+import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
 import { AgentOutputSchema, type AgentOutput } from "#src/domain/schemas.ts";
@@ -10,7 +10,7 @@ export async function runCodexTurn(input: {
   model: string;
   apiKey: string;
 }): Promise<AgentOutput> {
-  const openRouter = createOpenRouterCodexConfig({
+  const openRouter = createCodexConfig({
     apiKey: input.apiKey,
     modelId: input.model,
     env: agentEnvironment({}),

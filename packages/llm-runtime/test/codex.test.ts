@@ -3,25 +3,26 @@ import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 
 describe("Codex SDK configuration", () => {
   test("uses the catalog's native model id and OpenAI's own endpoint", () => {
-    // Under the gateway this had to rewrite the model to `openai/gpt-5.6-luna`
-    // and override the base URL. Against OpenAI the catalog id IS the API name.
+    // Under the gateway this rewrote the model to `openai/gpt-5.6-luna` and
+    // overrode the base URL. Against OpenAI the catalog id IS the API name, and
+    // no base URL is set at all.
     const config = createCodexConfig({
       apiKey: "sk-test",
       modelId: "gpt-5.6-luna",
     });
-    expect(config.model).toBe("gpt-5.6-luna");
-    expect(config.apiKey).toBe("sk-test");
-    expect(config.env["OPENAI_API_KEY"]).toBe("sk-test");
+    expect(config.catalogModelId).toBe("gpt-5.6-luna");
+    expect(config.routeModelId).toBe("gpt-5.6-luna");
+    expect(config.codexOptions.apiKey).toBe("sk-test");
+    expect(config.codexOptions).not.toHaveProperty("baseUrl");
   });
 
-  test("merges caller env without letting it override the credential", () => {
+  test("passes caller env through untouched", () => {
     const config = createCodexConfig({
       apiKey: "sk-test",
       modelId: "gpt-5.6-sol",
-      env: { OPENAI_API_KEY: "sk-stale", CODEX_HOME: "/tmp/codex" },
+      env: { CODEX_HOME: "/tmp/codex" },
     });
-    expect(config.env["OPENAI_API_KEY"]).toBe("sk-test");
-    expect(config.env["CODEX_HOME"]).toBe("/tmp/codex");
+    expect(config.codexOptions.env).toEqual({ CODEX_HOME: "/tmp/codex" });
   });
 
   test("refuses a model Codex cannot serve", () => {
@@ -37,5 +38,11 @@ describe("Codex SDK configuration", () => {
         modelId: "text-embedding-3-small",
       }),
     ).toThrow("not language");
+  });
+
+  test("refuses an empty key", () => {
+    expect(() =>
+      createCodexConfig({ apiKey: "   ", modelId: "gpt-5.6-luna" }),
+    ).toThrow("must not be empty");
   });
 });

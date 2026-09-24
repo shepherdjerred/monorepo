@@ -6,7 +6,7 @@ import {
 } from "@openai/codex-sdk";
 import { createCodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { attachCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
-import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
+import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 import { register } from "#observability/metrics.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import type {
@@ -104,7 +104,7 @@ async function prepareCodex(
       resumeSessionId: input.resumeSessionId,
     });
     try {
-      const openRouter = createOpenRouterCodexConfig({
+      const openRouter = createCodexConfig({
         apiKey: input.auth.apiKey,
         modelId: input.model,
         env: {

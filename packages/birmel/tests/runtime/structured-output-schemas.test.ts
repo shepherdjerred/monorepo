@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
 import { TurnAnswerSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
@@ -70,8 +70,8 @@ function recordingRuntime(
   responses: string[],
   recordRequestBody: (body: string) => void,
 ) {
-  return createOpenRouterRuntime({
-    apiKey: "test-key",
+  return createLlmRuntime({
+    credentials: { openai: { apiKey: "test-key" } },
     service: "birmel-schema-test",
     appName: "birmel-schema-test",
     fetch: Object.assign(

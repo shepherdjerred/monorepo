@@ -25,6 +25,7 @@ import {
   createFleetTelemetryRuntime,
   type FleetTelemetryRuntime,
 } from "#bundle/telemetry-runtime.ts";
+import { configuredSecretValues } from "./credential-redaction.ts";
 import { resolveFleetModel } from "#domain/model-resolution.ts";
 import {
   prepareManagedCheckout,
@@ -103,10 +104,6 @@ function requireTools(): void {
 function bootstrapWorkerLimit(value: string): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 1 && parsed <= 5 ? parsed : 1;
-}
-
-function configuredSecretValues(value: string | undefined): readonly string[] {
-  return value === undefined || value.length === 0 ? [] : [value];
 }
 
 function parseCliArgs(args: string[]) {
@@ -337,7 +334,6 @@ async function main(): Promise<void> {
   };
   try {
     const { parsed, modelName } = parseInvocation(args);
-    const configuredSecret = Bun.env["OPENROUTER_API_KEY"];
     if (await finishIfRequested()) {
       return;
     }
@@ -389,8 +385,8 @@ async function main(): Promise<void> {
       maxWorkers: config.maxWorkers,
       author: config.author ?? null,
     });
-    recorder.configureSecretValues(configuredSecretValues(configuredSecret));
-    const model = resolveFleetModel(config.model, configuredSecret);
+    recorder.configureSecretValues(configuredSecretValues(Bun.env));
+    const model = resolveFleetModel(config.model);
     // Default to the provider the repository's CI gate enforces, not the
     // provider-neutral default. The fleet decides readiness from the same
     // findings that gate the PR, and a provider whose findings live somewhere

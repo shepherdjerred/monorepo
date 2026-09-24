@@ -29,6 +29,7 @@ import {
   type StructuredOutputAttempt as InnerStructuredOutputAttempt,
   type TokenBreakdown as InnerTokenBreakdown,
 } from "./types.ts";
+import { providerCredentialsFromEnv as innerProviderCredentialsFromEnv } from "./credentials.ts";
 import { generateValidatedObject as innerGenerateValidatedObject } from "./validated-object.ts";
 import { webSearchTool as innerWebSearchTool } from "./web-search.ts";
 import {
@@ -138,6 +139,12 @@ export function webSearchTool(
   ...args: Parameters<typeof innerWebSearchTool>
 ): ReturnType<typeof innerWebSearchTool> {
   return innerWebSearchTool(...args);
+}
+
+export function providerCredentialsFromEnv(
+  ...args: Parameters<typeof innerProviderCredentialsFromEnv>
+): ReturnType<typeof innerProviderCredentialsFromEnv> {
+  return innerProviderCredentialsFromEnv(...args);
 }
 
 export function createLlmRuntime(

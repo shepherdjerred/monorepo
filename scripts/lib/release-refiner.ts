@@ -1,5 +1,5 @@
 import { Codex } from "@openai/codex-sdk";
-import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
+import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
 import { runAllowExit, type RunOptions, type RunResult } from "./run.ts";
@@ -217,7 +217,7 @@ export function refinerSdkEnv(
 async function runCodexSdk(
   input: RunReleaseRefinerInput,
 ): Promise<ReleaseAgentOutcome> {
-  const openRouter = createOpenRouterCodexConfig({
+  const openRouter = createCodexConfig({
     apiKey: input.openRouterApiKey,
     modelId: CODEX_MODEL,
     env: refinerSdkEnv(input, {}),

@@ -39,7 +39,7 @@ import {
   getLaneContext,
 } from "./prompts.ts";
 import { convertStagesToDataPackageFormat } from "./stages-converter.ts";
-import { createReviewWorkbenchClients } from "./openrouter-clients.ts";
+import { createReviewWorkbenchClients } from "./provider-clients.ts";
 
 export type GenerationStep =
   | "timeline-summary"
@@ -266,10 +266,6 @@ export async function generateMatchReview(
   const startTime = Date.now();
 
   try {
-    if (config.api.openRouterApiKey === undefined) {
-      throw new Error("OpenRouter API key is required");
-    }
-
     // Get personality from config
     const personality = resolvePersonality(config);
     if (!personality.styleCard || personality.styleCard.trim().length === 0) {
@@ -288,7 +284,14 @@ export async function generateMatchReview(
           : undefined;
     const laneContext = config.prompts.laneContext ?? getLaneContext(lane);
 
-    const clients = createReviewWorkbenchClients(config.api.openRouterApiKey);
+    // Which key is actually needed depends on the models the stages resolve
+    // to, so the clients raise a provider-specific error at call time rather
+    // than demanding all three up front.
+    const clients = createReviewWorkbenchClients({
+      openai: config.api.openaiApiKey,
+      anthropic: config.api.anthropicApiKey,
+      google: config.api.googleApiKey,
+    });
 
     // Get stage configs
     const stages = getStagesConfig(config);

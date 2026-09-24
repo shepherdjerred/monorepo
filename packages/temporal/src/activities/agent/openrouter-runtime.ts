@@ -1,25 +1,24 @@
 import { generateText } from "ai";
-import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
+import {
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+} from "@shepherdjerred/llm-runtime";
 import {
   serializeBodyAttribute,
   withLlmSpan,
 } from "@shepherdjerred/llm-observability/span-helpers";
 import { register } from "#observability/metrics.ts";
 
-let runtime: ReturnType<typeof createOpenRouterRuntime> | undefined;
+let runtime: ReturnType<typeof createLlmRuntime> | undefined;
 
-export function temporalOpenRouterRuntime(): ReturnType<
-  typeof createOpenRouterRuntime
-> {
+export function temporalLlmRuntime(): ReturnType<typeof createLlmRuntime> {
   if (runtime !== undefined) return runtime;
 
-  const apiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (apiKey === undefined || apiKey === "") {
-    throw new Error("OPENROUTER_API_KEY is required for Temporal LLM calls");
-  }
-
-  runtime = createOpenRouterRuntime({
-    apiKey,
+  // No up-front credential check: which provider a call needs depends on the
+  // model it asks for, and the runtime refuses loudly at that point. Demanding
+  // every provider here would stop a Temporal worker that only ever calls one.
+  runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "temporal",
     appName: "shepherdjerred-temporal",
     metricsRegister: register,
@@ -47,7 +46,7 @@ export async function generateBoundedSynthesis(input: {
   maxWords: number;
 }): Promise<string | undefined> {
   try {
-    const openRouter = temporalOpenRouterRuntime();
+    const openRouter = temporalLlmRuntime();
     return await withLlmSpan(
       { service: "temporal", callSite: input.callSite, system: "openrouter" },
       {

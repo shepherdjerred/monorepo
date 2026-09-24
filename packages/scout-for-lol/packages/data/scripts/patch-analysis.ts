@@ -10,7 +10,8 @@
 // refreshed changeset).
 
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
+  providerCredentialsFromEnv,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
 import type { RiotPatch } from "./riot-patch.ts";
@@ -116,8 +117,8 @@ export async function analyzePatch(
   officialPatchContent: string,
   date: Date = new Date(),
 ): Promise<PatchChangeset> {
-  const runtime = createOpenRouterRuntime({
-    apiKey: Bun.env["OPENROUTER_API_KEY"] ?? "",
+  const runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-data",
     appName: "scout-patch-analysis/1.0",
   });
