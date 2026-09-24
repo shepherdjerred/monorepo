@@ -137,7 +137,9 @@ https://api.meta.ai/muse-code/key`), keeping only the returned `subs_usage`
 rolling and weekly windows. The CLI remains the credential owner: Brim never
 rotates, refreshes, logs, or persists the Meta token, and an expired token
 surfaces as a sign-in state. An API-key login carries no subscription, and
-over-quota percentages above 100 are shown as fully used with a note. Those
+over-quota percentages above 100 are shown as fully used with a note. The
+keychain token is cached in memory and re-read only when the auth file changes
+or the cached token is rejected; a failed read backs off for an hour. Those
 boundaries are implemented by the
 [Muse adapter](https://github.com/shepherdjerred/monorepo/blob/029db3520e63631d4c17457072a2fffe1e524b3a/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/MuseProvider.swift).
 
