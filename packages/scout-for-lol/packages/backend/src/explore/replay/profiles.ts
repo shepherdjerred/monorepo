@@ -82,10 +82,11 @@ export type ExploreReplayFlagOverride = {
  * `customs` maps to nothing: its chips are ordinary lake analytics that
  * ScoutQL answers with no extra tool.
  *
- * `hall_of_fame` maps to `hallOfFame`. It used to map to nothing, on the view
- * that Hall questions were lake analytics — but the Hall is a board with its
- * own records, families and eligibility, which Explore now reads with a tool
- * that exists only where the server switched the Hall on.
+ * `hall_of_fame` maps to nothing. Where the Hall is on, Explore reads the
+ * board with its tool; where it is off, a record question still has an
+ * answer — the best single game in match data under the Hall's own rules —
+ * and the honest reply gives it, saying it is not the official board. Grading
+ * those chips as "must decline" marked seven helpful prod answers as wrong.
  *
  * Competitions are split. Reading them is a core feature with no flag, done by
  * permission-checked tools every turn has, so `competitions` maps to nothing.
@@ -105,7 +106,7 @@ const CONDITION_CAPABILITY: Readonly<
 > = {
   always: null,
   customs: null,
-  hall_of_fame: "hallOfFame",
+  hall_of_fame: null,
   bucks: "bucks",
   dares: "dares",
   challenges: "challenges",

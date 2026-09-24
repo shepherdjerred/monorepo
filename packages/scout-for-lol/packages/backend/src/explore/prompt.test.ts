@@ -315,6 +315,8 @@ describe("reading features rather than re-deriving them", () => {
     expect(on).not.toContain("The Hall of Fame is not switched on");
     const off = exploreAgentInstructions({ bucks: null, hallOfFame: false });
     expect(off).toContain("The Hall of Fame is not switched on");
+    // Off is not a refusal: a record question is answered from match data.
+    expect(off).toContain("Answer a record question anyway");
     expect(off).not.toContain("get_hall_of_fame");
   });
 

@@ -78,7 +78,7 @@ function hallOfFameSection(canReadBoard: boolean): readonly string[] {
           "Use get_hall_of_fame for every Hall of Fame question: it reads the server's actual board — its enabled families and records, each holder, and the game that set it. Never recompute a record from match data when the board can be read. A record still building or failed is not available yet; say so rather than that nobody holds it.",
         ]
       : [
-          "The Hall of Fame is not switched on for the servers in scope, so there is no board to read. Say that a server admin can turn it on. If the user wants it anyway, you may find the best single game for a metric from match data under the rules above — and say that is not the Hall.",
+          "The Hall of Fame is not switched on for the servers in scope, so there is no board to read. Answer a record question anyway: find the best single game for that metric from match data under the rules above, say in one sentence that this is not the official Hall of Fame board and a server admin can turn it on, and give the result. Decline only what needs the board itself, such as when a record was set or broken.",
         ]),
   ];
 }

@@ -76,7 +76,6 @@ describe("conditionCapability", () => {
     expect(conditionCapability("bucks")).toBe("bucks");
     expect(conditionCapability("dares")).toBe("dares");
     expect(conditionCapability("challenges")).toBe("challenges");
-    expect(conditionCapability("hall_of_fame")).toBe("hallOfFame");
     // Preparing a competition needs the creation tool; reading one does not.
     expect(conditionCapability("competition_creation")).toBe("creation");
   });
@@ -89,6 +88,9 @@ describe("conditionCapability", () => {
     // Reading competitions is a core feature, answered by permission-checked
     // tools every turn has; it used to be graded against creation.
     expect(conditionCapability("competitions")).toBeNull();
+    // Off, a record question is still answered from match data, labelled as
+    // not the official board.
+    expect(conditionCapability("hall_of_fame")).toBeNull();
   });
 });
 
@@ -98,6 +100,7 @@ describe("chipExpectation", () => {
       expect(chipExpectation(capabilities, "always")).toBe("answerable");
       expect(chipExpectation(capabilities, "customs")).toBe("answerable");
       expect(chipExpectation(capabilities, "competitions")).toBe("answerable");
+      expect(chipExpectation(capabilities, "hall_of_fame")).toBe("answerable");
     }
   });
 
@@ -109,8 +112,6 @@ describe("chipExpectation", () => {
     expect(chipExpectation(EVERYTHING, "competition_creation")).toBe(
       "answerable",
     );
-    expect(chipExpectation(NOTHING, "hall_of_fame")).toBe("gated-off");
-    expect(chipExpectation(EVERYTHING, "hall_of_fame")).toBe("answerable");
     expect(chipExpectation(NOTHING, "mvp_votes")).toBe("gated-off");
     expect(chipExpectation(EVERYTHING, "mvp_votes")).toBe("answerable");
   });
