@@ -1,24 +1,20 @@
-import { mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
-import type { TimelineParticipantFrameLakeRow } from "@scout-for-lol/data";
-import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/reports/report.ts";
-import type {
-  ScoutQlOutput,
-  ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
-import type {
-  ScoutQlPredicate,
-  ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { PlanQueryInput } from "#src/reports/duckdb/compile-plan.ts";
-import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
-import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
-import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
-import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
+import { writeTempTestLake } from "#src/testing/test-report-lake.ts";
+import { testFrameRow } from "#src/testing/test-timeline-rows.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
-import { number_, runPlan } from "#src/testing/run-compiled-plan.ts";
+import {
+  and,
+  avgOf,
+  col,
+  eq,
+  number_,
+  runPlan,
+  sourceInput,
+} from "#src/testing/run-compiled-plan.ts";
 
 /**
  * Timeline frames, compiled and run against a real seeded DuckDB lake.
@@ -36,53 +32,7 @@ const GAME = new Date(Date.UTC(2026, 4, 4, 12));
 
 let files: LakeFiles;
 
-function frame(input: {
-  puuid: string;
-  participantId: number;
-  minute: number;
-  totalGold: number;
-  minions: number;
-  jungle: number;
-}): TimelineParticipantFrameLakeRow {
-  const { puuid, participantId, minute, totalGold, minions, jungle } = input;
-  return {
-    match_id: "NA1_500",
-    month: lakeMonth(GAME.getTime()),
-    observed_at: lakeTimestamp(GAME.getTime()),
-    frame_index: minute,
-    // Real frames land a few milliseconds past the minute.
-    frame_timestamp_ms: minute * 60_000 + 23,
-    participant_id: participantId,
-    puuid,
-    position_x: 0,
-    position_y: 0,
-    current_gold: 0,
-    total_gold: totalGold,
-    gold_per_second: 0,
-    minions_killed: minions,
-    jungle_minions_killed: jungle,
-    level: 1,
-    xp: 0,
-    time_enemy_spent_controlled: 0,
-    ability_haste: null,
-    ability_power: null,
-    armor: null,
-    attack_damage: null,
-    attack_speed: null,
-    health: null,
-    health_max: null,
-    magic_resist: null,
-    movement_speed: null,
-    power: null,
-    power_max: null,
-    total_damage_done: null,
-    total_damage_done_to_champions: null,
-    total_damage_taken: null,
-  };
-}
-
 beforeAll(async () => {
-  const lakeDir = await mkdtemp(path.join(tmpdir(), "scoutql-frames-e2e-"));
   const base = {
     matchId: "NA1_500",
     queue: "solo",
@@ -92,7 +42,7 @@ beforeAll(async () => {
     assists: 0,
     gameCreationAt: GAME,
   };
-  await writeTestLake(lakeDir, {
+  files = await writeTempTestLake("scoutql-frames-e2e-", {
     serverId: SERVER_ID,
     matchFacts: [
       {
@@ -132,7 +82,9 @@ beforeAll(async () => {
       },
     ],
     timelineFrames: [
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: MIRA,
         participantId: 3,
         minute: 0,
@@ -140,7 +92,9 @@ beforeAll(async () => {
         minions: 0,
         jungle: 0,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: MIRA,
         participantId: 3,
         minute: 10,
@@ -148,7 +102,9 @@ beforeAll(async () => {
         minions: 80,
         jungle: 4,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: MIRA,
         participantId: 3,
         minute: 15,
@@ -156,7 +112,9 @@ beforeAll(async () => {
         minions: 120,
         jungle: 4,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: JAX,
         participantId: 2,
         minute: 0,
@@ -164,7 +122,9 @@ beforeAll(async () => {
         minions: 0,
         jungle: 0,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: JAX,
         participantId: 2,
         minute: 10,
@@ -172,7 +132,9 @@ beforeAll(async () => {
         minions: 6,
         jungle: 50,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: JAX,
         participantId: 2,
         minute: 15,
@@ -180,7 +142,9 @@ beforeAll(async () => {
         minions: 8,
         jungle: 70,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: OTTO,
         participantId: 8,
         minute: 0,
@@ -188,7 +152,9 @@ beforeAll(async () => {
         minions: 0,
         jungle: 0,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: OTTO,
         participantId: 8,
         minute: 10,
@@ -196,7 +162,9 @@ beforeAll(async () => {
         minions: 70,
         jungle: 0,
       }),
-      frame({
+      testFrameRow({
+        matchId: "NA1_500",
+        gameCreationAt: GAME,
         puuid: OTTO,
         participantId: 8,
         minute: 15,
@@ -206,54 +174,21 @@ beforeAll(async () => {
       }),
     ],
   });
-  files = await resolveLakeFiles(lakeDir);
 });
-
-function col(column: string): ScoutQlScalarExpr {
-  return { kind: "column", column };
-}
-
-function eq(column: string, value: number | string): ScoutQlPredicate {
-  return {
-    kind: "compare",
-    op: "=",
-    left: col(column),
-    right: { kind: "literal", value },
-  };
-}
-
-function avg(column: string): ScoutQlOutput {
-  return {
-    name: column,
-    expr: { kind: "aggregate", func: "avg", arg: col(column), distinct: false },
-    displayKind: "decimal",
-    additive: false,
-    evidence: { kind: "sample" },
-  };
-}
 
 function framesInput(
   plan: Partial<ScoutQlPlan>,
   overrides: Partial<PlanQueryInput> = {},
 ): PlanQueryInput {
-  return {
-    plan: {
+  return sourceInput(
+    files,
+    {
       source: "timeline_frames",
-      outputs: [avg("creep_score")],
-      timeWindow: { kind: "unbounded" },
-      groupings: [],
-      orderBy: [],
-      limit: 25,
-      playerRefs: [],
-      render: DEFAULT_RENDER_SPEC,
+      outputs: [avgOf(col("creep_score"))],
       ...plan,
     },
-    scope: GLOBAL_SCOPE,
-    files,
-    range: { start: new Date(0), end: new Date(Date.UTC(2027, 0, 1)) },
-    limit: 25,
-    ...overrides,
-  };
+    overrides,
+  );
 }
 
 /** First output by row label; a NULL result is left out, not read as a number. */
@@ -283,7 +218,7 @@ describe("timeline_frames end-to-end", () => {
   test("lane gold difference pairs a laner with the same position on the other team", async () => {
     const { rows } = await runPlan(
       framesInput({
-        outputs: [avg("lane_gold_diff")],
+        outputs: [avgOf(col("lane_gold_diff"))],
         where: eq("minute", 15),
         groupings: [{ kind: "column", column: "champion", name: "champion" }],
       }),
@@ -300,11 +235,8 @@ describe("timeline_frames end-to-end", () => {
     // 3800 + 3500 against red's 3300 at ten minutes.
     const { rows } = await runPlan(
       framesInput({
-        outputs: [avg("team_gold_diff")],
-        where: {
-          kind: "and",
-          operands: [eq("minute", 10), eq("puuid", MIRA)],
-        },
+        outputs: [avgOf(col("team_gold_diff"))],
+        where: and(eq("minute", 10), eq("puuid", MIRA)),
       }),
     );
     expect(number_(rows[0]?.["expr_0"])).toBe(3800 + 3500 - 3300);

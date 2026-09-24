@@ -119,8 +119,9 @@ function championGrouping(input: GroupingInput): CompiledGrouping {
           columnNames: ["champion_id"],
         };
       })
-      // Champion id and name are looked up from the frame's participant row.
-      .with("timeline-frame", (): CompiledGrouping => {
+      // Champion id and name are looked up from the frame's or event's
+      // participant row.
+      .with("timeline-frame", "timeline-event", (): CompiledGrouping => {
         requireColumns(input.columns, ["champion_id", "champion"]);
         return {
           key: frag("champion_id"),

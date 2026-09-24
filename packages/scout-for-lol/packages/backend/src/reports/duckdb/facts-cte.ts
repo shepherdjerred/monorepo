@@ -10,6 +10,32 @@ import {
 import { frag, joinFragments, seq } from "#src/reports/duckdb/sql-fragment.ts";
 
 /**
+ * Facts for a row with no player — a team or a ban — read with the match
+ * dimension and, for bans, champion names.
+ */
+function teamRowFacts(input: FactsCteInput, items: SqlFragment): SqlFragment {
+  const banSource = input.columnSource === "match-team-ban";
+  const dimension = input.matchDimension;
+  if (dimension === undefined) {
+    throw new Error("match_teams compile requires a match dimension.");
+  }
+  return seq(
+    "WITH ",
+    matchDimensionCte(dimension),
+    banSource ? seq(", ", championNamesCte()) : frag(""),
+    ", facts AS (SELECT ",
+    items,
+    " FROM (",
+    input.source,
+    ") m JOIN match_dim d ON d.match_id = m.match_id",
+    banSource
+      ? frag(" LEFT JOIN champion_names cn ON cn.champion_id = m.champion_id")
+      : frag(""),
+    ")",
+  );
+}
+
+/**
  * The facts CTE: every source's rows, with identity attached and any looked-up
  * facts joined, projected under bare column names for the aggregate tail.
  *
@@ -39,6 +65,18 @@ export type FactsCteInput = {
    * only, where the time window and every participant-level column live.
    */
   participantDimension?: SqlFragment | undefined;
+  /**
+   * Event lookups, each present only when named: the first-of-kind window
+   * (no source — it runs over the event scan itself), the killing team's
+   * result from match_teams, and assist counts from event participants.
+   */
+  eventLookups?:
+    | {
+        readonly firstOfKind: boolean;
+        readonly killerTeam: SqlFragment | undefined;
+        readonly assists: SqlFragment | undefined;
+      }
+    | undefined;
   /** An unfiltered frame scan, and which gold differences to compute from it. */
   frameGold?:
     | {
@@ -70,8 +108,9 @@ function identityProjection(
         "concat_ws('#', m.riot_id_game_name, m.riot_id_tagline) AS player_alias",
     )
     .with("prematch", () => "m.riot_id AS player_alias")
-    // A frame carries only a puuid; the Riot ID comes from the participant row.
-    .with("timeline-frame", () => "p.riot_id AS player_alias")
+    // A frame carries only a puuid and an event only a slot; either way the
+    // Riot ID comes from the participant row.
+    .with("timeline-frame", "timeline-event", () => "p.riot_id AS player_alias")
     // A team is not a player and has no name to label itself with. The column
     // keeps its place so the facts shape stays uniform; the grouping arms
     // reject `player` on this source, so nothing ever reads it.
@@ -90,7 +129,7 @@ function identityProjection(
  */
 function matchDimensionCte(dimension: SqlFragment): SqlFragment {
   return seq(
-    "WITH match_dim AS (SELECT match_id, any_value(game_creation_at) AS game_creation_at, any_value(queue) AS queue, any_value(",
+    "match_dim AS (SELECT match_id, any_value(game_creation_at) AS game_creation_at, any_value(queue) AS queue, any_value(",
     frag(String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`),
     ") AS patch, any_value(map_id) AS map_id FROM (",
     dimension,
@@ -184,7 +223,93 @@ type Lookups = {
 };
 
 /** The keyed lookups a row-level source (participants, frames) joins into facts. */
+/**
+ * One row per (match, slot): the participant an event's actor slot names.
+ * Grouped by slot, where frames group by puuid, because events carry a slot.
+ */
+function actorDimensionCte(dimension: SqlFragment): SqlFragment {
+  return seq(
+    "actor_dim AS (SELECT match_id, participant_id, any_value(puuid) AS puuid, any_value(champion_id) AS champion_id, any_value(champion_name) AS champion_name, any_value(team_position) AS team_position, any_value(concat_ws('#', riot_id_game_name, riot_id_tagline)) AS riot_id FROM (",
+    dimension,
+    ") GROUP BY match_id, participant_id)",
+  );
+}
+
+/** Whoever acted: the killer, else the participant, else the ward's creator. Slot 0 is not a player. */
+const EVENT_ACTOR =
+  "coalesce(nullif(m.killer_id, 0), nullif(m.participant_id, 0), nullif(m.creator_id, 0))";
+
+/** One row per (match, team): whether that team won. */
+function teamWinCte(teams: SqlFragment): SqlFragment {
+  return seq(
+    "team_win AS (SELECT match_id, team_id, any_value(win) AS win FROM (",
+    teams,
+    ") GROUP BY match_id, team_id)",
+  );
+}
+
+/** One row per event: how many players were credited with an assist. */
+function assistCountsCte(participants: SqlFragment): SqlFragment {
+  return seq(
+    "assist_counts AS (SELECT event_id, count(*) FILTER (WHERE role = 'assist') AS assists FROM (",
+    participants,
+    ") GROUP BY event_id)",
+  );
+}
+
+/**
+ * The event scan with its first-of-kind flag, computed before any join or
+ * filter so "first" means first in the match — not first among what a query
+ * or a server scope happened to keep.
+ */
+function withFirstOfKind(events: SqlFragment): SqlFragment {
+  return seq(
+    "SELECT *, (row_number() OVER (PARTITION BY match_id, event_type, coalesce(monster_type, ''), coalesce(building_type, '') ORDER BY event_timestamp_ms, event_index) = 1) AS is_first_of_kind FROM (",
+    events,
+    ")",
+  );
+}
+
+function eventLookups(input: FactsCteInput): Lookups {
+  const matches = input.matchDimension;
+  const participants = input.participantDimension;
+  if (matches === undefined || participants === undefined) {
+    throw new Error(
+      "timeline_events compile requires match and participant dimensions.",
+    );
+  }
+  const ctes = [matchDimensionCte(matches), actorDimensionCte(participants)];
+  const joins = [
+    " JOIN match_dim d ON d.match_id = m.match_id",
+    ` LEFT JOIN actor_dim p ON p.match_id = m.match_id AND p.participant_id = ${EVENT_ACTOR}`,
+  ];
+  const items = [
+    MATCH_DIMENSION_ITEMS,
+    "p.champion_id AS champion_id, p.champion_name AS champion_name, p.team_position AS team_position",
+  ];
+  const lookups = input.eventLookups;
+  if (lookups?.firstOfKind === true) {
+    items.push("m.is_first_of_kind AS is_first_of_kind");
+  }
+  if (lookups?.killerTeam !== undefined) {
+    ctes.push(teamWinCte(lookups.killerTeam));
+    joins.push(
+      " LEFT JOIN team_win kt ON kt.match_id = m.match_id AND kt.team_id = m.killer_team_id",
+    );
+    items.push("kt.win AS killer_team_won");
+  }
+  if (lookups?.assists !== undefined) {
+    ctes.push(assistCountsCte(lookups.assists));
+    joins.push(" LEFT JOIN assist_counts ac ON ac.event_id = m.event_id");
+    items.push("coalesce(ac.assists, 0) AS assist_count");
+  }
+  return { ctes, joins: joins.join(""), items };
+}
+
 function rowLookups(input: FactsCteInput): Lookups {
+  if (input.columnSource === "timeline-event") {
+    return eventLookups(input);
+  }
   const ctes: SqlFragment[] = [];
   const joins: string[] = [];
   const items: string[] = [];
@@ -237,13 +362,20 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
   const lookups: Lookups = teamSource
     ? { ctes: [], joins: "", items: [] }
     : rowLookups(input);
+  const eventSource = input.columnSource === "timeline-event";
+  // An event carries no puuid; its player's comes from the actor lookup.
+  const puuidRef = eventSource ? "p.puuid" : "m.puuid";
+  const rows =
+    eventSource && input.eventLookups?.firstOfKind === true
+      ? withFirstOfKind(input.source)
+      : input.source;
   const items = joinFragments(
     [
       frag(identityProjection(input.scope, input.columnSource)),
       ...lookups.items.map((item) => frag(item)),
       // No puuid exists on a team row; the column is held open as NULL so the
       // facts shape does not vary by source.
-      frag(teamSource ? "NULL::VARCHAR AS puuid" : "m.puuid AS puuid"),
+      frag(teamSource ? "NULL::VARCHAR AS puuid" : `${puuidRef} AS puuid`),
       frag(projected),
       ...(teamSource ? [frag(MATCH_DIMENSION_ITEMS)] : []),
       ...(banSource ? [frag("cn.champion_name AS champion_name")] : []),
@@ -252,23 +384,7 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
     ", ",
   );
   if (teamSource) {
-    const dimension = input.matchDimension;
-    if (dimension === undefined) {
-      throw new Error("match_teams compile requires a match dimension.");
-    }
-    return seq(
-      matchDimensionCte(dimension),
-      banSource ? seq(", ", championNamesCte()) : frag(""),
-      ", facts AS (SELECT ",
-      items,
-      " FROM (",
-      input.source,
-      ") m JOIN match_dim d ON d.match_id = m.match_id",
-      banSource
-        ? frag(" LEFT JOIN champion_names cn ON cn.champion_id = m.champion_id")
-        : frag(""),
-      ")",
-    );
+    return teamRowFacts(input, items);
   }
   const lookupCtes = lookups.ctes.flatMap((cte) => [cte, frag(", ")]);
   if (input.scope.kind === "global") {
@@ -278,7 +394,7 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
       "facts AS (SELECT ",
       items,
       " FROM (",
-      input.source,
+      rows,
       `) m${lookups.joins})`,
     );
   }
@@ -297,7 +413,8 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
     "), facts AS (SELECT ",
     items,
     " FROM (",
-    input.source,
-    `) m JOIN accounts a ON a.puuid = m.puuid${lookups.joins})`,
+    rows,
+    // Lookups first: an event's player is only known once the actor is.
+    `) m${lookups.joins} JOIN accounts a ON a.puuid = ${puuidRef})`,
   );
 }

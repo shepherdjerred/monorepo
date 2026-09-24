@@ -1,9 +1,11 @@
 /**
  * What Scout's lake holds that Explore's query surface cannot reach.
  *
- * ScoutQL has a closed set of sources, and the lake holds tables outside it.
- * Team rows and bans have since become sources (`match_teams`,
- * `match_team_bans`) and left this list; what remains is timeline data.
+ * Every lake table is now a ScoutQL source — team rows, bans, per-minute
+ * frames and timeline events each left this list when they became one. What
+ * remains is not a table but a shape: questions that compare two rows of the
+ * same game, or read games in order. The data for them is in the lake; a
+ * query reads one row at a time and aggregates without order (AI-18).
  *
  * The gap matters because of what the agent does with it. Reading a catalog
  * with no bans in it, the agent correctly concluded it could not query them,
@@ -17,8 +19,8 @@
  * has — which is the specific failure this is written to stop.
  */
 export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
-  "WHEN an objective was taken — the clock time of a dragon, baron, herald, tower or inhibitor (timeline_events). Which team took each first is queryable, from match_teams",
-  "item purchases and skill-up order (timeline_events)",
+  "matchups and pairings — how a champion or player did against, or alongside, a specific other one in the same game (champion vs champion, duo partners, who plays well together)",
+  "streaks — runs of consecutive wins or losses, which need games read in order",
 ] as const;
 
 /**

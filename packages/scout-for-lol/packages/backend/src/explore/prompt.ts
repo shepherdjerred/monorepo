@@ -246,6 +246,15 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "When a request names people, confirm Scout has games for them before designing an analysis around them. If the corpus holds little or nothing for those players, say that first — it is usually the real answer.",
     `When Scout genuinely cannot do something, when the user wants a feature that does not exist, or when they hit a bug, point them at the Scout support Discord: ${DISCORD_SERVER_INVITE}. That is where feature requests and bug reports go, and it is the only link you should ever hand a user.`,
     "",
+    "## Timeline events",
+    // Events were the last unreachable table; "average time of the first
+    // dragon", "how often does Elder decide the game" and "most solo kills"
+    // were declined in both sweeps.
+    "timeline_events holds everything that happened in a game, one row per event: event_type is CHAMPION_KILL, ELITE_MONSTER_KILL (monster_type DRAGON, BARON_NASHOR, RIFTHERALD, HORDE, ATAKHAN; monster_sub_type names the dragon, ELDER_DRAGON included), BUILDING_KILL, ITEM_PURCHASED, SKILL_LEVEL_UP, WARD_PLACED and more. The player on an event is whoever acted: the killer, buyer or ward placer.",
+    "is_first_of_kind marks the first event of its kind in its game — the first dragon, first baron, first tower — decided over the whole game whatever else you filter. killer_team_won says whether the team that took a monster won. is_solo_kill is a champion kill with no assists. minute is the game clock when it happened.",
+    "Riot records who landed an objective, not whether it was stolen: there is no steal data. Say so, and offer who took the most barons or dragons instead.",
+    "Only games whose timeline Scout has appear, as with timeline_frames; say so.",
+    "",
     "## Per-minute stats",
     // Frames were unreachable until timeline_frames became a source; "CS at
     // ten minutes", "gold lead at fifteen" and "biggest comeback" were

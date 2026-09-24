@@ -17,10 +17,15 @@ import {
   MATCH_TEAM_VIRTUALS,
   MATCH_VIRTUALS,
   PREMATCH_VIRTUALS,
+  TIMELINE_EVENT_VIRTUALS,
   TIMELINE_FRAME_VIRTUALS,
 } from "#src/model/scoutql/catalog/catalog-virtuals.ts";
-import { TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS } from "#src/model/reports/timeline-lake-columns.ts";
 import {
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+} from "#src/model/reports/timeline-lake-columns.ts";
+import {
+  TIMELINE_EVENT_DESCRIPTIONS,
   TIMELINE_FRAME_DESCRIPTIONS,
   MATCH_TEAM_BAN_DESCRIPTIONS,
   MATCH_TEAM_DESCRIPTIONS,
@@ -288,6 +293,22 @@ const CATALOG_LIST: SourceCatalog[] = [
         TIMELINE_FRAME_DESCRIPTIONS,
       ),
       ...TIMELINE_FRAME_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
+    playerRefAllowed: true,
+    groupCall: false,
+  },
+  {
+    id: "timeline_events",
+    description:
+      "Everything that happened in a game, one row per event — kills, objectives, buildings, purchases, level-ups, wards — for matches whose timeline Scout has. Not every match has one; say an answer covers games with timeline data.",
+    columns: toMap([
+      ...physicalColumns(
+        TIMELINE_EVENT_LAKE_COLUMNS,
+        TIMELINE_EVENT_DESCRIPTIONS,
+      ),
+      ...TIMELINE_EVENT_VIRTUALS,
     ]),
     timeColumn: "game_creation_at",
     requiresCompetitionId: false,

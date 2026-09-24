@@ -134,6 +134,88 @@ export const MATCH_TEAM_BAN_VIRTUALS: ScoutQlColumnInfo[] = [
  * the backend's frame column map looks them up. The two gold differences are
  * computed against the other team, and against the same position on it.
  */
+/**
+ * An event's player is its actor — killer, buyer or ward placer — looked up
+ * from the participant row. The flags are computed across the match's
+ * events, as the backend's event column map does.
+ */
+export const TIMELINE_EVENT_VIRTUALS: ScoutQlColumnInfo[] = [
+  virtualColumn(
+    "player",
+    "varchar",
+    "The player who acted — got the kill, bought the item, placed the ward. Filter with player('…').",
+  ),
+  virtualColumn("champion", "varchar", "Champion the acting player was on."),
+  {
+    name: "champion_id",
+    type: "integer",
+    description:
+      "Numeric id of the acting player's champion (compare with champion('Name')).",
+    displayKind: "count",
+    virtual: true,
+    contexts: { select: false, where: true, groupBy: false },
+  },
+  virtualColumn(
+    "team_position",
+    "varchar",
+    "Position the acting player was assigned.",
+  ),
+  virtualColumn(
+    "game_creation_at",
+    "timestamp",
+    "When the lobby was created (UTC), from the match.",
+  ),
+  virtualColumn(
+    "queue",
+    "varchar",
+    "Queue name of the match (solo, flex, aram, …).",
+  ),
+  virtualColumn("patch", "varchar", "Game patch (major.minor) of the match."),
+  virtualColumn("map", "integer", "Map dimension (map_id) of the match."),
+  {
+    name: "minute",
+    type: "integer",
+    description: "Whole minutes on the game clock when the event happened.",
+    displayKind: "count",
+    virtual: true,
+    contexts: ALL_CONTEXTS,
+  },
+  {
+    name: "is_first_of_kind",
+    type: "boolean",
+    description:
+      "Whether this is the first event of its type and monster or building type in its match — the first dragon, the first baron, the first tower. Decided over the whole match, whatever else is filtered.",
+    displayKind: "text",
+    virtual: true,
+    contexts: { select: true, where: true, groupBy: true },
+  },
+  {
+    name: "killer_team_won",
+    type: "boolean",
+    description:
+      "For a monster kill, whether the team that took it won the game.",
+    displayKind: "text",
+    virtual: true,
+    contexts: { select: true, where: true, groupBy: true },
+  },
+  {
+    name: "assist_count",
+    type: "integer",
+    description: "Players credited with an assist on this event.",
+    displayKind: "count",
+    virtual: true,
+    contexts: { select: true, where: true, groupBy: false },
+  },
+  {
+    name: "is_solo_kill",
+    type: "boolean",
+    description: "A champion kill with no assists.",
+    displayKind: "text",
+    virtual: true,
+    contexts: { select: true, where: true, groupBy: true },
+  },
+];
+
 export const TIMELINE_FRAME_VIRTUALS: ScoutQlColumnInfo[] = [
   virtualColumn(
     "player",

@@ -2,6 +2,18 @@ import { match } from "ts-pattern";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { PlanColumnSource } from "#src/reports/duckdb/column-map.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
+import {
+  buildMatchDimensionSource,
+  buildMatchTeamsSource,
+  buildParticipantDimensionSource,
+  buildTimelineEventParticipantsSource,
+  buildTimelineParticipantFramesSource,
+  type LakeFiles,
+  type SqlFragment,
+} from "#src/reports/duckdb/lake.ts";
+import { readsMatchDimension } from "#src/reports/duckdb/column-map.ts";
+import type { FactsCteInput } from "#src/reports/duckdb/facts-cte.ts";
+import { frag } from "#src/reports/duckdb/sql-fragment.ts";
 
 /**
  * Which rows a plan reads, and which scopes it may be read in.
@@ -48,6 +60,11 @@ export function planSourceKind(
     // A frame's match time is looked up from its player's participant row.
     .with("timeline_frames", (): SourceKind => ({
       columnSource: "timeline-frame",
+      timeColumn: "game_creation_at",
+    }))
+    // An event's match time comes from the match, its player from the actor.
+    .with("timeline_events", (): SourceKind => ({
+      columnSource: "timeline-event",
       timeColumn: "game_creation_at",
     }))
     .with("rank_current", "competition_rank", () => {
@@ -99,4 +116,115 @@ export function enforceScopeGuards(input: {
       throw new Error(`${input.plan.source} requires a competition_id.`);
     }
   }
+}
+
+/**
+ * A team dimension with no rows, for a lake that has no team files yet.
+ *
+ * Returning no source would make the whole query empty; a participant with no
+ * team row should instead read NULL team kills, which is what the LEFT JOIN
+ * against this gives.
+ */
+const EMPTY_TEAM_DIMENSION =
+  "SELECT NULL::VARCHAR AS match_id, NULL::INTEGER AS team_id, NULL::INTEGER AS champion_kills, NULL::BOOLEAN AS win WHERE false";
+
+export type LookupSources = {
+  matchDimension: SqlFragment | undefined;
+  participantDimension: SqlFragment | undefined;
+  teamDimension: SqlFragment | undefined;
+  frameGold: { source: SqlFragment; team: boolean; lane: boolean } | undefined;
+  eventLookups: FactsCteInput["eventLookups"];
+};
+
+/** Which event lookups a plan names; see EVENT_LOOKUPS. */
+export type EventLookupFlags = {
+  firstOfKind: boolean;
+  killerTeam: boolean;
+  assists: boolean;
+};
+
+const EMPTY_ASSIST_ROWS =
+  "SELECT NULL::VARCHAR AS event_id, NULL::VARCHAR AS role WHERE false";
+
+/**
+ * The scans an event's lookups read, unfiltered like the frame gold scan and
+ * for the same reason: a filter on events must not change which team won or
+ * how many players assisted.
+ */
+function eventLookupSources(
+  files: LakeFiles,
+  flags: EventLookupFlags | undefined,
+): FactsCteInput["eventLookups"] {
+  if (flags === undefined) return undefined;
+  return {
+    firstOfKind: flags.firstOfKind,
+    killerTeam: flags.killerTeam
+      ? (buildMatchTeamsSource(files, frag("")) ?? frag(EMPTY_TEAM_DIMENSION))
+      : undefined,
+    assists: flags.assists
+      ? (buildTimelineEventParticipantsSource(files, frag("")) ??
+        frag(EMPTY_ASSIST_ROWS))
+      : undefined,
+  };
+}
+
+/**
+ * The row scans a source's looked-up facts are read from.
+ *
+ * `undefined` when a lookup the source cannot do without has no rows in the
+ * window: a team with no match, a frame with no participant. That is the
+ * same empty answer an empty lake gives.
+ */
+export function buildLookupSources(
+  files: LakeFiles,
+  kind: SourceKind,
+  range: SqlFragment,
+  extras: {
+    teamLookup?: boolean;
+    frameGold?: { team: boolean; lane: boolean } | undefined;
+    eventLookups?: EventLookupFlags | undefined;
+  },
+): LookupSources | undefined {
+  const timeline =
+    kind.columnSource === "timeline-frame" ||
+    kind.columnSource === "timeline-event";
+  const participantDimension = timeline
+    ? buildParticipantDimensionSource(files, range)
+    : undefined;
+  if (participantDimension === undefined && timeline) {
+    return undefined;
+  }
+  const needsMatch =
+    readsMatchDimension(kind.columnSource) ||
+    kind.columnSource === "timeline-event";
+  const matchDimension = needsMatch
+    ? buildMatchDimensionSource(files, range)
+    : undefined;
+  if (matchDimension === undefined && needsMatch) {
+    return undefined;
+  }
+  // Unrestricted: a team table is two rows a match, and the LEFT JOIN keeps
+  // only the matches the participant scan already chose.
+  const teamDimension =
+    extras.teamLookup === true
+      ? (buildMatchTeamsSource(files, frag("")) ?? frag(EMPTY_TEAM_DIMENSION))
+      : undefined;
+  // Unfiltered on purpose: the source scan may hold player('…') or a minute
+  // filter, and a team total computed from filtered frames would sum only the
+  // filtered player.
+  const gold = extras.frameGold;
+  const goldSource =
+    gold !== undefined && (gold.team || gold.lane)
+      ? buildTimelineParticipantFramesSource(files, frag(""))
+      : undefined;
+  return {
+    matchDimension,
+    participantDimension,
+    teamDimension,
+    frameGold:
+      gold === undefined || goldSource === undefined
+        ? undefined
+        : { source: goldSource, ...gold },
+    eventLookups: eventLookupSources(files, extras.eventLookups),
+  };
 }

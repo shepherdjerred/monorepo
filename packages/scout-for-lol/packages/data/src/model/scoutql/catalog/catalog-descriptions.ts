@@ -154,6 +154,57 @@ export const TIMELINE_FRAME_DESCRIPTIONS: Record<string, string> = {
   total_damage_taken: "Damage taken so far at this frame.",
 };
 
+/**
+ * Every event column, spelled out: an event row reuses names like `team_id`
+ * and `level` with meanings that depend on the event type.
+ */
+export const TIMELINE_EVENT_DESCRIPTIONS: Record<string, string> = {
+  event_id: "Scout's id for this event.",
+  match_id: "Riot match id (region-qualified).",
+  observed_at:
+    "When Scout ingested this timeline (UTC) — not when the game was played; use game_creation_at for that.",
+  frame_index: "Frame (minute) the event fell in.",
+  event_index: "Order of the event within its frame.",
+  frame_timestamp_ms:
+    "Game clock at the start of the event's frame, in milliseconds.",
+  event_timestamp_ms:
+    "Game clock when the event happened, in milliseconds (see the minute column).",
+  event_type:
+    "What happened: CHAMPION_KILL, ELITE_MONSTER_KILL, BUILDING_KILL, ITEM_PURCHASED, SKILL_LEVEL_UP, WARD_PLACED, …",
+  participant_id:
+    "Participant slot the event is about, for purchases, level-ups and similar (1–10).",
+  killer_id: "Participant slot that got the kill; 0 when it was not a player.",
+  victim_id: "Participant slot that died, for champion kills.",
+  creator_id: "Participant slot that placed a ward.",
+  team_id:
+    "For a building kill, the team that lost the building (100 blue, 200 red).",
+  killer_team_id:
+    "For a monster kill, the team that took it (100 blue, 200 red).",
+  item_id: "Item bought, sold or undone.",
+  after_id: "Item after an undo.",
+  before_id: "Item before an undo.",
+  skill_slot: "Ability levelled (1 Q, 2 W, 3 E, 4 R).",
+  level: "Level reached, for a level-up.",
+  bounty: "Gold bounty on a champion kill.",
+  shutdown_bounty: "Shutdown gold on a champion kill.",
+  kill_streak_length: "Victim's kill streak that was ended.",
+  gold_gain: "Gold the event awarded.",
+  position_x: "Map x coordinate of the event.",
+  position_y: "Map y coordinate of the event.",
+  ward_type: "Ward kind, for ward events.",
+  building_type: "TOWER_BUILDING or INHIBITOR_BUILDING, for building kills.",
+  lane_type: "Lane of a building kill.",
+  tower_type: "Tower tier, for tower kills (OUTER_TURRET, INNER_TURRET, …).",
+  monster_type:
+    "DRAGON, BARON_NASHOR, RIFTHERALD, HORDE (void grubs) or ATAKHAN, for monster kills.",
+  monster_sub_type:
+    "Dragon kind — ELDER_DRAGON, or FIRE/WATER/EARTH/AIR/HEXTECH/CHEMTECH_DRAGON.",
+  level_up_type: "How a skill was levelled.",
+  winning_team_id: "Team that won, on the game-end event.",
+  real_timestamp_ms:
+    "Wall-clock time of the event, in milliseconds since the epoch.",
+};
+
 export const MATCH_TEAM_BAN_DESCRIPTIONS: Record<string, string> = {
   team_id: "The banning team (100 blue, 200 red).",
   pick_turn: "Which ban slot this was, in draft order (1-10).",

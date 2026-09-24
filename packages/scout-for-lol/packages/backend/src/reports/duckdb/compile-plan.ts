@@ -2,9 +2,8 @@ import { match } from "ts-pattern";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { ScoutQlPredicate } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
-  buildMatchDimensionSource,
   buildMatchTeamBansSource,
-  buildParticipantDimensionSource,
+  buildTimelineEventsSource,
   buildTimelineParticipantFramesSource,
   buildMatchTeamsSource,
   buildMatchesSource,
@@ -26,7 +25,7 @@ import {
 import {
   TEAM_LOOKUP_COLUMNS,
   buildPlanColumnMap,
-  readsMatchDimension,
+  EVENT_LOOKUPS,
   timeFromLookup,
   resolveColumn,
   type ColumnMap,
@@ -41,8 +40,10 @@ import {
 } from "#src/reports/duckdb/select-sql.ts";
 import { buildFactsCte } from "#src/reports/duckdb/facts-cte.ts";
 import {
+  buildLookupSources,
   enforceScopeGuards,
   planSourceKind,
+  type EventLookupFlags,
   type SourceKind,
 } from "#src/reports/duckdb/plan-source.ts";
 import { combineAnd, frag, seq } from "#src/reports/duckdb/sql-fragment.ts";
@@ -148,86 +149,11 @@ function projectionDependencies(
   return dependencies;
 }
 
-/**
- * A team dimension with no rows, for a lake that has no team files yet.
- *
- * Returning no source would make the whole query empty; a participant with no
- * team row should instead read NULL team kills, which is what the LEFT JOIN
- * against this gives.
- */
-const EMPTY_TEAM_DIMENSION =
-  "SELECT NULL::VARCHAR AS match_id, NULL::INTEGER AS team_id, NULL::INTEGER AS champion_kills WHERE false";
-
 type FactsPipeline = {
   /** CTE prefix ending after facts (and filtered, when present). */
   prefix: SqlFragment;
   relation: "facts" | "filtered";
 };
-
-type LookupSources = {
-  matchDimension: SqlFragment | undefined;
-  participantDimension: SqlFragment | undefined;
-  teamDimension: SqlFragment | undefined;
-  frameGold: { source: SqlFragment; team: boolean; lane: boolean } | undefined;
-};
-
-/**
- * The row scans a source's looked-up facts are read from.
- *
- * `undefined` when a lookup the source cannot do without has no rows in the
- * window: a team with no match, a frame with no participant. That is the
- * same empty answer an empty lake gives.
- */
-function buildLookupSources(
-  input: PlanQueryInput,
-  kind: SourceKind,
-  range: SqlFragment,
-  extras: {
-    teamLookup?: boolean;
-    frameGold?: { team: boolean; lane: boolean } | undefined;
-  },
-): LookupSources | undefined {
-  const participantDimension =
-    kind.columnSource === "timeline-frame"
-      ? buildParticipantDimensionSource(input.files, range)
-      : undefined;
-  if (
-    participantDimension === undefined &&
-    kind.columnSource === "timeline-frame"
-  ) {
-    return undefined;
-  }
-  const matchDimension = readsMatchDimension(kind.columnSource)
-    ? buildMatchDimensionSource(input.files, range)
-    : undefined;
-  if (matchDimension === undefined && readsMatchDimension(kind.columnSource)) {
-    return undefined;
-  }
-  // Unrestricted: a team table is two rows a match, and the LEFT JOIN keeps
-  // only the matches the participant scan already chose.
-  const teamDimension =
-    extras.teamLookup === true
-      ? (buildMatchTeamsSource(input.files, frag("")) ??
-        frag(EMPTY_TEAM_DIMENSION))
-      : undefined;
-  // Unfiltered on purpose: the source scan may hold player('…') or a minute
-  // filter, and a team total computed from filtered frames would sum only the
-  // filtered player.
-  const gold = extras.frameGold;
-  const goldSource =
-    gold !== undefined && (gold.team || gold.lane)
-      ? buildTimelineParticipantFramesSource(input.files, frag(""))
-      : undefined;
-  return {
-    matchDimension,
-    participantDimension,
-    teamDimension,
-    frameGold:
-      gold === undefined || goldSource === undefined
-        ? undefined
-        : { source: goldSource, ...gold },
-  };
-}
 
 function buildFactsPipeline(
   input: PlanQueryInput,
@@ -240,6 +166,8 @@ function buildFactsPipeline(
     teamLookup?: boolean;
     /** Compute gold differences against other frames of the same minute. */
     frameGold?: { team: boolean; lane: boolean } | undefined;
+    /** Event lookups named by the plan. */
+    eventLookups?: EventLookupFlags | undefined;
   },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
@@ -249,7 +177,15 @@ function buildFactsPipeline(
   };
   const sourceContext: ExprContext = { ...factsContext, placement: "source" };
 
-  const { pushed, residual } = splitWhere(input.plan.where, columns);
+  const split = splitWhere(input.plan.where, columns);
+  // The first-of-kind window must see every event of a match, so a plan that
+  // names it pushes nothing into the event scan: every conjunct is applied to
+  // facts, after the window has been computed.
+  const windowed = extras.eventLookups?.firstOfKind === true;
+  const pushed = windowed ? [] : split.pushed;
+  const residual = windowed
+    ? [...split.pushed, ...split.residual]
+    : split.residual;
   const range = rangePredicate(kind.timeColumn, input.range);
   const pushedFragments = pushed.map((conjunct) =>
     compilePredicate(conjunct, sourceContext),
@@ -271,11 +207,14 @@ function buildFactsPipeline(
     .with("timeline-frame", () =>
       buildTimelineParticipantFramesSource(input.files, pushdown),
     )
+    .with("timeline-event", () =>
+      buildTimelineEventsSource(input.files, pushdown),
+    )
     .exhaustive();
   if (source === undefined) {
     return undefined;
   }
-  const lookups = buildLookupSources(input, kind, range, extras);
+  const lookups = buildLookupSources(input.files, kind, range, extras);
   if (lookups === undefined) {
     return undefined;
   }
@@ -369,6 +308,16 @@ export function compileScoutQlPlanQuery(
         ? {
             team: referenced.has("team_gold_diff"),
             lane: referenced.has("lane_gold_diff"),
+          }
+        : undefined,
+    eventLookups:
+      kind.columnSource === "timeline-event"
+        ? {
+            firstOfKind: referenced.has(EVENT_LOOKUPS.firstOfKind),
+            killerTeam: referenced.has(EVENT_LOOKUPS.killerTeamWon),
+            assists:
+              referenced.has(EVENT_LOOKUPS.assistCount) ||
+              referenced.has(EVENT_LOOKUPS.soloKill),
           }
         : undefined,
   });

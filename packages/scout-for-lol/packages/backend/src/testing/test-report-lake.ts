@@ -1,4 +1,5 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   ACCOUNT_LAKE_COLUMNS,
@@ -31,6 +32,7 @@ import {
   timelineStagingFilePath,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
 
 /**
  * Test helper: build a minimal report lake from simplified fact inputs.
@@ -477,4 +479,14 @@ export async function writeTestLake(
     "timeline_coverage",
     input.timelineCoverage ?? [],
   );
+}
+
+/** Write a test lake into a fresh temp directory and resolve its files. */
+export async function writeTempTestLake(
+  prefix: string,
+  input: TestLakeInput,
+): Promise<LakeFiles> {
+  const lakeDir = await mkdtemp(path.join(tmpdir(), prefix));
+  await writeTestLake(lakeDir, input);
+  return await resolveLakeFiles(lakeDir);
 }

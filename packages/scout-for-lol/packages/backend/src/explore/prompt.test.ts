@@ -215,7 +215,8 @@ describe("team objectives", () => {
     // Leaving them there would have Explore decline what it can now answer.
     const listed = LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.join(" ");
     expect(listed).not.toContain("team-level objective counts");
-    expect(listed).toContain("WHEN an objective was taken");
+    // Objective timings left too, when timeline_events became a source.
+    expect(listed).not.toContain("objective");
   });
 });
 

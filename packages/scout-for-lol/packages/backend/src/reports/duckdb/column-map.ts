@@ -6,7 +6,10 @@ import {
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "@scout-for-lol/data/model/reports/lake-columns.ts";
-import { TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
+import {
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+} from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
 
 /**
  * Which column names each ScoutQL source exposes, and the SQL each becomes.
@@ -35,7 +38,12 @@ export type ColumnBinding = {
 export type ColumnMap = ReadonlyMap<string, ColumnBinding>;
 
 export type PlanColumnSource =
-  "match" | "prematch" | "match-team" | "match-team-ban" | "timeline-frame";
+  | "match"
+  | "prematch"
+  | "match-team"
+  | "match-team-ban"
+  | "timeline-frame"
+  | "timeline-event";
 
 /**
  * Sources whose rows hold no match facts of their own — no timestamp, queue
@@ -54,8 +62,25 @@ export function readsMatchDimension(source: PlanColumnSource): boolean {
  * `readsMatchDimension`.
  */
 export function timeFromLookup(source: PlanColumnSource): boolean {
-  return readsMatchDimension(source) || source === "timeline-frame";
+  return (
+    readsMatchDimension(source) ||
+    source === "timeline-frame" ||
+    source === "timeline-event"
+  );
 }
+
+/**
+ * Event columns computed from rows other than the event itself, joined only
+ * when a query names one. `is_first_of_kind` is a window over the match's
+ * events and so disables filter pushdown when named: filtering to Elder
+ * dragons first would redefine which dragon was first.
+ */
+export const EVENT_LOOKUPS = {
+  firstOfKind: "is_first_of_kind",
+  killerTeamWon: "killer_team_won",
+  assistCount: "assist_count",
+  soloKill: "is_solo_kill",
+} as const;
 
 const LAKE_TYPE_CLASS: Record<DuckDbColumnType, SqlTypeClass> = {
   VARCHAR: "text",
@@ -238,6 +263,43 @@ const TIMELINE_FRAME_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["lane_gold_diff", lookedUp("lane_gold_diff", "numeric")],
 ];
 
+/**
+ * An event's player is its actor — whoever killed, bought or placed —
+ * looked up from the participant row by slot. Match time and queue come
+ * from the match, so objective events with no player actor still count.
+ */
+const TIMELINE_EVENT_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
+  ["player", PLAYER_BINDING],
+  // The actor's puuid, which grouping by player keys on in global scope. An
+  // event row has none of its own; facts carries the looked-up one.
+  ["puuid", lookedUp("puuid", "text")],
+  ["champion", lookedUp("champion_name", "text")],
+  ["champion_id", lookedUp("champion_id", "numeric")],
+  ["team_position", lookedUp("team_position", "text")],
+  ["game_creation_at", lookedUp("game_creation_at", "timestamp")],
+  ["queue", lookedUp("queue", "text")],
+  ["patch", lookedUp("patch", "text")],
+  ["map", lookedUp("map_id", "numeric")],
+  [
+    "minute",
+    virtual("(floor(event_timestamp_ms / 60000))::INTEGER", "numeric", [
+      "event_timestamp_ms",
+    ]),
+  ],
+  [EVENT_LOOKUPS.firstOfKind, lookedUp("is_first_of_kind", "boolean")],
+  [EVENT_LOOKUPS.killerTeamWon, lookedUp("killer_team_won", "boolean")],
+  [EVENT_LOOKUPS.assistCount, lookedUp("assist_count", "numeric")],
+  [
+    EVENT_LOOKUPS.soloKill,
+    {
+      sql: "(event_type = 'CHAMPION_KILL' AND assist_count = 0)",
+      type: "boolean",
+      dependencies: ["event_type"],
+      identity: true,
+    },
+  ],
+];
+
 export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
   return match(source)
     .with(
@@ -278,6 +340,14 @@ export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
         new Map([
           ...sourceColumnEntries(TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS),
           ...TIMELINE_FRAME_VIRTUAL_COLUMNS,
+        ]),
+    )
+    .with(
+      "timeline-event",
+      () =>
+        new Map([
+          ...sourceColumnEntries(TIMELINE_EVENT_LAKE_COLUMNS),
+          ...TIMELINE_EVENT_VIRTUAL_COLUMNS,
         ]),
     )
     .exhaustive();
