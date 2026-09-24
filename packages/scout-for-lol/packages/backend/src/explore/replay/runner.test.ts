@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import type { ExploreTraceEntry } from "@scout-for-lol/data";
 import {
   DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
   ExploreAnswerSchema,
   ExploreMessageSchema,
   ExploreStreamEventSchema,
@@ -14,7 +13,6 @@ import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
 import type { ExploreAgentResult } from "#src/explore/agent.ts";
 import {
   queryFactsFromTrace,
-  replayCompetitionReadAccess,
   runReplayCase,
   runReplayCases,
   type ReplayCaseInput,
@@ -166,7 +164,6 @@ function dependencies(
       }),
     timeoutMs: overrides.timeoutMs ?? 30_000,
     newRunId: overrides.newRunId ?? (() => "run-1"),
-    competitionReadAccess: overrides.competitionReadAccess,
   };
 }
 
@@ -327,37 +324,6 @@ function execution(
     rawOutput: null,
   };
 }
-
-describe("replayCompetitionReadAccess", () => {
-  const GUILD = DiscordGuildIdSchema.parse("200000000000000002");
-
-  test("grants reading competitions in the replayed guild, and nothing else", async () => {
-    const access = await replayCompetitionReadAccess({ guildIds: [GUILD] });
-    if (access.kind !== "resolved") throw new Error("expected resolved");
-    expect(access.guilds.map((guild) => guild.guildId)).toEqual([GUILD]);
-    const permissions = access.guilds[0]?.permissions;
-    expect(permissions?.can("competitions", "read")).toBe(true);
-    expect(permissions?.can("competitions", "create")).toBe(false);
-    expect(permissions?.isRoot).toBe(false);
-  });
-
-  test("reaches the agent only when the runner is given it", async () => {
-    const seen: unknown[] = [];
-    const stub: AgentStub = async (params) => {
-      seen.push(params.competitionReadAccess);
-      return RESULT;
-    };
-    await runReplayCase(caseInput(), dependencies({ executeAgent: stub }));
-    await runReplayCase(
-      caseInput(),
-      dependencies({
-        executeAgent: stub,
-        competitionReadAccess: replayCompetitionReadAccess,
-      }),
-    );
-    expect(seen).toEqual([undefined, replayCompetitionReadAccess]);
-  });
-});
 
 describe("queryFactsFromTrace", () => {
   test("reads the row count the preview used to hide", () => {

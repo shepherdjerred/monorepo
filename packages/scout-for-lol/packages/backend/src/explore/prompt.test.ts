@@ -333,7 +333,9 @@ describe("reading features rather than re-deriving them", () => {
       });
       expect(instructions).toContain("list_competitions");
       expect(instructions).toContain("get_competition_standings");
-      expect(instructions).toContain("competitions:read");
+      // Membership is the gate: no permission for the model to blame.
+      expect(instructions).toContain("Every member of a server can read");
+      expect(instructions).not.toContain("competitions:read");
     }
     expect(
       exploreAgentInstructions({

@@ -10,11 +10,7 @@ import {
 import { createDareExploreTools } from "#src/explore/tools/dare-tool-definitions.ts";
 import { createChallengeExploreTools } from "#src/explore/tools/challenge-tools.ts";
 import { createChallengeReadTools } from "#src/explore/tools/challenge-read-tools.ts";
-import {
-  createCompetitionReadTools,
-  defaultCompetitionReadDependencies,
-  type CompetitionReadDependencies,
-} from "#src/explore/tools/competition-read-tools.ts";
+import { createCompetitionReadTools } from "#src/explore/tools/competition-read-tools.ts";
 import {
   createHallExploreTools,
   type HallExploreCapability,
@@ -40,9 +36,6 @@ export function createGatedExploreTools(input: {
   guildIds: readonly string[];
   conversationId: string;
   originChannelId: DiscordChannelId | null;
-  /** Replay only; see `ExploreAgentParams.competitionReadAccess`. */
-  competitionReadAccess?:
-    CompetitionReadDependencies["resolveAccess"] | undefined;
   track: ToolTracker;
 }) {
   return {
@@ -90,22 +83,12 @@ export function createGatedExploreTools(input: {
           track: input.track,
         })),
     // Not gated: competitions are a core feature with no flag of their own,
-    // and every read is permission-checked inside the tool, exactly as the
-    // web app checks it.
-    ...createCompetitionReadTools(
-      {
-        db: prisma,
-        requesterId: input.requesterId,
-        guildIds: input.guildIds,
-        track: input.track,
-      },
-      input.competitionReadAccess === undefined
-        ? defaultCompetitionReadDependencies
-        : {
-            ...defaultCompetitionReadDependencies,
-            resolveAccess: input.competitionReadAccess,
-          },
-    ),
+    // and every member of a server may read its competitions.
+    ...createCompetitionReadTools({
+      db: prisma,
+      guildIds: input.guildIds,
+      track: input.track,
+    }),
     ...createCreationExploreTools({
       capability: input.creationCapability,
       requesterId: input.requesterId,

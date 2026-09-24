@@ -1,9 +1,7 @@
 import { z } from "zod";
 import {
-  createPermissionSet,
   type DiscordAccountId,
   type DiscordChannelId,
-  type DiscordGuildId,
   type ExploreAnswer,
   type ExploreMatchCard,
   type ExploreMessage,
@@ -24,8 +22,6 @@ import {
 import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
-import type { CreationAccess } from "#src/explore/creation/capability.ts";
-import type { CompetitionReadDependencies } from "#src/explore/tools/competition-read-tools.ts";
 
 /**
  * Running one replay case against the real Explore agent.
@@ -90,39 +86,7 @@ export type ReplayRunnerDependencies = {
   readonly now: () => number;
   readonly timeoutMs: number;
   readonly newRunId: () => string;
-  /** Answers the competition read check; see `replayCompetitionReadAccess`. */
-  readonly competitionReadAccess?:
-    CompetitionReadDependencies["resolveAccess"] | undefined;
 };
-
-/**
- * The replay's answer to "may this requester read competitions here": yes, in
- * exactly the guilds the case replays, and nothing more.
- *
- * The real check asks Discord with the requester's own OAuth grant, which in
- * a snapshot has long expired, so every competition read in a sweep came back
- * "could not verify your servers" — eleven of the prod chips, measuring the
- * harness rather than the model. Granting read, and only read, measures how
- * the model handles competition data. What it cannot measure is the
- * permission path itself, which the tool's own tests cover.
- */
-export function replayCompetitionReadAccess(input: {
-  readonly guildIds: readonly DiscordGuildId[];
-}): Promise<CreationAccess> {
-  const read = createPermissionSet([
-    { resource: "competitions", action: "read" },
-  ]);
-  return Promise.resolve({
-    kind: "resolved",
-    // The competition tools read only the ids; names come from their own
-    // lookup, so the id stands in rather than a second query.
-    guilds: input.guildIds.map((guildId) => ({
-      guildId,
-      name: guildId,
-      permissions: read,
-    })),
-  });
-}
 
 function agentParams(
   input: ReplayCaseInput,
@@ -212,12 +176,9 @@ export async function runReplayCase(
     controller.abort();
   }, dependencies.timeoutMs);
   const runId = dependencies.newRunId();
-  const params = {
-    ...agentParams(input, runId, controller.signal, (event) => {
-      recordExploreTraceEvent(trace, event);
-    }),
-    competitionReadAccess: dependencies.competitionReadAccess,
-  };
+  const params = agentParams(input, runId, controller.signal, (event) => {
+    recordExploreTraceEvent(trace, event);
+  });
 
   // Recorded before the call so a turn that throws still shows what it was
   // asked. A failed case with no visible prompt is the least useful row in a

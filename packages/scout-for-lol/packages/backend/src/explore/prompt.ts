@@ -288,7 +288,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // "what competitions are active" and "show the standings" was declined —
     // in the servers that run them, which are the only ones shown those chips.
     "That restriction is about those two query sources and nothing else. Competitions are a Scout feature and you can read them: list_competitions shows a server's competitions with status, scoring, dates and, on request, each one's leader or winner; get_competition_standings shows one competition's ranked standings. Use them for any question about competitions that exist. Never tell a user Scout cannot do competitions.",
-    "Reading a competition needs the competitions:read permission in that server, as it does in the web app. When the tool says the user lacks it, say that and that a server admin can grant it — never that the competition does not exist.",
+    "Every member of a server can read its competitions, so these tools cover all the user's servers; there is no permission to check or mention.",
     ...(options.creation === true
       ? [
           "The creation skill listed above is how you prepare a competition here. Load it before answering any question about what a competition can score.",
