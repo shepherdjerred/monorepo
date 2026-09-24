@@ -2,14 +2,14 @@
  * Fish fidelity: agent CLIs are launched through the user's interactive fish
  * functions and abbreviation expansions, not by bare-executing binaries.
  *
- * `claude`, `agy`, and `muse` are abbreviations, and abbreviations only
- * expand while typing in the interactive editor — never inside a
- * `fish -i -c` program. So spawning `fish -i -c 'claude ...'` would silently
- * run the bare `claude` binary, dropping the `--allow-dangerously-skip-
- * permissions` flag and the `env -u` credential scrubbing. Instead the
- * expansion is resolved at runtime and spliced into the program, while
- * functions (`codex`, `opencode`, defined under `if status is-interactive`)
- * are invoked by name. Only the fish *word* per provider is hardcoded here;
+ * `claude` is an abbreviation, and abbreviations only expand while typing in
+ * the interactive editor — never inside a `fish -i -c` program. So spawning
+ * `fish -i -c 'claude ...'` would silently run the bare `claude` binary,
+ * dropping the `--allow-dangerously-skip-permissions` flag and the `env -u`
+ * credential scrubbing. Instead the expansion is resolved at runtime and
+ * spliced into the program, while functions (`codex`, `opencode`, `agy`,
+ * `grok`, `muse`, defined under `if status is-interactive`) are invoked by
+ * name. Only the fish *word* per provider is hardcoded here;
  * expansions are resolved at runtime, so editing
  * `~/.config/fish/config.fish` needs no CLI change.
  */
