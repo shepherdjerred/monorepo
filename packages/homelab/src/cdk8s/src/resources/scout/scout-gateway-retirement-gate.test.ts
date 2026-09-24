@@ -180,39 +180,38 @@ describe("Scout gateway retirement gate ordering", () => {
   });
 
   /**
-   * All Sync hooks, so every retirement sync runs its own check and ArgoCD
-   * blocks the next wave on the Job's completion rather than on its apply.
-   *
-   * Only the Job is deleted after success. The prerequisites keep
-   * `BeforeHookCreation` alone, matching the Temporal backup preflight, so
-   * the Job's ServiceAccount, RBAC and policy can never be removed while it
-   * still needs them.
+   * Only the Job is a hook: recreated on every sync, and ArgoCD blocks the
+   * next wave on its completion rather than on its apply. It deletes itself
+   * after success and is kept for its logs after a failure.
    */
-  test("every gate resource is a Sync hook", () => {
-    const resources = retiringBeta();
-    for (const resource of gateResources(resources)) {
-      expect(
-        annotations(resources, resource.kind, resource.metadata.name)[
-          "argocd.argoproj.io/hook"
-        ],
-      ).toBe("Sync");
-    }
+  test("the Job is a Sync hook at wave -1, deleted after success", () => {
+    const metadata = annotations(retiringBeta(), "Job", GATE);
+    expect(metadata["argocd.argoproj.io/hook"]).toBe("Sync");
+    expect(metadata["argocd.argoproj.io/hook-delete-policy"]).toBe(
+      "BeforeHookCreation,HookSucceeded",
+    );
+    expect(metadata[SYNC_WAVE]).toBe("-1");
   });
 
-  test("only the Job is deleted on success; its prerequisites persist", () => {
+  /**
+   * The prerequisites are ordinary managed resources in wave -3, not hooks.
+   * That orders them before the Job whatever ArgoCD does with hook deletion,
+   * and it lets release-root's pruning sync remove them once the stage stops
+   * rendering the gate. ArgoCD never prunes hooks, so as hooks they would stay
+   * in the namespace after `absent`.
+   */
+  test("its prerequisites are plain wave -3 resources, not hooks", () => {
     const resources = retiringBeta();
-    const deletePolicy = (kind: string, name: string) =>
-      annotations(resources, kind, name)[
-        "argocd.argoproj.io/hook-delete-policy"
-      ];
-    expect(deletePolicy("Job", GATE)).toBe("BeforeHookCreation,HookSucceeded");
     for (const [kind, name] of [
       ["ServiceAccount", GATE],
       ["Role", GATE],
       ["RoleBinding", GATE],
       ["NetworkPolicy", `${GATE}-netpol`],
     ] as const) {
-      expect(deletePolicy(kind, name)).toBe("BeforeHookCreation");
+      const metadata = annotations(resources, kind, name);
+      expect(metadata["argocd.argoproj.io/hook"]).toBeUndefined();
+      expect(metadata["argocd.argoproj.io/hook-delete-policy"]).toBeUndefined();
+      expect(metadata[SYNC_WAVE]).toBe("-3");
     }
   });
 });
