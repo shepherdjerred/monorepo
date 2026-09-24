@@ -1,3 +1,4 @@
+import { exploreScoutQlReference } from "#src/explore/scoutql-reference.ts";
 import { describe, expect, test } from "vitest";
 import {
   COMPETITIVE_PROGRESSION_CATALOG,
@@ -14,19 +15,22 @@ import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts
 import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
 
 describe("exploreAgentInstructions", () => {
-  test("is a lean core: skills index instead of inlined domain sections", () => {
+  test("carries ScoutQL itself, compact, last; domain skills stay on demand", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
 
     expect(instructions).toContain("## Skills");
     expect(instructions).toContain("load_skill");
-    // The ScoutQL language reference and field guide moved into the scoutql
-    // skill; the prompt must not carry either any more.
-    expect(instructions).not.toContain("## ScoutQL reference");
+    // Loaded as a skill, the reference landed after the user's question,
+    // where no two turns share a cached prefix: ~30k uncached tokens a turn.
+    // In the prompt it is part of one cached prefix. The field guide is
+    // shared with the report-query agent and must stay byte-identical.
+    expect(instructions).toContain(scoutQlFieldGuideSection());
+    expect(instructions.endsWith(exploreScoutQlReference())).toBe(true);
+    // Compact text, not the report agent's JSON catalog.
     expect(instructions).not.toContain(
       JSON.stringify(scoutQlLanguageReference()),
     );
-    expect(instructions).not.toContain(scoutQlFieldGuideSection());
-    expect(instructions).toContain("Load the scoutql skill");
+    expect(instructions).not.toContain("Load the scoutql skill");
   });
 
   test("keeps the answer-shaping rules that apply to every turn", () => {

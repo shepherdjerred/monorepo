@@ -141,6 +141,10 @@ async function streamExploreAgentInternal(
     ...runtime.callOptions({
       workload: "scout.explore",
       sessionId: params.runId,
+      // One cache partition for every turn. The per-turn session id would
+      // otherwise partition it, and no turn could reuse another's cached
+      // prompt — which is most of what a turn sends.
+      promptCacheKey: "scout.explore",
     }),
   });
 

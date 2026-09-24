@@ -218,7 +218,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
 
   const runReportQuery = tool({
     description:
-      "Run a valid ScoutQL query and return the resulting rows: over all ingested match data, or, with servers, over those servers' tracked players. Every statistic you state must come from a result of this tool. Load the scoutql skill first if you have not this turn.",
+      "Run a valid ScoutQL query and return the resulting rows: over all ingested match data, or, with servers, over those servers' tracked players. Every statistic you state must come from a result of this tool.",
     inputSchema: z
       .object({ queryText: ReportQueryTextSchema, servers: QueryServersSchema })
       .strict(),
@@ -311,9 +311,8 @@ export function createExploreTools(options: ExploreToolsOptions) {
       }),
   });
 
-  // The scoutql skill carries the full language reference, so the
-  // `get_report_language` reference tool is not registered here — one load
-  // path keeps the model from splitting its budget between two.
+  // The system prompt carries the full language reference, so the
+  // `get_report_language` reference tool is not registered here.
   return {
     load_skill: createLoadSkillTool({
       skills: enabledExploreSkills(skillOptions),

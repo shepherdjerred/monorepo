@@ -1,6 +1,4 @@
 import { DARE_V2_PROMPT_VERSION } from "@scout-for-lol/data";
-import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
-import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   loadExploreSkillFiles,
@@ -11,21 +9,15 @@ import {
  * The Explore skill registry: which skills exist, which are enabled for a
  * turn, and how a Markdown body becomes the text `load_skill` returns.
  *
- * Placeholders keep generated content unforked. The ScoutQL field guide and
- * language reference are generated from the same catalogs the docs, editor
- * completions, and report-query agent read; freezing them into Markdown would
- * fork them from those sources of truth, so skill bodies reference them as
+ * Placeholders keep generated content unforked: skill bodies reference it as
  * `{{token}}` and the provider map below resolves each token at load time.
+ * The ScoutQL reference is not a skill: it lives in the system prompt (see
+ * `explore/scoutql-reference.ts` for why).
  */
 
-/**
- * Turn-independent providers, resolved lazily so importing the registry does
- * not pay for the ~75KB language reference until a skill actually needs it.
- */
+/** Turn-independent providers, resolved lazily at load time. */
 const STATIC_PLACEHOLDER_PROVIDERS: Record<string, (() => string) | undefined> =
   {
-    scoutqlFieldGuide: () => scoutQlFieldGuideSection(),
-    scoutqlReference: () => JSON.stringify(scoutQlLanguageReference()),
     dareV2PromptVersion: () => DARE_V2_PROMPT_VERSION,
   };
 
