@@ -661,6 +661,28 @@ function groupPlan(overrides: Partial<ScoutQlPlan> = {}): ScoutQlPlan {
 }
 
 describe("group facts projection", () => {
+  test("refuses a team lookup, which a group of players has no single row for", () => {
+    const plan = groupPlan({
+      outputs: [
+        {
+          name: "kp",
+          expr: {
+            kind: "aggregate",
+            func: "avg",
+            arg: col("kill_participation"),
+            distinct: false,
+          },
+          displayKind: "percent",
+          additive: false,
+          evidence: { kind: "sample" },
+        },
+      ],
+    });
+    expect(() => compileGroupFactsProjection(makeInput({ plan }))).toThrow(
+      /kill_participation is not available on player_groups/,
+    );
+  });
+
   test("projects unit/identity columns plus only referenced value columns", () => {
     const compiled = compileGroupFactsProjection(
       makeInput({ plan: groupPlan() }),

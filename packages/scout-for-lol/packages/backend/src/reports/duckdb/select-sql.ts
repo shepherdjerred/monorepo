@@ -44,6 +44,11 @@ export type FactsCteInput = {
    * where the time window and every match-level column live.
    */
   matchDimension?: SqlFragment | undefined;
+  /**
+   * The match_teams rows a participant's team is looked up from — present
+   * only when the plan names a team lookup column.
+   */
+  teamDimension?: SqlFragment | undefined;
   /** Value columns to project as `m.X AS X` (identity handled separately). */
   projected: string[];
   /** Extra computed items (group-facts virtual columns), already fragments. */
@@ -93,6 +98,19 @@ function matchDimensionCte(dimension: SqlFragment): SqlFragment {
   );
 }
 
+/** One row per (match, team), for the same reason the match dimension is grouped. */
+function teamDimensionCte(dimension: SqlFragment): SqlFragment {
+  return seq(
+    "team_dim AS (SELECT match_id, team_id, any_value(champion_kills) AS team_champion_kills FROM (",
+    dimension,
+    ") GROUP BY match_id, team_id)",
+  );
+}
+
+const TEAM_LOOKUP_ITEMS = "t.team_champion_kills AS team_champion_kills";
+const TEAM_LOOKUP_JOIN =
+  " LEFT JOIN team_dim t ON t.match_id = m.match_id AND t.team_id = m.team_id";
+
 const MATCH_DIMENSION_ITEMS =
   "d.game_creation_at AS game_creation_at, d.queue AS queue, d.patch AS patch, d.map_id AS map_id";
 
@@ -108,9 +126,11 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
     .map((name) => `m.${name} AS ${name}`)
     .join(", ");
   const teamSource = input.columnSource === "match-team";
+  const team = input.teamDimension;
   const items = joinFragments(
     [
       frag(identityProjection(input.scope, input.columnSource)),
+      ...(team === undefined ? [] : [frag(TEAM_LOOKUP_ITEMS)]),
       // No puuid exists on a team row; the column is held open as NULL so the
       // facts shape does not vary by source.
       frag(teamSource ? "NULL::VARCHAR AS puuid" : "m.puuid AS puuid"),
@@ -134,13 +154,18 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
       ") m JOIN match_dim d ON d.match_id = m.match_id)",
     );
   }
+  const teamCte =
+    team === undefined ? frag("") : seq(teamDimensionCte(team), ", ");
+  const teamJoin = team === undefined ? "" : TEAM_LOOKUP_JOIN;
   if (input.scope.kind === "global") {
     return seq(
-      "WITH facts AS (SELECT ",
+      "WITH ",
+      teamCte,
+      "facts AS (SELECT ",
       items,
       " FROM (",
       input.source,
-      ") m)",
+      `) m${teamJoin})`,
     );
   }
   const accountsParquet = input.files.accountsParquet;
@@ -151,13 +176,15 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
   }
   const accounts = buildAccountsSource(accountsParquet, input.scope.serverId);
   return seq(
-    "WITH accounts AS (",
+    "WITH ",
+    teamCte,
+    "accounts AS (",
     accounts,
     "), facts AS (SELECT ",
     items,
     " FROM (",
     input.source,
-    ") m JOIN accounts a ON a.puuid = m.puuid)",
+    `) m JOIN accounts a ON a.puuid = m.puuid${teamJoin})`,
   );
 }
 

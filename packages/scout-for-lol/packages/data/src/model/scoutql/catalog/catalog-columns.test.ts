@@ -91,6 +91,10 @@ describe("virtual dimensions match what the engine can compute", () => {
       "surrender_state",
       "arena_placement",
       "map",
+      // Looked up from the participant's team row (column-map.ts
+      // TEAM_LOOKUP_COLUMNS); joined only when a query names one.
+      "team_champion_kills",
+      "kill_participation",
     ]);
   });
 

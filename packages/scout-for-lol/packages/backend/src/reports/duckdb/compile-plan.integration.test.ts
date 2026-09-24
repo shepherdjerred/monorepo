@@ -711,3 +711,44 @@ describe("match_teams end-to-end", () => {
     );
   });
 });
+
+// ── team lookups on participant rows ─────────────────────────────────────────
+
+describe("kill participation end-to-end", () => {
+  test("divides each player's kills and assists by their team's kills", async () => {
+    // NA1_100, team 100: Alice 2 kills + 5 assists, Bob 3 + 1, and the
+    // untracked Derek 9 kills — 14 team kills in all.
+    const kp: ScoutQlOutput = {
+      name: "kp",
+      expr: {
+        kind: "aggregate",
+        func: "avg",
+        arg: col("kill_participation"),
+        distinct: false,
+      },
+      displayKind: "percent",
+      additive: false,
+      evidence: { kind: "sample" },
+    };
+    const { rows, compiled } = await run(
+      makeInput({
+        plan: makePlan({
+          outputs: [kp],
+          where: eq("match_id", "NA1_100"),
+          groupings: [{ kind: "column", column: "player", name: "player" }],
+        }),
+      }),
+    );
+    expect(compiled.aggregateSql).toContain("LEFT JOIN team_dim t");
+    const byPlayer = new Map(
+      rows.map((row) => [String(row["label"]), Number(row["expr_0"])] as const),
+    );
+    expect(byPlayer.get("Alice")).toBeCloseTo(7 / 14, 6);
+    expect(byPlayer.get("Bob")).toBeCloseTo(4 / 14, 6);
+  });
+
+  test("does not join the team table unless a query names a team column", async () => {
+    const { compiled } = await run(makeInput());
+    expect(compiled.aggregateSql).not.toContain("team_dim");
+  });
+});

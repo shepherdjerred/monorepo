@@ -172,6 +172,26 @@ const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
     "Arena placement label ('Not Arena' outside Arena).",
   ),
   virtualColumn("map", "integer", "Map dimension (map_id)."),
+  // Looked up from this participant's team row. Numbers, not dimensions, so
+  // they carry a numeric display kind rather than virtualColumn's text.
+  {
+    name: "team_champion_kills",
+    type: "integer",
+    description:
+      "Champion kills by this participant's whole team in the game (from the team row).",
+    displayKind: "count",
+    virtual: true,
+    contexts: { select: true, where: true, groupBy: false },
+  },
+  {
+    name: "kill_participation",
+    type: "double",
+    description:
+      "Share of the team's kills this participant took part in: (kills + assists) / team champion kills. NULL when the team had no kills.",
+    displayKind: "percent",
+    virtual: true,
+    contexts: { select: true, where: true, groupBy: false },
+  },
 ];
 
 const PREMATCH_VIRTUALS: ScoutQlColumnInfo[] = [

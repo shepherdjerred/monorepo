@@ -75,6 +75,33 @@ const PLAYER_BINDING: ColumnBinding = {
 const SURRENDER_STATE_SQL =
   "CASE WHEN early_surrendered THEN 'Early surrender' WHEN surrendered THEN 'Surrender' ELSE 'Played out' END";
 
+/**
+ * Match facts looked up for a team row, which carries none of its own.
+ *
+ * Marked `identity` for the same reason player columns are: they do not exist
+ * in the union-branch pushdown context, only after the facts projection joins
+ * the match dimension. That routes any predicate over them to the residual
+ * WHERE, which runs against facts — where they do exist.
+ */
+function lookedUp(sql: string, type: SqlTypeClass): ColumnBinding {
+  return { sql, type, dependencies: [], identity: true };
+}
+
+/**
+ * The team a participant played on, looked up from `match_teams`.
+ *
+ * A participant row carries its own kills but not its team's, so kill
+ * participation — the share of a team's kills a player took part in — could
+ * not be computed from one source. The team row is the participant row's
+ * parent on `(match_id, team_id)`, so, as with the match dimension on
+ * `match_teams`, it is looked up rather than joined as a second fact source.
+ * The lookup is added to the facts CTE only when a query names one of these.
+ */
+export const TEAM_LOOKUP_COLUMNS: ReadonlySet<string> = new Set([
+  "team_champion_kills",
+  "kill_participation",
+]);
+
 /** Virtual dimensions over match facts, mirroring the grouping arms. */
 const MATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["player", PLAYER_BINDING],
@@ -100,6 +127,17 @@ const MATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
     virtual("coalesce(placement::VARCHAR, 'Not Arena')", "text", ["placement"]),
   ],
   ["map", virtual("map_id", "numeric", ["map_id"])],
+  ["team_champion_kills", lookedUp("team_champion_kills", "numeric")],
+  [
+    "kill_participation",
+    {
+      // NULL rather than a division by zero for a team with no kills.
+      sql: "((kills + assists)::DOUBLE / NULLIF(team_champion_kills, 0))",
+      type: "numeric",
+      dependencies: ["kills", "assists"],
+      identity: true,
+    },
+  ],
 ];
 
 /** Prematch rows have no champion_name; the dimension shows the numeric id. */
@@ -108,18 +146,6 @@ const PREMATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["champion", virtual("champion_id::VARCHAR", "text", ["champion_id"])],
   ["map", virtual("map_id", "numeric", ["map_id"])],
 ];
-
-/**
- * Match facts looked up for a team row, which carries none of its own.
- *
- * Marked `identity` for the same reason player columns are: they do not exist
- * in the union-branch pushdown context, only after the facts projection joins
- * the match dimension. That routes any predicate over them to the residual
- * WHERE, which runs against facts — where they do exist.
- */
-function lookedUp(sql: string, type: SqlTypeClass): ColumnBinding {
-  return { sql, type, dependencies: [], identity: true };
-}
 
 const MATCH_TEAM_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   [

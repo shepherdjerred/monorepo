@@ -21,6 +21,7 @@ import {
   type ExprContext,
 } from "#src/reports/duckdb/expr-sql.ts";
 import {
+  TEAM_LOOKUP_COLUMNS,
   buildPlanColumnMap,
   resolveColumn,
   type ColumnMap,
@@ -198,14 +199,25 @@ function projectionDependencies(
 ): Set<string> {
   const dependencies = new Set<string>();
   for (const name of referenced) {
-    const binding = resolveColumn(columns, name);
-    if (binding.identity) continue;
-    for (const dependency of binding.dependencies) {
+    // Identity and looked-up columns are projected by the facts CTE itself,
+    // but a column derived from one (kill participation) still reads source
+    // columns, and those must be projected like any other.
+    for (const dependency of resolveColumn(columns, name).dependencies) {
       dependencies.add(dependency);
     }
   }
   return dependencies;
 }
+
+/**
+ * A team dimension with no rows, for a lake that has no team files yet.
+ *
+ * Returning no source would make the whole query empty; a participant with no
+ * team row should instead read NULL team kills, which is what the LEFT JOIN
+ * against this gives.
+ */
+const EMPTY_TEAM_DIMENSION =
+  "SELECT NULL::VARCHAR AS match_id, NULL::INTEGER AS team_id, NULL::INTEGER AS champion_kills WHERE false";
 
 type FactsPipeline = {
   /** CTE prefix ending after facts (and filtered, when present). */
@@ -217,7 +229,12 @@ function buildFactsPipeline(
   input: PlanQueryInput,
   kind: SourceKind,
   columns: ColumnMap,
-  extras: { projected: Set<string>; extraItems: SqlFragment[] },
+  extras: {
+    projected: Set<string>;
+    extraItems: SqlFragment[];
+    /** Join the team row for team_champion_kills / kill_participation. */
+    teamLookup?: boolean;
+  },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
     columns,
@@ -263,12 +280,20 @@ function buildFactsPipeline(
     return undefined;
   }
 
+  // Unrestricted: a team table is two rows a match, and the LEFT JOIN keeps
+  // only the matches the participant scan already chose.
+  const teamDimension =
+    extras.teamLookup === true
+      ? (buildMatchTeamsSource(input.files, frag("")) ??
+        frag(EMPTY_TEAM_DIMENSION))
+      : undefined;
   const facts = buildFactsCte({
     scope: input.scope,
     files: input.files,
     columnSource: kind.columnSource,
     source,
     matchDimension,
+    teamDimension,
     projected: [...extras.projected],
     extraItems: extras.extraItems,
   });
@@ -339,6 +364,9 @@ export function compileScoutQlPlanQuery(
   const pipeline = buildFactsPipeline(input, kind, columns, {
     projected,
     extraItems: [],
+    teamLookup:
+      kind.columnSource === "match" &&
+      [...referenced].some((name) => TEAM_LOOKUP_COLUMNS.has(name)),
   });
   if (pipeline === undefined) {
     return undefined;
@@ -427,6 +455,14 @@ export function compileGroupFactsProjection(
   const columns = buildPlanColumnMap(kind.columnSource);
 
   const referenced = referencedColumnNames(plan);
+  const teamLookup = [...referenced].find((name) =>
+    TEAM_LOOKUP_COLUMNS.has(name),
+  );
+  if (teamLookup !== undefined) {
+    throw new Error(
+      `${teamLookup} is not available on player_groups: a group spans players, not one team row.`,
+    );
+  }
   const fixed = new Set<string>(["puuid", ...GROUP_UNIT_COLUMNS]);
   const rawNames: string[] = [];
   const projected = new Set<string>(GROUP_UNIT_COLUMNS);
