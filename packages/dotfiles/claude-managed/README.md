@@ -74,6 +74,14 @@ re-run the script.
    `~/.claude/settings.json` remains ignored).
 2. Seed user settings: `cp settings.user-reference.json ~/.claude/settings.json` (then `chmod 600`).
 3. Start Claude Code; adjust `model` / `effortLevel` freely — they stay local.
+4. Log the agent GitHub profile in as `derrej` (the token goes to the
+   keychain): `GH_CONFIG_DIR=$HOME/.config/gh-agent gh auth login --hostname github.com --git-protocol https --web`.
+   Verify with `GH_CONFIG_DIR=$HOME/.config/gh-agent gh api user -q .login`.
+   Without this login, agent `gh` calls and pushes fail.
+5. Switch git-spice to CLI auth with `git-spice auth login --refresh`, then
+   choose **CLI**. git-spice then asks `gh` for a token at run time: agent
+   shells get `derrej` and Jerred's shells get his own account. With OAuth
+   or a PAT stored instead, agents would still open PRs as Jerred.
 
 ## Recovery
 
