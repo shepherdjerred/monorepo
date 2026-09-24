@@ -6,6 +6,7 @@ import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
   classifyLlmProviderIssue,
+  providerForError,
   recordProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
 import { heartbeatWhile, probeQueue, unavailable } from "./activity-runtime.ts";
@@ -49,7 +50,7 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
     if (quotaFailure !== null) {
       recordProviderIssue({
         app: "scout-for-lol",
-        provider: "openrouter",
+        provider: providerForError(error),
         kind: "quota",
         source: "betting_parlay",
       });

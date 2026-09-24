@@ -37,7 +37,7 @@ export async function classifyShouldRespond(
     async (span) => {
       try {
         const result = await generateValidatedObject(getLlmRuntime(), {
-          model: config.openRouter.classifierModel,
+          model: config.llm.classifierModel,
           system:
             "Decide whether the elected persona should reply to the latest Discord message. Reply only when it is directed at the assistant or naturally continues the assistant's active conversation. Ignore unrelated side chatter. Always return reason; use null when no reason is needed.",
           prompt: `${buildConfiguredPersonaProjection(input.persona, config.persona.enabled)}\n\nRecent conversation:\n${input.transcript.length === 0 ? "(none)" : input.transcript}\n\nLatest message:\n${input.latestMessage}`,
@@ -45,7 +45,7 @@ export async function classifyShouldRespond(
           schemaName: "birmel_should_respond",
           workload: "birmel.admission.classify",
           sessionId: input.channelId,
-          reasoningEffort: config.openRouter.reasoningEffort,
+          reasoningEffort: config.llm.reasoningEffort,
           abortSignal: AbortSignal.timeout(config.agent.auxiliaryTimeoutMs),
         });
         span.setAttribute(

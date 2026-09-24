@@ -4,7 +4,10 @@ import { beforeAll, afterAll, vi } from "vitest";
 beforeAll(() => {
   Bun.env["DISCORD_TOKEN"] = "test-discord-token";
   Bun.env["DISCORD_CLIENT_ID"] = "123456789012345678";
-  Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
+  Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+  // Birmel's image model is Gemini on Vertex. Tests mock the generation call,
+  // but the runtime still resolves the provider, which needs a project.
+  Bun.env["GOOGLE_VERTEX_PROJECT"] = "test-vertex-project";
 });
 
 afterAll(() => {

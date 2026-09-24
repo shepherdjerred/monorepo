@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { classifyLlmProviderIssue } from "./provider-metrics.ts";
+import {
+  classifyLlmProviderIssue,
+  providerForError,
+} from "./provider-metrics.ts";
 
 describe("classifyLlmProviderIssue", () => {
   test("classifies insufficient quota 429s as quota issues", () => {
@@ -12,7 +15,7 @@ describe("classifyLlmProviderIssue", () => {
     expect(issue).toBe("quota");
   });
 
-  test("classifies OpenRouter credit failures as quota issues", () => {
+  test("classifies credit failures as quota issues", () => {
     expect(
       classifyLlmProviderIssue({
         statusCode: 402,
@@ -21,7 +24,7 @@ describe("classifyLlmProviderIssue", () => {
     ).toBe("quota");
   });
 
-  test("classifies OpenRouter weekly-limit 403s as quota issues", () => {
+  test("classifies weekly-limit 403s as quota issues", () => {
     expect(
       classifyLlmProviderIssue({
         status: 403,
@@ -86,5 +89,40 @@ describe("classifyLlmProviderIssue", () => {
     const issue = classifyLlmProviderIssue(new Error("connection reset"));
 
     expect(issue).toBeNull();
+  });
+});
+
+describe("providerForError", () => {
+  test("names the provider from the failed request's URL", () => {
+    expect(
+      providerForError({ url: "https://api.anthropic.com/v1/messages" }),
+    ).toBe("anthropic");
+    expect(
+      providerForError({
+        url: "https://aiplatform.googleapis.com/v1/projects/p/locations/global",
+      }),
+    ).toBe("google");
+  });
+
+  test("looks through retry wrappers and causes", () => {
+    // The AI SDK's RetryError carries the real APICallError as lastError.
+    expect(
+      providerForError({
+        name: "AI_RetryError",
+        lastError: { url: "https://api.openai.com/v1/responses" },
+      }),
+    ).toBe("openai");
+    expect(
+      providerForError(
+        new Error("wrapped", {
+          cause: { url: "https://api.openai.com/v1/responses" },
+        }),
+      ),
+    ).toBe("openai");
+  });
+
+  test("admits it does not know rather than guessing from configuration", () => {
+    expect(providerForError(new Error("no url here"))).toBe("unknown");
+    expect(providerForError({ url: "not a url" })).toBe("unknown");
   });
 });

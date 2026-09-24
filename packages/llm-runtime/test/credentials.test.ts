@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { providerCredentialsFromEnv } from "@shepherdjerred/llm-runtime";
+import {
+  providerCredentialsFromEnv,
+  requireCredentialsFor,
+} from "@shepherdjerred/llm-runtime";
 
 const FEDERATION = {
   ANTHROPIC_IDENTITY_TOKEN_FILE: "/var/run/secrets/anthropic.com/token",
@@ -55,5 +58,22 @@ describe("provider credentials from the environment", () => {
     expect(
       providerCredentialsFromEnv({ GOOGLE_CLOUD_PROJECT: "ambient" }).google,
     ).toEqual({ project: "ambient" });
+  });
+});
+
+describe("requireCredentialsFor", () => {
+  test("passes when the model's provider is configured", () => {
+    expect(() => {
+      requireCredentialsFor("gpt-5.6-luna", { openai: { apiKey: "sk" } });
+    }).not.toThrow();
+  });
+
+  test("names the provider and the variable when it is not", () => {
+    expect(() => {
+      requireCredentialsFor("claude-sonnet-5", { openai: { apiKey: "sk" } });
+    }).toThrow("routes to anthropic, but no anthropic credentials");
+    expect(() => {
+      requireCredentialsFor("gpt-5.6-luna", {});
+    }).toThrow("set OPENAI_API_KEY");
   });
 });

@@ -92,7 +92,7 @@ export function getImageGenerationClient(): ImageGenerationClient | undefined {
         {
           service: runtime.service,
           callSite: params.workload,
-          system: "openrouter",
+          system: runtime.providerFor(params.model).provider,
         },
         {
           model: params.model,

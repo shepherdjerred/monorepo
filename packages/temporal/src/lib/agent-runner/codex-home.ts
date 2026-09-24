@@ -63,18 +63,18 @@ export async function prepareCodexSubscriptionHome(
   }
 }
 
-export type CodexOpenRouterHome = {
+export type CodexApiKeyHome = {
   environment: Record<string, string>;
   providerHomeDirectory: string | undefined;
   subscriptionHome: string | undefined;
   subscriptionParentMode: ProviderHomeParentMode | undefined;
 };
 
-export async function prepareCodexOpenRouterHome(input: {
+export async function prepareCodexApiKeyHome(input: {
   environment: Record<string, string>;
   providerUid: number | undefined;
   resumeSessionId: string | undefined;
-}): Promise<CodexOpenRouterHome> {
+}): Promise<CodexApiKeyHome> {
   const configuredCodexHome = input.environment["CODEX_HOME"];
   const persistentCodexHome =
     configuredCodexHome === "" ? undefined : configuredCodexHome;
@@ -84,7 +84,7 @@ export async function prepareCodexOpenRouterHome(input: {
     input.providerUid !== undefined
   ) {
     throw new Error(
-      "Resumed OpenRouter Codex runs require a caller-owned CODEX_HOME",
+      "Resumed API-key Codex runs require a caller-owned CODEX_HOME",
     );
   }
   if (persistentCodexHome !== undefined) {
@@ -115,8 +115,8 @@ export async function prepareCodexOpenRouterHome(input: {
   };
 }
 
-export async function rollbackCodexOpenRouterHome(
-  home: CodexOpenRouterHome,
+export async function rollbackCodexApiKeyHome(
+  home: CodexApiKeyHome,
 ): Promise<void> {
   const failures: unknown[] = [];
   for (const operation of [
@@ -141,14 +141,14 @@ export async function rollbackCodexOpenRouterHome(
   if (failures.length > 0) {
     const firstFailure = failures[0];
     if (firstFailure === undefined)
-      throw new Error("Codex OpenRouter home cleanup failed without an error");
-    throw new Error("Codex OpenRouter home cleanup failed", {
+      throw new Error("Codex API-key home cleanup failed without an error");
+    throw new Error("Codex API-key home cleanup failed", {
       cause:
         failures.length === 1
           ? firstFailure
           : new AggregateError(
               failures,
-              "Codex OpenRouter home cleanup had multiple failures",
+              "Codex API-key home cleanup had multiple failures",
             ),
     });
   }

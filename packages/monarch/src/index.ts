@@ -172,8 +172,8 @@ async function main(): Promise<void> {
   if (config.verbose) setLogLevel("debug");
 
   await initMonarch();
-  // Both model-free modes are allowed to run without OPENROUTER_API_KEY
-  // (see config.ts), so neither may reach initLlm with an empty key.
+  // Both model-free modes are allowed to run without provider credentials
+  // (see config.ts), so neither may reach initLlm.
   const usesModel = !config.notesOnly && !config.derivedOnly;
   if (usesModel) {
     initLlm(config.model);

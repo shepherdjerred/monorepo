@@ -478,8 +478,14 @@ describe("patch attribution", () => {
 
   test("a patch resolved through several packages selects only those images", async () => {
     expect(
-      await select(["patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"]),
-    ).toEqual(["birmel", "scout-for-lol", "temporal-worker"]);
+      await select([
+        "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
+      ]),
+    ).toEqual([
+      "discord-plays-mario-kart",
+      "discord-plays-pokemon",
+      "streambot",
+    ]);
   });
 
   test("a patch for a dep outside every image closure selects nothing", async () => {

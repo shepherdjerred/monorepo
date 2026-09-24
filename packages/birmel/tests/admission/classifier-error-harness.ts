@@ -12,7 +12,7 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/llm.ts", () => ({
 
 vi.doMock("@shepherdjerred/birmel/config/index.ts", () => ({
   getConfig: () => ({
-    openRouter: {
+    llm: {
       classifierModel: "gpt-5.6-luna",
       reasoningEffort: "low",
     },

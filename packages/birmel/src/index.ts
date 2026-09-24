@@ -57,9 +57,9 @@ async function main(): Promise<void> {
     },
   });
   logger.info("Starting Birmel 3.0", {
-    model: config.openRouter.model,
-    classifierModel: config.openRouter.classifierModel,
-    memoryModel: config.openRouter.memoryModel,
+    model: config.llm.model,
+    classifierModel: config.llm.classifierModel,
+    memoryModel: config.llm.memoryModel,
     personaEnabled: config.persona.enabled,
     telemetryEnabled: config.telemetry.enabled,
     trustedActorCount: config.authority.trustedUserIds.length,

@@ -10,13 +10,13 @@ export async function runCodexTurn(input: {
   model: string;
   apiKey: string;
 }): Promise<AgentOutput> {
-  const openRouter = createCodexConfig({
+  const codexConfig = createCodexConfig({
     apiKey: input.apiKey,
     modelId: input.model,
     env: agentEnvironment({}),
   });
   const codex = new Codex({
-    ...openRouter.codexOptions,
+    ...codexConfig.codexOptions,
     config: {
       ...openRouter.providerConfig,
       features: { apps: false, plugins: false, multi_agent: false },
@@ -24,7 +24,7 @@ export async function runCodexTurn(input: {
   });
   const thread = codex.startThread({
     approvalPolicy: "never",
-    model: openRouter.routeModelId,
+    model: codexConfig.routeModelId,
     modelReasoningEffort: "medium",
     networkAccessEnabled: true,
     sandboxMode: "danger-full-access",

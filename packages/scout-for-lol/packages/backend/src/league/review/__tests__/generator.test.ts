@@ -105,12 +105,13 @@ function buildThrowingTextClient(error: unknown): TextGenerationClient {
 
 async function getProviderIssueActiveValue(
   kind: ProviderIssueKind,
+  provider: string,
 ): Promise<number | undefined> {
   const metric = await aiProviderIssueActive.get();
   return metric.values.find((value) => {
     return (
       value.labels.app === "scout-for-lol" &&
-      value.labels.provider === "openrouter" &&
+      value.labels.provider === provider &&
       value.labels.kind === kind &&
       value.labels.source === "match_review"
     );
@@ -126,7 +127,6 @@ beforeEach(() => {
   for (const kind of PROVIDER_ISSUE_KINDS) {
     resolveProviderIssue({
       app: "scout-for-lol",
-      provider: "openrouter",
       kind,
       source: "match_review",
     });
@@ -342,13 +342,18 @@ describe("generateMatchReview", () => {
       });
 
       expect(review).toBeUndefined();
-      expect(await getProviderIssueActiveValue("budget_exceeded")).toBe(1);
+      // Scout's own token budget refused the call, so there is no provider
+      // request URL to attribute it to.
+      expect(
+        await getProviderIssueActiveValue("budget_exceeded", "unknown"),
+      ).toBe(1);
       expect(captureException).not.toHaveBeenCalled();
     });
 
     test("records context-limit provider issues without capturing to Sentry", async () => {
       textClient = buildThrowingTextClient({
         status: 400,
+        url: "https://api.openai.com/v1/responses",
         error: {
           message:
             "Input tokens exceed the configured limit of 272000 tokens. Your messages resulted in 305127 tokens.",
@@ -365,7 +370,10 @@ describe("generateMatchReview", () => {
       });
 
       expect(review).toBeUndefined();
-      expect(await getProviderIssueActiveValue("context_limit")).toBe(1);
+      // The request URL names the provider that refused it.
+      expect(await getProviderIssueActiveValue("context_limit", "openai")).toBe(
+        1,
+      );
       expect(captureException).not.toHaveBeenCalled();
     });
   });

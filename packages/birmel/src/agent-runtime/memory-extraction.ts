@@ -417,7 +417,7 @@ export async function extractAndApplyTurnMemory(options: {
       );
       const runtime = getLlmRuntime();
       const result = await generateValidatedObject(runtime, {
-        model: config.openRouter.memoryModel,
+        model: config.llm.memoryModel,
         system: `Extract two deliberately separate kinds of durable memory.
 
 Elected persona projection:
@@ -442,7 +442,7 @@ Curated self-memory:
         schemaName: "birmel_memory_candidates",
         workload: "birmel.memory.extract",
         sessionId: options.turn.channelId,
-        reasoningEffort: config.openRouter.reasoningEffort,
+        reasoningEffort: config.llm.reasoningEffort,
         abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
       });
       const humanClaims = attachExtractionProvenance({
@@ -466,7 +466,7 @@ Curated self-memory:
         return 0;
       }
       const embeddings = await embedMany({
-        model: runtime.embeddingModel(config.openRouter.embeddingModel),
+        model: runtime.embeddingModel(config.llm.embeddingModel),
         values: candidates.map(
           ({ candidate }) =>
             `${candidate.subject} ${candidate.predicate} ${candidate.value}`,
@@ -487,7 +487,7 @@ Curated self-memory:
           userId: options.turn.userId,
           personaId: options.persona,
           authorUserId: options.turn.userId,
-          extractorModel: config.openRouter.memoryModel,
+          extractorModel: config.llm.memoryModel,
         },
         candidates: candidates.map(({ candidate, provenance }, index) => {
           const embedding = embeddings.embeddings[index];

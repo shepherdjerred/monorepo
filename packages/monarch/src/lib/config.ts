@@ -1,9 +1,9 @@
 import { parseArgs } from "node:util";
 import { z } from "zod";
+import { requireCredentialsFor } from "@shepherdjerred/llm-runtime";
 import { latestSclCsv } from "./finance-vault.ts";
 
 export type Config = {
-  openRouterApiKey: string;
   apply: boolean;
   limit: number;
   batchSize: number;
@@ -114,9 +114,10 @@ export function getConfig(): Config {
   // make the cheapest mode the hardest to run.
   const notesOnly = values["notes-only"];
   const derivedOnly = values["derived-only"];
-  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"] ?? "";
-  if (openRouterApiKey === "" && !notesOnly && !derivedOnly) {
-    throw new Error("OPENROUTER_API_KEY environment variable is required");
+  // Fail before the slow enrichment work, and name the provider the chosen
+  // model actually needs rather than a single fixed variable.
+  if (!notesOnly && !derivedOnly) {
+    requireCredentialsFor(values.model);
   }
 
   const currentYear = new Date().getFullYear();
@@ -128,7 +129,6 @@ export function getConfig(): Config {
       : defaultYears;
 
   return {
-    openRouterApiKey,
     apply: values.apply,
     limit: Number(values.limit),
     batchSize: Number(values["batch-size"]),

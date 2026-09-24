@@ -29,9 +29,17 @@ import {
   type StructuredOutputAttempt as InnerStructuredOutputAttempt,
   type TokenBreakdown as InnerTokenBreakdown,
 } from "./types.ts";
-import { providerCredentialsFromEnv as innerProviderCredentialsFromEnv } from "./credentials.ts";
+import {
+  providerCredentialsFromEnv as innerProviderCredentialsFromEnv,
+  requireCredentialsFor as innerRequireCredentialsFor,
+} from "./credentials.ts";
 import { generateValidatedObject as innerGenerateValidatedObject } from "./validated-object.ts";
 import { webSearchTool as innerWebSearchTool } from "./web-search.ts";
+import {
+  reasoningProviderOptions as innerReasoningProviderOptions,
+  toolLoopProviderOptions as innerToolLoopProviderOptions,
+  type ProviderOptions as InnerProviderOptions,
+} from "./provider-options.ts";
 import {
   createCodexConfig as innerCreateCodexConfig,
   type CodexConfig as InnerCodexConfig,
@@ -104,6 +112,22 @@ export type RuntimeTraceContext = Identity<InnerRuntimeTraceContext>;
 export type StructuredOutputAttempt = Identity<InnerStructuredOutputAttempt>;
 export type TokenBreakdown = Identity<InnerTokenBreakdown>;
 export type CodexConfig = Identity<InnerCodexConfig>;
+export type ProviderOptions = Identity<InnerProviderOptions>;
+export type ReasoningEffort = Parameters<
+  typeof innerReasoningProviderOptions
+>[2];
+
+export function reasoningProviderOptions(
+  ...args: Parameters<typeof innerReasoningProviderOptions>
+): ReturnType<typeof innerReasoningProviderOptions> {
+  return innerReasoningProviderOptions(...args);
+}
+
+export function toolLoopProviderOptions(
+  ...args: Parameters<typeof innerToolLoopProviderOptions>
+): ReturnType<typeof innerToolLoopProviderOptions> {
+  return innerToolLoopProviderOptions(...args);
+}
 
 export function createCodexConfig(
   ...args: Parameters<typeof innerCreateCodexConfig>
@@ -145,6 +169,12 @@ export function providerCredentialsFromEnv(
   ...args: Parameters<typeof innerProviderCredentialsFromEnv>
 ): ReturnType<typeof innerProviderCredentialsFromEnv> {
   return innerProviderCredentialsFromEnv(...args);
+}
+
+export function requireCredentialsFor(
+  ...args: Parameters<typeof innerRequireCredentialsFor>
+): ReturnType<typeof innerRequireCredentialsFor> {
+  innerRequireCredentialsFor(...args);
 }
 
 export function createLlmRuntime(

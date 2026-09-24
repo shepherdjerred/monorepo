@@ -85,18 +85,18 @@ async function captureRunFailure(
 }
 
 // runAgent builds a real provider environment, which fails fast without the
-// provider's OpenRouter credential.
-const originalOpenRouterCredential = Bun.env["OPENROUTER_API_KEY"];
+// provider's own credential.
+const originalOpenAiCredential = Bun.env["OPENAI_API_KEY"];
 
 beforeAll(() => {
-  Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-credential";
+  Bun.env["OPENAI_API_KEY"] = "test-openai-credential";
 });
 
 afterAll(() => {
-  if (originalOpenRouterCredential === undefined) {
-    delete Bun.env["OPENROUTER_API_KEY"];
+  if (originalOpenAiCredential === undefined) {
+    delete Bun.env["OPENAI_API_KEY"];
   } else {
-    Bun.env["OPENROUTER_API_KEY"] = originalOpenRouterCredential;
+    Bun.env["OPENAI_API_KEY"] = originalOpenAiCredential;
   }
 });
 
@@ -325,9 +325,9 @@ describe("agent task runtime support", () => {
   });
 
   it("redacts native SDK provider keys and operational credentials", () => {
-    const openRouterApiKey = "openrouter-distinct-secret";
+    const openAiApiKey = "openai-distinct-secret";
     const tokens = agentTaskSecretTokens("github-token", {
-      OPENROUTER_API_KEY: openRouterApiKey,
+      OPENAI_API_KEY: openAiApiKey,
       HA_TOKEN: "ha-distinct-secret",
       AWS_SECRET_ACCESS_KEY: "aws-distinct-secret",
       AGENT_TASK_API_TOKEN: "agent-task-distinct-secret",
@@ -338,7 +338,7 @@ describe("agent task runtime support", () => {
         "https://sentry-public@sentry.example/42?token=sentry-query-secret",
     });
 
-    expect(tokens).toContain(openRouterApiKey);
+    expect(tokens).toContain(openAiApiKey);
     expect(tokens).toContain("ha-distinct-secret");
     expect(tokens).toContain("aws-distinct-secret");
     expect(tokens).toContain("agent-task-distinct-secret");
@@ -378,7 +378,7 @@ describe("agent task environment boundary", () => {
         PATH: "/usr/bin",
         PROMETHEUS_URL: "http://prometheus.local",
         CLAUDE_CODE_OAUTH_TOKEN: "claude-secret",
-        OPENROUTER_API_KEY: "codex-secret",
+        OPENAI_API_KEY: "codex-secret",
         POSTAL_API_KEY: "postal-secret",
         AGENT_TASK_API_TOKEN: "api-secret",
       }),
@@ -399,11 +399,11 @@ describe("agent task environment boundary", () => {
     );
   });
 
-  it("allows only OpenRouter auth and non-secret read-only runtime configuration", () => {
+  it("allows only the OpenAI key and non-secret read-only runtime configuration", () => {
     const environment = envForProvider("codex", "/tmp/agent-home", {
       PATH: "/usr/bin",
       HOME: "/home/worker",
-      OPENROUTER_API_KEY: "codex-credential",
+      OPENAI_API_KEY: "codex-credential",
       ALERT_DASHBOARD_URL: "http://alerts.local",
       POSTAL_API_KEY: "postal-secret",
       SENDER_EMAIL: "sender@example.test",
@@ -418,7 +418,7 @@ describe("agent task environment boundary", () => {
     expect(environment).toEqual({
       PATH: "/usr/bin",
       HOME: "/tmp/agent-home",
-      OPENROUTER_API_KEY: "codex-credential",
+      OPENAI_API_KEY: "codex-credential",
       ALERT_DASHBOARD_URL: "http://alerts.local",
     });
     expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
@@ -433,7 +433,7 @@ describe("agent task environment boundary", () => {
 
   it("gives a trusted agent its operational credentials but only its own provider credential", () => {
     const environment = envForTrustedAgent(
-      { OPENROUTER_API_KEY: "openrouter-agent-key", GH_TOKEN: "minted" },
+      { OPENAI_API_KEY: "openai-agent-key", GH_TOKEN: "minted" },
       {
         PATH: "/usr/bin",
         // The audit genuinely needs these to inspect live state.
@@ -441,10 +441,11 @@ describe("agent task environment boundary", () => {
         ARGOCD_AUTH_TOKEN: "argocd-secret",
         BUGSINK_TOKEN: "bugsink-secret",
         TALOSCONFIG: "/etc/talos/config",
-        // An unrelated provider credential the worker happens to hold. A
-        // trusted agent has Bash, so inheriting this would make it
-        // exfiltratable by a mistaken or injected command.
-        OPENROUTER_API_KEY: "openrouter-key",
+        // The worker's own copy of this agent's provider key is replaced by the
+        // override; an unrelated provider credential must not be inherited. A
+        // trusted agent has Bash, so inheriting it would make it exfiltratable
+        // by a mistaken or injected command.
+        OPENAI_API_KEY: "worker-openai-key",
         ANTHROPIC_API_KEY: "anthropic-key",
         // Replaced by the minted installation token.
         GH_TOKEN: "worker-token",
@@ -461,22 +462,19 @@ describe("agent task environment boundary", () => {
       ARGOCD_AUTH_TOKEN: "argocd-secret",
       BUGSINK_TOKEN: "bugsink-secret",
       TALOSCONFIG: "/etc/talos/config",
-      OPENROUTER_API_KEY: "openrouter-agent-key",
+      OPENAI_API_KEY: "openai-agent-key",
       GH_TOKEN: "minted",
     });
-    expect(environment).toHaveProperty(
-      "OPENROUTER_API_KEY",
-      "openrouter-agent-key",
-    );
+    expect(environment).toHaveProperty("OPENAI_API_KEY", "openai-agent-key");
     expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
   });
 
-  it("fails fast when the provider's OpenRouter credential is missing", () => {
+  it("fails fast when the provider's credential is missing", () => {
     expect(() =>
       envForProvider("codex", "/tmp/agent-home", { PATH: "/usr/bin" }),
-    ).toThrow("OPENROUTER_API_KEY is required for codex agent tasks");
+    ).toThrow("OPENAI_API_KEY is required for codex agent tasks");
   });
 });

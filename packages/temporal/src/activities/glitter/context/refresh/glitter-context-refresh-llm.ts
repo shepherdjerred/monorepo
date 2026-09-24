@@ -13,7 +13,7 @@ import {
   type GenerationArtifactResult,
   type GenerationUsage,
 } from "./glitter-context-refresh-cache.ts";
-import { temporalLlmRuntime } from "#activities/agent/openrouter-runtime.ts";
+import { temporalLlmRuntime } from "#activities/agent/synthesis-runtime.ts";
 
 export function glitterPrompt(system: string, user: string) {
   return { system, prompt: user };

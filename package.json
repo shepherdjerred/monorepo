@@ -226,7 +226,6 @@
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "s3rver@3.7.1": "patches/s3rver@3.7.1.patch",
     "react-native-worklets@0.13.0": "patches/react-native-worklets@0.13.0.patch",
-    "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch",
     "@astrojs/internal-helpers@0.11.0": "patches/@astrojs%2Finternal-helpers@0.11.0.patch",
     "@lng2004/node-datachannel@0.32.3-20260815.5": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
     "@react-native-menu/menu@2.0.0": "patches/@react-native-menu%2Fmenu@2.0.0.patch"
