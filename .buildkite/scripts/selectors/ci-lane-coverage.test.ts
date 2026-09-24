@@ -76,6 +76,7 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   images: null,
   "ci-base": null,
   "ci-playwright": null,
+  "windows-cross-compiler": "windows-cross-compiler-pr",
   "helm-types": "pr-dryrun",
   tofu: [
     "tofu-plan-seaweedfs",

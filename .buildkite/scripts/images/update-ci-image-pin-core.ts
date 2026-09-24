@@ -1,6 +1,6 @@
 import { asRecord } from "../../../scripts/lib/json.ts";
 import { classifyRuntimeChange } from "./application-image-runtime.ts";
-import { ciImageDefinition } from "./build-ci-image-core.ts";
+import { ciImageDefinition, type CiImageName } from "./build-ci-image-core.ts";
 
 const DIGEST_PATTERN = /^sha256:[\da-f]{64}$/;
 const COMMIT_PATTERN = /^[\da-f]{40}$/;
@@ -56,7 +56,7 @@ export type CiImagePinState = {
 
 export type CiImageCandidate = {
   readonly schema: "ci-image-candidate/v1";
-  readonly image: "ci-base" | "ci-playwright";
+  readonly image: CiImageName;
   readonly buildNumber: number;
   readonly sourceCommit: string;
   readonly sourceFingerprint: string;
@@ -259,6 +259,28 @@ export function newestPinState(
   return newest;
 }
 
+export type LocalPromotionDecision =
+  "no-digest-change" | "older-than-pin" | "promote";
+
+/**
+ * Compares a candidate with the committed pin. An image with no pin yet always
+ * promotes its first candidate.
+ */
+export function localPromotionDecision(
+  current: CiImagePinState | undefined,
+  candidate: CiImagePinState,
+): LocalPromotionDecision {
+  if (current === undefined) {
+    return "promote";
+  }
+  if (candidate.digest === current.digest) {
+    return "no-digest-change";
+  }
+  return newestPinState([current, candidate]) === candidate
+    ? "promote"
+    : "older-than-pin";
+}
+
 export function verifyDigestFile(
   content: string,
   state: CiImagePinState,
@@ -350,7 +372,7 @@ export function ciImagePromotionFiles(
   image: CiImageCandidate["image"],
 ): readonly string[] {
   const definition = ciImageDefinition(image);
-  if (image === "ci-base") {
+  if (image !== "ci-playwright") {
     return [definition.digestFile, definition.stateFile];
   }
   return [

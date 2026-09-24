@@ -451,9 +451,29 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ".buildkite/scripts/images/update-ci-image-pin.ts",
     "scripts/lib/transient-error.ts",
   ],
+  "windows-cross-compiler": [
+    "packages/windows-cross-compiler/Dockerfile",
+    "packages/windows-cross-compiler/bin/",
+    "packages/windows-cross-compiler/msbuild/",
+    "packages/windows-cross-compiler/wine-patches/",
+    ".buildkite/scripts/images/application-image-runtime.ts",
+    ".buildkite/scripts/images/bake-retry.ts",
+    ".buildkite/scripts/images/build-ci-image-core.ts",
+    ".buildkite/scripts/images/build-ci-image.ts",
+    ".buildkite/scripts/reporting/buildkit-env.ts",
+    ".buildkite/scripts/images/update-ci-image-pin-core.ts",
+    ".buildkite/scripts/images/update-ci-image-pin-github.ts",
+    ".buildkite/scripts/images/update-ci-image-pin.ts",
+    "scripts/lib/transient-error.ts",
+  ],
 };
 
-const lanesWithoutGlobalPaths = new Set(["site-scout"]);
+// windows-cross-compiler images are content-addressed from their own sources;
+// pipeline edits cannot change them, so they do not re-trigger the long build.
+const lanesWithoutGlobalPaths = new Set([
+  "site-scout",
+  "windows-cross-compiler",
+]);
 
 export function selectorPathsForLane(
   lane: string,

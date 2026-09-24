@@ -338,6 +338,7 @@ packages/tasknotes-fixtures:typecheck
 packages/tasknotes-macos:build
 packages/tasknotes-macos:test
 packages/tasknotes-macos:typecheck
+packages/windows-cross-compiler:build
 packages/code-review:build
 packages/architecture:build
 packages/cooklang-rich-preview:test

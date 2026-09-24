@@ -164,6 +164,7 @@
     "packages/version-catalog",
     "packages/voice-assistant",
     "packages/webring",
+    "packages/windows-cross-compiler",
     "scripts"
   ],
   "overrides": {

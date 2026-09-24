@@ -43,6 +43,7 @@ export const summarySteps = [
   "version-commit-back",
   "ci-base-refresh",
   "ci-playwright-refresh",
+  "windows-cross-compiler-refresh",
 ] as const;
 
 export const summaryLanes = [
@@ -76,6 +77,7 @@ export const summaryLanes = [
   "scout-reconcile",
   "ci-base",
   "ci-playwright",
+  "windows-cross-compiler",
 ] as const;
 
 export function outcomeIcon(outcome: string): string {
