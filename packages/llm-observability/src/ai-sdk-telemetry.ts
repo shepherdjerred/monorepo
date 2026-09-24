@@ -7,7 +7,10 @@ import {
   type Tracer,
 } from "@opentelemetry/api";
 import { OpenTelemetry, type OpenTelemetryOptions } from "@ai-sdk/otel";
-import { modelIdForOpenRouterRoute } from "@shepherdjerred/llm-models";
+import {
+  modelIdForNativeRoute,
+  type Provider,
+} from "@shepherdjerred/llm-models";
 import { activeLlmSubjectAttributes } from "./subject.ts";
 import { z } from "zod";
 
@@ -28,6 +31,22 @@ type ParentState = {
 export type RepositoryOpenTelemetryOptions = OpenTelemetryOptions & {
   service: string;
 };
+
+/**
+ * Map an AI SDK provider name onto the catalog's vendor.
+ *
+ * Duplicated from `llm-runtime` rather than shared: that package depends on
+ * this one, so importing it back would close a cycle. Six lines is the cheaper
+ * price.
+ */
+function normalizeProvider(
+  sdkProvider: string | undefined,
+): Provider | "unknown" {
+  if (sdkProvider === undefined) return "unknown";
+  if (sdkProvider.startsWith("openai")) return "openai";
+  if (sdkProvider.startsWith("anthropic")) return "anthropic";
+  return sdkProvider.startsWith("google") ? "google" : "unknown";
+}
 
 function operationName(operationId: string): "chat" | "embeddings" {
   return operationId === "ai.embed" || operationId === "ai.embedMany"
@@ -74,11 +93,15 @@ export class RepositoryOpenTelemetry extends OpenTelemetry {
     if (workload === undefined || workload.trim() === "") {
       throw new Error("AI SDK telemetry requires a functionId workload");
     }
-    const model = modelIdForOpenRouterRoute(event.modelId) ?? event.modelId;
+    const provider = normalizeProvider(event.provider);
+    const model =
+      (provider === "unknown"
+        ? undefined
+        : modelIdForNativeRoute(provider, event.modelId)) ?? event.modelId;
     const span = this.#tracer.startSpan(`gen_ai.${operation}`, {
       attributes: {
-        "gen_ai.system": "openrouter",
-        "gen_ai.provider.name": "openrouter",
+        "gen_ai.system": provider,
+        "gen_ai.provider.name": provider,
         "gen_ai.operation.name": operation,
         "gen_ai.request.model": model,
         "llm.service": this.#service,
