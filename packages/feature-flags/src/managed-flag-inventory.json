@@ -1654,6 +1654,14 @@
               "result": true
             }
           ]
+        },
+        {
+          "key": "pet-dashboard-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     }
