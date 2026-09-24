@@ -19,6 +19,7 @@ import {
   type CreationAccess,
 } from "#src/explore/creation/capability.ts";
 import { loadCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
+import { serverNames } from "#src/explore/tools/hall-tools.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 
 /**
@@ -37,7 +38,7 @@ import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
  * from a refusal — "Scout could not check" is never "you lack permission".
  */
 
-const CompetitionReadResultSchema = z.strictObject({
+export const CompetitionReadResultSchema = z.strictObject({
   kind: z.string(),
   message: z.string(),
   data: z.unknown(),
@@ -69,10 +70,11 @@ function readableGuilds(
 function competitionSummary(
   competition: CompetitionWithCriteria,
   participants: number | null,
+  server: string,
 ) {
   return {
     competitionId: competition.id,
-    guildId: competition.serverId,
+    server,
     title: competition.title,
     description: competition.description,
     status: CompetitionStatusSchema.parse(getCompetitionStatus(competition)),
@@ -82,6 +84,21 @@ function competitionSummary(
     participants,
   };
 }
+
+export const ListCompetitionsInputSchema = z.strictObject({
+  activeOnly: z.boolean().optional(),
+  includeLeaders: z
+    .boolean()
+    .optional()
+    .describe(
+      "Also read each competition's current or final first place. Slower; use for winners and 'who won the most'.",
+    ),
+});
+
+export const CompetitionStandingsInputSchema = z.strictObject({
+  competitionId: CompetitionIdSchema,
+  limit: z.number().int().min(1).max(50).optional(),
+});
 
 const DENIED_MESSAGE =
   "The user lacks the competitions:read permission in some servers in scope, so those were not read. Say so if the answer might be missing them; a server admin can grant it.";
@@ -129,16 +146,9 @@ export function createCompetitionReadTools(
     list_competitions: tool({
       description:
         "List a server's competitions — active, upcoming, ended or cancelled — with scoring, dates, participant counts and, when asked, each one's leader or winner. Use for any question about which competitions exist, finished, won, or are scheduled.",
-      inputSchema: z.strictObject({
-        guildId: DiscordGuildIdSchema.optional(),
-        activeOnly: z.boolean().optional(),
-        includeLeaders: z
-          .boolean()
-          .optional()
-          .describe(
-            "Also read each competition's current or final first place. Slower; use for winners and 'who won the most'.",
-          ),
-      }),
+      // No server input, for the same reason as the Hall tool: the model never
+      // sees guild ids, so it could only guess one. Results name the server.
+      inputSchema: ListCompetitionsInputSchema,
       outputSchema: CompetitionReadResultSchema,
       execute: (input) =>
         options.track("list_competitions", async () => {
@@ -150,10 +160,8 @@ export function createCompetitionReadTools(
               data: [],
             };
           }
-          const guildIds =
-            input.guildId === undefined
-              ? readable.guildIds
-              : readable.guildIds.filter((id) => id === input.guildId);
+          const guildIds = readable.guildIds;
+          const names = await serverNames(options.db, guildIds);
           const pages = await Promise.all(
             guildIds.map((guildId) =>
               getCompetitionsByServerPaginated(options.db, guildId, {
@@ -179,6 +187,7 @@ export function createCompetitionReadTools(
               const summary = competitionSummary(
                 competition,
                 countById.get(competition.id) ?? 0,
+                names.get(competition.serverId) ?? competition.serverId,
               );
               if (input.includeLeaders !== true) return summary;
               const board = await dependencies.loadLeaderboard(competition.id);
@@ -207,10 +216,7 @@ export function createCompetitionReadTools(
     get_competition_standings: tool({
       description:
         "Read one competition's current standings (or final standings once it has ended), ranked. Call list_competitions first to find its id.",
-      inputSchema: z.strictObject({
-        competitionId: CompetitionIdSchema,
-        limit: z.number().int().min(1).max(50).optional(),
-      }),
+      inputSchema: CompetitionStandingsInputSchema,
       outputSchema: CompetitionReadResultSchema,
       execute: (input) =>
         options.track("get_competition_standings", async () => {
@@ -241,6 +247,7 @@ export function createCompetitionReadTools(
             };
           }
           const board = await dependencies.loadLeaderboard(competition.id);
+          const names = await serverNames(options.db, [competition.serverId]);
           return {
             kind: "competition_standings",
             message:
@@ -248,7 +255,11 @@ export function createCompetitionReadTools(
                 ? "Standings have not been computed for this competition yet. Say that, rather than that nobody is playing."
                 : `Standings as of ${board.calculatedAt}.`,
             data: {
-              competition: competitionSummary(competition, null),
+              competition: competitionSummary(
+                competition,
+                null,
+                names.get(competition.serverId) ?? competition.serverId,
+              ),
               calculatedAt: board?.calculatedAt ?? null,
               entries:
                 board?.entries.slice(0, input.limit ?? 10).map((entry) => ({

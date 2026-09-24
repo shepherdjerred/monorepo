@@ -42,7 +42,19 @@ export function progressSummary(progress: ChallengeProgress): string {
   }
 }
 
-const ChallengeReadResultSchema = z.strictObject({
+export const ChallengeCatalogInputSchema = z.strictObject({
+  search: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Match title or summary text. Omit for the whole catalog."),
+});
+
+export const ChallengeLeaderboardInputSchema = z.strictObject({
+  limit: z.number().int().min(1).max(25).optional(),
+});
+
+export const ChallengeReadResultSchema = z.strictObject({
   kind: z.string(),
   message: z.string(),
   data: z.unknown(),
@@ -108,13 +120,7 @@ export function createChallengeReadTools(options: {
     list_challenge_catalog: tool({
       description:
         "List the challenges available to start, with how many players in the servers in scope have started and completed each. Use for 'what challenges are available', 'hardest challenge', 'lowest completion rate'.",
-      inputSchema: z.strictObject({
-        search: z
-          .string()
-          .min(1)
-          .optional()
-          .describe("Match title or summary text. Omit for the whole catalog."),
-      }),
+      inputSchema: ChallengeCatalogInputSchema,
       outputSchema: ChallengeReadResultSchema,
       execute: (input) =>
         options.track("list_challenge_catalog", async () => {
@@ -160,9 +166,7 @@ export function createChallengeReadTools(options: {
     challenge_leaderboard: tool({
       description:
         "Rank players in the servers in scope by challenges completed. Use for 'who has completed the most challenges' and completion leaderboards.",
-      inputSchema: z.strictObject({
-        limit: z.number().int().min(1).max(25).optional(),
-      }),
+      inputSchema: ChallengeLeaderboardInputSchema,
       outputSchema: ChallengeReadResultSchema,
       execute: (input) =>
         options.track("challenge_leaderboard", async () => {

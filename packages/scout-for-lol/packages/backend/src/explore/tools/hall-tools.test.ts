@@ -132,12 +132,26 @@ describe("get_hall_of_fame", () => {
     expect(guild?.cells.map((cell) => cell.queueFamily)).toEqual(["ARAM"]);
   });
 
-  test("a server without the Hall has no board to read", async () => {
-    const result = await run(tools().get_hall_of_fame.execute, {
-      guildId: OTHER_GUILD,
+  test("names each server, since the model never sees a guild id", async () => {
+    // With a guildId input the model guessed an id, matched nothing, and
+    // told the user it could not identify the server.
+    const ServersSchema = z.array(z.object({ server: z.string() }));
+    const before = await run(tools().get_hall_of_fame.execute, {});
+    const unnamed = ServersSchema.parse(before.data);
+    expect(unnamed[0]?.server).toBe(HALL_GUILD);
+    await prisma.guildInstall.create({
+      data: {
+        serverId: HALL_GUILD,
+        serverName: "The Rift Club",
+        ownerDiscordId: "210000000000000000",
+        addedByDiscordId: "210000000000000000",
+        memberCount: 12,
+        installedAt: new Date(),
+      },
     });
-    expect(result.data).toEqual([]);
-    expect(result.message).toContain("does not have the Hall of Fame");
+    const after = await run(tools().get_hall_of_fame.execute, {});
+    const named = ServersSchema.parse(after.data);
+    expect(named[0]?.server).toBe("The Rift Club");
   });
 });
 

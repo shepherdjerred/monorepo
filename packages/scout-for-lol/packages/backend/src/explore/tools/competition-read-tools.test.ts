@@ -31,7 +31,7 @@ const REQUESTER = testAccountId("799");
 
 const SummarySchema = z.object({
   competitionId: z.number(),
-  guildId: z.string(),
+  server: z.string(),
   title: z.string(),
   leader: z.object({ player: z.string() }).nullable().optional(),
 });

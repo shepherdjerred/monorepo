@@ -18,6 +18,20 @@ import {
   ValidationToolOutputSchema,
 } from "#src/reports/ai/scoutql-tools.ts";
 import {
+  HallToolInputSchema,
+  HallToolResultSchema,
+} from "#src/explore/tools/hall-tools.ts";
+import {
+  ChallengeCatalogInputSchema,
+  ChallengeLeaderboardInputSchema,
+  ChallengeReadResultSchema,
+} from "#src/explore/tools/challenge-read-tools.ts";
+import {
+  CompetitionReadResultSchema,
+  CompetitionStandingsInputSchema,
+  ListCompetitionsInputSchema,
+} from "#src/explore/tools/competition-read-tools.ts";
+import {
   DareActionToolInputSchema,
   DareDefinitionToolInputSchema,
   DareDeleteToolInputSchema,
@@ -162,6 +176,54 @@ const CREATION_TOOL_SCHEMAS = new Map<
   ],
 ]);
 
+/**
+ * Explore's feature read tools: Hall of Fame, challenge runs, competitions.
+ *
+ * Registered so their input and output reach the trace like every other
+ * feature tool's. Unregistered, the trace recorded nothing for them — which
+ * hid what the model had actually been told, and left the replay judge with
+ * no evidence for any figure they supplied. They throw on failure and answer
+ * refusals as results, as the Bucks tools do, so they share that branch.
+ */
+const FEATURE_READ_TOOL_SCHEMAS = new Map<
+  string,
+  { input: z.ZodType; output: z.ZodType }
+>([
+  [
+    "get_hall_of_fame",
+    { input: HallToolInputSchema, output: HallToolResultSchema },
+  ],
+  [
+    "list_my_challenge_runs",
+    { input: EmptyToolInputSchema, output: ChallengeReadResultSchema },
+  ],
+  [
+    "list_challenge_catalog",
+    { input: ChallengeCatalogInputSchema, output: ChallengeReadResultSchema },
+  ],
+  [
+    "challenge_leaderboard",
+    {
+      input: ChallengeLeaderboardInputSchema,
+      output: ChallengeReadResultSchema,
+    },
+  ],
+  [
+    "list_competitions",
+    {
+      input: ListCompetitionsInputSchema,
+      output: CompetitionReadResultSchema,
+    },
+  ],
+  [
+    "get_competition_standings",
+    {
+      input: CompetitionStandingsInputSchema,
+      output: CompetitionReadResultSchema,
+    },
+  ],
+]);
+
 const JsonValueSchema = z.json();
 type JsonValue = z.infer<typeof JsonValueSchema>;
 
@@ -230,7 +292,8 @@ export function inspectExploreToolCall(
       },
     };
   }
-  const bucks = BUCKS_TOOL_SCHEMAS.get(toolName);
+  const bucks =
+    BUCKS_TOOL_SCHEMAS.get(toolName) ?? FEATURE_READ_TOOL_SCHEMAS.get(toolName);
   if (bucks !== undefined) {
     return {
       rawInput: JsonValueSchema.parse(bucks.input.parse(input)),
@@ -313,7 +376,8 @@ export function inspectExploreToolResult(
       },
     };
   }
-  const bucks = BUCKS_TOOL_SCHEMAS.get(toolName);
+  const bucks =
+    BUCKS_TOOL_SCHEMAS.get(toolName) ?? FEATURE_READ_TOOL_SCHEMAS.get(toolName);
   if (bucks !== undefined) {
     bucks.input.parse(input);
     // These tools throw on failure, so a delivered result is a success.

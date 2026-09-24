@@ -53,22 +53,39 @@ const HallCellSchema = z.strictObject({
   ),
 });
 
-const HallToolResultSchema = z.strictObject({
+/**
+ * Recorded server names for these guilds, for a model that never sees ids.
+ *
+ * Read from `GuildInstall`, the same row the creation tools name servers
+ * from. A guild without one is labelled by its id, which is all Scout knows.
+ */
+export async function serverNames(
+  db: ExtendedPrismaClient,
+  guildIds: readonly string[],
+): Promise<Map<string, string>> {
+  const rows = await db.guildInstall.findMany({
+    where: { serverId: { in: [...guildIds] } },
+    select: { serverId: true, serverName: true },
+  });
+  return new Map(rows.map((row) => [row.serverId, row.serverName]));
+}
+
+export const HallToolResultSchema = z.strictObject({
   kind: z.literal("hall_of_fame"),
   message: z.string(),
   data: z.array(
     z.strictObject({
-      guildId: z.string(),
+      server: z.string(),
       enabledQueueFamilies: z.array(z.string()),
       cells: z.array(HallCellSchema),
     }),
   ),
 });
 
-const HallToolInputSchema = z.strictObject({
-  guildId: DiscordGuildIdSchema.optional().describe(
-    "Only this server. Omit to read every server in scope that has a Hall.",
-  ),
+// No server input: the model is never shown guild ids, so a guildId field was
+// filled with a guess, matched nothing, and the model concluded it could not
+// identify the server. Every server in scope with a Hall is read, each named.
+export const HallToolInputSchema = z.strictObject({
   queueFamily: HallQueueFamilyIdSchema.optional().describe(
     "Only this queue family. Omit for all of the server's enabled families.",
   ),
@@ -121,20 +138,8 @@ export function createHallExploreTools(options: {
       outputSchema: HallToolResultSchema,
       execute: (input) =>
         options.track("get_hall_of_fame", async () => {
-          const guildIds =
-            input.guildId === undefined
-              ? options.capability.guildIds
-              : options.capability.guildIds.filter(
-                  (guildId) => guildId === input.guildId,
-                );
-          if (guildIds.length === 0) {
-            return HallToolResultSchema.parse({
-              kind: "hall_of_fame",
-              message:
-                "That server does not have the Hall of Fame switched on, so there is no board to read.",
-              data: [],
-            });
-          }
+          const guildIds = options.capability.guildIds;
+          const names = await serverNames(options.db, guildIds);
           const guilds = await Promise.all(
             guildIds.map(async (guildId) => {
               const hall = await getHall(options.db, guildId);
@@ -161,7 +166,7 @@ export function createHallExploreTools(options: {
                   })),
                 }));
               return {
-                guildId,
+                server: names.get(guildId) ?? guildId,
                 enabledQueueFamilies: hall.settings.enabledQueueFamilies.map(
                   (family) => FAMILY_LABEL.get(family) ?? family,
                 ),
