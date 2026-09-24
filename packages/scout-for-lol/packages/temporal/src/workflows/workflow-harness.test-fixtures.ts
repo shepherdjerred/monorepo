@@ -3,6 +3,7 @@ import { WorkflowFailedError, type Client } from "@temporalio/client";
 import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
+import type { ScoutPostMatchDiscoveryOwnerV2Result } from "#src/activity-contracts-v2.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 /**
@@ -30,6 +31,13 @@ export type ScoutV2WorkflowHarness = {
    * `--no-file-parallelism`.
    */
   startWorkers: (activities: object) => Promise<void>;
+};
+
+const V2_OWNS_DISCOVERY = {
+  resolvePostMatchDiscoveryOwnerV2:
+    (): ScoutPostMatchDiscoveryOwnerV2Result => ({
+      decision: "run-v2",
+    }),
 };
 
 /**
@@ -79,7 +87,10 @@ export function useScoutV2WorkflowHarness(): ScoutV2WorkflowHarness {
         await Worker.create({
           connection: live.nativeConnection,
           taskQueue: "scout-dev-realtime",
-          activities,
+          // Every discovery asks who owns the pass before it does anything
+          // else. The answer defaults to V2, as the flag does in production;
+          // a test about the v1 handoff overrides it.
+          activities: { ...V2_OWNS_DISCOVERY, ...activities },
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );

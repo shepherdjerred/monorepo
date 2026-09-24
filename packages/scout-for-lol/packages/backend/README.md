@@ -292,6 +292,28 @@ claim and the guarded close against a real Postgres; `match-v2.test.ts` proves
 the overlap end to end, with the second discovery starting while the first is
 awaiting a child.
 
+### Which pipeline owns post-match discovery
+
+The `postmatch-discovery` Schedule always starts
+`scoutPostMatchDiscoveryV2Workflow`. That Workflow's first Activity,
+`resolvePostMatchDiscoveryOwnerV2` (`src/temporal/v2/postmatch-ownership.ts`),
+reads the `scout_v2_postmatch_ownership_enabled` Flipt flag for the stage. The
+flag is on by default, and V2 then discovers as described above. When an
+operator turns it off, the run starts v1's `scoutPostMatchDiscoveryWorkflow`
+as a child and returns its outcome. Turning the flag back on returns the next
+pass to V2, and no deploy is needed in either direction.
+
+Only one pipeline discovers at a time. The Schedule's SKIP overlap keeps a run
+from starting until the previous one, V2 or delegated v1, has closed, and a V2
+run stays open until every match it handed to the dispatcher is acknowledged.
+v1 opens its poll without claiming it, so the handoff defers (`defer-v1`, a
+`no-op` result) while any live poll still holds `BotState`, and it only starts
+v1 once nothing does. In the other direction, V2's claim already refuses a
+poll v1 opened. Match children V2 started keep running under `ABANDON`, and
+their observation owner still decides who applies each match. The gate is
+behind the `scout-v2-postmatch-ownership` patch, so a discovery recorded
+before it replays straight into V2 discovery.
+
 `ScoutEffectClaim` keeps taking the top-level Prisma client, and
 `src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
 insert that expects to fail and then READS the existing row back, and in

@@ -327,6 +327,19 @@ export const ScoutPostMatchDiscoveryV2ResultSchema = z.strictObject({
   childrenStarted: z.int().nonnegative(),
   /** False when discovery could not see the whole tail of completed matches. */
   complete: z.boolean(),
+  /**
+   * Present only when v1 owned this pass and ran it as a child. The counts
+   * above describe V2's own work, which is then none; the v1 child reports
+   * what it started. Optional so every result recorded before the ownership
+   * gate still parses.
+   */
+  delegatedTo: z
+    .strictObject({
+      workflowType: z.literal("scoutPostMatchDiscoveryWorkflow"),
+      workflowId: z.string().min(1),
+      childrenStarted: z.int().nonnegative(),
+    })
+    .optional(),
 });
 export type ScoutPostMatchDiscoveryV2Result = z.infer<
   typeof ScoutPostMatchDiscoveryV2ResultSchema

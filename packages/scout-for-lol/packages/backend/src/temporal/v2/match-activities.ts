@@ -25,6 +25,15 @@ import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-sur
  */
 export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
   return {
+    resolvePostMatchDiscoveryOwnerV2: async () =>
+      await heartbeatWhile(
+        { phase: "resolving-post-match-owner-v2" },
+        async () => {
+          const { resolvePostMatchDiscoveryOwnerV2 } =
+            await import("#src/temporal/v2/postmatch-ownership.ts");
+          return await resolvePostMatchDiscoveryOwnerV2({ now: new Date() });
+        },
+      ),
     discoverPostMatchIdsV2: async () =>
       await heartbeatWhile({ phase: "discovering-post-match-v2" }, async () => {
         const { discoverPostMatchIdsV2 } =

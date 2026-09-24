@@ -399,6 +399,31 @@ export type ScoutLegacyMatchCompletionV2Result = z.infer<
 >;
 
 /**
+ * Which pipeline owns this post-match discovery pass.
+ *
+ * `run-v2` is the V2 pass. `delegate-v1` hands the pass to v1's
+ * `scoutPostMatchDiscoveryWorkflow`. `defer-v1` means v1 owns discovery but
+ * a live poll still holds `BotState`: v1 opens its poll unconditionally, so
+ * starting it now could discover the matches an in-flight V2 run is still
+ * processing. The pass stops and the next tick decides again.
+ */
+export const ScoutPostMatchDiscoveryOwnerV2ResultSchema = z.discriminatedUnion(
+  "decision",
+  [
+    z.strictObject({ decision: z.literal("run-v2") }),
+    z.strictObject({ decision: z.literal("delegate-v1") }),
+    z.strictObject({
+      decision: z.literal("defer-v1"),
+      /** When the poll that still holds the row was opened. */
+      pollHeldSince: IsoInstantSchema,
+    }),
+  ],
+);
+export type ScoutPostMatchDiscoveryOwnerV2Result = z.infer<
+  typeof ScoutPostMatchDiscoveryOwnerV2ResultSchema
+>;
+
+/**
  * Whether one intent may be sent right now, and why.
  *
  * `policy` is the recovery policy the intent is delivered under — `normal`
