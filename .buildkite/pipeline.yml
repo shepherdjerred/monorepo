@@ -2050,10 +2050,43 @@ steps:
   # This budget stays above wait-for-review.ts's own deadline plus its install,
   # so the script always reports which provider and head it gave up on rather
   # than Buildkite killing the pod first.
+  #
+  # The gate runs LAST. Its failure (for example Codex out of quota) still
+  # fails the build, but only after every other PR step has finished, so it can
+  # never flip the build to "failing" while a `cancel_on_build_failing` sibling
+  # is still running and get that sibling canceled. `allow_dependency_failure`
+  # keeps the gate reporting its review verdict when another step failed.
+  # select-pr-pipeline.ts treats these edges as ordering only: it keeps the
+  # selected ones and never pulls an unselected lane into the build, and it
+  # rejects a PR step that is missing from this list.
   - label: ":robot_face: Codex review gate (required)"
     key: codex-review-gate
     timeout_in_minutes: 90
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    depends_on:
+      - verify
+      - macos-native-dispatch
+      - quotabar-macos-pr
+      - hkctl-native-pr
+      - tasknotes-native-pr
+      - alert-dashboard-sqlite
+      - playwright-e2e-pr
+      - resume-build-pr
+      - trmnl-validate-pr
+      - docker-e2e-pr
+      - trivy
+      - semgrep
+      - pr-dryrun
+      - tofu-plan-seaweedfs
+      - tofu-plan-tailscale
+      - tofu-plan-buildkite
+      - tofu-plan-arr
+      - tofu-plan-github
+      - tofu-plan-cloudflare
+      - tofu-platforms-validate
+      - tofu-posthog-plan
+      - images-pr
+    allow_dependency_failure: true
     env:
       REVIEW_PROVIDER: codex
     command: |

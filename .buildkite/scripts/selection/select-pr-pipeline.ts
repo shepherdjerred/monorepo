@@ -23,6 +23,16 @@ const GLOBAL_SELECTOR_INPUTS = new Set([
   "scripts/lib/json.ts",
 ]);
 
+/**
+ * The Codex review gate must never fail while another PR step is still
+ * running: a failed job marks the build "failing", and Buildkite then cancels
+ * every running `cancel_on_build_failing` sibling. The gate therefore declares
+ * every other PR step as a dependency with `allow_dependency_failure`. Those
+ * edges order the gate last; they are not inputs, so selection keeps only the
+ * ones that are already selected instead of scheduling every lane on every PR.
+ */
+export const REVIEW_GATE_KEY = "codex-review-gate";
+
 function requiredString(value: unknown, description: string): string {
   if (typeof value !== "string" || value.length === 0) {
     throw new Error(`${description} must be a non-empty string`);
@@ -98,11 +108,60 @@ export function selectPrSteps(
   changedPaths: readonly string[],
 ): PipelineStep[] {
   const available = availablePrSteps(document);
+  assertReviewGateRunsLast(available);
   const selected = initiallySelectedKeys(available, changedPaths);
   addDependencyClosure(available, selected);
   return [...available]
     .filter(([key]) => selected.has(key))
-    .map(([, step]) => withoutNativeChangedFiles(step));
+    .map(([key, step]) =>
+      key === REVIEW_GATE_KEY
+        ? orderedAfterSelected(withoutNativeChangedFiles(step), selected)
+        : withoutNativeChangedFiles(step),
+    );
+}
+
+/**
+ * Reject a pipeline where the review gate could run beside another PR step,
+ * because a gate failure would then cancel that step.
+ */
+export function assertReviewGateRunsLast(
+  available: ReadonlyMap<string, PipelineStep>,
+): void {
+  const gate = available.get(REVIEW_GATE_KEY);
+  if (gate === undefined) {
+    throw new Error(`PR pipeline is missing ${REVIEW_GATE_KEY}`);
+  }
+  if (gate["allow_dependency_failure"] !== true) {
+    throw new Error(
+      `${REVIEW_GATE_KEY} must set allow_dependency_failure: true so it still reports after another step fails`,
+    );
+  }
+  for (const field of ["cancel_on_build_failing", "soft_fail"]) {
+    if (gate[field] !== undefined) {
+      throw new Error(`${REVIEW_GATE_KEY} must not set ${field}`);
+    }
+  }
+  const dependencies = new Set(dependencyKeys(gate));
+  const missing = [...available.keys()].filter(
+    (key) => key !== REVIEW_GATE_KEY && !dependencies.has(key),
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `${REVIEW_GATE_KEY} must depend on every other PR step so its failure cannot cancel them; missing: ${missing.join(", ")}`,
+    );
+  }
+}
+
+function orderedAfterSelected(
+  step: PipelineStep,
+  selected: ReadonlySet<string>,
+): PipelineStep {
+  return {
+    ...step,
+    depends_on: dependencyKeys(step).filter((dependency) =>
+      selected.has(dependency),
+    ),
+  };
 }
 
 function availablePrSteps(
@@ -143,6 +202,8 @@ function addDependencyClosure(
     const step = available.get(key);
     if (step === undefined)
       throw new Error(`selected PR step ${key} is missing`);
+    // The gate's edges only order it last; see REVIEW_GATE_KEY.
+    if (key === REVIEW_GATE_KEY) continue;
     for (const dependency of dependencyKeys(step)) {
       if (!available.has(dependency)) {
         throw new Error(`${key} depends on unavailable PR step ${dependency}`);

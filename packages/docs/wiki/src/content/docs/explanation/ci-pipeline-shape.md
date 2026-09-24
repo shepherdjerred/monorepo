@@ -95,6 +95,18 @@ Binding to the head commit is the whole point. A review comment from an earlier
 push is evidence about code that is no longer proposed, and accepting it would
 make the gate approve unreviewed changes.
 
+The gate runs after every other PR step. Any failed job marks a Buildkite build
+as failing, and most PR steps set `cancel_on_build_failing`, so a gate that ran
+beside them would cancel the whole build whenever Codex was out of quota. The
+gate therefore depends on every other PR step with `allow_dependency_failure`,
+still fails the build when the review fails, and still reports its verdict when
+another step failed. It does not run when a dependency was canceled, per
+Buildkite's
+[dependency rules](https://buildkite.com/docs/pipelines/configure/dependencies).
+The PR selector, `select-pr-pipeline.ts`, treats those edges as ordering only:
+it keeps the selected lanes, never schedules an unselected one, and rejects a
+PR step that is missing from the gate's list.
+
 ## Main builds upload only the steps they need
 
 A main build starts from a small selector bootstrap,
