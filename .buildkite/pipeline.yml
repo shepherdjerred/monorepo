@@ -2087,6 +2087,7 @@ steps:
       - tofu-posthog-plan
       - images-pr
       - windows-cross-compiler-pr
+      - macos-cross-compiler-pr
     allow_dependency_failure: true
     env:
       REVIEW_PROVIDER: codex
