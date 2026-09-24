@@ -140,6 +140,22 @@ function resolveOptions(
     : optionsOrFactory;
 }
 
+/** A prepared request: the absolute URL and the `fetch` init to send. */
+type PreparedRequest = { url: string; init: RequestInit };
+
+function parseJsonWith<T>(
+  schema: z.ZodType<T>,
+): (response: Response) => Promise<T> {
+  return async (response) => {
+    const json: unknown = await response.json();
+    return schema.parse(json);
+  };
+}
+
+async function readText(response: Response): Promise<string> {
+  return await response.text();
+}
+
 export function createHttpClient(
   optionsOrFactory: HttpClientOptions | (() => HttpClientOptions),
 ): HttpClient {
@@ -147,7 +163,7 @@ export function createHttpClient(
     options: HttpClientOptions,
     endpoint: string,
     query?: QueryParams,
-  ): URL {
+  ): string {
     const { baseUrl, normalizeUrl } = options;
     const url =
       normalizeUrl == null
@@ -156,7 +172,7 @@ export function createHttpClient(
     if (query != null) {
       applyQueryParams(url, query);
     }
-    return url;
+    return url.toString();
   }
 
   function jsonHeaders(options: HttpClientOptions): Record<string, string> {
@@ -185,113 +201,100 @@ export function createHttpClient(
     };
   }
 
-  async function get<T>(
-    endpoint: string,
-    getOptions: HttpGetOptions<T> & { schema: z.ZodType<T> },
+  /**
+   * Resolve options, send one request, and flatten the outcome into the
+   * standard envelope. `prepare` turns the resolved options into the request;
+   * `readBody` decodes a 2xx response.
+   */
+  async function send<T>(
+    prepare: (options: HttpClientOptions) => PreparedRequest,
+    readBody: (response: Response) => Promise<T>,
   ): Promise<HttpResult<T>> {
     try {
       const options = resolveOptions(optionsOrFactory);
-      const url = buildUrl(options, endpoint, getOptions.query);
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: jsonHeaders(options),
-      });
+      const { url, init } = prepare(options);
+      const response = await fetch(url, init);
       if (!response.ok) {
         return await errorEnvelope(options, response);
       }
-      const json: unknown = await response.json();
-      const data = getOptions.schema.parse(json);
+      const data = await readBody(response);
       return { success: true, data };
     } catch (error) {
       return wrapError(error);
     }
+  }
+
+  async function get<T>(
+    endpoint: string,
+    getOptions: HttpGetOptions<T> & { schema: z.ZodType<T> },
+  ): Promise<HttpResult<T>> {
+    return await send(
+      (options) => ({
+        url: buildUrl(options, endpoint, getOptions.query),
+        init: { method: "GET", headers: jsonHeaders(options) },
+      }),
+      parseJsonWith(getOptions.schema),
+    );
   }
 
   async function getUrl<T>(
     url: string,
     getOptions: { schema: z.ZodType<T> },
   ): Promise<HttpResult<T>> {
-    try {
-      const options = resolveOptions(optionsOrFactory);
-      const response = await fetch(url, {
-        method: "GET",
-        headers: jsonHeaders(options),
-      });
-      if (!response.ok) {
-        return await errorEnvelope(options, response);
-      }
-      const json: unknown = await response.json();
-      const data = getOptions.schema.parse(json);
-      return { success: true, data };
-    } catch (error) {
-      return wrapError(error);
-    }
+    return await send(
+      (options) => ({
+        url,
+        init: { method: "GET", headers: jsonHeaders(options) },
+      }),
+      parseJsonWith(getOptions.schema),
+    );
   }
 
   async function post<T>(
     endpoint: string,
     postOptions: HttpPostOptions<T> & { schema: z.ZodType<T> },
   ): Promise<HttpResult<T>> {
-    try {
-      const options = resolveOptions(optionsOrFactory);
-      const url = buildUrl(options, endpoint, postOptions.query);
-      const response = await fetch(url.toString(), {
-        method: "POST",
-        headers: jsonHeaders(options),
-        body: JSON.stringify(postOptions.body),
-      });
-      if (!response.ok) {
-        return await errorEnvelope(options, response);
-      }
-      const json: unknown = await response.json();
-      const data = postOptions.schema.parse(json);
-      return { success: true, data };
-    } catch (error) {
-      return wrapError(error);
-    }
+    return await send(
+      (options) => ({
+        url: buildUrl(options, endpoint, postOptions.query),
+        init: {
+          method: "POST",
+          headers: jsonHeaders(options),
+          body: JSON.stringify(postOptions.body),
+        },
+      }),
+      parseJsonWith(postOptions.schema),
+    );
   }
 
   async function raw(
     endpoint: string,
     rawOptions?: { query?: QueryParams | undefined },
   ): Promise<HttpResult<string>> {
-    try {
-      const options = resolveOptions(optionsOrFactory);
-      const url = buildUrl(options, endpoint, rawOptions?.query);
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: rawHeaders(options),
-      });
-      if (!response.ok) {
-        return await errorEnvelope(options, response);
-      }
-      const text = await response.text();
-      return { success: true, data: text };
-    } catch (error) {
-      return wrapError(error);
-    }
+    return await send(
+      (options) => ({
+        url: buildUrl(options, endpoint, rawOptions?.query),
+        init: { method: "GET", headers: rawHeaders(options) },
+      }),
+      readText,
+    );
   }
 
   async function postRaw(
     endpoint: string,
     postOptions?: HttpPostOptions<string>,
   ): Promise<HttpResult<string>> {
-    try {
-      const options = resolveOptions(optionsOrFactory);
-      const url = buildUrl(options, endpoint, postOptions?.query);
-      const response = await fetch(url.toString(), {
-        method: "POST",
-        headers: jsonHeaders(options),
-        body: JSON.stringify(postOptions?.body),
-      });
-      if (!response.ok) {
-        return await errorEnvelope(options, response);
-      }
-      const text = await response.text();
-      return { success: true, data: text };
-    } catch (error) {
-      return wrapError(error);
-    }
+    return await send(
+      (options) => ({
+        url: buildUrl(options, endpoint, postOptions?.query),
+        init: {
+          method: "POST",
+          headers: jsonHeaders(options),
+          body: JSON.stringify(postOptions?.body),
+        },
+      }),
+      readText,
+    );
   }
 
   return { get, getUrl, post, postRaw, raw };
