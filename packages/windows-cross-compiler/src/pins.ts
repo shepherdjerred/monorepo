@@ -23,12 +23,13 @@ export function dockerfileArgs(
 
 /** The `tool = "version"` pin for a tool in a mise TOML file. */
 export function misePin(miseToml: string, tool: string): string {
-  const pattern = new RegExp(`^${tool} = "([^"]+)"$`, "mu");
-  const version = pattern.exec(miseToml)?.[1];
-  if (version === undefined) {
-    throw new Error(`mise configuration has no ${tool} pin.`);
+  for (const match of miseToml.matchAll(/^([\w-]+) = "([^"]+)"$/gmu)) {
+    const [, name, version] = match;
+    if (name === tool && version !== undefined) {
+      return version;
+    }
   }
-  return version;
+  throw new Error(`mise configuration has no ${tool} pin.`);
 }
 
 /** The .NET SDK version a global.json pins. */
