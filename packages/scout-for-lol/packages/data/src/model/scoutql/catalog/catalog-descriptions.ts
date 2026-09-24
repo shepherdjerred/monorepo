@@ -114,6 +114,46 @@ const DESCRIPTIONS: Record<string, string> = {
  * columns collide states its own wording here rather than silently inheriting
  * the participant reading.
  */
+/**
+ * Frame columns are snapshots at one minute of one game, which changes what
+ * several shared names mean: `total_damage_taken` is damage taken so far,
+ * not by the end, and `observed_at` is ingestion time, not a lobby.
+ */
+export const TIMELINE_FRAME_DESCRIPTIONS: Record<string, string> = {
+  observed_at:
+    "When Scout ingested this timeline (UTC) — not when the game was played; use game_creation_at for that.",
+  frame_index: "Frame number within the game, normally one per minute from 0.",
+  frame_timestamp_ms:
+    "Game clock at this frame, in milliseconds (see the minute column).",
+  participant_id: "Participant slot within the match (1–10).",
+  position_x: "Map x coordinate at this frame.",
+  position_y: "Map y coordinate at this frame.",
+  current_gold: "Unspent gold at this frame.",
+  total_gold: "Gold earned so far, spent or not, at this frame.",
+  gold_per_second: "Passive gold income per second at this frame.",
+  minions_killed: "Lane minions killed so far at this frame.",
+  jungle_minions_killed: "Jungle monsters killed so far at this frame.",
+  level: "Champion level at this frame.",
+  xp: "Experience earned so far at this frame.",
+  time_enemy_spent_controlled:
+    "Seconds of crowd control applied to enemies so far.",
+  ability_haste: "Ability haste at this frame.",
+  ability_power: "Ability power at this frame.",
+  armor: "Armor at this frame.",
+  attack_damage: "Attack damage at this frame.",
+  attack_speed: "Attack speed at this frame.",
+  health: "Current health at this frame.",
+  health_max: "Maximum health at this frame.",
+  magic_resist: "Magic resist at this frame.",
+  movement_speed: "Movement speed at this frame.",
+  power: "Current mana or energy at this frame.",
+  power_max: "Maximum mana or energy at this frame.",
+  total_damage_done: "Total damage dealt so far at this frame.",
+  total_damage_done_to_champions:
+    "Damage dealt to champions so far at this frame.",
+  total_damage_taken: "Damage taken so far at this frame.",
+};
+
 export const MATCH_TEAM_BAN_DESCRIPTIONS: Record<string, string> = {
   team_id: "The banning team (100 blue, 200 red).",
   pick_turn: "Which ban slot this was, in draft order (1-10).",

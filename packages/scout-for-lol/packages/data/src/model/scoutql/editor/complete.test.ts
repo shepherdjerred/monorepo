@@ -36,6 +36,7 @@ describe("clause vocabulary", () => {
       "player_groups",
       "prematch_participants",
       "rank_current",
+      "timeline_frames",
     ]);
   });
 

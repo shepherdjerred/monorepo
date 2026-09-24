@@ -34,6 +34,19 @@ export type FactsCteInput = {
    * only when the plan names a team lookup column.
    */
   teamDimension?: SqlFragment | undefined;
+  /**
+   * Participant rows a timeline frame reads its player's facts from — frames
+   * only, where the time window and every participant-level column live.
+   */
+  participantDimension?: SqlFragment | undefined;
+  /** An unfiltered frame scan, and which gold differences to compute from it. */
+  frameGold?:
+    | {
+        readonly source: SqlFragment;
+        readonly team: boolean;
+        readonly lane: boolean;
+      }
+    | undefined;
   /** Value columns to project as `m.X AS X` (identity handled separately). */
   projected: string[];
   /** Extra computed items (group-facts virtual columns), already fragments. */
@@ -57,6 +70,8 @@ function identityProjection(
         "concat_ws('#', m.riot_id_game_name, m.riot_id_tagline) AS player_alias",
     )
     .with("prematch", () => "m.riot_id AS player_alias")
+    // A frame carries only a puuid; the Riot ID comes from the participant row.
+    .with("timeline-frame", () => "p.riot_id AS player_alias")
     // A team is not a player and has no name to label itself with. The column
     // keeps its place so the facts shape stays uniform; the grouping arms
     // reject `player` on this source, so nothing ever reads it.
@@ -112,6 +127,97 @@ function championNamesCte(): SqlFragment {
   );
 }
 
+/**
+ * One row per (match, puuid): the participant facts a timeline frame lacks.
+ * Grouped for the same reason the match dimension is — a join against it can
+ * never fan a frame out.
+ */
+function participantDimensionCte(dimension: SqlFragment): SqlFragment {
+  return seq(
+    "part_dim AS (SELECT match_id, puuid, any_value(game_creation_at) AS game_creation_at, any_value(queue) AS queue, any_value(",
+    frag(String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`),
+    ") AS patch, any_value(map_id) AS map_id, any_value(participant_id) AS participant_id, any_value(team_id) AS team_id, any_value(champion_id) AS champion_id, any_value(champion_name) AS champion_name, any_value(team_position) AS team_position, any_value(win) AS win, any_value(concat_ws('#', riot_id_game_name, riot_id_tagline)) AS riot_id FROM (",
+    dimension,
+    ") GROUP BY match_id, puuid)",
+  );
+}
+
+const PARTICIPANT_ITEMS =
+  "p.game_creation_at AS game_creation_at, p.queue AS queue, p.patch AS patch, p.map_id AS map_id, p.champion_id AS champion_id, p.champion_name AS champion_name, p.team_position AS team_position, p.team_id AS team_id, p.win AS win";
+
+const PARTICIPANT_JOIN =
+  " JOIN part_dim p ON p.match_id = m.match_id AND p.puuid = m.puuid";
+
+/** The other side of a two-team game. Arena and other modes get NULL, never a wrong team. */
+const OTHER_TEAM = "CASE p.team_id WHEN 100 THEN 200 WHEN 200 THEN 100 END";
+
+/** Each team's total gold at each frame, one row per (match, frame, team). */
+function teamGoldCte(frames: SqlFragment): SqlFragment {
+  return seq(
+    "team_gold AS (SELECT f.match_id, f.frame_index, pd.team_id, sum(f.total_gold) AS gold FROM (",
+    frames,
+    ") f JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid GROUP BY f.match_id, f.frame_index, pd.team_id)",
+  );
+}
+
+/**
+ * Each laner's gold at each frame, one row per (match, frame, team, position)
+ * — so "the same position on the other team" names one row or none. Players
+ * without an assigned position (ARAM, remakes) are left out, which makes
+ * their lane difference NULL rather than paired with a stranger.
+ */
+function laneGoldCte(frames: SqlFragment): SqlFragment {
+  return seq(
+    "lane_gold AS (SELECT f.match_id, f.frame_index, pd.team_id, pd.team_position, any_value(f.total_gold) AS gold FROM (",
+    frames,
+    ") f JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid WHERE pd.team_position IN ('TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY') GROUP BY f.match_id, f.frame_index, pd.team_id, pd.team_position)",
+  );
+}
+
+const TEAM_GOLD_JOIN = ` LEFT JOIN team_gold own ON own.match_id = m.match_id AND own.frame_index = m.frame_index AND own.team_id = p.team_id LEFT JOIN team_gold foe ON foe.match_id = m.match_id AND foe.frame_index = m.frame_index AND foe.team_id = ${OTHER_TEAM}`;
+const LANE_GOLD_JOIN = ` LEFT JOIN lane_gold lo ON lo.match_id = m.match_id AND lo.frame_index = m.frame_index AND lo.team_position = p.team_position AND lo.team_id = ${OTHER_TEAM}`;
+
+type Lookups = {
+  readonly ctes: SqlFragment[];
+  readonly joins: string;
+  readonly items: string[];
+};
+
+/** The keyed lookups a row-level source (participants, frames) joins into facts. */
+function rowLookups(input: FactsCteInput): Lookups {
+  const ctes: SqlFragment[] = [];
+  const joins: string[] = [];
+  const items: string[] = [];
+  if (input.teamDimension !== undefined) {
+    ctes.push(teamDimensionCte(input.teamDimension));
+    joins.push(TEAM_LOOKUP_JOIN);
+    items.push(TEAM_LOOKUP_ITEMS);
+  }
+  if (input.columnSource === "timeline-frame") {
+    const participants = input.participantDimension;
+    if (participants === undefined) {
+      throw new Error(
+        "timeline_frames compile requires a participant dimension.",
+      );
+    }
+    ctes.push(participantDimensionCte(participants));
+    joins.push(PARTICIPANT_JOIN);
+    items.push(PARTICIPANT_ITEMS);
+    const gold = input.frameGold;
+    if (gold?.team === true) {
+      ctes.push(teamGoldCte(gold.source));
+      joins.push(TEAM_GOLD_JOIN);
+      items.push("(own.gold - foe.gold) AS team_gold_diff");
+    }
+    if (gold?.lane === true) {
+      ctes.push(laneGoldCte(gold.source));
+      joins.push(LANE_GOLD_JOIN);
+      items.push("(m.total_gold - lo.gold) AS lane_gold_diff");
+    }
+  }
+  return { ctes, joins: joins.join(""), items };
+}
+
 const MATCH_DIMENSION_ITEMS =
   "d.game_creation_at AS game_creation_at, d.queue AS queue, d.patch AS patch, d.map_id AS map_id";
 
@@ -128,11 +234,13 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
     .join(", ");
   const teamSource = readsMatchDimension(input.columnSource);
   const banSource = input.columnSource === "match-team-ban";
-  const team = input.teamDimension;
+  const lookups: Lookups = teamSource
+    ? { ctes: [], joins: "", items: [] }
+    : rowLookups(input);
   const items = joinFragments(
     [
       frag(identityProjection(input.scope, input.columnSource)),
-      ...(team === undefined ? [] : [frag(TEAM_LOOKUP_ITEMS)]),
+      ...lookups.items.map((item) => frag(item)),
       // No puuid exists on a team row; the column is held open as NULL so the
       // facts shape does not vary by source.
       frag(teamSource ? "NULL::VARCHAR AS puuid" : "m.puuid AS puuid"),
@@ -162,18 +270,16 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
       ")",
     );
   }
-  const teamCte =
-    team === undefined ? frag("") : seq(teamDimensionCte(team), ", ");
-  const teamJoin = team === undefined ? "" : TEAM_LOOKUP_JOIN;
+  const lookupCtes = lookups.ctes.flatMap((cte) => [cte, frag(", ")]);
   if (input.scope.kind === "global") {
     return seq(
       "WITH ",
-      teamCte,
+      ...lookupCtes,
       "facts AS (SELECT ",
       items,
       " FROM (",
       input.source,
-      `) m${teamJoin})`,
+      `) m${lookups.joins})`,
     );
   }
   const accountsParquet = input.files.accountsParquet;
@@ -185,13 +291,13 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
   const accounts = buildAccountsSource(accountsParquet, input.scope.serverId);
   return seq(
     "WITH ",
-    teamCte,
+    ...lookupCtes,
     "accounts AS (",
     accounts,
     "), facts AS (SELECT ",
     items,
     " FROM (",
     input.source,
-    `) m JOIN accounts a ON a.puuid = m.puuid${teamJoin})`,
+    `) m JOIN accounts a ON a.puuid = m.puuid${lookups.joins})`,
   );
 }

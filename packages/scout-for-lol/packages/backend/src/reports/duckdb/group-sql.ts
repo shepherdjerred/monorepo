@@ -119,6 +119,16 @@ function championGrouping(input: GroupingInput): CompiledGrouping {
           columnNames: ["champion_id"],
         };
       })
+      // Champion id and name are looked up from the frame's participant row.
+      .with("timeline-frame", (): CompiledGrouping => {
+        requireColumns(input.columns, ["champion_id", "champion"]);
+        return {
+          key: frag("champion_id"),
+          label: () => frag("any_value(champion_name)"),
+          playerIdentity: false,
+          columnNames: ["champion_id"],
+        };
+      })
       .with("match-team", (): CompiledGrouping => {
         throw new Error(
           "GROUP BY champion is not available on match_teams: a team row names no champion. Use match_participants for champion analysis.",
@@ -214,7 +224,10 @@ function compileColumnGrouping(
       })
       .otherwise((): CompiledGrouping => {
         const binding = resolveColumn(input.columns, name);
-        if (binding.identity) {
+        // Player identity has its own arm above. Other columns marked identity
+        // are looked up in the facts CTE (a frame's side, a team's queue) and
+        // group like any column; only the player alias itself is refused.
+        if (binding.sql === "player_alias") {
           throw new Error(`Cannot group by identity column "${name}".`);
         }
         return {

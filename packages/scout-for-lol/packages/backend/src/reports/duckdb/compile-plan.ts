@@ -4,6 +4,8 @@ import type { ScoutQlPredicate } from "@scout-for-lol/data/model/scoutql/parse/e
 import {
   buildMatchDimensionSource,
   buildMatchTeamBansSource,
+  buildParticipantDimensionSource,
+  buildTimelineParticipantFramesSource,
   buildMatchTeamsSource,
   buildMatchesSource,
   buildPrematchSource,
@@ -25,6 +27,7 @@ import {
   TEAM_LOOKUP_COLUMNS,
   buildPlanColumnMap,
   readsMatchDimension,
+  timeFromLookup,
   resolveColumn,
   type ColumnMap,
 } from "#src/reports/duckdb/column-map.ts";
@@ -161,6 +164,71 @@ type FactsPipeline = {
   relation: "facts" | "filtered";
 };
 
+type LookupSources = {
+  matchDimension: SqlFragment | undefined;
+  participantDimension: SqlFragment | undefined;
+  teamDimension: SqlFragment | undefined;
+  frameGold: { source: SqlFragment; team: boolean; lane: boolean } | undefined;
+};
+
+/**
+ * The row scans a source's looked-up facts are read from.
+ *
+ * `undefined` when a lookup the source cannot do without has no rows in the
+ * window: a team with no match, a frame with no participant. That is the
+ * same empty answer an empty lake gives.
+ */
+function buildLookupSources(
+  input: PlanQueryInput,
+  kind: SourceKind,
+  range: SqlFragment,
+  extras: {
+    teamLookup?: boolean;
+    frameGold?: { team: boolean; lane: boolean } | undefined;
+  },
+): LookupSources | undefined {
+  const participantDimension =
+    kind.columnSource === "timeline-frame"
+      ? buildParticipantDimensionSource(input.files, range)
+      : undefined;
+  if (
+    participantDimension === undefined &&
+    kind.columnSource === "timeline-frame"
+  ) {
+    return undefined;
+  }
+  const matchDimension = readsMatchDimension(kind.columnSource)
+    ? buildMatchDimensionSource(input.files, range)
+    : undefined;
+  if (matchDimension === undefined && readsMatchDimension(kind.columnSource)) {
+    return undefined;
+  }
+  // Unrestricted: a team table is two rows a match, and the LEFT JOIN keeps
+  // only the matches the participant scan already chose.
+  const teamDimension =
+    extras.teamLookup === true
+      ? (buildMatchTeamsSource(input.files, frag("")) ??
+        frag(EMPTY_TEAM_DIMENSION))
+      : undefined;
+  // Unfiltered on purpose: the source scan may hold player('…') or a minute
+  // filter, and a team total computed from filtered frames would sum only the
+  // filtered player.
+  const gold = extras.frameGold;
+  const goldSource =
+    gold !== undefined && (gold.team || gold.lane)
+      ? buildTimelineParticipantFramesSource(input.files, frag(""))
+      : undefined;
+  return {
+    matchDimension,
+    participantDimension,
+    teamDimension,
+    frameGold:
+      gold === undefined || goldSource === undefined
+        ? undefined
+        : { source: goldSource, ...gold },
+  };
+}
+
 function buildFactsPipeline(
   input: PlanQueryInput,
   kind: SourceKind,
@@ -170,6 +238,8 @@ function buildFactsPipeline(
     extraItems: SqlFragment[];
     /** Join the team row for team_champion_kills / kill_participation. */
     teamLookup?: boolean;
+    /** Compute gold differences against other frames of the same minute. */
+    frameGold?: { team: boolean; lane: boolean } | undefined;
   },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
@@ -188,7 +258,7 @@ function buildFactsPipeline(
   // team row has no timestamp, so for match_teams the window belongs to the
   // match dimension the facts CTE joins, and only the team-side conjuncts are
   // pushed here.
-  const pushdown = readsMatchDimension(kind.columnSource)
+  const pushdown = timeFromLookup(kind.columnSource)
     ? combineAnd(pushedFragments)
     : combineAnd([range, ...pushedFragments]);
   const source = match(kind.columnSource)
@@ -198,18 +268,16 @@ function buildFactsPipeline(
     .with("match-team-ban", () =>
       buildMatchTeamBansSource(input.files, pushdown),
     )
+    .with("timeline-frame", () =>
+      buildTimelineParticipantFramesSource(input.files, pushdown),
+    )
     .exhaustive();
   if (source === undefined) {
     return undefined;
   }
-  let matchDimension: SqlFragment | undefined;
-  if (readsMatchDimension(kind.columnSource)) {
-    matchDimension = buildMatchDimensionSource(input.files, range);
-    if (matchDimension === undefined) {
-      // No participant rows in the window means no match to attribute a team
-      // to, which is the same empty answer an empty lake gives.
-      return undefined;
-    }
+  const lookups = buildLookupSources(input, kind, range, extras);
+  if (lookups === undefined) {
+    return undefined;
   }
   if (
     input.scope.kind === "guild" &&
@@ -217,21 +285,12 @@ function buildFactsPipeline(
   ) {
     return undefined;
   }
-
-  // Unrestricted: a team table is two rows a match, and the LEFT JOIN keeps
-  // only the matches the participant scan already chose.
-  const teamDimension =
-    extras.teamLookup === true
-      ? (buildMatchTeamsSource(input.files, frag("")) ??
-        frag(EMPTY_TEAM_DIMENSION))
-      : undefined;
   const facts = buildFactsCte({
     scope: input.scope,
     files: input.files,
     columnSource: kind.columnSource,
     source,
-    matchDimension,
-    teamDimension,
+    ...lookups,
     projected: [...extras.projected],
     extraItems: extras.extraItems,
   });
@@ -294,7 +353,7 @@ export function compileScoutQlPlanQuery(
   // puuid is always projected separately as `m.puuid AS puuid`. On match_teams
   // neither is a column of `m` — the time comes from the joined dimension and
   // there is no player — so nothing is added here.
-  if (!readsMatchDimension(kind.columnSource)) {
+  if (!timeFromLookup(kind.columnSource)) {
     projected.add(kind.timeColumn);
   }
   projected.delete("puuid");
@@ -305,6 +364,13 @@ export function compileScoutQlPlanQuery(
     teamLookup:
       kind.columnSource === "match" &&
       [...referenced].some((name) => TEAM_LOOKUP_COLUMNS.has(name)),
+    frameGold:
+      kind.columnSource === "timeline-frame"
+        ? {
+            team: referenced.has("team_gold_diff"),
+            lane: referenced.has("lane_gold_diff"),
+          }
+        : undefined,
   });
   if (pipeline === undefined) {
     return undefined;

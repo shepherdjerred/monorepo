@@ -362,6 +362,40 @@ export function buildMatchDimensionSource(
   });
 }
 
+/**
+ * The participant facts a timeline row lacks, and nothing more.
+ *
+ * A frame or event names a participant by puuid or slot but carries no
+ * champion, position, team, result or match time. Those are read from the
+ * participant row — one per (match, puuid), which the `matches` dedupe
+ * already guarantees — through this narrow projection rather than all
+ * ninety-odd participant columns.
+ */
+const PARTICIPANT_DIMENSION_LAKE_COLUMNS = {
+  ...MATCH_DIMENSION_LAKE_COLUMNS,
+  participant_id: MATCH_LAKE_COLUMNS.participant_id,
+  team_id: MATCH_LAKE_COLUMNS.team_id,
+  champion_id: MATCH_LAKE_COLUMNS.champion_id,
+  champion_name: MATCH_LAKE_COLUMNS.champion_name,
+  team_position: MATCH_LAKE_COLUMNS.team_position,
+  win: MATCH_LAKE_COLUMNS.win,
+  riot_id_game_name: MATCH_LAKE_COLUMNS.riot_id_game_name,
+  riot_id_tagline: MATCH_LAKE_COLUMNS.riot_id_tagline,
+} as const;
+
+export function buildParticipantDimensionSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.matchesParquet,
+    stagingFiles: files.matchesStaging,
+    columns: PARTICIPANT_DIMENSION_LAKE_COLUMNS,
+    dedupe: "matches",
+    predicate,
+  });
+}
+
 export function buildMatchTeamsSource(
   files: LakeFiles,
   predicate: SqlFragment,

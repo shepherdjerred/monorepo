@@ -6,11 +6,12 @@ import {
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "#src/model/reports/lake-columns.ts";
+import { TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS } from "#src/model/reports/timeline-lake-columns.ts";
 import {
   scoutQlSourceCatalog,
   scoutQlSourceCatalogs,
-  type ScoutQlColumnType,
 } from "#src/model/scoutql/catalog/catalog-columns.ts";
+import type { ScoutQlColumnType } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 
 // ── Catalog drift ────────────────────────────────────────────────────────────
 // The catalogs are the language's whole vocabulary, and the engine resolves the
@@ -34,6 +35,7 @@ const LAKE_MAPS: Record<string, Record<string, DuckDbColumnType>> = {
   prematch_participants: PREMATCH_LAKE_COLUMNS,
   match_teams: MATCH_TEAM_LAKE_COLUMNS,
   match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,
+  timeline_frames: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 };
 
 describe("physical catalog columns come from the lake schema", () => {

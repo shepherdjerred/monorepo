@@ -268,7 +268,8 @@ describe("the judge prompt", () => {
     // Bans left this list when match_team_bans became a source.
     expect(prompt).not.toContain("match_team_bans");
     expect(prompt).toContain("timeline_events");
-    expect(prompt).toContain("timeline_participant_frames");
+    // Frames left this list when timeline_frames became a source.
+    expect(prompt).not.toContain("timeline_participant_frames");
     expect(prompt).toContain("overclaimed_absence");
   });
 

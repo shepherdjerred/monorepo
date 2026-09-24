@@ -45,6 +45,11 @@ export function planSourceKind(
       columnSource: "match-team-ban",
       timeColumn: "game_creation_at",
     }))
+    // A frame's match time is looked up from its player's participant row.
+    .with("timeline_frames", (): SourceKind => ({
+      columnSource: "timeline-frame",
+      timeColumn: "game_creation_at",
+    }))
     .with("rank_current", "competition_rank", () => {
       throw new Error(`rank sources are not lake-backed: ${plan.source}`);
     })

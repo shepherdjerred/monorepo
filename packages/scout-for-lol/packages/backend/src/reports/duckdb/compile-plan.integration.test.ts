@@ -14,8 +14,6 @@ import type {
 } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   compileGroupFactsProjection,
-  compileScoutQlPlanQuery,
-  type CompiledPlanQuery,
   type PlanQueryInput,
 } from "#src/reports/duckdb/compile-plan.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -26,6 +24,12 @@ import {
 } from "#src/reports/duckdb/lake.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  CountSchema,
+  RowSchema,
+  number_,
+  runPlan,
+} from "#src/testing/run-compiled-plan.ts";
 import { lakeMonth } from "#src/report-lake/schema.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 
@@ -257,49 +261,7 @@ function makeInput(overrides: Partial<PlanQueryInput> = {}): PlanQueryInput {
   };
 }
 
-const CountSchema = z.union([z.bigint(), z.number()]).transform(Number);
-const RowSchema = z.record(z.string(), z.unknown());
-
-async function execute(compiled: CompiledPlanQuery): Promise<{
-  rows: Record<string, unknown>[];
-  scanned: number;
-}> {
-  return await withDuckDBConnection(async (session) => {
-    const bind = (params: BoundParam[]) =>
-      params.map((param) =>
-        param.kind === "list" ? session.list(param.values) : param.value,
-      );
-    const rawRows = await session.run(
-      compiled.aggregateSql,
-      bind(compiled.aggregateParams),
-    );
-    const scannedRows = await session.run(
-      compiled.scannedSql,
-      bind(compiled.scannedParams),
-    );
-    const scanned = z
-      .object({ scanned: CountSchema })
-      .parse(scannedRows[0]).scanned;
-    return { rows: rawRows.map((row) => RowSchema.parse(row)), scanned };
-  });
-}
-
-async function run(input: PlanQueryInput): Promise<{
-  rows: Record<string, unknown>[];
-  scanned: number;
-  compiled: CompiledPlanQuery;
-}> {
-  const compiled = compileScoutQlPlanQuery(input);
-  if (compiled === undefined) {
-    throw new Error("expected compiled query");
-  }
-  const result = await execute(compiled);
-  return { ...result, compiled };
-}
-
-function number_(value: unknown): number {
-  return CountSchema.parse(value);
-}
+const run = runPlan;
 
 describe("aggregates end-to-end", () => {
   test("win_rate with FILTER over the solo queue, with rate evidence", async () => {

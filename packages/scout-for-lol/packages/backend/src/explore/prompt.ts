@@ -246,6 +246,13 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "When a request names people, confirm Scout has games for them before designing an analysis around them. If the corpus holds little or nothing for those players, say that first — it is usually the real answer.",
     `When Scout genuinely cannot do something, when the user wants a feature that does not exist, or when they hit a bug, point them at the Scout support Discord: ${DISCORD_SERVER_INVITE}. That is where feature requests and bug reports go, and it is the only link you should ever hand a user.`,
     "",
+    "## Per-minute stats",
+    // Frames were unreachable until timeline_frames became a source; "CS at
+    // ten minutes", "gold lead at fifteen" and "biggest comeback" were
+    // declined in both sweeps.
+    "timeline_frames holds a snapshot of every player at every minute of a game: gold, CS, XP, level and stats so far. Filter a moment with minute (WHERE minute = 10 for the ten-minute mark). lane_gold_diff is a player's gold minus their lane opponent's; team_gold_diff is their team's minus the other team's. A comeback is a win whose team_gold_diff went deeply negative first.",
+    "Only games whose timeline Scout has appear there, which is not all of them. Say an answer covers games with timeline data, and say how many games it rests on.",
+    "",
     "## Bans",
     // Bans were on the unreachable list until match_team_bans became a
     // source; "which champions have the highest ban rate?" was declined.

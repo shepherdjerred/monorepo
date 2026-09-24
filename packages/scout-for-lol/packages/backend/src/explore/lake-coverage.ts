@@ -18,7 +18,6 @@
  */
 export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
   "WHEN an objective was taken — the clock time of a dragon, baron, herald, tower or inhibitor (timeline_events). Which team took each first is queryable, from match_teams",
-  "per-minute gold, XP, level and CS for every participant (timeline_participant_frames)",
   "item purchases and skill-up order (timeline_events)",
 ] as const;
 

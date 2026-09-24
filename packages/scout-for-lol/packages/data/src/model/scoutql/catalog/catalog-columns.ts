@@ -7,6 +7,21 @@ import {
 } from "#src/model/reports/lake-columns.ts";
 import type { ReportDisplayKind } from "#src/model/reports/report.ts";
 import {
+  ALL_CONTEXTS,
+  virtualColumn,
+  type ScoutQlColumnInfo,
+  type ScoutQlColumnType,
+} from "#src/model/scoutql/catalog/catalog-column-types.ts";
+import {
+  MATCH_TEAM_BAN_VIRTUALS,
+  MATCH_TEAM_VIRTUALS,
+  MATCH_VIRTUALS,
+  PREMATCH_VIRTUALS,
+  TIMELINE_FRAME_VIRTUALS,
+} from "#src/model/scoutql/catalog/catalog-virtuals.ts";
+import { TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS } from "#src/model/reports/timeline-lake-columns.ts";
+import {
+  TIMELINE_FRAME_DESCRIPTIONS,
   MATCH_TEAM_BAN_DESCRIPTIONS,
   MATCH_TEAM_DESCRIPTIONS,
   describe,
@@ -23,29 +38,6 @@ import {
 // schema maps in lake-columns.ts (a drift test pins that); virtual dimension
 // columns mirror EXACTLY what the engine's grouping/expression compiler can
 // compute (backend reports/duckdb/expr-sql.ts + group-sql.ts).
-
-export type ScoutQlColumnType =
-  "varchar" | "integer" | "bigint" | "double" | "boolean" | "timestamp";
-
-export type ScoutQlColumnContexts = {
-  /** Usable inside SELECT expressions (aggregate arguments, echoes). */
-  select: boolean;
-  /** Usable in WHERE / FILTER predicates. */
-  where: boolean;
-  /** Usable as a GROUP BY dimension. */
-  groupBy: boolean;
-};
-
-export type ScoutQlColumnInfo = {
-  name: string;
-  type: ScoutQlColumnType;
-  description: string;
-  /** Display kind of the RAW column (aggregates over it may inherit it). */
-  displayKind: ReportDisplayKind;
-  /** Computed by the engine (dimension), not a physical lake column. */
-  virtual: boolean;
-  contexts: ScoutQlColumnContexts;
-};
 
 export type SourceCatalog = {
   id: ScoutQlSource;
@@ -106,12 +98,6 @@ function rawDisplayKind(
   }
 }
 
-const ALL_CONTEXTS: ScoutQlColumnContexts = {
-  select: true,
-  where: true,
-  groupBy: true,
-};
-
 function physicalColumns(
   lake: Record<string, DuckDbColumnType>,
   overrides?: Record<string, string>,
@@ -127,136 +113,6 @@ function physicalColumns(
       contexts: ALL_CONTEXTS,
     }));
 }
-
-function virtualColumn(
-  name: string,
-  type: ScoutQlColumnType,
-  description: string,
-  contexts: ScoutQlColumnContexts = ALL_CONTEXTS,
-): ScoutQlColumnInfo {
-  return {
-    name,
-    type,
-    description,
-    displayKind: "text",
-    virtual: true,
-    contexts,
-  };
-}
-
-// Virtual dimensions mirror backend expr-sql.ts MATCH_VIRTUAL_COLUMNS /
-// PREMATCH_VIRTUAL_COLUMNS exactly — expose only what those arms can compute.
-const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
-  virtualColumn(
-    "player",
-    "varchar",
-    "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
-  ),
-  virtualColumn(
-    "champion",
-    "varchar",
-    "Champion display dimension (champion_name).",
-  ),
-  virtualColumn(
-    "patch",
-    "varchar",
-    "Game patch (major.minor of game_version).",
-  ),
-  virtualColumn("outcome", "varchar", "'Win' or 'Loss' (from win)."),
-  virtualColumn(
-    "surrender_state",
-    "varchar",
-    "'Early surrender', 'Surrender', or 'Played out'.",
-  ),
-  virtualColumn(
-    "arena_placement",
-    "varchar",
-    "Arena placement label ('Not Arena' outside Arena).",
-  ),
-  virtualColumn("map", "integer", "Map dimension (map_id)."),
-  // Looked up from this participant's team row. Numbers, not dimensions, so
-  // they carry a numeric display kind rather than virtualColumn's text.
-  {
-    name: "team_champion_kills",
-    type: "integer",
-    description:
-      "Champion kills by this participant's whole team in the game (from the team row).",
-    displayKind: "count",
-    virtual: true,
-    contexts: { select: true, where: true, groupBy: false },
-  },
-  {
-    name: "kill_participation",
-    type: "double",
-    description:
-      "Share of the team's kills this participant took part in: (kills + assists) / team champion kills. NULL when the team had no kills.",
-    displayKind: "percent",
-    virtual: true,
-    contexts: { select: true, where: true, groupBy: false },
-  },
-];
-
-const PREMATCH_VIRTUALS: ScoutQlColumnInfo[] = [
-  virtualColumn(
-    "player",
-    "varchar",
-    "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
-  ),
-  virtualColumn(
-    "champion",
-    "varchar",
-    "Champion dimension (numeric id shown — prematch rows carry no name).",
-  ),
-  virtualColumn("map", "integer", "Map dimension (map_id)."),
-];
-
-/**
- * Team rows carry no match facts of their own, so the engine looks them up.
- *
- * `match_teams` holds only `match_id`, `team_id` and the objective columns —
- * no timestamp, no queue, no version. Every one of those is needed to ask an
- * objective question honestly: "first dragon wins more" is meaningless over a
- * corpus that mixes Summoner's Rift with ARAM, where no dragon exists and both
- * teams land in the same bucket. So the compiler joins one row per match from
- * the participant table and projects these four; the join is keyed on
- * `match_id` and collapsed to one row per match, so it cannot fan a team row
- * out. It is a lookup of the parent row, not a join between two fact sources —
- * ScoutQL plans remain single-source.
- */
-const MATCH_TEAM_VIRTUALS: ScoutQlColumnInfo[] = [
-  virtualColumn("outcome", "varchar", "'Win' or 'Loss' (from win)."),
-  virtualColumn(
-    "side",
-    "varchar",
-    "'Blue' or 'Red' (from team_id); the raw id for modes that use others.",
-  ),
-  virtualColumn(
-    "game_creation_at",
-    "timestamp",
-    "When the lobby was created (UTC), from the match this team played.",
-  ),
-  virtualColumn(
-    "queue",
-    "varchar",
-    "Queue name of the match (solo, flex, aram, …); NULL for unmapped queues.",
-  ),
-  virtualColumn(
-    "patch",
-    "varchar",
-    "Game patch (major.minor) of the match this team played.",
-  ),
-  virtualColumn("map", "integer", "Map dimension (map_id) of the match."),
-];
-
-/** A ban row reads the same looked-up match facts as a team row, plus a champion name. */
-const MATCH_TEAM_BAN_VIRTUALS: ScoutQlColumnInfo[] = [
-  virtualColumn(
-    "champion",
-    "varchar",
-    "Banned champion's name, from Scout's champion registry ('No ban' for an unused slot).",
-  ),
-  ...MATCH_TEAM_VIRTUALS.filter((column) => column.name !== "outcome"),
-];
 
 const COMPETITION_ID_COLUMN = virtualColumn(
   "competition_id",
@@ -420,6 +276,22 @@ const CATALOG_LIST: SourceCatalog[] = [
     timeColumn: "game_creation_at",
     requiresCompetitionId: false,
     playerRefAllowed: false,
+    groupCall: false,
+  },
+  {
+    id: "timeline_frames",
+    description:
+      "Per-minute snapshots of each player — gold, CS, XP, level, stats — one row per player per minute, for matches whose timeline Scout has. Not every match has one; say an answer covers games with timeline data.",
+    columns: toMap([
+      ...physicalColumns(
+        TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+        TIMELINE_FRAME_DESCRIPTIONS,
+      ),
+      ...TIMELINE_FRAME_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
+    playerRefAllowed: true,
     groupCall: false,
   },
   {

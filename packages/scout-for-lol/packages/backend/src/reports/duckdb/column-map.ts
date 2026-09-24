@@ -6,6 +6,7 @@ import {
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "@scout-for-lol/data/model/reports/lake-columns.ts";
+import { TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
 
 /**
  * Which column names each ScoutQL source exposes, and the SQL each becomes.
@@ -34,7 +35,7 @@ export type ColumnBinding = {
 export type ColumnMap = ReadonlyMap<string, ColumnBinding>;
 
 export type PlanColumnSource =
-  "match" | "prematch" | "match-team" | "match-team-ban";
+  "match" | "prematch" | "match-team" | "match-team-ban" | "timeline-frame";
 
 /**
  * Sources whose rows hold no match facts of their own — no timestamp, queue
@@ -44,6 +45,16 @@ export type PlanColumnSource =
  */
 export function readsMatchDimension(source: PlanColumnSource): boolean {
   return source === "match-team" || source === "match-team-ban";
+}
+
+/**
+ * Sources whose match time is looked up rather than on the row, so the time
+ * window restricts the lookup and the row scan is joined to it. Timeline
+ * frames name a player, unlike team and ban rows, so this is wider than
+ * `readsMatchDimension`.
+ */
+export function timeFromLookup(source: PlanColumnSource): boolean {
+  return readsMatchDimension(source) || source === "timeline-frame";
 }
 
 const LAKE_TYPE_CLASS: Record<DuckDbColumnType, SqlTypeClass> = {
@@ -193,6 +204,40 @@ const MATCH_TEAM_BAN_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["map", lookedUp("map_id", "numeric")],
 ];
 
+/**
+ * A frame reads its player's participant row for everything but the
+ * snapshot itself: champion, position, team, result and match time.
+ */
+const TIMELINE_FRAME_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
+  ["player", PLAYER_BINDING],
+  ["champion", lookedUp("champion_name", "text")],
+  ["champion_id", lookedUp("champion_id", "numeric")],
+  ["team_position", lookedUp("team_position", "text")],
+  ["team_id", lookedUp("team_id", "numeric")],
+  ["win", lookedUp("win", "boolean")],
+  ["outcome", lookedUp("CASE WHEN win THEN 'Win' ELSE 'Loss' END", "text")],
+  ["side", lookedUp(SIDE_BINDING.sql, "text")],
+  ["game_creation_at", lookedUp("game_creation_at", "timestamp")],
+  ["queue", lookedUp("queue", "text")],
+  ["patch", lookedUp("patch", "text")],
+  ["map", lookedUp("map_id", "numeric")],
+  [
+    "minute",
+    virtual("(floor(frame_timestamp_ms / 60000))::INTEGER", "numeric", [
+      "frame_timestamp_ms",
+    ]),
+  ],
+  [
+    "creep_score",
+    virtual("(minions_killed + jungle_minions_killed)", "numeric", [
+      "minions_killed",
+      "jungle_minions_killed",
+    ]),
+  ],
+  ["team_gold_diff", lookedUp("team_gold_diff", "numeric")],
+  ["lane_gold_diff", lookedUp("lane_gold_diff", "numeric")],
+];
+
 export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
   return match(source)
     .with(
@@ -225,6 +270,14 @@ export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
         new Map([
           ...sourceColumnEntries(MATCH_TEAM_BAN_LAKE_COLUMNS),
           ...MATCH_TEAM_BAN_VIRTUAL_COLUMNS,
+        ]),
+    )
+    .with(
+      "timeline-frame",
+      () =>
+        new Map([
+          ...sourceColumnEntries(TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS),
+          ...TIMELINE_FRAME_VIRTUAL_COLUMNS,
         ]),
     )
     .exhaustive();
