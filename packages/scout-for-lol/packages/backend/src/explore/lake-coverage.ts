@@ -19,7 +19,9 @@
  * has — which is the specific failure this is written to stop.
  */
 export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
-  "matchups and pairings — how a champion or player did against, or alongside, a specific other one in the same game (champion vs champion, duo partners, who plays well together)",
+  // Teammates left this list when player_groups became queryable in server
+  // scope; opponents are a different join and stay (AI-18).
+  "head-to-head — how a champion or player did against a specific other one in the same game (champion vs champion, one player against another)",
   "streaks — runs of consecutive wins or losses, which need games read in order",
 ] as const;
 

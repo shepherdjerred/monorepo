@@ -278,8 +278,27 @@ describe("unresolved concepts", () => {
     // ~23 turns asked for a Riot ID and ~16 declined, for a referent no reader
     // would have found ambiguous.
     const instructions = exploreAgentInstructions({ bucks: null });
-    expect(instructions).toContain("the players this server tracks");
+    expect(instructions).toContain("the players the user's servers track");
     expect(instructions).toContain("Do not ask which players they meant");
+  });
+
+  test("says how to choose servers, and asks only when it cannot tell", () => {
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("call list_my_servers");
+    expect(instructions).toContain("if it lists one server, use it");
+    expect(instructions).toContain("'all my servers'");
+    expect(instructions).toContain("otherwise ask which server");
+  });
+
+  test("player_groups is allowed with servers and never globally", () => {
+    const instructions = exploreAgentInstructions({ bucks: null });
+    expect(instructions).toContain("player_groups reads groups");
+    expect(instructions).toContain("never runs without them");
+    expect(instructions).not.toContain("must never be queried: player_groups");
+    // Teammates are reachable now; opponents are still a stated limit.
+    const listed = LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.join(" ");
+    expect(listed).not.toContain("plays well together");
+    expect(listed).toContain("head-to-head");
   });
 
   test("defines the Hall of Fame, which was once read as a player name", () => {
