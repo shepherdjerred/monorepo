@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { ZodError, z } from "zod";
 import {
   callRiotOrThrow,
@@ -210,5 +210,57 @@ describe("schemaLabel", () => {
       ok({ id: 1, name: "ok", extra: true }),
     );
     expect(result).toEqual({ id: 1, name: "ok" });
+  });
+});
+
+describe("transport retry", () => {
+  test("retries a transport error once and returns the second attempt", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error("ENOTFOUND"))
+      .mockResolvedValueOnce({ id: 1, name: "ok" });
+    const result = await callRiotOrUndefined(
+      { source: "test-retry-success", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toEqual({ id: 1, name: "ok" });
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  test("gives up after two consecutive transport failures", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValue(new Error("ECONNRESET"));
+    const result = await callRiotOrUndefined(
+      { source: "test-retry-exhausted", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toBeUndefined();
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  test("retries a timeout-shaped error", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error("API request timed out after 30000ms"))
+      .mockResolvedValueOnce({ id: 1, name: "ok" });
+    const result = await callRiotOrUndefined(
+      { source: "test-retry-timeout", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toEqual({ id: 1, name: "ok" });
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  test("does not retry HTTP errors", async () => {
+    const fn = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValue(httpError(404));
+    const result = await callRiotOrUndefined(
+      { source: "test-no-retry-http", schema: Schema, context: {} },
+      fn,
+    );
+    expect(result).toBeUndefined();
+    expect(fn).toHaveBeenCalledTimes(1);
   });
 });
