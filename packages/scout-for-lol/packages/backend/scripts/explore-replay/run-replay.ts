@@ -57,6 +57,7 @@ import {
 import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
 import {
   queryFactsFromTrace,
+  replayCompetitionReadAccess,
   runReplayCases,
   type ReplayCaseInput,
   type ReplayObservation,
@@ -963,6 +964,7 @@ async function runGuild(input: {
         now: () => Date.now(),
         timeoutMs: 120_000,
         newRunId: () => globalThis.crypto.randomUUID(),
+        competitionReadAccess: replayCompetitionReadAccess,
       },
       {
         concurrency: options.concurrency,

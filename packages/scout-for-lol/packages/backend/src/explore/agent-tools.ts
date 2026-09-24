@@ -19,6 +19,7 @@ import { prisma } from "#src/database/index.ts";
 import type { CreationCapability } from "#src/explore/creation/capability.ts";
 import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
 import { createGatedExploreTools } from "#src/explore/gated-tools.ts";
+import type { CompetitionReadDependencies } from "#src/explore/tools/competition-read-tools.ts";
 import type { HallExploreCapability } from "#src/explore/tools/hall-tools.ts";
 import {
   enabledExploreSkills,
@@ -79,6 +80,14 @@ export type ExploreAgentParams = {
    * a policy choice.
    */
   surface: ExploreSurface;
+  /**
+   * Replay only. A replay cannot ask Discord who its requester is — their
+   * grant in a snapshot is long expired — so every competition read would
+   * report "could not verify". The harness answers the check itself, and
+   * records that it did; production leaves this undefined.
+   */
+  competitionReadAccess?:
+    CompetitionReadDependencies["resolveAccess"] | undefined;
   abortSignal: AbortSignal;
   emit: (event: ExploreStreamEvent) => void | Promise<void>;
 };
@@ -323,6 +332,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
       guildIds: params.guildIds,
       conversationId: params.conversationId,
       originChannelId: params.originChannelId,
+      competitionReadAccess: params.competitionReadAccess,
       track,
     }),
     ...(clashEnabled

@@ -112,7 +112,7 @@ export type CompetitionReadDependencies = {
   readonly loadLeaderboard: typeof loadCachedLeaderboard;
 };
 
-const defaultDependencies: CompetitionReadDependencies = {
+export const defaultCompetitionReadDependencies: CompetitionReadDependencies = {
   resolveAccess: (input) =>
     resolveCreationAccess({
       capability: { guildIds: input.guildIds },
@@ -128,7 +128,7 @@ export function createCompetitionReadTools(
     readonly guildIds: readonly string[];
     readonly track: ToolTracker;
   },
-  dependencies: CompetitionReadDependencies = defaultDependencies,
+  dependencies: CompetitionReadDependencies = defaultCompetitionReadDependencies,
 ) {
   const inScope = options.guildIds.map((guildId) =>
     DiscordGuildIdSchema.parse(guildId),
