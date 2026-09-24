@@ -63,6 +63,11 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 env:
+                  - name: GITHUB_DOWNLOAD_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-github-credentials
+                        key: GITHUB_DOWNLOAD_TOKEN
                   - name: BUILDKITE_ANALYTICS_TOKEN
                     valueFrom:
                       secretKeyRef:
@@ -149,6 +154,11 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 env:
+                  - name: GITHUB_DOWNLOAD_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-github-credentials
+                        key: GITHUB_DOWNLOAD_TOKEN
                   - name: BUILDKITE_ANALYTICS_TOKEN
                     valueFrom:
                       secretKeyRef:
