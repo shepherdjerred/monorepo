@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Urgot": {
       "id": "Urgot",
@@ -296,6 +296,68 @@
           "name": "Urgot the Clogfather (Obsidian)",
           "chromas": false,
           "parentSkin": 32
+        },
+        {
+          "id": "6041",
+          "num": 41,
+          "name": "Old God Urgot",
+          "chromas": true
+        },
+        {
+          "id": "6042",
+          "num": 42,
+          "name": "Old God Urgot (Ruby)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "6043",
+          "num": 43,
+          "name": "Old God Urgot (Catseye)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "6044",
+          "num": 44,
+          "name": "Old God Urgot (Emerald)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "6045",
+          "num": 45,
+          "name": "Old God Urgot (Sapphire)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "6046",
+          "num": 46,
+          "name": "Old God Urgot (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "6047",
+          "num": 47,
+          "name": "Old God Urgot (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "6048",
+          "num": 48,
+          "name": "Old God Urgot (Pearl)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "6049",
+          "num": 49,
+          "name": "Old God Urgot (Obsidian)",
+          "chromas": false,
+          "parentSkin": 41
         }
       ],
       "lore": "Once a powerful Noxian headsman, Urgot was betrayed by the empire for which he had killed so many. Bound in iron chains, he was forced to learn the true meaning of strength in the Dredge—a prison mine deep beneath Zaun. Emerging in a disaster that spread chaos throughout the city, he now casts an imposing shadow over its criminal underworld. Raising his victims on the very chains that once enslaved him, he will purge his new home of the unworthy, making it a crucible of pain.",

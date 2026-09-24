@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Janna": {
       "id": "Janna",
@@ -469,6 +469,54 @@
           "num": 66,
           "name": "Dawnbringer Janna",
           "chromas": false
+        },
+        {
+          "id": "40067",
+          "num": 67,
+          "name": "Coven Janna",
+          "chromas": true
+        },
+        {
+          "id": "40068",
+          "num": 68,
+          "name": "Coven Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40069",
+          "num": 69,
+          "name": "Coven Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40070",
+          "num": 70,
+          "name": "Coven Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40071",
+          "num": 71,
+          "name": "Coven Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40072",
+          "num": 72,
+          "name": "Coven Janna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40073",
+          "num": 73,
+          "name": "Coven Janna (Pearl)",
+          "chromas": false,
+          "parentSkin": 67
         }
       ],
       "lore": "Armed with the power of Runeterra's gales, Janna is a mysterious, elemental wind spirit who protects the dispossessed of Zaun. Some believe she was brought into existence by the pleas of Runeterra's sailors who prayed for fair winds as they navigated treacherous waters and braved rough tempests. Her favor and protection has since been called into the depths of Zaun, where Janna has become a beacon of hope to those in need. No one knows where or when she will appear, but more often than not, she's come to help.",

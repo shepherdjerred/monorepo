@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Anivia": {
       "id": "Anivia",
@@ -389,6 +389,68 @@
           "name": "Victorious Anivia (Challenger)",
           "chromas": false,
           "parentSkin": 46
+        },
+        {
+          "id": "34056",
+          "num": 56,
+          "name": "Old God Anivia",
+          "chromas": false
+        },
+        {
+          "id": "34057",
+          "num": 57,
+          "name": "Old God Anivia (Ruby)",
+          "chromas": true,
+          "parentSkin": 56
+        },
+        {
+          "id": "34058",
+          "num": 58,
+          "name": "Old God Anivia (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34059",
+          "num": 59,
+          "name": "Old God Anivia (Citrine)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34060",
+          "num": 60,
+          "name": "Old God Anivia (Pearl)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34061",
+          "num": 61,
+          "name": "Old God Anivia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34062",
+          "num": 62,
+          "name": "Old God Anivia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34063",
+          "num": 63,
+          "name": "Old God Anivia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "34064",
+          "num": 64,
+          "name": "Old God Anivia (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 56
         }
       ],
       "lore": "Anivia is a benevolent winged spirit who endures endless cycles of life, death, and rebirth to protect the Freljord. A demigod born of unforgiving ice and bitter winds, she wields those elemental powers to thwart any who dare disturb her homeland. Anivia guides and protects the tribes of the harsh north, who revere her as a symbol of hope, and a portent of great change. She fights with every ounce of her being, knowing that through her sacrifice, her memory will endure, and she will be reborn into a new tomorrow.",

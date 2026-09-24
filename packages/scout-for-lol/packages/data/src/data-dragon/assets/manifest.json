@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "sourceVersion": "16.18.1",
+  "sourceVersion": "16.19.1",
   "assets": [
     {
       "kind": "augment",
@@ -4900,6 +4900,15 @@
     },
     {
       "kind": "champion-loading",
+      "canonicalId": "Jade_Fizz_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Fizz_0.jpg",
+      "sha256": "ff6474f8efceb365d7e7d7c22ba73bd90438856e6a1a97937ccbe9ceea977b53"
+    },
+    {
+      "kind": "champion-loading",
       "canonicalId": "Jade_Galio_0",
       "mimeType": "image/jpeg",
       "height": 560,
@@ -4933,6 +4942,15 @@
       "width": 308,
       "relativePath": "img/champion-loading/Jade_Gragas_0.jpg",
       "sha256": "6791b9d10c30624f9e89e107ad1bc52d36408303367663261c08ea8381d85525"
+    },
+    {
+      "kind": "champion-loading",
+      "canonicalId": "Jade_Graves_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Graves_0.jpg",
+      "sha256": "f77455c7cf7ff82915dafb02d96616cd87d03afa28d27f19b155d12cc7dbead3"
     },
     {
       "kind": "champion-loading",
@@ -5107,12 +5125,30 @@
     },
     {
       "kind": "champion-loading",
+      "canonicalId": "Jade_Nami_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Nami_0.jpg",
+      "sha256": "da1a2afcba6822f085d34aef5ea6650d180e5b2dde7554d3767ae65f21bdafec"
+    },
+    {
+      "kind": "champion-loading",
       "canonicalId": "Jade_Nasus_0",
       "mimeType": "image/jpeg",
       "height": 560,
       "width": 308,
       "relativePath": "img/champion-loading/Jade_Nasus_0.jpg",
       "sha256": "cac74e32c970b83dc3d5cc67a46d0a7eb0b5956f221e08e4e73fd26345cc9cb5"
+    },
+    {
+      "kind": "champion-loading",
+      "canonicalId": "Jade_Nautilus_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Nautilus_0.jpg",
+      "sha256": "fa0ddc946fa7402854521b644f82c26246e97542c62c7a383e592d433b35d7f7"
     },
     {
       "kind": "champion-loading",
@@ -6930,7 +6966,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ahri_0.jpg",
-      "sha256": "5afbef28257c8118c54f4e9aa56706a4843b2f9bb8071154afac9a13309fc204"
+      "sha256": "d945d22eb73def929754393aebf55f52ac2aebbbc219c300816ddca68bbae187"
     },
     {
       "kind": "champion-splash",
@@ -6939,7 +6975,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Akali_0.jpg",
-      "sha256": "4355b383afc3564fd5bea48fac3805d700037552104d04b3b6006f1317dea4b3"
+      "sha256": "7ca5aa834b2dfb043413717eaed70d72d92bd3f863402ee1ea54116e21b17ded"
     },
     {
       "kind": "champion-splash",
@@ -6948,7 +6984,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Alistar_0.jpg",
-      "sha256": "786bb59dbe147ebec576ae40d8477b08efaccac504fe2761f76c5eae0d5e62b1"
+      "sha256": "0bb70350bc716046ece51d67440a9dfe8398258f69d39a0b9fcd46bc8770ba8f"
     },
     {
       "kind": "champion-splash",
@@ -6957,7 +6993,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Amumu_0.jpg",
-      "sha256": "c434b8cf9ea5f473d14badf2a7e2ad2ac3c01ac979700966eb7d23ada596c8a7"
+      "sha256": "f5a6cc412570a35140f0281d968719abbf7188a4d94912f16f1e52251947c5e1"
     },
     {
       "kind": "champion-splash",
@@ -6966,7 +7002,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Anivia_0.jpg",
-      "sha256": "63ab4a86ff9091a084dac342702e1245a5090d0efb7b4a3aff338400be8e3427"
+      "sha256": "9db00d00e59b68c7ec6afee3890dae59f20a1712468b440f7a311cd337f1f38a"
     },
     {
       "kind": "champion-splash",
@@ -6975,7 +7011,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Annie_0.jpg",
-      "sha256": "edb0ba3ce8688cf8419e56bbb31fbd4c5650fd2b1b0257c291efc327c66cf59b"
+      "sha256": "af0c11c71a7f9bce81460297c16aae96389f21f99952f6dcad6221b36c4b30c3"
     },
     {
       "kind": "champion-splash",
@@ -6984,7 +7020,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ashe_0.jpg",
-      "sha256": "b30a824e3fecbb1f7c8a865c6a654d1bd7ccccf6c9168bf30899a4290df21dac"
+      "sha256": "0769c901f100a1de9d73782e64a39d7330290d685d3b5a0452ee8841b9a472db"
     },
     {
       "kind": "champion-splash",
@@ -6993,7 +7029,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Blitzcrank_0.jpg",
-      "sha256": "bcfda688d1b2ea3b6ddda8d9dd2c359da8279115976bf76be149cdff70674f1f"
+      "sha256": "1a1a1dcc864381c6461d5cbd285e2ffd0da34c294d1220672c6ad80564828fa8"
     },
     {
       "kind": "champion-splash",
@@ -7002,7 +7038,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Brand_0.jpg",
-      "sha256": "f7f85075b4e23aea2bba2a7fd71541aa4771c6bd6ef8b6bf5f31b847da33fdff"
+      "sha256": "daab7f56a243162394bcdd1c2b6a2749e9ec4c0cfeb9f14b33bc194ffd1668cd"
     },
     {
       "kind": "champion-splash",
@@ -7011,7 +7047,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Chogath_0.jpg",
-      "sha256": "368eecfca3789a571e79c35f988371b0c5c2c9c61e30d143737e4a2fb8d12619"
+      "sha256": "1a7cce8b546215c9f91d5cef450c0e32906b5c069dd5fe896eb916bff59e0e0c"
     },
     {
       "kind": "champion-splash",
@@ -7020,7 +7056,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Corki_0.jpg",
-      "sha256": "b525d0806fc6bc2c86365d5f9eb1fe2608a6e82f9c3a39561464c958410e1525"
+      "sha256": "ba5d7694561f7909a4a5a109670c208709484c0fa6d7494c6112a767ef728e7b"
     },
     {
       "kind": "champion-splash",
@@ -7029,7 +7065,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_DrMundo_0.jpg",
-      "sha256": "bad3aa1ffbce577bcf90fc56b74de9c3e6d6a4d75367b0141d4ea3573a839140"
+      "sha256": "9fe341d0179bf9a3fa87e9eb023791d8ae601e70cdb061c931e9a377829b82c6"
     },
     {
       "kind": "champion-splash",
@@ -7038,7 +7074,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Evelynn_0.jpg",
-      "sha256": "4d08dc4a84ea238cfd6d8e792fcab71a3514fa098d104faa564c66add56ae5eb"
+      "sha256": "80598ac1ed5ec1cf6e4d8f47b839b8a73f8b89177d00e5e5a6f9e2d73fbd3e51"
     },
     {
       "kind": "champion-splash",
@@ -7047,7 +7083,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ezreal_0.jpg",
-      "sha256": "06279545481e63a6c558b0fde6a9015432f98f981642012b2d3ea3d0d840f9b8"
+      "sha256": "14d65725fb87147fa752bd7f10fbdfa7d98c89048538a2d24e72048a6c14cbf0"
     },
     {
       "kind": "champion-splash",
@@ -7056,7 +7092,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Fiddlesticks_0.jpg",
-      "sha256": "69cae697721d7463eac788c924f0db7a454167885bf5fb932a39b6df927d37f6"
+      "sha256": "aea5386de9362cbaa0e5bbc4d4df4bfbf0842ffa023ab8b3a7cb4a9d1ee1e279"
     },
     {
       "kind": "champion-splash",
@@ -7065,7 +7101,16 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Fiora_0.jpg",
-      "sha256": "c2f0810257f2be5e6e81d5d449103ecaf3efb23c2d0877d4ea00a9177f3fe3d7"
+      "sha256": "809e4cfe1fb0ca2a738a608f4276dc964a5b48b18611c0d492cb90fb3976429d"
+    },
+    {
+      "kind": "champion-splash",
+      "canonicalId": "Jade_Fizz_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Fizz_0.jpg",
+      "sha256": "f9276bb229a5169252879ea8d832b53ea4a4db2c0ef8d0c600a1f0c97c9e218f"
     },
     {
       "kind": "champion-splash",
@@ -7074,7 +7119,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Galio_0.jpg",
-      "sha256": "de2c69326c2953a166d5dd1e64d6a5b709671ac0bc5c3c0e2c6c623067481bd7"
+      "sha256": "ddf6d12e3e50696f194a369ab0479a229a8a3dc83484a88ddffe868732203b93"
     },
     {
       "kind": "champion-splash",
@@ -7083,7 +7128,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Gangplank_0.jpg",
-      "sha256": "baee1f6484fcf9465ead9d1c65bbc8e9645e21965742ef2c7ddecc15211adfd4"
+      "sha256": "03955066105fd74761715bf34c466fcb51d2ebe8035d7f50a0d56d329064a88c"
     },
     {
       "kind": "champion-splash",
@@ -7092,7 +7137,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Garen_0.jpg",
-      "sha256": "a7c363af03f7c828599a5cec9391df8d583840067152825e06d72afdebc13ded"
+      "sha256": "067251a4f632b62d8fdfda3efe83845ba57a6f7c8f79f130a5e202414193c868"
     },
     {
       "kind": "champion-splash",
@@ -7101,7 +7146,16 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Gragas_0.jpg",
-      "sha256": "eaa09f949655f034dcfd47978144f45b5a6eabebdda2de4a7196e601e49f88c5"
+      "sha256": "49118755993623fbc28df69903df63f1626e678a70ab5af13c6e25d27df0c867"
+    },
+    {
+      "kind": "champion-splash",
+      "canonicalId": "Jade_Graves_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Graves_0.jpg",
+      "sha256": "9bab8d9fc2d6c0c82d3d7efbd504e250e4ba60cb187291e1982aafaa647bf382"
     },
     {
       "kind": "champion-splash",
@@ -7110,7 +7164,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Heimerdinger_0.jpg",
-      "sha256": "432c03232fc7309528b1bc2179ac1fd27b3bdfcd9fd6a1b4aba0eac949978820"
+      "sha256": "30ed1514aa7289b77ca89a4e066dcfc79db51129f8063d67672a76ebc3e9da94"
     },
     {
       "kind": "champion-splash",
@@ -7119,7 +7173,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Janna_0.jpg",
-      "sha256": "66b3737369da893e6e9f63dd5aeeb3bcc9eab1d3e5d2ef0a87cbaaf02d19ac3b"
+      "sha256": "047bf5398b31bf510775fcfc3e0234090589b606bd139187b9cc442f1255b605"
     },
     {
       "kind": "champion-splash",
@@ -7128,7 +7182,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_JarvanIV_0.jpg",
-      "sha256": "2b759d0c46187bca79e8a0c0ff7e4c690b55c1fcd5793fe81a4faba7698ba830"
+      "sha256": "b3ef01eb8397762f3af866546e9eb5b59213b0deb4e683fb6b54ec0e13fb8614"
     },
     {
       "kind": "champion-splash",
@@ -7137,7 +7191,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Jax_0.jpg",
-      "sha256": "013bdc0f0e31261bbe1444f083ae18f6aa4ad9890f265cd76e4016c5e7ae853d"
+      "sha256": "5d1ad9d6c45fe6c2f97758cb58df9668b64e1dfc3a8b9f18e261116dafee7c57"
     },
     {
       "kind": "champion-splash",
@@ -7146,7 +7200,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Karthus_0.jpg",
-      "sha256": "56a35484312d09c2da2305333142d2d1858f9762a2f72a1a9cfa83727c66b3cb"
+      "sha256": "e71f4b75645444641adfce1c6f35618b32c96e1612451a3145c554ddbacd7d78"
     },
     {
       "kind": "champion-splash",
@@ -7155,7 +7209,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Kassadin_0.jpg",
-      "sha256": "39163ad5f4d4e711fd6900434f77e7ac847b7b052d3752e5e1ad9ceac0e084e7"
+      "sha256": "f56436bd018e0c146da23225d1376046159e3cd1f5c6988896b5a5f585c1e6cf"
     },
     {
       "kind": "champion-splash",
@@ -7164,7 +7218,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Katarina_0.jpg",
-      "sha256": "bb8b7824a5425fd227c0f43e9661f0a291f3a8de1abc827837e1a8aaf35d3752"
+      "sha256": "51501fb517226563de89d3df679be4279e67fa4d9ed35820929cc1f5adab09bc"
     },
     {
       "kind": "champion-splash",
@@ -7173,7 +7227,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Kayle_0.jpg",
-      "sha256": "9323b976886acc474f2493043a15f1d7fc459ec76b5af1e45edd71b6899750d8"
+      "sha256": "a8436bcf06b65319c573d9539303a2fa5249ff46bbfd71113ae1835428a9e0ea"
     },
     {
       "kind": "champion-splash",
@@ -7182,7 +7236,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Kennen_0.jpg",
-      "sha256": "67fad3942d674865548d96391bbabd58fe57ca50c7dfeb789b6016a68bac6fec"
+      "sha256": "7264f545d4d906fe59b994216afbce9c676aab5ac1c5dd1ba8eb68d2383421b9"
     },
     {
       "kind": "champion-splash",
@@ -7191,7 +7245,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_KogMaw_0.jpg",
-      "sha256": "ccf0337b92296f1bc40b0948ac746edfbefb7f017cc3ce50a87679cbe75332c8"
+      "sha256": "6fa74d3b28e7d6b5e86f373b85e96b1935b8ff0ba235a3ef1d9e92c689966059"
     },
     {
       "kind": "champion-splash",
@@ -7200,7 +7254,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_LeeSin_0.jpg",
-      "sha256": "c403bd419dcfda77278cfe756bd0281f941045afd5e2e905d19952160e7c9f24"
+      "sha256": "e8ca768fd8a09c4040645bcc473521272de7c2985c4e9323da8cfebc977ba047"
     },
     {
       "kind": "champion-splash",
@@ -7209,7 +7263,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Leona_0.jpg",
-      "sha256": "c6ab0267acfc20e690d69a2df2aa614bc8b9a45867b8992ba95fd3b5164c6294"
+      "sha256": "53fc589942b60213434cac05e3b7551f5f2b752ada2f1c5b8d5f16b6fbc9ba7a"
     },
     {
       "kind": "champion-splash",
@@ -7218,7 +7272,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Lulu_0.jpg",
-      "sha256": "41d678ee3fefb4da17cf58ad6f6069f35348c00676dd2b61e28306130bf341f5"
+      "sha256": "94b55e96564497d3a5f9de51fd2c7caaaae208605673e2ddcae0351884321ce9"
     },
     {
       "kind": "champion-splash",
@@ -7227,7 +7281,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Lux_0.jpg",
-      "sha256": "3ecda74d360e5ebccb79c341c39a5c41c1b179abe55135032148fc66f5a2a77a"
+      "sha256": "6ce4529993f5178f42f9192e93625548c68fc7352fa3ee6a512c783afc67e8a3"
     },
     {
       "kind": "champion-splash",
@@ -7236,7 +7290,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Malphite_0.jpg",
-      "sha256": "3a76c0e74a0d2c5f1180c0a7a59669400f14f5d2ef4e81f436b93100ee6a59e0"
+      "sha256": "ed95ba155bcfc67947295e97f083754e11f178ad1f12a9441758005a86e6cab7"
     },
     {
       "kind": "champion-splash",
@@ -7245,7 +7299,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Malzahar_0.jpg",
-      "sha256": "b0a8247452dafdd74050f1489f39bf44fe7beb8219902bf42fdb01f919e96f35"
+      "sha256": "cfb2e9664eb13604e1406491bf5626c0b43f5fd1c841d196a3fd24db1ee6a1fc"
     },
     {
       "kind": "champion-splash",
@@ -7254,7 +7308,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_MasterYi_0.jpg",
-      "sha256": "78ed07e69a0e002baa6a77b6d54f743d3b729356be2dcff9505f58af2c586ec2"
+      "sha256": "4e4a54ebb2f8d99bdcde6122b090331b26957dbac5cc95e32d4e2baeff6d2659"
     },
     {
       "kind": "champion-splash",
@@ -7263,7 +7317,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_MissFortune_0.jpg",
-      "sha256": "cb6bb162ebf848447acb1b04b5b6d1e5918581981fd0d1edef0012d2b745a268"
+      "sha256": "273ba110ab97364605aa1839de65bea2b9bdd72ff2de78fd044de5806e434b8d"
     },
     {
       "kind": "champion-splash",
@@ -7272,7 +7326,16 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Morgana_0.jpg",
-      "sha256": "98bbb4a3c3ef51d2ef28a08478da5d23378c1df6325224120b1d0f4413179929"
+      "sha256": "381d15f5705a9c8ff6b20d51ba44019b2737b6c68577799693891f83233be45b"
+    },
+    {
+      "kind": "champion-splash",
+      "canonicalId": "Jade_Nami_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Nami_0.jpg",
+      "sha256": "9325aec3457b4c763be780d32ba7ff0ad1224a42d4fa9595b6d8a9928e7abdd9"
     },
     {
       "kind": "champion-splash",
@@ -7281,7 +7344,16 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nasus_0.jpg",
-      "sha256": "c858644ee0ac6b2c4f5c424b75e8fcc8ec96f4e0a56b0a729d2b61f7bdbbac3b"
+      "sha256": "42b7133f9232f23945b301ad41f2f6133ff1f3ba3f32cde1689f15d523314d8d"
+    },
+    {
+      "kind": "champion-splash",
+      "canonicalId": "Jade_Nautilus_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Nautilus_0.jpg",
+      "sha256": "c1374f1802c2291af213e9ab67a0e3b0cd0a3ed725a9c5e98e69a9ab903dfab0"
     },
     {
       "kind": "champion-splash",
@@ -7290,7 +7362,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nidalee_0.jpg",
-      "sha256": "2530ef327960fb603a4a2c3eee86b618466fde5e2c2d57ee08dccdbd41c1d3d4"
+      "sha256": "632595c82a0e6cf2b77ee8c379bf0c5b3e698a3fafe07f0d712a562e50152531"
     },
     {
       "kind": "champion-splash",
@@ -7299,7 +7371,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nunu_0.jpg",
-      "sha256": "89c98bdba5e8365e6f65ea8a02e09b91cf996eab4d516e393eb8d073995b31ef"
+      "sha256": "f22cdb483884190276e9ae05d91c92d6d255889c7b665c82ff4d12c68ec502f2"
     },
     {
       "kind": "champion-splash",
@@ -7308,7 +7380,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Olaf_0.jpg",
-      "sha256": "08fbca831640bca52ae4a0723cf03c7691425bc9f43d9e29548b302af5225cf9"
+      "sha256": "6bea999cbf345ee7ef1d55dd09704b18f6b7d6618272ea01f4a43db57bda026c"
     },
     {
       "kind": "champion-splash",
@@ -7317,7 +7389,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Pantheon_0.jpg",
-      "sha256": "1a532ebd0f49352ac64953e879dbf594884e426152087a6649e13e23d0304662"
+      "sha256": "2239c7abfd581d4216144e48327fd5639130a2eb74cefae227b0f8e4e4ad7488"
     },
     {
       "kind": "champion-splash",
@@ -7326,7 +7398,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Poppy_0.jpg",
-      "sha256": "76f221aca4979212a5e573ac6b538c1a027387e4ee39557f591c9713ae6e13bb"
+      "sha256": "6da81bab33fed69419ca123282a7bc4d430b1c907220bebaa682bb2f60ab14a3"
     },
     {
       "kind": "champion-splash",
@@ -7335,7 +7407,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Rammus_0.jpg",
-      "sha256": "59959ce49deb7e0133db98f6759bb424fa35cad828d4c9d5fa81b1215d7d0dc1"
+      "sha256": "a1f38762ee6eb231212910bbf043f70c95a78036de7043ef4466b2b8b9f97716"
     },
     {
       "kind": "champion-splash",
@@ -7344,7 +7416,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ryze_0.jpg",
-      "sha256": "69fdc9ac8d90f6027b46145da44c64b251bec1377792de5318b243c6fe0c0b30"
+      "sha256": "ca47373269b4a6a053a424a4d0ef085a24bfbdc4659876735c91ff6019399337"
     },
     {
       "kind": "champion-splash",
@@ -7353,7 +7425,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Shaco_0.jpg",
-      "sha256": "fb283acdddd4a967e50a395d61a676e94ed8315451da47831be303306ce876bd"
+      "sha256": "244743b15aa9db719357768d04449a1c2e5ada37cf164e24151654055b103a57"
     },
     {
       "kind": "champion-splash",
@@ -7362,7 +7434,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Shen_0.jpg",
-      "sha256": "4a86a70141d112ea10f5bb5a7ae0f27a117d75fc2c47f3d3ef76a3da86c3869e"
+      "sha256": "46e609ca34e2f3029cb4af3fd60ea9689d0fa9a62d0912dcfa8e575023175ce2"
     },
     {
       "kind": "champion-splash",
@@ -7371,7 +7443,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Shyvana_0.jpg",
-      "sha256": "35274aee8d84f86d08d9ab4ae8b436438bc71331339c07701e06d3a6ef399de8"
+      "sha256": "8c9acd4d72a7fc7d728c9e60f2986c76e57f92b22e1febf30ee4121e9ed36f4c"
     },
     {
       "kind": "champion-splash",
@@ -7380,7 +7452,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Singed_0.jpg",
-      "sha256": "c641486e0e41bc8b32653fe89e317e456eb5f6e01b0003bb2ddc8433227379ce"
+      "sha256": "0730b46b3a5af4364456ca5de4d3cd75b42d8b6598ce43be93359847b7044749"
     },
     {
       "kind": "champion-splash",
@@ -7389,7 +7461,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Sion_0.jpg",
-      "sha256": "c408dc0ff0f5a691bbe6d28dba72ac20c749a716ccd7f4186c4e247d08531552"
+      "sha256": "67f2e77fb77b612e3fd29a8e0a5ec94e423587763f6f40246299f169f3a60fec"
     },
     {
       "kind": "champion-splash",
@@ -7398,7 +7470,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Sivir_0.jpg",
-      "sha256": "0df16680b3fd1d901d54fbd334828fe50244bc8827444d550715e877b6c7a039"
+      "sha256": "4a1cf067fee52ab729a4b6d75b8e2b72d4e75b241efa71b803d43658bd67d77f"
     },
     {
       "kind": "champion-splash",
@@ -7407,7 +7479,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Skarner_0.jpg",
-      "sha256": "6a7ab614951016afa56eb82594458b60bc683e3fd109c0029afbe7d279ca35fc"
+      "sha256": "8a0e8a032723993491e81163c7febb71ca6b403c5d48c1e77d0c4c2339826256"
     },
     {
       "kind": "champion-splash",
@@ -7416,7 +7488,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Sona_0.jpg",
-      "sha256": "999cf65ba72ecd543706e846bb9be0ee22278efb9606de93ac1f112289e014de"
+      "sha256": "3b3add09214649ed2a42b7eb08d52eca75ec41ee810e813bdff09bf4d693965e"
     },
     {
       "kind": "champion-splash",
@@ -7425,7 +7497,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Soraka_0.jpg",
-      "sha256": "ef3ce8f8a28b48ded519e909501fea682adb75bb2b6e49e8e4e42ed3f634de68"
+      "sha256": "591b00d7513d4deadb4d815711e33641c1b3f7ce1f0c883b8b05bc2569abf163"
     },
     {
       "kind": "champion-splash",
@@ -7434,7 +7506,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Taric_0.jpg",
-      "sha256": "3afbf3d09c1e49b812ee4c4c05f26180af2de9080c1a6344a2e314668d395d85"
+      "sha256": "a45c2aa2624966d09e53c3c804d9a3eb7aeabb0199804eda0f1826a4eed74887"
     },
     {
       "kind": "champion-splash",
@@ -7443,7 +7515,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Teemo_0.jpg",
-      "sha256": "42edf8d771ff530e2b26606ed072cbf6899371a17ebac50a43a679a7abcef168"
+      "sha256": "09299535bc04cc1bfecc2aa867004b1ac0b62f22fa84326efb3f18eced1d43fc"
     },
     {
       "kind": "champion-splash",
@@ -7452,7 +7524,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Tristana_0.jpg",
-      "sha256": "32a00a7edefbc0f0316ebb3651f79d403a0cc5aeb0f6b4517e6d096642c52e69"
+      "sha256": "0e4361b93871fb4a349f9fb75bf5ce182e8dba58c863dbee0805f67652300fbe"
     },
     {
       "kind": "champion-splash",
@@ -7461,7 +7533,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Tryndamere_0.jpg",
-      "sha256": "c7ecc32aae4c41f4208b3610642903cdb4cc38bebbba762824747ba13fca00dc"
+      "sha256": "e43a838982595020b75da295385c97e2f1e9328ab5d07e2a7f46af0c8236f9d1"
     },
     {
       "kind": "champion-splash",
@@ -7470,7 +7542,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_TwistedFate_0.jpg",
-      "sha256": "0da4fed4ac524635b42d234a6a9a7828fee4f1da8c827bfdf659f6feb864db6a"
+      "sha256": "38159603405cae4642d8b28692eff10f76bf2d674f6bc1b8147f67933a58c5e4"
     },
     {
       "kind": "champion-splash",
@@ -7479,7 +7551,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Twitch_0.jpg",
-      "sha256": "81c51222a1a57b53ace28742f9ddd3278f97b4be7d92a33971f638572c62527c"
+      "sha256": "fc76bc066df7efc43a47e19916fa7fd5537663f6e48ef1c678ef5438bc1c5e68"
     },
     {
       "kind": "champion-splash",
@@ -7488,7 +7560,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Vayne_0.jpg",
-      "sha256": "ea1d9ad651864a9ce901ba418ed56b42a0302509a0ea352494d49b7419896e90"
+      "sha256": "5e9f6919bcea816c771c2a8cb766418d840073dcf882fd3f81f3c7ab37374b36"
     },
     {
       "kind": "champion-splash",
@@ -7497,7 +7569,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Veigar_0.jpg",
-      "sha256": "e311fc6c06f6292a9279dbe5eb4c7e958613910bdfc93e9dfd567049ccc7cf80"
+      "sha256": "21e40a90db64562491a94808d00d45e9cf25146cc1d019ee618b0ebd85256acc"
     },
     {
       "kind": "champion-splash",
@@ -7506,7 +7578,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Warwick_0.jpg",
-      "sha256": "39832de8891d8e94e833a7faf40c09e7ad78c70cdba1bde22f0ffef4ab440c5f"
+      "sha256": "8231b5579f758a578d9d2005073efaa5119c7072ef86a7607d7ecffd523a1b84"
     },
     {
       "kind": "champion-splash",
@@ -7515,7 +7587,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Wukong_0.jpg",
-      "sha256": "9b3cc223b14d5dbc828b361dd5d270c227934be0ce5641fd116d1f34ac8cafa7"
+      "sha256": "d415866ad3c5e74559c3068a42221c29b85cdae1d160f3c14cd0d44519e9b54c"
     },
     {
       "kind": "champion-splash",
@@ -7524,7 +7596,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_XinZhao_0.jpg",
-      "sha256": "9e91203e2562d077e660d11da3964f0a9801822b16161a956528bf2979c46525"
+      "sha256": "2a757e0076fd546ab978914e601495cce754a1053b93b3fdc612cb4b682d3ca4"
     },
     {
       "kind": "champion-splash",
@@ -7533,7 +7605,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Zilean_0.jpg",
-      "sha256": "ec3614422664df950a42c06596ec95d31e6ce5db46d54242ef3c29fd35e8723a"
+      "sha256": "41349c244004565a7241a6f072d2bfbe90d0373e3da79cebbe6c6a8b9f1b4a91"
     },
     {
       "kind": "champion-splash",
@@ -9238,12 +9310,21 @@
     },
     {
       "kind": "champion",
+      "canonicalId": "Jade_Fizz",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Fizz.png",
+      "sha256": "215982c9f764c4ed931d5a71606750cb332d649cd3660907b4ba200ecd6e282b"
+    },
+    {
+      "kind": "champion",
       "canonicalId": "Jade_Galio",
       "mimeType": "image/png",
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Galio.png",
-      "sha256": "e70c9d89b3cd2f52dabb9d28b6b99d65b68fae556edeaadea811c49f20fb6564"
+      "sha256": "d2dc1d3e0af5c5d0fa9662f8becdc0ba4cae8aa10653bdb0d9d371d58dafbeae"
     },
     {
       "kind": "champion",
@@ -9261,7 +9342,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Garen.png",
-      "sha256": "4e219480bd4759860849709603014369981fb46ad72b1d10442f1a780f6d2d6a"
+      "sha256": "fda3747a372c1b249e138e2c630dbfa9d53c197861ce24fdb363a418e6819305"
     },
     {
       "kind": "champion",
@@ -9271,6 +9352,15 @@
       "height": 128,
       "relativePath": "img/champion/Jade_Gragas.png",
       "sha256": "2a548cb7ae4e3de2c813eff336fac4770c7b570226d967a3b1931b3bdacbb7c5"
+    },
+    {
+      "kind": "champion",
+      "canonicalId": "Jade_Graves",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Graves.png",
+      "sha256": "1956ef8d9310a9429f8dffb8c868a110c60999168648e8935dcc849101097c02"
     },
     {
       "kind": "champion",
@@ -9369,7 +9459,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_LeeSin.png",
-      "sha256": "58bc5ed5309f09864d7d9d83422f7ef1ed3778f0a59f74aa4b7b98c9d9851445"
+      "sha256": "25c5d0504457b185da1498a9b24045c9322b2f791e025f7397dfeb88cf4977a7"
     },
     {
       "kind": "champion",
@@ -9378,7 +9468,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Leona.png",
-      "sha256": "b2d45447a7b26a9238f36faea781fc8af01853c984c23dc2911b32acfcf9e38d"
+      "sha256": "0441a32cdd545023ffe31b6ea8eebb65d7310c04df71379da3a921976e4c45c4"
     },
     {
       "kind": "champion",
@@ -9387,7 +9477,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Lulu.png",
-      "sha256": "6bf34cb660de137e33c5cf82ae08a83d9c4a39cc8ee4883c9a1d9f4b82d2b49c"
+      "sha256": "d606d56fcb17368a052acafb0fb0383cdea533d44c7fcd099fe50e983791a5d4"
     },
     {
       "kind": "champion",
@@ -9414,7 +9504,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Malzahar.png",
-      "sha256": "420b19722cb9c32a556ed200d8e5edb7bb0c6b35e2a4ef61122c7342e3c93427"
+      "sha256": "c2cbe51ee57603d8b746860e8a9436a01cf58ff819134ad96123d64553a4b33e"
     },
     {
       "kind": "champion",
@@ -9445,12 +9535,30 @@
     },
     {
       "kind": "champion",
+      "canonicalId": "Jade_Nami",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Nami.png",
+      "sha256": "ebfdaebd9eb0e4bc9bb04a709a60dfb205f2eb757219e31c7ea45f22a2ca1fdf"
+    },
+    {
+      "kind": "champion",
       "canonicalId": "Jade_Nasus",
       "mimeType": "image/png",
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Nasus.png",
       "sha256": "9e1e3298e621d0db65bd19bbdd78c575858528d9a072ee44e3dc34a22a108c73"
+    },
+    {
+      "kind": "champion",
+      "canonicalId": "Jade_Nautilus",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Nautilus.png",
+      "sha256": "645a0b67ccae6127928b1821524807518c9f37ea150a00c7d4447d986cb722b1"
     },
     {
       "kind": "champion",
@@ -9504,7 +9612,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Rammus.png",
-      "sha256": "60b966d0239e3949dcec4a9821f242dc64726b675c00eb6599113c4a31c5b235"
+      "sha256": "f7f0bb4445267be65d39739334016f64155027e88ab01059115fdb294d5f9b55"
     },
     {
       "kind": "champion",
@@ -9612,7 +9720,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Teemo.png",
-      "sha256": "8faa9720b9bb47feadc01107998c3bba3878a9ab7c524ecae3caaaa58462572c"
+      "sha256": "229fba85fd3662c43ddecdc4f507e6325950b6f8ec2665d39a517126353cd5b4"
     },
     {
       "kind": "champion",
@@ -9621,7 +9729,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Tristana.png",
-      "sha256": "a2b374156efe468a64b834cfc4390a507667ec738ba9f10c6ab5f519ba8ebc79"
+      "sha256": "ea2e6e1d2496a885a67688e11ce7c1859f8375cbb13f1acb9ada1f8668f9e7b3"
     },
     {
       "kind": "champion",
@@ -9630,7 +9738,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Tryndamere.png",
-      "sha256": "6913e71cbccb1bd39a3e00d751bfec9ad02429976a1cb31f7cbe413c07544900"
+      "sha256": "d02f0dcd44e23d4a85f6c1e69fbb2fa28cd3154a4e9048def6df9b20fcbfed1c"
     },
     {
       "kind": "champion",
@@ -9666,7 +9774,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Veigar.png",
-      "sha256": "011a935f60c0e325f21251382538885aa1c4c0513e53f56a264673caf077837b"
+      "sha256": "be9df1e319551cc699e7069e73c92498b72a8abde4a02e2df6a310d877554288"
     },
     {
       "kind": "champion",
@@ -17992,6 +18100,24 @@
       "height": 64,
       "relativePath": "img/item/773160.png",
       "sha256": "586e7492cdb59f33c49a5eb7051be5cd73ffeff7e5a225f23623a94d9bd8fac6"
+    },
+    {
+      "kind": "item",
+      "canonicalId": "773161",
+      "mimeType": "image/png",
+      "width": 64,
+      "height": 64,
+      "relativePath": "img/item/773161.png",
+      "sha256": "ebfdd24735fe601c207043e0408d2a4f05dd51d03e376ba92992669f1c2646c9"
+    },
+    {
+      "kind": "item",
+      "canonicalId": "773162",
+      "mimeType": "image/png",
+      "width": 64,
+      "height": 64,
+      "relativePath": "img/item/773162.png",
+      "sha256": "c61da41b53e9a98e582dc58e403b9a411a7f98feba885921e9b2662d1432d79d"
     },
     {
       "kind": "item",
