@@ -317,6 +317,18 @@ export const zfsDatasetSnapshotCount = new Gauge({
   registers: [register],
 });
 
+export const veleroOrphanBackupCrsTotal = new Gauge({
+  name: "velero_orphan_backup_crs_total",
+  help: "ZFSBackup CRs whose Velero Backup is gone and which are older than the 24h fence",
+  registers: [register],
+});
+
+export const veleroOrphanBackupCrOldestAgeSeconds = new Gauge({
+  name: "velero_orphan_backup_crs_oldest_age_seconds",
+  help: "Age of the oldest orphan ZFSBackup CR, or 0 when none exist",
+  registers: [register],
+});
+
 // ---------------------------------------------------------------------------
 // Workflow outcome metric — distinguishes "did the work" from "skipped
 // intentionally" for check-and-skip workflows (vacuum, goodMorning*) where
