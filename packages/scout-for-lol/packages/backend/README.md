@@ -57,7 +57,7 @@ records the reason and increments the row's requeue count:
 ```bash
 bun run temporal:requeue-work -- \
   --work-id parlay:<match-id> \
-  --reason "OpenRouter capacity restored and this match was reviewed"
+  --reason "Provider capacity restored and this match was reviewed"
 ```
 
 `db:generate` must run after schema changes and before typecheck/test; from the

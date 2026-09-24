@@ -17,8 +17,8 @@ is a reminder, not provider billing data.
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
 critical remaining usage. Cached values remain visible but dimmed and stale.
-The `API & routers` segment reports OpenRouter credits plus OpenAI and Anthropic
-organization API spend for the current local month.
+The `API & routers` segment reports OpenAI and Anthropic organization API spend
+for the current local month.
 
 ## Build and install
 
@@ -209,8 +209,6 @@ The API view accepts a privileged admin or management key per platform, entered
 in Settings and stored in a dedicated login-Keychain account. Brim uses each
 key only for read-only billing requests:
 
-- OpenRouter Management API key: credits remaining and current-month API-key
-  spend, including estimated BYOK, across every workspace.
 - OpenAI Admin API key: organization Costs API spend for the current local
   calendar month. This is not ChatGPT subscription usage.
 - Anthropic Admin API key: organization Cost Report spend for the current

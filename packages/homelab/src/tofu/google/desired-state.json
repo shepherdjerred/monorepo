@@ -1,0 +1,44 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "google",
+  "google_billing_account_id": null,
+  "google_quota_project_id": null,
+  "google_workloads": {
+    "birmel-prod": {
+      "project_id": "sjerred-llm-birmel-prod",
+      "display_name": "LLM birmel prod",
+      "monthly_budget_usd": 10,
+      "ai_studio_spend_cap_usd": 10,
+      "onepassword_targets": [
+        {
+          "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
+          "vault_field": "GEMINI_API_KEY"
+        }
+      ]
+    },
+    "scout-beta": {
+      "project_id": "sjerred-llm-scout-beta",
+      "display_name": "LLM scout beta",
+      "monthly_budget_usd": 5,
+      "ai_studio_spend_cap_usd": 5,
+      "onepassword_targets": [
+        {
+          "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
+          "vault_field": "GEMINI_API_KEY"
+        }
+      ]
+    },
+    "scout-prod": {
+      "project_id": "sjerred-llm-scout-prod",
+      "display_name": "LLM scout prod",
+      "monthly_budget_usd": 20,
+      "ai_studio_spend_cap_usd": 20,
+      "onepassword_targets": [
+        {
+          "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
+          "vault_field": "GEMINI_API_KEY"
+        }
+      ]
+    }
+  }
+}

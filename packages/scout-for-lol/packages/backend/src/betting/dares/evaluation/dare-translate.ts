@@ -45,7 +45,7 @@ const logger = createLogger("betting-dare-translate");
 /**
  * The one place the dare feature talks to a model.
  *
- * Plumbing mirrors `parlay-generate.ts`: OpenRouter runtime, budget assert,
+ * Plumbing mirrors `parlay-generate.ts`: shared LLM runtime, budget assert,
  * `generateValidatedObject` under an `AbortSignal.timeout` deadline, usage
  * charged even for failed structured output, all inside a guild-attributed
  * LLM subject span. The difference is the boundary shape: a human is waiting
@@ -176,7 +176,7 @@ async function translateDareInternal(
     }
     const runtime = deps.getRuntime();
     if (runtime === undefined) {
-      throw new Error("OPENROUTER_API_KEY is required for dare translation");
+      throw new Error("OpenAI credentials are required for dare translation");
     }
     const model = deps.model();
     const schema = dareTranslationSchemaFor(shortlist);

@@ -8,8 +8,8 @@ import type {
 /**
  * The environment contract for provider credentials, in one place.
  *
- * Under the gateway every service read a single `OPENROUTER_API_KEY`, so each
- * one carried that field in its own typed config. Three providers with two
+ * Under the gateway every service read a single router key, so each one
+ * carried that field in its own typed config. Three providers with two
  * different authentication models would multiply that by six packages, and the
  * shapes are not application configuration — they are credentials and
  * bootstrap, which is what the environment is for here. Centralizing also
@@ -78,12 +78,8 @@ function anthropicFromEnv(
 }
 
 function googleFromEnv(env: CredentialEnv): GoogleCredentials | undefined {
-  const project =
-    trimmed(env["GOOGLE_VERTEX_PROJECT"]) ??
-    trimmed(env["GOOGLE_CLOUD_PROJECT"]);
-  if (project === undefined) return undefined;
-  const location = trimmed(env["GOOGLE_VERTEX_LOCATION"]);
-  return { project, ...(location === undefined ? {} : { location }) };
+  const apiKey = trimmed(env["GEMINI_API_KEY"]);
+  return apiKey === undefined ? undefined : { apiKey };
 }
 
 /**
@@ -110,8 +106,8 @@ export function providerCredentialsFromEnv(
  * The runtime already refuses at the first call, which is right for services.
  * A CLI that spends minutes fetching and enriching data before its first model
  * call wants the answer up front, and wants it to name the provider — "no
- * OpenAI credentials" is actionable where the old "OPENROUTER_API_KEY is
- * required" no longer applies to anything.
+ * OpenAI credentials" is actionable where a generic "API key is required" is
+ * not.
  */
 export function requireCredentialsFor(
   modelId: string,
@@ -122,7 +118,7 @@ export function requireCredentialsFor(
   const hint = {
     openai: "OPENAI_API_KEY",
     anthropic: "ANTHROPIC_API_KEY or the ANTHROPIC_FEDERATION_* variables",
-    google: "GOOGLE_VERTEX_PROJECT",
+    google: "GEMINI_API_KEY",
   }[provider];
   throw new Error(
     `Model ${modelId} routes to ${provider}, but no ${provider} credentials are configured (set ${hint})`,

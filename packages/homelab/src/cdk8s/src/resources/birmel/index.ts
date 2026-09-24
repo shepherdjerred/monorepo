@@ -19,6 +19,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-workload-identity.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
@@ -173,7 +174,6 @@ done`,
           key: "DISCORD_CLIENT_ID",
         }),
 
-        // OpenRouter ordinary inference
         // Bootstrap for the flag client — these cannot come from a flag.
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
@@ -181,13 +181,25 @@ done`,
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
-        OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+        // Provider credentials for the LLM runtime, one key per provider from
+        // Birmel's own OpenAI project and Gemini project. Anthropic, when
+        // federated, arrives through addAnthropicFederation below instead of
+        // a key.
+        OPENAI_API_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "birmel-openrouter-api-key-secret",
+            "birmel-openai-api-key-secret",
             onePasswordItem.name,
           ),
-          key: "OPENROUTER_API_KEY",
+          key: "OPENAI_API_KEY",
+        }),
+        GEMINI_API_KEY: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-gemini-api-key-secret",
+            onePasswordItem.name,
+          ),
+          key: "GEMINI_API_KEY",
         }),
         LLM_MODEL: EnvValue.fromValue("gpt-5.6-sol"),
         LLM_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
@@ -337,6 +349,7 @@ done`,
     }),
   );
 
+  addAnthropicFederation(deployment, { workload: "birmel-prod" });
   setRevisionHistoryLimit(deployment);
 
   const healthService = new Service(chart, "birmel-health-service", {

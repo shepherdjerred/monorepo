@@ -791,20 +791,6 @@
       ]
     },
     {
-      "name": "shepherdjerred/openrouter-broadcast-ingest",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-17828@sha256:d42716524e403fc0864007dc1f4899b345a687c5c04bb1faddf3b6df054cb8ff",
-      "notes": [
-        "not managed by renovate — pre-first-publish placeholder. The main image",
-        "release injects the built digest into chart synthesis and version",
-        "commit-back replaces this pin before a later release can use source state."
-      ]
-    },
-    {
       "name": "shepherdjerred/discord-plays-pokemon",
       "category": "internal-image",
       "artifactType": "image",

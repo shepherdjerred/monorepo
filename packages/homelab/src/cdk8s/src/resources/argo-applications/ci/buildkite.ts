@@ -77,7 +77,7 @@ const BUILDKITE_CREDENTIAL_ITEMS = [
     itemId: "4fmd5otmvwcpsrxjaptrloppvu",
   },
   {
-    secretName: "buildkite-release-openrouter-credentials",
+    secretName: "buildkite-release-openai-credentials",
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
   },
   {
@@ -119,10 +119,6 @@ const BUILDKITE_CREDENTIAL_ITEMS = [
   {
     secretName: "discord-tofu-credentials",
     itemId: "z2tt5eswusadzfsztg4uwr6vay",
-  },
-  {
-    secretName: "openrouter-tofu-credentials",
-    itemId: "msklmk7gk2r3rq4kyeywpuafny",
   },
   {
     secretName: "cloudflare-tokens-tofu-credentials",

@@ -65,7 +65,7 @@ function llmRuntime(
     credentials: {
       openai: { apiKey: "sk-test" },
       anthropic: { kind: "apiKey", apiKey: "sk-ant-test" },
-      google: { project: "test-project" },
+      google: { apiKey: "test-gemini-key" },
     },
     service: "runtime-test",
     appName: "Runtime Test",

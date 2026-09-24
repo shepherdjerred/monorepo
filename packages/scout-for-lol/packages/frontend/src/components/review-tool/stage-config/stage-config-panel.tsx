@@ -77,7 +77,7 @@ function getDefaultPrompts(stageName: PromptStageName): {
         user: IMAGE_DESCRIPTION_USER_PROMPT,
       };
     case "imageGeneration":
-      // Image generation uses a single OpenRouter image prompt.
+      // Image generation uses a single Gemini image prompt.
       return { user: IMAGE_GENERATION_USER_PROMPT };
   }
 }

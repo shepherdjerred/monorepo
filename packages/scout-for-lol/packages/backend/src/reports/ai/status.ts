@@ -25,7 +25,7 @@ export async function getReportAiEditStatus(params: {
   const disabledReason = featureEnabled
     ? hasRequiredProviderKey
       ? null
-      : "OPENAI_API_KEY is not configured."
+      : "No OpenAI credentials are configured."
     : "AI report editing is not enabled for this server.";
   const quota = getReportAiQuotaStatus(params, Date.now(), { exempt });
 

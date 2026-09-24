@@ -39,6 +39,8 @@
     "scripts/platform-desired-state.ts",
     "scripts/tofu/tofu-stack-manifest.ts",
     "scripts/tofu/tofu-stack.ts",
+    "scripts/tofu/export-workload-identity.ts",
+    "scripts/tofu/llm-workload-identity-schema.ts",
     "scripts/tofu/tofu-stack.test.ts"
   ]
 }

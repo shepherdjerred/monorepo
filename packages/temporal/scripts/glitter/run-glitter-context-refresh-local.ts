@@ -9,7 +9,8 @@
  * paid for.
  *
  * Requires GLITTER_DISCORD_GUILD_ID, the GLITTER_CORPUS_S3_* credentials, and
- * OPENROUTER_API_KEY. A non-dry run additionally opens a pull request and needs
+ * the provider key its models route to (OPENAI_API_KEY for the catalog
+ * defaults). A non-dry run additionally opens a pull request and needs
  * the GITHUB_APP_* credentials.
  */
 import { MockActivityEnvironment } from "@temporalio/testing";

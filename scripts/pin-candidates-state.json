@@ -31,11 +31,6 @@
       "digest": "sha256:985e6499b130f9f4927de45ae54cb13299a363409941717737c8d0433a45bbbe",
       "buildNumber": 16936
     },
-    "shepherdjerred/openrouter-broadcast-ingest": {
-      "version": "2.0.0-17828",
-      "digest": "sha256:d42716524e403fc0864007dc1f4899b345a687c5c04bb1faddf3b6df054cb8ff",
-      "buildNumber": 17828
-    },
     "shepherdjerred/redlib": {
       "version": "2.0.0-16936",
       "digest": "sha256:69e47978784b9099ac63e52f8d378b08fc0c2323dc7ae8c1740dae562c7c86db",

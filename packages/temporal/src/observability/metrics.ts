@@ -19,22 +19,30 @@ export const register = new Registry();
 register.setDefaultLabels({ component: "temporal-worker" });
 collectDefaultMetrics({ register, prefix: "temporal_worker_app_" });
 
-export const openAiProjectUsageTokens = new Gauge({
-  name: "openai_project_usage_tokens",
-  help: "Official OpenAI current-day project usage by model, service tier, and token type",
-  labelNames: ["model", "service_tier", "type"] as const,
+// Billed spend straight from each provider's cost report, per project or
+// workspace. `account` is the provider's own name for it, which is bounded by
+// how many projects and workspaces exist.
+export const llmBilledCostUsd = new Gauge({
+  name: "llm_billed_cost_usd",
+  help: "Billed LLM spend from the provider's cost report, per account, for the current UTC day or the trailing seven days",
+  labelNames: ["provider", "account", "window"] as const,
   registers: [register],
 });
 
-export const openAiProjectCostUsd = new Gauge({
-  name: "openai_project_cost_usd",
-  help: "Official OpenAI current-day cost for the monitored OpenRouter project",
+// OpenAI's usage report splits tokens by service tier, which is where the
+// data-sharing complimentary allowance shows up: shared traffic inside the
+// daily allowance is not billed at the `default` tier.
+export const llmBilledTokens = new Gauge({
+  name: "llm_billed_tokens",
+  help: "Current-UTC-day token usage from the provider's usage report, by account, model, service tier, and token type",
+  labelNames: ["provider", "account", "model", "service_tier", "type"] as const,
   registers: [register],
 });
 
-export const openAiUsageReconciliationLastSuccessTimestampSeconds = new Gauge({
-  name: "openai_usage_reconciliation_last_success_timestamp_seconds",
-  help: "Unix timestamp of the last successful official OpenAI usage and cost reconciliation",
+export const llmBilledReconciliationLastSuccessTimestampSeconds = new Gauge({
+  name: "llm_billed_reconciliation_last_success_timestamp_seconds",
+  help: "Unix timestamp of the last successful billed-cost reconciliation, per provider",
+  labelNames: ["provider"] as const,
   registers: [register],
 });
 

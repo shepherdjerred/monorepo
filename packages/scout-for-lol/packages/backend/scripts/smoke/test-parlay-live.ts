@@ -1,6 +1,7 @@
 import {
   createLlmRuntime,
   providerCredentialsFromEnv,
+  requireCredentialsFor,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
 import { LeaguePuuidSchema, type RankedQueueType } from "@scout-for-lol/data";
@@ -52,11 +53,8 @@ import { buildParlayShortlist } from "#src/betting/parlays/model/parlay-shortlis
 
 const logger = createLogger("test-parlay-live");
 
-const apiKey = Bun.env["OPENROUTER_API_KEY"];
-if (apiKey === undefined || apiKey.length === 0) {
-  throw new Error("OPENROUTER_API_KEY is required for test:parlay:live");
-}
 const model = Bun.env["BETTING_PARLAY_AI_MODEL"] ?? DEFAULT_PARLAY_AI_MODEL;
+requireCredentialsFor(model);
 const runtime = createLlmRuntime({
   credentials: providerCredentialsFromEnv(),
   service: "scout-parlay-live-acceptance",

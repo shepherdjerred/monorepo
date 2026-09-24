@@ -18,10 +18,11 @@ describe("Scout Temporal production policy", () => {
 });
 
 describe("Scout detached-work provider failures", () => {
-  test("turns OpenRouter weekly quota failures into non-retryable activity failures", () => {
+  test("turns provider spend-cap failures into non-retryable activity failures", () => {
     const failure = providerQuotaApplicationFailure({
-      status: 403,
-      message: "Weekly key limit exceeded",
+      status: 429,
+      message:
+        "You exceeded your current quota, please check your plan and billing details.",
     });
     expect(failure).toMatchObject({
       type: "ProviderQuotaExhausted",

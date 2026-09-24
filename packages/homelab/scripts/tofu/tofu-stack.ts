@@ -24,6 +24,12 @@ import {
   type StackDefinition,
   type TofuStack,
 } from "./tofu-stack-manifest.ts";
+import {
+  serializeWorkloadIdentityInventory,
+  WORKLOAD_IDENTITY_INVENTORY_PATH,
+  WORKLOAD_IDENTITY_OUTPUT,
+  workloadIdentityInventory,
+} from "./export-workload-identity.ts";
 
 const STACKS_REL = "src/tofu";
 
@@ -44,7 +50,7 @@ const AMBIENT_ENV_ALLOWLIST = [
   "USER",
 ] as const;
 
-type TofuAction = "validate" | "plan" | "apply";
+type TofuAction = "validate" | "plan" | "apply" | "export-workload-identity";
 
 function homelabRoot(): string {
   return new URL("../..", import.meta.url).pathname;
@@ -97,96 +103,6 @@ async function addDesiredStateEnvironment(
     env[`TF_VAR_${name}`] = JSON.stringify(value);
   }
   return desiredState;
-}
-
-/**
- * The declared BYOK credential names, or null when this stack has none.
- * Both the offline `validate` placeholder path and the real plan/apply
- * coverage check key off exactly this list, so they cannot disagree about
- * which credentials exist.
- */
-function declaredByokCredentialNames(
-  platform: PlatformStack,
-  desiredState: Readonly<Record<string, unknown>>,
-): readonly string[] | null {
-  if (platform !== "openrouter") return null;
-  const credentials = desiredState["openrouter_byok_credentials"];
-  if (
-    typeof credentials !== "object" ||
-    credentials === null ||
-    Array.isArray(credentials)
-  ) {
-    throw new TypeError(
-      "openrouter_byok_credentials must be an object after desired-state validation",
-    );
-  }
-  return Object.keys(credentials);
-}
-
-export function addValidationOnlySecrets(
-  platform: PlatformStack,
-  desiredState: Readonly<Record<string, unknown>>,
-  env: Record<string, string>,
-): void {
-  const declared = declaredByokCredentialNames(platform, desiredState);
-  if (declared === null) return;
-  env["TF_VAR_openrouter_byok_keys"] = JSON.stringify(
-    Object.fromEntries(
-      declared.map((name) => [name, "ci-validation-only-provider-key"]),
-    ),
-  );
-}
-
-/**
- * Real plan/apply runs read the BYOK provider keys from the 1Password-backed
- * `OPENROUTER_BYOK_KEYS_JSON` field, which the stack manifest maps straight
- * onto `TF_VAR_openrouter_byok_keys`. `openrouter_byok_key.managed` indexes
- * that map by credential name and its `key` attribute is provider-required,
- * so a name declared in desired-state but absent from the field aborts the
- * run inside `tofu plan` with a bare `Invalid index` naming only `each.key`.
- * Nothing in that output says which secret is short, or where to put it.
- *
- * Check the coverage here instead, before `tofu init` even runs. Never
- * substitute a placeholder on this path: that is what
- * `addValidationOnlySecrets` does for offline `validate`, and doing it here
- * would push a fabricated credential at the live OpenRouter API.
- */
-export function assertPlatformSecretCoverage(
-  platform: PlatformStack,
-  desiredState: Readonly<Record<string, unknown>>,
-  env: Readonly<Record<string, string>>,
-): void {
-  const declared = declaredByokCredentialNames(platform, desiredState);
-  if (declared === null || declared.length === 0) return;
-
-  const raw = env["TF_VAR_openrouter_byok_keys"];
-  if (raw === undefined) {
-    throw new Error(
-      "OPENROUTER_BYOK_KEYS_JSON is not set, so no BYOK provider key reached OpenTofu",
-    );
-  }
-  const parsed: unknown = JSON.parse(raw);
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    throw new TypeError(
-      "OPENROUTER_BYOK_KEYS_JSON must hold a JSON object of credential name to provider key",
-    );
-  }
-  const supplied = new Set(
-    Object.entries(parsed)
-      .filter(([, value]) => typeof value === "string" && value !== "")
-      .map(([name]) => name),
-  );
-  const missing = declared.filter((name) => !supplied.has(name));
-  if (missing.length > 0) {
-    throw new Error(
-      `OPENROUTER_BYOK_KEYS_JSON is missing a provider key for ${missing.join(", ")}. ` +
-        "Every entry in openrouter_byok_credentials needs one, because the OpenRouter " +
-        "provider requires `key` on openrouter_byok_key. Add the raw provider API key " +
-        "under that exact name to the OPENROUTER_BYOK_KEYS_JSON field of the " +
-        "openrouter-tofu-credentials 1Password item, or drop the credential from " +
-        "desired-state.json to stop managing it.",
-    );
-  }
 }
 
 function isolatedOptions(
@@ -330,12 +246,7 @@ async function validateStack(
   const definition = STACK_MANIFEST[stack];
   const { env, dataRoot } = await validationEnvironment(definition);
   if (definition.platform !== undefined) {
-    const desiredState = await addDesiredStateEnvironment(
-      stackDir,
-      definition.platform,
-      env,
-    );
-    addValidationOnlySecrets(definition.platform, desiredState, env);
+    await addDesiredStateEnvironment(stackDir, definition.platform, env);
   }
   let localProviderRoot: string | null = null;
   try {
@@ -355,13 +266,16 @@ async function validateStack(
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply [--dry-run]",
+    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply|export-workload-identity [--dry-run]",
   );
   process.exit(1);
 }
 
 function parseAction(value: string | undefined): TofuAction {
-  return value === "validate" || value === "plan" || value === "apply"
+  return value === "validate" ||
+    value === "plan" ||
+    value === "apply" ||
+    value === "export-workload-identity"
     ? value
     : usage();
 }
@@ -396,6 +310,41 @@ async function plan(
   throw new Error(message);
 }
 
+/**
+ * Refresh the committed federation inventory from the stack's one
+ * non-sensitive output. Reading a single named output, captured without echo,
+ * keeps this from ever printing another output of the stack.
+ */
+async function exportWorkloadIdentity(
+  stack: TofuStack,
+  root: string,
+  options: RunOptions,
+): Promise<void> {
+  if (stack !== "anthropic-federation") {
+    throw new Error(
+      "export-workload-identity reads only the anthropic-federation stack",
+    );
+  }
+  const result = await run(
+    [
+      "tofu",
+      `-chdir=${STACKS_REL}/${stack}`,
+      "output",
+      "-json",
+      WORKLOAD_IDENTITY_OUTPUT,
+    ],
+    { ...options, capture: true, secret: true },
+  );
+  const inventory = workloadIdentityInventory(result.stdout);
+  await Bun.write(
+    `${root}/${WORKLOAD_IDENTITY_INVENTORY_PATH}`,
+    serializeWorkloadIdentityInventory(inventory),
+  );
+  console.log(
+    `--- exported ${Object.keys(inventory.anthropic.workloads).length.toString()} federated workloads to ${WORKLOAD_IDENTITY_INVENTORY_PATH}`,
+  );
+}
+
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) usage();
@@ -422,12 +371,7 @@ async function main(): Promise<void> {
   const definition = STACK_MANIFEST[stack];
   const env = buildTofuEnvironment(stack);
   if (definition.platform !== undefined) {
-    const desiredState = await addDesiredStateEnvironment(
-      stackDir,
-      definition.platform,
-      env,
-    );
-    assertPlatformSecretCoverage(definition.platform, desiredState, env);
+    await addDesiredStateEnvironment(stackDir, definition.platform, env);
   }
   const options = isolatedOptions(env, root);
   await run(
@@ -436,6 +380,10 @@ async function main(): Promise<void> {
   );
   if (action === "plan") {
     await plan(stack, definition, options);
+    return;
+  }
+  if (action === "export-workload-identity") {
+    await exportWorkloadIdentity(stack, root, options);
     return;
   }
   await run(

@@ -7,79 +7,55 @@ import {
   LLM_WORKLOAD_SPIKE_RATIO,
 } from "./llm.ts";
 
-test("keeps LLM recording and Broadcast alert coverage together", () => {
-  const groups = getLlmRuleGroups();
-  const serialized = JSON.stringify(groups);
+function allRules() {
+  return getLlmRuleGroups().flatMap(({ rules: groupRules }) => groupRules);
+}
+
+function alertNamed(name: string) {
+  return allRules().find((rule) => rule?.alert === name);
+}
+
+test("keeps LLM recording and runtime alert coverage together", () => {
+  const serialized = JSON.stringify(getLlmRuleGroups());
   expect(serialized).toContain("llm:requests:rate5m");
+  expect(serialized).toContain("llm:cost_usd:rate5m");
   expect(serialized).toContain("llm:request_duration:p95_5m");
-  expect(serialized).toContain("LlmOpenRouterMetadataMissing");
-  expect(serialized).toContain("ScoutOpenAiNotByok");
-  expect(serialized).toContain("OpenAiComplimentaryMonitorStale");
-  expect(serialized).toContain("llm_openrouter_byok_requests_total");
-  const scoutByokAlert = groups
-    .flatMap(({ rules: groupRules }) => groupRules)
-    .find((rule) => rule?.alert === "ScoutOpenAiNotByok");
-  expect(scoutByokAlert?.expr?.value).toContain('byok=~"false|unknown"');
-  expect(scoutByokAlert?.expr?.value).toContain(
-    'exported_service="scout-for-lol-backend"',
-  );
-  expect(scoutByokAlert?.expr?.value).not.toContain(
-    '{service="scout-for-lol-backend"',
-  );
-  expect(scoutByokAlert?.expr?.value).toContain(
-    'workload=~"scout[.]review([.]text)?"',
-  );
-  const staleAlert = groups
-    .flatMap(({ rules: groupRules }) => groupRules)
-    .find((rule) => rule?.alert === "OpenAiComplimentaryMonitorStale");
-  expect(staleAlert?.expr?.value).toContain(
-    'namespace="temporal",container="temporal-billing-worker"',
-  );
-  expect(staleAlert?.expr?.value).not.toContain(
-    'pod=~"temporal-billing-worker-.*"',
-  );
-  expect(serialized).toContain(
-    "openai_usage_reconciliation_last_success_timestamp_seconds",
-  );
   expect(serialized).toContain("LlmStructuredOutputExhausted");
   expect(serialized).toContain("birmel_admission_classifier_total");
   expect(serialized).toContain("birmel_memory_extraction_total");
-  expect(serialized).toContain("OpenRouterBroadcastPipelineFailure");
-  expect(serialized).toContain("OpenRouterBroadcastTargetDown");
 
-  const rules = groups.flatMap(({ rules: groupRules }) => groupRules);
-
-  const targetDown = rules.find(
-    (rule) => rule?.alert === "OpenRouterBroadcastTargetDown",
-  );
-  expect(targetDown?.expr?.value).toContain(
-    'service="openrouter-broadca-openrouter-broadcast-ingest-service"',
-  );
-  expect(targetDown?.expr?.value).not.toContain(
-    'service="openrouter-broadcast-ingest-service"',
-  );
+  // Every OpenRouter-era signal is gone with the router: its metrics are no
+  // longer emitted, so a surviving rule would sit silently at zero.
+  for (const retired of [
+    "openrouter",
+    "byok",
+    'type="actual"',
+    "upstream",
+    "llm:cost_discrepancy:rate5m",
+    "openai_usage_reconciliation_last_success_timestamp_seconds",
+  ]) {
+    expect(serialized.toLowerCase()).not.toContain(retired.toLowerCase());
+  }
 
   for (const alertName of [
     "BirmelAdmissionClassifierErrors",
     "BirmelMemoryExtractionErrors",
   ]) {
-    const alert = rules.find((rule) => rule?.alert === alertName);
-    expect(alert?.labels).toEqual({ severity: "warning", category: "llm" });
+    expect(alertNamed(alertName)?.labels).toEqual({
+      severity: "warning",
+      category: "llm",
+    });
   }
 });
 
-test("alerts on LLM spend and on a silent Broadcast webhook", () => {
-  const rules = getLlmRuleGroups().flatMap(
-    ({ rules: groupRules }) => groupRules,
-  );
-  const alertNamed = (name: string) =>
-    rules.find((rule) => rule?.alert === name);
-
+test("alerts on live and provider-billed LLM spend", () => {
   for (const [name, severity] of [
     ["LlmDailySpendHigh", "warning"],
     ["LlmDailySpendCritical", "critical"],
+    ["LlmBilledSpendHigh", "warning"],
+    ["LlmBilledSpendCritical", "critical"],
     ["LlmWorkloadCostSpike", "warning"],
-    ["OpenRouterBroadcastSilent", "warning"],
+    ["LlmBilledReconciliationStale", "warning"],
   ] as const) {
     expect(alertNamed(name)?.labels).toEqual({ severity, category: "llm" });
   }
@@ -89,42 +65,34 @@ test("alerts on LLM spend and on a silent Broadcast webhook", () => {
   expect(LLM_DAILY_SPEND_CRITICAL_USD).toBeGreaterThan(
     LLM_DAILY_SPEND_WARNING_USD,
   );
-  expect(alertNamed("LlmDailySpendHigh")?.expr?.value).toContain(
-    `> ${LLM_DAILY_SPEND_WARNING_USD.toString()}`,
-  );
-  expect(alertNamed("LlmDailySpendCritical")?.expr?.value).toContain(
-    `> ${LLM_DAILY_SPEND_CRITICAL_USD.toString()}`,
-  );
+  for (const [name, ceiling] of [
+    ["LlmDailySpendHigh", LLM_DAILY_SPEND_WARNING_USD],
+    ["LlmBilledSpendHigh", LLM_DAILY_SPEND_WARNING_USD],
+    ["LlmDailySpendCritical", LLM_DAILY_SPEND_CRITICAL_USD],
+    ["LlmBilledSpendCritical", LLM_DAILY_SPEND_CRITICAL_USD],
+  ] as const) {
+    expect(alertNamed(name)?.expr?.value).toContain(`> ${ceiling.toString()}`);
+  }
 
-  // Every cost alert must use the same billed-cost convention. BYOK routes bill
-  // nothing through OpenRouter and report `actual` of exactly zero, so an
-  // actual-only expression misses the largest line item in the fleet -- and for
-  // the spike alert would hold both the ratio and the floor at zero, making it
-  // structurally incapable of firing for that class of workload.
-  const costAlerts = [
+  // Live alerts price provider-reported tokens from the catalog; billed alerts
+  // read what the providers report they will charge. Mixing the two in one
+  // expression would double count.
+  for (const liveAlert of [
     "LlmDailySpendHigh",
     "LlmDailySpendCritical",
     "LlmWorkloadCostSpike",
-  ];
-  for (const costAlert of costAlerts) {
-    const expr = alertNamed(costAlert)?.expr?.value;
-    expect(expr).toContain('type=~"actual|upstream"');
-    expect(expr).not.toContain('type="actual"');
-
-    // Ordering is the correctness property, not merely the presence of both
-    // aggregations. These series carry `pod`, so a deploy inside the window
-    // leaves two counter series per workload; selecting the maximum before
-    // summing them keeps only the longer-lived pod and silently understates
-    // spend. The per-type sum must therefore appear *inside* the max.
-    // `expr.value` is typed `string | number`, so narrow before searching it
-    // rather than letting an unexpected numeric expression silently skip the
-    // ordering assertions below.
-    expect(typeof expr).toBe("string");
-    const rendered = typeof expr === "string" ? expr : "";
-    const maxAt = rendered.indexOf("max by (service, workload, model)");
-    const sumAt = rendered.indexOf("sum by (service, workload, model, type)");
-    expect(maxAt).toBeGreaterThanOrEqual(0);
-    expect(sumAt).toBeGreaterThan(maxAt);
+  ]) {
+    const expr = alertNamed(liveAlert)?.expr?.value;
+    expect(expr).toContain('llm_cost_usd_total{type="catalog"}');
+    expect(expr).not.toContain("llm_billed_cost_usd");
+    // These series carry `pod`, so the per-workload sum must collapse pod
+    // lifetimes across a deploy rather than keep only one of them.
+    expect(expr).toContain("sum by (service, workload, model)");
+  }
+  for (const billedAlert of ["LlmBilledSpendHigh", "LlmBilledSpendCritical"]) {
+    const expr = alertNamed(billedAlert)?.expr?.value;
+    expect(expr).toContain('llm_billed_cost_usd{window="today"}');
+    expect(expr).not.toContain("llm_cost_usd_total");
   }
 
   // The spike alert needs both halves: a ratio alone fires on any burst from a
@@ -134,18 +102,22 @@ test("alerts on LLM spend and on a silent Broadcast webhook", () => {
   expect(spike).toContain(
     `* 3600 > ${LLM_WORKLOAD_SPIKE_FLOOR_USD_PER_HOUR.toString()}`,
   );
+});
 
-  // Uptime gating is what keeps a pod restart, which zeroes the gauge, from
-  // alerting before the service has had a day to receive a delivery.
-  const silent = alertNamed("OpenRouterBroadcastSilent")?.expr?.value;
-  expect(silent).toContain(
-    "openrouter_broadcast_ingest_process_start_time_seconds",
+test("detects a billed reconciliation that stopped succeeding", () => {
+  const stale = alertNamed("LlmBilledReconciliationStale")?.expr?.value;
+  // The worker scrape is identified by container, not by a pod-name regex
+  // that breaks on the next ReplicaSet hash format.
+  expect(stale).toContain(
+    'namespace="temporal",container="temporal-billing-worker"',
   );
-  expect(silent).toContain(
-    "openrouter_broadcast_last_success_timestamp_seconds",
+  expect(stale).not.toContain("pod=~");
+  expect(stale).toContain(
+    "llm_billed_reconciliation_last_success_timestamp_seconds",
   );
-
-  expect(JSON.stringify(getLlmRuleGroups())).toContain(
-    "llm:cost_discrepancy:rate5m",
-  );
+  // Without `absent`, a worker that never once succeeded has no series and the
+  // staleness comparison can never fire.
+  expect(stale).toContain("absent(");
+  // The uptime side has no provider label; a plain `and` would never match.
+  expect(stale).toContain("and on()");
 });

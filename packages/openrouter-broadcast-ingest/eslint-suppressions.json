@@ -1,7 +1,0 @@
-{
-  "src/app.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  }
-}

@@ -327,8 +327,8 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
 });
 
 test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue", () => {
-  expect(findScheduleById("openai-complimentary-usage-hourly")).toMatchObject({
-    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+  expect(findScheduleById("llm-billed-cost-hourly")).toMatchObject({
+    workflowType: "runLlmBilledCostReconciliation",
     args: [],
     timing: { kind: "cron", expression: "17 * * * *", timezone: "UTC" },
     taskQueue: TASK_QUEUES.WORKFLOWS,
@@ -448,7 +448,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",
-  "runOpenAiComplimentaryUsageReconciliation",
+  "runLlmBilledCostReconciliation",
   // Fans out one bounded collector Activity per source in parallel, then one
   // publish Activity. No workflow-level sleeps; Activity timeouts and retry
   // budgets fit inside the five-minute execution timeout.
@@ -676,6 +676,7 @@ test("terminates running executions of retired workflow types", async () => {
 
   expect(queries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
@@ -736,6 +737,7 @@ test("terminates a retired workflow in the namespace it actually ran in", async 
   );
   expect(prodQueries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
     'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
   ]);
 });

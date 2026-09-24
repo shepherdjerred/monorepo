@@ -44,8 +44,8 @@ uses a local override to keep auto-sync disabled between batches; the final
 prune restores that one policy. Stage 7 is the single authoritative scoped
 health gate.
 
-After verification, watch the serialized `openai`, `anthropic`, `discord`,
-`openrouter`, and `cloudflare-tokens` jobs. An ordinary main build plans each
+After verification, watch the serialized `openai`, `anthropic`, `discord`, and
+`cloudflare-tokens` jobs. An ordinary main build plans each
 encrypted platform state and never applies it. After reviewing a plan, create a
 targeted build of the current main commit with `TOFU_PLATFORM_APPLY` set to
 exactly one of those stack names. The selector schedules only that no-retry

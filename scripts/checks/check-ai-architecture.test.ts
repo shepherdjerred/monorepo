@@ -28,19 +28,92 @@ describe("AI architecture guard", () => {
     ]);
   });
 
-  test("accepts OpenRouter and Codex SDK integrations", () => {
+  test("rejects every OpenRouter surface", () => {
     expect(
       findAiArchitectureViolations([
         {
           path: "packages/app/package.json",
-          contents: [
-            '"@openrouter/ai-sdk-provider": "3.0.0"',
-            '"@openai/codex-sdk": "0.147.0"',
-          ].join("\n"),
+          contents: '"@openrouter/ai-sdk-provider": "3.0.0"',
         },
         {
           path: "packages/app/src/runtime.ts",
-          contents: "const key = Bun.env.OPENROUTER_API_KEY;",
+          contents: [
+            "const key = Bun.env.OPENROUTER_API_KEY;",
+            'const base = "https://openrouter.ai/api/v1";',
+          ].join("\n"),
+        },
+        {
+          // No compatibility path is exempt: the runtime itself must not
+          // regrow a router fallback.
+          path: "packages/llm-runtime/src/runtime.ts",
+          contents:
+            'import { createOpenRouter } from "@openrouter/ai-sdk-provider";',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["openrouter", "openrouter", "openrouter", "openrouter"]);
+  });
+
+  test("constructs provider SDKs only in llm-runtime and the Scout workbench", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/llm-runtime/package.json",
+          contents: '"@ai-sdk/anthropic": "4.0.62"\n"@ai-sdk/openai": "4.0.74"',
+        },
+        {
+          path: "packages/llm-runtime/src/runtime.ts",
+          contents: [
+            'import { createGoogleGenerativeAI } from "@ai-sdk/google";',
+            'const key = Bun.env["GEMINI_API_KEY"];',
+            'const token = "https://api.anthropic.com/v1/oauth/token";',
+          ].join("\n"),
+        },
+        {
+          path: "packages/scout-for-lol/packages/frontend/src/lib/review-tool/provider-clients.ts",
+          contents: 'import { createOpenAI } from "@ai-sdk/openai";',
+        },
+        {
+          path: "packages/app/package.json",
+          contents: '"@openai/codex-sdk": "0.147.0"',
+        },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/scout-for-lol/packages/backend/src/review.ts",
+          contents: 'import { createOpenAI } from "@ai-sdk/openai";',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["direct-provider-sdk"]);
+  });
+
+  test("never lets a deployed Anthropic key shadow federation", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/birmel/index.ts",
+          contents: "ANTHROPIC_API_KEY: EnvValue.fromSecretValue(secret)",
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["federation-shadowing-key"]);
+
+    // CI and local development cannot federate, so their bootstrap files may
+    // name a static key; so may the runtime that asserts it is absent.
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/birmel/.env.example",
+          contents: "# ANTHROPIC_API_KEY=",
+        },
+        {
+          path: "packages/scout-for-lol/packages/backend/example.env",
+          contents: "# ANTHROPIC_API_KEY=your-token-here",
+        },
+        {
+          path: "packages/llm-runtime/src/credentials.ts",
+          contents: 'const key = Bun.env["ANTHROPIC_API_KEY"];',
         },
       ]),
     ).toEqual([]);
@@ -267,6 +340,7 @@ describe("AI architecture guard exceptions", () => {
     ]);
     expect(violations.map(({ rule }) => rule)).toEqual([
       "provider-api-key",
+      "federation-shadowing-key",
       "direct-provider-endpoint",
     ]);
   });
@@ -300,13 +374,16 @@ describe("AI architecture guard exceptions", () => {
     ).toEqual(["direct-provider-endpoint"]);
   });
 
-  test("allows only the official OpenAI billing reconciliation endpoint", () => {
+  test("allows provider billing endpoints only in the billed-cost reconciliation", () => {
     expect(
       findAiArchitectureViolations([
         {
-          path: "packages/temporal/src/shared/openai-complimentary-usage.ts",
-          contents:
-            'const usage = "https://api.openai.com/v1/organization/usage/completions";\nconst costs = "https://api.openai.com/v1/organization/costs";',
+          path: "packages/temporal/src/shared/llm-billing.ts",
+          contents: [
+            'const usage = "https://api.openai.com/v1/organization/usage/completions";',
+            'const costs = "https://api.openai.com/v1/organization/costs";',
+            'const report = "https://api.anthropic.com/v1/organizations/cost_report";',
+          ].join("\n"),
         },
       ]),
     ).toEqual([]);

@@ -80,14 +80,17 @@ function isContextLimitIssue(status: number | undefined, lowerMessage: string) {
   );
 }
 
+// A provider-side hard cap is a quota, not a rate limit: retrying cannot succeed
+// until the cap resets or is raised. OpenAI reports its project spend limit as
+// a 429 `insufficient_quota`; Anthropic reports its workspace limit as
+// "reached your specified API usage limits" and an empty balance as a credit
+// balance error.
 function isQuotaIssue(status: number | undefined, lowerMessage: string) {
   return (
     status === 402 ||
     lowerMessage.includes("insufficient credits") ||
     lowerMessage.includes("credit balance") ||
-    ((status === 403 || lowerMessage.includes("403")) &&
-      lowerMessage.includes("weekly") &&
-      (lowerMessage.includes("limit") || lowerMessage.includes("quota"))) ||
+    lowerMessage.includes("api usage limits") ||
     ((status === 429 || lowerMessage.includes("429")) &&
       (lowerMessage.includes("quota") ||
         lowerMessage.includes("billing") ||

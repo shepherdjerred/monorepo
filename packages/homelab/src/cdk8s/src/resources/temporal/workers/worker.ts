@@ -179,10 +179,10 @@ export function createTemporalWorkerDeployment(
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
-      // Codex SDK receives the service-scoped OpenRouter key directly.
-      OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+      // Codex SDK and the LLM runtime use Temporal's own OpenAI project key.
+      OPENAI_API_KEY: EnvValue.fromSecretValue({
         secret,
-        key: "OPENROUTER_API_KEY",
+        key: "OPENAI_API_KEY",
       }),
       PROMETHEUS_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
@@ -230,9 +230,9 @@ export function createTemporalWorkerDeployment(
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue(
           "temporal-glitter-context-worker",
         ),
-        OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+        OPENAI_API_KEY: EnvValue.fromSecretValue({
           secret,
-          key: "OPENROUTER_API_KEY",
+          key: "OPENAI_API_KEY",
         }),
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,

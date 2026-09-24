@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 export type PlatformStack =
-  "openai" | "anthropic" | "discord" | "openrouter" | "cloudflare-tokens";
+  | "openai"
+  | "anthropic"
+  | "anthropic-federation"
+  | "google"
+  | "discord"
+  | "cloudflare-tokens";
 
 const SCHEMA_REFERENCE = "../platform-desired-state.schema.json";
 const nonEmptyString = z.string().min(1);
@@ -225,79 +230,58 @@ const discordDesiredState = z.strictObject({
     }),
 });
 
-const openRouterWorkspace = z.strictObject({
-  workspace_id: optionalNonEmptyString,
-  name: nonEmptyString,
-  slug: nonEmptyString,
-  description: optionalNonEmptyString,
-  default_text_model: optionalNonEmptyString,
-  default_image_model: optionalNonEmptyString,
-  default_provider_sort: optionalNonEmptyString,
-  io_logging_api_key_ids: z.array(z.number()).optional(),
-  io_logging_sampling_rate: z.number().optional(),
-  is_data_discount_logging_enabled: z.boolean().optional(),
-  is_observability_broadcast_enabled: z.boolean().optional(),
-  is_observability_io_logging_enabled: z.boolean().optional(),
-});
-const openRouterGuardrail = z.strictObject({
-  guardrail_id: optionalNonEmptyString,
-  name: nonEmptyString,
-  workspace_key: optionalNonEmptyString,
-  description: optionalNonEmptyString,
-  limit_usd: z.number().optional(),
-  reset_interval: optionalNonEmptyString,
-  allowed_models: z.array(nonEmptyString).optional(),
-  allowed_providers: z.array(nonEmptyString).optional(),
-  ignored_models: z.array(nonEmptyString).optional(),
-  ignored_providers: z.array(nonEmptyString).optional(),
-  enforce_zdr_anthropic: z.boolean().optional(),
-  enforce_zdr_google: z.boolean().optional(),
-  enforce_zdr_openai: z.boolean().optional(),
-  enforce_zdr_other: z.boolean().optional(),
-});
-const openRouterApiKey = z
-  .strictObject({
-    import_id: optionalNonEmptyString,
-    name: nonEmptyString,
-    workspace_key: optionalNonEmptyString,
-    limit: z.number().optional(),
-    limit_reset: optionalNonEmptyString,
-    include_byok_in_limit: z.boolean().optional(),
-    disabled: z.boolean().optional(),
-    expires_at: optionalNonEmptyString,
-    onepassword_targets: z.array(onePasswordTarget).optional(),
-  })
-  .superRefine((apiKey, context) => {
-    if (
-      apiKey.import_id === undefined &&
-      (apiKey.onepassword_targets === undefined ||
-        apiKey.onepassword_targets.length === 0)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["onepassword_targets"],
-        message: "a generated OpenRouter API key requires a 1Password target",
-      });
-    }
-  });
-const openRouterByokCredential = z.strictObject({
-  byok_key_id: optionalNonEmptyString,
-  provider_slug: nonEmptyString,
-  name: optionalNonEmptyString,
-  workspace_key: optionalNonEmptyString,
-  allowed_models: z.array(nonEmptyString).optional(),
-  allowed_user_ids: z.array(nonEmptyString).optional(),
-  disabled: z.boolean().optional(),
-  is_fallback: z.boolean().optional(),
-  allowed_api_key_hashes: z.array(nonEmptyString).optional(),
-});
-const openRouterDesiredState = z.strictObject({
+const anthropicFederationDesiredState = z.strictObject({
   $schema: schemaReference,
-  platform: z.literal("openrouter"),
-  openrouter_workspaces: resourceMap(openRouterWorkspace),
-  openrouter_guardrails: resourceMap(openRouterGuardrail),
-  openrouter_api_keys: resourceMap(openRouterApiKey),
-  openrouter_byok_credentials: resourceMap(openRouterByokCredential),
+  platform: z.literal("anthropic-federation"),
+  anthropic_federation_workspaces: resourceMap(
+    z.strictObject({ name: nonEmptyString }),
+  ),
+  anthropic_federation_issuer: z.strictObject({
+    name: z.string().regex(/^[a-z0-9-]+$/u),
+    issuer_url: z.string().startsWith("https://"),
+    jwks_keys_json: nonEmptyString,
+    max_jwt_lifetime_seconds: z.number().int().min(60).max(176_400),
+  }),
+  anthropic_federation_workloads: resourceMap(
+    z.strictObject({
+      workspace_key: nonEmptyString,
+      namespace: nonEmptyString,
+      // Anthropic caps a minted token at twice the remaining assertion
+      // lifetime, and projected tokens live 600s, so more than 1200 is never
+      // honoured.
+      token_lifetime_seconds: z.number().int().min(60).max(1200),
+    }),
+  ),
+});
+
+const googleDesiredState = z.strictObject({
+  $schema: schemaReference,
+  platform: z.literal("google"),
+  // Null until the billing account and quota project exist. The stack refuses
+  // to plan while either is unset, which is the intended state until then.
+  google_billing_account_id: z
+    .string()
+    .regex(/^[0-9A-F]{6}-[0-9A-F]{6}-[0-9A-F]{6}$/u)
+    .nullable(),
+  google_quota_project_id: nonEmptyString.nullable(),
+  google_workloads: resourceMap(
+    z
+      .strictObject({
+        project_id: z.string().regex(/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/u),
+        display_name: nonEmptyString,
+        monthly_budget_usd: z.number().positive(),
+        ai_studio_spend_cap_usd: z.number().positive(),
+        onepassword_targets: z.array(onePasswordTarget).min(1),
+      })
+      .refine(
+        (workload) =>
+          workload.ai_studio_spend_cap_usd <= workload.monthly_budget_usd,
+        {
+          message:
+            "ai_studio_spend_cap_usd must not exceed monthly_budget_usd, or the budget alert would fire only after the cap should have stopped spend",
+        },
+      ),
+  ),
 });
 
 const cloudflareTokenPolicy = z.strictObject({
@@ -342,7 +326,14 @@ function declaredPlatform(value: unknown): PlatformStack {
   }
   const platform = "platform" in value ? value.platform : undefined;
   return z
-    .enum(["openai", "anthropic", "discord", "openrouter", "cloudflare-tokens"])
+    .enum([
+      "openai",
+      "anthropic",
+      "anthropic-federation",
+      "google",
+      "discord",
+      "cloudflare-tokens",
+    ])
     .parse(platform);
 }
 
@@ -412,8 +403,12 @@ export async function loadPlatformDesiredState(
       return variablesFromDesiredState(anthropicDesiredState.parse(raw));
     case "discord":
       return variablesFromDesiredState(discordDesiredState.parse(raw));
-    case "openrouter":
-      return variablesFromDesiredState(openRouterDesiredState.parse(raw));
+    case "anthropic-federation":
+      return variablesFromDesiredState(
+        anthropicFederationDesiredState.parse(raw),
+      );
+    case "google":
+      return variablesFromDesiredState(googleDesiredState.parse(raw));
     case "cloudflare-tokens":
       return variablesFromDesiredState(cloudflareDesiredState.parse(raw));
   }

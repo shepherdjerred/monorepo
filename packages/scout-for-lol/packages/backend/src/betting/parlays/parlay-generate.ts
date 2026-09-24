@@ -190,7 +190,7 @@ async function generateAndPersistDefinition(
 ): Promise<number> {
   const runtime = getLlmRuntime();
   if (runtime === undefined) {
-    throw new Error("OPENROUTER_API_KEY is required for parlay generation");
+    throw new Error("OpenAI credentials are required for parlay generation");
   }
   const model = bettingParlayAiModel();
 

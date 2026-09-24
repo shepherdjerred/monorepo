@@ -180,9 +180,9 @@ export type PipelinePromptsInput = {
  * AI clients input for the pipeline
  */
 export type PipelineClientsInput = {
-  /** OpenRouter-backed client for text generation. */
+  /** Shared-runtime client for text generation. */
   text: TextGenerationClient;
-  /** OpenRouter-backed client for image generation (optional). */
+  /** Shared-runtime client for image generation (optional). */
   image?: ImageGenerationClient;
 };
 

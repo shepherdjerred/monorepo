@@ -66,7 +66,7 @@
       "rationale": "The test doubles protect recorded reads, injected failures, and the manual clock with NSLock."
     },
     {
-      "path": "Tests/QuotaBarCoreTests/OpenRouterTests.swift",
+      "path": "Tests/QuotaBarCoreTests/APIPlatformModelTests.swift",
       "count": 1,
       "rationale": "The test double protects its mutable API-platform snapshot with NSLock."
     },
