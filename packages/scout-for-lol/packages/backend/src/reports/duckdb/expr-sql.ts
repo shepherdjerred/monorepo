@@ -374,6 +374,16 @@ export function collectPredicateColumnNames(
   });
 }
 
+/** Whether every column a predicate reads is one of `names`. */
+export function predicateReadsOnly(
+  pred: ScoutQlPredicate,
+  names: ReadonlySet<string>,
+): boolean {
+  const referenced = new Set<string>();
+  collectPredicateColumnNames(pred, referenced);
+  return [...referenced].every((name) => names.has(name));
+}
+
 /**
  * Whether a predicate touches any identity column. Identity-touching conjuncts
  * cannot be pushed into the union branches — identity exists only after the

@@ -62,6 +62,8 @@ export type SelectAnalysisInput = {
   refs: PlayerRefCollector;
   diagnostics: ScoutQlDiagnostic[];
   clauseSpan: ScoutQlSpan;
+  /** The parser already reported an error, so a missing item is its recovery. */
+  parseFailed: boolean;
 };
 
 const MAX_OUTPUTS = 20;
@@ -244,6 +246,12 @@ export function analyzeOutputs(input: SelectAnalysisInput): AnalyzedOutput[] {
     });
   }
   if (input.items.length === 0) {
+    // An empty list after a parse error is the parser's recovery, not the
+    // author's query: reporting it would sort ahead of the real cause (CASE
+    // unsupported, a stray token) and be the one error a caller shows.
+    if (input.parseFailed) {
+      return [];
+    }
     emitDiagnostic(input.diagnostics, {
       code: "output-count",
       message: "SELECT needs at least one output.",

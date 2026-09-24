@@ -7,12 +7,16 @@ import {
   buildMatchTeamsSource,
   buildParticipantDimensionSource,
   buildTimelineEventParticipantsSource,
-  buildTimelineParticipantFramesSource,
+  buildFrameGoldSource,
   type LakeFiles,
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 import { readsMatchDimension } from "#src/reports/duckdb/column-map.ts";
-import type { FactsCteInput } from "#src/reports/duckdb/facts-cte.ts";
+import {
+  EVENT_KEYS_SCAN_FILTER,
+  FRAME_KEYS_SCAN_FILTER,
+  type FactsCteInput,
+} from "#src/reports/duckdb/facts-cte.ts";
 import { frag } from "#src/reports/duckdb/sql-fragment.ts";
 
 /**
@@ -132,7 +136,7 @@ export type LookupSources = {
   matchDimension: SqlFragment | undefined;
   participantDimension: SqlFragment | undefined;
   teamDimension: SqlFragment | undefined;
-  frameGold: { source: SqlFragment; team: boolean; lane: boolean } | undefined;
+  frameGold: FactsCteInput["frameGold"];
   eventLookups: FactsCteInput["eventLookups"];
 };
 
@@ -147,9 +151,9 @@ const EMPTY_ASSIST_ROWS =
   "SELECT NULL::VARCHAR AS event_id, NULL::VARCHAR AS role WHERE false";
 
 /**
- * The scans an event's lookups read, unfiltered like the frame gold scan and
- * for the same reason: a filter on events must not change which team won or
- * how many players assisted.
+ * The scans an event's lookups read. Like the frame gold scan they ignore the
+ * query's filter — it must not change which team won or how many players
+ * assisted — and the assist scan is narrowed only to the events kept.
  */
 function eventLookupSources(
   files: LakeFiles,
@@ -162,8 +166,10 @@ function eventLookupSources(
       ? (buildMatchTeamsSource(files, frag("")) ?? frag(EMPTY_TEAM_DIMENSION))
       : undefined,
     assists: flags.assists
-      ? (buildTimelineEventParticipantsSource(files, frag("")) ??
-        frag(EMPTY_ASSIST_ROWS))
+      ? (buildTimelineEventParticipantsSource(
+          files,
+          frag(EVENT_KEYS_SCAN_FILTER),
+        ) ?? frag(EMPTY_ASSIST_ROWS))
       : undefined,
   };
 }
@@ -182,6 +188,8 @@ export function buildLookupSources(
   extras: {
     teamLookup?: boolean;
     frameGold?: { team: boolean; lane: boolean } | undefined;
+    /** The source scan kept only some frames, so the gold scan can follow. */
+    scanFiltered?: boolean;
     eventLookups?: EventLookupFlags | undefined;
   },
 ): LookupSources | undefined {
@@ -209,13 +217,19 @@ export function buildLookupSources(
     extras.teamLookup === true
       ? (buildMatchTeamsSource(files, frag("")) ?? frag(EMPTY_TEAM_DIMENSION))
       : undefined;
-  // Unfiltered on purpose: the source scan may hold player('…') or a minute
-  // filter, and a team total computed from filtered frames would sum only the
-  // filtered player.
+  // Not filtered by the query: the source scan may hold player('…'), and a
+  // team total computed from filtered frames would sum only that player. It
+  // is narrowed only to the frames the source scan kept, every player's.
   const gold = extras.frameGold;
+  // Narrowing an unfiltered scan keeps every frame, and costs a second
+  // full-width scan to find that out.
+  const narrowed = extras.scanFiltered === true;
   const goldSource =
     gold !== undefined && (gold.team || gold.lane)
-      ? buildTimelineParticipantFramesSource(files, frag(""))
+      ? buildFrameGoldSource(
+          files,
+          frag(narrowed ? FRAME_KEYS_SCAN_FILTER : ""),
+        )
       : undefined;
   return {
     matchDimension,
@@ -224,7 +238,7 @@ export function buildLookupSources(
     frameGold:
       gold === undefined || goldSource === undefined
         ? undefined
-        : { source: goldSource, ...gold },
+        : { source: goldSource, narrowed, ...gold },
     eventLookups: eventLookupSources(files, extras.eventLookups),
   };
 }

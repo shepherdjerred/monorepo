@@ -81,6 +81,8 @@ export type FactsCteInput = {
   frameGold?:
     | {
         readonly source: SqlFragment;
+        /** The source scan was filtered, and the gold scan narrowed to it. */
+        readonly narrowed: boolean;
         readonly team: boolean;
         readonly lane: boolean;
       }
@@ -190,12 +192,42 @@ const PARTICIPANT_JOIN =
 /** The other side of a two-team game. Arena and other modes get NULL, never a wrong team. */
 const OTHER_TEAM = "CASE p.team_id WHEN 100 THEN 200 WHEN 200 THEN 100 END";
 
-/** Each team's total gold at each frame, one row per (match, frame, team). */
-function teamGoldCte(frames: SqlFragment): SqlFragment {
+/**
+ * The (match, frame) pairs the source scan kept. The gold scans are
+ * unfiltered so a team total sums every player, but only the frames a query
+ * reads need a total: without this they aggregated every frame in the lake.
+ */
+function frameKeysCte(frames: SqlFragment): SqlFragment {
   return seq(
-    "team_gold AS (SELECT f.match_id, f.frame_index, pd.team_id, sum(f.total_gold) AS gold FROM (",
+    "frame_keys AS (SELECT DISTINCT match_id, frame_index FROM (",
     frames,
-    ") f JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid GROUP BY f.match_id, f.frame_index, pd.team_id)",
+    "))",
+  );
+}
+
+/**
+ * The gold scan's own filter. The scan deduplicates staged and compacted
+ * rows with a window, and that window held every frame in the lake unless
+ * the scan was narrowed first. This keeps a superset of the kept pairs; the
+ * semi join below narrows it to exactly them.
+ */
+export const FRAME_KEYS_SCAN_FILTER =
+  "match_id IN (SELECT match_id FROM frame_keys) AND frame_index IN (SELECT frame_index FROM frame_keys)";
+
+const FRAME_KEYS_SEMI_JOIN =
+  " SEMI JOIN frame_keys k ON k.match_id = f.match_id AND k.frame_index = f.frame_index";
+
+/**
+ * Both teams' total gold at each frame, one row per (match, frame). Pivoted
+ * rather than one row per team, so a frame reads its own and its foe's total
+ * from one join: two joins against a per-team table ran out of memory over a
+ * whole lake of frames.
+ */
+function teamGoldCte(frames: SqlFragment, narrowed: boolean): SqlFragment {
+  return seq(
+    "team_gold AS (SELECT f.match_id, f.frame_index, sum(f.total_gold) FILTER (WHERE pd.team_id = 100) AS blue, sum(f.total_gold) FILTER (WHERE pd.team_id = 200) AS red FROM (",
+    frames,
+    `) f${narrowed ? FRAME_KEYS_SEMI_JOIN : ""} JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid GROUP BY f.match_id, f.frame_index)`,
   );
 }
 
@@ -205,15 +237,19 @@ function teamGoldCte(frames: SqlFragment): SqlFragment {
  * without an assigned position (ARAM, remakes) are left out, which makes
  * their lane difference NULL rather than paired with a stranger.
  */
-function laneGoldCte(frames: SqlFragment): SqlFragment {
+function laneGoldCte(frames: SqlFragment, narrowed: boolean): SqlFragment {
   return seq(
     "lane_gold AS (SELECT f.match_id, f.frame_index, pd.team_id, pd.team_position, any_value(f.total_gold) AS gold FROM (",
     frames,
-    ") f JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid WHERE pd.team_position IN ('TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY') GROUP BY f.match_id, f.frame_index, pd.team_id, pd.team_position)",
+    `) f${narrowed ? FRAME_KEYS_SEMI_JOIN : ""} JOIN part_dim pd ON pd.match_id = f.match_id AND pd.puuid = f.puuid WHERE pd.team_position IN ('TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY') GROUP BY f.match_id, f.frame_index, pd.team_id, pd.team_position)`,
   );
 }
 
-const TEAM_GOLD_JOIN = ` LEFT JOIN team_gold own ON own.match_id = m.match_id AND own.frame_index = m.frame_index AND own.team_id = p.team_id LEFT JOIN team_gold foe ON foe.match_id = m.match_id AND foe.frame_index = m.frame_index AND foe.team_id = ${OTHER_TEAM}`;
+const TEAM_GOLD_JOIN =
+  " LEFT JOIN team_gold tg ON tg.match_id = m.match_id AND tg.frame_index = m.frame_index";
+/** Arena and other modes have neither side, and get NULL, never a wrong total. */
+const TEAM_GOLD_DIFF =
+  "CASE p.team_id WHEN 100 THEN tg.blue - tg.red WHEN 200 THEN tg.red - tg.blue END AS team_gold_diff";
 const LANE_GOLD_JOIN = ` LEFT JOIN lane_gold lo ON lo.match_id = m.match_id AND lo.frame_index = m.frame_index AND lo.team_position = p.team_position AND lo.team_id = ${OTHER_TEAM}`;
 
 type Lookups = {
@@ -249,9 +285,21 @@ function teamWinCte(teams: SqlFragment): SqlFragment {
 }
 
 /** One row per event: how many players were credited with an assist. */
+/**
+ * The assist scan's own filter: only the events the source scan kept, and
+ * only assists. Unnarrowed, its dedupe window held every event participant
+ * in the lake and ran out of memory at production size.
+ */
+export const EVENT_KEYS_SCAN_FILTER =
+  "event_id IN (SELECT event_id FROM event_keys) AND role = 'assist'";
+
+function eventKeysCte(events: SqlFragment): SqlFragment {
+  return seq("event_keys AS (SELECT event_id FROM (", events, "))");
+}
+
 function assistCountsCte(participants: SqlFragment): SqlFragment {
   return seq(
-    "assist_counts AS (SELECT event_id, count(*) FILTER (WHERE role = 'assist') AS assists FROM (",
+    "assist_counts AS (SELECT event_id, count(*) AS assists FROM (",
     participants,
     ") GROUP BY event_id)",
   );
@@ -299,7 +347,7 @@ function eventLookups(input: FactsCteInput): Lookups {
     items.push("kt.win AS killer_team_won");
   }
   if (lookups?.assists !== undefined) {
-    ctes.push(assistCountsCte(lookups.assists));
+    ctes.push(eventKeysCte(input.source), assistCountsCte(lookups.assists));
     joins.push(" LEFT JOIN assist_counts ac ON ac.event_id = m.event_id");
     items.push("coalesce(ac.assists, 0) AS assist_count");
   }
@@ -329,13 +377,16 @@ function rowLookups(input: FactsCteInput): Lookups {
     joins.push(PARTICIPANT_JOIN);
     items.push(PARTICIPANT_ITEMS);
     const gold = input.frameGold;
+    if (gold?.narrowed === true) {
+      ctes.push(frameKeysCte(input.source));
+    }
     if (gold?.team === true) {
-      ctes.push(teamGoldCte(gold.source));
+      ctes.push(teamGoldCte(gold.source, gold.narrowed));
       joins.push(TEAM_GOLD_JOIN);
-      items.push("(own.gold - foe.gold) AS team_gold_diff");
+      items.push(TEAM_GOLD_DIFF);
     }
     if (gold?.lane === true) {
-      ctes.push(laneGoldCte(gold.source));
+      ctes.push(laneGoldCte(gold.source, gold.narrowed));
       joins.push(LANE_GOLD_JOIN);
       items.push("(m.total_gold - lo.gold) AS lane_gold_diff");
     }

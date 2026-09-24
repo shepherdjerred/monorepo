@@ -143,9 +143,13 @@ function nullableTextGrouping(
   column: string,
   input: GroupingInput,
 ): CompiledGrouping {
-  requireColumns(input.columns, [column]);
+  const binding = resolveColumn(input.columns, column);
   return {
-    key: frag(`coalesce(${column}, 'unknown')`),
+    // Riot sends an empty string, not NULL, for positions in modes without
+    // them (ARAM, Arena). coalesce alone let '' through as a category with no
+    // name, which a chart then refused as a point with an empty key — and
+    // took the whole answer down with it.
+    key: frag(`coalesce(nullif(${binding.sql}, ''), 'unknown')`),
     label: (keyRef) => frag(keyRef),
     playerIdentity: false,
     columnNames: [column],
@@ -235,7 +239,9 @@ function compileColumnGrouping(
           key: frag(`(${binding.sql})`),
           label: (keyRef) => frag(`coalesce((${keyRef})::VARCHAR, 'unknown')`),
           playerIdentity: false,
-          columnNames: [...binding.dependencies],
+          // The name itself too: a looked-up column has no source dependencies,
+          // and its lookup is joined only when the plan is seen to name it.
+          columnNames: [...binding.dependencies, name],
         };
       })
   );

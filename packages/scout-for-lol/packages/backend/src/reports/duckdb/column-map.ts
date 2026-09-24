@@ -72,9 +72,21 @@ export function timeFromLookup(source: PlanColumnSource): boolean {
 /**
  * Event columns computed from rows other than the event itself, joined only
  * when a query names one. `is_first_of_kind` is a window over the match's
- * events and so disables filter pushdown when named: filtering to Elder
+ * events and so limits filter pushdown when named: filtering to Elder
  * dragons first would redefine which dragon was first.
  */
+/**
+ * The first-of-kind window's partition. A filter reading only these keeps or
+ * drops whole partitions, so it cannot change which event is first and may
+ * still be pushed into the event scan.
+ */
+export const FIRST_OF_KIND_PARTITION: ReadonlySet<string> = new Set([
+  "match_id",
+  "event_type",
+  "monster_type",
+  "building_type",
+]);
+
 export const EVENT_LOOKUPS = {
   firstOfKind: "is_first_of_kind",
   killerTeamWon: "killer_team_won",
@@ -292,9 +304,11 @@ const TIMELINE_EVENT_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   [
     EVENT_LOOKUPS.soloKill,
     {
-      sql: "(event_type = 'CHAMPION_KILL' AND assist_count = 0)",
+      // killer_id 0 is an execution — a tower or minion got the kill, and
+      // with nobody assisting it would otherwise count as nobody's solo kill.
+      sql: "(event_type = 'CHAMPION_KILL' AND killer_id > 0 AND assist_count = 0)",
       type: "boolean",
-      dependencies: ["event_type"],
+      dependencies: ["event_type", "killer_id"],
       identity: true,
     },
   ],

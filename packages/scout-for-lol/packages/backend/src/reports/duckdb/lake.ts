@@ -245,6 +245,57 @@ type UnionSourceInput = {
 };
 
 /**
+ * Tables whose compacted parquet is already unique per key, because the
+ * rebuild emits one timeline per match (report-lake/rebuild-sources.ts).
+ * Only a staged row can duplicate one, and the compacted row wins.
+ */
+const COMPACTED_UNIQUE = new Set<UnionSourceInput["dedupe"]>([
+  "timeline-events",
+  "timeline-event-participants",
+  "timeline-participant-frames",
+  "timeline-coverage",
+]);
+
+/**
+ * The same rows the row_number dedupe keeps, without windowing the whole
+ * table: compacted rows as they are, plus staged rows no compacted row
+ * already holds, deduped among themselves. A window over every frame in a
+ * production lake ran out of the report memory limit; staging is small.
+ */
+function compactedFirstSource(
+  input: UnionSourceInput,
+  partition: string,
+): SqlFragment {
+  const cols = columnList(input.columns);
+  const where =
+    input.predicate.sql.length > 0 ? ` WHERE ${input.predicate.sql}` : "";
+  const compacted = `SELECT ${cols}, 1 AS src FROM read_parquet(?)${where}`;
+  const compactedParams = [
+    listParam(input.parquetFiles),
+    ...input.predicate.params,
+  ];
+  if (input.stagingFiles.length === 0) {
+    return { sql: compacted, params: compactedParams };
+  }
+  const staged = `SELECT * FROM (SELECT ${cols}, 2 AS src FROM read_json(?, format='newline_delimited', columns=${duckDbColumnsSpec(input.columns)})${where}) QUALIFY row_number() OVER (PARTITION BY ${partition}) = 1`;
+  const stagedParams = [
+    listParam(input.stagingFiles),
+    ...input.predicate.params,
+  ];
+  if (input.parquetFiles.length === 0) {
+    return { sql: staged, params: stagedParams };
+  }
+  const sameKey = partition
+    .split(", ")
+    .map((key) => `c.${key} = s.${key}`)
+    .join(" AND ");
+  return {
+    sql: `${compacted} UNION ALL BY NAME SELECT s.* FROM (${staged}) s ANTI JOIN (${compacted}) c ON ${sameKey}`,
+    params: [...compactedParams, ...stagedParams, ...compactedParams],
+  };
+}
+
+/**
  * Build the deduped parquet ∪ staging source for one lake table. Returns
  * undefined when there are no files at all (caller short-circuits).
  */
@@ -298,6 +349,9 @@ export function buildUnionSource(
         return "match_id";
     }
   })();
+  if (COMPACTED_UNIQUE.has(input.dedupe)) {
+    return compactedFirstSource(input, partition);
+  }
   const sourceOrder = "src";
   return {
     sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY ${sourceOrder}) = 1`,
@@ -469,6 +523,31 @@ export function buildTimelineParticipantFramesSource(
     parquetFiles: files.timelineParticipantFramesParquet,
     stagingFiles: files.timelineParticipantFramesStaging,
     columns: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+    dedupe: "timeline-participant-frames",
+    predicate,
+  });
+}
+
+/**
+ * The frame scan the gold differences read: only the columns a team or lane
+ * total needs. The dedupe window materializes every column it is handed, and
+ * the full frame row made that window run out of memory at production size.
+ */
+export function buildFrameGoldSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  const all = TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS;
+  return buildUnionSource({
+    parquetFiles: files.timelineParticipantFramesParquet,
+    stagingFiles: files.timelineParticipantFramesStaging,
+    columns: {
+      match_id: all.match_id,
+      frame_index: all.frame_index,
+      participant_id: all.participant_id,
+      puuid: all.puuid,
+      total_gold: all.total_gold,
+    },
     dedupe: "timeline-participant-frames",
     predicate,
   });

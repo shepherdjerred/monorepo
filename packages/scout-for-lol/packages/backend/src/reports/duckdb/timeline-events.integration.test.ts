@@ -23,8 +23,9 @@ import {
  *
  * NA1_600, blue wins: Jax takes the first dragon at 6:30, Otto the second at
  * 12:00, Mira the Elder at 30:00; Mira kills Otto alone at 8:00 and again
- * with Jax's help at 14:00. NA1_601, red wins: Otto takes the first dragon at
- * 8:00 and Mira takes the Elder anyway at 32:00. Otto is untracked.
+ * with Jax's help at 14:00; a tower executes Mira at 15:00. NA1_601, red
+ * wins: Otto takes the first dragon at 8:00 and Mira takes the Elder anyway at
+ * 32:00. Otto is untracked.
  */
 
 const SERVER_ID = testGuildId("791");
@@ -168,6 +169,15 @@ beforeAll(async () => {
         killer_id: 3,
         victim_id: 8,
       }),
+      // An execution: the tower got the kill, so no player did.
+      event({
+        event_id: "e8",
+        match_id: "NA1_600",
+        event_type: "CHAMPION_KILL",
+        event_timestamp_ms: 900_000,
+        killer_id: 0,
+        victim_id: 3,
+      }),
       dragon("e5", "NA1_600", {
         killer: 3,
         team: 100,
@@ -240,7 +250,27 @@ describe("timeline_events end-to-end", () => {
     expect(number_(rows[0]?.["expr_0"])).toBe(0.5);
   });
 
-  test("counts solo kills per player, not assisted ones", async () => {
+  test("groups by a looked-up column, joining its lookup", async () => {
+    const { rows } = await runPlan(
+      eventsInput({
+        where: eq("monster_sub_type", "ELDER_DRAGON"),
+        groupings: [
+          {
+            kind: "column",
+            column: "killer_team_won",
+            name: "killer_team_won",
+          },
+        ],
+      }),
+    );
+    // One Elder taken by the winners, one by the losers.
+    expect(rows.map((row) => String(row["label"])).toSorted()).toEqual([
+      "false",
+      "true",
+    ]);
+  });
+
+  test("counts solo kills per player, not assisted ones or executions", async () => {
     const { rows } = await runPlan(
       eventsInput({
         where: eq("is_solo_kill", true),

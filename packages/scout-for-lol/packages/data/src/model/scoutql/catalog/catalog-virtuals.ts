@@ -209,7 +209,8 @@ export const TIMELINE_EVENT_VIRTUALS: ScoutQlColumnInfo[] = [
   {
     name: "is_solo_kill",
     type: "boolean",
-    description: "A champion kill with no assists.",
+    description:
+      "A champion kill by a player with no assists; executions are not solo kills.",
     displayKind: "text",
     virtual: true,
     contexts: { select: true, where: true, groupBy: true },

@@ -19,6 +19,7 @@ import type {
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import {
   compilePredicate,
+  predicateReadsOnly,
   predicateTouchesIdentity,
   type ExprContext,
 } from "#src/reports/duckdb/expr-sql.ts";
@@ -26,6 +27,7 @@ import {
   TEAM_LOOKUP_COLUMNS,
   buildPlanColumnMap,
   EVENT_LOOKUPS,
+  FIRST_OF_KIND_PARTITION,
   timeFromLookup,
   resolveColumn,
   type ColumnMap,
@@ -168,6 +170,8 @@ function buildFactsPipeline(
     frameGold?: { team: boolean; lane: boolean } | undefined;
     /** Event lookups named by the plan. */
     eventLookups?: EventLookupFlags | undefined;
+    /** A grouping keys on the player, so rows without one are dropped. */
+    playerGrouped?: boolean;
   },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
@@ -178,14 +182,16 @@ function buildFactsPipeline(
   const sourceContext: ExprContext = { ...factsContext, placement: "source" };
 
   const split = splitWhere(input.plan.where, columns);
-  // The first-of-kind window must see every event of a match, so a plan that
-  // names it pushes nothing into the event scan: every conjunct is applied to
-  // facts, after the window has been computed.
+  // The first-of-kind window must see its whole partition: only conjuncts that
+  // select whole partitions are pushed; the rest apply to facts after it.
   const windowed = extras.eventLookups?.firstOfKind === true;
-  const pushed = windowed ? [] : split.pushed;
-  const residual = windowed
-    ? [...split.pushed, ...split.residual]
-    : split.residual;
+  const pushed = windowed
+    ? split.pushed.filter((c) => predicateReadsOnly(c, FIRST_OF_KIND_PARTITION))
+    : split.pushed;
+  const residual = [
+    ...split.pushed.filter((c) => !pushed.includes(c)),
+    ...split.residual,
+  ];
   const range = rangePredicate(kind.timeColumn, input.range);
   const pushedFragments = pushed.map((conjunct) =>
     compilePredicate(conjunct, sourceContext),
@@ -214,7 +220,10 @@ function buildFactsPipeline(
   if (source === undefined) {
     return undefined;
   }
-  const lookups = buildLookupSources(input.files, kind, range, extras);
+  const lookups = buildLookupSources(input.files, kind, range, {
+    ...extras,
+    scanFiltered: pushdown.sql.length > 0,
+  });
   if (lookups === undefined) {
     return undefined;
   }
@@ -237,6 +246,10 @@ function buildFactsPipeline(
   const residualFragments = residual.map((conjunct) =>
     compilePredicate(conjunct, factsContext),
   );
+  // A tower's or minion's kill has no player, so no row under GROUP BY player.
+  if (extras.playerGrouped === true) {
+    residualFragments.push(frag("puuid IS NOT NULL"));
+  }
   if (input.playerIds !== undefined) {
     residualFragments.push(
       frag("player_id IN (SELECT unnest(?))", [listParam(input.playerIds)]),
@@ -300,6 +313,7 @@ export function compileScoutQlPlanQuery(
   const pipeline = buildFactsPipeline(input, kind, columns, {
     projected,
     extraItems: [],
+    playerGrouped: groupings.some((grouping) => grouping.playerIdentity),
     teamLookup:
       kind.columnSource === "match" &&
       [...referenced].some((name) => TEAM_LOOKUP_COLUMNS.has(name)),
