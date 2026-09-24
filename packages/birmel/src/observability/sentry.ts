@@ -6,6 +6,7 @@
 // runs on Bun and uses @sentry/bun.
 import * as Sentry from "@sentry/bun";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { filterBirmelSentryEvent } from "./sentry-filters.ts";
 
 let sentryInitialized = false;
 
@@ -50,20 +51,24 @@ export function initializeSentry(): void {
     // "we tried to send X" with "Bugsink received Y" without enabling debug.
     // This is intentionally lightweight (no body), runs once per event, and
     // returns the event unchanged so Sentry's own pipeline is unaffected.
-    beforeSend(event) {
+    beforeSend(event, hint) {
+      const filtered = filterBirmelSentryEvent(event, hint);
+      if (filtered === null) {
+        return null;
+      }
       console.log(
         JSON.stringify({
           timestamp: new Date().toISOString(),
           level: "info",
           message: "Sentry event captured",
           module: "observability.sentry",
-          eventId: event.event_id,
-          exceptionType: event.exception?.values?.[0]?.type,
-          release: event.release,
-          environment: event.environment,
+          eventId: filtered.event_id,
+          exceptionType: filtered.exception?.values?.[0]?.type,
+          release: filtered.release,
+          environment: filtered.environment,
         }),
       );
-      return event;
+      return filtered;
     },
   });
 
