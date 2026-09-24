@@ -35,12 +35,20 @@ describe("NdjsonFileWriter", () => {
     expect(writer.rows).toBe(2);
   });
 
-  test("a failed open aborts with one contextual error", () => {
-    // /dev/full fails the open on this platform; production failed later at
-    // flush time. Both funnel into the same contextual error.
+  test("a failed open aborts with one contextual error", async () => {
+    // /dev/full fails the sink: eagerly in the constructor on some
+    // platforms, lazily at flush or close on others (Bun's file sink opens
+    // lazily on Linux). Drive the full lifecycle so every platform funnels
+    // into the one contextual error.
     let error: unknown;
     try {
-      new NdjsonFileWriter("/dev/full");
+      const writer = new NdjsonFileWriter("/dev/full");
+      for (let i = 0; i < 2000; i += 1) {
+        writer.write({ id: i });
+      }
+      // Let a backpressure rejection land before close() checks for it.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await writer.close();
     } catch (error_) {
       error = error_;
     }
