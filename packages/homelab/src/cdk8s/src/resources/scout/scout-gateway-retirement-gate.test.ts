@@ -180,23 +180,39 @@ describe("Scout gateway retirement gate ordering", () => {
   });
 
   /**
-   * A Sync hook, so every retirement sync runs its own check, and ArgoCD
+   * All Sync hooks, so every retirement sync runs its own check and ArgoCD
    * blocks the next wave on the Job's completion rather than on its apply.
-   * Every gate resource is a hook so none of them is left behind once the
-   * stage goes `absent`: hooks are never pruned.
+   *
+   * Only the Job is deleted after success. The prerequisites keep
+   * `BeforeHookCreation` alone, matching the Temporal backup preflight, so
+   * the Job's ServiceAccount, RBAC and policy can never be removed while it
+   * still needs them.
    */
-  test("every gate resource is a Sync hook deleted after success", () => {
+  test("every gate resource is a Sync hook", () => {
     const resources = retiringBeta();
     for (const resource of gateResources(resources)) {
-      const metadata = annotations(
-        resources,
-        resource.kind,
-        resource.metadata.name,
-      );
-      expect(metadata["argocd.argoproj.io/hook"]).toBe("Sync");
-      expect(metadata["argocd.argoproj.io/hook-delete-policy"]).toBe(
-        "BeforeHookCreation,HookSucceeded",
-      );
+      expect(
+        annotations(resources, resource.kind, resource.metadata.name)[
+          "argocd.argoproj.io/hook"
+        ],
+      ).toBe("Sync");
+    }
+  });
+
+  test("only the Job is deleted on success; its prerequisites persist", () => {
+    const resources = retiringBeta();
+    const deletePolicy = (kind: string, name: string) =>
+      annotations(resources, kind, name)[
+        "argocd.argoproj.io/hook-delete-policy"
+      ];
+    expect(deletePolicy("Job", GATE)).toBe("BeforeHookCreation,HookSucceeded");
+    for (const [kind, name] of [
+      ["ServiceAccount", GATE],
+      ["Role", GATE],
+      ["RoleBinding", GATE],
+      ["NetworkPolicy", `${GATE}-netpol`],
+    ] as const) {
+      expect(deletePolicy(kind, name)).toBe("BeforeHookCreation");
     }
   });
 });

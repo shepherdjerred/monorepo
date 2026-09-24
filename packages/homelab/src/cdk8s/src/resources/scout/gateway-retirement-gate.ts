@@ -68,17 +68,30 @@ const GATE_WAIT_TIMEOUT_SECONDS = 120;
  * A Sync hook is recreated on every sync (`BeforeHookCreation`), so each
  * retirement sync runs its own check.
  *
- * `HookSucceeded` deletes the gate after a successful operation — ArgoCD
- * deletes succeeded hooks only once the whole operation has succeeded, so the
- * RBAC in wave -3 is still present when the Job in wave -1 runs. Hook
- * resources are never pruned, so without this policy the gate would outlive
- * the `absent` change that retires the rest of the gateway. A failed gate is
- * kept for its logs until the next sync recreates it.
+ * The delete policy differs by role, following the Temporal backup preflight
+ * (`resources/temporal/backup-preflight.ts`):
+ *
+ * - the Job carries `BeforeHookCreation,HookSucceeded`, so a successful gate
+ *   is removed and a failed one is kept for its logs until the next sync;
+ * - the wave -3 ServiceAccount, Role, RoleBinding and NetworkPolicy carry
+ *   `BeforeHookCreation` only. They are never deleted after success, so their
+ *   lifetime cannot depend on when ArgoCD processes succeeded-hook deletion
+ *   relative to the wave -1 Job that needs them. Each sync replaces them
+ *   instead. They are inert between syncs: the Role only reads pods, and the
+ *   policy selects no pod once the Job is gone. Like any hook they are never
+ *   pruned, so the `absent` change must delete them explicitly.
  */
-function hookAnnotations(wave: string) {
+type GateHookRole = "prerequisite" | "job";
+
+const GATE_HOOK_DELETE_POLICY: Readonly<Record<GateHookRole, string>> = {
+  prerequisite: "BeforeHookCreation",
+  job: "BeforeHookCreation,HookSucceeded",
+};
+
+function hookAnnotations(role: GateHookRole, wave: string) {
   return {
     "argocd.argoproj.io/hook": "Sync",
-    "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation,HookSucceeded",
+    "argocd.argoproj.io/hook-delete-policy": GATE_HOOK_DELETE_POLICY[role],
     [ARGOCD_SYNC_WAVE_ANNOTATION]: wave,
   };
 }
@@ -152,6 +165,7 @@ echo "No gateway pod remains; the Discord token is released"
 export function createScoutGatewayRetirementGate(chart: Chart, stage: Stage) {
   const namespace = `scout-${stage}`;
   const prerequisiteAnnotations = hookAnnotations(
+    "prerequisite",
     SCOUT_GATEWAY_RETIREMENT_SYNC_WAVES.gatePrerequisites,
   );
 
@@ -225,7 +239,10 @@ export function createScoutGatewayRetirementGate(chart: Chart, stage: Stage) {
   const job = new Job(chart, "scout-gateway-retirement-gate", {
     metadata: {
       name: SCOUT_GATEWAY_RETIREMENT_GATE_NAME,
-      annotations: hookAnnotations(SCOUT_GATEWAY_RETIREMENT_SYNC_WAVES.gate),
+      annotations: hookAnnotations(
+        "job",
+        SCOUT_GATEWAY_RETIREMENT_SYNC_WAVES.gate,
+      ),
     },
     serviceAccount,
     // The script is all kubectl. cdk8s-plus defaults this to false, and

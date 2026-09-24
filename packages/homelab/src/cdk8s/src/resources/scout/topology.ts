@@ -42,6 +42,8 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
  * scaling anything by hand. The resource is deleted outright in a later
  * change, once the rollback has been proven once — which is what `absent` is
  * for; the release path's prune removes it then, when no pod remains to race.
+ * The gate's ServiceAccount, Role, RoleBinding and NetworkPolicy are Sync
+ * hooks, which ArgoCD never prunes, so that change has to delete them itself.
  *
  * ## Why this is a table and not a predicate
  *
