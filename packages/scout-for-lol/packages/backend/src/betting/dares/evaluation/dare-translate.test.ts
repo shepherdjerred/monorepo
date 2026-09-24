@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
   StructuredOutputExhaustionError,
-  createOpenRouterRuntime,
+  createLlmRuntime,
   emptyTokenBreakdown,
-  type AggregateOpenRouterUsage,
+  type AggregateLlmUsage,
 } from "@shepherdjerred/llm-runtime";
 import { DARE_DEFAULT_WINDOW_DAYS } from "#src/betting/constants.ts";
 import type { DareModelTranslation } from "#src/betting/dares/evaluation/dare-model-schema.ts";
@@ -51,8 +51,8 @@ const SHORTLIST: DareShortlistEntry[] = [
 
 // Constructing the runtime performs no network or metric registration; it is
 // only ever handed to the mocked generate boundary.
-const runtime = createOpenRouterRuntime({
-  apiKey: "test-key",
+const runtime = createLlmRuntime({
+  credentials: { openai: { apiKey: "test-key" } },
   service: "dare-translate-test",
   appName: "dare-translate-test",
 });
@@ -91,7 +91,7 @@ const RAW_UNMAPPABLE: DareModelTranslation = {
   leaves: [],
 };
 
-function usageOf(input: number, output: number): AggregateOpenRouterUsage {
+function usageOf(input: number, output: number): AggregateLlmUsage {
   return {
     tokens: {
       ...emptyTokenBreakdown(),
@@ -99,9 +99,7 @@ function usageOf(input: number, output: number): AggregateOpenRouterUsage {
       output,
       total: input + output,
     },
-    actualCostUsd: 0,
     catalogCostUsd: 0,
-    upstreamCostUsd: 0,
   };
 }
 
@@ -268,9 +266,8 @@ describe("translateDare", () => {
 
   test("a missing OpenRouter runtime maps to provider_error", async () => {
     const { deps, generateCalls } = makeDeps({
-      // What a keyless deployment's getOpenRouterRuntime answers.
-      getRuntime: ():
-        ReturnType<typeof createOpenRouterRuntime> | undefined => {
+      // What a keyless deployment's getLlmRuntime answers.
+      getRuntime: (): ReturnType<typeof createLlmRuntime> | undefined => {
         return undefined;
       },
     });

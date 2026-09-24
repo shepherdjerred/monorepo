@@ -176,7 +176,7 @@ async function main(): Promise<void> {
   // (see config.ts), so neither may reach initLlm with an empty key.
   const usesModel = !config.notesOnly && !config.derivedOnly;
   if (usesModel) {
-    initLlm(config.openRouterApiKey, config.model);
+    initLlm(config.model);
     setWebSearchEnabled(!config.skipResearch);
   }
   const hints = await loadHints();

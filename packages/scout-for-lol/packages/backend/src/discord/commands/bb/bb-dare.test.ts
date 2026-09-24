@@ -61,9 +61,7 @@ const RECORD: DareTranslationRecord = {
       reasoning: 0,
       total: 30,
     },
-    actualCostUsd: 0,
     catalogCostUsd: 0,
-    upstreamCostUsd: 0,
   },
   shortlistKeys: ["T1"],
   rawOutput: {

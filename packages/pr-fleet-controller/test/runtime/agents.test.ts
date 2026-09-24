@@ -27,7 +27,9 @@ const snapshot: FleetSnapshot = {
   prs: [],
 };
 
-const fleetModel = resolveFleetModel("gpt-5.6-sol", "test-openrouter-key");
+const fleetModel = resolveFleetModel("gpt-5.6-sol", {
+  openai: { apiKey: "test-key" },
+});
 
 const noop = (): void => {
   // test stub — intentionally does nothing

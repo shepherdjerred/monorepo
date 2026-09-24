@@ -5,7 +5,10 @@ import {
   type ExploreCapabilityCase,
   type ExploreCapabilityCorpus,
 } from "@scout-for-lol/data";
-import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
+import {
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+} from "@shepherdjerred/llm-runtime";
 import {
   capabilityAnswerIssues,
   EXPLORE_CAPABILITY_EVAL_MODEL,
@@ -92,7 +95,7 @@ function isMissingOutput(error: unknown): boolean {
 }
 
 async function answerOnce(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   entry: ExploreCapabilityCase,
 ): Promise<string> {
   const result = await generateText({
@@ -110,7 +113,7 @@ async function answerOnce(
 }
 
 async function evaluateCase(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   entry: ExploreCapabilityCase,
 ): Promise<{
   id: string;
@@ -171,8 +174,8 @@ async function main(): Promise<void> {
     );
   }
   const { corpus, raw } = await loadCorpus();
-  const runtime = createOpenRouterRuntime({
-    apiKey,
+  const runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-explore-capability-evals",
     appName: "Scout Explore Capability Evals",
   });

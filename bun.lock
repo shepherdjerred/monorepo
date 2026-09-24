@@ -1583,6 +1583,9 @@
       "name": "@scout-for-lol/frontend",
       "version": "0.0.1",
       "dependencies": {
+        "@ai-sdk/anthropic": "^4.0.62",
+        "@ai-sdk/google": "^4.0.79",
+        "@ai-sdk/openai": "^4.0.74",
         "@astrojs/mdx": "^8.0.2",
         "@astrojs/react": "^7.0.0",
         "@astrojs/sitemap": "^3.7.2",

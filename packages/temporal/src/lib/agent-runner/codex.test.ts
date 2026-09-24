@@ -36,7 +36,7 @@ vi.mock("@openai/codex-sdk", () => ({
   },
 }));
 vi.mock("@shepherdjerred/llm-runtime", () => ({
-  createOpenRouterCodexConfig: mocks.createOpenRouterConfig,
+  createCodexConfig: mocks.createOpenRouterConfig,
 }));
 vi.mock("./provider-workspace.ts", () => ({
   prepareProviderWorkspace: mocks.prepareProviderWorkspace,

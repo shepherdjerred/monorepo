@@ -13,7 +13,7 @@ import {
   type GenerationArtifactResult,
   type GenerationUsage,
 } from "./glitter-context-refresh-cache.ts";
-import { temporalOpenRouterRuntime } from "#activities/agent/openrouter-runtime.ts";
+import { temporalLlmRuntime } from "#activities/agent/openrouter-runtime.ts";
 
 export function glitterPrompt(system: string, user: string) {
   return { system, prompt: user };
@@ -100,15 +100,15 @@ function generationUsage(input: {
     output: number;
     cachedInput: number;
   };
-  actualCostUsd: number;
+  catalogCostUsd: number;
 }): GenerationUsage {
   return GenerationUsageSchema.parse({
     inputTokens: input.tokens.input,
     outputTokens: input.tokens.output,
     cachedInputTokens: input.tokens.cachedInput,
     costUsd:
-      input.actualCostUsd > 0
-        ? input.actualCostUsd
+      input.catalogCostUsd > 0
+        ? input.catalogCostUsd
         : catalogCostUsd(input.model, input.tokens),
   });
 }
@@ -131,7 +131,7 @@ export async function generateGlitterObject<SCHEMA extends z.ZodType>(input: {
   usage: GenerationUsage;
 }> {
   try {
-    const result = await generateValidatedObject(temporalOpenRouterRuntime(), {
+    const result = await generateValidatedObject(temporalLlmRuntime(), {
       model: input.model,
       schema: input.schema,
       schemaName: input.schemaName,
@@ -150,7 +150,7 @@ export async function generateGlitterObject<SCHEMA extends z.ZodType>(input: {
       usage: generationUsage({
         model: input.model,
         tokens: result.usage.tokens,
-        actualCostUsd: result.usage.actualCostUsd,
+        catalogCostUsd: result.usage.catalogCostUsd,
       }),
       missingParsedError: input.exhaustionError,
     });
@@ -167,7 +167,7 @@ export async function generateGlitterObject<SCHEMA extends z.ZodType>(input: {
         generationUsage({
           model: input.model,
           tokens: error.usage.tokens,
-          actualCostUsd: error.usage.actualCostUsd,
+          catalogCostUsd: error.usage.catalogCostUsd,
         }),
         { cause: error },
       );
@@ -182,7 +182,7 @@ export async function generateGlitterObject<SCHEMA extends z.ZodType>(input: {
       usage: generationUsage({
         model: input.model,
         tokens: error.usage.tokens,
-        actualCostUsd: error.usage.actualCostUsd,
+        catalogCostUsd: error.usage.catalogCostUsd,
       }),
       ...(exhaustedByLength && input.truncationError !== undefined
         ? { failureError: input.truncationError }

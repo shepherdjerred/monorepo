@@ -16,6 +16,32 @@ type ApiSettingsPanelProps = {
   onChange: (config: GlobalConfig) => void;
 };
 
+/**
+ * One key per provider, entered by the operator and held only in the browser.
+ * Google is the Gemini API rather than Vertex: a browser cannot hold the
+ * service-account OAuth credential the rest of the repo uses.
+ */
+const PROVIDER_KEY_FIELDS = [
+  {
+    field: "openaiApiKey",
+    id: "openai-api-key",
+    label: "OpenAI API Key",
+    placeholder: "sk-...",
+  },
+  {
+    field: "anthropicApiKey",
+    id: "anthropic-api-key",
+    label: "Anthropic API Key",
+    placeholder: "sk-ant-...",
+  },
+  {
+    field: "googleApiKey",
+    id: "google-api-key",
+    label: "Google AI Studio API Key",
+    placeholder: "AIza...",
+  },
+] as const;
+
 export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
   const [showImportExport, setShowImportExport] = useState(false);
   const [importInput, setImportInput] = useState("");
@@ -49,30 +75,32 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
       <div>
         <h3 className="text-sm font-semibold text-scout-ink mb-3">API Keys</h3>
         <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="openrouter-api-key"
-              className="block text-sm font-medium text-scout-ink mb-1"
-            >
-              OpenRouter API Key
-            </label>
-            <input
-              id="openrouter-api-key"
-              type="password"
-              value={config.api.openRouterApiKey ?? ""}
-              onChange={(e) => {
-                onChange({
-                  ...config,
-                  api: {
-                    ...config.api,
-                    openRouterApiKey: e.target.value || undefined,
-                  },
-                });
-              }}
-              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
-              placeholder="sk-or-v1-..."
-            />
-          </div>
+          {PROVIDER_KEY_FIELDS.map(({ field, id, label, placeholder }) => (
+            <div key={field}>
+              <label
+                htmlFor={id}
+                className="block text-sm font-medium text-scout-ink mb-1"
+              >
+                {label}
+              </label>
+              <input
+                id={id}
+                type="password"
+                value={config.api[field] ?? ""}
+                onChange={(e) => {
+                  onChange({
+                    ...config,
+                    api: {
+                      ...config.api,
+                      [field]: e.target.value || undefined,
+                    },
+                  });
+                }}
+                className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
+                placeholder={placeholder}
+              />
+            </div>
+          ))}
         </div>
       </div>
 

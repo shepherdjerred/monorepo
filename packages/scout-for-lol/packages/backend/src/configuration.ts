@@ -283,7 +283,7 @@ function computeConfiguration() {
       .get("REPORT_DUCKDB_MEMORY_LIMIT")
       .default("512MB")
       .asString(),
-    openRouterApiKey: getOptionalEnvVar("OPENROUTER_API_KEY"),
+    inferenceConfigured: getOptionalEnvVar("OPENAI_API_KEY") !== undefined,
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
     bettingParlayAiModel: getOptionalEnvVar(
       "BETTING_PARLAY_AI_MODEL",
@@ -453,8 +453,8 @@ const configuration: Configuration = {
   get reportDuckDbMemoryLimit() {
     return getConfiguration().reportDuckDbMemoryLimit;
   },
-  get openRouterApiKey() {
-    return getConfiguration().openRouterApiKey;
+  get inferenceConfigured() {
+    return getConfiguration().inferenceConfigured;
   },
   get reportAiModel() {
     return getConfiguration().reportAiModel;

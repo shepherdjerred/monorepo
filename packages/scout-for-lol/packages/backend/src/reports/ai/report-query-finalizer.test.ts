@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "vitest";
 import { Registry } from "prom-client";
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
   MAX_SEMANTIC_ATTEMPTS,
   StructuredOutputExhaustionError,
 } from "@shepherdjerred/llm-runtime";
@@ -42,8 +42,8 @@ afterEach(() => {
 test("charges every billable attempt when the finalizer exhausts its retries", async () => {
   resetBudgetStateForTests();
   let requests = 0;
-  const runtime = createOpenRouterRuntime({
-    apiKey: "test-key",
+  const runtime = createLlmRuntime({
+    credentials: { openai: { apiKey: "test-key" } },
     service: "scout-finalizer-test",
     appName: "Scout finalizer test",
     metricsRegister: new Registry(),

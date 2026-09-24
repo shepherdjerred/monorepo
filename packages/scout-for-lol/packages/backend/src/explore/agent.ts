@@ -29,7 +29,7 @@ import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools
 import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
 import { clashExploreEnabled } from "#src/league/clash/access.ts";
 import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
-import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
+import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
@@ -62,7 +62,7 @@ async function streamExploreAgentInternal(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
   const model = exploreModel();
-  const runtime = getOpenRouterRuntime();
+  const runtime = getLlmRuntime();
   if (runtime === undefined) {
     throw new Error("OPENROUTER_API_KEY is required for explore");
   }
