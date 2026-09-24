@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Morgana": {
       "id": "Morgana",
@@ -573,6 +573,13 @@
           "name": "Prestige Veiled Lady Morgana (Vivid)",
           "chromas": true,
           "parentSkin": 81
+        },
+        {
+          "id": "25083",
+          "num": 83,
+          "name": "Coven Morgana (Pristine)",
+          "chromas": false,
+          "parentSkin": 26
         }
       ],
       "lore": "Conflicted between her celestial and mortal natures, Morgana bound her wings to embrace humanity, and inflicts her pain and bitterness upon the dishonest and the corrupt. She rejects laws and traditions she believes are unjust, and fights for truth from the shadows of Demacia—even as others seek to repress it—by casting shields and chains of dark fire. More than anything else, Morgana truly believes that even the banished and outcast may one day rise again.",

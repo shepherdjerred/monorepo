@@ -466,6 +466,54 @@
           "num": 66,
           "name": "Dawnbringer Janna",
           "chromas": false
+        },
+        {
+          "id": "40067",
+          "num": 67,
+          "name": "Coven Janna",
+          "chromas": true
+        },
+        {
+          "id": "40068",
+          "num": 68,
+          "name": "Coven Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40069",
+          "num": 69,
+          "name": "Coven Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40070",
+          "num": 70,
+          "name": "Coven Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40071",
+          "num": 71,
+          "name": "Coven Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40072",
+          "num": 72,
+          "name": "Coven Janna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "40073",
+          "num": 73,
+          "name": "Coven Janna (Pearl)",
+          "chromas": false,
+          "parentSkin": 67
         }
       ],
       "lore": "Armed with the power of Runeterra's gales, Janna is a mysterious, elemental wind spirit who protects the dispossessed of Zaun. Some believe she was brought into existence by the pleas of Runeterra's sailors who prayed for fair winds as they navigated treacherous waters and braved rough tempests. Her favor and protection has since been called into the depths of Zaun, where Janna has become a beacon of hope to those in need. No one knows where or when she will appear, but more often than not, she's come to help.",
@@ -480,10 +528,7 @@
         "Listen for the charge up sound on Howling Gale in case Janna is trying to hit you with it from off screen or from brush.",
         "Janna's at her strongest when buffing another ally. If you can harass her ally, it will weaken her ability to fight you."
       ],
-      "tags": [
-        "Support",
-        "Mage"
-      ],
+      "tags": ["Support", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -532,95 +577,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            14,
-            14,
-            14,
-            14
-          ],
+          "cooldown": [14, 14, 14, 14, 14],
           "cooldownBurn": "14",
-          "cost": [
-            90,
-            95,
-            100,
-            105,
-            110
-          ],
+          "cost": [90, 95, 100, 105, 110],
           "costBurn": "90/95/100/105/110",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -638,13 +611,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1075,
-            1075,
-            1075,
-            1075,
-            1075
-          ],
+          "range": [1075, 1075, 1075, 1075, 1075],
           "rangeBurn": "1075",
           "image": {
             "full": "HowlingGale.png",
@@ -679,95 +646,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            7.5,
-            7,
-            6.5,
-            6
-          ],
+          "cooldown": [8, 7.5, 7, 6.5, 6],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -785,13 +680,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            4294967295,
-            4294967295,
-            4294967295,
-            4294967295,
-            4294967295
-          ],
+          "range": [4294967295, 4294967295, 4294967295, 4294967295, 4294967295],
           "rangeBurn": "4294967295",
           "image": {
             "full": "SowTheWind.png",
@@ -824,95 +713,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            15,
-            14,
-            13,
-            12
-          ],
+          "cooldown": [16, 15, 14, 13, 12],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -930,13 +747,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            800,
-            800,
-            800,
-            800,
-            800
-          ],
+          "range": [800, 800, 800, 800, 800],
           "rangeBurn": "800",
           "image": {
             "full": "EyeOfTheStorm.png",
@@ -955,81 +766,30 @@
           "description": "Janna surrounds herself in a magical storm, throwing enemies back. After the storm has settled, soothing winds heal nearby allies while the ability is active.",
           "tooltip": "Janna summons a magical monsoon, <status>Knocking Back</status> nearby enemies then healing nearby allies for <healing>{{ totalheal }} Health</healing> over {{ duration }} seconds. Moving or using an Ability ends the monsoon early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Heal Per Second",
-              "Cooldown"
-            ],
+            "label": ["Heal Per Second", "Cooldown"],
             "effect": [
               "{{ healbasepersecond }} -> {{ healbasepersecondNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            130,
-            115,
-            100
-          ],
+          "cooldown": [130, 115, 100],
           "cooldownBurn": "130/115/100",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              300,
-              450,
-              600
-            ],
-            [
-              3,
-              3,
-              3
-            ],
-            [
-              700,
-              700,
-              700
-            ],
-            [
-              875,
-              875,
-              875
-            ],
-            [
-              875,
-              875,
-              875
-            ],
-            [
-              1200,
-              1200,
-              1200
-            ],
-            [
-              10,
-              10,
-              10
-            ],
-            [
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [300, 450, 600],
+            [3, 3, 3],
+            [700, 700, 700],
+            [875, 875, 875],
+            [875, 875, 875],
+            [1200, 1200, 1200],
+            [10, 10, 10],
+            [0.5, 0.5, 0.5],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1047,11 +807,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            725,
-            725,
-            725
-          ],
+          "range": [725, 725, 725],
           "rangeBurn": "725",
           "image": {
             "full": "ReapTheWhirlwind.png",

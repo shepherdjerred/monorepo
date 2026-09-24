@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Lillia": {
       "id": "Lillia",
@@ -401,7 +401,7 @@
         "mp": 410,
         "mpperlevel": 50,
         "movespeed": 330,
-        "armor": 22,
+        "armor": 24,
         "armorperlevel": 4.5,
         "spellblock": 32,
         "spellblockperlevel": 1.55,
