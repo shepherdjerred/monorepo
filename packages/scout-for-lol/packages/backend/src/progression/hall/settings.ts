@@ -283,7 +283,7 @@ export async function requestFullHallBaseline(
     readonly stage: ScoutStage;
     readonly reuseActive?: boolean;
   },
-): Promise<HallBaselineRequest> {
+): Promise<HallBaselineRequest | null> {
   const guildId = DiscordGuildIdSchema.parse(options.guildId);
   const request = await db.$transaction(async (tx) => {
     const existing = await tx.hallSettings.findUnique({
@@ -314,9 +314,8 @@ export async function requestFullHallBaseline(
       reuseActive: options.reuseActive ?? true,
     });
   });
-  if (request === null) {
-    throw new Error("Hall baseline requires at least one enabled cell");
-  }
+  // Null when no cells are enabled: a user-configuration state, not a
+  // failure. The caller maps it to a user-facing error.
   return request;
 }
 

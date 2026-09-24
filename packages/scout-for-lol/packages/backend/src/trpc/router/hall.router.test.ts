@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
+  COMPETITIVE_PROGRESSION_CATALOG_VERSION,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -111,6 +112,32 @@ describe("hall.router", () => {
       expect(result.settings.guildId).toBe(guildId);
       expect(result.catalog).toBeDefined();
       expect(result.entries).toEqual([]);
+    });
+  });
+
+  describe("hall.startBaseline", () => {
+    test("returns BAD_REQUEST when no cells are enabled", async () => {
+      addFlagOverride("hall_of_fame_enabled", true, { server: guildId });
+      trpc.setMembership([{ guildId, asAdmin: true }]);
+      await db.hallSettings.deleteMany();
+      await db.hallSettings.create({
+        data: {
+          guildId,
+          catalogVersion: COMPETITIVE_PROGRESSION_CATALOG_VERSION,
+          channelId: null,
+          enabledQueueFamilies: JSON.stringify([]),
+          enabledRecords: JSON.stringify([]),
+          updatedByDiscordId: actor,
+        },
+      });
+
+      await expect(
+        caller().hall.startBaseline({ guildId }),
+      ).rejects.toMatchObject({
+        code: "BAD_REQUEST",
+        message:
+          "Enable at least one Hall of Fame queue family and record to start a baseline.",
+      });
     });
   });
 });
