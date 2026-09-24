@@ -555,3 +555,91 @@ test("keeps the active frontier monotonic when mixed evidence has an earlier tim
   expect(olderStore.calls).not.toContain("settleMatchMarketsV2");
   expect(log).toContain(`${MATCH_ID}:terminal-receipt`);
 }, 90_000);
+
+function discoveredMatch(
+  riotMatchId: typeof MATCH_ID,
+  gameEndTimestamp: number,
+) {
+  return {
+    riotMatchId,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode: "live" as const,
+    gameEndTimestamp,
+  };
+}
+
+async function runDiscovery(workflowId: string) {
+  return await harness
+    .client()
+    .workflow.execute(scoutPostMatchDiscoveryV2Workflow, {
+      taskQueue: "scout-dev",
+      workflowId,
+      args: [
+        scoutPostMatchDiscoveryV2InputCodec.serialize({
+          stage,
+          trigger: "schedule",
+        }),
+      ],
+    });
+}
+
+test("a rediscovered, already-processed match does not hold back the matches after it", async () => {
+  // The prod shape: an account whose cursor did not move past a match its
+  // completed child already processed rediscovers that match at the head of
+  // every page. Its deterministic child ID is taken for good, so a discovery
+  // that stops at the first refused start never reaches anything newer.
+  const log: string[] = [];
+  const firstStore = createScoutV2MatchStore();
+  const pages = [
+    [discoveredMatch(MATCH_ID, 1)],
+    [discoveredMatch(MATCH_ID, 1), discoveredMatch(SECOND_MATCH_ID, 2)],
+  ];
+  let scans = 0;
+  await harness.startWorkers({
+    ...routedMatchActivities(firstStore, createScoutV2MatchStore(), {
+      beforeCommit: (input) => {
+        log.push(`${input.riotMatchId}:commit`);
+      },
+      onFanOut: (riotMatchId) => {
+        log.push(`${riotMatchId}:fan-out`);
+      },
+    }),
+    discoverPostMatchIdsV2: () => {
+      const matches = pages[Math.min(scans, pages.length - 1)] ?? [];
+      scans += 1;
+      return {
+        outcome: "scanned",
+        riotMatchIds: matches.map((match) => match.riotMatchId),
+        matches,
+        complete: true,
+        pollOwner: POLL_OWNER,
+      };
+    },
+    runPostMatchMaintenance: () => log.push("maintenance"),
+  });
+
+  await expect(runDiscovery("discovery-first-sighting")).resolves.toEqual(
+    scoutPostMatchDiscoveryV2ResultCodec.serialize({
+      status: "completed",
+      discovered: 1,
+      childrenStarted: 1,
+      complete: true,
+    }),
+  );
+  await expect(runDiscovery("discovery-rediscovery")).resolves.toEqual(
+    scoutPostMatchDiscoveryV2ResultCodec.serialize({
+      status: "completed",
+      discovered: 2,
+      childrenStarted: 1,
+      complete: true,
+    }),
+  );
+  await terminateDispatcher(
+    scoutClientMatchDispatchV2WorkflowId(stage),
+    "test observed both discovery runs",
+  );
+
+  expect(log.filter((entry) => entry === `${MATCH_ID}:commit`)).toHaveLength(1);
+  expect(log).toContain(`${SECOND_MATCH_ID}:fan-out`);
+  expect(log.filter((entry) => entry === "maintenance")).toHaveLength(2);
+}, 90_000);
