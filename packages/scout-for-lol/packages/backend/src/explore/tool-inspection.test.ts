@@ -65,3 +65,31 @@ test("feature read tools reach the trace with their input and output", () => {
     expect(result.rawOutput).toEqual(output);
   }
 });
+
+test("a server-scoped query is inspected, with its servers kept out of the trace", () => {
+  // The strict shared input schema once rejected `servers` and failed the
+  // whole turn. Servers stay out of the trace: share links are public.
+  const input = {
+    queryText: "FROM matches SELECT games",
+    servers: ["123456789012345678"],
+  };
+  expect(inspectExploreToolCall("run_report_query", input).rawInput).toEqual({
+    queryText: "FROM matches SELECT games",
+  });
+  const result = inspectExploreToolResult("run_report_query", input, {
+    ok: false,
+    message: "The user is not in some of those servers.",
+    formattedQueryText: null,
+    preview: null,
+  });
+  expect(result.details).toMatchObject({
+    kind: "execution",
+    queryText: "FROM matches SELECT games",
+  });
+  expect(JSON.stringify(result)).not.toContain("123456789012345678");
+});
+
+test("list_my_servers never reaches a shared trace", () => {
+  const call = inspectExploreToolCall("list_my_servers", { search: "rift" });
+  expect(call.rawInput).toBeNull();
+});

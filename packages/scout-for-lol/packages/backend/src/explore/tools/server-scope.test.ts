@@ -52,7 +52,8 @@ describe("resolveTurnScope", () => {
     const turn = resolveTurnScope([ALPHA, OUTSIDE], [ALPHA, BETA]);
     expect(turn.ok).toBe(false);
     if (turn.ok) throw new Error("expected a refusal");
-    expect(turn.message).toContain(OUTSIDE);
+    // Refusals reach shared traces, so they never name a server.
+    expect(turn.message).not.toContain(OUTSIDE);
     expect(turn.message).toContain("list_my_servers");
   });
 

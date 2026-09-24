@@ -31,6 +31,7 @@ import {
   CompetitionStandingsInputSchema,
   ListCompetitionsInputSchema,
 } from "#src/explore/tools/competition-read-tools.ts";
+import { QueryServersSchema } from "#src/explore/tools/server-scope.ts";
 import {
   DareActionToolInputSchema,
   DareDefinitionToolInputSchema,
@@ -224,6 +225,20 @@ const FEATURE_READ_TOOL_SCHEMAS = new Map<
   ],
 ]);
 
+/**
+ * Explore's run_report_query input: the shared query input plus the servers
+ * it reads. The servers are accepted but never recorded: traces are served
+ * to share-link holders, and which servers a user is in stays private, as
+ * the turn's own server list does.
+ */
+const ExploreRunQueryInputSchema = ScoutQlQueryToolInputSchema.extend({
+  servers: QueryServersSchema,
+});
+
+function recordedQueryInput(input: unknown): { queryText: string } {
+  return { queryText: ExploreRunQueryInputSchema.parse(input).queryText };
+}
+
 const JsonValueSchema = z.json();
 type JsonValue = z.infer<typeof JsonValueSchema>;
 
@@ -279,7 +294,7 @@ export function inspectExploreToolCall(
     };
   }
   if (toolName === "run_report_query") {
-    const parsed = ScoutQlQueryToolInputSchema.parse(input);
+    const parsed = recordedQueryInput(input);
     return {
       rawInput: JsonValueSchema.parse(parsed),
       details: {
@@ -361,7 +376,7 @@ export function inspectExploreToolResult(
     };
   }
   if (toolName === "run_report_query") {
-    const parsedInput = ScoutQlQueryToolInputSchema.parse(input);
+    const parsedInput = recordedQueryInput(input);
     const parsedOutput = QueryResultToolOutputSchema.parse(output);
     return {
       succeeded: parsedOutput.ok,

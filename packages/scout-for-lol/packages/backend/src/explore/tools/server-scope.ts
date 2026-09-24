@@ -57,7 +57,10 @@ export function resolveTurnScope(
   if (outside.length > 0) {
     return {
       ok: false,
-      message: `The user is not in ${outside.join(", ")}. Call list_my_servers for the servers they are in.`,
+      // No ids in the message: it is recorded in traces that share links
+      // serve, and the model already knows which servers it asked for.
+      message:
+        "The user is not in some of those servers. Call list_my_servers for the servers they are in.",
     };
   }
   if (chosen.length === 0) {
