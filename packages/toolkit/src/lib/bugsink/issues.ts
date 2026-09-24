@@ -6,11 +6,16 @@ import { getProjects } from "./queries.ts";
 export type GetIssuesOptions = {
   project?: string | undefined;
   limit?: number | undefined;
+  maxPages?: number | undefined;
 };
 
 export async function getIssues(
   options: GetIssuesOptions = {},
 ): Promise<BugsinkIssue[]> {
+  if (options.limit === 0) {
+    return [];
+  }
+
   const params: Record<string, string> = {};
 
   if (options.project != null && options.project.length > 0) {
@@ -21,7 +26,7 @@ export async function getIssues(
     "/issues/",
     BugsinkIssueSchema,
     params,
-    { limit: options.limit },
+    { limit: options.limit, maxPages: options.maxPages },
   );
 
   if (!result.success || !result.data) {

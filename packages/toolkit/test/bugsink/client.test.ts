@@ -146,7 +146,9 @@ describe("Bugsink client", () => {
       "https://bugsink.sjer.red/api/canonical/0/releases/?project=42",
     ]);
   });
+});
 
+describe("Bugsink pagination", () => {
   it("follows issue pagination cursors until next is null", async () => {
     const requestedUrls: string[] = [];
     const page2 =
@@ -268,5 +270,89 @@ describe("Bugsink client", () => {
       "https://bugsink.sjer.red/api/canonical/0/releases/?project=42",
       page2,
     ]);
+  });
+
+  it("fails loudly when maxPages is exceeded and completes when raised", async () => {
+    const page2 =
+      "https://bugsink.sjer.red/api/canonical/0/issues/?cursor=page2&project=42";
+    installFetchMock(async (input) => {
+      const url = fetchInputToUrl(input);
+      return url.includes("cursor=")
+        ? bugsinkPage([issue("id-2")])
+        : bugsinkPage([issue("id-1")], page2);
+    });
+    Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+    Bun.env["BUGSINK_TOKEN"] = "token";
+
+    await expect(getIssues({ project: "42", maxPages: 1 })).rejects.toThrow(
+      "exceeded 1 page",
+    );
+    const issues = await getIssues({ project: "42", maxPages: 2 });
+    expect(issues.map((item) => item.id)).toEqual(["id-1", "id-2"]);
+  });
+
+  it("rejects invalid maxPages", async () => {
+    Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+    Bun.env["BUGSINK_TOKEN"] = "token";
+
+    await expect(getIssues({ maxPages: Number.NaN })).rejects.toThrow(
+      "Invalid maxPages",
+    );
+    await expect(getIssues({ maxPages: 0 })).rejects.toThrow(
+      "Invalid maxPages",
+    );
+  });
+
+  it("refuses pagination URLs on another origin without fetching them", async () => {
+    const requestedUrls: string[] = [];
+    installFetchMock(async (input) => {
+      const url = fetchInputToUrl(input);
+      requestedUrls.push(url);
+      return bugsinkPage(
+        [issue("id-1")],
+        "https://evil.example.test/api/canonical/0/issues/?cursor=x",
+      );
+    });
+    Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+    Bun.env["BUGSINK_TOKEN"] = "token";
+
+    await expect(getIssues({ project: "42" })).rejects.toThrow(
+      "unexpected origin",
+    );
+    expect(requestedUrls).toEqual([
+      "https://bugsink.sjer.red/api/canonical/0/issues/?project=42",
+    ]);
+  });
+
+  it("returns no requests for zero limit even with a slug filter", async () => {
+    const requestedUrls: string[] = [];
+    installFetchMock(async (input) => {
+      requestedUrls.push(fetchInputToUrl(input));
+      return bugsinkPage([project()]);
+    });
+    Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+    Bun.env["BUGSINK_TOKEN"] = "token";
+
+    const issues = await getIssues({ project: "scout-for-lol", limit: 0 });
+
+    expect(issues).toEqual([]);
+    expect(requestedUrls).toEqual([]);
+  });
+
+  it("threads maxPages through release listing", async () => {
+    const page2 =
+      "https://bugsink.sjer.red/api/canonical/0/releases/?cursor=page2&project=42";
+    installFetchMock(async (input) => {
+      const url = fetchInputToUrl(input);
+      return url.includes("cursor=")
+        ? bugsinkPage([release("rel-2", "2.0.0")])
+        : bugsinkPage([release("rel-1", "1.0.0")], page2);
+    });
+    Bun.env["BUGSINK_URL"] = "https://bugsink.sjer.red";
+    Bun.env["BUGSINK_TOKEN"] = "token";
+
+    await expect(getReleases(42, { maxPages: 1 })).rejects.toThrow(
+      "higher maxPages",
+    );
   });
 });

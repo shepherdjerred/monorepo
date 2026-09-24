@@ -2,6 +2,7 @@ import {
   bugsinkRequest,
   bugsinkRequestPaginated,
   bugsinkRequestRaw,
+  type BugsinkListOptions,
 } from "./client.ts";
 import {
   BugsinkTeamSchema,
@@ -20,8 +21,15 @@ import type {
   BugsinkReleaseDetail,
 } from "./types.ts";
 
-export async function getTeams(): Promise<BugsinkTeam[]> {
-  const result = await bugsinkRequestPaginated("/teams/", BugsinkTeamSchema);
+export async function getTeams(
+  options: BugsinkListOptions = {},
+): Promise<BugsinkTeam[]> {
+  const result = await bugsinkRequestPaginated(
+    "/teams/",
+    BugsinkTeamSchema,
+    undefined,
+    options,
+  );
 
   if (!result.success || !result.data) {
     throw new Error(result.error ?? "Failed to fetch teams");
@@ -45,6 +53,7 @@ export async function getTeam(uuid: string): Promise<BugsinkTeam | null> {
 
 export async function getProjects(
   teamUuid?: string,
+  options: BugsinkListOptions = {},
 ): Promise<BugsinkProjectDetail[]> {
   const params: Record<string, string> = {};
 
@@ -56,6 +65,7 @@ export async function getProjects(
     "/projects/",
     BugsinkProjectDetailSchema,
     params,
+    options,
   );
 
   if (!result.success || !result.data) {
@@ -85,11 +95,13 @@ export async function getProject(
 
 export async function getEvents(
   issueUuid: string,
+  options: BugsinkListOptions = {},
 ): Promise<BugsinkEventListItem[]> {
   const result = await bugsinkRequestPaginated(
     "/events/",
     BugsinkEventListSchema,
     { issue: issueUuid },
+    options,
   );
 
   if (!result.success || !result.data) {
@@ -129,6 +141,7 @@ export async function getStacktrace(eventUuid: string): Promise<string> {
 
 export async function getReleases(
   project?: number | string,
+  options: BugsinkListOptions = {},
 ): Promise<BugsinkReleaseListItem[]> {
   const params: Record<string, string> = {};
 
@@ -143,6 +156,7 @@ export async function getReleases(
     "/releases/",
     BugsinkReleaseListSchema,
     params,
+    options,
   );
 
   if (!result.success || !result.data) {

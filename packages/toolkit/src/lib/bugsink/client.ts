@@ -16,14 +16,18 @@ export type BugsinkClientResult<T> = {
   error?: string | undefined;
 };
 
+function bugsinkBaseUrl(): string {
+  return requireEnv(
+    "BUGSINK_URL",
+    "Bugsink instance URL, e.g. https://bugsink.example.com",
+  )
+    .replace(/\/$/, "")
+    .replace(/\/api\/canonical\/0$/, "");
+}
+
 function client(): HttpClient {
   return createHttpClient(() => {
-    const baseUrl = requireEnv(
-      "BUGSINK_URL",
-      "Bugsink instance URL, e.g. https://bugsink.example.com",
-    )
-      .replace(/\/$/, "")
-      .replace(/\/api\/canonical\/0$/, "");
+    const baseUrl = bugsinkBaseUrl();
     const authToken = requireEnv("BUGSINK_TOKEN", "Bugsink API token");
     return {
       baseUrl,
@@ -49,6 +53,11 @@ export type BugsinkPaginatedOptions = {
   maxPages?: number | undefined;
 };
 
+/** Page-cap option shared by list readers without a result limit. */
+export type BugsinkListOptions = {
+  maxPages?: number | undefined;
+};
+
 function validateBugsinkLimit(limit: number | undefined): string | null {
   if (limit == null) {
     return null;
@@ -56,6 +65,33 @@ function validateBugsinkLimit(limit: number | undefined): string | null {
   return !Number.isInteger(limit) || limit < 0
     ? `Invalid limit: ${String(limit)}. Expected a non-negative integer.`
     : null;
+}
+
+function validateBugsinkMaxPages(maxPages: number | undefined): string | null {
+  if (maxPages == null) {
+    return null;
+  }
+  return !Number.isInteger(maxPages) || maxPages < 1
+    ? `Invalid maxPages: ${String(maxPages)}. Expected a positive integer.`
+    : null;
+}
+
+function paginationOriginError(nextUrl: string): string | null {
+  let nextOrigin: string;
+  try {
+    nextOrigin = new URL(nextUrl).origin;
+  } catch {
+    return `Invalid Bugsink pagination URL: ${nextUrl}`;
+  }
+  let expectedOrigin: string;
+  try {
+    expectedOrigin = new URL(bugsinkBaseUrl()).origin;
+  } catch (error) {
+    return error instanceof Error ? error.message : "Unknown error occurred";
+  }
+  return nextOrigin === expectedOrigin
+    ? null
+    : `Refusing to follow Bugsink pagination URL on unexpected origin: ${nextUrl}`;
 }
 
 type FetchBugsinkPageArgs<T> = {
@@ -73,6 +109,10 @@ async function fetchBugsinkPage<T>(
   const { http, endpoint, pageSchema, params, seen, nextUrl } = args;
   if (nextUrl == null) {
     return http.get(endpoint, { schema: pageSchema, query: params });
+  }
+  const originError = paginationOriginError(nextUrl);
+  if (originError != null) {
+    return { success: false, error: originError };
   }
   if (seen.has(nextUrl)) {
     return {
@@ -108,12 +148,15 @@ export async function bugsinkRequestPaginated<T>(
   params?: Record<string, string>,
   options: BugsinkPaginatedOptions = {},
 ): Promise<BugsinkClientResult<T[]>> {
-  const { limit, maxPages = 100 } = options;
-
-  const limitError = validateBugsinkLimit(limit);
+  const limitError = validateBugsinkLimit(options.limit);
   if (limitError != null) {
     return { success: false, error: limitError };
   }
+  const maxPagesError = validateBugsinkMaxPages(options.maxPages);
+  if (maxPagesError != null) {
+    return { success: false, error: maxPagesError };
+  }
+  const { limit, maxPages = 100 } = options;
   if (limit === 0) {
     return { success: true, data: [] };
   }
@@ -151,7 +194,7 @@ export async function bugsinkRequestPaginated<T>(
 
   return {
     success: false,
-    error: `Bugsink API pagination exceeded ${String(maxPages)} pages`,
+    error: `Bugsink API pagination exceeded ${String(maxPages)} pages; pass a higher maxPages if the list is legitimately large`,
   };
 }
 
