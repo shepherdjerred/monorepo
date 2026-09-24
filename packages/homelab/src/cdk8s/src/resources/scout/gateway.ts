@@ -20,8 +20,6 @@ import {
   type ZfsVolumeSelinuxLevel,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { ARGOCD_SYNC_WAVE_ANNOTATION } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
-import { postgresImageDigests } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import type { RenderedGatewayTopology } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
@@ -64,40 +62,6 @@ const GATEWAY_SYNC_WAVE = {
   split: "1",
   retiring: "-1",
 } as const;
-
-/**
- * Refuse to synth a split-role stage whose image still keeps its database on
- * the shared volume.
- *
- * A pre-PostgreSQL Scout image runs `DATABASE_URL=file:/data/db.sqlite`, which
- * puts that stage's live database on the same ReadWriteOnce claim the report
- * lake uses. A second pod there means two processes holding one SQLite database
- * file open, so the co-mount this split depends on is only sound once the
- * stage's database has moved to PostgreSQL.
- *
- * Throwing at synth time is the point: a stage set to `split` in
- * `SCOUT_GATEWAY_TOPOLOGY` before its pin crosses over fails the build rather
- * than reaching a cluster.
- *
- * Only `split` is checked. A `retiring` stage is exempt, and deliberately so:
- * the instruction this very error gives for a pin rollback is to move the stage
- * to `retiring`, so checking that state too would refuse to render the exact
- * remedy it prescribes. The exemption is sound because retirement is what
- * removes the second pod — a retiring stage renders the gateway at zero
- * replicas, so there is no concurrent opener of the SQLite file to protect
- * against.
- */
-export function assertStageCanHostSplitRoles(
-  stage: Stage,
-  imageVersion: string,
-): void {
-  if (scoutImageUsesPostgres(imageVersion, postgresImageDigests)) return;
-  throw new Error(
-    `Scout ${stage} cannot host split runtime roles: its pinned image ${imageVersion} stores the database as SQLite at /data/db.sqlite on the same ReadWriteOnce claim as the report lake, so the split's second pod would hold that SQLite database file open concurrently. ` +
-      `If you are setting ${stage} to "split" in SCOUT_GATEWAY_TOPOLOGY, promote it to a PostgreSQL-contract image first. ` +
-      `If you are rolling ${stage}'s pin back past the PostgreSQL boundary, set ${stage} to "retiring" in SCOUT_GATEWAY_TOPOLOGY in the same change — that returns the shard to the single combined pod and scales the gateway to zero ahead of it, so the rollback completes without an operator scaling anything by hand.`,
-  );
-}
 
 /**
  * The role label, so a metrics series or a NetworkPolicy can name the runtime

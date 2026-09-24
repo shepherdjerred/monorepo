@@ -37,10 +37,9 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
  * ## Why this is a table and not a predicate
  *
  * Topology must never appear as a side effect of a version bump: a stage runs
- * the split because someone wrote it here, and `assertStageCanHostSplitRoles`
- * then proves that stage is actually safe to split. A `Record<Stage, …>` rather
- * than a list so a new stage is a compile error instead of silently defaulting
- * to whatever the absent case happens to be.
+ * the split because someone wrote it here. A `Record<Stage, …>` rather than a
+ * list so a new stage is a compile error instead of silently defaulting to
+ * whatever the absent case happens to be.
  */
 export type ScoutGatewayTopology = "split" | "retiring" | "absent";
 

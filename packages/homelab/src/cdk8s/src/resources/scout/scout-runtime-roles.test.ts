@@ -1,24 +1,17 @@
-import { describe, expect, test, vi } from "vitest";
-import { App } from "cdk8s";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import {
   findResource,
   scoutResources,
   scoutResourcesWithGatewayTopology,
   temporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/scout-test-resources.ts";
-import { assertStageCanHostSplitRoles } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import {
   gatewayTopologyRunsRole,
   SCOUT_GATEWAY_TOPOLOGY,
   SCOUT_STAGES,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 import { SCOUT_GATEWAY_OWNER_BY_STAGE } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
-// Type-only, aliased: the helper below hands its callback the FRESHLY imported
-// chart factory, so the static binding exists purely to type that parameter.
-import type { createScoutChart as CreateScoutChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const EnvEntrySchema = z
   .object({
@@ -83,56 +76,6 @@ function envValue(
   )?.value;
 }
 
-/**
- * Render beta with its pin rolled back past the PostgreSQL boundary.
- *
- * Both directions of the guard have to be exercised through the REAL render
- * path rather than by calling the predicate: the hazard only exists once
- * `createScoutDeployment` has composed DATABASE_URL from the rolled-back pin.
- * This drives the real catalog through the documented
- * HOMELAB_VERSION_CATALOG_JSON override, so it survives a change to how the
- * contract is represented.
- *
- * The fixture is a synthetic digest rather than a real pin on purpose. An
- * earlier version used prod's live pin as the SQLite example, which stopped
- * being one the moment prod was promoted onto the PostgreSQL contract — a test
- * that silently inverts when an unrelated Renovate bump lands is worse than no
- * test. Any digest absent from the catalog's contract set exercises the same
- * branch, permanently.
- */
-async function withBetaPinRolledBackPastPostgres(
-  assert: (createScoutChart: typeof CreateScoutChart) => void,
-): Promise<void> {
-  const CatalogSchema = z.looseObject({
-    entries: z.array(z.looseObject({ name: z.string(), value: z.string() })),
-  });
-  const rolledBack = CatalogSchema.parse(
-    structuredClone(rawCatalog satisfies unknown),
-  );
-  for (const entry of rolledBack.entries) {
-    if (entry.name === "shepherdjerred/scout-for-lol/beta") {
-      // A real-looking pin whose digest is absent from every contract note.
-      entry.value = `2.0.0-1@sha256:${"0".repeat(64)}`;
-    }
-  }
-
-  const previous = Bun.env["HOMELAB_VERSION_CATALOG_JSON"];
-  Bun.env["HOMELAB_VERSION_CATALOG_JSON"] = JSON.stringify(rolledBack);
-  vi.resetModules();
-  try {
-    const { createScoutChart } =
-      await import("@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts");
-    assert(createScoutChart);
-  } finally {
-    if (previous === undefined) {
-      delete Bun.env["HOMELAB_VERSION_CATALOG_JSON"];
-    } else {
-      Bun.env["HOMELAB_VERSION_CATALOG_JSON"] = previous;
-    }
-    vi.resetModules();
-  }
-}
-
 describe("Scout runtime role assignment", () => {
   test("beta's backend Deployment owns the application role", () => {
     const backend = roleDeployment("beta", "scout-beta-scout-backend");
@@ -190,68 +133,6 @@ describe("Scout runtime role assignment", () => {
 describe("Scout split-topology opt-in", () => {
   test("only beta is opted into the split today", () => {
     expect(SCOUT_GATEWAY_TOPOLOGY).toEqual({ beta: "split", prod: "absent" });
-  });
-
-  /**
-   * The predicate gates the human decision rather than making it, so it has to
-   * hold for every stage already running the split.
-   */
-  test("every opted-in stage's pinned image is on the PostgreSQL contract", () => {
-    for (const stage of SCOUT_STAGES.filter((candidate) =>
-      gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY[candidate]),
-    )) {
-      expect(() => {
-        assertStageCanHostSplitRoles(
-          stage,
-          versions[`shepherdjerred/scout-for-lol/${stage}`],
-        );
-      }).not.toThrow();
-    }
-  });
-
-  /**
-   * The other direction: opting in a stage whose image still keeps its database
-   * on the shared claim must fail synth, and must say why rather than failing
-   * obscurely.
-   *
-   * The fixture is a synthetic digest rather than a real pin on purpose. An
-   * earlier version of this test used prod's live pin as the SQLite example,
-   * which stopped being one the moment prod was promoted onto the PostgreSQL
-   * contract — a test that silently inverts when an unrelated Renovate bump
-   * lands is worse than no test. Any digest absent from the catalog's contract
-   * set exercises the same branch, permanently.
-   */
-  test("opting in a SQLite-pinned stage fails synth and names the hazard", () => {
-    const unlistedDigestPin = `2.0.0-1@sha256:${"0".repeat(64)}`;
-    expect(() => {
-      assertStageCanHostSplitRoles("prod", unlistedDigestPin);
-    }).toThrow(/SQLite/);
-    expect(() => {
-      assertStageCanHostSplitRoles("prod", unlistedDigestPin);
-    }).toThrow(/SQLite database file open concurrently/);
-    // And it tells the operator what to do about it in the add direction.
-    expect(() => {
-      assertStageCanHostSplitRoles("prod", unlistedDigestPin);
-    }).toThrow(/promote it to a PostgreSQL-contract image first/);
-  });
-
-  /**
-   * The rollback direction, exercised through the real render path rather than
-   * by calling the guard directly.
-   *
-   * A stage's SCOUT_GATEWAY_TOPOLOGY entry is a standing decision, but the
-   * property it relies on lives in a pin that moves independently: rolling
-   * beta's image back past the PostgreSQL boundary flips DATABASE_URL to the
-   * SQLite file on the shared claim while the role assignment and the gateway
-   * pod stand. Nothing about the topology entry changes, so only a check on the
-   * render path catches it.
-   */
-  test("rolling a split stage's pin back past the boundary fails synth", async () => {
-    await withBetaPinRolledBackPastPostgres((createScoutChart) => {
-      expect(() => {
-        createScoutChart(new App(), "beta");
-      }).toThrow(/rolling .*beta.*pin back past the PostgreSQL boundary/s);
-    });
   });
 });
 
@@ -743,27 +624,6 @@ describe("Scout gateway retirement", () => {
         resource.metadata.name.includes("gateway"),
       ),
     ).toEqual([]);
-  });
-
-  /**
-   * The guard's message tells an operator rolling a pin back past the
-   * PostgreSQL boundary to set the stage to `retiring`. That remedy has to
-   * actually render, or the instruction sends them into a synth failure.
-   *
-   * Driven through the real catalog override rather than by calling the guard,
-   * so it proves the render path an operator would actually take.
-   */
-  test("retiring renders on a pin rolled back past the PostgreSQL boundary", async () => {
-    await withBetaPinRolledBackPastPostgres((createScoutChart) => {
-      // Still refuses while split — the hazard is real and unchanged.
-      expect(() => {
-        createScoutChart(new App(), "beta", undefined, "split");
-      }).toThrow(/rolling .*beta.*pin back past the PostgreSQL boundary/s);
-      // And renders the remedy it prescribes.
-      expect(() => {
-        createScoutChart(new App(), "beta", undefined, "retiring");
-      }).not.toThrow();
-    });
   });
 });
 

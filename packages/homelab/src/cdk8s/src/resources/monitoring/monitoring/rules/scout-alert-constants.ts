@@ -31,8 +31,8 @@ export const SCOUT_TRPC_NON_FAULT_CODES = [
  * scout-gateway Deployment ships in the same revision as this line, which is
  * the whole reason the flip lives here rather than in a follow-up — the alert
  * and the topology change together and neither is briefly true alone. Prod
- * stays `combined`; its split is a later gate, blocked on nothing now that its
- * pin carries the PostgreSQL contract, but not taken yet.
+ * stays `combined`; its split is a later gate, blocked on nothing now that
+ * Scout is PostgreSQL-only, but not taken yet.
  *
  * Pointing a stage at a role it does not run would not degrade gracefully — the
  * series simply would not exist, the `absent()` guard would fire, and that

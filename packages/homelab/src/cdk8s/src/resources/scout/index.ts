@@ -29,10 +29,7 @@ import {
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import {
-  assertStageCanHostSplitRoles,
-  createScoutGatewayDeployment,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import { createScoutGatewayDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import {
   gatewayTopologyRunsRole,
@@ -198,22 +195,6 @@ export function createScoutDeployment(
   // pod — which runs `application` — neither mounts nor needs it. On an unsplit
   // stage the combined pod keeps it exactly as #2870 wired it.
   const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
-  // Gate the whole split render, not just the gateway Deployment at the end of
-  // this function. A stage's SCOUT_GATEWAY_TOPOLOGY entry is a standing
-  // decision, but the property it depends on lives in a pin that moves
-  // underneath it: a rollback to a pre-Postgres digest flips DATABASE_URL back
-  // to the SQLite file on the shared claim while the role assignment and the
-  // gateway pod stand, which is two processes on one SQLite database. Checking
-  // here means that combination cannot be rendered at all, in either direction.
-  //
-  // Keyed on `split` rather than on "renders gateway resources" because a
-  // `retiring` stage has already given the shard back to the combined pod and
-  // scaled the gateway to zero — there is no second opener of the SQLite file —
-  // and because retiring is the remedy the guard's own message prescribes for
-  // this exact rollback.
-  if (splitTopology) {
-    assertStageCanHostSplitRoles(stage, imageVersion);
-  }
   const voiceSecretMount =
     stage === "beta"
       ? {
