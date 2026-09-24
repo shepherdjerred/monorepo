@@ -59,6 +59,7 @@ bun run windows:analysis # compiler, analyzers, architecture, duplication
 bun run windows:format   # CSharpier and XAML Styler
 bun run windows:mutation # explicit Stryker.NET and cargo-mutants deep gate
 bun run windows:package  # signed MSIX under AppPackages/
+bun run windows:cross-package # unsigned MSIX built on Linux
 bun run windows:run      # register debug identity and launch
 bun run windows:parity-check
 bun run windows:e2e
@@ -85,6 +86,22 @@ $installer = Get-ChildItem .\packages\tasknotes-windows\AppPackages -Recurse -Fi
   Select-Object -First 1
 & $installer.FullName -Force -SkipLoggingTelemetry
 ```
+
+## Linux package build
+
+`bun run windows:cross-package` builds every Windows project and the unsigned
+MSIX on Linux, in the pinned
+[`windows-cross-compiler-winui`](../windows-cross-compiler/) image, and writes
+the package to `AppPackages/cross/`. Buildkite runs the same build on every
+change as `tasknotes-windows-cross`. The image needs a linux/amd64 container
+host.
+
+The Rust core cross-compiles for `x86_64-pc-windows-msvc` with cargo-xwin, and
+`Directory.Build.targets` imports the image's `$(WindowsCrossTargets)`, which
+runs Microsoft's XAML compiler, `makepri`, and `makeappx` under Wine. The
+package README documents the Wine patches and the build's limitations. This is
+compile and package evidence only: packaged runtime, UI Automation, and parity
+claims still require `windows:verify` on Windows.
 
 Portable Linux CI uses `build`, `typecheck`, `lint`, `coverage:portable`, and
 `test:ci`. The checked-in `projects.json` classifies every project, and the
