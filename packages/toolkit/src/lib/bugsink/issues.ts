@@ -1,40 +1,39 @@
-import { bugsinkRequest, bugsinkRequestPostRaw } from "./client.ts";
-import {
-  BugsinkIssueSchema,
-  BugsinkPaginatedResponseSchema,
-} from "./schemas.ts";
+import { bugsinkRequest, bugsinkRequestPaginated, bugsinkRequestPostRaw } from "./client.ts";
+import { BugsinkIssueSchema } from "./schemas.ts";
 import type { BugsinkIssue } from "./types.ts";
 import { getProjects } from "./queries.ts";
 
 export type GetIssuesOptions = {
   project?: string | undefined;
   limit?: number | undefined;
+  maxPages?: number | undefined;
 };
 
 export async function getIssues(
   options: GetIssuesOptions = {},
 ): Promise<BugsinkIssue[]> {
+  if (options.limit === 0) {
+    return [];
+  }
+
   const params: Record<string, string> = {};
 
   if (options.project != null && options.project.length > 0) {
     params["project"] = await resolveProjectFilter(options.project);
   }
 
-  if (options.limit != null) {
-    params["limit"] = String(options.limit);
-  }
-
-  const result = await bugsinkRequest(
+  const result = await bugsinkRequestPaginated(
     "/issues/",
-    BugsinkPaginatedResponseSchema(BugsinkIssueSchema),
+    BugsinkIssueSchema,
     params,
+    { limit: options.limit, maxPages: options.maxPages },
   );
 
   if (!result.success || !result.data) {
     throw new Error(result.error ?? "Failed to fetch issues");
   }
 
-  return result.data.results;
+  return result.data;
 }
 
 async function resolveProjectFilter(project: string): Promise<string> {
