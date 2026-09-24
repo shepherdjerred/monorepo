@@ -7,7 +7,7 @@ hold only scoped invariants that agents must keep in context.
 
 | Package                                                         | Description                                                                              |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [alert-dashboard](alert-dashboard/)                             | Homelab alert dashboard — Postal email ingest, Grafana previews, enforced hexagonal core |
+| [alert-dashboard](alert-dashboard/)                             | Ops dashboard — snapshot overview, alert ledger, digest email, Grafana previews          |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                          |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                 |
 | [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports      |
@@ -62,6 +62,8 @@ hold only scoped invariants that agents must keep in context.
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
+| [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
+| [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
 | [voice-assistant](voice-assistant/)               | Shared wake-word voice pipeline (local cascade + OpenAI Realtime turn)         |
 
 ## Plugins & extensions
