@@ -4,7 +4,9 @@
   "title": "LLM model catalog",
   "description": "Language-neutral source of truth for the active LLM models we use. Token prices are USD per 1,000,000 tokens; image prices are USD per image. Validated at runtime by Zod (TS) and Pydantic (Python).",
   "type": "object",
-  "additionalProperties": { "$ref": "#/$defs/modelEntry" },
+  "additionalProperties": {
+    "$ref": "#/$defs/modelEntry"
+  },
   "$defs": {
     "modelEntry": {
       "type": "object",
@@ -19,22 +21,51 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "provider": { "enum": ["openai", "anthropic", "google"] },
-        "displayName": { "type": "string", "minLength": 1 },
-        "description": { "type": "string" },
-        "contextWindow": { "type": "integer", "exclusiveMinimum": 0 },
-        "pinnedContextWindow": { "type": "boolean" },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider": {
+          "enum": ["openai", "anthropic", "google"]
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "contextWindow": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "pinnedContextWindow": {
+          "type": "boolean"
+        },
         "acceptedUpstreamPricing": {
           "type": "object",
-          "description": "A divergence a human reviewed and decided to keep. Each field records the pair — the upstream value declined and the catalog value held — and both must still match for the divergence to stay accepted. At least one of input/output is required: acceptances are matched per field, so a block with neither is inert and only reads like a decision that was made.",
+          "description": "A divergence a human reviewed and decided to keep. Each field records the pair \u2014 the upstream value declined and the catalog value held \u2014 and both must still match for the divergence to stay accepted. At least one of input/output is required: acceptances are matched per field, so a block with neither is inert and only reads like a decision that was made.",
           "required": ["reason", "expiresAt"],
-          "anyOf": [{ "required": ["input"] }, { "required": ["output"] }],
+          "anyOf": [
+            {
+              "required": ["input"]
+            },
+            {
+              "required": ["output"]
+            }
+          ],
           "additionalProperties": false,
           "properties": {
-            "input": { "$ref": "#/$defs/acceptedPrice" },
-            "output": { "$ref": "#/$defs/acceptedPrice" },
-            "reason": { "type": "string", "minLength": 1 },
+            "input": {
+              "$ref": "#/$defs/acceptedPrice"
+            },
+            "output": {
+              "$ref": "#/$defs/acceptedPrice"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
             "expiresAt": {
               "type": "string",
               "format": "date-time",
@@ -42,19 +73,31 @@
             }
           }
         },
-        "status": { "enum": ["current", "preview", "deprecated"] },
-        "category": { "type": "string" },
+        "status": {
+          "enum": ["current", "preview", "deprecated"]
+        },
+        "category": {
+          "type": "string"
+        },
         "routes": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "openRouter": {
+            "native": {
               "type": "object",
-              "required": ["modelId", "endpoint"],
+              "required": ["provider", "modelId", "endpoint"],
               "additionalProperties": false,
               "properties": {
-                "modelId": { "type": "string", "minLength": 1 },
-                "endpoint": { "enum": ["language", "embedding", "image"] }
+                "provider": {
+                  "enum": ["openai", "anthropic", "google"]
+                },
+                "modelId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "endpoint": {
+                  "enum": ["language", "embedding", "image"]
+                }
               }
             },
             "claudeAgentSdk": {
@@ -62,7 +105,10 @@
               "required": ["modelId"],
               "additionalProperties": false,
               "properties": {
-                "modelId": { "type": "string", "minLength": 1 }
+                "modelId": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             },
             "codexSdk": {
@@ -70,7 +116,10 @@
               "required": ["modelId"],
               "additionalProperties": false,
               "properties": {
-                "modelId": { "type": "string", "minLength": 1 }
+                "modelId": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             }
           }
@@ -82,12 +131,67 @@
               "required": ["modality", "input", "output"],
               "additionalProperties": false,
               "properties": {
-                "modality": { "const": "text" },
-                "input": { "type": "number", "minimum": 0 },
-                "output": { "type": "number", "minimum": 0 },
-                "cachedInput": { "type": "number", "minimum": 0 },
-                "cacheRead": { "type": "number", "minimum": 0 },
-                "cacheWrite": { "type": "number", "minimum": 0 },
+                "modality": {
+                  "const": "text"
+                },
+                "input": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "output": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "cachedInput": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "cacheRead": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "cacheWrite": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "cacheWriteByTtl": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "5m": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "1h": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "serviceTierMultipliers": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "priority": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "batch": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                },
+                "serverToolPricing": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "webSearchPerRequest": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
                 "longContextSurcharge": {
                   "$ref": "#/$defs/longContextSurcharge"
                 }
@@ -98,8 +202,13 @@
               "required": ["modality", "perImage"],
               "additionalProperties": false,
               "properties": {
-                "modality": { "const": "image" },
-                "perImage": { "type": "number", "minimum": 0 }
+                "modality": {
+                  "const": "image"
+                },
+                "perImage": {
+                  "type": "number",
+                  "minimum": 0
+                }
               }
             }
           ]
@@ -120,21 +229,47 @@
           "properties": {
             "inputModalities": {
               "type": "array",
-              "items": { "enum": ["text", "image", "audio", "video"] }
+              "items": {
+                "enum": ["text", "image", "audio", "video"]
+              }
             },
             "outputModalities": {
               "type": "array",
-              "items": { "enum": ["text", "image", "embedding"] }
+              "items": {
+                "enum": ["text", "image", "embedding"]
+              }
             },
-            "tools": { "type": "boolean" },
-            "structuredOutputs": { "type": "boolean" },
-            "webSearch": { "type": "boolean" },
-            "reasoning": { "type": "boolean" },
-            "supportsTemperature": { "type": "boolean" },
-            "supportsTopP": { "type": "boolean" },
-            "maxTokens": { "type": "integer", "exclusiveMinimum": 0 },
-            "adaptiveThinking": { "type": "boolean" },
-            "effortTiers": { "type": "array", "items": { "type": "string" } }
+            "tools": {
+              "type": "boolean"
+            },
+            "structuredOutputs": {
+              "type": "boolean"
+            },
+            "webSearch": {
+              "type": "boolean"
+            },
+            "reasoning": {
+              "type": "boolean"
+            },
+            "supportsTemperature": {
+              "type": "boolean"
+            },
+            "supportsTopP": {
+              "type": "boolean"
+            },
+            "maxTokens": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "adaptiveThinking": {
+              "type": "boolean"
+            },
+            "effortTiers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -149,9 +284,18 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "thresholdInputTokens": { "type": "integer", "minimum": 0 },
-        "inputMultiplier": { "type": "number", "exclusiveMinimum": 0 },
-        "outputMultiplier": { "type": "number", "exclusiveMinimum": 0 }
+        "thresholdInputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inputMultiplier": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "outputMultiplier": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
     "acceptedPrice": {
@@ -160,8 +304,14 @@
       "required": ["upstream", "catalog"],
       "additionalProperties": false,
       "properties": {
-        "upstream": { "type": "number", "minimum": 0 },
-        "catalog": { "type": "number", "minimum": 0 }
+        "upstream": {
+          "type": "number",
+          "minimum": 0
+        },
+        "catalog": {
+          "type": "number",
+          "minimum": 0
+        }
       }
     }
   }

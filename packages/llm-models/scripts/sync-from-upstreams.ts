@@ -3,8 +3,8 @@
  * Cross-check the catalog against community datasets and report/apply drift.
  *
  * Source of truth is still our own `src/catalog.json`. This script fetches the
- * public models.dev and LiteLLM datasets for pricing/context drift plus
- * OpenRouter's ordinary and embedding catalogs for route availability. For
+ * public models.dev and LiteLLM datasets for pricing/context drift, and checks
+ * that every routable model still declares a native provider route. For
  * each text model we list, it compares the unambiguous numeric fields.
  * It:
  *   - rewrites our values to the upstream value when they drift (default), and
@@ -46,13 +46,26 @@
  */
 import { z } from "zod";
 import { CatalogSchema, type Catalog, type ModelEntry } from "#src/index.ts";
-import {
-  indexOpenRouterRoutes,
-  missingOpenRouterRoute,
-  OPENROUTER_EMBEDDINGS_URL,
-  OPENROUTER_MODELS_URL,
-} from "#scripts/openrouter-routes.ts";
 import { emit, emitReport } from "#scripts/report.ts";
+
+/**
+ * Report a model that should be callable but declares no native route.
+ *
+ * Deprecated entries keep their prices for historical attribution and are
+ * allowed to lose their route; a `current` or `preview` entry without one is a
+ * model application code can ask for and the runtime will refuse, so it fails
+ * the sync rather than waiting to throw in production.
+ *
+ * This is a catalog invariant, not an upstream reachability probe: confirming a
+ * model is still served would mean authenticating to all three providers from
+ * an unattended weekly job. Pricing drift already covers the "quietly changed"
+ * case for text models, and a withdrawn model shows up as overlay-only.
+ */
+function missingNativeRoute(id: string, entry: ModelEntry): string | undefined {
+  return entry.status === "deprecated" || entry.routes.native !== undefined
+    ? undefined
+    : `${id} (${entry.status}) has no native route`;
+}
 
 const MODELS_DEV_URL = "https://models.dev/api.json";
 const LITELLM_URL =
@@ -598,16 +611,9 @@ async function main(): Promise<void> {
   const rawText = await Bun.file(CATALOG_PATH).text();
   const rawCatalog = UnknownRecord.parse(JSON.parse(rawText));
   const catalog: Catalog = CatalogSchema.parse(JSON.parse(rawText));
-  const [
-    modelsDevRaw,
-    liteLlmRaw,
-    openRouterModelsRaw,
-    openRouterEmbeddingsRaw,
-  ] = await Promise.all([
+  const [modelsDevRaw, liteLlmRaw] = await Promise.all([
     fetchJson(MODELS_DEV_URL),
     fetchJson(LITELLM_URL),
-    fetchJson(OPENROUTER_MODELS_URL),
-    fetchJson(OPENROUTER_EMBEDDINGS_URL),
   ]);
   const modelsDev = indexModelsDev(modelsDevRaw);
   const liteLlm = indexLiteLlm(liteLlmRaw);
@@ -620,22 +626,17 @@ async function main(): Promise<void> {
         .map((entry) => entry.provider),
     ),
   );
-  const openRouterRoutes = indexOpenRouterRoutes(
-    openRouterModelsRaw,
-    openRouterEmbeddingsRaw,
-  );
-
   const now = new Date();
   const drifted: string[] = [];
   const models: Record<string, ModelVerdict> = {};
   const overlayOnly: string[] = [];
   const notChecked: string[] = [];
-  const missingOpenRouterRoutes: string[] = [];
+  const missingNativeRoutes: string[] = [];
 
   for (const [id, entry] of Object.entries(catalog)) {
-    const missingRoute = missingOpenRouterRoute(id, entry, openRouterRoutes);
+    const missingRoute = missingNativeRoute(id, entry);
     if (missingRoute !== undefined) {
-      missingOpenRouterRoutes.push(missingRoute);
+      missingNativeRoutes.push(missingRoute);
     }
     if (entry.pricing.modality !== "text") {
       notChecked.push(`${id} (image — per-image pricing not in upstreams)`);
@@ -678,13 +679,13 @@ async function main(): Promise<void> {
   };
   emitReport(report, check);
 
-  if (missingOpenRouterRoutes.length > 0) {
+  if (missingNativeRoutes.length > 0) {
     emit(
-      `\nMissing current OpenRouter routes:\n  ${missingOpenRouterRoutes.join("\n  ")}`,
+      `\nMissing native provider routes:\n  ${missingNativeRoutes.join("\n  ")}`,
     );
     process.exitCode = 1;
   } else {
-    emit("\nAll current and preview OpenRouter routes are available.");
+    emit("\nAll current and preview models declare a native route.");
   }
 
   if (!check && drifted.length > 0) {

@@ -23,6 +23,20 @@ export const LongContextSurchargeSchema = z.strictObject({
 });
 export type LongContextSurcharge = z.infer<typeof LongContextSurchargeSchema>;
 
+/**
+ * How long a cache entry lives. Providers charge a different write price per
+ * TTL, so the bucket is a pricing dimension, not a detail.
+ */
+export const CacheTtlSchema = z.enum(["5m", "1h"]);
+export type CacheTtl = z.infer<typeof CacheTtlSchema>;
+
+/**
+ * The billing tier a request ran under, as the provider reports it back.
+ * `batch` is roughly half price; `priority` is a premium.
+ */
+export const ServiceTierSchema = z.enum(["standard", "priority", "batch"]);
+export type ServiceTier = z.infer<typeof ServiceTierSchema>;
+
 /** USD per 1M tokens. Cache fields describe provider-specific discounted reads and billed writes. */
 export const TextPricingSchema = z.strictObject({
   modality: z.literal("text"),
@@ -31,6 +45,39 @@ export const TextPricingSchema = z.strictObject({
   cachedInput: z.number().nonnegative().optional(),
   cacheRead: z.number().nonnegative().optional(),
   cacheWrite: z.number().nonnegative().optional(),
+  /**
+   * Per-TTL cache-write prices, where the provider charges by bucket. Takes
+   * precedence over the flat `cacheWrite` for tokens whose TTL is known;
+   * `cacheWrite` remains the fallback for a provider that reports an
+   * undifferentiated total.
+   */
+  cacheWriteByTtl: z
+    .strictObject({
+      "5m": z.number().nonnegative().optional(),
+      "1h": z.number().nonnegative().optional(),
+    })
+    .optional(),
+  /**
+   * Multipliers applied to the whole turn when the response reports a
+   * non-standard `service_tier`. Absent means the model is not offered on that
+   * tier, and a request claiming it is a contract violation worth failing on
+   * rather than silently pricing at 1.0.
+   */
+  serviceTierMultipliers: z
+    .strictObject({
+      priority: z.number().positive().optional(),
+      batch: z.number().positive().optional(),
+    })
+    .optional(),
+  /**
+   * Server-side tools the provider bills per request rather than per token.
+   * USD per request, NOT per 1M — these are counted, not measured.
+   */
+  serverToolPricing: z
+    .strictObject({
+      webSearchPerRequest: z.number().nonnegative().optional(),
+    })
+    .optional(),
   longContextSurcharge: LongContextSurchargeSchema.optional(),
 });
 export type TextPricing = z.infer<typeof TextPricingSchema>;
@@ -63,18 +110,23 @@ export const ModelCapabilitiesSchema = z.strictObject({
 });
 export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
 
-export const OpenRouterEndpointSchema = z.enum([
-  "language",
-  "embedding",
-  "image",
-]);
-export type OpenRouterEndpoint = z.infer<typeof OpenRouterEndpointSchema>;
+export const ModelEndpointSchema = z.enum(["language", "embedding", "image"]);
+export type ModelEndpoint = z.infer<typeof ModelEndpointSchema>;
 
-export const OpenRouterRouteSchema = z.strictObject({
+/**
+ * How to reach this model on its first-party provider.
+ *
+ * `provider` is the transport, which is not always the creator: Claude served
+ * through Vertex would carry `provider: "google"` with `ModelEntry.provider`
+ * still `"anthropic"`. Keeping them separate is what lets cost attribution and
+ * credential selection disagree when they legitimately should.
+ */
+export const NativeRouteSchema = z.strictObject({
+  provider: ProviderSchema,
   modelId: z.string().min(1),
-  endpoint: OpenRouterEndpointSchema,
+  endpoint: ModelEndpointSchema,
 });
-export type OpenRouterRoute = z.infer<typeof OpenRouterRouteSchema>;
+export type NativeRoute = z.infer<typeof NativeRouteSchema>;
 
 export const NativeSdkRouteSchema = z.strictObject({
   modelId: z.string().min(1),
@@ -82,7 +134,12 @@ export const NativeSdkRouteSchema = z.strictObject({
 export type NativeSdkRoute = z.infer<typeof NativeSdkRouteSchema>;
 
 export const ModelRoutesSchema = z.strictObject({
-  openRouter: OpenRouterRouteSchema.optional(),
+  /**
+   * Optional on purpose: a model whose provider has retired it keeps its
+   * catalog entry so historical spend still prices, but loses its route.
+   * `requireNativeRoute` is what turns that into a loud failure at call time.
+   */
+  native: NativeRouteSchema.optional(),
   claudeAgentSdk: NativeSdkRouteSchema.optional(),
   codexSdk: NativeSdkRouteSchema.optional(),
 });
@@ -197,59 +254,70 @@ export function getPricing(id: string): ModelPricing | undefined {
   return MODELS[id]?.pricing;
 }
 
-export function getOpenRouterRoute(id: string): OpenRouterRoute | undefined {
-  return MODELS[id]?.routes.openRouter;
+export function getNativeRoute(id: string): NativeRoute | undefined {
+  return MODELS[id]?.routes.native;
 }
 
-// A gateway route is not guaranteed to be unique: a dated snapshot and its
-// undated alias can share one OpenRouter model (anthropic/claude-haiku-4.5 is
+// A provider route is not guaranteed to be unique: a dated snapshot and its
+// undated alias can share one upstream model (anthropic's claude-haiku-4.5 is
 // reached by both claude-haiku-4-5 and claude-haiku-4-5-20251001). A
 // first-match reverse lookup would attribute every dated run to the alias, so
 // ambiguous routes resolve to nothing and callers fall back to the raw route
 // id — an unresolved route is recoverable, a confidently wrong one is not.
-const CATALOG_IDS_BY_OPEN_ROUTER_ROUTE = ((): ReadonlyMap<
+//
+// Keyed by provider *and* model id, because two providers may legitimately
+// serve the same upstream name (Claude on Anthropic and on Vertex).
+function nativeRouteKey(provider: Provider, routeModelId: string): string {
+  return `${provider} ${routeModelId}`;
+}
+
+const CATALOG_IDS_BY_NATIVE_ROUTE = ((): ReadonlyMap<
   string,
   readonly string[]
 > => {
   const byRoute = new Map<string, string[]>();
   for (const model of Object.values(MODELS)) {
-    const routeModelId = model.routes.openRouter?.modelId;
-    if (routeModelId === undefined) continue;
-    const ids = byRoute.get(routeModelId) ?? [];
+    const route = model.routes.native;
+    if (route === undefined) continue;
+    const key = nativeRouteKey(route.provider, route.modelId);
+    const ids = byRoute.get(key) ?? [];
     ids.push(model.id);
-    byRoute.set(routeModelId, ids);
+    byRoute.set(key, ids);
   }
   return byRoute;
 })();
 
 /**
- * Resolve a gateway route back to the repository's stable catalog id.
+ * Resolve a provider route back to the repository's stable catalog id.
  *
  * Returns undefined when the route is unknown *or* when more than one catalog
  * entry claims it, so attribution never reports the wrong model.
  */
-export function modelIdForOpenRouterRoute(
+export function modelIdForNativeRoute(
+  provider: Provider,
   routeModelId: string,
 ): string | undefined {
-  const ids = CATALOG_IDS_BY_OPEN_ROUTER_ROUTE.get(routeModelId);
+  const ids = CATALOG_IDS_BY_NATIVE_ROUTE.get(
+    nativeRouteKey(provider, routeModelId),
+  );
   return ids?.length === 1 ? ids[0] : undefined;
 }
 
-export function requireOpenRouterRoute(
+export function requireNativeRoute(
   id: string,
-  endpoint?: OpenRouterEndpoint,
-): OpenRouterRoute {
+  endpoint?: ModelEndpoint,
+): NativeRoute {
   const model = getModel(id);
   if (model === undefined) {
     throw new Error(`Unknown model id: ${id}`);
   }
-  const route = model.routes.openRouter;
+  const route = model.routes.native;
   if (route === undefined) {
-    throw new Error(`Model ${id} has no OpenRouter route`);
+    throw new Error(`Model ${id} has no native provider route`);
   }
   if (endpoint !== undefined && route.endpoint !== endpoint) {
     throw new Error(
-      `Model ${id} uses OpenRouter ${route.endpoint}, not ${endpoint}`,
+      `Model ${id} uses ${route.provider} ${route.endpoint}, not ${endpoint}`,
     );
   }
   return route;
@@ -278,11 +346,26 @@ export type TextUsage = {
   cacheReadTokens?: number;
   /** Anthropic: cache-creation tokens (separate from `inputTokens`). */
   cacheWriteTokens?: number;
+  /**
+   * Anthropic `usage.cache_creation`: the same tokens as `cacheWriteTokens`,
+   * split by TTL bucket. When present this is authoritative and
+   * `cacheWriteTokens` is ignored, because the two describe one quantity and
+   * adding both would bill every cache write twice.
+   */
+  cacheWriteTokensByTtl?: Partial<Record<CacheTtl, number>>;
+  /** The tier the provider reports the turn ran under. Absent means `standard`. */
+  serviceTier?: ServiceTier;
+  /** Server-side tool invocations, billed per request rather than per token. */
+  serverToolRequests?: { webSearch?: number };
 };
 
 /**
  * Total USD for a text-model turn. Returns `undefined` for unknown or
- * image-only models (callers can surface "no list price on file").
+ * image-only models, and for a turn this catalog cannot price honestly — a
+ * non-standard service tier with no multiplier on file, or a billed server
+ * tool with no per-request price. Callers surface that as "no list price on
+ * file" rather than a confidently wrong number; the catalog-vs-billed
+ * discrepancy alert is what catches a systematic gap.
  *
  * Handles both billing conventions: OpenAI passes `cachedInputTokens` as a
  * subset of `inputTokens`; Anthropic passes `cacheRead/WriteTokens` separately
@@ -296,25 +379,104 @@ export function costForTextUsage(
   if (pricing?.modality !== "text") {
     return undefined;
   }
+
+  const tierMultiplier = serviceTierMultiplier(pricing, usage.serviceTier);
+  if (tierMultiplier === undefined) {
+    return undefined;
+  }
+
+  const toolCost = serverToolCost(pricing, usage.serverToolRequests);
+  if (toolCost === undefined) {
+    return undefined;
+  }
+
   const cachedInput = usage.cachedInputTokens ?? 0;
   const cacheRead = usage.cacheReadTokens ?? 0;
-  const cacheWrite = usage.cacheWriteTokens ?? 0;
+  const cacheWrite = cacheWriteCost(pricing, usage);
   const uncachedInput = Math.max(0, usage.inputTokens - cachedInput);
-  const billedInputTokens = usage.inputTokens + cacheRead + cacheWrite;
+  const billedInputTokens =
+    usage.inputTokens + cacheRead + cacheWrite.billedTokens;
   const longContext = pricing.longContextSurcharge;
   const surchargeApplies =
     longContext !== undefined &&
     billedInputTokens > longContext.thresholdInputTokens;
   const inputMultiplier = surchargeApplies ? longContext.inputMultiplier : 1;
   const outputMultiplier = surchargeApplies ? longContext.outputMultiplier : 1;
-  const total =
+
+  const tokenCost =
     (uncachedInput * pricing.input +
       cachedInput * (pricing.cachedInput ?? pricing.input) +
-      cacheRead * (pricing.cacheRead ?? pricing.input) +
-      cacheWrite * (pricing.cacheWrite ?? pricing.input)) *
+      cacheRead * cacheReadPrice(pricing) +
+      cacheWrite.cost) *
       inputMultiplier +
     usage.outputTokens * pricing.output * outputMultiplier;
-  return total / 1_000_000;
+
+  return (tokenCost / 1_000_000 + toolCost) * tierMultiplier;
+}
+
+/**
+ * Price per 1M for reading a cached prompt prefix.
+ *
+ * The two providers name this field differently and only one of them uses
+ * `cacheRead`: Anthropic publishes an explicit cache-read rate, while OpenAI
+ * calls the same thing `cachedInput`. Falling straight back to `input` would
+ * bill an OpenAI cache read at the full uncached rate — a 10x overcharge on
+ * gpt-5.4-nano — so `cachedInput` sits between them in the chain.
+ */
+function cacheReadPrice(pricing: TextPricing): number {
+  return pricing.cacheRead ?? pricing.cachedInput ?? pricing.input;
+}
+
+/**
+ * Cache-write tokens and their unscaled cost (still per 1M, like the other
+ * token terms). The per-TTL breakdown wins where present, because it describes
+ * the same tokens as the flat total at a more accurate price.
+ */
+function cacheWriteCost(
+  pricing: TextPricing,
+  usage: TextUsage,
+): { billedTokens: number; cost: number } {
+  const flat = pricing.cacheWrite ?? pricing.input;
+  const byTtl = usage.cacheWriteTokensByTtl;
+  if (byTtl === undefined) {
+    const billedTokens = usage.cacheWriteTokens ?? 0;
+    return { billedTokens, cost: billedTokens * flat };
+  }
+  const fiveMinute = byTtl["5m"] ?? 0;
+  const hour = byTtl["1h"] ?? 0;
+  return {
+    billedTokens: fiveMinute + hour,
+    cost:
+      fiveMinute * (pricing.cacheWriteByTtl?.["5m"] ?? flat) +
+      hour * (pricing.cacheWriteByTtl?.["1h"] ?? flat),
+  };
+}
+
+/**
+ * The whole-turn multiplier for a reported service tier, or `undefined` when
+ * the model has no price on file for that tier.
+ */
+function serviceTierMultiplier(
+  pricing: TextPricing,
+  tier: ServiceTier | undefined,
+): number | undefined {
+  return tier === undefined || tier === "standard"
+    ? 1
+    : pricing.serviceTierMultipliers?.[tier];
+}
+
+/**
+ * USD for per-request server tools, or `undefined` when a tool was billed and
+ * no per-request price is on file.
+ */
+function serverToolCost(
+  pricing: TextPricing,
+  requests: TextUsage["serverToolRequests"],
+): number | undefined {
+  const webSearch = requests?.webSearch ?? 0;
+  if (webSearch === 0) return 0;
+  const perRequest = pricing.serverToolPricing?.webSearchPerRequest;
+  return perRequest === undefined ? undefined : webSearch * perRequest;
 }
 
 /** Price independent requests without combining their context lengths. */

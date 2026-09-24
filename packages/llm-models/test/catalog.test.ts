@@ -6,13 +6,13 @@ import {
   costForTextUsage,
   costForTextUsageByTurn,
   getModel,
-  getOpenRouterRoute,
+  getNativeRoute,
   getPerTokenPricing,
   getPricing,
   isModelId,
-  modelIdForOpenRouterRoute,
+  modelIdForNativeRoute,
   modelsByProvider,
-  requireOpenRouterRoute,
+  requireNativeRoute,
 } from "#src/index.ts";
 
 describe("catalog integrity", () => {
@@ -57,12 +57,12 @@ describe("catalog integrity", () => {
     }
   });
 
-  test("current and preview models have explicit OpenRouter routes", () => {
+  test("current and preview models have explicit native routes", () => {
     for (const model of Object.values(MODELS)) {
       expect(model.capabilities.inputModalities.length).toBeGreaterThan(0);
       expect(model.capabilities.outputModalities.length).toBeGreaterThan(0);
       if (model.status !== "deprecated") {
-        expect(model.routes.openRouter).toBeDefined();
+        expect(model.routes.native).toBeDefined();
       }
     }
   });
@@ -74,14 +74,21 @@ describe("catalog integrity", () => {
     expect(MODELS["gpt-5.6-sol"]?.routes.codexSdk?.modelId).toBe("gpt-5.6-sol");
   });
 
-  test("resolves OpenRouter routes back to stable ids", () => {
-    expect(modelIdForOpenRouterRoute("openai/gpt-5.6-sol")).toBe("gpt-5.6-sol");
-    expect(modelIdForOpenRouterRoute("missing/model")).toBeUndefined();
-    // A dated snapshot and its undated alias share this route, so resolving it
-    // would have to guess which one a run meant.
+  test("resolves native routes back to stable ids", () => {
+    expect(modelIdForNativeRoute("openai", "gpt-5.6-sol")).toBe("gpt-5.6-sol");
+    expect(modelIdForNativeRoute("openai", "missing-model")).toBeUndefined();
+    // The gateway reached both of these through one aliased route, so neither
+    // could be attributed. Anthropic addresses them separately, so a dated run
+    // and an alias run are now told apart.
+    expect(modelIdForNativeRoute("anthropic", "claude-haiku-4-5")).toBe(
+      "claude-haiku-4-5",
+    );
     expect(
-      modelIdForOpenRouterRoute("anthropic/claude-haiku-4.5"),
-    ).toBeUndefined();
+      modelIdForNativeRoute("anthropic", "claude-haiku-4-5-20251001"),
+    ).toBe("claude-haiku-4-5-20251001");
+    // The model id alone is not the key: another provider serving the same
+    // upstream name is a different route.
+    expect(modelIdForNativeRoute("google", "gpt-5.6-sol")).toBeUndefined();
   });
 });
 
@@ -91,20 +98,20 @@ describe("id guards", () => {
     expect(isModelId("gpt-9000")).toBe(false);
   });
 
-  test("resolves exact OpenRouter routes without model fallback", () => {
-    expect(getOpenRouterRoute("gpt-5.6-sol")).toEqual({
-      modelId: "openai/gpt-5.6-sol",
+  test("resolves exact native routes without model fallback", () => {
+    expect(getNativeRoute("gpt-5.6-sol")).toEqual({
+      provider: "openai",
+      modelId: "gpt-5.6-sol",
       endpoint: "language",
     });
-    expect(
-      requireOpenRouterRoute("text-embedding-3-small", "embedding"),
-    ).toEqual({
-      modelId: "openai/text-embedding-3-small",
+    expect(requireNativeRoute("text-embedding-3-small", "embedding")).toEqual({
+      provider: "openai",
+      modelId: "text-embedding-3-small",
       endpoint: "embedding",
     });
     expect(() =>
-      requireOpenRouterRoute("text-embedding-3-small", "language"),
-    ).toThrow("uses OpenRouter embedding, not language");
+      requireNativeRoute("text-embedding-3-small", "language"),
+    ).toThrow("uses openai embedding, not language");
   });
 
   test("assertModelId throws on unknown", () => {
@@ -234,6 +241,135 @@ describe("pricing accessors", () => {
       costForTextUsage("gemini-3-pro-image-preview", {
         inputTokens: 1000,
         outputTokens: 1000,
+      }),
+    ).toBeUndefined();
+  });
+});
+
+describe("native pricing dimensions", () => {
+  test("OpenAI cache reads bill at cachedInput, not the full input rate", () => {
+    // The AI SDK reports cache reads in the same non-overlapping cacheRead slot
+    // for every provider, but OpenAI publishes that rate as `cachedInput` and
+    // carries no `cacheRead`. Falling back to `input` would bill nano's cache
+    // reads at $0.20/1M instead of $0.02/1M.
+    expect(
+      costForTextUsage("gpt-5.4-nano", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(0.02, 9);
+    // Anthropic publishes cacheRead explicitly and it still wins.
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(0.1, 9);
+  });
+
+  test("1h cache writes bill at 2x input, not the 5m rate", () => {
+    // Haiku: input $1/1M, so 5m writes $1.25 and 1h writes $2. Pricing only the
+    // flat (5m) rate would understate a 1h write by 37.5%.
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheWriteTokensByTtl: { "1h": 1_000_000 },
+      }),
+    ).toBeCloseTo(2, 9);
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheWriteTokensByTtl: { "5m": 1_000_000 },
+      }),
+    ).toBeCloseTo(1.25, 9);
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheWriteTokensByTtl: { "5m": 400_000, "1h": 600_000 },
+      }),
+    ).toBeCloseTo(0.4 * 1.25 + 0.6 * 2, 9);
+  });
+
+  test("the TTL split wins over the undifferentiated total, never adds to it", () => {
+    // Anthropic reports both cache_creation_input_tokens and the per-TTL
+    // breakdown for the SAME tokens. Summing both would bill every write twice.
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheWriteTokens: 1_000_000,
+        cacheWriteTokensByTtl: { "5m": 1_000_000 },
+      }),
+    ).toBeCloseTo(1.25, 9);
+  });
+
+  test("batch tier halves the whole turn", () => {
+    const standard = costForTextUsage("claude-haiku-4-5", {
+      inputTokens: 1_000_000,
+      outputTokens: 1_000_000,
+    });
+    const batch = costForTextUsage("claude-haiku-4-5", {
+      inputTokens: 1_000_000,
+      outputTokens: 1_000_000,
+      serviceTier: "batch",
+    });
+    expect(standard).toBeCloseTo(6, 9);
+    expect(batch).toBeCloseTo(3, 9);
+  });
+
+  test("a tier with no multiplier on file prices nothing rather than guessing", () => {
+    // Anthropic publishes no priority rate for Haiku, so the honest answer is
+    // "no list price", not a silent 1.0 multiplier.
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 1000,
+        outputTokens: 0,
+        serviceTier: "priority",
+      }),
+    ).toBeUndefined();
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 1000,
+        outputTokens: 0,
+        serviceTier: "standard",
+      }),
+    ).toBeCloseTo(0.001, 9);
+  });
+
+  test("web search bills per request on top of tokens", () => {
+    // $10 per 1,000 searches, and it is counted, not measured -- three searches
+    // cost $0.03 regardless of token volume.
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 1_000_000,
+        outputTokens: 0,
+        serverToolRequests: { webSearch: 3 },
+      }),
+    ).toBeCloseTo(1 + 0.03, 9);
+    // The batch multiplier stacks onto the tool charge too.
+    expect(
+      costForTextUsage("claude-haiku-4-5", {
+        inputTokens: 0,
+        outputTokens: 0,
+        serviceTier: "batch",
+        serverToolRequests: { webSearch: 2 },
+      }),
+    ).toBeCloseTo(0.01, 9);
+  });
+
+  test("a billed server tool with no price on file prices nothing", () => {
+    // OpenAI models carry no webSearchPerRequest, so a search there is a gap we
+    // surface rather than a cost we invent.
+    expect(
+      costForTextUsage("gpt-5.4-nano", {
+        inputTokens: 1000,
+        outputTokens: 0,
+        serverToolRequests: { webSearch: 1 },
       }),
     ).toBeUndefined();
   });

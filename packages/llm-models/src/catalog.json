@@ -24,8 +24,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/gpt-5.6-sol",
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-5.6-sol",
         "endpoint": "language"
       },
       "codexSdk": {
@@ -58,8 +59,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/gpt-5.6-terra",
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-5.6-terra",
         "endpoint": "language"
       },
       "codexSdk": {
@@ -98,8 +100,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/gpt-5.6-luna",
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-5.6-luna",
         "endpoint": "language"
       },
       "codexSdk": {
@@ -132,8 +135,9 @@
     },
     "status": "deprecated",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/gpt-5.5",
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-5.5",
         "endpoint": "language"
       },
       "codexSdk": {
@@ -166,8 +170,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/gpt-5.4-mini",
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-5.4-mini",
         "endpoint": "language"
       },
       "codexSdk": {
@@ -200,8 +205,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/gpt-5.4-nano",
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-5.4-nano",
         "endpoint": "language"
       },
       "codexSdk": {
@@ -233,8 +239,9 @@
     "status": "current",
     "category": "embedding",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/text-embedding-3-small",
+      "native": {
+        "provider": "openai",
+        "modelId": "text-embedding-3-small",
         "endpoint": "embedding"
       }
     }
@@ -249,7 +256,17 @@
       "input": 5,
       "output": 25,
       "cacheRead": 0.5,
-      "cacheWrite": 6.25
+      "cacheWrite": 6.25,
+      "cacheWriteByTtl": {
+        "5m": 6.25,
+        "1h": 10
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
     },
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
@@ -267,8 +284,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "anthropic/claude-opus-5",
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-opus-5",
         "endpoint": "language"
       },
       "claudeAgentSdk": {
@@ -286,7 +304,17 @@
       "input": 2,
       "output": 10,
       "cacheRead": 0.2,
-      "cacheWrite": 2.5
+      "cacheWrite": 2.5,
+      "cacheWriteByTtl": {
+        "5m": 2.5,
+        "1h": 4
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
     },
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
@@ -304,8 +332,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "anthropic/claude-sonnet-5",
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-sonnet-5",
         "endpoint": "language"
       },
       "claudeAgentSdk": {
@@ -323,7 +352,17 @@
       "input": 10,
       "output": 50,
       "cacheRead": 1,
-      "cacheWrite": 12.5
+      "cacheWrite": 12.5,
+      "cacheWriteByTtl": {
+        "5m": 12.5,
+        "1h": 20
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
     },
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
@@ -341,8 +380,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "anthropic/claude-fable-5",
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-fable-5",
         "endpoint": "language"
       },
       "claudeAgentSdk": {
@@ -360,7 +400,17 @@
       "input": 5,
       "output": 25,
       "cacheRead": 0.5,
-      "cacheWrite": 6.25
+      "cacheWrite": 6.25,
+      "cacheWriteByTtl": {
+        "5m": 6.25,
+        "1h": 10
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
     },
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
@@ -378,8 +428,9 @@
     },
     "status": "deprecated",
     "routes": {
-      "openRouter": {
-        "modelId": "anthropic/claude-opus-4-8",
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-opus-4-8",
         "endpoint": "language"
       },
       "claudeAgentSdk": {
@@ -397,7 +448,17 @@
       "input": 3,
       "output": 15,
       "cacheRead": 0.3,
-      "cacheWrite": 3.75
+      "cacheWrite": 3.75,
+      "cacheWriteByTtl": {
+        "5m": 3.75,
+        "1h": 6
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
     },
     "contextWindow": 1000000,
     "capabilities": {
@@ -414,8 +475,9 @@
     },
     "status": "deprecated",
     "routes": {
-      "openRouter": {
-        "modelId": "anthropic/claude-sonnet-4-6",
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-sonnet-4-6",
         "endpoint": "language"
       },
       "claudeAgentSdk": {
@@ -433,7 +495,17 @@
       "input": 1,
       "output": 5,
       "cacheRead": 0.1,
-      "cacheWrite": 1.25
+      "cacheWrite": 1.25,
+      "cacheWriteByTtl": {
+        "5m": 1.25,
+        "1h": 2
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
     },
     "contextWindow": 200000,
     "capabilities": {
@@ -449,8 +521,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "anthropic/claude-haiku-4.5",
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-haiku-4-5",
         "endpoint": "language"
       },
       "claudeAgentSdk": {
@@ -468,7 +541,17 @@
       "input": 1,
       "output": 5,
       "cacheRead": 0.1,
-      "cacheWrite": 1.25
+      "cacheWrite": 1.25,
+      "cacheWriteByTtl": {
+        "5m": 1.25,
+        "1h": 2
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.5
+      },
+      "serverToolPricing": {
+        "webSearchPerRequest": 0.01
+      }
     },
     "contextWindow": 200000,
     "capabilities": {
@@ -484,8 +567,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "anthropic/claude-haiku-4.5",
+      "native": {
+        "provider": "anthropic",
+        "modelId": "claude-haiku-4-5-20251001",
         "endpoint": "language"
       },
       "claudeAgentSdk": {
@@ -514,8 +598,9 @@
     },
     "status": "preview",
     "routes": {
-      "openRouter": {
-        "modelId": "google/gemini-3-pro-image-preview",
+      "native": {
+        "provider": "google",
+        "modelId": "gemini-3-pro-image-preview",
         "endpoint": "image"
       }
     }
@@ -541,8 +626,9 @@
     },
     "status": "preview",
     "routes": {
-      "openRouter": {
-        "modelId": "google/gemini-3.1-flash-image-preview",
+      "native": {
+        "provider": "google",
+        "modelId": "gemini-3.1-flash-image-preview",
         "endpoint": "image"
       }
     }
@@ -568,8 +654,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "google/gemini-2.5-flash-image",
+      "native": {
+        "provider": "google",
+        "modelId": "gemini-2.5-flash-image",
         "endpoint": "image"
       }
     }
@@ -599,8 +686,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "google/gemini-3.7-flash",
+      "native": {
+        "provider": "google",
+        "modelId": "gemini-3.7-flash",
         "endpoint": "language"
       }
     }
@@ -630,8 +718,9 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "google/gemini-3.8-flash",
+      "native": {
+        "provider": "google",
+        "modelId": "gemini-3.8-flash",
         "endpoint": "language"
       }
     }
