@@ -227,6 +227,9 @@ describe("/bb dare", () => {
     expect(describeDareTranslationFailure({ kind: "invalid_output" })).toBe(
       "🤖 The translator couldn't produce a usable dare from that. Try rewording it.",
     );
+    expect(describeDareTranslationFailure({ kind: "provider_quota" })).toBe(
+      "🧯 The dare translator's provider quota is exhausted. Try again later.",
+    );
     expect(describeDareTranslationFailure({ kind: "provider_error" })).toBe(
       "😵 The dare translator failed. Try again shortly.",
     );

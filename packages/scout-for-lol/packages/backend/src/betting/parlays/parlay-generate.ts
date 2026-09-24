@@ -71,6 +71,7 @@ type GenerationStatus =
   | "budget_refused"
   | "timeout"
   | "invalid_output"
+  | "provider_quota"
   | "provider_error"
   | "persistence_error"
   | "unpriceable";
@@ -434,6 +435,7 @@ async function runParlayGenerationInternal(
       status === "budget_refused" ||
       status === "timeout" ||
       status === "invalid_output" ||
+      status === "provider_quota" ||
       status === "unpriceable";
     if (expected) {
       logger.info(

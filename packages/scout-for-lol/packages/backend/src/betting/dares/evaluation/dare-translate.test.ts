@@ -243,6 +243,20 @@ describe("translateDare", () => {
     ]);
   });
 
+  test("provider quota exhaustion maps to provider_quota without a throw", async () => {
+    const { deps } = makeDeps({
+      generate: () =>
+        Promise.reject(
+          Object.assign(new Error("Key limit exceeded (weekly limit)"), {
+            statusCode: 403,
+          }),
+        ),
+    });
+    await expect(translateDare(INPUT, deps)).resolves.toEqual({
+      kind: "provider_quota",
+    });
+  });
+
   test("an unexpected provider failure maps to provider_error", async () => {
     const { deps } = makeDeps({
       generate: () => Promise.reject(new Error("connection reset")),
