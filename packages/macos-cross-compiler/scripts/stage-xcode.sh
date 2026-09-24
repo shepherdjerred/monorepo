@@ -53,7 +53,11 @@ cp "$toolchain"/usr/lib/clang/*/lib/darwin/libclang_rt.{osx,ios}.a "$stage/clang
 cp "$developer/../version.plist" "$stage/version.plist"
 
 tarball=$root/sdk-$sdk.tar.zst
-tar -C "$root" -cf - "$sdk" | zstd -q -19 -T0 -f -o "$tarball"
+# Without these, macOS tar adds an AppleDouble `._<name>` entry for every file
+# carrying an xattr (com.apple.provenance, on everything Xcode installs), and
+# Linux extracts those as files: `._foo.h` beside each SDK header.
+COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs --no-fflags -C "$root" -cf - "$sdk" |
+  zstd -q -19 -T0 -f -o "$tarball"
 shasum -a 256 "$tarball" | cut -d' ' -f1 > "$tarball.sha256"
 echo "staged Xcode $(plutil -extract CFBundleShortVersionString raw "$stage/version.plist") ($(plutil -extract ProductBuildVersion raw "$stage/version.plist")), macOS SDK $sdk_version, into $stage"
 echo "tarball $tarball sha256 $(cat "$tarball.sha256")"
