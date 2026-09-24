@@ -1,4 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { z } from "zod";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -288,4 +289,68 @@ describe("the account cursor time repair migration", () => {
       lastMatchTime: OLDER_AT,
     });
   });
+
+  test("does not rewind a cursor a writer advanced after the repair read it", async () => {
+    await prisma.matchTrackedAccount.create({
+      data: {
+        riotMatchId: NEWER_MATCH,
+        puuid: PUUID,
+        cursorAdvancedAt: NEWER_AT,
+      },
+    });
+    const locked = Promise.withResolvers<true>();
+    const release = Promise.withResolvers<true>();
+
+    // A cursor writer holds the row mid-advance, so the repair takes its
+    // snapshot of the drifted row and then waits on the row lock.
+    const writer = prisma.$transaction(
+      async (tx) => {
+        await tx.account.updateMany({
+          where: { puuid: PUUID },
+          data: {
+            lastProcessedMatchId: UNPROCESSED_MATCH,
+            lastMatchTime: LATEST_AT,
+          },
+        });
+        locked.resolve(true);
+        await release.promise;
+      },
+      { timeout: 30_000 },
+    );
+    await locked.promise;
+    const repair = applyRepair();
+    await waitForBlockedRepair();
+    release.resolve(true);
+    await writer;
+    await repair;
+
+    expect(await storedCursor()).toEqual({
+      lastProcessedMatchId: UNPROCESSED_MATCH,
+      lastMatchTime: LATEST_AT,
+    });
+  });
 });
+
+const BlockedQueriesSchema = z.array(z.object({ blocked: z.number() }));
+
+/**
+ * Resolve once the repair statement is waiting on the writer's row lock.
+ *
+ * Matched on the migration's leading comment: `pg_stat_activity.query` is
+ * truncated at `track_activity_query_size`, so the SQL body may be cut off.
+ */
+async function waitForBlockedRepair(): Promise<void> {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    const rows = BlockedQueriesSchema.parse(
+      await prisma.$queryRawUnsafe(
+        `SELECT count(*)::int AS blocked FROM pg_stat_activity
+         WHERE datname = current_database()
+           AND wait_event_type = 'Lock'
+           AND query LIKE '-- Repair post-match cursors%'`,
+      ),
+    );
+    if ((rows[0]?.blocked ?? 0) > 0) return;
+    await Bun.sleep(25);
+  }
+  throw new Error("The repair never blocked on the writer's row lock");
+}
