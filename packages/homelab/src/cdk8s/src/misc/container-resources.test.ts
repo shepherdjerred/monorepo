@@ -127,6 +127,37 @@ function expectSjerredPostCutoverCleanup(
   );
 }
 
+const MinecraftServerPortsSchema = z.object({
+  extraPorts: z.array(z.unknown()).optional(),
+});
+
+function expectMinecraftMapServicePort(
+  application: z.infer<typeof MinecraftApplicationSchema> | undefined,
+  name: string,
+  mapPort: number | null,
+  mapName: string | null,
+): void {
+  const minecraftServer =
+    application?.spec.source.helm.valuesObject["minecraftServer"];
+  if (mapPort === null || mapName === null) {
+    // TSMC ships no map renderer, so no map service port is declared.
+    const parsed = MinecraftServerPortsSchema.parse(minecraftServer);
+    expect(parsed.extraPorts, name).toBeUndefined();
+    return;
+  }
+  expect(minecraftServer, name).toMatchObject({
+    extraPorts: expect.arrayContaining([
+      {
+        service: { enabled: true, port: mapPort },
+        protocol: "TCP",
+        containerPort: mapPort,
+        name: mapName,
+        ingress: { enabled: false },
+      },
+    ]),
+  });
+}
+
 const WORKLOAD_KINDS = new Set([
   "Deployment",
   "StatefulSet",
@@ -507,7 +538,7 @@ describe("Burst-memory sharing policy", () => {
     });
     for (const [name, cpu, request, limit, heap, mapPort, mapName] of [
       ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G", 8100, "bluemap"],
-      ["minecraft-tsmc", "2", "6Gi", "8Gi", "6G", 8100, "bluemap"],
+      ["minecraft-tsmc", "2", "6Gi", "8Gi", "6G", null, null],
       ["minecraft-sjerred", "2", "6Gi", "8Gi", "5G", 8123, "dynmap"],
     ] as const) {
       const values = applications.find((app) => app.metadata.name === name)
@@ -524,16 +555,13 @@ describe("Burst-memory sharing policy", () => {
       });
       expect(values?.["minecraftServer"], name).toMatchObject({
         memory: heap,
-        extraPorts: expect.arrayContaining([
-          {
-            service: { enabled: true, port: mapPort },
-            protocol: "TCP",
-            containerPort: mapPort,
-            name: mapName,
-            ingress: { enabled: false },
-          },
-        ]),
       });
+      expectMinecraftMapServicePort(
+        applications.find((app) => app.metadata.name === name),
+        name,
+        mapPort,
+        mapName,
+      );
     }
     const sjerredApplication = applications.find(
       (app) => app.metadata.name === "minecraft-sjerred",

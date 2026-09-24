@@ -52,15 +52,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_better_skill_capped_com" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_bluemap_ts_mc_net" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "bluemap.ts-mc.net"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_bugsink_shepherdjerred_com" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1

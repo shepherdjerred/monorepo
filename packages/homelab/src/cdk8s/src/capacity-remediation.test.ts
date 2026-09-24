@@ -297,7 +297,6 @@ function assertTailscaleSizing(documents: readonly unknown[]): void {
     "argocd/apps-argocd-ingress": "medium",
     "prometheus/apps-alertmanager-ingress": "medium",
     "chartmuseum/apps-chartmuseum-ingress": "heavy",
-    "minecraft-tsmc/apps-minecraft-tsmc-bluemap-ingress": "medium",
     "loki/apps-loki-ingress": "medium",
     "seaweedfs/apps-seaweedfs-s3-ingress": "heavy",
     "media/media-bazarr-tailscale-ingress-ingress": "medium",

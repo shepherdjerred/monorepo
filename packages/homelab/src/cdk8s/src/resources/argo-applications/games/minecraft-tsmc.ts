@@ -4,9 +4,6 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
-import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
-import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
@@ -46,28 +43,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
   });
 
-  createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
-    namespace: "minecraft-tsmc",
-    service: "minecraft-tsmc-bluemap",
-    port: 8100,
-    hosts: ["minecraft-tsmc-bluemap"],
-    proxyClass: "medium",
-    // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
-    // so a synthetic probe only measures sleep: 60s failures around the clock.
-    disableProbe: true,
-  });
-
-  createCloudflareTunnelBinding(chart, "minecraft-tsmc-bluemap-cf-tunnel", {
-    serviceName: "minecraft-tsmc-bluemap",
-    fqdn: "bluemap.ts-mc.net",
-    namespace: "minecraft-tsmc",
-    disableDnsUpdates: true,
-    port: 8100,
-    // Hibernates at 0 replicas (see above); the public probe additionally made
-    // cloudflared log an unreachable-origin error every minute.
-    disableProbe: true,
-  });
-
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
     replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
@@ -96,7 +71,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
       difficulty: "hard",
       maxPlayers: 20,
       levelType: "LARGEBIOMES",
-      levelSeed: "6723312581398122416",
       viewDistance: 10,
       memory: "6G",
       motd: "The Storm | Survival",
@@ -117,7 +91,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // Plugin downloads - direct URLs
       pluginUrls: [
         "https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar",
-        "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.23/bluemap-5.23-paper.jar",
         DISCORDSRV_PLUGIN_URL,
         "https://cdn.modrinth.com/data/hXiIvTyT/versions/nY6VN1XH/EssentialsX-2.22.0.jar",
         "https://cdn.modrinth.com/data/sYpvDxGJ/versions/lc5JHiNJ/EssentialsXSpawn-2.22.0.jar",
@@ -150,8 +123,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
       ],
       // Skipped (no direct download URL): mcMMO (Spigot/Polymart only), LWCX (Spigot only)
 
-      extraPorts: [getMinecraftBlueMapPort()],
-
       rcon: {
         enabled: true,
         withGeneratedPassword: true,
@@ -159,8 +130,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
     persistence: {
       storageClass: NVME_STORAGE_CLASS,
-      // Note: persistence.labels doesn't work in this Helm chart (not templated to
-      // the PVC), so this volume is not enrolled in Velero backups.
+      // Note: persistence.labels isn't templated to the PVC by this Helm chart;
+      // Velero backup labels come from the pvc-backup admission policy instead.
       dataDir: {
         Size: Size.gibibytes(128).asString(),
         enabled: true,
