@@ -31,6 +31,29 @@ class LongContextSurcharge(BaseModel):
     outputMultiplier: float = Field(gt=0)
 
 
+class CacheWriteByTtl(BaseModel):
+    """Per-TTL cache-write prices, where the provider charges by bucket."""
+
+    model_config = {"extra": "forbid", "populate_by_name": True}
+    ttl_5m: float | None = Field(default=None, ge=0, alias="5m")
+    ttl_1h: float | None = Field(default=None, ge=0, alias="1h")
+
+
+class ServiceTierMultipliers(BaseModel):
+    """Whole-turn multipliers for non-standard billing tiers."""
+
+    model_config = {"extra": "forbid"}
+    priority: float | None = Field(default=None, gt=0)
+    batch: float | None = Field(default=None, gt=0)
+
+
+class ServerToolPricing(BaseModel):
+    """USD per request, NOT per 1M -- these are counted, not measured."""
+
+    model_config = {"extra": "forbid"}
+    webSearchPerRequest: float | None = Field(default=None, ge=0)
+
+
 class TextPricing(BaseModel):
     model_config = {"extra": "forbid"}
     modality: Literal["text"]
@@ -39,6 +62,9 @@ class TextPricing(BaseModel):
     cachedInput: float | None = Field(default=None, ge=0)
     cacheRead: float | None = Field(default=None, ge=0)
     cacheWrite: float | None = Field(default=None, ge=0)
+    cacheWriteByTtl: CacheWriteByTtl | None = None
+    serviceTierMultipliers: ServiceTierMultipliers | None = None
+    serverToolPricing: ServerToolPricing | None = None
     longContextSurcharge: LongContextSurcharge | None = None
 
 
@@ -103,8 +129,16 @@ class AcceptedUpstreamPricing(BaseModel):
         return self
 
 
-class OpenRouterRoute(BaseModel):
+class NativeRoute(BaseModel):
+    """How to reach this model on its first-party provider.
+
+    `provider` is the transport, which is not always the creator: Claude served
+    through Vertex would carry provider "google" with the entry's own provider
+    still "anthropic".
+    """
+
     model_config = {"extra": "forbid"}
+    provider: Literal["openai", "anthropic", "google"]
     modelId: str = Field(min_length=1)
     endpoint: Literal["language", "embedding", "image"]
 
@@ -116,7 +150,7 @@ class NativeSdkRoute(BaseModel):
 
 class Routes(BaseModel):
     model_config = {"extra": "forbid"}
-    openRouter: OpenRouterRoute | None = None
+    native: NativeRoute | None = None
     claudeAgentSdk: NativeSdkRoute | None = None
     codexSdk: NativeSdkRoute | None = None
 
