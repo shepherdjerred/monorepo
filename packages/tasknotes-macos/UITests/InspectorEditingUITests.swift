@@ -55,19 +55,21 @@ final class InspectorEditingUITests: XCTestCase {
             element(AccessibilityIdentifier.Inspector.recurrenceSheet, in: app)
                 .waitForExistence(timeout: 5)
         )
-        // The sheet publishes its identifier before its controls finish
-        // animating in: the radio exists while still not hittable, and
-        // clicking it then fails the tap.
+        // Existence is the only gate the tap needs: the click resolves its
+        // coordinates at tap time. A hittability gate was tried here and
+        // removed — build 16990's screen recording proved the "Not hittable"
+        // failures were a macOS Continuity Camera onboarding dialog covering
+        // the sheet, not the app. Hittability asserts the environment, so a
+        // gate on it fails permanently while the dialog is up and adds
+        // nothing once it is answered.
         let weekly = element(
             AccessibilityIdentifier.Inspector.recurrenceFrequencyOption("weekly"),
             in: app
         )
         XCTAssertTrue(weekly.waitForExistence(timeout: 5))
-        XCTAssertTrue(waitForHittable(weekly, timeout: 5))
         weekly.click()
         let apply = element(AccessibilityIdentifier.Inspector.recurrenceApply, in: app)
         XCTAssertTrue(apply.waitForExistence(timeout: 5))
-        XCTAssertTrue(waitForHittable(apply, timeout: 5))
         apply.click()
         try waitForVault(server, containing: "recurrence: DTSTART:")
         try waitForVault(server, containing: ";FREQ=WEEKLY;BYDAY=")
@@ -193,23 +195,6 @@ final class InspectorEditingUITests: XCTestCase {
 
     private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any)[identifier]
-    }
-
-    /// Poll until the element can receive a click, or give up.
-    ///
-    /// Existence only means the query resolves: a sheet radio still animating
-    /// in exists but is not hittable. For sheet controls the container never
-    /// scrolls, so hittability is the right gate. Bounded poll, not a fixed
-    /// sleep — QuickAdd's activation wait explains why.
-    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if element.isHittable {
-                return true
-            }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
-        }
-        return element.isHittable
     }
 
     /// Poll until the element's frame stops changing, or give up.
