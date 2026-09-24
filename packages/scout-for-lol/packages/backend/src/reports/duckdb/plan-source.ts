@@ -2,6 +2,7 @@ import { match } from "ts-pattern";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { PlanColumnSource } from "#src/reports/duckdb/column-map.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
+import type { ServerPerson } from "#src/reports/server-people.ts";
 import {
   buildMatchDimensionSource,
   buildMatchTeamsSource,
@@ -85,12 +86,34 @@ export function planSourceKind(
   return kind;
 }
 
+/**
+ * Whether a tracked scope has anyone to join. A server with no accounts file,
+ * or a set of servers tracking nobody, is the same empty answer an empty lake
+ * gives.
+ */
+export function hasTrackedAccounts(input: {
+  readonly scope: LakeQueryScope;
+  readonly files: LakeFiles;
+  readonly serverPeople?: readonly ServerPerson[] | undefined;
+}): boolean {
+  return match(input.scope.kind)
+    .with("global", () => true)
+    .with("guild", () => input.files.accountsParquet !== undefined)
+    .with("servers", () => (input.serverPeople?.length ?? 0) > 0)
+    .exhaustive();
+}
+
+/**
+ * Which sources and filters a scope allows. Written as positive checks on
+ * purpose: a scope kind nobody anticipated must be refused, not fall through
+ * a `kind === "guild"` test and widen to the whole lake.
+ */
 export function enforceScopeGuards(input: {
   readonly plan: ScoutQlPlan;
   readonly scope: LakeQueryScope;
   readonly playerIds?: readonly number[] | undefined;
 }): void {
-  if (input.scope.kind === "global" && input.playerIds !== undefined) {
+  if (input.scope.kind !== "guild" && input.playerIds !== undefined) {
     throw new Error(
       "playerIds scoping requires a guild scope — player ids are per-server.",
     );
@@ -102,7 +125,7 @@ export function enforceScopeGuards(input: {
     input.plan.source === "match_teams" ||
     input.plan.source === "match_team_bans"
   ) {
-    if (input.scope.kind === "guild") {
+    if (input.scope.kind !== "global") {
       throw new Error(
         `${input.plan.source} cannot be scoped to a server: its rows carry no player identity. Query it in global scope, or use match_participants for a server's players.`,
       );
@@ -113,8 +136,10 @@ export function enforceScopeGuards(input: {
   }
   // Rank sources threw in planSourceKind, so only the match flavor remains.
   if (input.plan.source === "competition_match_participants") {
-    if (input.scope.kind === "global") {
-      throw new Error("Competition reports are not available in global scope.");
+    if (input.scope.kind !== "guild") {
+      throw new Error(
+        "Competition reports need the competition's own server as their scope.",
+      );
     }
     if (input.plan.competitionId === undefined) {
       throw new Error(`${input.plan.source} requires a competition_id.`);

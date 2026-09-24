@@ -16,7 +16,11 @@ import type {
   LakeFiles,
   SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
-import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
+import {
+  isTrackedScope,
+  type LakeQueryScope,
+} from "#src/reports/duckdb/scope.ts";
+import type { ServerPerson } from "#src/reports/server-people.ts";
 import {
   compilePredicate,
   predicateReadsOnly,
@@ -44,6 +48,7 @@ import { buildFactsCte } from "#src/reports/duckdb/facts-cte.ts";
 import {
   buildLookupSources,
   enforceScopeGuards,
+  hasTrackedAccounts,
   planSourceKind,
   type EventLookupFlags,
   type SourceKind,
@@ -91,6 +96,8 @@ export type PlanQueryInput = {
   playerPuuids?: Map<number, string[]> | undefined;
   /** Guild-only pre-resolved player scoping (competition path). */
   playerIds?: number[] | undefined;
+  /** The merged people of a `servers` scope; required there, unused elsewhere. */
+  serverPeople?: readonly ServerPerson[] | undefined;
   /** Effective limit, already policy-capped. */
   limit: number;
 };
@@ -227,15 +234,13 @@ function buildFactsPipeline(
   if (lookups === undefined) {
     return undefined;
   }
-  if (
-    input.scope.kind === "guild" &&
-    input.files.accountsParquet === undefined
-  ) {
+  if (!hasTrackedAccounts(input)) {
     return undefined;
   }
   const facts = buildFactsCte({
     scope: input.scope,
     files: input.files,
+    serverPeople: input.serverPeople,
     columnSource: kind.columnSource,
     source,
     ...lookups,
@@ -406,7 +411,7 @@ export function compileGroupFactsProjection(
   const { plan } = input;
   enforcePlanNodeBudget(plan);
   const kind = planSourceKind(plan, true);
-  if (input.scope.kind === "global") {
+  if (!isTrackedScope(input.scope)) {
     throw new Error(
       "player_groups is not available in global scope — teammate groups are " +
         "defined by tracked accounts queueing together, which global match " +

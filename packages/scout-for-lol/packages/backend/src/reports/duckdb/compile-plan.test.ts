@@ -260,7 +260,7 @@ describe("guards and short-circuits", () => {
       compileScoutQlPlanQuery(
         makeInput({ plan: competition, scope: GLOBAL_SCOPE }),
       ),
-    ).toThrow(/not available in global scope/);
+    ).toThrow(/competition's own server/);
     expect(() =>
       compileScoutQlPlanQuery(
         makeInput({

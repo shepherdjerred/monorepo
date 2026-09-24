@@ -41,7 +41,7 @@ export type ResolvedIdentity = {
   trackedAlias: string | undefined;
 };
 
-const AccountRowSchema = z.object({
+export const AccountRowSchema = z.object({
   server_id: z.string(),
   puuid: z.string(),
   player_id: z.union([z.bigint(), z.number()]).transform(Number),
@@ -59,7 +59,7 @@ const IdentityRowSchema = z.object({
   last_seen: z.string(),
 });
 
-async function runQuery<T>(
+export async function runQuery<T>(
   sql: string,
   params: BoundParam[],
   schema: z.ZodType<T>,
@@ -247,7 +247,7 @@ async function lookupByRiotId(
   return rows.map((row) => row.puuid);
 }
 
-function groupAccountsByPerson(
+export function groupAccountsByPerson(
   accounts: z.infer<typeof AccountRowSchema>[],
 ): z.infer<typeof AccountRowSchema>[][] {
   let groups: z.infer<typeof AccountRowSchema>[][] = [];

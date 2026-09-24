@@ -2,7 +2,14 @@ import { match } from "ts-pattern";
 import { getAllChampions } from "@scout-for-lol/data";
 import { buildAccountsSource, listParam } from "#src/reports/duckdb/lake.ts";
 import type { LakeFiles, SqlFragment } from "#src/reports/duckdb/lake.ts";
-import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
+import {
+  isTrackedScope,
+  type LakeQueryScope,
+} from "#src/reports/duckdb/scope.ts";
+import {
+  buildServerPeopleSource,
+  type ServerPerson,
+} from "#src/reports/server-people.ts";
 import {
   readsMatchDimension,
   type PlanColumnSource,
@@ -48,6 +55,8 @@ function teamRowFacts(input: FactsCteInput, items: SqlFragment): SqlFragment {
 export type FactsCteInput = {
   scope: LakeQueryScope;
   files: LakeFiles;
+  /** The merged people a `servers` scope joins instead of one server's accounts. */
+  serverPeople?: readonly ServerPerson[] | undefined;
   columnSource: PlanColumnSource;
   source: SqlFragment;
   /**
@@ -97,7 +106,7 @@ function identityProjection(
   scope: LakeQueryScope,
   columnSource: PlanColumnSource,
 ): string {
-  if (scope.kind === "guild") {
+  if (isTrackedScope(scope)) {
     return "a.player_id AS player_id, a.player_alias AS player_alias, a.discord_id AS discord_id";
   }
   // Global scope: no accounts dimension exists, so the row labels itself with
@@ -398,6 +407,31 @@ const MATCH_DIMENSION_ITEMS =
   "d.game_creation_at AS game_creation_at, d.queue AS queue, d.patch AS patch, d.map_id AS map_id";
 
 /**
+ * The accounts a tracked scope joins, one row per puuid either way: one
+ * server's dimension is unique per puuid already, and a set of servers is
+ * merged into people before it gets here.
+ */
+function trackedAccountsSource(input: FactsCteInput): SqlFragment {
+  if (input.scope.kind === "servers") {
+    const people = input.serverPeople;
+    if (people === undefined) {
+      throw new Error("A servers scope compiled without its merged people.");
+    }
+    return buildServerPeopleSource(people);
+  }
+  if (input.scope.kind !== "guild") {
+    throw new Error("Global scope joins no accounts.");
+  }
+  const accountsParquet = input.files.accountsParquet;
+  if (accountsParquet === undefined) {
+    throw new Error(
+      "compile called without accounts.parquet — caller must short-circuit",
+    );
+  }
+  return buildAccountsSource(accountsParquet, input.scope.serverId);
+}
+
+/**
  * The facts CTE: identity + puuid + every referenced source column over the
  * union source. Guild scope joins the server's accounts dimension; global
  * scope never joins it (re-adding the join would double-count accounts
@@ -449,13 +483,7 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
       `) m${lookups.joins})`,
     );
   }
-  const accountsParquet = input.files.accountsParquet;
-  if (accountsParquet === undefined) {
-    throw new Error(
-      "compile called without accounts.parquet — caller must short-circuit",
-    );
-  }
-  const accounts = buildAccountsSource(accountsParquet, input.scope.serverId);
+  const accounts = trackedAccountsSource(input);
   return seq(
     "WITH ",
     ...lookupCtes,
