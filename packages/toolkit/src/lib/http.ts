@@ -185,34 +185,19 @@ export function createHttpClient(
     };
   }
 
-  async function get<T>(
-    endpoint: string,
-    getOptions: HttpGetOptions<T> & { schema: z.ZodType<T> },
+  /**
+   * Shared by `get` and `getUrl`: resolve options, fetch the request URL
+   * `buildRequestUrl` produces from those options, and parse the JSON body.
+   * `resolveOptions` runs inside the `try` so a thrown config error is caught
+   * and flattened like any other request failure.
+   */
+  async function getJson<T>(
+    buildRequestUrl: (options: HttpClientOptions) => string,
+    schema: z.ZodType<T>,
   ): Promise<HttpResult<T>> {
     try {
       const options = resolveOptions(optionsOrFactory);
-      const url = buildUrl(options, endpoint, getOptions.query);
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: jsonHeaders(options),
-      });
-      if (!response.ok) {
-        return await errorEnvelope(options, response);
-      }
-      const json: unknown = await response.json();
-      const data = getOptions.schema.parse(json);
-      return { success: true, data };
-    } catch (error) {
-      return wrapError(error);
-    }
-  }
-
-  async function getUrl<T>(
-    url: string,
-    getOptions: { schema: z.ZodType<T> },
-  ): Promise<HttpResult<T>> {
-    try {
-      const options = resolveOptions(optionsOrFactory);
+      const url = buildRequestUrl(options);
       const response = await fetch(url, {
         method: "GET",
         headers: jsonHeaders(options),
@@ -221,11 +206,28 @@ export function createHttpClient(
         return await errorEnvelope(options, response);
       }
       const json: unknown = await response.json();
-      const data = getOptions.schema.parse(json);
+      const data = schema.parse(json);
       return { success: true, data };
     } catch (error) {
       return wrapError(error);
     }
+  }
+
+  async function get<T>(
+    endpoint: string,
+    getOptions: HttpGetOptions<T> & { schema: z.ZodType<T> },
+  ): Promise<HttpResult<T>> {
+    return getJson(
+      (options) => buildUrl(options, endpoint, getOptions.query).toString(),
+      getOptions.schema,
+    );
+  }
+
+  async function getUrl<T>(
+    url: string,
+    getOptions: { schema: z.ZodType<T> },
+  ): Promise<HttpResult<T>> {
+    return getJson(() => url, getOptions.schema);
   }
 
   async function post<T>(
