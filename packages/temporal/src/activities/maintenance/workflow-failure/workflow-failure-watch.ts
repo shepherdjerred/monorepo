@@ -14,6 +14,10 @@ import {
   type WorkflowFailureOverflowSummary,
 } from "./workflow-failure-watch-overflow.ts";
 import { scanWorkflowFailureVisibility } from "./workflow-failure-watch-scan.ts";
+import {
+  DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS,
+  withWorkflowFailureRpcTimeout,
+} from "./workflow-failure-watch-timeout.ts";
 import type { WorkflowVisibilityClient } from "#shared/infra/workflow-visibility-client.ts";
 import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
@@ -206,6 +210,8 @@ async function postFailureBatch(
   const { client, poster, executions, options, checkpointProgress } =
     batchOptions;
   const { now, ttlMs } = options;
+  const rpcTimeoutMs =
+    options.rpcTimeoutMs ?? DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS;
   const alerts: AlertmanagerAlert[] = [];
   let errored = 0;
   let checkpointBlocked = checkpointProgress.checkpointBlocked;
@@ -223,7 +229,11 @@ async function postFailureBatch(
     let chunkErrored = 0;
     const chunkAlerts = await Promise.all(
       chunk.map((execution) =>
-        buildFailureAlertForExecution(client, execution, now, ttlMs),
+        buildFailureAlertForExecution(client, execution, {
+          now,
+          ttlMs,
+          rpcTimeoutMs,
+        }),
       ),
     );
     const postedAlerts: AlertmanagerAlert[] = [];
@@ -238,7 +248,11 @@ async function postFailureBatch(
     }
 
     if (postedAlerts.length > 0) {
-      await poster(postedAlerts);
+      await withWorkflowFailureRpcTimeout(
+        poster(postedAlerts),
+        "alertmanager-post",
+        rpcTimeoutMs,
+      );
       // Recorded after the poster succeeds, mirroring the archive-after-success pattern
       // — an activity retry after a failed post re-alerts (safe: Alertmanager
       // dedups by label) but this counter is informational only, not exactly-once.
@@ -376,6 +390,11 @@ export type PollWorkflowFailuresOptions = {
   lookbackSince?: Date;
   checkpoint?: WorkflowFailureWatchCheckpoint;
   onCheckpoint?: (checkpoint: WorkflowFailureWatchCheckpoint) => void;
+  /**
+   * Per-RPC timeout for the visibility list, failure-detail extraction, and
+   * Alertmanager posts. Defaults to 30s; tests inject millisecond values.
+   */
+  rpcTimeoutMs?: number;
 };
 
 /**
@@ -390,6 +409,8 @@ export async function pollWorkflowFailuresOnce(
 ): Promise<PollWorkflowFailuresResult> {
   const { checkpoint } = options;
   const { since, query } = pollVisibilityBoundary(options);
+  const rpcTimeoutMs =
+    options.rpcTimeoutMs ?? DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS;
   let errored = 0;
   let alerted = 0;
   let checkpointBlocked = false;
@@ -422,14 +443,18 @@ export async function pollWorkflowFailuresOnce(
       overflowSummary,
       executions,
     );
-    await poster([
-      buildWorkflowFailureOverflowAlert(
-        overflowSummary,
-        since,
-        options.now,
-        options.ttlMs,
-      ),
-    ]);
+    await withWorkflowFailureRpcTimeout(
+      poster([
+        buildWorkflowFailureOverflowAlert(
+          overflowSummary,
+          since,
+          options.now,
+          options.ttlMs,
+        ),
+      ]),
+      "alertmanager-post",
+      rpcTimeoutMs,
+    );
     temporalFailureWatcherAlertsTotal.inc({ workflowType: "overflow" });
     const checkpointProgress = advanceRecoveryCheckpoint({
       result: { alerted: 0, errored: 0 },
@@ -450,6 +475,7 @@ export async function pollWorkflowFailuresOnce(
   const scan = await scanWorkflowFailureVisibility(client, {
     namespace: options.namespace ?? "prod",
     query,
+    rpcTimeoutMs,
     checkpoint,
     detailedAlertsConsumed: checkpoint?.detailedAlertsConsumed ?? 0,
     onDetailBatch: postDetails,
