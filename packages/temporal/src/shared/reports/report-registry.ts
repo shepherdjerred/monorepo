@@ -75,8 +75,8 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
   {
     scheduleId: "tasknotes-skipped-files-canary",
     reportType: "tasknotes-canary",
-    cadenceHours: 24,
-    graceHours: defaultReportGraceHours(24),
+    cadenceHours: 168,
+    graceHours: defaultReportGraceHours(168),
     receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
   },
   {
@@ -99,12 +99,5 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     cadenceHours: 168,
     graceHours: defaultReportGraceHours(168),
     receiptRequiredAfter: SCANNER_REPORT_ACTIVATION,
-  },
-  {
-    scheduleId: "ci-io-post-merge-impact",
-    reportType: "ci-io-impact",
-    cadenceHours: 24,
-    graceHours: defaultReportGraceHours(24),
-    receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
   },
 ];

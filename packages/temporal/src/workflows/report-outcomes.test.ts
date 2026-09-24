@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import type { CiIoImpactResult } from "#activities/maintenance/ci-io-impact.ts";
 import type {
   DataDragonUpdateResult,
   DataDragonVersionState,
@@ -9,7 +8,6 @@ import type { ScoutSeasonRefreshResult } from "#activities/scout/scout-season-re
 import type { TasknotesCanaryResult } from "#activities/maintenance/tasknotes-canary.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
-import { ciIoImpactReport } from "./ci/ci-io-impact.ts";
 import { dataDragonReport } from "./scout/data-dragon.ts";
 import { protobufWatchReport } from "./ci/protobuf-watch.ts";
 import { scoutQueueWindowsReport } from "./scout/scout-queue-windows.ts";
@@ -33,83 +31,6 @@ function validate(report: ActivityReportInput): ActivityReportInput {
     },
   });
   return report;
-}
-
-function ciIoResult(gate: "passed" | "failed" = "passed"): CiIoImpactResult {
-  const observability = Array.from({ length: 11 }, (_, index) => ({
-    id: `query-${index.toString()}`,
-    query: `metric_${index.toString()}`,
-    series: 1,
-    minimumRequiredSeries: index === 6 || index === 10 ? 0 : 1,
-    values: [1],
-    passed: true,
-  }));
-  return {
-    observedAt: OBSERVED_AT,
-    mergedAt: "2026-08-01T16:00:00.000Z",
-    mergeSha: "a".repeat(40),
-    prUrl: "https://github.com/shepherdjerred/monorepo/pull/1602",
-    elapsedHours: 216,
-    postMergeBuildCount: 120,
-    candidateBuilds: [9001],
-    pendingReason: undefined,
-    raw: {
-      schemaVersion: 4,
-      generatedAt: OBSERVED_AT,
-      metricSource: "raw",
-      candidate: {
-        buildNumbers: [9001],
-        integrityIssues: [],
-        summary: {
-          buildCount: 1,
-          measuredJobCount: 10,
-          missingJobCount: 0,
-          sampleCoveragePercent: 100,
-          totalWriteBytes: 1,
-          totalNetworkReceiveBytes: 1,
-          totalNetworkTransmitBytes: 1,
-          p95DurationSeconds: 60,
-        },
-      },
-      comparison: {
-        fixedCorpusGate: {
-          status: gate,
-          aggregateWriteReductionPercent: 55,
-          p95DurationChangePercent: 2,
-          reasons: gate === "passed" ? [] : ["write reduction below target"],
-        },
-      },
-    },
-    rawExitCode: gate === "passed" ? 0 : 1,
-    rawError:
-      gate === "passed"
-        ? undefined
-        : "CI I/O fixed-corpus impact gate did not pass: failed",
-    recording: {
-      schemaVersion: 4,
-      generatedAt: OBSERVED_AT,
-      metricSource: "recording",
-      candidate: {
-        buildNumbers: [9001],
-        integrityIssues: [],
-        summary: {
-          buildCount: 1,
-          measuredJobCount: 10,
-          missingJobCount: 0,
-          sampleCoveragePercent: 100,
-          totalWriteBytes: 1,
-          totalNetworkReceiveBytes: 1,
-          totalNetworkTransmitBytes: 1,
-          p95DurationSeconds: 60,
-        },
-      },
-      comparison: null,
-    },
-    recordingExitCode: 0,
-    recordingError: undefined,
-    observability,
-    evidenceJson: "{}",
-  };
 }
 
 const VERSION_STATE: DataDragonVersionState = {
@@ -170,66 +91,6 @@ function tasknotesResult(
 }
 
 describe("deterministic report outcome matrices", () => {
-  test("CI I/O distinguishes pending, passing, domain failure, and missing evidence", () => {
-    const pending = ciIoResult();
-    pending.pendingReason = "Observation window is incomplete.";
-    pending.raw = undefined;
-    pending.rawExitCode = undefined;
-    pending.recording = undefined;
-    pending.recordingExitCode = undefined;
-    pending.observability = [];
-    expect(validate(ciIoImpactReport(STARTED_AT, pending))).toMatchObject({
-      execution: "complete",
-      verdict: "pending",
-    });
-    expect(validate(ciIoImpactReport(STARTED_AT, ciIoResult()))).toMatchObject({
-      execution: "complete",
-      verdict: "clear",
-    });
-    const failed = validate(ciIoImpactReport(STARTED_AT, ciIoResult("failed")));
-    expect(failed).toMatchObject({
-      execution: "complete",
-      verdict: "attention",
-    });
-    expect(
-      failed.checks.find((check) => check.id === "acceptance-gates")?.status,
-    ).toBe("failed");
-    const missing = ciIoResult();
-    missing.observability = [];
-    expect(validate(ciIoImpactReport(STARTED_AT, missing))).toMatchObject({
-      execution: "partial",
-      verdict: "attention",
-    });
-  });
-
-  test("CI I/O recommends retirement only after a complete passing observation", () => {
-    expect(
-      validate(ciIoImpactReport(STARTED_AT, ciIoResult()))
-        .retirementRecommendation,
-    ).toContain("human may retire");
-
-    const failed = validate(ciIoImpactReport(STARTED_AT, ciIoResult("failed")));
-    expect(failed.retirementRecommendation).toBeUndefined();
-
-    const pending = ciIoResult();
-    pending.pendingReason = "No exact fixed-corpus candidate exists yet.";
-    pending.raw = undefined;
-    pending.rawExitCode = undefined;
-    pending.recording = undefined;
-    pending.recordingExitCode = undefined;
-    pending.observability = [];
-    expect(
-      validate(ciIoImpactReport(STARTED_AT, pending)).retirementRecommendation,
-    ).toBeUndefined();
-
-    const incomplete = ciIoResult();
-    incomplete.observability = [];
-    expect(
-      validate(ciIoImpactReport(STARTED_AT, incomplete))
-        .retirementRecommendation,
-    ).toBeUndefined();
-  });
-
   test("TaskNotes distinguishes first baseline, clean, and task-count attention", () => {
     expect(
       validate(tasknotesReport(STARTED_AT, tasknotesResult(100, undefined))),

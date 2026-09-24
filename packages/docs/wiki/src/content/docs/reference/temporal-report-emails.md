@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-Temporal sends twelve source-defined scheduled reports plus report-only agent
+Temporal sends eleven source-defined scheduled reports plus report-only agent
 task results. The schedule definitions remain authoritative for timing; this
 page records the email surface they share.
 
@@ -55,16 +55,14 @@ All times are `America/Los_Angeles`.
 | `scout-lane-priors-weekly-refresh` | Saturday 07:00      | Scout lane data is up to date      | Scout lane-data update created             |
 | `scout-queue-windows-daily`        | daily 06:45         | Scout queue windows are up to date | Action needed: Scout queue-window warnings |
 | `scout-season-refresh-weekly`      | Monday 07:00        | Scout season dates are up to date  | Scout season-date update created           |
-| `tasknotes-skipped-files-canary`   | daily 09:00         | TaskNotes looks healthy            | Action needed: TaskNotes problem found     |
+| `tasknotes-skipped-files-canary`   | Monday 09:00        | TaskNotes looks healthy            | Action needed: TaskNotes problem found     |
 | `protobufjs-v8-watch-weekly`       | Monday 09:00        | Temporal still uses protobufjs v7  | Temporal can move to protobufjs v8         |
 | `main-vuln-scan-weekly`            | Sunday 05:00        | No high-risk vulnerabilities found | Action needed: vulnerabilities found       |
 | `link-rot-scan-weekly`             | Sunday 09:00        | No broken links found              | Broken or unreachable links found          |
-| `ci-io-post-merge-impact`          | daily 09:00         | CI I/O report is ready             | Action needed: CI I/O target missed        |
 
 Every scheduled family also has explicit copy for pending, partial, and failed
 runs. Scout reports distinguish current data, an update created, a manual action,
-and a collection or publication failure. CI I/O distinguishes ready, pending,
-target missed, and collection failure.
+and a collection or publication failure.
 
 Dynamic report-only agent tasks use the task title itself: `<title>: report
 ready`, `Action needed: <title>`, or `<title> could not finish`.

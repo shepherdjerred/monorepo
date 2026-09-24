@@ -57,7 +57,6 @@ import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/h
 import { runProtobufWatch as _runProtobufWatch } from "./ci/protobuf-watch.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
-import { runCiIoImpact as _runCiIoImpact } from "./ci/ci-io-impact.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
 import type { ReportDeliveryResult } from "#activities/reports/report-delivery.ts";
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
@@ -329,10 +328,6 @@ export async function runTasknotesCanary(): Promise<void> {
 
 export async function monitorReportFreshness(): Promise<void> {
   return _monitorReportFreshness();
-}
-
-export async function runCiIoImpact(): Promise<void> {
-  return _runCiIoImpact();
 }
 
 export async function deliverReportWorkflow(

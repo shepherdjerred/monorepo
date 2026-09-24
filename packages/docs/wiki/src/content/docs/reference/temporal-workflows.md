@@ -87,7 +87,6 @@ and does not add a toolkit command.
 | llm-catalog-refresh | Mon 09:00   | deterministic                    | PR or [durable alert](/explanation/temporal/workflow-families/#repo-upkeep) |
 | homelab-crd-imports | daily 05:30 | deterministic                    | PR                                                                          |
 | pokeemerald-data    | daily 04:30 | deterministic                    | PR                                                                          |
-| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email                                                             |
 | protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email                                                             |
 
 Ordinary LLM summaries use the shared OpenRouter runtime. The deterministic
@@ -147,7 +146,7 @@ Only corpus capture and context-refresh are scheduled.
 | golink-sync                     | daily 05:00   | deterministic | golink reconcile                         |
 | temporal-failure-watch          | every 5 min   | deterministic | durable alert occurrence                 |
 | report-freshness-monitor        | every 15 min  | deterministic | metrics + durable alert                  |
-| TaskNotes canary                | daily 09:00   | deterministic | heartbeat email                          |
+| TaskNotes canary                | Mon 09:00     | deterministic | heartbeat email                          |
 | main-vuln-scan                  | Sun 05:00     | deterministic | report email + durable alert on CRITICAL |
 
 ## Home automation
