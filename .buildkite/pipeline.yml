@@ -2120,6 +2120,7 @@ steps:
       - alert-dashboard-sqlite
       - playwright-e2e-pr
       - resume-build-pr
+      - tasknotes-windows-cross
       - trmnl-validate-pr
       - docker-e2e-pr
       - trivy
