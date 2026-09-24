@@ -410,7 +410,7 @@ test("resolves every bake target from the real structured version catalog", asyn
 
 test("shares its full-build target universe with the image selector", () => {
   expect(knownImageTargets).toEqual(ALL_IMAGE_TARGETS);
-  expect(knownImageTargets).toContain("openrouter-broadcast-ingest");
+  expect(knownImageTargets).toContain("birmel");
 });
 
 test("validates structured pins before starting a production push", async () => {

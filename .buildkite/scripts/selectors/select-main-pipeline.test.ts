@@ -268,12 +268,11 @@ test("selects only the explicitly requested platform apply job", () => {
   const selected = selectedKeys(
     steps,
     new Map([["tofu-platforms", true]]),
-    "tofu-platform-openrouter",
+    "tofu-platform-discord",
   );
-  expect(selected.has("tofu-platform-openrouter")).toBe(true);
+  expect(selected.has("tofu-platform-discord")).toBe(true);
   expect(selected.has("tofu-platform-openai")).toBe(false);
   expect(selected.has("tofu-platform-anthropic")).toBe(false);
-  expect(selected.has("tofu-platform-discord")).toBe(false);
   expect(selected.has("tofu-platform-cloudflare-tokens")).toBe(false);
   expect(selected.has("homelab-release-admission")).toBe(true);
 });

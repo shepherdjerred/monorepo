@@ -123,8 +123,8 @@ import {
   runSeaweedFsBackupWorkflow as _runSeaweedFsBackupWorkflow,
 } from "./homelab/seaweedfs-backup.ts";
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
-import { runOpenAiComplimentaryUsageReconciliation as _runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
-import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";
+import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
+import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
 import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
@@ -421,8 +421,8 @@ export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
   return _runSeaweedFsBackupRetentionAndGcWorkflow();
 }
 
-export async function runOpenAiComplimentaryUsageReconciliation(): Promise<OpenAiComplimentaryUsageResult> {
-  return _runOpenAiComplimentaryUsageReconciliation();
+export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
+  return _runLlmBilledCostReconciliation();
 }
 
 export async function runOpsSnapshot(): Promise<OpsPublishSummary> {

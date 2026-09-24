@@ -24,13 +24,34 @@ describe("classifyLlmProviderIssue", () => {
     ).toBe("quota");
   });
 
-  test("classifies weekly-limit 403s as quota issues", () => {
+  test("classifies provider hard spend caps as quota issues", () => {
+    expect(
+      classifyLlmProviderIssue({
+        status: 429,
+        message:
+          "You exceeded your current quota, please check your plan and billing details.",
+        error: { type: "insufficient_quota" },
+      }),
+    ).toBe("quota");
+    expect(
+      classifyLlmProviderIssue({
+        status: 400,
+        message:
+          "You have reached your specified API usage limits. You will regain access on 2026-10-01 at 00:00 UTC.",
+      }),
+    ).toBe("quota");
+  });
+
+  test("no longer treats a router weekly key limit as a quota", () => {
+    // OpenRouter's per-key weekly limit was the old cap. A 403 now means an
+    // authorization problem, which retrying or waiting does not fix either,
+    // but it is not a spend cap and must not be reported as one.
     expect(
       classifyLlmProviderIssue({
         status: 403,
         message: "Key limit exceeded: weekly limit reached for this key",
       }),
-    ).toBe("quota");
+    ).toBeNull();
   });
 
   test("classifies generic 429s as rate-limit issues", () => {

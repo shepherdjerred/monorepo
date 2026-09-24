@@ -1,7 +1,7 @@
 import { context, propagation, trace } from "@opentelemetry/api";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
-import { createVertex } from "@ai-sdk/google-vertex";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import {
   getModel,
   requireNativeRoute,
@@ -19,13 +19,6 @@ import type {
   RequiredModelCapability,
   RuntimeFetch,
 } from "./types.ts";
-
-/**
- * Several Gemini 3.x preview models are served only from the global endpoint
- * and answer model-not-found on a regional one, so global is the default a
- * caller has to opt out of rather than into.
- */
-const DEFAULT_VERTEX_LOCATION = "global";
 
 /**
  * `@ai-sdk/anthropic` refuses to construct without some credential, and it
@@ -76,7 +69,7 @@ function resolveRoute(
 type ProviderClients = {
   openai: ReturnType<typeof createOpenAI>;
   anthropic: ReturnType<typeof createAnthropic>;
-  google: ReturnType<typeof createVertex>;
+  google: ReturnType<typeof createGoogleGenerativeAI>;
 };
 
 /**
@@ -106,7 +99,7 @@ function asFetchFunction(runtimeFetch: RuntimeFetch): typeof fetch {
  * Build providers lazily and once.
  *
  * Lazily, because a service that only ever calls OpenAI should not have to
- * hold Anthropic or Vertex configuration — it only fails if it actually asks
+ * hold Anthropic or Google configuration — it only fails if it actually asks
  * for a model routed there. Once, because the Anthropic wrapper caches a
  * federated token and rebuilding it per call would re-exchange a single-use
  * JWT on every request.
@@ -158,12 +151,11 @@ function createProviderClients(options: LlmRuntimeOptions): {
       const credentials = options.credentials.google;
       if (credentials === undefined) {
         throw new Error(
-          `${options.service}: model routes to Google but no Vertex configuration was provided`,
+          `${options.service}: model routes to Google but no Google credentials were configured`,
         );
       }
-      return createVertex({
-        project: credentials.project,
-        location: credentials.location ?? DEFAULT_VERTEX_LOCATION,
+      return createGoogleGenerativeAI({
+        apiKey: credentials.apiKey,
         ...(baseFetch !== undefined && { fetch: asFetchFunction(baseFetch) }),
       });
     },

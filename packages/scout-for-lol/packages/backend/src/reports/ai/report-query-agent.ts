@@ -78,7 +78,7 @@ async function streamReportQueryAgentInternal(
   const model = reportAiModel();
   const runtime = getLlmRuntime();
   if (runtime === undefined) {
-    throw new Error("OPENROUTER_API_KEY is required for report editing");
+    throw new Error("OpenAI credentials are required for report editing");
   }
   assertWithinBudget();
 
@@ -93,9 +93,8 @@ async function streamReportQueryAgentInternal(
         ? { activeTools: [], toolChoice: "none" }
         : undefined,
     // See explore/agent.ts: most current models declare
-    // supportsTemperature: false, and the runtime requests
-    // `require_parameters` for tool calls, so sending temperature to such a
-    // model leaves zero eligible OpenRouter endpoints and 404s the whole run.
+    // supportsTemperature: false, and the provider rejects temperature for
+    // such a model with a 400 that fails the whole run.
     ...(modelSupportsParameter(model, "temperature")
       ? { temperature: 0.2 }
       : {}),

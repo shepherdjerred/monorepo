@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { providerCredentialsFromEnv } from "@shepherdjerred/llm-runtime";
 import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
@@ -283,7 +284,10 @@ function computeConfiguration() {
       .get("REPORT_DUCKDB_MEMORY_LIMIT")
       .default("512MB")
       .asString(),
-    inferenceConfigured: getOptionalEnvVar("OPENAI_API_KEY") !== undefined,
+    // Scout's review and report models are OpenAI, so "inference is
+    // configured" means the runtime can see OpenAI credentials. Asked of the
+    // runtime's own resolver so the environment contract has one home.
+    inferenceConfigured: providerCredentialsFromEnv().openai !== undefined,
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
     bettingParlayAiModel: getOptionalEnvVar(
       "BETTING_PARLAY_AI_MODEL",
@@ -327,9 +331,13 @@ function computeConfiguration() {
       .get("FEATURE_TIP_COOLDOWN_HOURS")
       .default("72")
       .asIntPositive(),
+    // Voice has its own names. It bills a dedicated OpenAI project with its own
+    // spend cap, and the direct key outranks the file, so sharing
+    // `OPENAI_API_KEY` with text inference would silently move Realtime spend
+    // onto the review project.
     voiceAssistant: parseVoiceAssistantConfiguration({
-      openAiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
-      openAiApiKeyFile: getOptionalEnvVar("OPENAI_API_KEY_FILE"),
+      openAiApiKey: getOptionalEnvVar("VOICE_OPENAI_API_KEY"),
+      openAiApiKeyFile: getOptionalEnvVar("VOICE_OPENAI_API_KEY_FILE"),
       assetsDir: getOptionalEnvVar("VOICE_ASSETS_DIR"),
       kwsRuntime: getOptionalEnvVar("VOICE_KWS_RUNTIME"),
     }),

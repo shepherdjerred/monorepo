@@ -30,7 +30,7 @@ reference; the Temporal wiki explains workflow families and boundaries. Load
 - Report delivery is exclusive and auditable. A generated report, durable send
   record, downstream receipt, and user-visible message are separate evidence.
 - Generic agent tasks follow the shared typed schema, bounded tools, redacted
-  environment, and OpenRouter/Codex SDK policy. Never pass inference credentials
+  environment, and Codex SDK policy. Never pass inference credentials
   to tool subprocesses.
 - Durable agent chats use the reviewed Claude Agent SDK or Codex App Server adapter
   with subscription authentication. Their provider is fixed at chat creation;

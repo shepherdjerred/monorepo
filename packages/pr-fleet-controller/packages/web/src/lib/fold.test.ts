@@ -141,7 +141,7 @@ function createV2CorrelatedRunView(): ReturnType<typeof createRunView> {
         startTime: [1_754_250_401, 0],
         duration: [0, 1_000_000],
         status: { code: 1 },
-        attributes: { "gen_ai.system": "openrouter" },
+        attributes: { "gen_ai.system": "openai" },
         events: [],
       },
     }),

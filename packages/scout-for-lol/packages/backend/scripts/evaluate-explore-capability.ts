@@ -8,6 +8,7 @@ import {
 import {
   createLlmRuntime,
   providerCredentialsFromEnv,
+  requireCredentialsFor,
 } from "@shepherdjerred/llm-runtime";
 import {
   capabilityAnswerIssues,
@@ -167,12 +168,7 @@ async function evaluateCase(
 }
 
 async function main(): Promise<void> {
-  const apiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (apiKey === undefined || apiKey.trim() === "") {
-    throw new Error(
-      "OPENROUTER_API_KEY is required for Explore capability evals.",
-    );
-  }
+  requireCredentialsFor(EXPLORE_CAPABILITY_EVAL_MODEL);
   const { corpus, raw } = await loadCorpus();
   const runtime = createLlmRuntime({
     credentials: providerCredentialsFromEnv(),

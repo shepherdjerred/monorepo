@@ -153,8 +153,14 @@ describe("dashboard query health", () => {
       String.raw`ai_provider_errors_total{app=~\"$app\",provider=~\"$provider\",kind=~\"$kind\",source=~\"$source\"}[24h])) or on() vector(0)`,
     );
     expect(dashboardJson).toContain("llm_request_duration_seconds_bucket");
-    expect(dashboardJson).toContain("llm_router_attempts_total");
     expect(dashboardJson).toContain("llm_structured_output_attempts_total");
-    expect(dashboardJson).toContain("openrouter_broadcast_requests_total");
+    expect(dashboardJson).toContain("llm_billed_cost_usd");
+    expect(dashboardJson).toContain(
+      "llm_billed_reconciliation_last_success_timestamp_seconds",
+    );
+    // The router and its Broadcast webhook are gone; their metric families
+    // are never emitted again, so a panel on them would read zero forever.
+    expect(dashboardJson).not.toContain("llm_router_attempts_total");
+    expect(dashboardJson).not.toContain("openrouter");
   });
 });

@@ -81,7 +81,6 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "tofu-platform-openai": ["tofu-platforms"],
   "tofu-platform-anthropic": ["tofu-platforms"],
   "tofu-platform-discord": ["tofu-platforms"],
-  "tofu-platform-openrouter": ["tofu-platforms"],
   "tofu-platform-cloudflare-tokens": ["tofu-platforms"],
   "argocd-sync": ["helm", "argocd", "images"],
   "tofu-apply-cloudflare": ["tofu", "argocd"],

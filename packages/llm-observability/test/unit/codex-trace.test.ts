@@ -138,8 +138,8 @@ test("attachCodexTrace records standard native SDK metrics", async () => {
   expect(metrics).toContain('outcome="success"');
   expect(metrics).toContain('type="reasoning"');
 
-  // Luna runs through OpenRouter, so the catalog estimate is recorded alongside
-  // the native SDK usage metrics.
+  // Luna bills per token against the OpenAI API, so the catalog estimate is
+  // recorded alongside the native SDK usage metrics.
   expect(metrics).toContain(
     'llm_cost_usd_total{service="temporal",workload="agent-task",provider="codex_sdk",model="gpt-5.6-luna",type="catalog"} 0.0006522',
   );

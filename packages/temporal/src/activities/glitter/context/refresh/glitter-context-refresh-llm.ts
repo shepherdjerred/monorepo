@@ -56,7 +56,7 @@ export function glitterObjectArtifact<Response>(input: {
 } {
   if (input.usage === undefined) {
     throw ApplicationFailure.nonRetryable(
-      `OpenRouter returned a billable completion without valid usage for ${input.model}; automatic retry is disabled because the completed request may already have been charged`,
+      `The provider returned a billable completion without valid usage for ${input.model}; automatic retry is disabled because the completed request may already have been charged`,
       "BilledGenerationUsageUnavailable",
       { model: input.model },
     );

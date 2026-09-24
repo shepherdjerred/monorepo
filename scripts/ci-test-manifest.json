@@ -379,16 +379,6 @@
       ]
     },
     {
-      "package": "@shepherdjerred/openrouter-broadcast-ingest",
-      "directory": "packages/openrouter-broadcast-ingest",
-      "steps": [
-        {
-          "runner": "vitest",
-          "args": ["test"]
-        }
-      ]
-    },
-    {
       "package": "@shepherdjerred/monarch",
       "directory": "packages/monarch",
       "steps": [

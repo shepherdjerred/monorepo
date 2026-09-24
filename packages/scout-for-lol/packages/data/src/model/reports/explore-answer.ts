@@ -85,7 +85,7 @@ export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
 /**
  * The same answer contract, shaped for a strict structured-output request.
  *
- * The runtime asks OpenRouter for `structuredOutputs: { strict: true }`, and
+ * The runtime asks OpenAI for a strict JSON schema, and
  * OpenAI's strict mode requires *every* property to appear in `required` —
  * a field carrying `.default()` is emitted as optional and the provider
  * rejects the whole request with `invalid_json_schema`

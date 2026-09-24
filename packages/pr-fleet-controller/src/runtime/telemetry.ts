@@ -36,7 +36,7 @@ export function captureTelemetryOperation<T>(
  *
  * `FleetTelemetry.traceId()` is a sha256 truncated to 32 hex characters — a
  * valid W3C trace ID by construction. Supplying it only through
- * `callOptions.traceContext` puts it in the OpenRouter request metadata but
+ * `callOptions.traceContext` puts it on the runtime's call log record but
  * leaves the local trace untouched, and the AI SDK integration starts its spans
  * from `context.active()`. Without this graft each model and tool call becomes
  * its own root trace with a random ID, so the dashboard's `tracePrNumbers`

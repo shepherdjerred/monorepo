@@ -165,7 +165,6 @@ if [ "$$release_admission" != "admitted" ]; then exit 1; fi
       ["tofu-platform-openai", mutatingStep],
       ["tofu-platform-anthropic", mutatingStep],
       ["tofu-platform-discord", mutatingStep],
-      ["tofu-platform-openrouter", mutatingStep],
       ["tofu-platform-cloudflare-tokens", mutatingStep],
       [
         "argocd-sync",
@@ -189,9 +188,9 @@ if [ "$$release_admission" != "admitted" ]; then exit 1; fi
 
   test("rejects automatic retries for platform credential mutations", () => {
     const steps = releaseSteps();
-    steps.set("tofu-platform-openrouter", `${mutatingStep}\nretry: *retry`);
+    steps.set("tofu-platform-discord", `${mutatingStep}\nretry: *retry`);
     expect(() => validateHomelabReleaseAdmission(steps)).toThrow(
-      "tofu-platform-openrouter must not retry credential mutations automatically",
+      "tofu-platform-discord must not retry credential mutations automatically",
     );
   });
 });

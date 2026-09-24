@@ -15,9 +15,7 @@ type JsonValue =
 
 /**
  * Provider options as the AI SDK types them: JSON values only, keyed by the
- * provider bucket that SDK reads (`openai`, `anthropic`, `google`). Vertex
- * reads `googleVertex`/`vertex` and falls back to `google`, so one key covers
- * both Google transports.
+ * provider bucket that SDK reads (`openai`, `anthropic`, `google`).
  */
 export type ProviderOptions = Record<string, Record<string, JsonValue>>;
 

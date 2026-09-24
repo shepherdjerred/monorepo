@@ -20,15 +20,11 @@ describe("provider credentials from the environment", () => {
     const credentials = providerCredentialsFromEnv({
       OPENAI_API_KEY: "sk-openai",
       ANTHROPIC_API_KEY: "sk-ant",
-      GOOGLE_VERTEX_PROJECT: "proj",
-      GOOGLE_VERTEX_LOCATION: "us-central1",
+      GEMINI_API_KEY: "gemini-key",
     });
     expect(credentials.openai).toEqual({ apiKey: "sk-openai" });
     expect(credentials.anthropic).toEqual({ kind: "apiKey", apiKey: "sk-ant" });
-    expect(credentials.google).toEqual({
-      project: "proj",
-      location: "us-central1",
-    });
+    expect(credentials.google).toEqual({ apiKey: "gemini-key" });
   });
 
   test("federation wins over a leftover static key", () => {
@@ -52,12 +48,6 @@ describe("provider credentials from the environment", () => {
 
   test("blank values count as absent, not as empty credentials", () => {
     expect(providerCredentialsFromEnv({ OPENAI_API_KEY: "   " })).toEqual({});
-  });
-
-  test("falls back to the ambient Google project", () => {
-    expect(
-      providerCredentialsFromEnv({ GOOGLE_CLOUD_PROJECT: "ambient" }).google,
-    ).toEqual({ project: "ambient" });
   });
 });
 

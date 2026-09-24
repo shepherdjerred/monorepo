@@ -1455,7 +1455,7 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
-  // Ask Opus through OpenRouter to analyze deterministically fetched patch notes
+  // Ask Opus to analyze deterministically fetched patch notes
   // (`summary` + per-change data feed the AI review) plus the Scout-focused
   // `changelogHighlights` consumed here for the "What's New" entry.
   // Best-effort: a failure (no credential, timeout, bad output) falls back to just
@@ -1463,9 +1463,7 @@ async function maybeAppendChangelogEntry(
   // than blocking the asset PR or shipping a garbage changeset.
   let highlights: string[] = [];
   try {
-    console.log(
-      `🤖 Analyzing patch ${patch.patch} notes via OpenRouter Opus...`,
-    );
+    console.log(`🤖 Analyzing patch ${patch.patch} notes via Opus...`);
     const officialPatchContent = await fetchOfficialPatchNotes(patch);
     const changeset = await analyzePatch(patch, officialPatchContent);
     await savePatchChangeset(changeset);
@@ -1476,7 +1474,7 @@ async function maybeAppendChangelogEntry(
     await saveRawPatchNotes(patch, officialPatchContent);
   } catch (error) {
     console.warn(
-      `⚠ OpenRouter patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
+      `⚠ Patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
     );
   }
 

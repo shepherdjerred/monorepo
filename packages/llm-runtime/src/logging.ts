@@ -25,7 +25,7 @@ export const defaultLlmRuntimeLogger: LlmRuntimeLogger = (record) => {
  * Map an AI SDK provider name onto the catalog's provider enum.
  *
  * The SDK reports a qualified transport name — `anthropic.messages`,
- * `openai.chat`, `google.vertex.chat` — while the catalog, metric labels, and
+ * `openai.chat`, `google.generative-ai` — while the catalog, metric labels, and
  * pricing all key on the bare vendor.
  */
 export function normalizeProvider(

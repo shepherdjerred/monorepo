@@ -17,7 +17,7 @@ const infrastructureTargets = [
 ] as const;
 // Keep full-image and fallback builds on the same target universe as the
 // closure selector. A second hand-maintained list previously omitted
-// OpenRouter, so fixed-corpus recovery could never publish its first image.
+// a newly added image, so fixed-corpus recovery could never publish it.
 export const knownImageTargets = [...ALL_IMAGE_TARGETS];
 const FIXED_CORPUS_LANES: ReadonlySet<string> = new Set([
   "docker-e2e",

@@ -164,17 +164,6 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
-  new KubeNetworkPolicy(chart, "temporal-billing-alertmanager-netpol", {
-    metadata: { name: "temporal-billing-alertmanager-netpol" },
-    spec: {
-      podSelector: { matchLabels: { component: "billing-worker" } },
-      policyTypes: ["Egress"],
-      egress: [
-        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
-      ],
-    },
-  });
-
   new KubeNetworkPolicy(chart, "temporal-gateway-ingress-netpol", {
     metadata: { name: "temporal-gateway-ingress-netpol" },
     spec: {

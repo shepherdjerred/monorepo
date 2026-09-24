@@ -264,7 +264,7 @@ describe("translateDare", () => {
     });
   });
 
-  test("a missing OpenRouter runtime maps to provider_error", async () => {
+  test("a missing LLM runtime maps to provider_error", async () => {
     const { deps, generateCalls } = makeDeps({
       // What a keyless deployment's getLlmRuntime answers.
       getRuntime: (): ReturnType<typeof createLlmRuntime> | undefined => {

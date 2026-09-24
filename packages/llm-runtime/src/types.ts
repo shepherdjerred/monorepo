@@ -90,17 +90,15 @@ export type AnthropicCredentials =
     };
 
 /**
- * Vertex needs no secret: `@ai-sdk/google-vertex` resolves Application Default
- * Credentials, which in-cluster is an external-account config pointing at the
- * same projected token Anthropic federation uses.
- *
- * `location` defaults to `global` because several Gemini 3.x preview models are
- * served only from the global endpoint and return model-not-found on a regional
- * one.
+ * Google is reached through the Gemini API with a service-account-bound "auth
+ * key", not Vertex. Vertex offers no hard spend cap without an invoiced Gemini
+ * Enterprise account — newer Gemini models there run on Dynamic Shared Quota, so
+ * there is no per-project quota to lower either — while the Gemini API has a
+ * native per-project monthly cap. The price is a static key minted with gcloud
+ * rather than federation.
  */
 export type GoogleCredentials = {
-  readonly project: string;
-  readonly location?: string | undefined;
+  readonly apiKey: string;
 };
 
 export type ProviderCredentials = {

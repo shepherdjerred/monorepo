@@ -14,10 +14,6 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
     ghcrVisibility: "public",
   },
   birmel: { owner: "@shepherdjerred/birmel", ghcrVisibility: "public" },
-  "openrouter-broadcast-ingest": {
-    owner: "@shepherdjerred/openrouter-broadcast-ingest",
-    ghcrVisibility: "public",
-  },
   "tasknotes-server": { owner: "tasknotes-server", ghcrVisibility: "public" },
   "starlight-karma-bot": {
     owner: "starlight-karma-bot",

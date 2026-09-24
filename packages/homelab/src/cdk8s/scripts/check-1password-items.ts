@@ -47,8 +47,9 @@ const SNAPSHOT_MAX_AGE_DAYS = 45;
 const PLATFORM_STACKS: readonly PlatformStack[] = [
   "openai",
   "anthropic",
+  "anthropic-federation",
+  "google",
   "discord",
-  "openrouter",
   "cloudflare-tokens",
 ];
 

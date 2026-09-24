@@ -33,16 +33,16 @@ const PUBLISHED_VERSION_CATALOG = REAL_VERSION_CATALOG.replaceAll(
   UNPUBLISHED_IMAGE_DIGEST,
   PUBLISHED_IMAGE_DIGEST,
 );
-const OPENROUTER_IMAGE_PIN_PATTERN =
-  /("name": "shepherdjerred\/openrouter-broadcast-ingest",[\s\S]*?"value": "[^"]*@)sha256:[0-9a-f]{64}/;
+const BIRMEL_IMAGE_PIN_PATTERN =
+  /("name": "shepherdjerred\/birmel",[\s\S]*?"value": "[^"]*@)sha256:[0-9a-f]{64}/;
 
-function unpublishedOpenrouterVersionCatalog(source: string): string {
-  if (!OPENROUTER_IMAGE_PIN_PATTERN.test(source)) {
-    throw new Error("OpenRouter image pin is missing from the version catalog");
+function unpublishedBirmelVersionCatalog(source: string): string {
+  if (!BIRMEL_IMAGE_PIN_PATTERN.test(source)) {
+    throw new Error("Birmel image pin is missing from the version catalog");
   }
 
   return source.replace(
-    OPENROUTER_IMAGE_PIN_PATTERN,
+    BIRMEL_IMAGE_PIN_PATTERN,
     `$1${UNPUBLISHED_IMAGE_DIGEST}`,
   );
 }
@@ -202,15 +202,15 @@ describe("selectImageTargets", () => {
       ["README.md"],
       REPO_ROOT,
       {
-        versionCatalogSource: unpublishedOpenrouterVersionCatalog(
+        versionCatalogSource: unpublishedBirmelVersionCatalog(
           PUBLISHED_VERSION_CATALOG,
         ),
       },
     );
 
-    expect(result.targets).toEqual(["openrouter-broadcast-ingest"]);
-    expect(result.report.targets["openrouter-broadcast-ingest"]).toEqual([
-      "unpublished image pin shepherdjerred/openrouter-broadcast-ingest requires its first release",
+    expect(result.targets).toEqual(["birmel"]);
+    expect(result.report.targets["birmel"]).toEqual([
+      "unpublished image pin shepherdjerred/birmel requires its first release",
     ]);
   });
 

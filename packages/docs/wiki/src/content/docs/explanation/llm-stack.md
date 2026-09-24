@@ -1,15 +1,23 @@
 ---
 title: LLM stack
-description: One ordinary-inference gateway, two native coding-agent exceptions, repository-owned model and eval contracts, and an observability boundary that puts full content on every span and tail-samples LLM traces into a self-hosted Phoenix.
+description: One shared runtime that calls OpenAI, Anthropic, and Google directly, two native coding-agent exceptions, per-workload credentials with provider-side spend caps, and an observability boundary that puts full content on every span and tail-samples LLM traces into a self-hosted Phoenix.
 sidebar:
   order: 5
 ---
 
 Ordinary model inference in the monorepo goes through AI SDK 7 and the shared
-`@shepherdjerred/llm-runtime` package to OpenRouter. Text, structured output,
-tools, embeddings, images, and model-controlled web search all use that path.
-OpenRouter may change the upstream provider for availability, but it may not
-silently change the requested catalog model.
+`@shepherdjerred/llm-runtime` package, which calls OpenAI, Anthropic, and
+Google directly. Text, structured output, tools, embeddings, images, and
+model-controlled web search all use that path. Each catalog model names exactly
+one first-party provider route, so there is no upstream failover: a provider
+outage fails the call rather than silently serving a different model.
+
+The runtime used to front everything with OpenRouter. That bought one key and
+one bill, but it hid which provider served a call, put a reseller between the
+repository and each provider's own spend controls, and made every cost figure a
+number someone else computed. Calling providers directly moves spend
+containment to where the money is charged — each provider's own project or
+workspace caps — and makes cost exact arithmetic on provider-reported tokens.
 
 Claude Agent SDK and Codex SDK are the two exceptions. They are reserved for
 general-purpose coding or computer-use agents where a model needs repository
@@ -20,16 +28,50 @@ and command tools. They run in process through their native SDKs; active
 
 - `@shepherdjerred/llm-models` remains the language-neutral source of stable
   model IDs, capabilities, routes, lifecycle state, and canonical pricing.
-- `@shepherdjerred/llm-runtime` resolves exact routes, adds application and
-  trace attribution, enables AI SDK telemetry, captures router metadata, and
-  accounts usage and cost.
+- `@shepherdjerred/llm-runtime` resolves each model's native route, constructs
+  the provider client, adds application and trace attribution, enables AI SDK
+  telemetry, and accounts usage and catalog cost. It is the only place a
+  provider SDK is constructed or a provider credential is read.
 - `generateValidatedObject` is the only shared higher-level primitive. It uses
   a strict Zod-backed object output, retries transport failures separately from
   bounded semantic repair, and never extracts JSON from prose.
 - Scout and Discord Plays Pokemon keep their existing project-specific eval
   corpora and comparison processes. There is no generic eval framework.
-- A CI architecture check rejects Mastra, VoltAgent, ordinary direct-provider
-  clients and credentials, provider base URLs, and agent CLI subprocesses.
+- A CI architecture check rejects Mastra, VoltAgent, any OpenRouter surface,
+  provider SDKs and endpoints outside the runtime, provider credentials outside
+  reviewed wiring paths, a deployed `ANTHROPIC_API_KEY`, and agent CLI
+  subprocesses.
+
+## Credentials and spend containment
+
+Every workload and environment gets its own credential and its own provider
+project or workspace, so one runaway feature exhausts its own cap and nothing
+else. The three providers allow three different authentication models:
+
+| Provider  | Production credential                       | Hard cap                              | Managed by                                                 |
+| --------- | ------------------------------------------- | ------------------------------------- | ---------------------------------------------------------- |
+| OpenAI    | Per-project service-account key             | Project spend limit, model allowlist  | OpenTofu (`openai`), CI-applied                            |
+| Anthropic | Workload identity federation, no stored key | Workspace spend limit (Console)       | OpenTofu (`anthropic-federation`), operator-applied        |
+| Google    | Service-account-bound Gemini API key        | AI Studio project spend cap (Console) | OpenTofu (`google`) plus a `gcloud` mint, operator-applied |
+
+OpenAI has no federation, so production holds a static key there; OpenTofu
+mints it and hands it to 1Password. Anthropic federates: a pod presents a
+projected Kubernetes service-account token, and the runtime exchanges it for a
+short-lived access token. Federated workloads hold no Anthropic secret at all.
+The runtime refuses to start a federated client when `ANTHROPIC_API_KEY` is
+also set, because that key would silently outrank federation — the one way this
+design could appear to work while not actually being federated.
+
+Google was first planned on Vertex AI with federation, but Vertex has no
+per-project spend cap; its only hard limits are request quotas, and a dollar cap
+needs an enterprise subscription. The Gemini API has a per-project spend cap, at
+the cost of a static key that only `gcloud` can mint. A capped static key beat
+an uncapped federated identity.
+
+CI and local development cannot federate, so they use static keys from
+1Password for every provider. Provider-side caps are the backstop; the Prometheus
+alerts below are the early warning. Rotation and the manual steps are in
+[Rotate LLM provider credentials](/how-to/rotate-provider-credentials/).
 
 ## Observability boundary
 
@@ -78,8 +120,8 @@ per-service-stage projects — `scout-beta`, `scout-prod`, `birmel`,
 `temporal`, `discord-plays`, `misc` — through explicit allowlist branches.
 Each branch sets the `x-project-name` header and shares one system API key. A
 service listed in no branch reaches no project. That exclusion bounds
-Phoenix's database growth, so there is deliberately no catch-all branch;
-OpenRouter Broadcast payloads in particular stay out. Phoenix keeps traces
+Phoenix's database growth, so there is deliberately no catch-all branch.
+Phoenix keeps traces
 for 30 days, matching Tempo, and blocks inserts before its volume fills. The
 kill switch for a runaway producer is removing a branch from the sampler's
 output list, which the config reloader applies without recreating the pod;
@@ -89,65 +131,50 @@ spans that completed more than the decision window before a trace's first
 LLM span are gone for Phoenix. That loss is bounded to the pre-LLM bootstrap
 of long agent traces and is accepted; Tempo always holds the complete trace.
 
-OpenRouter Broadcast is a correlated second source of routing, provider, token,
-and actual-cost evidence. The authenticated `openrouter-broadcast-ingest`
-service archives the complete OTLP JSON payload, with credentials masked, and
-forwards that same payload to Tempo. Its digest receipt makes webhook redelivery
-idempotent, including retries across UTC date partitions. A `204` means both
-archive and forward completed; a failure intentionally asks OpenRouter to
-redeliver. That receipt is why this service deliberately bypasses
-`alloy-gateway` and forwards straight to Tempo: the gateway acknowledges a
-request before Tempo delivery is durable, which would let a gateway crash
-turn an already-issued receipt into a lie. Every other producer's telemetry
-is fire-and-forget, so the gateway's weaker acknowledgment costs them
-nothing. Broadcast payloads reach no Phoenix project either way — no
-allowlist branch matches them.
-
 Prometheus uses bounded service, workload, provider, model, outcome, token-type,
 and cost-type labels. Trace, generation, session, and user IDs are never
-labels. OpenRouter, Claude Agent SDK, and Codex SDK share:
+labels. The direct providers, Claude Agent SDK, and Codex SDK share:
 
 - `llm_requests_total`
 - `llm_request_duration_seconds`
 - `llm_tokens_total`
 
-`llm_cost_usd_total` is **not** shared. Only the OpenRouter gateway contributes
-to it. Both native SDKs bill against a subscription rather than per call, so any
-figure they report is an API-equivalent price rather than money that moved.
-Publishing that into the same series as real OpenRouter charges would have made
-the one number people sum, and the ceilings that alert on it, wrong. The native
-SDKs record tokens instead. Codex never had an `actual` figure at all, only a
-catalog estimate, which made the series look complete while being a guess.
+The `provider` label now names the real provider, and `gen_ai.system` on spans
+is the real provider too, which makes the traces conform to the GenAI semantic
+conventions for the first time.
 
-Cost is recorded under three `type` labels and they disagree, deliberately.
-`actual` is what OpenRouter charged, `catalog` is what our own pricing table
-predicts, and `upstream` is the provider's inference cost. For a BYOK route
-OpenRouter charges nothing, so `actual` reads zero while the real money sits in
-`upstream`. A spend query that reads only `actual` therefore understates the
-fleet. Which of the three is authoritative in the general case is still an open
-question, waiting on the correlated OpenRouter Broadcast record to settle it;
-until then the spend ceilings take the per-series maximum of `actual` and
-`upstream`, because an alert should err toward firing.
+`llm_cost_usd_total` is **not** shared. Both native SDKs bill against a
+subscription rather than per call, so any figure they report is an
+API-equivalent price rather than money that moved. They record tokens instead.
 
-For OpenAI BYOK traffic, none of those three gateway figures proves what OpenAI
-charged. Complimentary input/output sharing creates a fourth case: OpenRouter's
-`actual` cost is zero, `upstream` is an estimate of ordinary provider cost, and
-OpenAI may still charge zero because the request used its `incentivized-tier`.
-The evidence therefore has a strict order:
+Providers return tokens, never dollars, so spend has two series that measure the
+same money from opposite directions:
 
-1. `openrouter_metadata.is_byok` proves which credential path one request used.
-2. OpenAI's organization Usage API proves which `service_tier` received its
-   tokens after the provider's ingestion delay.
-3. OpenAI's organization Costs API is the billing authority for money charged.
-4. OpenRouter actual, upstream, and catalog cost remain routing and estimation
-   diagnostics, not proof of an OpenAI payment.
+- **Live** — `llm_cost_usd_total{type="catalog"}`: the catalog price applied to
+  provider-reported usage, per request, including cache reads and writes,
+  service tier, and server-side tool calls. It moves within a scrape and carries
+  workload labels, but it cannot see uninstrumented traffic (Codex, voice) or
+  OpenAI's complimentary data-sharing tokens.
+- **Billed** — `llm_billed_cost_usd{provider,account,window}`: what OpenAI's
+  Costs API and Anthropic's Cost Report say they will charge, per project or
+  workspace, reconciled hourly by the `temporal-billing-worker`. It includes
+  everything and is net of complimentary tokens, but it is an hour late and has
+  no workload labels.
 
-The `temporal-billing-worker` reconciles the OpenRouter OpenAI project hourly,
-with a 15-minute ingestion cutoff. It is a single-purpose Activity Worker: it
-has one organization admin key, Temporal and telemetry access, HTTPS egress,
-and Alertmanager access, but no Flipt reachability or Kubernetes service-account
-token. The privileged admin key remains organization-wide at OpenAI despite
-that runtime isolation.
+OpenAI's data-sharing program makes the two disagree on purpose: free tokens
+count in the live series and are absent from the billed one, so billed sitting
+below live is the program working. Billed above live means uninstrumented
+traffic or a stale catalog price. The dashboard shows both side by side rather
+than alerting on the gap, because the uninstrumented share makes any fixed
+tolerance meaningless. Both series have their own daily ceilings, and a
+staleness alert fires when the reconciliation stops succeeding. Google has no
+spend API short of a Cloud Billing export to BigQuery, so it has no billed
+series yet; its caps and Cloud Billing budget alerts cover it.
+
+The billing worker is a single-purpose Activity Worker: it holds the OpenAI and
+Anthropic organization admin keys and has Temporal, telemetry, and HTTPS egress,
+but no Flipt reachability or Kubernetes service-account token. The admin keys
+remain organization-wide at each provider despite that runtime isolation.
 
 ## Attribution
 
@@ -160,9 +187,9 @@ in different servers, so they belong to no single guild. Those workloads declare
 visible as unattributed rather than misfiled.
 
 The attribution span must be _active_, not merely created. The runtime reads the
-ambient span when it builds a call's attribution headers, so a call made outside
-one reaches OpenRouter with no trace ID, and its cost log can never be joined
-back to the span naming the subject. This is why Scout's cost logs carried a null
+ambient span when it stamps a call's trace ID, so a call made outside one reaches
+the provider with no trace ID, and its cost log can never be joined back to the
+span naming the subject. This is why Scout's cost logs carried a null
 trace ID before the call sites were wrapped: its `gen_ai.chat` spans were trace
 roots with no enclosing application span.
 
@@ -188,24 +215,24 @@ answered by a join rather than a long-range aggregate; see
 would need its own store, which is deliberately not built until a chargeback or
 quota requirement justifies it.
 
-Structured-output attempts, router attempts, and missing router metadata have
-separate counters. BYOK status is a bounded per-request counter; official
-current-day OpenAI tokens, cost, and reconciliation freshness are gauges.
+Structured-output attempts have their own counter. Billed cost, billed OpenAI
+tokens by service tier, and reconciliation freshness are gauges.
 Project IDs, generation IDs, user IDs, prompts, and responses never become
 labels. Existing `ai_provider_errors_total` and
 `ai_provider_issue_active` series remain queryable across the cutover.
 
 ## Deployment acceptance
 
-The migration is deployed atomically. Create one OpenRouter key per service and
-stage, create the Broadcast bearer secret, publish the Broadcast image, and
-canary Broadcast before the consumers. For each transport, verify the
-application span, SDK child spans, correlated Broadcast span, Loki log,
-Prometheus usage and cost, private body archive, and full-content Tempo
-record.
-Only after text, structured output, tools, embeddings, images, web search,
-Claude SDK, Codex SDK, and the production Temporal canary pass may old provider
-secrets be revoked.
+The cutover to direct providers is atomic. Before it deploys, the operator
+provisions each workload's OpenAI and Gemini keys into 1Password, applies the
+operator-only `anthropic-federation` and `google` stacks, and exports the
+federation identifiers into the committed workload-identity inventory. For each
+provider and endpoint type, verify the application span, provider child spans,
+Loki log, live cost, body archive, and full-content Tempo record; for
+Anthropic, also confirm the exchange appears in the Console's workload-identity
+history across several token rotations. Only after that, and after the old
+OpenRouter dashboard shows no traffic for a day, may the OpenRouter keys be
+revoked.
 
 Repository configuration or a healthy pod is not production acceptance. The
 operator must observe the real archive, Tempo, metrics, logs, and consumer
