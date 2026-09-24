@@ -526,6 +526,18 @@ export function toJson_ZfsRestoreSpec(
  */
 export interface ZfsRestoreVolSpec {
   /**
+   * ATime controls whether the access time for files is updated when they are read.
+   * Turning this property off ("off") avoids producing write traffic when reading files,
+   * which can result in significant performance gains for read-heavy workloads.
+   * This is a filesystem (dataset) only property and is ignored for zvols.
+   * ATime property can be edited after the volume has been created.
+   * Default Value: on.
+   *
+   * @schema ZfsRestoreVolSpec#atime
+   */
+  readonly atime?: ZfsRestoreVolSpecAtime;
+
+  /**
    * Capacity of the volume
    *
    * @schema ZfsRestoreVolSpec#capacity
@@ -604,6 +616,18 @@ export interface ZfsRestoreVolSpec {
    * @schema ZfsRestoreVolSpec#keylocation
    */
   readonly keylocation?: string;
+
+  /**
+   * LogBias provides a hint to ZFS about how to handle synchronous requests for this volume.
+   * If set to "latency" (the default), ZFS uses the pool's separate log devices, if any, to handle
+   * the requests at low latency. If set to "throughput", ZFS does not use the separate log devices,
+   * instead it optimizes synchronous operations for global pool throughput and efficient use of resources.
+   * LogBias property can be edited after the volume has been created.
+   * Default Value: latency.
+   *
+   * @schema ZfsRestoreVolSpec#logbias
+   */
+  readonly logbias?: ZfsRestoreVolSpecLogbias;
 
   /**
    * OwnerNodeID is the Node ID where the ZPOOL is running which is where
@@ -707,6 +731,7 @@ export function toJson_ZfsRestoreVolSpec(
     return undefined;
   }
   const result = {
+    atime: obj.atime,
     capacity: obj.capacity,
     compression: obj.compression,
     dedup: obj.dedup,
@@ -714,6 +739,7 @@ export function toJson_ZfsRestoreVolSpec(
     fsType: obj.fsType,
     keyformat: obj.keyformat,
     keylocation: obj.keylocation,
+    logbias: obj.logbias,
     ownerNodeID: obj.ownerNodeId,
     poolName: obj.poolName,
     quotaType: obj.quotaType,
@@ -731,6 +757,23 @@ export function toJson_ZfsRestoreVolSpec(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ATime controls whether the access time for files is updated when they are read.
+ * Turning this property off ("off") avoids producing write traffic when reading files,
+ * which can result in significant performance gains for read-heavy workloads.
+ * This is a filesystem (dataset) only property and is ignored for zvols.
+ * ATime property can be edited after the volume has been created.
+ * Default Value: on.
+ *
+ * @schema ZfsRestoreVolSpecAtime
+ */
+export enum ZfsRestoreVolSpecAtime {
+  /** on */
+  ON = "on",
+  /** off */
+  OFF = "off",
+}
 
 /**
  * Deduplication is the process for removing redundant data at the block level,
@@ -767,6 +810,23 @@ export enum ZfsRestoreVolSpecKeyformat {
   RAW = "raw",
   /** hex */
   HEX = "hex",
+}
+
+/**
+ * LogBias provides a hint to ZFS about how to handle synchronous requests for this volume.
+ * If set to "latency" (the default), ZFS uses the pool's separate log devices, if any, to handle
+ * the requests at low latency. If set to "throughput", ZFS does not use the separate log devices,
+ * instead it optimizes synchronous operations for global pool throughput and efficient use of resources.
+ * LogBias property can be edited after the volume has been created.
+ * Default Value: latency.
+ *
+ * @schema ZfsRestoreVolSpecLogbias
+ */
+export enum ZfsRestoreVolSpecLogbias {
+  /** latency */
+  LATENCY = "latency",
+  /** throughput */
+  THROUGHPUT = "throughput",
 }
 
 /**
@@ -947,6 +1007,18 @@ export function toJson_ZfsSnapshotProps(
  */
 export interface ZfsSnapshotSpec {
   /**
+   * ATime controls whether the access time for files is updated when they are read.
+   * Turning this property off ("off") avoids producing write traffic when reading files,
+   * which can result in significant performance gains for read-heavy workloads.
+   * This is a filesystem (dataset) only property and is ignored for zvols.
+   * ATime property can be edited after the volume has been created.
+   * Default Value: on.
+   *
+   * @schema ZfsSnapshotSpec#atime
+   */
+  readonly atime?: ZfsSnapshotSpecAtime;
+
+  /**
    * Capacity of the volume
    *
    * @schema ZfsSnapshotSpec#capacity
@@ -1025,6 +1097,18 @@ export interface ZfsSnapshotSpec {
    * @schema ZfsSnapshotSpec#keylocation
    */
   readonly keylocation?: string;
+
+  /**
+   * LogBias provides a hint to ZFS about how to handle synchronous requests for this volume.
+   * If set to "latency" (the default), ZFS uses the pool's separate log devices, if any, to handle
+   * the requests at low latency. If set to "throughput", ZFS does not use the separate log devices,
+   * instead it optimizes synchronous operations for global pool throughput and efficient use of resources.
+   * LogBias property can be edited after the volume has been created.
+   * Default Value: latency.
+   *
+   * @schema ZfsSnapshotSpec#logbias
+   */
+  readonly logbias?: ZfsSnapshotSpecLogbias;
 
   /**
    * OwnerNodeID is the Node ID where the ZPOOL is running which is where
@@ -1128,6 +1212,7 @@ export function toJson_ZfsSnapshotSpec(
     return undefined;
   }
   const result = {
+    atime: obj.atime,
     capacity: obj.capacity,
     compression: obj.compression,
     dedup: obj.dedup,
@@ -1135,6 +1220,7 @@ export function toJson_ZfsSnapshotSpec(
     fsType: obj.fsType,
     keyformat: obj.keyformat,
     keylocation: obj.keylocation,
+    logbias: obj.logbias,
     ownerNodeID: obj.ownerNodeId,
     poolName: obj.poolName,
     quotaType: obj.quotaType,
@@ -1152,6 +1238,23 @@ export function toJson_ZfsSnapshotSpec(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ATime controls whether the access time for files is updated when they are read.
+ * Turning this property off ("off") avoids producing write traffic when reading files,
+ * which can result in significant performance gains for read-heavy workloads.
+ * This is a filesystem (dataset) only property and is ignored for zvols.
+ * ATime property can be edited after the volume has been created.
+ * Default Value: on.
+ *
+ * @schema ZfsSnapshotSpecAtime
+ */
+export enum ZfsSnapshotSpecAtime {
+  /** on */
+  ON = "on",
+  /** off */
+  OFF = "off",
+}
 
 /**
  * Deduplication is the process for removing redundant data at the block level,
@@ -1188,6 +1291,23 @@ export enum ZfsSnapshotSpecKeyformat {
   RAW = "raw",
   /** hex */
   HEX = "hex",
+}
+
+/**
+ * LogBias provides a hint to ZFS about how to handle synchronous requests for this volume.
+ * If set to "latency" (the default), ZFS uses the pool's separate log devices, if any, to handle
+ * the requests at low latency. If set to "throughput", ZFS does not use the separate log devices,
+ * instead it optimizes synchronous operations for global pool throughput and efficient use of resources.
+ * LogBias property can be edited after the volume has been created.
+ * Default Value: latency.
+ *
+ * @schema ZfsSnapshotSpecLogbias
+ */
+export enum ZfsSnapshotSpecLogbias {
+  /** latency */
+  LATENCY = "latency",
+  /** throughput */
+  THROUGHPUT = "throughput",
 }
 
 /**
@@ -1745,6 +1865,18 @@ export function toJson_ZfsVolumeProps(
  */
 export interface ZfsVolumeSpec {
   /**
+   * ATime controls whether the access time for files is updated when they are read.
+   * Turning this property off ("off") avoids producing write traffic when reading files,
+   * which can result in significant performance gains for read-heavy workloads.
+   * This is a filesystem (dataset) only property and is ignored for zvols.
+   * ATime property can be edited after the volume has been created.
+   * Default Value: on.
+   *
+   * @schema ZfsVolumeSpec#atime
+   */
+  readonly atime?: ZfsVolumeSpecAtime;
+
+  /**
    * Capacity of the volume
    *
    * @schema ZfsVolumeSpec#capacity
@@ -1823,6 +1955,18 @@ export interface ZfsVolumeSpec {
    * @schema ZfsVolumeSpec#keylocation
    */
   readonly keylocation?: string;
+
+  /**
+   * LogBias provides a hint to ZFS about how to handle synchronous requests for this volume.
+   * If set to "latency" (the default), ZFS uses the pool's separate log devices, if any, to handle
+   * the requests at low latency. If set to "throughput", ZFS does not use the separate log devices,
+   * instead it optimizes synchronous operations for global pool throughput and efficient use of resources.
+   * LogBias property can be edited after the volume has been created.
+   * Default Value: latency.
+   *
+   * @schema ZfsVolumeSpec#logbias
+   */
+  readonly logbias?: ZfsVolumeSpecLogbias;
 
   /**
    * OwnerNodeID is the Node ID where the ZPOOL is running which is where
@@ -1926,6 +2070,7 @@ export function toJson_ZfsVolumeSpec(
     return undefined;
   }
   const result = {
+    atime: obj.atime,
     capacity: obj.capacity,
     compression: obj.compression,
     dedup: obj.dedup,
@@ -1933,6 +2078,7 @@ export function toJson_ZfsVolumeSpec(
     fsType: obj.fsType,
     keyformat: obj.keyformat,
     keylocation: obj.keylocation,
+    logbias: obj.logbias,
     ownerNodeID: obj.ownerNodeId,
     poolName: obj.poolName,
     quotaType: obj.quotaType,
@@ -1950,6 +2096,23 @@ export function toJson_ZfsVolumeSpec(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ATime controls whether the access time for files is updated when they are read.
+ * Turning this property off ("off") avoids producing write traffic when reading files,
+ * which can result in significant performance gains for read-heavy workloads.
+ * This is a filesystem (dataset) only property and is ignored for zvols.
+ * ATime property can be edited after the volume has been created.
+ * Default Value: on.
+ *
+ * @schema ZfsVolumeSpecAtime
+ */
+export enum ZfsVolumeSpecAtime {
+  /** on */
+  ON = "on",
+  /** off */
+  OFF = "off",
+}
 
 /**
  * Deduplication is the process for removing redundant data at the block level,
@@ -1986,6 +2149,23 @@ export enum ZfsVolumeSpecKeyformat {
   RAW = "raw",
   /** hex */
   HEX = "hex",
+}
+
+/**
+ * LogBias provides a hint to ZFS about how to handle synchronous requests for this volume.
+ * If set to "latency" (the default), ZFS uses the pool's separate log devices, if any, to handle
+ * the requests at low latency. If set to "throughput", ZFS does not use the separate log devices,
+ * instead it optimizes synchronous operations for global pool throughput and efficient use of resources.
+ * LogBias property can be edited after the volume has been created.
+ * Default Value: latency.
+ *
+ * @schema ZfsVolumeSpecLogbias
+ */
+export enum ZfsVolumeSpecLogbias {
+  /** latency */
+  LATENCY = "latency",
+  /** throughput */
+  THROUGHPUT = "throughput",
 }
 
 /**
