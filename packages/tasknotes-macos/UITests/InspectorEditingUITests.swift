@@ -138,9 +138,19 @@ final class InspectorEditingUITests: XCTestCase {
             .outlineRows.containing(.staticText, identifier: title).firstMatch
         XCTAssertTrue(nativeRow.waitForExistence(timeout: 5), "missing native row \(title)")
         // A row matched during an outline reload can vanish before the tap
-        // resolves its query — after a relaunch the snapshot fails with no
-        // matches. Hittability re-resolves immediately before the tap.
-        XCTAssertTrue(waitForHittable(nativeRow, timeout: 5), "row never hittable \(title)")
+        // resolves its query. Stability waits out the reload; hittability is
+        // deliberately not required first, because the tap scrolls a
+        // below-fold row into view itself and a hittability gate would forbid
+        // taps that succeed.
+        if !waitForStableFrame(nativeRow, timeout: 10) {
+            let rows = app.outlines[AccessibilityIdentifier.TaskList.list]
+                .outlineRows.containing(.staticText, identifier: title)
+            XCTFail(
+                "row never settled \(title): \(rows.count) matches, "
+                    + "frame \(nativeRow.frame), outline: "
+                    + app.outlines[AccessibilityIdentifier.TaskList.list].debugDescription
+            )
+        }
         // `XCUIElement.click()` chooses the trailing edge of this outline row,
         // where the hover actions live. The leading cell inset is owned by the
         // native table and therefore exercises selection directly.
@@ -187,9 +197,9 @@ final class InspectorEditingUITests: XCTestCase {
 
     /// Poll until the element can receive a click, or give up.
     ///
-    /// Existence only means the query resolves. A sheet radio still animating
-    /// in exists but is not hittable, and an outline row matched during a
-    /// reload can vanish before the tap resolves. Bounded poll, not a fixed
+    /// Existence only means the query resolves: a sheet radio still animating
+    /// in exists but is not hittable. For sheet controls the container never
+    /// scrolls, so hittability is the right gate. Bounded poll, not a fixed
     /// sleep — QuickAdd's activation wait explains why.
     private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
@@ -200,6 +210,41 @@ final class InspectorEditingUITests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         return element.isHittable
+    }
+
+    /// Poll until the element's frame stops changing, or give up.
+    ///
+    /// An outline row can exist while its outline is still reloading: each
+    /// access re-resolves the query, so existence alone cannot tell a settled
+    /// row from one that will vanish before the tap resolves. A stable frame
+    /// across consecutive samples means the reload finished. This deliberately
+    /// does not require hittability — the tap scrolls a below-fold row into
+    /// view itself.
+    private func waitForStableFrame(
+        _ element: XCUIElement,
+        samples: Int = 3,
+        interval: TimeInterval = 0.2,
+        timeout: TimeInterval = 10
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        var stable = 0
+        var previous = CGRect.null
+        while Date() < deadline {
+            let frame = element.frame
+            if frame.isNull || frame.isEmpty {
+                stable = 0
+            } else if frame == previous {
+                stable += 1
+                if stable >= samples {
+                    return true
+                }
+            } else {
+                stable = 1
+            }
+            previous = frame
+            RunLoop.current.run(until: Date().addingTimeInterval(interval))
+        }
+        return false
     }
 
     private func waitForVault(

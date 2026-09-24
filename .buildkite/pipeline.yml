@@ -1037,7 +1037,10 @@ steps:
       cd ../..
       bun --no-install run --cwd packages/tasknotes-macos mac:verify
       bun --no-install run --cwd packages/tasknotes-macos mac:analyze
-      bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+      if ! bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci; then
+        buildkite-agent artifact upload "packages/tasknotes-macos/.build/xcode/Logs/Test/*.xcresult/**/*" || echo "xcresult upload failed"
+        exit 1
+      fi
     retry: *retry
     agents:
       queue: macos
@@ -1060,7 +1063,10 @@ steps:
       cd ../..
       bun --no-install run --cwd packages/tasknotes-macos mac:verify
       bun --no-install run --cwd packages/tasknotes-macos mac:analyze
-      bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+      if ! bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci; then
+        buildkite-agent artifact upload "packages/tasknotes-macos/.build/xcode/Logs/Test/*.xcresult/**/*" || echo "xcresult upload failed"
+        exit 1
+      fi
     retry: *retry
     agents:
       queue: macos
