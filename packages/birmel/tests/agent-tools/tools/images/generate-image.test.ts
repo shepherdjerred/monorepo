@@ -270,7 +270,7 @@ describe("generateImageTool - reference image editing", () => {
 describe("generateImageTool - error handling and validation", () => {
   test("returns clean error result when generateImage throws", async () => {
     mockGenerateImage.mockRejectedValueOnce(
-      new Error("OpenRouter rate limit reached"),
+      new Error("provider rate limit reached"),
     );
 
     const context: RequestContext = { ...dummyContext };
@@ -284,7 +284,7 @@ describe("generateImageTool - error handling and validation", () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain("OpenRouter rate limit reached");
+    expect(result.message).toContain("provider rate limit reached");
 
     const staged = getStagedAttachments(context);
     expect(staged).toHaveLength(0);

@@ -96,10 +96,10 @@ function harness(options: HarnessInput = {}): {
     root: "/workspace",
     prompt: "refine the release notes",
     env: { GH_TOKEN: "github-token", GIT_ASKPASS: "/tmp/askpass" },
-    openRouterApiKey: "openrouter-key",
+    openAiApiKey: "openai-key",
     execute,
     runCodex: (received) => {
-      expect(received.openRouterApiKey).toBe("openrouter-key");
+      expect(received.openAiApiKey).toBe("openai-key");
       state.agentCalls += 1;
       if (options.agentError !== undefined) throw options.agentError;
       return Promise.resolve(
@@ -136,7 +136,7 @@ describe("release refiner provider selection", () => {
       "gh",
     ]);
     for (const call of testHarness.calls) {
-      expect(call.unsetEnv).toContain("OPENROUTER_API_KEY");
+      expect(call.unsetEnv).toContain("OPENAI_API_KEY");
       expect(call.unsetEnv).toContain("CLAUDE_CODE_OAUTH_TOKEN");
     }
   });
@@ -154,10 +154,10 @@ describe("release refiner provider selection", () => {
 
 describe("release refiner failure handling", () => {
   test("fails closed without invoking another provider", async () => {
-    const testHarness = harness({ agentError: new Error("OpenRouter failed") });
+    const testHarness = harness({ agentError: new Error("provider failed") });
 
     await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
-      "OpenRouter failed",
+      "provider failed",
     );
     expect(testHarness.agentCalls).toBe(1);
   });
@@ -248,7 +248,7 @@ describe("refinerSdkEnv", () => {
         GITHUB_APP_PRIVATE_KEY: "private-key",
         BUILDKITE_AGENT_ACCESS_TOKEN: "agent-token",
         CLAUDE_CODE_OAUTH_TOKEN: "claude-token",
-        OPENROUTER_API_KEY: "openrouter-key",
+        OPENAI_API_KEY: "openai-key",
       },
     );
 

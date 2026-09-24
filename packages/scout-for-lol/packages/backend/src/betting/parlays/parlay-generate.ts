@@ -271,7 +271,6 @@ async function generateAndPersistDefinition(
   );
   resolveProviderIssue({
     app: "scout-for-lol",
-    provider: "openrouter",
     kind: "quota",
     source: "betting_parlay",
   });

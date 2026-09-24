@@ -13,7 +13,7 @@ describe("release refiner native SDK contract", () => {
     expect(typeof createCodexConfig).toBe("function");
   });
 
-  test("pins Codex SDK and the shared OpenRouter adapter", async () => {
+  test("pins Codex SDK and the shared runtime Codex adapter", async () => {
     const manifest = ScriptsPackageSchema.parse(
       await Bun.file(`${import.meta.dir}/../package.json`).json(),
     );

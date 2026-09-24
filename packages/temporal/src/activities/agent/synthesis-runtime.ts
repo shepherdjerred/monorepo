@@ -46,9 +46,13 @@ export async function generateBoundedSynthesis(input: {
   maxWords: number;
 }): Promise<string | undefined> {
   try {
-    const openRouter = temporalLlmRuntime();
+    const llm = temporalLlmRuntime();
     return await withLlmSpan(
-      { service: "temporal", callSite: input.callSite, system: "openrouter" },
+      {
+        service: "temporal",
+        callSite: input.callSite,
+        system: llm.providerFor(SYNTHESIS_MODEL).provider,
+      },
       {
         model: SYNTHESIS_MODEL,
         maxTokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
@@ -62,11 +66,11 @@ export async function generateBoundedSynthesis(input: {
           serializeBodyAttribute({ prompt: input.prompt }),
         );
         const result = await generateText({
-          model: openRouter.languageModel(SYNTHESIS_MODEL),
+          model: llm.languageModel(SYNTHESIS_MODEL),
           prompt: input.prompt,
           maxOutputTokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
           maxRetries: 2,
-          ...openRouter.callOptions({ workload: input.workload }),
+          ...llm.callOptions({ workload: input.workload }),
         });
         span.setAttribute(
           "gen_ai.output.messages",

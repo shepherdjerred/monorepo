@@ -67,7 +67,7 @@ async function embedding(value: string): Promise<number[]> {
   const config = getConfig();
   const runtime = getLlmRuntime();
   const result = await embed({
-    model: runtime.embeddingModel(config.openRouter.embeddingModel),
+    model: runtime.embeddingModel(config.llm.embeddingModel),
     value,
     abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
     ...runtime.callOptions({ workload: "birmel.memory-tool.embed" }),
@@ -147,7 +147,7 @@ async function inspectOrMutateMemory(
         sourceDiscordMessageIds: [request.sourceMessageId],
         authorUserId: request.userId,
         channelId: request.sourceChannelId,
-        extractorModel: config.openRouter.memoryModel,
+        extractorModel: config.llm.memoryModel,
       });
       suppressAutomaticMemoryExtraction();
       return {
@@ -184,7 +184,7 @@ async function inspectOrMutateMemory(
           sourceOrder: request.sourceMessageId,
           authorUserId: request.userId,
           channelId: request.sourceChannelId,
-          extractorModel: config.openRouter.memoryModel,
+          extractorModel: config.llm.memoryModel,
           embedding: await embedding(value),
         }),
       };
@@ -217,7 +217,7 @@ async function rememberMemory(input: MemoryToolInput, request: RequestContext) {
         userId: request.userId,
         personaId: request.personaId ?? null,
         authorUserId: request.userId,
-        extractorModel: config.openRouter.memoryModel,
+        extractorModel: config.llm.memoryModel,
       },
       candidate,
       embedding: await embedding(

@@ -1,3 +1,4 @@
+import { requireNativeRoute } from "@shepherdjerred/llm-models";
 import type {
   AnthropicCredentials,
   GoogleCredentials,
@@ -101,4 +102,29 @@ export function providerCredentialsFromEnv(
     ...(anthropic === undefined ? {} : { anthropic }),
     ...(google === undefined ? {} : { google }),
   };
+}
+
+/**
+ * Fail fast when the provider a model routes to has no credentials.
+ *
+ * The runtime already refuses at the first call, which is right for services.
+ * A CLI that spends minutes fetching and enriching data before its first model
+ * call wants the answer up front, and wants it to name the provider — "no
+ * OpenAI credentials" is actionable where the old "OPENROUTER_API_KEY is
+ * required" no longer applies to anything.
+ */
+export function requireCredentialsFor(
+  modelId: string,
+  credentials: ProviderCredentials = providerCredentialsFromEnv(),
+): void {
+  const { provider } = requireNativeRoute(modelId);
+  if (credentials[provider] !== undefined) return;
+  const hint = {
+    openai: "OPENAI_API_KEY",
+    anthropic: "ANTHROPIC_API_KEY or the ANTHROPIC_FEDERATION_* variables",
+    google: "GOOGLE_VERTEX_PROJECT",
+  }[provider];
+  throw new Error(
+    `Model ${modelId} routes to ${provider}, but no ${provider} credentials are configured (set ${hint})`,
+  );
 }

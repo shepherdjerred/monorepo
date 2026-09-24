@@ -10,13 +10,12 @@ export const DIRECT_PROVIDER_CREDENTIAL_KEYS = [
   "GOOGLE_GENERATIVE_AI_API_KEY",
   "GROQ_API_KEY",
   "OPENAI_API_KEY",
-  "OPENROUTER_API_KEY",
   "XAI_API_KEY",
 ] as const;
 
 export const PROVIDER_CREDENTIAL_KEYS = {
   claude: "CLAUDE_CODE_OAUTH_TOKEN",
-  codex: "OPENROUTER_API_KEY",
+  codex: "OPENAI_API_KEY",
 } as const satisfies Record<AgentTaskProvider, string>;
 
 // Every inference credential the worker can hold, direct or subscription.

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   constructor: vi.fn(),
   resumeThread: vi.fn(),
   startThread: vi.fn(),
-  createOpenRouterConfig: vi.fn(),
+  createCodexConfig: vi.fn(),
   prepareProviderWorkspace: vi.fn(),
   restoreProviderWorkspace: vi.fn(),
   finishParser: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock("@openai/codex-sdk", () => ({
   },
 }));
 vi.mock("@shepherdjerred/llm-runtime", () => ({
-  createCodexConfig: mocks.createOpenRouterConfig,
+  createCodexConfig: mocks.createCodexConfig,
 }));
 vi.mock("./provider-workspace.ts", () => ({
   prepareProviderWorkspace: mocks.prepareProviderWorkspace,
@@ -220,20 +220,20 @@ describe("runCodexAgentTurn failure classification", () => {
 });
 
 describe("runCodexAgentTurn preparation", () => {
-  test("uses a persistent OpenRouter home for an initial session", async () => {
+  test("uses a persistent API-key home for an initial session", async () => {
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
     let expectedCodexHome = "";
-    mocks.createOpenRouterConfig.mockImplementation((input: unknown) => {
+    mocks.createCodexConfig.mockImplementation((input: unknown) => {
       const parsed = z
         .object({ env: z.record(z.string(), z.string()) })
         .parse(input);
       expect(parsed.env["HOME"]).toBe(expectedCodexHome);
       expect(parsed.env["CODEX_HOME"]).toBe(expectedCodexHome);
-      throw new Error("OpenRouter setup failed");
+      throw new Error("Codex setup failed");
     });
 
     await withLifecycleDirectory(
-      "codex-openrouter-lifecycle",
+      "codex-api-key-lifecycle",
       async ({ codexHome }) => {
         expectedCodexHome = codexHome;
         await expect(
@@ -241,11 +241,11 @@ describe("runCodexAgentTurn preparation", () => {
             service: "temporal",
             callSite: "agent-chat",
             prompt: "continue",
-            model: "openrouter/model",
+            model: "gpt-5.6-luna",
             maxTurns: 4,
             turnBudgetKind: "turns",
             cwd: "/work/session",
-            auth: { kind: "openrouter", apiKey: "openrouter-secret" },
+            auth: { kind: "openai-api-key", apiKey: "openai-secret" },
             env: { CODEX_HOME: codexHome },
             signal: new AbortController().signal,
             sandboxPolicy: {
@@ -337,7 +337,6 @@ describe("runCodexAgentTurn", () => {
         GOOGLE_GENERATIVE_AI_API_KEY: "must-not-forward",
         GROQ_API_KEY: "must-not-forward",
         OPENAI_API_KEY: "must-not-forward",
-        OPENROUTER_API_KEY: "must-not-forward-either",
         XAI_API_KEY: "must-not-forward",
       },
       signal: new AbortController().signal,
@@ -353,7 +352,7 @@ describe("runCodexAgentTurn", () => {
       onEvent,
     });
 
-    expect(mocks.createOpenRouterConfig).not.toHaveBeenCalled();
+    expect(mocks.createCodexConfig).not.toHaveBeenCalled();
     expect(mocks.constructor).not.toHaveBeenCalled();
     expect(mocks.subscriptionEvents).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -400,7 +399,7 @@ describe("runCodexAgentTurn", () => {
     let wrapperPath = "";
     let wrapperScript = "";
     let providerHome = "";
-    mocks.createOpenRouterConfig.mockImplementation((input: unknown) => {
+    mocks.createCodexConfig.mockImplementation((input: unknown) => {
       const parsed = z
         .object({ env: z.record(z.string(), z.string()) })
         .parse(input);
@@ -409,7 +408,7 @@ describe("runCodexAgentTurn", () => {
       expect(parsed.env["CODEX_HOME"]).toBe(path.join(providerHome, ".codex"));
       return {
         codexOptions: { env: parsed.env },
-        routeModelId: "openrouter/model",
+        routeModelId: "gpt-5.6-luna",
       };
     });
     mocks.constructor.mockImplementation((options: unknown) => {
@@ -430,11 +429,11 @@ describe("runCodexAgentTurn", () => {
       service: "temporal",
       callSite: "agent-chat",
       prompt: "start",
-      model: "openrouter/model",
+      model: "gpt-5.6-luna",
       maxTurns: 4,
       turnBudgetKind: "turns",
       cwd: "/work/session",
-      auth: { kind: "openrouter", apiKey: "openrouter-secret" },
+      auth: { kind: "openai-api-key", apiKey: "openai-secret" },
       env: { PATH: "/bin", HOME: "/root" },
       signal: new AbortController().signal,
       sandboxPolicy: {
@@ -443,7 +442,7 @@ describe("runCodexAgentTurn", () => {
         webSearchMode: "live",
       },
       skipGitRepoCheck: true,
-      redactTokens: ["openrouter-secret"],
+      redactTokens: ["openai-secret"],
       beforeEvent: () => Promise.resolve(true),
       onEvent: vi.fn(),
     });

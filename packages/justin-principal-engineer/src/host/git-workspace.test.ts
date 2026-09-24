@@ -27,7 +27,7 @@ const config: Config = {
   },
   agents: {
     codex: {
-      openRouterApiKey: "op://vault/codex/key",
+      openAiApiKey: "op://vault/codex/key",
       model: "codex",
     },
   },

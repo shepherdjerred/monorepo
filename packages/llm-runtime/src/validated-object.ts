@@ -12,7 +12,11 @@ import {
 } from "@shepherdjerred/llm-observability/span-helpers";
 import { z } from "zod";
 import { requireNativeRoute } from "@shepherdjerred/llm-models";
-import { reasoningProviderOptions, type ProviderOptions } from "./reasoning.ts";
+import {
+  mergeProviderOptions as mergeOptionBuckets,
+  reasoningProviderOptions,
+  type ProviderOptions,
+} from "./provider-options.ts";
 import {
   addTokenBreakdown,
   emptyTokenBreakdown,
@@ -146,17 +150,14 @@ function aggregateUsage(
  * Merge reasoning options into the runtime's call options without either set
  * clobbering the other's provider bucket.
  */
-function mergeProviderOptions<
-  T extends { providerOptions?: Record<string, Record<string, unknown>> },
->(callOptions: T, reasoning: ProviderOptions | undefined): T {
-  if (reasoning === undefined) return callOptions;
-  const merged: Record<string, Record<string, unknown>> = {
-    ...callOptions.providerOptions,
-  };
-  for (const [provider, values] of Object.entries(reasoning)) {
-    merged[provider] = { ...merged[provider], ...values };
-  }
-  return { ...callOptions, providerOptions: merged };
+function mergeProviderOptions<T extends { providerOptions?: ProviderOptions }>(
+  callOptions: T,
+  reasoning: ProviderOptions | undefined,
+): T {
+  const merged = mergeOptionBuckets(callOptions.providerOptions, reasoning);
+  return merged === undefined
+    ? callOptions
+    : { ...callOptions, providerOptions: merged };
 }
 
 /**

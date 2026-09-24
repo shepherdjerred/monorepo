@@ -3,10 +3,13 @@ import {
   aiProviderErrorsTotal,
   aiProviderIssueActive,
 } from "#src/metrics/index.ts";
-import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
+import {
+  PROVIDER_ISSUE_KINDS,
+  SCOUT_LLM_PROVIDERS,
+} from "#src/alerts/provider-issue-kinds.ts";
 
-// Keep direct-provider values readable for historical series across cutover.
-const ProviderSchema = z.enum(["openrouter", "openai", "gemini"]);
+const ProviderSchema = z.enum(SCOUT_LLM_PROVIDERS);
+export type ScoutLlmProvider = z.infer<typeof ProviderSchema>;
 const ProviderIssueKindSchema = z.enum(PROVIDER_ISSUE_KINDS);
 
 export type ProviderIssueKind = z.infer<typeof ProviderIssueKindSchema>;
@@ -39,7 +42,7 @@ type ProviderError = z.infer<typeof ProviderErrorSchema>;
 
 function labels(issue: ProviderIssue): {
   app: "scout-for-lol";
-  provider: "openrouter" | "openai" | "gemini";
+  provider: ScoutLlmProvider;
   kind: ProviderIssueKind;
   source: string;
 } {
@@ -108,9 +111,68 @@ export function recordProviderIssue(input: ProviderIssue): void {
   aiProviderIssueActive.set(issueLabels, 1);
 }
 
-export function resolveProviderIssue(input: ProviderIssue): void {
-  const issue = ProviderIssueSchema.parse(input);
-  aiProviderIssueActive.set(labels(issue), 0);
+/**
+ * Clear an issue for every provider. A success does not say which provider a
+ * stale failure came from, and the model behind a source can change between
+ * the failure and the recovery.
+ */
+export function resolveProviderIssue(
+  input: Omit<ProviderIssue, "provider">,
+): void {
+  for (const provider of SCOUT_LLM_PROVIDERS) {
+    const issue = ProviderIssueSchema.parse({ ...input, provider });
+    aiProviderIssueActive.set(labels(issue), 0);
+  }
+}
+
+const RequestUrlSchema = z.looseObject({ url: z.string() });
+const NestedErrorSchema = z.looseObject({
+  cause: z.unknown().optional(),
+  lastError: z.unknown().optional(),
+  errors: z.array(z.unknown()).optional(),
+});
+
+function providerForHost(url: string): ScoutLlmProvider | undefined {
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return undefined;
+  }
+  if (host.endsWith("openai.com")) return "openai";
+  if (host.endsWith("anthropic.com")) return "anthropic";
+  return host.endsWith("googleapis.com") ? "google" : undefined;
+}
+
+/**
+ * The provider behind a failed call, read from the request URL the AI SDK
+ * attaches to its API errors. Walks retry wrappers and causes, since a
+ * transport failure usually arrives wrapped at least once.
+ */
+export function providerForError(error: unknown): ScoutLlmProvider {
+  const pending: unknown[] = [error];
+  const seen = new Set<unknown>();
+  while (pending.length > 0) {
+    const current = pending.shift();
+    if (current === undefined || current === null || seen.has(current)) {
+      continue;
+    }
+    seen.add(current);
+    const withUrl = RequestUrlSchema.safeParse(current);
+    if (withUrl.success) {
+      const provider = providerForHost(withUrl.data.url);
+      if (provider !== undefined) return provider;
+    }
+    const nested = NestedErrorSchema.safeParse(current);
+    if (nested.success) {
+      pending.push(
+        nested.data.cause,
+        nested.data.lastError,
+        ...(nested.data.errors ?? []),
+      );
+    }
+  }
+  return "unknown";
 }
 
 export function classifyLlmProviderIssue(

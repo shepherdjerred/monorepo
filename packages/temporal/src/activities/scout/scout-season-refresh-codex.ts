@@ -54,9 +54,9 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
 export async function runSeasonAgent(
   input: SeasonAgentRunInput,
 ): Promise<SeasonAgentRunResult> {
-  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (openRouterApiKey === undefined || openRouterApiKey === "") {
-    throw new Error("OPENROUTER_API_KEY is required");
+  const openAiApiKey = Bun.env["OPENAI_API_KEY"];
+  if (openAiApiKey === undefined || openAiApiKey === "") {
+    throw new Error("OPENAI_API_KEY is required");
   }
   const prompt = buildSeasonRefreshPrompt({
     today: new Date().toISOString().slice(0, 10),
@@ -108,8 +108,8 @@ export async function runSeasonAgent(
       maxTurns: input.maxTurns,
       turnBudgetKind: "turns",
       cwd: input.workdir,
-      auth: { kind: "openrouter", apiKey: openRouterApiKey },
-      env: envForTrustedAgent({ OPENROUTER_API_KEY: openRouterApiKey }),
+      auth: { kind: "openai-api-key", apiKey: openAiApiKey },
+      env: envForTrustedAgent({ OPENAI_API_KEY: openAiApiKey }),
       signal,
       sandboxPolicy: {
         sandboxMode: "danger-full-access",

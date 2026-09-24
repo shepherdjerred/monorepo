@@ -2,7 +2,7 @@
 // each purchase, have the LLM suggest a note and (optionally) a better
 // category, and apply through the guard/notes machinery.
 //
-//   OPENROUTER_API_KEY=... bun run scripts/match-emails.ts \
+//   OPENAI_API_KEY=... bun run scripts/match-emails.ts \
 //     [--apply] [--limit N] [--rebuild-index] [--model <id>]
 //
 // Dry run by default: prints the match report and writes nothing.
@@ -15,6 +15,7 @@ import {
   fetchCategories,
   setTransactionNotes,
 } from "../src/lib/monarch/client.ts";
+import { requireCredentialsFor } from "@shepherdjerred/llm-runtime";
 import { initLlm } from "../src/lib/classifier/llm.ts";
 import { loadEmailIndex } from "../src/lib/mail/index.ts";
 import {
@@ -59,10 +60,7 @@ const { values } = parseArgs({
 const LIMIT = Number(values.limit);
 const CONCURRENCY = Math.max(1, Number(values.concurrency));
 
-const apiKey = Bun.env["OPENROUTER_API_KEY"];
-if (apiKey === undefined || apiKey === "") {
-  throw new Error("OPENROUTER_API_KEY environment variable is required");
-}
+requireCredentialsFor(values.model);
 initLlm(values.model);
 
 const CHECKPOINT_PATH = await resolveCachePath(

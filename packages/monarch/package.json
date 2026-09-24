@@ -1,7 +1,7 @@
 {
   "name": "@shepherdjerred/monarch",
   "version": "0.1.0",
-  "description": "Monarch Money transaction classifier using OpenRouter + Amazon order matching",
+  "description": "Monarch Money transaction classifier using first-party LLM providers + Amazon order matching",
   "type": "module",
   "bin": {
     "monarch-classify": "./src/index.ts"

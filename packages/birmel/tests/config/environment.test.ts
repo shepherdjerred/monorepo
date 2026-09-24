@@ -4,7 +4,7 @@ import { loadConfigFromEnvironment } from "@shepherdjerred/birmel/config/index.t
 const VALID_ENVIRONMENT = {
   DISCORD_TOKEN: "token",
   DISCORD_CLIENT_ID: "1".repeat(18),
-  OPENROUTER_API_KEY: "key",
+  OPENAI_API_KEY: "key",
 };
 
 describe("strict environment configuration", () => {

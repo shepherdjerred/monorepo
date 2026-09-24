@@ -225,7 +225,7 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 // Build the deliberately small environment for a native agent SDK run. The SDK
 // child process inherits nothing by default: only basic process/TLS settings,
 // non-secret evidence endpoints, the dedicated read-only Kubernetes identity,
-// and the one OpenRouter credential its own provider needs. Every other
+// and the one provider credential its own SDK needs. Every other
 // worker credential — Postal, S3, GitHub, Temporal, Talos — stays out, so a
 // prompt-injected agent has nothing to exfiltrate from its own environment.
 export function envForProvider(
