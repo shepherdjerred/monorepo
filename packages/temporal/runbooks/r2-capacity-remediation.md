@@ -150,5 +150,5 @@ credential exists (see `requiredEnvironment` in
 
 - Orphan cleanup runbook: `packages/temporal/runbooks/velero-orphan-snapshot-remediation.md`
 - R2 workflow source: `packages/temporal/src/workflows/homelab/velero-r2-orphan-audit.ts`
-- Alert rules: `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/storage/velero.ts`
+- Alert rules: `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/storage/r2-storage.ts` (`velero-r2-orphans` group)
 - Schedules/TTLs: `packages/homelab/src/cdk8s/src/resources/velero/velero-schedules.ts`

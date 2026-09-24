@@ -474,60 +474,6 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
           severity: "warning",
         },
       },
-      {
-        alert: "VeleroR2OrphanPrefixes",
-        annotations: {
-          summary: "Velero orphan R2 backup prefixes detected",
-          message: escapePrometheusTemplate(
-            "Velero orphan R2 prefixes present: {{ $value }} prefix(es) under zfspv-incr/backups/ have no matching live Velero Backup CR or metadata. Run packages/temporal/runbooks/r2-capacity-remediation.md.",
-          ),
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "velero_orphan_r2_prefixes_total > 0",
-        ),
-        for: "24h",
-        labels: {
-          severity: "warning",
-        },
-      },
-      {
-        alert: "VeleroR2OrphanBytesExcessive",
-        annotations: {
-          summary: "Velero orphan R2 prefixes consuming significant storage",
-          message: escapePrometheusTemplate(
-            "Velero orphan R2 prefixes consume {{ $value | humanize1024 }}B. Run the remediation runbook to reclaim space before the bucket approaches its limit.",
-          ),
-        },
-        // 50 GiB ceiling — under two days of accumulation at the observed
-        // September 2026 rate (~30 GiB/day with zero reclamation).
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "velero_orphan_r2_bytes_total > 50 * 1024 * 1024 * 1024",
-        ),
-        for: "24h",
-        labels: {
-          severity: "warning",
-        },
-      },
-      {
-        alert: "VeleroR2OrphanAuditNotRunning",
-        annotations: {
-          summary:
-            "velero-r2-orphan-audit workflow has not run successfully recently",
-          message: escapePrometheusTemplate(
-            "The velero-r2-orphan-audit Temporal workflow has not incremented its success counter in 36h+. R2 detection metrics may be stale. Investigate the workflow in the Temporal UI.",
-          ),
-        },
-        // Workflow runs daily at 04:00 PT; alert if success metrics disappear
-        // for 36h. The counter is low-frequency and resets on worker rollouts,
-        // so rate/increase are unreliable freshness checks.
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'absent_over_time(velero_r2_orphan_audit_runs_total{outcome="success"}[36h])',
-        ),
-        for: "1h",
-        labels: {
-          severity: "warning",
-        },
-      },
     ],
   };
 }
