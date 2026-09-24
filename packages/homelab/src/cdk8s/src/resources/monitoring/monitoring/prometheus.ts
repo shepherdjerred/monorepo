@@ -26,6 +26,7 @@ import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { getFliptRuleGroups } from "./rules/flipt.ts";
 import { getLlmRuleGroups } from "./rules/llm.ts";
+import { getOpsSnapshotRuleGroups } from "./rules/ops-snapshot.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 import { getAlertingControlRuleGroups } from "./rules/platform/alerting-control.ts";
@@ -358,6 +359,17 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getLlmRuleGroups(),
+    },
+  });
+
+  new PrometheusRule(chart, "prometheus-ops-snapshot-rules", {
+    metadata: {
+      name: "prometheus-ops-snapshot-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getOpsSnapshotRuleGroups(),
     },
   });
 }

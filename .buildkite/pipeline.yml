@@ -1085,6 +1085,10 @@ steps:
         - "package.json"
         - "packages/alert-dashboard/**"
         - "packages/eslint-config/**"
+        - "packages/config/**"
+        - "packages/feature-flags/**"
+        - "packages/ops-model/**"
+        - "packages/ops-clients/**"
     cancel_on_build_failing: true
     command: |
       MISE_TOOLCHAIN_SCOPE=runtime . .buildkite/scripts/toolchain.sh
@@ -1167,6 +1171,8 @@ steps:
         - "packages/llm-models/**"
         - "packages/llm-observability/**"
         - "packages/llm-runtime/**"
+        - "packages/ops-clients/**"
+        - "packages/ops-model/**"
         - "packages/release-tools/**"
         - "packages/s3-signed-request/**"
         - "packages/temporal-observability/**"
@@ -2642,6 +2648,8 @@ steps:
         - "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts"
         - "packages/llm-models/**"
         - "packages/llm-observability/**"
+        - "packages/ops-clients/**"
+        - "packages/ops-model/**"
         - "packages/s3-signed-request/**"
         - "packages/scout-for-lol/packages/backend/**"
         - "packages/scout-for-lol/packages/data/**"
