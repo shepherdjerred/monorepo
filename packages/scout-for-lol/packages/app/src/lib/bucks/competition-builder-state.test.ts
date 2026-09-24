@@ -1,5 +1,24 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { getAllSeasons, PlayerIdSchema } from "@scout-for-lol/data";
+import type * as ScoutData from "@scout-for-lol/data";
+
+vi.mock("@scout-for-lol/data", async (importOriginal) => {
+  const original = await importOriginal<typeof ScoutData>();
+  return {
+    ...original,
+    // COMPETITION_EXAMPLES is built at module load and omits the "rank"
+    // starter when no season is current (e.g. between acts), which made the
+    // legacy-starter test depend on the wall clock. Pin a fixed catalog act
+    // so the test is deterministic. getCurrentSeason's only app consumer is
+    // onboarding-examples, so nothing else in this file is affected.
+    getCurrentSeason: () => ({
+      id: "2026_SEASON_3_ACT_1",
+      displayName: "Classic (Act 1)",
+      startDate: new Date("2026-07-29T12:00:00-07:00"),
+      endDate: new Date("2026-09-22T23:59:59-07:00"),
+    }),
+  };
+});
 import {
   buildCompetitionSubmission,
   competitionBuilderReducer,
