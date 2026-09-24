@@ -30,6 +30,14 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
   numeric priority (0 = most severe), or `null` when unbadged.
 - **`detectSkip: SkipStrategy | null`** — how a deliberate skip ("no
   reviewable files", excluded author, …) is recognized on issue comments.
+- **`detectBlocked: BlockedSignalStrategy | null`** — how a provider-side
+  block (Codex quota exhaustion: "reached your Codex usage limits", in
+  either the full or the short notice wording) is recognized on issue
+  comments. Unlike a skip this is a FAILING
+  terminal state — no review happened — so the gate fails fast with the
+  provider's remediation instead of polling to its deadline. Only a
+  provider-authored match posted at/after the head push counts, so a stale
+  notice cannot pin a newer head.
 - **`requestReview: ReviewRequestStrategy | null`** — how to ask for a
   (re-)review of the head, with an idempotency marker so a consumer never
   posts a duplicate trigger comment; `null` for providers that review
@@ -46,7 +54,9 @@ iff it is authored by the active provider, unresolved, not outdated, and
 carries a severity at or above the threshold (`priority <=
 maxBlockingPriority`; the CI gate reads `REVIEW_MAX_BLOCKING_PRIORITY`).
 Threads without a severity badge never block. `errored` review jobs fail the
-gate rather than being trusted.
+gate rather than being trusted; when the error carries a recognised block
+reason (e.g. `usage-limited`), the failure names the operator's remediation
+instead of asking for a re-trigger.
 
 ## Providers
 

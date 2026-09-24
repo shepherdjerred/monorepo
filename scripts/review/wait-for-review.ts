@@ -336,6 +336,7 @@ const UNOBSERVED_STATE: ReviewStateResult = {
   reviewedAt: null,
   staleReaction: false,
   skipReason: null,
+  blockedReason: null,
 };
 
 /**
@@ -471,6 +472,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         headPushedAt,
         startedAt,
         reviewedCommit: stateResult.reviewedCommit,
+        blockedReason: stateResult.blockedReason,
       });
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -504,6 +506,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
       threads: threadResult.threads,
       policy,
       skipReason: stateResult.skipReason,
+      blockedReason: stateResult.blockedReason,
     });
 
     if (!warnedOversizedFirstReview) {

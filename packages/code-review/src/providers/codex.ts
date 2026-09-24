@@ -31,6 +31,19 @@ export const codexProvider: ReviewProvider = {
   findingKey: null,
   completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },
   detectSkip: null,
+  // When the account's review quota is exhausted Codex answers with an issue
+  // comment instead of a review, so without this the gate polls to its
+  // deadline and times out. Two wordings observed live (PR #3058): the full
+  // "… usage limits for code reviews … add credits …" notice and a short
+  // "… usage limits." one, so the shared prefix is the whole matcher. It stays
+  // precise through the exact author match, the head-push binding, and the
+  // completion-wins ordering — a real review always beats a block notice.
+  detectBlocked: {
+    matches: ["reached your Codex usage limits"],
+    reason: "usage-limited",
+    remediation:
+      "Add credits to the Codex account and enable them for code reviews (see the Codex usage dashboard)",
+  },
   // Codex's "Automatic reviews" setting reviews a pull request when it is
   // opened, not on every push, so a new head still has to be asked for
   // explicitly. There is no per-push configuration to move this to.

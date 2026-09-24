@@ -168,6 +168,26 @@ export type SkipStrategy = {
 };
 
 /**
+ * How a provider signals it cannot review at all right now (quota/usage-limit
+ * exhaustion). Detected on issue-level comments authored by the provider that
+ * contain every `matches` entry and postdate the head push. Unlike a skip this
+ * is a FAILING terminal state — no review happened, so the gate fails fast with
+ * `remediation` instead of polling to its deadline. `null` for providers with
+ * no such signal.
+ */
+export type BlockedSignalStrategy = {
+  /** Every entry must appear in the comment body for it to count. */
+  matches: readonly string[];
+  /** Short slug carried on the result, e.g. `"usage-limited"`. */
+  reason: string;
+  /**
+   * What the operator must do, rendered in the gate failure (capitalised, no
+   * trailing punctuation — the gate frames it with the provider and head).
+   */
+  remediation: string;
+};
+
+/**
  * How to explicitly ask a provider to (re-)review the current head, or `null`
  * when the provider reviews automatically and needs no trigger comment.
  *
@@ -229,6 +249,12 @@ export type ReviewProvider = {
   completion: CompletionStrategy;
   /** How the provider signals a deliberate skip, or null if it has none. */
   detectSkip: SkipStrategy | null;
+  /**
+   * How the provider signals it cannot review right now (quota exhaustion),
+   * or null if it has no such signal. A matched block fails the gate — it is
+   * never a pass, because no review happened.
+   */
+  detectBlocked: BlockedSignalStrategy | null;
   /**
    * How to explicitly request a head review, or `null` when the provider
    * reviews automatically. Consumers that trigger reviews (e.g. the PR-fleet

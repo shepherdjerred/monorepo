@@ -1,3 +1,4 @@
+import { fetchBlockedReason } from "./github-blocked.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
 import {
   asRecord,
@@ -257,6 +258,29 @@ export async function resolveIssueCommentReview(input: {
           : acknowledgement.updatedAt,
       staleReaction: false,
       skipReason: null,
+      blockedReason: null,
+      issueComment: comment,
+    };
+  }
+  // The comment is not bound to this head. Before reporting `reviewing`, check
+  // whether the provider said it cannot review at all (quota exhaustion) — a
+  // block fails fast with its remediation instead of polling to the deadline.
+  const blockedReason = await fetchBlockedReason({
+    repo: input.repo,
+    number: input.prNumber,
+    token: input.token,
+    provider: input.provider,
+    headPushedAt: input.headPushedAt,
+  });
+  if (blockedReason !== null) {
+    return {
+      state: "errored",
+      completionSignal: "none",
+      reviewedCommit: null,
+      reviewedAt: comment?.updatedAt ?? null,
+      staleReaction: false,
+      skipReason: null,
+      blockedReason,
       issueComment: comment,
     };
   }
@@ -267,6 +291,7 @@ export async function resolveIssueCommentReview(input: {
     reviewedAt: comment?.updatedAt ?? null,
     staleReaction: false,
     skipReason: null,
+    blockedReason: null,
     issueComment: comment,
   };
 }

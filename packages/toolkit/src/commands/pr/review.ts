@@ -19,6 +19,7 @@ import {
 } from "#lib/review/harvest.ts";
 import {
   resolveProvider,
+  resolveRequiredReviewProvider,
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
 
@@ -112,20 +113,38 @@ export async function reviewListCommand(
   const repo = options.repo ?? DEFAULT_REPO;
   const number = requirePr(prNumber);
   const provider = selectedProvider(options);
-  const { head, findings } = await listFindings({
+  const { head, findings, reviewState } = await listFindings({
     repo,
     number,
     token: requireToken(),
     provider,
   });
+  // A blocked review also yields zero findings, so without this the counts
+  // below read as a clean review rather than one that never ran.
+  const blocked = reviewState.blockedReason;
+  // `listFindings` defaults an unspecified provider the same way.
+  const strategy = (provider ?? resolveRequiredReviewProvider()).detectBlocked;
+  const remediation =
+    blocked !== null && strategy !== null && strategy.reason === blocked
+      ? `: ${strategy.remediation}`
+      : "";
 
   if (options.json === true) {
-    console.log(JSON.stringify({ repo, pr: number, head, findings }, null, 2));
+    console.log(
+      JSON.stringify(
+        { repo, pr: number, head, blockedReason: blocked, findings },
+        null,
+        2,
+      ),
+    );
     return;
   }
 
   const open = findings.filter((finding) => !finding.isResolved);
   console.log(`${repo}#${String(number)} @ ${head.slice(0, 9)}`);
+  if (blocked !== null) {
+    console.log(`Review blocked (${blocked})${remediation}`);
+  }
   console.log(
     `${String(findings.length)} finding(s), ${String(open.length)} unresolved\n`,
   );

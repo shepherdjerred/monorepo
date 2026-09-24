@@ -685,6 +685,7 @@ export const qodoProvider: ReviewProvider = {
     parseFindings: parseQodoIssueComment,
   },
   detectSkip: null,
+  detectBlocked: null,
   // Qodo 2.x documents `/agentic_review` as the manual trigger. The older
   // `/review` still works, but it is no longer the documented spelling and can
   // stop working without notice. Preferred over asking at all: enabling
