@@ -109,7 +109,7 @@ public final class ShopsPaper {
     events.registerEvents(
         new ShopClickListener(settings, chestShops, new PaperTools(blocks, templates, replies)),
         plugin);
-    events.registerEvents(new ShopGuardListener(locks, blocks, chestShops, protection), plugin);
+    events.registerEvents(new ShopGuardListener(locks, blocks, chestShops), plugin);
     events.registerEvents(notices, plugin);
     var catalogTrades =
         new CatalogTrades(

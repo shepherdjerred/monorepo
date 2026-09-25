@@ -1,18 +1,16 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
-import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.shops.app.ChestShops;
 import com.shepherdjerred.thestorm.shops.app.ShopLocks;
 import com.shepherdjerred.thestorm.shops.app.ShopRegistry;
 import com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
+import io.papermc.paper.event.entity.ItemTransportingEntityValidateTargetEvent;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -32,13 +30,13 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.Inventory;
 
 /**
  * Keeps shop stock where it belongs. A shop's container opens only for its owner (and admins),
- * whatever the land's container flags say; the sign and container break only for them; hoppers may
- * pull stock out only on the owner's own land; nothing moves while a trade is settling; and
- * explosions, pistons, fire and mobs leave shops alone.
+ * whatever the land's container flags say; the sign and container break only for them; no machine
+ * or mob (hopper, hopper minecart, dropper, crafter, copper golem) ever moves items into or out of
+ * it, even on the owner's own land; nothing opens while a trade is settling; and explosions,
+ * pistons, fire and mobs leave shops alone.
  */
 final class ShopGuardListener implements Listener {
 
@@ -46,14 +44,12 @@ final class ShopGuardListener implements Listener {
   private final ShopLocks locks;
   private final ShopBlocks blocks;
   private final ChestShops shops;
-  private final Protection protection;
 
-  ShopGuardListener(ShopLocks locks, ShopBlocks blocks, ChestShops shops, Protection protection) {
+  ShopGuardListener(ShopLocks locks, ShopBlocks blocks, ChestShops shops) {
     this.registry = blocks.registry();
     this.locks = locks;
     this.blocks = blocks;
     this.shops = shops;
-    this.protection = protection;
   }
 
   /**
@@ -122,38 +118,39 @@ final class ShopGuardListener implements Listener {
     }
   }
 
-  /**
-   * No one else may join a chest onto a shop chest (the double chest would open for them) or hang a
-   * hopper under a shop container.
-   */
+  /** No one else may join a chest onto a shop chest: the double chest would open for them. */
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   public void onPlace(BlockPlaceEvent event) {
     var placed = event.getBlockPlaced();
-    var player = event.getPlayer();
-    List<SignShop> neighbors;
-    if (placed.getBlockData() instanceof Chest) {
-      neighbors = blocks.shopsOnContainer(placed);
-    } else if (placed.getType() == Material.HOPPER) {
-      neighbors = blocks.shopsAt(placed.getRelative(BlockFace.UP));
-    } else {
+    if (!(placed.getBlockData() instanceof Chest)) {
       return;
     }
+    var player = event.getPlayer();
+    var neighbors = blocks.shopsOnContainer(placed);
     if (!neighbors.isEmpty() && !mayManage(player, neighbors)) {
       event.setCancelled(true);
       player.sendMessage(Replies.error("That would reach into " + owners(neighbors) + "."));
     }
   }
 
+  /**
+   * Hoppers, hopper minecarts, droppers and crafters never move items into or out of a shop
+   * container, whoever owns the land or the machine: shop stock moves only through trades and its
+   * owner's hands.
+   */
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-  public void onHopper(InventoryMoveItemEvent event) {
-    var from = blocks.shopsOwning(event.getSource());
-    if (!from.isEmpty() && (isBusy(from) || !pullsOnOwnersLand(event.getDestination(), from))) {
+  public void onMachineMove(InventoryMoveItemEvent event) {
+    if (!blocks.shopsOwning(event.getSource()).isEmpty()
+        || !blocks.shopsOwning(event.getDestination()).isEmpty()) {
       event.setCancelled(true);
-      return;
     }
-    var into = blocks.shopsOwning(event.getDestination());
-    if (!into.isEmpty() && isBusy(into)) {
-      event.setCancelled(true);
+  }
+
+  /** Copper golems never take items from, or bring items to, a shop container. */
+  @EventHandler(priority = EventPriority.HIGH)
+  public void onGolemTarget(ItemTransportingEntityValidateTargetEvent event) {
+    if (!blocks.shopsOnContainer(event.getBlock()).isEmpty()) {
+      event.setAllowed(false);
     }
   }
 
@@ -225,26 +222,6 @@ final class ShopGuardListener implements Listener {
   private static boolean mayManage(Player player, List<SignShop> shopsHere) {
     return player.hasPermission(ShopsPaper.ADMIN_PERMISSION)
         || shopsHere.stream().allMatch(shop -> shop.owner().isOwnedBy(player.getUniqueId()));
-  }
-
-  /**
-   * A hopper block may pull a shop's stock only when it sits on the same owner's land as the
-   * container; hopper minecarts and anything else never may. Placing a hopper under a shop is
-   * already refused to everyone but the owner.
-   */
-  private boolean pullsOnOwnersLand(Inventory destination, List<SignShop> from) {
-    var hopper = ShopBlocks.hopperBlock(destination);
-    if (hopper.isEmpty()) {
-      return false;
-    }
-    var at = hopper.orElseThrow();
-    return from.stream()
-        .allMatch(
-            shop ->
-                shop.container()
-                    .flatMap(blocks::center)
-                    .map(container -> protection.sameLand(at, container))
-                    .orElse(false));
   }
 
   private static String owners(List<SignShop> shopsHere) {

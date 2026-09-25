@@ -135,14 +135,6 @@ public final class ShopBlocks {
     return location == null ? List.of() : shopsOnContainer(location.getBlock());
   }
 
-  /** Whether an inventory belongs to a hopper block (not a hopper minecart). */
-  public static Optional<Location> hopperBlock(Inventory inventory) {
-    var location = inventory.getLocation();
-    return location != null && location.getBlock().getType() == Material.HOPPER
-        ? Optional.of(location)
-        : Optional.empty();
-  }
-
   /** Every shop a broken, burnt or exploded block belongs to, as sign or container. */
   public List<SignShop> shopsAt(Block block) {
     var shops = new ArrayList<SignShop>();

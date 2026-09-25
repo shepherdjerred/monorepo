@@ -40,7 +40,7 @@ chestShops:
 
 # NPC shops.
 catalogs:
-  # Daily limits reset at midnight in this time zone.
-  dailyResetZone: UTC
+  # Daily limits reset at local midnight in this time zone.
+  dailyResetZone: America/Los_Angeles
   # The most trades of one item a single menu purchase may bundle.
   maxLots: 16
