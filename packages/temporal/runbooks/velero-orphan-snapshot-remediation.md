@@ -302,10 +302,7 @@ Trigger: `VeleroOrphanBackupCRs` (any, > 24h) or
 Orphan = CR name suffix (after the single `.` in `<pv-name>.<backup-name>`)
 matches no live `backups.velero.io` name AND `creationTimestamp` is older
 than 24h. Status is not part of the predicate. Unparseable names stay out of
-the prune list. The Temporal `temporal-backup-preflight` hook only reads the
-newest `6hourly-backup`'s per-PV object, which is always live, so the
-live-name check subsumes its needs — but re-verify the hook inputs below
-before and after.
+the prune list.
 
 Deleting a CR is the same path Velero TTL expiry takes (the plugin deletes
 only the CR): the zfs-localpv controller then `zfs destroy`s the matching

@@ -79,8 +79,7 @@ const GATE_JOB_ANNOTATIONS = {
 /**
  * The prerequisites' annotations: an ordinary managed resource in wave -3.
  *
- * Deliberately NOT hooks, matching the Temporal backup preflight's
- * NetworkPolicy. A non-hook resource is a Sync-phase task, and ArgoCD orders
+ * Deliberately NOT hooks. A non-hook resource is a Sync-phase task, and ArgoCD orders
  * Sync-phase tasks by wave and waits for a wave to be healthy before the next,
  * so these are applied before the wave -1 Job regardless of hook-deletion
  * timing. Being managed also ties their lifetime to rendering: when the stage
@@ -213,8 +212,7 @@ export function createScoutGatewayRetirementGate(chart: Chart, stage: Stage) {
   // Only the Kubernetes API. No policy in this namespace selects the gate's
   // pod otherwise, so without this it would have unrestricted egress. kubectl
   // reaches the API through KUBERNETES_SERVICE_HOST, an IP, so it needs no DNS;
-  // 6443 is the API server's endpoint port after the Service is translated,
-  // matching the temporal backup preflight's policy.
+  // 6443 is the API server's endpoint port after the Service is translated.
   new KubeNetworkPolicy(chart, "scout-gateway-retirement-gate-netpol", {
     metadata: {
       name: `${SCOUT_GATEWAY_RETIREMENT_GATE_NAME}-netpol`,
