@@ -6,10 +6,11 @@
 # /plugins/<path> -> /data/plugins/<path>, overwritten whenever they differ,
 # never deleted). That sync cannot remove anything, so:
 #
-# - /bundle/remove.list names files (relative to /data) to delete. It runs
-#   once per version of the list: its sha256 is recorded in
-#   /data/.the-storm-remove.list.sha256 afterwards, so a file a plugin or
-#   admin recreates later is left alone.
+# - /bundle/remove.list names files (relative to /data) to delete. Each entry
+#   runs once: after deleting the file (or finding it absent) the entry is
+#   appended to the ledger /data/.the-storm-removed, and ledgered entries are
+#   skipped on later boots, so a file a plugin or admin recreates is kept.
+#   Adding a line to the list processes only that line.
 # - Each line of /bundle/owned.roots names a directory under plugins/
 #   (relative to /data) that the repository owns completely: files there that
 #   the image does not ship are deleted on every boot. Never list a directory a
@@ -24,28 +25,31 @@ fail() {
 }
 
 remove_stale_files() {
-  local list=/bundle/remove.list marker=/data/.the-storm-remove.list.sha256
-  local want path target dir
-  want=$(sha256sum "$list" | cut -d' ' -f1)
-  [[ -f $marker && $(<"$marker") == "$want" ]] && return 0
+  local list=/bundle/remove.list ledger=/data/.the-storm-removed
+  local path target dir
+  touch "$ledger"
   while IFS= read -r path; do
     [[ -z $path || $path == \#* ]] && continue
-    if [[ $path == /* || $path == *..* || $path == *[*?[]* ]]; then
-      fail "remove.list entry '$path' must be a plain path relative to /data"
+    if [[ $path == /* || $path == *..* || $path == *[*?[]* || $path == */ ]]; then
+      fail "remove.list entry '$path' must be a plain file path relative to /data"
     fi
+    # Each entry runs once, ever: a file recreated later (by a plugin,
+    # /setspawn, an admin) is runtime state and is left alone.
+    grep -qxF -- "$path" "$ledger" && continue
     target=/data/$path
     [[ -d $target && ! -L $target ]] && fail "remove.list entry '$path' is a directory"
-    [[ -e $target || -L $target ]] || continue
-    rm -f -- "$target"
-    echo "[storm-entrypoint] removed stale $path"
-    dir=$(dirname "$target")
-    while [[ $dir != /data && -z $(find "$dir" -mindepth 1 -print -quit) ]]; do
-      rmdir -- "$dir"
-      echo "[storm-entrypoint] removed empty ${dir#/data/}/"
-      dir=$(dirname "$dir")
-    done
+    if [[ -e $target || -L $target ]]; then
+      rm -f -- "$target"
+      echo "[storm-entrypoint] removed stale $path"
+      dir=$(dirname "$target")
+      while [[ $dir != /data && -z $(find "$dir" -mindepth 1 -print -quit) ]]; do
+        rmdir -- "$dir"
+        echo "[storm-entrypoint] removed empty ${dir#/data/}/"
+        dir=$(dirname "$dir")
+      done
+    fi
+    echo "$path" >>"$ledger"
   done <"$list"
-  echo "$want" >"$marker"
 }
 
 mirror_owned_roots() {

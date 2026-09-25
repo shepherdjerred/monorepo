@@ -16,8 +16,10 @@
 # legacy: a volume pre-filled with the config tree the old minecraft-tsmc init
 #   container copied (packages/homelab/src/cdk8s/config/minecraft-tsmc from
 #   the commit before it was removed, or LEGACY_REV), as the live volume has
-#   it. One boot: the patch step must accept those older files, remove.list
-#   must clear the stale copies, and patches must land on the first boot.
+#   it. First boot: the patch step must accept those older files, remove.list
+#   must clear the stale copies, and patches must land on that boot. Then,
+#   with a recreated spawn.yml and one line appended to remove.list, a second
+#   boot (offline) must run only the new entry.
 #
 #   boot-check.sh <image> [log-dir]
 set -euo pipefail
@@ -161,10 +163,24 @@ for stale in plugins/Essentials/spawn.yml plugins/Chunky/tasks/world.properties 
   plugins/Multiverse-Core plugins/LWCX-2.2.9.jar; do
   on_volume test ! -e "/data/$stale" || fail "legacy: stale $stale is still there"
 done
-on_volume test -f /data/.the-storm-remove.list.sha256 || fail "legacy: remove.list did not record its run"
+on_volume grep -qxF plugins/Essentials/spawn.yml /data/.the-storm-removed ||
+  fail "legacy: remove.list did not record its entries in the ledger"
 on_volume test -f /data/plugins/DynamicShop/Shop/SampleShop.yml ||
   fail "legacy: runtime shop data outside remove.list was deleted"
 on_volume grep -q '^_version: 31$' /data/config/paper-global.yml ||
   fail "legacy: paper-global.yml was not regenerated from the 26.2 defaults"
 expect_patched legacy
+
+# A later release appends to remove.list: only the new entry may run. The
+# spawn an admin set after the first release must survive.
+on_volume bash -c 'echo "spawns: {}" >/data/plugins/Essentials/spawn.yml &&
+  mkdir -p /data/plugins/BootCheck && echo stale >/data/plugins/BootCheck/stale.yml'
+docker run --rm --entrypoint cat "$image" /bundle/remove.list >"$fixture/remove.list"
+echo plugins/BootCheck/stale.yml >>"$fixture/remove.list"
+boot legacy-relist --network none -v "$fixture/remove.list:/bundle/remove.list:ro"
+on_volume test -f /data/plugins/Essentials/spawn.yml ||
+  fail "legacy-relist: an entry that already ran deleted a recreated file"
+on_volume test ! -e /data/plugins/BootCheck || fail "legacy-relist: the new remove.list entry did not run"
+on_volume grep -qxF plugins/BootCheck/stale.yml /data/.the-storm-removed ||
+  fail "legacy-relist: the new entry is missing from the ledger"
 echo "boot-check passed; logs in $logs"

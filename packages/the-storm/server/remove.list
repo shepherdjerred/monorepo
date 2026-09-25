@@ -1,7 +1,8 @@
-# Files, relative to /data, that storm-entrypoint deletes once when this list
-# changes (it records the list's sha256 in /data/.the-storm-remove.list.sha256),
-# then removes any directory left empty. One file path per line; no globs,
-# directories, absolute paths or "..".
+# Files, relative to /data, that storm-entrypoint deletes once each: every
+# entry is recorded in /data/.the-storm-removed after it runs and never runs
+# again, so appending a line affects only that file, and a file recreated
+# later (e.g. by /setspawn) is kept. Directories left empty are removed. One
+# file path per line; no globs, directories, absolute paths or "..".
 #
 # These are copies the old minecraft-tsmc config init container kept
 # overwriting and nothing now manages. Never list a file that holds world,

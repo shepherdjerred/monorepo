@@ -226,6 +226,11 @@
       "schedule": ["at any time"]
     },
     {
+      "description": "packages/the-storm/server/Dockerfile builds FROM the version catalog's itzg/minecraft-server pin (minecraft-tsmc.test.ts requires them equal), so bump both in one PR",
+      "matchPackageNames": ["itzg/minecraft-server"],
+      "groupName": "itzg/minecraft-server"
+    },
+    {
       "description": "Sandbox is personal scratch space outside maintained dependency automation",
       "matchFileNames": ["sandbox/**"],
       "enabled": false
