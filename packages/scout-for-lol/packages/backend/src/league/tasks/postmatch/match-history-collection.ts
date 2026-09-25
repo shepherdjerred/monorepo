@@ -6,7 +6,7 @@ import {
 import {
   getLastProcessedMatch,
   updateLastCheckedAt,
-} from "#src/database/index.ts";
+} from "#src/database/account-cursors.ts";
 import { createLogger } from "#src/logger.ts";
 import { recoverMissedMatches } from "#src/league/tasks/postmatch/gap-recovery.ts";
 import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-processing.ts";

@@ -15,7 +15,7 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filters.ts";
-import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
+import { getChannelsSubscribedToPlayers } from "#src/database/subscribed-channels.ts";
 import { send, ChannelSendError } from "#src/league/discord/channel.ts";
 import { decorateWithFeatureTip } from "#src/tips/index.ts";
 import { getChampionDisplayName } from "#src/utils/champion.ts";

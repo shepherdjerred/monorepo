@@ -5,11 +5,11 @@ import type {
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
 import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
 import {
   getAccountConfigsByPuuids,
   getAccountsWithState,
-  prisma,
-} from "#src/database/index.ts";
+} from "#src/database/player-accounts.ts";
 import {
   isLikelyPreStartLobby,
   rosterIsAsCompleteAsItWillGet,

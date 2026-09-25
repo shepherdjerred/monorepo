@@ -24,7 +24,7 @@ let buildLoadingScreenImpl: () => Promise<unknown> = async () => ({
   fake: true,
 });
 
-vi.doMock("#src/database/index.ts", async (importOriginal) => ({
+vi.doMock("#src/database/subscribed-channels.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   getChannelsSubscribedToPlayers: async () => {
     callOrder.push("getChannelsSubscribedToPlayers");

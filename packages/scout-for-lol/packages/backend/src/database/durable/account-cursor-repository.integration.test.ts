@@ -8,7 +8,7 @@ import {
   testPuuid,
 } from "#src/testing/test-ids.ts";
 import { advanceAccountCursor } from "#src/database/durable/account-cursor-repository.ts";
-import { updateLastMatchTime } from "#src/database/index.ts";
+import { updateLastMatchTime } from "#src/database/account-cursors.ts";
 
 const { prisma } = createTestDatabase("durable-account-cursor");
 

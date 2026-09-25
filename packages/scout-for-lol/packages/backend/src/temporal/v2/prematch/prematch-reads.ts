@@ -17,7 +17,8 @@ import {
   SCOUT_V2_PAGE_MAX,
   type ScoutPrematchGameRef,
 } from "@scout-for-lol/temporal/contracts-v2";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";

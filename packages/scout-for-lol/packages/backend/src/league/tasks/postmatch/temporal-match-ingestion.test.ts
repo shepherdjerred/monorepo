@@ -5,7 +5,7 @@ import {
   PlayerConfigEntrySchema,
   type LeaguePuuid,
 } from "@scout-for-lol/data/index.ts";
-import type { PlayerAccountWithState } from "#src/database/index.ts";
+import type { PlayerAccountWithState } from "#src/database/player-accounts.ts";
 
 // The guild a READY client still lists, and one it has dropped (a removal
 // mid-match).
@@ -30,6 +30,8 @@ const mocks = vi.hoisted(() => ({
 // real query does, so a caller that passes the gateway set is caught here.
 vi.mock("#src/database/index.ts", () => ({
   prisma: {},
+}));
+vi.mock("#src/database/player-accounts.ts", () => ({
   getAccountsWithState: (_client: unknown, activeServerIds?: Set<string>) =>
     Promise.resolve(
       [...mocks.accounts.entries()]

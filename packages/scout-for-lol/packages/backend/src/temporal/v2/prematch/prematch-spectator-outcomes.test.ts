@@ -28,6 +28,8 @@ vi.mock("#src/league/api/spectator.ts", () => ({
 }));
 vi.mock("#src/database/index.ts", () => ({
   prisma: {},
+}));
+vi.mock("#src/database/player-accounts.ts", () => ({
   getAccountsWithState: mocks.getAccountsWithState,
 }));
 const { resolveScoutV2PrematchContext } =

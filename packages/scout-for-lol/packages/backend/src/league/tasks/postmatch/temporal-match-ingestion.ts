@@ -5,7 +5,8 @@ import {
   type MatchId,
   type RawMatch,
 } from "@scout-for-lol/data/index.ts";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { processMatchAndUpdatePlayers } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import type { DiscoveredMatchIntent } from "#src/league/tasks/postmatch/match-intents.ts";

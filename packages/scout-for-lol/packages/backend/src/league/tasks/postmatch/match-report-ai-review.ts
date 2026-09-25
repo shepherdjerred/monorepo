@@ -16,7 +16,10 @@ import {
   generateMatchReview,
   selectPlayerIndex,
 } from "#src/league/review/generator.ts";
-import { hasAiBeenAttempted, markAiAttempted } from "#src/database/index.ts";
+import {
+  hasAiBeenAttempted,
+  markAiAttempted,
+} from "#src/database/ai-attempts.ts";
 import { LlmBudgetExceeded } from "#src/league/review/openai-budget.ts";
 import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
