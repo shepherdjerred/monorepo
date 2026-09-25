@@ -3,6 +3,7 @@ import {
   collectDurablePipelineMetrics,
   scoutDurableBacklogOldestAge,
   scoutDurableNotificationIntents,
+  scoutDurableObservationLag,
   scoutDurableRecoveryBatches,
 } from "#src/metrics/durable-pipeline.ts";
 import { gaugeValue } from "#src/testing/gauge-values.ts";
@@ -101,7 +102,9 @@ beforeEach(async () => {
   await prisma.matchNotificationIntent.deleteMany();
   await prisma.matchRecoveryBatch.deleteMany();
   await prisma.scoutWorkflowStart.deleteMany();
+  await prisma.matchObservation.deleteMany();
   scoutDurableNotificationIntents.reset();
+  scoutDurableObservationLag.reset();
   scoutDurableRecoveryBatches.reset();
   scoutDurableBacklogOldestAge.reset();
 });
@@ -223,6 +226,47 @@ describe("durable pipeline sweep against Postgres", () => {
     ).toBe(0);
   });
 
+  test("ages the oldest ready intent by when it was minted", async () => {
+    // seedIntent stamps createdAt an hour ago. A pending intent beside it is
+    // not ready and must not set the age.
+    await seedIntent("ready", `${MATCH_ID}:ready`);
+    await seedIntent("pending", `${MATCH_ID}:pending`);
+
+    await collectDurablePipelineMetrics(prisma);
+
+    const age = await gaugeValue(scoutDurableBacklogOldestAge, {
+      family: "ready-notification-intents",
+    });
+    expect(age).toBeGreaterThan(0.9 * 3600);
+    expect(age).toBeLessThan(1.1 * 3600);
+  });
+
+  test("publishes the observation lag as both statistics, zero when nothing was observed", async () => {
+    await collectDurablePipelineMetrics(prisma);
+    expect(
+      await gaugeValue(scoutDurableObservationLag, { statistic: "p90" }),
+    ).toBe(0);
+
+    const observedAt = new Date(NOW - 10 * 60 * 1000);
+    await prisma.matchObservation.create({
+      data: {
+        riotMatchId: "NA1_9150",
+        platformRoute: "NA1",
+        processingPolicy: "FULL",
+        deliveryMode: "live",
+        pipelineOwner: "TEMPORAL_V2",
+        gameCreatedAt: new Date(observedAt.getTime() - 3 * HOUR_MS),
+        observedAt,
+      },
+    });
+    await collectDurablePipelineMetrics(prisma);
+    for (const statistic of ["p90", "max"]) {
+      expect(
+        await gaugeValue(scoutDurableObservationLag, { statistic }),
+      ).toBeCloseTo(3 * 3600, 3);
+    }
+  });
+
   test("a failing read writes the sentinel shape instead of failing the scrape", async () => {
     // A disconnected client stands in for any read that throws. The contract
     // under test is the degraded shape the alerts are written against: ages go
@@ -256,6 +300,16 @@ describe("durable pipeline sweep against Postgres", () => {
       await gaugeValue(scoutDurableBacklogOldestAge, {
         family: "live-recovery-batches",
       }),
+    ).toBe(-1);
+    expect(
+      await gaugeValue(scoutDurableBacklogOldestAge, {
+        family: "ready-notification-intents",
+      }),
+    ).toBe(-1);
+    // The lag is an age too, so it takes the sentinel rather than going
+    // absent; ScoutDurableSweepFailing watches for exactly this.
+    expect(
+      await gaugeValue(scoutDurableObservationLag, { statistic: "p90" }),
     ).toBe(-1);
     expect(
       await gaugeValue(scoutDurableNotificationIntents, { state: "pending" }),

@@ -160,7 +160,7 @@ twice.
 
 ## Durable pipeline observability
 
-The dual-write counters above say what the pipeline _did_. Five more families in
+The dual-write counters above say what the pipeline _did_. Seven more families in
 `src/metrics/durable-pipeline.ts` — likewise a single definition site — say what
 it is still _holding_, which is the half the V2 acceptance checklist asks about:
 
@@ -170,11 +170,24 @@ it is still _holding_, which is the half the V2 acceptance checklist asks about:
 - `scout_durable_recovery_batches{state}` — batches per state, zero-filled
   across all six.
 - `scout_durable_backlog_oldest_age_seconds{family}` — age of the oldest row in
-  `stalled-match-processing`, `live-recovery-batches`, and
-  `unaccepted-workflow-starts`. Only backlogs whose ordering column is a true
-  age are here; stalled notifications sort by freshness deadline, so their head
-  is the intent closest to expiring rather than the one waiting longest, and
-  their depth lives on the intent gauge instead.
+  `stalled-match-processing`, `live-recovery-batches`,
+  `unaccepted-workflow-starts`, and `ready-notification-intents`. Only backlogs
+  whose ordering column is a true age are here; stalled notifications sort by
+  freshness deadline, so their head is the intent closest to expiring rather
+  than the one waiting longest, and their depth lives on the intent gauge
+  instead. The ready family is one state read by `createdAt`, excluding intents
+  a recovery batch policy holds, so its head is the longest-waiting send.
+- `scout_durable_observation_lag_seconds{statistic}` — `p90` and `max` of
+  observation time minus game START for live FULL matches observed in the last
+  two hours. The observation row stores no game end, so this includes the
+  game's own length (healthy p90 is about 40–45 minutes). An empty window reads
+  0, so it does not detect discovery that has stopped outright.
+- `scout_durable_postmatch_mint_gaps` — live V2 matches observed in the last six
+  hours whose cursors all advanced at least 15 minutes ago, with an unmuted,
+  unfiltered subscription owed a report, but no postmatch intent and no
+  postmatch render receipt. It under-counts on purpose: queue-filtered
+  subscriptions need the match's queue type, which only the raw match JSON
+  holds. The silent post-match backfill's render receipts clear it.
 - `scout_durable_lake_staging_lag_seconds{artifact_kind}` — how long the
   longest-unprojected archived artifact has waited for its staging receipt, per
   artifact kind because the three fail independently.
@@ -187,12 +200,13 @@ exhaustive classification tables in `database/durable/pipeline-scan.ts`, so a
 state added to a domain union fails to compile until the sweep covers it. No
 match id, guild id, or intent key is ever a label.
 
-The first four are swept from the database at scrape time and so belong to the
-one role with `databaseMetricSweeps` (see the runtime roles section). The lake
-lag is swept by `report-lake/` instead, because its receipt-kind vocabulary
-lives there and `architecture.config.ts` forbids `metrics/` from importing that
-layer; it registers through `metrics/sweep-registry.ts`, which exists for
-exactly that inversion. `metrics/sweeps.ts` is the list of everything a
+The gauges are swept from the database at scrape time and so belong to the one
+role with `databaseMetricSweeps` (see the runtime roles section). The lake lag
+is swept by `report-lake/`, and the mint gap by
+`temporal/v2/notification/postmatch-mint-gap.ts`, because their receipt-kind
+vocabularies live there and `architecture.config.ts` forbids `metrics/` from
+importing those layers; each registers through `metrics/sweep-registry.ts`,
+which exists for exactly that inversion. `metrics/sweeps.ts` is the list of everything a
 sweep-owning scrape runs.
 
 Every metric also carries a `role` default label, from the runtime-role enum.

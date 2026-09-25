@@ -18,6 +18,8 @@ const DURABLE_METRICS = [
   "scout_durable_notification_intents",
   "scout_durable_lake_staging_lag_seconds",
   "scout_durable_receipts_recorded_total",
+  "scout_durable_observation_lag_seconds",
+  "scout_durable_postmatch_mint_gaps",
 ];
 
 function ruleNamed(alert: string) {
@@ -41,6 +43,9 @@ describe("Scout durable pipeline alert rules", () => {
         "ScoutDurableUnknownDeliveries",
         "ScoutDurableRecoveryBacklogStale",
         "ScoutDurableLakeStagingLag",
+        "ScoutDurablePostmatchIntentsNotMinted",
+        "ScoutDurableReadyIntentsNotDelivered",
+        "ScoutDurableObservationLagHigh",
         "ScoutDurableSweepMissing",
         "ScoutDurableSweepFailing",
       ]),
@@ -62,6 +67,8 @@ describe("Scout durable pipeline alert rules", () => {
   const SENTINEL_GAUGES = [
     "scout_durable_backlog_oldest_age_seconds",
     "scout_durable_lake_staging_lag_seconds",
+    "scout_durable_observation_lag_seconds",
+    "scout_durable_postmatch_mint_gaps",
   ];
 
   test.each(SENTINEL_GAUGES)("a -1 series on %s fires an alert", (metric) => {
@@ -119,6 +126,9 @@ describe("Scout durable pipeline alert rules", () => {
     "ScoutDurableUnknownDeliveries",
     "ScoutDurableRecoveryBacklogStale",
     "ScoutDurableLakeStagingLag",
+    "ScoutDurablePostmatchIntentsNotMinted",
+    "ScoutDurableReadyIntentsNotDelivered",
+    "ScoutDurableObservationLagHigh",
     "ScoutDurableSweepMissing",
   ])("%s survives its gauge going away entirely", (alert) => {
     // One role sweeps these gauges. Without an absent() guard, a rollout that
@@ -170,5 +180,41 @@ describe("Scout durable pipeline alert rules", () => {
     // enough to need a person.
     expect(expression).toContain(String.raw`state=\"unknown-delivery\"`);
     expect(expression).toContain("> 0");
+  });
+
+  test("pages on a single live match that finished without minting its report", () => {
+    const rule = ruleNamed("ScoutDurablePostmatchIntentsNotMinted");
+    const expression = JSON.stringify(rule.expr);
+    // The gauge under-counts by construction and reads 0 on a correct
+    // deployment, so one match is a user who was never told. A higher bound
+    // would let a partial mint failure hide below it.
+    expect(expression).toContain(
+      "max by (environment) (scout_durable_postmatch_mint_gaps) > 0",
+    );
+    expect(rule.labels?.["severity"]).toBe("critical");
+  });
+
+  test("ages the ready queue by its own family and not by the stalled read", () => {
+    const rule = ruleNamed("ScoutDurableReadyIntentsNotDelivered");
+    const expression = JSON.stringify(rule.expr);
+    // The family is read by createdAt, a real age. Pointing this at another
+    // family would page on a different backlog, or on none.
+    expect(expression).toContain(
+      String.raw`family=\"ready-notification-intents\"`,
+    );
+    // Thirty minutes: well inside the three-hour post-match freshness window,
+    // so the page arrives while the queue can still be sent.
+    expect(expression).toContain("> 1800");
+    expect(rule.labels?.["severity"]).toBe("critical");
+  });
+
+  test("alerts on the p90 observation lag above 90 minutes for 30 minutes", () => {
+    const rule = ruleNamed("ScoutDurableObservationLagHigh");
+    const expression = JSON.stringify(rule.expr);
+    // p90, not max: one long game or one slow account is normal, and max
+    // would page on it.
+    expect(expression).toContain(String.raw`statistic=\"p90\"`);
+    expect(expression).toContain("> 5400");
+    expect(rule.for).toBe("30m");
   });
 });
