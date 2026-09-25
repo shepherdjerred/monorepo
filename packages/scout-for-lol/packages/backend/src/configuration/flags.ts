@@ -180,6 +180,7 @@ export type FlagName =
   | "scout-consumer-player-profiles-enabled"
   | "scout_v2_postmatch_ownership_enabled"
   | "scout_v2_prematch_ownership_enabled"
+  | "scout_v2_progression_notifications_enabled"
   | "voice_assistant_enabled";
 
 /**
@@ -468,6 +469,12 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
+  /**
+   * Per server, mint new Hall record breaks as V2 intents. First path owns
+   * each guild and match; the flag is off by default and ramps per server.
+   * Targeting is mirrored in managed-flag-inventory.json.
+   */
+  scout_v2_progression_notifications_enabled: { default: false, overrides: [] },
   initial_match_history_import_enabled: {
     default: false,
     overrides: [],

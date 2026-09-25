@@ -15,6 +15,7 @@ import { prisma, type Db } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
 import { lockHallRecords } from "#src/progression/hall/baseline.ts";
+import { announceHallRecordBreak } from "#src/progression/hall/break-announcement.ts";
 import {
   HallBreakPayloadSchema,
   HallBreakRecordsSchema,
@@ -117,6 +118,7 @@ async function evaluateGuild(
   guildId: DiscordGuildId,
   matchId: string,
   matchesByPuuid: ReadonlyMap<string, ProgressionMatchRow>,
+  options: { readonly v2Enabled: boolean },
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await lockHallRecords(tx, guildId);
@@ -168,18 +170,16 @@ async function evaluateGuild(
         ),
       });
     });
-    await tx.hallRecordBreakOutbox.upsert({
-      where: { guildId_matchId: { guildId, matchId } },
-      create: {
-        guildId,
-        matchId,
-        channelId: settings.channelId,
-        payloadJson: JSON.stringify(payload),
-      },
-      update: {
-        channelId: settings.channelId,
-        payloadJson: JSON.stringify(payload),
-      },
+    // Inside this transaction, so the announcement commits with the cells it
+    // describes. Which path takes it — v1's outbox row or a V2 intent, or
+    // neither for a silent match — is `announceHallRecordBreak`'s decision.
+    await announceHallRecordBreak(tx, {
+      guildId,
+      matchId,
+      channelId: settings.channelId,
+      records: payload,
+      v2Enabled: options.v2Enabled,
+      now: new Date(),
     });
   });
 }
@@ -232,6 +232,13 @@ export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
     if (configuredGuildIds.has(guildId)) guildIds.add(guildId);
   }
   for (const guildId of guildIds) {
-    await evaluateGuild(guildId, matchId, byPuuid);
+    // Read outside the transaction: a Flipt round trip must not hold the
+    // guild's Hall lock. It only chooses where a NEW announcement goes; one
+    // already recorded keeps its path whatever this answers.
+    const v2Enabled = await isPolicyEnabled(
+      "scout_v2_progression_notifications_enabled",
+      { server: guildId },
+    );
+    await evaluateGuild(guildId, matchId, byPuuid, { v2Enabled });
   }
 }

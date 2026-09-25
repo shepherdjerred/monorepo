@@ -819,6 +819,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_v2_progression_notifications_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Per server, mint new progression announcements (Hall of Fame record breaks) as V2 notification intents instead of v1 outbox rows. The first path to record a (guild, match) announcement keeps it, so flipping this never announces one twice.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "llm-daily-token-budget",
       "owner": "scout",
       "namespace": "scout",
