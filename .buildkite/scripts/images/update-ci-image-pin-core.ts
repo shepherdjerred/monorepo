@@ -44,6 +44,20 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     section: "devDependencies",
     dependency: "@playwright/test",
   },
+  // Missed by the v1.62.1 -> v1.63.0 promotion: the Scout app's e2e spec hands
+  // its 1.62.1 `Page` to design-system's 1.63.0-typed Storybook helpers and
+  // failed typecheck on main. The workspace-coverage test now rejects any exact
+  // Playwright pin that is not listed here.
+  {
+    path: "packages/scout-for-lol/packages/app/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
+    path: "packages/scout-for-lol/packages/activity/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
 ] as const;
 
 export type CiImagePinState = {
