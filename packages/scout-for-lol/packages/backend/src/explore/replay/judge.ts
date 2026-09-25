@@ -258,6 +258,12 @@ export type JudgeCaseInput = {
   readonly queries: readonly {
     readonly queryText: string | null;
     readonly rowsReturned: number | null;
+    /**
+     * Whether it read every match or only the user's servers' players. An
+     * answer that checks the server, finds nothing, then answers across all
+     * matches runs two queries that look alike without it.
+     */
+    readonly scope: string | null;
   }[];
   /**
    * What the non-ScoutQL tools returned, bounded.
@@ -301,23 +307,18 @@ export function judgeEvidenceFromTrace(
     readonly toolName: string;
     readonly status: string;
     readonly details?: unknown;
+    readonly rawInput?: unknown;
     readonly rawOutput?: unknown;
   }[],
 ): Pick<JudgeCaseInput, "queries" | "toolResults"> {
-  const queries: { queryText: string | null; rowsReturned: number | null }[] =
-    [];
+  const queries: JudgeCaseInput["queries"][number][] = [];
   const toolResults: { toolName: string; summary: string }[] = [];
 
   for (const entry of trace) {
     if (entry.status !== "succeeded") continue;
     if (entry.toolName === "run_report_query") {
-      const parsed = TraceExecutionSchema.safeParse(entry.details);
-      if (parsed.success) {
-        queries.push({
-          queryText: parsed.data.queryText ?? null,
-          rowsReturned: parsed.data.rowsReturned,
-        });
-      }
+      const query = queryEvidence(entry);
+      if (query !== null) queries.push(query);
       continue;
     }
     if (!CAPABILITY_TOOL_PATTERN.test(entry.toolName)) continue;
@@ -335,6 +336,27 @@ export function judgeEvidenceFromTrace(
 
   return { queries, toolResults };
 }
+
+/** One executed query as the judge sees it, or null if the trace lacks it. */
+function queryEvidence(entry: {
+  readonly details?: unknown;
+  readonly rawInput?: unknown;
+}): JudgeCaseInput["queries"][number] | null {
+  const parsed = TraceExecutionSchema.safeParse(entry.details);
+  if (!parsed.success) return null;
+  const input = TraceQueryScopeSchema.safeParse(entry.rawInput);
+  return {
+    queryText: parsed.data.queryText ?? null,
+    rowsReturned: parsed.data.rowsReturned,
+    scope: input.success ? input.data.value.scope : null,
+  };
+}
+
+/** The scope kind a trace records beside a query; see tool-inspection.ts. */
+const TraceQueryScopeSchema = z.looseObject({
+  kind: z.literal("value"),
+  value: z.looseObject({ scope: z.string() }),
+});
 
 const TraceExecutionSchema = z.looseObject({
   kind: z.literal("execution"),
@@ -363,7 +385,8 @@ const JUDGE_SYSTEM_PROMPT = [
   "     - a parameter the answer proposes for something it is drafting or offering to run — a deadline, a stake, a game floor, a time window;",
   "     - an example inside a clarifying question or an offer, such as 'did you mean 10 PM to 5 AM?';",
   "     - the period the answer says it covered.",
-  "   'unsupported' when the answer reports findings and there is no query and no tool output, or every query returned zero rows and no tool returned data, or the findings contradict the evidence.",
+  "   A query that returned zero rows is evidence that nothing matched it, in its scope. It supports 'none of your server's games matched' when that is what the query asked, and nothing broader: a zero-row query with a HAVING threshold or a narrow filter does not show the data has none at all.",
+  "   'unsupported' when the answer reports findings and there is no query and no tool output, or the findings go beyond what the queries could show, or they contradict the evidence.",
   "   'not_applicable' when the answer reports no findings.",
   "   Judge only whether the findings could have come from the evidence. Do not grade the choice of method, the grouping, or whether you would have written the query differently.",
   "",
@@ -433,7 +456,7 @@ export function judgeUserPrompt(input: JudgeCaseInput): string {
       ? ["(the turn ran no query)"]
       : input.queries.map(
           (query, index) =>
-            `  ${(index + 1).toString()}. returned ${query.rowsReturned === null ? "an unrecorded number of" : query.rowsReturned.toString()} rows: ${query.queryText ?? "(query text not recorded)"}`,
+            `  ${(index + 1).toString()}. [${query.scope ?? "scope not recorded"}] returned ${query.rowsReturned === null ? "an unrecorded number of" : query.rowsReturned.toString()} rows: ${query.queryText ?? "(query text not recorded)"}`,
         );
   const toolResults =
     input.toolResults.length === 0

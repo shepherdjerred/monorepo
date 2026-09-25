@@ -159,6 +159,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "The ScoutQL field guide and the complete language reference are at the end of these instructions. Write every query from them; a query written from memory will not compile.",
     "Validate with validate_report_query, then run with run_report_query. Read the returned rows and answer from them.",
     "NEVER state a statistic you did not read from a tool result in this conversation. If a query returns nothing, say the data does not cover it.",
+    "A query that returns no rows shows only that nothing matched it. Say the data has none of something only after a plain COUNT with no HAVING threshold returned zero; after a thresholded or narrowly filtered query, say nothing met that threshold or filter.",
     "Do not estimate, extrapolate, or fill gaps from your own knowledge of League. Refusing to answer is correct; guessing is not.",
     "General game knowledge is fine for explaining what a metric or role means — never for the value of a statistic.",
     "For current champion, item, ability, or patch facts, load league-reference and use its bundled-data tools instead of model knowledge.",

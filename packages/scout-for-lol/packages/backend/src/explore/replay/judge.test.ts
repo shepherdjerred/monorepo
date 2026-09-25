@@ -299,7 +299,13 @@ describe("the judge prompt", () => {
     const rendered = judgeUserPrompt({
       question: "Compare vision score between our support players",
       answer: null,
-      queries: [{ queryText: "from matches select champion", rowsReturned: 0 }],
+      queries: [
+        {
+          queryText: "from matches select champion",
+          rowsReturned: 0,
+          scope: "global",
+        },
+      ],
       toolResults: [],
       toolNames: ["run_report_query"],
       expectation: "answerable",
@@ -365,13 +371,25 @@ describe("judgeEvidenceFromTrace", () => {
       {
         toolName: "run_report_query",
         status: "succeeded",
+        rawInput: {
+          kind: "value",
+          value: { queryText: "second", scope: "one server" },
+        },
         details: { kind: "execution", queryText: "second", rowsReturned: 1 },
       },
     ]);
+    // The scope rides along when the trace recorded it: an answer that checks
+    // the server and then falls back to every match runs two look-alike queries.
     expect(evidence.queries).toEqual([
-      { queryText: "first", rowsReturned: 25 },
-      { queryText: "second", rowsReturned: 1 },
+      { queryText: "first", rowsReturned: 25, scope: null },
+      { queryText: "second", rowsReturned: 1, scope: "one server" },
     ]);
+  });
+
+  test("tells the judge what a zero-row query does and does not show", () => {
+    const prompt = judgeSystemPrompt();
+    expect(prompt).toContain("evidence that nothing matched it, in its scope");
+    expect(prompt).toContain("does not show the data has none at all");
   });
 
   test("ignores a failed query, which produced nothing to ground on", () => {
