@@ -31,8 +31,26 @@ public final class TheStormPlugin extends JavaPlugin {
   private final Services services = new Services();
   private @Nullable StormDatabase database;
 
+  /**
+   * Enables The Storm or stops the server. Once modules replace third-party plugins (land
+   * protection, bans, the economy), running without them is worse than not running: a server with
+   * the plugin disabled would let players join with no land protection. So any enable failure is
+   * logged and the server is shut down, which keeps the failure loud (the pod restarts and alerts)
+   * instead of quietly failing open.
+   */
   @Override
   public void onEnable() {
+    try {
+      enableModules();
+    } catch (RuntimeException e) {
+      getComponentLogger()
+          .error("The Storm failed to enable; stopping the server rather than run unprotected", e);
+      getServer().shutdown();
+      throw e;
+    }
+  }
+
+  private void enableModules() {
     var config = readConfig();
     var selected =
         switch (ModuleRegistry.select(Modules.all(), config.toggles())) {
