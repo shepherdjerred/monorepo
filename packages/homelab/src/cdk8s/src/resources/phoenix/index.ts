@@ -76,6 +76,10 @@ export function createPhoenixDeployment(chart: Chart) {
     securityContext: {
       fsGroup: PHOENIX_UID,
     },
+    // The Service is named "phoenix", so service links would inject
+    // PHOENIX_PORT=tcp://<ip>:6006 (and PHOENIX_SERVICE_*), which Phoenix
+    // reads as its own config and refuses to start on.
+    enableServiceLinks: false,
     podMetadata: { labels: { app: "phoenix" } },
   });
 
