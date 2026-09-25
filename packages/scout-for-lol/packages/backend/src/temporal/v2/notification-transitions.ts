@@ -24,6 +24,7 @@ import {
   resolveNotificationGateV2,
 } from "#src/temporal/v2/notification/notification-policy.ts";
 import { retireIfAudienceGoneV2 } from "#src/temporal/v2/notification/intent-audience.ts";
+import { suppressIfKindPolicyForbidsV2 } from "#src/temporal/v2/notification/kind-policy.ts";
 import {
   notificationTransitionV2,
   requireIntentRecordV2,
@@ -46,9 +47,25 @@ import {
  * of being folded into the send.
  */
 
+/**
+ * Ready a pending intent — unless its kind's policy now forbids it.
+ *
+ * The kind policy (`suppressIfKindPolicyForbidsV2`) is asked first: a Hall
+ * announcement whose guild has since turned `hall_of_fame_enabled` off is
+ * suppressed `feature-disabled` here, before it is readied or rendered. The
+ * Workflow reads the suppressed state as the machine having said its piece and
+ * stops, exactly as it does for any other non-`ready` answer, so no Workflow
+ * code changes to honour it.
+ */
 export async function markNotificationReadyV2(
   input: ScoutIntentRefV2,
 ): Promise<ScoutNotificationTransitionV2Result> {
+  const suppressed = await suppressIfKindPolicyForbidsV2(
+    await requireIntentRecordV2(input.intentKey),
+  );
+  if (suppressed !== undefined) {
+    return await notificationTransitionV2(input.intentKey, suppressed);
+  }
   return await notificationTransitionV2(
     input.intentKey,
     await transitionIntent(prisma, {
@@ -74,7 +91,9 @@ export async function markNotificationReadyV2(
  * it was. The Workflow already stops on a hold at its opening read; this is
  * the write boundary, and it does not rely on the caller having asked.
  *
- * The audience is asked next, for an unattempted intent only: one whose
+ * The kind policy is asked next, then the audience, both for an unattempted
+ * intent only. A kind whose policy forbids the send (a Hall announcement in
+ * a guild that turned the feature off) is suppressed with that reason. One whose
  * subscription, channel or guild was deleted since the mint is retired
  * (`retireIfAudienceGoneV2`) instead of begun. That is the point of
  * discovery, and it is before the nonce on purpose — an intent that is
@@ -92,6 +111,14 @@ export async function beginNotificationSendV2(
       state: record.intent.state,
       attemptCount: record.intent.attemptCount,
     };
+  }
+  const suppressed = await suppressIfKindPolicyForbidsV2(record);
+  if (suppressed !== undefined) {
+    // Asked again at the write boundary, because the policy can change
+    // between the ready and the send (a retry after a transient failure can
+    // be minutes later), and before the audience check because it needs no
+    // Discord read to answer.
+    return await notificationTransitionV2(input.intentKey, suppressed);
   }
   const retired = await retireIfAudienceGoneV2(prisma, record);
   if (retired !== undefined) {

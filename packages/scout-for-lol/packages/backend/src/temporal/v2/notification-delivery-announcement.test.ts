@@ -279,6 +279,67 @@ describe("the dare-summary-shaped path", () => {
   });
 });
 
+function hallRecordWith(records: unknown[]): unknown {
+  return {
+    matchId: "NA1_9301",
+    intent: {
+      key: intentKey,
+      kind: "hall-record-break",
+      origin: { kind: "live" },
+      target: { kind: "channel", channelId: CHANNEL_ID },
+      announcement: {
+        kind: "scout-hall-record-break-announcement",
+        version: 1,
+        data: {
+          guildId: "100000000000000001",
+          riotMatchId: "NA1_9301",
+          records,
+        },
+      },
+    },
+  };
+}
+
+describe("the hall-shaped path", () => {
+  // The hall arm is NOT mocked here: what is pinned is the real arm's
+  // refusal reaching the delivery as a definite, terminal non-send.
+  test("an announcement whose every record was retired parks as content-unavailable, unsent", async () => {
+    stubs.requireIntentRecordV2.mockResolvedValue(
+      hallRecordWith([
+        {
+          matchId: "NA1_9301",
+          gameEndAt: "2026-09-04T00:00:00.000Z",
+          value: 1,
+          holder: {
+            playerId: 1,
+            playerAlias: "Alice",
+            accountId: 1,
+            accountAlias: "Main",
+            puuid: "hall-delivery-puuid",
+          },
+          queueFamilyId: "retired-anyway",
+          recordId: "largest_multikill",
+          holders: [],
+        },
+      ]),
+    );
+    stubs.resolveNotificationGateV2.mockResolvedValue({
+      kind: "hall-record-break",
+      target: "channel",
+      policy: "normal",
+      decision: "permitted",
+    });
+
+    const result = await deliverNotificationV2(attemptRef());
+
+    expect(result).toEqual({
+      outcome: "failed",
+      failure: { classification: "terminal", reason: "content-unavailable" },
+    });
+    expect(stubs.send).not.toHaveBeenCalled();
+  });
+});
+
 const SentOptionsSchema = z.object({
   content: z.string().optional(),
   reply: z.unknown().optional(),
