@@ -34,6 +34,11 @@ const REPOSITORY_CHART_URLS = new Set([
 // vault item, while the old OnePasswordItem is a stateless retired resource;
 // leaving it live keeps Scout beta OutOfSync and blocks the root release health
 // wait.
+// trmnl-dashboard is here because #3093 moved its homelab screen onto the ops
+// snapshot, retiring its Kubernetes read access. The ServiceAccount,
+// ClusterRole and ClusterRoleBinding are stateless retired resources; leaving
+// them live keeps trmnl-dashboard OutOfSync and failed the build 17262 release
+// health wait.
 const PRUNED_RELEASE_CHARTS = new Set([
   "birmel",
   "freshrss",
@@ -41,6 +46,7 @@ const PRUNED_RELEASE_CHARTS = new Set([
   "scout-beta",
   "service-probes",
   "temporal",
+  "trmnl-dashboard",
   "turbo-cache",
 ]);
 
