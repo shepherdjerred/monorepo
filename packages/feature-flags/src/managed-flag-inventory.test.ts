@@ -362,14 +362,31 @@ describe("Scout V2 post-match ownership", () => {
 });
 
 describe("Scout V2 prematch ownership", () => {
-  test("leaves prematch detection with v1 in every environment", () => {
-    // A cutover switch that ramps per stage, not a rollback: merging it must
-    // change nothing, so both environments resolve the v1 ownership that
-    // already runs, and each ramp records its own environment override.
-    for (const environment of ["beta", "prod"]) {
-      expect(
-        scoutPolicyFlag(environment, "scout_v2_prematch_ownership_enabled"),
-      ).toMatchObject({ default: false, rollouts: [] });
-    }
+  test("keeps the declared default on v1 so an unreachable Flipt never moves detection", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "scout_v2_prematch_ownership_enabled",
+    );
+    expect(declared).toMatchObject({ default: false, rollouts: [] });
+  });
+
+  test("hands prematch detection to V2 in beta while prod stays on v1", () => {
+    // The cutover ramps per stage, beta first. Each ramp records its own
+    // environment override, so prod keeps resolving the v1 ownership it runs.
+    expect(
+      scoutPolicyFlag("beta", "scout_v2_prematch_ownership_enabled"),
+    ).toMatchObject({
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+    expect(
+      scoutPolicyFlag("prod", "scout_v2_prematch_ownership_enabled"),
+    ).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
   });
 });
