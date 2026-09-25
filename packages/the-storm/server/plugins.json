@@ -1,0 +1,228 @@
+{
+  "paper": {
+    "version": "26.2-129",
+    "url": "https://fill-data.papermc.io/v1/objects/b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083/paper-26.2-129.jar",
+    "sha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "file": "paper-26.2-129.jar"
+  },
+  "paperDefaults": [
+    {
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/paper-global.yml",
+      "sha256": "0670a9c4367afbcb841898a4754ba6eba0dba6367c4cb159269f0957d25ae762",
+      "file": "26.2/paper-global.yml"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/paper-world-defaults.yml",
+      "sha256": "abf93aa72a8498289b81a563f5aef57b684198efb85973f26757ab6353b4acfe",
+      "file": "26.2/paper-world-defaults.yml"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/bukkit.yml",
+      "sha256": "a72396bbd1b69636b63f990995ed1ce31df7183af275868b4d638071fd4c866a",
+      "file": "26.2/bukkit.yml"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/spigot.yml",
+      "sha256": "85d3a58f6b2e2e6dc211ff1a298374de837bf5558776ed9712ff3d2cecf1a11e",
+      "file": "26.2/spigot.yml"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "BlueMap",
+      "version": "5.27",
+      "url": "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.27/bluemap-5.27-paper.jar",
+      "sha256": "0e479c9a75de4673e7dcdbc766e3fa9e76245c87341253466b89a6a251e3510b",
+      "file": "BlueMap-5.27.jar"
+    },
+    {
+      "name": "ChestSort",
+      "version": "1.1",
+      "url": "https://cdn.modrinth.com/data/LDkz4P10/versions/jOP2uPPT/ChestSort-1.1.jar",
+      "sha256": "a097881176ec631c4f1af31da3590c86a587fe64fb3657bbb15835e8ae7049ca",
+      "file": "ChestSort-1.1.jar"
+    },
+    {
+      "name": "Chunky",
+      "version": "1.5.3",
+      "url": "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
+      "sha256": "530d2c7430a96a39957391b7088be144daa3108f7665896d1c23aa8dd4af32f3",
+      "file": "Chunky-1.5.3.jar"
+    },
+    {
+      "name": "ChunkyBorder",
+      "version": "1.2.23",
+      "url": "https://cdn.modrinth.com/data/s86X568j/versions/asaBBItO/ChunkyBorder-Bukkit-1.2.23.jar",
+      "sha256": "7fa76e7ad85e4142be7203c30bc843896518985398ba8961fd573faa2964432f",
+      "file": "ChunkyBorder-1.2.23.jar"
+    },
+    {
+      "name": "CombatLog",
+      "version": "1.19",
+      "url": "https://cdn.modrinth.com/data/LI8sodAD/versions/xrvVOux2/CombatLog.jar",
+      "sha256": "c549e16aa99b3b62eaf949b4cc511f37e2e2c95f56584d69bc1cd8cf56bfc514",
+      "file": "CombatLog-1.19.jar"
+    },
+    {
+      "name": "CoreProtect",
+      "version": "24.1",
+      "url": "https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar",
+      "sha256": "a2acef7c06ef201355cef07d591a6055dfed358ad768faaaaaf4e276865ecc97",
+      "file": "CoreProtect-24.1.jar"
+    },
+    {
+      "name": "CraftBook5",
+      "version": "5.0.0-beta-05",
+      "url": "https://cdn.modrinth.com/data/jrO7z7l7/versions/5NcWuiCT/craftbook-bukkit-5.0.0-beta-05.jar",
+      "sha256": "922f8556c3e2035451a16dd04dd2b3980f64d14e032da665cc84a914335d9474",
+      "file": "CraftBook-5.0.0-beta-05.jar"
+    },
+    {
+      "name": "DecentHolograms",
+      "version": "2.10.1",
+      "url": "https://github.com/DecentSoftware-eu/DecentHolograms/releases/download/2.10.1/DecentHolograms-2.10.1.jar",
+      "sha256": "e247b7362c277dad0596cb48b5d1570b1002fba014a5afd8458d978963a253b4",
+      "file": "DecentHolograms-2.10.1.jar"
+    },
+    {
+      "name": "DiscordSRV",
+      "version": "1.30.5",
+      "url": "https://cdn.modrinth.com/data/UmLGoGij/versions/ATlquwiT/DiscordSRV-Build-1.30.5.jar",
+      "sha256": "ef2fa1f2eb146c7c77412b7190a7dd33f1fc91282683fe45407739554c8aefef",
+      "file": "DiscordSRV-1.30.5.jar"
+    },
+    {
+      "name": "DynamicShop",
+      "version": "2.6.4",
+      "url": "https://cdn.modrinth.com/data/OzSmbRQS/versions/IEILpPIV/DynamicShop-2.6.4.jar",
+      "sha256": "aa42d7f45c4104b8986f1d2f7e67abb19e7cdbd49cfef31bca4f15601d91c4dd",
+      "file": "DynamicShop-2.6.4.jar"
+    },
+    {
+      "name": "Essentials",
+      "version": "2.22.0",
+      "url": "https://cdn.modrinth.com/data/hXiIvTyT/versions/nY6VN1XH/EssentialsX-2.22.0.jar",
+      "sha256": "bda4685105977fca2e209820a9f0ad24275bd103390a03236f38e59bfdac58e6",
+      "file": "EssentialsX-2.22.0.jar"
+    },
+    {
+      "name": "EssentialsSpawn",
+      "version": "2.22.0",
+      "url": "https://cdn.modrinth.com/data/sYpvDxGJ/versions/lc5JHiNJ/EssentialsXSpawn-2.22.0.jar",
+      "sha256": "dd5377c4c921b9b67814209f4f6646ffbb959729003e721ec5e63c47c7c010b8",
+      "file": "EssentialsXSpawn-2.22.0.jar"
+    },
+    {
+      "name": "GravesX",
+      "version": "2026.4.9.1",
+      "url": "https://cdn.modrinth.com/data/vCFaodCy/versions/JpbCUK5u/GravesX-2026.4.9.1.jar",
+      "sha256": "b17fa89ae7a3631cc03c1db66353eaf589e88e914872c617bed17a0c7f3b1d33",
+      "file": "GravesX-2026.4.9.1.jar"
+    },
+    {
+      "name": "LevelledMobs",
+      "version": "4.5.3.2 b159",
+      "url": "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/dSBu3PRW/LevelledMobs-4.5.3.2%20b159.jar",
+      "sha256": "80b26f86bae76b8e32828f576e630e2d24d1d0c7210194e296fe408011e3fb4f",
+      "file": "LevelledMobs-4.5.3.2-b159.jar"
+    },
+    {
+      "name": "LuckPerms",
+      "version": "5.5.71",
+      "url": "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
+      "sha256": "49cecb66fa1fd22a133039a490e9c1e5095a238e7cd66eb9d2a16fe6c897550d",
+      "file": "LuckPerms-5.5.71.jar"
+    },
+    {
+      "name": "Lunamatic",
+      "version": "2.0.8",
+      "url": "https://cdn.modrinth.com/data/uA289E2d/versions/F4QSC1D9/Lunamatic-2.0.8-all.jar",
+      "sha256": "595f6f174116952fd4d6ef247fe026a6982c367757b6f7786cd25a02a0a34381",
+      "file": "Lunamatic-2.0.8.jar"
+    },
+    {
+      "name": "mcMMO",
+      "version": "2.3.002-SNAPSHOT (Jenkins build 363)",
+      "url": "https://popicraft.net/jenkins/job/mcMMO/363/artifact/target/mcMMO.jar",
+      "sha256": "b6c3d5ed187a5f14852703805391345673416856612223eca1abda86469b4246",
+      "file": "mcMMO-2.3.002-b363.jar"
+    },
+    {
+      "name": "MobArena",
+      "version": "0.109",
+      "url": "https://github.com/garbagemule/MobArena/releases/download/0.109/MobArena-0.109.jar",
+      "sha256": "c2b6f60ee486942753f529bba867500c409ea4b6aa803d873e20b81742f04042",
+      "file": "MobArena-0.109.jar"
+    },
+    {
+      "name": "PlaceholderAPI",
+      "version": "2.12.3",
+      "url": "https://cdn.modrinth.com/data/lKEzGugV/versions/pIvQcXW8/PlaceholderAPI-2.12.3.jar",
+      "sha256": "fde03259f5af6938f3c33eeb4d814000a1adabf1d2304ce14970be81f609a437",
+      "file": "PlaceholderAPI-2.12.3.jar"
+    },
+    {
+      "name": "Plan",
+      "version": "5.8 build 3605",
+      "url": "https://cdn.modrinth.com/data/wJQfHhxh/versions/VCtXebje/Plan-5.8-build-3605.jar",
+      "sha256": "f61cb806910dd7d2aceb2a37d53eb5ec4c6045f8a7531206fe731ec0ef9a105c",
+      "file": "Plan-5.8-build-3605.jar"
+    },
+    {
+      "name": "ProtocolLib",
+      "version": "5.4.0",
+      "url": "https://github.com/dmulloy2/ProtocolLib/releases/download/5.4.0/ProtocolLib.jar",
+      "sha256": "ee2e7ab9b5386f2d103081c4d108e61b1035df2ca692b53d6e2409fb1f5caccf",
+      "file": "ProtocolLib-5.4.0.jar"
+    },
+    {
+      "name": "Sleeper",
+      "version": "1.10.8",
+      "url": "https://cdn.modrinth.com/data/Kt3eUOUy/versions/hvoPVYQT/Sleeper-1.10.8.jar",
+      "sha256": "dcc1d2280854ec5a8b82fc6a584efb4961c74c3a25caaf4a7eabb2f59ee1eed8",
+      "file": "Sleeper-1.10.8.jar"
+    },
+    {
+      "name": "Towny",
+      "version": "0.103.2.0",
+      "url": "https://cdn.modrinth.com/data/Vs77PB2W/versions/pra46LOM/Towny-0.103.2.0.jar",
+      "sha256": "c8d7d59984eaf2606fce4192e860f7f969f3384e5a51b26b97225efbbe747c70",
+      "file": "Towny-0.103.2.0.jar"
+    },
+    {
+      "name": "Vault",
+      "version": "1.7.3",
+      "url": "https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar",
+      "sha256": "a6b5ed97f43a5cf5bbaf00a7c8cd23c5afc9bd003f849875af8b36e6cf77d01d",
+      "file": "Vault-1.7.3.jar"
+    },
+    {
+      "name": "VentureChat",
+      "version": "3.8.0",
+      "url": "https://github.com/Aust1n46/VentureChat/releases/download/v3.8.0/VentureChat-3.8.0.jar",
+      "sha256": "df6c9c5fc1c3bcf1bf2190185c95988cc7361e174dd6eeea510974b2654244dd",
+      "file": "VentureChat-3.8.0.jar"
+    },
+    {
+      "name": "WorldEdit",
+      "version": "7.4.5",
+      "url": "https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar",
+      "sha256": "e5696a6d064b9969437a8888be91b0941148a28e0c3736de1554a00254a5d142",
+      "file": "WorldEdit-7.4.5.jar"
+    },
+    {
+      "name": "WorldGuard",
+      "version": "7.0.18",
+      "url": "https://cdn.modrinth.com/data/DKY9btbd/versions/btHBavWa/worldguard-bukkit-7.0.18.jar",
+      "sha256": "08f3ef58bc521c635d8c78aedaca96f151d2d397e7cd8018584955dd7468eb05",
+      "file": "WorldGuard-7.0.18.jar"
+    },
+    {
+      "name": "XConomy",
+      "version": "2.26.3",
+      "url": "https://github.com/YiC200333/XConomy/releases/download/2.26.3/XConomy-Paper-2.26.3.jar",
+      "sha256": "bba7f8923142042efa595861991b1d54676e26d216a788b83095611d12d202b3",
+      "file": "XConomy-2.26.3.jar"
+    }
+  ]
+}

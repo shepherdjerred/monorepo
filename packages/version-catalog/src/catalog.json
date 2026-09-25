@@ -1378,6 +1378,20 @@
       ]
     },
     {
+      "name": "shepherdjerred/the-storm-server",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
+        "by the infra bake group. not managed by renovate — CI's version commit-back writes the real",
+        "tag@digest after the first image push; the zero digest is the unpublished placeholder."
+      ]
+    },
+    {
       "name": "shepherdjerred/tasknotes-server",
       "category": "internal-image",
       "artifactType": "image",

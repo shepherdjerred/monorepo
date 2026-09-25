@@ -1,0 +1,126 @@
+{
+  "file": "/data/plugins/Essentials/config.yml",
+  "ops": [
+    {
+      "$set": {
+        "path": "$.ops-name-color",
+        "value": "none"
+      }
+    },
+    {
+      "$set": {
+        "path": "$.nickname-prefix",
+        "value": "none"
+      }
+    },
+    {
+      "$set": {
+        "path": "$.change-tab-complete-name",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "change-playerlist",
+        "value": true
+      }
+    },
+    {
+      "$set": {
+        "path": "$.teleport-cooldown",
+        "value": 1800
+      }
+    },
+    {
+      "$set": {
+        "path": "$.teleport-delay",
+        "value": 7
+      }
+    },
+    {
+      "$set": {
+        "path": "$.teleport-invulnerability",
+        "value": 10
+      }
+    },
+    {
+      "$set": {
+        "path": "$.enabledSigns",
+        "value": ["color"]
+      }
+    },
+    {
+      "$set": {
+        "path": "$.auto-afk",
+        "value": 600
+      }
+    },
+    {
+      "$set": {
+        "path": "$.auto-afk-timeout",
+        "value": 1200
+      }
+    },
+    {
+      "$set": {
+        "path": "$.freeze-afk-players",
+        "value": true
+      }
+    },
+    {
+      "$set": {
+        "path": "$.disable-item-pickup-while-afk",
+        "value": true
+      }
+    },
+    {
+      "$set": {
+        "path": "$.afk-list-name",
+        "value": "{PLAYER} (AFK)"
+      }
+    },
+    {
+      "$set": {
+        "path": "$.send-info-after-death",
+        "value": true
+      }
+    },
+    {
+      "$set": {
+        "path": "$.sethome-multiple.default",
+        "value": 1
+      }
+    },
+    {
+      "$set": {
+        "path": "$.confirm-home-overwrite",
+        "value": true
+      }
+    },
+    {
+      "$set": {
+        "path": "$.newbies.announce-format",
+        "value": "&7Welcome &3{DISPLAYNAME} &7to the server!"
+      }
+    },
+    {
+      "$set": {
+        "path": "$.newbies.spawnpoint",
+        "value": "none"
+      }
+    },
+    {
+      "$set": {
+        "path": "$.newbies.kit",
+        "value": "starter"
+      }
+    },
+    {
+      "$set": {
+        "path": "$.respawn-at-home",
+        "value": true
+      }
+    }
+  ]
+}

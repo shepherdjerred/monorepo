@@ -16,6 +16,7 @@ from `plugin/`.
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
+| `server/`                          | The `minecraft-tsmc` server image: pinned jars, config bundle and patches (see `server/README.md`)                     |
 
 ## Commands
 

@@ -192,7 +192,7 @@ target "discord-plays-mario-kart" {
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "redlib"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server"]
 }
 
 target "caddy-s3proxy" {
@@ -218,4 +218,16 @@ target "redlib" {
   tags       = imagetags("redlib")
   cache-from = cachefrom("redlib")
   cache-to   = cacheto("redlib")
+}
+
+# The Storm's Minecraft server (minecraft-tsmc): pre-patched Paper, the pinned
+# plugin jars, TheStorm.jar built from packages/the-storm/plugin, and the
+# repository-owned config bundle. See packages/the-storm/server/README.md.
+target "the-storm-server" {
+  context    = "packages/the-storm"
+  dockerfile = "server/Dockerfile"
+  target     = "image"
+  tags       = imagetags("the-storm-server")
+  cache-from = cachefrom("the-storm-server")
+  cache-to   = cacheto("the-storm-server")
 }

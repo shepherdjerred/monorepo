@@ -1,0 +1,8 @@
+# Directories under /data that the repository owns completely. On every boot,
+# storm-entrypoint deletes files there that server/owned/ does not ship. One
+# path per line, relative to /data and below plugins/ (for example
+# plugins/TheStorm/content/quests).
+#
+# Never list a directory a plugin writes runtime data into: plugins/TheStorm
+# holds the-storm.db, so it is not a root. Its YAML files are still overwritten
+# from server/owned/ on every boot by itzg's /plugins sync.

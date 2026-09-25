@@ -1,0 +1,11 @@
+{
+  "file": "/data/plugins/Chunky/config.yml",
+  "ops": [
+    {
+      "$set": {
+        "path": "$.continue-on-restart",
+        "value": true
+      }
+    }
+  ]
+}
