@@ -8,12 +8,15 @@ import com.shepherdjerred.thestorm.towns.domain.protection.ProtectionEngine;
 import com.shepherdjerred.thestorm.towns.domain.protection.Verdict;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldRules;
+import java.util.Optional;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The one place listeners ask: resolves Paper positions to land, asks the domain, and tells the
@@ -26,11 +29,13 @@ final class Guard {
   private final TownsState state;
   private final ProtectionEngine engine;
   private final Notices notices;
+  private final Culprits culprits;
 
-  Guard(TownsState state, ProtectionEngine engine, Notices notices) {
+  Guard(TownsState state, ProtectionEngine engine, Notices notices, Culprits culprits) {
     this.state = state;
     this.engine = engine;
     this.notices = notices;
+    this.culprits = culprits;
   }
 
   Land land(Block block) {
@@ -70,7 +75,25 @@ final class Guard {
   }
 
   static Actor actor(Player player) {
-    return new Actor(player.getUniqueId(), player.hasPermission(BYPASS_PERMISSION));
+    return Culprit.of(player).actor();
+  }
+
+  /** The player behind {@code entity}, if any (see {@link Culprits}). */
+  Optional<Culprit> culprit(@Nullable Entity entity) {
+    return culprits.behind(entity);
+  }
+
+  Optional<Culprit> culprit(DamageSource source) {
+    return culprits.behind(source);
+  }
+
+  /** The player behind an entity pressing a block, riders and lead holders included. */
+  Optional<Culprit> presser(Entity entity) {
+    return culprits.presser(entity);
+  }
+
+  Culprits culprits() {
+    return culprits;
   }
 
   Verdict verdict(Player player, Act act, Land land) {
@@ -87,16 +110,29 @@ final class Guard {
     return verdict(player, act, land).isAllowed();
   }
 
+  /** True when {@code culprit} may do {@code act} on {@code land}; tells them if online. */
+  boolean permits(Culprit culprit, Act act, Land land) {
+    return tell(culprit, engine.decide(culprit.actor(), act, land));
+  }
+
+  boolean permitsQuietly(Culprit culprit, Act act, Land land) {
+    return engine.decide(culprit.actor(), act, land).isAllowed();
+  }
+
   /**
    * True when {@code attacker} may hurt, push or pull {@code victim} (see {@link
    * ProtectionEngine#decideHarm}). Tells the attacker when refused if {@code tell}.
    */
   boolean permitsHarm(Player attacker, Entity victim, boolean tell) {
+    return permitsHarm(Culprit.of(attacker), victim, tell);
+  }
+
+  boolean permitsHarm(Culprit attacker, Entity victim, boolean tell) {
     var verdict =
         engine.decideHarm(
-            actor(attacker),
-            land(attacker),
-            EntityKinds.victim(victim, attacker.getUniqueId()),
+            attacker.actor(),
+            land(attacker.from()),
+            EntityKinds.victim(victim, attacker.id()),
             land(victim));
     return tell ? tell(attacker, verdict) : verdict.isAllowed();
   }
@@ -112,6 +148,14 @@ final class Guard {
     return permits(player, act, land(entity));
   }
 
+  /**
+   * True when harm nobody can be blamed for, coming from {@code origin}, may reach a player on
+   * {@code victimLand} (see {@link ProtectionEngine#allowsUntracedHarm}).
+   */
+  boolean allowsUntracedHarm(Land origin, Land victimLand) {
+    return engine.allowsUntracedHarm(origin, victimLand);
+  }
+
   static boolean flows(WorldEffect effect, Land from, Land to) {
     return WorldRules.allows(effect, from, to);
   }
@@ -122,6 +166,11 @@ final class Guard {
 
   void forget(Player player) {
     notices.forget(player);
+  }
+
+  private boolean tell(Culprit culprit, Verdict verdict) {
+    var player = culprit.online();
+    return player == null ? verdict.isAllowed() : tell(player, verdict);
   }
 
   private boolean tell(Player player, Verdict verdict) {

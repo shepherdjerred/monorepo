@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,6 +47,29 @@ final class BlockKinds {
           Material.NOTE_BLOCK,
           Material.REDSTONE_WIRE);
 
+  /** Components and power sources beyond buttons, plates and lightning rods (tags). */
+  private static final List<Material> REDSTONE_SOURCES =
+      List.of(
+          Material.REDSTONE_WIRE,
+          Material.LEVER,
+          Material.REDSTONE_TORCH,
+          Material.REDSTONE_WALL_TORCH,
+          Material.REDSTONE_BLOCK,
+          Material.REPEATER,
+          Material.COMPARATOR,
+          Material.OBSERVER,
+          Material.TARGET,
+          Material.DAYLIGHT_DETECTOR,
+          Material.DETECTOR_RAIL,
+          Material.ACTIVATOR_RAIL,
+          Material.TRAPPED_CHEST,
+          Material.TRIPWIRE_HOOK,
+          Material.TRIPWIRE,
+          Material.LECTERN,
+          Material.SCULK_SENSOR,
+          Material.CALIBRATED_SCULK_SENSOR,
+          Material.JUKEBOX);
+
   private static final Set<Material> BLOCK_CHANGING_ITEMS =
       Set.of(
           Material.HONEYCOMB,
@@ -64,12 +88,15 @@ final class BlockKinds {
   private final Map<Material, Act> uses = new EnumMap<>(Material.class);
   private final Map<Material, Act> steps = new EnumMap<>(Material.class);
   private final Map<Material, Act> impacts = new EnumMap<>(Material.class);
+  private final Map<Material, Act> presses = new EnumMap<>(Material.class);
+  private final Set<Material> redstone = EnumSet.noneOf(Material.class);
 
   BlockKinds() {
     switches();
     containers();
     others();
     stepsAndImpacts();
+    redstone();
   }
 
   private void switches() {
@@ -117,12 +144,11 @@ final class BlockKinds {
     steps.put(Material.TRIPWIRE, new Act(Action.INTERACT, Subject.TRIPWIRE));
     for (var plate : Tag.PRESSURE_PLATES.getValues()) {
       steps.put(plate, new Act(Action.INTERACT, Subject.PRESSURE_PLATE));
-      impacts.put(plate, new Act(Action.INTERACT, Subject.PRESSURE_PLATE));
     }
+    presses.putAll(steps);
     for (var button : Tag.BUTTONS.getValues()) {
-      impacts.put(button, new Act(Action.INTERACT, Subject.BUTTON));
+      presses.put(button, new Act(Action.INTERACT, Subject.BUTTON));
     }
-    impacts.put(Material.TRIPWIRE, new Act(Action.INTERACT, Subject.TRIPWIRE));
     impacts.put(Material.TARGET, new Act(Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT));
     impacts.put(Material.BELL, new Act(Action.INTERACT, Subject.BELL));
     for (var fragile :
@@ -133,6 +159,13 @@ final class BlockKinds {
       for (var lightable : tag.getValues()) {
         impacts.put(lightable, new Act(Action.BUILD, Subject.BLOCK));
       }
+    }
+  }
+
+  private void redstone() {
+    redstone.addAll(REDSTONE_SOURCES);
+    for (var tag : List.of(Tag.BUTTONS, Tag.PRESSURE_PLATES, Tag.LIGHTNING_RODS)) {
+      redstone.addAll(tag.getValues());
     }
   }
 
@@ -168,6 +201,19 @@ final class BlockKinds {
   /** What stepping on a block of {@code type} does, or empty when stepping is harmless. */
   Optional<Act> step(Material type) {
     return Optional.ofNullable(steps.get(type));
+  }
+
+  /**
+   * What an entity (an arrow, a thrown item, a mob, a mount) pressing or trampling a block of
+   * {@code type} does, or empty when that is harmless.
+   */
+  Optional<Act> press(Material type) {
+    return Optional.ofNullable(presses.get(type));
+  }
+
+  /** True for redstone components and power sources, which may not be wired into others' land. */
+  boolean isRedstone(Material type) {
+    return redstone.contains(type);
   }
 
   /** What a player's projectile does to a block of {@code type}, or empty when nothing. */

@@ -19,6 +19,10 @@ claims:
 # How long before a player is told about the same refusal again.
 denialCooldownMillis: 2000
 
+# How far, in chunks on both axes, from land a player has no say over (other
+# towns' claims and admin regions) they may build a wither.
+witherBufferChunks: 8
+
 # Admin regions. Nobody can claim a chunk a region overlaps. Players may only
 # do what `allow` lists (staff with thestorm.towns.bypass may do anything but
 # fight); explosions, fire and mob griefing never change a region, and nothing

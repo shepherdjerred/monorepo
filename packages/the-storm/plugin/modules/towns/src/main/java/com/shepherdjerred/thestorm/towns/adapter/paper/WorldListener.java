@@ -35,21 +35,14 @@ import org.bukkit.event.world.StructureGrowEvent;
  */
 final class WorldListener implements Listener {
 
-  private static final List<BlockFace> FACES =
-      List.of(
-          BlockFace.NORTH,
-          BlockFace.EAST,
-          BlockFace.SOUTH,
-          BlockFace.WEST,
-          BlockFace.UP,
-          BlockFace.DOWN);
-
   private final Guard guard;
   private final BlockKinds kinds;
+  private final Redstone redstone;
 
   WorldListener(Guard guard, BlockKinds kinds) {
     this.guard = guard;
     this.kinds = kinds;
+    this.redstone = new Redstone(guard, kinds);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -92,7 +85,7 @@ final class WorldListener implements Listener {
 
   /**
    * Redstone from another owner's land cannot open a door, trapdoor or fence gate: a torch in the
-   * wild beside a town's door would otherwise open it.
+   * wild beside a town's door, or beside a block next to it, would otherwise open it.
    */
   @EventHandler(priority = EventPriority.LOW)
   void onRedstone(BlockRedstoneEvent event) {
@@ -100,19 +93,8 @@ final class WorldListener implements Listener {
       return;
     }
     var block = event.getBlock();
-    if (!kinds.opensWithRedstone(block.getType())) {
-      return;
-    }
-    var land = guard.land(block);
-    if (land instanceof Land.Wilderness) {
-      return;
-    }
-    for (var face : FACES) {
-      if (block.getBlockPower(face) > 0
-          && !Guard.flows(WorldEffect.REDSTONE, guard.land(block.getRelative(face)), land)) {
-        event.setNewCurrent(event.getOldCurrent());
-        return;
-      }
+    if (kinds.opensWithRedstone(block.getType()) && redstone.foreignPower(block)) {
+      event.setNewCurrent(event.getOldCurrent());
     }
   }
 
@@ -127,7 +109,7 @@ final class WorldListener implements Listener {
       return;
     }
     var entity = event.getEntity();
-    var player = Culprits.behind(entity);
+    var player = guard.culprit(entity);
     var from = entity != null ? guard.land(entity) : guard.land(blocks.getFirst());
     var build = new Act(Action.BUILD, Subject.BLOCK);
     for (var block : blocks) {
@@ -149,7 +131,7 @@ final class WorldListener implements Listener {
     var direction = event.getDirection();
     var moved = new ArrayList<Block>(event.getBlocks());
     moved.add(piston.getRelative(direction));
-    if (!pistonMay(guard.land(piston), moved, direction)) {
+    if (redstone.foreignPistonPower(piston) || !pistonMay(guard.land(piston), moved, direction)) {
       event.setCancelled(true);
     }
   }
@@ -158,7 +140,8 @@ final class WorldListener implements Listener {
   void onPistonRetract(BlockPistonRetractEvent event) {
     var from = guard.land(event.getBlock());
     var direction = event.getDirection();
-    if (!pistonMay(from, event.getBlocks(), direction)
+    if (redstone.foreignPistonPower(event.getBlock())
+        || !pistonMay(from, event.getBlocks(), direction)
         || !pistonMay(from, event.getBlocks(), direction.getOppositeFace())) {
       event.setCancelled(true);
     }

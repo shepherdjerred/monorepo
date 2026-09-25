@@ -10,7 +10,6 @@ import java.util.Optional;
 import org.bukkit.block.Block;
 import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -43,7 +42,8 @@ final class FireListener implements Listener {
   void onIgnite(BlockIgniteEvent event) {
     var block = event.getBlock();
     var igniter = event.getIgnitingEntity();
-    var player = Optional.ofNullable(event.getPlayer()).or(() -> Culprits.behind(igniter));
+    var player =
+        Optional.ofNullable(event.getPlayer()).map(Culprit::of).or(() -> guard.culprit(igniter));
     if (player.isPresent()) {
       event.setCancelled(!guard.permits(player.get(), BUILD, guard.land(block)));
       return;
@@ -71,7 +71,7 @@ final class FireListener implements Listener {
   void onPrime(TNTPrimeEvent event) {
     var tnt = event.getBlock();
     var primer = event.getPrimingEntity();
-    var player = Culprits.behind(primer);
+    var player = guard.culprit(primer);
     if (player.isPresent()) {
       event.setCancelled(!guard.permits(player.get(), BUILD, guard.land(tnt)));
       return;
@@ -86,7 +86,7 @@ final class FireListener implements Listener {
   void onEntityExplode(EntityExplodeEvent event) {
     var entity = event.getEntity();
     var from = guard.land(event.getLocation());
-    var player = Culprits.behind(entity);
+    var player = guard.culprit(entity);
     if (entity instanceof AbstractWindCharge && player.isPresent()) {
       // A player's wind charge only toggles doors, buttons and levers: each is their own use.
       event.blockList().removeIf(block -> !mayTrigger(player.get(), block));
@@ -104,7 +104,7 @@ final class FireListener implements Listener {
    * Keeps only blocks the explosion may change: within its own land, where that land allows
    * explosions, and, for an explosion a player caused, where that player may build.
    */
-  private void filter(List<Block> blocks, Land from, Optional<Player> player) {
+  private void filter(List<Block> blocks, Land from, Optional<Culprit> player) {
     blocks.removeIf(
         block -> {
           var land = guard.land(block);
@@ -113,7 +113,7 @@ final class FireListener implements Listener {
         });
   }
 
-  private boolean mayTrigger(Player player, Block block) {
+  private boolean mayTrigger(Culprit player, Block block) {
     var act = kinds.use(block.getType()).orElse(TRIGGER);
     return guard.permitsQuietly(player, act, guard.land(block));
   }
