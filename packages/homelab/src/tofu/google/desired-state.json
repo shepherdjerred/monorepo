@@ -9,24 +9,16 @@
       "display_name": "LLM birmel prod",
       "monthly_budget_usd": 10,
       "ai_studio_spend_cap_usd": 10,
-      "onepassword_targets": [
-        {
-          "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
-          "vault_field": "GEMINI_API_KEY"
-        }
-      ]
+      "gemini_key_revision": 1,
+      "onepassword_item_title": "llm-gemini-birmel-prod"
     },
     "scout-beta": {
       "project_id": "sjerred-llm-scout-beta",
       "display_name": "LLM scout beta",
       "monthly_budget_usd": 5,
       "ai_studio_spend_cap_usd": 5,
-      "onepassword_targets": [
-        {
-          "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
-          "vault_field": "GEMINI_API_KEY"
-        }
-      ]
+      "gemini_key_revision": 1,
+      "onepassword_item_title": "llm-gemini-scout-beta"
     }
   }
 }

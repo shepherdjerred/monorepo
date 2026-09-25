@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 8.4"
     }
+    onepassword = {
+      source  = "1Password/onepassword"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -23,3 +27,8 @@ provider "google" {
   billing_project       = var.google_quota_project_id
   user_project_override = true
 }
+
+# Writes each minted key into its own 1Password item. Authenticates through
+# the 1Password desktop app for the account named by OP_ACCOUNT, the same
+# operator session that runs this stack.
+provider "onepassword" {}

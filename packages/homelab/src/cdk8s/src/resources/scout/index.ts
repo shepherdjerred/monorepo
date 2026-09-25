@@ -22,7 +22,10 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
-import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-workload-identity.ts";
+import {
+  addAnthropicFederation,
+  geminiApiKeyEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   applyZfsVolumeSelinuxRelabeling,
   zfsVolumeSelinuxLevels,
@@ -350,14 +353,7 @@ export function createScoutDeployment(
     // project and must not carry a key it never uses.
     ...(stage === "beta"
       ? {
-          GEMINI_API_KEY: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(
-              chart,
-              "gemini-api-key-secret",
-              onePasswordItem.name,
-            ),
-            key: "GEMINI_API_KEY",
-          }),
+          GEMINI_API_KEY: geminiApiKeyEnv(chart, "scout-beta"),
         }
       : {}),
   };

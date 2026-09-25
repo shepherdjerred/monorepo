@@ -1146,7 +1146,12 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["workspace_key", "namespace", "token_lifetime_seconds"],
+        "required": [
+          "workspace_key",
+          "namespace",
+          "token_lifetime_seconds",
+          "onepassword_item_title"
+        ],
         "properties": {
           "workspace_key": {
             "type": "string",
@@ -1160,6 +1165,9 @@
             "type": "integer",
             "minimum": 60,
             "maximum": 1200
+          },
+          "onepassword_item_title": {
+            "$ref": "#/$defs/onePasswordItemTitle"
           }
         }
       }
@@ -1177,7 +1185,8 @@
           "display_name",
           "monthly_budget_usd",
           "ai_studio_spend_cap_usd",
-          "onepassword_targets"
+          "gemini_key_revision",
+          "onepassword_item_title"
         ],
         "properties": {
           "project_id": {
@@ -1196,15 +1205,21 @@
             "type": "number",
             "exclusiveMinimum": 0
           },
-          "onepassword_targets": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "$ref": "#/$defs/onePasswordTarget"
-            }
+          "gemini_key_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Bumping this mints a replacement key before the old one is deleted"
+          },
+          "onepassword_item_title": {
+            "$ref": "#/$defs/onePasswordItemTitle"
           }
         }
       }
+    },
+    "onePasswordItemTitle": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,62}$",
+      "description": "Title of the 1Password item OpenTofu creates and CDK8s references"
     }
   }
 }

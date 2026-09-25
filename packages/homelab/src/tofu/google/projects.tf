@@ -33,10 +33,6 @@ resource "google_project_service" "workload" {
 # the key are processed as this account, which is what lets a leaked key be
 # disabled by disabling one account. The Gemini API is allowed for
 # authorization keys by default, so the account needs no project role.
-#
-# The key itself is minted outside OpenTofu: the API Keys REST endpoint cannot
-# create an authorization key, only `gcloud beta services api-keys create
-# --service-account` can. See the credential rotation how-to.
 resource "google_service_account" "gemini_key" {
   for_each = var.google_workloads
 

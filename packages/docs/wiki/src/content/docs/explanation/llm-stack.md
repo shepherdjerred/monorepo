@@ -48,14 +48,16 @@ Every workload and environment gets its own credential and its own provider
 project or workspace, so one runaway feature exhausts its own cap and nothing
 else. The three providers allow three different authentication models:
 
-| Provider  | Production credential                       | Hard cap                              | Managed by                                                 |
-| --------- | ------------------------------------------- | ------------------------------------- | ---------------------------------------------------------- |
-| OpenAI    | Per-project service-account key             | Project spend limit, model allowlist  | OpenTofu (`openai`), CI-applied                            |
-| Anthropic | Workload identity federation, no stored key | Workspace spend limit (Console)       | OpenTofu (`anthropic-federation`), operator-applied        |
-| Google    | Service-account-bound Gemini API key        | AI Studio project spend cap (Console) | OpenTofu (`google`) plus a `gcloud` mint, operator-applied |
+| Provider  | Production credential                       | Hard cap                              | Managed by                                          |
+| --------- | ------------------------------------------- | ------------------------------------- | --------------------------------------------------- |
+| OpenAI    | Per-project service-account key             | Project spend limit, model allowlist  | OpenTofu (`openai`), CI-applied                     |
+| Anthropic | Workload identity federation, no stored key | Workspace spend limit (Console)       | OpenTofu (`anthropic-federation`), operator-applied |
+| Google    | Service-account-bound Gemini API key        | AI Studio project spend cap (Console) | OpenTofu (`google`), operator-applied               |
 
 OpenAI has no federation, so production holds a static key there; OpenTofu
-mints it and hands it to 1Password. Anthropic federates: a pod presents a
+mints it and an operator hands it to 1Password. The operator-applied Google
+and Anthropic stacks write their outputs into dedicated 1Password items
+themselves, so applying them needs no handoff or follow-up commit. Anthropic federates: a pod presents a
 projected Kubernetes service-account token, and the runtime exchanges it for a
 short-lived access token. Federated workloads hold no Anthropic secret at all.
 The runtime refuses to start a federated client when `ANTHROPIC_API_KEY` is
@@ -65,8 +67,8 @@ design could appear to work while not actually being federated.
 Google was first planned on Vertex AI with federation, but Vertex has no
 per-project spend cap; its only hard limits are request quotas, and a dollar cap
 needs an enterprise subscription. The Gemini API has a per-project spend cap, at
-the cost of a static key that only `gcloud` can mint. A capped static key beat
-an uncapped federated identity.
+the cost of a static key, which OpenTofu mints and binds to a per-workload
+service account. A capped static key beat an uncapped federated identity.
 
 CI and local development cannot federate, so they use static keys from
 1Password for every provider. Provider-side caps are the backstop; the Prometheus
@@ -224,9 +226,10 @@ labels. Existing `ai_provider_errors_total` and
 ## Deployment acceptance
 
 The cutover to direct providers is atomic. Before it deploys, the operator
-provisions each workload's OpenAI and Gemini keys into 1Password, applies the
-operator-only `anthropic-federation` and `google` stacks, and exports the
-federation identifiers into the committed workload-identity inventory. For each
+hands each workload's OpenAI key to 1Password and applies the operator-only
+`google` and `anthropic-federation` stacks, which write the Gemini keys and
+federation identifiers to 1Password themselves. Pods reference those items, so
+a workload whose stack has not been applied waits on its missing Secret. For each
 provider and endpoint type, verify the application span, provider child spans,
 Loki log, live cost, body archive, and full-content Tempo record; for
 Anthropic, also confirm the exchange appears in the Console's workload-identity

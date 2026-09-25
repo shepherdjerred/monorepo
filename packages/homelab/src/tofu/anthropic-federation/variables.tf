@@ -22,6 +22,7 @@ variable "anthropic_federation_workloads" {
     workspace_key          = string
     namespace              = string
     token_lifetime_seconds = number
+    onepassword_item_title = string
   }))
   default = {}
 

@@ -40,8 +40,8 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `discord` — one bot token per imported application plus `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `openai` — `OPENAI_ADMIN_KEY`, `OPENAI_CERTIFICATE_VALUES_JSON`, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `anthropic` — `ANTHROPIC_ADMIN_API_KEY` and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
-  - `anthropic-federation` — `ANTHROPIC_ADMIN_API_KEY`, an `org:admin` OAuth token as `ANTHROPIC_AUTH_TOKEN`, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
-  - `google` — the operator's Application Default Credentials and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
+  - `anthropic-federation` — `ANTHROPIC_ADMIN_API_KEY`, an `org:admin` OAuth token as `ANTHROPIC_AUTH_TOKEN`, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
+  - `google` — the operator's Application Default Credentials, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `cloudflare-tokens` — a bootstrap `CLOUDFLARE_API_TOKEN` and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
 
 Non-secret platform desired state is committed in each platform stack's
@@ -162,9 +162,10 @@ The `anthropic-federation` stack registers the Talos cluster's service-account
 token issuer with inline JWKS, because the issuer is not publicly reachable. It
 creates one Anthropic service account and federation rule per workload, each
 matching `system:serviceaccount:<namespace>:*` and bound to that environment's
-workspace. Federated pods hold no Anthropic secret. After an apply, refresh the
-committed CDK8s inventory with
-`bun packages/homelab/scripts/tofu/tofu-stack.ts anthropic-federation export-workload-identity`.
+workspace. Federated pods hold no Anthropic secret. The apply writes each
+workload's organization, rule, service account, and workspace IDs into a
+dedicated 1Password item named by its `onepassword_item_title`, which CDK8s
+syncs into the workload's namespace, so an apply needs no follow-up commit.
 
 The federation admin endpoints accept only an `org:admin` OAuth token, so this
 stack is operator-applied. Workspace spend limits are not exposed by the
@@ -174,15 +175,18 @@ provider and are set in the Claude Console.
 
 The `google` stack creates one project per workload with the Gemini API
 enabled, a role-less service account to bind the key to, and an alert-only
-Cloud Billing budget. The provider cannot mint a service-account-bound Gemini
-key, and the AI Studio spend cap is Console-only; the output
-`google_gemini_key_targets` lists what the operator needs for both. Without a
+Cloud Billing budget. It mints a Gemini API key bound to that account and
+restricted to the Gemini API, and writes it into a dedicated 1Password item
+named by the workload's `onepassword_item_title`. Bumping
+`gemini_key_revision` rotates the key: the replacement is created and handed
+off before the old one is deleted. The AI Studio spend cap has no API; the
+output `google_gemini_spend_caps` lists the value to set by hand. Without a
 GCP organization only a user can create projects, so this stack runs with the
 operator's Application Default Credentials. `google_billing_account_id` and
 `google_quota_project_id` are unset until the billing account exists.
 
 See [Rotate LLM provider credentials](https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/wiki/src/content/docs/how-to/rotate-provider-credentials.md)
-for the key handoff, spend caps, and JWKS refresh.
+for the operator steps, spend caps, and JWKS refresh.
 
 ### GitHub
 

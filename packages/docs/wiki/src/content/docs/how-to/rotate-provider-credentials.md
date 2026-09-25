@@ -12,17 +12,17 @@ why the three providers differ, see [LLM stack](/explanation/llm-stack/).
 Rotate one workload at a time. Keep the previous credential active until its
 consumer proves the replacement works, then revoke it.
 
-| Provider  | Stack                  | Applied by | Credential in 1Password |
-| --------- | ---------------------- | ---------- | ----------------------- |
-| OpenAI    | `openai`               | Buildkite  | `OPENAI_API_KEY` field  |
-| Google    | `google`               | Operator   | `GEMINI_API_KEY` field  |
-| Anthropic | `anthropic-federation` | Operator   | None; the pod federates |
+| Provider  | Stack                  | Applied by | Credential in 1Password                   |
+| --------- | ---------------------- | ---------- | ----------------------------------------- |
+| OpenAI    | `openai`               | Buildkite  | `OPENAI_API_KEY` field                    |
+| Google    | `google`               | Operator   | Per-workload item, written by OpenTofu    |
+| Anthropic | `anthropic-federation` | Operator   | Per-workload ID item, written by OpenTofu |
 
-Each workload's 1Password item and field are in its stack's
-`desired-state.json` under
+Each workload's 1Password target is in its stack's `desired-state.json` under
 [`packages/homelab/src/tofu/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/tofu).
-Put values into 1Password with the app or a non-printing `op item edit`. Never
-place a key in a shell argument, file, command output, or chat.
+For the OpenAI handoff, put values into 1Password with the app or a
+non-printing `op item edit`. Never place a key in a shell argument, file,
+command output, or chat.
 
 ## 1. Rotate an OpenAI project key
 
@@ -48,56 +48,55 @@ Data sharing is set per project in the OpenAI dashboard, under the project's
 data controls. The provider cannot manage it. Enable it only on projects whose
 traffic may be shared.
 
-## 2. Rotate a Gemini API key
+## 2. Mint or rotate a Gemini API key
 
-OpenTofu creates each workload's project and a role-less service account. Only
-`gcloud` can mint a key bound to that service account.
+The `google` stack creates each workload's project, a role-less service
+account, and a Gemini API key bound to that account. It writes the key into
+the workload's own 1Password item, named by `onepassword_item_title`, as
+`GEMINI_API_KEY`. The cluster syncs that item directly.
 
-1. Read the targets. The output is not secret:
+1. Sign in with your own Google credentials, and name the 1Password account
+   whose desktop app authorizes the item write:
+
+   ```bash
+   gcloud auth application-default login
+   export OP_ACCOUNT=my.1password.com
+   ```
+
+2. To rotate, bump the workload's `gemini_key_revision` in
+   `google/desired-state.json`. OpenTofu mints the replacement and updates the
+   item before it deletes the old key.
+3. Apply, supplying the stack's state passphrase from 1Password:
 
    ```bash
    bun packages/homelab/scripts/tofu/tofu-stack.ts google apply
    ```
 
-   The apply prints `google_gemini_key_targets` with each workload's
-   `project_id`, `service_account_email`, spend cap, and 1Password target.
+4. Restart the workload and confirm a Gemini call succeeds.
 
-2. Mint a key restricted to the Gemini API:
-
-   ```bash
-   gcloud beta services api-keys create \
-     --project=<project_id> \
-     --display-name=<workload>-<yyyy-mm> \
-     --service-account=<service_account_email> \
-     --api-target=service=generativelanguage.googleapis.com
-   ```
-
-   Copy the key string straight into the target field in 1Password.
-
-3. Restart the workload and confirm a Gemini call succeeds.
-4. Delete the previous key with `gcloud services api-keys delete`.
-
-Set the project's spend cap in Google AI Studio, under the project's billing
-settings, to `ai_studio_spend_cap_usd`. The cap is Console-only. The
-`google_billing_budget` in the stack only sends alerts.
+The apply prints `google_gemini_spend_caps`. Set each project's spend cap in
+Google AI Studio, under the project's billing settings, to
+`ai_studio_spend_cap_usd`. The cap has no API. The `google_billing_budget` in
+the stack only sends alerts.
 
 :::caution
-The stack runs with your own Application Default Credentials, because without a
-GCP organization only a user can create projects. Run `gcloud auth application-default login`
-first, and create the `google_quota_project_id` project once by hand before the
-first apply.
+Without a GCP organization only a user can create projects, so this stack
+always runs with your own credentials. Before the first apply, create the
+billing account and the `google_quota_project_id` project by hand, and record
+both in `google/desired-state.json`.
 :::
 
-## 3. Rotate an Anthropic federation identity
+## 3. Apply or change an Anthropic federation identity
 
-Federated workloads hold no secret, so there is no key to rotate. Recreate the
-identity only when a rule, service account, or workspace must change.
+Federated workloads hold no secret, so there is no key to rotate. Apply the
+stack when a workload, rule, service account, or workspace changes.
 
 1. Authenticate with an organization-admin OAuth token. The federation admin
    endpoints reject API keys:
 
    ```bash
    ant auth login --scope org:admin
+   export OP_ACCOUNT=my.1password.com
    ```
 
    Supply that token as `ANTHROPIC_AUTH_TOKEN`, with `ANTHROPIC_ADMIN_API_KEY`
@@ -109,15 +108,13 @@ identity only when a rule, service account, or workspace must change.
    bun packages/homelab/scripts/tofu/tofu-stack.ts anthropic-federation apply
    ```
 
-3. Export the identifiers into the committed inventory, and commit the result:
+   OpenTofu writes each workload's organization, rule, service account, and
+   workspace IDs into its item, named by `onepassword_item_title`. The cluster
+   syncs them as `ANTHROPIC_*` variables with no further commit.
 
-   ```bash
-   bun packages/homelab/scripts/tofu/tofu-stack.ts anthropic-federation export-workload-identity
-   ```
-
-4. After the release reaches the cluster, check the Claude Console's
-   workload-identity history for successful exchanges. Watch at least three
-   token rotations, about 30 minutes, for `jti_reused` failures.
+3. Restart the workload. Check the Claude Console's workload-identity history
+   for successful exchanges, and watch at least three token rotations, about 30
+   minutes, for `jti_reused` failures.
 
 Workspace spend limits are Console-only. Set them in the Claude Console under
 each workspace's limits.
