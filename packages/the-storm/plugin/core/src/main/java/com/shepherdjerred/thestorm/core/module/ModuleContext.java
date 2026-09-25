@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.core.module;
 
+import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
@@ -17,6 +18,7 @@ import org.bukkit.plugin.Plugin;
  * @param lifecycle Paper's lifecycle manager, for registering Brigadier commands
  * @param scheduler the main-thread scheduler port
  * @param database shared storage
+ * @param services the ports modules publish to each other
  * @param dataDirectory the plugin data folder
  * @param time the current instant (no time zone: modules format times for display themselves)
  * @param random randomness for drops, chances and rotations
@@ -27,7 +29,14 @@ public record ModuleContext(
     LifecycleEventManager<Plugin> lifecycle,
     Scheduler scheduler,
     StormDatabase database,
+    Services services,
     Path dataDirectory,
     InstantSource time,
     RandomGenerator random,
-    ComponentLogger logger) {}
+    ComponentLogger logger) {
+
+  /** Loads {@code plugins/TheStorm/<fileName>}, which the repository owns. */
+  public <T> T loadConfig(String fileName, Class<T> type) {
+    return ConfigFiles.load(dataDirectory.resolve(fileName), type);
+  }
+}

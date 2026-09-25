@@ -19,6 +19,7 @@ assertj = "3.27.7"
 archunit = "1.5.0"
 mockbukkit = "4.116.1"
 mockito = "5.24.0"
+jda = "6.7.0"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -41,6 +42,7 @@ assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
 mockbukkit = { module = "org.mockbukkit.mockbukkit:mockbukkit-v26.2", version.ref = "mockbukkit" }
 mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version = "5.1.1" }
