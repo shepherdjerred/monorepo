@@ -329,6 +329,17 @@ final class PathFollowerTest {
   }
 
   @Test
+  void facingAListenerTurnsOnlyWhenNeeded() {
+    var at = new At(SHOP.position(), Rotation.SOUTH);
+    var east = SHOP.position().plus(new Vec3(3, 1.62, 0));
+    var turn = PathFollower.face(at, east);
+    assertThat(turn).singleElement().isInstanceOf(Move.Face.class);
+    var facing = ((Move.Face) turn.getFirst()).facing();
+    assertThat(facing.yaw()).isCloseTo(-90f, within(1.0e-3f));
+    assertThat(PathFollower.face(new At(SHOP.position(), facing), east)).isEmpty();
+  }
+
+  @Test
   void aSleepingNpcDoesNotLookAround() {
     var bed = spot(0.5, 64, 0.5, 180);
     var start = follower.start(new Intent.Sleep(bed), new At(bed.position(), Rotation.SOUTH), 0);

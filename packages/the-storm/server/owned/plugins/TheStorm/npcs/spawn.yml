@@ -155,6 +155,17 @@ dialogues:
             then: trainer
           - label: Goodbye
             then: close
+  # A placeholder until the bank opens.
+  braxton:
+    title: Braxton
+    start: greet
+    nodes:
+      greet:
+        text: The Storm Bank opens soon. Keep your crystals close.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
   nat:
     title: Nat
     start: greet
@@ -279,7 +290,7 @@ npcs:
     pose: standing
     roles: [banker]
     schedule: none
-    dialogue: none
+    dialogue: braxton
     trainer: none
   nat:
     name: Nat · Tavern Keeper

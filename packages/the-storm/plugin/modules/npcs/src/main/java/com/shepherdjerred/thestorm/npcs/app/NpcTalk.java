@@ -7,6 +7,10 @@ import com.shepherdjerred.thestorm.npcs.domain.dialogue.Screen;
 import com.shepherdjerred.thestorm.npcs.domain.dialogue.Screen.Choice;
 import com.shepherdjerred.thestorm.npcs.domain.npc.NpcDefinition;
 import com.shepherdjerred.thestorm.npcs.domain.trainer.Offer;
+import java.time.Duration;
+import java.time.InstantSource;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -24,6 +28,8 @@ public final class NpcTalk {
    * What talking needs.
    *
    * @param continueLabel the label of a {@code next} node's button
+   * @param time the clock, for how long an open dialog holds its NPC
+   * @param hold how long an NPC stays still for a dialog nobody answers (Escape is not reported)
    */
   public record Wiring(
       NpcCatalog catalog,
@@ -31,6 +37,8 @@ public final class NpcTalk {
       ActionRegistry actions,
       DialogPresenter presenter,
       String continueLabel,
+      InstantSource time,
+      Duration hold,
       ComponentLogger logger) {}
 
   private final Wiring wiring;
@@ -73,6 +81,14 @@ public final class NpcTalk {
       return;
     }
     choose(player, npc.get(), clicked.get().choice());
+  }
+
+  /**
+   * The players talking to NPC {@code npc} right now: they have its dialog open, shown within the
+   * hold time. The NPC stands still and faces them meanwhile.
+   */
+  public List<UUID> listeners(String npc) {
+    return conversations.listeners(npc, wiring.time().instant().minus(wiring.hold()));
   }
 
   /** Forgets {@code player}'s conversation (they quit). */
@@ -141,7 +157,7 @@ public final class NpcTalk {
   }
 
   private void show(Player player, NpcDefinition npc, Screen screen) {
-    var token = conversations.show(player.getUniqueId(), npc.id(), screen);
+    var token = conversations.show(player.getUniqueId(), npc.id(), screen, wiring.time().instant());
     wiring.presenter().show(player, screen, button -> click(player, token, button));
   }
 }

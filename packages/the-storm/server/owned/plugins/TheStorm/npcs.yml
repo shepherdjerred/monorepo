@@ -48,3 +48,9 @@ dialog:
   continueLabel: Continue
   # How long a shown dialog's buttons keep working, in minutes.
   lifetimeMinutes: 10
+  # While a player has an NPC's dialog open, the NPC stops and faces them.
+  # The server is not told when a dialog is closed with Escape, so the NPC
+  # moves on after this many seconds without a click, or once the player is
+  # further than holdRadius blocks away.
+  holdSeconds: 30
+  holdRadius: 8

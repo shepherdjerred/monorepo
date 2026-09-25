@@ -130,7 +130,7 @@ public class NpcsTestPlugin extends JavaPlugin {
     };
   }
 
-  private final class Tickets implements ChunkTickets {
+  private final class Tickets implements HeldChunks {
 
     @Override
     public void hold(Set<ChunkKey> chunks) {
