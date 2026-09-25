@@ -160,8 +160,27 @@ async function startDispatcher(workflowId: string) {
     });
 }
 
+/**
+ * Stop the never-returning dispatcher once a test has observed what it needs.
+ *
+ * The dispatcher only closes on its own by timing out: the time-skipping
+ * server gives it the default ten-year execution timeout, and while a test
+ * awaits a discovery's result time skipping is unlocked, so an idle
+ * environment can jump straight to that deadline before the result returns.
+ * Whether it does is a race, so the latest run is either still RUNNING or
+ * already TIMED_OUT, and terminating a closed run throws
+ * `WorkflowNotFoundError`. Time stays locked between these two calls, so the
+ * status read here cannot go stale before the terminate. Any other closed
+ * status is a real defect and fails the test.
+ */
 async function terminateDispatcher(workflowId: string, reason: string) {
-  await harness.client().workflow.getHandle(workflowId).terminate(reason);
+  const handle = harness.client().workflow.getHandle(workflowId);
+  const { status } = await handle.describe();
+  if (status.name === "RUNNING") {
+    await handle.terminate(reason);
+    return;
+  }
+  expect(status.name).toBe("TIMED_OUT");
 }
 
 describe("the shared V2 match dispatcher", () => {
