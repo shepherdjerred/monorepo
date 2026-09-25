@@ -19,6 +19,7 @@ import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -161,15 +162,23 @@ final class JooqShopStoreTest {
         .recordTrade(trade(new TradeSite.Catalog("florist"), BOB, Direction.SELL, NOW), true)
         .get();
 
-    var query = new ShopStore.CatalogUsageQuery(BOB, "baker", "emerald", Direction.SELL, dayStart);
+    assertThat(store.catalogUsageSince(BOB, dayStart).get())
+        .containsOnly(
+            Map.entry(new ShopStore.UsageKey("baker", "emerald", Direction.SELL), 8),
+            Map.entry(new ShopStore.UsageKey("baker", "emerald", Direction.BUY), 4),
+            Map.entry(new ShopStore.UsageKey("florist", "emerald", Direction.SELL), 4));
+    assertThat(store.catalogUsageSince(new UUID(5, 5), dayStart).get()).isEmpty();
+  }
 
-    assertThat(store.catalogUsage(query).get()).isEqualTo(8);
-    assertThat(
-            store
-                .catalogUsage(
-                    new ShopStore.CatalogUsageQuery(BOB, "baker", "coal", Direction.SELL, dayStart))
-                .get())
-        .isZero();
+  @Test
+  void theLastIssuedShopIdSurvivesDeletingThatShop() throws Exception {
+    assertThat(store.lastShopId().get()).isZero();
+    store.saveShop(chestShop(1, 0)).get();
+    store.saveShop(chestShop(7, 5)).get();
+
+    store.deleteShop(7).get();
+
+    assertThat(store.lastShopId().get()).isEqualTo(7);
   }
 
   @Test

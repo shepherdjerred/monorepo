@@ -31,6 +31,7 @@ final class ShopsConfigTest {
     assertThat(config.chestShops().containers()).doesNotContain("SHULKER_BOX");
     assertThat(config.chestShops().limits().allowed(1)).isEqualTo(5);
     assertThat(config.catalogs().zone()).isEqualTo(ZoneId.of("America/Los_Angeles"));
+    assertThat(config.catalogs().maxDistance()).isEqualTo(8);
   }
 
   @Test
@@ -72,10 +73,11 @@ final class ShopsConfigTest {
 
   @Test
   void catalogSettingsValidateThemselves() {
-    assertThatThrownBy(() -> new CatalogSettings("Mars/Olympus", 16))
+    assertThatThrownBy(() -> new CatalogSettings("Mars/Olympus", 16, 8))
         .hasMessageContaining("time zone");
-    assertThatThrownBy(() -> new CatalogSettings("UTC", 0)).hasMessageContaining("maxLots");
-    assertThat(new CatalogSettings("America/Los_Angeles", 1).zone())
+    assertThatThrownBy(() -> new CatalogSettings("UTC", 0, 8)).hasMessageContaining("maxLots");
+    assertThatThrownBy(() -> new CatalogSettings("UTC", 1, 0)).hasMessageContaining("maxDistance");
+    assertThat(new CatalogSettings("America/Los_Angeles", 1, 8).zone())
         .isEqualTo(ZoneId.of("America/Los_Angeles"));
   }
 }

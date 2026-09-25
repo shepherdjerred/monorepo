@@ -20,6 +20,7 @@ import io.papermc.paper.registry.data.dialog.type.DialogType;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -27,13 +28,16 @@ import java.util.function.Consumer;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
  * The NPC shops as Paper dialogs. A catalog opens as a list of buttons, one per item with its
- * prices; an item opens a second dialog with a quantity slider and Buy/Sell buttons.
+ * prices; an item opens a second dialog with a quantity slider and Buy/Sell buttons. Every button
+ * checks that the player is still within reach of where the shop was opened (the shopkeeper NPC),
+ * so a dialog left open cannot be used from across the map.
  *
  * <p>Dialogs rather than a chest menu: a dialog cannot leak items the way a chest menu can (no
  * shift-clicks, drags or number keys to cancel), it can ask for a quantity, and Geyser turns it
@@ -51,20 +55,38 @@ final class DialogServerShops implements ServerShops {
   private final CatalogTrades trades;
   private final Replies replies;
   private final Scheduler scheduler;
+  private final int maxDistance;
 
-  DialogServerShops(CatalogTrades trades, Replies replies, Scheduler scheduler) {
+  /**
+   * @param maxDistance how far, in blocks, a player may be from where the shop was opened
+   */
+  DialogServerShops(CatalogTrades trades, Replies replies, Scheduler scheduler, int maxDistance) {
     this.trades = trades;
     this.replies = replies;
     this.scheduler = scheduler;
+    this.maxDistance = maxDistance;
   }
+
+  /**
+   * A catalog opened at a place.
+   *
+   * @param catalog the catalog
+   * @param at where it was opened: the shopkeeper, or the player for {@code /shop}
+   */
+  private record Visit(Catalog catalog, Location at) {}
 
   @Override
   public void open(Player player, String catalogId) {
+    open(player, catalogId, ShopBlocks.locationOf(player));
+  }
+
+  @Override
+  public void open(Player player, String catalogId, Location shopkeeper) {
     var catalog =
         trades
             .catalog(catalogId)
             .orElseThrow(() -> new IllegalArgumentException("No shop catalog " + catalogId));
-    player.showDialog(menu(catalog));
+    player.showDialog(menu(new Visit(catalog, shopkeeper.clone())));
   }
 
   @Override
@@ -77,7 +99,8 @@ final class DialogServerShops implements ServerShops {
     return trades.ids();
   }
 
-  private Dialog menu(Catalog catalog) {
+  private Dialog menu(Visit visit) {
+    var catalog = visit.catalog();
     var buttons =
         catalog.entries().stream()
             .map(
@@ -85,7 +108,7 @@ final class DialogServerShops implements ServerShops {
                     ActionButton.builder(Component.text(ShopTexts.entryLabel(entry)))
                         .tooltip(Component.text(replies.texts().entryPrices(entry)))
                         .width(BUTTON_WIDTH)
-                        .action(onClick(player -> showEntry(player, catalog, entry)))
+                        .action(onClick(visit, player -> showEntry(player, visit, entry)))
                         .build())
             .toList();
     return Dialog.create(
@@ -105,23 +128,23 @@ final class DialogServerShops implements ServerShops {
   }
 
   /** Looks up today's allowances, then shows the item's dialog. */
-  private void showEntry(Player player, Catalog catalog, CatalogEntry entry) {
+  private void showEntry(Player player, Visit visit, CatalogEntry entry) {
     var customer = customer(player);
-    var buyLeft = trades.remainingToday(catalog, entry, Direction.BUY, customer);
-    var sellLeft = trades.remainingToday(catalog, entry, Direction.SELL, customer);
+    var buyLeft = trades.remainingToday(visit.catalog(), entry, Direction.BUY, customer);
+    var sellLeft = trades.remainingToday(visit.catalog(), entry, Direction.SELL, customer);
     replies.whenDone(
         buyLeft.thenCombine(sellLeft, Allowances::new),
         player.getUniqueId(),
         allowances -> {
           if (player.isOnline()) {
-            player.showDialog(entryDialog(catalog, entry, allowances));
+            player.showDialog(entryDialog(visit, entry, allowances));
           }
         });
   }
 
   private record Allowances(OptionalInt buy, OptionalInt sell) {}
 
-  private Dialog entryDialog(Catalog catalog, CatalogEntry entry, Allowances allowances) {
+  private Dialog entryDialog(Visit visit, CatalogEntry entry, Allowances allowances) {
     var material = material(entry);
     var name = ItemNames.pretty(entry.itemKey());
     var body = new ArrayList<DialogBody>();
@@ -144,14 +167,14 @@ final class DialogServerShops implements ServerShops {
               .build());
     }
     var buttons = new ArrayList<ActionButton>(2);
-    entry.buy().ifPresent(price -> buttons.add(tradeButton(catalog, entry, Direction.BUY)));
-    entry.sell().ifPresent(price -> buttons.add(tradeButton(catalog, entry, Direction.SELL)));
+    entry.buy().ifPresent(price -> buttons.add(tradeButton(visit, entry, Direction.BUY)));
+    entry.sell().ifPresent(price -> buttons.add(tradeButton(visit, entry, Direction.SELL)));
     return Dialog.create(
         factory ->
             factory
                 .empty()
                 .base(
-                    DialogBase.builder(Component.text(catalog.name() + ": " + name))
+                    DialogBase.builder(Component.text(visit.catalog().name() + ": " + name))
                         .canCloseWithEscape(true)
                         .body(body)
                         .inputs(inputs)
@@ -161,7 +184,7 @@ final class DialogServerShops implements ServerShops {
                         .columns(buttons.size())
                         .exitAction(
                             ActionButton.builder(Component.text("Back"))
-                                .action(onClick(player -> open(player, catalog.id())))
+                                .action(onClick(visit, player -> player.showDialog(menu(visit))))
                                 .build())
                         .build()));
   }
@@ -178,7 +201,7 @@ final class DialogServerShops implements ServerShops {
     return String.join("\n", lines);
   }
 
-  private ActionButton tradeButton(Catalog catalog, CatalogEntry entry, Direction direction) {
+  private ActionButton tradeButton(Visit visit, CatalogEntry entry, Direction direction) {
     var label =
         switch (direction) {
           case BUY -> "Buy";
@@ -194,7 +217,8 @@ final class DialogServerShops implements ServerShops {
                 (view, audience) ->
                     onPlayer(
                         audience,
-                        player -> trade(player, new Pick(catalog, entry), direction, lots(view))),
+                        visit,
+                        player -> trade(player, new Pick(visit, entry), direction, lots(view))),
                 ONCE))
         .build();
   }
@@ -212,15 +236,15 @@ final class DialogServerShops implements ServerShops {
   }
 
   /**
-   * One line of one catalog.
+   * One line of one catalog, opened at a place.
    *
-   * @param catalog the catalog
+   * @param visit the catalog and where it was opened
    * @param entry the line
    */
-  private record Pick(Catalog catalog, CatalogEntry entry) {}
+  private record Pick(Visit visit, CatalogEntry entry) {}
 
   private void trade(Player player, Pick pick, Direction direction, Optional<Integer> lots) {
-    var catalog = pick.catalog();
+    var catalog = pick.visit().catalog();
     var entry = pick.entry();
     if (lots.isEmpty()) {
       player.sendMessage(Replies.error("Choose between 1 and " + trades.maxLots() + " trades."));
@@ -234,7 +258,11 @@ final class DialogServerShops implements ServerShops {
             direction,
             lots.orElseThrow(),
             customer(player),
-            InventoryHoldings.of(player, ItemStack.of(material)));
+            InventoryHoldings.ofPlayer(
+                player.getServer(),
+                player.getUniqueId(),
+                ItemStack.of(material),
+                ShopBlocks.locationOf(player)));
     var itemName = ItemNames.pretty(entry.itemKey());
     var goods = ShopTexts.goods(entry.quantity() * lots.orElseThrow(), entry.itemKey());
     replies.whenDone(
@@ -246,21 +274,38 @@ final class DialogServerShops implements ServerShops {
               outcome,
               itemName,
               paid -> replies.texts().completed(direction, goods, paid, catalog.name()));
-          if (player.isOnline()) {
-            showEntry(player, catalog, entry);
+          if (player.isOnline() && near(player, pick.visit())) {
+            showEntry(player, pick.visit(), entry);
           }
         });
   }
 
   /** A button action that runs once, on the main thread, for the player who clicked. */
-  private DialogAction onClick(Consumer<Player> action) {
-    return DialogAction.customClick((view, audience) -> onPlayer(audience, action), ONCE);
+  private DialogAction onClick(Visit visit, Consumer<Player> action) {
+    return DialogAction.customClick((view, audience) -> onPlayer(audience, visit, action), ONCE);
   }
 
-  private void onPlayer(Audience audience, Consumer<Player> action) {
-    if (audience instanceof Player player) {
-      scheduler.runOnMainThread(() -> action.accept(player));
+  /** Runs {@code action} on the main thread if the player is still near the shop. */
+  private void onPlayer(Audience audience, Visit visit, Consumer<Player> action) {
+    if (!(audience instanceof Player player)) {
+      return;
     }
+    scheduler.runOnMainThread(
+        () -> {
+          if (near(player, visit)) {
+            action.accept(player);
+          } else {
+            player.sendMessage(
+                Replies.error("You are too far from " + visit.catalog().name() + " to trade."));
+          }
+        });
+  }
+
+  private boolean near(Player player, Visit visit) {
+    var at = ShopBlocks.locationOf(player);
+    return player.isOnline()
+        && Objects.equals(at.getWorld(), visit.at().getWorld())
+        && at.distanceSquared(visit.at()) <= (double) maxDistance * maxDistance;
   }
 
   private static Customer customer(Player player) {

@@ -26,6 +26,8 @@ public final class FakeWallets implements Wallets {
   private final List<Receipt> receipts = new ArrayList<>();
   private final Deque<Runnable> afterTransfer = new ArrayDeque<>();
   private final Deque<RuntimeException> failures = new ArrayDeque<>();
+  private final Deque<Runnable> held = new ArrayDeque<>();
+  private int holds;
 
   public void set(AccountId account, long crystals) {
     balances.put(account, crystals);
@@ -60,17 +62,44 @@ public final class FakeWallets implements Wallets {
     if (!failures.isEmpty()) {
       return CompletableFuture.failedFuture(failures.removeFirst());
     }
+    var result = settle(from, to, amount, reason);
+    if (holds > 0) {
+      holds--;
+      var answer = new CompletableFuture<Result<Receipt, EconomyError>>();
+      held.add(() -> answer.complete(result));
+      return answer;
+    }
+    return CompletableFuture.completedFuture(result);
+  }
+
+  /**
+   * The next transfer lands in the ledger at once, but its answer waits for {@link #answerHeld},
+   * like a ledger write that is slow to report back.
+   */
+  public void holdNext() {
+    holds++;
+  }
+
+  /** Answers every held transfer, in order. */
+  public void answerHeld() {
+    while (!held.isEmpty()) {
+      held.removeFirst().run();
+    }
+  }
+
+  private Result<Receipt, EconomyError> settle(
+      AccountId from, AccountId to, Crystals amount, String reason) {
     if (from.equals(to)) {
-      return CompletableFuture.completedFuture(Result.err(new EconomyError.SameAccount(from)));
+      return Result.err(new EconomyError.SameAccount(from));
     }
     if (amount.amount() == 0) {
-      return CompletableFuture.completedFuture(Result.err(new EconomyError.ZeroAmount()));
+      return Result.err(new EconomyError.ZeroAmount());
     }
     var server = from instanceof AccountId.Server;
     if (!server && balanceOf(from) < amount.amount()) {
       var refusal = new EconomyError.InsufficientFunds(from, Crystals.of(balanceOf(from)), amount);
       runHook();
-      return CompletableFuture.completedFuture(Result.err(refusal));
+      return Result.err(refusal);
     }
     if (!server) {
       balances.put(from, balanceOf(from) - amount.amount());
@@ -81,7 +110,7 @@ public final class FakeWallets implements Wallets {
     var receipt = new Receipt(receipts.size() + 1L, from, to, amount, reason, Instant.EPOCH);
     receipts.add(receipt);
     runHook();
-    return CompletableFuture.completedFuture(Result.ok(receipt));
+    return Result.ok(receipt);
   }
 
   private void runHook() {

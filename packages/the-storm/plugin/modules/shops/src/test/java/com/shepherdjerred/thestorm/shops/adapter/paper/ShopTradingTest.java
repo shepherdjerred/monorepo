@@ -49,6 +49,36 @@ final class ShopTradingTest extends ShopsFixture {
   }
 
   @Test
+  void aTradeClosesTheOwnersOpenViewOfTheChest() throws Exception {
+    var alice = player("Alice", 1);
+    var bob = player("Bob", 0);
+    var chest = chest(0);
+    give(inventoryOf(chest), Material.COAL, 32);
+    var sign = shop(alice, chest, "", "16", "B 50", "coal");
+    setBalance(bob, 100);
+    alice.openInventory(inventoryOf(chest));
+    assertThat(inventoryOf(chest).getViewers()).contains(alice);
+
+    click(bob, sign, Action.RIGHT_CLICK_BLOCK);
+
+    assertThat(inventoryOf(chest).getViewers()).doesNotContain(alice);
+    assertThat(awaitLine(bob, "You bought")).isNotEmpty();
+  }
+
+  @Test
+  void anAdminShopThatWouldLoopWithACatalogIsRefused() {
+    var root = admin("Root");
+    var stone = world.getBlockAt(0, 64, 0);
+    stone.setType(Material.STONE);
+
+    // Reynold's sells coal at 3 crystals each; paying 4 each would print crystals.
+    var event = write(root, signOn(stone), "Admin Shop", "16", "S 64", "coal");
+
+    assertThat(event.isCancelled()).isTrue();
+    assertThat(messages(root)).singleElement().asString().contains("Reynold's Supplies");
+  }
+
+  @Test
   void anEmptyShopSellsNothingAndChargesNothing() throws Exception {
     var alice = player("Alice", 1);
     var bob = player("Bob", 0);
@@ -172,18 +202,18 @@ final class ShopTradingTest extends ShopsFixture {
     var bob = player("Bob", 0);
     var stone = world.getBlockAt(0, 64, 0);
     stone.setType(Material.STONE);
-    var sign = shop(root, stone, "Admin Shop", "1", "B 10", "?");
+    var sign = shop(root, stone, "Admin Shop", "1", "B 50", "?");
     messages(root);
     root.getInventory().setItemInMainHand(ItemStack.of(Material.NAME_TAG));
 
     click(root, sign, Action.RIGHT_CLICK_BLOCK);
 
     assertThat(messages(root)).containsExactly("[Shop]: This shop now trades Name Tag.");
-    setBalance(bob, 10);
+    setBalance(bob, 50);
     click(bob, sign, Action.RIGHT_CLICK_BLOCK);
     assertThat(awaitLine(bob, "You bought")).isNotEmpty();
     assertThat(count(bob.getInventory(), Material.NAME_TAG)).isEqualTo(1);
-    setBalance(root, 10);
+    setBalance(root, 50);
     click(root, sign, Action.RIGHT_CLICK_BLOCK);
     assertThat(awaitLine(root, "You bought")).isNotEmpty();
   }

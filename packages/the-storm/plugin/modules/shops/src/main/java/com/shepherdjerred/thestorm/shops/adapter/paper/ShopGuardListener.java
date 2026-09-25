@@ -204,8 +204,9 @@ final class ShopGuardListener implements Listener {
     return !blocks.shopsAt(block).isEmpty();
   }
 
+  /** A trade locks every block of its container, so one of these shops' containers is enough. */
   private boolean isBusy(List<SignShop> shopsHere) {
-    return shopsHere.stream().anyMatch(shop -> locks.isBusy(shop.id()));
+    return shopsHere.stream().flatMap(shop -> shop.container().stream()).anyMatch(locks::isBusy);
   }
 
   /** Why {@code player} may not open or break these shops right now, if they may not. */

@@ -1,5 +1,7 @@
 # Winston's florist, on the path to the Mob Arena. See reynolds-supplies.yml for
-# the entry format.
+# the entry format. Winston does not buy tall flowers (sunflower, lilac, peony,
+# rose bush): bone meal on one drops a copy, so buying them would turn cheap
+# bone meal into crystals.
 id: florist
 name: Winston's Flowers
 greeting: >-
@@ -54,13 +56,13 @@ entries:
   - item: sunflower
     quantity: 2
     buy: 12
-    sell: 4
-    dailyLimit: 128
+    sell: null
+    dailyLimit: null
   - item: lilac
     quantity: 2
     buy: 12
-    sell: 4
-    dailyLimit: 128
+    sell: null
+    dailyLimit: null
   - item: lily_pad
     quantity: 4
     buy: 12

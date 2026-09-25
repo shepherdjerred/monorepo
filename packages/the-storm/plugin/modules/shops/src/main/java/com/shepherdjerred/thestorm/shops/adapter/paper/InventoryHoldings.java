@@ -11,8 +11,10 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Stockpile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -44,13 +46,23 @@ final class InventoryHoldings implements Holdings {
     this.dropAt = dropAt;
   }
 
-  /** A player's main inventory and hotbar; overflow drops at their feet. */
-  static InventoryHoldings of(Player player, ItemStack template) {
+  /**
+   * A player's main inventory and hotbar, found by id on every call so a trade that settles after
+   * they left never touches the inventory of a player who is gone: an offline player has no stock
+   * and no room, and items given back to them drop where they were trading.
+   *
+   * @param tradingAt where the player was when the trade began
+   */
+  static InventoryHoldings ofPlayer(
+      Server server, UUID player, ItemStack template, Location tradingAt) {
     return new InventoryHoldings(
-        () -> Optional.of(player.getInventory()),
+        () -> Optional.ofNullable(server.getPlayer(player)).<Inventory>map(Player::getInventory),
         PLAYER_STORAGE_SLOTS,
         template,
-        () -> Optional.ofNullable(player.getLocation()));
+        () ->
+            Optional.ofNullable(server.getPlayer(player))
+                .map(ShopBlocks::locationOf)
+                .or(() -> Optional.of(tradingAt)));
   }
 
   /**

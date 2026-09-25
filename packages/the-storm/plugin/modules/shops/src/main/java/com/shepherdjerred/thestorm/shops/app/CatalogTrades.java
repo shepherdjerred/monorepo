@@ -11,13 +11,11 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
-import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -29,17 +27,17 @@ public final class CatalogTrades {
 
   private final Map<String, Catalog> catalogs;
   private final ChestShops.Wiring wiring;
-  private final ZoneId dailyResetZone;
+  private final DailyUsage usage;
   private final int maxLots;
 
   /**
    * @param catalogs the validated catalogs, in menu order
    * @param wiring the shared collaborators
-   * @param dailyResetZone whose midnight resets daily limits
+   * @param usage today's counts per player, for the daily limits
    * @param maxLots the most trades one purchase may bundle
    */
   public CatalogTrades(
-      List<Catalog> catalogs, ChestShops.Wiring wiring, ZoneId dailyResetZone, int maxLots) {
+      List<Catalog> catalogs, ChestShops.Wiring wiring, DailyUsage usage, int maxLots) {
     var byId = new LinkedHashMap<String, Catalog>();
     for (var catalog : catalogs) {
       if (byId.putIfAbsent(catalog.id(), catalog) != null) {
@@ -48,7 +46,7 @@ public final class CatalogTrades {
     }
     this.catalogs = byId;
     this.wiring = wiring;
-    this.dailyResetZone = dailyResetZone;
+    this.usage = usage;
     this.maxLots = maxLots;
   }
 
@@ -105,10 +103,6 @@ public final class CatalogTrades {
       return completedFuture(
           new TradeOutcome.Refused(new TradeProblem.NotOffered(order.direction())));
     }
-    var lease = wiring.locks().acquire(OptionalLong.empty(), order.customer().id());
-    if (lease.isEmpty()) {
-      return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
-    }
     var quantity = Math.multiplyExact(order.entry().quantity(), order.lots());
     var deal =
         new Deal(
@@ -123,47 +117,62 @@ public final class CatalogTrades {
                 + order.entry().itemKey()
                 + ":"
                 + order.direction().id());
-    return withinLimit(order, quantity)
-        .thenComposeAsync(
-            problem ->
-                problem
-                    .<CompletableFuture<TradeOutcome>>map(
-                        refusal -> completedFuture(new TradeOutcome.Refused(refusal)))
-                    .orElseGet(() -> wiring.engine().execute(deal)),
-            wiring.mainThread())
-        .whenComplete((outcome, error) -> lease.orElseThrow().release())
-        .thenApply(
-            outcome -> {
-              if (outcome instanceof TradeOutcome.Completed) {
-                journal(order, quantity, deal.price());
-              }
-              return outcome;
-            });
+    var lease = wiring.locks().acquire(List.of(), order.customer().id(), deal);
+    if (lease.isEmpty()) {
+      return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
+    }
+    var trade =
+        withinLimit(order, quantity)
+            .thenComposeAsync(
+                problem ->
+                    problem
+                        .<CompletableFuture<TradeOutcome>>map(
+                            refusal -> completedFuture(new TradeOutcome.Refused(refusal)))
+                        .orElseGet(() -> wiring.engine().execute(deal)),
+                wiring.mainThread());
+    // Counted and logged before the lease is released, so the customer's next trade sees it.
+    return lease
+        .orElseThrow()
+        .releaseAfter(
+            trade,
+            completed -> {
+              usage.add(order.customer().id(), key(order), quantity);
+              journal(order, quantity, deal.price());
+            },
+            wiring.mainThread());
   }
 
+  /**
+   * Whether today's allowance covers the trade. The customer's counts are loaded even for an entry
+   * without a limit, so the count this trade adds lands on a day already read from the log.
+   */
   private CompletableFuture<Optional<TradeProblem>> withinLimit(Order order, int quantity) {
-    if (order.entry().dailyLimit().isEmpty()) {
-      return completedFuture(Optional.empty());
-    }
-    return allowance(order.catalog(), order.entry(), order.direction(), order.customer())
+    var limit = order.entry().dailyLimit();
+    return usage
+        .used(order.customer().id(), key(order))
         .thenApply(
-            allowance ->
-                allowance.permits(quantity)
-                    ? Optional.empty()
-                    : Optional.of(
-                        new TradeProblem.DailyLimitReached(allowance.remaining(), quantity)));
+            used -> {
+              if (limit.isEmpty()) {
+                return Optional.empty();
+              }
+              var allowance = new DailyAllowance(limit.getAsInt(), used);
+              return allowance.permits(quantity)
+                  ? Optional.empty()
+                  : Optional.of(
+                      new TradeProblem.DailyLimitReached(allowance.remaining(), quantity));
+            });
   }
 
   private CompletableFuture<DailyAllowance> allowance(
       Catalog catalog, CatalogEntry entry, Direction direction, Customer customer) {
     var limit = entry.dailyLimit().orElseThrow();
-    var since = DailyAllowance.dayStart(wiring.time().instant(), dailyResetZone);
-    return wiring
-        .store()
-        .catalogUsage(
-            new ShopStore.CatalogUsageQuery(
-                customer.id(), catalog.id(), entry.itemKey(), direction, since))
+    return usage
+        .used(customer.id(), new ShopStore.UsageKey(catalog.id(), entry.itemKey(), direction))
         .thenApply(used -> new DailyAllowance(limit, used));
+  }
+
+  private static ShopStore.UsageKey key(Order order) {
+    return new ShopStore.UsageKey(order.catalog().id(), order.entry().itemKey(), order.direction());
   }
 
   private void journal(Order order, int quantity, Crystals price) {

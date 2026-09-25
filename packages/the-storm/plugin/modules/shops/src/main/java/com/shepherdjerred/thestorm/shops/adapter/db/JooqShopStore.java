@@ -22,6 +22,7 @@ import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -161,22 +162,35 @@ public final class JooqShopStore implements ShopStore {
   }
 
   @Override
-  public CompletableFuture<Integer> catalogUsage(CatalogUsageQuery query) {
+  public CompletableFuture<Map<UsageKey, Integer>> catalogUsageSince(UUID customer, Instant since) {
+    var total = sum(SHOPS_TRADE.QUANTITY);
     return database.read(
-        dsl -> {
-          var total =
-              dsl.select(sum(SHOPS_TRADE.QUANTITY))
-                  .from(SHOPS_TRADE)
-                  .where(
-                      SHOPS_TRADE.CUSTOMER_ID.eq(query.customer().toString()),
-                      SHOPS_TRADE.SOURCE.eq(CATALOG),
-                      SHOPS_TRADE.CATALOG_ID.eq(query.catalogId()),
-                      SHOPS_TRADE.ITEM_MATERIAL.eq(query.itemKey()),
-                      SHOPS_TRADE.DIRECTION.eq(query.direction().id()),
-                      SHOPS_TRADE.AT.ge(query.since().toEpochMilli()))
-                  .fetchOne(0, Integer.class);
-          return total == null ? 0 : total;
-        });
+        dsl ->
+            dsl.select(
+                    SHOPS_TRADE.CATALOG_ID, SHOPS_TRADE.ITEM_MATERIAL, SHOPS_TRADE.DIRECTION, total)
+                .from(SHOPS_TRADE)
+                .where(
+                    SHOPS_TRADE.CUSTOMER_ID.eq(customer.toString()),
+                    SHOPS_TRADE.SOURCE.eq(CATALOG),
+                    SHOPS_TRADE.AT.ge(since.toEpochMilli()))
+                .groupBy(SHOPS_TRADE.CATALOG_ID, SHOPS_TRADE.ITEM_MATERIAL, SHOPS_TRADE.DIRECTION)
+                .fetchMap(
+                    row ->
+                        new UsageKey(
+                            requireColumn(row.value1()),
+                            row.value2(),
+                            Direction.fromId(row.value3())),
+                    row -> requireColumn(row.value4()).intValueExact()));
+  }
+
+  @Override
+  public CompletableFuture<Long> lastShopId() {
+    // AUTOINCREMENT keeps the highest id ever used, even after that shop is deleted.
+    return database.read(
+        dsl ->
+            dsl.resultQuery("select seq from sqlite_sequence where name = ?", "shops_shop")
+                .fetchOptional(0, Long.class)
+                .orElse(0L));
   }
 
   @Override

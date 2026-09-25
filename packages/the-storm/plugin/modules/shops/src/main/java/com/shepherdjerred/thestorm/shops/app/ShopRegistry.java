@@ -24,7 +24,12 @@ public final class ShopRegistry {
   private final Map<BlockPos, Set<Long>> byContainer = new HashMap<>();
   private long lastId;
 
-  public ShopRegistry(Collection<SignShop> shops) {
+  /**
+   * @param shops the stored shops
+   * @param lastIssuedId the highest id ever issued, deleted shops included, so ids are never reused
+   */
+  public ShopRegistry(Collection<SignShop> shops, long lastIssuedId) {
+    this.lastId = lastIssuedId;
     shops.forEach(this::add);
   }
 
@@ -74,6 +79,11 @@ public final class ShopRegistry {
                 }
               }
             });
+  }
+
+  /** Every shop. */
+  public List<SignShop> all() {
+    return List.copyOf(byId.values());
   }
 
   public Optional<SignShop> byId(long id) {

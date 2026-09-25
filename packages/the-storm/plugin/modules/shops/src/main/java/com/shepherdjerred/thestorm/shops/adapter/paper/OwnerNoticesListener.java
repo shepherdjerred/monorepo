@@ -1,6 +1,5 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
-import com.shepherdjerred.thestorm.shops.app.OwnerNotices;
 import com.shepherdjerred.thestorm.shops.app.ShopStore;
 import com.shepherdjerred.thestorm.shops.domain.trade.OwnerSummary;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
@@ -15,7 +14,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
  * Tells chest shop owners about their trades: on the spot when they are online, and in one summary
  * when they next join otherwise.
  */
-final class OwnerNoticesListener implements Listener, OwnerNotices {
+final class OwnerNoticesListener implements Listener {
 
   private final Server server;
   private final ShopStore store;
@@ -29,8 +28,7 @@ final class OwnerNoticesListener implements Listener, OwnerNotices {
     this.summaryLines = summaryLines;
   }
 
-  @Override
-  public boolean tellIfOnline(UUID owner, TradeRecord trade) {
+  boolean tellOwnerIfOnline(UUID owner, TradeRecord trade) {
     var player = server.getPlayer(owner);
     if (player == null) {
       return false;

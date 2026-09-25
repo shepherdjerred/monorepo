@@ -4,14 +4,19 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.shops.app.Background;
 import com.shepherdjerred.thestorm.shops.app.CatalogTrades;
 import com.shepherdjerred.thestorm.shops.app.ChestShops;
+import com.shepherdjerred.thestorm.shops.app.DailyUsage;
+import com.shepherdjerred.thestorm.shops.app.MainThreadPump;
 import com.shepherdjerred.thestorm.shops.app.RefundJournal;
+import com.shepherdjerred.thestorm.shops.app.ServerOffers;
 import com.shepherdjerred.thestorm.shops.app.ServerShops;
 import com.shepherdjerred.thestorm.shops.app.ShopLocks;
 import com.shepherdjerred.thestorm.shops.app.ShopRegistry;
 import com.shepherdjerred.thestorm.shops.app.ShopStore;
 import com.shepherdjerred.thestorm.shops.app.ShopTexts;
+import com.shepherdjerred.thestorm.shops.app.ShutdownDrain;
 import com.shepherdjerred.thestorm.shops.app.TradeEngine;
 import com.shepherdjerred.thestorm.shops.domain.catalog.Catalog;
 import com.shepherdjerred.thestorm.shops.domain.config.ShopsConfig;
@@ -22,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.bukkit.Material;
+import org.bukkit.plugin.IllegalPluginAccessException;
 
 /** Hooks the shops into Paper: listeners, the {@code /shop} command and the NPC shop dialogs. */
 public final class ShopsPaper {
@@ -59,22 +65,41 @@ public final class ShopsPaper {
   }
 
   /**
+   * What {@link #install} hands back to the module.
+   *
+   * @param serverShops the NPC shops, published for other modules
+   * @param drain settles trades in flight when the module stops
+   */
+  public record Installed(ServerShops serverShops, ShutdownDrain drain) {}
+
+  /**
    * Registers everything and returns the NPC shops for other modules.
    *
    * @param state the loaded registry, catalogs and storage
    */
-  public static ServerShops install(ModuleContext context, ShopsConfig config, State state) {
+  public static Installed install(ModuleContext context, ShopsConfig config, State state) {
     var services = context.services();
-    var server = context.plugin().getServer();
+    var plugin = context.plugin();
+    var server = plugin.getServer();
+    var logger = context.logger();
     var texts = new ShopTexts(services.require(CrystalFormatter.class));
-    var mainThread = context.scheduler().mainThread();
-    var replies = new Replies(server, mainThread, context.logger(), texts);
+    var replies = new Replies(server, context.scheduler().mainThread(), logger, texts);
+    // Trades settle through the pump, so the shutdown drain can finish them on the main thread
+    // once the scheduler stops taking tasks.
+    var mainThread =
+        new MainThreadPump(
+            task -> {
+              if (plugin.isEnabled()) {
+                try {
+                  context.scheduler().runOnMainThread(task);
+                } catch (IllegalPluginAccessException e) {
+                  logger.debug("Shop work left queued for the shutdown drain", e);
+                }
+              }
+            });
     var locks = new ShopLocks();
-    var engine =
-        new TradeEngine(
-            services.require(Wallets.class),
-            mainThread,
-            new RefundJournal(state.store(), context.time(), context.logger()));
+    var journal = new RefundJournal(state.store(), context.time(), logger);
+    var engine = new TradeEngine(services.require(Wallets.class), mainThread, journal);
     var wiring =
         new ChestShops.Wiring(
             state.registry(),
@@ -86,12 +111,15 @@ public final class ShopsPaper {
             context.logger());
     var settings = config.chestShops();
     var notices = new OwnerNoticesListener(server, state.store(), replies, settings.summaryLines());
-    var chestShops = new ChestShops(wiring, CreationRules.standard(settings.limits()), notices);
-    var blocks =
-        new ShopBlocks(context.plugin(), state.registry(), containers(settings.containers()));
+    var blocks = new ShopBlocks(plugin, state.registry(), containers(settings.containers()));
+    var chestShops =
+        new ChestShops(
+            wiring,
+            CreationRules.standard(settings.limits()),
+            new PaperShopEffects(notices, blocks),
+            new ServerOffers(state.catalogs(), state.registry()));
     var templates = new ItemTemplates();
     var protection = services.require(Protection.class);
-    var plugin = context.plugin();
     var events = server.getPluginManager();
     events.registerEvents(
         new ShopSignListener(
@@ -111,16 +139,25 @@ public final class ShopsPaper {
         plugin);
     events.registerEvents(new ShopGuardListener(locks, blocks, chestShops), plugin);
     events.registerEvents(notices, plugin);
+    var usage = new DailyUsage(state.store(), context.time(), config.catalogs().zone(), mainThread);
+    events.registerEvents(new CatalogUsageListener(usage, logger), plugin);
+    server
+        .getOnlinePlayers()
+        .forEach(
+            player ->
+                Background.logFailure(
+                    usage.preload(player.getUniqueId()), logger, "load catalog usage"));
     var catalogTrades =
-        new CatalogTrades(
-            state.catalogs(), wiring, config.catalogs().zone(), config.catalogs().maxLots());
-    var serverShops = new DialogServerShops(catalogTrades, replies, context.scheduler());
+        new CatalogTrades(state.catalogs(), wiring, usage, config.catalogs().maxLots());
+    var serverShops =
+        new DialogServerShops(
+            catalogTrades, replies, context.scheduler(), config.catalogs().maxDistance());
     var command = new ShopCommand(serverShops, state.registry(), settings.limits());
     context
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> command.register(event.registrar()));
-    return serverShops;
+    return new Installed(serverShops, new ShutdownDrain(mainThread, locks, journal));
   }
 
   /**

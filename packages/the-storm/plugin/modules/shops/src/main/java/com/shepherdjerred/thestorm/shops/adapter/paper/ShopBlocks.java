@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import com.shepherdjerred.thestorm.shops.domain.sign.SignLines;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import net.kyori.adventure.text.Component;
@@ -22,6 +23,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.Chest;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
@@ -48,6 +50,11 @@ public final class ShopBlocks {
 
   public ShopRegistry registry() {
     return registry;
+  }
+
+  /** Where an online player stands. Paper marks the getter nullable; it is set for a player. */
+  public static Location locationOf(Player player) {
+    return Objects.requireNonNull(player.getLocation(), "an online player has a location");
   }
 
   public static BlockPos pos(Block block) {
@@ -139,19 +146,19 @@ public final class ShopBlocks {
   public List<SignShop> shopsAt(Block block) {
     var shops = new ArrayList<SignShop>();
     registry.atSign(pos(block)).ifPresent(shops::add);
-    if (block.getState(false) instanceof Container) {
-      shops.addAll(shopsOnContainer(block));
-    }
+    shops.addAll(shopsOnContainer(block));
     return shops.stream().distinct().toList();
   }
 
   /** The shop whose sign this is, if the sign still carries that shop's id. */
   public Optional<SignShop> shopAtSign(Block block) {
-    if (!(block.getState(false) instanceof Sign sign)) {
+    // The registry lookup is cheap; read the block state only for a registered sign.
+    var shop = registry.atSign(pos(block));
+    if (shop.isEmpty() || !(block.getState(false) instanceof Sign sign)) {
       return Optional.empty();
     }
     var id = sign.getPersistentDataContainer().get(shopIdKey, PersistentDataType.LONG);
-    return registry.atSign(pos(block)).filter(shop -> id != null && shop.id() == id);
+    return shop.filter(found -> id != null && found.id() == id);
   }
 
   /**

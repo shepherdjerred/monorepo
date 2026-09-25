@@ -241,6 +241,62 @@ final class TradeEngineTest {
   }
 
   @Test
+  void itemsGoBackOnlyAfterTheRefundHasGoneThrough() throws Exception {
+    wallets.set(OWNER, 100);
+    customer.count = 16;
+    var heldAtRefund = new int[] {-1};
+    wallets.afterNextTransfer(() -> shop.count = 60);
+    wallets.afterNextTransfer(() -> heldAtRefund[0] = customer.count);
+
+    run(deal(Direction.SELL, OWNER, shop));
+
+    assertThat(heldAtRefund[0]).isZero();
+    assertThat(customer.count).isEqualTo(16);
+  }
+
+  @Test
+  void aSellRefundThatFailsLeavesTheItemsWithTheShopNeverTheCustomer() throws Exception {
+    wallets.set(OWNER, 100);
+    customer.count = 16;
+    // While the owner pays, the shop fills up and the customer drains the payment with /pay.
+    wallets.afterNextTransfer(
+        () -> {
+          shop.count = 60;
+          wallets.set(ALICE, 0);
+        });
+
+    var outcome = run(deal(Direction.SELL, OWNER, shop));
+
+    assertThat(outcome).isInstanceOf(TradeOutcome.RefundFailed.class);
+    assertThat(((TradeOutcome.RefundFailed) outcome).problem())
+        .isEqualTo(new TradeProblem.ShopFull(4, 16));
+    assertThat(customer.count + customer.dropped).isZero();
+    assertThat(shop.count).isEqualTo(64);
+    assertThat(shop.dropped).isEqualTo(12);
+    assertThat(store.refundFailures)
+        .singleElement()
+        .satisfies(
+            failure -> {
+              assertThat(failure.payer()).isEqualTo(ALICE);
+              assertThat(failure.payee()).isEqualTo(OWNER);
+            });
+  }
+
+  @Test
+  void aCustomerWhoLeftBeforeDeliveryIsRefunded() throws Exception {
+    wallets.set(ALICE, 100);
+    shop.count = 16;
+    // Leaving empties the customer's holdings: no stock, no room.
+    wallets.afterNextTransfer(() -> customer.capacity = 0);
+
+    var outcome = run(deal(Direction.BUY, OWNER, shop));
+
+    assertThat(outcome).isEqualTo(new TradeOutcome.Refunded(new TradeProblem.NoRoom(0, 16)));
+    assertThat(wallets.balanceOf(ALICE)).isEqualTo(100);
+    assertThat(shop.count).isEqualTo(16);
+  }
+
+  @Test
   void returnedItemsThatNoLongerFitAreDropped() throws Exception {
     wallets.set(OWNER, 10);
     customer.count = 16;

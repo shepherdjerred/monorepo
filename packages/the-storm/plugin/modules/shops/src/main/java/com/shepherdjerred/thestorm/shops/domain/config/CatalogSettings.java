@@ -8,8 +8,10 @@ import java.time.ZoneId;
  *
  * @param dailyResetZone the time zone whose midnight resets daily limits, such as {@code UTC}
  * @param maxLots the most trades of an entry one menu purchase may bundle
+ * @param maxDistance how far, in blocks, a player may stand from the shopkeeper and still use the
+ *     shop's buttons
  */
-public record CatalogSettings(String dailyResetZone, int maxLots) {
+public record CatalogSettings(String dailyResetZone, int maxLots, int maxDistance) {
 
   public CatalogSettings {
     try {
@@ -19,6 +21,9 @@ public record CatalogSettings(String dailyResetZone, int maxLots) {
     }
     if (maxLots < 1) {
       throw new IllegalArgumentException("maxLots must be positive: " + maxLots);
+    }
+    if (maxDistance < 1) {
+      throw new IllegalArgumentException("maxDistance must be positive: " + maxDistance);
     }
   }
 
