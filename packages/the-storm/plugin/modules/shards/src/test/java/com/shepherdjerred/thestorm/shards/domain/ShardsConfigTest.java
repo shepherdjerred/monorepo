@@ -55,7 +55,9 @@ final class ShardsConfigTest {
   void theShippedMobTablesUseBossesAndModernMobs() {
     var mobs = load().drops().mobs();
 
-    assertThat(mobs).containsKeys("WARDEN", "WITHER", "ENDER_DRAGON", "BREEZE", "RAVAGER");
+    assertThat(mobs).containsKeys("WARDEN", "WITHER", "ENDER_DRAGON", "BREEZE");
+    // Ravagers only spawn in raids, and raids never drop.
+    assertThat(mobs).doesNotContainKey("RAVAGER");
     assertThat(mobs).containsKeys("EVOKER", "PIGLIN_BRUTE");
     assertThat(mobs).containsEntry("ZOMBIE", new DropRule(0.0005, 1, 1));
     assertThat(mobs).containsEntry("WITCH", new DropRule(0.0005, 1, 1));

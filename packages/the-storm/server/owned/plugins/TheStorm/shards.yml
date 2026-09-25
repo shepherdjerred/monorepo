@@ -32,8 +32,9 @@ drops:
     - BUCKET
   # chance per kill (0.0005 = 0.05%); min/max shards per drop.
   # v4 (2017) numbers, retuned for modern farms: farmable mobs are at or
-  # below 0.05% (ghasts, slow to farm, 0.1%); raids never drop, so ravagers
-  # and evokers drop only outside raids (evokers: woodland mansions).
+  # below 0.05% (ghasts, slow to farm, 0.1%). Raids never drop, so there is
+  # no ravager entry (they only spawn in raids) and evokers drop only in
+  # woodland mansions.
   mobs:
     # Bosses (the Giant is gone; the Warden takes its place)
     WARDEN: { chance: 0.5, min: 1, max: 2 }
@@ -42,7 +43,6 @@ drops:
     ELDER_GUARDIAN: { chance: 0.25, min: 1, max: 2 }
     # Rare fights
     PIGLIN_BRUTE: { chance: 0.02, min: 1, max: 1 }
-    RAVAGER: { chance: 0.01, min: 1, max: 1 }
     EVOKER: { chance: 0.005, min: 1, max: 1 }
     BREEZE: { chance: 0.005, min: 1, max: 1 }
     GHAST: { chance: 0.001, min: 1, max: 1 }
