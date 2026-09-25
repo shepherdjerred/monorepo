@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "noEmit": true
+  },
+  "include": ["tests/**/*.ts", "vitest.e2e.config.ts", "eslint.config.ts"]
+}

@@ -89,6 +89,11 @@
         "plugin/**/*.toml",
         "plugin/**/*.properties",
         "plugin/config/**",
+        "tests/**",
+        "vitest.e2e.config.ts",
+        "tsconfig.json",
+        "eslint.config.ts",
+        "package.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -111,6 +116,11 @@
         "plugin/**/*.lockfile",
         "plugin/**/*.xml",
         "plugin/**/*.sql",
+        "tests/**",
+        "vitest.e2e.config.ts",
+        "tsconfig.json",
+        "eslint.config.ts",
+        "package.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -120,6 +130,19 @@
         "JAVA_HOME",
         "GRADLE_USER_HOME",
         "GRADLE_OPTS"
+      ]
+    },
+    // Real-server e2e against the built TheStorm.jar in a disposable Paper
+    // container (tests/e2e). Uncached: it exercises Docker and live network
+    // pins. STORM_E2E_* selects a CI sidecar server instead of local Docker.
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": [
+        "DOCKER_HOST",
+        "DOCKER_CONTEXT",
+        "DOCKER_CONFIG",
+        "STORM_E2E_*"
       ]
     }
   }

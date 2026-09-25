@@ -865,6 +865,16 @@
           "runner": "gradle",
           "args": ["-p", "plugin", "test"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "tests/e2e/plugin.e2e.test.ts",
+          "reason": "Real-server E2E; boots a disposable Paper 26.2 server with TheStorm.jar in Docker (or a CI sidecar) and drives it with mineflayer bots over the network. Runs only via its own test:e2e lane; full reporting is test-only and does not stand up game servers."
+        },
+        {
+          "path": "tests/e2e/server.e2e.test.ts",
+          "reason": "Real-server E2E; boots a disposable Paper 26.2 server with TheStorm.jar in Docker (or a CI sidecar) and drives it with mineflayer bots over the network. Runs only via its own test:e2e lane; full reporting is test-only and does not stand up game servers."
+        }
       ]
     }
   ],
