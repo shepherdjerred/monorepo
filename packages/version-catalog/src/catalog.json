@@ -784,11 +784,11 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "2.0.0-0@sha256:5ba11ccd2c8bb8025df5cfbe444c52217747faffbf371c62f82cc8316a62bfc3",
       "notes": [
-        "not managed by renovate — pre-first-publish placeholder. The main image",
-        "release injects the built digest into chart synthesis and version",
-        "commit-back replaces this pin before a later release can use source state."
+        "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
+        "needs this service to generate the pipeline that would otherwise build",
+        "it. The main image release replaces the pin through version commit-back."
       ]
     },
     {
