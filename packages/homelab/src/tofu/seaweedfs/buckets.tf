@@ -44,6 +44,32 @@ resource "aws_s3_bucket" "cook" {
   bucket = "cook"
 }
 
+# macos-cross.sjer.red — the macos-cross-compiler marketing site.
+resource "aws_s3_bucket" "macos_cross" {
+  bucket = "macos-cross"
+}
+
+# Private. The Apple SDK tarballs the published macos-cross-compiler images are
+# built from (packages/macos-cross-compiler/scripts/stage-xcode.sh), pinned by
+# sha256 in its sdks.json. Re-staging one needs a Mac with that exact Xcode
+# installed, so the objects are backed up rather than treated as rebuildable.
+#
+# The first tarball upload (scripts/release/macos-cross-compiler.ts upload)
+# created the bucket before this resource reached main — SeaweedFS creates a
+# bucket on its first PutObject — so adopt it instead of calling CreateBucket.
+import {
+  to = aws_s3_bucket.apple_sdks
+  id = "apple-sdks"
+}
+
+resource "aws_s3_bucket" "apple_sdks" {
+  bucket = "apple-sdks"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # stocks.sjer.red. This bucket predates its IaC declaration: when stocks was
 # wired into the deploy (commit 6d0aa524b) it was added to CI + Caddy + the Astro
 # app but never to this file, and SeaweedFS's S3 gateway auto-created it on the
@@ -126,6 +152,7 @@ locals {
     "scout-frontend-beta" = ["app/assets/", "_astro/"]
     "sjer-red"            = ["_astro/"]
     "cook"                = ["_astro/"]
+    "macos-cross"         = ["_astro/"]
     "stocks-sjer-red"     = ["_astro/"]
     "wiki-sjer-red"       = ["_astro/"]
     "better-skill-capped" = ["assets/"]
@@ -148,6 +175,7 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.scout_frontend_beta,
     aws_s3_bucket.sjer_red,
     aws_s3_bucket.cook,
+    aws_s3_bucket.macos_cross,
     aws_s3_bucket.stocks_sjer_red,
     aws_s3_bucket.wiki_sjer_red,
     aws_s3_bucket.better_skill_capped,

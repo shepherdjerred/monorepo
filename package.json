@@ -123,6 +123,8 @@
     "packages/llm-runtime",
     "packages/loaded",
     "packages/macos-ai-subscription-tracker",
+    "packages/macos-cross-compiler",
+    "packages/macos-cross-site",
     "packages/openrouter-broadcast-ingest",
     "packages/monarch",
     "packages/pr-fleet-controller",

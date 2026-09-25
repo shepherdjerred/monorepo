@@ -76,6 +76,7 @@ export const VersionMapSchema = z
     "agent-stack-k8s": z.string(),
     "ducktors/turborepo-remote-cache": z.string(),
     kueue: z.string(),
+    "tonistiigi/binfmt": z.string(),
     "moby/buildkit": z.string(),
     "library/python": z.string(),
     "bitnamilegacy/kubectl": z.string(),

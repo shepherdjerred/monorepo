@@ -905,6 +905,22 @@
       "value": "0.19.6@sha256:f74af5397ba326b94b4d2808f5fb6eac4996ab0f20a3358af0afd3a7a1e12c1a"
     },
     {
+      "name": "tonistiigi/binfmt",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "regex:^qemu-v(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)$"
+      },
+      "value": "qemu-v10.2.3@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0",
+      "notes": [
+        "Registers QEMU binfmt_misc handlers on the CI node from buildkitd's init",
+        "container, so BuildKit builds linux/arm64 images (macos-cross-compiler)."
+      ]
+    },
+    {
       "name": "moby/buildkit",
       "category": "upstream",
       "artifactType": "image",

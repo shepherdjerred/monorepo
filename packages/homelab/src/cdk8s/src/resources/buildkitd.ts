@@ -133,6 +133,29 @@ export function createBuildkitdDeployment(chart: Chart) {
   );
   deployment.scheduling.tolerate(ciNodeTaintedNode());
 
+  // Register QEMU user-mode handlers for arm64 in the node kernel before the
+  // daemon starts, so it advertises linux/arm64 and can build multi-platform
+  // images (the public macos-cross-compiler images ship for amd64 and arm64).
+  // The registration is kernel-global and uses the fix-binary flag, so it
+  // survives this container exiting; re-running it is idempotent.
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "binfmt",
+      image: `tonistiigi/binfmt:${versions["tonistiigi/binfmt"]}`,
+      args: ["--install", "arm64"],
+      securityContext: {
+        privileged: true,
+        allowPrivilegeEscalation: true,
+        ensureNonRoot: false,
+        readOnlyRootFilesystem: false,
+      },
+      resources: {
+        cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },
+        memory: { request: Size.mebibytes(32), limit: Size.mebibytes(128) },
+      },
+    }),
+  );
+
   deployment.addContainer(
     withCommonProps({
       name: "buildkitd",

@@ -66,6 +66,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "docker-e2e-main": ["docker-e2e"],
   images: ["images"],
   sites: ["sites"],
+  "macos-cross-compiler": ["macos-cross-compiler"],
   publish: ["npm", "cooklang"],
   "ci-base-refresh": ["ci-base"],
   "ci-playwright-refresh": ["ci-playwright"],

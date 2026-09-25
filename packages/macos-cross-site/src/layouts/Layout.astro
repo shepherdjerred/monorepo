@@ -1,0 +1,28 @@
+---
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="color-scheme" content="dark light" />
+    <title>macos-cross-compiler - Build macOS and iOS apps on Linux</title>
+    <meta
+      name="description"
+      content="A Docker image that compiles, links, and signs macOS, iOS, and Mac Catalyst software on Linux: Swift, SwiftUI, SwiftPM, C, C++, Objective-C, and Rust, with Xcode-identical output."
+    />
+  </head>
+  <body class="bg-white text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-sky-500 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+    >
+      Skip to content
+    </a>
+    <slot />
+  </body>
+</html>

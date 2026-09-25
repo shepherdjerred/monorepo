@@ -13,6 +13,7 @@ hold only scoped invariants that agents must keep in context.
 | [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports      |
 | [starlight-karma-bot](starlight-karma-bot/)                     | Discord karma bot — points, leaderboards, scheduled recaps                               |
 | [macos-ai-subscription-tracker](macos-ai-subscription-tracker/) | Brim (QuotaBar) — native macOS menu-bar tracker for AI subscription quotas               |
+| [macos-cross-compiler](macos-cross-compiler/)                   | Public Docker images that build macOS, iOS, and Catalyst apps on Linux                   |
 | [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
 
@@ -48,6 +49,7 @@ hold only scoped invariants that agents must keep in context.
 | [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)            |
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                               |
+| [macos-cross-site](macos-cross-site/)           | Marketing site for the macos-cross-compiler Docker image     |
 
 ## Libraries
 
