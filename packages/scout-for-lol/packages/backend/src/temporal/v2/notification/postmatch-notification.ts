@@ -21,6 +21,7 @@ import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-conte
 import type { ScoutV2AttestedReportArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
 import type { ScoutV2ReportComponentsSchema } from "#src/temporal/v2/notification-receipts.ts";
 import type { z } from "zod";
+import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
 
 /**
  * The post-match report: what a `postmatch` intent renders and delivers.
@@ -80,7 +81,39 @@ export type ScoutV2PostmatchRender = {
   readonly components: ScoutV2ReportComponents;
   /** The queue the report was rendered for, kept as object metadata. */
   readonly queueId: number;
+  /** Riot's creation instant for the game, in epoch milliseconds. */
+  readonly gameCreation: number;
 };
+
+/**
+ * When, relative to the game, this report is being rendered.
+ *
+ * `live` is the ordinary render, minutes after the game: the generator
+ * captures each tracked player's rank now, which IS the post-game rank, and
+ * records it in `MatchRankHistory`.
+ *
+ * `historical` is a render long after the game — the silent post-match
+ * backfill. The rank a player holds today is not the rank that game left
+ * them at, and the generator's capture would upsert it over the row the
+ * settlement-time capture already wrote for that game, rewriting history
+ * that rank Dares and player profiles read. So a historical render is handed
+ * the changes already recorded for the match and never captures one. A
+ * player with no recorded row is rendered without a rank change rather than
+ * with an invented one.
+ *
+ * A historical render also omits the community-MVP vote controls, and with
+ * them the `MatchMvpContest` row they vote into: the report is never posted,
+ * so a contest would have no message to be voted from and would sit in the
+ * table as an orphan that anything counting contests reads as real. The
+ * receipt then truthfully attests `match-link` rather than
+ * `match-link-mvp-vote`. The AI review is kept.
+ */
+export type ScoutV2PostmatchRenderMode =
+  | { readonly kind: "live" }
+  | {
+      readonly kind: "historical";
+      readonly rankChanges: PostmatchRankChanges;
+    };
 
 function bufferedAttachment(file: unknown): {
   name: string;
@@ -132,7 +165,7 @@ function classifyComponents(
 function disassembleReport(
   message: MessageCreateOptions,
   matchId: MatchId,
-  queueId: number,
+  game: { queueId: number; gameCreation: number },
 ): ScoutV2PostmatchRender {
   const content = message.content;
   if (content === undefined || content.length === 0) {
@@ -175,12 +208,14 @@ function disassembleReport(
     review,
     content,
     components,
-    queueId,
+    queueId: game.queueId,
+    gameCreation: game.gameCreation,
   };
 }
 
 export async function renderPostmatchNotificationV2(
   riotMatchId: RiotMatchId,
+  mode: ScoutV2PostmatchRenderMode,
 ): Promise<ScoutV2PostmatchRender> {
   // The OBSERVED roster, which is the one the minter used to decide this
   // report was owed. Rebuilding it here asked a different question and could
@@ -207,7 +242,12 @@ export async function renderPostmatchNotificationV2(
   const message = await generateMatchReport(
     context.matchData,
     context.trackedPlayers,
-    { targetGuildIds: audience.guildIds },
+    {
+      targetGuildIds: audience.guildIds,
+      ...(mode.kind === "historical"
+        ? { prefetchedRankChanges: mode.rankChanges, omitMvpVotes: true }
+        : {}),
+    },
   );
   if (message === undefined) {
     // The report generator found no tracked player it could render. An intent
@@ -218,11 +258,10 @@ export async function renderPostmatchNotificationV2(
       "MissingDomainRecord",
     );
   }
-  return disassembleReport(
-    message,
-    context.matchId,
-    context.matchData.info.queueId,
-  );
+  return disassembleReport(message, context.matchId, {
+    queueId: context.matchData.info.queueId,
+    gameCreation: context.matchData.info.gameCreation,
+  });
 }
 
 /**

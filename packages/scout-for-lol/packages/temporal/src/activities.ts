@@ -76,6 +76,7 @@ import type {
   ScoutRecoveryTransitionV2Result,
   ScoutTournamentResultV2Result,
 } from "./activity-contracts-v2.ts";
+import type { ScoutSilentPostmatchBackfillV2Result } from "./silent-postmatch-backfill-v2.ts";
 
 export type ScoutTemporalActivities = {
   probeQueue: (
@@ -255,6 +256,12 @@ export type ScoutTemporalV2Activities = {
   scanPipelineReconciliationPageV2: (
     input: ScoutPipelineReconciliationV2Input,
   ) => Promise<ScoutReconciliationScanV2Result>;
+
+  // Operator backfill — render and attest one match's post-match report with
+  // no intent and no delivery, background. See `silent-postmatch-backfill-v2.ts`.
+  backfillSilentPostmatchArtifactV2: (
+    input: ScoutMatchRefV2,
+  ) => Promise<ScoutSilentPostmatchBackfillV2Result>;
 };
 
 export type ScoutV2ActivityName = keyof ScoutTemporalV2Activities;

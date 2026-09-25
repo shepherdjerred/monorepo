@@ -41,6 +41,10 @@ import type {
   ScoutRecoveryBatchV2InputEnvelope,
   ScoutRecoveryBatchV2ResultEnvelope,
 } from "#src/workflow-contracts-v2.ts";
+import type {
+  ScoutSilentPostmatchBackfillV2InputEnvelope,
+  ScoutSilentPostmatchBackfillV2ResultEnvelope,
+} from "#src/silent-postmatch-backfill-v2.ts";
 import { scoutRealtimePollWorkflow as realtimePoll } from "./realtime.ts";
 import { scoutMatchIngestionWorkflow as matchIngestion } from "./realtime.ts";
 import { scoutPostMatchDiscoveryWorkflow as postMatchDiscovery } from "./realtime.ts";
@@ -75,6 +79,7 @@ import {
   scoutPipelineReconciliationV2Workflow as pipelineReconciliationV2,
   scoutRecoveryBatchV2Workflow as recoveryBatchV2,
 } from "./durable-v2.ts";
+import { scoutSilentPostmatchBackfillV2Workflow as silentPostmatchBackfillV2 } from "./silent-postmatch-backfill-v2.ts";
 
 export async function scoutRealtimePollWorkflow(
   input: ScoutRealtimePollInput,
@@ -230,4 +235,10 @@ export async function scoutPipelineReconciliationV2Workflow(
   input: ScoutPipelineReconciliationV2InputEnvelope,
 ): Promise<ScoutPipelineReconciliationV2ResultEnvelope> {
   return await pipelineReconciliationV2(input);
+}
+
+export async function scoutSilentPostmatchBackfillV2Workflow(
+  input: ScoutSilentPostmatchBackfillV2InputEnvelope,
+): Promise<ScoutSilentPostmatchBackfillV2ResultEnvelope> {
+  return await silentPostmatchBackfillV2(input);
 }

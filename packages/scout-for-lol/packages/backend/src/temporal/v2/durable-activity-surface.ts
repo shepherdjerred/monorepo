@@ -51,6 +51,7 @@ export type ScoutV2BackgroundActivities = Pick<
   | "digestRecoveryBatchV2"
   | "closeRecoveryBatchV2"
   | "scanPipelineReconciliationPageV2"
+  | "backfillSilentPostmatchArtifactV2"
 >;
 
 export type ScoutV2LakeActivities = Pick<

@@ -2,7 +2,7 @@ import type { ScoutV2BackgroundActivities } from "#src/temporal/v2/durable-activ
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
 /**
- * The seven V2 Activities that run on the background queue.
+ * The V2 Activities that run on the background queue.
  *
  * What unites them is not a domain but a latency promise. Rendering a report,
  * paging a recovery batch and sweeping the pipeline are all work that must
@@ -96,6 +96,20 @@ export function createScoutV2BackgroundActivities(): ScoutV2BackgroundActivities
           const { scanPipelineReconciliationPageV2 } =
             await import("#src/temporal/v2/reconciliation-scan.ts");
           return await scanPipelineReconciliationPageV2(input);
+        },
+      ),
+    // The operator's silent post-match backfill: the render and nothing
+    // else, for a match the V2 core finished without minting its report.
+    backfillSilentPostmatchArtifactV2: async (input) =>
+      await heartbeatWhile(
+        {
+          riotMatchId: input.riotMatchId,
+          phase: "silently-backfilling-postmatch-v2",
+        },
+        async () => {
+          const { backfillSilentPostmatchArtifactV2 } =
+            await import("#src/temporal/v2/notification/silent-postmatch-backfill.ts");
+          return await backfillSilentPostmatchArtifactV2(input);
         },
       ),
   };
