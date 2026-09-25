@@ -223,6 +223,26 @@ describe("Woodpecker CI namespace", () => {
     );
   });
 
+  /** The backend authenticates to the API with the agent pod's own token. */
+  it("mounts the agent's service account token", () => {
+    const deployment = z
+      .object({
+        spec: z.object({
+          template: z.object({
+            spec: z.object({
+              serviceAccountName: z.string(),
+              automountServiceAccountToken: z.boolean(),
+            }),
+          }),
+        }),
+      })
+      .parse(find("Deployment", "woodpecker-woodpecker-agent"));
+    expect(deployment.spec.template.spec).toMatchObject({
+      serviceAccountName: "woodpecker-agent",
+      automountServiceAccountToken: true,
+    });
+  });
+
   /** Woodpecker creates a headless Service per workflow before any pod. */
   it("lets the agent create what a workflow needs, only in the CI namespace", () => {
     const role = z

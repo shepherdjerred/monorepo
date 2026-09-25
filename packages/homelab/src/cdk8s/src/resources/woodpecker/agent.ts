@@ -98,6 +98,10 @@ export function createWoodpeckerAgent(chart: Chart) {
   const deployment = new Deployment(chart, "woodpecker-agent", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    // The Kubernetes backend drives the API with this pod's own service
+    // account token. cdk8s-plus defaults to not mounting it, and without it the
+    // backend falls back to a kubeconfig that does not exist and exits.
+    automountServiceAccountToken: true,
     podMetadata: { labels: { app: "woodpecker-agent" } },
     serviceAccount: ServiceAccount.fromServiceAccountName(
       chart,
