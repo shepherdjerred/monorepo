@@ -60,6 +60,11 @@ applebuild project.yml --target MyApp [--platform macos|ios|maccatalyst] \
   [--configuration Release] [--setting KEY=VALUE] --output out
 ```
 
+App targets can mix Swift with C, C++, Objective-C, and Objective-C++. Clang
+compiles them with the flags Xcode derives from the same build settings. A
+`SWIFT_OBJC_BRIDGING_HEADER` exposes them to Swift, and Objective-C imports
+Swift through the generated `<Module>-Swift.h`.
+
 Signing is ad-hoc when `CODE_SIGN_IDENTITY` is `-`. To sign with a real
 identity, set `APPLEBUILD_P12_FILE` and `APPLEBUILD_P12_PASSWORD_FILE`, plus
 `APPLEBUILD_PROVISIONING_PROFILE` for a profile to embed. A target with an
@@ -97,8 +102,8 @@ uses the mechanism Xcode itself uses:
   through Xcode's plugins and through these, and requires identical expansions.
 - **Apps.** [`applebuild`](applebuild/) resolves Xcode build settings through
   XcodeGen's and Xcode's own layers. It builds package products with Swift
-  Build, embeds dynamic products as frameworks, compiles the app target, and
-  assembles the bundle, including the keys Xcode's Info.plist processing adds.
+  Build, embeds dynamic products as frameworks, compiles the app target's Swift
+  and C-family sources, and assembles the bundle, including the keys Xcode's Info.plist processing adds.
   It signs with [rcodesign](https://github.com/indygreg/apple-platform-rs).
 
 ## Building the images
@@ -138,6 +143,12 @@ These differences from `xcodebuild` output are known:
   through a re-export. For example, `NSURLSession` is bound to `CFNetwork`
   rather than via `Foundation`, which adds a `CFNetwork` load command. dyld
   resolves both to the same code.
+- **Linked-library order:** the set of libraries matches Xcode's, but not
+  always their order. Xcode's linker lists a library an object autolinks
+  (such as Foundation, for Objective-C that imports it) where it loads that
+  object. ld64 lists autolinked libraries after the command line's.
+  [`compare-bundles.sh`](scripts/compare-bundles.sh) reports the order
+  without failing on it.
 - **Package deployment targets:** Swift Build compiles every package in the
   graph for the app's deployment target, while Xcode compiles each package for
   its own declared minimum. A package that declares an older minimum therefore
@@ -148,6 +159,6 @@ These differences from `xcodebuild` output are known:
 - **Package frameworks** (a `type: .dynamic` product) get compatibility
   version 1.0.0 where Xcode writes 0.0.0. They also record the real SDK in
   `LC_BUILD_VERSION`, where Xcode records the package's deployment target.
-- **Not supported yet:** `.xcodeproj` projects, Objective-C, C, or Metal
-  sources in an XcodeGen app target, simulator SDKs, and running tests.
+- **Not supported yet:** `.xcodeproj` projects, Metal sources, storyboards,
+  simulator SDKs, and running tests.
   Each one fails with an error rather than being skipped.
