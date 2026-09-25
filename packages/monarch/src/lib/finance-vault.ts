@@ -2,13 +2,14 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { Glob } from "bun";
 
-// The Obsidian vault is the durable home for personal finance source data
+// The finance vault is the durable home for personal finance source data
 // (statements, receipts, exports). The repo keeps no copies; parsers read
-// straight from these folders.
+// straight from these folders. It lives in a Syncthing-synced folder rather
+// than a cloud drive so it stays available offline and outside Obsidian.
 export const FINANCE_VAULT_DIR = path.join(
   homedir(),
-  "Documents",
-  "Main Vault",
+  "Sync",
+  "Sync",
   "Finances",
 );
 

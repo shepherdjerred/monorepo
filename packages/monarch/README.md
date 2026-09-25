@@ -99,8 +99,8 @@ enabled by default through OpenRouter and can be disabled with
 
 ## Data Sources
 
-Statement and receipt files live in the Obsidian vault
-(`~/Documents/Main Vault/Finances`, see `src/lib/finance-vault.ts`); the repo
+Statement and receipt files live in the finance vault
+(`~/Sync/Sync/Finances`, see `src/lib/finance-vault.ts`); the repo
 keeps no copies. Parsers read straight from these folders:
 
 - **Monarch Money** -- Transaction data via API.
@@ -169,7 +169,7 @@ into tier-1 defaults.
 
 ## hints.txt
 
-User-provided hints to override default categorization. Lives at the root of the finance vault (`~/Documents/Main Vault/Finances/hints.txt`). One hint per line, starting with `-`. Blank lines and `#` comments are supported.
+User-provided hints to override default categorization. Lives at the root of the finance vault (`~/Sync/Sync/Finances/hints.txt`). One hint per line, starting with `-`. Blank lines and `#` comments are supported.
 
 Example:
 
