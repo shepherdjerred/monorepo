@@ -8,8 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.Raid;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Boat;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Vehicle;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
@@ -75,7 +75,10 @@ final class GriefRegressionTest extends AegisServer {
     assertThat(placeAllowed(bob, WILD_X, Material.LEVER)).isFalse();
     assertThat(placeAllowed(bob, WILD_X, Material.REDSTONE_TORCH)).isFalse();
     assertThat(placeAllowed(bob, WILD_X, Material.REDSTONE_BLOCK)).isFalse();
-    assertThat(placeAllowed(bob, WILD_X - 1, Material.REDSTONE_WIRE)).isTrue();
+    assertThat(placeAllowed(bob, WILD_X - 1, Material.REDSTONE_WIRE))
+        .as("two steps from the claim, it powers the claim through one block")
+        .isFalse();
+    assertThat(placeAllowed(bob, WILD_X - 2, Material.REDSTONE_WIRE)).isTrue();
     assertThat(placeAllowed(bob, WILD_X, Material.COBBLESTONE)).isTrue();
     assertThat(placeAllowed(alice, WILD_X, Material.LEVER)).isTrue();
   }
@@ -138,27 +141,32 @@ final class GriefRegressionTest extends AegisServer {
   @Test
   void anOutsiderCannotStartARaidOnATown() {
     var town = new Location(world, 170, Y, Z);
-    var wild = new Location(world, 120, Y, Z);
+    var nearTown = new Location(world, 120, Y, Z);
+    var farWild = new Location(world, 600, Y, Z);
 
-    bob.teleport(wild);
+    bob.teleport(farWild);
     assertThat(raidAllowed(bob, town)).isFalse();
-    assertThat(raidAllowed(bob, wild)).isTrue();
+    assertThat(raidAllowed(bob, farWild)).isTrue();
+    assertThat(raidAllowed(bob, nearTown)).as("Aegis is within the raid's 64 blocks").isFalse();
     bob.teleport(town);
-    assertThat(raidAllowed(bob, wild)).isFalse();
+    assertThat(raidAllowed(bob, farWild)).isFalse();
     alice.teleport(town);
     assertThat(raidAllowed(alice, town)).isTrue();
+    assertThat(raidAllowed(alice, nearTown)).isTrue();
   }
 
-  // P1-7: boats carrying animals off.
+  // P1-7: vehicles carrying animals off. (MockBukkit's boats cannot report being leashed, so a
+  // pig stands in as the vehicle; leashed boats are in E2E-CASES.md.)
 
   @Test
-  void aBoatInTheWildCannotPickUpATownsAnimal() {
+  void aVehicleInTheWildCannotPickUpATownsAnimal() {
     var cow = world.spawnEntity(new Location(world, CLAIM_X, Y, Z), EntityType.COW);
-    var wildBoat = world.spawn(new Location(world, WILD_X, Y, Z), Boat.class);
-    var townBoat = world.spawn(new Location(world, CLAIM_X + 1, Y, Z), Boat.class);
+    var wildPig = (Vehicle) world.spawnEntity(new Location(world, WILD_X, Y, Z), EntityType.PIG);
+    var townPig =
+        (Vehicle) world.spawnEntity(new Location(world, CLAIM_X + 1, Y, Z), EntityType.PIG);
 
-    assertThat(call(new VehicleEnterEvent(wildBoat, cow)).isCancelled()).isTrue();
-    assertThat(call(new VehicleEnterEvent(townBoat, cow)).isCancelled()).isFalse();
+    assertThat(call(new VehicleEnterEvent(wildPig, cow)).isCancelled()).isTrue();
+    assertThat(call(new VehicleEnterEvent(townPig, cow)).isCancelled()).isFalse();
   }
 
   // P1-10: withers.

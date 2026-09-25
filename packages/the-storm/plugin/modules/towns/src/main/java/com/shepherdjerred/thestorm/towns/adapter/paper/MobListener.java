@@ -1,8 +1,10 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
+import com.shepherdjerred.thestorm.towns.domain.world.Neighbourhood;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Enderman;
@@ -36,10 +38,14 @@ final class MobListener implements Listener {
 
   private final Guard guard;
   private final BlockKinds kinds;
+  private final Neighbourhood neighbourhood;
+  private final int raidRadiusChunks;
 
-  MobListener(Guard guard, BlockKinds kinds) {
+  MobListener(Guard guard, BlockKinds kinds, Neighbourhood neighbourhood, int raidRadiusChunks) {
     this.guard = guard;
     this.kinds = kinds;
+    this.neighbourhood = neighbourhood;
+    this.raidRadiusChunks = raidRadiusChunks;
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -52,12 +58,17 @@ final class MobListener implements Listener {
       event.setCancelled(!Guard.flows(WorldEffect.MOB_GRIEF, guard.land(entity), land));
       return;
     }
-    // A player behind it: the player, a pet's owner, whoever rides it or leads it on a lead, so a
-    // sheep led into a town cannot eat its grass and a rabbit cannot eat its carrots.
-    var culprit = guard.presser(entity);
-    if (culprit.isPresent()) {
+    // Players answerable for it: whoever rides it or leads it, else a pet's owner, so a sheep led
+    // into a town cannot eat its grass and a rabbit cannot eat its carrots.
+    var controllers = guard.controllers(entity);
+    if (!controllers.isEmpty()) {
       var act = new Act(Action.BUILD, kinds.subject(block.getType()));
-      event.setCancelled(!guard.permits(culprit.get(), act, land));
+      for (var controller : controllers) {
+        if (!guard.permits(controller, act, land)) {
+          event.setCancelled(true);
+          return;
+        }
+      }
       return;
     }
     if (entity instanceof FallingBlock) {
@@ -85,10 +96,10 @@ final class MobListener implements Listener {
     }
     var entity = event.getEntity();
     var land = guard.land(block);
-    var culprit = guard.presser(entity);
+    var controllers = guard.controllers(entity);
     boolean allowed;
-    if (culprit.isPresent()) {
-      allowed = guard.permitsQuietly(culprit.get(), act.get(), land);
+    if (!controllers.isEmpty()) {
+      allowed = guard.allPermitQuietly(controllers, act.get(), land);
     } else if (act.get().action() == Action.BREAK) {
       allowed = Guard.flows(WorldEffect.MOB_GRIEF, guard.land(entity), land);
     } else {
@@ -125,22 +136,30 @@ final class MobListener implements Listener {
     if (use == null) {
       return;
     }
-    var culprit = guard.presser(event.getEntity());
-    if (culprit.isPresent() && !guard.permitsQuietly(culprit.get(), use, guard.land(block))) {
+    var controllers = guard.controllers(event.getEntity());
+    if (!guard.allPermitQuietly(controllers, use, guard.land(block))) {
       event.setCancelled(true);
     }
   }
 
   /**
    * A raid is war on the land around it: it may only start where the player may build, both at the
-   * raid's centre and where they stand.
+   * raid's centre and where they stand, and with no land they have no say over (another town's
+   * claim, an admin region) within the raid's reach.
    */
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onRaid(RaidTriggerEvent event) {
     var player = event.getPlayer();
+    var centre = event.getRaid().getLocation();
     var build = new Act(Action.BUILD, Subject.BLOCK);
-    if (!guard.permits(player, build, guard.land(event.getRaid().getLocation()))
+    if (!guard.permits(player, build, guard.land(centre))
         || !guard.permits(player, build, guard.land(player))) {
+      event.setCancelled(true);
+      return;
+    }
+    var chunk =
+        ChunkPos.ofBlock(Guard.world(centre).getName(), centre.getBlockX(), centre.getBlockZ());
+    if (neighbourhood.foreignLandNear(player.getUniqueId(), chunk, raidRadiusChunks).isPresent()) {
       event.setCancelled(true);
     }
   }

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The {@link Protection} port's contract, answered by the real engine over Aegis (chunks 10..11 on
- * z chunk 10, PvP off), spawn (chunks -4..3, PvP off) and the wilderness (PvP on).
+ * z chunk 10), spawn (chunks -4..3, PvP off) and the wilderness (PvP on).
  */
 final class ProtectionPortTest extends AegisServer {
 
@@ -24,7 +24,13 @@ final class ProtectionPortTest extends AegisServer {
   }
 
   @Test
-  void playersFightOnlyWherePvpIsOnForBoth() {
+  void playersFightOnlyWherePvpIsOnForBoth() throws InterruptedException {
+    // New claims have PvP on; Aegis turns it off on both of its chunks.
+    for (var x : new int[] {165, 180}) {
+      alice.teleport(at(x, Z));
+      server.dispatchCommand(alice, "claim flag pvp false");
+      awaitLine(alice, "pvp is now off here.");
+    }
     var port = port();
     var aegis = at(170, Z);
     var aegisToo = at(185, Z);

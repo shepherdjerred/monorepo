@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.towns.domain.world.Neighbourhood;
 import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Wither;
 import org.bukkit.event.EventHandler;
@@ -23,9 +24,6 @@ import org.jspecify.annotations.Nullable;
  */
 final class WitherListener implements Listener {
 
-  /** A player who is nobody's member, for withers nobody built (a dispenser placed the skull). */
-  private static final UUID NOBODY = new UUID(0, 0);
-
   /** How close (in blocks) the wither spawns to the skull that completed it. */
   private static final double SPAWN_REACH = 4.0;
 
@@ -34,12 +32,15 @@ final class WitherListener implements Listener {
   private final int radius;
   private @Nullable Placement lastSkull;
 
-  private record Placement(UUID builder, Location at) {}
+  private final Server server;
 
-  WitherListener(TownsState state, Culprits culprits, int radius) {
+  private record Placement(UUID builder, Location at, int tick) {}
+
+  WitherListener(TownsState state, Culprits culprits, int radius, Server server) {
     this.neighbourhood = new Neighbourhood(state, state);
     this.culprits = culprits;
     this.radius = radius;
+    this.server = server;
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -59,7 +60,7 @@ final class WitherListener implements Listener {
               "You can't build a wither within " + radius + " chunks of land that isn't yours."));
       return;
     }
-    lastSkull = new Placement(player.getUniqueId(), block.getLocation());
+    lastSkull = new Placement(player.getUniqueId(), block.getLocation(), server.getCurrentTick());
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -73,17 +74,18 @@ final class WitherListener implements Listener {
     var at = wither.getLocation();
     var builder =
         skull != null
+                && skull.tick() == server.getCurrentTick()
                 && Guard.world(skull.at()).equals(Guard.world(at))
                 && skull.at().distance(at) <= SPAWN_REACH
             ? skull.builder()
-            : NOBODY;
+            : Culprits.NOBODY;
     if (nearForeignLand(builder, at)) {
       event.setCancelled(true);
       return;
     }
-    if (!builder.equals(NOBODY)) {
-      culprits.rememberBuilder(wither, builder);
-    }
+    // A wither nobody built (a dispenser placed the last skull) is still remembered, as built by
+    // nobody: nobody's member, so it may break nothing on anyone's land.
+    culprits.rememberBuilder(wither, builder);
   }
 
   private boolean nearForeignLand(UUID player, Location at) {

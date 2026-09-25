@@ -8,7 +8,6 @@ import io.papermc.paper.event.player.PlayerFlowerPotManipulateEvent;
 import io.papermc.paper.event.player.PlayerInsertLecternBookEvent;
 import io.papermc.paper.event.player.PlayerLecternPageChangeEvent;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
-import java.util.List;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
@@ -138,16 +137,26 @@ final class BlockListener implements Listener {
 
   /**
    * A redstone component or power source may only go where the player may change the redstone of
-   * every block it could power: the six blocks around it and, for components attached to a block,
-   * the six around that block. Otherwise a lever in the wilderness drives a town's pistons.
+   * every block it could power, directly or through one block: every block within two steps
+   * (Manhattan distance 2) of it, and the six around the block it is attached to. Otherwise a lever
+   * in the wilderness drives a town's pistons, or a torch under a block beside the border powers a
+   * town's door through it.
    */
   private boolean mayWire(Player player, Block block, Block against) {
     var wire = new Act(Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT);
-    for (var center : List.of(block, against)) {
-      for (var face : Redstone.FACES) {
-        if (!guard.permits(player, wire, guard.land(center.getRelative(face)))) {
-          return false;
+    for (var dx = -2; dx <= 2; dx++) {
+      for (var dy = -2; dy <= 2; dy++) {
+        for (var dz = -2; dz <= 2; dz++) {
+          if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) <= 2
+              && !guard.permits(player, wire, guard.land(block.getRelative(dx, dy, dz)))) {
+            return false;
+          }
         }
+      }
+    }
+    for (var face : Redstone.FACES) {
+      if (!guard.permits(player, wire, guard.land(against.getRelative(face)))) {
+        return false;
       }
     }
     return true;

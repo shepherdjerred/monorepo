@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.bukkit.damage.DamageSource;
@@ -21,6 +22,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.LingeringPotionSplashEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.potion.PotionEffect;
@@ -38,6 +40,17 @@ final class CombatListener implements Listener {
 
   CombatListener(Guard guard) {
     this.guard = guard;
+  }
+
+  /**
+   * A swing at something the player may not hurt is stopped before it lands, so it has no side
+   * effects either: no sweep, no cooldown reset, no angering the victim.
+   */
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onSwing(PrePlayerAttackEntityEvent event) {
+    if (!guard.permitsHarm(event.getPlayer(), event.getAttacked(), true)) {
+      event.setCancelled(true);
+    }
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -113,7 +126,7 @@ final class CombatListener implements Listener {
       return;
     }
     var thrower = guard.culprit(potion);
-    var origin = guard.land(Origins.of(potion));
+    var origin = guard.land(guard.origin(potion));
     for (var victim : event.getAffectedEntities()) {
       if (!mayHarm(thrower, origin, victim)) {
         event.setIntensity(victim, 0);
@@ -124,6 +137,13 @@ final class CombatListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onCloud(AreaEffectCloudApplyEvent event) {
     var cloud = event.getEntity();
+    var thrower = guard.culprit(cloud);
+    var origin = guard.land(guard.origin(cloud));
+    if (thrower.isEmpty()
+        && !Guard.flows(WorldEffect.PROJECTILE_IMPACT, origin, guard.land(cloud))) {
+      event.setCancelled(true);
+      return;
+    }
     var base = cloud.getBasePotionType();
     var effects =
         Stream.concat(
@@ -132,9 +152,26 @@ final class CombatListener implements Listener {
     if (!harmful(effects)) {
       return;
     }
-    var thrower = guard.culprit(cloud);
-    var origin = guard.land(Origins.of(cloud));
     event.getAffectedEntities().removeIf(victim -> !mayHarm(thrower, origin, victim));
+  }
+
+  /**
+   * A lingering cloud remembers who threw its potion and where from, so it answers for them after
+   * the thrower logs out or the dispenser is broken; a cloud nobody threw may not land on other
+   * owners' land at all.
+   */
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onLingering(LingeringPotionSplashEvent event) {
+    var potion = event.getEntity();
+    var cloud = event.getAreaEffectCloud();
+    var thrower = guard.culprit(potion);
+    var origin = Origins.of(potion);
+    if (thrower.isEmpty()
+        && !Guard.flows(WorldEffect.PROJECTILE_IMPACT, guard.land(origin), guard.land(cloud))) {
+      event.setCancelled(true);
+      return;
+    }
+    guard.culprits().rememberCloud(cloud, thrower, origin);
   }
 
   /** A potion from a player follows their harm rules; one from a dispenser, the border rules. */

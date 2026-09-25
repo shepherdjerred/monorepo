@@ -186,15 +186,31 @@ final class WorldListener implements Listener {
     }
   }
 
-  /** Every moved block must be allowed both where it is and where it goes. */
+  /**
+   * Every moved block must be allowed both where it is and where it goes, and a moved power source
+   * (a redstone block, an observer) must not end up touching other owners' protected land, which it
+   * would then power.
+   */
   private boolean pistonMay(Land from, List<Block> blocks, BlockFace direction) {
     for (var block : blocks) {
+      var destination = block.getRelative(direction);
       if (!Guard.flows(WorldEffect.PISTON, from, guard.land(block))
-          || !Guard.flows(WorldEffect.PISTON, from, guard.land(block.getRelative(direction)))) {
+          || !Guard.flows(WorldEffect.PISTON, from, guard.land(destination))
+          || (kinds.isRedstone(block.getType()) && touchesOtherProtectedLand(destination, from))) {
         return false;
       }
     }
     return true;
+  }
+
+  private boolean touchesOtherProtectedLand(Block block, Land own) {
+    for (var face : Redstone.FACES) {
+      var land = guard.land(block.getRelative(face));
+      if (!(land instanceof Land.Wilderness) && !land.sameOwnerAs(own)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)

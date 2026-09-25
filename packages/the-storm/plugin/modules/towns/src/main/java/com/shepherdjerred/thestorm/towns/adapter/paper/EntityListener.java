@@ -10,6 +10,7 @@ import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Cancellable;
@@ -76,7 +77,7 @@ final class EntityListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onLeash(PlayerLeashEntityEvent event) {
-    interactWith(event, event.getPlayer(), event.getEntity());
+    rideOrLead(event, event.getPlayer(), event.getEntity());
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -93,7 +94,7 @@ final class EntityListener implements Listener {
   void onVehicleEnter(VehicleEnterEvent event) {
     var entered = event.getEntered();
     if (entered instanceof Player player) {
-      interactWith(event, player, event.getVehicle());
+      rideOrLead(event, player, event.getVehicle());
     } else if (!mayCarry(event.getVehicle(), entered)) {
       event.setCancelled(true);
     }
@@ -104,7 +105,7 @@ final class EntityListener implements Listener {
     var rider = event.getEntity();
     if (rider instanceof Player player) {
       if (!(event.getMount() instanceof Vehicle)) {
-        interactWith(event, player, event.getMount());
+        rideOrLead(event, player, event.getMount());
       }
     } else if (!mayCarry(event.getMount(), rider)) {
       event.setCancelled(true);
@@ -130,8 +131,7 @@ final class EntityListener implements Listener {
     }
     var use = new Act(Action.INTERACT_ENTITY, subject.get());
     for (var handler : List.of(vehicle, passenger)) {
-      var culprit = guard.presser(handler);
-      if (culprit.isPresent() && !guard.permitsQuietly(culprit.get(), use, land)) {
+      if (!guard.allPermitQuietly(guard.controllers(handler), use, land)) {
         return false;
       }
     }
@@ -141,6 +141,12 @@ final class EntityListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onFish(PlayerFishEvent event) {
     var caught = event.getCaught();
+    if (event.getState() == PlayerFishEvent.State.CAUGHT_ENTITY
+        && caught instanceof Item item
+        && !mayReel(event.getPlayer(), item)) {
+      event.setCancelled(true);
+      return;
+    }
     if (event.getState() == PlayerFishEvent.State.CAUGHT_ENTITY
         && caught != null
         && !guard.permitsHarm(event.getPlayer(), caught, true)) {
@@ -214,6 +220,27 @@ final class EntityListener implements Listener {
         WorldEffect.DISPENSE, guard.land(event.getBlock()), guard.land(event.getEntity()))) {
       event.setCancelled(true);
     }
+  }
+
+  /** Reeling in an item lying on someone's land is picking it up (see ContactListener). */
+  private boolean mayReel(Player player, Item item) {
+    if (player.getUniqueId().equals(item.getThrower())) {
+      return true;
+    }
+    var land = guard.land(item);
+    return land instanceof Land.Wilderness || guard.permits(player, ContactListener.TAKE, land);
+  }
+
+  /**
+   * Riding or leading someone else's tamed pet is its owner's alone, everywhere, like hurting it:
+   * otherwise a borrowed pet carries its owner's rights into their town.
+   */
+  private void rideOrLead(Cancellable event, Player player, Entity entity) {
+    if (guard.refuseOthersPet(player, entity)) {
+      event.setCancelled(true);
+      return;
+    }
+    interactWith(event, player, entity);
   }
 
   private void interactWith(Cancellable event, Player player, Entity entity) {
