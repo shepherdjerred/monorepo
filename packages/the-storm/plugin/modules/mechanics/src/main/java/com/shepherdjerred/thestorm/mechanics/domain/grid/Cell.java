@@ -27,6 +27,17 @@ public record Cell(String material, Shape shape, Mobility mobility, boolean fixe
     return new Cell(AIR, Shape.EMPTY, Mobility.NORMAL, false);
   }
 
+  /**
+   * A position in a chunk that is not loaded. Mechanisms never load chunks; they treat unloaded
+   * space as a fixed wall that nothing matches, moves or lands on.
+   */
+  public static Cell unloaded() {
+    return new Cell(UNLOADED, Shape.SOLID, Mobility.BLOCK, true);
+  }
+
+  /** The material key {@link #unloaded()} reports. */
+  public static final String UNLOADED = "thestorm:unloaded";
+
   /** An ordinary solid block of {@code material}. */
   public static Cell solid(String material) {
     return new Cell(material, Shape.SOLID, Mobility.NORMAL, false);

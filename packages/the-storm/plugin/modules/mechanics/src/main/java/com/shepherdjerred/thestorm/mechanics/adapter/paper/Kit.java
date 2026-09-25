@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.mechanics.app.Gatekeeper;
 import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
+import com.shepherdjerred.thestorm.mechanics.domain.structure.StructureProblem;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.block.Sign;
@@ -25,9 +26,7 @@ record Kit(
    * What a player is told about a mechanism sign with no recorded creator, such as a CraftBook sign
    * from the old world. Editing the sign runs creation again, which records its creator.
    */
-  static final String NOT_SET_UP =
-      "This sign isn't set up yet. Sneak and right-click it with an empty hand, then press Done"
-          + " to set it up.";
+  static final String NOT_SET_UP = new StructureProblem.NotBound().message();
 
   /**
    * Whether {@code player} may use {@code feature}'s sign, telling them why not. A sign with no

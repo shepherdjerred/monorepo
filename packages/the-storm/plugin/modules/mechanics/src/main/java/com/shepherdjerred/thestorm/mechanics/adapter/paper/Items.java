@@ -10,9 +10,9 @@ final class Items {
   private Items() {}
 
   /** Gives {@code count} of {@code kind}, dropping what does not fit at the player's feet. */
-  static void give(Player player, ItemStack kind, int count) {
+  static void give(Player player, ItemStack kind, long count) {
     for (var remaining = count; remaining > 0; ) {
-      var stack = kind.asQuantity(Math.min(remaining, kind.getMaxStackSize()));
+      var stack = kind.asQuantity((int) Math.min(remaining, kind.getMaxStackSize()));
       remaining -= stack.getAmount();
       player
           .getInventory()
@@ -23,9 +23,9 @@ final class Items {
   }
 
   /** Drops {@code count} of {@code kind} at {@code location}, in full stacks. */
-  static void drop(Location location, ItemStack kind, int count) {
+  static void drop(Location location, ItemStack kind, long count) {
     for (var remaining = count; remaining > 0; ) {
-      var stack = kind.asQuantity(Math.min(remaining, kind.getMaxStackSize()));
+      var stack = kind.asQuantity((int) Math.min(remaining, kind.getMaxStackSize()));
       remaining -= stack.getAmount();
       location.getWorld().dropItemNaturally(location, stack);
     }

@@ -9,15 +9,28 @@ import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Shape;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.SignView;
 import com.shepherdjerred.thestorm.mechanics.domain.piston.BlockMove;
+import com.shepherdjerred.thestorm.mechanics.domain.structure.Binding;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.BlockChange;
+import com.shepherdjerred.thestorm.mechanics.domain.structure.SignRecord;
+import com.shepherdjerred.thestorm.mechanics.domain.structure.SignRecords;
+import com.shepherdjerred.thestorm.mechanics.domain.structure.Stock;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
-/** An in-memory world for domain tests: air everywhere unless set, build height -64 to 320. */
-public final class TestGrid implements BlockGrid {
+/**
+ * An in-memory world for domain tests: air everywhere unless set, build height -64 to 320.
+ *
+ * <p>It simulates physics the way a real server would hurt a mechanism: removing a block that holds
+ * up a sign pops the sign off, and whatever the sign held drops as items ({@link #dropped}). Signs
+ * also carry the data a real sign stores (binding and stock), so it serves as the binder's {@link
+ * SignRecords}.
+ */
+public final class TestGrid implements BlockGrid, SignRecords {
 
   public static final String STONE = "minecraft:stone";
   public static final String PLANKS = "minecraft:oak_planks";
@@ -30,10 +43,16 @@ public final class TestGrid implements BlockGrid {
 
   private final Map<Pos, Cell> cells = new HashMap<>();
   private final Map<Pos, SignView> signs = new HashMap<>();
+  private final Map<Pos, Binding> bindings = new HashMap<>();
+  private final Map<Pos, Stock> stocks = new HashMap<>();
+  private final Set<Pos> holdingUp = new HashSet<>();
+  private final Map<String, Long> dropped = new HashMap<>();
 
   public TestGrid set(Pos pos, Cell cell) {
     cells.put(pos, cell);
     signs.remove(pos);
+    bindings.remove(pos);
+    stocks.remove(pos);
     return this;
   }
 
@@ -57,6 +76,12 @@ public final class TestGrid implements BlockGrid {
     return set(pos, new Cell(material, Shape.HAZARD, Mobility.NORMAL, false));
   }
 
+  /** Marks {@code pos} as holding up something (a torch, rail, painting) besides signs. */
+  public TestGrid holdsUp(Pos pos) {
+    holdingUp.add(pos);
+    return this;
+  }
+
   /** A standing sign reading {@code tag} on its second line, text facing {@code facing}. */
   public TestGrid sign(Pos pos, String tag, Direction facing) {
     return sign(pos, new SignView(List.of("", tag, "", ""), Mount.STANDING, Optional.of(facing)));
@@ -68,9 +93,41 @@ public final class TestGrid implements BlockGrid {
 
   public TestGrid sign(Pos pos, SignView view) {
     var material = view.mount() == Mount.WALL ? WALL_SIGN : SIGN;
-    cells.put(pos, new Cell(material, Shape.PASSABLE, Mobility.BREAK, true));
+    set(pos, new Cell(material, Shape.PASSABLE, Mobility.BREAK, true));
     signs.put(pos, view);
     return this;
+  }
+
+  public TestGrid bind(Pos sign, Binding binding) {
+    requireSign(sign);
+    bindings.put(sign, binding);
+    return this;
+  }
+
+  public TestGrid stock(Pos sign, Stock stock) {
+    requireSign(sign);
+    stocks.put(sign, stock);
+    return this;
+  }
+
+  public Stock stockAt(Pos sign) {
+    return stocks.getOrDefault(sign, Stock.empty());
+  }
+
+  public Optional<Binding> bindingAt(Pos sign) {
+    return Optional.ofNullable(bindings.get(sign));
+  }
+
+  /** Breaks a sign as a player would: it and everything it holds drop. */
+  public void breakSign(Pos sign) {
+    requireSign(sign);
+    drop(stockAt(sign));
+    air(sign);
+  }
+
+  /** How many of {@code material} have dropped as items from broken or popped signs. */
+  public long dropped(String material) {
+    return dropped.getOrDefault(material, 0L);
   }
 
   /** Fills every position from {@code from} to {@code to} inclusive with {@code material}. */
@@ -85,7 +142,10 @@ public final class TestGrid implements BlockGrid {
     return this;
   }
 
-  /** Applies changes as the adapter would, checking each still finds what its plan saw. */
+  /**
+   * Applies changes as the adapter would, checking each still finds what its plan saw. Removing a
+   * block pops off every sign it holds up, as physics would.
+   */
   public void apply(List<BlockChange> changes) {
     for (var change : changes) {
       if (!cellAt(change.pos()).is(change.from())) {
@@ -93,6 +153,7 @@ public final class TestGrid implements BlockGrid {
       }
       if (change.isRemoval()) {
         air(change.pos());
+        popSignsOn(change.pos());
       } else {
         solid(change.pos(), change.to());
       }
@@ -121,6 +182,14 @@ public final class TestGrid implements BlockGrid {
     return cells.values().stream().filter(cell -> cell.is(material)).count();
   }
 
+  /** How many blocks of {@code material} all signs hold. */
+  public long heldAll(String material) {
+    return stocks.values().stream()
+        .filter(stock -> stock.material().filter(material::equals).isPresent())
+        .mapToLong(Stock::count)
+        .sum();
+  }
+
   @Override
   public Cell cellAt(Pos pos) {
     return cells.getOrDefault(pos, Cell.air());
@@ -132,6 +201,16 @@ public final class TestGrid implements BlockGrid {
   }
 
   @Override
+  public boolean supports(Pos pos) {
+    return holdingUp.contains(pos) || signs.keySet().stream().anyMatch(sign -> heldBy(sign, pos));
+  }
+
+  @Override
+  public Optional<SignRecord> at(Pos pos) {
+    return signAt(pos).map(view -> new SignRecord(view.mechanism(), bindingAt(pos), stockAt(pos)));
+  }
+
+  @Override
   public int minY() {
     return -64;
   }
@@ -139,5 +218,30 @@ public final class TestGrid implements BlockGrid {
   @Override
   public int maxY() {
     return 320;
+  }
+
+  /** Whether the sign at {@code sign} hangs on or stands on {@code block}. */
+  private boolean heldBy(Pos sign, Pos block) {
+    var view = signAt(sign).orElseThrow();
+    var support =
+        view.mount() == Mount.WALL
+            ? sign.offset(view.facing().orElseThrow().opposite())
+            : sign.offset(Direction.DOWN);
+    return support.equals(block);
+  }
+
+  private void popSignsOn(Pos block) {
+    var popped = signs.keySet().stream().filter(sign -> heldBy(sign, block)).toList();
+    popped.forEach(this::breakSign);
+  }
+
+  private void drop(Stock stock) {
+    stock.material().ifPresent(material -> dropped.merge(material, stock.count(), Long::sum));
+  }
+
+  private void requireSign(Pos sign) {
+    if (!signs.containsKey(sign)) {
+      throw new AssertionError("no sign at " + sign);
+    }
   }
 }

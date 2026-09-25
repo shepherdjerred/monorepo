@@ -90,17 +90,43 @@ final class PaperGrid implements BlockGrid {
     return new Location(world, pos.x(), pos.y(), pos.z());
   }
 
+  /** Whether the chunk holding {@code pos} is loaded; reading an unloaded one would load it. */
+  boolean loaded(Pos pos) {
+    return world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4);
+  }
+
+  /** Whether {@code block}'s chunk is loaded. */
+  static boolean loaded(Block block) {
+    return block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4);
+  }
+
+  @Override
+  public boolean contains(Pos pos) {
+    return pos.y() >= minY()
+        && pos.y() < maxY()
+        && loaded(pos)
+        && world.getWorldBorder().isInside(location(pos).add(0.5, 0.5, 0.5));
+  }
+
   @Override
   public Cell cellAt(Pos pos) {
-    return cell(block(pos));
+    return loaded(pos) ? cell(block(pos)) : Cell.unloaded();
   }
 
   @Override
   public Optional<SignView> signAt(Pos pos) {
+    if (!loaded(pos)) {
+      return Optional.empty();
+    }
     var block = block(pos);
     return Signs.isSign(block.getType()) && block.getState(false) instanceof Sign sign
         ? Optional.of(view(block, frontLines(sign)))
         : Optional.empty();
+  }
+
+  @Override
+  public boolean supports(Pos pos) {
+    return !loaded(pos) || Supports.anythingOn(block(pos));
   }
 
   @Override

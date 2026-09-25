@@ -82,7 +82,7 @@ final class CookingPots {
     kit.signs().setFuel(sign, cook.fuel());
     sign.update();
     var result = found.getResult();
-    Items.give(player, result, result.getAmount() * cook.cooked());
+    Items.give(player, result, (long) result.getAmount() * cook.cooked());
     player.giveExp(Math.round(found.getExperience() * cook.cooked()));
     Replies.success(
         player,

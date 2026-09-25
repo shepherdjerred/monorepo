@@ -14,7 +14,7 @@ public final class Names {
   }
 
   /** {@code 3 oak planks}, {@code 1 oak planks}: counts read as plain numbers. */
-  public static String count(int count, String key) {
+  public static String count(long count, String key) {
     return count + " " + material(key);
   }
 
