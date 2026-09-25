@@ -16,6 +16,9 @@ import java.util.function.Function;
 /** The sentences players read when a town or claim command is refused. */
 public final class Explanations {
 
+  private static final String BUSY =
+      "Your last change is still being saved; try again in a moment.";
+
   private Explanations() {}
 
   /** Explains {@code problem}; {@code townName} names a town by id. */
@@ -43,6 +46,7 @@ public final class Explanations {
       case ClaimProblem.NotClaimed() -> "Nobody has claimed this chunk.";
       case ClaimProblem.OwnedByOtherTown(var town) ->
           "This chunk belongs to " + townName.apply(town) + ", not your town.";
+      case ClaimProblem.Busy() -> BUSY;
     };
   }
 
@@ -63,6 +67,7 @@ public final class Explanations {
           "Only the town's owner may do that; you are " + article(role) + ".";
       case TownProblem.ConfirmationMismatch(var town) ->
           "To delete your town, type its name: /town delete " + town;
+      case TownProblem.Busy() -> BUSY;
     };
   }
 

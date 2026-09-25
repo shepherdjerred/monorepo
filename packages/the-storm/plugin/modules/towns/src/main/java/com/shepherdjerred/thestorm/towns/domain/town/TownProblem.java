@@ -20,4 +20,7 @@ public sealed interface TownProblem {
 
   /** The confirmation did not repeat the town's name. */
   record ConfirmationMismatch(String townName) implements TownProblem {}
+
+  /** A change to this town or player is still being saved. */
+  record Busy() implements TownProblem {}
 }

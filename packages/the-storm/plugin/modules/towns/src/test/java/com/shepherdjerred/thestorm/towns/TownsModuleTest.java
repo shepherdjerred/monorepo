@@ -77,6 +77,16 @@ final class TownsModuleTest {
   }
 
   @Test
+  void aWorldTheServerHasNotLoadedStopsTheModule() throws Exception {
+    var config = Files.readString(SHIPPED).replace("worlds: [world]", "worlds: [atlantis]");
+    Files.writeString(directory.resolve("towns.yml"), config);
+
+    assertThatThrownBy(() -> new TownsModule().enable(context()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("atlantis");
+  }
+
+  @Test
   void aMissingConfigStopsTheModule() {
     assertThatThrownBy(() -> new TownsModule().enable(context()))
         .isInstanceOf(RuntimeException.class);

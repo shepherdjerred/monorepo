@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimMap;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
+import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLevel;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLookup;
 import com.shepherdjerred.thestorm.towns.domain.region.AdminRegion;
@@ -11,6 +12,7 @@ import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownDirectory;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,7 +38,7 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
   private final Map<UUID, Town> towns = new HashMap<>();
   private final Map<UUID, UUID> townOfPlayer = new HashMap<>();
   private final Map<String, UUID> townByName = new HashMap<>();
-  private final Map<String, Map<Long, Land.TownLand>> claims = new HashMap<>();
+  private final Map<String, Long2ObjectOpenHashMap<Land.TownLand>> claims = new HashMap<>();
   private final Map<UUID, Integer> claimCounts = new HashMap<>();
 
   public TownsState(RegionIndex regions) {
@@ -55,15 +57,25 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
     snapshot.claims().forEach(this::addClaim);
   }
 
+  /** Replaces everything with {@code snapshot}, the stored truth, after a failed save. */
+  public void reload(TownsSnapshot snapshot) {
+    towns.clear();
+    townOfPlayer.clear();
+    townByName.clear();
+    claims.clear();
+    claimCounts.clear();
+    load(snapshot);
+  }
+
   public RegionIndex regions() {
     return regions;
   }
 
   /** What block ({@code x}, {@code y}, {@code z}) of {@code world} is: region, claim or wild. */
   public Land landAt(String world, int x, int y, int z) {
-    var region = regions.at(world, x, y, z);
-    if (region.isPresent()) {
-      return regionLand(region.get());
+    var region = regions.regionAt(world, x, y, z);
+    if (region != null) {
+      return regionLand(region);
     }
     var worldClaims = claims.get(world);
     if (worldClaims == null) {
@@ -132,6 +144,11 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
   }
 
   @Override
+  public TrustLevel trustOf(UUID player, Claim claim, Act act) {
+    return trustOf(player, claim.townId());
+  }
+
+  /** How far {@code townId} trusts {@code player}, from their role; outsiders when not a member. */
   public TrustLevel trustOf(UUID player, UUID townId) {
     var town = towns.get(townId);
     if (town == null) {
@@ -177,7 +194,8 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
     if (!towns.containsKey(claim.townId())) {
       throw new IllegalStateException("claim " + claim.chunk() + " for unknown town");
     }
-    var worldClaims = claims.computeIfAbsent(claim.chunk().world(), world -> new HashMap<>());
+    var worldClaims =
+        claims.computeIfAbsent(claim.chunk().world(), world -> new Long2ObjectOpenHashMap<>());
     var key = claim.chunk().key();
     if (worldClaims.containsKey(key)) {
       throw new IllegalStateException("chunk " + claim.chunk() + " is already claimed");
@@ -193,7 +211,7 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
       throw new IllegalStateException("no claim by that town at " + claim.chunk());
     }
     claims
-        .computeIfAbsent(claim.chunk().world(), world -> new HashMap<>())
+        .computeIfAbsent(claim.chunk().world(), world -> new Long2ObjectOpenHashMap<>())
         .put(claim.chunk().key(), new Land.TownLand(claim));
   }
 

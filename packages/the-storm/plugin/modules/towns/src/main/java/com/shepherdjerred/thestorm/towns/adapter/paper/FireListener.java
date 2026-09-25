@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
+import com.shepherdjerred.thestorm.towns.domain.protection.Actor;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import java.util.List;
@@ -89,7 +90,8 @@ final class FireListener implements Listener {
     var player = guard.culprit(entity);
     if (entity instanceof AbstractWindCharge && player.isPresent()) {
       // A player's wind charge only toggles doors, buttons and levers: each is their own use.
-      event.blockList().removeIf(block -> !mayTrigger(player.get(), block));
+      var actor = player.get().actor();
+      event.blockList().removeIf(block -> !mayTrigger(actor, block));
       return;
     }
     filter(event.blockList(), from, player);
@@ -105,15 +107,17 @@ final class FireListener implements Listener {
    * explosions, and, for an explosion a player caused, where that player may build.
    */
   private void filter(List<Block> blocks, Land from, Optional<Culprit> player) {
+    // One actor for the whole blast: its bypass check is a permission lookup.
+    var actor = player.map(Culprit::actor).orElse(null);
     blocks.removeIf(
         block -> {
           var land = guard.land(block);
           return !Guard.flows(WorldEffect.EXPLOSION, from, land)
-              || player.filter(culprit -> !guard.permitsQuietly(culprit, BUILD, land)).isPresent();
+              || (actor != null && !guard.permitsQuietly(actor, BUILD, land));
         });
   }
 
-  private boolean mayTrigger(Culprit player, Block block) {
+  private boolean mayTrigger(Actor player, Block block) {
     var act = kinds.use(block.getType()).orElse(TRIGGER);
     return guard.permitsQuietly(player, act, guard.land(block));
   }

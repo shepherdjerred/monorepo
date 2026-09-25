@@ -27,7 +27,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 
@@ -151,9 +154,8 @@ final class TownCommands {
         player,
         towns.found(player.getUniqueId(), name),
         town ->
-            player.sendMessage(
-                Notices.success(
-                    "Founded " + town.name() + ". Stand in a chunk and type /claim to claim it.")));
+            Notices.success(
+                "Founded " + town.name() + ". Stand in a chunk and type /claim to claim it."));
   }
 
   private void disband(Player player, String confirmation) {
@@ -162,13 +164,8 @@ final class TownCommands {
         player,
         towns.disband(player.getUniqueId(), confirmation),
         town ->
-            player.sendMessage(
-                Notices.success(
-                    "Deleted "
-                        + town.name()
-                        + " and released its "
-                        + claims.orElse(0)
-                        + " chunk(s).")));
+            Notices.success(
+                "Deleted " + town.name() + " and released its " + claims.orElse(0) + " chunk(s)."));
   }
 
   private void claimHere(Player player) {
@@ -177,15 +174,8 @@ final class TownCommands {
         player,
         towns.claim(player.getUniqueId(), chunk),
         claim ->
-            player.sendMessage(
-                Notices.success(
-                    "Claimed chunk "
-                        + chunk.x()
-                        + ", "
-                        + chunk.z()
-                        + " for "
-                        + nameOf(claim)
-                        + ".")));
+            Notices.success(
+                "Claimed chunk " + chunk.x() + ", " + chunk.z() + " for " + nameOf(claim) + "."));
   }
 
   private void unclaimHere(Player player) {
@@ -193,9 +183,7 @@ final class TownCommands {
     onClaim(
         player,
         towns.unclaim(player.getUniqueId(), chunk),
-        claim ->
-            player.sendMessage(
-                Notices.success("Released chunk " + chunk.x() + ", " + chunk.z() + ".")));
+        claim -> Notices.success("Released chunk " + chunk.x() + ", " + chunk.z() + "."));
   }
 
   private void setFlag(Player player, String flagName, boolean on) {
@@ -218,14 +206,13 @@ final class TownCommands {
         player,
         towns.setFlag(player.getUniqueId(), chunkOf(player), flag.get(), on),
         claim ->
-            player.sendMessage(
-                Notices.success(
-                    Explanations.flagName(flag.get())
-                        + " is now "
-                        + (on ? "on" : "off")
-                        + " here. "
-                        + Explanations.describe(claim.flags())
-                        + ".")));
+            Notices.success(
+                Explanations.flagName(flag.get())
+                    + " is now "
+                    + (on ? "on" : "off")
+                    + " here. "
+                    + Explanations.describe(claim.flags())
+                    + "."));
   }
 
   private void describeHere(Player player) {
@@ -257,8 +244,12 @@ final class TownCommands {
     return townName(claim.townId());
   }
 
+  /** A town's name, looked up while handling a command, when every claim's town exists. */
   private String townName(UUID townId) {
-    return state.town(townId).map(Town::name).orElseThrow();
+    return state
+        .town(townId)
+        .map(Town::name)
+        .orElseThrow(() -> new IllegalStateException("no town " + townId + " holds a claim"));
   }
 
   private static ChunkPos chunkOf(Player player) {
@@ -267,11 +258,17 @@ final class TownCommands {
         Guard.world(location).getName(), location.getBlockX(), location.getBlockZ());
   }
 
+  /**
+   * Reports a town change: problems at once; success once saved. The success message is built now,
+   * while every town it names certainly exists, and only sent later.
+   */
   private void onTown(
-      Player player, Result<Change<Town>, List<TownProblem>> result, Consumer<Town> onSaved) {
+      Player player,
+      Result<Change<Town>, List<TownProblem>> result,
+      Function<Town, Component> message) {
     switch (result) {
       case Result.Ok<Change<Town>, List<TownProblem>>(var change) ->
-          whenSaved(player, change, onSaved);
+          whenSaved(player, change.saved(), message.apply(change.value()));
       case Result.Err<Change<Town>, List<TownProblem>>(var problems) ->
           problems.forEach(
               problem -> player.sendMessage(Notices.error(Explanations.explain(problem))));
@@ -279,10 +276,12 @@ final class TownCommands {
   }
 
   private void onClaim(
-      Player player, Result<Change<Claim>, List<ClaimProblem>> result, Consumer<Claim> onSaved) {
+      Player player,
+      Result<Change<Claim>, List<ClaimProblem>> result,
+      Function<Claim, Component> message) {
     switch (result) {
       case Result.Ok<Change<Claim>, List<ClaimProblem>>(var change) ->
-          whenSaved(player, change, onSaved);
+          whenSaved(player, change.saved(), message.apply(change.value()));
       case Result.Err<Change<Claim>, List<ClaimProblem>>(var problems) ->
           problems.forEach(
               problem ->
@@ -290,21 +289,19 @@ final class TownCommands {
     }
   }
 
-  private <T> void whenSaved(Player player, Change<T> change, Consumer<T> onSaved) {
+  private void whenSaved(Player player, CompletableFuture<Void> saved, Component success) {
     var _ =
-        change
-            .saved()
-            .whenCompleteAsync(
-                (ok, failure) -> {
-                  if (failure != null) {
-                    runtime.logger().error("Saving a towns change failed; it was undone", failure);
-                    player.sendMessage(
-                        Notices.error("That could not be saved, so it was undone. Try again."));
-                    return;
-                  }
-                  onSaved.accept(change.value());
-                },
-                runtime.scheduler().mainThread());
+        saved.whenCompleteAsync(
+            (ok, failure) -> {
+              if (failure != null) {
+                runtime.logger().error("Saving a towns change failed; it was undone", failure);
+                player.sendMessage(
+                    Notices.error("That could not be saved, so it was undone. Try again."));
+                return;
+              }
+              player.sendMessage(success);
+            },
+            runtime.scheduler().mainThread());
   }
 
   private static int asPlayer(CommandContext<CommandSourceStack> context, Consumer<Player> action) {

@@ -61,9 +61,9 @@ public final class Fixtures {
   /** Trust as town membership gives it, for towns A and B. */
   public static TrustLookup trust() {
     var towns = List.of(townA(), townB());
-    return (player, townId) ->
+    return (player, claim, act) ->
         towns.stream()
-            .filter(town -> town.id().equals(townId))
+            .filter(town -> town.id().equals(claim.townId()))
             .findFirst()
             .orElseThrow()
             .roleOf(player)
