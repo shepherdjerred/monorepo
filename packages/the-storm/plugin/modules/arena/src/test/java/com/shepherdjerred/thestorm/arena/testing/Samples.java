@@ -126,6 +126,11 @@ public final class Samples {
   }
 
   public static Setup setup(int minPlayers, WaveTable table) {
+    return setup(minPlayers, table, FLAT);
+  }
+
+  /** {@link #setup(int, WaveTable)} on {@code tier}. */
+  public static Setup setup(int minPlayers, WaveTable table, Tier tier) {
     return new Setup(
         "test",
         "Test Arena",
@@ -135,7 +140,7 @@ public final class Samples {
         Duration.ofSeconds(10),
         timing(),
         table,
-        FLAT,
+        tier,
         NO_SCALING,
         rewards(),
         Map.of("knight", "Knight", "archer", "Archer"));
