@@ -1,15 +1,17 @@
 ---
-title: Route a service to Braintrust
-description: Add a service's LLM traces to a Braintrust project through the alloy-gateway allowlist, and verify the result.
+title: Route a service to Phoenix
+description: Add a service's LLM traces to a Phoenix project through the alloy-gateway allowlist, and verify the result.
 ---
 
-Braintrust receives only whole LLM traces that an explicit gateway allowlist
+Phoenix receives only whole LLM traces that an explicit gateway allowlist
 branch claims; this page adds a service to one.
 
 1. Pick the destination project. Reuse an existing branch when the service
    belongs to one (`misc` collects small tools). A new project needs a new
-   entry in `BRAINTRUST_BRANCHES` in
-   [`alloy-gateway.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts).
+   entry in `PHOENIX_BRANCHES` in
+   [`alloy-gateway.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts),
+   and a matching name in
+   [`alloy-gateway.test.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alloy-gateway.test.ts).
 2. Write the branch's `drop` conditions as the negation of "belongs to this
    project", matched on `resource.attributes["service.name"]`. Equality
    comparisons handle a nil service name safely.
@@ -23,24 +25,28 @@ branch claims; this page adds a service to one.
    with a complete endpoint — it needs `OTLP_GATEWAY_TRACES_URL`. Its egress
    NetworkPolicy (if any) selects the `alloy-gateway` namespace on port 4318
    instead of `tempo`.
-4. Validate the rendered River config with the pinned Alloy binary before
-   merging — CI does not parse River:
+4. Validate the rendered River config with the Alloy binary that matches the
+   pinned chart's `appVersion` before merging — CI does not parse River:
 
    ```bash
    cd packages/homelab/src/cdk8s
+   helm show chart alloy --repo https://grafana.github.io/helm-charts \
+     --version "$(jq -r '.entries[] | select(.name=="alloy") | .value' ../../../version-catalog/src/catalog.json)" | grep appVersion
    bun -e 'import { ALLOY_GATEWAY_CONFIG } from "./src/resources/argo-applications/observability/alloy-gateway.ts";
    await Bun.write("/tmp/config.alloy", ALLOY_GATEWAY_CONFIG);'
-   docker run --rm -e BRAINTRUST_API_KEY=dummy -v /tmp:/cfg grafana/alloy:v1.18.1 validate /cfg/config.alloy
+   docker run --rm -e PHOENIX_API_KEY=dummy -v /tmp:/cfg grafana/alloy:<appVersion> validate /cfg/config.alloy
    ```
 
-5. Check the byte budget before adding a heavy producer. Estimate with the
-   service's `llm_tokens_total` rate and compare against the Braintrust plan's
-   monthly ingest allowance on its usage page.
+5. Check the producer's volume before adding a heavy one. Estimate with its
+   `llm_tokens_total` rate. Phoenix blocks inserts once its database passes
+   the budget set in
+   [`phoenix/index.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/phoenix/index.ts),
+   and that stops every project, not just the new one.
 6. Merge; the main pipeline releases it. Then verify: the service's traces
    still land in Tempo, `otelcol_exporter_sent_spans_total` for the new
-   `bt_<project>` exporter increases after LLM activity while
+   `px_<project>` exporter increases after LLM activity while
    `otelcol_exporter_send_failed_spans_total` stays absent, and the project
-   shows the whole trace with a root span.
+   shows the whole trace with its root span at `https://phoenix.tailnet-1a49.ts.net`.
 
 :::caution
 Project names are exact-match and created implicitly on first write — a typo
@@ -49,10 +55,10 @@ service name and `error_mode=ignore` then skips only that condition, leaking
 spans into the project; keep a `service.name == nil` drop guard listed first.
 :::
 
-If a branch overruns the byte budget, remove it from the
-`tail_sampling.output` list — the config reloader applies that without
-recreating the pod. Never add a catch-all branch; unlisted services staying
-out of Braintrust is the exclusion mechanism.
+If a branch floods Phoenix, remove it from the `tail_sampling.output` list —
+the config reloader applies that without recreating the pod. Never add a
+catch-all branch; unlisted services staying out of Phoenix is the exclusion
+mechanism.
 
 ## Related
 

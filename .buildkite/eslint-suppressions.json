@@ -4,11 +4,6 @@
       "count": 4
     }
   },
-  ".buildkite/scripts/images/update-ci-image-pin.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   ".buildkite/scripts/reporting/annotate-image-summary.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

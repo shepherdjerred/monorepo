@@ -56,6 +56,9 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
+  packages/config \
+  packages/ops-model \
+  packages/ops-clients \
   ./
 # Home Assistant is published with a dist-based export. Build it in the
 # artifact stage so the runtime image does not resolve the workspace link to a
@@ -424,6 +427,8 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/temporal \
   packages/seaweedfs-backup \
+  packages/ops-model \
+  packages/ops-clients \
   ./
 
 # Built artifacts from the build stage.

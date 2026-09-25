@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:541efcdc9d708b328bcbeb874d22fedb702412304fef79440260a7c66fbe587e",
+      "value": "2.0.0-17169@sha256:09bfc210b62fcdaf61759b274071033b276f2c0afa73096ab46832614333e6b1",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -667,7 +667,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:31e5f992f5c33a63726e1032feefd36f10991de351df0b1bdb56108181a01d4f",
+      "value": "2.0.0-17172@sha256:895e3573d265c4e4deddac0f58e4d2bc8a9273693d20761b474617fa64f5b1f9",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -681,7 +681,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-16677@sha256:8abb031de6cf4ab2c3e2ce79edc449856507edecf9ff00f52c4c0ae37bc2586c",
+      "value": "2.0.0-17149@sha256:31e5f992f5c33a63726e1032feefd36f10991de351df0b1bdb56108181a01d4f",
       "notes": [
         "Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -751,7 +751,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:8ab2255c7febbbb8eb8438553e10fd88ab36440f558b6af2574970e178bfa8cf",
+      "value": "2.0.0-17169@sha256:a83c5e770eefc8e5e15181a1918b20a5f27e3e7ed460b2a7c36745fbdc454da0",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -774,7 +774,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:2de0be9722bc6ef4cc4748a0c9173fe4e6e732d4b7746934d92a6b5ce44e0211",
+      "value": "2.0.0-17169@sha256:74b41a02cd3e984f7aa1b6dde3198a8489b893942af6c38dffdc716c09407b78",
       "notes": ["not managed by renovate"]
     },
     {
@@ -784,7 +784,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:84b7ef35dff0c637e17b0412cdf272de2685e30ad74801577745a5bb4788ef4f",
+      "value": "2.0.0-17169@sha256:1a58583afec8965ada2a282990cbac60d472dff14adf7f6b5ec459e9748a7fc5",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -797,7 +797,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:26203e35f579c7dbe6d7ac4dc3c1ecea6a2b50f8018675d11e6c7cae517c271c",
+      "value": "2.0.0-17169@sha256:285665cb5cf522f7b37380e46c0770463e4271362d851508ec1467300cf84d6b",
       "notes": [
         "not managed by renovate — pre-first-publish placeholder. The main image",
         "release injects the built digest into chart synthesis and version",
@@ -811,7 +811,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:73e4e2c896aa671ac31d28c9ca81516715ac1e79bbdd812976f00f16d140b929",
+      "value": "2.0.0-17169@sha256:2bacdcbb5d08cb5ba4ac3c26441c64c0c429c1b744b353fe72037de8d29e3f5e",
       "notes": ["not managed by renovate"]
     },
     {
@@ -821,7 +821,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:8d67a58941f0d45edf6ae64b68a82fdcc9605e363b4c8cb5312fd8598352ea48",
+      "value": "2.0.0-17169@sha256:d75e196df0670da0db8bf74c758c61fae3d07015db48148bf9f8bef9ad753253",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
@@ -1384,7 +1384,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:bd77b0bde95eb0412aea6f85469f6bad5d0f4c6b5738850ca1b9b41a71bf1f2d",
+      "value": "2.0.0-17169@sha256:b10def993d374615f7322b120509df4bd932c39c58e43c5056211fe464a68a02",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1413,7 +1413,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.31.2@sha256:b5ecdb8282bededae2a10c36e8d862e27d0bc2d247fc73c5416025997ab4a1da"
+      "value": "1.32.0@sha256:c3e752127759616bb1615e0f9ba0e21635aeb5fdeb922de4f371c350955f46ae"
     },
     {
       "name": "temporalio/ui",
@@ -1437,7 +1437,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.31.2@sha256:dbc5fcd6ee8f0f4d808bf765af9a87dea9d8a283abfdcfbd2fc148496ba66107"
+      "value": "1.32.0@sha256:a9f84fb9a374b2374fe2e67c8efc0468ff3f1c66c8a0b14597ec86e349e62bca"
     },
     {
       "name": "shepherdjerred/temporal-worker",
@@ -1446,7 +1446,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:a3a8eb7bb20be9366fe534bfb518be5a23158eab75c7fd84b544d7e353de8b13",
+      "value": "2.0.0-17174@sha256:fa84f8983c8a16e3006174881809ff195ce1f5b3e48774a2c1ae8f409adb6dcd",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1485,7 +1485,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17149@sha256:469faf938581f1bbc6df279412d1677ada0e4c57e2ad1b06498bac383bbd15d8",
+      "value": "2.0.0-17169@sha256:9ff2506910c55e77e0c925277d7a8c8e1edd0ced58542df89fb66a68f7be40b6",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"

@@ -25,12 +25,20 @@ import {
   ScoutClientObservationConflict,
   startAcceptedClientMatches,
 } from "./ingress.ts";
-import { ReplayUploadError, uploadReplay } from "./replay-upload.ts";
+import {
+  MAX_REPLAY_BYTES,
+  ReplayUploadError,
+  uploadReplay,
+} from "./replay-upload.ts";
+import { drainRequestBody } from "./replay/drain.ts";
+import { ReplayOfferRequestSchema, decideReplayOffer } from "./replay/offer.ts";
 
 const API_PREFIX = "/api/scout-client/v1";
 const EXCHANGE_PATH =
   /^\/api\/scout-client\/v1\/pairings\/([0-9a-f-]{36})\/exchange$/;
 const REPLAY_PATH = /^\/api\/scout-client\/v1\/replays\/(\d{1,32})$/;
+const REPLAY_OFFER_PATH =
+  /^\/api\/scout-client\/v1\/replays\/(\d{1,32})\/offer$/;
 const SELF_REVOKE_PATH = `${API_PREFIX}/devices/current/revoke`;
 const BodyChunkSchema = z.instanceof(Uint8Array);
 
@@ -131,6 +139,46 @@ async function handlePairingRoute(
   return jsonResponse(result, result.status === "consumed" ? 409 : 200);
 }
 
+async function handleCheckIn(
+  request: Request,
+  device: AuthenticatedScoutClient,
+): Promise<Response> {
+  const input = ScoutClientCheckInSchema.safeParse(await boundedJson(request));
+  if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
+  const checkedInAt = new Date();
+  const checkIn = await prisma.$transaction([
+    prisma.scoutClientDevice.update({
+      where: { id: device.deviceId },
+      data: { appVersion: input.data.appVersion, lastSeenAt: checkedInAt },
+    }),
+    prisma.scoutClientDeviceVersion.upsert({
+      where: {
+        deviceId_appVersion: {
+          deviceId: device.deviceId,
+          appVersion: input.data.appVersion,
+        },
+      },
+      create: {
+        deviceId: device.deviceId,
+        appVersion: input.data.appVersion,
+        lastSeenAt: checkedInAt,
+      },
+      update: { lastSeenAt: checkedInAt },
+    }),
+    prisma.scoutClientObservation.aggregate({
+      where: { deviceId: device.deviceId },
+      _max: { sequence: true },
+    }),
+  ]);
+  const sequence = checkIn[2];
+  return jsonResponse(
+    ScoutClientCheckInResponseSchema.parse({
+      accepted: true,
+      nextSequence: nextScoutClientObservationSequence(sequence._max.sequence),
+    }),
+  );
+}
+
 async function handleAuthenticatedRoute(
   request: Request,
   pathname: string,
@@ -144,45 +192,20 @@ async function handleAuthenticatedRoute(
     return jsonResponse(replay, replay.outcome === "accepted" ? 201 : 200);
   }
 
-  if (pathname === `${API_PREFIX}/check-ins`) {
-    const input = ScoutClientCheckInSchema.safeParse(
+  const offerMatch = REPLAY_OFFER_PATH.exec(pathname);
+  if (offerMatch !== null) {
+    const gameId = offerMatch[1];
+    if (gameId === undefined) return jsonResponse({ error: "not_found" }, 404);
+    const offer = ReplayOfferRequestSchema.safeParse(
       await boundedJson(request),
     );
-    if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
-    const checkedInAt = new Date();
-    const checkIn = await prisma.$transaction([
-      prisma.scoutClientDevice.update({
-        where: { id: device.deviceId },
-        data: { appVersion: input.data.appVersion, lastSeenAt: checkedInAt },
-      }),
-      prisma.scoutClientDeviceVersion.upsert({
-        where: {
-          deviceId_appVersion: {
-            deviceId: device.deviceId,
-            appVersion: input.data.appVersion,
-          },
-        },
-        create: {
-          deviceId: device.deviceId,
-          appVersion: input.data.appVersion,
-          lastSeenAt: checkedInAt,
-        },
-        update: { lastSeenAt: checkedInAt },
-      }),
-      prisma.scoutClientObservation.aggregate({
-        where: { deviceId: device.deviceId },
-        _max: { sequence: true },
-      }),
-    ]);
-    const sequence = checkIn[2];
-    return jsonResponse(
-      ScoutClientCheckInResponseSchema.parse({
-        accepted: true,
-        nextSequence: nextScoutClientObservationSequence(
-          sequence._max.sequence,
-        ),
-      }),
-    );
+    return offer.success
+      ? jsonResponse(await decideReplayOffer(gameId, offer.data, device))
+      : jsonResponse({ error: "invalid_request" }, 400);
+  }
+
+  if (pathname === `${API_PREFIX}/check-ins`) {
+    return await handleCheckIn(request, device);
   }
 
   if (pathname === SELF_REVOKE_PATH) {
@@ -229,14 +252,19 @@ export async function handleScoutClientRoute(
       request,
       url.pathname !== SELF_REVOKE_PATH,
     );
-    return device === null
-      ? jsonResponse({ error: "unauthorized" }, 401)
-      : await handleAuthenticatedRoute(
-          request,
-          url.pathname,
-          replayMatch,
-          device,
-        );
+    if (device === null) {
+      // An unauthorized replay PUT is refused before a body byte is read, and
+      // closing under an in-flight upload is what the proxy turns into a 502.
+      if (replayMatch !== null)
+        await drainRequestBody(request, MAX_REPLAY_BYTES);
+      return jsonResponse({ error: "unauthorized" }, 401);
+    }
+    return await handleAuthenticatedRoute(
+      request,
+      url.pathname,
+      replayMatch,
+      device,
+    );
   } catch (error) {
     if (error instanceof ScoutClientRequestError) {
       return new Response(error.message, { status: error.status });

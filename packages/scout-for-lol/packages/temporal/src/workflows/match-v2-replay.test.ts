@@ -15,6 +15,7 @@ import {
   scoutPostMatchDiscoveryV2Workflow,
 } from "./index.ts";
 import { SCOUT_V2_MATCH_MINT_INTENTS_PATCH } from "./match-v2.ts";
+import { SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH } from "./postmatch-ownership-v2.ts";
 import {
   createScoutV2MatchStore,
   scoutV2MatchActivityStubs,
@@ -145,7 +146,11 @@ function historyAsPreChangeGeneration(history: History): {
   return { history, scans, childStarts, maintenance };
 }
 
-test("a discovery recorded before the page carried matches still replays", async () => {
+/**
+ * Run one discovery of a single live match to completion and return its
+ * recorded history, which each replay case below then rewrites.
+ */
+async function recordOneMatchDiscovery(workflowId: string): Promise<History> {
   const store = createScoutV2MatchStore();
   await harness.startWorkers({
     ...scoutV2MatchActivityStubs(store),
@@ -167,7 +172,7 @@ test("a discovery recorded before the page carried matches still replays", async
     .client()
     .workflow.start(scoutPostMatchDiscoveryV2Workflow, {
       taskQueue: "scout-dev",
-      workflowId: "discovery-pre-matches-history",
+      workflowId: workflowId,
       args: [
         scoutPostMatchDiscoveryV2InputCodec.serialize({
           stage,
@@ -176,8 +181,15 @@ test("a discovery recorded before the page carried matches still replays", async
       ],
     });
   await handle.result();
+  return await handle.fetchHistory();
+}
 
-  const rewritten = historyAsPreChangeGeneration(await handle.fetchHistory());
+test("a discovery recorded before the page carried matches still replays", async () => {
+  const history = await recordOneMatchDiscovery(
+    "discovery-pre-matches-history",
+  );
+
+  const rewritten = historyAsPreChangeGeneration(history);
 
   // A fixture that matched nothing would pass for the wrong reason.
   expect(rewritten.scans).toBe(1);
@@ -194,39 +206,53 @@ test("a discovery recorded before the page carried matches still replays", async
 // ─── A per-match run whose history predates the mint ───────────────────────
 
 /**
- * The events the mint generation added: the marker `patched` wrote and the
- * mint's own schedule.
- *
- * The marker is matched by the SDK's own marker name rather than by decoding
- * its details, and the caller asserts that exactly one such marker exists —
- * so if a second patch is ever added to this Workflow, this fixture fails
- * loudly instead of quietly stripping the wrong one.
+ * One patch-gated Activity: the patch id `patched` records and the Activity
+ * the gated block schedules.
  */
-function isMintEvent(event: Event): boolean {
+type PatchedActivity = {
+  readonly patchId: string;
+  readonly activityType: string;
+};
+
+const MINT: PatchedActivity = {
+  patchId: SCOUT_V2_MATCH_MINT_INTENTS_PATCH,
+  activityType: "mintPostmatchNotificationIntentsV2",
+};
+
+const OWNERSHIP: PatchedActivity = {
+  patchId: SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH,
+  activityType: "resolvePostMatchDiscoveryOwnerV2",
+};
+
+/**
+ * The events a patch generation added: the marker `patched` wrote and the
+ * gated Activity's own schedule.
+ *
+ * The marker is matched by the SDK's own marker name and its patch id, and
+ * the caller asserts that exactly one such marker exists, so a fixture that
+ * matched the wrong marker fails loudly instead of quietly stripping it.
+ */
+function isGatedEvent(event: Event, gate: PatchedActivity): boolean {
   const scheduled =
     event.activityTaskScheduledEventAttributes?.activityType?.name;
-  return (
-    scheduled === "mintPostmatchNotificationIntentsV2" || namesThisPatch(event)
-  );
+  return scheduled === gate.activityType || namesPatch(event, gate.patchId);
 }
 
 /**
- * Whether this event is the marker for THIS patch.
+ * Whether this event is the marker for the named patch.
  *
  * Matching on the marker name alone is not enough: the Workflow UI
  * interceptor records a patch of its own, so a history carries two, and
  * stripping the wrong one would leave the gate reading true while the mint's
  * events were gone. The id is read from the marker's own payload bytes.
  */
-function namesThisPatch(event: Event): boolean {
+function namesPatch(event: Event, patchId: string): boolean {
   const marker = event.markerRecordedEventAttributes;
   if (marker?.markerName !== PATCH_MARKER) return false;
   const decoder = new TextDecoder();
   return Object.values(marker.details ?? {}).some((payloads) =>
     (payloads.payloads ?? []).some((payload) =>
-      decoder
-        .decode(payload.data ?? new Uint8Array())
-        .includes(SCOUT_V2_MATCH_MINT_INTENTS_PATCH),
+      decoder.decode(payload.data ?? new Uint8Array()).includes(patchId),
     ),
   );
 }
@@ -234,33 +260,35 @@ function namesThisPatch(event: Event): boolean {
 /** The marker name the TypeScript SDK records `patched` calls under. */
 const PATCH_MARKER = "core_patch";
 
-function historyWithoutTheMint(history: History): History {
+function historyWithoutPatchedActivity(
+  history: History,
+  gate: PatchedActivity,
+): History {
   const events = history.events ?? [];
   const mintScheduledIds = new Set(
     events
       .filter(
         (event) =>
           event.activityTaskScheduledEventAttributes?.activityType?.name ===
-          "mintPostmatchNotificationIntentsV2",
+          gate.activityType,
       )
       .map((event) => Number(event.eventId)),
   );
-  // The gated block emits three commands in one Workflow task, in this order:
-  // the patch marker, the phase upsert `setWorkflowPhase` makes, and the mint
-  // itself. A generation without the mint emitted none of them, so the upsert
-  // between the marker and the schedule goes too — leaving it behind makes
-  // replay fail on an event the pre-change code never produced.
+  // A patch marker is followed directly by the search-attribute upsert the
+  // SDK records with it. A generation without the patch emitted neither, so
+  // that upsert goes too. Only that one: another patch's marker and upsert
+  // can sit between this marker and the gated schedule (the UI interceptor's
+  // does when the gate is a Workflow's first command), and the older
+  // generation recorded those.
   const markerId = Number(
-    events.find((event) => namesThisPatch(event))?.eventId ?? 0,
+    events.find((event) => namesPatch(event, gate.patchId))?.eventId ?? 0,
   );
-  const mintScheduledId = Math.min(...mintScheduledIds);
-  const isGatedPhaseUpsert = (event: Event): boolean =>
+  const isGatedPatchUpsert = (event: Event): boolean =>
     event.upsertWorkflowSearchAttributesEventAttributes != null &&
-    Number(event.eventId) > markerId &&
-    Number(event.eventId) < mintScheduledId;
+    Number(event.eventId) === markerId + 1;
   const dropped = events.filter((event) => {
-    if (isGatedPhaseUpsert(event)) return true;
-    if (isMintEvent(event)) return true;
+    if (isGatedPatchUpsert(event)) return true;
+    if (isGatedEvent(event, gate)) return true;
     const started = event.activityTaskStartedEventAttributes?.scheduledEventId;
     const completed =
       event.activityTaskCompletedEventAttributes?.scheduledEventId;
@@ -338,13 +366,13 @@ test("a history recorded before the mint existed still replays", async () => {
   await handle.result();
 
   const recorded = await handle.fetchHistory();
-  const preChange = historyWithoutTheMint(recorded);
+  const preChange = historyWithoutPatchedActivity(recorded, MINT);
 
   // The fixture is only a pre-change history if it lost BOTH the marker and
   // the mint's three events; a strip that silently matched neither would make
   // this test pass for the wrong reason.
   expect(
-    (recorded.events ?? []).filter((event) => namesThisPatch(event)),
+    (recorded.events ?? []).filter((event) => namesPatch(event, MINT.patchId)),
   ).toHaveLength(1);
   expect(
     (recorded.events ?? []).filter(
@@ -360,6 +388,41 @@ test("a history recorded before the mint existed still replays", async () => {
   );
   // And the patch it recorded is the one this gate names.
   expect(SCOUT_V2_MATCH_MINT_INTENTS_PATCH).toBe("scout-v2-match-mint-intents");
+
+  await Worker.runReplayHistory(
+    { workflowsPath: new URL("index.ts", import.meta.url).pathname },
+    preChange,
+  );
+}, 120_000);
+
+// ─── A discovery whose history predates the ownership gate ─────────────────
+
+test("a discovery recorded before the ownership gate still replays", async () => {
+  const recorded = await recordOneMatchDiscovery(
+    "discovery-pre-ownership-history",
+  );
+  const preChange = historyWithoutPatchedActivity(recorded, OWNERSHIP);
+  const ownershipReads = (history: History): number =>
+    (history.events ?? []).filter(
+      (event) =>
+        event.activityTaskScheduledEventAttributes?.activityType?.name ===
+        OWNERSHIP.activityType,
+    ).length;
+  const ownershipMarkers = (history: History): number =>
+    (history.events ?? []).filter((event) =>
+      namesPatch(event, OWNERSHIP.patchId),
+    ).length;
+
+  // The gate recorded exactly one marker and one ownership read, and the
+  // fixture removed both; a strip that matched neither would pass for the
+  // wrong reason.
+  expect(ownershipMarkers(recorded)).toBe(1);
+  expect(ownershipReads(recorded)).toBe(1);
+  expect(ownershipMarkers(preChange)).toBe(0);
+  expect(ownershipReads(preChange)).toBe(0);
+  expect(SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH).toBe(
+    "scout-v2-postmatch-ownership",
+  );
 
   await Worker.runReplayHistory(
     { workflowsPath: new URL("index.ts", import.meta.url).pathname },

@@ -43,9 +43,9 @@ both appear.
 ## Deploy one server version
 
 Confirm the pull request pins `temporalio/server` and
-`temporalio/admin-tools` to the same release. The first migration is 1.30.6.
-The 1.31.2 change is a separate future release and must not merge until the
-1.30.6 acceptance below is recorded.
+`temporalio/admin-tools` to the same release, and that it moves the server by
+exactly one release from the version currently running. Do not merge it until
+the running release has recorded runtime acceptance.
 
 Argo runs two ordered gates before touching the server Deployment:
 
@@ -141,10 +141,10 @@ TLS gate.
 
 ## Advance to the next release
 
-Prepare 1.31.2 only after 1.30.6 has passed runtime acceptance. Update the
-server and admin-tools pins together, obtain another current successful Velero
-backup, and repeat the complete procedure. Never stack the unverified second
-upgrade on the first release branch.
+Prepare the next release only after the current one has passed runtime
+acceptance. Update the server and admin-tools pins together, obtain another
+current successful Velero backup, and repeat the complete procedure. Never
+stack an unverified second upgrade on the first release branch.
 
 ## Related
 

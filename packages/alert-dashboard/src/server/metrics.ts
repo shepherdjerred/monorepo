@@ -2,7 +2,11 @@ type MetricName =
   | "alert_dashboard_webhook_total"
   | "alert_dashboard_reconciliation_total"
   | "alert_dashboard_preview_failure_total"
-  | "alert_dashboard_email_attempt_total";
+  | "alert_dashboard_email_attempt_total"
+  | "alert_dashboard_ops_ingest_total"
+  | "alert_dashboard_ops_digest_total"
+  | "feature_flag_evaluations_total"
+  | "feature_flag_errors_total";
 
 type GaugeName =
   | "alert_dashboard_email_enabled"
@@ -11,7 +15,10 @@ type GaugeName =
   | "alert_dashboard_oldest_pending_email_timestamp_seconds"
   | "alert_dashboard_last_reconciliation_timestamp_seconds"
   | "alert_dashboard_reconciliation_drift"
-  | "alert_dashboard_open_alerts";
+  | "alert_dashboard_open_alerts"
+  | "alert_dashboard_ops_last_ingest_timestamp_seconds"
+  | "feature_flag_provider_ready"
+  | "feature_flag_snapshot_age_seconds";
 
 function metricKey(
   name: string,

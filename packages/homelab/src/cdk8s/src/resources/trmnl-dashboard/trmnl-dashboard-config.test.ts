@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
 
 async function synthesizeApp(): Promise<string> {
   const app = new App({ outdir: ".test-synth" });
@@ -9,13 +10,17 @@ async function synthesizeApp(): Promise<string> {
 }
 
 describe("trmnl-dashboard configuration", () => {
-  it("points Bugsink traffic at the internal service", async () => {
-    const yaml = await synthesizeApp();
+  it("renders the homelab screen from the ops dashboard service", () => {
+    const app = new App({ outdir: ".test-synth-trmnl-dashboard" });
+    createTrmnlDashboardChart(app);
+    const yaml = app.synthYaml();
 
-    expect(yaml).toContain("name: BUGSINK_URL");
+    expect(yaml).toContain("name: OPS_DASHBOARD_URL");
     expect(yaml).toContain(
-      "value: http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
+      "value: http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
     );
+    expect(yaml).not.toContain("name: BUGSINK_TOKEN");
+    expect(yaml).not.toContain("name: trmnl-dashboard-reader");
   });
 
   it("allows Bugsink internal service hostnames", async () => {

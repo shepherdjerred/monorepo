@@ -7,6 +7,7 @@ import { createScoutChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts
 import { createStarlightKarmaBotChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/starlight-karma-bot.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
+import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
 import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkite.ts";
 
 const ManifestSchema = z
@@ -126,6 +127,15 @@ describe("Flipt consumer environments", () => {
       namespace: "trmnl-dashboard",
       count: 1,
       createChart: (app: App) => createTrmnlDashboardChart(app),
+    },
+    {
+      name: "Ops dashboard",
+      environment: "prod",
+      namespace: "alert-dashboard",
+      count: 1,
+      createChart: (app: App) => {
+        createAlertDashboardChart(app);
+      },
     },
     {
       name: "Temporal",

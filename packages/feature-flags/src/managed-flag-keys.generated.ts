@@ -9,6 +9,7 @@ export const MANAGED_NAMESPACES = [
   "starlight-karma-bot",
   "trmnl-dashboard",
   "temporal",
+  "alert-dashboard",
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
@@ -51,6 +52,7 @@ export const SCOUT_FLAG_KEYS = [
   "explore-guild-allowlist",
   "explore_creation_enabled",
   "scout_operations_console_enabled",
+  "scout_v2_postmatch_ownership_enabled",
   "llm-daily-token-budget",
   "llm-hourly-token-budget",
 ] as const;
@@ -87,6 +89,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout-temporal-call-graph-tracing",
   "explore_creation_enabled",
   "scout_operations_console_enabled",
+  "scout_v2_postmatch_ownership_enabled",
 ] as const;
 
 export type ScoutBooleanFlagKey = (typeof SCOUT_BOOLEAN_FLAG_KEYS)[number];
@@ -261,6 +264,22 @@ export const TEMPORAL_VARIANT_FLAG_KEYS = [] as const;
 export type TemporalVariantFlagKey =
   (typeof TEMPORAL_VARIANT_FLAG_KEYS)[number];
 
+export const ALERT_DASHBOARD_FLAG_KEYS = ["ops-digest-email-enabled"] as const;
+
+export type AlertDashboardFlagKey = (typeof ALERT_DASHBOARD_FLAG_KEYS)[number];
+
+export const ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS = [
+  "ops-digest-email-enabled",
+] as const;
+
+export type AlertDashboardBooleanFlagKey =
+  (typeof ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS)[number];
+
+export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [] as const;
+
+export type AlertDashboardVariantFlagKey =
+  (typeof ALERT_DASHBOARD_VARIANT_FLAG_KEYS)[number];
+
 export const MANAGED_FLAG_KEYS = [
   ...SCOUT_FLAG_KEYS,
   ...BIRMEL_FLAG_KEYS,
@@ -268,6 +287,7 @@ export const MANAGED_FLAG_KEYS = [
   ...STARLIGHT_KARMA_BOT_FLAG_KEYS,
   ...TRMNL_DASHBOARD_FLAG_KEYS,
   ...TEMPORAL_FLAG_KEYS,
+  ...ALERT_DASHBOARD_FLAG_KEYS,
 ] as const;
 
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
@@ -279,6 +299,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...STARLIGHT_KARMA_BOT_BOOLEAN_FLAG_KEYS,
   ...TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS,
   ...TEMPORAL_BOOLEAN_FLAG_KEYS,
+  ...ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS,
 ] as const;
 
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
@@ -290,6 +311,7 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   ...STARLIGHT_KARMA_BOT_VARIANT_FLAG_KEYS,
   ...TRMNL_DASHBOARD_VARIANT_FLAG_KEYS,
   ...TEMPORAL_VARIANT_FLAG_KEYS,
+  ...ALERT_DASHBOARD_VARIANT_FLAG_KEYS,
 ] as const;
 
 export type ManagedVariantFlagKey = (typeof MANAGED_VARIANT_FLAG_KEYS)[number];

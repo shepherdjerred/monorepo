@@ -247,6 +247,7 @@ describe("Flipt chart", () => {
             "starlight-karma-bot",
             "trmnl-dashboard",
             "temporal",
+            "alert-dashboard",
           ].map((namespace) => `${environment}.${namespace}.yaml`),
         )
         .toSorted(),

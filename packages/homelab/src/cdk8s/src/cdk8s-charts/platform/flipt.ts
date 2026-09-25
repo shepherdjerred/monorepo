@@ -27,6 +27,8 @@ const CONSUMER_NAMESPACES = [
   "birmel",
   "temporal",
   "trmnl-dashboard",
+  // The ops dashboard gates the digest email on `ops-digest-email-enabled`.
+  "alert-dashboard",
   // streambot is deployed inside the `media` chart, not its own namespace.
   "media",
   // The Buildkite maintenance worker runs the shared temporal-worker image

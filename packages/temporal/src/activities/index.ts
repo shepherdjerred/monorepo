@@ -46,6 +46,7 @@ import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
 import { openAiComplimentaryUsageActivities } from "./agent/openai-complimentary-usage.ts";
+import { opsActivities } from "./ops/ops-activities.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -74,6 +75,7 @@ export const infraActivities = {
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,
+  ...opsActivities,
 };
 
 export const repoActivities = {

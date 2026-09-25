@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-24T12:00:00.000Z",
+  "severity": "error",
+  "summary": "4 areas need attention (Alerts, Cluster & GitOps, Delivery, Sites & product) · 2 waiting on you",
+  "sources": [
+    {
+      "source": "alerts",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "kubernetes",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "argocd",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "talos",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "ci",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "github",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "renovate",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "linear",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "bugsink",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "posthog",
+      "ok": false,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T11:00:00.000Z",
+      "durationMs": 15000,
+      "error": "PostHog API timed out"
+    },
+    {
+      "source": "probes",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "logs",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "maintenance",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    },
+    {
+      "source": "ai",
+      "ok": true,
+      "observedAt": "2026-09-24T12:00:00.000Z",
+      "lastSuccessAt": "2026-09-24T12:00:00.000Z",
+      "durationMs": 120
+    }
+  ],
+  "sections": [
+    {
+      "id": "alerts",
+      "title": "Alerts",
+      "severity": "error",
+      "summary": "1 issue · 1 waiting on you",
+      "sources": ["alerts"],
+      "metrics": [
+        {
+          "id": "alerts.firing",
+          "label": "Firing alerts",
+          "value": 1,
+          "unit": "count",
+          "severity": "error",
+          "source": "alerts"
+        }
+      ],
+      "signals": [
+        {
+          "id": "alerts:KubePodCrashLooping:scout",
+          "source": "alerts",
+          "section": "alerts",
+          "service": "scout-for-lol",
+          "kind": "alert",
+          "severity": "error",
+          "needsMe": true,
+          "title": "KubePodCrashLooping",
+          "detail": "scout-beta pod restarting",
+          "since": "2026-09-24T10:00:00.000Z",
+          "attributes": {},
+          "links": [
+            {
+              "kind": "grafana",
+              "label": "Grafana",
+              "url": "https://grafana.tailnet-1a49.ts.net/d/pods"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform",
+      "title": "Cluster & GitOps",
+      "severity": "warning",
+      "summary": "1 issue",
+      "sources": ["kubernetes", "argocd", "talos"],
+      "metrics": [],
+      "signals": [
+        {
+          "id": "argocd:app:birmel",
+          "source": "argocd",
+          "section": "platform",
+          "service": "birmel",
+          "kind": "argo-app",
+          "severity": "warning",
+          "needsMe": false,
+          "title": "birmel OutOfSync",
+          "since": "2026-09-24T11:30:00.000Z",
+          "attributes": {},
+          "links": [
+            {
+              "kind": "argocd",
+              "label": "Argo CD",
+              "url": "https://argocd.tailnet-1a49.ts.net/applications/birmel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "title": "Delivery",
+      "severity": "warning",
+      "summary": "1 issue · 1 waiting on you",
+      "sources": ["ci", "github", "renovate"],
+      "metrics": [],
+      "signals": [
+        {
+          "id": "github:pr:3070",
+          "source": "github",
+          "section": "delivery",
+          "kind": "pull-request",
+          "severity": "warning",
+          "needsMe": true,
+          "title": "PR #3070 awaiting your review",
+          "since": "2026-09-20T09:00:00.000Z",
+          "attributes": {},
+          "links": [
+            {
+              "kind": "github",
+              "label": "PR #3070",
+              "url": "https://github.com/shepherdjerred/monorepo/pull/3070"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "title": "Work",
+      "severity": "ok",
+      "summary": "All clear",
+      "sources": ["linear"],
+      "metrics": [],
+      "signals": []
+    },
+    {
+      "id": "errors",
+      "title": "Errors",
+      "severity": "ok",
+      "summary": "All clear",
+      "sources": ["bugsink"],
+      "metrics": [],
+      "signals": []
+    },
+    {
+      "id": "product",
+      "title": "Sites & product",
+      "severity": "unknown",
+      "summary": "no data from posthog",
+      "sources": ["probes", "posthog"],
+      "metrics": [],
+      "signals": []
+    },
+    {
+      "id": "ai",
+      "title": "AI usage & spend",
+      "severity": "info",
+      "summary": "All clear",
+      "sources": ["ai"],
+      "metrics": [
+        {
+          "id": "ai.cost.month_to_date_usd",
+          "label": "API spend MTD",
+          "value": 42.5,
+          "unit": "usd",
+          "severity": "ok",
+          "source": "ai"
+        },
+        {
+          "id": "ai.quota.max_used_ratio",
+          "label": "Max quota used",
+          "value": 0.62,
+          "unit": "ratio",
+          "severity": "ok",
+          "source": "ai"
+        }
+      ],
+      "signals": [
+        {
+          "id": "ai:quota:claude-code:weekly",
+          "source": "ai",
+          "section": "ai",
+          "kind": "quota-window",
+          "severity": "info",
+          "needsMe": false,
+          "title": "Claude Code weekly quota 62%",
+          "attributes": {},
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": "Maintenance",
+      "severity": "ok",
+      "summary": "All clear",
+      "sources": ["maintenance"],
+      "metrics": [],
+      "signals": []
+    },
+    {
+      "id": "observability",
+      "title": "Logs & traces",
+      "severity": "ok",
+      "summary": "All clear",
+      "sources": ["logs"],
+      "metrics": [],
+      "signals": []
+    }
+  ]
+}

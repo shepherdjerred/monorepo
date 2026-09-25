@@ -30,7 +30,8 @@
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",
     "prom-client": "^15.1.3",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/ops-model": "workspace:*"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",

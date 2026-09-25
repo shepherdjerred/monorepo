@@ -13,10 +13,20 @@ COPY --parents \
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
 
 FROM deps AS build
-# `@shepherdjerred/loaded` exports TypeScript source rather than a built dist,
-# so having its package.json present for the install is not enough — the
-# client build has to be able to read the files its export map points at.
-COPY --parents tsconfig.base.json packages/alert-dashboard packages/eslint-config packages/loaded ./
+# `@shepherdjerred/loaded` and the ops packages export TypeScript source rather
+# than a built dist, so having their package.json present for the install is
+# not enough — the client build has to be able to read the files their export
+# maps point at.
+COPY --parents \
+  tsconfig.base.json \
+  packages/alert-dashboard \
+  packages/eslint-config \
+  packages/loaded \
+  packages/ops-model \
+  packages/ops-clients \
+  packages/config \
+  packages/feature-flags \
+  ./
 RUN cd packages/alert-dashboard && bun run build
 
 FROM base AS prod-deps
@@ -35,9 +45,15 @@ COPY --from=prod-deps /app/ /app/
 # install can use different peer-context hashes, so copying its node_modules
 # over this tree would point at packages that do not exist in prod-deps.
 COPY --from=build --exclude=node_modules /app/packages/alert-dashboard /app/packages/alert-dashboard
-# It is a production dependency, so the prod install symlinks it; without the
-# source here that symlink dangles in the runtime image.
-COPY --parents packages/loaded ./
+# These are production dependencies, so the prod install symlinks them; without
+# the source here those symlinks dangle in the runtime image.
+COPY --parents \
+  packages/loaded \
+  packages/ops-model \
+  packages/ops-clients \
+  packages/config \
+  packages/feature-flags \
+  ./
 # Bake Prisma's migration engines into the production dependency tree. Bun's
 # production install omits lifecycle scripts, so the CLI would otherwise
 # download engines on first use. Runtime executes as uid 1000 over root-owned

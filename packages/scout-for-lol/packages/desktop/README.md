@@ -31,3 +31,22 @@ store, or purchase data. Device credentials use the OS credential store. Raw
 observations survive transient network failures in the local SQLite outbox.
 Clash capture includes check-in, invitations, tournament state, rewards, and
 history; mastery capture preserves the client's season-milestone fields.
+
+## Diagnostics
+
+The release binary is a GUI-subsystem process with no console, so it writes
+rotating JSONL to `logs/` under its per-user data directory
+(`%LOCALAPPDATA%\Scout\Scout Client\data` on Windows). Files roll at 25 MiB and
+are kept for seven days. The Diagnostics page shows recent events and counters,
+opens that folder, and copies a shareable bundle.
+
+Records carry an allow-list — level, category, operation, outcome, HTTP status,
+duration, size, and a bounded `detail` — so a credential, PUUID or filesystem
+path is not representable in one rather than merely filtered out of it. Adding
+a field is the only way to widen what a record can hold.
+
+Errors and crashes are also reported to Bugsink once a DSN is configured in
+`scout_client_core::reporting`; until then the reporter is not installed and
+everything stays on the machine. Only `Error` and `Critical` records are sent,
+and they are the same allow-listed records, so nothing leaves that the local log
+does not already hold.

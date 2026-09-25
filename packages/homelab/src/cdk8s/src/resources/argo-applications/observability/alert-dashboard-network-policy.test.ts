@@ -5,6 +5,8 @@ import { z } from "zod";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
 import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/postal.ts";
 import { createAppsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/apps.ts";
+import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/flipt.ts";
+import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
 import { createAlertDashboardApp } from "./alert-dashboard.ts";
 import {
   getRegisteredBackendProbes,
@@ -103,6 +105,22 @@ function allowsIngress(
   );
 }
 
+function allowsEgress(
+  rules: readonly Rule[] | undefined,
+  namespace: string,
+  port: number,
+): boolean {
+  return (rules ?? []).some(
+    (rule) => hasPort(rule, port) && hasPeer(rule.to, namespace),
+  );
+}
+
+function synthesize(create: (app: App) => void, outdir: string): string {
+  const app = new App({ outdir });
+  create(app);
+  return app.synthYaml();
+}
+
 describe("alert dashboard network paths", () => {
   it("registers the deployment after the real public image digest is pinned", async () => {
     const app = new App({ outdir: ".test-synth-alert-dashboard-app-gate" });
@@ -147,6 +165,38 @@ describe("alert dashboard network paths", () => {
     expect(allowsIngress(dashboard.spec.ingress, "trmnl-dashboard", 7341)).toBe(
       true,
     );
+  });
+
+  it("reaches Prometheus for series presets and Flipt for the digest flag", () => {
+    const dashboard = findPolicy(
+      synthesize(
+        createAlertDashboardChart,
+        ".test-synth-alert-dashboard-egress",
+      ),
+      "alert-dashboard-app-netpol",
+    );
+    const flipt = findPolicy(
+      synthesize(createFliptChart, ".test-synth-alert-dashboard-flipt"),
+      "flipt-ingress-netpol",
+    );
+
+    expect(allowsEgress(dashboard.spec.egress, "prometheus", 9090)).toBe(true);
+    expect(allowsEgress(dashboard.spec.egress, "flipt", 8080)).toBe(true);
+    expect(allowsIngress(flipt.spec.ingress, "alert-dashboard", 8080)).toBe(
+      true,
+    );
+  });
+
+  it("opens the ops snapshot path to TRMNL", () => {
+    const trmnl = findPolicy(
+      synthesize(
+        createTrmnlDashboardChart,
+        ".test-synth-alert-dashboard-trmnl",
+      ),
+      "trmnl-dashboard-egress-netpol",
+    );
+
+    expect(allowsEgress(trmnl.spec.egress, "alert-dashboard", 7341)).toBe(true);
   });
 
   it("registers a service probe after activation", () => {

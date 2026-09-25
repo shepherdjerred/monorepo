@@ -401,6 +401,9 @@ export function scoutNotificationAttemptNonce(
  * and that module imports `@temporalio/workflow`.
  */
 export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
+  resolvePostMatchDiscoveryOwnerV2: "realtime",
+  releasePostMatchPollClaimV2: "realtime",
+  renewPostMatchPollClaimV2: "realtime",
   discoverPostMatchIdsV2: "realtime",
   discoverPrematchGamesV2: "realtime",
   readMatchPipelineStateV2: "realtime",

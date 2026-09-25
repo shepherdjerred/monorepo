@@ -80,6 +80,16 @@ export type ScoutMatchIngestionInput = z.infer<
 export const ScoutPostMatchDiscoveryInputSchema = z.object({
   stage: ScoutStageSchema,
   scheduledStartAt: IsoInstantSchema.optional(),
+  /**
+   * The durable poll claim this v1 pass runs under, by the instant it was
+   * claimed at. Set only when the V2 ownership gate delegates to v1: the gate
+   * claims the poll first, so two overlapping handoffs cannot both run v1.
+   * Discovery re-presents the claim instead of opening the poll
+   * unconditionally, and the Workflow's `...input` spread carries it to
+   * maintenance, whose close is then guarded on it. Absent for every v1 run
+   * the gate did not start, which keeps v1's own open and close unchanged.
+   */
+  pollOwner: z.iso.datetime().optional(),
 });
 export type ScoutPostMatchDiscoveryInput = z.infer<
   typeof ScoutPostMatchDiscoveryInputSchema
