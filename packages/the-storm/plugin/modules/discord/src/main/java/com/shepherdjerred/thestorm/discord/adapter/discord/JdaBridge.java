@@ -26,10 +26,14 @@ import org.slf4j.Logger;
  */
 public final class JdaBridge implements DiscordGateway {
 
-  /** How long shutdown waits for the goodbye post and for JDA to close. */
-  private static final Duration SHUTDOWN_WAIT = Duration.ofSeconds(5);
+  /** How long stop waits for the goodbye post. */
+  static final Duration GOODBYE_WAIT = Duration.ofSeconds(3);
+
+  /** How long stop then waits for JDA to close before cutting it. */
+  static final Duration CLOSE_WAIT = Duration.ofSeconds(2);
 
   private final Logger logger;
+  private final Object lifecycle = new Object();
   private final AtomicReference<@Nullable JDA> jda = new AtomicReference<>();
   private volatile @Nullable TextChannel channel;
   private volatile boolean stopped;
@@ -63,7 +67,10 @@ public final class JdaBridge implements DiscordGateway {
             });
   }
 
-  /** Called by JDA once connected: finds the channel, registers {@code /list}, says hello. */
+  /**
+   * Called by JDA once connected: finds the channel, registers {@code /list}, says hello. Holds the
+   * lifecycle lock so the hello is queued before any goodbye, and never after one.
+   */
   void ready(JDA client, long channelId, DiscordRelay relay) {
     var found = client.getTextChannelById(channelId);
     if (found == null) {
@@ -72,7 +79,13 @@ public final class JdaBridge implements DiscordGateway {
           channelId);
       return;
     }
-    channel = found;
+    synchronized (lifecycle) {
+      if (stopped) {
+        return;
+      }
+      channel = found;
+      relay.onServerStarted();
+    }
     found
         .getGuild()
         .updateCommands()
@@ -80,7 +93,6 @@ public final class JdaBridge implements DiscordGateway {
         .queue(
             commands -> logger.info("Discord bridge connected to #{}", found.getName()),
             error -> logger.warn("Registering Discord slash commands failed", error));
-    relay.onServerStarted();
   }
 
   @Override
@@ -95,18 +107,22 @@ public final class JdaBridge implements DiscordGateway {
   }
 
   /**
-   * Posts {@code goodbye} and disconnects, waiting a bounded time for each. Called once, from
-   * module disable.
+   * Posts {@code goodbye} and disconnects. Called once, from module disable, on the main thread: it
+   * waits at most {@link #GOODBYE_WAIT} plus {@link #CLOSE_WAIT} (5 seconds in all), then cuts the
+   * connection.
    */
   public void stop(String goodbye) {
-    stopped = true;
-    var target = channel;
-    channel = null;
+    @Nullable TextChannel target;
+    synchronized (lifecycle) {
+      stopped = true;
+      target = channel;
+      channel = null;
+    }
     if (target != null) {
       try {
         withoutMentions(target.sendMessage(goodbye))
             .submit()
-            .get(SHUTDOWN_WAIT.toMillis(), TimeUnit.MILLISECONDS);
+            .get(GOODBYE_WAIT.toMillis(), TimeUnit.MILLISECONDS);
       } catch (ExecutionException | TimeoutException e) {
         logger.warn("Posting the sleep message to Discord failed", e);
       } catch (InterruptedException e) {
@@ -119,7 +135,7 @@ public final class JdaBridge implements DiscordGateway {
     }
     client.shutdown();
     try {
-      if (!client.awaitShutdown(SHUTDOWN_WAIT)) {
+      if (!client.awaitShutdown(CLOSE_WAIT)) {
         client.shutdownNow();
       }
     } catch (InterruptedException e) {

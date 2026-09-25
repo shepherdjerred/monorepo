@@ -28,12 +28,15 @@ final class Fixtures {
       new ChatConfig(
           "global",
           new FilterSettings(256, 3, 30),
+          "Calm down",
           new ChannelFormats(
               "[G][<prefix><player>]: <message>",
               "[W][<prefix><player>]: <message>",
               "[S][<prefix><player>]: <message>",
               "[T][<prefix><player>]: <message>",
               "[N][<prefix><player>]: <message>"),
+          "[<channel>] * <prefix><player> <message>",
+          "[<from> -> <to>]: <message>",
           "[<source>][<author>]: <message>");
 
   private Fixtures() {}

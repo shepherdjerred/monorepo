@@ -51,28 +51,61 @@ public final class ChatCommands {
    */
   public void register(Commands commands) {
     for (var channel : ChannelKey.values()) {
-      commands.register(
-          channelCommand(channel),
-          "Talk in " + channel.displayName() + " chat, or send one message there");
+      // Every label is its own command: Paper lets a label replace an existing command, but not
+      // an alias.
+      for (var label : labels(channel)) {
+        commands.register(
+            channelCommand(label, channel),
+            "Talk in " + channel.displayName() + " chat, or send one message there");
+      }
     }
+    commands.register(emoteCommand(), "Act something out in your channel");
     commands.register(ignoreCommand(), "Ignore a player's chat, or list who you ignore");
     commands.register(unignoreCommand(), "Stop ignoring a player");
     commands.register(channelsCommand(), "List chat channels, or hide and show them");
   }
 
-  /** The command that switches to {@code channel}. */
+  /** The main command that switches to {@code channel}. */
   static String label(ChannelKey channel) {
+    return labels(channel).getFirst();
+  }
+
+  /** Every command that switches to {@code channel}; {@code /w} is whisper, so War is /war. */
+  static List<String> labels(ChannelKey channel) {
     return switch (channel) {
-      case GLOBAL -> "g";
-      case WAR -> "w";
-      case STAFF -> "sc";
-      case TOWN -> "tc";
-      case NATION -> "nc";
+      case GLOBAL -> List.of("g");
+      case WAR -> List.of("war", "wc");
+      case STAFF -> List.of("sc");
+      case TOWN -> List.of("tc");
+      case NATION -> List.of("nc");
     };
   }
 
-  private LiteralCommandNode<CommandSourceStack> channelCommand(ChannelKey channel) {
-    return Commands.literal(label(channel))
+  private LiteralCommandNode<CommandSourceStack> emoteCommand() {
+    return Commands.literal("me")
+        .requires(ChatCommands::isPlayer)
+        .then(
+            Commands.argument(MESSAGE, StringArgumentType.greedyString())
+                .executes(
+                    context ->
+                        emote(player(context), StringArgumentType.getString(context, MESSAGE))))
+        .build();
+  }
+
+  private int emote(Player player, String action) {
+    switch (service.prepareEmote(Speakers.of(player), action)) {
+      case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
+        output.deliver(line);
+        Feedback.noticeCalmed(player, line.message(), service.capsNotice());
+      }
+      case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) ->
+          player.sendMessage(Feedback.denials(denials));
+    }
+    return Command.SINGLE_SUCCESS;
+  }
+
+  private LiteralCommandNode<CommandSourceStack> channelCommand(String label, ChannelKey channel) {
+    return Commands.literal(label)
         .requires(
             source ->
                 source.getSender() instanceof Player player
@@ -146,6 +179,7 @@ public final class ChatCommands {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
         output.deliver(line);
         hub.published(line);
+        Feedback.noticeCalmed(player, line.message(), service.capsNotice());
       }
       case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) ->
           player.sendMessage(Feedback.denials(denials));
