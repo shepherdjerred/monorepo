@@ -87,6 +87,15 @@ export function buildTofuEnvironment(
   return env;
 }
 
+/**
+ * OpenTofu reads a string variable's environment value literally and parses
+ * every other type as HCL. JSON-encoding a string would keep its quotes, so a
+ * `type = string` variable would receive `"value"` and fail its validation.
+ */
+export function desiredStateVariableValue(value: unknown): string {
+  return typeof value === "string" ? value : JSON.stringify(value);
+}
+
 async function addDesiredStateEnvironment(
   stackDir: string,
   platform: PlatformStack,
@@ -94,7 +103,7 @@ async function addDesiredStateEnvironment(
 ): Promise<Record<string, unknown>> {
   const desiredState = await loadPlatformDesiredState(stackDir, platform);
   for (const [name, value] of Object.entries(desiredState)) {
-    env[`TF_VAR_${name}`] = JSON.stringify(value);
+    env[`TF_VAR_${name}`] = desiredStateVariableValue(value);
   }
   return desiredState;
 }
