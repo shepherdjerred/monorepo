@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { PostalPort } from "#application/ports";
+import type { PostalMessage, PostalPort } from "#application/ports";
 
 const PostalEnvelopeSchema = z.object({
   status: z.string(),
@@ -28,11 +28,7 @@ export class PostalClient implements PostalPort {
     };
   }
 
-  async send(input: {
-    messageId: string;
-    subject: string;
-    htmlBody: string;
-  }): Promise<void> {
+  async send(input: PostalMessage): Promise<void> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "X-Server-API-Key": this.#options.apiKey,
@@ -47,8 +43,11 @@ export class PostalClient implements PostalPort {
         from: this.#options.from,
         subject: input.subject,
         html_body: input.htmlBody,
+        ...(input.plainBody === undefined
+          ? {}
+          : { plain_body: input.plainBody }),
         message_id: input.messageId,
-        tag: "alert-dashboard-opening",
+        tag: input.tag ?? "alert-dashboard-opening",
       }),
       signal: AbortSignal.timeout(15_000),
     });

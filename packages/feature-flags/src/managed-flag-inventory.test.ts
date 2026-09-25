@@ -94,6 +94,7 @@ describe("ManagedFlagInventorySchema", () => {
       "starlight-karma-bot",
       "trmnl-dashboard",
       "temporal",
+      "alert-dashboard",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(

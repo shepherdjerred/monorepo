@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { AppConfig } from "../config.ts";
 import { collectHomePayload } from "../collectors/home.ts";
+import { collectHomelabPayload } from "../collectors/homelab.ts";
 import {
-  collectHomelabPayload,
-  type HomelabClients,
-} from "../collectors/homelab.ts";
+  HOMELAB_METRICS,
+  HOMELAB_SIGNALS,
+  homelabSnapshot,
+  sources,
+} from "./ops-snapshot-fixture.ts";
+import { assembleSnapshot } from "@shepherdjerred/ops-model/assemble.ts";
+import type { Snapshot } from "@shepherdjerred/ops-model/snapshot.ts";
 
 const config: AppConfig = {
   port: 3000,
@@ -31,14 +36,7 @@ const config: AppConfig = {
     security: [{ entityId: "lock.front_door", label: "Front Door" }],
     climate: [{ entityId: "climate.downstairs", label: "Downstairs" }],
   },
-  homelab: {
-    prometheusUrl: "http://prometheus.local",
-    alertDashboardUrl: "http://alerts.local",
-    bugsinkUrl: "http://bugsink.local/api/canonical/0",
-    kubernetesUrl: "https://kubernetes.default.svc",
-    kubernetesTokenPath: "/tmp/token",
-    kubernetesCaPath: "/tmp/ca.crt",
-  },
+  opsDashboardUrl: "http://ops.local",
 };
 
 describe("collectHomePayload", () => {
@@ -77,126 +75,129 @@ describe("collectHomePayload", () => {
   });
 });
 
+const NOW = new Date("2026-09-24T12:00:00.000Z");
+
+function reading(snapshot: Snapshot) {
+  return { ops: { getSnapshot: async () => snapshot } };
+}
+
 describe("collectHomelabPayload", () => {
-  it("aggregates homelab integrations", async () => {
-    const clients: HomelabClients = {
-      prometheus: {
-        async query() {
-          return [{ metric: { mountpoint: "/" }, value: 71.2 }];
-        },
-        async scalar(query) {
-          return query.includes("node_cpu") ? 14.5 : 63.2;
-        },
-      },
-      alerts: {
-        async getSummary() {
-          return { open: 1, critical: 0, warning: 1, info: 0 };
-        },
-        async listOpen() {
-          return [
-            {
-              alertname: "ExampleWarning",
-              severity: "warning",
-              summary: "Example warning",
-              lifecycleState: "open",
-            },
-          ];
-        },
-      },
-      kubernetes: {
-        async getSummary() {
-          return { readyNodes: 1, totalNodes: 1, unhealthyPods: 0 };
-        },
-      },
-      bugsink: {
-        async getProjectSummaries() {
-          return [{ name: "api", unresolved: 2 }];
-        },
-      },
-    };
+  it("maps the ops snapshot onto the homelab screen", async () => {
+    const payload = await collectHomelabPayload(
+      config,
+      reading(homelabSnapshot(new Date(NOW.getTime() - 60_000))),
+      NOW,
+    );
 
-    const payload = await collectHomelabPayload(config, clients);
-
-    expect(payload.status).toBe("warning");
-    expect(payload.bugsink.unresolved).toBe(2);
-    expect(payload.storage.max_disk_used_percent).toBe(71.2);
-    expect(payload.alerts.warning).toBe(1);
+    expect(payload.status).toBe("error");
+    expect(payload.errors).toEqual([]);
+    expect(payload.generated_at).toBe("2026-09-24T11:59:00.000Z");
+    expect(payload.kubernetes).toEqual({
+      status: "ok",
+      ready_nodes: 2,
+      total_nodes: 2,
+      unhealthy_pods: 0,
+    });
+    expect(payload.hardware).toEqual({
+      status: "ok",
+      cpu_used_percent: 23.4,
+      memory_used_percent: 61.2,
+    });
+    expect(payload.storage).toEqual({
+      status: "warning",
+      max_disk_used_percent: 84,
+      volumes: [
+        { name: "/var", used_percent: 84 },
+        { name: "tank", used_percent: 81.2 },
+      ],
+    });
+    expect(payload.bugsink).toEqual({
+      status: "warning",
+      unresolved: 3,
+      projects: [
+        { name: "automation", unresolved: 2 },
+        { name: "dashboard", unresolved: 1 },
+      ],
+    });
+    expect(payload.alerts).toEqual({
+      status: "error",
+      open: 3,
+      critical: 1,
+      warning: 1,
+      info: 1,
+      recent: [
+        {
+          severity: "error",
+          alertname: "DiskFull",
+          summary: "Disk is nearly full",
+        },
+        {
+          severity: "warning",
+          alertname: "BackupAge",
+          summary: "Nightly backup is running late",
+        },
+      ],
+    });
+    expect(payload.summary).toBe(
+      "2/2 nodes · 1 critical alerts · 1 warning alerts · 3 Bugsink · 3 open alerts",
+    );
   });
 
-  it("surfaces Bugsink and Alerts failures instead of treating them as zero", async () => {
-    const clients: HomelabClients = {
-      prometheus: {
-        async query() {
-          return [];
-        },
-        async scalar() {
-          return 10;
-        },
-      },
-      alerts: {
-        async getSummary() {
-          throw new Error("Alerts request failed: 401");
-        },
-        async listOpen() {
-          return [];
-        },
-      },
-      kubernetes: {
-        async getSummary() {
-          return { readyNodes: 1, totalNodes: 1, unhealthyPods: 0 };
-        },
-      },
-      bugsink: {
-        async getProjectSummaries() {
-          throw new Error("Bugsink request failed: 400");
-        },
-      },
-    };
+  it("renders failed sources as unknown instead of zero", async () => {
+    const generatedAt = new Date(NOW.getTime() - 60_000);
+    const snapshot = assembleSnapshot({
+      generatedAt,
+      sources: sources(generatedAt, { bugsink: "Bugsink returned 401" }),
+      signals: HOMELAB_SIGNALS.filter((signal) => signal.source !== "bugsink"),
+      metrics: HOMELAB_METRICS.filter((metric) => metric.source !== "bugsink"),
+    });
 
-    const payload = await collectHomelabPayload(config, clients);
+    const payload = await collectHomelabPayload(config, reading(snapshot), NOW);
+
+    expect(payload.bugsink).toEqual({
+      status: "unknown",
+      unresolved: 0,
+      projects: [],
+    });
+    expect(payload.summary).toContain("Bugsink ERR");
+    expect(payload.errors).toEqual(["bugsink: Bugsink returned 401"]);
+  });
+
+  it("never renders a stale snapshot as healthy", async () => {
+    const generatedAt = new Date(NOW.getTime() - 60 * 60_000);
+    const snapshot = assembleSnapshot({
+      generatedAt,
+      sources: sources(generatedAt),
+      signals: [],
+      metrics: HOMELAB_METRICS.map((metric) => ({
+        ...metric,
+        severity: "ok",
+      })),
+    });
+
+    const payload = await collectHomelabPayload(config, reading(snapshot), NOW);
 
     expect(payload.status).toBe("unknown");
-    expect(payload.bugsink.status).toBe("unknown");
-    expect(payload.alerts.status).toBe("unknown");
-    expect(payload.errors).toEqual([
-      "Bugsink: Bugsink request failed: 400",
-      "Alerts: Alerts request failed: 401",
-    ]);
+    expect(payload.errors).toEqual(["Ops snapshot is 60 minutes old"]);
   });
 
-  it("filters noisy storage mount artifacts", async () => {
-    const clients: HomelabClients = {
-      prometheus: {
-        async query() {
-          return [
-            { metric: { mountpoint: "/var" }, value: 38.8 },
-            { metric: { mountpoint: "/etc/extensions.yaml" }, value: 99 },
-            { metric: { mountpoint: "/usr/lib/firmware" }, value: 98 },
-          ];
-        },
-        async scalar() {
-          return 10;
+  it("reports an unreachable ops dashboard on every tile", async () => {
+    const payload = await collectHomelabPayload(
+      config,
+      {
+        ops: {
+          getSnapshot: async () => {
+            throw new Error("Ops snapshot request failed: 503");
+          },
         },
       },
-      alerts: {
-        async getSummary() {
-          return { open: 0, critical: 0, warning: 0, info: 0 };
-        },
-        async listOpen() {
-          return [];
-        },
-      },
-      kubernetes: {
-        async getSummary() {
-          return { readyNodes: 1, totalNodes: 1, unhealthyPods: 0 };
-        },
-      },
-    };
+      NOW,
+    );
 
-    const payload = await collectHomelabPayload(config, clients);
-
-    expect(payload.storage.volumes).toEqual([
-      { name: "/var", used_percent: 38.8 },
-    ]);
+    expect(payload.status).toBe("unknown");
+    expect(payload.alerts.status).toBe("unknown");
+    expect(payload.bugsink.status).toBe("unknown");
+    expect(payload.storage.max_disk_used_percent).toBeNull();
+    expect(payload.errors).toEqual(["Ops: Ops snapshot request failed: 503"]);
   });
 });

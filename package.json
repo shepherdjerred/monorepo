@@ -126,6 +126,8 @@
     "packages/macos-cross-compiler",
     "packages/macos-cross-site",
     "packages/openrouter-broadcast-ingest",
+    "packages/ops-clients",
+    "packages/ops-model",
     "packages/monarch",
     "packages/pr-fleet-controller",
     "packages/pr-fleet-controller/packages/web",

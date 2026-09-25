@@ -69,6 +69,19 @@ export function createTrmnlDashboardChart(app: App) {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: trmnlDashboardPorts,
         },
+        {
+          // The ops snapshot behind /api/homelab.
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "alert-dashboard",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }],
+        },
       ],
     },
   });

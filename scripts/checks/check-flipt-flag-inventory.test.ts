@@ -71,7 +71,7 @@ describe("check-flipt-flag-inventory", () => {
         managedFlagNamespaces.map((namespace) => `${environment}/${namespace}`),
       ),
     );
-    expect(messages).toHaveLength(12);
+    expect(messages).toHaveLength(2 * managedFlagNamespaces.length);
   });
 
   test("checks only exact environment and namespace filters", async () => {
@@ -125,6 +125,6 @@ describe("check-flipt-flag-inventory", () => {
         },
       }),
     ).rejects.toThrow(/beta\/scout/);
-    expect(loaded).toHaveLength(12);
+    expect(loaded).toHaveLength(2 * managedFlagNamespaces.length);
   });
 });

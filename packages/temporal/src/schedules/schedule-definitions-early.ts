@@ -219,4 +219,52 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     workflowExecutionTimeout: "50 minutes",
     memo: "Deterministic daily homelab health check with evidence-backed report delivery",
   },
+  {
+    id: "ops-snapshot",
+    workflowType: "runOpsSnapshot",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "*/5 * * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "5 minutes",
+    // Two 60s collector attempts run in parallel, then up to three 30s
+    // publish attempts with backoff: about four minutes in the worst case,
+    // inside one five-minute cadence.
+    workflowExecutionTimeout: "5 minutes",
+    memo: "Every-five-minute ops overview snapshot collection and dashboard ingest",
+  },
+  {
+    id: "ops-digest-daily",
+    workflowType: "runOpsDigest",
+    args: [{ kind: "daily" }],
+    timing: {
+      kind: "cron",
+      expression: "30 7 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 2m trigger attempts plus backoff; the dashboard is idempotent
+    // per period, so a late or retried trigger never sends twice.
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Daily ops digest email trigger (the dashboard renders and sends)",
+  },
+  {
+    id: "ops-digest-weekly",
+    workflowType: "runOpsDigest",
+    args: [{ kind: "weekly" }],
+    timing: {
+      kind: "cron",
+      expression: "0 8 * * 1",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Weekly ops review digest email trigger (the dashboard renders and sends)",
+  },
 ]);
