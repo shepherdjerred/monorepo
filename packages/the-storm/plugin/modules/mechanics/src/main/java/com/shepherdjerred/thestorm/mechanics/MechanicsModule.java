@@ -8,8 +8,8 @@ import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
 
 /**
  * The Mechanic track's mechanisms, replacing CraftBook: sign elevators, bridges, gates, doors,
- * switches, cooking pots, the sign copier, map and painting switchers, and special pistons. Each is
- * gated by a Mechanic track level and respects land protection, which the towns module provides.
+ * switches, cooking pots, the sign copier, the painting switcher and special pistons. Each is gated
+ * by a Mechanic track level and respects land protection, which the towns module provides.
  */
 public final class MechanicsModule implements StormModule {
 

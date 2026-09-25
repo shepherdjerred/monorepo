@@ -22,6 +22,14 @@ record Kit(
     MechanicsConfig config, Gatekeeper gatekeeper, Signs signs, Guard guard, Scheduler scheduler) {
 
   /**
+   * What a player is told about a mechanism sign with no recorded creator, such as a CraftBook sign
+   * from the old world. Editing the sign runs creation again, which records its creator.
+   */
+  static final String NOT_SET_UP =
+      "This sign isn't set up yet. Sneak and right-click it with an empty hand, then press Done"
+          + " to set it up.";
+
+  /**
    * Whether {@code player} may use {@code feature}'s sign, telling them why not. A sign with no
    * recorded creator was not built through this plugin and must be rewritten first.
    */
@@ -33,7 +41,7 @@ record Kit(
     }
     var owner = signs.owner(sign);
     if (owner.isEmpty()) {
-      Replies.error(player, feature, "This sign was never set up. Edit it to build it again.");
+      Replies.error(player, feature, NOT_SET_UP);
     }
     return owner;
   }

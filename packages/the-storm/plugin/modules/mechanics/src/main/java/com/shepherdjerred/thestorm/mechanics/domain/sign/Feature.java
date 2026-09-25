@@ -14,7 +14,6 @@ public enum Feature {
   GATE("Gate"),
   DOOR("Door"),
   SIGN_COPIER("Sign Copier"),
-  MAP_CHANGER("Map Changer"),
   PAINTING_SWITCHER("Painting Switcher"),
   CRUSH("Crushing Piston"),
   BOUNCE("Bouncing Piston"),

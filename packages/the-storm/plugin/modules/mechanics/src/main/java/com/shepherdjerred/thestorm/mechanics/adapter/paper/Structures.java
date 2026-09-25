@@ -165,7 +165,6 @@ final class Structures {
           BLOCK_DROPS,
           ELEVATOR,
           SIGN_COPIER,
-          MAP_CHANGER,
           PAINTING_SWITCHER,
           CRUSH,
           BOUNCE,

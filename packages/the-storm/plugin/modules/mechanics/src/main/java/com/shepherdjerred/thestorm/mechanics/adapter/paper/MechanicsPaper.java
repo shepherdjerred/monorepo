@@ -22,11 +22,7 @@ public final class MechanicsPaper {
     var copier = new SignCopier(kit);
     var handlers =
         new SignClickListener.Handlers(
-            new Elevators(kit),
-            structures,
-            new CookingPots(kit),
-            new LightSwitches(kit),
-            new MapChangers(kit));
+            new Elevators(kit), structures, new CookingPots(kit), new LightSwitches(kit));
     var creation = new SignCreation(gatekeeper, CreationRules.standard(config));
     var events = plugin.getServer().getPluginManager();
     events.registerEvents(new SignWriteListener(creation, signs, protection), plugin);

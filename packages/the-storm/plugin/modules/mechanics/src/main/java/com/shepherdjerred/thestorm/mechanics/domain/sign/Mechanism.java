@@ -12,7 +12,6 @@ public enum Mechanism {
   GATE(Feature.GATE, "[Gate]"),
   DOOR_UP(Feature.DOOR, "[Door Up]"),
   DOOR_DOWN(Feature.DOOR, "[Door Down]"),
-  MAP_CHANGER(Feature.MAP_CHANGER, "[Map]"),
   CRUSH(Feature.CRUSH, "[Crush]"),
   BOUNCE(Feature.BOUNCE, "[Bounce]"),
   SUPER_STICKY(Feature.SUPER_STICKY, "[SuperSticky]"),
@@ -53,7 +52,6 @@ public enum Mechanism {
           GATE,
           DOOR,
           SIGN_COPIER,
-          MAP_CHANGER,
           PAINTING_SWITCHER ->
           false;
     };

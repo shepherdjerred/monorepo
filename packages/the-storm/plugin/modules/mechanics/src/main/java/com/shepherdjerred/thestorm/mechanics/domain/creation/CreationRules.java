@@ -27,7 +27,6 @@ public final class CreationRules {
       case BRIDGE -> List.of(new SquareFacingRule(), new SpanBaseRule(config.bridge()));
       case DOOR_UP, DOOR_DOWN -> List.of(new SquareFacingRule(), new SpanBaseRule(config.door()));
       case GATE -> List.of(new GateNearbyRule(config.gate()));
-      case MAP_CHANGER -> List.of(new MapRangeRule(config.mapChanger()));
       case CRUSH, BOUNCE, SUPER_PUSH -> List.of(new AdjacentPistonRule(false));
       case SUPER_STICKY -> List.of(new AdjacentPistonRule(true));
     };

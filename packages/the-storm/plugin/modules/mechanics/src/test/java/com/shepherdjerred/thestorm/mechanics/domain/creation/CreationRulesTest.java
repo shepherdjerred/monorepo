@@ -6,13 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.mechanics.domain.TestConfigs;
 import com.shepherdjerred.thestorm.mechanics.domain.TestGrid;
-import com.shepherdjerred.thestorm.mechanics.domain.config.Access;
 import com.shepherdjerred.thestorm.mechanics.domain.config.BlockDropsConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.CookingPotConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.ElevatorConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.HiddenSwitchConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.LightSwitchConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.MapChangerConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.PaintingSwitcherConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.PistonConfig;
@@ -46,7 +44,6 @@ final class CreationRulesTest {
           TestConfigs.gate(3, 8, 8),
           TestConfigs.span(8, 1),
           new SignCopierConfig(new Unlock(true, 3), "minecraft:feather"),
-          new MapChangerConfig(new Access(true, 3, 3), 16),
           new PaintingSwitcherConfig(new Unlock(true, 3)),
           new PistonConfig(
               new Unlock(true, 4),
@@ -135,19 +132,6 @@ final class CreationRulesTest {
 
     assertThat(check(grid, Mechanism.COOKING_POT)).isEmpty();
     assertThat(check(new TestGrid(), Mechanism.COOKING_POT)).isPresent();
-  }
-
-  @Test
-  void aMapChangerNeedsARange() {
-    var good =
-        new SignView(List.of("", "[Map]", "3-9", ""), Mount.WALL, Optional.of(Direction.NORTH));
-    var tooMany =
-        new SignView(List.of("", "[Map]", "0-99", ""), Mount.WALL, Optional.of(Direction.NORTH));
-
-    assertThat(check(new TestGrid(), Mechanism.MAP_CHANGER, good)).isEmpty();
-    assertThat(check(new TestGrid(), Mechanism.MAP_CHANGER, tooMany))
-        .contains(new Refusal("A map changer cycles at most 16 maps."));
-    assertThat(check(new TestGrid(), Mechanism.MAP_CHANGER)).isPresent();
   }
 
   @ParameterizedTest

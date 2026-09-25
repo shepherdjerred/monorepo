@@ -14,7 +14,6 @@ import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
  * @param gate {@code [Gate]} signs
  * @param door {@code [Door Up]} and {@code [Door Down]} signs
  * @param signCopier the sign copier tool
- * @param mapChanger {@code [Map]} signs
  * @param paintingSwitcher right-clicking a painting to change its picture
  * @param pistons the special piston signs
  */
@@ -28,7 +27,6 @@ public record MechanicsConfig(
     GateConfig gate,
     SpanConfig door,
     SignCopierConfig signCopier,
-    MapChangerConfig mapChanger,
     PaintingSwitcherConfig paintingSwitcher,
     PistonConfig pistons) {
 
@@ -44,7 +42,6 @@ public record MechanicsConfig(
       case GATE -> gate.access();
       case DOOR -> door.access();
       case SIGN_COPIER -> signCopier.unlock().asAccess();
-      case MAP_CHANGER -> mapChanger.access();
       case PAINTING_SWITCHER -> paintingSwitcher.unlock().asAccess();
       case CRUSH -> pistons.crush().asAccess();
       case BOUNCE -> pistons.bounce().asAccess();
