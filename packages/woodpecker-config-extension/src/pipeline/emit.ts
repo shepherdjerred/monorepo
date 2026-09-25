@@ -82,6 +82,27 @@ export type PipelineIdentity = {
 };
 
 /**
+ * The Woodpecker workflow timeout, in minutes.
+ *
+ * Woodpecker kills a whole workflow at its repository's timeout, whatever the
+ * step's own budget says, so every step's worst case -- its timeout times its
+ * attempts -- has to fit inside it with room for the clone. The server sets
+ * this as both the default and the maximum
+ * (`resources/woodpecker/index.ts` in the homelab cdk8s package); a repository
+ * activated before that keeps the value it was activated with until its
+ * settings are changed.
+ */
+export const WORKFLOW_TIMEOUT_MINUTES = 270;
+
+/**
+ * GNU timeout on the Mac, where macOS ships none. Homebrew's coreutils
+ * installs it under a `g` prefix; `mac-ci/bootstrap.sh` provisions it. The path
+ * is absolute because this runs before `macos-native-env.sh` puts Homebrew on
+ * PATH.
+ */
+const MACOS_TIMEOUT = "/opt/homebrew/bin/gtimeout";
+
+/**
  * Wrap a step's commands so they inherit the guarantees Woodpecker's step
  * schema does not provide.
  *
@@ -93,7 +114,8 @@ export type PipelineIdentity = {
 export function wrapCommands(step: CiStep): string[] {
   const seconds = step.timeoutMinutes * 60;
   const body = step.commands.join("\n");
-  const attemptScript = `timeout ${seconds.toString()}s bash -euo pipefail -c ${shellQuote(body)}`;
+  const timeout = step.backend === "local" ? MACOS_TIMEOUT : "timeout";
+  const attemptScript = `${timeout} ${seconds.toString()}s bash -euo pipefail -c ${shellQuote(body)}`;
 
   if (step.retries === undefined || step.retries <= 1) {
     return [attemptScript];
@@ -171,6 +193,9 @@ function backendOptions(
  * would filter a second time against a graph that no longer expects it, and a
  * workflow whose dependency was filtered out never becomes runnable — a lane
  * that silently never runs rather than one that fails.
+ *
+ * The rendered text is escaped for Woodpecker's variable substitution; see
+ * `escapeSubstitution`.
  */
 export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
   const workflow: Record<string, unknown> = {
@@ -229,7 +254,23 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
         }),
   };
 
-  return stringify(workflow, { lineWidth: 0 });
+  return escapeSubstitution(stringify(workflow, { lineWidth: 0 }));
+}
+
+/**
+ * Double every `$` so Woodpecker's substitution hands back exactly what was
+ * emitted.
+ *
+ * Woodpecker runs every configuration -- extension-served ones included --
+ * through envsubst before parsing it. That rewrites any braced `${NAME}`,
+ * blanking names it does not know, and rejects bash forms such as
+ * `"${array[@]}"` outright, failing the whole pipeline at compile time. None
+ * of the emitted text is a Woodpecker template: steps read `CI_*` from their
+ * environment at run time. envsubst turns `$$` back into `$`, so doubling is
+ * exact rather than a guess about which forms it would have touched.
+ */
+export function escapeSubstitution(yaml: string): string {
+  return yaml.replaceAll("$", () => "$$");
 }
 
 export function emitWorkflows(

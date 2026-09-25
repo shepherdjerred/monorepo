@@ -270,6 +270,12 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   sites: Object.entries(sitePaths)
     .filter(([lane]) => lane !== "site-scout")
     .flatMap(([, paths]) => paths),
+  "macos-cross-compiler": [
+    "packages/macos-cross-compiler",
+    "scripts/release/macos-cross-compiler.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/seaweedfs.ts",
+  ],
   "scout-reconcile": [
     ...workspacePaths,
     "packages/scout-for-lol",
@@ -309,9 +315,15 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
 };
 
-// The Scout site is released through its own path and does not depend on
-// changes to general CI plumbing.
-const lanesWithoutGlobalPaths = new Set(["site-scout"]);
+// These lanes' images are built only from their own sources and publish
+// scripts. A rebuild costs hours of long builds (multi-platform for
+// macos-cross-compiler), so CI plumbing edits (lane definitions, selectors) must
+// not re-trigger them.
+const lanesWithoutGlobalPaths = new Set([
+  "site-scout",
+  "windows-cross-compiler",
+  "macos-cross-compiler",
+]);
 
 export function selectorPathsForLane(
   lane: string,
