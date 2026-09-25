@@ -4,11 +4,12 @@ import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
-import {
-  isArenaQueueOrMode,
-  MatchIdSchema,
-} from "@scout-for-lol/data/index.ts";
+import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import {
+  isLikelyPreStartLobby,
+  rosterIsAsCompleteAsItWillGet,
+} from "#src/league/tasks/prematch/spectator-roster.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
@@ -49,39 +50,16 @@ let checkStartTime: number | undefined;
 const CHECK_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
 /**
- * Constants for the "pre-start / partial-roster lobby" defer path.
+ * Retry budget for a roster that is still filling.
  *
- * Riot's Spectator API surfaces a game during its pre-game countdown — for a
- * custom 5v5 as soon as the creator clicks Play, and for matched games as the
- * lobby forms. In that window the payload reports `gameLength < 0` and fewer
- * than 10 participants because not everyone has loaded in yet. This is NOT
- * custom-only: matched event modes (ARAM: Mayhem / event ARAM, queues
- * 3200/3220/3270) routinely arrive with 2-4 of 10 participants (confirmed from
- * archived spectator payloads — gameLength of -17 to -58s). Building a
- * loading-screen image off that partial snapshot throws inside
- * `buildLoadingScreenData` (the layout schema requires a full roster), which
- * used to look like a real detection error in Bugsink. The fix: detect this
- * state, retry the spectator fetch a couple of times in-process, and if the
- * roster still hasn't filled, skip the upsert+notify path so the next 30s cron
- * tick re-evaluates once the game has actually started.
+ * Riot surfaces a game during its pre-game countdown, so the first read often
+ * arrives short. A couple of in-process retries usually catch the full roster;
+ * anything still short is left for the next 30-second tick, which is cheaper
+ * than holding this one open. See `spectator-roster.ts` for what "short"
+ * means and why a started game is a different case.
  */
-const STANDARD_PARTICIPANT_COUNT = 10;
 const LOBBY_RETRY_LIMIT = 2;
 const LOBBY_RETRY_DELAY_MS = 2000;
-
-/**
- * A standard or ARAM roster is exactly 10 players; Arena is 16/18 and is
- * validated by its own schema. Any other non-Arena game reporting fewer than
- * 10 participants is an incomplete Spectator snapshot — almost always the
- * pre-game countdown (`gameLength < 0`), though we also defer the rare
- * started-but-undersized lobby rather than throw on it.
- */
-function isLikelyPreStartLobby(gameInfo: RawCurrentGameInfo): boolean {
-  return (
-    !isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) &&
-    gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT
-  );
-}
 
 async function refetchLobbyUntilFilled(
   initial: RawCurrentGameInfo,
@@ -164,6 +142,34 @@ async function pollPlayerForGame(
   // A 404 is an answer, so the API is reachable.
   spectatorCircuit.recordSuccess();
   return spectator.kind === "in-game" ? spectator.game : undefined;
+}
+
+/**
+ * Log and count a roster this tick will not act on.
+ *
+ * The two reasons look the same from here and are not the same fact. One is a
+ * lobby still loading in; the other is a game already under way whose roster is
+ * simply short, which is what a custom against bots looks like because Riot
+ * never lists them. Counting them apart is what makes the second visible.
+ */
+function recordDeferredRoster(
+  alias: string,
+  gameInfo: RawCurrentGameInfo,
+): void {
+  const settled = rosterIsAsCompleteAsItWillGet(gameInfo);
+  const participants = gameInfo.participants.length.toString();
+  const gameId = gameInfo.gameId.toString();
+  const gameLength = gameInfo.gameLength.toString();
+  logger.info(
+    settled
+      ? `[${alias}] ⏳ Deferring gameId=${gameId} — ${participants}/10 participants and the game has already started (gameLength=${gameLength}), so this is the roster Riot will report; bots are never listed`
+      : `[${alias}] ⏳ Deferring pre-start gameId=${gameId} — only ${participants}/10 participants present (gameLength=${gameLength}); next cron tick will retry`,
+  );
+  // The original label is kept for Grafana dashboard continuity; the new one
+  // separates "still filling" from "this is the roster".
+  prematchDetectionsTotal.inc({
+    status: settled ? "deferred_undersized_roster" : "deferred_custom_prestart",
+  });
 }
 
 async function processPrematchWithRetryCleanup(input: {
@@ -365,11 +371,7 @@ export async function checkActiveGames(
           : initial;
 
         if (isLikelyPreStartLobby(gameInfo)) {
-          logger.info(
-            `[${player.alias}] ⏳ Deferring pre-start gameId=${gameInfo.gameId.toString()} — only ${gameInfo.participants.length.toString()}/10 participants present (gameLength=${gameInfo.gameLength.toString()}); next cron tick will retry`,
-          );
-          // Metric label kept as-is for Grafana dashboard continuity.
-          prematchDetectionsTotal.inc({ status: "deferred_custom_prestart" });
+          recordDeferredRoster(player.alias, gameInfo);
           continue;
         }
 

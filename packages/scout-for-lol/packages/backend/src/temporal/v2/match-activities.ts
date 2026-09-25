@@ -25,6 +25,44 @@ import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-sur
  */
 export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
   return {
+    resolvePostMatchDiscoveryOwnerV2: async () =>
+      await heartbeatWhile(
+        { phase: "resolving-post-match-owner-v2" },
+        async () => {
+          const { resolvePostMatchDiscoveryOwnerV2 } =
+            await import("#src/temporal/v2/postmatch-ownership.ts");
+          // The first-scheduled timestamp is the one instant every attempt
+          // agrees on, so a retried attempt re-acquires the claim its
+          // predecessor took instead of deferring behind it.
+          return await resolvePostMatchDiscoveryOwnerV2({
+            claimAt: new Date(Context.current().info.scheduledTimestampMs),
+          });
+        },
+      ),
+    renewPostMatchPollClaimV2: async (input) =>
+      await heartbeatWhile(
+        { phase: "renewing-post-match-claim-v2" },
+        async () => {
+          const { renewPostMatchPollClaimV2 } =
+            await import("#src/temporal/v2/postmatch-ownership.ts");
+          return await renewPostMatchPollClaimV2({
+            pollOwner: new Date(input.pollOwner),
+            renewedAt: new Date(),
+          });
+        },
+      ),
+    releasePostMatchPollClaimV2: async (input) =>
+      await heartbeatWhile(
+        { phase: "releasing-post-match-claim-v2" },
+        async () => {
+          const { releasePostMatchPollClaimV2 } =
+            await import("#src/temporal/v2/postmatch-ownership.ts");
+          return await releasePostMatchPollClaimV2({
+            pollOwner: new Date(input.pollOwner),
+            releasedAt: new Date(),
+          });
+        },
+      ),
     discoverPostMatchIdsV2: async () =>
       await heartbeatWhile({ phase: "discovering-post-match-v2" }, async () => {
         const { discoverPostMatchIdsV2 } =
