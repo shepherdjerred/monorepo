@@ -12,8 +12,8 @@ import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
  * - Sources Explore may never query are left out: the competition and rank
  *   sources need one server's competition id. So are report presets, and
  *   the idioms, which the field guide already carries as worked examples.
- * - `player_groups` is written as a difference from `match_participants`
- *   rather than 70 repeated columns.
+ * - `player_groups` and `match_pairs` are written as differences from
+ *   `match_participants` rather than 70 or 100 repeated columns.
  *
  * It sits in Explore's system prompt, not a skill. Loaded mid-turn it landed
  * after the user's question, where no two turns share a prefix, so every turn
@@ -51,16 +51,20 @@ function sourceHeader(source: Source): string {
   return `### ${source.id} — ${source.description} (${facts.join("; ")})`;
 }
 
+/** Sources whose columns are match_participants', with differences. */
+const DERIVED_SOURCES = new Set(["player_groups", "match_pairs"]);
+
 /**
- * A source's columns, or, for player_groups, how they differ from a base.
+ * A source's columns, or, for a derived source, how they differ from a base.
  *
  * player_groups' columns are the base's, differing only in where they may
  * appear (game-level columns are filter-only; member counters are summed and
  * select-only). Listing names by clause set says that in a few lines; a column
- * whose type or description also differs keeps its own line.
+ * whose type or description also differs keeps its own line. match_pairs has
+ * every base column unchanged, which is left unsaid, plus its own.
  */
 function sourceBody(source: Source, base: Source | undefined): string[] {
-  if (base === undefined || source.id !== "player_groups") {
+  if (base === undefined || !DERIVED_SOURCES.has(source.id)) {
     return source.columns.map((column) => columnLine(column));
   }
   const baseByName = new Map(
@@ -84,10 +88,16 @@ function sourceBody(source: Source, base: Source | undefined): string[] {
     const clauses = column.usableIn
       .map((clause) => CLAUSE_LETTER[clause])
       .join("");
+    const baseClauses = inBase.usableIn
+      .map((clause) => CLAUSE_LETTER[clause])
+      .join("");
+    if (clauses === baseClauses) continue;
     byClauses.set(clauses, [...(byClauses.get(clauses) ?? []), column.name]);
   }
   return [
-    `Columns are ${base.id}'s, described above, except: no ${missing.join(", ")}.`,
+    missing.length === 0
+      ? `Columns are ${base.id}'s, described above, plus:`
+      : `Columns are ${base.id}'s, described above, except: no ${missing.join(", ")}.`,
     ...[...byClauses.entries()].map(
       ([clauses, names]) => `[${clauses}] ${names.join(", ")}`,
     ),

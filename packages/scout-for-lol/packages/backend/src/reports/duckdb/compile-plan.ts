@@ -217,7 +217,9 @@ function buildFactsPipeline(
     ? combineAnd(pushedFragments)
     : combineAnd([range, ...pushedFragments]);
   const source = match(kind.columnSource)
-    .with("match", () => buildMatchesSource(input.files, pushdown))
+    .with("match", "match-pair", () =>
+      buildMatchesSource(input.files, pushdown),
+    )
     .with("prematch", () => buildPrematchSource(input.files, pushdown))
     .with("match-team", () => buildMatchTeamsSource(input.files, pushdown))
     .with("match-team-ban", () =>

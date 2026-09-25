@@ -122,6 +122,17 @@ export const CORPUS: Expectation[] = [
     groupings: ["column/player"],
   },
   {
+    name: "a player's teammates, by partner",
+    query: `SELECT other, COUNT(*) AS games, AVG(win::INT) AS win_rate FROM match_pairs WHERE player('Gex') AND other('Lolo') AND relation = 'teammate' AND ${BOUND} GROUP BY other`,
+    timeWindow: "relative",
+    outputs: [
+      "other:text:sample",
+      "games:count:sample+",
+      "win_rate:percent:rate",
+    ],
+    groupings: ["column/other"],
+  },
+  {
     name: "histogram over a FLOOR bucket",
     query: `SELECT FLOOR(game_duration_seconds / 300) * 300 AS bucket, COUNT(*) AS games FROM match_participants WHERE ${BOUND} GROUP BY FLOOR(game_duration_seconds / 300) * 300 RENDER histogram`,
     timeWindow: "relative",

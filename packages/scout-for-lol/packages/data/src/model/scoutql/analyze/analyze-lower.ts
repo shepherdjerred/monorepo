@@ -230,7 +230,10 @@ export function lowerPredicate(
 ): ScoutQlPredicate | undefined {
   const playerRef = playerRefShape(expr);
   if (playerRef !== undefined) {
-    return { kind: "player-ref", index: refs.indexOf(playerRef.name) };
+    const index = refs.indexOf(playerRef.name);
+    return playerRef.side === "other"
+      ? { kind: "player-ref", index, side: "other" }
+      : { kind: "player-ref", index };
   }
   return match(expr)
     .with({ kind: "binary", op: "and" }, { kind: "binary", op: "or" }, (node) =>

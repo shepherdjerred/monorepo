@@ -292,6 +292,13 @@ const MATCH_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
   timeColumn: "game_creation_at",
 };
 
+/** match_pairs: the match pool plus the other player's columns. */
+const PAIR_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
+  ...MATCH_POOL,
+  text: [...MATCH_POOL.text, "relation", "other_team_position"],
+  dims: [...MATCH_POOL.dims, "other", "relation", "other_champion"],
+};
+
 const PREMATCH_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
   numeric: ["champion_id", "map_id", "team_id"],
   text: ["queue", "game_mode"],
@@ -328,7 +335,12 @@ function randomScalar(rnd: Rnd, pool: ColumnPool): ScoutQlScalarExpr {
 function randomLeaf(rnd: Rnd, pool: ColumnPool): ScoutQlPredicate {
   const roll = rnd();
   const hostile = pick(rnd, HOSTILE_STRINGS);
-  if (pool.playerRef && roll < 0.12) return { kind: "player-ref", index: 0 };
+  if (pool.playerRef && roll < 0.12) {
+    // On pairs, half name the other player instead.
+    return pool.dims.includes("other") && roll < 0.06
+      ? { kind: "player-ref", index: 0, side: "other" }
+      : { kind: "player-ref", index: 0 };
+  }
   if (roll < 0.4) {
     return {
       kind: "compare",
@@ -477,14 +489,29 @@ function randomGrouping(
   };
 }
 
+type RandomSource = {
+  source: "prematch_participants" | "match_pairs" | "match_participants";
+  pool: Omit<ColumnPool, "playerRef" | "streaks">;
+};
+
+function randomSource(rnd: Rnd): RandomSource {
+  if (rnd() < 0.3) {
+    return { source: "prematch_participants", pool: PREMATCH_POOL };
+  }
+  return rnd() < 0.3
+    ? { source: "match_pairs", pool: PAIR_POOL }
+    : { source: "match_participants", pool: MATCH_POOL };
+}
+
 function randomPlanInput(rnd: Rnd): PlanQueryInput {
-  const prematch = rnd() < 0.3;
-  const global = rnd() < 0.3;
+  const { source, pool: columns } = randomSource(rnd);
+  // A global pair query must name its player; a server's scope always does.
+  const global = source !== "match_pairs" && rnd() < 0.3;
   const usePlayerRef = rnd() < 0.4;
   const pool: ColumnPool = {
-    ...(prematch ? PREMATCH_POOL : MATCH_POOL),
+    ...columns,
     playerRef: usePlayerRef,
-    streaks: !prematch,
+    streaks: source === "match_participants",
   };
 
   const outputCount = 1 + Math.floor(rnd() * 3);
@@ -524,7 +551,7 @@ function randomPlanInput(rnd: Rnd): PlanQueryInput {
     });
   }
   const plan = makePlan({
-    source: prematch ? "prematch_participants" : "match_participants",
+    source,
     outputs,
     where: rnd() < 0.8 ? randomPredicate(rnd, pool, 2) : undefined,
     groupings,
@@ -568,6 +595,13 @@ const CLOSED_STRING_LITERALS = new Set([
   // Riot's empty position, folded into 'unknown'.
   "''",
   "'Not Arena'",
+  "'teammate'",
+  "'opponent'",
+  "'TOP'",
+  "'JUNGLE'",
+  "'MIDDLE'",
+  "'BOTTOM'",
+  "'UTILITY'",
   "'All'",
   "' • '",
   "'#'",
@@ -674,6 +708,17 @@ const IDENTIFIER_ALLOWLIST = new Set([
   "a",
   "facts",
   "filtered",
+  "pair_keys",
+  "pair_dim",
+  "o",
+  "riot_id",
+  "other",
+  "other_puuid",
+  "relation",
+  "is_lane_opponent",
+  "other_champion",
+  "other_champion_id",
+  "other_team_position",
   "streak_rows",
   "streak_base",
   "streak_runs",

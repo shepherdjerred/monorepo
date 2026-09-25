@@ -394,6 +394,22 @@ export const SCOUTQL_FUNCTIONS: readonly ScoutQlFunctionInfo[] = [
     maxArgs: 1,
   }),
   fn({
+    name: "other",
+    kind: "reference",
+    signatures: [
+      {
+        label: "other('name')",
+        params: [param("name", "Tracked player alias or Riot ID.")],
+      },
+    ],
+    resultType: "BOOLEAN (WHERE only, match_pairs)",
+    docMarkdown:
+      "On `match_pairs`, filter to pairs whose other player is this one: `WHERE player('Bob') AND other('Alice')` reads Bob's games with or against Alice. Resolves like `player('…')`: a Riot ID works for anyone.",
+    snippet: "other('${1:name}')",
+    minArgs: 1,
+    maxArgs: 1,
+  }),
+  fn({
     name: "champion",
     kind: "reference",
     signatures: [

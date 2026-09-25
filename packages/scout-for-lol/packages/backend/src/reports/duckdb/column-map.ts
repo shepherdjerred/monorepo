@@ -39,6 +39,7 @@ export type ColumnMap = ReadonlyMap<string, ColumnBinding>;
 
 export type PlanColumnSource =
   | "match"
+  | "match-pair"
   | "prematch"
   | "match-team"
   | "match-team-ban"
@@ -314,6 +315,17 @@ const TIMELINE_EVENT_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ],
 ];
 
+/** The other player of a match_pairs row, looked up (see pair-sql.ts). */
+const MATCH_PAIR_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
+  ["other", lookedUp("other", "text")],
+  ["other_puuid", lookedUp("other_puuid", "text")],
+  ["relation", lookedUp("relation", "text")],
+  ["is_lane_opponent", lookedUp("is_lane_opponent", "boolean")],
+  ["other_champion", lookedUp("other_champion", "text")],
+  ["other_champion_id", lookedUp("other_champion_id", "numeric")],
+  ["other_team_position", lookedUp("other_team_position", "text")],
+];
+
 export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
   return match(source)
     .with(
@@ -322,6 +334,15 @@ export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
         new Map([
           ...sourceColumnEntries(MATCH_LAKE_COLUMNS),
           ...MATCH_VIRTUAL_COLUMNS,
+        ]),
+    )
+    .with(
+      "match-pair",
+      () =>
+        new Map([
+          ...sourceColumnEntries(MATCH_LAKE_COLUMNS),
+          ...MATCH_VIRTUAL_COLUMNS,
+          ...MATCH_PAIR_VIRTUAL_COLUMNS,
         ]),
     )
     .with(

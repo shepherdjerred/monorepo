@@ -13,6 +13,7 @@ import {
   type ScoutQlColumnType,
 } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 import {
+  MATCH_PAIR_VIRTUALS,
   MATCH_TEAM_BAN_VIRTUALS,
   MATCH_TEAM_VIRTUALS,
   MATCH_VIRTUALS,
@@ -234,6 +235,20 @@ const CATALOG_LIST: SourceCatalog[] = [
     id: "match_participants",
     description: "One row per participant per finished match.",
     columns: toMap([...physicalColumns(MATCH_LAKE_COLUMNS), ...MATCH_VIRTUALS]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
+    playerRefAllowed: true,
+    groupCall: false,
+  },
+  {
+    id: "match_pairs",
+    description:
+      "One row per pair of players in the same finished match: every match_participants column describes the row's own player, and other, relation and the other_* columns describe the player they are paired with — a teammate or an opponent, tracked or not. For duo partners, worst teammates and head-to-head. Needs a player: name one with player('…'), or query a server.",
+    columns: toMap([
+      ...physicalColumns(MATCH_LAKE_COLUMNS),
+      ...MATCH_VIRTUALS,
+      ...MATCH_PAIR_VIRTUALS,
+    ]),
     timeColumn: "game_creation_at",
     requiresCompetitionId: false,
     playerRefAllowed: true,

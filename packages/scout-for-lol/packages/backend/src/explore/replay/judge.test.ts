@@ -268,9 +268,10 @@ describe("the judge prompt", () => {
     const prompt = judgeSystemPrompt();
     // Bans left this list when match_team_bans became a source.
     expect(prompt).not.toContain("match_team_bans");
-    // Every table is a source now; what remains is the head-to-head shape.
-    // Teammate pairings left when player_groups became reachable.
-    expect(prompt).toContain("head-to-head");
+    // Every table is a source now, and head-to-head left with match_pairs,
+    // so the judge grades absence claims against the whole lake.
+    expect(prompt).not.toContain("head-to-head");
+    expect(prompt).toContain("Explore can query everything");
     expect(prompt).not.toContain("plays well together");
     expect(prompt).not.toContain("timeline_events");
     expect(prompt).not.toContain("timeline_participant_frames");

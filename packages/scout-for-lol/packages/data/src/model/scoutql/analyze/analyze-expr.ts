@@ -133,15 +133,19 @@ function typePlayerRefCondition(
   if (shape === undefined) {
     return false;
   }
-  if (ctx.clause === "where" && ctx.allowPlayerRef) {
+  // other('…') names the other side of a pair, so only pairs have one.
+  const sideAvailable =
+    shape.side === "player" || ctx.catalog?.id === "match_pairs";
+  if (sideAvailable && ctx.clause === "where" && ctx.allowPlayerRef) {
     return true;
   }
+  const call = `${shape.side}('…')`;
   emitDiagnostic(ctx.diagnostics, {
     code: "player-ref-unavailable",
     message:
       ctx.clause === "where"
-        ? `player('…') is not available on ${ctx.catalog?.id ?? "this source"}.`
-        : "player('…') is only valid in the WHERE clause.",
+        ? `${call} is not available on ${ctx.catalog?.id ?? "this source"}.${shape.side === "other" ? " It names the other player of a pair: query match_pairs." : ""}`
+        : `${call} is only valid in the WHERE clause.`,
     span: shape.span,
   });
   return true;

@@ -90,7 +90,7 @@ function playerGrouping(input: GroupingInput): CompiledGrouping {
 function championGrouping(input: GroupingInput): CompiledGrouping {
   return (
     match(input.source)
-      .with("match", (): CompiledGrouping => {
+      .with("match", "match-pair", (): CompiledGrouping => {
         requireColumns(input.columns, ["champion_id", "champion_name"]);
         return {
           key: frag("champion_id"),
@@ -163,6 +163,17 @@ function compileColumnGrouping(
   return (
     match(name)
       .with("player", () => playerGrouping(input))
+      // The other player of a pair, anyone in the game: keyed on the account
+      // and labelled with its latest Riot ID, as a global player is.
+      .with("other", (): CompiledGrouping => {
+        requireColumns(input.columns, ["other", "other_puuid"]);
+        return {
+          key: frag("other_puuid"),
+          label: () => frag(`arg_max(other, ${input.timeColumn})`),
+          playerIdentity: false,
+          columnNames: ["other_puuid", "other"],
+        };
+      })
       .with("champion", () => championGrouping(input))
       .with(
         "queue",

@@ -277,10 +277,21 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "match_teams holds one row per team per match: objective counts and a first-objective flag for dragon, baron, herald, towers, inhibitors, grubs and Atakhan, each beside that team's win. Use it for 'does taking X predict winning' questions.",
     "It covers every match Scout has ingested and cannot be narrowed to this server's players, because a team row names no player and a query reads one source. Answer from it when the question is about the game, and say the answer covers all matches Scout has ingested — never present it as this server's record. If someone asks specifically about their own group's objectives, say that is the one thing you cannot split out.",
     "",
-    "## Data Scout has that you cannot query",
-    LAKE_COVERAGE_RULE,
-    ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map((entry) => `- ${entry}`),
+    "## Teammates and opponents",
+    // Head-to-head was on the unreachable list, and "who is his worst
+    // teammate" was the most-asked question Explore could not answer: the
+    // partner is usually untracked, which player_groups cannot see.
+    "match_pairs pairs each player with everyone else in the same game: its match_participants columns (win, kills, champion, …) are that player's, and other, relation ('teammate' or 'opponent'), is_lane_opponent and other_champion describe the one they are paired with — anyone, tracked or not. Name the player with player('…') and the partner or opponent with other('…'); globally it refuses to run without player('…').",
+    "Worst or best teammate: WHERE player('…') AND relation = 'teammate' GROUP BY other with a games floor in HAVING (HAVING games >= 5), and say the floor. Win rate with someone: player('A') AND other('B') AND relation = 'teammate'. Head-to-head: relation = 'opponent'; the lane matchup: is_lane_opponent. 'Together' means the same team in the same game, not necessarily queued as a duo; say so.",
     "",
+    ...(LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.length === 0
+      ? []
+      : [
+          "## Data Scout has that you cannot query",
+          LAKE_COVERAGE_RULE,
+          ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map((entry) => `- ${entry}`),
+          "",
+        ]),
     "## Limits",
     "player_groups reads groups of a server's tracked players who were on the same team in the same game — 'our top players together', 'who plays well together', 'our group's win rate'. It needs servers, and never runs without them: globally it cannot tell friends from random teammates. 'Together' means the same team in the same game, not necessarily queued as a group; say so.",
     "Two ScoutQL sources are unavailable here and must never be queried: the competition sources, competition_match_participants and competition_rank (each is scoped to one server's competition).",

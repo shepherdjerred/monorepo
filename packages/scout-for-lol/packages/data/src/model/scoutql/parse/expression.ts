@@ -188,8 +188,10 @@ export type ScoutQlPredicate =
     }
   | { kind: "is-null"; operand: ScoutQlScalarExpr; negated: boolean }
   // A `player('…')` conjunct: index into ScoutQlPlan.playerRefs. The engine
-  // substitutes the resolved PUUID set at execution.
-  | { kind: "player-ref"; index: number };
+  // substitutes the resolved PUUID set at execution. On match_pairs,
+  // `other('…')` names the other participant of the pair: the same name
+  // resolution, matched against the other side's puuid.
+  | { kind: "player-ref"; index: number; side?: "other" | undefined };
 
 export const ScoutQlPredicateSchema: z.ZodType<ScoutQlPredicate> = z.lazy(() =>
   z.discriminatedUnion("kind", [
@@ -232,6 +234,7 @@ export const ScoutQlPredicateSchema: z.ZodType<ScoutQlPredicate> = z.lazy(() =>
     z.object({
       kind: z.literal("player-ref"),
       index: z.number().int().nonnegative(),
+      side: z.literal("other").optional(),
     }),
   ]),
 );

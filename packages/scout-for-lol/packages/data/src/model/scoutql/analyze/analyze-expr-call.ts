@@ -443,13 +443,12 @@ function typeReferenceCall(
   node: CallNode,
   ctx: ExprTypingContext,
 ): ScoutQlExprType {
-  if (node.name === "player") {
+  if (node.name === "player" || node.name === "other") {
     // Valid player('…') shapes are consumed by typeConditionExpr before typing
     // descends here, so reaching this point is always a misuse.
     emitDiagnostic(ctx.diagnostics, {
       code: "player-ref-unavailable",
-      message:
-        "player('…') is only usable as a WHERE condition (bare, or player = player('…')).",
+      message: `${node.name}('…') is only usable as a WHERE condition (bare, or ${node.name} = ${node.name}('…')).`,
       span: node.span,
     });
     return "unknown";

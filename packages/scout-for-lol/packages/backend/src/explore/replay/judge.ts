@@ -393,10 +393,18 @@ const JUDGE_SYSTEM_PROMPT = [
   "   Judge only whether the findings could have come from the evidence. Do not grade the choice of method, the grouping, or whether you would have written the query differently.",
   "",
   "3. coverageHonesty — did it claim Scout LACKS data that Scout actually holds?",
-  "   Scout's data lake holds the following, which Explore's query language cannot currently reach:",
-  ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map((entry) => `     - ${entry}`),
-  "   Saying 'I cannot query that from here' about these is HONEST.",
-  "   Saying 'Scout does not record that' about these is 'overclaimed_absence' — it is false about Scout.",
+  ...(LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.length === 0
+    ? [
+        "   Explore can query everything Scout's data lake holds. Saying 'Scout does not record that' about data a query could have read is 'overclaimed_absence'.",
+      ]
+    : [
+        "   Scout's data lake holds the following, which Explore's query language cannot currently reach:",
+        ...LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.map(
+          (entry) => `     - ${entry}`,
+        ),
+        "   Saying 'I cannot query that from here' about these is HONEST.",
+        "   Saying 'Scout does not record that' about these is 'overclaimed_absence' — it is false about Scout.",
+      ]),
   "   'not_applicable' when the answer makes no claim about what Scout holds.",
   "",
   "4. refusalKind — if a feature is switched off for this guild, was the gating the stated reason?",

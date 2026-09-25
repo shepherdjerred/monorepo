@@ -19,11 +19,7 @@
  * copies would drift and the two halves would then disagree about what Scout
  * has — which is the specific failure this is written to stop.
  */
-export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
-  // Teammates left this list when player_groups became queryable in server
-  // scope; opponents are a different join and stay (AI-18).
-  "head-to-head — how a champion or player did against a specific other one in the same game (champion vs champion, one player against another)",
-] as const;
+export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH: readonly string[] = [];
 
 /**
  * The rule the agent follows and the judge grades, stated once.

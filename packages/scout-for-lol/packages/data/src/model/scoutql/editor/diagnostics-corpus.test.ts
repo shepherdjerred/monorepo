@@ -169,6 +169,12 @@ export const NEGATIVE_CASES: NegativeCase[] = [
     code: "source-column-context",
   },
   {
+    // Only a pair has another player to name.
+    name: "other('…') outside match_pairs",
+    query: `SELECT COUNT(*) AS g FROM match_participants WHERE other('Lolo') AND ${BOUND}`,
+    code: "player-ref-unavailable",
+  },
+  {
     name: "casting an aggregate result",
     query: `SELECT SUM(kills)::DOUBLE AS x FROM match_participants WHERE ${BOUND} GROUP BY player`,
     code: "cast-around-aggregate",

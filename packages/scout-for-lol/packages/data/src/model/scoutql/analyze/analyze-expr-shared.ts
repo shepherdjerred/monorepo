@@ -1,4 +1,5 @@
 import { match } from "ts-pattern";
+import { z } from "zod";
 import type { ScoutQlExprAst } from "#src/model/scoutql/parse/ast.ts";
 import type {
   ScoutQlDiagnostic,
@@ -249,12 +250,25 @@ export function comparable(a: ScoutQlExprType, b: ScoutQlExprType): boolean {
 
 // ── player('…') shapes ───────────────────────────────────────────────────────
 
-export type PlayerRefShape = { name: string; span: ScoutQlSpan };
+/**
+ * `player('…')` names the row's player. On match_pairs, `other('…')` names
+ * the other player of the pair, resolved the same way.
+ */
+const PlayerRefSideSchema = z.enum(["player", "other"]);
+export type PlayerRefSide = z.infer<typeof PlayerRefSideSchema>;
+
+export type PlayerRefShape = {
+  name: string;
+  span: ScoutQlSpan;
+  side: PlayerRefSide;
+};
 
 function barePlayerCall(expr: ScoutQlExprAst): PlayerRefShape | undefined {
+  const side =
+    expr.kind === "call" ? PlayerRefSideSchema.safeParse(expr.name) : undefined;
   if (
     expr.kind === "call" &&
-    expr.name === "player" &&
+    side?.success === true &&
     !expr.star &&
     !expr.distinct &&
     !expr.all &&
@@ -263,7 +277,7 @@ function barePlayerCall(expr: ScoutQlExprAst): PlayerRefShape | undefined {
   ) {
     const [arg] = expr.args;
     if (arg?.kind === "string") {
-      return { name: arg.value, span: expr.span };
+      return { name: arg.value, span: expr.span, side: side.data };
     }
   }
   return undefined;
@@ -271,8 +285,9 @@ function barePlayerCall(expr: ScoutQlExprAst): PlayerRefShape | undefined {
 
 /**
  * The two accepted `player('…')` condition shapes: a bare call, and the
- * legacy-familiar `player = player('…')` comparison. Both lift the name into
- * `plan.playerRefs` and leave a `player-ref` node behind.
+ * legacy-familiar `player = player('…')` comparison (`other = other('…')`
+ * alike). Both lift the name into `plan.playerRefs` and leave a `player-ref`
+ * node behind.
  */
 export function playerRefShape(
   expr: ScoutQlExprAst,
@@ -291,9 +306,9 @@ export function playerRefShape(
       if (
         call !== undefined &&
         side.column.kind === "column" &&
-        side.column.name === "player"
+        side.column.name === call.side
       ) {
-        return { name: call.name, span: expr.span };
+        return { ...call, span: expr.span };
       }
     }
   }

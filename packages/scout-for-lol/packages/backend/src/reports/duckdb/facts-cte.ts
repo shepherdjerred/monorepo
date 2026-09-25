@@ -15,6 +15,7 @@ import {
   type PlanColumnSource,
 } from "#src/reports/duckdb/column-map.ts";
 import { frag, joinFragments, seq } from "#src/reports/duckdb/sql-fragment.ts";
+import { pairLookup } from "#src/reports/duckdb/pair-sql.ts";
 
 /**
  * Facts for a row with no player — a team or a ban — read with the match
@@ -96,6 +97,8 @@ export type FactsCteInput = {
         readonly lane: boolean;
       }
     | undefined;
+  /** match_pairs only: every participant of the kept games (pair-sql.ts). */
+  pairOthers?: SqlFragment | undefined;
   /** Value columns to project as `m.X AS X` (identity handled separately). */
   projected: string[];
   /** Extra computed items (group-facts virtual columns), already fragments. */
@@ -115,6 +118,7 @@ function identityProjection(
   const alias = match(columnSource)
     .with(
       "match",
+      "match-pair",
       () =>
         "concat_ws('#', m.riot_id_game_name, m.riot_id_tagline) AS player_alias",
     )
@@ -454,10 +458,21 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
     eventSource && input.eventLookups?.firstOfKind === true
       ? withFirstOfKind(input.source)
       : input.source;
+  const pair =
+    input.pairOthers === undefined
+      ? undefined
+      : pairLookup({
+          subjects: rows,
+          others: input.pairOthers,
+          scope: input.scope,
+        });
+  const joins = `${lookups.joins}${pair?.join ?? ""}`;
+  const pairCtes = (pair?.ctes ?? []).flatMap((cte) => [cte, frag(", ")]);
   const items = joinFragments(
     [
       frag(identityProjection(input.scope, input.columnSource)),
       ...lookups.items.map((item) => frag(item)),
+      ...(pair === undefined ? [] : [frag(pair.items)]),
       // No puuid exists on a team row; the column is held open as NULL so the
       // facts shape does not vary by source.
       frag(teamSource ? "NULL::VARCHAR AS puuid" : `${puuidRef} AS puuid`),
@@ -476,11 +491,12 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
     return seq(
       "WITH ",
       ...lookupCtes,
+      ...pairCtes,
       "facts AS (SELECT ",
       items,
       " FROM (",
       rows,
-      `) m${lookups.joins})`,
+      `) m${joins})`,
     );
   }
   const accounts = trackedAccountsSource(input);
@@ -489,11 +505,14 @@ export function buildFactsCte(input: FactsCteInput): SqlFragment {
     ...lookupCtes,
     "accounts AS (",
     accounts,
-    "), facts AS (SELECT ",
+    // A pair's games are the scope's players' games, so they follow accounts.
+    "), ",
+    ...pairCtes,
+    "facts AS (SELECT ",
     items,
     " FROM (",
     rows,
     // Lookups first: an event's player is only known once the actor is.
-    `) m${lookups.joins} JOIN accounts a ON a.puuid = ${puuidRef})`,
+    `) m${joins} JOIN accounts a ON a.puuid = ${puuidRef})`,
   );
 }

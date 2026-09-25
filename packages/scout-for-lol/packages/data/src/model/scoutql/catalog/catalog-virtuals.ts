@@ -298,3 +298,45 @@ export const TIMELINE_FRAME_VIRTUALS: ScoutQlColumnInfo[] = [
     contexts: { select: true, where: true, groupBy: false },
   },
 ];
+
+/**
+ * The other player of a match_pairs row. Every match_participants column
+ * describes the row's own player; these describe the one they are paired
+ * with, looked up from that player's participant row in the same game.
+ */
+export const MATCH_PAIR_VIRTUALS: ScoutQlColumnInfo[] = [
+  virtualColumn(
+    "other",
+    "varchar",
+    "The other player, by Riot ID — anyone in the game, tracked or not. Filter with other('…'); group by it for partners or opponents.",
+  ),
+  virtualColumn(
+    "relation",
+    "varchar",
+    "'teammate' when the other player was on the same team (the same Arena duo), else 'opponent'.",
+  ),
+  {
+    name: "is_lane_opponent",
+    type: "boolean",
+    description:
+      "Whether the other player was the opponent in the same assigned position — the lane matchup. False without positions (ARAM, Arena).",
+    displayKind: "text",
+    virtual: true,
+    contexts: { select: true, where: true, groupBy: true },
+  },
+  virtualColumn("other_champion", "varchar", "The other player's champion."),
+  {
+    name: "other_champion_id",
+    type: "integer",
+    description:
+      "Numeric id of the other player's champion (compare with champion('Name')).",
+    displayKind: "count",
+    virtual: true,
+    contexts: { select: false, where: true, groupBy: false },
+  },
+  virtualColumn(
+    "other_team_position",
+    "varchar",
+    "Position the other player was assigned.",
+  ),
+];
