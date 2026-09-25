@@ -299,6 +299,14 @@ const PAIR_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
   dims: [...MATCH_POOL.dims, "other", "relation", "other_champion"],
 };
 
+/** match_items: the match pool plus the held item's columns. */
+const ITEM_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
+  ...MATCH_POOL,
+  numeric: [...MATCH_POOL.numeric, "item_id", "slot"],
+  text: [...MATCH_POOL.text, "item", "item_tier"],
+  dims: [...MATCH_POOL.dims, "item", "item_tier", "slot"],
+};
+
 const PREMATCH_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
   numeric: ["champion_id", "map_id", "team_id"],
   text: ["queue", "game_mode"],
@@ -490,7 +498,11 @@ function randomGrouping(
 }
 
 type RandomSource = {
-  source: "prematch_participants" | "match_pairs" | "match_participants";
+  source:
+    | "prematch_participants"
+    | "match_pairs"
+    | "match_items"
+    | "match_participants";
   pool: Omit<ColumnPool, "playerRef" | "streaks">;
 };
 
@@ -498,8 +510,10 @@ function randomSource(rnd: Rnd): RandomSource {
   if (rnd() < 0.3) {
     return { source: "prematch_participants", pool: PREMATCH_POOL };
   }
-  return rnd() < 0.3
-    ? { source: "match_pairs", pool: PAIR_POOL }
+  const roll = rnd();
+  if (roll < 0.25) return { source: "match_pairs", pool: PAIR_POOL };
+  return roll < 0.5
+    ? { source: "match_items", pool: ITEM_POOL }
     : { source: "match_participants", pool: MATCH_POOL };
 }
 
@@ -621,6 +635,7 @@ const IDENTIFIER_ALLOWLIST = new Set([
   "FROM",
   "WHERE",
   "JOIN",
+  "LEFT",
   "ON",
   "GROUP",
   "BY",
@@ -719,6 +734,24 @@ const IDENTIFIER_ALLOWLIST = new Set([
   "other_champion",
   "other_champion_id",
   "other_team_position",
+  "item_names",
+  "raw_id",
+  "raw_item_id",
+  "item_id",
+  "item",
+  "item_tier",
+  "slot",
+  "i",
+  "n",
+  "LATERAL",
+  "range",
+  "item0",
+  "item1",
+  "item2",
+  "item3",
+  "item4",
+  "item5",
+  "item6",
   "streak_rows",
   "streak_base",
   "streak_runs",

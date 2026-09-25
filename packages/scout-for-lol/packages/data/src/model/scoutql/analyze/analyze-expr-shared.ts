@@ -18,7 +18,10 @@ import {
 } from "#src/model/scoutql/parse/expression.ts";
 import type { SourceCatalog } from "#src/model/scoutql/catalog/catalog-columns.ts";
 import type { ScoutQlColumnInfo } from "#src/model/scoutql/catalog/catalog-column-types.ts";
-import { resolveReportChampion } from "#src/model/reports/report-query-champions.ts";
+import {
+  isNamedConstantFunction,
+  resolveNamedConstant,
+} from "#src/model/scoutql/analyze/analyze-named-constant.ts";
 
 // ── Expression-analysis shared vocabulary ────────────────────────────────────
 // The type lattice, the diagnostic emitter, the AST walkers, and the small
@@ -337,13 +340,13 @@ export function inItemLiteral(
   }
   if (
     item.kind === "call" &&
-    item.name === "champion" &&
+    isNamedConstantFunction(item.name) &&
     item.args.length === 1 &&
     item.args[0]?.kind === "string"
   ) {
-    const champion = resolveReportChampion(item.args[0].value);
-    if (champion !== undefined) {
-      return { value: champion.id };
+    const id = resolveNamedConstant(item.name, item.args[0].value);
+    if (id !== undefined) {
+      return { value: id };
     }
   }
   return undefined;

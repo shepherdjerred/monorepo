@@ -133,6 +133,17 @@ export const CORPUS: Expectation[] = [
     groupings: ["column/other"],
   },
   {
+    name: "a champion's most-built finished items",
+    query: `SELECT item, COUNT(DISTINCT match_id) AS games, AVG(win::INT) AS win_rate FROM match_items WHERE champion_id = champion('Mel') AND item_tier = 'legendary' AND item_id != item('Infinity Edge') AND ${BOUND} GROUP BY item`,
+    timeWindow: "relative",
+    outputs: [
+      "item:text:sample",
+      "games:count:sample",
+      "win_rate:percent:rate",
+    ],
+    groupings: ["column/item"],
+  },
+  {
     name: "histogram over a FLOOR bucket",
     query: `SELECT FLOOR(game_duration_seconds / 300) * 300 AS bucket, COUNT(*) AS games FROM match_participants WHERE ${BOUND} GROUP BY FLOOR(game_duration_seconds / 300) * 300 RENDER histogram`,
     timeWindow: "relative",

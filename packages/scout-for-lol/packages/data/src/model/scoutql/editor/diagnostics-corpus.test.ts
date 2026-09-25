@@ -169,6 +169,11 @@ export const NEGATIVE_CASES: NegativeCase[] = [
     code: "source-column-context",
   },
   {
+    name: "unknown item",
+    query: `SELECT COUNT(DISTINCT match_id) AS games FROM match_items WHERE item_id = item('Infinty Edge') AND ${BOUND}`,
+    code: "item-unknown",
+  },
+  {
     // Only a pair has another player to name.
     name: "other('…') outside match_pairs",
     query: `SELECT COUNT(*) AS g FROM match_participants WHERE other('Lolo') AND ${BOUND}`,

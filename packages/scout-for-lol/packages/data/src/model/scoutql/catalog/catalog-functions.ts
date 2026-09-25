@@ -410,6 +410,22 @@ export const SCOUTQL_FUNCTIONS: readonly ScoutQlFunctionInfo[] = [
     maxArgs: 1,
   }),
   fn({
+    name: "item",
+    kind: "reference",
+    signatures: [
+      {
+        label: "item('Name')",
+        params: [param("Name", "Item display name, e.g. 'Infinity Edge'.")],
+      },
+    ],
+    resultType: "INTEGER constant (an item_id)",
+    docMarkdown:
+      "Resolve an item display name to its numeric id at compile time: `WHERE item_id = item('Infinity Edge')` on `match_items`.",
+    snippet: "item('${1:Name}')",
+    minArgs: 1,
+    maxArgs: 1,
+  }),
+  fn({
     name: "champion",
     kind: "reference",
     signatures: [

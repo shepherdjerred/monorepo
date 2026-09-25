@@ -14,8 +14,7 @@ import {
   col,
   COUNT_OUTPUT,
   eq,
-  number_,
-  runPlan,
+  outputsByLabel,
   sourceInput,
 } from "#src/testing/run-compiled-plan.ts";
 import { compileScoutQlPlanQuery } from "#src/reports/duckdb/compile-plan.ts";
@@ -148,21 +147,9 @@ function pairs(plan: Partial<ScoutQlPlan>) {
 const GEX_REF = { kind: "player-ref", index: 0 } as const;
 const OTTO_REF = { kind: "player-ref", index: 1, side: "other" } as const;
 
-async function byLabel(
-  input: ReturnType<typeof pairs>,
-): Promise<Record<string, number[]>> {
-  const { rows, compiled } = await runPlan(input);
-  return Object.fromEntries(
-    rows.map((row) => [
-      String(row[compiled.columns.label]),
-      compiled.columns.outputs.map((output) => number_(row[output.alias])),
-    ]),
-  );
-}
-
 describe("match_pairs", () => {
   test("a player's teammates, tracked or not, with their record together", async () => {
-    const result = await byLabel(
+    const result = await outputsByLabel(
       pairs({
         outputs: [
           COUNT_OUTPUT,
@@ -176,7 +163,7 @@ describe("match_pairs", () => {
   });
 
   test("head-to-head: one player against another", async () => {
-    const result = await byLabel(
+    const result = await outputsByLabel(
       pairs({
         outputs: [
           COUNT_OUTPUT,
@@ -190,7 +177,7 @@ describe("match_pairs", () => {
   });
 
   test("the lane matchup is the opponent in the same position", async () => {
-    const result = await byLabel(
+    const result = await outputsByLabel(
       pairs({
         outputs: [COUNT_OUTPUT],
         where: and(GEX_REF, eq("is_lane_opponent", true)),
@@ -202,7 +189,7 @@ describe("match_pairs", () => {
   });
 
   test("a server's scope pairs its own players with anyone", async () => {
-    const result = await byLabel(
+    const result = await outputsByLabel(
       sourceInput(
         files,
         {

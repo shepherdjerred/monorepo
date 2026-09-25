@@ -12,7 +12,10 @@ import {
   ScoutQlCompareOpSchema,
   ScoutQlScalarFunctionSchema,
 } from "#src/model/scoutql/parse/expression.ts";
-import { resolveReportChampion } from "#src/model/reports/report-query-champions.ts";
+import {
+  isNamedConstantFunction,
+  resolveNamedConstant,
+} from "#src/model/scoutql/analyze/analyze-named-constant.ts";
 import {
   inItemLiteral,
   normalizeCastType,
@@ -81,15 +84,13 @@ export function allDefined<T>(values: (T | undefined)[]): T[] | undefined {
 function lowerScalarCall(
   node: Extract<ScoutQlExprAst, { kind: "call" }>,
 ): ScoutQlScalarExpr | undefined {
-  if (node.name === "champion") {
+  if (isNamedConstantFunction(node.name)) {
     const [arg] = node.args;
-    if (arg?.kind !== "string") {
-      return undefined;
-    }
-    const champion = resolveReportChampion(arg.value);
-    return champion === undefined
-      ? undefined
-      : { kind: "literal", value: champion.id };
+    const id =
+      arg?.kind === "string"
+        ? resolveNamedConstant(node.name, arg.value)
+        : undefined;
+    return id === undefined ? undefined : { kind: "literal", value: id };
   }
   const func = scalarFunction(node.name);
   if (func === undefined) {

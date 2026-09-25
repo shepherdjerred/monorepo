@@ -331,6 +331,15 @@ including its win state, objective counts, and first-objective flags, while
 team-relative statistic ordinary SQL: a target row joins its team row on
 `match_id` and `team_id`, and an opponent comparison joins the other team.
 
+A participant row also carries its final inventory as seven slot columns,
+`item0` through `item6`. Only ScoutQL's `match_items` source reads them, which
+unpivots them into one row per held item; every other read, including the Dare
+catalog, leaves them out. That is deliberate. Reads name their columns, so a
+build published before a column existed fails any read that names it until the
+schema fingerprint's rebuild publishes. Keeping the slots out of ordinary reads
+limits that window to item queries
+([lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts)).
+
 Version-three Bryan Bucks Dares expose those relations, the four timeline
 relations, and `T1` through `T5`. Each target relation is an ordinary filtered
 view of `match_participants`, bound to the contract's frozen Riot accounts and

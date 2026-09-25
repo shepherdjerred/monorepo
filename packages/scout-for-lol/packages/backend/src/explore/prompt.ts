@@ -277,6 +277,11 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "match_teams holds one row per team per match: objective counts and a first-objective flag for dragon, baron, herald, towers, inhibitors, grubs and Atakhan, each beside that team's win. Use it for 'does taking X predict winning' questions.",
     "It covers every match Scout has ingested and cannot be narrowed to this server's players, because a team row names no player and a query reads one source. Answer from it when the question is about the game, and say the answer covers all matches Scout has ingested — never present it as this server's record. If someone asks specifically about their own group's objectives, say that is the one thing you cannot split out.",
     "",
+    "## Items",
+    // "Best builds for Mel" was declined: items were not in the lake.
+    "match_items holds one row per item a player held when the game ended, with every match_participants column for that player. Name an item with item('…') (WHERE item_id = item('Infinity Edge')); item_tier = 'legendary' keeps finished items, and boots are their own tier. Count games with COUNT(DISTINCT match_id), never rows, and put a games floor on a ranked list.",
+    "It is the final inventory: not build order, not when an item was bought, and not items sold before the end. Say so when a question is about build paths or timing. Default to Summoner's Rift (queue solo, flex, normal or clash) unless the user names a mode; other modes build differently.",
+    "",
     "## Teammates and opponents",
     // Head-to-head was on the unreachable list, and "who is his worst
     // teammate" was the most-asked question Explore could not answer: the

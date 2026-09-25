@@ -340,3 +340,38 @@ export const MATCH_PAIR_VIRTUALS: ScoutQlColumnInfo[] = [
     "Position the other player was assigned.",
   ),
 ];
+
+/**
+ * The item of a match_items row. Every match_participants column describes
+ * the player who ended the game holding it.
+ */
+export const MATCH_ITEM_VIRTUALS: ScoutQlColumnInfo[] = [
+  virtualColumn(
+    "item",
+    "varchar",
+    "The item's name, from Scout's item data. A game mode's reissue of an item counts as the item.",
+  ),
+  {
+    name: "item_id",
+    type: "integer",
+    description:
+      "Numeric id of the item (compare with item('Name')). A game mode's reissue has its base item's id.",
+    displayKind: "count",
+    virtual: true,
+    contexts: { select: false, where: true, groupBy: false },
+  },
+  virtualColumn(
+    "item_tier",
+    "varchar",
+    "'legendary' (a finished item), 'boots', 'epic', 'basic', 'starter', 'consumable', 'trinket' or 'other' — from today's recipes, so an old patch's item may be classed as it is now.",
+  ),
+  {
+    name: "slot",
+    type: "integer",
+    description:
+      "Inventory slot, 0-5, and 6 for the trinket. Slot order is where an item sat at the end, not when it was bought.",
+    displayKind: "count",
+    virtual: true,
+    contexts: { select: false, where: true, groupBy: true },
+  },
+];

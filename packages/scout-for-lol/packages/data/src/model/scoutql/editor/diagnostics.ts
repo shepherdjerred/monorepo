@@ -32,6 +32,7 @@ export const SCOUTQL_DIAGNOSTIC_CODES = [
   "unknown-function",
   "unknown-queue",
   "champion-unknown",
+  "item-unknown",
   // Typing
   "type-mismatch",
   "aggregate-over-boolean",

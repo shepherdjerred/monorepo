@@ -1,4 +1,5 @@
 import {
+  ITEM_SLOT_COLUMNS,
   MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
@@ -13,6 +14,7 @@ import {
   type ScoutQlColumnType,
 } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 import {
+  MATCH_ITEM_VIRTUALS,
   MATCH_PAIR_VIRTUALS,
   MATCH_TEAM_BAN_VIRTUALS,
   MATCH_TEAM_VIRTUALS,
@@ -77,8 +79,15 @@ const DURATION_COLUMNS = new Set([
   "time_ccing_others",
 ]);
 
-/** Internal plumbing excluded from every catalog (partitioning / dedupe). */
-const INTERNAL_COLUMNS = new Set(["month", "dedupe_key"]);
+/**
+ * Excluded from every catalog: partitioning and dedupe plumbing, and the raw
+ * inventory slots, which match_items reads as one row per item.
+ */
+const INTERNAL_COLUMNS = new Set<string>([
+  "month",
+  "dedupe_key",
+  ...ITEM_SLOT_COLUMNS,
+]);
 
 function rawDisplayKind(
   name: string,
@@ -248,6 +257,20 @@ const CATALOG_LIST: SourceCatalog[] = [
       ...physicalColumns(MATCH_LAKE_COLUMNS),
       ...MATCH_VIRTUALS,
       ...MATCH_PAIR_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
+    playerRefAllowed: true,
+    groupCall: false,
+  },
+  {
+    id: "match_items",
+    description:
+      "One row per item a player held when a finished match ended — final inventory, not build order or timing. Every match_participants column describes the player holding it; item, item_id, item_tier and slot describe the item. Count builds as games with COUNT(DISTINCT match_id), not rows.",
+    columns: toMap([
+      ...physicalColumns(MATCH_LAKE_COLUMNS),
+      ...MATCH_VIRTUALS,
+      ...MATCH_ITEM_VIRTUALS,
     ]),
     timeColumn: "game_creation_at",
     requiresCompetitionId: false,

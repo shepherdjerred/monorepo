@@ -90,7 +90,7 @@ function playerGrouping(input: GroupingInput): CompiledGrouping {
 function championGrouping(input: GroupingInput): CompiledGrouping {
   return (
     match(input.source)
-      .with("match", "match-pair", (): CompiledGrouping => {
+      .with("match", "match-pair", "match-item", (): CompiledGrouping => {
         requireColumns(input.columns, ["champion_id", "champion_name"]);
         return {
           key: frag("champion_id"),

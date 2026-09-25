@@ -30,6 +30,7 @@ describe("clause vocabulary", () => {
     expect(labels("SELECT COUNT(*) AS games FROM |")).toEqual([
       "competition_match_participants",
       "competition_rank",
+      "match_items",
       "match_pairs",
       "match_participants",
       "match_team_bans",

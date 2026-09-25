@@ -39,6 +39,7 @@ export const ScoutQlSourceSchema = z.enum([
   "match_teams",
   "match_team_bans",
   "match_pairs",
+  "match_items",
   "timeline_frames",
   "timeline_events",
   "player_groups",

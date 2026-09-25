@@ -85,6 +85,8 @@ export type TestLakeMatchFact = {
    */
   riotIdGameName?: string;
   riotIdTagline?: string;
+  /** Final inventory by slot (0-6); missing slots are empty. */
+  items?: number[];
   gameCreationAt: Date;
 };
 
@@ -105,6 +107,20 @@ export type TestLakePrematchFact = {
 };
 
 let testBuildCounter = 0;
+
+/** A fixture's inventory as the seven slot columns; missing slots are empty. */
+function itemSlots(items: readonly number[] = []) {
+  const at = (slot: number) => items[slot] ?? 0;
+  return {
+    item0: at(0),
+    item1: at(1),
+    item2: at(2),
+    item3: at(3),
+    item4: at(4),
+    item5: at(5),
+    item6: at(6),
+  };
+}
 
 function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
@@ -202,6 +218,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     placement: null,
     subteam_placement: null,
     player_subteam_id: fact.playerSubteamId ?? null,
+    ...itemSlots(fact.items),
   };
 }
 

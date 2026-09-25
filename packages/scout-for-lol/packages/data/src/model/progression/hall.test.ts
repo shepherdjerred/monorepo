@@ -103,6 +103,13 @@ function matchRow(): MatchLakeRow {
     placement: null,
     subteam_placement: null,
     player_subteam_id: null,
+    item0: 0,
+    item1: 0,
+    item2: 0,
+    item3: 0,
+    item4: 0,
+    item5: 0,
+    item6: 0,
   };
 }
 

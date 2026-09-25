@@ -15,7 +15,12 @@ import {
   type PlanColumnSource,
 } from "#src/reports/duckdb/column-map.ts";
 import { frag, joinFragments, seq } from "#src/reports/duckdb/sql-fragment.ts";
-import { pairLookup } from "#src/reports/duckdb/pair-sql.ts";
+import { pairLookup } from "#src/reports/duckdb/sources/pair-sql.ts";
+import {
+  ITEM_ITEMS,
+  ITEM_JOIN,
+  itemNamesCte,
+} from "#src/reports/duckdb/sources/item-sql.ts";
 
 /**
  * Facts for a row with no player — a team or a ban — read with the match
@@ -119,6 +124,7 @@ function identityProjection(
     .with(
       "match",
       "match-pair",
+      "match-item",
       () =>
         "concat_ws('#', m.riot_id_game_name, m.riot_id_tagline) AS player_alias",
     )
@@ -378,6 +384,11 @@ function rowLookups(input: FactsCteInput): Lookups {
     ctes.push(teamDimensionCte(input.teamDimension));
     joins.push(TEAM_LOOKUP_JOIN);
     items.push(TEAM_LOOKUP_ITEMS);
+  }
+  if (input.columnSource === "match-item") {
+    ctes.push(itemNamesCte());
+    joins.push(ITEM_JOIN);
+    items.push(ITEM_ITEMS);
   }
   if (input.columnSource === "timeline-frame") {
     const participants = input.participantDimension;

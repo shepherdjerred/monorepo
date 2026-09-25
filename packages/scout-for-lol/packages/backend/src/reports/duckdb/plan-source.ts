@@ -6,7 +6,7 @@ import type { ServerPerson } from "#src/reports/server-people.ts";
 import {
   namesPairSubject,
   PAIR_KEYS_SCAN_FILTER,
-} from "#src/reports/duckdb/pair-sql.ts";
+} from "#src/reports/duckdb/sources/pair-sql.ts";
 import {
   buildMatchesSource,
   buildMatchDimensionSource,
@@ -56,6 +56,11 @@ export function planSourceKind(
     // A pair's own player is a participant row; the other is a lookup.
     .with("match_pairs", (): SourceKind => ({
       columnSource: "match-pair",
+      timeColumn: "game_creation_at",
+    }))
+    // An item's player is a participant row; the item is unpivoted from it.
+    .with("match_items", (): SourceKind => ({
+      columnSource: "match-item",
       timeColumn: "game_creation_at",
     }))
     .with("prematch_participants", (): SourceKind => ({

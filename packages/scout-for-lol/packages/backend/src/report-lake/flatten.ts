@@ -149,6 +149,13 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     placement: participant.placement ?? null,
     subteam_placement: participant.subteamPlacement ?? null,
     player_subteam_id: participant.playerSubteamId ?? null,
+    item0: participant.item0,
+    item1: participant.item1,
+    item2: participant.item2,
+    item3: participant.item3,
+    item4: participant.item4,
+    item5: participant.item5,
+    item6: participant.item6,
   }));
 }
 

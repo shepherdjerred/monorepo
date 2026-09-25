@@ -1,6 +1,5 @@
 import { match } from "ts-pattern";
 import {
-  MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
@@ -10,6 +9,7 @@ import {
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
+import { MATCH_READ_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 
 /**
  * Which column names each ScoutQL source exposes, and the SQL each becomes.
@@ -40,6 +40,7 @@ export type ColumnMap = ReadonlyMap<string, ColumnBinding>;
 export type PlanColumnSource =
   | "match"
   | "match-pair"
+  | "match-item"
   | "prematch"
   | "match-team"
   | "match-team-ban"
@@ -315,7 +316,7 @@ const TIMELINE_EVENT_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ],
 ];
 
-/** The other player of a match_pairs row, looked up (see pair-sql.ts). */
+/** The other player of a match_pairs row, looked up (see sources/pair-sql.ts). */
 const MATCH_PAIR_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["other", lookedUp("other", "text")],
   ["other_puuid", lookedUp("other_puuid", "text")],
@@ -326,13 +327,21 @@ const MATCH_PAIR_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["other_team_position", lookedUp("other_team_position", "text")],
 ];
 
+/** The item of a match_items row, unpivoted from the slots (see sources/item-sql.ts). */
+const MATCH_ITEM_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
+  ["item", lookedUp("item", "text")],
+  ["item_id", lookedUp("item_id", "numeric")],
+  ["item_tier", lookedUp("item_tier", "text")],
+  ["slot", lookedUp("slot", "numeric")],
+];
+
 export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
   return match(source)
     .with(
       "match",
       () =>
         new Map([
-          ...sourceColumnEntries(MATCH_LAKE_COLUMNS),
+          ...sourceColumnEntries(MATCH_READ_COLUMNS),
           ...MATCH_VIRTUAL_COLUMNS,
         ]),
     )
@@ -340,9 +349,18 @@ export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
       "match-pair",
       () =>
         new Map([
-          ...sourceColumnEntries(MATCH_LAKE_COLUMNS),
+          ...sourceColumnEntries(MATCH_READ_COLUMNS),
           ...MATCH_VIRTUAL_COLUMNS,
           ...MATCH_PAIR_VIRTUAL_COLUMNS,
+        ]),
+    )
+    .with(
+      "match-item",
+      () =>
+        new Map([
+          ...sourceColumnEntries(MATCH_READ_COLUMNS),
+          ...MATCH_VIRTUAL_COLUMNS,
+          ...MATCH_ITEM_VIRTUAL_COLUMNS,
         ]),
     )
     .with(

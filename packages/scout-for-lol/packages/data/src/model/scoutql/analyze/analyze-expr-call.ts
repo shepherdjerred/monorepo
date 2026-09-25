@@ -4,10 +4,7 @@ import type {
   ScoutQlFix,
   ScoutQlSpan,
 } from "#src/model/scoutql/editor/diagnostics.ts";
-import {
-  closestChampionName,
-  resolveReportChampion,
-} from "#src/model/reports/report-query-champions.ts";
+import { unknownNamedConstant } from "#src/model/scoutql/analyze/analyze-named-constant.ts";
 import {
   closestScoutQlFunctionName,
   scoutQlFunction,
@@ -458,19 +455,15 @@ function typeReferenceCall(
     if (arg !== undefined && !containsErrorNode(arg)) {
       emitDiagnostic(ctx.diagnostics, {
         code: "function-arity",
-        message: "champion('…') takes one string literal.",
+        message: `${node.name}('…') takes one string literal.`,
         span: node.span,
       });
     }
     return "integer";
   }
-  if (resolveReportChampion(arg.value) === undefined) {
-    const suggestion = closestChampionName(arg.value);
-    emitDiagnostic(ctx.diagnostics, {
-      code: "champion-unknown",
-      message: `Unknown champion "${arg.value}".${suggestion === undefined ? "" : ` Did you mean "${suggestion}"?`}`,
-      span: arg.span,
-    });
+  const unknown = unknownNamedConstant(node.name, arg.value);
+  if (unknown !== undefined) {
+    emitDiagnostic(ctx.diagnostics, { ...unknown, span: arg.span });
   }
   return "integer";
 }

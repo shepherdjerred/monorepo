@@ -10,6 +10,7 @@ import {
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
+import { MATCH_READ_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import {
   TIMELINE_COVERAGE_LAKE_COLUMNS,
   TIMELINE_EVENT_LAKE_COLUMNS,
@@ -362,11 +363,12 @@ export function buildUnionSource(
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  columns: "reads" | "with-items" = "reads",
 ): SqlFragment | undefined {
   return buildUnionSource({
     parquetFiles: files.matchesParquet,
     stagingFiles: files.matchesStaging,
-    columns: MATCH_LAKE_COLUMNS,
+    columns: columns === "reads" ? MATCH_READ_COLUMNS : MATCH_LAKE_COLUMNS,
     dedupe: "matches",
     predicate,
   });
