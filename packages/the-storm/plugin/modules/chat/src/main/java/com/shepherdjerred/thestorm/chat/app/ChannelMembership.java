@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Resolves who hears a town or nation message. Provided by the towns module through {@link
+ * Resolves who hears a town chat message. Provided by the towns module through {@link
  * ChannelRegistry}.
  *
  * <p>Called from Paper's async chat threads as well as the main thread, so implementations must be
@@ -15,8 +15,8 @@ import java.util.UUID;
 public interface ChannelMembership {
 
   /**
-   * Everyone in {@code speaker}'s group, including the speaker, or empty when the speaker has no
-   * town (or nation).
+   * Everyone in {@code speaker}'s town, including the speaker, or empty when the speaker has no
+   * town.
    */
   Optional<Set<UUID>> members(UUID speaker);
 }

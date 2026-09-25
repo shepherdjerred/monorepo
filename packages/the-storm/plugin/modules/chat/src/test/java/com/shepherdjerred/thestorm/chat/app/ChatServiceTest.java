@@ -63,24 +63,21 @@ final class ChatServiceTest {
   @Test
   void townChatIsUnavailableUntilTownsRegister() {
     assertThat(service.access(ALICE_SPEAKS, ChannelKey.TOWN)).isEqualTo(ChannelAccess.UNAVAILABLE);
-    assertThat(service.prepare(ALICE_SPEAKS, ChannelKey.NATION, "hi"))
+    assertThat(service.prepare(ALICE_SPEAKS, ChannelKey.TOWN, "hi"))
         .isEqualTo(
             Result.err(
-                List.of(new ChatDenial.NoAccess(ChannelKey.NATION, ChannelAccess.UNAVAILABLE))));
+                List.of(new ChatDenial.NoAccess(ChannelKey.TOWN, ChannelAccess.UNAVAILABLE))));
 
-    extensions.registerMembership(
-        GroupChannel.TOWN,
+    extensions.registerTownMembership(
         speaker -> speaker.equals(ALICE) ? Optional.of(Set.of(ALICE, BOB)) : Optional.empty());
 
     assertThat(service.access(ALICE_SPEAKS, ChannelKey.TOWN)).isEqualTo(ChannelAccess.GRANTED);
     assertThat(service.access(STAFF_SPEAKS, ChannelKey.TOWN)).isEqualTo(ChannelAccess.NOT_A_MEMBER);
-    assertThat(service.access(ALICE_SPEAKS, ChannelKey.NATION))
-        .isEqualTo(ChannelAccess.UNAVAILABLE);
   }
 
   @Test
   void townLinesReachOnlyTheTown() {
-    extensions.registerMembership(GroupChannel.TOWN, speaker -> Optional.of(Set.of(ALICE, BOB)));
+    extensions.registerTownMembership(speaker -> Optional.of(Set.of(ALICE, BOB)));
 
     var line = sent(service.prepare(ALICE_SPEAKS, ChannelKey.TOWN, "meet at the hall"));
 
@@ -202,11 +199,10 @@ final class ChatServiceTest {
 
   @Test
   void extensionsRegisterOnce() {
-    extensions.registerMembership(GroupChannel.NATION, speaker -> Optional.empty());
+    extensions.registerTownMembership(speaker -> Optional.empty());
     extensions.registerPrefixProvider(player -> "x");
 
-    assertThatThrownBy(
-            () -> extensions.registerMembership(GroupChannel.NATION, speaker -> Optional.empty()))
+    assertThatThrownBy(() -> extensions.registerTownMembership(speaker -> Optional.empty()))
         .isInstanceOf(IllegalStateException.class);
     assertThatThrownBy(() -> extensions.registerPrefixProvider(player -> "y"))
         .isInstanceOf(IllegalStateException.class);

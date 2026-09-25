@@ -22,9 +22,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Chat channels (Global, War, Staff, Town, Nation), private messages, emotes, ignores and staff
- * mutes; replaces VentureChat. Publishes {@link GlobalChat} for bridges, and {@link
- * ChannelRegistry} and {@link PrefixRegistry} for the towns and tracks modules.
+ * Chat channels (Global, War, Staff, Town), private messages, emotes, ignores and staff mutes;
+ * replaces VentureChat. Publishes {@link GlobalChat} for bridges, and {@link ChannelRegistry} and
+ * {@link PrefixRegistry} for the towns and tracks modules.
  */
 public final class ChatModule implements StormModule {
 

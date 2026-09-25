@@ -8,10 +8,10 @@ import com.shepherdjerred.thestorm.chat.domain.LineTemplate;
  * The MiniMessage format of each channel. Every format must use {@code <prefix>}, {@code <player>}
  * and {@code <message>}.
  */
-public record ChannelFormats(String global, String war, String staff, String town, String nation) {
+public record ChannelFormats(String global, String war, String staff, String town) {
 
   public ChannelFormats {
-    for (var format : new String[] {global, war, staff, town, nation}) {
+    for (var format : new String[] {global, war, staff, town}) {
       ChatFormat.channelTemplate(format);
     }
   }
@@ -24,7 +24,6 @@ public record ChannelFormats(String global, String war, String staff, String tow
           case WAR -> war;
           case STAFF -> staff;
           case TOWN -> town;
-          case NATION -> nation;
         });
   }
 }

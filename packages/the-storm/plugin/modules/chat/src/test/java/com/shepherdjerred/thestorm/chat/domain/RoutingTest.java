@@ -34,15 +34,14 @@ final class RoutingTest {
   }
 
   @Test
-  void groupChatReachesOnlyMembers() {
+  void townChatReachesOnlyTheTown() {
     assertThat(
             Routing.receives(
                 ChannelKey.TOWN, SPEAKER, viewer(false, LISTENS), Set.of(SPEAKER, VIEWER)))
         .isTrue();
     assertThat(Routing.receives(ChannelKey.TOWN, SPEAKER, viewer(true, LISTENS), Set.of(SPEAKER)))
+        .as("staff outside the town do not hear it")
         .isFalse();
-    assertThat(Routing.receives(ChannelKey.NATION, SPEAKER, viewer(false, LISTENS), Set.of(VIEWER)))
-        .isTrue();
   }
 
   @Test

@@ -287,13 +287,13 @@ public final class ChatService {
           speaker.staff()
               ? Resolution.granted(Set.of())
               : new Resolution(ChannelAccess.NO_PERMISSION, Set.of());
-      case GROUP -> resolveGroup(speaker, GroupChannel.of(channel));
+      case TOWN -> resolveTown(speaker);
     };
   }
 
-  private Resolution resolveGroup(Speaker speaker, GroupChannel group) {
+  private Resolution resolveTown(Speaker speaker) {
     return extensions
-        .membership(group)
+        .townMembership()
         .map(
             membership ->
                 membership

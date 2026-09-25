@@ -33,8 +33,7 @@ final class Fixtures {
               "[G][<prefix><player>]: <message>",
               "[W][<prefix><player>]: <message>",
               "[S][<prefix><player>]: <message>",
-              "[T][<prefix><player>]: <message>",
-              "[N][<prefix><player>]: <message>"),
+              "[T][<prefix><player>]: <message>"),
           "[<channel>] * <prefix><player> <message>",
           "[<from> -> <to>]: <message>",
           "[<source>][<author>]: <message>");

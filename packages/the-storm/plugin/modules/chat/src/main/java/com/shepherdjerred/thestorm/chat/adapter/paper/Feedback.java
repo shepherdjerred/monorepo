@@ -8,7 +8,6 @@ import com.shepherdjerred.thestorm.chat.domain.Durations;
 import com.shepherdjerred.thestorm.chat.domain.ProfileError;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import java.util.List;
-import java.util.Locale;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -60,12 +59,11 @@ final class Feedback {
   }
 
   static String describe(ChannelKey channel, ChannelAccess access) {
-    var group = channel.displayName().toLowerCase(Locale.ROOT);
     return switch (access) {
       case GRANTED -> "You can talk in " + channel.displayName() + " chat.";
       case NO_PERMISSION -> "You cannot use " + channel.displayName() + " chat.";
-      case UNAVAILABLE -> "Towns are not available yet, so there is no " + group + " chat.";
-      case NOT_A_MEMBER -> "You are not in a " + group + ".";
+      case UNAVAILABLE -> "Towns are not available yet, so there is no town chat.";
+      case NOT_A_MEMBER -> "You are not in a town.";
     };
   }
 
