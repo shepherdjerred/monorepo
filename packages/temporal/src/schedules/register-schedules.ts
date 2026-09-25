@@ -32,12 +32,19 @@ import {
 // allow-list — NOT a blind prune of "anything not in SCHEDULES", which would
 // also delete the ad-hoc/cron agent-task schedules created via the /agent-tasks API.
 export const DELETED_SCHEDULE_IDS = [
+  // CI maintenance schedules renamed off the provider: the id is also the
+  // `maintenance_job` metric label the homelab staleness alerts watch, so the
+  // old ids must be deleted rather than orphaned or both names would appear to
+  // be jobs that stopped reporting.
+  "buildkite-bun-cache-gc",
+  "buildkite-uv-cache-prune-weekly",
+  "buildkite-trivy-db-refresh",
   // Replaced by the stage-specific Scout competition update Schedules owned
   // by the embedded Scout Workers.
   "scout-competition-updates-minute",
   "good-morning-weekday-early",
   "good-morning-weekend-early",
-  // Replaced by the Buildkite `helm-types-drift-check` CI gate (the generated
+  // Replaced by the `helm-types-drift-check` CI gate (the generated
   // types are now verified on every PR that touches a generator input, instead
   // of reconciled weekly). The workflow type was removed from the bundle, so
   // this schedule must be deleted or it would keep firing a missing workflow.

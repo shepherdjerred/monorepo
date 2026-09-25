@@ -167,12 +167,16 @@ export function createTemporalOperationsWorkers(
         key: "S3_BUCKET_NAME",
       }),
       S3_KEY: EnvValue.fromValue("data/manifest.json"),
-      BUILDKITE_API_TOKEN: EnvValue.fromSecretValue({
+      WOODPECKER_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
-        key: "BUILDKITE_API_TOKEN",
+        key: "WOODPECKER_TOKEN",
       }),
-      BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
-      BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
+      WOODPECKER_REPO_ID: EnvValue.fromSecretValue({
+        secret: props.secret,
+        key: "WOODPECKER_REPO_ID",
+      }),
+      // HTTP origin, not the agent gRPC endpoint WOODPECKER_SERVER names.
+      WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
       ),

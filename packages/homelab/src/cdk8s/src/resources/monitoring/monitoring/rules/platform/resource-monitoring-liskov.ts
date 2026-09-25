@@ -39,18 +39,18 @@ export function getLiskovResourceMonitoringRuleGroups(): PrometheusRuleSpecGroup
       ],
     },
     {
-      name: "resource-buildkite-admission-monitoring",
+      name: "resource-woodpecker-admission-monitoring",
       rules: [
         {
-          alert: "BuildkiteKueueWorkloadsWaiting",
+          alert: "WoodpeckerKueueWorkloadsWaiting",
           annotations: {
             description: escapePrometheusTemplate(
-              "Buildkite workloads have been waiting for liskov quota admission for more than 30 minutes: {{ $value }} pending workloads",
+              "Woodpecker workloads have been waiting for liskov quota admission for more than 30 minutes: {{ $value }} pending workloads",
             ),
-            summary: "Buildkite workloads are waiting for Kueue capacity",
+            summary: "Woodpecker workloads are waiting for Kueue capacity",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'kueue_pending_workloads{cluster_queue="buildkite"} > 0',
+            'kueue_pending_workloads{cluster_queue="woodpecker"} > 0',
           ),
           for: "30m",
           labels: { severity: "warning" },

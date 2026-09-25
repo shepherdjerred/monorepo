@@ -21,7 +21,7 @@ type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
 type KubeStateMetricsValues = NonNullable<
   KubePrometheusStackValues["kube-state-metrics"]
 >;
-type KubeStateMetricsWithBuildkiteMetadata = KubeStateMetricsValues & {
+type KubeStateMetricsWithWoodpeckerMetadata = KubeStateMetricsValues & {
   metricLabelsAllowlist?: string[];
   metricAnnotationsAllowList?: string[];
   resources?: {
@@ -34,7 +34,7 @@ export type PrometheusValuesWithBlackbox = Omit<
   "grafana" | "kube-state-metrics"
 > & {
   grafana?: GrafanaValuesWithStringDashboardLabel;
-  "kube-state-metrics"?: KubeStateMetricsWithBuildkiteMetadata;
+  "kube-state-metrics"?: KubeStateMetricsWithWoodpeckerMetadata;
   "prometheus-blackbox-exporter"?: {
     enabled?: boolean;
     resources?: {
@@ -59,26 +59,36 @@ export type PrometheusValuesWithBlackbox = Omit<
   };
 };
 
-export const BUILDKITE_KUBE_STATE_METRICS_VALUES = {
+/**
+ * kube-state-metrics only exports pod labels and annotations named here, so
+ * this list is what makes CI I/O attribution possible at all.
+ *
+ * The keys are stamped by the configuration extension
+ * (packages/woodpecker-config-extension/src/pipeline/emit.ts) and joined by the
+ * recording rules in resources/monitoring/monitoring/rules/woodpecker.ts.
+ * Nothing fails loudly if these three drift -- the join just returns an empty
+ * vector -- which is why each file names the other two.
+ */
+export const CI_KUBE_STATE_METRICS_VALUES = {
   metricLabelsAllowlist: [
-    "pods=[buildkite.com/job-uuid,ci.sjer.red/step-key]",
+    "pods=[ci.sjer.red/step-key,ci.sjer.red/commit]",
     "persistentvolumeclaims=[velero.io/backup]",
   ],
   metricAnnotationsAllowList: [
-    "pods=[buildkite.com/build-branch,buildkite.com/build-url,buildkite.com/job-url,buildkite.com/pipeline-slug]",
+    "pods=[ci.sjer.red/branch,ci.sjer.red/pipeline-url]",
   ],
   resources: {
     requests: { cpu: "20m", memory: "128Mi" },
   },
-} satisfies KubeStateMetricsWithBuildkiteMetadata;
+} satisfies KubeStateMetricsWithWoodpeckerMetadata;
 
-export const BUILDKITE_IO_OBSERVABILITY_VALUES = {
+export const CI_IO_OBSERVABILITY_VALUES = {
   kubelet: {
     serviceMonitor: {
       cAdvisorInterval: "10s",
     },
   },
-  "kube-state-metrics": BUILDKITE_KUBE_STATE_METRICS_VALUES,
+  "kube-state-metrics": CI_KUBE_STATE_METRICS_VALUES,
 } satisfies Pick<
   PrometheusValuesWithBlackbox,
   "kubelet" | "kube-state-metrics"

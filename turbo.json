@@ -145,7 +145,7 @@
         "package.json",
         "packages/**",
         "scripts/**",
-        ".buildkite/**",
+        "ci/**",
         "!**/node_modules/**",
         "!**/dist/**",
         "!packages/dotfiles/dot_agents/skills/**"
@@ -154,7 +154,7 @@
     "//#check-ai-architecture": {
       "inputs": [
         "package.json",
-        ".buildkite/**",
+        "ci/**",
         "packages/**",
         "scripts/**",
         "!**/node_modules/**",
@@ -182,7 +182,7 @@
         "patches/**",
         "packages/**/patches/*.patch",
         "scripts/checks/deps/check-patched-deps.ts",
-        ".buildkite/scripts/selectors/select-image-targets.ts"
+        "ci/scripts/selectors/select-image-targets.ts"
       ]
     },
     // Every env var a pipeline step's scripts require must be provided by that
@@ -198,22 +198,32 @@
     },
     "//#check-ci-env": {
       // Every tree requiredEnvFrom may analyze has to be hashed, not just the
-      // pipeline: the checker treats literal `.buildkite/scripts/*.ts`
+      // pipeline: the checker treats literal `ci/scripts/*.ts`
       // commands as entry points and follows their imports, so a requireEnv
       // added there would otherwise reuse a green cached result.
       // The check iterates every pipeline in secret-grants.json, so every
       // one of those files must invalidate it — reporting-pipeline.yml was
       // missing here, which let a grant violation ride main green on cache.
       "inputs": [
-        ".buildkite/pipeline.yml",
-        ".buildkite/main-bootstrap.yml",
-        ".buildkite/reporting-pipeline.yml",
-        ".buildkite/scripts/**",
+        "ci/scripts/**",
         "scripts/**",
         "!scripts/node_modules/**",
         "packages/homelab/scripts/**",
         "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts"
+        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
+        // The grants come from the generated step model, so the generator is
+        // an input too; without it a grant change reused a green cached result.
+        "packages/woodpecker-config-extension/src/**"
+      ]
+    },
+    "//#check-ci-admission-budget": {
+      // The budget (cdk8s) and the step model (the generator) are the two
+      // halves this check compares; a change to either must re-run it.
+      "inputs": [
+        "scripts/checks/ci/check-ci-admission-budget.ts",
+        "scripts/lib/ci/generated-steps.ts",
+        "packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json",
+        "packages/woodpecker-config-extension/src/**"
       ]
     },
     "//#check-script-migrations": {
@@ -222,7 +232,7 @@
         "scripts/script-migrations.schema.json",
         "scripts/checks/check-script-migrations.ts",
         "scripts/**/*.ts",
-        ".buildkite/scripts/**",
+        "ci/scripts/**",
         "**/*.sh",
         "packages/**/*.ts",
         "packages/**/package.json",
@@ -243,9 +253,9 @@
         "scripts/package.json",
         "scripts/**/*.test.ts",
         "vitest.config.ts",
-        ".buildkite/scripts/**/*.ts",
-        ".buildkite/main-bootstrap.yml",
-        ".buildkite/pipeline.yml",
+        "ci/scripts/**/*.ts",
+        "ci/main-bootstrap.yml",
+        "ci/pipeline.yml",
         "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/Dockerfile",
@@ -398,7 +408,7 @@
       ]
     },
     "//#gitleaks": {
-      "env": ["BUILDKITE_COMMIT", "CI_CHANGED_BASE"],
+      "env": ["CI_COMMIT_SHA", "CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/gitleaks.ts",
         "**/*",

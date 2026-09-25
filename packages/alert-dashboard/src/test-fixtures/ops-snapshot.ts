@@ -115,9 +115,9 @@ function signals(now: Temporal.Instant): SignalInput[] {
       title: "main is green",
       links: [
         {
-          kind: "buildkite",
-          label: "Buildkite",
-          url: "https://buildkite.com/shepherdjerred/monorepo",
+          kind: "woodpecker",
+          label: "Woodpecker",
+          url: "https://woodpecker.sjer.red/repos/1",
         },
       ],
     },

@@ -327,11 +327,17 @@
     },
     {
       "id": "ci",
-      "title": "CI (Buildkite)",
+      "title": "CI (Woodpecker)",
       "kind": "platform",
-      "namespaces": ["buildkite", "buildkitd", "turbo-cache", "kueue-system"],
-      "argoApps": ["buildkite", "buildkitd", "turbo-cache", "kueue"],
-      "grafanaDashboards": ["buildkite-ci-dashboard", "buildkitd-dashboard"]
+      "namespaces": [
+        "woodpecker",
+        "woodpecker-ci",
+        "buildkitd",
+        "turbo-cache",
+        "kueue-system"
+      ],
+      "argoApps": ["woodpecker", "buildkitd", "turbo-cache", "kueue"],
+      "grafanaDashboards": ["ci-capacity-dashboard", "buildkitd-dashboard"]
     },
     {
       "id": "storage",

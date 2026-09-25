@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Provision and validate the native macOS Buildkite host.
+# Provision and validate the native macOS Woodpecker CI host.
 #
 # This script automates the reproducible setup. Apple ID, FileVault, signing,
 # and Accessibility prompts remain interactive by design.
@@ -12,11 +12,20 @@ XCODE_VERSION="$(tr -d '[:space:]' < "$REPO_ROOT/.xcode-version")"
 RUN_BOOTSTRAP=1
 INSTALL_XCODE=1
 
+# gRPC endpoint, host:port with no scheme. Tailnet rather than the public
+# hostname: the agent endpoint is guarded only by the shared agent secret, so
+# it is deliberately not exposed through the Cloudflare tunnel.
+WOODPECKER_SERVER="${WOODPECKER_SERVER:-woodpecker-grpc:9000}"
+# 1Password item holding WOODPECKER_AGENT_SECRET, in the Homelab (Kubernetes)
+# vault. Same item the in-cluster server reads its forge OAuth2 credentials
+# from (see cdk8s .../ci/woodpecker-credentials.ts).
+WOODPECKER_ITEM="${WOODPECKER_ITEM:-Woodpecker Server}"
+
 usage() {
   cat <<'EOF'
 Usage: provision-host.sh [--skip-bootstrap] [--skip-xcode]
 
-Provision and validate the Apple Silicon native Buildkite host.
+Provision and validate the Apple Silicon native CI host.
 
 Options:
   --skip-bootstrap  Reuse packages and agent configuration already installed.
@@ -51,19 +60,23 @@ if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
 fi
 
 if ((RUN_BOOTSTRAP)); then
-  if [[ -z "${BUILDKITE_AGENT_TOKEN:-}" ]]; then
+  # Same shared secret the in-cluster agents use, read straight from 1Password
+  # into this process. It is exported for bootstrap.sh and unset on exit; it is
+  # never written to disk here, and bootstrap.sh's own chmod-600 env file is the
+  # only place it lands.
+  if [[ -z "${WOODPECKER_AGENT_SECRET:-}" ]]; then
     if ! command -v op >/dev/null; then
-      echo "error: op is required when BUILDKITE_AGENT_TOKEN is not set" >&2
+      echo "error: op is required when WOODPECKER_AGENT_SECRET is not set" >&2
       exit 1
     fi
-    echo "==> Reading the Buildkite agent token from 1Password"
-    BUILDKITE_AGENT_TOKEN="$(op item get "Buildkite Agent Token" \
+    echo "==> Reading the Woodpecker agent secret from 1Password"
+    WOODPECKER_AGENT_SECRET="$(op item get "$WOODPECKER_ITEM" \
       --vault "Homelab (Kubernetes)" \
-      --fields "BUILDKITE_AGENT_TOKEN" \
+      --fields "WOODPECKER_AGENT_SECRET" \
       --reveal)"
   fi
-  export BUILDKITE_AGENT_TOKEN
-  trap 'unset BUILDKITE_AGENT_TOKEN' EXIT
+  export WOODPECKER_AGENT_SECRET WOODPECKER_SERVER
+  trap 'unset WOODPECKER_AGENT_SECRET' EXIT
 
   echo "==> Running the reproducible package and agent bootstrap"
   "$SCRIPT_DIR/bootstrap.sh"
@@ -110,12 +123,12 @@ security find-identity -v -p codesigning
 
 echo "==> Running the native preflight"
 cd "$REPO_ROOT"
-# The preflight is the acceptance check used by Buildkite. Run both suites so
+# The preflight is the acceptance check CI uses. Run both suites so
 # this host script fails with the same actionable reason CI would report.
-# shellcheck source=.buildkite/scripts/macos-native-env.sh
-. .buildkite/scripts/macos-native-env.sh
-bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar
-bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts tasknotes
+# shellcheck source=ci/scripts/macos-native-env.sh
+. ci/scripts/macos-native-env.sh
+bun --no-install ci/scripts/macos/macos-native-preflight.ts quotabar
+bun --no-install ci/scripts/macos/macos-native-preflight.ts tasknotes
 
 echo
 echo "Native host setup is complete only after:"
@@ -126,5 +139,5 @@ echo
 echo "Run the affected native preflight from:"
 echo "  $REPO_ROOT"
 echo
-echo "  . .buildkite/scripts/macos-native-env.sh"
-echo "  bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar"
+echo "  . ci/scripts/macos-native-env.sh"
+echo "  bun --no-install ci/scripts/macos/macos-native-preflight.ts quotabar"

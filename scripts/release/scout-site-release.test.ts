@@ -1,4 +1,8 @@
 import { expect, test } from "vitest";
+import {
+  findGeneratedStep,
+  readGeneratedSteps,
+} from "../lib/ci/generated-steps.ts";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -281,29 +285,18 @@ test("release state output creates its parent directory", async () => {
   }
 });
 
-test("pipeline selects Scout for a source change or exact beta candidate", async () => {
-  const pipeline = await Bun.file(
-    new URL("../../.buildkite/pipeline.yml", import.meta.url),
-  ).text();
-  const betaStart = pipeline.indexOf("key: scout-beta-release");
-  const tagStart = pipeline.indexOf("key: scout-tag-release");
-  const beta = pipeline.slice(betaStart, tagStart);
-  expect(beta).toContain('."shepherdjerred/scout-for-lol/beta" // empty');
-  expect(beta).toContain("ci-changed.ts site-scout");
-  expect(beta).toContain(
-    'if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi',
+test("the Scout release lane selects on a source change or an exact beta candidate", async () => {
+  const steps = await readGeneratedSteps(
+    new URL("../..", import.meta.url).pathname,
   );
-  expect(beta).not.toContain("cancel_on_build_failing");
-  const prodStart = pipeline.indexOf("key: scout-prod-reconcile");
-  const prodEnd = pipeline.indexOf(
-    'label: ":terraform: OpenTofu apply — Cloudflare after tunnel gate',
-    prodStart,
-  );
-  expect(pipeline.slice(tagStart, prodEnd)).not.toContain(
-    "cancel_on_build_failing",
-  );
-  expect(pipeline.slice(prodStart, prodEnd)).toContain(
-    'reconcile-prod-pin --prod-pin "$$prod_pin"',
+  const beta = findGeneratedStep(steps, "scout-beta-release");
+  expect(beta).toBeDefined();
+  const commands = (beta?.commands ?? []).join("\n");
+  expect(commands).toContain('."shepherdjerred/scout-for-lol/beta" // empty');
+  expect(commands).toContain("ci-changed.ts site-scout");
+  // Nothing to release: no pushed backend image and no site source change.
+  expect(commands).toContain(
+    'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
   );
 });
 

@@ -1,0 +1,362 @@
+import { ALL_IMAGE_TARGETS } from "./images/image-targets.ts";
+import { nativeLanePaths } from "./macos/macos-native-selection.ts";
+import {
+  deployScripts,
+  sitePaths,
+  workspacePaths,
+} from "./selectors/site-lane-paths.ts";
+import {
+  legacyTofuPaths,
+  platformTofuPaths,
+} from "./selectors/tofu-lane-paths.ts";
+const infrastructureTargets = [
+  "caddy-s3proxy",
+  "obsidian-headless",
+  "redlib",
+] as const;
+// Keep full-image and fallback builds on the same target universe as the
+// closure selector. A second hand-maintained list previously omitted
+// OpenRouter, so fixed-corpus recovery could never publish its first image.
+export const knownImageTargets = [...ALL_IMAGE_TARGETS];
+const FIXED_CORPUS_LANES: ReadonlySet<string> = new Set([
+  "docker-e2e",
+  "images",
+  "playwright",
+  "resume",
+  "tofu",
+  "tofu-platforms",
+  "tofu-posthog",
+]);
+export class FixedCorpusConfigurationError extends Error {}
+/**
+ * `CI_IO_FIXED_CORPUS=true` on a manually created main build forces every lane
+ * and a full verify, so one build measures the whole CI corpus.
+ */
+export function fixedCorpusMode(
+  environment: Readonly<Record<string, string | undefined>>,
+): boolean {
+  const value = environment["CI_IO_FIXED_CORPUS"];
+  if (value === undefined) {
+    return false;
+  }
+  if (value !== "true") {
+    throw new FixedCorpusConfigurationError(
+      'CI_IO_FIXED_CORPUS must be exactly "true" when set',
+    );
+  }
+  // Key off the same signal the uploader and every main-only pipeline condition
+  // use (`pipeline.default_branch`), not the literal name. Comparing to "main"
+  // would reject the default branch itself wherever it is called something
+  // else, hard-failing the build before the selector's fail-open path.
+  const defaultBranch = environment["CI_REPO_DEFAULT_BRANCH"] ?? "main";
+  const branch = environment["CI_COMMIT_BRANCH"];
+  if (branch !== defaultBranch) {
+    throw new FixedCorpusConfigurationError(
+      `CI_IO_FIXED_CORPUS is ${defaultBranch}-only; CI_COMMIT_BRANCH was ${branch ?? "unset"}`,
+    );
+  }
+  return true;
+}
+export function fixedCorpusForcesLane(
+  lane: string,
+  environment: Readonly<Record<string, string | undefined>>,
+): boolean {
+  return fixedCorpusMode(environment) && FIXED_CORPUS_LANES.has(lane);
+}
+export function fixedCorpusLaneMetadata(
+  lane: string,
+): Readonly<Record<string, string>> {
+  return {
+    [`ci-lane-run-${lane}`]: "true",
+    [`ci-lane-decision-${lane}`]: "ran — fixed CI I/O corpus requested",
+  };
+}
+export function parseBakeArguments(rawArguments: readonly string[]): {
+  readonly affected: boolean;
+  readonly push: boolean;
+} {
+  const flags = new Set(rawArguments);
+  for (const argument of flags) {
+    if (argument !== "--affected" && argument !== "--push") {
+      throw new Error(`Unknown argument: ${argument}`);
+    }
+  }
+  return { affected: flags.has("--affected"), push: flags.has("--push") };
+}
+export function expandTargets(selected: readonly string[]): string[] {
+  const targets = [...selected].filter((target) => target !== "infra");
+  if (selected.includes("infra")) targets.push(...infrastructureTargets);
+  return targets;
+}
+export function parseStringArray(
+  value: unknown,
+  description: string,
+): string[] {
+  if (!Array.isArray(value))
+    throw new TypeError(`${description} must be an array`);
+  const strings: string[] = [];
+  for (const item of value) {
+    if (typeof item !== "string") {
+      throw new TypeError(`${description} must only contain strings`);
+    }
+    strings.push(item);
+  }
+  return strings;
+}
+export function parseImageSelection(output: string): {
+  readonly targets: string[];
+  readonly fallbackReason: string;
+} {
+  try {
+    const parsed = parseStringArray(
+      JSON.parse(output.trim()),
+      "image selection",
+    );
+    if (!parsed.every((target) => knownImageTargets.includes(target))) {
+      return {
+        targets: knownImageTargets,
+        fallbackReason: "image selector returned invalid targets",
+      };
+    }
+    return { targets: parsed, fallbackReason: "" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      targets: knownImageTargets,
+      fallbackReason: `image selector returned malformed output: ${message}`,
+    };
+  }
+}
+// The handoff helpers are global because they are the seam between the image
+// lane that writes the digests and the Helm, ArgoCD, Scout, and version steps
+// that execute them. A commit touching only one side would otherwise select
+// neither, so a repair to the handoff could land without any lane exercising
+// the release path it repairs.
+export const globalPaths = [
+  // The step model IS the pipeline now, so a change to any lane definition or
+  // to the emitter can change every selected step.
+  "packages/woodpecker-config-extension/src",
+  "ci/scripts/selectors/ci-changed.ts",
+  "ci/scripts/migration-core.ts",
+  "scripts/lib/ci/ci-handoff.ts",
+  "scripts/lib/ci/ci-artifact.ts",
+  "scripts/lib/ci/ci-environment.ts",
+  "scripts/lib/json.ts",
+] as const;
+
+export const lanePaths: Readonly<Record<string, readonly string[]>> = {
+  ...nativeLanePaths,
+  playwright: [
+    ...workspacePaths,
+    "config/analytics-sites.json",
+    "packages/architecture",
+    "packages/code-review",
+    "packages/config",
+    "packages/feature-flags",
+    "packages/glitter-context",
+    "packages/llm-models",
+    "packages/llm-observability",
+    "packages/llm-runtime",
+    "packages/loaded",
+    "packages/ops-clients",
+    "packages/ops-model",
+    "packages/release-tools",
+    "packages/s3-signed-request",
+    "packages/temporal-observability",
+    "packages/version-catalog",
+    "ci/scripts/bun-install.sh",
+    "ci/scripts/selectors/select-image-targets-lockfile.ts",
+    "ci/scripts/selectors/select-image-targets-workspaces.ts",
+    "ci/scripts/selection/playwright-targets.ts",
+    "ci/scripts/selection/run-playwright.ts",
+    ".mise.toml",
+    "scripts/ci/ci-reporting.ts",
+    "scripts/ci-test-manifest.json",
+    "scripts/ci/namespace-playwright-reports.ts",
+    "scripts/ci/write-ci-report-index.ts",
+    "scripts/checks/check-built-internal-links.ts",
+    "packages/alert-dashboard",
+    "packages/birmel",
+    "packages/sjer.red",
+    "packages/astro-opengraph-images",
+    "packages/webring",
+    "packages/eslint-config",
+    "packages/docs/wiki",
+    "packages/scout-for-lol/eslint.config.ts",
+    "packages/scout-for-lol/tsconfig.base.json",
+    "packages/scout-for-lol/packages/data",
+    "packages/scout-for-lol/packages/report",
+    "packages/scout-for-lol/packages/app",
+    "packages/scout-for-lol/packages/activity",
+    "packages/scout-for-lol/packages/backend",
+    "packages/scout-for-lol/packages/frontend",
+    "packages/scout-for-lol/packages/docs-site",
+    "packages/scout-for-lol/packages/design-audit",
+    "packages/scout-for-lol/packages/design-system",
+    "packages/scout-for-lol/packages/temporal",
+    "packages/scout-for-lol/package.json",
+    "packages/scout-for-lol/scripts/dev/dev-web.ts",
+    "scripts",
+    ...deployScripts,
+  ],
+  resume: ["packages/resume", ...deployScripts],
+  trmnl: ["packages/trmnl-dashboard", "packages/version-catalog"],
+  "docker-e2e": [
+    ...workspacePaths,
+    "packages/llm-observability",
+    "packages/s3-signed-request",
+    "packages/eslint-config",
+  ],
+  "helm-types": [
+    ...workspacePaths,
+    "packages/version-catalog",
+    "packages/homelab/src/cdk8s/src/versions.ts",
+    "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
+    "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts",
+    "packages/homelab/src/helm-types",
+    "packages/homelab/src/cdk8s/generated/helm",
+  ],
+  tofu: [
+    ...workspacePaths,
+    ...legacyTofuPaths,
+    "packages/homelab/scripts/tofu/tofu-stack.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/transient.ts",
+  ],
+  "tofu-platforms": [
+    ...workspacePaths,
+    ...platformTofuPaths,
+    "packages/homelab/scripts/tofu/tofu-stack.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/transient.ts",
+  ],
+  "tofu-posthog": [
+    ...workspacePaths,
+    "packages/homelab/src/tofu/posthog",
+    "packages/homelab/scripts/tofu/tofu-stack.ts",
+    "scripts/lib/transient-error.ts",
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
+    "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
+    "scripts/lib/run.ts",
+    "scripts/lib/transient.ts",
+    "config/analytics-sites.json",
+  ],
+  helm: [
+    ...workspacePaths,
+    "packages/version-catalog",
+    "packages/homelab/src/cdk8s",
+    "packages/homelab/scripts/helm/helm-release-core.ts",
+    "packages/homelab/scripts/helm/helm-push.ts",
+    "scripts/lib/run.ts",
+  ],
+  argocd: [
+    ...workspacePaths,
+    "packages/version-catalog",
+    "packages/homelab/src/cdk8s",
+    "packages/homelab/scripts/argocd/argocd.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/transient.ts",
+  ],
+  npm: [
+    ...workspacePaths,
+    "packages/astro-opengraph-images",
+    "packages/webring",
+    "packages/homelab/src/helm-types",
+    "packages/home-assistant",
+    "scripts/release/publish-npm.ts",
+    "scripts/lib",
+  ],
+  ...sitePaths,
+  sites: Object.entries(sitePaths)
+    .filter(([lane]) => lane !== "site-scout")
+    .flatMap(([, paths]) => paths),
+  "macos-cross-compiler": [
+    "packages/macos-cross-compiler",
+    "scripts/release/macos-cross-compiler.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/seaweedfs.ts",
+  ],
+  "scout-reconcile": [
+    ...workspacePaths,
+    "packages/scout-for-lol",
+    "packages/astro-opengraph-images",
+    "packages/llm-models",
+    "packages/version-catalog",
+    "packages/homelab/src/cdk8s/src/versions.ts",
+    "scripts/package.json",
+    "scripts/release/scout-site-release.ts",
+    "scripts/lib",
+  ],
+  cooklang: [...workspacePaths, "packages/cooklang-for-obsidian"],
+  "ci-base": [
+    "ci/ci-image/Dockerfile",
+    "ci/scripts/images/application-image-runtime.ts",
+    "ci/scripts/images/bake-retry.ts",
+    "ci/scripts/images/build-ci-image-core.ts",
+    "ci/scripts/images/build-ci-image.ts",
+    "ci/scripts/reporting/buildkit-env.ts",
+    "ci/scripts/images/update-ci-image-pin-core.ts",
+    "ci/scripts/images/update-ci-image-pin-github.ts",
+    "ci/scripts/images/update-ci-image-pin.ts",
+    "scripts/lib/transient-error.ts",
+    ".mise.toml",
+  ],
+  "ci-playwright": [
+    "ci/ci-playwright/Dockerfile",
+    "ci/scripts/images/application-image-runtime.ts",
+    "ci/scripts/images/bake-retry.ts",
+    "ci/scripts/images/build-ci-image-core.ts",
+    "ci/scripts/images/build-ci-image.ts",
+    "ci/scripts/reporting/buildkit-env.ts",
+    "ci/scripts/images/update-ci-image-pin-core.ts",
+    "ci/scripts/images/update-ci-image-pin-github.ts",
+    "ci/scripts/images/update-ci-image-pin.ts",
+    "scripts/lib/transient-error.ts",
+  ],
+  "windows-cross-compiler": [
+    "packages/windows-cross-compiler/Dockerfile",
+    "packages/windows-cross-compiler/bin/",
+    "packages/windows-cross-compiler/msbuild/",
+    "packages/windows-cross-compiler/wine-patches/",
+    "ci/scripts/images/application-image-runtime.ts",
+    "ci/scripts/images/bake-retry.ts",
+    "ci/scripts/images/build-ci-image-core.ts",
+    "ci/scripts/images/build-ci-image.ts",
+    "ci/scripts/reporting/buildkit-env.ts",
+    "ci/scripts/images/update-ci-image-pin-core.ts",
+    "ci/scripts/images/update-ci-image-pin-github.ts",
+    "ci/scripts/images/update-ci-image-pin.ts",
+    "scripts/lib/transient-error.ts",
+  ],
+};
+
+// These lanes' images are built only from their own sources and publish
+// scripts. A rebuild costs hours of long builds (multi-platform for
+// macos-cross-compiler), so CI plumbing edits (lane definitions, selectors) must
+// not re-trigger them.
+const lanesWithoutGlobalPaths = new Set([
+  "site-scout",
+  "windows-cross-compiler",
+  "macos-cross-compiler",
+]);
+
+export function selectorPathsForLane(
+  lane: string,
+): readonly string[] | undefined {
+  const paths = lanePaths[lane];
+  if (paths === undefined) {
+    return undefined;
+  }
+  return lanesWithoutGlobalPaths.has(lane) ? paths : [...globalPaths, ...paths];
+}
+
+export function caddyfileEntitlementArguments(
+  targets: readonly string[],
+  caddyfile?: string,
+): string[] {
+  if (!targets.includes("caddy-s3proxy")) return [];
+  if (caddyfile === undefined) {
+    throw new Error("CADDYFILE_SMOKE_PATH is required for caddy-s3proxy");
+  }
+  return ["--allow", `fs.read=${caddyfile}`];
+}

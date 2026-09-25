@@ -39,7 +39,7 @@ bun run mac:verify
 bun run mac:e2e
 ```
 
-Changed TaskNotes paths also have a hard serial macOS Buildkite gate. Preserve
+Changed TaskNotes paths also have a hard serial macOS CI gate. Preserve
 accessibility assertions; a compile-only result is not app verification.
 
 Releases use the operator-run Developer ID/notarization lane. Do not add an App

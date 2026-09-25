@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { App, Chart, Testing } from "cdk8s";
+import { App, Testing } from "cdk8s";
 import { z } from "zod";
 import { createBirmelChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/birmel.ts";
 import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/media.ts";
@@ -8,7 +8,6 @@ import { createStarlightKarmaBotChart } from "@shepherdjerred/homelab/cdk8s/src/
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
-import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkite.ts";
 
 const ManifestSchema = z
   .object({
@@ -143,18 +142,6 @@ describe("Flipt consumer environments", () => {
       namespace: "temporal",
       count: 12,
       createChart: (app: App) => createTemporalChart(app),
-    },
-    {
-      name: "Buildkite maintenance",
-      environment: "prod",
-      namespace: "temporal",
-      count: 1,
-      createChart: (app: App) => {
-        const chart = new Chart(app, "buildkite-feature-flags", {
-          disableResourceNameHashes: true,
-        });
-        createBuildkiteApp(chart);
-      },
     },
   ];
 

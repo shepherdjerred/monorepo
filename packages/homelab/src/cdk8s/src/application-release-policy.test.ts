@@ -111,7 +111,7 @@ describe("applyApplicationReleasePolicy", () => {
       ["prometheus", "-1"],
       ["temporal", "0"],
       ["kueue", "1"],
-      ["buildkite", "3"],
+      ["woodpecker", "3"],
       ["worker", "4"],
     ]);
     const applications = [...expectedWaves.keys()].map((name) =>

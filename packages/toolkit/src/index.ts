@@ -16,7 +16,7 @@ Usage:
 
 Platform commands (native CLI passthroughs):
   gh          GitHub CLI (GH_REPO=shepherdjerred/monorepo)
-  bk          Buildkite CLI (organization sjerred)
+  woodpecker  Woodpecker CI CLI
   git-spice   Stacked branch and PR workflow
   linear      Linear CLI (--workspace sjerred)
   posthog     PostHog CLI (project 549883)
@@ -31,7 +31,7 @@ Platform commands (native CLI passthroughs):
 
 Monorepo workflows:
   brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
-  pr health [PR_NUMBER]        Check merge, exact-head Buildkite CI, and review
+  pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
   deployed [SELECTOR]          Trace a commit or service to the live homelab
@@ -54,7 +54,7 @@ Passthrough behavior:
 
 Examples:
   toolkit gh pr view
-  toolkit bk build list --pipeline monorepo --branch main
+  toolkit woodpecker pipeline ls shepherdjerred/monorepo
   toolkit prom query 'up == 0'
   toolkit loki query '{namespace="temporal"}'
   toolkit pr health

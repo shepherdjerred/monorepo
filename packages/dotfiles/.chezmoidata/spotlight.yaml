@@ -56,7 +56,7 @@ spotlight:
     - .maestro
     - .devframe
     - .herdr
-    - .buildkite-agent
+    - .woodpecker
 
     # Infrastructure CLI state: caches, vendored providers, and cluster creds.
     - .docker

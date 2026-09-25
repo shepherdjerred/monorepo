@@ -87,7 +87,12 @@ export default defineConfig({
   redirects: {
     "/birmel": "/explanation/birmel/",
     "/homelab/alerts": "/explanation/homelab/alerts/",
-    "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
+    // Two hops collapsed into one: the pre-Diátaxis route and the
+    // Buildkite-named canonical route both land on the current page.
+    "/homelab/buildkite-admission": "/explanation/homelab/ci-admission/",
+    "/explanation/homelab/buildkite-admission/":
+      "/explanation/homelab/ci-admission/",
+    "/how-to/rotate-buildkite-credentials/": "/how-to/rotate-ci-credentials/",
     "/homelab/releases": "/explanation/homelab/release-safety/",
     "/homelab/scout-evals-tailnet-boundary": "/explanation/homelab/overview/",
     "/homelab/tracker-tracker": "/explanation/homelab/overview/",

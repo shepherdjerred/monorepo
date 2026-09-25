@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  findGeneratedStep,
+  readGeneratedSteps,
+} from "../lib/ci/generated-steps.ts";
+import {
   DEFAULT_REQUEST_GRACE_SECONDS,
   DEFAULT_REQUEST_RETRY_SECONDS,
   requestGraceSecondsForProvider,
@@ -124,28 +128,25 @@ export function reviewGateStepBlockText(
  * How long the step spends on `toolchain.sh` and the filtered install before
  * wait-for-review.ts starts counting. Nothing bounds that preamble — a cold or
  * stale image pays for mise bootstrap and network downloads — so the margin is
- * deliberately generous. Getting it wrong reinstates the anonymous Buildkite
+ * deliberately generous. Getting it wrong reinstates the anonymous step-timeout
  * kill this whole change exists to prevent.
  */
 const PREAMBLE_MARGIN_SECONDS = 20 * 60;
 
-// Two timeouts govern this gate and only one of them explains itself. If
-// Buildkite's is the smaller, the job dies with an anonymous step timeout and
-// the operator cannot tell a slow provider from a broken one, so the ordering
-// is part of the gate's contract rather than a coincidence of two constants.
+// Two timeouts govern this gate and only one of them explains itself. If the
+// STEP's is the smaller, the job dies with an anonymous step timeout and the
+// operator cannot tell a slow provider from a broken one, so the ordering is
+// part of the gate's contract rather than a coincidence of two constants.
 describe("review gate timeout budget", () => {
-  test("expires before the Buildkite step that runs it", async () => {
-    // Resolved from this file: the suite runs with scripts/ as the cwd.
-    const pipeline = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/pipeline.yml`,
-    ).text();
-    for (const stepKey of ["codex-review-gate"]) {
-      expect(
-        reviewGateStepTimeoutSeconds(pipeline, stepKey),
-      ).toBeGreaterThanOrEqual(
-        DEFAULT_TIMEOUT_SECONDS + PREAMBLE_MARGIN_SECONDS,
-      );
-    }
+  test("expires before the CI step that runs it", async () => {
+    const steps = await readGeneratedSteps(
+      new URL("../..", import.meta.url).pathname,
+    );
+    const gate = findGeneratedStep(steps, "codex-review-gate");
+    expect(gate).toBeDefined();
+    expect((gate?.timeoutMinutes ?? 0) * 60).toBeGreaterThanOrEqual(
+      DEFAULT_TIMEOUT_SECONDS + PREAMBLE_MARGIN_SECONDS,
+    );
   });
 
   test("reads review-gate's own timeout, not a later step's", () => {
@@ -247,43 +248,39 @@ describe("review gate timeout budget", () => {
 // parser, and no change to that PR could have cleared it.
 describe("review gate source", () => {
   test("the required Codex gate uses the main-sourced wrapper", async () => {
-    const pipeline = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/pipeline.yml`,
-    ).text();
-    for (const [stepKey, provider] of [
-      ["codex-review-gate", "codex"],
-    ] as const) {
-      const command = reviewGateStepCommand(pipeline, stepKey);
-      expect(command).not.toContain(
-        "bun --no-install scripts/review/wait-for-review.ts",
-      );
-      expect(command.some((line) => line.includes("review-gate.sh"))).toBe(
-        true,
-      );
-      expect(reviewGateStepBlockText(pipeline, stepKey)).toContain(
-        `REVIEW_PROVIDER: ${provider}`,
-      );
-    }
+    const steps = await readGeneratedSteps(
+      new URL("../..", import.meta.url).pathname,
+    );
+    const gate = findGeneratedStep(steps, "codex-review-gate");
+    expect(gate).toBeDefined();
+    const commands = gate?.commands ?? [];
+    // The wrapper is what pins the gate to main's copy of the script; calling
+    // wait-for-review.ts directly would run the PR's own version of the gate
+    // that is supposed to be judging it.
+    expect(commands).not.toContain(
+      "bun --no-install scripts/review/wait-for-review.ts",
+    );
+    expect(commands.some((line) => line.includes("review-gate.sh"))).toBe(true);
   });
 
-  test("the required gate remains retryable", async () => {
-    const pipeline = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/pipeline.yml`,
-    ).text();
-    for (const stepKey of ["codex-review-gate"]) {
-      const block = reviewGateStepBlockText(pipeline, stepKey);
-      expect(block).not.toContain("cancel_on_build_failing");
-      // The step soft-fails on the gate's own blocked-by-quota status and on
-      // nothing else; select-pr-pipeline.ts enforces the exact shape.
-      expect(block).toContain(
-        `soft_fail:\n      - exit_status: ${String(REVIEW_GATE_BLOCKED_EXIT_CODE)}\n`,
-      );
-    }
+  /**
+   * Buildkite needed an explicit `cancel_on_build_failing: false` to stop a
+   * failing sibling step from killing the gate mid-review. Woodpecker runs
+   * each workflow independently, so the property now follows from the gate
+   * depending on nothing: no other lane's failure can reach it.
+   */
+  test("the required gate cannot be cancelled by another lane failing", async () => {
+    const steps = await readGeneratedSteps(
+      new URL("../..", import.meta.url).pathname,
+    );
+    const gate = findGeneratedStep(steps, "codex-review-gate");
+    expect(gate).toBeDefined();
+    expect(gate?.dependsOn ?? []).toEqual([]);
   });
 
   test("the gate script checks out a ref and runs the gate from it", async () => {
     const script = await Bun.file(
-      `${import.meta.dir}/../../.buildkite/scripts/review-gate.sh`,
+      `${import.meta.dir}/../../ci/scripts/review-gate.sh`,
     ).text();
     expect(script).toContain("git worktree add");
     expect(script).toContain("REVIEW_GATE_REF:-main");
@@ -291,10 +288,16 @@ describe("review gate source", () => {
     // The commit actually used has to reach the signal event, or a count still
     // cannot be attributed to the parser that produced it.
     expect(script).toContain("REVIEW_GATE_PARSER_COMMIT");
-    // Only the blocked-by-quota status is annotated and soft-failed.
+    // Only the blocked-by-quota status passes, with a warning; Woodpecker has
+    // no per-status soft-fail, so the script is the only place it can live.
     expect(script).toContain(
       `QUOTA_EXIT_STATUS=${String(REVIEW_GATE_BLOCKED_EXIT_CODE)}`,
     );
-    expect(script).toContain("buildkite-agent annotate --style warning");
+    const quotaBranch = script.slice(
+      script.indexOf('if [[ "$GATE_STATUS" -eq "$QUOTA_EXIT_STATUS" ]]; then'),
+    );
+    expect(quotaBranch).toMatch(
+      /out of quota[\s\S]*exit 0\nfi\nexit "\$GATE_STATUS"/u,
+    );
   });
 });

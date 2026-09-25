@@ -6,24 +6,24 @@ Repeatable procedure for a comprehensive health audit of the `torvalds` cluster.
 > `homelab-audit-daily` email does not execute this document or delegate these
 > sections to a generic agent. It runs six deterministic collectors for
 > Prometheus alerts, durable alert occurrences, Temporal failures/stalls,
-> Kubernetes workload health, ArgoCD state, and Buildkite main failures with
-> failed-job logs. Use this runbook when those signals require a deeper human-
+> Kubernetes workload health, ArgoCD state, and CI main failures with
+> failed-step logs. Use this runbook when those signals require a deeper human-
 > directed investigation.
 
 ## Prerequisites
 
 All tools must be authenticated before starting:
 
-| Tool               | Context                                                   | Check                                                 |
-| ------------------ | --------------------------------------------------------- | ----------------------------------------------------- |
-| `kubectl`          | `admin@torvalds`                                          | `kubectl get nodes`                                   |
-| `talosctl`         | `torvalds`                                                | `talosctl version`                                    |
-| `toolkit argocd`   | `admin`                                                   | `toolkit argocd app list`                             |
-| `velero`           | —                                                         | `velero backup get`                                   |
-| `toolkit`          | Command hub plus Alerts, Grafana, and Bugsink credentials | `toolkit prom query 'ALERTS{alertstate="firing"}'`    |
-| `toolkit temporal` | `TEMPORAL_ADDRESS` points at the frontend service         | `toolkit temporal operator cluster health`            |
-| `toolkit bk`       | `BUILDKITE_API_TOKEN`; organization defaults to `sjerred` | `toolkit bk build list --pipeline monorepo --limit 1` |
-| `toolkit gh`       | GitHub auth; repository defaults to this monorepo         | `toolkit gh pr list --limit 1`                        |
+| Tool                 | Context                                                    | Check                                                          |
+| -------------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
+| `kubectl`            | `admin@torvalds`                                           | `kubectl get nodes`                                            |
+| `talosctl`           | `torvalds`                                                 | `talosctl version`                                             |
+| `toolkit argocd`     | `admin`                                                    | `toolkit argocd app list`                                      |
+| `velero`             | —                                                          | `velero backup get`                                            |
+| `toolkit`            | Command hub plus Alerts, Grafana, and Bugsink credentials  | `toolkit prom query 'ALERTS{alertstate="firing"}'`             |
+| `toolkit temporal`   | `TEMPORAL_ADDRESS` points at the frontend service          | `toolkit temporal operator cluster health`                     |
+| `toolkit woodpecker` | `WOODPECKER_URL`, `WOODPECKER_TOKEN`, `WOODPECKER_REPO_ID` | `toolkit woodpecker pipeline ls $WOODPECKER_REPO_ID --limit 1` |
+| `toolkit gh`         | GitHub auth; repository defaults to this monorepo          | `toolkit gh pr list --limit 1`                                 |
 
 ## Execution Strategy
 
@@ -384,36 +384,35 @@ until the canary and seven consecutive daily audits pass.
 
 ## Section 11: CI on `main`
 
-Buildkite is the source of truth for CI (pipeline `sjerred/monorepo`); this repo does not use GitHub Actions. Requires `BUILDKITE_API_TOKEN` in env; the scheduled audit worker also sets `BUILDKITE_ORGANIZATION_SLUG=sjerred` and `BUILDKITE_PIPELINE_SLUG=monorepo`.
+Woodpecker is the source of truth for CI; this repo does not use GitHub Actions. Requires `WOODPECKER_URL`, `WOODPECKER_TOKEN`, and `WOODPECKER_REPO_ID` in env.
 
 ### Is `main` green?
 
 ```bash
-toolkit bk build list --pipeline monorepo --branch main --limit 5                  # last 5 builds on main
-toolkit bk build list --pipeline monorepo --branch main --state failed --since 24h # recent failures on main
-toolkit bk build view --pipeline monorepo <BUILD_NUMBER>                           # build and job IDs
-toolkit bk job log <JOB_ID> --agent                                                # failed job log
+toolkit woodpecker pipeline ls "$WOODPECKER_REPO_ID" --branch main --limit 5   # last 5 pipelines on main
+toolkit woodpecker pipeline show "$WOODPECKER_REPO_ID" <PIPELINE>              # workflows and step ids
+toolkit woodpecker pipeline log show "$WOODPECKER_REPO_ID" <PIPELINE>          # failed step logs
 ```
 
-Flag: latest `main` build `failed` / `canceled` / `blocked`, or a sustained streak of failures (a red `main` means deploys are stale — last-green image is still running).
+Flag: latest `main` pipeline `failure` / `error` / `killed`, or a sustained streak of failures (a red `main` means deploys are stale — the last-green image is still running).
 
-### In-flight builds
+### In-flight pipelines
 
 ```bash
-toolkit bk build list --pipeline monorepo --state running --limit 20               # currently running
-toolkit bk build list --pipeline monorepo --state scheduled --limit 20             # queued / waiting for agents
+toolkit woodpecker pipeline queue                                              # pending and running work
+toolkit woodpecker pipeline ls "$WOODPECKER_REPO_ID" --limit 20                # recent pipelines and status
 ```
 
-Flag: builds running >60 min (stuck), scheduled builds piling up (agent starvation — cross-check agent pool below).
+Flag: pipelines running >60 min (stuck), pending pipelines piling up (agent starvation — cross-check the agent pool below).
 
 ### Agent pool
 
 ```bash
-kubectl get pods -n buildkite                             # agent stack controller + active agents
-toolkit bk agent list                                             # connected agents
+kubectl get pods -n woodpecker                            # server, agent, extension, step pods
+toolkit woodpecker info                                   # server and connected-agent view
 ```
 
-Flag: agent controller pod not Running, zero connected agents while builds are scheduled.
+Flag: agent pod not Running, zero connected agents while pipelines are pending. The `WoodpeckerAgentDisconnected` alert covers the same condition.
 
 ## Section 12: Open Pull Requests
 
@@ -437,7 +436,7 @@ For any PR flagged above:
 
 ```bash
 toolkit pr health <PR_NUMBER>                             # bundled conflicts + CI + approval check
-toolkit bk job log <JOB_ID> --agent                                  # Buildkite logs for the failing check
+toolkit woodpecker pipeline log show "$WOODPECKER_REPO_ID" <PIPELINE>  # CI logs for the failing check
 ```
 
 Flag: merge conflicts against `main`, failing required checks, missing approvals on a PR otherwise ready.
@@ -540,60 +539,60 @@ observability, ingress, or child-resource signal.
 
 ### Matrix
 
-| App                            | Namespace                      | App-specific health check                                                                                                                                                                   |
-| ------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `1password`                    | `1password`                    | Connect and operator deployments ready; no `CreateContainerConfigError` in namespaces using `OnePasswordItem`; secret-sync failures are Red for affected apps.                              |
-| `apps`                         | `argocd`                       | Root app is synced; generated monitoring rules, probes, ingress, and tunnel bindings exist; any child app missing from the inventory is Red.                                                |
-| `argocd`                       | `argocd`                       | Controller, repo-server, server, Redis, ApplicationSet, notifications, and Dex ready; `argocd_app_info` present; `ArgoAppMissing` / `ArgoAppNotSynced` alerts explain any app drift.        |
-| `birmel`                       | `birmel`                       | Deployment ready; OAuth Tailscale ingress proxy ready; Bugsink has no new/high-volume `birmel` issues; Loki shows normal bot activity and no sustained tool or Discord API failures.        |
-| `blackbox-exporter`            | `prometheus`                   | Blackbox exporter deployment ready; `probe_success` data exists for static-site probes; `StaticSiteProbeAbsent` is Red for covered sites.                                                   |
-| `bugsink`                      | `bugsink`                      | Web app and PostgreSQL ready; run Section 9 issue/release checks; `BugsinkPostgreSQLNotReady` or PVC critical alerts are Red.                                                               |
-| `buildkite`                    | `buildkite`                    | Agent stack controller ready; `bk agent list` shows connected agents when builds are scheduled; large Error/NotReady job pod buildup is Yellow unless current builds are blocked, then Red. |
-| `cert-manager`                 | `cert-manager`                 | Controller, cainjector, and webhook ready; certificates are `Ready=True`; webhook or certificate expiry/failure is Red for affected ingresses.                                              |
-| `chartmuseum`                  | `chartmuseum`                  | Deployment ready; Tailscale/Cloudflare ingress proxy ready; `curl -fsS https://chartmuseum.tailnet-1a49.ts.net/health` or equivalent chart index check succeeds.                            |
-| `cloudflare-operator`          | `cloudflare-operator-system`   | Controller and webhook certificates ready; no TunnelBinding reconciliation errors; metrics/webhook certs `Ready=True`.                                                                      |
-| `cloudflare-tunnel`            | `cloudflare-tunnel`            | Cluster tunnel resources reconcile; `homelab-tunnel` / cloudflared workload is running in `cloudflare-operator-system`; public tunnel-bound endpoints respond.                              |
-| `dagger`                       | `dagger`                       | Dagger engine StatefulSet ready; Section 11 Buildkite jobs can start Dagger work; engine restart loops or stuck CI jobs are Red.                                                            |
-| `ddns`                         | `ddns`                         | Deployment ready; logs show successful DNS update loop; sustained provider/auth failures are Red.                                                                                           |
-| `freshrss`                     | `freshrss`                     | Deployment ready; Tailscale/Cloudflare ingress proxy ready; FreshRSS HTTP endpoint responds; repeated feed update/login errors are Yellow or Red by impact.                                 |
-| `gickup`                       | `gickup`                       | Deployment and ServiceMonitor ready; check Gitckup alerts for job not running, failed jobs, incomplete sources/destinations, low repo success, or stuck duration.                           |
-| `golink`                       | `golink`                       | Deployment ready; Temporal `syncGolinks` workflow has no recent failures; service/logs show normal redirect/sync behavior.                                                                  |
-| `grafana`                      | `prometheus`                   | Grafana StatefulSet ready; Grafana ingress proxy ready; dashboards and datasource provisioning succeed; Section 6 alert queries work.                                                       |
-| `grafana-db`                   | `prometheus`                   | Grafana PostgreSQL StatefulSet ready; PVC below warning thresholds; Grafana can read/write dashboards and alert state.                                                                      |
-| `home`                         | `home`                         | Home Assistant and Eufy websocket deployments ready; Home Assistant ingress proxy ready; Home Assistant entity and HA workflow alerts are clear.                                            |
-| `intel-device-plugin-operator` | `intel-device-plugin-operator` | Operator deployment ready; webhook cert ready; no reconcile errors.                                                                                                                         |
-| `intel-gpu-device-plugin`      | `intel-device-plugin-operator` | GPU plugin DaemonSet ready; node exposes `gpu.intel.com/i915`; GPU consumers such as `pokemon` can schedule when scaled up.                                                                 |
-| `kueue`                        | `kueue-system`                 | Controller manager ready; webhook/visibility services reachable; no admission or queue reconciliation errors.                                                                               |
-| `kyverno`                      | `kyverno`                      | Admission, background, cleanup, and reports controllers ready; failed policy/report jobs or webhook failures are Red.                                                                       |
-| `kyverno-policies`             | `kyverno-policies`             | Policy app synced; Kyverno shows no rejected/invalid policy resources; any policy preventing expected deploys is Red for the affected app.                                                  |
-| `loki`                         | `loki`                         | Loki, gateway, cache, and canary workloads ready; Loki ingress proxy ready; Section 6 log queries return data.                                                                              |
-| `mc-router`                    | `mc-router`                    | Router deployment ready; NodePort/service routes Minecraft hostnames; if any running Minecraft server is unreachable through the router, mark that server Red.                              |
-| `media`                        | `media`                        | All media deployments ready; Tailscale proxies ready; Plex and qBittorrent ServiceMonitors scrape; `QBitTorrentFirewalled` is Red; individual \*arr UI failures are Yellow/Red by service.  |
-| `minecraft-shuxin`             | `minecraft-shuxin`             | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Bluemap ingress proxy ready.                                                   |
-| `minecraft-sjerred`            | `minecraft-sjerred`            | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Dynmap ingress proxy ready.                                                    |
-| `minecraft-tsmc`               | `minecraft-tsmc`               | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Bluemap ingress proxy ready.                                                   |
-| `nfd`                          | `node-feature-discovery`       | Master, worker, and GC workloads ready; node labels are present; missing hardware labels are Yellow unless a dependent app cannot schedule.                                                 |
-| `openebs`                      | `openebs`                      | ZFS LocalPV node/controller/provisioner ready; PVC provisioning works; pending PVCs using OpenEBS are Red for affected apps.                                                                |
-| `pokemon`                      | `pokemon`                      | Desired replicas currently `0` is Green/idle; if scaled up, deployment ready, GPU scheduled, Selkies/UI ingress proxies ready, and UI endpoint responds.                                    |
-| `postal`                       | `postal`                       | Web, SMTP, and worker deployments ready; ServiceMonitor scrapes worker metrics; queue latency, worker errors, SMTP exceptions, or web/SMTP down alerts are Red.                             |
-| `postal-mariadb`               | `postal`                       | MariaDB StatefulSet ready; metrics scrape present; `PostalMariaDBDown` or storage saturation is Red.                                                                                        |
-| `postgres-operator`            | `postgres-operator`            | Operator deployment ready; managed Postgres clusters report ready; credential secret rotation or reconciliation errors are Red for dependent apps.                                          |
-| `prometheus`                   | `prometheus`                   | Prometheus, Alertmanager, operator, kube-state-metrics, node-exporter, Grafana, and renderer ready; Prometheus can query alerts and targets; TSDB/config/rule failures are Red.             |
-| `prometheus-adapter`           | `prometheus`                   | Adapter deployment ready; Kubernetes aggregated API healthy; HPA/custom metrics queries work if any consumers depend on them.                                                               |
-| `promtail`                     | `promtail`                     | DaemonSet ready on all nodes; Loki receives recent logs from all active namespaces; scrape/send errors are Red for observability.                                                           |
-| `redlib`                       | `redlib`                       | Deployment ready; Tailscale ingress proxy ready; endpoint responds; very high restart count requires log review even if currently Ready.                                                    |
-| `s3-static-sites`              | `s3-static-sites`              | Caddy deployment ready; every `Probe/static-site-*` has `probe_success == 1`; static-site SSL expiry, slow response, missing probe, or failed public endpoint is Red for that site.         |
-| `scout-beta`                   | `scout-beta`                   | Deployment ready; `/healthz` readiness passes; ServiceMonitor scrapes; Riot API error-rate alerts and active Bugsink Scout issues are reviewed.                                             |
-| `scout-prod`                   | `scout-prod`                   | Deployment ready; `/healthz` readiness passes; ServiceMonitor scrapes; Riot API error-rate alerts and active Bugsink Scout issues are Red if user-facing flows are degraded.                |
-| `seaweedfs`                    | `seaweedfs`                    | Master, filer, volume, and S3 workloads ready; ServiceMonitors scrape; filer and S3 ingress proxies ready; S3-backed apps can read/write.                                                   |
-| `starlight-karma-bot-beta`     | `starlight-karma-bot-beta`     | Deployment ready; logs show Discord connection/heartbeat and no sustained API/auth failures; Bugsink release/issues current.                                                                |
-| `starlight-karma-bot-prod`     | `starlight-karma-bot-prod`     | Deployment ready; logs show Discord connection/heartbeat and no sustained API/auth failures; Bugsink release/issues current.                                                                |
-| `syncthing`                    | `syncthing`                    | Deployment ready; Tailscale ingress proxy ready; Syncthing UI/API reports connected peers and no paused/error folders.                                                                      |
-| `tailscale`                    | `tailscale`                    | Operator deployment ready; every generated `ts-*-ingress-*-0` pod ready; missing ingress proxy is Red for the exposed app.                                                                  |
-| `tasknotes`                    | `tasknotes`                    | Both `tasknotes-server` and `obsidian-headless` containers ready; `/api/health` passes; ServiceMonitor scrapes; sync-client-down, high latency/error, or PVC alerts are Red.                |
-| `tempo`                        | `tempo`                        | StatefulSet ready; OTLP/Tempo service reachable from instrumented apps; tracing ingestion errors are Yellow unless app debugging is blocked.                                                |
-| `temporal`                     | `temporal`                     | Run Section 10; server, UI, worker, PostgreSQL, metrics ServiceMonitors, schedules, and workflow failure checks must all be healthy.                                                        |
-| `velero`                       | `velero`                       | Deployment ready; backup schedules fresh; Velero Prometheus alerts clear; failed/partial backups or restore validation failures are Red.                                                    |
+| App                            | Namespace                      | App-specific health check                                                                                                                                                                               |
+| ------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1password`                    | `1password`                    | Connect and operator deployments ready; no `CreateContainerConfigError` in namespaces using `OnePasswordItem`; secret-sync failures are Red for affected apps.                                          |
+| `apps`                         | `argocd`                       | Root app is synced; generated monitoring rules, probes, ingress, and tunnel bindings exist; any child app missing from the inventory is Red.                                                            |
+| `argocd`                       | `argocd`                       | Controller, repo-server, server, Redis, ApplicationSet, notifications, and Dex ready; `argocd_app_info` present; `ArgoAppMissing` / `ArgoAppNotSynced` alerts explain any app drift.                    |
+| `birmel`                       | `birmel`                       | Deployment ready; OAuth Tailscale ingress proxy ready; Bugsink has no new/high-volume `birmel` issues; Loki shows normal bot activity and no sustained tool or Discord API failures.                    |
+| `blackbox-exporter`            | `prometheus`                   | Blackbox exporter deployment ready; `probe_success` data exists for static-site probes; `StaticSiteProbeAbsent` is Red for covered sites.                                                               |
+| `bugsink`                      | `bugsink`                      | Web app and PostgreSQL ready; run Section 9 issue/release checks; `BugsinkPostgreSQLNotReady` or PVC critical alerts are Red.                                                                           |
+| `woodpecker`                   | `woodpecker`                   | Server, agent, config extension, and Postgres ready; connected agents exist when pipelines are pending; large Error/NotReady step pod buildup is Yellow unless current pipelines are blocked, then Red. |
+| `cert-manager`                 | `cert-manager`                 | Controller, cainjector, and webhook ready; certificates are `Ready=True`; webhook or certificate expiry/failure is Red for affected ingresses.                                                          |
+| `chartmuseum`                  | `chartmuseum`                  | Deployment ready; Tailscale/Cloudflare ingress proxy ready; `curl -fsS https://chartmuseum.tailnet-1a49.ts.net/health` or equivalent chart index check succeeds.                                        |
+| `cloudflare-operator`          | `cloudflare-operator-system`   | Controller and webhook certificates ready; no TunnelBinding reconciliation errors; metrics/webhook certs `Ready=True`.                                                                                  |
+| `cloudflare-tunnel`            | `cloudflare-tunnel`            | Cluster tunnel resources reconcile; `homelab-tunnel` / cloudflared workload is running in `cloudflare-operator-system`; public tunnel-bound endpoints respond.                                          |
+| `dagger`                       | `dagger`                       | Dagger engine StatefulSet ready; Section 11 CI steps can start Dagger work; engine restart loops or stuck CI steps are Red.                                                                             |
+| `ddns`                         | `ddns`                         | Deployment ready; logs show successful DNS update loop; sustained provider/auth failures are Red.                                                                                                       |
+| `freshrss`                     | `freshrss`                     | Deployment ready; Tailscale/Cloudflare ingress proxy ready; FreshRSS HTTP endpoint responds; repeated feed update/login errors are Yellow or Red by impact.                                             |
+| `gickup`                       | `gickup`                       | Deployment and ServiceMonitor ready; check Gitckup alerts for job not running, failed jobs, incomplete sources/destinations, low repo success, or stuck duration.                                       |
+| `golink`                       | `golink`                       | Deployment ready; Temporal `syncGolinks` workflow has no recent failures; service/logs show normal redirect/sync behavior.                                                                              |
+| `grafana`                      | `prometheus`                   | Grafana StatefulSet ready; Grafana ingress proxy ready; dashboards and datasource provisioning succeed; Section 6 alert queries work.                                                                   |
+| `grafana-db`                   | `prometheus`                   | Grafana PostgreSQL StatefulSet ready; PVC below warning thresholds; Grafana can read/write dashboards and alert state.                                                                                  |
+| `home`                         | `home`                         | Home Assistant and Eufy websocket deployments ready; Home Assistant ingress proxy ready; Home Assistant entity and HA workflow alerts are clear.                                                        |
+| `intel-device-plugin-operator` | `intel-device-plugin-operator` | Operator deployment ready; webhook cert ready; no reconcile errors.                                                                                                                                     |
+| `intel-gpu-device-plugin`      | `intel-device-plugin-operator` | GPU plugin DaemonSet ready; node exposes `gpu.intel.com/i915`; GPU consumers such as `pokemon` can schedule when scaled up.                                                                             |
+| `kueue`                        | `kueue-system`                 | Controller manager ready; webhook/visibility services reachable; no admission or queue reconciliation errors.                                                                                           |
+| `kyverno`                      | `kyverno`                      | Admission, background, cleanup, and reports controllers ready; failed policy/report jobs or webhook failures are Red.                                                                                   |
+| `kyverno-policies`             | `kyverno-policies`             | Policy app synced; Kyverno shows no rejected/invalid policy resources; any policy preventing expected deploys is Red for the affected app.                                                              |
+| `loki`                         | `loki`                         | Loki, gateway, cache, and canary workloads ready; Loki ingress proxy ready; Section 6 log queries return data.                                                                                          |
+| `mc-router`                    | `mc-router`                    | Router deployment ready; NodePort/service routes Minecraft hostnames; if any running Minecraft server is unreachable through the router, mark that server Red.                                          |
+| `media`                        | `media`                        | All media deployments ready; Tailscale proxies ready; Plex and qBittorrent ServiceMonitors scrape; `QBitTorrentFirewalled` is Red; individual \*arr UI failures are Yellow/Red by service.              |
+| `minecraft-shuxin`             | `minecraft-shuxin`             | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Bluemap ingress proxy ready.                                                               |
+| `minecraft-sjerred`            | `minecraft-sjerred`            | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Dynmap ingress proxy ready.                                                                |
+| `minecraft-tsmc`               | `minecraft-tsmc`               | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Bluemap ingress proxy ready.                                                               |
+| `nfd`                          | `node-feature-discovery`       | Master, worker, and GC workloads ready; node labels are present; missing hardware labels are Yellow unless a dependent app cannot schedule.                                                             |
+| `openebs`                      | `openebs`                      | ZFS LocalPV node/controller/provisioner ready; PVC provisioning works; pending PVCs using OpenEBS are Red for affected apps.                                                                            |
+| `pokemon`                      | `pokemon`                      | Desired replicas currently `0` is Green/idle; if scaled up, deployment ready, GPU scheduled, Selkies/UI ingress proxies ready, and UI endpoint responds.                                                |
+| `postal`                       | `postal`                       | Web, SMTP, and worker deployments ready; ServiceMonitor scrapes worker metrics; queue latency, worker errors, SMTP exceptions, or web/SMTP down alerts are Red.                                         |
+| `postal-mariadb`               | `postal`                       | MariaDB StatefulSet ready; metrics scrape present; `PostalMariaDBDown` or storage saturation is Red.                                                                                                    |
+| `postgres-operator`            | `postgres-operator`            | Operator deployment ready; managed Postgres clusters report ready; credential secret rotation or reconciliation errors are Red for dependent apps.                                                      |
+| `prometheus`                   | `prometheus`                   | Prometheus, Alertmanager, operator, kube-state-metrics, node-exporter, Grafana, and renderer ready; Prometheus can query alerts and targets; TSDB/config/rule failures are Red.                         |
+| `prometheus-adapter`           | `prometheus`                   | Adapter deployment ready; Kubernetes aggregated API healthy; HPA/custom metrics queries work if any consumers depend on them.                                                                           |
+| `promtail`                     | `promtail`                     | DaemonSet ready on all nodes; Loki receives recent logs from all active namespaces; scrape/send errors are Red for observability.                                                                       |
+| `redlib`                       | `redlib`                       | Deployment ready; Tailscale ingress proxy ready; endpoint responds; very high restart count requires log review even if currently Ready.                                                                |
+| `s3-static-sites`              | `s3-static-sites`              | Caddy deployment ready; every `Probe/static-site-*` has `probe_success == 1`; static-site SSL expiry, slow response, missing probe, or failed public endpoint is Red for that site.                     |
+| `scout-beta`                   | `scout-beta`                   | Deployment ready; `/healthz` readiness passes; ServiceMonitor scrapes; Riot API error-rate alerts and active Bugsink Scout issues are reviewed.                                                         |
+| `scout-prod`                   | `scout-prod`                   | Deployment ready; `/healthz` readiness passes; ServiceMonitor scrapes; Riot API error-rate alerts and active Bugsink Scout issues are Red if user-facing flows are degraded.                            |
+| `seaweedfs`                    | `seaweedfs`                    | Master, filer, volume, and S3 workloads ready; ServiceMonitors scrape; filer and S3 ingress proxies ready; S3-backed apps can read/write.                                                               |
+| `starlight-karma-bot-beta`     | `starlight-karma-bot-beta`     | Deployment ready; logs show Discord connection/heartbeat and no sustained API/auth failures; Bugsink release/issues current.                                                                            |
+| `starlight-karma-bot-prod`     | `starlight-karma-bot-prod`     | Deployment ready; logs show Discord connection/heartbeat and no sustained API/auth failures; Bugsink release/issues current.                                                                            |
+| `syncthing`                    | `syncthing`                    | Deployment ready; Tailscale ingress proxy ready; Syncthing UI/API reports connected peers and no paused/error folders.                                                                                  |
+| `tailscale`                    | `tailscale`                    | Operator deployment ready; every generated `ts-*-ingress-*-0` pod ready; missing ingress proxy is Red for the exposed app.                                                                              |
+| `tasknotes`                    | `tasknotes`                    | Both `tasknotes-server` and `obsidian-headless` containers ready; `/api/health` passes; ServiceMonitor scrapes; sync-client-down, high latency/error, or PVC alerts are Red.                            |
+| `tempo`                        | `tempo`                        | StatefulSet ready; OTLP/Tempo service reachable from instrumented apps; tracing ingestion errors are Yellow unless app debugging is blocked.                                                            |
+| `temporal`                     | `temporal`                     | Run Section 10; server, UI, worker, PostgreSQL, metrics ServiceMonitors, schedules, and workflow failure checks must all be healthy.                                                                    |
+| `velero`                       | `velero`                       | Deployment ready; backup schedules fresh; Velero Prometheus alerts clear; failed/partial backups or restore validation failures are Red.                                                                |
 
 ### Coverage Gaps to Call Out
 
@@ -649,7 +648,7 @@ End with a "What's Working Well" section to confirm healthy systems.
 - Bugsink releases should match recent deployments (if ArgoCD synced a new version but no Bugsink release exists, SDK integration may be misconfigured)
 - Temporal workflow failures should correlate with pod health: if workflows error out while `temporal-worker` pods are Healthy, check `kubectl logs -n temporal -l app=temporal-worker` — the worker is running but the workflow/activity code is failing
 - Red `main` CI should correlate with ArgoCD state for any auto-synced app tracking `main` — if `main` is red but ArgoCD is Synced and Healthy, the deployed image is the last green build (not the tip of `main`)
-- PR `statusCheckRollup` failures on Buildkite checks should match `bk build list` output for that commit; a mismatch means GitHub's check status is stale and a re-run may be needed
+- PR `statusCheckRollup` failures on CI checks should match `toolkit woodpecker pipeline ls` output for that commit; a mismatch means GitHub's check status is stale and a re-run may be needed
 - Application Health row count should match the live ArgoCD app count; a missing app row means the audit did not answer whether every deployed app is healthy
 - App-specific alerts should match the matrix row status: firing `Scout*`, `Temporal*`, `Tasknotes*`, `Postal*`, `Gitckup*`, `StaticSite*`, `Bugsink*`, or `QBitTorrent*` alerts should produce Yellow/Red application rows
 - Apps with no native metrics should still have row-specific proof from readiness, logs, endpoint response, Bugsink, or dependency checks; do not mark them Green on ArgoCD status alone

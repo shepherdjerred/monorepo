@@ -47,7 +47,7 @@ const coverageExclusions =
         "**/node_modules/**",
         "**/__tests__/**",
         "**/dist/**",
-        // Scope this to Scout's package tree: Buildkite checks out the
+        // Scope this to Scout's package tree: CI checks out the
         // repository below /workspace/build, so an unanchored **/build/**
         // excludes every source file and produces an empty coverage report.
         path.join(workspaceRoot, "packages", "**", "build", "**"),
@@ -212,7 +212,7 @@ export default {
       ? {
           include: [
             ...defaultTestInclude,
-            "../.buildkite/scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)",
+            "../ci/scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)",
           ],
         }
       : {}),
@@ -241,7 +241,7 @@ export default {
       provider: "istanbul",
       reporter: ["text", "lcovonly"],
       // These suites exercise source outside their project roots: docs-site
-      // imports sibling Scout data, while root-scripts owns Buildkite scripts.
+      // imports sibling Scout data, while root-scripts owns the CI scripts.
       allowExternal:
         workspace === "packages/scout-for-lol/packages/docs-site" ||
         workspace === "scripts",

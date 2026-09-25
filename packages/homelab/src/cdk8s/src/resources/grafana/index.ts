@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { exportCiCapacityDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/shared/ci-capacity-dashboard.ts";
 import { ConfigMap } from "cdk8s-plus-31";
 import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai/ai-provider-dashboard.ts";
 import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
@@ -7,7 +8,6 @@ import { exportScoutDurableDashboardJson } from "@shepherdjerred/homelab/cdk8s/g
 import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/smartctl-dashboard.ts";
 import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/velero-dashboard.ts";
 import { exportTasknotesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/tasknotes-dashboard.ts";
-import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkite/buildkite-dashboard.ts";
 import { exportBuildkitdDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkitd-dashboard.ts";
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal/temporal-dashboard.ts";
@@ -115,11 +115,15 @@ const ZFS_DASHBOARD: DashboardConfig = {
   exportFn: exportZfsDashboardJson,
 };
 
-const BUILDKITE_DASHBOARD: DashboardConfig = {
-  id: "buildkite-dashboard-configmap",
-  name: "buildkite-dashboard",
-  jsonFilename: "buildkite.json",
-  exportFn: exportBuildkiteDashboardJson,
+// Successor to the Buildkite dashboard, reduced to the Kueue capacity and
+// admission panels. The agent-health and per-job I/O panels keyed off
+// Buildkite-specific metrics and pod labels and have to be rebuilt against
+// Woodpecker's once the new CI has produced data.
+const CI_CAPACITY_DASHBOARD: DashboardConfig = {
+  id: "ci-capacity-dashboard-configmap",
+  name: "ci-capacity-dashboard",
+  jsonFilename: "ci-capacity.json",
+  exportFn: exportCiCapacityDashboardJson,
 };
 
 const BUILDKITD_DASHBOARD: DashboardConfig = {
@@ -173,7 +177,7 @@ export const ALL_DASHBOARDS: DashboardConfig[] = [
   },
   AI_PROVIDER_DASHBOARD,
   BUILDKITD_DASHBOARD,
-  BUILDKITE_DASHBOARD,
+  CI_CAPACITY_DASHBOARD,
   DISCORD_PLAYS_DASHBOARD,
   GITCKUP_DASHBOARD,
   SCOUT_DASHBOARD,

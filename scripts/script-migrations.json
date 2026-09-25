@@ -3,189 +3,169 @@
   "version": 1,
   "scripts": [
     {
-      "source": ".buildkite/scripts/annotate-build-summary.sh",
-      "disposition": "port",
-      "reason": "Buildkite runtime includes Bun",
-      "replacement": ".buildkite/scripts/reporting/annotate-build-summary.ts",
-      "owner": {
-        "packageJson": "scripts/package.json",
-        "tsconfig": "scripts/tsconfig.json",
-        "eslintConfig": "scripts/eslint.config.ts"
-      },
-      "tests": [
-        ".buildkite/scripts/reporting/annotate-build-summary.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
-      ]
+      "source": "ci/scripts/annotate-build-summary.sh",
+      "disposition": "delete",
+      "reason": "Retired with the Buildkite cutover: its only output was a build annotation, and Woodpecker has no annotation surface."
     },
     {
-      "source": ".buildkite/scripts/bake-images.sh",
+      "source": "ci/scripts/bake-images.sh",
       "disposition": "port",
       "reason": "Complex image orchestration benefits from typed process handling",
-      "replacement": ".buildkite/scripts/images/bake-images.ts",
+      "replacement": "ci/scripts/images/bake-images.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/images/bake-images.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
+        "ci/scripts/images/bake-images.test.ts",
+        "ci/scripts/migration-smoke.test.ts"
       ]
     },
     {
-      "source": ".buildkite/scripts/bake-retry.sh",
+      "source": "ci/scripts/bake-retry.sh",
       "disposition": "port",
       "reason": "Retry classification is shared with the typed image workflow",
-      "replacement": ".buildkite/scripts/images/bake-retry.ts",
+      "replacement": "ci/scripts/images/bake-retry.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/images/bake-retry.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
+        "ci/scripts/images/bake-retry.test.ts",
+        "ci/scripts/migration-smoke.test.ts"
       ]
     },
     {
-      "source": ".buildkite/scripts/bake-retry.test.sh",
+      "source": "ci/scripts/bake-retry.test.sh",
       "disposition": "port",
       "reason": "Bun test replaces the shell harness",
-      "replacement": ".buildkite/scripts/images/bake-retry.test.ts",
+      "replacement": "ci/scripts/images/bake-retry.test.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/images/bake-retry.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
+        "ci/scripts/images/bake-retry.test.ts",
+        "ci/scripts/migration-smoke.test.ts"
       ]
     },
     {
-      "source": ".buildkite/scripts/build-ci-image.sh",
+      "source": "ci/scripts/build-ci-image.sh",
       "disposition": "port",
-      "reason": "Buildkite runtime includes Bun",
-      "replacement": ".buildkite/scripts/images/build-ci-image.ts",
+      "reason": "CI runtime includes Bun",
+      "replacement": "ci/scripts/images/build-ci-image.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/images/build-ci-image.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
+        "ci/scripts/images/build-ci-image.test.ts",
+        "ci/scripts/migration-smoke.test.ts"
       ]
     },
     {
-      "source": ".buildkite/scripts/buildkit-env.sh",
+      "source": "ci/scripts/buildkit-env.sh",
       "disposition": "port",
       "reason": "The sourced file only performs registry login and exports nothing",
-      "replacement": ".buildkite/scripts/reporting/buildkit-env.ts",
+      "replacement": "ci/scripts/reporting/buildkit-env.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/reporting/buildkit-env.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
+        "ci/scripts/reporting/buildkit-env.test.ts",
+        "ci/scripts/migration-smoke.test.ts"
       ]
     },
     {
-      "source": ".buildkite/scripts/macos-native-env.sh",
+      "source": "ci/scripts/macos-native-env.sh",
       "disposition": "retain",
       "reason": "Sourced native macOS job environment must export host-local tool and cache settings before Bun is invoked"
     },
     {
-      "source": ".buildkite/scripts/bun-install.sh",
+      "source": "ci/scripts/bun-install.sh",
       "disposition": "retain",
       "reason": "Must acquire a Linux flock file descriptor before invoking Bun"
     },
     {
-      "source": ".buildkite/scripts/ci-changed.sh",
+      "source": "ci/scripts/ci-changed.sh",
       "disposition": "port",
       "reason": "Large lane selector benefits from typed data and fixtures",
-      "replacement": ".buildkite/scripts/selectors/ci-changed.ts",
+      "replacement": "ci/scripts/selectors/ci-changed.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/selectors/ci-changed.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
+        "ci/scripts/selectors/ci-changed.test.ts",
+        "ci/scripts/migration-smoke.test.ts"
       ]
     },
     {
-      "source": ".buildkite/scripts/ci-changed.test.sh",
+      "source": "ci/scripts/ci-changed.test.sh",
       "disposition": "port",
       "reason": "Bun test replaces the shell harness",
-      "replacement": ".buildkite/scripts/selectors/ci-changed.test.ts",
+      "replacement": "ci/scripts/selectors/ci-changed.test.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/selectors/ci-changed.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
+        "ci/scripts/selectors/ci-changed.test.ts",
+        "ci/scripts/migration-smoke.test.ts"
       ]
     },
     {
-      "source": ".buildkite/scripts/ci-image-refs.sh",
+      "source": "ci/scripts/ci-image-refs.sh",
       "disposition": "retain",
-      "reason": "Sourced Buildkite bootstrap validates and exports image refs before Bun is guaranteed"
+      "reason": "Sourced CI bootstrap validates and exports image refs before Bun is guaranteed"
     },
     {
-      "source": ".buildkite/scripts/docker-env.sh",
+      "source": "ci/scripts/docker-env.sh",
       "disposition": "delete",
       "reason": "Remote BuildKit cutover removed every executable caller"
     },
     {
-      "source": ".buildkite/scripts/prepare-ci-changed-base.sh",
-      "disposition": "port",
-      "reason": "Buildkite runtime includes Bun",
-      "replacement": ".buildkite/scripts/selectors/prepare-ci-changed-base.ts",
-      "owner": {
-        "packageJson": "scripts/package.json",
-        "tsconfig": "scripts/tsconfig.json",
-        "eslintConfig": "scripts/eslint.config.ts"
-      },
-      "tests": [
-        ".buildkite/scripts/selectors/prepare-ci-changed-base.test.ts",
-        ".buildkite/scripts/migration-smoke.test.ts"
-      ]
+      "source": "ci/scripts/prepare-ci-changed-base.sh",
+      "disposition": "delete",
+      "reason": "Retired with the Buildkite cutover: the configuration extension resolves the last green main commit before any step is generated, so no step computes it."
     },
     {
-      "source": ".buildkite/scripts/review-gate.sh",
+      "source": "ci/scripts/review-gate.sh",
       "disposition": "retain",
-      "reason": "Buildkite wrapper selects and checks out the trusted parser source before installing Bun"
+      "reason": "CI wrapper selects and checks out the trusted parser source before installing Bun"
     },
     {
-      "source": ".buildkite/scripts/toolchain.sh",
+      "source": "ci/scripts/toolchain.sh",
       "disposition": "retain",
       "reason": "Sourced bootstrap installs Bun and exports into the parent shell"
     },
     {
-      "source": ".buildkite/scripts/toolchain.test.sh",
+      "source": "ci/scripts/toolchain.test.sh",
       "disposition": "retain",
       "reason": "Thirty-three-line test directly validates the shell bootstrap contract"
     },
     {
-      "source": ".buildkite/scripts/upload-pipeline.sh",
-      "disposition": "retain",
-      "reason": "Buildkite bootstrap runs before the repository runtime is guaranteed"
+      "source": "ci/scripts/upload-pipeline.sh",
+      "disposition": "delete",
+      "reason": "Retired with the Buildkite cutover: pipeline upload was Buildkite's bootstrap step, and Woodpecker asks the configuration extension for the graph instead."
     },
     {
-      "source": ".buildkite/scripts/upload-pipeline.test.sh",
-      "disposition": "retain",
-      "reason": "Tests the minimal shell bootstrap contract"
+      "source": "ci/scripts/upload-pipeline.test.sh",
+      "disposition": "delete",
+      "reason": "Retired with its subject: there is no shell bootstrap contract left to test."
     },
     {
-      "source": ".buildkite/scripts/upload-reporting-pipeline.sh",
-      "disposition": "retain",
-      "reason": "Buildkite bootstrap runs before the repository runtime is guaranteed"
+      "source": "ci/scripts/upload-reporting-pipeline.sh",
+      "disposition": "delete",
+      "reason": "Retired with the Buildkite cutover: the separate reporting pipeline it uploaded has no successor."
     },
     {
       "source": "packages/anki/generate.sh",
@@ -398,7 +378,7 @@
       "reason": "ConfigMap-mounted init-container drift check runs on the busybox+yq image where Bun is unavailable"
     },
     {
-      "source": "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
+      "source": "packages/homelab/src/cdk8s/src/resources/woodpecker/bun-cache-gc.sh",
       "disposition": "retain",
       "reason": "ConfigMap-mounted maintenance entrypoint coordinates Linux filesystem utilities under flock"
     },

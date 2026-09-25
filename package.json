@@ -67,6 +67,7 @@
     "check-floating-deps": "bun scripts/checks/deps/check-floating-deps.ts",
     "check-patched-deps": "bun scripts/checks/deps/check-patched-deps.ts",
     "check-ci-env": "bun scripts/checks/ci/check-ci-env.ts",
+    "check-ci-admission-budget": "bun scripts/checks/ci/check-ci-admission-budget.ts",
     "check-worker-image-pins": "bun scripts/checks/ci/verify-worker-image-build-ids.ts --offline",
     "check-script-migrations": "bun scripts/checks/check-script-migrations.ts",
     "check-test-standardization": "bun scripts/checks/check-test-standardization.ts",
@@ -169,6 +170,7 @@
     "packages/voice-assistant",
     "packages/webring",
     "packages/windows-cross-compiler",
+    "packages/woodpecker-config-extension",
     "scripts"
   ],
   "overrides": {

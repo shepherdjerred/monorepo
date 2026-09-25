@@ -11,11 +11,12 @@ import type {
   ReportEnvelopeV1,
 } from "#shared/reports/report.ts";
 import { ensureGcxContext } from "#activities/gcx-context.ts";
-import { collectBuildkite } from "./homelab-audit-buildkite.ts";
+import { collectCiMain } from "./homelab-audit-ci.ts";
 import {
   interpretKubernetesWorkloads,
   KubernetesWorkloadListSchema,
 } from "./homelab-audit-kubernetes.ts";
+import { sha256 } from "./homelab-audit-digest.ts";
 
 export const PrometheusResultSchema = z.object({
   status: z.literal("success"),
@@ -78,27 +79,12 @@ type CollectorResult = {
   limitation: string | undefined;
 };
 
-async function sha256(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value),
-  );
-  return [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 async function runCommand(args: string[]): Promise<string> {
   const process = Bun.spawn(args, {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
-    env: {
-      ...Bun.env,
-      BUILDKITE_ORGANIZATION_SLUG:
-        Bun.env["BUILDKITE_ORGANIZATION_SLUG"] ?? "sjerred",
-      BUILDKITE_PIPELINE_SLUG: Bun.env["BUILDKITE_PIPELINE_SLUG"] ?? "monorepo",
-    },
+    env: { ...Bun.env },
   });
   const timeout = setTimeout(() => {
     process.kill();
@@ -461,7 +447,7 @@ export async function collectHomelabAuditEvidence(): Promise<HomelabAuditCollect
       schema: ArgoApplicationsSchema,
       interpret: interpretArgoApplications,
     }),
-    collectBuildkite(),
+    collectCiMain(),
   ]);
   return {
     startedAt,

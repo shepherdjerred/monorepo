@@ -59,6 +59,6 @@ Run focused Turbo tasks for affected Scout workspaces. Use the existing seeded
 report lake and browser/Discord fixtures for integration and visual proof.
 
 Beta continuously receives built images; production is promoted through the
-catalog/GitOps path. Verify source, exact-head Buildkite, image digest, ArgoCD
+catalog/GitOps path. Verify source, exact-head CI, image digest, ArgoCD
 revision, logs, and the user flow independently. Never infer deployment from a
 green source check.

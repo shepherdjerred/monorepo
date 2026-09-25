@@ -23,7 +23,7 @@ export function renderLaunchAgent(input: {
   checkout: string;
   path: string;
   linearApiKeyReference: string;
-  buildkiteApiTokenReference: string;
+  woodpeckerTokenReference: string;
   pinchtabConfigPath: string;
   stdout: string;
   stderr: string;
@@ -38,7 +38,7 @@ export function renderLaunchAgent(input: {
   <array>
     <string>/usr/bin/env</string>
     <string>LINEAR_API_KEY=${escapeXml(input.linearApiKeyReference)}</string>
-    <string>BUILDKITE_API_TOKEN=${escapeXml(input.buildkiteApiTokenReference)}</string>
+    <string>WOODPECKER_TOKEN=${escapeXml(input.woodpeckerTokenReference)}</string>
     <string>PINCHTAB_CONFIG=${escapeXml(input.pinchtabConfigPath)}</string>
     <string>op</string>
     <string>run</string>
@@ -120,7 +120,7 @@ export class LaunchdService {
         checkout: config.repository.stableCheckout,
         path: processPath,
         linearApiKeyReference: config.linear.apiKey,
-        buildkiteApiTokenReference: config.buildkite.apiToken,
+        woodpeckerTokenReference: config.woodpecker.apiToken,
         pinchtabConfigPath: config.pinchtab.configPath,
         stdout: path.join(this.paths.logs, "stdout.log"),
         stderr: path.join(this.paths.logs, "stderr.log"),

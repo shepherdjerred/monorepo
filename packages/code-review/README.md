@@ -3,7 +3,7 @@
 Provider-neutral library for reasoning about automated PR code review: which
 bot posts reviews (Codex, Greptile, …), whether it has finished reviewing the
 head commit, and whether its unresolved findings should block. It is the single
-shared vocabulary behind the `review-gate` Buildkite step
+shared vocabulary behind the `codex-review-gate` CI step
 ([scripts/review/wait-for-review.ts](../../scripts/review/wait-for-review.ts)) and the PR
 fleet controller ([packages/pr-fleet-controller](../pr-fleet-controller/)).
 
@@ -39,8 +39,8 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
   provider-authored match posted at/after the head push counts, so a stale
   notice cannot pin a newer head. The failed decision carries
   `blockedReason`, and `gateExitCode` maps it to
-  `REVIEW_GATE_BLOCKED_EXIT_CODE` (42) — the one status the Buildkite step
-  soft-fails on. Every other failure maps to `REVIEW_GATE_FAILURE_EXIT_CODE`.
+  `REVIEW_GATE_BLOCKED_EXIT_CODE` (42) — the one status the CI gate script
+  passes with a warning. Every other failure maps to `REVIEW_GATE_FAILURE_EXIT_CODE`.
 - **`requestReview: ReviewRequestStrategy | null`** — how to ask for a
   (re-)review of the head, with an idempotency marker so a consumer never
   posts a duplicate trigger comment; `null` for providers that review

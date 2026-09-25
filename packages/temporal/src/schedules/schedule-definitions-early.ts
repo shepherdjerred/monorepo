@@ -76,7 +76,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Create missing managed Flipt flags, then alert on remaining inventory drift",
   },
   {
-    id: "buildkite-bun-cache-gc",
+    id: "ci-bun-cache-gc",
     workflowType: "runBunCacheGcWorkflow",
     args: [],
     timing: {
@@ -88,7 +88,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 15-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "1 hour",
-    memo: "Every-five-minute Buildkite Bun cache GC on the CI node",
+    memo: "Every-five-minute Bun cache GC on the CI node",
   },
   {
     id: "turbo-cache-clean-daily",

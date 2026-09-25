@@ -19,7 +19,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # ── wine-dlls: Wine 11.0 DLLs carrying the patches under wine-patches/ ──────
 FROM ubuntu AS wine-dlls
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# Unpinned on purpose, as in .buildkite/ci-image: the archive drops superseded
+# Unpinned on purpose, as in ci/ci-image: the archive drops superseded
 # point releases. The Wine source itself is pinned and checksummed below.
 # hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \

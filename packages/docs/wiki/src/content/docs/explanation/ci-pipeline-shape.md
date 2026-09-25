@@ -1,14 +1,77 @@
 ---
 title: Why the CI pipeline has so many steps
-description: What each Buildkite lane actually covers, why the step count is not redundancy, and how main builds upload only the steps a commit needs.
+description: What each CI lane actually covers, why the step count is not redundancy, and how a pipeline is generated per commit rather than committed.
 sidebar:
   order: 2
 ---
 
-The main Buildkite pipeline has a lot of steps, and several of them look like
-copies of each other. They are not. Each lane exists because it has a different
-scope, a different failure meaning, or a different side effect, and collapsing
-any two of them would lose information the pipeline is built to preserve.
+The CI pipeline has a lot of steps, and several of them look like copies of
+each other. They are not. Each lane exists because it has a different scope, a
+different failure meaning, or a different side effect, and collapsing any two of
+them would lose information the pipeline is built to preserve.
+
+## The pipeline is generated, not committed
+
+There is no `.woodpecker.yaml` in this repository. When Woodpecker starts a
+build it POSTs the repository, the pipeline, and the list of changed files to a
+[configuration
+extension](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/app.ts)
+running in the cluster, and executes the workflows that come back.
+
+That is where lane selection lives. The extension holds the whole step model —
+each lane's image, resources, secret grants, dependencies, and change filters —
+selects the steps a commit actually needs, closes the selection over its
+dependencies, and emits one workflow per selected step.
+
+Three consequences are worth stating plainly:
+
+- **No bootstrap step.** Selection happens before any pod exists, so nothing has
+  to start in order to decide what starts.
+- **No second filter.** The emitted workflows carry no `when: path` clause. The
+  selector already decided, using the same changed-file list Woodpecker would
+  have filtered on; filtering twice would strand a dependent on a workflow that
+  was quietly skipped.
+- **Every request is verified.** The response is executed as a pipeline and the
+  request carries repository credentials, so the extension checks Woodpecker's
+  ed25519 signature — and recomputes the body digest rather than trusting the
+  `Content-Digest` header it covers — before reading anything.
+
+## CI runs only for the owner's own accounts
+
+Steps in this pipeline mount production credentials — Cloudflare and Tailscale
+tokens, an ArgoCD token, OpenTofu state keys, an npm token, a GitHub App private
+key. Nobody else's change is worth that exposure, so the pipeline is not
+generated for anybody else.
+
+Two independent gates say so, and they fail in different directions on purpose:
+
+- **Woodpecker's approval gate**, `require_approval` with
+  `approval_allowed_users`, blocks a pipeline before any step is scheduled. The
+  server defaults new repositories to `all_events`, so an unknown account's
+  push or pull request waits for an explicit approval. This is the stronger
+  gate, but it lives in the server's database, where nothing in this repository
+  can assert it.
+- **The extension's own allowlist** refuses to emit any workflow unless the
+  account that owns the change is the owner, his agent account (`derrej`,
+  which coding-agent sessions push as), or one of his bots — and, where
+  Woodpecker reports one, the account whose action triggered this event too, so
+  that nobody else can drive commits into a trusted account's pull request. The
+  change must also not come from a fork. This gate is weaker, because it runs
+  after the pipeline exists, but it is reviewable: it ships in the extension's
+  image, and a branch cannot edit it into admitting itself. It is also the only
+  gate in front of a cron pipeline, which Woodpecker's approval gate exempts.
+
+The repository is trusted for `volumes` and nothing else. Steps mount the
+shared CI caches as claims, which Woodpecker only allows a trusted repository;
+`network` and `security` stay untrusted, so no step can run privileged or on
+the host network. The trust is safe to grant only because every workflow comes
+from the extension, for an allowlisted account.
+
+A refusal is an error status, never `204`. To Woodpecker a `204` means "keep the
+configuration you already have", which is the branch's own committed YAML — the
+opposite of a refusal. For the same reason the server runs the extension in
+exclusive mode, so there is no committed YAML to fall back to when the extension
+fails.
 
 ## The lanes are phases, not duplicated test suites
 
@@ -17,35 +80,28 @@ any two of them would lose information the pipeline is built to preserve.
   audit. The browser matrix comes from the pinned `ci-playwright` image, so the
   lane is about published sites rather than about Playwright as a tool. The
   design audit uses a deterministic local boot and fixture; see [Run the Scout
-  design audit](/how-to/run-scout-design-audit/). The lane's scope statement is asserted in
-  [`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validation/validate-pipeline-clarity.ts)
-  against the lane defined in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
+  design audit](/how-to/run-scout-design-audit/).
 - **llm-observability E2E** is the dedicated tracing-stack lane. It starts Tempo
-  and MinIO and runs only `@shepherdjerred/llm-observability`'s
-  service-dependent tests. That live backing stack is what sets it apart:
-  `alert-dashboard-sqlite` also runs integration tests for the alert ledger, but
-  against a local SQLite file rather than a service. This lane is the only one
-  needing a whole trace pipeline, where a failure means the
-  exporter/collector/object-store path broke rather than a query. See the
-  `docker-e2e` and `alert-dashboard-sqlite` steps in
-  [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
-- **OpenTofu** has one plan and apply job for each SeaweedFS, Tailscale,
-  Buildkite, ARR, GitHub, and Cloudflare stack. Each job receives the state
-  identity plus only that stack's provider identity. The dependency chain
-  preserves release ordering while the job boundary prevents one provider's
-  configuration from running with another provider's credential. OpenAI,
-  Anthropic, Discord, OpenRouter, and Cloudflare token management add a second
-  serialized group: PRs validate them without credentials or a backend, while
-  main gives each no-retry job only its platform credential and unique state
-  passphrase. Ordinary main builds plan only; an exact-stack
-  `TOFU_PLATFORM_APPLY` request selects one job for an operator-controlled
-  apply. The
-  `tofu-*` steps live in
-  [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
+  and MinIO as workflow services and runs only
+  `@shepherdjerred/llm-observability`'s service-dependent tests. That live
+  backing stack is what sets it apart: `alert-dashboard-sqlite` also runs
+  integration tests for the alert ledger, but against a local SQLite file rather
+  than a service. This lane is the only one needing a whole trace pipeline,
+  where a failure means the exporter/collector/object-store path broke rather
+  than a query.
+- **OpenTofu** has one plan and apply job for each SeaweedFS, Tailscale, ARR,
+  GitHub, and Cloudflare stack. Each job receives the state identity plus only
+  that stack's provider identity. The dependency chain preserves release
+  ordering while the job boundary prevents one provider's configuration from
+  running with another provider's credential. OpenAI, Anthropic, Discord,
+  OpenRouter, and Cloudflare token management add a second serialized group: PRs
+  validate them without credentials or a backend, while main gives each
+  no-retry job only its platform credential and unique state passphrase.
+  Ordinary main builds plan only; an exact-stack `TOFU_PLATFORM_APPLY` request
+  selects one job for an operator-controlled apply.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
-  three stages of one release, not three independent Scout test suites. The
-  `scout-*` steps are ordered in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
+  three stages of one release, not three independent Scout test suites.
 - **Toolchain image candidates** rebuild the images other steps run inside:
   `ci-base`, `ci-playwright`, and the two
   [`windows-cross-compiler`](https://github.com/shepherdjerred/monorepo/tree/main/packages/windows-cross-compiler)
@@ -58,160 +114,158 @@ any two of them would lose information the pipeline is built to preserve.
 ## Native Apple checks are a separate execution surface
 
 Linux `verify` remains the first hard correctness gate, but it cannot exercise
-Xcode, code signing, or macOS UI automation. Changed QuotaBar and TaskNotes
-paths therefore add native phases after `verify`: QuotaBar runs its complete
-macOS verification suite, while TaskNotes verifies the Rust-to-Swift boundary,
-the native app, static analysis, and six signed UI flows.
+Xcode, code signing, or macOS UI automation. Changed QuotaBar, hkctl, and
+TaskNotes paths therefore add native phases after `verify`.
 
-Those phases target a dedicated `macos` queue and serialize in one global
-concurrency group. They do not inherit the Kubernetes plugin, pod metadata, or
-cluster-secret environment. This is an intentional trust boundary: affected PR
-code runs directly in an unlocked macOS user session, so the host contains only
-the development certificate and permissions required by those tests. The host
-allows XCTest to enable Automation Mode without authenticating interactively,
-so native jobs never depend on an expiring password grant. Release
-signing, notarization, iOS simulators, devices, CocoaPods, and Maestro remain
-outside that surface.
+Those phases select the Mac Mini by its `platform=darwin/arm64` agent label and
+serialize in one concurrency group. They run on Woodpecker's **local backend**:
+there is no container and no pod, which is the only way Swift and Xcode run at
+all. That is also why they carry no credentials — with no pod there are no
+Kubernetes secret grants to attach — and why fork pull requests must never
+reach them. Fork code is held at the repository level by Woodpecker's approval
+setting rather than by a guard on each step.
 
-The native steps are hard on both PRs and `main`, declare bounded timeouts, and
-wait for Linux `verify`. Pipeline validation treats native and Kubernetes steps
-as different classes so a future edit cannot accidentally route native work to
-Linux, attach Kubernetes secrets to the Mac, make the gates soft, or allow the
-single host to run them concurrently.
+Affected PR code runs directly in an unlocked macOS user session, so the host
+contains only the development certificate and permissions those tests require.
+Release signing, notarization, iOS simulators, devices, CocoaPods, and Maestro
+remain outside that surface.
 
 ## Optional scans fail differently on purpose
 
-**Trivy** and **Semgrep** are finding scans. Their finding exit statuses are
-explicitly soft-failed, while scanner, configuration, and runtime failures stay
-hard failures. The exact `soft_fail` exit statuses are pinned in
-[`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml) and asserted in
-[`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validation/validate-pipeline-clarity.ts).
+**Trivy** and **Semgrep** are finding scans. A finding is not a build failure;
+a scanner that could not run is.
 
-That split matters: a soft-failed scanner would silently stop scanning and still
-look green. Separating "the scan found something" from "the scan did not run"
-keeps the second one a real failure.
+That distinction used to be expressed as a list of soft-failed exit statuses in
+the pipeline. It now lives inside each scanner's own command: the lane exits 0
+when the tool reports findings and propagates any other failure. This is
+stricter than the exit-status list it replaces, which could not tell a findings
+exit from a crash that happened to share its code.
+
+The split matters either way: a soft-failed scanner would silently stop scanning
+and still look green.
 
 ## The review gate waits for the exact head
 
 The required PR review gate is Codex. Its latest PR review must name the exact
 head commit; a clean review is represented by Codex's 👍 reaction. Unresolved
 Codex findings then fold into the gate decision. Qodo remains available as an
-optional provider, but is not required by Buildkite for now. The gate is
+optional provider, but is not required. The gate is
 [`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/review/wait-for-review.ts).
 
 Binding to the head commit is the whole point. A review comment from an earlier
 push is evidence about code that is no longer proposed, and accepting it would
 make the gate approve unreviewed changes.
 
-The gate runs after every other PR step. Any failed job marks a Buildkite build
-as failing, and most PR steps set `cancel_on_build_failing`, so a gate that ran
-beside them would cancel the whole build whenever it failed. The gate therefore
-depends on every other PR step with `allow_dependency_failure`, still fails the
-build when the review fails, and still reports its verdict when another step
-failed.
+## Handoffs go through object storage
 
-Codex running out of quota is not a review failure. No review happened, and
-blocking every merge on a billing state would stop the rest of CI from
-counting. When Codex posts its usage-limit notice for the exact head, the gate
-exits with status 42, and the step soft-fails on that status alone. The build
-then carries a warning annotation telling the reviewer to rely on Greptile's
-review. Findings, unresolved threads, timeouts, and every other error exit with
-another status and still fail the required build. `select-pr-pipeline.ts`
-rejects any other `soft_fail` shape on the gate, so it cannot quietly widen
-into a gate that never fails. It does not run when a dependency was canceled, per
-Buildkite's
-[dependency rules](https://buildkite.com/docs/pipelines/configure/dependencies).
-The PR selector, `select-pr-pipeline.ts`, treats those edges as ordering only:
-it keeps the selected lanes, never schedules an unselected one, and rejects a
-PR step that is missing from the gate's list.
+Steps pass values to later steps through a build-scoped SeaweedFS prefix,
+`s3://ci-handoff/<pipeline number>/<key>.json`, written and read by
+[`ci-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/ci/ci-handoff.ts).
 
-## Main builds upload only the steps they need
+There is one path rather than two. Buildkite offered build metadata for small
+values and artifacts for large ones, so every handoff had to choose, and image
+digests spilled from one to the other as they grew. Woodpecker has neither, and
+one storage path with no size threshold is simpler than reimplementing both.
 
-A main build starts from a small selector bootstrap,
-[`main-bootstrap.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/main-bootstrap.yml), rather than the
-complete graph. [`select-main-pipeline.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/selectors/select-main-pipeline.ts)
-compares the commit with the last green main build, uploads only the selected
-main steps, and preserves the stable step keys and release dependencies so
-downstream lanes still resolve.
+Reads fail loudly by design. A defaulted `{}` would let a release step deploy
+nothing and report success.
 
-Steps that are selected for every main build do not retain a native
-`if_changed` filter. Buildkite would otherwise withhold a required dependency
-when its path filter does not match. The selector already decides which optional
-lanes changed, so those lanes retain their native filters.
-
-Selection-contract, comparison-base, and lane-decision failures upload the
-complete main graph instead. The fallback is deliberately the expensive
-direction: a broken selector must never be able to skip a lane.
-
-The bootstrap itself is not soft-failed. Invalid configuration, a failure to
-load the immutable image pins, and any failure to validate or upload the
-complete graph stay hard build failures — a selector that cannot even fall back
-correctly is not a degraded optimization, it is a broken build.
-
-## Handoffs stay small, then spill to artifacts
-
-Steps pass values to later steps through Buildkite metadata. Image digests and
-pin candidates move to artifacts automatically once they exceed the metadata
-budget in [`buildkite-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/reporting/buildkite-handoff.ts),
-and downstream release jobs read either form through
-[`read-buildkite-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/reporting/read-buildkite-handoff.ts).
-
-The alternative — always using artifacts — would add a download to every handoff
-for values that are usually a few hundred bytes.
+The store has its own SeaweedFS identity, scoped to the `ci-handoff` bucket and
+nothing else. That is what lets `verify`, `playwright-e2e` and `resume-build`
+run on every pull request: they move build values between steps, so they need
+this credential, and it cannot touch a published site or the OpenTofu state.
+The scope is on the bucket rather than a prefix because the same bucket also
+holds `ci-artifact`'s `artifacts/` trees, and a prefix grant would break those
+while the handoff half kept working.
 
 ## Release refinement has its own authentication boundary
 
 The main-only release refiner can use a ChatGPT subscription for Codex without
-placing a reusable credential in ordinary CI jobs. Its dedicated pod mounts a
-persistent auth bundle that Codex refreshes in place, while the other shared
-pod shapes do not mount that storage. The release lane is serialized, so a
-single-writer volume is sufficient. The bundle is deliberately excluded from
-backups because recovery means reauthenticating on a trusted operator machine.
+placing a reusable credential in ordinary CI steps. Its step mounts a persistent
+auth bundle that Codex refreshes in place, while other steps do not. The release
+lane is serialized, so a single-writer volume is sufficient. The bundle is
+deliberately excluded from backups because recovery means reauthenticating on a
+trusted operator machine.
 
 This separates a renewable login session from an extracted short-lived token.
 The distinction lets the release refiner recover normally when its Codex access
-token expires without broadening the rest of the Buildkite credential surface.
-The [release pod definition](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml),
-[PVC declaration](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts),
-and [refiner boundary](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/release-refiner.ts)
-define that separation.
+token expires without broadening the rest of the CI credential surface.
 
 ## Credentials follow issuer and rotation boundaries
 
-Buildkite credentials are stored in 1Password by issuer or rotation unit, not
-by an arbitrary target number of Secrets. GitHub, Buildkite API, Buildkite Test
-Analytics, Turbo, npm, Claude, ChartMuseum, Argo CD, SeaweedFS, Cloudflare,
-Tailscale, and the ARR and tracker services therefore have independent items
-and Kubernetes Secrets.
-Semantic field names distinguish identities that may initially carry the same
-value but must rotate independently later, such as GitHub download, review,
-package publication, App, and OpenTofu access.
+CI credentials are stored in 1Password by issuer or rotation unit, not by an
+arbitrary target number of Secrets. GitHub, Turbo, npm, Claude, ChartMuseum,
+Argo CD, SeaweedFS, Cloudflare, Tailscale, and the ARR and tracker services
+therefore have independent items and Kubernetes Secrets. Semantic field names
+distinguish identities that may initially carry the same value but must rotate
+independently later, such as GitHub download, review, package publication, App,
+and OpenTofu access.
 
-Every step pod uses the tokenless `buildkite-job` service account without a
-RoleBinding and disables service-account token mounting. Only `container-0`
-receives credential environment variables. The Buildkite agent, checkout,
-init, and sidecar containers receive none, and the job cannot use Kubernetes
-RBAC to discover another Secret.
+That last sentence is a licence worth using carefully, because it describes an
+intention rather than a boundary, and the two are easy to confuse. SeaweedFS is
+the worked example: `SEAWEEDFS_STATE_*` and `SEAWEEDFS_DEPLOY_*` read as a
+boundary for a long time while holding one value — the gateway's only identity,
+carrying unscoped `Admin` over every bucket. Every step granted either pair
+could rewrite the OpenTofu state and every published site.
 
-Because the agent process cannot see those container-only values, the
-repository `pre-command` hook registers only the grants present in
-`container-0` with Buildkite's runtime log redactor before plugins or job code
-can emit output. A redactor registration failure stops the job.
+SeaweedFS now has five identities that are genuinely distinct, each scoped in
+the gateway to the buckets its job touches:
 
-`.buildkite/secret-grants.json` is the reviewable contract between step keys,
-environment variables, Kubernetes Secrets, and fields. `check-ci-env` compares
-the resolved pipeline with that contract and the hashed 1Password snapshot. It
-fails on missing or excessive grants, `envFrom`, optional references, blank or
-unknown fields, auxiliary-container credentials, the wrong service account, or
-an API-token mount. A credential expansion therefore needs an explicit manifest
-change that appears in the diff.
+| Field                    | Reaches                                                 |
+| ------------------------ | ------------------------------------------------------- |
+| `SEAWEEDFS_HANDOFF_*`    | `ci-handoff` only                                       |
+| `SEAWEEDFS_SITES_*`      | the thirteen published-site and release-archive buckets |
+| `SEAWEEDFS_TOFU_STATE_*` | `homelab-tofu-state` only                               |
+| `SEAWEEDFS_APPLE_SDKS_*` | `apple-sdks`, read-only                                 |
+| `SEAWEEDFS_TOFU_ADMIN_*` | everything — see below                                  |
+
+`SEAWEEDFS_TOFU_ADMIN_*` is deliberately unscoped: the `seaweedfs` OpenTofu
+stack manages the buckets themselves, and SeaweedFS requires unscoped `Admin`
+to create one. It is the credential `tofu-plan-seaweedfs` holds, which makes
+that step the one pull-request-reachable holder of a broad SeaweedFS key.
+Narrowing it means moving bucket management off the pull-request path, not
+changing a grant.
+
+The scoping lives in the identities config the S3 gateway loads through
+`existingConfigSecret`, which exists only in a 1Password item. No repository
+check can see it, so the boundary is proved by probe — each identity must be
+**denied** a bucket belonging to another — and that denial is the acceptance
+evidence for any change to it. A positive probe alone cannot tell a scoped
+identity from an admin one.
+
+Each generated step names the exact secrets and keys it needs, and the agent
+turns those into `secretKeyRef` entries with
+`WOODPECKER_BACKEND_K8S_ALLOW_NATIVE_SECRETS`. Credentials therefore stay in
+1Password-synced Kubernetes Secrets and never enter Woodpecker's own secret
+store or its database. Every step pod uses the tokenless `woodpecker-job`
+service account without a RoleBinding and disables service-account token
+mounting, so a step cannot use Kubernetes RBAC to discover another Secret.
+
+:::caution
+Step logs are **not** redacted. Buildkite masked values matching configured
+globs and accepted runtime registrations from a `pre-command` hook; Woodpecker
+masks only secrets from its own store, and native Kubernetes secrets are
+external to it. Keeping credentials in 1Password costs the redactor. Do not echo
+a credential in a step command.
+:::
+
+The grant contract is checked rather than written twice. `check-ci-env` reads
+the generated step model directly — not a committed pipeline file — and fails on
+missing grants, blank or unknown 1Password fields, the wrong
+service account, or a token mount. It does **not** detect an _excessive_ grant:
+it reports a step that cannot meet a requirement, never one holding more than
+it needs, so a credential quietly spreading to another step passes it. That gap
+is covered where it matters most by `pr-reachable-secrets.test.ts`, which pins
+both the exact set of credentials a pull request can reach and the exact list
+of steps allowed to write a published site. A credential expansion therefore needs an
+explicit change to a lane definition that appears in the diff.
 
 The stable field names make later rotations pipeline-independent. The
-[Buildkite credential rotation procedure](/how-to/rotate-buildkite-credentials/)
-defines the reconciliation, acceptance, and archival checks.
+[CI credential rotation procedure](/how-to/rotate-ci-credentials/) defines the
+reconciliation, acceptance, and archival checks.
 
 ## Related
 
-- [About the monorepo](/explanation/monorepo/) — why CI is Buildkite at all
+- [About the monorepo](/explanation/monorepo/) — why CI is self-hosted at all
 - [Why releases are shaped this way](/explanation/homelab/release-safety/)
-- [Buildkite admission](/explanation/homelab/buildkite-admission/) — where CI runs
+- [CI admission](/explanation/homelab/ci-admission/) — where CI runs

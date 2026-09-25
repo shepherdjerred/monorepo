@@ -9,7 +9,7 @@
 /**
  * Names a shell command assigns before/while running something, which the
  * secret does not carry. Steps routinely rename a secret key into the name a
- * script expects — `export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID"`,
+ * script expects — `export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_SITES_ACCESS_KEY_ID"`,
  * `export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"`. Treating those as unprovided
  * would make this check's first run a wall of false positives.
  *
@@ -129,7 +129,7 @@ export function commandScopes(command: string): CommandScope[] {
 export function scriptPathsInCommand(command: string): string[] {
   const paths = new Set<string>();
   const pattern =
-    /(?<![\w./-])((?:scripts|\.buildkite\/scripts|packages\/[\w.-]+(?:\/[\w.-]+)*?\/scripts)(?:\/[\w.-]+)*?\/[\w.-]+\.ts)/gu;
+    /(?<![\w./-])((?:scripts|ci\/scripts|packages\/[\w.-]+(?:\/[\w.-]+)*?\/scripts)(?:\/[\w.-]+)*?\/[\w.-]+\.ts)/gu;
   for (const match of command.matchAll(pattern)) {
     const found = match[1];
     if (found !== undefined) paths.add(found);

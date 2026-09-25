@@ -229,13 +229,12 @@ export function createTemporalChart(app: App) {
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         {
-          // The Buildkite-namespace maintenance worker runs cache/database
-          // activities directly and needs Temporal gRPC without Kubernetes API
-          // access.
+          // The CI-namespace maintenance worker runs cache/database activities
+          // directly and needs Temporal gRPC without Kubernetes API access.
           from: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "buildkite" },
+                matchLabels: { "kubernetes.io/metadata.name": "woodpecker-ci" },
               },
               podSelector: {
                 matchLabels: { app: "temporal-maintenance-worker" },

@@ -778,6 +778,20 @@
       "notes": ["not managed by renovate"]
     },
     {
+      "name": "shepherdjerred/woodpecker-config-extension",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-2@sha256:1fbd89b676bad8617caf55d24356f0b5b0268b6136590dec5bb81fe3adc7fef0",
+      "notes": [
+        "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
+        "needs this service to generate the pipeline that would otherwise build",
+        "it. The main image release replaces the pin through version commit-back."
+      ]
+    },
+    {
       "name": "shepherdjerred/alert-dashboard",
       "category": "internal-image",
       "artifactType": "image",
@@ -875,6 +889,102 @@
         "packageName": "agent-stack-k8s"
       },
       "value": "0.50.0@sha256:9d0d052f73362fe28143faa9b0a5ee3fdefedc93e2d7ad9ab8f65b15d50ca4bd"
+    },
+    {
+      "name": "texlive/texlive",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "TL2024-historic@sha256:7995b32f28e7d91c11fc8b222b97244949c58cb2b61c4705e2d3f39f97bc8c31"
+    },
+    {
+      "name": "grafana/tempo",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
+    },
+    {
+      "name": "minio/mc",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "RELEASE.2025-04-03T17-07-56Z@sha256:69fb6e6ca209008ae3cacf9f63c2524f68a1322dc921c8992ba2cc99c5bef3c6"
+    },
+    {
+      "name": "minio/minio",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b"
+    },
+    {
+      "name": "aquasec/trivy",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f"
+    },
+    {
+      "name": "semgrep/semgrep",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.170.0@sha256:c98f8829eea377274ee4b10656458b078b88232469b2ff913f091c2317347c9d"
+    },
+    {
+      "name": "woodpeckerci/woodpecker-server",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v3.18.1@sha256:58dafbe56bb3529d78b48ee8d56a1f4b0886748763fd04ac23c01cc06c3dd24e"
+    },
+    {
+      "name": "woodpeckerci/woodpecker-agent",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v3.18.1@sha256:73ee7cc63161b40bfefa4a26eae45c518a09124ab34f7e3c5e781df85e1ba4ac"
     },
     {
       "name": "ducktors/turborepo-remote-cache",

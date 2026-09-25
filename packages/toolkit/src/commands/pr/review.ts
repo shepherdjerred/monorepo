@@ -23,6 +23,15 @@ import {
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
 
+/**
+ * Repository the CLI addresses when restarting a pipeline.
+ *
+ * `woodpecker-cli` takes a repository before the pipeline number, and accepts
+ * either its numeric id or its slug. The slug is used here because it is the
+ * same in every environment and needs no lookup.
+ */
+const WOODPECKER_REPO = "shepherdjerred/monorepo";
+
 export type ReviewOptions = {
   repo?: string | undefined;
   provider?: string | undefined;
@@ -293,30 +302,37 @@ export async function reviewHarvestCommand(
       // makes the read-only run useful rather than merely safe.
       if (options.all !== true) {
         console.log(
-          `#${String(number)} ${provider.displayName}: retryable — toolkit bk job retry ${verdict.jobId}`,
+          `#${String(number)} ${provider.displayName}: retryable — toolkit woodpecker pipeline start ${WOODPECKER_REPO} ${verdict.pipelineNumber}`,
         );
         continue;
       }
-      retryBuildkiteJob(verdict.jobId);
+      restartCiPipeline(verdict.pipelineNumber);
       console.log(
-        `#${String(number)} ${provider.displayName}: retried ${verdict.jobId}`,
+        `#${String(number)} ${provider.displayName}: restarted pipeline ${verdict.pipelineNumber}`,
       );
     }
   }
 }
 
-function retryBuildkiteJob(jobId: string): void {
+/**
+ * Restart a whole pipeline.
+ *
+ * Coarser than the Buildkite retry it replaces: that targeted the one failed
+ * job, because Buildkite wrote the job id into the status URL fragment.
+ * Woodpecker links a status at the pipeline and restarts at that granularity,
+ * so this re-runs the gate rather than one step inside it.
+ */
+function restartCiPipeline(pipelineNumber: string): void {
   const result = Bun.spawnSync([
-    "bk",
-    "job",
-    "retry",
-    jobId,
-    "-y",
-    "--no-input",
+    "woodpecker-cli",
+    "pipeline",
+    "start",
+    WOODPECKER_REPO,
+    pipelineNumber,
   ]);
   if (result.exitCode !== 0) {
     throw new Error(
-      `bk job retry ${jobId} failed: ${result.stderr.toString().trim()}`,
+      `woodpecker-cli pipeline start ${pipelineNumber} failed: ${result.stderr.toString().trim()}`,
     );
   }
 }

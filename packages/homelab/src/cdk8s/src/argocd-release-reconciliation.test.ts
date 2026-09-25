@@ -14,7 +14,7 @@ function operationForSyncRequest(request: unknown): Record<string, unknown> {
   const syncRequest = SyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: { prune: syncRequest.prune, revision: syncRequest.revision },
   };
 }

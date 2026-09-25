@@ -15,7 +15,7 @@ const config: Config = {
     baseBranch: "main",
   },
   linear: { team: "SJ", apiKey: "op://test/linear/key" },
-  buildkite: { apiToken: "op://test/buildkite/key" },
+  woodpecker: { apiToken: "op://test/woodpecker/key" },
   pinchtab: { configPath: "/tmp/pinchtab.json" },
   github: {
     appId: "op://vault/app/id",

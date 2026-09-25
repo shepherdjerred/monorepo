@@ -11,7 +11,7 @@ import {
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
-  BUILDKITE_IO_OBSERVABILITY_VALUES,
+  CI_IO_OBSERVABILITY_VALUES,
   createGrafanaValues,
   type PrometheusValuesWithBlackbox,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
@@ -228,10 +228,10 @@ export async function createPrometheusApp(chart: Chart) {
       endpoints: [PROD_NODE_INTERNAL_IP],
     },
     // cAdvisor owns the unique 10-second pod-parent counters. The normal
-    // kube-state-metrics scrape adds Buildkite identity/link metadata; missing
+    // kube-state-metrics scrape adds Woodpecker identity/link metadata; missing
     // joins remain explicit in the rules and CI I/O reporter rather than
     // accelerating the full cluster-wide metadata endpoint.
-    ...BUILDKITE_IO_OBSERVABILITY_VALUES,
+    ...CI_IO_OBSERVABILITY_VALUES,
     grafana: createGrafanaValues(prometheusSecrets.name),
     prometheusOperator: {
       resources: {
@@ -418,13 +418,13 @@ export async function createPrometheusApp(chart: Chart) {
               ],
             },
             {
-              // Silence KubeJobFailed for Buildkite CI jobs — a failed PR build is a
-              // normal outcome, already surfaced in Buildkite and as a GitHub commit
+              // Silence KubeJobFailed for Woodpecker CI jobs — a failed PR build is a
+              // normal outcome, already surfaced in Woodpecker and as a GitHub commit
               // status. Job failures in every other namespace still page.
               receiver: "null",
               matchers: [
                 'alertname = "KubeJobFailed"',
-                'namespace = "buildkite"',
+                'namespace = "woodpecker"',
               ],
             },
             removedAgentTaskAggregateRoute,

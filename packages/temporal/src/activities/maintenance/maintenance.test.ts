@@ -44,34 +44,26 @@ describe("maintenance command construction", () => {
         KOMETA_TMDBAPIKEY: "tmdb-secret-for-test",
       },
     });
-    expect(
-      await buildMaintenanceCommand("buildkite-bun-cache-gc"),
-    ).toMatchObject({
-      command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
+    expect(await buildMaintenanceCommand("ci-bun-cache-gc")).toMatchObject({
+      command: ["bash", "/woodpecker/maintenance/bun-cache-gc.sh"],
       env: {
-        BUN_INSTALL_CACHE_DIR: "/buildkite/bun-cache/data",
-        BUN_CACHE_LOCK_FILE: "/buildkite/bun-cache-control/.gc.lock",
+        BUN_INSTALL_CACHE_DIR: "/woodpecker/bun-cache/data",
+        BUN_CACHE_LOCK_FILE: "/woodpecker/bun-cache-control/.gc.lock",
       },
     });
-    const cacheCommand = await buildMaintenanceCommand(
-      "buildkite-bun-cache-gc",
-    );
+    const cacheCommand = await buildMaintenanceCommand("ci-bun-cache-gc");
     expect(cacheCommand.env).not.toHaveProperty("KOMETA_PLEXTOKEN");
-    expect(
-      await buildMaintenanceCommand("buildkite-uv-cache-prune"),
-    ).toMatchObject({
+    expect(await buildMaintenanceCommand("ci-uv-cache-prune")).toMatchObject({
       command: ["uv", "cache", "prune", "--ci"],
-      env: { UV_CACHE_DIR: "/buildkite/uv-cache" },
+      env: { UV_CACHE_DIR: "/woodpecker/uv-cache" },
     });
-    expect(
-      await buildMaintenanceCommand("buildkite-trivy-db-refresh"),
-    ).toMatchObject({
+    expect(await buildMaintenanceCommand("ci-trivy-db-refresh")).toMatchObject({
       command: [
         "trivy",
         "image",
         "--download-db-only",
         "--cache-dir",
-        "/buildkite/trivy-db",
+        "/woodpecker/trivy-db",
       ],
     });
   });
@@ -117,7 +109,7 @@ describe("maintenance subprocess runner", () => {
     let heartbeats = 0;
     let cancellations = 0;
     const command: MaintenanceCommand = {
-      kind: "buildkite-uv-cache-prune",
+      kind: "ci-uv-cache-prune",
       command: ["sleep", "60"],
       cwd: "/tmp",
       env: {},
@@ -171,8 +163,8 @@ describe("maintenance subprocess runner", () => {
     ): Promise<number> => 9;
     // The activity context is supplied explicitly at this unit-test seam.
     await expect(
-      executeMaintenance("buildkite-bun-cache-gc", failingRunner, testHooks),
-    ).rejects.toThrow("buildkite-bun-cache-gc command exited 9");
+      executeMaintenance("ci-bun-cache-gc", failingRunner, testHooks),
+    ).rejects.toThrow("ci-bun-cache-gc command exited 9");
   });
 });
 

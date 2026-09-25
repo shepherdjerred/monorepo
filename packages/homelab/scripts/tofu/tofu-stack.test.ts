@@ -13,8 +13,8 @@ import {
 } from "#scripts/platform-desired-state.ts";
 
 const STATE_SOURCES = [
-  "SEAWEEDFS_STATE_ACCESS_KEY_ID",
-  "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+  "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
+  "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
 ];
 
 async function temporaryDirectory(): Promise<string> {

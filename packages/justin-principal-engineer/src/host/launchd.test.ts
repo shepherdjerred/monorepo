@@ -10,7 +10,7 @@ describe("renderLaunchAgent", () => {
       checkout: "/Users/test/repo",
       path: "/opt/homebrew/bin:/usr/bin",
       linearApiKeyReference: "op://Automation/Linear/credential",
-      buildkiteApiTokenReference: "op://Automation/Buildkite/credential",
+      woodpeckerTokenReference: "op://Automation/Woodpecker/credential",
       pinchtabConfigPath:
         "/Users/test/Library/Application Support/pinchtab/config.json",
       stdout: "/tmp/stdout.log",
@@ -22,7 +22,7 @@ describe("renderLaunchAgent", () => {
     expect(plist).toContain("LINEAR_API_KEY=op://Automation/Linear/credential");
     expect(plist).toContain("<string>op</string>");
     expect(plist).toContain(
-      "BUILDKITE_API_TOKEN=op://Automation/Buildkite/credential",
+      "WOODPECKER_TOKEN=op://Automation/Woodpecker/credential",
     );
     expect(plist).toContain(
       "PINCHTAB_CONFIG=/Users/test/Library/Application Support/pinchtab/config.json",

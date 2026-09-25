@@ -12,9 +12,9 @@ services around them — and delivered by ArgoCD.
 ```mermaid
 flowchart LR
   accTitle: Homelab topology
-  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to ChartMuseum. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Buildkite step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress.
+  accDescr: A pull request builds cdk8s manifests into immutable Helm charts published to ChartMuseum. ArgoCD syncs them onto a two-node Talos cluster. Torvalds is the control plane and runs all production workloads on node-local ZFS volumes. Liskov is a CI-only worker running Woodpecker step pods. Tailscale provides private ingress and Cloudflare Tunnel provides public ingress.
 
-  PR[Pull request] --> CI[Buildkite]
+  PR[Pull request] --> CI[Woodpecker CI]
   CI --> CM[ChartMuseum<br/>immutable charts]
   CM --> ARGO[ArgoCD]
   ARGO --> T[torvalds<br/>control plane + all prod]
@@ -31,7 +31,7 @@ home automation, monitoring, and the storage for every prod PVC. Its ZFS volumes
 are node-local, so prod stateful workloads cannot move.
 
 **liskov** is a CI-only worker (Ryzen 9950X), tainted `ci=only:NoSchedule` in its
-Talos machine config. Only Buildkite step pods, which also nodeSelector onto it,
+Talos machine config. Only CI step pods, which also nodeSelector onto it,
 and per-node system DaemonSets with tolerations run there.
 
 This is not a high-availability cluster and is not pretending to be. For prod
@@ -127,7 +127,7 @@ orphan audit exists to make that visible.
 
 ## CI runs here, so the homelab is in the merge path
 
-Buildkite runs on liskov under [Kueue admission](/explanation/homelab/buildkite-admission/).
+CI runs on liskov under [Kueue admission](/explanation/homelab/ci-admission/).
 The Temporal worker also posts the required `ci/merge-conflict` status.
 
 That means the homelab being down blocks merging. It is a real coupling, and an
@@ -136,5 +136,5 @@ accepted one.
 ## Related
 
 - [Release safety](/explanation/homelab/release-safety/)
-- [Buildkite admission](/explanation/homelab/buildkite-admission/)
+- [CI admission](/explanation/homelab/ci-admission/)
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)

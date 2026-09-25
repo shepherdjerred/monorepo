@@ -54,11 +54,6 @@
       "count": 1
     }
   },
-  "lib/ci/ci-secret-grant-pipeline.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
   "lib/npm-release-eligibility.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

@@ -1,6 +1,6 @@
 ---
 name: monorepo-delivery
-description: Deliver changes in this monorepo through Git-Spice, focused checks, Buildkite, automated review, and PR evidence. Use for branches, commits, PRs, CI failures, review findings, or release-readiness claims.
+description: Deliver changes in this monorepo through Git-Spice, focused checks, Woodpecker CI, automated review, and PR evidence. Use for branches, commits, PRs, CI failures, review findings, or release-readiness claims.
 ---
 
 # Monorepo delivery
@@ -36,7 +36,7 @@ based on the whole branch, not the latest commit.
 
 ## Prove readiness
 
-- Buildkite is authoritative for CI. Use `toolkit pr health <PR>` or
+- Woodpecker is authoritative for CI. Use `toolkit pr health <PR>` or
   `toolkit bk`; do not infer status from GitHub Actions.
 - Verify the exact PR head. A prior build or a green sibling branch is not
   evidence for the current commit.

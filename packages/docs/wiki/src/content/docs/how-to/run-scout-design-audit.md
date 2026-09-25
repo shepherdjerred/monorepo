@@ -1,6 +1,6 @@
 ---
 title: Run the Scout design audit
-description: Run the deterministic Scout browser audit locally or reproduce its scheduled Buildkite check.
+description: Run the deterministic Scout browser audit locally or reproduce its scheduled CI check.
 sidebar:
   order: 14
 ---
@@ -25,12 +25,11 @@ bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e
 The exact route, theme, viewport, and browser counts are in the
 [design-audit reference](/reference/scout-design-audit/).
 
-## 2. Reproduce the scheduled Buildkite boundary
+## 2. Reproduce the scheduled CI boundary
 
-The `monorepo-test-reporting` pipeline runs the audit daily at 03:00 PT. Its
-`scout-design-audit` step uses the pinned Playwright image and remains a soft
-failure while main establishes a stable passing history. The command is defined
-in [`reporting-pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/reporting-pipeline.yml).
+The `scout-design-audit` lane uses the pinned Playwright image and remains a
+soft failure while main establishes a stable passing history. It is defined in
+[`scout.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/scout.ts).
 
 Set `SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true` to use the deterministic local
 fixture. External audit URLs are only needed when that flag is omitted.

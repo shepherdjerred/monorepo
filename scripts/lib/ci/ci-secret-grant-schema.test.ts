@@ -5,31 +5,13 @@ import {
   hash,
   parseSecretGrantManifest,
   validateGrantCatalog,
-  type SecretGrantManifest,
 } from "./ci-secret-grant-schema.ts";
 
 const ITEM_ID = "item-id";
 const DECLARATION = `
-new OnePasswordItem(chart, "buildkite-test-credentials", {
+new OnePasswordItem(chart, "woodpecker-test-credentials", {
   spec: { itemPath: "vaults/vault/items/${ITEM_ID}" },
 });`;
-
-function manifest(key = "TOKEN"): SecretGrantManifest {
-  return parseSecretGrantManifest({
-    secrets: { "buildkite-test-credentials": { itemId: ITEM_ID } },
-    pipelines: {
-      ".buildkite/pipeline.yml": {
-        "test-step": [
-          {
-            env: "TOKEN",
-            secret: "buildkite-test-credentials",
-            key,
-          },
-        ],
-      },
-    },
-  });
-}
 
 function snapshot(blankFields: string[] = []) {
   return {
@@ -46,10 +28,10 @@ function snapshot(blankFields: string[] = []) {
   };
 }
 
-describe("Buildkite grant catalog", () => {
+describe("CI grant catalog", () => {
   test("reads cdk8s Secret-to-item declarations", () => {
     expect(declaredSecretItems(DECLARATION)).toEqual(
-      new Map([["buildkite-test-credentials", ITEM_ID]]),
+      new Map([["woodpecker-test-credentials", ITEM_ID]]),
     );
   });
 
@@ -82,18 +64,18 @@ describe("Buildkite grant catalog", () => {
   test("rejects unknown and blank snapshot fields", () => {
     expect(
       validateGrantCatalog({
-        manifest: manifest("UNKNOWN"),
+        grants: [{ secret: "woodpecker-test-credentials", key: "UNKNOWN" }],
         declarationSource: DECLARATION,
         snapshot: snapshot(),
       }),
-    ).toContain("Secret buildkite-test-credentials has unknown field UNKNOWN");
+    ).toContain("Secret woodpecker-test-credentials has unknown field UNKNOWN");
 
     expect(
       validateGrantCatalog({
-        manifest: manifest(),
+        grants: [{ secret: "woodpecker-test-credentials", key: "TOKEN" }],
         declarationSource: DECLARATION,
         snapshot: snapshot([hash("TOKEN")]),
       }),
-    ).toContain("Secret buildkite-test-credentials field TOKEN is blank");
+    ).toContain("Secret woodpecker-test-credentials field TOKEN is blank");
   });
 });

@@ -454,7 +454,6 @@ test("a fleet tick classifies every PR and queues excess actionable work", async
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const environment = new FakeEnvironment(
     [first, second],
@@ -618,7 +617,6 @@ test("shutdown rejects worker terminal telemetry persistence failures", async ()
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const controller = controllerHarness({
     environment: new FakeEnvironment(
@@ -662,7 +660,6 @@ test("shutdown start persistence failure still aborts and settles workers", asyn
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const runner = new RecordingRunner();
   const controller = controllerHarness({
@@ -702,7 +699,6 @@ test("worker completion capture failures escape settlement and stop the controll
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const telemetry = new KindFailingTelemetry();
   const runner = new DeferredSuccessfulRunner();
@@ -778,7 +774,6 @@ test("controller tick commands carry tick and PR correlation", async () => {
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const environment = new CorrelationEnvironment(
     [pr],
@@ -814,7 +809,6 @@ test("shutdown cancels a worker dispatched by an already-running tick", async ()
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const environment = new DeferredWorktreeEnvironment(
     [pr],
@@ -856,7 +850,6 @@ test("pausing an active worker records cancellation instead of failure", async (
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const telemetry = new RecordingTelemetry();
   const store = new FleetStore(1);
@@ -892,7 +885,6 @@ test("records worker start before the runner can emit its first attempt", async 
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const telemetry = new RecordingTelemetry();
   const controller = controllerHarness({
@@ -936,7 +928,6 @@ test("does not schedule a worker when persisting its start fails", async () => {
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const runner = new RecordingRunner();
   const store = new FleetStore(1);
@@ -971,7 +962,6 @@ test("worktree capture failures stop the controller instead of pausing the PR", 
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const runner = new RecordingRunner();
   const store = new FleetStore(1);
@@ -999,7 +989,6 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const before = identity(1, { headSha: "a".repeat(40) });
   const environment = new MutableEnvironment(
@@ -1055,7 +1044,6 @@ test("keeps a closed PR's leases until its worker settles", async () => {
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const pr = identity(1);
   const environment = new MutableEnvironment(
@@ -1103,7 +1091,6 @@ test("an operator question parks only its PR, releases leases, and resumes on an
     state: "FAILURE",
     bucket: "fail",
     link: null,
-    softFail: false,
   };
   const pr = identity(71);
   const environment = new MutableEnvironment(
@@ -1216,7 +1203,6 @@ test("a head change supersedes an unanswered operator request", async () => {
     state: "PENDING",
     bucket: "pending",
     link: null,
-    softFail: false,
   };
   const environment = new MutableEnvironment(
     [before],
@@ -1225,7 +1211,7 @@ test("a head change supersedes an unanswered operator request", async () => {
         before.number,
         evidence(before, {
           checks: [pendingCheck],
-          buildkiteCurrentHead: false,
+          ciCurrentHead: false,
           hostedReviewComplete: false,
         }),
       ],
@@ -1288,7 +1274,7 @@ test("a head change supersedes an unanswered operator request", async () => {
       after.number,
       evidence(after, {
         checks: [pendingCheck],
-        buildkiteCurrentHead: false,
+        ciCurrentHead: false,
         hostedReviewComplete: false,
       }),
     ],

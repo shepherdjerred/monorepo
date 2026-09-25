@@ -77,7 +77,7 @@ describe("CriticalSystemLoad alert", () => {
   });
 });
 
-describe("liskov memory and Buildkite admission alerts", () => {
+describe("liskov memory and Woodpecker admission alerts", () => {
   it("warns before the liskov eviction floor", () => {
     const group = getResourceMonitoringRuleGroups().find(
       (candidate) => candidate.name === "resource-liskov-memory-monitoring",
@@ -100,13 +100,13 @@ describe("liskov memory and Buildkite admission alerts", () => {
     const admission = groups
       .find(
         (candidate) =>
-          candidate.name === "resource-buildkite-admission-monitoring",
+          candidate.name === "resource-woodpecker-admission-monitoring",
       )
-      ?.rules?.find((rule) => rule.alert === "BuildkiteKueueWorkloadsWaiting");
+      ?.rules?.find((rule) => rule.alert === "WoodpeckerKueueWorkloadsWaiting");
     expect(memory?.expr.value).toContain("MemoryPressure");
     expect(memory?.expr.value).toContain("4294967296");
     expect(memory?.for).toBeUndefined();
-    expect(admission?.expr.value).toContain('cluster_queue="buildkite"');
+    expect(admission?.expr.value).toContain('cluster_queue="woodpecker"');
     expect(admission?.for).toBe("30m");
   });
 });
@@ -126,7 +126,7 @@ describe("production memory request capacity", () => {
 });
 
 describe("generic disk write alerts", () => {
-  it("leaves liskov to the dedicated Buildkite write-volume signal", () => {
+  it("leaves liskov to the dedicated Woodpecker write-volume signal", () => {
     const rules = getResourceMonitoringRuleGroups().flatMap(
       (group) => group.rules ?? [],
     );
@@ -164,7 +164,7 @@ describe("crypto-mining alerts", () => {
     expect(alert.expr.value).toContain("sum by (instance)");
   });
 
-  it("keeps the dedicated CI-node signal active while Buildkite jobs run", () => {
+  it("keeps the dedicated CI-node signal active while Woodpecker jobs run", () => {
     const alert = securityRules().find(
       (rule) => rule.alert === "PotentialCryptoMiningCiNode",
     );
@@ -173,7 +173,7 @@ describe("crypto-mining alerts", () => {
     }
     expect(alert.expr.value).toContain('node="liskov"');
     expect(alert.expr.value).toContain("sum by (instance)");
-    expect(alert.expr.value).not.toContain('namespace="buildkite"');
+    expect(alert.expr.value).not.toContain('namespace="woodpecker"');
     expect(alert.expr.value).not.toContain('phase="Running"');
     expect(alert.expr.value).not.toContain("absent(");
     expect(alert.for).toBe("30m");

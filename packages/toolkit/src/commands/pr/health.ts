@@ -1,5 +1,5 @@
-import { getBuildkiteBuildForCommit } from "#lib/buildkite/ci.ts";
-import type { BuildkiteBuild } from "#lib/buildkite/ci.ts";
+import { getWoodpeckerPipelineForCommit } from "#lib/woodpecker/ci.ts";
+import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import { checkMergeConflicts } from "#lib/git/conflicts.ts";
 import type { MergeCheckResult } from "#lib/git/conflicts.ts";
 import { getGitHubChecks } from "#lib/github/checks.ts";
@@ -17,7 +17,6 @@ import type {
 } from "#lib/github/types.ts";
 import { formatHealthReport, formatJson } from "#lib/output/formatter.ts";
 
-const BUILDKITE_PIPELINE = "sjerred/monorepo";
 const MONOREPO_REPOSITORY = "shepherdjerred/monorepo";
 
 export type HealthOptions = {
@@ -33,32 +32,41 @@ export type PrHealthEvidence = {
   readonly pr: PullRequest;
   readonly merge: MergeCheckResult;
   readonly githubChecks: readonly GitHubCheck[];
-  readonly buildkiteBuild: BuildkiteBuild | null;
+  readonly ciPipeline: WoodpeckerPipeline | null;
   readonly reviews: readonly ReviewEvidence[];
 };
 
-function statusForBuildkiteBuild(state: string): HealthStatus {
+/**
+ * Map a Woodpecker pipeline status onto PR health.
+ *
+ * Throws on an unrecognised status rather than guessing. A status this does
+ * not know about is a Woodpecker upgrade that changed the vocabulary, and
+ * defaulting it either way would silently misreport whether a PR is safe to
+ * merge.
+ *
+ * `skipped` and `blocked` are UNHEALTHY rather than pending: a pipeline that
+ * was skipped never ran the gates, and one blocked on approval will not
+ * proceed without a human.
+ */
+function statusForWoodpeckerPipeline(state: string): HealthStatus {
   switch (state.toLowerCase()) {
-    case "passed":
+    case "success":
       return "HEALTHY";
-    case "failed":
-    case "failing":
-    case "canceled":
-    case "cancelled":
-    case "timed_out":
+    case "failure":
+    case "error":
+    case "killed":
+    case "declined":
     case "skipped":
-    case "not_run":
-      return "UNHEALTHY";
-    case "scheduled":
-    case "running":
-    case "creating":
-    case "waiting":
     case "blocked":
-    case "canceling":
-    case "cancelling":
+      return "UNHEALTHY";
+    case "pending":
+    case "running":
+    case "started":
+    case "waiting":
+    case "waiting_on_deps":
       return "PENDING";
     default:
-      throw new Error(`Unknown Buildkite build state: ${state}`);
+      throw new Error(`Unknown Woodpecker pipeline status: ${state}`);
   }
 }
 
@@ -79,15 +87,21 @@ function statusForGitHubCheck(check: GitHubCheck): HealthStatus {
   }
 }
 
-function isBuildkiteCheck(check: GitHubCheck): boolean {
-  if (check.name.startsWith("buildkite/")) {
+/**
+ * Is this GitHub check the one our own CI posts?
+ *
+ * Matched by host rather than only by name so a renamed status context does
+ * not start being double-counted as an unrelated external check.
+ */
+function isOwnCiCheck(check: GitHubCheck): boolean {
+  if (check.name.startsWith("ci/woodpecker")) {
     return true;
   }
   if (check.link === undefined || check.link.length === 0) {
     return false;
   }
   try {
-    return new URL(check.link).hostname === "buildkite.com";
+    return new URL(check.link).hostname === "woodpecker.sjer.red";
   } catch {
     return false;
   }
@@ -126,14 +140,17 @@ function mergeHealth(result: MergeCheckResult): HealthCheck {
   };
 }
 
-function hardFailureJob(state: string): boolean {
-  return ["failed", "timed_out", "canceled", "cancelled", "expired"].includes(
+/**
+ * Did this workflow fail in a way that blocks the PR?
+ *
+ * There is no soft-failure state to exclude any more. The advisory scanners
+ * decide inside their own command whether findings are fatal and exit 0 when
+ * they are not, so anything that reaches here as failed genuinely failed.
+ */
+function failedWorkflow(state: string): boolean {
+  return ["failure", "error", "killed", "declined"].includes(
     state.toLowerCase(),
   );
-}
-
-function loggableFailureJob(state: string): boolean {
-  return ["failed", "timed_out"].includes(state.toLowerCase());
 }
 
 function aggregateStatuses(statuses: readonly HealthStatus[]): HealthStatus {
@@ -146,55 +163,50 @@ function aggregateStatuses(statuses: readonly HealthStatus[]): HealthStatus {
 export function ciHealth(
   headSha: string,
   githubChecks: readonly GitHubCheck[],
-  build: BuildkiteBuild | null,
+  pipeline: WoodpeckerPipeline | null,
 ): HealthCheck {
   const details: string[] = [];
   const commands: string[] = [];
-  let buildkiteStatus: HealthStatus = "PENDING";
+  let ciStatus: HealthStatus = "PENDING";
 
-  if (build === null) {
+  if (pipeline === null) {
     details.push(
-      `No Buildkite build found for exact PR head ${headSha.slice(0, 12)}`,
+      `No Woodpecker pipeline found for exact PR head ${headSha.slice(0, 12)}`,
     );
-    commands.push(
-      `toolkit bk build list --pipeline ${BUILDKITE_PIPELINE} --commit ${headSha}`,
-    );
+    commands.push(`toolkit woodpecker pipeline ls ${MONOREPO_REPOSITORY}`);
   } else {
-    buildkiteStatus = statusForBuildkiteBuild(build.state);
+    ciStatus = statusForWoodpeckerPipeline(pipeline.status);
     details.push(
-      `Buildkite build #${String(build.number)} for exact head ${headSha.slice(0, 12)}: ${build.state.toUpperCase()}`,
+      `Woodpecker pipeline #${String(pipeline.number)} for exact head ${headSha.slice(0, 12)}: ${pipeline.status.toUpperCase()}`,
     );
     commands.push(
-      `toolkit bk build view ${String(build.number)} --pipeline ${BUILDKITE_PIPELINE}`,
+      `toolkit woodpecker pipeline show ${MONOREPO_REPOSITORY} ${String(pipeline.number)}`,
     );
 
-    const hardFailures = build.jobs.filter(
-      (job) => hardFailureJob(job.state) && job.soft_failed !== true,
+    const failures = pipeline.workflows.filter((workflow) =>
+      failedWorkflow(workflow.state),
     );
-    if (hardFailures.length > 0) {
-      buildkiteStatus = "UNHEALTHY";
+    if (failures.length > 0) {
+      ciStatus = "UNHEALTHY";
     }
-    for (const job of hardFailures) {
-      details.push(`Job "${job.name}" - ${job.state.toUpperCase()}`);
-      if (loggableFailureJob(job.state)) {
-        commands.push(`toolkit bk job log ${job.id} --agent`);
-      }
-    }
-    const softFailures = build.jobs.filter(
-      (job) => hardFailureJob(job.state) && job.soft_failed === true,
-    );
-    for (const job of softFailures) {
+    for (const workflow of failures) {
       details.push(
-        `Soft-failed job "${job.name}" - ${job.state.toUpperCase()}`,
+        `Workflow "${workflow.name}" - ${workflow.state.toUpperCase()}`,
+      );
+    }
+    if (failures.length > 0) {
+      // One command for the whole pipeline rather than one per workflow: the
+      // CLI's log command is addressed by step id, and a workflow name is not
+      // one. The failing workflows are named in the details above.
+      commands.push(
+        `toolkit woodpecker pipeline log show ${MONOREPO_REPOSITORY} ${String(pipeline.number)}`,
       );
     }
   }
 
-  const buildkiteChecks = githubChecks.filter((check) =>
-    isBuildkiteCheck(check),
-  );
+  const ownCiChecks = githubChecks.filter((check) => isOwnCiCheck(check));
   const externalChecks = githubChecks.filter(
-    (check) => !isBuildkiteCheck(check) && check.name !== "ci/merge-conflict",
+    (check) => !isOwnCiCheck(check) && check.name !== "ci/merge-conflict",
   );
   const externalStatuses = new Set(
     externalChecks.map((check) => statusForGitHubCheck(check)),
@@ -206,18 +218,18 @@ export function ciHealth(
     }
   }
 
-  if (build !== null && buildkiteChecks.length > 0) {
-    const githubBuildkiteStatus = aggregateStatuses(
-      buildkiteChecks.map((check) => statusForGitHubCheck(check)),
+  if (pipeline !== null && ownCiChecks.length > 0) {
+    const githubReportedStatus = aggregateStatuses(
+      ownCiChecks.map((check) => statusForGitHubCheck(check)),
     );
-    if (githubBuildkiteStatus !== buildkiteStatus) {
+    if (githubReportedStatus !== ciStatus) {
       details.push(
-        `GitHub's Buildkite check metadata does not match authoritative build #${String(build.number)}; using Buildkite`,
+        `GitHub's check metadata disagrees with authoritative pipeline #${String(pipeline.number)}; trusting Woodpecker`,
       );
     }
   }
 
-  let status = buildkiteStatus;
+  let status = ciStatus;
   if (externalStatuses.has("UNHEALTHY")) {
     status = "UNHEALTHY";
   } else if (status !== "UNHEALTHY" && externalStatuses.has("PENDING")) {
@@ -251,7 +263,7 @@ export function buildPrHealthReport(evidence: PrHealthEvidence): HealthReport {
     ciHealth(
       evidence.pr.headRefOid,
       evidence.githubChecks,
-      evidence.buildkiteBuild,
+      evidence.ciPipeline,
     ),
     approvalHealth(evidence.pr.reviewDecision, evidence.reviews),
   ];
@@ -271,10 +283,10 @@ export function buildPrHealthReport(evidence: PrHealthEvidence): HealthReport {
   }
   if (ci?.status === "UNHEALTHY") {
     nextSteps.push(
-      "Inspect the exact-head Buildkite build and fix hard failures",
+      "Inspect the exact-head Woodpecker pipeline and fix hard failures",
     );
   } else if (ci?.status === "PENDING") {
-    nextSteps.push("Wait for the exact-head Buildkite build to complete");
+    nextSteps.push("Wait for the exact-head Woodpecker pipeline to complete");
   }
   if (approval?.status === "UNHEALTHY") {
     nextSteps.push("Address review feedback");
@@ -308,17 +320,17 @@ export async function healthCommand(
     process.exit(1);
   }
 
-  const [merge, githubChecks, buildkiteBuild, reviewMap] = await Promise.all([
+  const [merge, githubChecks, ciPipeline, reviewMap] = await Promise.all([
     checkMergeConflicts(pr.number, pr.baseRefName, pr.headRefOid),
     getGitHubChecks(pr.number, MONOREPO_REPOSITORY),
-    getBuildkiteBuildForCommit(pr.headRefOid),
+    getWoodpeckerPipelineForCommit(pr.headRefOid),
     getLatestReviewsByAuthor(pr.number, MONOREPO_REPOSITORY),
   ]);
   const report = buildPrHealthReport({
     pr,
     merge,
     githubChecks,
-    buildkiteBuild,
+    ciPipeline,
     reviews: [...reviewMap].map(([author, review]) => ({
       author,
       state: review.state,

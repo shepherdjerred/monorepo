@@ -157,16 +157,15 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
 }
 
 describe("temporal homelab audit tooling configuration", () => {
-  it("injects Buildkite and Bugsink configuration", async () => {
+  it("injects Woodpecker and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
 
     expect(yaml).toContain("name: BUGSINK_URL");
     expect(yaml).toContain("value: https://bugsink.sjer.red");
-    expect(yaml).toContain("name: BUILDKITE_API_TOKEN");
-    expect(yaml).toContain("name: BUILDKITE_ORGANIZATION_SLUG");
-    expect(yaml).toContain("value: sjerred");
-    expect(yaml).toContain("name: BUILDKITE_PIPELINE_SLUG");
-    expect(yaml).toContain("value: monorepo");
+    expect(yaml).toContain("name: WOODPECKER_TOKEN");
+    expect(yaml).toContain("name: WOODPECKER_REPO_ID");
+    expect(yaml).toContain("name: WOODPECKER_URL");
+    expect(yaml).toContain("value: https://woodpecker.sjer.red");
     // Homelab-audit S3 archiving is unused; HOMELAB_AUDIT_ARCHIVE_* env vars are
     // intentionally not wired (no dead optional secret).
     expect(yaml).not.toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
@@ -551,7 +550,7 @@ describe("Temporal operations worker isolation", () => {
       expect(scoutEnv).not.toContain(required);
     }
     expect(repoEnv).toContain("FRESHRSS_API_PASSWORD_FILE");
-    expect(repoEnv).toContain("BUILDKITE_API_TOKEN");
+    expect(repoEnv).toContain("WOODPECKER_TOKEN");
     expect(repoEnv).toContain("OPENROUTER_API_KEY");
     expect(scoutEnv).toContain("OPENROUTER_API_KEY");
     for (const replayOnly of [
@@ -667,7 +666,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
       "AWS_ACCESS_KEY_ID",
       "AWS_SECRET_ACCESS_KEY",
       "BUGSINK_TOKEN",
-      "BUILDKITE_API_TOKEN",
+      "WOODPECKER_TOKEN",
       "CLOUDFLARE_API_TOKEN",
       "CODEX_API_KEY",
       "CLAUDE_CODE_OAUTH_TOKEN",

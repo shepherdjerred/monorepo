@@ -36,11 +36,11 @@ bunx lefthook install           # arm git hooks
 bunx turbo run typecheck test lint --filter=<pkg>
 
 bunx lefthook run pre-commit    # staged-file checks + package typecheck/lint
-bun run verify                  # exhaustive whole-repo gate — what Buildkite runs
+bun run verify                  # exhaustive whole-repo gate — what CI runs
 ```
 
 `bun run verify` is the CI entry point, not part of the everyday loop; run it
-locally only to reproduce a Buildkite failure or when changing the verification
+locally only to reproduce a CI failure or when changing the verification
 machinery itself.
 
 See [AGENTS.md](AGENTS.md) for always-on repository constraints and

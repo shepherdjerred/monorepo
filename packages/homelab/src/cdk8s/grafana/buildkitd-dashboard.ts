@@ -3,7 +3,7 @@ import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import {
   createStatPanel,
   createTimeseriesPanel,
-} from "./buildkite/buildkite-dashboard-panels.ts";
+} from "./shared/dashboard-panels.ts";
 
 // PromQL-side constants so the chart shows the designed bounds from
 // resources/buildkitd.ts: GC keeps 240 GiB of the 300 GiB cache volume, and
@@ -23,7 +23,7 @@ const MEMORY_LIMIT_BYTES_EXPR = "vector(32 * 1024 * 1024 * 1024)";
 export function createBuildkitdDashboard() {
   const builder = new dashboard.DashboardBuilder("buildkitd — CI Image Builds")
     .uid("buildkitd-dashboard")
-    .tags(["buildkitd", "buildkite", "ci", "docker"])
+    .tags(["buildkitd", "woodpecker", "ci", "docker"])
     .time({ from: "now-24h", to: "now" })
     .refresh("30s")
     .timezone("browser")

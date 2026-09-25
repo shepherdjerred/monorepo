@@ -1,6 +1,6 @@
 import { AlertmanagerClient } from "@shepherdjerred/ops-clients/alertmanager.ts";
 import { BugsinkClient } from "@shepherdjerred/ops-clients/bugsink.ts";
-import { BuildkiteClient } from "@shepherdjerred/ops-clients/buildkite.ts";
+import { WoodpeckerClient } from "@shepherdjerred/ops-clients/woodpecker.ts";
 import { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
 import type { Fetch } from "@shepherdjerred/ops-clients/http.ts";
 import { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
@@ -53,13 +53,22 @@ function requiredEnvironment(name: string): string {
   return value.trim();
 }
 
+/** Woodpecker's numeric repository id, from the same item as its token. */
+function requiredRepoId(): number {
+  const repoId = Number(requiredEnvironment("WOODPECKER_REPO_ID"));
+  if (!Number.isInteger(repoId) || repoId <= 0) {
+    throw new Error("WOODPECKER_REPO_ID must be a positive integer");
+  }
+  return repoId;
+}
+
 /** Credentials whose values must never appear in a stored failure reason. */
 const SECRET_ENVIRONMENT = [
   "OPS_INGEST_TOKEN",
   "LINEAR_API_KEY",
   "POSTHOG_PERSONAL_API_KEY",
   "BUGSINK_TOKEN",
-  "BUILDKITE_API_TOKEN",
+  "WOODPECKER_TOKEN",
   "GITHUB_APP_PRIVATE_KEY",
 ] as const;
 
@@ -171,10 +180,10 @@ export const opsActivities = {
   async collectOpsCi(): Promise<OpsSourceResult> {
     return await timed("ci", (context) =>
       collectCi(
-        new BuildkiteClient({
-          token: requiredEnvironment("BUILDKITE_API_TOKEN"),
-          organization: requiredEnvironment("BUILDKITE_ORGANIZATION_SLUG"),
-          pipeline: requiredEnvironment("BUILDKITE_PIPELINE_SLUG"),
+        new WoodpeckerClient({
+          baseUrl: requiredEnvironment("WOODPECKER_URL"),
+          token: requiredEnvironment("WOODPECKER_TOKEN"),
+          repoId: requiredRepoId(),
         }),
         context,
       ),

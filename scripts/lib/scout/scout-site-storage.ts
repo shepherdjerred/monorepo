@@ -6,9 +6,8 @@ import {
   isMissingS3Object,
   s3SyncStaticSite,
   staticSiteFilePaths,
-  SEAWEEDFS_ENDPOINT,
-  SEAWEEDFS_AWS_ENV,
 } from "../s3-static-site.ts";
+import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../seaweedfs.ts";
 import {
   archiveRecord,
   assertArchiveRecordMatchesState,

@@ -30,9 +30,7 @@ import path from "node:path";
 // CI-only: skip in local `bun run test` unless explicitly enabled.
 // To run locally: HELM_RENDER_TEST=1 bun run test -- src/argocd-helm-render.test.ts
 const shouldRun =
-  Bun.env["CI"] === "true" ||
-  Bun.env["BUILDKITE"] === "true" ||
-  Bun.env["HELM_RENDER_TEST"] === "1";
+  Bun.env["CI"] === "true" || Bun.env["HELM_RENDER_TEST"] === "1";
 
 const DIST_DIR = path.join(import.meta.dir, "../dist");
 const APPS_YAML = path.join(DIST_DIR, "apps.k8s.yaml");

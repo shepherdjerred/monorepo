@@ -12,8 +12,8 @@ GitOps release can go wrong.
 ```mermaid
 sequenceDiagram
   accTitle: Homelab release sequence
-  accDescr: One Buildkite release command suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, preflights and reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
-  participant BK as Buildkite
+  accDescr: One CI release command suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, preflights and reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
+  participant BK as CI
   participant CM as ChartMuseum
   participant Root as apps Application
   participant Child as child Applications
@@ -74,11 +74,11 @@ revision, but disagreement between them is a hard identity failure.
 The waves are an architecture contract, not incident-specific ordering.
 Admission policy objects land first, followed by the 1Password controller and
 items, infrastructure providers, certificate resources, the root Application,
-Kueue, dependent configuration, Buildkite, and leaf workloads. This also makes
+Kueue, dependent configuration, CI, and leaf workloads. This also makes
 an ordinary manual global sync safe: all members of a wave apply before ArgoCD
 waits on health, and no prerequisite is hidden behind a leaf workload.
 
-Disabling every child creates a second ordering obligation: Buildkite must
+Disabling every child creates a second ordering obligation: the release must
 explicitly reconcile external children as well as charts published by this
 repository. The release renders the exact root revision again, orders its
 Application manifests by numeric sync wave, and combines two revision sources.
@@ -119,7 +119,7 @@ exempting a missing Secret because cert-manager
 [records a failed request as `Issuing=False`](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/controller/certificates/issuing/issuing_controller.go#L408-L430)
 while the missing-Secret Ready condition can remain unchanged. A different
 false Ready reason or failed issuance stays `Degraded`. The
-[five-minute release operation timeout](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml#L1547-L1556)
+[five-minute release operation timeout](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
 still fails a Certificate that never becomes ready. Ignoring Certificate health
 would let later CA and workload waves race a missing trust Secret, so the
 release does not use that shortcut.
@@ -276,10 +276,10 @@ independently unhealthy. Waiting synchronously on the root would mean waiting on
 every one of them, and a single permanently unhealthy child would hold the
 release open forever.
 
-So the [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+So the [main release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
 separates root application from release-scoped health. One
 [atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-retains the exact Buildkite request identity while ArgoCD applies the root
+retains the exact CI request identity while ArgoCD applies the root
 revision. It sends every desired wave as bounded exact-source selections plus
 local overrides only where policy is deliberately rewritten. It compares each
 batch's reported group, kind, and name identities with its exact selection and
@@ -298,7 +298,7 @@ asynchronously. A second process can read before the accepted operation appears.
 Keeping submission and finalization together lets the command poll through that
 gap and distinguish stale state from its own operation.
 
-Buildkite retries reuse the build UUID. The
+A CI retry reuses the request identity. The
 [operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 adopts only the same request ID and revision. It refuses any unrelated active
 operation. For the root workflow, the active resource selection must also equal
@@ -311,8 +311,8 @@ adoptable as the final prune only when that marker says `prune` and Argo's prune
 flag is true, so an older full-source operation cannot borrow prior-batch proof.
 A generated per-operation UUID binds the top-level live operation to its
 completed status. This lets a retry accept a stable, fully applied result while
-rejecting stale status from an earlier POST with the same Buildkite identity.
-Recovery is the same `release-root` command with the same Buildkite UUID, not a
+rejecting stale status from an earlier POST with the same request identity.
+Recovery is the same `release-root` command with the same request id, not a
 second public finalizer command. It recognizes only operations whose request
 identity, exact revision, selected resources, phase marker, and prune mode fit
 the expected step. An unrelated operation remains a hard failure.

@@ -142,7 +142,7 @@ async function main(): Promise<void> {
     if (file.startsWith("sandbox/")) continue;
     const active =
       file.startsWith("scripts/") ||
-      file.startsWith(".buildkite/") ||
+      file.startsWith("ci/") ||
       [...activeRoots].some((root) => file.startsWith(`${root}/`));
     if (!active) continue;
     const violation = sourceViolation(file, await Bun.file(file).text());

@@ -2,7 +2,7 @@ import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import {
   createStatPanel,
   createTimeseriesPanel,
-} from "@shepherdjerred/homelab/cdk8s/grafana/buildkite/buildkite-dashboard-panels.ts";
+} from "@shepherdjerred/homelab/cdk8s/grafana/shared/dashboard-panels.ts";
 
 const NVME_INFO = 'nvme_device_info{serial=~"$serial"}';
 

@@ -1,6 +1,6 @@
 # Mise configuration for monorepo development AND CI.
 # `mise install` provides every toolchain: dev machines, git hooks, and the
-# CI toolchain image (.buildkite/ci-image) are all baked from this one file,
+# CI toolchain image (ci/ci-image) are all baked from this one file,
 # so laptop and CI can never disagree about tool versions.
 
 [tools]

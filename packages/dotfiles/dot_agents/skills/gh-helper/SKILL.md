@@ -20,8 +20,8 @@ as the default and otherwise preserves native CLI behavior. Do not create
 branches, create feature PRs, or merge them with the generic `gh` examples
 below. Load `monorepo-delivery` before any branch or feature-PR mutation.
 
-This monorepo uses Buildkite, not GitHub Actions. Use `toolkit bk` or
-`toolkit pr health` for CI. The generic Actions examples later in this skill
+This monorepo uses Woodpecker CI, not GitHub Actions. Use
+`toolkit woodpecker` or `toolkit pr health` for CI. The generic Actions examples later in this skill
 apply only to repositories that actually use GitHub Actions.
 
 ## MCP Tool Equivalents Reference

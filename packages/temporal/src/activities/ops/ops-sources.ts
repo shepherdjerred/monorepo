@@ -1,6 +1,6 @@
 import type { AlertmanagerClient } from "@shepherdjerred/ops-clients/alertmanager.ts";
 import type { BugsinkClient } from "@shepherdjerred/ops-clients/bugsink.ts";
-import type { BuildkiteClient } from "@shepherdjerred/ops-clients/buildkite.ts";
+import type { WoodpeckerClient } from "@shepherdjerred/ops-clients/woodpecker.ts";
 import type {
   GitHubClient,
   OpenPullRequest,
@@ -109,10 +109,10 @@ export async function collectTalos(talosctl: Talosctl): Promise<OpsCollection> {
 }
 
 export async function collectCi(
-  buildkite: BuildkiteClient,
+  woodpecker: WoodpeckerClient,
   context: OpsContext,
 ): Promise<OpsCollection> {
-  return mapCi(await buildkite.branchStatus("main"), context);
+  return mapCi(await woodpecker.branchStatus("main"), context);
 }
 
 function setPullRequestGauges(

@@ -97,23 +97,19 @@ export function declaredSecretItems(source: string): Map<string, string> {
   return declarations;
 }
 
-function grantFieldsForSecret(
-  manifest: SecretGrantManifest,
-  secret: string,
-): Set<string> {
-  const fields = new Set<string>();
-  for (const steps of Object.values(manifest.pipelines)) {
-    for (const grants of Object.values(steps)) {
-      for (const grant of grants) {
-        if (grant.secret === secret) fields.add(grant.key);
-      }
-    }
-  }
-  return fields;
-}
-
+/**
+ * Prove every grant the pipeline hands out is real.
+ *
+ * Takes the grants from the generated step model rather than a manifest: the
+ * model is the only declaration of them now, so there is no second copy to
+ * compare against. What is still verified is that each granted Secret is
+ * declared in the cdk8s credential boundary, and that each granted key exists
+ * and is non-blank in the committed hashed 1Password snapshot -- a grant
+ * naming a field nobody ever set would otherwise fail at runtime, in the
+ * middle of a release.
+ */
 export function validateGrantCatalog(input: {
-  manifest: SecretGrantManifest;
+  grants: readonly { secret: string; key: string }[];
   snapshot: VaultSnapshot;
   declarationSource: string;
 }): string[] {
@@ -122,11 +118,21 @@ export function validateGrantCatalog(input: {
   const snapshotByRef = new Map(
     input.snapshot.items.map((item) => [item.ref, item]),
   );
-  for (const [secret, { itemId }] of Object.entries(input.manifest.secrets)) {
-    if (declared.get(secret) !== itemId) {
+
+  const keysBySecret = new Map<string, Set<string>>();
+  for (const grant of input.grants) {
+    const keys = keysBySecret.get(grant.secret) ?? new Set<string>();
+    keys.add(grant.key);
+    keysBySecret.set(grant.secret, keys);
+  }
+
+  for (const [secret, keys] of keysBySecret) {
+    const itemId = declared.get(secret);
+    if (itemId === undefined) {
       errors.push(
-        `Secret ${secret} is not declared against manifest item ${itemId}`,
+        `Secret ${secret} is granted but not declared in the cdk8s credential boundary`,
       );
+      continue;
     }
     const item = snapshotByRef.get(hash(itemId));
     if (item === undefined) {
@@ -135,7 +141,7 @@ export function validateGrantCatalog(input: {
     }
     const fields = new Set(item.fields);
     const blanks = new Set(item.blankFields);
-    for (const key of grantFieldsForSecret(input.manifest, secret)) {
+    for (const key of keys) {
       const fieldHash = hash(key);
       if (!fields.has(fieldHash)) {
         errors.push(`Secret ${secret} has unknown field ${key}`);

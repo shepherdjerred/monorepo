@@ -62,7 +62,7 @@ function operationForRootSyncRequest(
   const syncRequest = RootSyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       prune: syncRequest.prune,
       ...(syncRequest.revision === undefined
@@ -168,7 +168,7 @@ function operationForSyncRequest(request: unknown): Record<string, unknown> {
   const syncRequest = SyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       ...(syncRequest.manifests === undefined
         ? {}
@@ -917,7 +917,7 @@ test("root release finalization refuses a batch selecting another namespace", as
   // rendered revision never declares, so it is a different target.
   const activeOperation = {
     info: releaseOperationInfo("batch"),
-    initiatedBy: { username: "buildkite" },
+    initiatedBy: { username: "woodpecker" },
     sync: {
       prune: false,
       resources: [

@@ -23,6 +23,7 @@
  */
 
 import { run, requireEnv } from "../lib/run.ts";
+import { isCi } from "../lib/ci/ci-environment.ts";
 import { asRecord } from "../lib/json.ts";
 import { runMain } from "../lib/transient.ts";
 
@@ -109,7 +110,7 @@ export function expiryWarning(
     `NPM_TOKEN expires ${when} (${expiry}). When it lapses, every npm call ` +
     `401s and this publish step fails with no other symptom. Mint a ` +
     `replacement granular token with bypass-2FA enabled and update the ` +
-    `NPM_TOKEN field of the Buildkite npm Credentials 1Password item.`
+    `NPM_TOKEN field of the CI npm Credentials 1Password item.`
   );
 }
 
@@ -139,8 +140,8 @@ async function readTokenPage(
       "npm rejected NPM_TOKEN (HTTP 401). The token is expired, revoked, " +
         "or otherwise invalid — this is a credential rotation, not a bug " +
         "in this script. Mint a granular token with bypass-2FA enabled " +
-        "and update the NPM_TOKEN field of the Buildkite npm Credentials " +
-        "1Password item; the operator syncs it to the buildkite namespace.",
+        "and update the NPM_TOKEN field of the CI npm Credentials " +
+        "1Password item; the operator syncs it to the woodpecker namespace.",
     );
   }
   if (!response.ok) {
@@ -216,30 +217,26 @@ export async function verifyTokenBypasses2fa(
 }
 
 /**
- * Surface an imminent expiry where someone will actually see it. A log line in
- * a passing step is invisible, so in CI this also raises a build annotation.
+ * Surface an imminent NPM_TOKEN expiry where someone will actually see it.
+ *
+ * Buildkite raised a build annotation here, precisely because a log line in a
+ * PASSING step is invisible and this warning is not a failure. Woodpecker has
+ * no annotation surface, so the warning is written to stderr and, in CI, also
+ * to the collected report directory.
+ *
+ * That is weaker than an annotation and is a known gap: the alarm needs a
+ * durable destination (Discord or Linear, alongside the other operational
+ * alerts) rather than a file nobody opens. Until it has one, a token that
+ * silently expires will break publishing with no warning anyone saw.
  */
 function defaultExpiryWarner(message: string): void {
   console.warn(`WARNING: ${message}`);
-  if (Bun.env["BUILDKITE"] !== "true") return;
-  const proc = Bun.spawnSync(
-    [
-      "buildkite-agent",
-      "annotate",
-      "--style",
-      "warning",
-      "--context",
-      "npm-token-expiry",
-    ],
-    {
-      stdin: new TextEncoder().encode(message),
-      stdout: "inherit",
-      stderr: "inherit",
-    },
-  );
-  if (proc.exitCode !== 0) {
-    throw new Error(`buildkite-agent annotate exited ${String(proc.exitCode)}`);
-  }
+  if (!isCi()) return;
+  const reportPath = new URL(
+    "../../.ci-reports/npm-token-expiry.txt",
+    import.meta.url,
+  ).pathname;
+  void Bun.write(reportPath, `${message}\n`);
 }
 
 // ---------------------------------------------------------------------------

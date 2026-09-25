@@ -6,21 +6,6 @@
 
 import { run } from "./run.ts";
 
-export const SEAWEEDFS_ENDPOINT = "https://seaweedfs-s3.tailnet-1a49.ts.net";
-
-/**
- * Env vars every SeaweedFS-bound aws CLI call needs: SeaweedFS S3 requires
- * s3v4 signing, so the region is pinned to avoid mismatches with newer AWS CLI
- * versions that use CRT-based signing, and the WHEN_REQUIRED settings suppress
- * checksum headers AWS CLI v2 sends by default but SeaweedFS does not
- * understand.
- */
-export const SEAWEEDFS_AWS_ENV: Record<string, string> = {
-  AWS_DEFAULT_REGION: "us-east-1",
-  AWS_REQUEST_CHECKSUM_CALCULATION: "WHEN_REQUIRED",
-  AWS_RESPONSE_CHECKSUM_VALIDATION: "WHEN_REQUIRED",
-};
-
 /**
  * Refuse to sync a partial static site that would delete a live entrypoint.
  *

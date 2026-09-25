@@ -8,7 +8,7 @@ homelab repository skill before changing or operating it.
 ## Ownership
 
 - `torvalds` is the production/control-plane node; `liskov` is the dedicated CI
-  worker. Keep production and Buildkite resource policy distinct.
+  worker. Keep production and CI resource policy distinct.
 - Every hosted first-party workload uses a repo-owned namespace/chart and
   ArgoCD Application. Reuse the established deployment, ingress, storage,
   observability, and LinuxServer helpers.
@@ -22,8 +22,8 @@ homelab repository skill before changing or operating it.
 
 Secrets are required and fail fast. Add the semantic field to the owning
 1Password item, refresh the committed vault snapshot, declare the exact
-Buildkite grant when needed, and reference it only in the intended workload.
-Buildkite jobs use the tokenless service account and explicit `secretKeyRef`
+per-step grant when needed, and reference it only in the intended workload.
+CI steps use the tokenless service account and explicit `secretKeyRef`
 entries on `container-0`; no `envFrom`, optional refs, or sidecar credentials.
 
 Probe local 1Password access with the exact read or `op vault list`, not
@@ -64,4 +64,4 @@ bun run check:kubeconform
 ```
 
 Some checks need network schemas or authorized local credentials. State those
-separately. Source, Buildkite, artifact, ArgoCD, and live health remain distinct.
+separately. Source, CI, artifact, ArgoCD, and live health remain distinct.

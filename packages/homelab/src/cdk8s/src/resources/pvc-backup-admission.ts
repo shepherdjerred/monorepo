@@ -4,6 +4,7 @@ import {
   pvcBackupPolicyKey,
 } from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 import { CI_WORKSPACE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 const INCLUDED_PVC_KEYS = PVC_BACKUP_POLICY.filter(
   (entry) => entry.backup === "enabled",
@@ -19,8 +20,6 @@ function toCelList(values: readonly string[]): string {
 
 const POLICY_KEY_EXPRESSION =
   "object.metadata.namespace + '/' + object.metadata.name";
-/** Where Woodpecker creates CI pods and their workspace claims. */
-const WOODPECKER_CI_NAMESPACE = "woodpecker-ci";
 /**
  * Per-workflow CI workspaces, excluded by what they are rather than by name.
  *

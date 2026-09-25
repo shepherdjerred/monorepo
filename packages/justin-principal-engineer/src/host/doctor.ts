@@ -50,10 +50,7 @@ export async function doctor(input: {
     }),
   );
   const digestText = await Bun.file(
-    path.join(
-      input.config.repository.stableCheckout,
-      ".buildkite/ci-image/DIGEST",
-    ),
+    path.join(input.config.repository.stableCheckout, "ci/ci-image/DIGEST"),
   ).text();
   const digest = digestText.trim();
   if (
@@ -97,7 +94,7 @@ export async function doctor(input: {
   }
 
   await Promise.all([
-    readOpReference(input.config.buildkite.apiToken, input.run),
+    readOpReference(input.config.woodpecker.apiToken, input.run),
     readOpReference(input.config.agents.codex.openRouterApiKey, input.run),
   ]);
   const github = await createGitHubAuth(input.config, input.paths, input.run);

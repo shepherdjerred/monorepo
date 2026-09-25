@@ -61,12 +61,14 @@ describe("readiness classification", () => {
         pr,
         evidence(pr, {
           checks: [
+            // Advisory lanes exit 0 when their findings are not fatal, so an
+            // advisory finding reaches the fleet as a PASSING check rather
+            // than as a failure that has to be excluded.
             {
               name: "knip",
-              state: "FAILURE",
-              bucket: "fail",
+              state: "SUCCESS",
+              bucket: "pass",
               link: null,
-              softFail: true,
             },
           ],
         }),
@@ -87,7 +89,6 @@ describe("readiness classification", () => {
           state: "FAILURE",
           bucket: "fail",
           link: null,
-          softFail: false,
         },
       ],
     });

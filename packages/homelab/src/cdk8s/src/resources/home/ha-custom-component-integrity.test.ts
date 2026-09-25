@@ -23,12 +23,11 @@ import { HA_CUSTOM_COMPONENTS } from "./ha-custom-components.ts";
  * context fails CI instead of crash-looping the pod.
  *
  * CI-only: requires network access. Gate with the same environment the other
- * network tests in this package use (BUILDKITE / CI / explicit opt-in).
+ * network tests in this package use (CI / explicit opt-in).
  */
 
 const shouldRun =
   Bun.env["CI"] === "true" ||
-  Bun.env["BUILDKITE"] === "true" ||
   Bun.env["HA_CUSTOM_COMPONENT_TARBALL_TEST"] === "1";
 
 const describeFn = shouldRun ? describe : describe.skip;

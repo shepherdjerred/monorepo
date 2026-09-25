@@ -1,8 +1,5 @@
-import {
-  s3StaticSiteNeedsSync,
-  SEAWEEDFS_AWS_ENV,
-  SEAWEEDFS_ENDPOINT,
-} from "../s3-static-site.ts";
+import { s3StaticSiteNeedsSync } from "../s3-static-site.ts";
+import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../seaweedfs.ts";
 import { scoutStorageRoot } from "./scout-storage-runtime.ts";
 
 type ScoutStage = "beta" | "prod";

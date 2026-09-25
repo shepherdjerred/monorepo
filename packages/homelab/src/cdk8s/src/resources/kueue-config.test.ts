@@ -2,16 +2,28 @@ import { describe, expect, it } from "vitest";
 import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
-import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
+import {
+  CI_CLUSTER_QUEUE,
+  CI_MAINTENANCE_CLUSTER_QUEUE,
+  CI_MAINTENANCE_LOCAL_QUEUE,
+  createKueueConfig,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
-import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
+import { CI_ADMISSION_BUDGET } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 
 const ClusterQueueSchema = z.object({
-  apiVersion: z.literal("kueue.x-k8s.io/v1beta1"),
+  apiVersion: z.literal("kueue.x-k8s.io/v1beta2"),
   kind: z.literal("ClusterQueue"),
   metadata: z.object({ name: z.string() }).loose(),
   spec: z
     .object({
+      namespaceSelector: z.object({
+        matchLabels: z.record(z.string(), z.string()),
+      }),
+      preemption: z.object({
+        withinClusterQueue: z.string(),
+        reclaimWithinCohort: z.string(),
+      }),
       resourceGroups: z.array(
         z
           .object({
@@ -34,29 +46,17 @@ const ClusterQueueSchema = z.object({
     .loose(),
 });
 
-function synthKueueClusterQueue(): z.infer<typeof ClusterQueueSchema> {
+const LocalQueueSchema = z.object({
+  apiVersion: z.literal("kueue.x-k8s.io/v1beta2"),
+  kind: z.literal("LocalQueue"),
+  metadata: z.object({ name: z.string(), namespace: z.string() }).loose(),
+  spec: z.object({ clusterQueue: z.string() }),
+});
+
+function synthDocuments(create: (chart: Chart) => unknown): unknown[] {
   const app = new App();
   const chart = new Chart(app, "test", {});
-  createKueueConfig(chart);
-
-  const documents = app
-    .synthYaml()
-    .split(/^---$/m)
-    .map((doc) => doc.trim())
-    .filter((doc) => doc.length > 0)
-    .map((document): unknown => parseYaml(document));
-
-  for (const document of documents) {
-    const result = ClusterQueueSchema.safeParse(document);
-    if (result.success) return result.data;
-  }
-  throw new Error("Kueue ClusterQueue was not synthesized");
-}
-
-function synthKueueAppDocuments(): unknown[] {
-  const app = new App();
-  const chart = new Chart(app, "test", {});
-  createKueueApp(chart);
+  create(chart);
   return app
     .synthYaml()
     .split(/^---$/m)
@@ -65,52 +65,140 @@ function synthKueueAppDocuments(): unknown[] {
     .map((document): unknown => parseYaml(document));
 }
 
+function clusterQueue(name: string): z.infer<typeof ClusterQueueSchema> {
+  for (const document of synthDocuments(createKueueConfig)) {
+    const result = ClusterQueueSchema.safeParse(document);
+    if (result.success && result.data.metadata.name === name) {
+      return result.data;
+    }
+  }
+  throw new Error(`ClusterQueue ${name} was not synthesized`);
+}
+
+function quota(name: string, resource: string): string | undefined {
+  return clusterQueue(name).spec.resourceGroups[0]?.flavors[0]?.resources.find(
+    (entry) => entry.name === resource,
+  )?.nominalQuota;
+}
+
+function localQueues(): z.infer<typeof LocalQueueSchema>[] {
+  return synthDocuments(createKueueConfig)
+    .map((document) => LocalQueueSchema.safeParse(document))
+    .filter((result) => result.success)
+    .map((result) => result.data);
+}
+
+function synthKueueAppDocuments(): unknown[] {
+  return synthDocuments(createKueueApp);
+}
+
 describe("kueue-config", () => {
-  it("covers pods as a resource, alongside cpu and memory", () => {
-    const clusterQueue = synthKueueClusterQueue();
-    const group = clusterQueue.spec.resourceGroups[0];
-    expect(group).toBeDefined();
-    expect(group?.coveredResources).toContain("pods");
-    expect(group?.coveredResources).toContain("cpu");
-    expect(group?.coveredResources).toContain("memory");
-  });
-
-  it("uses liskov's weighted CPU and memory budget", () => {
-    const clusterQueue = synthKueueClusterQueue();
-    const flavor = clusterQueue.spec.resourceGroups[0]?.flavors[0];
-    expect(flavor?.resources.find((r) => r.name === "cpu")?.nominalQuota).toBe(
-      "24",
-    );
-    expect(
-      flavor?.resources.find((r) => r.name === "memory")?.nominalQuota,
-    ).toBe("80Gi");
-  });
-
-  it("covers ephemeral-storage (pods request it — omitting it freezes CI)", () => {
-    // Every .buildkite/pipeline.yml step container sets an ephemeral-storage
-    // request. Kueue refuses to admit a workload that
-    // requests a resource the ClusterQueue does not cover, so if this drifts
-    // out every build sits Pending forever. Regression guard for the
+  it("covers pods and ephemeral-storage alongside cpu and memory", () => {
+    // Every CI container requests ephemeral-storage, and Kueue refuses a
+    // workload requesting a resource its ClusterQueue does not cover: if this
+    // drifts, every build sits gated forever. Regression guard for the
     // 2026-07-24 freeze.
-    const clusterQueue = synthKueueClusterQueue();
-    const group = clusterQueue.spec.resourceGroups[0];
-    expect(group?.coveredResources).toContain("ephemeral-storage");
-    const flavor = group?.flavors[0];
-    const eph = flavor?.resources.find((r) => r.name === "ephemeral-storage");
-    expect(eph).toBeDefined();
-    expect(eph?.nominalQuota).toBe("100Gi");
+    for (const name of [CI_CLUSTER_QUEUE, CI_MAINTENANCE_CLUSTER_QUEUE]) {
+      expect(
+        clusterQueue(name).spec.resourceGroups[0]?.coveredResources,
+      ).toEqual(["cpu", "memory", "pods", "ephemeral-storage"]);
+    }
   });
 
-  it("pods nominalQuota stays in lockstep with Buildkite's max-in-flight", () => {
-    const clusterQueue = synthKueueClusterQueue();
-    const flavor = clusterQueue.spec.resourceGroups[0]?.flavors[0];
-    expect(flavor).toBeDefined();
-    const podsResource = flavor?.resources.find((r) => r.name === "pods");
-    expect(podsResource).toBeDefined();
-    // Two independent enforcement layers (Buildkite max-in-flight, Kueue pods
-    // quota) for the same concurrency cap must never drift apart — see the
-    // long comment in kueue-config.ts / buildkite.ts for why both exist.
-    expect(podsResource?.nominalQuota).toBe(String(BUILDKITE_MAX_IN_FLIGHT));
+  it("takes the CI budget from its language-neutral source", () => {
+    expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("24");
+    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("80Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("100Gi");
+    expect(CI_ADMISSION_BUDGET.quota).toEqual({
+      cpu: "24",
+      memory: "80Gi",
+      "ephemeral-storage": "100Gi",
+    });
+  });
+
+  /**
+   * Counted in pods, not workflows: a workflow has its step and each of its
+   * services admitted at once. Sized so the pods quota never binds before the
+   * agent's workflow cap does.
+   */
+  it("sizes the pods backstop from the workflow cap and services", () => {
+    const perWorkflow = 1 + CI_ADMISSION_BUDGET.maxServicesPerWorkflow;
+    expect(quota(CI_CLUSTER_QUEUE, "pods")).toBe(
+      String(CI_ADMISSION_BUDGET.maxWorkflows * perWorkflow),
+    );
+  });
+
+  it("admits only the CI namespace, and never preempts", () => {
+    for (const name of [CI_CLUSTER_QUEUE, CI_MAINTENANCE_CLUSTER_QUEUE]) {
+      const { spec } = clusterQueue(name);
+      expect(spec.namespaceSelector.matchLabels).toEqual({
+        "kubernetes.io/metadata.name": "woodpecker-ci",
+      });
+      // Kueue stops a plain pod by deleting it, which Woodpecker would read
+      // as a step that succeeded.
+      expect(spec.preemption).toEqual({
+        withinClusterQueue: "Never",
+        reclaimWithinCohort: "Never",
+      });
+    }
+  });
+
+  /**
+   * `default` is what makes Kueue queue a pod that names no queue, which is
+   * every pod Woodpecker creates. The maintenance worker names its own queue
+   * so it never holds CI quota.
+   */
+  it("queues unlabelled CI pods by default and the maintenance worker apart", () => {
+    expect(
+      localQueues().map(({ metadata, spec }) => [
+        metadata.namespace,
+        metadata.name,
+        spec.clusterQueue,
+      ]),
+    ).toEqual([
+      ["woodpecker-ci", "default", CI_CLUSTER_QUEUE],
+      [
+        "woodpecker-ci",
+        CI_MAINTENANCE_LOCAL_QUEUE,
+        CI_MAINTENANCE_CLUSTER_QUEUE,
+      ],
+    ]);
+  });
+
+  /** Woodpecker creates bare pods; without `pod`, Kueue admits nothing. */
+  it("integrates plain pods as well as Jobs", () => {
+    const application = synthKueueAppDocuments()
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("Application"),
+            spec: z.object({
+              source: z.object({
+                helm: z.object({
+                  valuesObject: z.object({
+                    managerConfig: z.object({
+                      controllerManagerConfigYaml: z.string(),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          })
+          .safeParse(document),
+      )
+      .find((result) => result.success);
+    if (application?.success !== true) {
+      throw new Error("Kueue Application was not synthesized");
+    }
+    const config = z
+      .object({ integrations: z.object({ frameworks: z.array(z.string()) }) })
+      .parse(
+        parseYaml(
+          application.data.spec.source.helm.valuesObject.managerConfig
+            .controllerManagerConfigYaml,
+        ),
+      );
+    expect(config.integrations.frameworks).toEqual(["batch/job", "pod"]);
   });
 
   it("enables and selects Kueue metrics in the Prometheus namespace", () => {

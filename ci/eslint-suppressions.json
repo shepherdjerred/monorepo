@@ -1,0 +1,12 @@
+{
+  "ci/scripts/images/docker-source-label.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 4
+    }
+  },
+  "ci/scripts/selectors/ci-changed.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

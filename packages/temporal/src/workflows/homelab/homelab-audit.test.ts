@@ -30,7 +30,7 @@ function collection(): HomelabAuditCollection {
     "temporal-health",
     "kubernetes-health",
     "argocd-health",
-    "buildkite-main",
+    "ci-main",
   ];
   return {
     startedAt: OBSERVED_AT,

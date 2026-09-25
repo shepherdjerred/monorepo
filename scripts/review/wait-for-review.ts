@@ -80,9 +80,10 @@ const DEFAULT_REPO = "shepherdjerred/monorepo";
  * The `codex-review-gate` step allows longer still — by a margin sized for its
  * unbounded `toolchain.sh` and install preamble, not a token few minutes — so
  * this deadline is always the binding one and the timeout message names the
- * provider and head commit instead of Buildkite killing the pod anonymously.
- * `wait-for-review.test.ts` asserts that ordering against the pipeline,
- * reading the step's own declared timeout rather than the first one it finds.
+ * provider and head commit instead of the step timeout killing the pod
+ * anonymously. `wait-for-review.test.ts` asserts that ordering against the
+ * generated step, reading its own declared timeout rather than the first one
+ * it finds.
  */
 export const DEFAULT_TIMEOUT_SECONDS = 60 * 60;
 const DEFAULT_INTERVAL_SECONDS = 30;
@@ -133,17 +134,13 @@ function repoFromEnvironment(): string {
   const explicit = Bun.env["GITHUB_REPOSITORY"];
   if (explicit !== undefined && explicit.trim() !== "") return explicit.trim();
 
-  const buildkiteRepo = Bun.env["BUILDKITE_REPO"];
-  if (buildkiteRepo === undefined || buildkiteRepo.trim() === "") {
+  const cloneUrl = Bun.env["CI_REPO_CLONE_URL"];
+  if (cloneUrl === undefined || cloneUrl.trim() === "") {
     return DEFAULT_REPO;
   }
-  const sshMatch = /github\.com[:/]([^/]+\/[^/.]+)(?:\.git)?$/u.exec(
-    buildkiteRepo,
-  );
+  const sshMatch = /github\.com[:/]([^/]+\/[^/.]+)(?:\.git)?$/u.exec(cloneUrl);
   if (sshMatch?.[1] !== undefined) return sshMatch[1];
-  const httpsMatch = /github\.com\/([^/]+\/[^/.]+)(?:\.git)?$/u.exec(
-    buildkiteRepo,
-  );
+  const httpsMatch = /github\.com\/([^/]+\/[^/.]+)(?:\.git)?$/u.exec(cloneUrl);
   return httpsMatch?.[1] ?? DEFAULT_REPO;
 }
 
@@ -189,7 +186,7 @@ function errorCode(error: unknown): string | null {
  * than failing the gate. Retry ONLY recognized transient failures — a 5xx
  * response, or a transport-level failure (socket closed/refused, DNS error,
  * timeout — by message OR error code). Everything else fails fast so the step
- * doesn't hold a Buildkite agent until the gate deadline: a 4xx (bad token
+ * doesn't hold an agent slot until the gate deadline: a 4xx (bad token
  * / missing permission), a GraphQL application-error payload (HTTP 200 +
  * `errors`), and — critically — an unexpected-shape / invariant error thrown by
  * our own parsers (e.g. `parseThreadPage` when `reviewThreads` is missing) all
@@ -221,20 +218,18 @@ class ReviewGateFailure extends Error {
 }
 
 async function waitForReview(): Promise<void> {
-  const pullRequest = Bun.env["BUILDKITE_PULL_REQUEST"];
-  if (
-    pullRequest === undefined ||
-    pullRequest === "" ||
-    pullRequest === "false"
-  ) {
-    console.log("Not a Buildkite pull request build; skipping review gate.");
+  // A non-pull-request build reports a value rather than omitting the
+  // variable, so anything that is not a positive integer means "not a pull
+  // request" rather than a misconfiguration.
+  const pullRequest = Bun.env["CI_COMMIT_PULL_REQUEST"];
+  if (pullRequest === undefined || pullRequest === "") {
+    console.log("Not a pull request build; skipping review gate.");
     return;
   }
   const number = Number.parseInt(pullRequest, 10);
   if (!Number.isInteger(number) || number <= 0) {
-    throw new Error(
-      `BUILDKITE_PULL_REQUEST must be a positive integer, got ${pullRequest}`,
-    );
+    console.log("Not a pull request build; skipping review gate.");
+    return;
   }
 
   const token = Bun.env["GH_TOKEN"];
@@ -242,9 +237,9 @@ async function waitForReview(): Promise<void> {
     throw new Error("GH_TOKEN is required to query GitHub review threads");
   }
 
-  const commit = Bun.env["BUILDKITE_COMMIT"];
+  const commit = Bun.env["CI_COMMIT_SHA"];
   if (commit === undefined || commit.trim() === "") {
-    throw new Error("BUILDKITE_COMMIT is required to identify the PR head");
+    throw new Error("CI_COMMIT_SHA is required to identify the PR head");
   }
   const head = commit.trim();
   const repo = repoFromEnvironment();
@@ -587,7 +582,7 @@ if (import.meta.main) {
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     // Only a provider-declared block (quota exhaustion) exits with the status
-    // the Buildkite step soft-fails on; timeouts, configuration errors, and
+    // the CI gate script passes on; timeouts, configuration errors, and
     // findings all keep the hard failure status.
     process.exit(
       error instanceof ReviewGateFailure

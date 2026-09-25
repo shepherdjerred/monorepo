@@ -118,7 +118,6 @@ if command -v brew &>/dev/null; then
     log_info "Trusting third-party Homebrew formulae"
     third_party_formulae=(
         "artginzburg/tap/sudo-touchid"
-        "buildkite/buildkite/bk@3"
         "cormacrelf/tap/dark-notify"
         "dsully/tap/macos-defaults"
         "lightpanda-io/browser/lightpanda"
@@ -132,6 +131,20 @@ if command -v brew &>/dev/null; then
         retry 3 5 brew tap "$tap"
         brew trust --formula "$formula"
     done
+
+    # Woodpecker publishes no Homebrew formula, so its CLI is a pinned release
+    # binary. `toolkit woodpecker` shells out to it.
+    woodpecker_cli_version="3.18.1"
+    if [ ! -x "${HOME}/.local/bin/woodpecker-cli" ]; then
+        log_info "Installing woodpecker-cli ${woodpecker_cli_version}"
+        mkdir -p "${HOME}/.local/bin"
+        woodpecker_archive="$(mktemp -d)/woodpecker-cli.tar.gz"
+        retry 3 5 curl -fsSL -o "${woodpecker_archive}" \
+            "https://github.com/woodpecker-ci/woodpecker/releases/download/v${woodpecker_cli_version}/woodpecker-cli_darwin_arm64.tar.gz"
+        tar -xzf "${woodpecker_archive}" -C "${HOME}/.local/bin" woodpecker-cli
+        chmod 755 "${HOME}/.local/bin/woodpecker-cli"
+        log_success "woodpecker-cli installed"
+    fi
 
     log_info "Installing Brewfile packages"
     retry 3 5 brew bundle --file="${DOTFILES_SOURCE_DIR}/.Brewfile_darwin"

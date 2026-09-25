@@ -2246,6 +2246,28 @@
         "vitest": "5.0.1",
       },
     },
+    "packages/woodpecker-config-extension": {
+      "name": "@shepherdjerred/woodpecker-config-extension",
+      "dependencies": {
+        "hono": "^4.12.18",
+        "http-message-signatures": "^1.0.6",
+        "yaml": "^2.8.3",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.0",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "4.1.10",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "4.1.10",
+      },
+    },
     "scripts": {
       "name": "@shepherdjerred/root-scripts",
       "dependencies": {
@@ -2253,6 +2275,7 @@
         "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "@shepherdjerred/release-tools": "workspace:*",
+        "@shepherdjerred/s3-signed-request": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
         "@temporalio/client": "1.24.0",
         "@temporalio/worker": "1.24.0",
@@ -4078,6 +4101,8 @@
     "@shepherdjerred/version-catalog": ["@shepherdjerred/version-catalog@workspace:packages/version-catalog"],
 
     "@shepherdjerred/voice-assistant": ["@shepherdjerred/voice-assistant@workspace:packages/voice-assistant"],
+
+    "@shepherdjerred/woodpecker-config-extension": ["@shepherdjerred/woodpecker-config-extension@workspace:packages/woodpecker-config-extension"],
 
     "@shikijs/core": ["@shikijs/core@4.4.3", "", { "dependencies": { "@shikijs/primitive": "4.4.3", "@shikijs/types": "4.4.3", "@shikijs/vscode-textmate": "^10.0.2", "@types/hast": "^3.0.5", "hast-util-to-html": "^9.0.5" } }, "sha512-QCR4q2ZO/ILJEuwiBMel4wdcTDb1JGwfjKTxPDF6x8ixOaluPrVqIn06C99AcRPhmYlBR56d/Fb+GN58GzExpg=="],
 
@@ -5993,6 +6018,8 @@
 
     "http-errors": ["http-errors@2.0.1", "", { "dependencies": { "depd": "~2.0.0", "inherits": "~2.0.4", "setprototypeof": "~1.2.0", "statuses": "~2.0.2", "toidentifier": "~1.0.1" } }, "sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ=="],
 
+    "http-message-signatures": ["http-message-signatures@1.0.6", "", { "dependencies": { "structured-headers": "^2.0.2" } }, "sha512-mGaW/gs0WyP1X4wcc0iHguoDuv/LGyGLbvn8NWgbSdR+opFXKncrNiwQO8bN5rZ5j0z9HrwrRj33CzIK5dhGXA=="],
+
     "http-parser-js": ["http-parser-js@0.5.10", "", {}, "sha512-Pysuw9XpUq5dVc/2SMHpuTY01RFl8fttgcyunjL7eEMhGM3cI4eOmiCycJDVCo/7O7ClfQD3SaI6ftDzqOXYMA=="],
 
     "http-proxy-agent": ["http-proxy-agent@7.0.2", "", { "dependencies": { "agent-base": "^7.1.0", "debug": "^4.3.4" } }, "sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig=="],
@@ -7558,6 +7585,8 @@
     "strip-json-comments": ["strip-json-comments@5.0.3", "", {}, "sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw=="],
 
     "strnum": ["strnum@2.4.2", "", { "dependencies": { "anynum": "^1.0.1" } }, "sha512-rDG3Ah4TV0k1hWvLSzkZtMmLN9+eS+h3knq4MP6A42Y3Yh5qGNnOUs1jJkoSr8FG5dsL28c7KgkIBzSEykqtuw=="],
+
+    "structured-headers": ["structured-headers@2.1.0", "", {}, "sha512-ClzykN+XQVaSW5UfpOdEWfDplZ1Th7mISdaFvaC2+GjLTeBhGMJw83D/Rw9jPkHOml4oYd3EXaZhbz3gnE5nBQ=="],
 
     "style-mod": ["style-mod@4.1.3", "", {}, "sha512-i/n8VsZydrugj3Iuzll8+x/00GH2vnYsk1eomD8QiRrSAeW6ItbCQDtfXCeJHd0iwiNagqjQkvpvREEPtW3IoQ=="],
 

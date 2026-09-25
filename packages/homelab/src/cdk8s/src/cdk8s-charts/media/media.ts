@@ -117,12 +117,12 @@ export async function createMediaChart(app: App) {
           ],
         },
         {
-          // Kometa runs in the Buildkite-owned Temporal maintenance worker and
+          // Kometa runs in the Woodpecker-owned Temporal maintenance worker and
           // only needs Plex's HTTP API.
           from: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "buildkite" },
+                matchLabels: { "kubernetes.io/metadata.name": "woodpecker-ci" },
               },
               podSelector: {
                 matchLabels: { app: "temporal-maintenance-worker" },
