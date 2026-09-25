@@ -53,6 +53,9 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
  *   gateway to the buckets its job touches. `SEAWEEDFS_HANDOFF_*` reaches only
  *   the `ci-handoff` bucket and `SEAWEEDFS_TOFU_STATE_*` only
  *   `homelab-tofu-state`, so neither can touch a published site.
+ * - `SEAWEEDFS_APPLE_SDKS_*` lets `macos-cross-compiler-pr` read the private
+ *   Apple SDK tarballs its smoke build needs. Read and list on that one bucket
+ *   only; the Buildkite lane it replaces held the cluster-wide deploy key.
  * - `SEAWEEDFS_TOFU_ADMIN_*` is the one genuinely broad credential left here.
  *   It belongs to `tofu-plan-seaweedfs`, whose stack manages the buckets
  *   themselves, and SeaweedFS requires unscoped `Admin` to create one.
@@ -79,6 +82,8 @@ const PR_REACHABLE_SECRETS = [
   "PROWLARR_API_KEY",
   "QBITTORRENT_PASSWORD",
   "RADARR_API_KEY",
+  "SEAWEEDFS_APPLE_SDKS_ACCESS_KEY_ID",
+  "SEAWEEDFS_APPLE_SDKS_SECRET_ACCESS_KEY",
   "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
   "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
   "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",

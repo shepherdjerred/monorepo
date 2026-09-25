@@ -13,6 +13,7 @@ import {
 } from "#src/pipeline/lanes/tofu-apply.ts";
 import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
+import { macosCrossCompilerSteps } from "#src/pipeline/lanes/macos-cross-compiler.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { macosSteps } from "#src/pipeline/lanes/macos.ts";
@@ -136,6 +137,7 @@ export function buildPipelineSteps({
     ...tofuApplySteps(images),
     ...releaseChainSteps(images, sharedEnvironment),
     ...ciImageSteps(images),
+    ...macosCrossCompilerSteps(images),
     ...scoutSteps(images),
     ...siteSteps(images),
     ...macosSteps(),

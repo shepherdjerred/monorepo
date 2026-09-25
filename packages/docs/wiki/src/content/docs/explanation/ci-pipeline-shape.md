@@ -201,15 +201,16 @@ boundary for a long time while holding one value — the gateway's only identity
 carrying unscoped `Admin` over every bucket. Every step granted either pair
 could rewrite the OpenTofu state and every published site.
 
-SeaweedFS now has four identities that are genuinely distinct, each scoped in
+SeaweedFS now has five identities that are genuinely distinct, each scoped in
 the gateway to the buckets its job touches:
 
-| Field                    | Reaches                                               |
-| ------------------------ | ----------------------------------------------------- |
-| `SEAWEEDFS_HANDOFF_*`    | `ci-handoff` only                                     |
-| `SEAWEEDFS_SITES_*`      | the twelve published-site and release-archive buckets |
-| `SEAWEEDFS_TOFU_STATE_*` | `homelab-tofu-state` only                             |
-| `SEAWEEDFS_TOFU_ADMIN_*` | everything — see below                                |
+| Field                    | Reaches                                                 |
+| ------------------------ | ------------------------------------------------------- |
+| `SEAWEEDFS_HANDOFF_*`    | `ci-handoff` only                                       |
+| `SEAWEEDFS_SITES_*`      | the thirteen published-site and release-archive buckets |
+| `SEAWEEDFS_TOFU_STATE_*` | `homelab-tofu-state` only                               |
+| `SEAWEEDFS_APPLE_SDKS_*` | `apple-sdks`, read-only                                 |
+| `SEAWEEDFS_TOFU_ADMIN_*` | everything — see below                                  |
 
 `SEAWEEDFS_TOFU_ADMIN_*` is deliberately unscoped: the `seaweedfs` OpenTofu
 stack manages the buckets themselves, and SeaweedFS requires unscoped `Admin`

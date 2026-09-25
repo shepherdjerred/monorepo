@@ -30,7 +30,7 @@ export const GITHUB_DOWNLOAD: SecretGrant = {
 /**
  * SeaweedFS identities, one per job this CI does.
  *
- * These are four genuinely distinct S3 identities, each scoped in SeaweedFS to
+ * These are five genuinely distinct S3 identities, each scoped in SeaweedFS to
  * the buckets its job touches, not four names for one key. That distinction
  * was previously cosmetic: `SEAWEEDFS_STATE_*` and `SEAWEEDFS_DEPLOY_*` held
  * the same value, and that value was the cluster's only identity -- unscoped
@@ -101,6 +101,28 @@ export const HANDOFF_KEYS: SecretGrant[] = [
     secret: "ci-seaweedfs-credentials",
     key: "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
     env: "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+  },
+];
+
+/**
+ * Read-only access to the private `apple-sdks` bucket, which holds the Apple
+ * SDK tarballs the macos-cross-compiler images are built from.
+ *
+ * Read and list only, and only that bucket: the SDKs are staged by an operator
+ * from a Mac with the matching Xcode, never by CI. That is what makes it safe
+ * to hand the pull-request smoke build, which the Buildkite lane it replaces
+ * did with the cluster-wide deploy key instead.
+ */
+export const APPLE_SDKS_KEYS: SecretGrant[] = [
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_APPLE_SDKS_ACCESS_KEY_ID",
+    env: "SEAWEEDFS_APPLE_SDKS_ACCESS_KEY_ID",
+  },
+  {
+    secret: "ci-seaweedfs-credentials",
+    key: "SEAWEEDFS_APPLE_SDKS_SECRET_ACCESS_KEY",
+    env: "SEAWEEDFS_APPLE_SDKS_SECRET_ACCESS_KEY",
   },
 ];
 
