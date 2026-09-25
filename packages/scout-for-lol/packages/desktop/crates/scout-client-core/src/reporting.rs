@@ -15,7 +15,9 @@
 
 use sentry::{ClientInitGuard, ClientOptions, Level};
 
-use crate::diagnostics::{DiagnosticEvent, DiagnosticLevel, DiagnosticSink};
+use crate::diagnostics::{
+    DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, DiagnosticSink,
+};
 
 /// Holds error reporting open, and flushes what is queued when dropped.
 ///
@@ -77,6 +79,39 @@ impl DiagnosticSink for BugsinkSink {
 /// The returned guard flushes on drop, so the caller must hold it for the life
 /// of the process. `None` means reporting is off — no DSN, or a debug build —
 /// and the client runs exactly as it did before, with its local log intact.
+/// Whether this build reports errors anywhere, and why not when it does not.
+///
+/// Recorded locally at startup so "is this machine reporting?" is answered in
+/// the same log as everything else, rather than inferred from an absence of
+/// issues somewhere nobody is looking.
+#[must_use]
+pub fn reporting_status() -> DiagnosticEvent {
+    let reporting = !BUGSINK_DSN.is_empty() && !cfg!(debug_assertions);
+    let detail = if BUGSINK_DSN.is_empty() {
+        "no DSN configured; errors stay on this machine"
+    } else if cfg!(debug_assertions) {
+        "debug build; errors stay on this machine"
+    } else {
+        "reporting errors to Bugsink"
+    };
+    DiagnosticEvent::new(
+        DiagnosticLevel::Info,
+        DiagnosticCategory::Runtime,
+        "report_error",
+        if reporting {
+            DiagnosticOutcome::Succeeded
+        } else {
+            DiagnosticOutcome::Skipped
+        },
+    )
+    .with_detail(detail)
+}
+
+/// Start error reporting, if this build has somewhere to report to.
+///
+/// The returned guard flushes on drop, so the caller must hold it for the life
+/// of the process. `None` means reporting is off — no DSN, or a debug build —
+/// and the client runs exactly as it did before, with its local log intact.
 #[must_use]
 pub fn start_error_reporting(environment: &str) -> Option<ClientInitGuard> {
     if BUGSINK_DSN.is_empty() || cfg!(debug_assertions) {
@@ -113,7 +148,8 @@ pub fn reporting_environment(backend_origin: &str) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use super::{BUGSINK_DSN, reporting_environment, start_error_reporting};
+    use super::{BUGSINK_DSN, reporting_environment, reporting_status, start_error_reporting};
+    use crate::diagnostics::DiagnosticOutcome;
 
     #[test]
     fn environments_are_distinguished_so_issues_do_not_merge() {
@@ -129,6 +165,18 @@ mod tests {
             reporting_environment("http://127.0.0.1:3000"),
             "development"
         );
+    }
+
+    #[test]
+    fn the_client_says_locally_whether_it_reports_anywhere() {
+        // Otherwise "no issues in Bugsink" is indistinguishable from "nothing
+        // was ever reporting".
+        let status = reporting_status();
+        assert_eq!(status.operation, "report_error");
+        assert!(status.detail.is_some());
+        if BUGSINK_DSN.is_empty() {
+            assert_eq!(status.outcome, DiagnosticOutcome::Skipped);
+        }
     }
 
     #[test]
