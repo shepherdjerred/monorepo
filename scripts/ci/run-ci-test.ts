@@ -11,6 +11,10 @@ import {
   TestManifestSchema,
   type TestStep,
 } from "./ci-reporting.ts";
+import {
+  gradleJUnitReportPaths,
+  writeGradleJUnitReport,
+} from "./gradle-junit.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const coverageEnabled = Bun.env["CI_TEST_COVERAGE"] === "1";
@@ -36,6 +40,14 @@ if (workspaceEntry === undefined) {
   );
 }
 const workspace = workspaceEntry;
+const nestedWorkspaceDirectories = [
+  ...manifest.workspaces,
+  ...manifest.testlessWorkspaces,
+  ...manifest.separateTests,
+]
+  .map((entry) => entry.directory)
+  .filter((directory) => directory.startsWith(`${workspaceDirectory}/`))
+  .map((directory) => directory.slice(workspaceDirectory.length + 1));
 
 const outputDirectory = path.join(
   repositoryRoot,
@@ -218,6 +230,13 @@ async function commandForStep(
         reportPath,
       ];
     }
+    case "gradle":
+      if (coverageEnabled) {
+        throw new Error(
+          "Gradle steps do not collect coverage: the coverage summary has no JaCoCo parser. Run this workspace's test:report without CI_TEST_COVERAGE=1.",
+        );
+      }
+      return ["mise", "exec", "--", "gradle", ...step.args, "--continue"];
     case "command":
       return step.command;
   }
@@ -237,6 +256,16 @@ for (const [index, step] of workspace.steps.entries()) {
   const name = testStepReportName(step, index);
   const reportPath = path.resolve(outputDirectory, `${name}.xml`);
   await removeExistingReport(reportPath);
+  if (step.runner === "gradle") {
+    // Gradle's per-class results outlive the run; drop them so only this
+    // run's results are merged into the report.
+    for (const stalePath of await gradleJUnitReportPaths(
+      process.cwd(),
+      nestedWorkspaceDirectories,
+    )) {
+      await removeExistingReport(stalePath);
+    }
+  }
   const rawCoverageDirectory = coverageDirectory(step, index);
   if (
     coverageEnabled &&
@@ -308,11 +337,26 @@ for (const [index, step] of workspace.steps.entries()) {
       stderr: "inherit",
     });
     exitCode = await child.exited;
+    if (step.runner === "gradle") {
+      // Like Cargo's synthesized report, a merge failure must not mask
+      // Gradle's exit code.
+      try {
+        await writeGradleJUnitReport({
+          workspaceDirectory: process.cwd(),
+          nestedWorkspaceDirectories,
+          reportPath,
+          exitCode,
+        });
+      } catch (error) {
+        reportingError =
+          error instanceof Error ? error : new Error(String(error));
+      }
+    }
   }
   const durationSeconds = (performance.now() - startedAt) / 1000;
 
   // Only finalize (read back + namespace) when the raw report was written;
-  // if the Cargo write already failed there is nothing to finalize.
+  // if the Cargo write or Gradle merge failed there is nothing to finalize.
   if (reportingError === undefined) {
     const completed = await completeJUnitReport({
       runner: step.runner,

@@ -947,6 +947,16 @@
           "runner": "vitest"
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/the-storm",
+      "directory": "packages/the-storm",
+      "steps": [
+        {
+          "runner": "gradle",
+          "args": ["-p", "plugin", "test"]
+        }
+      ]
     }
   ],
   "testlessWorkspaces": [

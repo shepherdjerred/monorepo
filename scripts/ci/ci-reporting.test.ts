@@ -827,6 +827,7 @@ describe("CI reporting manifest", () => {
         const usesCoverage = manifestEntry.steps.some(
           (step) =>
             step.runner !== "cargo" &&
+            step.runner !== "gradle" &&
             step.runner !== "command" &&
             (step.runner !== "dotnet" || step.coverageConfig !== undefined),
         );
@@ -858,6 +859,7 @@ describe("CI reporting manifest", () => {
       "scripts/ci/ci-reporting.ts",
       "scripts/ci-test-manifest.json",
       "scripts/ci/run-ci-test.ts",
+      "scripts/ci/gradle-junit.ts",
     ]) {
       expect(rootTurbo).toContain(`"${reportingInput}"`);
     }
