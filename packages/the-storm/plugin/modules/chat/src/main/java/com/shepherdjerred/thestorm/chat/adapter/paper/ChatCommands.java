@@ -77,7 +77,6 @@ public final class ChatCommands {
       case WAR -> List.of("war", "wc");
       case STAFF -> List.of("sc");
       case TOWN -> List.of("tc");
-      case NATION -> List.of("nc");
     };
   }
 

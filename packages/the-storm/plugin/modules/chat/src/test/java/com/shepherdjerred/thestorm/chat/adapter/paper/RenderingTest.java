@@ -70,8 +70,8 @@ final class RenderingTest {
         .isEqualTo("You are muted for 2m: spam");
     assertThat(Feedback.describe(ChannelKey.TOWN, ChannelAccess.UNAVAILABLE))
         .isEqualTo("Towns are not available yet, so there is no town chat.");
-    assertThat(Feedback.describe(ChannelKey.NATION, ChannelAccess.NOT_A_MEMBER))
-        .isEqualTo("You are not in a nation.");
+    assertThat(Feedback.describe(ChannelKey.TOWN, ChannelAccess.NOT_A_MEMBER))
+        .isEqualTo("You are not in a town.");
     assertThat(Arrays.stream(ProfileError.values()).map(Feedback::describe))
         .doesNotContainNull()
         .doesNotHaveDuplicates();
@@ -80,7 +80,7 @@ final class RenderingTest {
   @Test
   void channelCommandsAreDistinct() {
     assertThat(Arrays.stream(ChannelKey.values()).map(ChatCommands::label))
-        .containsExactly("g", "war", "sc", "tc", "nc");
+        .containsExactly("g", "war", "sc", "tc");
     assertThat(ChatCommands.labels(ChannelKey.WAR)).containsExactly("war", "wc");
   }
 

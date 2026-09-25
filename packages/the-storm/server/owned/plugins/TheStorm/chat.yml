@@ -28,7 +28,6 @@ channels:
   war: "<dark_gray>[<dark_red>W</dark_red>][<prefix><white><player></white>]: </dark_gray><gray><message>"
   staff: "<dark_gray>[<gold>S</gold>][<prefix><white><player></white>]: </dark_gray><yellow><message>"
   town: "<dark_gray>[<green>T</green>][<prefix><white><player></white>]: </dark_gray><green><message>"
-  nation: "<dark_gray>[<aqua>N</aqua>][<prefix><white><player></white>]: </dark_gray><aqua><message>"
 
 # /me actions, sent to the player's focused channel. Uses <channel> (the
 # channel's letter), <prefix>, <player> and <message>.

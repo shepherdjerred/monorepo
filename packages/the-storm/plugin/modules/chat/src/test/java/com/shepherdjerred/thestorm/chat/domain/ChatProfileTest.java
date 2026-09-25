@@ -106,7 +106,7 @@ final class ChatProfileTest {
     assertThat(ChannelKey.GLOBAL.reach()).isEqualTo(ChannelKey.Reach.EVERYONE);
     assertThat(ChannelKey.WAR.reach()).isEqualTo(ChannelKey.Reach.EVERYONE);
     assertThat(ChannelKey.STAFF.reach()).isEqualTo(ChannelKey.Reach.STAFF);
-    assertThat(ChannelKey.TOWN.reach()).isEqualTo(ChannelKey.Reach.GROUP);
-    assertThat(ChannelKey.NATION.reach()).isEqualTo(ChannelKey.Reach.GROUP);
+    assertThat(ChannelKey.TOWN.reach()).isEqualTo(ChannelKey.Reach.TOWN);
+    assertThat(ChannelKey.fromId("nation")).as("there are no nations").isEmpty();
   }
 }

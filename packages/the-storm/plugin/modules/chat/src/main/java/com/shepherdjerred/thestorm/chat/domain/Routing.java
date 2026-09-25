@@ -13,9 +13,9 @@ public final class Routing {
    *
    * <p>The speaker always sees their own message. Otherwise a viewer must not have hidden the
    * channel, must not ignore the speaker (except in staff chat, which staff cannot ignore away),
-   * and must be in the channel's reach: everyone, staff, or the speaker's group.
+   * and must be in the channel's reach: everyone, staff, or the speaker's town.
    *
-   * @param groupMembers the speaker's town or nation for group channels; ignored otherwise
+   * @param groupMembers the speaker's town for town chat; ignored otherwise
    */
   public static boolean receives(
       ChannelKey channel, UUID speaker, Viewer viewer, Set<UUID> groupMembers) {
@@ -31,7 +31,7 @@ public final class Routing {
     return switch (channel.reach()) {
       case EVERYONE -> true;
       case STAFF -> viewer.staff();
-      case GROUP -> groupMembers.contains(viewer.id());
+      case TOWN -> groupMembers.contains(viewer.id());
     };
   }
 

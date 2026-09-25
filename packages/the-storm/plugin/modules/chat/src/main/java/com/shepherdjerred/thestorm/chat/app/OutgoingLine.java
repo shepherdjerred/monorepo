@@ -13,7 +13,7 @@ import java.util.UUID;
  * @param channel where it goes
  * @param speaker who sent it
  * @param message the accepted text
- * @param members the speaker's group for town and nation chat; empty for other channels
+ * @param members the speaker's town for town chat; empty for other channels
  * @param emote whether it is a {@code /me} action rather than a message
  */
 public record OutgoingLine(
