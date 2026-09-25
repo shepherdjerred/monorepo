@@ -1,10 +1,7 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.domain.game.GameEvent;
-import com.shepherdjerred.thestorm.arena.domain.game.Member;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.event.Event;
@@ -13,19 +10,15 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.inventory.Inventory;
 
 /**
- * Players and the arena: restoring on join, leaving on quit and death, keeping items and players
- * inside, and the class signs, ready block and join signs.
+ * Players and the arena: restoring on join, leaving on quit and death, keeping members in and
+ * outsiders out, and the class signs, ready block and join signs.
  */
 final class PlayerListener implements Listener {
 
@@ -33,33 +26,27 @@ final class PlayerListener implements Listener {
   private final Arenas arenas;
   private final Snapshots snapshots;
   private final ArenaCommands commands;
-  private final Keys keys;
+  private final ItemGuard items;
 
-  PlayerListener(PaperContext context, Arenas arenas, ArenaCommands commands, Keys keys) {
+  PlayerListener(PaperContext context, Arenas arenas, ArenaCommands commands, ItemGuard items) {
     this.context = context;
     this.arenas = arenas;
     this.snapshots = arenas.snapshots();
     this.commands = commands;
-    this.keys = keys;
+    this.items = items;
   }
 
-  /** On join: arena items never survive outside, and a crash's snapshot is restored. */
+  /**
+   * On join: arena items never survive outside, and a crash's snapshot is restored (once they
+   * respawn, if they left while dead).
+   */
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
     var player = event.getPlayer();
-    sweep(player.getInventory());
-    sweep(player.getEnderChest());
+    items.sweep(player.getInventory());
+    items.sweep(player.getEnderChest());
     if (arenas.arenaOf(player.getUniqueId()).isEmpty()) {
       snapshots.recover(player);
-    }
-  }
-
-  private void sweep(Inventory inventory) {
-    for (var slot = 0; slot < inventory.getSize(); slot++) {
-      var item = inventory.getItem(slot);
-      if (item != null && keys.isArenaItem(item)) {
-        inventory.setItem(slot, null);
-      }
     }
   }
 
@@ -77,7 +64,7 @@ final class PlayerListener implements Listener {
   void onDeath(PlayerDeathEvent event) {
     var id = event.getPlayer().getUniqueId();
     var runner = arenas.of(id);
-    if (runner.isEmpty() || isPending(runner.orElseThrow(), id)) {
+    if (runner.isEmpty()) {
       return;
     }
     event.getDrops().clear();
@@ -94,65 +81,72 @@ final class PlayerListener implements Listener {
       if (runner.awaitsRespawn(player.getUniqueId())) {
         event.setRespawnLocation(runner.exit());
         context.scheduler().runOnMainThread(() -> runner.respawned(player));
+        return;
       }
     }
-  }
-
-  @EventHandler(ignoreCancelled = true)
-  void onDrop(PlayerDropItemEvent event) {
-    if (arrived(event.getPlayer().getUniqueId()).isPresent()) {
-      event.setCancelled(true);
+    if (snapshots.waitsForRespawn(player.getUniqueId())) {
+      context.scheduler().runOnMainThread(() -> snapshots.respawned(player));
     }
   }
 
-  /** Pearls, chorus fruit, homes and warps cannot take a player out of their arena. */
+  /**
+   * Members cannot teleport out of their arena (pearls, chorus fruit, homes, warps, /back, /tpa)
+   * and players still joining cannot teleport at all. Nobody else may teleport into an arena while
+   * a game runs there.
+   */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onTeleport(PlayerTeleportEvent event) {
-    var runner = arrived(event.getPlayer().getUniqueId());
-    if (runner.isPresent() && !runner.orElseThrow().world().contains(event.getTo())) {
+    var player = event.getPlayer();
+    var id = player.getUniqueId();
+    if (arenas.joining(id)) {
       event.setCancelled(true);
-      Texts.error(event.getPlayer(), "You cannot leave the arena that way. Use /arena leave.");
+      return;
     }
-  }
-
-  @EventHandler(ignoreCancelled = true)
-  void onOpen(InventoryOpenEvent event) {
-    if (event.getInventory().getType() == InventoryType.ENDER_CHEST
-        && arrived(event.getPlayer().getUniqueId()).isPresent()) {
+    var home = arenas.arrived(id);
+    if (home.isPresent()) {
+      if (!home.orElseThrow().world().contains(event.getTo())) {
+        event.setCancelled(true);
+        Texts.error(player, "You cannot leave the arena that way. Use /arena leave.");
+      }
+      return;
+    }
+    var target = arenas.runningAt(event.getTo());
+    if (target.isPresent() && !target.orElseThrow().world().contains(event.getFrom())) {
       event.setCancelled(true);
+      Texts.error(player, "A game is under way in that arena. Use /arena spec to watch.");
     }
   }
 
   @EventHandler(priority = EventPriority.HIGH)
   void onInteract(PlayerInteractEvent event) {
+    var id = event.getPlayer().getUniqueId();
+    if (arenas.joining(id)) {
+      event.setCancelled(true);
+      return;
+    }
     var block = event.getClickedBlock();
-    if (block == null || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+    if (block == null) {
       return;
     }
-    if (joinSign(event, block)) {
+    var home = arenas.arrived(id);
+    if (home.isPresent()) {
+      member(event, block, home.orElseThrow());
       return;
     }
-    var runner = arrived(event.getPlayer().getUniqueId());
-    if (runner.isPresent() && runner.orElseThrow().world().contains(block.getLocation())) {
-      insideArena(event, block, runner.orElseThrow());
+    if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !joinSign(event, block)) {
+      outsider(event, block);
     }
   }
 
-  private boolean joinSign(PlayerInteractEvent event, Block block) {
-    var pos = Places.pos(block);
-    for (var runner : arenas.all()) {
-      if (block.getWorld().equals(runner.world().world())
-          && runner.world().definition().joinSigns().contains(pos)) {
-        event.setUseInteractedBlock(Event.Result.DENY);
-        arenas.join(event.getPlayer(), runner);
-        return true;
-      }
+  /** A member reaches only blocks in their arena: its signs, ready block and loot chests. */
+  private void member(PlayerInteractEvent event, Block block, GameRunner runner) {
+    if (!runner.world().contains(block.getLocation())) {
+      event.setCancelled(true);
+      return;
     }
-    return false;
-  }
-
-  /** Class signs and the ready block work; only fighters open loot chests; no other container. */
-  private void insideArena(PlayerInteractEvent event, Block block, GameRunner runner) {
+    if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+      return;
+    }
     var player = event.getPlayer();
     var pos = Places.pos(block);
     var definition = runner.world().definition();
@@ -173,12 +167,24 @@ final class PlayerListener implements Listener {
     }
   }
 
-  /** The arena {@code player} is in, once their snapshot is stored (not while still joining). */
-  private Optional<GameRunner> arrived(UUID player) {
-    return arenas.of(player).filter(runner -> !isPending(runner, player));
+  /** Nobody outside a running game opens a container in its arena. */
+  private void outsider(PlayerInteractEvent event, Block block) {
+    if (block.getState() instanceof Container
+        && arenas.runningAt(block.getLocation()).isPresent()) {
+      event.setUseInteractedBlock(Event.Result.DENY);
+    }
   }
 
-  private static boolean isPending(GameRunner runner, UUID player) {
-    return runner.member(player).filter(Member.Pending.class::isInstance).isPresent();
+  private boolean joinSign(PlayerInteractEvent event, Block block) {
+    var pos = Places.pos(block);
+    for (var runner : arenas.all()) {
+      if (block.getWorld().equals(runner.world().world())
+          && runner.world().definition().joinSigns().contains(pos)) {
+        event.setUseInteractedBlock(Event.Result.DENY);
+        arenas.join(event.getPlayer(), runner);
+        return true;
+      }
+    }
+    return false;
   }
 }

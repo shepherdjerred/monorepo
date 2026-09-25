@@ -20,6 +20,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.PiglinBrute;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -153,6 +154,30 @@ final class MobFactoryTest {
         .hasMessageContaining("DRAGONFLY is not a mob")
         .hasMessageContaining("GLASS_HAT is not an item")
         .hasMessageContaining("ARROW is not a mob");
+  }
+
+  @Test
+  void piglinsNeverZombifyOutsideTheNether() {
+    var keys = new Keys(MockBukkit.createMockPlugin());
+    var brute =
+        new MobArchetype(
+            "PIGLIN_BRUTE",
+            1,
+            1,
+            1,
+            1,
+            Optional.empty(),
+            Map.of(),
+            Optional.empty(),
+            Behavior.VANILLA,
+            0);
+    var factory = MobFactory.create(keys, table(Map.of("knight", brute)));
+    var at = requireNonNull(world);
+    var piglin = at.spawn(new Location(at, 0.5, 5, 0.5), PiglinBrute.class);
+
+    factory.configure(piglin, brute, MobFactory.Tuning.relative(1, 1), "colosseum");
+
+    assertThat(piglin.isImmuneToZombification()).isTrue();
   }
 
   @Test

@@ -6,6 +6,8 @@ import com.shepherdjerred.thestorm.arena.adapter.db.JooqRewardStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ArenaPaper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
+import com.shepherdjerred.thestorm.arena.adapter.paper.PlayerSaver;
+import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
 import com.shepherdjerred.thestorm.arena.app.RewardPayer;
@@ -27,17 +29,21 @@ import org.jspecify.annotations.Nullable;
  */
 public final class ArenaModule implements StormModule {
 
-  private final Function<ModuleContext, ChunkKeeper> chunks;
+  private final Function<ModuleContext, ServerHooks> hooks;
   private @Nullable ArenaPaper paper;
 
   /** Arena chunks are held through core's shared {@link ChunkTickets}. */
   public ArenaModule() {
-    this(context -> ChunkKeeper.shared(context.services().require(ChunkTickets.class)));
+    this(
+        context ->
+            new ServerHooks(
+                ChunkKeeper.shared(context.services().require(ChunkTickets.class)),
+                PlayerSaver.paper()));
   }
 
-  /** For tests, which run where plugin chunk tickets are not available. */
-  ArenaModule(Function<ModuleContext, ChunkKeeper> chunks) {
-    this.chunks = chunks;
+  /** For tests, which run where chunk tickets and player saves are not available. */
+  ArenaModule(Function<ModuleContext, ServerHooks> hooks) {
+    this.hooks = hooks;
   }
 
   @Override
@@ -58,7 +64,7 @@ public final class ArenaModule implements StormModule {
             leaderboard,
             new RewardPayer(context.services().require(Wallets.class)),
             context.services().require(CrystalFormatter.class));
-    var started = ArenaPaper.start(context, content, app, chunks.apply(context));
+    var started = ArenaPaper.start(context, content, app, hooks.apply(context));
     paper = started;
     context.services().provide(ArenaPresence.class, started.presence());
     context.services().provide(ArenaRecords.class, leaderboard);

@@ -237,15 +237,17 @@ final class Waves {
   }
 
   /**
-   * Resets the arena if a game was running, restores the remaining spectators and empties the
-   * arena. Players still joining are dropped; their snapshots are forgotten when they arrive.
+   * Resets the arena if a game was running, restores the remaining spectators and anyone still
+   * joining (already emptied), and empties the arena.
    */
   static void close(Draft draft) {
     if (draft.phase.running()) {
       draft.effect(new GameEffect.ResetArena());
     }
-    for (var watcher : draft.watchers()) {
-      draft.effect(new GameEffect.Restore(watcher.id()));
+    for (var member : draft.members()) {
+      if (member instanceof Member.Watcher || member instanceof Member.Pending) {
+        draft.effect(new GameEffect.Restore(member.id()));
+      }
     }
     for (var member : draft.members()) {
       draft.remove(member.id());

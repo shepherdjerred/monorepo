@@ -167,7 +167,7 @@ final class JooqStoresTest {
     assertThat(rewards.claimVault(new RewardStore.VaultClaim(BOB, 20, day, loot, T0)).join())
         .isEqualTo(RewardStore.Claim.OPENED);
 
-    var waiting = rewards.pending(ALICE).join();
+    var waiting = rewards.claimAll(ALICE).join();
     assertThat(waiting).hasSize(3);
     assertThat(waiting)
         .extracting(RewardStore.PendingReward::reason)
@@ -176,17 +176,38 @@ final class JooqStoresTest {
   }
 
   @Test
-  void deliveredLootIsGone() {
+  void claimingTakesTheLootOutSoItIsHandedOutOnce() {
     var rewards = new JooqRewardStore(database);
     var loot = ItemData.of(new byte[] {1});
+    var day = LocalDate.of(2026, 9, 25);
+    rewards.claimVault(new RewardStore.VaultClaim(ALICE, 10, day, loot, T0)).join();
+    rewards.claimVault(new RewardStore.VaultClaim(BOB, 10, day, loot, T0)).join();
+
+    var first = rewards.claimAll(ALICE).join();
+    var second = rewards.claimAll(ALICE).join();
+
+    assertThat(first).singleElement().satisfies(r -> assertThat(r.items()).isEqualTo(loot));
+    assertThat(second).isEmpty();
+    assertThat(rewards.claimAll(BOB).join()).hasSize(1);
+  }
+
+  @Test
+  void claimedLootThatCouldNotBeGivenIsPutBack() {
+    var rewards = new JooqRewardStore(database);
+    var loot = ItemData.of(new byte[] {4, 2});
     rewards
-        .claimVault(new RewardStore.VaultClaim(ALICE, 10, LocalDate.of(2026, 9, 25), loot, T0))
+        .claimVault(new RewardStore.VaultClaim(ALICE, 20, LocalDate.of(2026, 9, 25), loot, T0))
         .join();
-    var waiting = rewards.pending(ALICE).join();
+    var claimed = rewards.claimAll(ALICE).join();
 
-    rewards.delivered(waiting.getFirst().id()).join();
+    rewards.requeue(ALICE, claimed, T0.plusSeconds(5)).join();
 
-    assertThat(rewards.pending(ALICE).join()).isEmpty();
-    assertThat(rewards.pending(BOB).join()).isEmpty();
+    assertThat(rewards.claimAll(ALICE).join())
+        .singleElement()
+        .satisfies(
+            reward -> {
+              assertThat(reward.reason()).isEqualTo("vault:wave20");
+              assertThat(reward.items()).isEqualTo(loot);
+            });
   }
 }

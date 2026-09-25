@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.arena.app;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.bukkit.Location;
 
 /**
  * Who is in an arena. Other modules use it to keep arena players out of their features (for
@@ -15,4 +16,11 @@ public interface ArenaPresence {
    * empty if they are in none.
    */
   Optional<String> arenaOf(UUID player);
+
+  /**
+   * Whether {@code location} lies in an arena where a game is under way. Players who are not in
+   * that game may not teleport there (the arena refuses it); other modules can check first to
+   * explain why.
+   */
+  boolean isGameRunningAt(Location location);
 }

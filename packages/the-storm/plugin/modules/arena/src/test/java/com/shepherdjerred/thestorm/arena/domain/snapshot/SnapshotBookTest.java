@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -42,9 +44,13 @@ final class SnapshotBookTest {
     assertThat(book.holds(ALICE)).isTrue();
   }
 
+  private static SnapshotBook loaded() {
+    return SnapshotBook.UNLOADED.withLoaded(List.of());
+  }
+
   @Test
   void aSnapshotIsTakenExactlyOnce() {
-    var book = SnapshotBook.UNLOADED.withLoaded(List.of()).withStored(snapshot(ALICE, "colosseum"));
+    var book = loaded().withHeld(snapshot(ALICE, "colosseum"));
 
     var first = book.take(ALICE);
     var second = first.book().take(ALICE);
@@ -56,9 +62,60 @@ final class SnapshotBookTest {
   }
 
   @Test
+  void aHeldSnapshotBlocksAnotherUntilRestored() {
+    var book = loaded().withHeld(snapshot(ALICE, "colosseum"));
+
+    assertThat(book.refusal(ALICE)).contains(SnapshotBook.Refusal.RESTORE_PENDING);
+    assertThatThrownBy(() -> book.withHeld(snapshot(ALICE, "maze")))
+        .isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> SnapshotBook.UNLOADED.withHeld(snapshot(ALICE, "maze")))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  /**
+   * The restore order: take the snapshot (put it back and save the player), and only after the
+   * stored copy is deleted may a new snapshot be taken. A delete still in flight would otherwise
+   * remove the new one.
+   */
+  @Test
+  void aRestoredPlayerMayNotJoinUntilTheStoredSnapshotIsDeleted() {
+    var restored = loaded().withHeld(snapshot(ALICE, "colosseum")).take(ALICE).book();
+
+    assertThat(restored.holds(ALICE)).isFalse();
+    assertThat(restored.cleaning()).containsExactly(ALICE);
+    assertThat(restored.refusal(ALICE)).contains(SnapshotBook.Refusal.CLEANUP_PENDING);
+    assertThatThrownBy(() -> restored.withHeld(snapshot(ALICE, "maze")))
+        .isInstanceOf(IllegalStateException.class);
+
+    var deleted = restored.cleaned(ALICE);
+
+    assertThat(deleted.refusal(ALICE)).isEmpty();
+    assertThat(deleted.withHeld(snapshot(ALICE, "maze")).holds(ALICE)).isTrue();
+    assertThat(deleted.cleaned(ALICE)).isSameAs(deleted);
+  }
+
+  @Test
+  void aStoredSnapshotOfAPlayerStillCleaningUpIsNotLoadedAgain() {
+    var cleaning = new SnapshotBook(Map.of(), Set.of(ALICE), false);
+
+    var loaded = cleaning.withLoaded(List.of(snapshot(ALICE, "colosseum")));
+
+    assertThat(loaded.holds(ALICE)).isFalse();
+    assertThat(loaded.refusal(ALICE)).contains(SnapshotBook.Refusal.CLEANUP_PENDING);
+  }
+
+  @Test
+  void aPlayerIsNeverHeldAndCleaningAtOnce() {
+    assertThatThrownBy(
+            () ->
+                new SnapshotBook(Map.of(ALICE, snapshot(ALICE, "colosseum")), Set.of(ALICE), true))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
   void aSnapshotTakenDuringThisRunWinsOverAStoredOne() {
     var fresh = snapshot(ALICE, "maze");
-    var book = SnapshotBook.UNLOADED.withStored(fresh);
+    var book = new SnapshotBook(Map.of(ALICE, fresh), Set.of(), false);
 
     var loaded = book.withLoaded(List.of(snapshot(ALICE, "colosseum"), snapshot(BOB, "colosseum")));
 

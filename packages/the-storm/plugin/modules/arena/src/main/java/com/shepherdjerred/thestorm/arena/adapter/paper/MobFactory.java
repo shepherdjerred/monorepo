@@ -13,8 +13,11 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Hoglin;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.PiglinAbstract;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -96,9 +99,10 @@ final class MobFactory {
 
   /**
    * Spawns archetype {@code mobId} at {@code at} with its riders, all tagged for {@code arena}.
-   * Returns every entity spawned, the mount first.
+   * Returns every entity spawned, the mount first, or empty if a spawn was refused (whatever did
+   * spawn is removed again).
    */
-  List<LivingEntity> spawn(Location at, String mobId, Tuning tuning, String arena) {
+  Optional<List<LivingEntity>> spawn(Location at, String mobId, Tuning tuning, String arena) {
     var spawned = new ArrayList<LivingEntity>();
     @Nullable LivingEntity below = null;
     var id = mobId;
@@ -106,12 +110,17 @@ final class MobFactory {
     while (true) {
       var archetype = table.mob(id);
       var entity = spawnOne(at, archetype, current, arena);
+      if (!entity.isValid()) {
+        spawned.forEach(Entity::remove);
+        return Optional.empty();
+      }
+      quirks(entity);
       if (below != null) {
         below.addPassenger(entity);
       }
       spawned.add(entity);
       if (archetype.rider().isEmpty()) {
-        return List.copyOf(spawned);
+        return Optional.of(List.copyOf(spawned));
       }
       below = entity;
       id = archetype.rider().orElseThrow();
@@ -125,11 +134,8 @@ final class MobFactory {
     if (type == null) {
       throw new IllegalStateException("type was not checked at enable: " + archetype.type());
     }
-    var entity =
-        at.getWorld()
-            .spawn(at, type, mob -> configure(mob, archetype, tuning, arena), SpawnReason.CUSTOM);
-    quirks(entity);
-    return entity;
+    return at.getWorld()
+        .spawn(at, type, mob -> configure(mob, archetype, tuning, arena), SpawnReason.CUSTOM);
   }
 
   /**
@@ -139,6 +145,13 @@ final class MobFactory {
   void configure(LivingEntity mob, MobArchetype archetype, Tuning tuning, String arena) {
     keys.tag(mob, arena);
     mob.setPersistent(false);
+    // Piglins and hoglins outside the Nether turn into zombified mobs, which would leave the wave.
+    if (mob instanceof PiglinAbstract piglin) {
+      piglin.setImmuneToZombification(true);
+    }
+    if (mob instanceof Hoglin hoglin) {
+      hoglin.setImmuneToZombification(true);
+    }
     archetype
         .name()
         .ifPresent(

@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.domain.game.GameEvent;
+import com.shepherdjerred.thestorm.arena.domain.game.Member;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -44,11 +45,35 @@ public final class Arenas implements ArenaPresence {
         .findFirst();
   }
 
+  @Override
+  public boolean isGameRunningAt(Location location) {
+    return runningAt(location).isPresent();
+  }
+
   /** The arena whose region contains {@code location}. */
   Optional<GameRunner> at(Location location) {
     return runners.values().stream()
         .filter(runner -> runner.world().contains(location))
         .findFirst();
+  }
+
+  /** The arena whose region contains {@code location}, if a game is under way there. */
+  Optional<GameRunner> runningAt(Location location) {
+    return at(location).filter(runner -> runner.game().phase().running());
+  }
+
+  /** The arena {@code player} is in, once their snapshot is stored (not while still joining). */
+  Optional<GameRunner> arrived(UUID player) {
+    return of(player).filter(runner -> !isPending(runner, player));
+  }
+
+  /** Whether {@code player} is still joining an arena: frozen until their snapshot is stored. */
+  boolean joining(UUID player) {
+    return of(player).filter(runner -> isPending(runner, player)).isPresent();
+  }
+
+  private static boolean isPending(GameRunner runner, UUID player) {
+    return runner.member(player).filter(Member.Pending.class::isInstance).isPresent();
   }
 
   Collection<GameRunner> all() {
@@ -101,6 +126,9 @@ public final class Arenas implements ArenaPresence {
     switch (refusal.orElseThrow()) {
       case NOT_LOADED ->
           Texts.error(player, "The arena is still starting up; try again in a moment.");
+      case CLEANUP_PENDING ->
+          Texts.error(
+              player, "Your belongings from your last game are still being put away; try again.");
       case RESTORE_PENDING -> {
         snapshots.recover(player);
         Texts.error(player, "Your belongings from your last game were restored first; join again.");

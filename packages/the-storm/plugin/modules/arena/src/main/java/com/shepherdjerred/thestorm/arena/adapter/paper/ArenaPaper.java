@@ -62,7 +62,7 @@ public final class ArenaPaper {
    * chest is not a container, or content names an item, mob or effect the server does not know.
    */
   public static ArenaPaper start(
-      ModuleContext module, ArenaBundle content, App app, ChunkKeeper chunks) {
+      ModuleContext module, ArenaBundle content, App app, ServerHooks hooks) {
     var context =
         new PaperContext(module.plugin(), module.scheduler(), module.time(), module.random());
     var keys = new Keys(module.plugin());
@@ -78,7 +78,9 @@ public final class ArenaPaper {
       throw new IllegalStateException("Unknown effects in arena/classes.yml: " + effects);
     }
     var mobs = MobFactory.create(keys, content.waves());
-    var snapshots = new Snapshots(context, app.snapshots(), app.rewards(), texts);
+    var snapshots =
+        new Snapshots(
+            context, new Snapshots.Parts(app.snapshots(), app.rewards(), texts, hooks.saver()));
     var services =
         new GameRunner.Services(
             context,
@@ -113,7 +115,7 @@ public final class ArenaPaper {
               keys,
               mobs,
               chests,
-              chunks,
+              hooks.chunks(),
               content.waves(),
               settings.tier(definition.tier()),
               settings.waves().entityCap());
@@ -137,9 +139,12 @@ public final class ArenaPaper {
             LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
     var permissions = new ArenaPermissions(context.server().getPluginManager());
     permissions.register(content.classes());
+    var guard = new ItemGuard(arenas, keys);
     List<Listener> listeners =
         List.of(
-            new PlayerListener(context, arenas, commands, keys), new WorldListener(arenas, keys));
+            new PlayerListener(context, arenas, commands, guard),
+            guard,
+            new WorldListener(arenas, keys));
     listeners.forEach(
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
     var clock = module.scheduler().repeatOnMainThread(TICK, TICK, arenas::tick);
