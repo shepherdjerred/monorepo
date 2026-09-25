@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 final class PreferencesAndBlocklistTest {
 
   private static final CommandBlocklist BLOCKLIST =
-      new CommandBlocklist(Set.of("pl", "plugins", "ver", "version", "?"));
+      new CommandBlocklist(Set.of("pl", "plugins", "ver", "version", "help", "?"));
 
   @Test
   void everyoneHearsEverythingByDefault() {
@@ -40,13 +40,25 @@ final class PreferencesAndBlocklistTest {
 
   @ParameterizedTest
   @ValueSource(
-      strings = {"/ pl", "/?", "/bukkit:pl", "/PL", "/pl", "/plugins", "/ver", "/version foo"})
+      strings = {
+        "/ pl",
+        "/?",
+        "/bukkit:help",
+        "/bukkit:pl",
+        "/help",
+        "/help 2",
+        "/PL",
+        "/pl",
+        "/plugins",
+        "/ver",
+        "/version foo"
+      })
   void blocksListedCommands(String message) {
     assertThat(BLOCKLIST.blocksMessage(message)).isTrue();
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"/", "/bal pl", "/help", "/plot", "/toggle-tips", "/verify"})
+  @ValueSource(strings = {"/", "/bal pl", "/helpop", "/plot", "/toggle-tips", "/verify"})
   void allowsEverythingElse(String message) {
     assertThat(BLOCKLIST.blocksMessage(message)).isFalse();
   }
@@ -54,7 +66,19 @@ final class PreferencesAndBlocklistTest {
   @Test
   void blocksNamespacedLabelsSentToTheClient() {
     assertThat(BLOCKLIST.blocks("bukkit:plugins")).isTrue();
-    assertThat(BLOCKLIST.blocks("minecraft:help")).isFalse();
+    assertThat(BLOCKLIST.blocks("minecraft:help")).isTrue();
+    assertThat(BLOCKLIST.blocks("minecraft:tell")).isFalse();
+  }
+
+  @Test
+  void hidesBlockedAndNamespacedCommandsFromTheClient() {
+    assertThat(BLOCKLIST.hidesFromClient("plugins")).isTrue();
+    assertThat(BLOCKLIST.hidesFromClient("help")).isTrue();
+    assertThat(BLOCKLIST.hidesFromClient("worldedit:wand")).isTrue();
+    assertThat(BLOCKLIST.hidesFromClient("minecraft:tell")).isTrue();
+    assertThat(BLOCKLIST.hidesFromClient("thestorm:toggle-tips")).isTrue();
+    assertThat(BLOCKLIST.hidesFromClient("tell")).isFalse();
+    assertThat(BLOCKLIST.hidesFromClient("toggle-tips")).isFalse();
   }
 
   @ParameterizedTest

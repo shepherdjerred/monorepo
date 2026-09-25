@@ -9,9 +9,9 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 
 /**
- * Broadcasts one announcement per run, such as {@code [Tips]: ...}, to the console and to every
- * player who has not muted the channel. Messages come up in shuffled rounds. Runs on the main
- * thread from the scheduler.
+ * Broadcasts one announcement per run, such as {@code [Tips]: ...}, to every online player who has
+ * not muted the channel. Messages come up in shuffled rounds. Runs on the main thread from the
+ * scheduler.
  */
 public final class Announcer implements Runnable {
 
@@ -24,7 +24,7 @@ public final class Announcer implements Runnable {
   /**
    * Where announcements go and how the next one is picked.
    *
-   * @param server the online players and the console
+   * @param server the online players
    * @param preferences each player's muted channels
    * @param random shuffles each round
    */
@@ -43,7 +43,6 @@ public final class Announcer implements Runnable {
     var draw = bag.draw(audience.random());
     bag = draw.next();
     var announcement = HouseStyle.info(label, messages.get(draw.index()));
-    audience.server().getConsoleSender().sendMessage(announcement);
     for (var player : audience.server().getOnlinePlayers()) {
       if (audience.preferences().read(player).hears(channel)) {
         player.sendMessage(announcement);

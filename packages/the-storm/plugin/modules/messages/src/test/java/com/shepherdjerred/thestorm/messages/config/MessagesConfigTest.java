@@ -42,6 +42,7 @@ final class MessagesConfigTest {
     assertThat(config.announcements().tips().messages()).hasSizeGreaterThanOrEqualTo(15);
     assertThat(config.motd()).isNotEmpty();
     assertThat(config.commands().blocklist().blocksMessage("/bukkit:plugins")).isTrue();
+    assertThat(config.commands().blocklist().blocksMessage("/help")).isTrue();
   }
 
   @Test
@@ -89,6 +90,24 @@ final class MessagesConfigTest {
     texts.add(config.commands().blockedMessage());
 
     assertThat(texts).allSatisfy(text -> assertThat(MiniText.parse(text, "test")).isNotNull());
+  }
+
+  @Test
+  void theShippedTipsOnlyMentionCommandsThatExist() {
+    var config = shipped();
+
+    assertThat(config.announcements().ads().messages()).isEmpty();
+    assertThat(config.announcements().tips().messages())
+        .noneMatch(tip -> tip.contains("toggle-ads"));
+  }
+
+  @Test
+  void rejectsATagInADeathMessage() throws IOException {
+    var yaml = shippedYaml().replace("\"{player} drowned\"", "\"{player} <aqua>drowned</aqua>\"");
+
+    assertThat(problems(yaml))
+        .singleElement()
+        .satisfies(p -> assertThat(p.message()).contains("plain text"));
   }
 
   @Test

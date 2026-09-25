@@ -35,6 +35,15 @@ public record CommandBlocklist(Set<String> labels) {
     return labels.contains(colon < 0 ? lower : lower.substring(colon + 1));
   }
 
+  /**
+   * Whether to drop {@code label} from the command list sent to a restricted player: blocked
+   * labels, and every namespaced label such as {@code worldedit:wand}, so players see only plain
+   * command names.
+   */
+  public boolean hidesFromClient(String label) {
+    return label.indexOf(':') >= 0 || blocks(label);
+  }
+
   /** Whether the chat line {@code message}, such as {@code "/pl"}, runs a blocked command. */
   public boolean blocksMessage(String message) {
     var line = message.startsWith("/") ? message.substring(1) : message;
