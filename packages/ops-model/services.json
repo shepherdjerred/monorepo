@@ -300,7 +300,8 @@
         "pyroscope",
         "alloy",
         "alloy-gateway",
-        "promtail"
+        "promtail",
+        "phoenix"
       ],
       "argoApps": [
         "prometheus",
@@ -313,7 +314,8 @@
         "pyroscope",
         "alloy",
         "alloy-gateway",
-        "promtail"
+        "promtail",
+        "phoenix"
       ]
     },
     {
