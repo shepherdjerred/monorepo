@@ -1,5 +1,6 @@
 import { fail, hasTrimmedLine } from "./validate-pipeline-parse.ts";
 import { requireIncludes } from "./validate-pipeline-lib.ts";
+import { MAIN_DEPLOY_STEPS } from "./main-deploy-steps.ts";
 import {
   parsePlaywrightVersionFile,
   playwrightPackageVersion,
@@ -232,7 +233,9 @@ function validateReleaseSteps({
       );
     }
   }
-  for (const step of ["helm-push", "argocd-sync"]) {
+  // Deploy and publish steps already wait on their own depends_on. Letting an
+  // unrelated red lane cancel them left merged work undeployed for hours.
+  for (const step of ["helm-push", "argocd-sync", ...MAIN_DEPLOY_STEPS]) {
     if (stepBlocks.get(step)?.includes("cancel_on_build_failing") === true) {
       fail(
         `${step} must remain eligible after its qualified dependencies pass`,
