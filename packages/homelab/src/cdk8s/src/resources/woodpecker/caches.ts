@@ -5,7 +5,7 @@ import {
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
-import { WOODPECKER_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 /**
  * Shared package caches for CI step pods.
@@ -57,7 +57,7 @@ function createCacheClaim(
   new KubePersistentVolumeClaim(chart, id, {
     metadata: {
       name,
-      namespace: WOODPECKER_NAMESPACE,
+      namespace: WOODPECKER_CI_NAMESPACE,
       labels: DISPOSABLE_CACHE_LABELS,
     },
     spec: {
@@ -98,7 +98,7 @@ export function createWoodpeckerCaches(chart: Chart): void {
   new KubeConfigMap(chart, "woodpecker-bun-cache-gc-config", {
     metadata: {
       name: WOODPECKER_BUN_CACHE_GC_CONFIG_MAP,
-      namespace: WOODPECKER_NAMESPACE,
+      namespace: WOODPECKER_CI_NAMESPACE,
     },
     data: { "bun-cache-gc.sh": BUN_CACHE_GC_SCRIPT },
   });

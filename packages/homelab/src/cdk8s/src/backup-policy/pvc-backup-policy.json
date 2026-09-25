@@ -24,25 +24,25 @@
     "reason": "Woodpecker CI database - pipeline history and the last-green-main record the release lanes read back"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-bun-cache",
     "backup": "disabled",
     "reason": "Disposable CI package cache - rebuildable from the lockfile"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-bun-cache-control",
     "backup": "disabled",
     "reason": "Lock file only - coordination state for the bun cache collector"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-uv-cache",
     "backup": "disabled",
     "reason": "Disposable CI package cache - rebuildable from the lockfile"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-tofu-plugin-cache",
     "backup": "disabled",
     "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
@@ -60,13 +60,13 @@
     "reason": "Rebuildable BuildKit cache"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-codex-auth",
     "backup": "disabled",
     "reason": "Refreshable ChatGPT-managed Codex credential bundle"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-trivy-db",
     "backup": "disabled",
     "reason": "Rebuildable vulnerability database cache"

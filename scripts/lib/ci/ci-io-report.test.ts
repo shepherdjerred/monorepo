@@ -451,11 +451,11 @@ describe("Prometheus query contract", () => {
   });
 
   // Woodpecker pods are the only CI pods in the namespace that should be
-  // measured; the server, agent and config extension share it.
+  // measured; the maintenance worker shares it.
   test("scopes every query to Woodpecker step pods", () => {
     for (const query of Object.values(buildIoQueries(WINDOW))) {
-      expect(query).toContain('namespace="woodpecker"');
-      expect(query).toContain("wp-[0-9a-hjkmnp-tv-z]{26}-[0-9]+-step-[0-9]+");
+      expect(query).toContain('namespace="woodpecker-ci"');
+      expect(query).toContain('pod=~"wp-[0-9a-hjkmnp-tv-z]{26}"');
     }
   });
 

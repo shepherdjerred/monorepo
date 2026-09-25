@@ -52,6 +52,12 @@ export type StepService = {
   /** Shell commands replacing the image entrypoint. */
   readonly commands?: readonly string[];
   readonly environment?: Readonly<Record<string, string>>;
+  /**
+   * Required for the same reason a step's is: the service is its own pod,
+   * admitted by Kueue before its step. Use `SERVICE_TIER` unless measured
+   * usage says otherwise.
+   */
+  readonly resources: ResourceTier;
 };
 
 export type StepVolume = {
@@ -111,7 +117,10 @@ export type CiStep = {
   readonly secrets?: readonly SecretGrant[];
   /** Pre-provisioned PVCs mounted by name, e.g. the shared bun and uv caches. */
   readonly volumes?: readonly StepVolume[];
-  /** Containers started beside the step and reachable on localhost. */
+  /**
+   * Daemons started for the step. Each is its own pod, reachable from the
+   * step by its `name` as a hostname -- not on localhost.
+   */
   readonly services?: readonly StepService[];
   /** Restrict to these events. Defaults to both push and pull_request. */
   readonly events?: readonly StepEvent[];

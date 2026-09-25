@@ -1,95 +1,133 @@
 ---
 title: Why CI jobs queue instead of failing
-description: Kueue admits CI steps by resource fit, so pressure is handled before pods exist rather than after.
+description: Kueue admits CI pods by resource fit, so pressure waits outside the node rather than piling onto it.
 sidebar:
   order: 5
 ---
 
-CI runs on the dedicated `liskov` worker. Woodpecker caps in-flight workflows
-at 24, and Kueue decides whether each step's resource requests fit the shared
-CI budget **before** Kubernetes creates its pods.
+CI runs on the dedicated `liskov` worker. Kueue holds every CI pod until its
+resource requests fit a budget below the node's capacity. Woodpecker's
+workflow cap is only a backstop.
 
 ```mermaid
 flowchart LR
   accTitle: CI resource admission
-  accDescr: The Woodpecker agent creates step pods in the managed namespace. Kueue admits those that fit the ClusterQueue budget, and Prometheus observes the node and queue state.
+  accDescr: The Woodpecker agent creates clone, service, and step pods in the woodpecker-ci namespace. Each is held behind a scheduling gate until the Kueue ClusterQueue has room, then scheduled onto liskov. The control plane lives in a separate namespace Kueue never touches.
 
-  WP[Woodpecker agent] --> JOB[Step pod in woodpecker namespace]
-  JOB --> KQ[Kueue LocalQueue default]
-  KQ --> CQ[ClusterQueue woodpecker]
-  CQ -->|admitted| POD[CI pod on liskov]
-  CQ -.->|waits when full| KQ
-  PROM[Prometheus] -->|node and Kueue metrics| CQ
+  subgraph CP[woodpecker namespace]
+    WP[Woodpecker agent]
+  end
+  subgraph CI[woodpecker-ci namespace]
+    POD[Clone, service, and step pods]
+  end
+  WP -->|creates| POD
+  POD -->|gated| CQ[ClusterQueue woodpecker]
+  CQ -->|admitted| NODE[liskov]
+  CQ -.->|waits when full| POD
 ```
 
 ## The problem with counting jobs
 
-Woodpecker's cap is a count: at most 24 workflows in flight. But CI steps are
-not interchangeable. Twenty lightweight lint steps and twenty Docker builds are
-very different loads on one machine.
+A count cannot tell a lint step from a cold Docker build. The July 2026
+freezes proved it: nine concurrent jobs locked up a node. Lowering the cap did
+not help, because the cap never bounded what each job consumed.
 
-A count-based limit therefore either wastes the node or oversubscribes it. When
-it oversubscribes, Kubernetes keeps trying to schedule pods that cannot fit,
-and the failure surfaces as scheduling churn and eventually kubelet eviction —
-which looks like flaky CI rather than a capacity problem.
+A count therefore either wastes the node or oversubscribes it. Oversubscription
+surfaces as scheduling churn, then kubelet eviction. It looks like flaky CI
+rather than a capacity problem.
 
 ## Admitting by resources instead
 
-The `woodpecker` namespace is managed by Kueue. The `woodpecker`
-ClusterQueue's nominal quota is:
+Kueue meters CPU, memory, and ephemeral storage against the `woodpecker`
+ClusterQueue. The budget sits below liskov's 29 CPU and roughly 91.5Gi of
+allocatable memory. It is a guard, not permission to consume the node to zero.
+The numbers live in one file, `misc/ci-admission-budget.json`.
 
-| Resource          | Quota |
-| ----------------- | ----- |
-| CPU               | 24    |
-| Memory            | 80Gi  |
-| Pods              | 24    |
-| Ephemeral storage | 100Gi |
+A pod that does not fit is held behind a scheduling gate. It exists, but the
+scheduler and the kubelet ignore it. There is no churn, and nothing to evict.
+It waits until other CI work finishes.
 
-Steps that do not fit stay **suspended** until resources are released. No pods
-are created, so there is no churn to observe and nothing to evict.
+Ephemeral storage is in the budget deliberately. A build that fills the node's
+disk makes the kubelet evict _other_ pods. Metering it makes disk a scheduling
+constraint instead of an afterthought.
 
-This keeps resource pressure quiet at admission time. The workflow count cap
-remains an independent backstop rather than the primary control.
+## Why CI has its own namespace
 
-Liskov currently exposes approximately 83.5Gi of Kubernetes allocatable
-memory. The 80Gi queue quota is therefore a scheduling guard, not permission to
-consume the node to zero: the node and queue dashboards correlate admission
-with MemAvailable, AMD Tctl, and disk-I/O pressure.
+Woodpecker creates bare pods, not Jobs, so admission uses Kueue's pod
+integration. That integration can only be scoped by namespace, and it gates
+every pod in one. It also fails closed: while Kueue is down, pod creation
+there fails.
 
-The complete pod reservation includes Woodpecker's own clone and workspace
-containers. The audited heavy profiles are 1.1 CPU / 15.06Gi for `verify`, 1.1
-CPU / 5.06Gi for Playwright, and 1.1 CPU / 2.06Gi for image/remote-BuildKit
-clients. Light deploy and scanner profiles reserve 350m CPU and roughly
-1.56-1.81Gi. CPU, memory, and ephemeral-storage quotas continue to stop an
-unsafe all-heavy mix before the 24-workflow count cap does.
+That is right for CI and wrong for anything that must restart unattended. So
+the control plane (server, agent, configuration extension, database) lives in
+`woodpecker`, which Kueue never manages. CI pods, their caches, and their
+credentials live in `woodpecker-ci`. A Kueue outage fails CI loudly and leaves
+the control plane alone.
 
-## Why ephemeral storage is in the quota
+The maintenance worker shares `woodpecker-ci` because it mounts the caches.
+It has its own small queue, so it never holds CI quota.
 
-It is the one people forget. A build that fills the node's ephemeral storage
-triggers kubelet eviction of _other_ pods, so an unbounded disk-hungry step can
-take down unrelated work on the same node.
+## Every pod is its own workload
 
-Including it in the admission budget makes disk a first-class scheduling
-constraint rather than an afterthought.
+Woodpecker runs a workflow as separate pods: a clone, then its services and
+step together. Kueue admits each one alone. That creates one hazard: services
+are admitted before their step and hold quota while it waits. Enough waiting
+workflows could hold everything, with no step able to start.
+
+A root check, `check-ci-admission-budget.ts`, rules that out. It proves that
+every in-flight workflow's services plus the largest step always fit the
+budget. Keeping services on the small `SERVICE_TIER` is what makes it hold.
+
+Kueue never preempts CI. It stops a plain pod by deleting it, and Woodpecker
+reports a pod that vanishes mid-step as a success.
+
+## Guards against a misplaced pod
+
+Placement, priority, and requests come from three different layers: the
+agent's pod defaults, the pipeline generator, and a namespace `LimitRange`.
+Woodpecker gives its clone and service pods nothing a step declares. Without
+the agent defaults, a clone would land on the production node. The workspace
+claim would bind there with it.
+
+An admission policy, `woodpecker-ci-pod-guard`, rejects any CI pod that is
+not pinned to liskov, not at `batch-low` priority, or missing requests and
+limits. A regression in any layer becomes a failed step, not CI on torvalds.
+
+## Workspaces do not accumulate
+
+Each workflow gets a workspace claim on the `ci-workspace` storage class. The
+class deletes the volume with the claim and provisions only on liskov. A class
+that retained volumes would grow the CI pool with every build. That is the
+disk-full failure the July freezes began with.
+
+A claim that outlives any possible workflow means Woodpecker failed to delete
+it. The `WoodpeckerWorkspaceClaimLeaked` alert reports it.
 
 ## What is watched
 
-Prometheus scrapes Kueue's controller through the selected ServiceMonitor in
-`kueue-system`. The monitoring rules alert on sustained queue backlog and on the
-memory conditions that precede liskov's kubelet eviction behaviour.
-
-Backlog is the signal that the quota is too small for the workload; the memory
-alert is the signal that something is about to go wrong regardless.
+Prometheus scrapes Kueue's controller through a ServiceMonitor in
+`kueue-system`. Sustained pending workloads mean the budget is too small for
+the work. Gated time counts against the workflow timeout, so the backlog alert
+fires well before that. Separate memory alerts watch for liskov approaching
+kubelet eviction, whatever the queue says.
 
 ## Where to look
 
-- Kueue chart and ServiceMonitor: `resources/argo-applications/platform/kueue.ts`
-- Queue resources and pod quota: `resources/kueue-config.ts`
-- Namespace and count cap: `resources/woodpecker/agent.ts` and
-  `misc/woodpecker.ts`
-- Per-step resource tiers: `packages/woodpecker-config-extension/src/pipeline/tiers.ts`
-- Node and admission alerts:
-  `resources/monitoring/monitoring/rules/resource-monitoring-liskov.ts`
+- Kueue chart and controller config:
+  `resources/argo-applications/platform/kueue.ts`
+- Queues and quota: `resources/kueue-config.ts` and
+  `misc/ci-admission-budget.json`
+- CI namespace, `LimitRange`, and default service account:
+  `resources/woodpecker/ci-namespace.ts`
+- Pod guard: `resources/woodpecker/ci-pod-guard.ts`
+- Agent pod defaults: `resources/woodpecker/agent.ts`
+- Workspace class: `misc/storage/storage-classes.ts`
+- Per-step resource tiers:
+  `packages/woodpecker-config-extension/src/pipeline/tiers.ts`
+- Budget proof: `scripts/checks/ci/check-ci-admission-budget.ts`
+- Queue, workspace, and liskov memory alerts:
+  `resources/monitoring/monitoring/rules/woodpecker.ts` and
+  `resources/monitoring/monitoring/rules/platform/resource-monitoring-liskov.ts`
 
 ## Related
 

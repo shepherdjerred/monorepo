@@ -1,121 +1,174 @@
 import type { Chart } from "cdk8s";
-import { ApiObject } from "cdk8s";
-import { WOODPECKER_MAX_WORKFLOWS } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
+import {
+  ClusterQueueV1Beta2,
+  ClusterQueueV1Beta2SpecPreemptionReclaimWithinCohort,
+  ClusterQueueV1Beta2SpecPreemptionWithinClusterQueue,
+  ClusterQueueV1Beta2SpecResourceGroupsFlavorsResourcesNominalQuota as NominalQuota,
+  LocalQueueV1Beta2,
+  ResourceFlavorV1Beta2,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/kueue.x-k8s.io.ts";
+import { CI_ADMISSION_BUDGET } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
+import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+
+/** The CI ClusterQueue. Its name is what the queue alerts and dashboards select. */
+export const CI_CLUSTER_QUEUE = "woodpecker";
 
 /**
- * Creates Kueue resource management configuration for the Woodpecker namespace.
+ * The CI LocalQueue. Named `default` deliberately: Kueue gives every pod in a
+ * managed namespace that names no queue the LocalQueue called `default`, which
+ * is how Woodpecker's clone, service, and step pods are queued without the
+ * pipeline labelling any of them.
+ */
+export const CI_LOCAL_QUEUE = "default";
+
+export const CI_MAINTENANCE_CLUSTER_QUEUE = "woodpecker-maintenance";
+export const CI_MAINTENANCE_LOCAL_QUEUE = "ci-maintenance";
+
+/**
+ * Pods one workflow can have admitted at once.
  *
- * Caps the woodpecker namespace at 24 CPU / 80Gi of requests. Sized to liskov's
- * current allocatable capacity of roughly 83.5Gi after Talos reservations and
- * eviction floors. Memory sits below the full allocatable capacity because the
- * CI workspace is memory-backed (agent-stack `workspace-volume` tmpfs — see
- * argo-applications/ci/woodpecker.ts): checkout explicitly requests 1Gi and each
- * step request covers its own install/workspace demand. Image builds use the
- * remote BuildKit daemon and do not run DinD sidecars. The request-weighted
- * quota admits broad light-job mixes while keeping verify, Playwright, and
- * image-heavy mixes bounded by CPU and memory rather than the 24-pod count cap.
- * The 8Gi
- * soft-eviction floor stays armed (the freeze incidents earned that caution);
- * if the canaries (node MemAvailable, ZfsArcHitRateLow, eviction events) fire,
- * the quota and the workspace sizeLimit are one-line back-offs.
+ * Woodpecker runs a workflow in stages: the clone pod, which finishes (and
+ * releases its quota) first, then the services and the step together.
+ */
+export const CI_PODS_PER_WORKFLOW =
+  1 + CI_ADMISSION_BUDGET.maxServicesPerWorkflow;
+
+const COVERED_RESOURCES = ["cpu", "memory", "pods", "ephemeral-storage"];
+
+const SYNC_WAVE = { "argocd.argoproj.io/sync-wave": "2" };
+
+/**
+ * Resource admission for CI on liskov.
  *
- * Jobs exceeding the quota are suspended (not rejected), eliminating
- * FailedCreate event storms.
+ * The July 2026 freezes came from CI that a job count could not bound: nine
+ * concurrent jobs were enough to lock up a node. So CI is admitted by the
+ * resources it requests, against a budget that stays below the node's
+ * allocatable capacity, and work that does not fit waits outside the
+ * scheduler instead of piling onto the node.
  *
- * The `pods` covered resource is capped at `WOODPECKER_MAX_WORKFLOWS`.
- * Woodpecker's `max-in-flight` is the real, primary concurrency control (see the
- * long comment on it in woodpecker.ts); this is a cheap, independent second
- * enforcement point at the K8s admission layer in case that setting ever
- * regresses (e.g. a future Helm-values typo). Kueue admission accounting is
- * always requests-based, so the CPU/memory nominal quota is scoped against the
- * per-step requests regardless of the pods cap.
+ * Woodpecker creates bare pods, so this runs on Kueue's pod integration: every
+ * pod created in the CI namespace is held behind the `kueue.x-k8s.io/admission`
+ * scheduling gate until its requests fit. A gated pod exists but is invisible
+ * to the scheduler and the kubelet -- no scheduling churn, nothing to evict.
+ * Pod integration can only be scoped by namespace, which is why the CI
+ * namespace holds nothing that must be able to start while Kueue is down.
+ *
+ * Each pod is its own workload. A workflow's services are admitted before its
+ * step, so admitted services must never be able to starve every step of
+ * quota; `scripts/checks/ci/check-ci-admission-budget.ts` proves they cannot
+ * against the generated pipeline. The `pods` quota is a backstop behind the
+ * agent's workflow cap, counted in pods.
+ *
+ * Preemption stays off. Kueue stops a plain pod by deleting it, and
+ * Woodpecker reads a pod that vanishes mid-step as a success.
+ *
+ * `ephemeral-storage` must stay covered: Kueue refuses a workload requesting a
+ * resource its ClusterQueue does not cover, and every CI container requests
+ * it. Leaving it out once froze CI completely.
+ *
+ * Quantities are written in the form the API server stores ("24", not
+ * "24000m"): ArgoCD diffs the raw string, and a mismatch is a permanent
+ * phantom OutOfSync that wedges the app-of-apps sync.
  */
 export function createKueueConfig(chart: Chart) {
-  new ApiObject(chart, "kueue-resource-flavor", {
-    apiVersion: "kueue.x-k8s.io/v1beta1",
-    kind: "ResourceFlavor",
-    metadata: {
-      name: "default",
-      annotations: { "argocd.argoproj.io/sync-wave": "2" },
-    },
+  new ResourceFlavorV1Beta2(chart, "kueue-resource-flavor", {
+    metadata: { name: "default", annotations: SYNC_WAVE },
   });
 
-  new ApiObject(chart, "kueue-cluster-queue", {
-    apiVersion: "kueue.x-k8s.io/v1beta1",
-    kind: "ClusterQueue",
-    metadata: {
-      name: "woodpecker",
-      annotations: { "argocd.argoproj.io/sync-wave": "2" },
-    },
+  const quota = CI_ADMISSION_BUDGET.quota;
+  createClusterQueue(chart, "kueue-cluster-queue", CI_CLUSTER_QUEUE, {
+    cpu: quota.cpu,
+    memory: quota.memory,
+    pods: String(CI_ADMISSION_BUDGET.maxWorkflows * CI_PODS_PER_WORKFLOW),
+    "ephemeral-storage": quota["ephemeral-storage"],
+  });
+  createLocalQueue(
+    chart,
+    "kueue-local-queue",
+    CI_LOCAL_QUEUE,
+    CI_CLUSTER_QUEUE,
+  );
+
+  // The maintenance worker is a long-running pod in the CI namespace. Its own
+  // queue, sized to it alone, keeps it from ever holding CI quota -- and CI
+  // from ever starving it.
+  createClusterQueue(
+    chart,
+    "kueue-maintenance-cluster-queue",
+    CI_MAINTENANCE_CLUSTER_QUEUE,
+    { cpu: "1", memory: "2Gi", pods: "1", "ephemeral-storage": "2Gi" },
+  );
+  createLocalQueue(
+    chart,
+    "kueue-maintenance-local-queue",
+    CI_MAINTENANCE_LOCAL_QUEUE,
+    CI_MAINTENANCE_CLUSTER_QUEUE,
+  );
+}
+
+function createClusterQueue(
+  chart: Chart,
+  id: string,
+  name: string,
+  quotas: Readonly<Record<string, string>>,
+): void {
+  new ClusterQueueV1Beta2(chart, id, {
+    metadata: { name, annotations: SYNC_WAVE },
     spec: {
       namespaceSelector: {
         matchLabels: {
-          "kueue.x-k8s.io/managed-namespace": "true",
+          "kubernetes.io/metadata.name": WOODPECKER_CI_NAMESPACE,
         },
       },
       preemption: {
-        withinClusterQueue: "Never",
-        reclaimWithinCohort: "Never",
+        withinClusterQueue:
+          ClusterQueueV1Beta2SpecPreemptionWithinClusterQueue.NEVER,
+        reclaimWithinCohort:
+          ClusterQueueV1Beta2SpecPreemptionReclaimWithinCohort.NEVER,
       },
       resourceGroups: [
         {
-          // ephemeral-storage MUST be covered here: ci/pipeline.yml sets
-          // an ephemeral-storage request on every step container, and
-          // Kueue refuses to admit a workload that requests a resource its
-          // ClusterQueue does not cover ("resource ephemeral-storage unavailable
-          // in ClusterQueue"). Omitting it froze CI completely — every workload
-          // sat Pending and no build could run (which also blocked the
-          // argocd-sync that would have shipped this very fix).
-          coveredResources: ["cpu", "memory", "pods", "ephemeral-storage"],
+          coveredResources: COVERED_RESOURCES,
           flavors: [
             {
               name: "default",
-              resources: [
-                {
-                  name: "cpu",
-                  // Canonical "24", NOT "24000m": Kueue/Kubernetes normalises
-                  // the stored Quantity to "24", and ArgoCD diffs the raw string
-                  // — "12000m" in the chart vs "12" live is a permanent phantom
-                  // OutOfSync that wedges the app-of-apps sync (it never reaches
-                  // Synced, so every argocd-sync CI step then fails). Keep this
-                  // in the form the API server stores.
-                  nominalQuota: "24",
-                },
-                {
-                  name: "memory",
-                  nominalQuota: "80Gi",
-                },
-                {
-                  name: "pods",
-                  nominalQuota: String(WOODPECKER_MAX_WORKFLOWS),
-                },
-                {
-                  // Generous headroom, deliberately NOT a binding constraint:
-                  // CPU/memory gate concurrency first (~6 heavy pods at 6Gi eph
-                  // request each ≈ 36Gi). 100Gi leaves ~2x margin and sits far
-                  // under the node's multi-TiB ephemeral capacity — it exists
-                  // only so Kueue can account for the pods' eph requests.
-                  name: "ephemeral-storage",
-                  nominalQuota: "100Gi",
-                },
-              ],
+              resources: COVERED_RESOURCES.map((resource) => ({
+                name: resource,
+                nominalQuota: NominalQuota.fromString(
+                  requireQuota(quotas, resource),
+                ),
+              })),
             },
           ],
         },
       ],
     },
   });
+}
 
-  new ApiObject(chart, "kueue-local-queue", {
-    apiVersion: "kueue.x-k8s.io/v1beta1",
-    kind: "LocalQueue",
+function requireQuota(
+  quotas: Readonly<Record<string, string>>,
+  resource: string,
+): string {
+  const value = quotas[resource];
+  if (value === undefined) {
+    throw new Error(`no quota for covered resource ${resource}`);
+  }
+  return value;
+}
+
+function createLocalQueue(
+  chart: Chart,
+  id: string,
+  name: string,
+  clusterQueue: string,
+): void {
+  new LocalQueueV1Beta2(chart, id, {
     metadata: {
-      name: "default",
-      namespace: "woodpecker",
-      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+      name,
+      namespace: WOODPECKER_CI_NAMESPACE,
+      annotations: SYNC_WAVE,
     },
-    spec: {
-      clusterQueue: "woodpecker",
-    },
+    spec: { clusterQueue },
   });
 }

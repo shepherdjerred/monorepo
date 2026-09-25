@@ -13,6 +13,18 @@ import {
 export async function readGeneratedSteps(
   repositoryRoot: string,
 ): Promise<GeneratedStep[]> {
+  return GeneratedStepsSchema.parse(
+    await readGeneratedStepJson(repositoryRoot),
+  );
+}
+
+/**
+ * The generator's complete step model as untyped JSON, for a checker that
+ * needs fields the credential contract does not (resources, services).
+ */
+export async function readGeneratedStepJson(
+  repositoryRoot: string,
+): Promise<unknown> {
   const child = Bun.spawn(
     ["bun", "packages/woodpecker-config-extension/src/dump-steps.ts"],
     { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
@@ -27,7 +39,8 @@ export async function readGeneratedSteps(
       `could not read the generated step model: ${stderr.trim()}`,
     );
   }
-  return GeneratedStepsSchema.parse(JSON.parse(stdout));
+  const parsed: unknown = JSON.parse(stdout);
+  return parsed;
 }
 
 /** One step by key, or undefined when the generator does not emit it. */

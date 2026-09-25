@@ -210,7 +210,20 @@
         "!scripts/node_modules/**",
         "packages/homelab/scripts/**",
         "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts"
+        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
+        // The grants come from the generated step model, so the generator is
+        // an input too; without it a grant change reused a green cached result.
+        "packages/woodpecker-config-extension/src/**"
+      ]
+    },
+    "//#check-ci-admission-budget": {
+      // The budget (cdk8s) and the step model (the generator) are the two
+      // halves this check compares; a change to either must re-run it.
+      "inputs": [
+        "scripts/checks/ci/check-ci-admission-budget.ts",
+        "scripts/lib/ci/generated-steps.ts",
+        "packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json",
+        "packages/woodpecker-config-extension/src/**"
       ]
     },
     "//#check-script-migrations": {

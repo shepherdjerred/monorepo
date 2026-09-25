@@ -30,10 +30,10 @@ const CONSUMER_NAMESPACES = [
   // streambot is deployed inside the `media` chart, not its own namespace.
   "media",
   // The Woodpecker maintenance worker runs the shared temporal-worker image
-  // (component: maintenance-worker) but lives in its own `woodpecker`
+  // (component: maintenance-worker) but lives in the `woodpecker-ci`
   // namespace, not `temporal` — it needs its own entry here or its
   // temporal-call-graph-tracing check silently degrades to the default false.
-  "woodpecker",
+  "woodpecker-ci",
 ] as const;
 
 export function createFliptChart(app: App) {

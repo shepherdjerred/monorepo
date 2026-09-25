@@ -4,6 +4,7 @@ import {
   VolumeSnapshotClass,
   VolumeSnapshotClassDeletionPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/snapshot.storage.k8s.io.ts";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 // Note: K8s storage class names don't match hardware (legacy naming)
 // - "zfs-ssd" is backed by NVMe SSDs
@@ -17,6 +18,21 @@ export const SATA_STORAGE_CLASS = "zfs-hdd";
 // lz4 both cuts NVMe wear and — critically — relocates the CI write storm off
 // the Talos xfs `/var` system partition onto the ZFS NVMe pool.
 export const NVME_STORAGE_CLASS_LZ4 = "zfs-ssd-lz4";
+
+/**
+ * Per-workflow CI workspaces: Woodpecker creates one claim per workflow and
+ * deletes it when the workflow ends.
+ *
+ * Its own class for two properties the cache class must not have:
+ *
+ * - `reclaimPolicy: Delete`. Under Retain, every deleted workspace would
+ *   leave its dataset on the CI pool, and a pool that only grows is the
+ *   disk-full failure the July 2026 freezes began with.
+ * - Provisioning only on the CI node. The claim binds wherever its first pod
+ *   lands (`WaitForFirstConsumer`), so this keeps a misplaced pod from
+ *   putting a workspace on the production node's pool.
+ */
+export const CI_WORKSPACE_STORAGE_CLASS = "ci-workspace";
 
 export function createStorageClasses(chart: Chart) {
   new KubeStorageClass(chart, "host-zfs-ssd", {
@@ -52,6 +68,30 @@ export function createStorageClasses(chart: Chart) {
       shared: "yes",
     },
     volumeBindingMode: "WaitForFirstConsumer",
+  });
+
+  new KubeStorageClass(chart, "ci-workspace", {
+    metadata: { name: CI_WORKSPACE_STORAGE_CLASS },
+    provisioner: "zfs.csi.openebs.io",
+    allowVolumeExpansion: false,
+    reclaimPolicy: "Delete",
+    parameters: {
+      fstype: "zfs",
+      poolname: "zfspv-pool-nvme",
+      compression: "lz4",
+      dedup: "off",
+      recordsize: "128k",
+      // A workflow's clone, service, and step pods mount the same claim.
+      shared: "yes",
+    },
+    volumeBindingMode: "WaitForFirstConsumer",
+    allowedTopologies: [
+      {
+        matchLabelExpressions: [
+          { key: "kubernetes.io/hostname", values: [CI_NODE_HOSTNAME] },
+        ],
+      },
+    ],
   });
 
   new KubeStorageClass(chart, "host-zfs-hdd", {

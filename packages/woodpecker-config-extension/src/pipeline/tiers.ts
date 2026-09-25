@@ -11,9 +11,10 @@ import type { ResourceTier } from "#src/pipeline/model.ts";
 /**
  * Heavy steps: the full turbo graph on a cold cache.
  *
- * The large memory request covers the memory-backed workspace as well as the
- * build itself — the workspace volume's pages count against the container's
- * limit.
+ * The memory request was sized under Buildkite, whose workspace was a
+ * memory-backed volume charged to the pod. Woodpecker's workspace is a claim
+ * on the CI node's NVMe, so part of this reservation no longer covers
+ * anything; it is kept until measured usage says what to lower it to.
  */
 export const VERIFY_TIER: ResourceTier = {
   cpuRequest: "1",
@@ -99,4 +100,21 @@ export const BROWSER_TIER: ResourceTier = {
   memoryLimit: "12Gi",
   ephemeralStorageRequest: "2Gi",
   ephemeralStorageLimit: "20Gi",
+};
+
+/**
+ * A step's services -- the databases and daemons it talks to by hostname.
+ *
+ * Each is its own pod, admitted by Kueue before its step, so its request is
+ * reserved for as long as the step waits for quota. Kept small for that
+ * reason: `check-ci-admission-budget.ts` proves that every in-flight
+ * workflow's admitted services together can never starve a step.
+ */
+export const SERVICE_TIER: ResourceTier = {
+  cpuRequest: "250m",
+  cpuLimit: "2",
+  memoryRequest: "512Mi",
+  memoryLimit: "2Gi",
+  ephemeralStorageRequest: "1Gi",
+  ephemeralStorageLimit: "5Gi",
 };

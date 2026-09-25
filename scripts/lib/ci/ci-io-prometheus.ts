@@ -172,12 +172,12 @@ export function filterPrometheusIoMetrics(
  * packages/homelab/.../monitoring/rules/woodpecker.ts, which scopes the
  * recording rules themselves.
  */
-const POD_PATTERN = "wp-[0-9a-hjkmnp-tv-z]{26}-[0-9]+-step-[0-9]+";
+const POD_PATTERN = "wp-[0-9a-hjkmnp-tv-z]{26}";
 export const CI_RECORDED_PARENT_WRITES_BY_JOB_METRIC =
   "woodpecker:pod_parent_fs_writes_bytes_by_job_total";
-const RAW_PARENT_SELECTOR = `namespace="woodpecker",container="",id=~"/kubepods.*pod[^/]+$",pod=~"${POD_PATTERN}"`;
-const RAW_NETWORK_SELECTOR = `namespace="woodpecker",container="",pod=~"${POD_PATTERN}"`;
-const RECORDING_SELECTOR = `namespace="woodpecker",pod=~"${POD_PATTERN}"`;
+const RAW_PARENT_SELECTOR = `namespace="woodpecker-ci",container="",id=~"/kubepods.*pod[^/]+$",pod=~"${POD_PATTERN}"`;
+const RAW_NETWORK_SELECTOR = `namespace="woodpecker-ci",container="",pod=~"${POD_PATTERN}"`;
+const RECORDING_SELECTOR = `namespace="woodpecker-ci",pod=~"${POD_PATTERN}"`;
 
 function parentLastSampleQuery(range: string): string {
   // Pin the subquery to the cAdvisor scrape interval so Prometheus's longer

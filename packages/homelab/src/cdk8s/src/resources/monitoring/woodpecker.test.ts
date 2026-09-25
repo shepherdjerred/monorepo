@@ -100,10 +100,10 @@ function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
     `maintenance_job="${CI_BUN_CACHE_GC_ACTIVITY}"`,
     "kubernetes_maintenance_last_success_timestamp_seconds",
     `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      maintenance_job="${CI_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
-    'temporal_worker_app_process_start_time_seconds{\n        namespace="woodpecker",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-    'kube_pod_start_time{\n        namespace="woodpecker",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-    'kube_deployment_status_replicas_available{\n        namespace="woodpecker",\n        deployment="temporal-maintenance-worker"\n      }',
-    'up{\n        namespace="woodpecker",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
+    'temporal_worker_app_process_start_time_seconds{\n        namespace="woodpecker-ci",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+    'kube_pod_start_time{\n        namespace="woodpecker-ci",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+    'kube_deployment_status_replicas_available{\n        namespace="woodpecker-ci",\n        deployment="temporal-maintenance-worker"\n      }',
+    'up{\n        namespace="woodpecker-ci",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
     'condition="Progressing",\n        status="false"',
     'reason="NewReplicaSetAvailable"',
   ]);
@@ -220,7 +220,7 @@ describe("Woodpecker monitoring manifests", () => {
       labels: {
         severity: "warning",
         category: "ci",
-        namespace: "woodpecker",
+        namespace: "woodpecker-ci",
       },
     });
     expect(bunCacheWarningExpr).toContain(
@@ -235,7 +235,7 @@ describe("Woodpecker monitoring manifests", () => {
       labels: {
         severity: "critical",
         category: "ci",
-        namespace: "woodpecker",
+        namespace: "woodpecker-ci",
       },
     });
     expect(bunCacheCriticalExpr).toContain("> 0.9");
@@ -245,7 +245,7 @@ describe("Woodpecker monitoring manifests", () => {
       labels: {
         severity: "warning",
         category: "ci",
-        namespace: "woodpecker",
+        namespace: "woodpecker-ci",
       },
     });
     assertCollectorStaleExpression(collectorStale);

@@ -20,9 +20,10 @@ import type { TaintedNode } from "cdk8s-plus-31";
  * - Per-node system/observability pods (monitoring collectors, CSI node
  *   plugin) — they TOLERATE the taint so liskov is monitored and can
  *   provision volumes, but are not pinned to it.
- * - Woodpecker CI step pods — they tolerate AND select the node
- *   (woodpecker.ts pod-spec-patch), so CI runs only on liskov and liskov
- *   runs only CI.
+ * - Woodpecker CI pods — they tolerate AND select the node (the agent's pod
+ *   defaults in resources/woodpecker/agent.ts, enforced by
+ *   resources/woodpecker/ci-pod-guard.ts), so CI runs only on liskov and
+ *   liskov runs only CI.
  */
 export const PROD_NODE_HOSTNAME = "torvalds";
 
@@ -38,7 +39,7 @@ export const CI_TAINT_KEY = "ci";
 export const CI_TAINT_VALUE = "only";
 
 /**
- * Raw Kubernetes toleration object for Helm values and pod-spec-patch use.
+ * Raw Kubernetes toleration object for Helm values and agent pod defaults.
  * Keep in sync with ciNodeTaintedNode below.
  */
 export const CI_NODE_TOLERATION = {

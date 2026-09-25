@@ -159,8 +159,9 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(2);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(2);
+    // PVC backup, ArgoCD Application, and the CI pod guard.
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(3);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(3);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {
@@ -203,6 +204,41 @@ describe("PVC backup policy", () => {
         expression: "!has(object.metadata.deletionTimestamp)",
       },
     ]);
+  });
+
+  /**
+   * Woodpecker names each workspace claim after its workflow, so no inventory
+   * can list them; they are classified by class and namespace instead. Scoped
+   * that tightly so the rule cannot excuse any other unlisted claim.
+   */
+  it("excludes CI workspace claims by class, only in the CI namespace", () => {
+    const app = new App();
+    const chart = new Chart(app, "pvc-backup-admission");
+    createPvcBackupAdmissionPolicies(chart);
+    const variables = parseAllDocuments(app.synthYaml())
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("ValidatingAdmissionPolicy"),
+            spec: z.object({
+              variables: z.array(
+                z.object({ name: z.string(), expression: z.string() }),
+              ),
+            }),
+          })
+          .safeParse(document.toJS()),
+      )
+      .find((result) => result.success)?.data?.spec.variables;
+    const expression = (name: string): string => {
+      const found = variables?.find((variable) => variable.name === name);
+      if (found === undefined) throw new Error(`no ${name} variable`);
+      return found.expression;
+    };
+
+    const workspace =
+      "object.metadata.namespace == 'woodpecker-ci' && has(object.spec.storageClassName) && object.spec.storageClassName == 'ci-workspace'";
+    expect(expression("excluded")).toContain(`|| (${workspace})`);
+    expect(expression("included")).not.toContain("ci-workspace");
   });
 
   it("fails synthesis for an unclassified ZFS PVC", () => {

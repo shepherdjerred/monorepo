@@ -34,10 +34,20 @@ const RuleSchema = z
   })
   .loose();
 
+const CiPeerSchema = z.object({
+  podSelector: z.object({
+    matchExpressions: z.array(
+      z.object({ key: z.string(), operator: z.string() }),
+    ),
+  }),
+});
+
 const NetworkPolicySchema = z
   .object({
     kind: z.literal("NetworkPolicy"),
-    metadata: z.object({ name: z.string() }).loose(),
+    metadata: z
+      .object({ name: z.string(), namespace: z.string().optional() })
+      .loose(),
     spec: z
       .object({
         podSelector: z
@@ -104,16 +114,48 @@ describe("CI step pod network boundary", () => {
     expect(policy.spec.podSelector.matchLabels).toBeUndefined();
   });
 
+  it("lives with the CI pods", () => {
+    expect(stepPolicy().metadata.namespace).toBe("woodpecker-ci");
+  });
+
   it("constrains both directions", () => {
     expect(stepPolicy().spec.policyTypes).toEqual(["Egress", "Ingress"]);
   });
 
   /**
-   * Nothing dials a step pod: the agent drives steps through the Kubernetes
-   * API, and a step's service containers share its pod and use localhost.
+   * A step's services are separate pods it reaches by hostname, so CI pods
+   * must reach each other -- and nothing else may reach them. The agent
+   * drives pods through the Kubernetes API, not the pod network.
    */
-  it("accepts no ingress", () => {
-    expect(stepPolicy().spec.ingress).toEqual([]);
+  it("accepts ingress only from other CI pods", () => {
+    const ingress = stepPolicy().spec.ingress ?? [];
+    expect(ingress).toHaveLength(1);
+    const peers = z.object({ from: z.array(CiPeerSchema) }).parse(ingress[0]);
+    expect(peers.from).toEqual([
+      {
+        podSelector: {
+          matchExpressions: [
+            { key: "ci.sjer.red/step-key", operator: "Exists" },
+          ],
+        },
+      },
+    ]);
+  });
+
+  it("reaches other CI pods, and no pod outside the namespace", () => {
+    const rules = (stepPolicy().spec.egress ?? []).filter(
+      (rule) => rule.ports === undefined,
+    );
+    expect(rules).toHaveLength(1);
+    expect(rules[0]?.to).toEqual([
+      {
+        podSelector: {
+          matchExpressions: [
+            { key: "ci.sjer.red/step-key", operator: "Exists" },
+          ],
+        },
+      },
+    ]);
   });
 
   it("allows DNS", () => {

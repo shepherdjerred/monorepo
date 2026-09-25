@@ -1,6 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
+import { MEDIUM_TIER, SERVICE_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
@@ -12,8 +12,9 @@ import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
  * rewrote with yq at start-up. That rewrite existed only because the live
  * ConfigMap lagged any PR that changed the Tempo version.
  *
- * Woodpecker services share the step's workspace, so the config is simply a
- * file in the repository next to the suite that uses it. The ConfigMap, the
+ * Woodpecker services are separate pods that mount the step's workspace, so
+ * the config is simply a file in the repository next to the suite that uses
+ * it, and the suite reaches each service by its name as a hostname. The ConfigMap, the
  * yq init container, and the version-lag problem all go away together.
  *
  * The bucket creation that was a second init container moves into the step,
@@ -33,9 +34,10 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
       commands: [
         ". ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/llm-observability'",
-        // Services start with the step, not before it, so wait rather than
-        // assume. `mc alias set` is the readiness probe MinIO actually has.
-        `until mc alias set local http://127.0.0.1:9000 ${MINIO_ROOT} ${MINIO_ROOT}; do sleep 1; done`,
+        // Services are separate pods reached by name, and start with the step
+        // rather than before it, so wait rather than assume. `mc alias set` is
+        // the readiness probe MinIO actually has.
+        `until mc alias set local http://minio:9000 ${MINIO_ROOT} ${MINIO_ROOT}; do sleep 1; done`,
         `mc mb --ignore-existing local/${ARCHIVE_BUCKET}`,
         "bun --no-install run --cwd packages/llm-observability test:e2e:ci",
       ],
@@ -47,6 +49,7 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
           name: "tempo",
           image: images.catalog["grafana/tempo"],
           commands: [`/tempo -config.file=$CI_WORKSPACE/${TEMPO_CONFIG}`],
+          resources: SERVICE_TIER,
         },
         {
           name: "minio",
@@ -56,6 +59,7 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
             MINIO_ROOT_USER: MINIO_ROOT,
             MINIO_ROOT_PASSWORD: MINIO_ROOT,
           },
+          resources: SERVICE_TIER,
         },
       ],
       changed: {
