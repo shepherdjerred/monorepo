@@ -254,6 +254,7 @@ test("keeps direct TypeScript on 6 without constraining the native alias", async
   expect(rule).toEqual({
     description:
       "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+    groupName: "typescript",
     matchManagers: ["bun", "npm"],
     matchDepNames: ["typescript"],
     allowedVersions: "<7",
@@ -340,6 +341,11 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
   expect(pins).toEqual([
     { depName: "uv", currentValue: expect.stringMatching(/^\d/) },
     { depName: "yt-dlp/yt-dlp", currentValue: expect.stringMatching(/^\d/) },
+    {
+      depName: "realm/SwiftLint",
+      currentValue: expect.stringMatching(/^\d/),
+    },
+    { depName: "uv", currentValue: expect.stringMatching(/^\d/) },
   ]);
 
   const ytDlpRule = config.packageRules.find(
@@ -354,6 +360,151 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
     matchDepNames: ["yt-dlp/yt-dlp"],
     matchFileNames: ["packages/streambot/Dockerfile"],
   });
+});
+
+test("keeps the SwiftLint version pin synchronized between the ci-image Dockerfile and its toolchain-script fallback", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+
+  const dockerfileManager = config.customManagers.find((candidate) =>
+    candidate.managerFilePatterns.includes(".buildkite/ci-image/Dockerfile"),
+  );
+  if (dockerfileManager === undefined) {
+    throw new Error("ci-image Dockerfile ARG Renovate manager is missing");
+  }
+  const dockerfileExpression = dockerfileManager.matchStrings[0];
+  if (dockerfileExpression === undefined) {
+    throw new Error("ci-image Dockerfile ARG matcher is missing");
+  }
+  const dockerfileSource = await Bun.file(
+    `${root}/.buildkite/ci-image/Dockerfile`,
+  ).text();
+  const dockerfilePin = [
+    ...dockerfileSource.matchAll(new RegExp(dockerfileExpression, "gm")),
+  ].find((match) => match.groups?.["depName"] === "realm/SwiftLint");
+  const dockerfileValue = dockerfilePin?.groups?.["currentValue"];
+  if (dockerfileValue === undefined) {
+    throw new Error("ci-image Dockerfile did not yield a realm/SwiftLint pin");
+  }
+
+  const scriptManager = config.customManagers.find((candidate) =>
+    candidate.managerFilePatterns.includes(".buildkite/scripts/toolchain.sh"),
+  );
+  if (scriptManager === undefined) {
+    throw new Error("toolchain.sh SwiftLint Renovate manager is missing");
+  }
+  const scriptExpression = scriptManager.matchStrings[0];
+  if (scriptExpression === undefined) {
+    throw new Error("toolchain.sh SwiftLint matcher is missing");
+  }
+  const scriptSource = await Bun.file(
+    `${root}/.buildkite/scripts/toolchain.sh`,
+  ).text();
+  const scriptMatch = new RegExp(scriptExpression).exec(scriptSource);
+  const scriptValue = scriptMatch?.groups?.["currentValue"];
+  if (scriptValue === undefined) {
+    throw new Error("toolchain.sh did not yield a SwiftLint pin");
+  }
+
+  expect(scriptValue).toBe(dockerfileValue);
+  expect(scriptValue).toBe("0.61.0");
+
+  const swiftlintRule = config.packageRules.find(
+    (candidate) => candidate.groupName === "SwiftLint",
+  );
+  expect(swiftlintRule).toEqual({
+    description:
+      "Keep the SwiftLint version pin synchronized between the ci-image Dockerfile ARG and its toolchain-script fallback",
+    groupName: "SwiftLint",
+    matchDepNames: ["realm/SwiftLint"],
+  });
+});
+
+test("extracts an Apple codesign version pin from the macOS cross-compiler Dockerfile", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const manager = config.customManagers.find((candidate) =>
+    candidate.managerFilePatterns.includes(
+      "packages/macos-cross-compiler/Dockerfile",
+    ),
+  );
+  if (manager === undefined) {
+    throw new Error("Apple codesign Renovate manager is missing");
+  }
+  const expression = manager.matchStrings[0];
+  if (expression === undefined) {
+    throw new Error("Apple codesign matcher is missing");
+  }
+  const source = await Bun.file(
+    `${root}/packages/macos-cross-compiler/Dockerfile`,
+  ).text();
+  const match = new RegExp(expression).exec(source);
+  expect(match?.groups?.["depName"]).toBe("indygreg/apple-platform-rs");
+  expect(match?.groups?.["currentValue"]).toBe("0.29.0");
+});
+
+test("extracts identical Swift base image digest pins from both sources", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const manager = config.customManagers.find(
+    (candidate) => candidate.depNameTemplate === "swift",
+  );
+  if (manager === undefined) {
+    throw new Error("Swift base image Renovate manager is missing");
+  }
+
+  const sources = [
+    await Bun.file(`${root}/packages/macos-cross-compiler/sdks.json`).text(),
+    await Bun.file(`${root}/packages/macos-cross-compiler/Dockerfile`).text(),
+  ];
+  expect(manager.matchStrings).toHaveLength(2);
+  expect(manager.matchStrings[0]).toContain("swiftImage");
+  expect(manager.matchStrings[1]).toContain("SWIFT_IMAGE");
+
+  const expressions = [
+    /"swiftImage":\s*"swift:(?<currentValue>[^@"]+)@(?<currentDigest>sha256:[a-f0-9]{64})"/,
+    /ARG\s+SWIFT_IMAGE=swift:(?<currentValue>[^@\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})/,
+  ];
+  const pins = expressions.flatMap((expression, index) => {
+    const source = sources[index];
+    if (source === undefined) {
+      throw new Error(
+        `Missing Swift source for expression ${index.toString()}`,
+      );
+    }
+    const match = expression.exec(source);
+    const currentValue = match?.groups?.["currentValue"];
+    const currentDigest = match?.groups?.["currentDigest"];
+    if (currentValue === undefined || currentDigest === undefined) {
+      throw new Error(
+        `Swift expression ${index.toString()} did not extract a complete pin`,
+      );
+    }
+    return [`${currentValue}@${currentDigest}`];
+  });
+
+  expect(manager.managerFilePatterns).toEqual([
+    "packages/macos-cross-compiler/sdks.json",
+    "packages/macos-cross-compiler/Dockerfile",
+  ]);
+  expect(pins[0]).toEqual(pins[1]);
+});
+
+test("groups eslint and prettier bumps across the workspace into single PRs", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const eslintRule = config.packageRules.find(
+    (candidate) => candidate.groupName === "eslint",
+  );
+  const prettierRule = config.packageRules.find(
+    (candidate) => candidate.groupName === "prettier",
+  );
+  expect(eslintRule?.matchDepNames).toEqual(["eslint"]);
+  expect(prettierRule?.matchDepNames).toEqual(["prettier"]);
 });
 
 test("extracts identical Emscripten tag and digest pins from both sources", async () => {

@@ -23,7 +23,7 @@
     "fast-xml-validator": "1.4.2",
     "istanbul-lib-instrument": "6.0.3",
     "minimatch": "10.2.6",
-    "prettier": "3.9.9",
+    "prettier": "^3.9.9",
     "yaml": "^2.8.3",
     "zod": "^4.4.3"
   },

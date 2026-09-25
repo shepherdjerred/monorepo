@@ -3,7 +3,7 @@
   "27": {
     "xcode": "27.0",
     "xcodeBuild": "27A5228h",
-    "swiftImage": "swift:6.4.0-noble",
+    "swiftImage": "swift:6.4.0-noble@sha256:64bab762bc73a3fda6d9ebc559258bd6d7660c10a705bb25ecacad2f99d066f9",
     "sha256": "4363ef0a7cdb0f84c0f729b036d1aa076b17cbf843b2a2a50c59e50b720da9df",
     "latest": true
   }

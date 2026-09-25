@@ -71,7 +71,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "1.4.2",
     "@types/node": "^26.1.1",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "5.0.1",
