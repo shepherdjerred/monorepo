@@ -11,6 +11,7 @@ import {
   publishOpsIngest,
   recordSourceSuccesses,
   redactFailure,
+  SOURCE_NOT_COLLECTED,
   triggerDigest,
   type OpsCollectorOutcome,
   type OpsPoster,
@@ -105,15 +106,26 @@ describe("buildOpsIngest", () => {
     );
   });
 
-  test("a missing or doubled source is a broken workflow contract", () => {
-    expect(() =>
-      buildOpsIngest({
-        outcomes: outcomes().slice(1),
-        now,
-        lastSuccess: new Map(),
-        secrets: [],
-      }),
-    ).toThrow(/cover each source once/);
+  test("a source this workflow build does not report is a failed source", () => {
+    const withoutTraces = outcomes().filter(
+      (outcome) => outcome.source !== "traces",
+    );
+    const ingest = buildOpsIngest({
+      outcomes: withoutTraces,
+      now,
+      lastSuccess: new Map(),
+      secrets: [],
+    });
+    expect(
+      ingest.snapshot.sources.find((status) => status.source === "traces"),
+    ).toMatchObject({ ok: false, error: SOURCE_NOT_COLLECTED });
+    expect(findSection(ingest.snapshot, "observability").severity).toBe(
+      "unknown",
+    );
+    expect(ingest.snapshot.sources).toHaveLength(SOURCE_IDS.length);
+  });
+
+  test("a doubled source is a broken workflow contract", () => {
     expect(() =>
       buildOpsIngest({
         outcomes: [...outcomes(), ok("ai")],
@@ -121,7 +133,7 @@ describe("buildOpsIngest", () => {
         lastSuccess: new Map(),
         secrets: [],
       }),
-    ).toThrow(/cover each source once/);
+    ).toThrow(/report each source once; duplicated ai/);
   });
 });
 

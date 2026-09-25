@@ -88,6 +88,8 @@ describe("ops snapshot workflow", () => {
       ]);
       expect(attempts.get("linear")).toBe(2);
       expect(attempts.get("alerts")).toBe(1);
+      // New runs take the patched branch and collect traces.
+      expect(attempts.get("traces")).toBe(1);
     } finally {
       await environment.teardown();
     }

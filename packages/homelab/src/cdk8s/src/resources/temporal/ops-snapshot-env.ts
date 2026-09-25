@@ -16,6 +16,7 @@ export function opsSnapshotEnv(secret: ISecret): Record<string, EnvValue> {
       "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
     ),
     LOKI_URL: EnvValue.fromValue("http://loki.loki.svc.cluster.local:3100"),
+    TEMPO_URL: EnvValue.fromValue("http://tempo.tempo.svc.cluster.local:3200"),
     OPS_INGEST_TOKEN: EnvValue.fromSecretValue({
       secret,
       key: "OPS_INGEST_TOKEN",

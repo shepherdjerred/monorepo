@@ -21,6 +21,7 @@ export const SOURCE_IDS = [
   "posthog",
   "probes",
   "logs",
+  "traces",
   "maintenance",
   "ai",
 ] as const;

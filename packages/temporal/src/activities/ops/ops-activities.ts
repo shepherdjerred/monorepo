@@ -6,6 +6,7 @@ import type { Fetch } from "@shepherdjerred/ops-clients/http.ts";
 import { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import { LinearClient } from "@shepherdjerred/ops-clients/linear.ts";
 import { LokiClient } from "@shepherdjerred/ops-clients/loki.ts";
+import { TempoClient } from "@shepherdjerred/ops-clients/tempo.ts";
 import { PostHogClient } from "@shepherdjerred/ops-clients/posthog.ts";
 import { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
@@ -32,6 +33,7 @@ import {
   collectKubernetes,
   collectLinear,
   collectLogs,
+  collectTraces,
   collectMaintenance,
   collectPostHog,
   collectProbes,
@@ -225,6 +227,14 @@ export const opsActivities = {
     return await timed("logs", (context) =>
       collectLogs(
         new LokiClient({ baseUrl: requiredEnvironment("LOKI_URL") }),
+        context,
+      ),
+    );
+  },
+  async collectOpsTraces(): Promise<OpsSourceResult> {
+    return await timed("traces", (context) =>
+      collectTraces(
+        new TempoClient({ baseUrl: requiredEnvironment("TEMPO_URL") }),
         context,
       ),
     );

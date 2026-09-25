@@ -32,7 +32,7 @@ flowchart LR
   accTitle: Operations overview data flow
   accDescr: A Temporal schedule collects every upstream into one snapshot and posts it to the ops dashboard, which stores it in SQLite. The web UI, TRMNL, the email digest, and the toolkit CLI read that snapshot. The Mac pushes AI usage metrics to Prometheus through the Alloy gateway, and the collector reads them back from Prometheus.
 
-  SRC[Upstreams\nAlertmanager, Kubernetes, Argo CD, Talos,\nGitHub, Renovate, Linear, Bugsink,\nPostHog, Loki, Prometheus]
+  SRC[Upstreams\nAlertmanager, Kubernetes, Argo CD, Talos,\nGitHub, Renovate, Linear, Bugsink,\nPostHog, Loki, Tempo, Prometheus]
   TEMPORAL[Temporal ops-snapshot\nevery 5 minutes]
   PROM[(Prometheus)]
   DASH[Ops dashboard\nalert-dashboard service]
@@ -92,6 +92,13 @@ its section renders `unknown`. The rest of the snapshot still publishes. At
 read time the dashboard applies a staleness budget of three intervals. An old
 snapshot degrades to `unknown` instead of staying green. A Prometheus rule
 alerts when publishing stops.
+
+Adding a source spans two deploys. Collector activities update with every
+release, but the snapshot workflow is pinned to the central Worker
+Deployment version. Until that version advances, a newly declared source is
+reported as failed ("not collected by this workflow build") rather than
+blocking the whole snapshot. Traces arrived this way: error and slow root
+traces come from Tempo's TraceQL search, grouped by root service.
 
 ## The service catalog is the join key
 
