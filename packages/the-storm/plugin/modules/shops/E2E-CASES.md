@@ -31,17 +31,31 @@ because MockBukkit does not implement the API or gets it wrong.
 The trade logic behind them (lots, daily limits, pricing, refunds) is unit
 tested in `CatalogTradesTest`.
 
-| Case                                                            | Expect                                                                                                                                                                        |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/shop reynolds-supplies` as an admin (Java)                    | A list dialog titled "Reynold's Supplies" with the greeting and one button per item ("16 Coal"), prices in each tooltip, a Close button                                       |
-| Click an item                                                   | Item dialog: the item icon, "Buy 48 CR · Sell 16 CR for 16 Coal.", a "Trades of 16 Coal" slider 1..16, Buy and Sell buttons, Back                                             |
-| Buy 3 trades                                                    | 48 coal, 144 crystals charged, the item dialog reopens                                                                                                                        |
-| Sell emeralds to `braxtons-exchange` past the daily limit (128) | Refused with "You can trade N more Emerald today"; the allowance line in the dialog counts down                                                                               |
-| Daily limit reset                                               | After midnight in `catalogs.dailyResetZone` (America/Los_Angeles) the allowance is full again                                                                                 |
-| Tampered dialog response (lots = 0, 999, NaN)                   | "Choose between 1 and 16 trades."; nothing moves                                                                                                                              |
-| Double-click Buy (callback used twice)                          | The second click does nothing (`ClickCallback` uses = 1)                                                                                                                      |
-| Bedrock player opens a catalog (Geyser → Floodgate form)        | The list becomes a simple form of buttons; the item dialog becomes a custom form with the slider and an action dropdown; the item icon is missing but the text names the item |
-| NPC module calls `ServerShops.open(player, id)`                 | Same dialogs as `/shop`                                                                                                                                                       |
+| Case                                                                                      | Expect                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/shop reynolds-supplies` as an admin (Java)                                              | A list dialog titled "Reynold's Supplies" with the greeting and one button per item ("16 Coal"), prices in each tooltip, a Close button                                       |
+| Click an item                                                                             | Item dialog: the item icon, "Buy 48 CR · Sell 16 CR for 16 Coal.", a "Trades of 16 Coal" slider 1..16, Buy and Sell buttons, Back                                             |
+| Buy 3 trades                                                                              | 48 coal, 144 crystals charged, the item dialog reopens                                                                                                                        |
+| Sell emeralds to `braxtons-exchange` past the daily limit (128)                           | Refused with "You can trade N more Emerald today"; the allowance line in the dialog counts down                                                                               |
+| Daily limit reset                                                                         | After midnight in `catalogs.dailyResetZone` (America/Los_Angeles) the allowance is full again                                                                                 |
+| Walk more than `catalogs.maxDistance` (8) blocks from the shopkeeper, then click a button | "You are too far from ... to trade."; nothing moves                                                                                                                           |
+| Tampered dialog response (lots = 0, 999, NaN)                                             | "Choose between 1 and 16 trades."; nothing moves                                                                                                                              |
+| Double-click Buy (callback used twice)                                                    | The second click does nothing (`ClickCallback` uses = 1)                                                                                                                      |
+| Bedrock player opens a catalog (Geyser → Floodgate form)                                  | The list becomes a simple form of buttons; the item dialog becomes a custom form with the slider and an action dropdown; the item icon is missing but the text names the item |
+| NPC module calls `ServerShops.open(player, id)`                                           | Same dialogs as `/shop`                                                                                                                                                       |
+
+## Settlement under real latency
+
+MockBukkit and the unit tests cover the logic with a fake ledger; these need the
+real server's scheduler, ledger thread and players.
+
+| Case                                                                  | Expect                                                                                       |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Customer logs off right after clicking Buy                            | Charge refunded; nothing given to the offline inventory                                      |
+| Customer logs off right after clicking Sell, and the owner cannot pay | Items drop where the customer traded                                                         |
+| Server stops (`/stop`) with a trade in flight                         | Trade settles during shutdown, or a `shops_refund_failure` row reads "unsettled at shutdown" |
+| Owner has the shop chest open when a customer trades                  | The owner's chest screen closes; the trade settles                                           |
+| Two customers click two signs on one double chest in the same tick    | One trades, the other is told the shop is busy                                               |
 
 ## Operations
 

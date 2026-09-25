@@ -190,6 +190,41 @@ final class ShopGuardListenerTest extends ShopsFixture {
     assertThat(plainTarget.isAllowed()).isTrue();
   }
 
+  /** Places a chest east of {@code chest}, joined to it as the right half of a double chest. */
+  private BlockPlaceEvent joinChestTo(Player player, Block chest) {
+    var joined = chest.getRelative(BlockFace.EAST);
+    var replaced = joined.getState();
+    joined.setType(Material.CHEST);
+    var data = (org.bukkit.block.data.type.Chest) joined.getBlockData();
+    data.setFacing(BlockFace.NORTH);
+    data.setType(org.bukkit.block.data.type.Chest.Type.RIGHT);
+    joined.setBlockData(data);
+    var event =
+        new BlockPlaceEvent(
+            joined,
+            replaced,
+            joined.getRelative(BlockFace.DOWN),
+            ItemStack.of(Material.CHEST),
+            player,
+            true,
+            EquipmentSlot.HAND);
+    server.getPluginManager().callEvent(event);
+    return event;
+  }
+
+  @Test
+  void othersCannotJoinAChestOntoAShopChest() {
+    var alice = player("Alice", 1);
+    var bob = player("Bob", 0);
+    var chest = chest(0);
+    shop(alice, chest, "", "16", "B 50", "coal");
+    messages(bob);
+
+    assertThat(joinChestTo(bob, chest).isCancelled()).isTrue();
+    assertThat(messages(bob)).containsExactly("[Shop]: That would reach into Alice.");
+    assertThat(joinChestTo(alice, chest).isCancelled()).isFalse();
+  }
+
   @Test
   void hoppersMayStandNextToAShopButDoNothing() {
     var alice = player("Alice", 1);

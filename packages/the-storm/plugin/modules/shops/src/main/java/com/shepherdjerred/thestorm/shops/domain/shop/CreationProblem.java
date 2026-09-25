@@ -18,6 +18,14 @@ public sealed interface CreationProblem {
   /** Someone else's shop already trades from this container. */
   record ContainerTaken() implements CreationProblem {}
 
+  /**
+   * An admin shop whose prices would let players buy from one server shop and sell to another (or
+   * this one) in a loop.
+   *
+   * @param with the server shop it would loop with
+   */
+  record PriceLoop(String with) implements CreationProblem {}
+
   /** A sentence for the creator. */
   default String describe() {
     return switch (this) {
@@ -30,6 +38,10 @@ public sealed interface CreationProblem {
               + ", the most your Shopkeeper level allows.";
       case NoContainer() -> "Put the shop sign on a chest, barrel or copper chest.";
       case ContainerTaken() -> "Another player's shop already uses that container.";
+      case PriceLoop(var with) ->
+          "Those prices would let players trade in a loop with "
+              + with
+              + ": server shops never pay more per item than any server shop charges.";
     };
   }
 }
