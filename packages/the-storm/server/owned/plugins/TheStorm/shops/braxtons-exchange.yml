@@ -1,0 +1,50 @@
+# Braxton the banker buys emeralds and village trade goods, so the villager
+# economy and the crystal economy connect. He sells nothing, and his daily
+# limits keep trading halls from printing crystals. See reynolds-supplies.yml
+# for the entry format.
+id: braxtons-exchange
+name: Braxton's Exchange
+greeting: >-
+  Braxton adjusts his spectacles. "Emeralds, bottled experience, oddities from
+  the villages. I'll turn them into crystals, within reason."
+entries:
+  - item: emerald
+    quantity: 1
+    buy: null
+    sell: 12
+    dailyLimit: 128
+  - item: emerald_block
+    quantity: 1
+    buy: null
+    sell: 108
+    dailyLimit: 14
+  - item: experience_bottle
+    quantity: 4
+    buy: null
+    sell: 20
+    dailyLimit: 64
+  - item: ender_pearl
+    quantity: 4
+    buy: null
+    sell: 24
+    dailyLimit: 64
+  - item: bookshelf
+    quantity: 1
+    buy: null
+    sell: 20
+    dailyLimit: 16
+  - item: bell
+    quantity: 1
+    buy: null
+    sell: 150
+    dailyLimit: 2
+  - item: name_tag
+    quantity: 1
+    buy: null
+    sell: 40
+    dailyLimit: 8
+  - item: saddle
+    quantity: 1
+    buy: null
+    sell: 30
+    dailyLimit: 8

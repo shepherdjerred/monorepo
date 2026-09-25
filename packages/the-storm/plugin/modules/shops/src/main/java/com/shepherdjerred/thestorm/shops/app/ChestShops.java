@@ -1,0 +1,286 @@
+package com.shepherdjerred.thestorm.shops.app;
+
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
+import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.economy.app.AccountId;
+import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
+import com.shepherdjerred.thestorm.shops.domain.shop.CreationAttempt;
+import com.shepherdjerred.thestorm.shops.domain.shop.CreationProblem;
+import com.shepherdjerred.thestorm.shops.domain.shop.CreationRules;
+import com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint;
+import com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner;
+import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
+import com.shepherdjerred.thestorm.shops.domain.sign.OwnerLine;
+import com.shepherdjerred.thestorm.shops.domain.sign.ShopSignDraft;
+import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
+import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
+import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
+import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
+import java.time.InstantSource;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import org.slf4j.Logger;
+
+/**
+ * Sign shops: making them, setting their item, removing them, and trading at them. Keeps the
+ * in-memory registry and storage in step. Main thread only.
+ */
+public final class ChestShops {
+
+  private final ShopRegistry registry;
+  private final ShopStore store;
+  private final ShopLocks locks;
+  private final TradeEngine engine;
+  private final CreationRules rules;
+  private final OwnerNotices notices;
+  private final Executor mainThread;
+  private final InstantSource time;
+  private final Logger logger;
+
+  /**
+   * @param wiring the shared collaborators
+   * @param rules the creation rules with the configured limits
+   * @param notices tells online owners about trades
+   */
+  public ChestShops(Wiring wiring, CreationRules rules, OwnerNotices notices) {
+    this.registry = wiring.registry();
+    this.store = wiring.store();
+    this.locks = wiring.locks();
+    this.engine = wiring.engine();
+    this.mainThread = wiring.mainThread();
+    this.time = wiring.time();
+    this.logger = wiring.logger();
+    this.rules = rules;
+    this.notices = notices;
+  }
+
+  /**
+   * The collaborators every shop use case shares.
+   *
+   * @param registry the in-memory shops
+   * @param store storage
+   * @param locks trades in flight
+   * @param engine settles trades
+   * @param mainThread completes futures on the main thread
+   * @param time the clock
+   * @param logger for storage failures
+   */
+  public record Wiring(
+      ShopRegistry registry,
+      ShopStore store,
+      ShopLocks locks,
+      TradeEngine engine,
+      Executor mainThread,
+      InstantSource time,
+      Logger logger) {}
+
+  /**
+   * A sign a player wrote, with everything the creation rules look at.
+   *
+   * @param draft the parsed sign
+   * @param creator who wrote it
+   * @param admin whether they may make admin shops
+   * @param shopkeeperLevel their Shopkeeper level
+   * @param where the sign, and the shop container it hangs on (if any)
+   * @param item the item written on the sign, or empty for {@code ?}
+   */
+  public record Request(
+      ShopSignDraft draft,
+      Customer creator,
+      boolean admin,
+      int shopkeeperLevel,
+      Placement where,
+      Optional<ItemFingerprint> item) {}
+
+  /**
+   * Where a new shop goes.
+   *
+   * @param sign the sign block
+   * @param container the shop container the sign hangs on, if any
+   * @param containerBlocks every block of that container (both halves of a double chest)
+   */
+  public record Placement(
+      BlockPos sign, Optional<BlockPos> container, List<BlockPos> containerBlocks) {
+    public Placement {
+      containerBlocks = List.copyOf(containerBlocks);
+    }
+  }
+
+  /** Makes the shop the sign describes, or explains every reason it cannot. */
+  public Result<SignShop, List<CreationProblem>> create(Request request) {
+    var owner =
+        switch (request.draft().owner()) {
+          case OwnerLine.Creator() ->
+              new ShopOwner.Player(request.creator().id(), request.creator().name());
+          case OwnerLine.AdminShop() -> new ShopOwner.Admin();
+        };
+    var attempt =
+        new CreationAttempt(
+            request.draft().owner(),
+            request.admin(),
+            request.shopkeeperLevel(),
+            registry.ownedBy(request.creator().id()),
+            containerState(owner, request.where()));
+    var problems = rules.check(attempt);
+    if (!problems.isEmpty()) {
+      return Result.err(problems);
+    }
+    var shop =
+        new SignShop(
+            registry.nextId(),
+            request.where().sign(),
+            request.where().container(),
+            owner,
+            request.draft().quantity(),
+            request.draft().prices(),
+            request.item(),
+            time.instant());
+    registry.add(shop);
+    var _ =
+        store
+            .saveShop(shop)
+            .whenCompleteAsync(
+                (id, error) -> {
+                  if (error != null) {
+                    logger.error("Could not save shop {}; removing it", shop.id(), error);
+                    registry.remove(shop.id());
+                  }
+                },
+                mainThread);
+    return Result.ok(shop);
+  }
+
+  private CreationAttempt.Container containerState(ShopOwner owner, Placement where) {
+    if (where.container().isEmpty()) {
+      return CreationAttempt.Container.NONE;
+    }
+    var mine =
+        where.containerBlocks().stream()
+            .allMatch(
+                block ->
+                    switch (owner) {
+                      case ShopOwner.Player(var id, _) -> registry.ownsAllOn(id, block);
+                      case ShopOwner.Admin() ->
+                          registry.tradingFrom(block).stream().allMatch(SignShop::isAdmin);
+                    });
+    return mine ? CreationAttempt.Container.FREE : CreationAttempt.Container.TAKEN;
+  }
+
+  /** Sets the item of a {@code ?} shop. */
+  public SignShop setItem(SignShop shop, ItemFingerprint item) {
+    if (shop.item().isPresent()) {
+      throw new IllegalStateException("shop " + shop.id() + " already has an item");
+    }
+    var updated = shop.withItem(item);
+    registry.replace(updated);
+    Background.logFailure(
+        store.setItem(shop.id(), item), logger, "save the item of shop " + shop.id());
+    return updated;
+  }
+
+  /** Removes a shop whose sign or container was broken. */
+  public void remove(SignShop shop) {
+    registry.remove(shop.id());
+    Background.logFailure(store.deleteShop(shop.id()), logger, "delete shop " + shop.id());
+  }
+
+  /**
+   * A customer's click on a shop sign.
+   *
+   * @param shop the shop
+   * @param direction buying or selling
+   * @param customer who clicked
+   * @param customerItems the customer's inventory
+   * @param shopItems the shop's container, or {@link Holdings#UNLIMITED} for an admin shop
+   */
+  public record Visit(
+      SignShop shop,
+      Direction direction,
+      Customer customer,
+      Holdings customerItems,
+      Holdings shopItems) {}
+
+  /** Trades one lot at a shop sign. */
+  public CompletableFuture<TradeOutcome> trade(Visit visit) {
+    var shop = visit.shop();
+    var direction = visit.direction();
+    var customer = visit.customer();
+    var refusal = refusal(shop, direction, customer);
+    if (refusal.isPresent()) {
+      return completedFuture(new TradeOutcome.Refused(refusal.orElseThrow()));
+    }
+    var lease = locks.acquire(OptionalLong.of(shop.id()), customer.id());
+    if (lease.isEmpty()) {
+      return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
+    }
+    var price = shop.prices().forDirection(direction).orElseThrow();
+    var deal =
+        new Deal(
+            direction,
+            shop.quantity(),
+            Crystals.of(price.crystals()),
+            new Deal.Party(customer.account(), visit.customerItems()),
+            new Deal.Party(accountOf(shop.owner()), visit.shopItems()),
+            "shop:" + shop.id() + ":" + direction.id());
+    return engine
+        .execute(deal)
+        .whenComplete((outcome, error) -> lease.orElseThrow().release())
+        .thenApply(
+            outcome -> {
+              if (outcome instanceof TradeOutcome.Completed) {
+                journal(shop, direction, customer, price.crystals());
+              }
+              return outcome;
+            });
+  }
+
+  private Optional<TradeProblem> refusal(SignShop shop, Direction direction, Customer customer) {
+    if (shop.item().isEmpty()) {
+      return Optional.of(new TradeProblem.ItemNotSet());
+    }
+    if (shop.owner().isOwnedBy(customer.id())) {
+      return Optional.of(new TradeProblem.OwnShop());
+    }
+    if (shop.prices().forDirection(direction).isEmpty()) {
+      return Optional.of(new TradeProblem.NotOffered(direction));
+    }
+    return Optional.empty();
+  }
+
+  private void journal(SignShop shop, Direction direction, Customer customer, long price) {
+    var site =
+        switch (shop.owner()) {
+          case ShopOwner.Player(var owner, _) -> new TradeSite.Chest(shop.id(), owner);
+          case ShopOwner.Admin() -> new TradeSite.Admin(shop.id());
+        };
+    var trade =
+        new TradeRecord(
+            site,
+            customer.id(),
+            customer.name(),
+            direction,
+            shop.item().orElseThrow().material(),
+            shop.quantity(),
+            price,
+            time.instant());
+    var told =
+        switch (site) {
+          case TradeSite.Chest(_, var owner) -> notices.tellIfOnline(owner, trade);
+          case TradeSite.Admin(_), TradeSite.Catalog(_) -> true;
+        };
+    Background.logFailure(
+        store.recordTrade(trade, told), logger, "log a trade at shop " + shop.id());
+  }
+
+  static AccountId accountOf(ShopOwner owner) {
+    return switch (owner) {
+      case ShopOwner.Player(var id, _) -> new AccountId.Player(id);
+      case ShopOwner.Admin() -> new AccountId.Server();
+    };
+  }
+}

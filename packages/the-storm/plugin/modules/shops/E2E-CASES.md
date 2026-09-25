@@ -1,0 +1,52 @@
+# Shops: cases for the real-server suite
+
+MockBukkit covers sign creation gating, the right-click container lock,
+breaking, hopper placement, explosions, the sign editor, buying and selling
+at chest and admin shops, `?` shops with enchanted items, owner notices and
+`/shop`. These cases need a real Paper 26.2 server (and Geyser for Bedrock),
+because MockBukkit does not implement the API or gets it wrong.
+
+## Chest shops
+
+| Case                                                                                                                     | Why not MockBukkit                                                                                       | Expect                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Double chest: a shop sign on one half; buy until the stock on the _other_ half is used                                   | MockBukkit chests are always single; `Chest#getInventory` is not a double inventory                      | Stock and room count both halves; items come out of either half                             |
+| Double chest: another player places a chest next to a shop chest                                                         | Needs real chest joining (`Chest.Type` LEFT/RIGHT)                                                       | Placement refused ("That would reach into Alice.")                                          |
+| Double chest: the other half's `LEFT`/`RIGHT` direction                                                                  | `DoubleChests.otherHalf` assumes vanilla's rule (LEFT joins clockwise of facing); verify on every facing | Breaking/opening either half is guarded                                                     |
+| Opening a shop container through any path other than a right-click (another plugin's `openInventory`)                    | `Inventory#getLocation` returns the world spawn in MockBukkit for block inventories                      | `InventoryOpenEvent` cancelled for non-owners; double chests resolve to one of their halves |
+| Hopper under a shop chest, placed by the owner on their own town land                                                    | `InventoryMoveItemEvent` guard uses `Inventory#getLocation` (see above)                                  | Items flow out                                                                              |
+| Hopper under a wilderness shop chest placed before the shop existed, by someone else                                     | same                                                                                                     | Items flow (both in the wilderness count as the same land); document for players            |
+| Hopper minecart on rails under a shop chest                                                                              | same                                                                                                     | No items flow                                                                               |
+| Hopper pushing into a shop chest (restocking)                                                                            | same                                                                                                     | Items flow, except while a trade is settling                                                |
+| Copper golem sorting from/into a shop copper chest                                                                       | Unknown whether Paper fires `InventoryMoveItemEvent` for golems                                          | Record what happens; if golems can pull stock, add a guard                                  |
+| A trade in flight: owner tries to open the chest, a hopper tries to move items, someone breaks the sign in the same tick | Needs real async ledger latency                                                                          | All refused until the trade settles                                                         |
+| Left-click (sell) on a shop sign in survival                                                                             | Real digging: cancelling the interact event must not let the sign break over time                        | Sign never breaks for non-owners; owners break it normally                                  |
+| Sign editor: right-click a shop sign (1.20+ editing)                                                                     | `PlayerOpenSignEvent` fired by the real client                                                           | No editor opens                                                                             |
+| Owner renames their account                                                                                              | Owner name is stored when the shop is made                                                               | Sign still shows the old name (known limitation)                                            |
+| Server restart with shops loaded                                                                                         | The registry loads from SQLite at enable                                                                 | Shops, locks and PDC stamps survive; trades work immediately                                |
+| Bedrock player (Geyser) buys and sells at a sign                                                                         | Geyser input mapping for left/right click                                                                | Tap = right-click buys; hold/break = left-click sells; confirm the sell gesture is usable   |
+
+## NPC catalogs (dialogs)
+
+`Dialog.create` is unimplemented in MockBukkit, so the dialogs are covered here.
+The trade logic behind them (lots, daily limits, pricing, refunds) is unit
+tested in `CatalogTradesTest`.
+
+| Case                                                            | Expect                                                                                                                                                                        |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/shop reynolds-supplies` as an admin (Java)                    | A list dialog titled "Reynold's Supplies" with the greeting and one button per item ("16 Coal"), prices in each tooltip, a Close button                                       |
+| Click an item                                                   | Item dialog: the item icon, "Buy 48 CR · Sell 16 CR for 16 Coal.", a "Trades of 16 Coal" slider 1..16, Buy and Sell buttons, Back                                             |
+| Buy 3 trades                                                    | 48 coal, 144 crystals charged, the item dialog reopens                                                                                                                        |
+| Sell emeralds to `braxtons-exchange` past the daily limit (128) | Refused with "You can trade N more Emerald today"; the allowance line in the dialog counts down                                                                               |
+| Daily limit reset                                               | After midnight in `catalogs.dailyResetZone` (UTC) the allowance is full again                                                                                                 |
+| Tampered dialog response (lots = 0, 999, NaN)                   | "Choose between 1 and 16 trades."; nothing moves                                                                                                                              |
+| Double-click Buy (callback used twice)                          | The second click does nothing (`ClickCallback` uses = 1)                                                                                                                      |
+| Bedrock player opens a catalog (Geyser → Floodgate form)        | The list becomes a simple form of buttons; the item dialog becomes a custom form with the slider and an action dropdown; the item icon is missing but the text names the item |
+| NPC module calls `ServerShops.open(player, id)`                 | Same dialogs as `/shop`                                                                                                                                                       |
+
+## Operations
+
+| Case                                                                                                | Expect                                                                |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| A catalog file with a typo, an unknown item, or a price that pays more than another catalog charges | The plugin refuses to start and lists every problem                   |
+| `shops_refund_failure` rows                                                                         | Only appear if the ledger refused a refund; staff settle them by hand |
