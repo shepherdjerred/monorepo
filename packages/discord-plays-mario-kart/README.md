@@ -76,7 +76,7 @@ records the pinned baseline, the patches, and the update procedure. Our changes:
 
 [`scripts/build-wasm.ts`](./scripts/build-wasm.ts) compiles
 the core into `packages/backend/assets/n64wasm/` using the pinned
-`emscripten/emsdk:6.0.5` image.
+`emscripten/emsdk:6.0.10` image.
 
 > **Do not define `window`.** The emscripten glue must detect
 > `ENVIRONMENT_IS_NODE` only; if it also detects a web environment its FS path

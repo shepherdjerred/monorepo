@@ -31,7 +31,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@ai-sdk/otel": "^1.0.107",
+    "@ai-sdk/otel": "1.0.114",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.222.0",
     "@opentelemetry/core": "^2.7.1",

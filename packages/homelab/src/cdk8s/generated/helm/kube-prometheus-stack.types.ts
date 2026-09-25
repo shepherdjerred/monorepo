@@ -2560,7 +2560,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.34.0"
+   * @default "v0.34.1"
    */
   tag?: string;
   /**
