@@ -12,6 +12,7 @@ import java.util.List;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
@@ -44,7 +45,49 @@ final class BlockListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onBreak(BlockBreakEvent event) {
     var block = event.getBlock();
-    check(event, event.getPlayer(), new Act(Action.BREAK, kinds.subject(block.getType())), block);
+    var player = event.getPlayer();
+    check(event, player, new Act(Action.BREAK, kinds.subject(block.getType())), block);
+    if (!event.isCancelled() && !mayDropSupported(player, block)) {
+      event.setCancelled(true);
+    }
+  }
+
+  /**
+   * Breaking a block drops what hangs on it: torches, signs, buttons and ladders beside it and item
+   * frames and paintings on it. On a border those can be on someone else's land, so they must be
+   * the player's to break too. Blocks away from a border (every neighbour on the same land) skip
+   * the check.
+   */
+  private boolean mayDropSupported(Player player, Block block) {
+    var own = guard.land(block);
+    var border = false;
+    for (var face : Redstone.FACES) {
+      var neighbour = block.getRelative(face);
+      var land = guard.land(neighbour);
+      if (land.sameOwnerAs(own)) {
+        continue;
+      }
+      border = true;
+      var type = neighbour.getType();
+      if (!type.isAir()
+          && !type.isSolid()
+          && !guard.permits(player, new Act(Action.BREAK, kinds.subject(type)), land)) {
+        return false;
+      }
+    }
+    return !border || mayDropHanging(player, block);
+  }
+
+  private boolean mayDropHanging(Player player, Block block) {
+    var center = block.getLocation().add(0.5, 0.5, 0.5);
+    for (var hanging : block.getWorld().getNearbyEntitiesByType(Hanging.class, center, 1.5)) {
+      var support = hanging.getLocation().getBlock().getRelative(hanging.getAttachedFace());
+      var act = new Act(Action.BREAK, EntityKinds.subject(hanging).orElse(Subject.ENTITY));
+      if (support.equals(block) && !guard.permits(player, act, guard.land(hanging))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)

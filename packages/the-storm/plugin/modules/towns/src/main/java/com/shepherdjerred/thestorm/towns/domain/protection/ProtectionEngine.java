@@ -72,8 +72,7 @@ public final class ProtectionEngine {
    * <ul>
    *   <li>themselves, their own pets and unprotected entities: always;
    *   <li>another player: where PvP is on for both;
-   *   <li>another player's pet: where PvP is on for both, and the pet's land lets the attacker hurt
-   *       animals;
+   *   <li>another player's pet: never, anywhere, bypass included;
    *   <li>anything else: where the land lets the attacker hurt entities.
    * </ul>
    */
@@ -81,9 +80,7 @@ public final class ProtectionEngine {
     return switch (victim) {
       case Victim.Self _, Victim.OwnPet _, Victim.Unprotected _ -> Verdict.allow();
       case Victim.OtherPlayer _ -> decidePvp(attacker, attackerLand, victimLand);
-      case Victim.OthersPet _ ->
-          decidePvp(attacker, attackerLand, victimLand)
-              .and(decide(attacker, new Act(Action.DAMAGE_ENTITY, Subject.ANIMAL), victimLand));
+      case Victim.OthersPet _ -> new Verdict.Deny(new Denial.NotYourPet());
       case Victim.Protected(var subject) ->
           decide(attacker, new Act(Action.DAMAGE_ENTITY, subject), victimLand);
     };

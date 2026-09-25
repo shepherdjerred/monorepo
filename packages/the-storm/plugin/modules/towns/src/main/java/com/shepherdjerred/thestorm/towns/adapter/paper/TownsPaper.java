@@ -46,7 +46,8 @@ public final class TownsPaper {
             new WorldListener(guard, kinds),
             new FireListener(guard, kinds),
             new MobListener(guard, kinds),
-            new WitherListener(state, culprits, config.witherBufferChunks()));
+            new WitherListener(state, culprits, config.witherBufferChunks()),
+            new ContactListener(guard, server));
     for (var listener : listeners) {
       server.getPluginManager().registerEvents(listener, context.plugin());
     }

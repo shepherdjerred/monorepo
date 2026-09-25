@@ -86,7 +86,9 @@ final class FireListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onEntityExplode(EntityExplodeEvent event) {
     var entity = event.getEntity();
-    var from = guard.land(event.getLocation());
+    // Judged from where the blast came from: primed TNT from where it was lit, a creeper or
+    // fireball from where it spawned, so TNT cannons and wandering creepers stop at the border.
+    var from = guard.land(Origins.of(entity));
     var player = guard.culprit(entity);
     if (entity instanceof AbstractWindCharge && player.isPresent()) {
       // A player's wind charge only toggles doors, buttons and levers: each is their own use.
