@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   hasSuppressionPattern,
   isPostalBoundaryViolation,
+  staleExclusions,
 } from "./check-suppressions.ts";
 
 describe("hasSuppressionPattern", () => {
@@ -52,5 +53,23 @@ describe("isPostalBoundaryViolation", () => {
         "sendPostalEmail({})",
       ),
     ).toBe(false);
+  });
+});
+
+describe("staleExclusions", () => {
+  test("reports every exclusion when nothing is tracked", () => {
+    expect(staleExclusions([])).toContain("scripts/prompts/");
+  });
+
+  test("keeps a prefix exclusion alive through any file beneath it", () => {
+    expect(staleExclusions(["scripts/prompts/refine.md"])).not.toContain(
+      "scripts/prompts/",
+    );
+  });
+
+  test("keeps a basename exclusion alive through a nested match", () => {
+    expect(staleExclusions(["packages/x/AGENTS.md"])).not.toContain(
+      "AGENTS.md",
+    );
   });
 });

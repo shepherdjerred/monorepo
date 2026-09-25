@@ -404,9 +404,6 @@
   ],
   "ignoreIssues": {
     "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
-    "packages/discord-plays-mario-kart/packages/backend/src/observability/tracing.ts": [
-      "exports"
-    ],
     "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [
       "exports"
     ],
@@ -428,24 +425,10 @@
     "packages/discord-plays-pokemon/packages/backend/src/game/command/command.ts": [
       "exports"
     ],
-    "packages/discord-plays-pokemon/packages/backend/src/observability/tracing.ts": [
-      "exports"
-    ],
     "packages/home-assistant/src/codegen/introspect.ts": ["exports"],
-    "packages/monarch/src/lib/classifier/cache.ts": ["exports"],
-    "packages/monarch/src/lib/classifier/claude.ts": ["exports"],
     "packages/monarch/src/lib/conservice/client.ts": ["exports"],
     "packages/monarch/src/lib/enrichment.ts": ["exports"],
     "packages/monarch/src/lib/monarch/api.ts": ["exports"],
-    "packages/scout-for-lol/packages/app/src/components/ui/dialog.tsx": [
-      "exports"
-    ],
-    "packages/scout-for-lol/packages/app/src/components/ui/dropdown-menu.tsx": [
-      "exports"
-    ],
-    "packages/scout-for-lol/packages/app/src/components/ui/select.tsx": [
-      "exports"
-    ],
     "packages/scout-for-lol/packages/frontend/src/lib/review-tool/reset-defaults.ts": [
       "exports"
     ],

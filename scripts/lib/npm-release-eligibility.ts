@@ -8,7 +8,6 @@ export type NpmPackagePolicy = {
   readonly path: string;
   readonly packageJsonPath: string;
   readonly tagPrefix: string;
-  readonly initialVersion?: string;
 };
 
 export const NPM_PACKAGE_POLICIES: readonly NpmPackagePolicy[] = [
@@ -35,7 +34,6 @@ export const NPM_PACKAGE_POLICIES: readonly NpmPackagePolicy[] = [
     path: "packages/home-assistant",
     packageJsonPath: "packages/home-assistant/package.json",
     tagPrefix: "home-assistant-v",
-    initialVersion: "0.1.0",
   },
 ];
 
@@ -341,7 +339,7 @@ export async function fetchReleaseTarget(
 async function latestTag(
   root: string,
   policy: NpmPackagePolicy,
-): Promise<string | undefined> {
+): Promise<string> {
   const result = await run(
     ["git", "tag", "--list", `${policy.tagPrefix}*`, "--sort=-version:refname"],
     { cwd: root, capture: true, echoCapturedStdout: false },
@@ -351,43 +349,11 @@ async function latestTag(
     .map((line) => line.trim())
     .find(Boolean);
   if (tag === undefined) {
-    if (policy.initialVersion !== undefined) {
-      return undefined;
-    }
     throw new Error(
       `No release tag found for ${policy.name} with prefix ${policy.tagPrefix}`,
     );
   }
   return tag;
-}
-
-async function classifyInitialPackageRelease(
-  root: string,
-  policy: NpmPackagePolicy,
-  headRef: string,
-): Promise<PackageReleaseDecision> {
-  if (policy.initialVersion === undefined) {
-    throw new Error(`No initial release configured for ${policy.name}`);
-  }
-  const packageJson = parsePackageJson(
-    await packageJsonAtTag(root, headRef, policy.packageJsonPath),
-    policy.packageJsonPath,
-  );
-  const version = packageJson["version"];
-  if (version !== policy.initialVersion) {
-    throw new Error(
-      `${policy.name} has no release tag but package.json version is ${String(version)}; ` +
-        `expected initial version ${policy.initialVersion}`,
-    );
-  }
-  return {
-    packageName: policy.name,
-    packagePath: policy.path,
-    latestTag: "initial release",
-    changedFiles: [policy.packageJsonPath],
-    eligible: true,
-    reasons: [`initial ${policy.initialVersion} release pending`],
-  };
 }
 
 async function packageJsonAtTag(
@@ -464,10 +430,11 @@ export async function classifyPackageRelease(
   root: string,
   policy: NpmPackagePolicy,
 ): Promise<PackageReleaseDecision> {
-  const tag = await latestTag(root, policy);
-  return tag === undefined
-    ? classifyInitialPackageRelease(root, policy, "HEAD")
-    : classifyPackageReleaseFromTag(root, policy, tag);
+  return classifyPackageReleaseFromTag(
+    root,
+    policy,
+    await latestTag(root, policy),
+  );
 }
 
 export async function classifyPackageReleaseRange(
@@ -485,12 +452,12 @@ export async function classifyAllPackageReleases(
 ): Promise<readonly PackageReleaseDecision[]> {
   return Promise.all(
     NPM_PACKAGE_POLICIES.map(async (policy) =>
-      (async () => {
-        const tag = await latestTag(root, policy);
-        return tag === undefined
-          ? classifyInitialPackageRelease(root, policy, headRef)
-          : classifyPackageReleaseFromTag(root, policy, tag, headRef);
-      })(),
+      classifyPackageReleaseFromTag(
+        root,
+        policy,
+        await latestTag(root, policy),
+        headRef,
+      ),
     ),
   );
 }

@@ -4,13 +4,11 @@ import { rm } from "node:fs/promises";
 
 import { setupGitAuth } from "../lib/github-auth.ts";
 import {
-  fillMissingPinState,
   mergePinCandidates,
   mergePinStates,
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
-  reconstructGeneratedBranchPinState,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateCandidateKeys,
@@ -62,34 +60,6 @@ async function readBranchFile(
     throw new Error(`failed to read ${path} from ${ref}: ${result.stderr}`);
   }
   return result.stdout;
-}
-
-async function branchHasFile(
-  git: GitRunner,
-  ref: string,
-  path: string,
-): Promise<boolean> {
-  const result = await git(["ls-tree", "--name-only", ref, "--", path], {
-    capture: true,
-  });
-  return result.stdout.trim() === path;
-}
-
-export function generatedBuildNumberFromSubject(subject: string): number {
-  const normalized = subject.trim();
-  const current = /^chore: update image pins from build (\d+)$/.exec(
-    normalized,
-  );
-  const legacy = /^chore: bump image versions to 2\.0\.0-(\d+)$/.exec(
-    normalized,
-  );
-  const buildNumber = current?.[1] ?? legacy?.[1];
-  if (buildNumber === undefined) {
-    throw new Error(
-      `generated version bump commit has an unexpected subject: ${normalized}`,
-    );
-  }
-  return Number.parseInt(buildNumber, 10);
 }
 
 async function remoteBranchSha(git: GitRunner): Promise<string | null> {
@@ -149,36 +119,11 @@ async function prepareAttempt(
       VERSION_CATALOG_FILE_REL,
     );
     const pendingVersions = parseVersionCatalogSource(pendingSource);
-    const mergeBaseResult = await git(
-      ["merge-base", "origin/main", pendingRef],
-      { capture: true },
+    // Every generated bump commits its pin state beside the catalog, so the
+    // pending branch's state file is the authority for its pins.
+    const pendingState = parsePinCandidatesState(
+      await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
     );
-    const mergeBase = mergeBaseResult.stdout.trim();
-    if (!/^[0-9a-f]{40}$/.test(mergeBase)) {
-      throw new Error(`unexpected generated bump merge base: ${mergeBase}`);
-    }
-    const subjectResult = await git(["log", "-1", "--format=%s", pendingRef], {
-      capture: true,
-    });
-    const reconstructedState = reconstructGeneratedBranchPinState(
-      parseVersionCatalogSource(
-        await readBranchFile(git, mergeBase, VERSION_CATALOG_FILE_REL),
-      ),
-      pendingVersions,
-      generatedBuildNumberFromSubject(subjectResult.stdout),
-    );
-    let pendingState = reconstructedState;
-    if (await branchHasFile(git, pendingRef, PIN_STATE_FILE_REL)) {
-      const persistedState = parsePinCandidatesState(
-        await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
-      );
-      validateStateAgainstVersions(persistedState, pendingVersions);
-      pendingState = fillMissingPinState(persistedState, reconstructedState);
-    } else {
-      console.log(
-        `reconstructed ${Object.keys(pendingState.pins).length.toString()} legacy pending image pins`,
-      );
-    }
     validateStateAgainstVersions(pendingState, pendingVersions);
     aggregate = mergePinStates(aggregate, pendingState);
   }

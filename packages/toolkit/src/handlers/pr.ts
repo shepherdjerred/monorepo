@@ -117,7 +117,7 @@ Options:
   --profile <name>      (asset) AWS profile to use (overrides AWS_PROFILE)
   --finding <key>       (review resolve) Finding key or exact title
   --evidence <text>     (review resolve) Why it is resolved; required
-  --provider <id>       (review list/resolve) Provider (default: qodo)
+  --provider <id>       (review list/resolve) Provider (default: codex)
   --retry               (review harvest) Re-run the eligible jobs
 
 Credentials (asset):

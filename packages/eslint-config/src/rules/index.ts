@@ -7,7 +7,6 @@ import { preferZodValidation } from "./prefer-zod-validation.js";
 import { preferBunApis } from "./prefer-bun-apis.js";
 import { noReExports } from "./no-re-exports.js";
 import { noUseEffect } from "./no-use-effect.js";
-import { preferDateFns } from "./prefer-date-fns.js";
 import { noFunctionOverloads } from "./no-function-overloads.js";
 import { noParentImports } from "./no-parent-imports.js";
 import { noTypeGuards } from "./no-type-guards.js";
@@ -32,7 +31,6 @@ export const customRulesPlugin = {
     "prefer-bun-apis": preferBunApis,
     "no-re-exports": noReExports,
     "no-use-effect": noUseEffect,
-    "prefer-date-fns": preferDateFns,
     "no-function-overloads": noFunctionOverloads,
     "no-parent-imports": noParentImports,
     "no-type-guards": noTypeGuards,
@@ -56,7 +54,6 @@ export {
   preferBunApis,
   noReExports,
   noUseEffect,
-  preferDateFns,
   noFunctionOverloads,
   noParentImports,
   noTypeGuards,

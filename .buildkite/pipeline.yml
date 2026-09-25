@@ -696,10 +696,7 @@ common:
           limit: 2
 
 env:
-  # New pipelines use a coordinated subdirectory. Once the matching agent-stack
-  # change removes its legacy PodSpec-level cache override, older branch
-  # pipelines fall back to per-pod ephemeral caching instead of writing to the
-  # shared cache without taking its lock.
+  # Shared Bun cache under a coordinated subdirectory; writers take the GC lock.
   BUN_INSTALL_CACHE_DIR: /buildkite/bun-cache/data
   BUN_CACHE_LOCK_FILE: /buildkite/bun-cache-control/.gc.lock
   BUN_INSTALL_LOCK_MODE: shared
@@ -1666,35 +1663,13 @@ steps:
                   - *env_buildkite_shell
                   - *grant_github_download
             initContainers:
-              # The live ConfigMap is reconciled only after this PR merges.
-              # Render its Tempo 3-compatible subset first, so this PR's new
-              # Tempo image can be accepted before that GitOps reconciliation.
-              - name: render-tempo-config
-                # renovate: datasource=docker depName=mikefarah/yq
-                image: "mikefarah/yq:latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23"
-                command:
-                  - /bin/sh
-                  - -ec
-                  - >-
-                    yq eval 'del(.ingester, .compactor)'
-                    /config-source/tempo.yaml > /etc/tempo/tempo.yaml
-                volumeMounts:
-                  - {
-                      name: llm-observability-e2e-tempo-source,
-                      mountPath: /config-source,
-                      readOnly: true,
-                    }
-                  - {
-                      name: llm-observability-e2e-tempo-rendered,
-                      mountPath: /etc/tempo,
-                    }
               - name: tempo
                 image: "grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
                 restartPolicy: Always
                 args: ["-config.file=/etc/tempo/tempo.yaml"]
                 volumeMounts:
                   - {
-                      name: llm-observability-e2e-tempo-rendered,
+                      name: llm-observability-e2e-tempo-source,
                       mountPath: /etc/tempo,
                       readOnly: true,
                     }
@@ -1721,7 +1696,6 @@ steps:
                   name: llm-observability-e2e-tempo-source,
                   configMap: { name: llm-observability-e2e-tempo },
                 }
-              - { name: llm-observability-e2e-tempo-rendered, emptyDir: {} }
               - {
                   name: llm-observability-e2e-data,
                   emptyDir: { medium: Memory, sizeLimit: 1Gi },
@@ -1753,35 +1727,13 @@ steps:
                   - *env_buildkite_shell
                   - *grant_github_download
             initContainers:
-              # The live ConfigMap is reconciled only after this PR merges.
-              # Render its Tempo 3-compatible subset first, so this PR's new
-              # Tempo image can be accepted before that GitOps reconciliation.
-              - name: render-tempo-config
-                # renovate: datasource=docker depName=mikefarah/yq
-                image: "mikefarah/yq:latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23"
-                command:
-                  - /bin/sh
-                  - -ec
-                  - >-
-                    yq eval 'del(.ingester, .compactor)'
-                    /config-source/tempo.yaml > /etc/tempo/tempo.yaml
-                volumeMounts:
-                  - {
-                      name: llm-observability-e2e-tempo-source,
-                      mountPath: /config-source,
-                      readOnly: true,
-                    }
-                  - {
-                      name: llm-observability-e2e-tempo-rendered,
-                      mountPath: /etc/tempo,
-                    }
               - name: tempo
                 image: "grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
                 restartPolicy: Always
                 args: ["-config.file=/etc/tempo/tempo.yaml"]
                 volumeMounts:
                   - {
-                      name: llm-observability-e2e-tempo-rendered,
+                      name: llm-observability-e2e-tempo-source,
                       mountPath: /etc/tempo,
                       readOnly: true,
                     }
@@ -1808,7 +1760,6 @@ steps:
                   name: llm-observability-e2e-tempo-source,
                   configMap: { name: llm-observability-e2e-tempo },
                 }
-              - { name: llm-observability-e2e-tempo-rendered, emptyDir: {} }
               - {
                   name: llm-observability-e2e-data,
                   emptyDir: { medium: Memory, sizeLimit: 1Gi },
@@ -3089,21 +3040,7 @@ steps:
         bun --no-install run --cwd packages/astro-opengraph-images publish:npm
         bun --no-install run --cwd packages/webring publish:npm
         bun --no-install run --cwd packages/homelab/src/helm-types publish:npm
-        home_assistant_release_state=published
-        if home_assistant_tags=$$(git ls-remote --exit-code --refs origin 'refs/tags/home-assistant-v*'); then
-          echo "Home Assistant release tag(s): $$home_assistant_tags"
-        else
-          home_assistant_lookup_status=$$?
-          if [ "$$home_assistant_lookup_status" -ne 2 ]; then
-            echo "failed to inspect Home Assistant release tags (status $$home_assistant_lookup_status)"
-            exit "$$home_assistant_lookup_status"
-          fi
-          home_assistant_release_state=pending
-          echo "Home Assistant has no release tag; deferring latest publish until its initial release is merged"
-        fi
-        if [ "$$home_assistant_release_state" = published ]; then
-          bun --no-install run --cwd packages/home-assistant publish:npm
-        fi
+        bun --no-install run --cwd packages/home-assistant publish:npm
         bun --no-install scripts/release/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/release/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/release/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
