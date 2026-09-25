@@ -311,21 +311,25 @@ final class StructureBinderTest {
 
       var bind = bound(grid, SIGN);
 
-      assertThat(bind.cells()).hasSize(10);
+      // Ten moving cells plus the two tops, which the creator must also be allowed to change.
+      assertThat(bind.cells()).hasSize(12).contains(new Pos(0, 66, 1), new Pos(1, 66, 1));
       assertThat(grid.bindingAt(SIGN))
           .contains(
               new Binding.GateFrame(
-                  new Gate(
-                      FENCE, new Pos(0, 66, 1), List.of(new Pos(0, 66, 1), new Pos(1, 66, 1)))));
+                  new Gate(FENCE, new Pos(0, 66, 1), List.of(new Pos(0, 66, 1), new Pos(1, 66, 1))),
+                  Optional.empty(),
+                  true));
     }
 
     @Test
     void anotherGateSignNearbyIsNeverTouched() {
       var grid = gate();
       var other = new Pos(1, 64, 0);
-      grid.sign(other, "[Gate]", Direction.NORTH);
-      bound(grid, other);
-      grid.stock(other, Stock.of(FENCE, 7));
+      // A gate sign for a different set of columns, holding blocks of its own.
+      var onlyOneColumn = new Gate(FENCE, new Pos(1, 66, 1), List.of(new Pos(1, 66, 1)));
+      grid.sign(other, "[Gate]", Direction.NORTH)
+          .bind(other, new Binding.GateFrame(onlyOneColumn, Optional.empty(), true))
+          .stock(other, Stock.of(FENCE, 7));
       bound(grid, SIGN);
 
       assertThat(toggle(grid, SIGN)).isTrue();
@@ -350,6 +354,71 @@ final class StructureBinderTest {
           gate().bind(SIGN, new Binding.SpanEnd(FENCE, new Pos(0, 66, 1), Optional.empty(), true));
 
       assertThat(useRefusal(grid, SIGN)).isEqualTo(new StructureProblem.NotBound());
+    }
+
+    @Test
+    void aSecondSignForTheSameColumnsLinksAndSharesTheFirstsStock() {
+      var grid = gate();
+      bound(grid, SIGN);
+      var back = new Pos(1, 64, 2);
+      grid.sign(back, "[Gate]", Direction.SOUTH);
+
+      var bind = bound(grid, back);
+
+      assertThat(bind.writes()).extracting(StructureBinder.Write::sign).contains(SIGN, back);
+      assertThat(resolved(grid, SIGN).keeper()).isEqualTo(SIGN);
+      assertThat(resolved(grid, back).keeper()).isEqualTo(SIGN);
+      var fences = grid.countAll(FENCE);
+      assertThat(toggle(grid, back)).isTrue();
+      assertThat(grid.stockAt(SIGN)).isEqualTo(Stock.of(FENCE, 10));
+      assertThat(grid.stockAt(back)).isEqualTo(Stock.empty());
+      assertThat(toggle(grid, SIGN)).isTrue();
+      assertThat(grid.countAll(FENCE)).isEqualTo(fences);
+    }
+
+    @Test
+    void aThirdSignForLinkedColumnsBindsAlone() {
+      var grid = gate();
+      bound(grid, SIGN);
+      var back = new Pos(1, 64, 2);
+      grid.sign(back, "[Gate]", Direction.SOUTH);
+      bound(grid, back);
+      var third = new Pos(-1, 64, 0);
+      grid.sign(third, "[Gate]", Direction.NORTH);
+
+      var bind = bound(grid, third);
+
+      assertThat(bind.writes()).extracting(StructureBinder.Write::sign).containsExactly(third);
+      assertThat(resolved(grid, third).keeper()).isEqualTo(third);
+    }
+
+    @Test
+    void aRewrittenTwinIsMissing() {
+      var grid = gate();
+      bound(grid, SIGN);
+      var back = new Pos(1, 64, 2);
+      grid.sign(back, "[Gate]", Direction.SOUTH);
+      bound(grid, back);
+      grid.sign(SIGN, "[Gate]", Direction.NORTH);
+
+      assertThat(useRefusal(grid, back)).isEqualTo(new StructureProblem.PartnerMissing(SIGN));
+    }
+
+    @Test
+    void stackedColumnsNeverMergeAndLockTheGate() {
+      // Two closed fence runs in one line, 61-62 and 64-66, one block apart.
+      var grid = new TestGrid().fill(new Pos(-5, 60, -5), new Pos(5, 60, 5), STONE);
+      grid.sign(SIGN, "[Gate]", Direction.NORTH);
+      grid.fill(new Pos(0, 61, 1), new Pos(0, 62, 1), FENCE);
+      grid.fill(new Pos(0, 64, 1), new Pos(0, 66, 1), FENCE);
+      bound(grid, SIGN);
+      var fences = grid.countAll(FENCE);
+
+      for (var round = 0; round < 6; round++) {
+        assertThat(toggle(grid, SIGN)).as("round %d", round).isTrue();
+        assertThat(grid.countAll(FENCE) + grid.heldAll(FENCE)).isEqualTo(fences);
+        assertThat(grid.cellAt(new Pos(0, 63, 1)).is(FENCE)).isFalse();
+      }
     }
   }
 }

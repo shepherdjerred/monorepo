@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.mechanics.domain.structure;
 
+import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Mechanism;
 import java.util.Optional;
 
@@ -11,6 +12,15 @@ import java.util.Optional;
  * @param stock the blocks it holds
  */
 public record SignRecord(Optional<Mechanism> mechanism, Optional<Binding> binding, Stock stock) {
+
+  /** Its binding as a gate sign, if it is one. */
+  Optional<Binding.GateFrame> gateFrame() {
+    var gateSign = mechanism.filter(own -> own.feature() == Feature.GATE).isPresent();
+    return binding
+        .filter(bound -> gateSign)
+        .filter(Binding.GateFrame.class::isInstance)
+        .map(Binding.GateFrame.class::cast);
+  }
 
   /** Its binding as a bridge or door end of {@code mechanism}'s feature. */
   Optional<Binding.SpanEnd> spanEndFor(Mechanism of) {

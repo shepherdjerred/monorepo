@@ -18,11 +18,14 @@ import java.util.Set;
  * Finds the gate a {@code [Gate]} sign controls, once, when the sign is written.
  *
  * <p>Every block of an allowed material within the search radius belongs to a column, whose top is
- * the highest block of that material directly above it. The gate's material is the nearest
- * column's; columns of other materials are left alone, and only the nearest {@code maxColumns}
- * belong to the gate. The sign remembers those tops; on use the gate is rebuilt from them, never
- * searched for again. The top of each column always stays; below it the column fills down through
- * air and water until it meets anything else, at most {@code maxHeight} blocks.
+ * the highest block of that material directly above it. A column with no room to move below its top
+ * is not part of any gate. The gate's material is the nearest column's; columns of other materials
+ * are left alone, and only the nearest {@code maxColumns} belong to the gate. The sign remembers
+ * those tops; on use the gate is rebuilt from them, never searched for again.
+ *
+ * <p>The top of each column always stays; below it the column fills down through air and water
+ * until it meets anything else, at most {@code maxHeight} blocks. It stops one block short of
+ * another column's top, so two columns stacked in one line never merge into one and lock the gate.
  */
 public final class GateFinder {
 
@@ -30,7 +33,16 @@ public final class GateFinder {
 
   /** The gate near {@code sign}. */
   public static Result<Gate, StructureProblem> find(BlockGrid grid, Pos sign, GateConfig config) {
-    var tops = columnTops(grid, sign, config);
+    var found = columnTops(grid, sign, config);
+    var stops = Set.copyOf(found.keySet());
+    var tops = new HashMap<Pos, String>();
+    found.forEach(
+        (top, material) -> {
+          var limits = new ColumnLimits(config.maxHeight(), stops);
+          if (!column(grid, top, material, limits).isEmpty()) {
+            tops.put(top, material);
+          }
+        });
     if (tops.isEmpty()) {
       return Result.err(new StructureProblem.NoGate(config.searchRadius()));
     }
@@ -102,7 +114,9 @@ public final class GateFinder {
     var cells = new ArrayList<Pos>();
     for (var depth = 1; depth <= limits.maxHeight(); depth++) {
       var pos = top.offset(Direction.DOWN, depth);
-      if (!grid.contains(pos) || limits.tops().contains(pos)) {
+      if (!grid.contains(pos)
+          || limits.tops().contains(pos)
+          || limits.tops().contains(pos.offset(Direction.DOWN))) {
         break;
       }
       var cell = grid.cellAt(pos);
