@@ -27,10 +27,12 @@ Done with every plugin enabled:
 - **fresh**: two boots on a new volume, the second with `--network none`.
   `the-storm.db` and other runtime files survive, `REMOVE_OLD_MODS` leaves
   exactly the image's jars, and the patches apply.
-- **legacy**: one boot on a volume pre-filled with the config tree the old
+- **legacy**: a volume pre-filled with the config tree the old
   `minecraft-tsmc` init container copied (from git history), which is what the
-  live volume holds. The patch step accepts those older files, `remove.list`
-  clears the stale copies, and the patches land on that first boot.
+  live volume holds. On the first boot the patch step accepts those older
+  files, `remove.list` clears the stale copies, and the patches land. A second,
+  offline boot with a recreated `spawn.yml` and one line appended to
+  `remove.list` runs only the new entry.
 
 ## Stages
 
@@ -44,12 +46,13 @@ Done with every plugin enabled:
 
 ## How a boot works
 
-1. `storm-entrypoint` deletes the files in `remove.list` once per version of
-   that list (it records the list's sha256 in
-   `/data/.the-storm-remove.list.sha256`), mirrors each directory listed in
-   `owned.roots` into `/data` with `rsync --delete` (none yet; reserved for
-   content-only trees such as `plugins/TheStorm/content/quests`), then execs
-   itzg's start script.
+1. `storm-entrypoint` deletes each file in `remove.list` once: an entry is
+   appended to the ledger `/data/.the-storm-removed` after it runs and is
+   skipped on every later boot, so appending a line runs only that line and a
+   file recreated later (such as `spawn.yml` after `/setspawn`) is kept. It
+   then mirrors each directory listed in `owned.roots` into `/data` with
+   `rsync --delete` (none yet; reserved for content-only trees such as
+   `plugins/TheStorm/content/quests`), and execs itzg's start script.
 2. itzg deletes every top-level jar in `/data/plugins` (`REMOVE_OLD_MODS`),
    then copies `/plugins` into `/data/plugins`: the baked jars and every file
    under `server/owned/plugins/`. Files are overwritten when they differ
@@ -213,8 +216,11 @@ module work and loaded strictly by the plugin.
 
 The first release onto the existing `minecraft-tsmc` volume:
 
-1. **Back up.** Run an on-demand Velero backup of `datadir-minecraft-tsmc-0`
-   and confirm it completed. Keep the server asleep until step 6.
+1. **Announce and back up.** Tell players before the release: existing LWC
+   locks disappear at this deploy, and containers inside claims are protected
+   again once the `towns` module is switched on. Run an on-demand Velero backup
+   of `datadir-minecraft-tsmc-0` and confirm it completed. Keep the server
+   asleep until step 6.
 2. **Dry-run the patches against the live configs.** Copy the live
    `plugins/`, `bukkit.yml`, `spigot.yml` and `config/` out read-only (for
    example `kubectl cp` from a pod that mounts the volume read-only), put them
@@ -242,8 +248,10 @@ The first release onto the existing `minecraft-tsmc` volume:
    all 29 plugins enabling. mcMMO upgrades its stored data in place.
 7. **In game:** `/setspawn` at the windmill (the pinned spawn was removed),
    `/settpr` if random teleport has no centre, check that DiscordSRV relays
-   chat and that bluemap.ts-mc.net renders. `world_amplified`, a
-   Multiverse-only world, no longer loads; its folder stays on the volume.
+   chat and that bluemap.ts-mc.net renders. (Dropping Multiverse loses
+   nothing: its only extra world, `world_amplified`, was already unreachable,
+   because its folder is gone from the volume and its autoload was turned off
+   in e0a72baa90.)
 
 Rolling back to the old chart is not a clean revert: the hand-placed mcMMO and
 LWCX jars are gone and must come back from the Velero backup.
