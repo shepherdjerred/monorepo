@@ -12,7 +12,11 @@ import {
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
 } from "./wait-for-review.ts";
-import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
+import {
+  codexProvider,
+  qodoProvider,
+  REVIEW_GATE_BLOCKED_EXIT_CODE,
+} from "@shepherdjerred/code-review";
 
 describe("resolveReviewGateProvider", () => {
   test("defaults direct invocations to Codex", () => {
@@ -267,8 +271,12 @@ describe("review gate source", () => {
       `${import.meta.dir}/../../.buildkite/pipeline.yml`,
     ).text();
     for (const stepKey of ["codex-review-gate"]) {
-      expect(reviewGateStepBlockText(pipeline, stepKey)).not.toContain(
-        "cancel_on_build_failing",
+      const block = reviewGateStepBlockText(pipeline, stepKey);
+      expect(block).not.toContain("cancel_on_build_failing");
+      // The step soft-fails on the gate's own blocked-by-quota status and on
+      // nothing else; select-pr-pipeline.ts enforces the exact shape.
+      expect(block).toContain(
+        `soft_fail:\n      - exit_status: ${String(REVIEW_GATE_BLOCKED_EXIT_CODE)}\n`,
       );
     }
   });
@@ -283,5 +291,10 @@ describe("review gate source", () => {
     // The commit actually used has to reach the signal event, or a count still
     // cannot be attributed to the parser that produced it.
     expect(script).toContain("REVIEW_GATE_PARSER_COMMIT");
+    // Only the blocked-by-quota status is annotated and soft-failed.
+    expect(script).toContain(
+      `QUOTA_EXIT_STATUS=${String(REVIEW_GATE_BLOCKED_EXIT_CODE)}`,
+    );
+    expect(script).toContain("buildkite-agent annotate --style warning");
   });
 });

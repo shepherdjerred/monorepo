@@ -2099,8 +2099,15 @@ steps:
   # so the script always reports which provider and head it gave up on rather
   # than Buildkite killing the pod first.
   #
-  # The gate runs LAST. Its failure (for example Codex out of quota) still
-  # fails the build, but only after every other PR step has finished, so it can
+  # The gate soft-fails on exactly one status: 42, which it exits with only when
+  # Codex declared it could not review this head because of its usage limit
+  # (REVIEW_GATE_BLOCKED_EXIT_CODE in @shepherdjerred/code-review). review-gate.sh
+  # then annotates the build to rely on Greptile. Findings, unresolved threads,
+  # timeouts, and every other error exit with another status and fail the build.
+  # select-pr-pipeline.ts rejects any other soft_fail shape on this step.
+  #
+  # The gate runs LAST. Its hard failure still fails the build, but only after
+  # every other PR step has finished, so it can
   # never flip the build to "failing" while a `cancel_on_build_failing` sibling
   # is still running and get that sibling canceled. `allow_dependency_failure`
   # keeps the gate reporting its review verdict when another step failed.
@@ -2138,6 +2145,8 @@ steps:
       - windows-cross-compiler-pr
       - macos-cross-compiler-pr
     allow_dependency_failure: true
+    soft_fail:
+      - exit_status: 42
     env:
       REVIEW_PROVIDER: codex
     command: |

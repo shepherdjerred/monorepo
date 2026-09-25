@@ -96,6 +96,24 @@ if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
   git apply "$RESOLVED_BOOTSTRAP_PATCH"
 fi
 
-GH_TOKEN="$GITHUB_REVIEW_TOKEN" \
+# Exit status 42 is the gate's "the provider declared it cannot review at all"
+# (quota exhaustion) status, REVIEW_GATE_BLOCKED_EXIT_CODE in
+# @shepherdjerred/code-review. The pipeline step soft-fails on exactly that
+# status so the rest of CI still reports; every other non-zero status (findings,
+# unresolved threads, timeouts, errors) fails the build. Keep 42 in sync with
+# the `soft_fail` entry in .buildkite/pipeline.yml and select-pr-pipeline.ts.
+QUOTA_EXIT_STATUS=42
+if GH_TOKEN="$GITHUB_REVIEW_TOKEN" \
   REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" \
-  bun --no-install "$WAIT_SCRIPT"
+  bun --no-install "$WAIT_SCRIPT"; then
+  exit 0
+else
+  GATE_STATUS=$?
+fi
+
+if [[ "$GATE_STATUS" -eq "$QUOTA_EXIT_STATUS" ]]; then
+  PROVIDER_NAME="${REVIEW_PROVIDER:-codex}"
+  buildkite-agent annotate --style warning --context review-gate-quota \
+    "**${PROVIDER_NAME} review skipped: out of quota.** The review gate soft-failed because ${PROVIDER_NAME} reported its usage limit for this head, so no review ran. Rely on Greptile's review for this PR, or add ${PROVIDER_NAME} credits and re-run the gate step to get a ${PROVIDER_NAME} review."
+fi
+exit "$GATE_STATUS"

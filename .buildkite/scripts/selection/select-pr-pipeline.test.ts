@@ -3,17 +3,25 @@ import { parsePipeline } from "../selectors/select-main-pipeline.ts";
 import {
   changedStep,
   REVIEW_GATE_KEY,
+  REVIEW_GATE_QUOTA_EXIT_STATUS,
   selectPrSteps,
 } from "./select-pr-pipeline.ts";
 
 const PIPELINE_PATH = new URL("../../pipeline.yml", import.meta.url).pathname;
 
-function gate(dependencies: readonly string[]): string {
+const QUOTA_SOFT_FAIL = `    soft_fail:
+      - exit_status: ${String(REVIEW_GATE_QUOTA_EXIT_STATUS)}
+`;
+
+function gate(
+  dependencies: readonly string[],
+  softFail: string = QUOTA_SOFT_FAIL,
+): string {
   return `  - key: ${REVIEW_GATE_KEY}
     if: build.pull_request.id != null
     depends_on: [${dependencies.join(", ")}]
     allow_dependency_failure: true
-`;
+${softFail}`;
 }
 
 describe("PR pipeline selection", () => {
@@ -99,14 +107,46 @@ ${gate(["verify"])}`);
     );
   });
 
-  test("rejects a softened or self-canceling gate", () => {
-    for (const field of ["soft_fail: true", "cancel_on_build_failing: true"]) {
+  test("rejects a self-canceling gate", () => {
+    const document = parsePipeline(`steps:
+  - key: verify
+${gate(["verify"])}    cancel_on_build_failing: true
+`);
+    expect(() => selectPrSteps(document, ["README.md"])).toThrow(
+      "must not set cancel_on_build_failing",
+    );
+  });
+
+  test("allows the gate to soft-fail on exactly the quota exit status", () => {
+    const document = parsePipeline(`steps:
+  - key: verify
+${gate(["verify"])}`);
+    const gateStep = selectPrSteps(document, ["README.md"]).find(
+      (step) => step["key"] === REVIEW_GATE_KEY,
+    );
+    expect(gateStep?.["soft_fail"]).toEqual([
+      { exit_status: REVIEW_GATE_QUOTA_EXIT_STATUS },
+    ]);
+  });
+
+  test("rejects every other soft_fail shape on the gate", () => {
+    const shapes = [
+      "",
+      "    soft_fail: true\n",
+      "    soft_fail: false\n",
+      "    soft_fail:\n      - exit_status: 1\n",
+      '    soft_fail:\n      - exit_status: "*"\n',
+      '    soft_fail:\n      - exit_status: "42"\n',
+      "    soft_fail: []\n",
+      "    soft_fail:\n      - exit_status: 42\n      - exit_status: 1\n",
+      "    soft_fail:\n      - exit_status: 42\n        signal_reason: none\n",
+    ];
+    for (const softFail of shapes) {
       const document = parsePipeline(`steps:
   - key: verify
-${gate(["verify"])}    ${field}
-`);
+${gate(["verify"], softFail)}`);
       expect(() => selectPrSteps(document, ["README.md"])).toThrow(
-        `must not set ${field.split(":")[0] ?? ""}`,
+        "must set exactly soft_fail: [{ exit_status: 42 }]",
       );
     }
   });
@@ -120,7 +160,9 @@ ${gate(["verify"])}    ${field}
       .filter((key) => key !== REVIEW_GATE_KEY);
     expect(gateStep?.["depends_on"]).toEqual(others);
     expect(gateStep?.["allow_dependency_failure"]).toBe(true);
-    expect(gateStep?.["soft_fail"]).toBeUndefined();
+    expect(gateStep?.["soft_fail"]).toEqual([
+      { exit_status: REVIEW_GATE_QUOTA_EXIT_STATUS },
+    ]);
     expect(gateStep?.["cancel_on_build_failing"]).toBeUndefined();
     // verify still cancels its siblings when it fails.
     const verify = selected.find((step) => step["key"] === "verify");
