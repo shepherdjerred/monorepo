@@ -1186,7 +1186,8 @@
           "monthly_budget_usd",
           "ai_studio_spend_cap_usd",
           "gemini_key_revision",
-          "onepassword_item_title"
+          "onepassword_item_title",
+          "gemini_quota_limits"
         ],
         "properties": {
           "project_id": {
@@ -1212,6 +1213,28 @@
           },
           "onepassword_item_title": {
             "$ref": "#/$defs/onePasswordItemTitle"
+          },
+          "gemini_quota_limits": {
+            "type": "object",
+            "description": "Per-model request ceilings keyed by the Cloud Quotas model dimension",
+            "propertyNames": {
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["requests_per_minute"],
+              "properties": {
+                "requests_per_day": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "requests_per_minute": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
           }
         }
       }

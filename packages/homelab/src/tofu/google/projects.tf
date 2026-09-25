@@ -1,7 +1,10 @@
 locals {
   project_services = toset([
     "apikeys.googleapis.com",
+    "cloudquotas.googleapis.com",
     "generativelanguage.googleapis.com",
+    # The quota decrease safety check reads current usage from Monitoring.
+    "monitoring.googleapis.com",
   ])
 
   workload_services = {

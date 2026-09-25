@@ -283,6 +283,16 @@ const googleDesiredState = z.strictObject({
         gemini_key_revision: z.number().int().positive(),
         // The item OpenTofu writes the minted key into, as GEMINI_API_KEY.
         onepassword_item_title: onePasswordItemTitle,
+        // Per-model request ceilings, keyed by the Cloud Quotas `model`
+        // dimension (which can differ from the API model id). They throttle a
+        // runaway immediately; the AI Studio monthly cap is the dollar stop.
+        gemini_quota_limits: resourceMap(
+          z.strictObject({
+            // Omitted leaves Google's default daily limit in place.
+            requests_per_day: z.number().int().positive().optional(),
+            requests_per_minute: z.number().int().positive(),
+          }),
+        ),
       })
       .refine(
         (workload) =>

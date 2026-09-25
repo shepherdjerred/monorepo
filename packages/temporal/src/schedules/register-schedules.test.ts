@@ -326,7 +326,7 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
   });
 });
 
-test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue", () => {
+test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
   expect(findScheduleById("llm-billed-cost-hourly")).toMatchObject({
     workflowType: "runLlmBilledCostReconciliation",
     args: [],
@@ -335,6 +335,14 @@ test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue"
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "10 minutes",
   });
+});
+
+test("billed LLM cost registers paused until its Workflow candidate is promoted", () => {
+  // The stable bundle predates runLlmBilledCostReconciliation, so an unpaused
+  // first run would fail and trip the alerts that gate the rollout itself.
+  expect(
+    findScheduleById("llm-billed-cost-hourly")?.initialPauseNote,
+  ).toContain("candidate promotion");
 });
 
 describe("ops overview schedules", () => {

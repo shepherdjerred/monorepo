@@ -16,6 +16,12 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "10 minutes",
     memo: "Hourly billed-spend reconciliation from the OpenAI and Anthropic cost reports, per project and workspace",
+    // Registered paused: until the Workflow candidate carrying
+    // runLlmBilledCostReconciliation takes traffic, a run would land on the
+    // stable bundle, fail, and raise the Temporal alerts that block the
+    // rollout's own advance gates. Unpause once the candidate reaches 100%.
+    initialPauseNote:
+      "Awaiting Workflow candidate promotion with runLlmBilledCostReconciliation",
   },
   {
     id: "report-freshness-monitor",

@@ -24,6 +24,10 @@ variable "google_workloads" {
     ai_studio_spend_cap_usd = number
     gemini_key_revision     = number
     onepassword_item_title  = string
+    gemini_quota_limits = map(object({
+      requests_per_day    = optional(number)
+      requests_per_minute = number
+    }))
   }))
   default = {}
 

@@ -10,7 +10,7 @@
  */
 
 // Matches the `AbortSignal.timeout(30_000)` precedent used for bounded
-// external fetches elsewhere in this package (openai-complimentary-usage,
+// external fetches elsewhere in this package (llm-billing,
 // glitter-corpus-discord-client): far enough under the 2-minute activity
 // start-to-close that a fully-hung attempt fails fast.
 export const DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS = 30_000;
