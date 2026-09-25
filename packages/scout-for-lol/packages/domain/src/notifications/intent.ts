@@ -19,6 +19,8 @@ import {
  * the same inputs always produce the same outputs. The delivery invariants:
  *
  * - `delivered`, `suppressed`, `expired`, and `permission-denied` are terminal.
+ *   An intent whose audience was deleted is retired into `suppressed` with a
+ *   {@link NotificationRetirementReason}; it is never re-targeted.
  * - `unknown-delivery` is left ONLY via `operatorResolveUnknown` — a send whose
  *   outcome is unobserved must never be retried automatically, because the
  *   retry may double-deliver.
@@ -104,6 +106,34 @@ export const NotificationAttemptNonceSchema = z
   .min(1)
   .brand<"NotificationAttemptNonce">();
 
+/**
+ * Why an intent's audience no longer exists, which retires it.
+ *
+ * An intent is a decision to tell one audience one thing, and the audience is
+ * part of the decision: a channel reached through a subscription, in a guild
+ * Scout is installed in. When that audience is deleted before delivery, the
+ * intent can never be sent correctly — delivering it to whatever the channel
+ * id resolves to now, or re-deriving a target from the subscription that
+ * replaced it, would be reconstructing an identity the decision never named.
+ * So the intent is retired (`retireOrphaned`), and the reason says which part
+ * of the audience went:
+ *
+ * - `subscription-deleted`: no subscription in the target channel still
+ *   follows anyone in the match — unsubscribed, the tracked account removed,
+ *   or the guild's data cleaned up.
+ * - `channel-deleted`: Discord answered Unknown Channel for the target.
+ * - `guild-left`: Discord answered that Scout is no longer in the target
+ *   channel's guild.
+ */
+export type NotificationRetirementReason = z.infer<
+  typeof NotificationRetirementReasonSchema
+>;
+export const NotificationRetirementReasonSchema = z.enum([
+  "subscription-deleted",
+  "channel-deleted",
+  "guild-left",
+]);
+
 export type NotificationSuppressionReason = z.infer<
   typeof NotificationSuppressionReasonSchema
 >;
@@ -111,6 +141,7 @@ export const NotificationSuppressionReasonSchema = z.enum([
   "stale",
   "feature-disabled",
   "recipient-preference",
+  ...NotificationRetirementReasonSchema.options,
 ]);
 
 export type NotificationRetryableFailureReason = z.infer<

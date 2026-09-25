@@ -5,6 +5,7 @@ import type {
   NotificationFailure,
   NotificationIntent,
   NotificationIntentState,
+  NotificationRetirementReason,
   OperatorUnknownResolution,
 } from "#src/notifications/intent.ts";
 
@@ -313,6 +314,51 @@ export function expire(
       return alreadyApplied;
     case "delivered":
     case "suppressed":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * Retire an intent whose audience was deleted before it was delivered.
+ *
+ * Only an intent nobody is sending may be retired. `sending` is an attempt in
+ * flight whose outcome belongs to that attempt — retiring it would erase the
+ * nonce the outcome is matched by, and the message may already be in the
+ * channel. `unknown-delivery` is the operator's alone. Both conflict rather
+ * than apply, exactly as {@link expire} does, so a retirement that races a
+ * send loses to it.
+ *
+ * Retiring is idempotent over its reason. An intent already retired for a
+ * DIFFERENT reason, or settled any other way, conflicts as terminal: the
+ * first recorded reason is the one the evidence supported when it was
+ * written, and a later observer does not get to rewrite it.
+ */
+export function retireOrphaned(
+  intent: NotificationIntent,
+  args: { reason: NotificationRetirementReason },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "pending":
+    case "ready":
+      return applied(
+        withState(intent, { kind: "suppressed", reason: args.reason }),
+      );
+    case "sending":
+      return conflict("send-in-flight");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "suppressed":
+      return state.reason === args.reason
+        ? alreadyApplied
+        : conflict("terminal-state");
+    case "delivered":
+    case "expired":
     case "permission-denied":
       return conflict("terminal-state");
     default: {
