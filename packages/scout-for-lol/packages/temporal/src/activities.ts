@@ -226,6 +226,9 @@ export type ScoutTemporalV2Activities = {
   planPrematchFanOutV2: (
     input: ScoutMatchRefV2,
   ) => Promise<ScoutFanOutV2Result>;
+  openPrematchMarketsV2: (
+    input: ScoutMatchRefV2,
+  ) => Promise<ScoutGuardedEffectV2Result>;
 
   // Notification — rendering on background, the intent machine on realtime.
   markNotificationReadyV2: (

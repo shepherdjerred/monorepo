@@ -420,19 +420,38 @@ redriven. Betting pools are unique per match and guild, so a second open is a
 no-op. Neither pipeline therefore announces a game twice or opens its markets
 twice across a flip.
 
-Before ramping, know what V2 prematch does not yet do:
+### V2 prematch delivery and markets
 
-- `scoutPrematchGameV2Workflow` mints notification intents but starts no
-  notification children (SJ-205). Only the pipeline reconciliation sweep
-  drives them, and no Schedule starts that sweep. With the flag on and nothing
-  driving intents, game-start announcements are not sent.
-- The V2 prematch send opens no Bryan Bucks markets. This matters in beta
-  only, because production hard-disables betting.
+Behind the `scout-v2-prematch-delivery` patch, `scoutPrematchGameV2Workflow`
+does what v1's `sendPrematchNotification` does, after its capture and plan:
+
+1. `openPrematchMarketsV2` (`src/temporal/v2/prematch/prematch-markets.ts`)
+   runs v1's one-of-two Bucks decision behind the V2 effect fence, with a
+   `prematch-markets` receipt. A standard Classic lobby gets the participation
+   point (`awardClassicPrematchForGame`, once per match and guild by its
+   `BucksMatchEarning` marker). Any other bettable game gets one pool per
+   Bucks-enabled guild it is announced in (`openBettingPoolsStrict`, once per
+   match and guild by `BucksMatchPool`'s unique key). A failure is retried,
+   stays visible in the history, and the game is still announced without a
+   market.
+2. One `scoutNotificationV2Workflow` child per drivable prematch intent, with
+   the post-match path's reuse policy. The plan leaves out delivered and
+   `unknown-delivery` intents and any unsent intent past its freshness
+   deadline.
+3. Each child builds its message with its guild's buttons when that guild
+   holds an open pool. After delivery, `afterNotificationDeliveredV2` runs
+   `prematch-follow-up.ts`: it appends the message to the pool's refs with a
+   compare-and-set, refreshes the pool's messages, enqueues the parlay once
+   per match and counts the guild's core output. A failed ref write is
+   retried, because the ref is the settlement announcement's only destination.
+
+V2 does not decorate prematch messages with feature tips, and it decides the
+Clash chrome once from the tracked players rather than per guild.
 
 The ramp procedure:
 
-1. Confirm that something delivers V2 prematch intents in the stage: the
-   SJ-205 start loop, or a scheduled `scoutPipelineReconciliationV2Workflow`.
+1. Confirm the running Scout worker image includes the
+   `scout-v2-prematch-delivery` patch.
 2. Switch `scout_v2_prematch_ownership_enabled` on for `beta` in Flipt. It
    takes effect on the next 30-second pass. Commit a matching `beta`
    `default: true` override in `managed-flag-inventory.json`, or the inventory
@@ -669,10 +688,11 @@ prefix). The kind selects the renderer and the message builder: a `prematch`
 intent is rendered from the archived spectator snapshot and delivered as v1's
 game-start message, and nothing on that arm reads a MatchV5 payload — so a
 prematch intent re-driven after its game ended can never deliver a post-match
-report. The V2 prematch send carries no Bryan Bucks markets or buttons; v1
-opens pools during its send and records message references afterwards, and
-buttons on a message nothing recorded would be a market the bot could not
-later close. That is an explicit gap, not a silent one.
+report. A prematch message carries its guild's Bryan Bucks buttons and
+live-market line exactly when that guild holds an open pool for the match,
+and the post-delivery follow-up records the message on the pool so the close
+sweep and the settlement announcement can find it (see
+[V2 prematch delivery and markets](#v2-prematch-delivery-and-markets)).
 
 ### The announcement kinds carry their message on the intent
 

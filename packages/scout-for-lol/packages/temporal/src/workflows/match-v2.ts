@@ -453,7 +453,7 @@ function assertCommitsUncontested(
  * An ID already in use is an answer rather than a fault — some execution is
  * already driving that work — so it is not counted as started.
  */
-async function startMatchFanOutChildrenV2(
+export async function startMatchFanOutChildrenV2(
   stage: ScoutStage,
   children: readonly ScoutMatchFanOutChildV2[],
 ): Promise<{ notifications: number; lakeProjections: number }> {

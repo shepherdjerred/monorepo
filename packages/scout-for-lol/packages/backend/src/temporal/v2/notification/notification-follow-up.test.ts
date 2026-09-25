@@ -17,6 +17,7 @@ import { intentRecord } from "#src/temporal/v2/notification-delivery.test-fixtur
 const stubs = vi.hoisted(() => ({
   requireIntentRecordV2: vi.fn(),
   afterDareSummaryDeliveredV2: vi.fn(),
+  afterPrematchDeliveredV2: vi.fn(),
 }));
 
 vi.mock("#src/temporal/v2/notification-reads.ts", () => ({
@@ -24,6 +25,9 @@ vi.mock("#src/temporal/v2/notification-reads.ts", () => ({
 }));
 vi.mock("#src/temporal/v2/notification/dare-summary-notification.ts", () => ({
   afterDareSummaryDeliveredV2: stubs.afterDareSummaryDeliveredV2,
+}));
+vi.mock("#src/temporal/v2/notification/prematch-follow-up.ts", () => ({
+  afterPrematchDeliveredV2: stubs.afterPrematchDeliveredV2,
 }));
 
 const { afterNotificationDeliveredV2 } =
@@ -53,7 +57,30 @@ describe("the post-delivery follow-up", () => {
     expect(stubs.afterDareSummaryDeliveredV2).toHaveBeenCalledTimes(1);
   });
 
-  test.each(["postmatch", "prematch", "settlement"] as const)(
+  test("hands a delivered prematch to its own follow-up and lets it throw", async () => {
+    // The prematch step records the Bryan Bucks message ref, the settlement
+    // announcement's only destination; a failure must reach the Activity's
+    // retry rather than be reported and dropped.
+    stubs.requireIntentRecordV2.mockResolvedValue(
+      intentRecord("channel", "prematch"),
+    );
+    stubs.afterPrematchDeliveredV2.mockResolvedValueOnce({
+      outcome: "completed",
+    });
+    expect(await afterNotificationDeliveredV2(ATTEMPT)).toEqual({
+      outcome: "completed",
+    });
+
+    stubs.afterPrematchDeliveredV2.mockRejectedValueOnce(
+      new Error("the ref write was lost"),
+    );
+    await expect(afterNotificationDeliveredV2(ATTEMPT)).rejects.toThrow(
+      "the ref write was lost",
+    );
+    expect(stubs.afterDareSummaryDeliveredV2).not.toHaveBeenCalled();
+  });
+
+  test.each(["postmatch", "settlement"] as const)(
     "has nothing to do for a %s intent",
     async (kind) => {
       stubs.requireIntentRecordV2.mockResolvedValue(

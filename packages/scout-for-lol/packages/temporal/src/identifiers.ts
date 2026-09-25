@@ -441,6 +441,7 @@ export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
   planMatchFanOutV2: "realtime",
   archivePrematchSnapshotV2: "realtime",
   planPrematchFanOutV2: "realtime",
+  openPrematchMarketsV2: "realtime",
   markNotificationReadyV2: "realtime",
   renderNotificationArtifactV2: "background",
   beginNotificationSendV2: "realtime",

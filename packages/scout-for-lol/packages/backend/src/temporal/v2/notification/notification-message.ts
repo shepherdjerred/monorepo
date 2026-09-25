@@ -51,6 +51,7 @@ export async function buildAttestedMessageV2(
       return await buildPrematchNotificationMessageV2(
         riotMatchId,
         await readAttestedPrematchArtifactV2(riotMatchId, abortSignal),
+        record.intent.target,
       );
   }
 }

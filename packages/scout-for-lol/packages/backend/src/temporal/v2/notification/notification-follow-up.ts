@@ -1,6 +1,7 @@
 import type { ScoutIntentAttemptRefV2 } from "@scout-for-lol/temporal/contracts-v2";
 import type { ScoutNotificationFollowUpV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
 import { afterDareSummaryDeliveredV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
+import { afterPrematchDeliveredV2 } from "#src/temporal/v2/notification/prematch-follow-up.ts";
 import { requireIntentRecordV2 } from "#src/temporal/v2/notification-reads.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -10,8 +11,12 @@ const logger = createLogger("scout-v2-notification-follow-up");
  * The best-effort work that follows a delivered notification, in its own
  * Activity and after the outcome is durably recorded.
  *
- * Only the Dare summary has any: v1 refreshes the Dare callout once the result
- * has been posted. It used to run inside `deliverNotificationV2`, at the end,
+ * Two kinds have any. A delivered prematch records its Bryan Bucks message
+ * ref, refreshes the pool's messages, enqueues the game's parlay and counts
+ * the guild's core output — v1's `recordPrematchOutputs`, per channel (see
+ * `prematch-follow-up.ts`). A Dare summary refreshes the Dare callout once the
+ * result has been posted. The Dare refresh used to run inside
+ * `deliverNotificationV2`, at the end,
  * guarded by a try/catch — which looks safe and is not. The refresh waits
  * behind its own serialized queue and then edits a Discord message, and either
  * wait can outlive the delivery Activity's ten-second heartbeat timeout. That
@@ -29,6 +34,14 @@ export async function afterNotificationDeliveredV2(
   input: ScoutIntentAttemptRefV2,
 ): Promise<ScoutNotificationFollowUpV2Result> {
   const record = await requireIntentRecordV2(input.intentKey);
+  if (record.intent.kind === "prematch") {
+    // Not caught here, unlike the Dare refresh: the pool's message ref is the
+    // settlement announcement's only destination, so a failure to record it
+    // is thrown for the Activity's retry to repair. Every step it holds is
+    // idempotent, and its genuinely best-effort steps report their own
+    // failures (see `prematch-follow-up.ts`).
+    return await afterPrematchDeliveredV2(record);
+  }
   if (record.intent.kind !== "dare-summary") {
     return { outcome: "skipped" };
   }
