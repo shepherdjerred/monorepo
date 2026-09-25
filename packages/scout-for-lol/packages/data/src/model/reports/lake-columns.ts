@@ -18,6 +18,13 @@ import { z } from "zod";
  * This module must stay browser-safe: zod only, no node/Bun imports.
  */
 
+/**
+ * One final-inventory slot's item id; 0 is an empty slot. Defaulted so a row
+ * staged before the slots existed still parses — the schema fingerprint
+ * rebuilds every lake file with them, so no query reads that default.
+ */
+const ItemSlotSchema = z.number().nullable().default(null);
+
 export const MatchLakeRowSchema = z.object({
   // Match keys
   match_id: z.string(),
@@ -134,6 +141,14 @@ export const MatchLakeRowSchema = z.object({
   placement: z.number().nullable(),
   subteam_placement: z.number().nullable(),
   player_subteam_id: z.number().nullable(),
+  // Final inventory: Riot's six slots and the trinket.
+  item0: ItemSlotSchema,
+  item1: ItemSlotSchema,
+  item2: ItemSlotSchema,
+  item3: ItemSlotSchema,
+  item4: ItemSlotSchema,
+  item5: ItemSlotSchema,
+  item6: ItemSlotSchema,
 });
 
 export type MatchLakeRow = z.infer<typeof MatchLakeRowSchema>;
@@ -323,7 +338,43 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     placement: "INTEGER",
     subteam_placement: "INTEGER",
     player_subteam_id: "INTEGER",
+    item0: "INTEGER",
+    item1: "INTEGER",
+    item2: "INTEGER",
+    item3: "INTEGER",
+    item4: "INTEGER",
+    item5: "INTEGER",
+    item6: "INTEGER",
   };
+
+/** The final-inventory slot columns, which only match_items reads. */
+export const ITEM_SLOT_COLUMNS = [
+  "item0",
+  "item1",
+  "item2",
+  "item3",
+  "item4",
+  "item5",
+  "item6",
+] as const;
+
+const ITEM_SLOTS = new Set<string>(ITEM_SLOT_COLUMNS);
+
+/**
+ * The match columns every read selects: all but the inventory slots.
+ *
+ * A read names its columns, and a build published before a column existed
+ * fails every read that names it until the lake is rebuilt (the backend's
+ * lakeSchemaFingerprint). Only match_items needs the slots, so only its reads
+ * name them: a deploy that adds them leaves every other match read working
+ * while the rebuild runs.
+ */
+export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
+  Object.fromEntries(
+    Object.entries(MATCH_LAKE_COLUMNS).filter(
+      ([name]) => !ITEM_SLOTS.has(name),
+    ),
+  );
 
 export const PREMATCH_LAKE_COLUMNS: Record<
   keyof PrematchLakeRow,

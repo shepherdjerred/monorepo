@@ -1,4 +1,5 @@
 import {
+  ITEM_SLOT_COLUMNS,
   MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
@@ -31,8 +32,13 @@ function columns(values: Record<string, DuckDbColumnType>) {
   return Object.entries(values).map(([name, type]) => ({ name, type }));
 }
 
+/** Dares read participant stats, not inventories: the slots stay out. */
+const DARE_EXCLUDED_COLUMNS = new Set<string>(ITEM_SLOT_COLUMNS);
+
 export function dareSqlV3Catalog() {
-  const participantColumns = columns(MATCH_LAKE_COLUMNS);
+  const participantColumns = columns(MATCH_LAKE_COLUMNS).filter(
+    (column) => !DARE_EXCLUDED_COLUMNS.has(column.name),
+  );
   return {
     contract:
       "One read-only SELECT. Game-set CTEs return match_id, game_end_at, and nullable BOOLEAN matched. The root returns exactly one nullable BOOLEAN named achieved.",
