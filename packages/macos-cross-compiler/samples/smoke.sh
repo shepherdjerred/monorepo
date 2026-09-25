@@ -92,6 +92,18 @@ for want in "identifier: dev.macos-cross.HelloSwiftUI" "flags: CodeSignatureFlag
   grep -qF -- "$want" <<<"$signature" || { echo "FAIL apps/HelloSwiftUI.app: signature lacks $want"; exit 1; }
 done
 echo "ok   apps/HelloSwiftUI.app: ad-hoc signature seals Info.plist and resources"
+
+# Its unit tests: an .xctest bundle loaded by the app, embedded in its PlugIns.
+applebuild "$samples/swiftui-app/project.yml" --target HelloTests --configuration Debug --output apps/tests --work work/tests
+xctest=apps/tests/HelloSwiftUI.app/Contents/PlugIns/HelloTests.xctest/Contents/MacOS/HelloTests
+expect "$xctest" macos 15.0 arm64
+header=$(otool -hv "$xctest")
+grep -qw BUNDLE <<<"$header" || { echo "FAIL $xctest: not an MH_BUNDLE"; exit 1; }
+libraries=$(otool -L "$xctest")
+for want in XCTest.framework/Versions/A/XCTest libXCTestSwiftSupport.dylib; do
+  grep -qF "$want" <<<"$libraries" || { echo "FAIL $xctest: does not link $want"; exit 1; }
+done
+echo "ok   apps/tests/HelloSwiftUI.app: hosts HelloTests.xctest (XCTest and Swift Testing)"
 applebuild "$samples/ios-app/project.yml" --target HelloiOS --platform ios --output apps/ios --work work/ios
 expect apps/ios/HelloiOS.app/HelloiOS ios 18.0 arm64
 applebuild "$samples/ios-app/project.yml" --target HelloiOS --platform maccatalyst --output apps/maccatalyst --work work/maccatalyst
@@ -105,7 +117,7 @@ expect "$mixed" macos 15.0 arm64 x86_64
 libraries=$(otool -L "$mixed")
 grep -qF '/usr/lib/libc++.1.dylib' <<<"$libraries" || { echo "FAIL $mixed: does not link libc++"; exit 1; }
 symbols=$(/usr/lib/llvm-apple/bin/llvm-nm "$mixed")
-for want in '_OBJC_CLASS_$_Greeter' '_mixed_add' '_mixed_word_count' '_OBJC_CLASS_$__TtC8MixedApp5Tally'; do
+for want in "_OBJC_CLASS_\$_Greeter" _mixed_add _mixed_word_count "_OBJC_CLASS_\$__TtC8MixedApp5Tally"; do
   grep -qF -- "$want" <<<"$symbols" || { echo "FAIL $mixed: lacks $want"; exit 1; }
 done
 headers=$(find apps/MixedApp.app -name '*.h')

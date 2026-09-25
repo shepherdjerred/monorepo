@@ -4,7 +4,7 @@
     "xcode": "27.0",
     "xcodeBuild": "27A5228h",
     "swiftImage": "swift:6.4.0-noble",
-    "sha256": "4363ef0a7cdb0f84c0f729b036d1aa076b17cbf843b2a2a50c59e50b720da9df",
+    "sha256": "805606a43244cf46b9823a68531d3af3a865f310873cb253c5c41310ca21a10e",
     "latest": true
   }
 }

@@ -8,11 +8,13 @@ struct HelloApp: App {
 }
 
 struct ContentView: View {
+  nonisolated static let title = "Built on Linux"
+
   @State private var taps = 0
 
   var body: some View {
     VStack(spacing: 12) {
-      Text("Built on Linux").font(.largeTitle)
+      Text(Self.title).font(.largeTitle)
       Button("Tapped \(taps) times") { taps += 1 }
     }
     .padding(40)
