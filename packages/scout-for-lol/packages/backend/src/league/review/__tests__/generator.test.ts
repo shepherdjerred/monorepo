@@ -325,7 +325,7 @@ describe("generateMatchReview", () => {
     });
   });
 
-  describe("when OpenRouter operational errors occur", () => {
+  describe("when provider operational errors occur", () => {
     test("records budget-exceeded provider issues without capturing to Sentry", async () => {
       const error = new Error(
         "LLM hourly token budget exceeded: 2000000 / 2000000",

@@ -202,6 +202,12 @@ describe("committed platform desired state", () => {
             monthly_budget_usd: 10,
             ai_studio_spend_cap_usd: 10,
             gemini_key_revision: 1,
+            gemini_quota_limits: {
+              "gemini-3-pro-image": {
+                requests_per_day: 50,
+                requests_per_minute: 5,
+              },
+            },
             // CDK8s references the item by this title, so it must be a
             // title the cluster's item path can carry.
             onepassword_item_title: "Birmel Gemini Key",
@@ -232,6 +238,12 @@ describe("committed platform desired state", () => {
             monthly_budget_usd: 10,
             ai_studio_spend_cap_usd: 50,
             gemini_key_revision: 1,
+            gemini_quota_limits: {
+              "gemini-3-pro-image": {
+                requests_per_day: 50,
+                requests_per_minute: 5,
+              },
+            },
             onepassword_item_title: "llm-gemini-birmel",
           },
         },

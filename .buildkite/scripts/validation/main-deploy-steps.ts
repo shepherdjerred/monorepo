@@ -18,7 +18,6 @@ export const MAIN_DEPLOY_STEPS = [
   "tofu-platform-openai",
   "tofu-platform-anthropic",
   "tofu-platform-discord",
-  "tofu-platform-openrouter",
   "tofu-platform-cloudflare-tokens",
   "release-please",
   "version-commit-back",

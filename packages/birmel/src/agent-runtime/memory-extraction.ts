@@ -70,9 +70,9 @@ const VerifiedToolExperienceMemorySchema = z.strictObject({
 // 'items'), 'oneOf' is not permitted", so post-response memory extraction failed
 // on every delivered turn while the reply itself succeeded.
 //
-// This is routing-dependent, which is what made it survive review: providers
-// that tolerate `oneOf` pass the same schema happily, so the failure only
-// appears once OpenRouter routes the workload to Azure.
+// This was provider-dependent, which is what made it survive review: providers
+// that tolerate `oneOf` pass the same schema happily, so it only appeared when
+// a request reached a strict one (then, OpenRouter routing to Azure).
 //
 // The `kind` literals stay disjoint, so parsing behaviour is unchanged; only
 // the failure message for invalid input is less specific.
