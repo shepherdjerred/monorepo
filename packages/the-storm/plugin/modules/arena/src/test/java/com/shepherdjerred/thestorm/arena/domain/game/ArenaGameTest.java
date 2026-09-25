@@ -134,9 +134,9 @@ final class ArenaGameTest {
     }
 
     @Test
-    void leavingWhileJoiningForgetsTheSnapshotWhenItArrives() {
+    void leavingWhileJoiningRestoresAndForgetsTheSnapshotWhenItArrives() {
       play.ok(new Join(ALICE, "Alice"));
-      assertThat(play.ok(new Leave(ALICE))).isEmpty();
+      assertThat(play.ok(new Leave(ALICE))).containsExactly(new Restore(ALICE));
 
       var effects = play.ok(new SnapshotStored(ALICE));
 
@@ -145,9 +145,9 @@ final class ArenaGameTest {
     }
 
     @Test
-    void disconnectingWhileJoiningAlsoForgetsTheSnapshot() {
+    void disconnectingWhileJoiningAlsoRestoresAndForgets() {
       play.ok(new Join(ALICE, "Alice"));
-      play.ok(new Disconnect(ALICE));
+      assertThat(play.ok(new Disconnect(ALICE))).containsExactly(new Restore(ALICE));
 
       assertThat(play.ok(new SnapshotStored(ALICE))).containsExactly(new ForgetSnapshot(ALICE));
     }
@@ -376,7 +376,7 @@ final class ArenaGameTest {
 
       var effects = play.ok(new SnapshotStored(BOB));
 
-      assertThat(effects.getFirst()).isEqualTo(new ForgetSnapshot(BOB));
+      assertThat(effects.getFirst()).isEqualTo(new Restore(BOB));
       assertThat(notices(effects)).containsExactly(NoticeKind.STARTED_WITHOUT_YOU);
       assertThat(play.game.member(BOB)).isEmpty();
     }
@@ -668,6 +668,18 @@ final class ArenaGameTest {
     }
 
     @Test
+    void theEndOfAGameRestoresSpectatorsStillJoining() {
+      play.start(ALICE);
+      play.tick(5, 0);
+      play.ok(new Spectate(DAVE, "Dave"));
+
+      var effects = play.ok(new Died(ALICE));
+
+      assertThat(effects).contains(new Restore(DAVE), new ResetArena());
+      assertThat(play.game.isEmpty()).isTrue();
+    }
+
+    @Test
     void theGameGoesOnWhileAFighterRemains() {
       play.start(ALICE, BOB);
       play.tick(5, 0);
@@ -732,10 +744,10 @@ final class ArenaGameTest {
     }
 
     @Test
-    void dyingWhileJoiningTouchesNothing() {
+    void dyingWhileJoiningRestoresAfterRespawning() {
       play.ok(new Join(ALICE, "Alice"));
 
-      assertThat(play.ok(new Died(ALICE))).isEmpty();
+      assertThat(play.ok(new Died(ALICE))).containsExactly(new RestoreAfterRespawn(ALICE));
       assertThat(play.game.isEmpty()).isTrue();
     }
 
@@ -764,6 +776,7 @@ final class ArenaGameTest {
               new Restore(ALICE),
               new RecordBestWave(BOB, "Bob", 1),
               new Restore(BOB),
+              new Restore(CAROL),
               new ResetArena());
       assertThat(play.game.isEmpty()).isTrue();
       assertThat(play.ok(new SnapshotStored(CAROL))).containsExactly(new ForgetSnapshot(CAROL));

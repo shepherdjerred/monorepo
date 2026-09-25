@@ -98,8 +98,35 @@ final class PlayerStates {
     return world != null;
   }
 
+  /**
+   * Closes whatever the player has open and puts the item on their cursor into their inventory, so
+   * nothing in a crafting grid or on the cursor is missed by a snapshot.
+   */
+  static void settle(Player player) {
+    var cursor = player.getItemOnCursor();
+    player.setItemOnCursor(null);
+    player.closeInventory();
+    if (!cursor.isEmpty()) {
+      player
+          .getInventory()
+          .addItem(cursor)
+          .values()
+          .forEach(left -> player.getWorld().dropItem(Places.at(player), left));
+    }
+  }
+
+  /**
+   * Closes whatever the player has open and throws away the item on their cursor: before they are
+   * emptied or restored, whatever they hold there came from the arena.
+   */
+  static void discardHeld(Player player) {
+    player.closeInventory();
+    player.setItemOnCursor(null);
+  }
+
   /** Empties the player for the arena: no items, effects or experience; full health and food. */
   static void wipe(Player player, GameMode mode) {
+    discardHeld(player);
     player.setGameMode(mode);
     player.getInventory().clear();
     player.clearActivePotionEffects();

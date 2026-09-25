@@ -13,8 +13,9 @@ import java.util.UUID;
  *
  * <p>The flow is lobby (join, pick a class, ready) → countdown → waves → the end (every fighter
  * dead or gone, the final wave cleared, or a stop), after which the arena is an empty lobby again.
- * Nothing of a player's is touched until their snapshot is stored, and everyone who arrived is
- * restored exactly once, whichever way they leave.
+ * A player is emptied in the same tick their snapshot is taken (so nothing they do while it is
+ * stored can be duplicated), and everyone who joined is restored exactly once, whichever way they
+ * leave.
  *
  * @param setup the arena's fixed rules
  * @param phase where the game is
