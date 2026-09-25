@@ -28,7 +28,10 @@ final class TownsConfigTest {
         maxClaimsPerTown: 64
         defaultFlags: [PUBLIC_SWITCHES]
       denialCooldownMillis: 2000
-      witherBufferChunks: 8
+      grief:
+        witherBufferChunks: 8
+        raidRadiusBlocks: 64
+        thrownItemMemoryTicks: 100
       regions:
         - id: spawn
           name: Spawn
@@ -55,7 +58,7 @@ final class TownsConfigTest {
     assertThat(config.regions())
         .extracting(region -> region.id())
         .containsExactly("spawn", "arena");
-    assertThat(config.claims().defaultFlags()).isEmpty();
+    assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
     var spawn = regions.byId("spawn").orElseThrow();
     assertThat(spawn.permits(new Act(Action.INTERACT, Subject.DOOR))).isTrue();
     assertThat(spawn.permits(new Act(Action.OPEN_CONTAINER, Subject.CONTAINER))).isFalse();
@@ -78,12 +81,20 @@ final class TownsConfigTest {
   @ValueSource(
       strings = {
         "denialCooldownMillis: 2000\n",
+        "  thrownItemMemoryTicks: 100\n",
         "  buffer: 2\n",
         "        subjects: [DOOR]\n",
         "      cuboids: []\n",
       })
   void missingKeysAreRejected(String line) {
     assertThat(parses(VALID.replace(line, ""))).isFalse();
+  }
+
+  @Test
+  void theRaidRadiusRoundsUpToWholeChunks() {
+    assertThat(new GriefLimits(8, 64, 100).raidRadiusChunks()).isEqualTo(4);
+    assertThat(new GriefLimits(8, 65, 100).raidRadiusChunks()).isEqualTo(5);
+    assertThat(new GriefLimits(8, 0, 100).raidRadiusChunks()).isZero();
   }
 
   @Test
@@ -102,6 +113,9 @@ final class TownsConfigTest {
         "buffer: 2|buffer: 17",
         "maxClaimsPerTown: 64|maxClaimsPerTown: 0",
         "worlds: [world]|worlds: []",
+        "raidRadiusBlocks: 64|raidRadiusBlocks: 300",
+        "thrownItemMemoryTicks: 100|thrownItemMemoryTicks: -1",
+        "witherBufferChunks: 8|witherBufferChunks: 17",
         "denialCooldownMillis: 2000|denialCooldownMillis: -5",
         "from: {x: -4, z: -4}|from: {x: 5, z: -4}",
         "id: spawn|id: Spawn Town",

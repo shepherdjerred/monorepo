@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
 import com.shepherdjerred.thestorm.towns.domain.protection.DenialThrottle;
 import com.shepherdjerred.thestorm.towns.domain.protection.ProtectionEngine;
+import com.shepherdjerred.thestorm.towns.domain.world.Neighbourhood;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.List;
 import java.util.TreeSet;
@@ -33,7 +34,14 @@ public final class TownsPaper {
             new DenialThrottle(config.denialCooldownMillis()),
             context.time(),
             context.scheduler());
-    var culprits = new Culprits(new NamespacedKey(context.plugin(), "wither_builder"));
+    var plugin = context.plugin();
+    var culprits =
+        new Culprits(
+            new Culprits.Keys(
+                new NamespacedKey(plugin, "wither_builder"),
+                new NamespacedKey(plugin, "cloud_thrower"),
+                new NamespacedKey(plugin, "cloud_origin")),
+            config.grief().thrownItemMemoryTicks());
     var guard = new Guard(state, engine, notices, culprits);
     var kinds = new BlockKinds();
     List<Listener> listeners =
@@ -45,9 +53,11 @@ public final class TownsPaper {
             new MovementListener(guard, kinds),
             new WorldListener(guard, kinds),
             new FireListener(guard, kinds),
-            new MobListener(guard, kinds),
-            new WitherListener(state, culprits, config.witherBufferChunks()),
-            new ContactListener(guard, server));
+            new MobListener(
+                guard, kinds, new Neighbourhood(state, state), config.grief().raidRadiusChunks()),
+            new WitherListener(state, culprits, config.grief().witherBufferChunks(), server),
+            new ContactListener(guard, server),
+            new ArrivalListener(guard));
     for (var listener : listeners) {
       server.getPluginManager().registerEvents(listener, context.plugin());
     }
