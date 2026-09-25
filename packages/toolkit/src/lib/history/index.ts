@@ -140,6 +140,35 @@ function schemaVersion(database: Database): number {
     .parse(database.query("PRAGMA user_version").get()).user_version;
 }
 
+const REQUIRED_TABLES = [
+  "documents",
+  "history_fts",
+  "source_state",
+  "usage_events",
+] as const;
+
+/**
+ * Whether the index matches this build's schema. The version alone is not
+ * enough: two unrelated schemas both shipped as v3 (one without
+ * `usage_events`), so a v3 index can still be missing required tables.
+ */
+function schemaIsCurrent(database: Database): boolean {
+  if (schemaVersion(database) !== INDEX_SCHEMA_VERSION) {
+    return false;
+  }
+  const tables = new Set(
+    z
+      .array(z.object({ name: z.string() }))
+      .parse(
+        database
+          .query("SELECT name FROM sqlite_master WHERE type = 'table'")
+          .all(),
+      )
+      .map((row) => row.name),
+  );
+  return REQUIRED_TABLES.every((table) => tables.has(table));
+}
+
 function createSchema(database: Database): void {
   database.run(`
     CREATE TABLE documents (
@@ -229,20 +258,22 @@ export class HistoryIndex {
       create: !readonly,
       strict: true,
     });
+    // Readers race the daemon's scans; wait for its write lock instead of
+    // failing with "database is locked".
+    database.run("PRAGMA busy_timeout = 5000;");
     const version = schemaVersion(database);
-    if (readonly && version !== INDEX_SCHEMA_VERSION) {
+    const current = schemaIsCurrent(database);
+    if (readonly && !current) {
       database.close();
       throw new Error(
-        `History index schema is v${String(version)}; restart the daemon to rebuild v${String(INDEX_SCHEMA_VERSION)}.`,
+        `History index schema is v${String(version)} without the current tables; restart the daemon to rebuild v${String(INDEX_SCHEMA_VERSION)}.`,
       );
     }
     const index = new HistoryIndex(database, runtimePaths.indexDb);
     if (!readonly) {
       try {
-        index.#database.run(
-          "PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;",
-        );
-        if (version !== INDEX_SCHEMA_VERSION) {
+        index.#database.run("PRAGMA journal_mode = WAL;");
+        if (!current) {
           rebuildSchema(index.#database);
         }
         await secureIndexFiles(runtimePaths.indexDb);

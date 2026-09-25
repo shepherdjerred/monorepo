@@ -323,6 +323,32 @@ describe("pet dashboard rollout", () => {
   });
 });
 
+describe("ops digest email rollout", () => {
+  test("sends the ops digest only in prod", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "ops-digest-email-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
+    for (const [environment, enabled] of [
+      ["beta", false],
+      ["prod", true],
+    ] as const) {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "alert-dashboard",
+      ).find((candidate) => candidate.key === "ops-digest-email-enabled");
+      expect(flag).toMatchObject({
+        default: enabled,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+    }
+  });
+});
+
 describe("Scout V2 post-match ownership", () => {
   test("keeps V2 as the post-match discovery owner in every environment", () => {
     // The rollback switch, not a new surface: merging it must change nothing,

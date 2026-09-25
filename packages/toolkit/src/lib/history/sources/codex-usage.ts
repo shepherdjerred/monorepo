@@ -164,7 +164,9 @@ function applyTokenCount(
   location: UsageFieldLocation,
 ): void {
   const infoValue = payload["info"];
-  if (infoValue === undefined) {
+  // Codex also emits rate-limit-only token_count events with `info: null`;
+  // they carry no token usage for this turn.
+  if (infoValue === undefined || infoValue === null) {
     return;
   }
   const info = parseRecord(infoValue);

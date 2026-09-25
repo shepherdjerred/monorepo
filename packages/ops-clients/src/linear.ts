@@ -11,6 +11,7 @@ const STATE_TYPES = [
   "started",
   "completed",
   "canceled",
+  "duplicate",
 ] as const;
 
 export type LinearStateType = (typeof STATE_TYPES)[number];
@@ -69,7 +70,7 @@ export type LinearOverview = {
 
 const OPEN_ISSUES = `
 query OpenIssues($after: String) {
-  issues(first: 250, after: $after, filter: {state: {type: {nin: ["completed", "canceled"]}}}) {
+  issues(first: 250, after: $after, filter: {state: {type: {nin: ["completed", "canceled", "duplicate"]}}}) {
     pageInfo { hasNextPage endCursor }
     nodes { id identifier title url createdAt team { key } state { type } }
   }

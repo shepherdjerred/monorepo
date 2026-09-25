@@ -20,7 +20,7 @@ export const OPS_POLICY = {
    * Month-to-date pay-as-you-go API spend budget across Anthropic, OpenAI,
    * and OpenRouter, excluding fixed subscriptions.
    */
-  monthlyApiBudgetUsd: 150,
+  monthlyApiBudgetUsd: 100,
   /** Warn once the month-end projection exceeds this share of budget. */
   budgetProjectionWarningRatio: 1,
   /** Certificates expiring within this many days warn; half of it errors. */
