@@ -24,14 +24,6 @@ final class WordingTest {
   }
 
   @Test
-  void crystalsHaveSeparatorsAndPlurals() {
-    assertThat(Wording.crystals(1)).isEqualTo("1 crystal");
-    assertThat(Wording.crystals(0)).isEqualTo("0 crystals");
-    assertThat(Wording.crystals(3_750)).isEqualTo("3,750 crystals");
-    assertThat(Wording.crystals(1_000_000)).isEqualTo("1,000,000 crystals");
-  }
-
-  @Test
   void waitsRoundUpSoTheyAreNeverShort() {
     assertThat(Wording.wait(Duration.ZERO)).isEqualTo("0s");
     assertThat(Wording.wait(Duration.ofSeconds(-5))).isEqualTo("0s");

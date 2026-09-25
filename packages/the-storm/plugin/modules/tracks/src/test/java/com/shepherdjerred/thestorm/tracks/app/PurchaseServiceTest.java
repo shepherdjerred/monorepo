@@ -42,8 +42,8 @@ final class PurchaseServiceTest {
   private void online(TrackProgress progress) {
     test.store.put(ALICE, progress);
     test.cache.quit(ALICE);
-    test.cache.joined(ALICE);
-    test.cache.loaded(ALICE, progress);
+    var token = test.cache.joined(ALICE);
+    test.cache.loaded(ALICE, token, progress);
   }
 
   private Quote quote(Track track) {
@@ -237,6 +237,65 @@ final class PurchaseServiceTest {
         .isEqualTo(Result.err(List.of(new PurchaseProblem.StillLoading())));
     assertThat(service.overview(ALICE).join())
         .isEqualTo(Result.err(new PurchaseProblem.StillLoading()));
+  }
+
+  @Test
+  void aPlayerWhoseTracksFailedToLoadIsToldSo() {
+    test.cache.quit(ALICE);
+    var token = test.cache.joined(ALICE);
+    test.cache.failed(ALICE, token);
+
+    assertThat(service.quote(ALICE, MECHANIC).join())
+        .isEqualTo(Result.err(List.of(new PurchaseProblem.LoadFailed())));
+    assertThat(service.buy(ALICE, new Quote(MECHANIC, 1, 1_000)).join())
+        .isEqualTo(Result.err(List.of(new PurchaseProblem.LoadFailed())));
+    assertThat(service.overview(ALICE).join())
+        .isEqualTo(Result.err(new PurchaseProblem.LoadFailed()));
+  }
+
+  @Test
+  void anOfflinePlayerCannotBuy() {
+    test.cache.quit(ALICE);
+
+    assertThat(service.buy(ALICE, new Quote(MECHANIC, 1, 1_000)).join())
+        .isEqualTo(Result.err(List.of(new PurchaseProblem.StillLoading())));
+  }
+
+  @Test
+  void shutdownWaitsForARunningPurchaseAndRefusesNewOnes() throws Exception {
+    wallets.give(ALICE_ACCOUNT, 5_000);
+    var quote = quote(MECHANIC);
+    var gate = new CompletableFuture<Void>();
+    test.store.holdLoads(gate);
+    var running = service.buy(ALICE, quote);
+
+    var stopping = CompletableFuture.supplyAsync(() -> service.shutdown(Duration.ofSeconds(10)));
+    Thread.sleep(50);
+    var refused = service.quote(ALICE, ENGINEER).join();
+    assertThat(stopping).isNotDone();
+    gate.complete(null);
+
+    assertThat(stopping.get(10, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+    assertThat(running.join().isOk()).isTrue();
+    assertThat(test.store.get(ALICE).level(MECHANIC)).isEqualTo(1);
+    assertThat(refused).isEqualTo(Result.err(List.of(new PurchaseProblem.ShuttingDown())));
+    assertThat(service.buy(ALICE, quote).join())
+        .isEqualTo(Result.err(List.of(new PurchaseProblem.ShuttingDown())));
+  }
+
+  @Test
+  void shutdownGivesUpAfterItsTimeout() {
+    wallets.give(ALICE_ACCOUNT, 5_000);
+    var quote = quote(MECHANIC);
+    test.store.holdLoads(new CompletableFuture<>());
+    var _ = service.buy(ALICE, quote);
+
+    assertThat(service.shutdown(Duration.ofMillis(20))).isFalse();
+  }
+
+  @Test
+  void shutdownWithNothingRunningReturnsAtOnce() {
+    assertThat(service.shutdown(Duration.ofMillis(1))).isTrue();
   }
 
   @Test

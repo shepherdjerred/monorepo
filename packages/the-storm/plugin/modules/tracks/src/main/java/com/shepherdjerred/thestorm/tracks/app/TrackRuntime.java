@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.tracks.app;
 
+import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.tracks.domain.TrackProgress;
 import java.time.InstantSource;
 import java.util.UUID;
@@ -12,7 +13,7 @@ import org.slf4j.Logger;
  * @param store the source of truth
  * @param permissions the permission grants that follow it
  * @param cache online players' progress
- * @param mainThread runs work on the server's main thread
+ * @param scheduler the main thread, now or later
  * @param time the clock
  * @param logger where failures are reported
  */
@@ -20,9 +21,14 @@ public record TrackRuntime(
     TrackStore store,
     PermissionSync permissions,
     LevelCache cache,
-    Executor mainThread,
+    Scheduler scheduler,
     InstantSource time,
     Logger logger) {
+
+  /** Runs work on the server's main thread. */
+  Executor mainThread() {
+    return scheduler.mainThread();
+  }
 
   /**
    * {@code player}'s progress was stored as {@code progress}: refresh the cache and their
@@ -30,22 +36,21 @@ public record TrackRuntime(
    */
   void changed(UUID player, TrackProgress progress) {
     cache.changed(player, progress);
-    syncPermissions(player, progress);
+    syncPermissions(player);
   }
 
-  /** Brings {@code player}'s permissions in line with {@code progress}, logging any failure. */
-  void syncPermissions(UUID player, TrackProgress progress) {
+  /** Brings {@code player}'s permissions in line with their stored progress, logging failures. */
+  void syncPermissions(UUID player) {
     var _ =
         permissions
-            .apply(player, progress)
+            .apply(player)
             .whenComplete(
                 (ignored, failure) -> {
                   if (failure != null) {
                     logger.error(
-                        "Could not sync track permissions for {} to {}; they are retried on"
-                            + " their next join",
+                        "Could not sync track permissions for {}; they are retried on their next"
+                            + " join",
                         player,
-                        progress,
                         failure);
                   }
                 });

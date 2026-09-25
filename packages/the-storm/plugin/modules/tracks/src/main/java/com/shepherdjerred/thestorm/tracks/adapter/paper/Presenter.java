@@ -68,7 +68,10 @@ final class Presenter {
     var quote = next.get();
     line.append(
         Component.text(
-            " - next " + Wording.numeral(quote.level()) + ": " + Wording.crystals(quote.cost()),
+            " - next "
+                + Wording.numeral(quote.level())
+                + ": "
+                + explanations.crystals(quote.cost()),
             NamedTextColor.GRAY));
     if (standing.problems().isEmpty()) {
       return line.append(

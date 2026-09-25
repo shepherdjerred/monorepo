@@ -12,16 +12,27 @@ import com.shepherdjerred.thestorm.tracks.domain.TrackProgress;
 import com.shepherdjerred.thestorm.tracks.domain.purchase.PurchaseAttempt;
 import com.shepherdjerred.thestorm.tracks.domain.purchase.PurchaseRules;
 import com.shepherdjerred.thestorm.tracks.domain.purchase.TrackStanding;
+import java.time.Duration;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Buying track levels. The level is written only after the economy has taken payment; if it then
  * cannot be written, the payment is refunded with a compensating transfer, so a player is never
  * charged for a level they do not get. One purchase per player runs at a time.
+ *
+ * <p>On shutdown, {@link #shutdown} refuses new purchases and waits for running ones to finish
+ * before the database closes. One window remains: if the process dies between the charge and the
+ * level write (a crash or kill, not a clean stop), the ledger holds a {@code track:<id>:<level>}
+ * payment with no level and no refund. The operator's remedy is {@code /perks admin set <player>
+ * <track> <level>} for the paid level.
  */
 public final class PurchaseService implements TrackPurchases {
 
@@ -30,7 +41,11 @@ public final class PurchaseService implements TrackPurchases {
   private final TrackRuntime runtime;
   private final Wallets wallets;
   private final PurchaseRules rules;
-  private final Set<UUID> buying = ConcurrentHashMap.newKeySet();
+
+  /** Each player's running purchase, completed once it has been paid and stored or refunded. */
+  private final Map<UUID, CompletableFuture<Void>> buying = new ConcurrentHashMap<>();
+
+  private volatile boolean closed;
 
   public PurchaseService(TrackRuntime runtime, Wallets wallets, PurchaseRules rules) {
     this.runtime = runtime;
@@ -49,45 +64,105 @@ public final class PurchaseService implements TrackPurchases {
   }
 
   /**
-   * Every track's standing for {@code player}, for {@code /perks}; empty until they have loaded.
+   * Refuses new purchases and waits up to {@code timeout} for running ones to be paid and stored or
+   * refunded. Blocks the calling thread: call only while the plugin is stopping. Returns whether
+   * every purchase finished in time.
+   */
+  public boolean shutdown(Duration timeout) {
+    closed = true;
+    var running = CompletableFuture.allOf(buying.values().toArray(new CompletableFuture<?>[0]));
+    try {
+      running.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+      return true;
+    } catch (TimeoutException e) {
+      runtime
+          .logger()
+          .error(
+              "Stopping with track purchases still running for {}; any charged without a level"
+                  + " need /perks admin set",
+              buying.keySet(),
+              e);
+      return false;
+    } catch (ExecutionException e) {
+      // Each purchase reports its own failure; it has finished either way.
+      return true;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return false;
+    }
+  }
+
+  /** Why {@code player} cannot use the tracks right now, if anything. */
+  private Optional<PurchaseProblem> notReady(UUID player) {
+    if (closed) {
+      return Optional.of(new PurchaseProblem.ShuttingDown());
+    }
+    var state = runtime.cache().state(player);
+    if (state.isEmpty()) {
+      return Optional.of(new PurchaseProblem.StillLoading());
+    }
+    return switch (state.get()) {
+      case LevelCache.State.Loading() -> Optional.of(new PurchaseProblem.StillLoading());
+      case LevelCache.State.Failed() -> Optional.of(new PurchaseProblem.LoadFailed());
+      case LevelCache.State.Loaded(var _) -> Optional.empty();
+    };
+  }
+
+  /** {@code player}'s loaded progress, or why it is not usable. */
+  private Result<TrackProgress, PurchaseProblem> ready(UUID player) {
+    var problem = notReady(player);
+    if (problem.isPresent()) {
+      return Result.err(problem.get());
+    }
+    return runtime
+        .cache()
+        .progress(player)
+        .<Result<TrackProgress, PurchaseProblem>>map(Result::ok)
+        .orElseGet(() -> Result.err(new PurchaseProblem.StillLoading()));
+  }
+
+  /**
+   * Every track's standing for {@code player}, for {@code /perks}; refused until they have loaded.
    */
   public CompletableFuture<Result<List<TrackStanding>, PurchaseProblem>> overview(UUID player) {
-    var loaded = runtime.cache().progress(player);
-    if (loaded.isEmpty()) {
-      return completedFuture(Result.err(new PurchaseProblem.StillLoading()));
-    }
-    var progress = loaded.get();
-    return wallets
-        .balance(account(player))
-        .thenApplyAsync(
-            balance ->
-                Result.ok(rules.overview(progress, runtime.time().instant(), balance.amount())),
-            runtime.mainThread());
+    return switch (ready(player)) {
+      case Result.Err<TrackProgress, PurchaseProblem>(var problem) ->
+          completedFuture(Result.err(problem));
+      case Result.Ok<TrackProgress, PurchaseProblem>(var progress) ->
+          wallets
+              .balance(account(player))
+              .thenApplyAsync(
+                  balance ->
+                      Result.ok(
+                          rules.overview(progress, runtime.time().instant(), balance.amount())),
+                  runtime.mainThread());
+    };
   }
 
   @Override
   public CompletableFuture<Result<Quote, List<PurchaseProblem>>> quote(UUID player, Track track) {
-    var loaded = runtime.cache().progress(player);
-    if (loaded.isEmpty()) {
-      return completedFuture(Result.err(List.of(new PurchaseProblem.StillLoading())));
-    }
-    var progress = loaded.get();
-    return wallets
-        .balance(account(player))
-        .thenApplyAsync(
-            balance ->
-                rules.validate(
-                    PurchaseAttempt.next(
-                        progress, track, runtime.time().instant(), balance.amount())),
-            runtime.mainThread());
+    return switch (ready(player)) {
+      case Result.Err<TrackProgress, PurchaseProblem>(var problem) ->
+          completedFuture(Result.err(List.of(problem)));
+      case Result.Ok<TrackProgress, PurchaseProblem>(var progress) ->
+          wallets
+              .balance(account(player))
+              .thenApplyAsync(
+                  balance ->
+                      rules.validate(
+                          PurchaseAttempt.next(
+                              progress, track, runtime.time().instant(), balance.amount())),
+                  runtime.mainThread());
+    };
   }
 
   @Override
   public CompletableFuture<Result<Purchase, List<PurchaseProblem>>> buy(UUID player, Quote quote) {
-    if (runtime.cache().progress(player).isEmpty()) {
-      return completedFuture(Result.err(List.of(new PurchaseProblem.StillLoading())));
+    if (ready(player) instanceof Result.Err<TrackProgress, PurchaseProblem>(var problem)) {
+      return completedFuture(Result.err(List.of(problem)));
     }
-    if (!buying.add(player)) {
+    var done = new CompletableFuture<Void>();
+    if (buying.putIfAbsent(player, done) != null) {
       return completedFuture(Result.err(List.of(new PurchaseProblem.AlreadyBuying())));
     }
     CompletableFuture<Result<Recorded, List<PurchaseProblem>>> flow;
@@ -102,11 +177,17 @@ public final class PurchaseService implements TrackPurchases {
                           .balance(account(player))
                           .thenCompose(balance -> charge(player, quote, progress, balance)));
     } catch (RuntimeException e) {
-      buying.remove(player);
+      finished(player, done);
       throw e;
     }
-    return flow.whenComplete((ignored, failure) -> buying.remove(player))
+    return flow.whenComplete((ignored, failure) -> finished(player, done))
         .thenApplyAsync(recorded -> finish(player, recorded), runtime.mainThread());
+  }
+
+  /** Frees {@code player} to buy again and lets {@link #shutdown} see the purchase is over. */
+  private void finished(UUID player, CompletableFuture<Void> done) {
+    buying.remove(player, done);
+    done.complete(null);
   }
 
   /** Checks the offer against the stored progress and, if it still stands, takes payment. */
