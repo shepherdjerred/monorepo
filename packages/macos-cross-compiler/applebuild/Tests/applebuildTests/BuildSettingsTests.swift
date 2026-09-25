@@ -46,6 +46,62 @@ import Testing
     #expect(!flags.contains("InferSendableFromCaptures"))
   }
 
+  /// The settings an XcodeGen application target resolves, below the spec.
+  private func appSettings(_ configuration: String) -> BuildSettings {
+    BuildSettings(layers: [xcodeCompilerDefaults(), configurationPresets(configuration)])
+  }
+
+  /// Pinned to the flags Xcode 27 passes for an XcodeGen app target (its
+  /// `*-common-args.resp`), less warnings and header-map search paths.
+  @Test func clangFlagsFollowXcodesCBuildRule() throws {
+    let release = appSettings("Release")
+    #expect(try clangFlags(release, language: "c") == [
+      "-std=gnu11", "-fmodules", "-gmodules", "-fpascal-strings", "-Os", "-fno-common", "-g", "-fvisibility=hidden",
+    ])
+    #expect(try clangFlags(release, language: "objective-c") == [
+      "-std=gnu11", "-fobjc-arc", "-fobjc-weak", "-fmodules", "-gmodules", "-fpascal-strings", "-Os", "-fno-common",
+      "-DNS_BLOCK_ASSERTIONS=1", "-DOBJC_OLD_DISPATCH_PROTOTYPES=0", "-g", "-fvisibility=hidden",
+    ])
+    #expect(try clangFlags(release, language: "c++") == [
+      "-std=gnu++14", "-stdlib=libc++", "-fmodules", "-fno-cxx-modules", "-gmodules", "-fpascal-strings", "-Os",
+      "-fno-common", "-g", "-fvisibility=hidden", "-fvisibility-inlines-hidden",
+    ])
+
+    let debug = appSettings("Debug")
+    #expect(try clangFlags(debug, language: "c") == [
+      "-std=gnu11", "-fmodules", "-gmodules", "-fpascal-strings", "-O0", "-fno-common", "-DDEBUG=1", "-g",
+    ])
+    #expect(try clangFlags(debug, language: "objective-c") == [
+      "-std=gnu11", "-fobjc-arc", "-fobjc-weak", "-fmodules", "-gmodules", "-fpascal-strings", "-O0", "-fno-common",
+      "-DDEBUG=1", "-DOBJC_OLD_DISPATCH_PROTOTYPES=0", "-g",
+    ])
+    #expect(try clangFlags(debug, language: "c++") == [
+      "-std=gnu++14", "-stdlib=libc++", "-fmodules", "-fno-cxx-modules", "-gmodules",
+      "-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG", "-fpascal-strings", "-O0", "-fno-common", "-DDEBUG=1",
+      "-g", "-fvisibility-inlines-hidden",
+    ])
+  }
+
+  @Test func projectSettingsOverrideTheCDefaults() throws {
+    let settings = BuildSettings(layers: [
+      xcodeCompilerDefaults(), configurationPresets("Release"),
+      [
+        "CLANG_ENABLE_OBJC_ARC": "NO", "GCC_PREPROCESSOR_DEFINITIONS": "$(inherited) FEATURE=1",
+        "OTHER_CFLAGS": "-fno-objc-exceptions", "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+        "CLANG_CXX_STANDARD_LIBRARY_HARDENING": "extensive",
+      ],
+    ])
+    let objc = try clangFlags(settings, language: "objective-c")
+    #expect(!objc.contains("-fobjc-arc"))
+    #expect(objc.contains("-DFEATURE=1"))
+    #expect(objc.last == "-fno-objc-exceptions")
+    let cxx = try clangFlags(settings, language: "objective-c++")
+    #expect(cxx.contains("-std=c++20"))
+    #expect(cxx.contains("-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE"))
+    // OTHER_CPLUSPLUSFLAGS defaults to OTHER_CFLAGS.
+    #expect(cxx.last == "-fno-objc-exceptions")
+  }
+
   @Test func missingSwiftVersionIsAnError() {
     #expect(throws: BuildError.self) { try swiftFlags(BuildSettings(layers: [])) }
   }

@@ -4,10 +4,15 @@
 #   scripts/compare-bundles.sh <xcode.app> <linux.app>
 #
 # Checks what distinguishes a faithful build rather than what merely differs
-# by construction: the file tree, every Info.plist, each Mach-O's load
-# commands and LC_BUILD_VERSION, and that the Linux bundle's signature is
-# valid. Keys that name the build host (`BuildMachineOSBuild`) and the code
-# signature itself are excluded: the reference is built unsigned on a Mac.
+# by construction: the file tree, every Info.plist, each Mach-O's
+# architectures, linked libraries, and LC_BUILD_VERSION, and that the Linux
+# bundle's signature is valid. Keys that name the build host
+# (`BuildMachineOSBuild`) and the code signature itself are excluded: the
+# reference is built unsigned on a Mac.
+#
+# Linked libraries are compared as a set. Their order is reported but not
+# failed: Xcode's linker lists libraries an object autolinks where it loads
+# that object, while ld64 lists them after the command line's.
 set -euo pipefail
 
 reference=$1
@@ -38,10 +43,18 @@ done < <(cd "$reference" && find . -name Info.plist -not -path '*/_CodeSignature
 
 section "Mach-O load commands and build versions"
 while IFS= read -r binary; do
-  for arch in $(lipo -archs "$reference/$binary"); do
-    dylibs() { otool -arch "$arch" -L "$1" | tail -n +2 | sed 's/^[[:space:]]*//' | sort; }
+  archs() { lipo -archs "$1" | tr ' ' '\n' | sort; }
+  archs "$reference/$binary" > "$work/a"; archs "$candidate/$binary" > "$work/b"; report "$binary architectures"
+  for arch in $(comm -12 "$work/a" "$work/b"); do
+    dylibs() { otool -arch "$arch" -L "$1" | grep -v ':$' | sed 's/^[[:space:]]*//'; }
     version() { otool -arch "$arch" -l "$1" | grep -A4 LC_BUILD_VERSION | grep -E 'platform|minos|sdk' | tr -s ' '; }
-    dylibs "$reference/$binary" > "$work/a"; dylibs "$candidate/$binary" > "$work/b"; report "$binary ($arch) load commands"
+    dylibs "$reference/$binary" > "$work/ordered-a"; dylibs "$candidate/$binary" > "$work/ordered-b"
+    sort "$work/ordered-a" > "$work/a"; sort "$work/ordered-b" > "$work/b"
+    same_set=false; cmp -s "$work/a" "$work/b" && same_set=true
+    report "$binary ($arch) linked libraries"
+    if $same_set && ! cmp -s "$work/ordered-a" "$work/ordered-b"; then
+      echo "note: $binary ($arch) lists the same libraries in a different order"
+    fi
     version "$reference/$binary" > "$work/a"; version "$candidate/$binary" > "$work/b"; report "$binary ($arch) LC_BUILD_VERSION"
   done
 done < <(cd "$reference" && find . -type f -perm -u+x -not -path '*/_CodeSignature*' -exec sh -c 'file -b "$1" | grep -q Mach-O && echo "$1"' _ {} \; | sort)

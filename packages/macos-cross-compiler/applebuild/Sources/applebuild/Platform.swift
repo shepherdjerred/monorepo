@@ -105,23 +105,56 @@ enum Platform: String {
   }
 }
 
-/// XcodeGen's per-configuration presets for every project.
+/// Compiler defaults Xcode applies when nothing sets them: the application
+/// product type's (DarwinProductTypes.xcspec) and Clang.xcspec's own.
+func xcodeCompilerDefaults() -> [String: String] {
+  [
+    "GCC_SYMBOLS_PRIVATE_EXTERN": "YES",
+    "GCC_INLINES_ARE_PRIVATE_EXTERN": "YES",
+    "GCC_OPTIMIZATION_LEVEL": "s",
+    "GCC_ENABLE_PASCAL_STRINGS": "YES",
+    "CLANG_ENABLE_MODULE_DEBUGGING": "YES",
+    "ENABLE_NS_ASSERTIONS": "YES",
+    "OTHER_CPLUSPLUSFLAGS": "$(OTHER_CFLAGS)",
+    "SWIFT_OBJC_INTERFACE_HEADER_NAME": "$(PRODUCT_MODULE_NAME)-Swift.h",
+  ]
+}
+
+/// XcodeGen's presets for every project: its base set (the settings that
+/// change compiler output; warnings only change diagnostics) and the
+/// per-configuration ones.
 func configurationPresets(_ configuration: String) -> [String: String] {
+  var presets = [
+    "CLANG_CXX_LANGUAGE_STANDARD": "gnu++14",
+    "CLANG_CXX_LIBRARY": "libc++",
+    "CLANG_ENABLE_MODULES": "YES",
+    "CLANG_ENABLE_OBJC_ARC": "YES",
+    "CLANG_ENABLE_OBJC_WEAK": "YES",
+    "ENABLE_STRICT_OBJC_MSGSEND": "YES",
+    "GCC_C_LANGUAGE_STANDARD": "gnu11",
+    "GCC_NO_COMMON_BLOCKS": "YES",
+  ]
   if configuration.lowercased() == "debug" {
-    return [
+    presets.merge([
       "DEBUG_INFORMATION_FORMAT": "dwarf",
       "ENABLE_TESTABILITY": "YES",
+      "GCC_DYNAMIC_NO_PIC": "NO",
+      "GCC_OPTIMIZATION_LEVEL": "0",
+      "GCC_PREPROCESSOR_DEFINITIONS": "$(inherited) DEBUG=1",
       "ONLY_ACTIVE_ARCH": "YES",
       "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
       "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "DEBUG",
-    ]
+    ]) { $1 }
+  } else {
+    presets.merge([
+      "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
+      "ENABLE_NS_ASSERTIONS": "NO",
+      "SWIFT_COMPILATION_MODE": "wholemodule",
+      "SWIFT_OPTIMIZATION_LEVEL": "-O",
+      "VALIDATE_PRODUCT": "YES",
+    ]) { $1 }
   }
-  return [
-    "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
-    "SWIFT_COMPILATION_MODE": "wholemodule",
-    "SWIFT_OPTIMIZATION_LEVEL": "-O",
-    "VALIDATE_PRODUCT": "YES",
-  ]
+  return presets
 }
 
 /// The SDK's own identity, for the `DT*` keys Xcode stamps into Info.plist.
