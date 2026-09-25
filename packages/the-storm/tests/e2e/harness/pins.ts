@@ -50,4 +50,13 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
       sha256:
         "f902f7da7eb99e8bfaf461f80283c4e2750b7d9727e6b508ea4bb9163f55b1db",
     },
+    {
+      // TheStorm's paper-plugin.yml requires LuckPerms (load BEFORE); same
+      // build as the production server image.
+      name: "LuckPerms",
+      version: "5.5.71",
+      url: "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
+      sha256:
+        "49cecb66fa1fd22a133039a490e9c1e5095a238e7cd66eb9d2a16fe6c897550d",
+    },
   ]);
