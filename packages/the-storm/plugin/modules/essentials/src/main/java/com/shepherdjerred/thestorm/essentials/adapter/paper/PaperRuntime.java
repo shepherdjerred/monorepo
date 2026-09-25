@@ -20,18 +20,33 @@ import org.bukkit.Server;
 public record PaperRuntime(
     Server server, Scheduler scheduler, InstantSource time, ComponentLogger logger) {
 
-  /** Runs {@code then} on the main thread with the result of {@code future}, logging failures. */
-  <T> void onMain(CompletableFuture<T> future, String what, Consumer<T> then) {
+  /**
+   * Runs {@code then} on the main thread with the result of {@code future}. If the future fails, or
+   * {@code then} throws, the failure is logged and handed to {@code failed} on the main thread.
+   */
+  <T> void onMain(
+      CompletableFuture<T> future, String what, Consumer<T> then, Consumer<Throwable> failed) {
     var _ =
         future.whenCompleteAsync(
             (value, failure) -> {
               if (failure != null) {
                 report(what, failure);
+                failed.accept(failure);
                 return;
               }
-              then.accept(value);
+              try {
+                then.accept(value);
+              } catch (RuntimeException e) {
+                report(what, e);
+                failed.accept(e);
+              }
             },
             main());
+  }
+
+  /** {@link #onMain(CompletableFuture, String, Consumer, Consumer)} that only logs failures. */
+  <T> void onMain(CompletableFuture<T> future, String what, Consumer<T> then) {
+    onMain(future, what, then, failure -> {});
   }
 
   /** Logs {@code future}'s failure, if any. For writes nobody waits on. */

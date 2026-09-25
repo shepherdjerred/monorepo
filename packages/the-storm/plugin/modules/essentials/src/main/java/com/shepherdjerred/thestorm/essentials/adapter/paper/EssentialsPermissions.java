@@ -25,6 +25,8 @@ public final class EssentialsPermissions {
   static final String AFK = PREFIX + "afk";
   static final String KICK = PREFIX + "kick";
   static final String BAN = PREFIX + "ban";
+  static final String KICK_EXEMPT = PREFIX + "kick.exempt";
+  static final String BAN_EXEMPT = PREFIX + "ban.exempt";
   static final String HISTORY = PREFIX + "history";
   static final String TELEPORT_FREE = PREFIX + "teleport.free";
   static final String TELEPORT_NO_COOLDOWN = PREFIX + "teleport.nocooldown";
@@ -41,11 +43,14 @@ public final class EssentialsPermissions {
     return KIT + "." + name;
   }
 
-  /** Registers every permission, including one per kit. */
-  public void register(Collection<String> kitNames) {
+  /**
+   * Registers every permission, including one per kit: the starter kit is open to everyone, every
+   * other kit must be granted.
+   */
+  public void register(Collection<String> kitNames, String starterKit) {
     add(SPAWN, "Use /spawn", PermissionDefault.TRUE);
     add(HOME, "Use /home, /sethome, /delhome and /homes", PermissionDefault.TRUE);
-    add(TPA, "Use /tpa, /tpahere, /tpaccept and /tpdeny", PermissionDefault.TRUE);
+    add(TPA, "Use /tpa, /tpahere, /tpaccept, /tpdeny and /tptoggle", PermissionDefault.TRUE);
     add(BACK, "Use /back", PermissionDefault.TRUE);
     add(WARP, "Use /warp", PermissionDefault.TRUE);
     add(KIT, "Use /kit", PermissionDefault.TRUE);
@@ -53,12 +58,15 @@ public final class EssentialsPermissions {
     add(AFK, "Use /afk", PermissionDefault.TRUE);
     add(SET_WARP, "Use /setwarp and /delwarp", PermissionDefault.OP);
     add(KICK, "Use /kick", PermissionDefault.OP);
-    add(BAN, "Use /ban, /tempban and /unban", PermissionDefault.OP);
+    add(BAN, "Use /ban, /tempban, /unban, /pardon and /banlist", PermissionDefault.OP);
     add(HISTORY, "Use /history", PermissionDefault.OP);
+    add(KICK_EXEMPT, "Cannot be kicked", PermissionDefault.OP);
+    add(BAN_EXEMPT, "Cannot be banned", PermissionDefault.OP);
     add(TELEPORT_FREE, "Teleport without paying", PermissionDefault.OP);
     add(TELEPORT_NO_COOLDOWN, "Teleport without cooldowns", PermissionDefault.OP);
     for (var name : kitNames) {
-      add(kit(name), "Claim the " + name + " kit", PermissionDefault.TRUE);
+      var byDefault = name.equals(starterKit) ? PermissionDefault.TRUE : PermissionDefault.OP;
+      add(kit(name), "Claim the " + name + " kit", byDefault);
     }
   }
 

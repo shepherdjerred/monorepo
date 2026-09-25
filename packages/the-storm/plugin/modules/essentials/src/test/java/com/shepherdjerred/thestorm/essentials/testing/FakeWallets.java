@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * An in-memory {@link Wallets} following the port's contract: the server account never runs out.
  */
-public final class FakeWallets implements Wallets {
+public class FakeWallets implements Wallets {
 
   private final Map<AccountId, Long> balances = new HashMap<>();
   private final List<Receipt> receipts = new ArrayList<>();

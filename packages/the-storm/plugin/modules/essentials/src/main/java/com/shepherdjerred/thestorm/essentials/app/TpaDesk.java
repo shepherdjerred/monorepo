@@ -4,10 +4,9 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaError;
 import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaRequest;
 import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaRequests;
-import java.time.Duration;
+import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaSelector;
 import java.time.InstantSource;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /** The outstanding {@code /tpa} and {@code /tpahere} requests. Main thread only. */
@@ -16,28 +15,32 @@ public final class TpaDesk {
   private final InstantSource time;
   private TpaRequests requests;
 
-  public TpaDesk(InstantSource time, Duration timeout) {
+  public TpaDesk(InstantSource time, TpaRequests.Rules rules) {
     this.time = time;
-    this.requests = TpaRequests.empty(timeout);
+    this.requests = TpaRequests.empty(rules);
   }
 
-  /** Sends a request, replacing any earlier one from the same requester to the same target. */
+  /** Sends a request; see {@link TpaRequests#send} for when one is refused. */
   public Result<TpaRequest, TpaError> send(
       UUID requester, UUID target, TpaRequest.Direction direction) {
-    var now = time.instant();
     return requests
-        .send(requester, target, direction, now)
+        .send(requester, target, direction, time.instant())
         .map(
-            next -> {
-              requests = next;
-              return next.pendingFor(target, now).getFirst();
+            sent -> {
+              requests = sent.remaining();
+              return sent.request();
             });
   }
 
-  /** Removes {@code target}'s request from {@code requester}, or their newest one. */
-  public Result<TpaRequest, TpaError> take(UUID target, Optional<UUID> requester) {
+  /** The request {@code selector} names, left in place. */
+  public Result<TpaRequest, TpaError> peek(UUID target, TpaSelector selector) {
+    return requests.peek(target, selector, time.instant());
+  }
+
+  /** Removes and returns the request {@code selector} names. */
+  public Result<TpaRequest, TpaError> take(UUID target, TpaSelector selector) {
     return requests
-        .take(target, requester, time.instant())
+        .take(target, selector, time.instant())
         .map(
             taken -> {
               requests = taken.remaining();
@@ -55,5 +58,12 @@ public final class TpaDesk {
   /** Drops every request to or from {@code player}. */
   public void forget(UUID player) {
     requests = requests.forget(player);
+  }
+
+  /** {@code /tptoggle}: flips whether {@code player} receives requests; returns the new setting. */
+  public boolean toggle(UUID player) {
+    var accepting = !requests.isAccepting(player);
+    requests = requests.accepting(player, accepting);
+    return accepting;
   }
 }

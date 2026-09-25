@@ -18,12 +18,20 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Prices and charges teleports. Crystals go from the payer to the server account with the reason
- * {@code teleport:<kind>}; the payer's usage (multiplier and cooldown) is saved only once the
- * charge succeeds. Futures complete off the main thread.
+ * Prices and charges teleports in three steps, so a teleport that does not happen never costs the
+ * player anything:
  *
- * <p>Callers must not start two payments for the same player at once; the Paper adapter allows one
- * pending teleport per player.
+ * <ol>
+ *   <li>{@link #charge} moves the crystals from the payer to the server account (reason {@code
+ *       teleport:<kind>}) and records nothing else;
+ *   <li>once the player has arrived, {@link #confirm} records the usage, which raises the
+ *       multiplier and starts the cooldown;
+ *   <li>if the teleport fails after the charge, {@link #refund} returns the crystals and nothing is
+ *       recorded.
+ * </ol>
+ *
+ * <p>Futures complete off the main thread. Callers must not run two teleports for the same player
+ * at once; the Paper adapter holds one lock per player from quote to arrival.
  */
 public final class TeleportPayments {
 
@@ -52,19 +60,24 @@ public final class TeleportPayments {
                     .mapError(TeleportRefusal.Cooldown::new));
   }
 
-  /** Re-quotes at the current time, charges the payer and records the usage. */
-  public CompletableFuture<Result<Quote, TeleportRefusal>> pay(
+  /** Re-quotes at the current time and takes the crystals. Records no usage. */
+  public CompletableFuture<Result<Quote, TeleportRefusal>> charge(
       UUID payer, TeleportKind kind, Exemptions exemptions) {
     return quote(payer, kind, exemptions)
         .thenCompose(
             quoted ->
                 switch (quoted) {
                   case Result.Err<Quote, TeleportRefusal> refused -> completedFuture(refused);
-                  case Result.Ok<Quote, TeleportRefusal>(var quote) -> charge(payer, quote);
+                  case Result.Ok<Quote, TeleportRefusal>(var quote) -> take(payer, quote);
                 });
   }
 
-  /** Returns a paid teleport's crystals when it could not happen after all. */
+  /** The player arrived: records the usage from {@code quote}. */
+  public CompletableFuture<Void> confirm(UUID payer, Quote quote) {
+    return usage.save(payer, quote.kind(), quote.next());
+  }
+
+  /** The teleport could not happen after {@link #charge}: returns the crystals. */
   public CompletableFuture<Void> refund(UUID payer, Quote quote) {
     if (quote.cost() == 0) {
       return completedFuture(null);
@@ -78,9 +91,9 @@ public final class TeleportPayments {
         .thenAccept(TeleportPayments::requireOk);
   }
 
-  private CompletableFuture<Result<Quote, TeleportRefusal>> charge(UUID payer, Quote quote) {
+  private CompletableFuture<Result<Quote, TeleportRefusal>> take(UUID payer, Quote quote) {
     if (quote.cost() == 0) {
-      return record(payer, quote);
+      return completedFuture(Result.ok(quote));
     }
     return wallets
         .transfer(
@@ -88,17 +101,12 @@ public final class TeleportPayments {
             new AccountId.Server(),
             Crystals.of(quote.cost()),
             "teleport:" + quote.kind().id())
-        .thenCompose(
+        .thenApply(
             transfer ->
                 switch (transfer) {
-                  case Result.Ok<Receipt, EconomyError> _ -> record(payer, quote);
-                  case Result.Err<Receipt, EconomyError>(var error) ->
-                      completedFuture(Result.err(refusal(error)));
+                  case Result.Ok<Receipt, EconomyError> _ -> Result.ok(quote);
+                  case Result.Err<Receipt, EconomyError>(var error) -> Result.err(refusal(error));
                 });
-  }
-
-  private CompletableFuture<Result<Quote, TeleportRefusal>> record(UUID payer, Quote quote) {
-    return usage.save(payer, quote.kind(), quote.next()).thenApply(saved -> Result.ok(quote));
   }
 
   private static TeleportRefusal refusal(EconomyError error) {

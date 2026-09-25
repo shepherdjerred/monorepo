@@ -12,7 +12,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 /**
- * Reports activity to the AFK tracker and announces players coming back. Chat arrives on an async
+ * Reports activity to the AFK tracker and announces players coming back. Activity is looking
+ * around, interacting, chatting or using commands; being moved is not. Chat arrives on an async
  * thread; the announcement is scheduled onto the main thread.
  */
 final class AfkListener implements Listener {
@@ -39,7 +40,8 @@ final class AfkListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onMove(PlayerMoveEvent event) {
-    if (event.hasChangedOrientation() || event.hasChangedBlock()) {
+    // Only looking around counts: water currents, pistons and other players move idle bodies too.
+    if (event.hasChangedOrientation()) {
       active(event.getPlayer());
     }
   }

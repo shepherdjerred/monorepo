@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.app;
 
+import static java.util.Comparator.comparing;
+
 import com.shepherdjerred.thestorm.essentials.app.store.ModerationLogStore;
 import com.shepherdjerred.thestorm.essentials.domain.moderation.AuditEntry;
 import com.shepherdjerred.thestorm.essentials.domain.moderation.Ban;
@@ -13,9 +15,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Kicks and bans. Every action is appended to the audit log; each player's standing is replayed
- * from the log into memory when the module starts and kept current on every write, so the login
- * check never touches the database.
+ * Kicks and bans. Every action is appended to the audit log first; only once the append succeeds
+ * does the in-memory standing change, so memory never claims a ban the log lost. Standings are
+ * replayed from the log when the module starts, so the login check never touches the database.
  */
 public final class ModerationService {
 
@@ -30,6 +32,14 @@ public final class ModerationService {
     this.loaded = log.all().thenAccept(entries -> entries.forEach(this::apply));
   }
 
+  /**
+   * A ban in force.
+   *
+   * @param player the banned player
+   * @param ban the ban
+   */
+  public record ActiveBan(UUID player, Ban ban) {}
+
   /** Starts replaying every standing from {@code log}; see {@link #loaded()}. */
   public static ModerationService load(ModerationLogStore log, InstantSource time) {
     return new ModerationService(log, time);
@@ -41,21 +51,32 @@ public final class ModerationService {
   }
 
   /**
-   * Records {@code entry} once the log has loaded. The in-memory standing changes before the write,
-   * so a ban applies to the next login at once.
+   * Appends {@code entry} to the log once it has loaded, then applies it in memory. Fails if the
+   * append fails, and then nothing changes.
    */
   public CompletableFuture<Void> record(AuditEntry entry) {
-    return loaded.thenCompose(
-        ready -> {
-          apply(entry);
-          return log.append(entry);
-        });
+    return loaded.thenCompose(ready -> log.append(entry)).thenRun(() -> apply(entry));
   }
 
   /** The ban in force on {@code player} once the log has loaded. For the login check. */
   public CompletableFuture<Optional<Ban>> activeBan(UUID player) {
     return loaded.thenApply(
         ready -> standings.getOrDefault(player, Standing.CLEAN).activeBan(time.instant()));
+  }
+
+  /** Every ban in force once the log has loaded, newest first. For {@code /banlist}. */
+  public CompletableFuture<List<ActiveBan>> activeBans() {
+    return loaded.thenApply(
+        ready -> {
+          var now = time.instant();
+          return standings.entrySet().stream()
+              .flatMap(
+                  entry ->
+                      entry.getValue().activeBan(now).stream()
+                          .map(ban -> new ActiveBan(entry.getKey(), ban)))
+              .sorted(comparing((ActiveBan active) -> active.ban().at()).reversed())
+              .toList();
+        });
   }
 
   /** {@code player}'s newest {@code limit} audit entries, newest first. */

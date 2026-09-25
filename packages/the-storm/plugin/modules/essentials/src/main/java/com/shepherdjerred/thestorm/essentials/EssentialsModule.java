@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.essentials;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqBackStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeStore;
@@ -28,7 +29,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Spawn, homes, {@code /tpa}, {@code /back}, warps, kits, the rules book, AFK and kicks and bans:
  * The Storm's replacement for EssentialsX and LiteBans. Teleports are paid in crystals through the
- * economy module, which must be enabled first.
+ * economy module and checked against land protection from the towns module; both must be enabled
+ * first.
  *
  * <p>Publishes {@link TeleportGuards} (other modules add rules such as "not in combat") and {@link
  * AfkStatus}.
@@ -48,6 +50,7 @@ public final class EssentialsModule implements StormModule {
     context.database().migrate(id(), getClass().getClassLoader());
     var database = context.database();
     var wallets = context.services().require(Wallets.class);
+    var protection = context.services().require(Protection.class);
 
     var guards = new GuardRegistry();
     var afk = new AfkTracker(context.time(), config.afkTimeout());
@@ -76,7 +79,8 @@ public final class EssentialsModule implements StormModule {
         EssentialsPaper.start(
             context,
             config,
-            new EssentialsPaper.App(payments, guards, afk, moderation, players, warps, stores));
+            new EssentialsPaper.App(
+                payments, guards, afk, moderation, players, warps, stores, protection));
   }
 
   @Override
