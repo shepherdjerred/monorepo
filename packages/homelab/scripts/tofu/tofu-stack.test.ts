@@ -2,10 +2,6 @@ import { describe, expect, test } from "vitest";
 import { buildTofuEnvironment, validationInitArguments } from "./tofu-stack.ts";
 import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
 import {
-  serializeWorkloadIdentityInventory,
-  workloadIdentityInventory,
-} from "./export-workload-identity.ts";
-import {
   collectOnePasswordTargets,
   loadPlatformDesiredState,
   type PlatformStack,
@@ -186,7 +182,7 @@ describe("committed platform desired state", () => {
     );
   });
 
-  test("requires an exact 1Password handoff field for generated keys", async () => {
+  test("requires a valid 1Password item title for each minted Gemini key", async () => {
     const stackDir = await temporaryDirectory();
     await Bun.write(
       `${stackDir}/desired-state.json`,
@@ -201,13 +197,16 @@ describe("committed platform desired state", () => {
             display_name: "LLM birmel",
             monthly_budget_usd: 10,
             ai_studio_spend_cap_usd: 10,
-            onepassword_targets: [{ vault_item_id: "birmel-item" }],
+            gemini_key_revision: 1,
+            // CDK8s references the item by this title, so it must be a
+            // title the cluster's item path can carry.
+            onepassword_item_title: "Birmel Gemini Key",
           },
         },
       }),
     );
     await expect(loadPlatformDesiredState(stackDir, "google")).rejects.toThrow(
-      "vault_field",
+      "onepassword_item_title",
     );
   });
 
@@ -228,9 +227,8 @@ describe("committed platform desired state", () => {
             display_name: "LLM birmel",
             monthly_budget_usd: 10,
             ai_studio_spend_cap_usd: 50,
-            onepassword_targets: [
-              { vault_item_id: "birmel-item", vault_field: "GEMINI_API_KEY" },
-            ],
+            gemini_key_revision: 1,
+            onepassword_item_title: "llm-gemini-birmel",
           },
         },
       }),
@@ -307,42 +305,5 @@ describe("committed platform desired state", () => {
         },
       }),
     ).toEqual([{ vault_item_id: "birmel-item" }]);
-  });
-});
-
-describe("workload identity export", () => {
-  const output = JSON.stringify({
-    organization_id: "org-123",
-    workloads: {
-      "birmel-prod": {
-        federation_rule_id: "fdrl_abc",
-        service_account_id: "svac_abc",
-        workspace_id: "wrkspc_abc",
-      },
-    },
-  });
-
-  test("wraps the tofu output as the committed inventory", () => {
-    const inventory = workloadIdentityInventory(output);
-    expect(inventory.anthropic.workloads["birmel-prod"]?.workspace_id).toBe(
-      "wrkspc_abc",
-    );
-    expect(serializeWorkloadIdentityInventory(inventory)).toBe(
-      `${JSON.stringify({ anthropic: JSON.parse(output) }, null, 2)}\n`,
-    );
-  });
-
-  test("rejects a malformed id at export rather than at synthesis", () => {
-    expect(() =>
-      workloadIdentityInventory(output.replace("fdrl_abc", "rule-abc")),
-    ).toThrow();
-  });
-
-  test("rejects federated workloads without an organization", () => {
-    expect(() =>
-      workloadIdentityInventory(
-        output.replace('"organization_id":"org-123"', '"organization_id":null'),
-      ),
-    ).toThrow("organization_id is required");
   });
 });

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import googleDesiredStateJson from "#tofu/google/desired-state.json" with { type: "json" };
+import anthropicFederationDesiredStateJson from "#tofu/anthropic-federation/desired-state.json" with { type: "json" };
 
 export type PlatformStack =
   | "openai"
@@ -11,8 +13,12 @@ export type PlatformStack =
 const SCHEMA_REFERENCE = "../platform-desired-state.schema.json";
 const nonEmptyString = z.string().min(1);
 const optionalNonEmptyString = nonEmptyString.optional();
-const resourceMap = (schema: z.ZodType) => z.record(nonEmptyString, schema);
+const resourceMap = <SCHEMA extends z.ZodType>(schema: SCHEMA) =>
+  z.record(nonEmptyString, schema);
 const schemaReference = z.literal(SCHEMA_REFERENCE);
+// OpenTofu creates these 1Password items and CDK8s references them by title,
+// so the title is the contract between the two and lives here once.
+const onePasswordItemTitle = z.string().regex(/^[a-z0-9][a-z0-9-]{2,62}$/u);
 const onePasswordTarget = z.strictObject({
   vault_item_id: nonEmptyString,
   vault_field: nonEmptyString,
@@ -250,6 +256,8 @@ const anthropicFederationDesiredState = z.strictObject({
       // lifetime, and projected tokens live 600s, so more than 1200 is never
       // honoured.
       token_lifetime_seconds: z.number().int().min(60).max(1200),
+      // The item OpenTofu writes the workload's federation identifiers into.
+      onepassword_item_title: onePasswordItemTitle,
     }),
   ),
 });
@@ -271,7 +279,10 @@ const googleDesiredState = z.strictObject({
         display_name: nonEmptyString,
         monthly_budget_usd: z.number().positive(),
         ai_studio_spend_cap_usd: z.number().positive(),
-        onepassword_targets: z.array(onePasswordTarget).min(1),
+        // Bumping this mints a replacement key before the old one is deleted.
+        gemini_key_revision: z.number().int().positive(),
+        // The item OpenTofu writes the minted key into, as GEMINI_API_KEY.
+        onepassword_item_title: onePasswordItemTitle,
       })
       .refine(
         (workload) =>
@@ -382,6 +393,44 @@ export function collectOnePasswordTargets(
   };
   visit(value);
   return targets;
+}
+
+/** The 1Password items OpenTofu writes LLM workload credentials into. */
+export type LlmCredentialItems = {
+  /** Workload key to the item holding its GEMINI_API_KEY. */
+  readonly gemini: Readonly<Record<string, string>>;
+  /** Workload key to the item holding its Anthropic federation identifiers. */
+  readonly anthropicFederation: Readonly<Record<string, string>>;
+};
+
+function titlesByWorkload(
+  workloads: Readonly<Record<string, { onepassword_item_title: string }>>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(workloads).map(([key, workload]) => [
+      key,
+      workload.onepassword_item_title,
+    ]),
+  );
+}
+
+/**
+ * Read, synchronously, which 1Password item each LLM workload's
+ * OpenTofu-written credentials live in. CDK8s synthesis is synchronous and
+ * offline, and these titles are committed desired state, so the manifests and
+ * the stacks cannot disagree about where a credential is.
+ */
+export function loadLlmCredentialItems(): LlmCredentialItems {
+  const google = googleDesiredState.parse(googleDesiredStateJson);
+  const federation = anthropicFederationDesiredState.parse(
+    anthropicFederationDesiredStateJson,
+  );
+  return {
+    gemini: titlesByWorkload(google.google_workloads),
+    anthropicFederation: titlesByWorkload(
+      federation.anthropic_federation_workloads,
+    ),
+  };
 }
 
 export async function loadPlatformDesiredState(

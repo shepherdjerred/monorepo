@@ -1,4 +1,4 @@
-import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-workload-identity.ts";
+import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   Cpu,
   Deployment,

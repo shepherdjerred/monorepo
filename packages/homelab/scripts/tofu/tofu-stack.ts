@@ -24,12 +24,6 @@ import {
   type StackDefinition,
   type TofuStack,
 } from "./tofu-stack-manifest.ts";
-import {
-  serializeWorkloadIdentityInventory,
-  WORKLOAD_IDENTITY_INVENTORY_PATH,
-  WORKLOAD_IDENTITY_OUTPUT,
-  workloadIdentityInventory,
-} from "./export-workload-identity.ts";
 
 const STACKS_REL = "src/tofu";
 
@@ -50,7 +44,7 @@ const AMBIENT_ENV_ALLOWLIST = [
   "USER",
 ] as const;
 
-type TofuAction = "validate" | "plan" | "apply" | "export-workload-identity";
+type TofuAction = "validate" | "plan" | "apply";
 
 function homelabRoot(): string {
   return new URL("../..", import.meta.url).pathname;
@@ -266,16 +260,13 @@ async function validateStack(
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply|export-workload-identity [--dry-run]",
+    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply [--dry-run]",
   );
   process.exit(1);
 }
 
 function parseAction(value: string | undefined): TofuAction {
-  return value === "validate" ||
-    value === "plan" ||
-    value === "apply" ||
-    value === "export-workload-identity"
+  return value === "validate" || value === "plan" || value === "apply"
     ? value
     : usage();
 }
@@ -308,41 +299,6 @@ async function plan(
     throw new TransientError(message);
   }
   throw new Error(message);
-}
-
-/**
- * Refresh the committed federation inventory from the stack's one
- * non-sensitive output. Reading a single named output, captured without echo,
- * keeps this from ever printing another output of the stack.
- */
-async function exportWorkloadIdentity(
-  stack: TofuStack,
-  root: string,
-  options: RunOptions,
-): Promise<void> {
-  if (stack !== "anthropic-federation") {
-    throw new Error(
-      "export-workload-identity reads only the anthropic-federation stack",
-    );
-  }
-  const result = await run(
-    [
-      "tofu",
-      `-chdir=${STACKS_REL}/${stack}`,
-      "output",
-      "-json",
-      WORKLOAD_IDENTITY_OUTPUT,
-    ],
-    { ...options, capture: true, secret: true },
-  );
-  const inventory = workloadIdentityInventory(result.stdout);
-  await Bun.write(
-    `${root}/${WORKLOAD_IDENTITY_INVENTORY_PATH}`,
-    serializeWorkloadIdentityInventory(inventory),
-  );
-  console.log(
-    `--- exported ${Object.keys(inventory.anthropic.workloads).length.toString()} federated workloads to ${WORKLOAD_IDENTITY_INVENTORY_PATH}`,
-  );
 }
 
 async function main(): Promise<void> {
@@ -380,10 +336,6 @@ async function main(): Promise<void> {
   );
   if (action === "plan") {
     await plan(stack, definition, options);
-    return;
-  }
-  if (action === "export-workload-identity") {
-    await exportWorkloadIdentity(stack, root, options);
     return;
   }
   await run(

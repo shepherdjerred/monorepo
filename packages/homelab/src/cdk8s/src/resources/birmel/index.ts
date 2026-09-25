@@ -19,7 +19,10 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
-import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-workload-identity.ts";
+import {
+  addAnthropicFederation,
+  geminiApiKeyEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
@@ -181,10 +184,9 @@ done`,
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
-        // Provider credentials for the LLM runtime, one key per provider from
-        // Birmel's own OpenAI project and Gemini project. Anthropic, when
-        // federated, arrives through addAnthropicFederation below instead of
-        // a key.
+        // Provider credentials for the LLM runtime, from Birmel's own OpenAI
+        // project and the Gemini key the google stack minted. Anthropic
+        // arrives through addAnthropicFederation below instead of a key.
         OPENAI_API_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
@@ -193,14 +195,7 @@ done`,
           ),
           key: "OPENAI_API_KEY",
         }),
-        GEMINI_API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "birmel-gemini-api-key-secret",
-            onePasswordItem.name,
-          ),
-          key: "GEMINI_API_KEY",
-        }),
+        GEMINI_API_KEY: geminiApiKeyEnv(chart, "birmel-prod"),
         LLM_MODEL: EnvValue.fromValue("gpt-5.6-sol"),
         LLM_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
         LLM_MEMORY_MODEL: EnvValue.fromValue("gpt-5.4-nano"),

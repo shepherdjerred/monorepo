@@ -22,11 +22,8 @@ variable "google_workloads" {
     # Applied by hand in AI Studio's Spend tab; recorded here so the value
     # has one reviewed home. See google/budgets.tf for why.
     ai_studio_spend_cap_usd = number
-    onepassword_targets = list(object({
-      vault_item_id   = string
-      vault_field     = string
-      vault_json_path = optional(string)
-    }))
+    gemini_key_revision     = number
+    onepassword_item_title  = string
   }))
   default = {}
 

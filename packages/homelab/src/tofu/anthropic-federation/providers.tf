@@ -6,6 +6,10 @@ terraform {
       source  = "registry.terraform.io/ippontech/anthropic"
       version = "1.43.5"
     }
+    onepassword = {
+      source  = "1Password/onepassword"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -16,3 +20,7 @@ terraform {
 # operator-applied and never planned in CI. Workspaces still authenticate with
 # ANTHROPIC_ADMIN_API_KEY, so a run needs both.
 provider "anthropic" {}
+
+# Writes each workload's identifiers into its own 1Password item, through the
+# 1Password desktop app for the account named by OP_ACCOUNT.
+provider "onepassword" {}

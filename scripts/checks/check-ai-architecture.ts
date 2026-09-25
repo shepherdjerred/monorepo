@@ -151,6 +151,9 @@ const SCOUT_WORKBENCH_ROOT = "packages/scout-for-lol/packages/frontend/";
 const PROVIDER_CREDENTIAL_WIRING_PATHS = new Set([
   ".buildkite/pipeline.yml",
   ".buildkite/scripts/images/smoke-app-in-image.ts",
+  // Wires the per-workload Gemini key and Anthropic federation identifiers
+  // that the operator-applied OpenTofu stacks write to 1Password.
+  "packages/homelab/src/cdk8s/src/misc/llm-provider-credentials.ts",
   "packages/homelab/src/cdk8s/src/resources/birmel/index.ts",
   "packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts",
   "packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts",
@@ -237,7 +240,7 @@ const LLM_BILLING_RECONCILIATION_PATH =
 // The federation audience is Anthropic's API origin by definition; the pod
 // never calls it from here.
 const WORKLOAD_IDENTITY_MANIFEST_PATH =
-  "packages/homelab/src/cdk8s/src/misc/llm-workload-identity.ts";
+  "packages/homelab/src/cdk8s/src/misc/llm-provider-credentials.ts";
 const NATIVE_SDK_CONTRACT_TEST =
   "scripts/release/release-agent-sdk-contract.test.ts";
 

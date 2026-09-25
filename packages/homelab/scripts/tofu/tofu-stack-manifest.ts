@@ -72,6 +72,8 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
         target: "ANTHROPIC_ADMIN_API_KEY",
       },
       { source: "ANTHROPIC_AUTH_TOKEN", target: "ANTHROPIC_AUTH_TOKEN" },
+      // Names the 1Password account whose desktop app authorizes the item writes.
+      { source: "OP_ACCOUNT", target: "OP_ACCOUNT" },
       {
         source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
         target: "TF_VAR_tofu_state_encryption_passphrase",
@@ -167,6 +169,8 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     platform: "google",
     encrypted: true,
     credentials: [
+      // Names the 1Password account whose desktop app authorizes the item writes.
+      { source: "OP_ACCOUNT", target: "OP_ACCOUNT" },
       {
         source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
         target: "TF_VAR_tofu_state_encryption_passphrase",

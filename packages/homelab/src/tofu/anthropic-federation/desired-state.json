@@ -19,17 +19,20 @@
     "birmel-prod": {
       "workspace_key": "prod",
       "namespace": "birmel",
-      "token_lifetime_seconds": 1200
+      "token_lifetime_seconds": 1200,
+      "onepassword_item_title": "llm-anthropic-federation-birmel-prod"
     },
     "scout-beta": {
       "workspace_key": "beta",
       "namespace": "scout-beta",
-      "token_lifetime_seconds": 1200
+      "token_lifetime_seconds": 1200,
+      "onepassword_item_title": "llm-anthropic-federation-scout-beta"
     },
     "scout-prod": {
       "workspace_key": "prod",
       "namespace": "scout-prod",
-      "token_lifetime_seconds": 1200
+      "token_lifetime_seconds": 1200,
+      "onepassword_item_title": "llm-anthropic-federation-scout-prod"
     }
   }
 }

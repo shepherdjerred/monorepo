@@ -64,19 +64,41 @@ resource "anthropic_federation_rule" "workload" {
   depends_on = [anthropic_service_account_workspace.workload]
 }
 
-# Not secrets: a token can only be minted by presenting a JWT from the trusted
-# issuer whose claims match the rule. `scripts/tofu/export-workload-identity.ts`
-# copies these into the CDK8s workload-identity inventory.
-output "anthropic_workload_identity" {
-  description = "Per-workload federation identifiers for the CDK8s workload-identity inventory"
-  value = {
-    organization_id = data.anthropic_organization.current.id
-    workloads = {
-      for key, rule in anthropic_federation_rule.workload : key => {
-        federation_rule_id = rule.id
-        service_account_id = anthropic_service_account.workload[key].id
-        workspace_id       = anthropic_workspace.managed[var.anthropic_federation_workloads[key].workspace_key].id
-      }
+# The identifiers a federated pod needs, one 1Password item per workload,
+# synced into its namespace as ANTHROPIC_* environment variables. They are not
+# secrets — a token can only be minted by presenting a JWT from the trusted
+# issuer whose claims match the rule — but routing them through 1Password
+# means an apply reaches the cluster without a follow-up commit.
+resource "onepassword_item" "workload_identity" {
+  for_each = var.anthropic_federation_workloads
+
+  # The "Homelab (Kubernetes)" vault, which the cluster's 1Password operator syncs.
+  vault    = "v64ocnykdqju4ui6j6pua56xw4"
+  title    = each.value.onepassword_item_title
+  category = "secure_note"
+
+  section {
+    label = "federation"
+
+    field {
+      label = "ANTHROPIC_ORGANIZATION_ID"
+      type  = "STRING"
+      value = data.anthropic_organization.current.id
+    }
+    field {
+      label = "ANTHROPIC_FEDERATION_RULE_ID"
+      type  = "STRING"
+      value = anthropic_federation_rule.workload[each.key].id
+    }
+    field {
+      label = "ANTHROPIC_SERVICE_ACCOUNT_ID"
+      type  = "STRING"
+      value = anthropic_service_account.workload[each.key].id
+    }
+    field {
+      label = "ANTHROPIC_WORKSPACE_ID"
+      type  = "STRING"
+      value = anthropic_workspace.managed[each.value.workspace_key].id
     }
   }
 }
