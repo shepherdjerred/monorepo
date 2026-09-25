@@ -31,7 +31,7 @@
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",
-    "@types/react": "19.2.18",
+    "@types/react": "19.3.0",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
@@ -49,7 +49,7 @@
     "discord.js": "^14",
     "discord.js-selfbot-v13": "^3.7",
     "ink": "7.1.1",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "zod": "^4.4.3"
   }
 }

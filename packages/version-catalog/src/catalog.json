@@ -72,7 +72,7 @@
         "registryUrl": "https://intel.github.io/helm-charts/",
         "versioning": "semver"
       },
-      "value": "0.36.0"
+      "value": "0.37.0"
     },
     {
       "name": "node-feature-discovery",
@@ -96,7 +96,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "91.4.1"
+      "value": "91.5.1"
     },
     {
       "name": "prometheus-adapter",
@@ -204,7 +204,7 @@
         "versioning": "docker",
         "packageName": "itzg/minecraft-server"
       },
-      "value": "2026.8.2-java8@sha256:baf543e7ac35bd1cd06c3e2d8c546884e77a70ea1468f25a16c0981d84f5f72f",
+      "value": "2026.9.1-java8@sha256:aea37afb200728b004c41cbdc1b79e088955f32d22f5dac7f44cd94e5eaac0fe",
       "notes": [
         "Java 8 variant for the Forge 1.12.2 RLCraft server; keep separate from",
         "the Java 25 Paper image used by the other Minecraft servers."
@@ -244,7 +244,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.1@sha256:d24bd0048c759a468970989e9df11a6b96a7628d556d00f923e60a35ba59237b"
+      "value": "1.6.1@sha256:762f802274598da27255b2e5778f262b2b71b355a23e3812d9ee1520f8dbe37c"
     },
     {
       "name": "seerr-team/seerr",
@@ -268,7 +268,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v2.4.8@sha256:c58f6d4af511613f218b6dafbfc84078af4e5a6089790c1fdba58fd7c5dad70a"
+      "value": "v2.5.1@sha256:20388de48f0e088ad9feb9904f6a452fd9ef933a79c7b2bf186e388224e8f437"
     },
     {
       "name": "linuxserver/prowlarr",
@@ -280,7 +280,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.6.5@sha256:c96b56d94d116a9f4de94bc23d3381689492e6c3cfb7435320e8d982e406f99a"
+      "value": "2.6.5@sha256:f2b26429893d4c4cb71941b7ee50b1bdecd9d5f9f9e02d5410615e9f4f7c8d95"
     },
     {
       "name": "qdm12/gluetun",
@@ -356,7 +356,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2026.9.1@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4"
+      "value": "2026.9.3@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c"
     },
     {
       "name": "tailscale/golink",
@@ -427,7 +427,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v8.2.4"
+      "value": "v8.2.5"
     },
     {
       "name": "basnijholt/adaptive-lighting",
@@ -504,7 +504,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v3.13.0"
+      "value": "v3.13.1"
     },
     {
       "name": "elax46/custom-brand-icons",
@@ -1012,7 +1012,23 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.19.5@sha256:570cdfce9f9928a8cf36ea814278e2e56651d2e7f2dac3363ebf3e0cda303bc2"
+      "value": "0.19.6@sha256:f74af5397ba326b94b4d2808f5fb6eac4996ab0f20a3358af0afd3a7a1e12c1a"
+    },
+    {
+      "name": "tonistiigi/binfmt",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "regex:^qemu-v(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)$"
+      },
+      "value": "qemu-v10.2.3@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0",
+      "notes": [
+        "Registers QEMU binfmt_misc handlers on the CI node from buildkitd's init",
+        "container, so BuildKit builds linux/arm64 images (macos-cross-compiler)."
+      ]
     },
     {
       "name": "moby/buildkit",
@@ -1041,7 +1057,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.14-alpine@sha256:016508ba505da24f7139765bc4bb669df4e88eb2f12eeadd571bf2f88d7533df"
+      "value": "3.14-alpine@sha256:9e9fde4d32eedce0b661d9ab91e826b62dddf28e928c230ec55f1866cac66b01"
     },
     {
       "name": "bitnamilegacy/kubectl",
@@ -1239,7 +1255,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.2.2"
+      "value": "28.2.3"
     },
     {
       "name": "seaweedfs",
@@ -1335,7 +1351,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616"
+      "value": "latest@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e"
     },
     {
       "name": "mikefarah/yq",
@@ -1415,7 +1431,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.31.4-alpine@sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913"
+      "value": "1.31.6-alpine@sha256:d10753d9289b8e3f884386351f73554ce72b631378949deddd75e83ee296c427"
     },
     {
       "name": "bugsink/bugsink",
@@ -1553,7 +1569,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13792@sha256:9d65ed0bb72513ac998aa82f0e32cda50f9ca9553cb7ae30ac51660d0a737a26",
+      "value": "2.0.0-13290@sha256:839757bc2a1ffbdca5111843e6e78ea41771b6c73d486111ee993e2fda762fb5",
       "notes": [
         "Candidate central Workflow Worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1596,10 +1612,10 @@
         "versioning": "semver",
         "packageName": "flipt/flipt"
       },
-      "value": "v2.11.0@sha256:d20384874048ef6ac326f4937cee64f1db175a1878a87db32916cc8db46c740e",
+      "value": "v2.13.0@sha256:d96f7cbe499dfa2cb1e626ce0230a9d5e068896975a855000a7a8645826862e4",
       "notes": [
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
-        "A bump requires re-capturing packages/feature-flags/fixtures/flipt-snapshot.default.json,",
+        "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",
         "because the provider fetches the internal /internal/v1/evaluation/snapshot API."
       ]
     }

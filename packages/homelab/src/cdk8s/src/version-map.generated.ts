@@ -85,6 +85,7 @@ export const VersionMapSchema = z
     "woodpeckerci/woodpecker-agent": z.string(),
     "ducktors/turborepo-remote-cache": z.string(),
     kueue: z.string(),
+    "tonistiigi/binfmt": z.string(),
     "moby/buildkit": z.string(),
     "library/python": z.string(),
     "bitnamilegacy/kubectl": z.string(),

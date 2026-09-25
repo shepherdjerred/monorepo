@@ -265,6 +265,27 @@ export type LocalPromotionDecision =
  * Compares a candidate with the committed pin. An image with no pin yet always
  * promotes its first candidate.
  */
+/**
+ * Reads a source file at a revision as checkout writes it. The build
+ * fingerprints checked-out bytes, so the main-side comparison must apply the
+ * same .gitattributes conversions (e.g. `*.targets eol=crlf`); a raw blob would
+ * make every such candidate look superseded.
+ */
+export function checkedOutSourceCommand(
+  repository: string,
+  revision: string,
+  path: string,
+): readonly string[] {
+  return [
+    "git",
+    "-C",
+    repository,
+    "cat-file",
+    "--filters",
+    `${revision}:${path}`,
+  ];
+}
+
 export function localPromotionDecision(
   current: CiImagePinState | undefined,
   candidate: CiImagePinState,

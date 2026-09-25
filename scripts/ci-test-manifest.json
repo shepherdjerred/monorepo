@@ -854,6 +854,11 @@
       "reason": "Static marketing site; no test files exist."
     },
     {
+      "package": "@shepherdjerred/macos-cross-site",
+      "directory": "packages/macos-cross-site",
+      "reason": "Static marketing site; no test files exist."
+    },
+    {
       "package": "@shepherdjerred/resume",
       "directory": "packages/resume",
       "reason": "LaTeX build artifact; no test files exist."
@@ -875,6 +880,11 @@
     }
   ],
   "separateTests": [
+    {
+      "package": "@shepherdjerred/macos-cross-compiler",
+      "directory": "packages/macos-cross-compiler",
+      "reason": "Verified by the image's smoke stage, which builds every sample for every Apple platform and checks each Mach-O, in the macos-cross-compiler Buildkite lane (PR smoke, main publish). The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
+    },
     {
       "package": "@shepherdjerred/hkctl",
       "directory": "packages/hkctl",

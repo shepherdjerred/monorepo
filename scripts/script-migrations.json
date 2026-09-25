@@ -438,6 +438,31 @@
       ]
     },
     {
+      "source": "packages/macos-cross-compiler/macros/check-against-xcode.sh",
+      "disposition": "retain",
+      "reason": "Public product tool for users without Bun; only drives Xcode's swift-frontend and the Linux plugin"
+    },
+    {
+      "source": "packages/macos-cross-compiler/samples/smoke.sh",
+      "disposition": "retain",
+      "reason": "Runs inside the published image's smoke stage, which has no Bun"
+    },
+    {
+      "source": "packages/macos-cross-compiler/scripts/compare-bundles.sh",
+      "disposition": "retain",
+      "reason": "Public product tool for users without Bun; only drives Apple's codesign, plutil, and otool"
+    },
+    {
+      "source": "packages/macos-cross-compiler/scripts/setup-toolchain.sh",
+      "disposition": "retain",
+      "reason": "Runs during the published image build, which has no Bun"
+    },
+    {
+      "source": "packages/macos-cross-compiler/scripts/stage-xcode.sh",
+      "disposition": "retain",
+      "reason": "Public product tool for users without Bun; only copies from Xcode with tar and plutil"
+    },
+    {
       "source": "packages/scout-for-lol/scripts/dev-web.sh",
       "disposition": "port",
       "reason": "Long-lived process supervision needs explicit typed signal handling",

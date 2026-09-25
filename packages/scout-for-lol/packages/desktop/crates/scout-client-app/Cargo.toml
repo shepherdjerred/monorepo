@@ -23,6 +23,7 @@ chrono.workspace = true
 directories.workspace = true
 eframe.workspace = true
 egui.workspace = true
+hex.workspace = true
 keyring.workspace = true
 open.workspace = true
 reqwest.workspace = true

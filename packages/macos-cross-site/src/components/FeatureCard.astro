@@ -1,0 +1,27 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+const { title, description, icon } = Astro.props;
+---
+
+<li class="rounded-xl border border-stone-200 bg-stone-50 p-5 dark:border-stone-800 dark:bg-stone-900/50">
+  <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950">
+    <Icon
+      name={icon}
+      class="h-5 w-5 text-sky-700 dark:text-sky-400"
+      aria-hidden="true"
+    />
+  </div>
+  <h3 class="mt-4 text-sm font-semibold text-stone-900 dark:text-white">
+    {title}
+  </h3>
+  <p class="mt-1.5 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+    {description}
+  </p>
+</li>

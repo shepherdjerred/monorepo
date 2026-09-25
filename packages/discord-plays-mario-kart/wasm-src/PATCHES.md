@@ -136,7 +136,7 @@ on demand when you want a specific upstream fix.
 ## Build
 
 `scripts/build-wasm.ts` stages pristine `code/`, applies `patches/`, and runs
-`make` inside `emscripten/emsdk` (pinned 6.0.5), emitting `n64wasm.js` +
+`make` inside `emscripten/emsdk` (pinned 6.0.10), emitting `n64wasm.js` +
 `n64wasm.wasm` and copying them (plus the MEMFS assets `shader_vert.hlsl`,
 `shader_frag.hlsl`, `overlay.png`, `res/arial.ttf`) into the backend's
 `assets/n64wasm/`. The CI image build (Dagger, `.dagger/src/image.ts`) does the

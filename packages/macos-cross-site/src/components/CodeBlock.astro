@@ -1,0 +1,62 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  code: string;
+  label?: string;
+}
+
+const { code, label } = Astro.props;
+---
+
+<figure class="code-block min-w-0 overflow-hidden rounded-xl border border-stone-800 bg-stone-900 text-left shadow-sm dark:border-stone-800 dark:bg-stone-900/80">
+  <div class="flex items-center justify-between gap-2 border-b border-stone-800 px-4 py-2">
+    <figcaption class="truncate font-mono text-xs text-stone-400">
+      {label ?? "shell"}
+    </figcaption>
+    <button
+      type="button"
+      class="copy-button inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-stone-400 transition-colors hover:bg-stone-800 hover:text-stone-100"
+      aria-label={label ? `Copy ${label} command` : "Copy command"}
+    >
+      <Icon name="heroicons:clipboard-document" class="copy-icon h-4 w-4" />
+      <Icon
+        name="heroicons:check"
+        class="check-icon hidden h-4 w-4 text-sky-400"
+      />
+      <span class="copy-text">Copy</span>
+    </button>
+  </div>
+  <pre
+    tabindex="0"
+    class="overflow-x-auto px-4 py-4 text-xs leading-relaxed sm:text-[13px] text-stone-100"
+  ><code>{code}</code></pre>
+</figure>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    ".copy-button",
+  )) {
+    button.addEventListener("click", () => {
+      const code = button.closest(".code-block")?.querySelector("code");
+      if (code?.textContent == null) {
+        return;
+      }
+      void navigator.clipboard.writeText(code.textContent).then(() => {
+        const text = button.querySelector(".copy-text");
+        button.querySelector(".copy-icon")?.classList.add("hidden");
+        button.querySelector(".check-icon")?.classList.remove("hidden");
+        if (text) {
+          text.textContent = "Copied";
+        }
+        setTimeout(() => {
+          button.querySelector(".copy-icon")?.classList.remove("hidden");
+          button.querySelector(".check-icon")?.classList.add("hidden");
+          if (text) {
+            text.textContent = "Copy";
+          }
+        }, 1500);
+      });
+    });
+  }
+</script>

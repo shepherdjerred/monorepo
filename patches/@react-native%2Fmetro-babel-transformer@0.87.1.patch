@@ -1,8 +1,11 @@
 diff --git a/src/index.js b/src/index.js
-index 37cc570..cbd1c5d 100644
+index d2297ea..9070765 100644
 --- a/src/index.js
 +++ b/src/index.js
-@@ -25 +25,7 @@
+@@ -22,7 +22,13 @@ import type {
+ } from 'metro-babel-transformer';
+ */
+ 
 -const {parseSync, transformFromAstSync} = require('@babel/core');
 +const {parseSync, transformFromAstSync} = require(
 +  require.resolve('@babel/core-v7', {
@@ -11,3 +14,6 @@ index 37cc570..cbd1c5d 100644
 +    paths: [process.cwd()],
 +  }),
 +);
+ const {getCacheKey: getPresetCacheKey} = require('@react-native/babel-preset');
+ const makeHMRConfig = require('@react-native/babel-preset/src/configs/hmr');
+ const crypto = require('crypto');

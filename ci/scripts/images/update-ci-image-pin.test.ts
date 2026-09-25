@@ -1,5 +1,9 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, expect, test } from "vitest";
 import {
+  checkedOutSourceCommand,
   ciImagePromotionFiles,
   classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
@@ -491,5 +495,49 @@ describe("local promotion decision", () => {
     expect(localPromotionDecision(state(7, "a"), state(6, "b"))).toBe(
       "older-than-pin",
     );
+  });
+});
+
+describe("main-side source fingerprint", () => {
+  test("reads sources with checkout conversions so CRLF files match the build", async () => {
+    const repository = await mkdtemp(path.join(tmpdir(), "ci-image-pin-eol-"));
+    const git = (...args: string[]): void => {
+      const result = Bun.spawnSync(["git", "-C", repository, ...args]);
+      if (result.exitCode !== 0) {
+        throw new Error(result.stderr.toString());
+      }
+    };
+    try {
+      git("init", "--quiet");
+      await Bun.write(
+        path.join(repository, ".gitattributes"),
+        "*.targets text eol=crlf\n",
+      );
+      await Bun.write(path.join(repository, "a.targets"), "one\ntwo\n");
+      git("add", ".");
+      git(
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@t",
+        "commit",
+        "--quiet",
+        "-m",
+        "x",
+      );
+      await rm(path.join(repository, "a.targets"));
+      git("checkout", "--", "a.targets");
+
+      const checkedOut = new Uint8Array(
+        await Bun.file(path.join(repository, "a.targets")).arrayBuffer(),
+      );
+      const fromCommand = Bun.spawnSync([
+        ...checkedOutSourceCommand(repository, "HEAD", "a.targets"),
+      ]).stdout;
+      expect(new TextDecoder().decode(checkedOut)).toBe("one\r\ntwo\r\n");
+      expect(new TextDecoder().decode(fromCommand)).toBe("one\r\ntwo\r\n");
+    } finally {
+      await rm(repository, { recursive: true, force: true });
+    }
   });
 });

@@ -1,0 +1,25 @@
+---
+interface Props {
+  step: number;
+  title: string;
+}
+
+const { step, title } = Astro.props;
+---
+
+<li class="relative flex gap-4 sm:gap-6">
+  <div
+    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-sky-600/40 bg-sky-50 font-mono text-xs font-semibold text-sky-700 dark:border-sky-400/40 dark:bg-sky-950 dark:text-sky-300"
+    aria-hidden="true"
+  >
+    {step}
+  </div>
+  <div class="min-w-0 pb-2">
+    <h3 class="text-base font-semibold text-stone-900 dark:text-white">
+      {title}
+    </h3>
+    <p class="mt-1.5 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+      <slot />
+    </p>
+  </div>
+</li>

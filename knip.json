@@ -237,6 +237,10 @@
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
     },
+    "packages/macos-cross-site": {
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
+    },
     "packages/monarch": {
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
