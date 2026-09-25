@@ -2,8 +2,9 @@
   "file": "/data/plugins/LevelledMobs/messages.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.common.prefix",
+      "$put": {
+        "path": "$.common",
+        "key": "prefix",
         "value": "&8[&3LevelledMobs&8]:&7"
       }
     }

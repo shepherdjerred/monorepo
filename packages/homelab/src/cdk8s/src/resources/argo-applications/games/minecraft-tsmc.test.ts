@@ -86,6 +86,20 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     }
   });
 
+  test("builds TheStorm.jar with .mise.toml's Gradle and Java major", async () => {
+    const mise = await Bun.file(`${repoRoot}.mise.toml`).text();
+    const gradle = /^gradle = "([^"]+)"$/mu.exec(mise)?.[1];
+    const javaMajor = /^java = "corretto-(\d+)\./mu.exec(mise)?.[1];
+    expect(gradle).toBeDefined();
+    expect(javaMajor).toBeDefined();
+    expect(await dockerfile()).toMatch(
+      new RegExp(
+        String.raw`^FROM gradle:${String(gradle).replaceAll(".", String.raw`\.`)}-jdk${String(javaMajor)}-corretto@sha256:[a-f\d]{64} AS plugin$`,
+        "mu",
+      ),
+    );
+  });
+
   test("sets VERSION and the Paper jar the chart and manifest agree on", async () => {
     const text = await dockerfile();
     const manifest = ManifestSchema.parse(

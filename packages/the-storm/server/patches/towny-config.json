@@ -2,32 +2,37 @@
   "file": "/data/plugins/Towny/settings/config.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.unclaimed.unclaimed_zone_build",
+      "$put": {
+        "path": "$.unclaimed",
+        "key": "unclaimed_zone_build",
         "value": "true"
       }
     },
     {
-      "$set": {
-        "path": "$.unclaimed.unclaimed_zone_destroy",
+      "$put": {
+        "path": "$.unclaimed",
+        "key": "unclaimed_zone_destroy",
         "value": "true"
       }
     },
     {
-      "$set": {
-        "path": "$.unclaimed.unclaimed_zone_item_use",
+      "$put": {
+        "path": "$.unclaimed",
+        "key": "unclaimed_zone_item_use",
         "value": "true"
       }
     },
     {
-      "$set": {
-        "path": "$.unclaimed.unclaimed_zone_switch",
+      "$put": {
+        "path": "$.unclaimed",
+        "key": "unclaimed_zone_switch",
         "value": "true"
       }
     },
     {
-      "$set": {
-        "path": "$.new_world_settings.plot_management.revert_on_unclaim.enabled",
+      "$put": {
+        "path": "$.new_world_settings.plot_management.revert_on_unclaim",
+        "key": "enabled",
         "value": "false"
       }
     }

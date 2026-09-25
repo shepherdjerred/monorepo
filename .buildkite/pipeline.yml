@@ -2046,7 +2046,6 @@ steps:
         --exclude sandbox \
         --exclude packages/homelab/src/cdk8s/config/minecraft-shuxin/server.properties \
         --exclude packages/homelab/src/cdk8s/config/minecraft-sjerred/server.properties \
-        --exclude packages/homelab/src/cdk8s/config/minecraft-tsmc/server.properties \
         --exclude packages/temporal/src/activities/fetcher.ts \
         .
       semgrep_status=$$?
@@ -2699,6 +2698,8 @@ steps:
         - "packages/homelab/src/cdk8s/src/misc/common.ts"
         - "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts"
         - "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts"
+        - "packages/the-storm/plugin/**"
+        - "packages/the-storm/server/**"
         - "packages/llm-models/**"
         - "packages/llm-observability/**"
         - "packages/ops-clients/**"

@@ -2,20 +2,23 @@
   "file": "/data/plugins/Essentials/config.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.ops-name-color",
+      "$put": {
+        "path": "$",
+        "key": "ops-name-color",
         "value": "none"
       }
     },
     {
-      "$set": {
-        "path": "$.nickname-prefix",
+      "$put": {
+        "path": "$",
+        "key": "nickname-prefix",
         "value": "none"
       }
     },
     {
-      "$set": {
-        "path": "$.change-tab-complete-name",
+      "$put": {
+        "path": "$",
+        "key": "change-tab-complete-name",
         "value": true
       }
     },
@@ -27,98 +30,114 @@
       }
     },
     {
-      "$set": {
-        "path": "$.teleport-cooldown",
+      "$put": {
+        "path": "$",
+        "key": "teleport-cooldown",
         "value": 1800
       }
     },
     {
-      "$set": {
-        "path": "$.teleport-delay",
+      "$put": {
+        "path": "$",
+        "key": "teleport-delay",
         "value": 7
       }
     },
     {
-      "$set": {
-        "path": "$.teleport-invulnerability",
+      "$put": {
+        "path": "$",
+        "key": "teleport-invulnerability",
         "value": 10
       }
     },
     {
-      "$set": {
-        "path": "$.enabledSigns",
+      "$put": {
+        "path": "$",
+        "key": "enabledSigns",
         "value": ["color"]
       }
     },
     {
-      "$set": {
-        "path": "$.auto-afk",
+      "$put": {
+        "path": "$",
+        "key": "auto-afk",
         "value": 600
       }
     },
     {
-      "$set": {
-        "path": "$.auto-afk-timeout",
+      "$put": {
+        "path": "$",
+        "key": "auto-afk-timeout",
         "value": 1200
       }
     },
     {
-      "$set": {
-        "path": "$.freeze-afk-players",
+      "$put": {
+        "path": "$",
+        "key": "freeze-afk-players",
         "value": true
       }
     },
     {
-      "$set": {
-        "path": "$.disable-item-pickup-while-afk",
+      "$put": {
+        "path": "$",
+        "key": "disable-item-pickup-while-afk",
         "value": true
       }
     },
     {
-      "$set": {
-        "path": "$.afk-list-name",
+      "$put": {
+        "path": "$",
+        "key": "afk-list-name",
         "value": "{PLAYER} (AFK)"
       }
     },
     {
-      "$set": {
-        "path": "$.send-info-after-death",
+      "$put": {
+        "path": "$",
+        "key": "send-info-after-death",
         "value": true
       }
     },
     {
-      "$set": {
-        "path": "$.sethome-multiple.default",
+      "$put": {
+        "path": "$.sethome-multiple",
+        "key": "default",
         "value": 1
       }
     },
     {
-      "$set": {
-        "path": "$.confirm-home-overwrite",
+      "$put": {
+        "path": "$",
+        "key": "confirm-home-overwrite",
         "value": true
       }
     },
     {
-      "$set": {
-        "path": "$.newbies.announce-format",
+      "$put": {
+        "path": "$.newbies",
+        "key": "announce-format",
         "value": "&7Welcome &3{DISPLAYNAME} &7to the server!"
       }
     },
     {
-      "$set": {
-        "path": "$.newbies.spawnpoint",
+      "$put": {
+        "path": "$.newbies",
+        "key": "spawnpoint",
         "value": "none"
       }
     },
     {
-      "$set": {
-        "path": "$.newbies.kit",
+      "$put": {
+        "path": "$.newbies",
+        "key": "kit",
         "value": "starter"
       }
     },
     {
-      "$set": {
-        "path": "$.respawn-at-home",
+      "$put": {
+        "path": "$",
+        "key": "respawn-at-home",
         "value": true
       }
     }

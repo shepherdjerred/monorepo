@@ -2,38 +2,44 @@
   "file": "/data/plugins/DiscordSRV/messages.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.ChannelTopicUpdaterChatChannelTopicFormat",
+      "$put": {
+        "path": "$",
+        "key": "ChannelTopicUpdaterChatChannelTopicFormat",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.ChannelTopicUpdaterConsoleChannelTopicFormat",
+      "$put": {
+        "path": "$",
+        "key": "ChannelTopicUpdaterConsoleChannelTopicFormat",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.ChannelTopicUpdaterChatChannelTopicAtServerShutdownFormat",
+      "$put": {
+        "path": "$",
+        "key": "ChannelTopicUpdaterChatChannelTopicAtServerShutdownFormat",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.ChannelTopicUpdaterConsoleChannelTopicAtServerShutdownFormat",
+      "$put": {
+        "path": "$",
+        "key": "ChannelTopicUpdaterConsoleChannelTopicAtServerShutdownFormat",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.DiscordChatChannelServerStartupMessage",
+      "$put": {
+        "path": "$",
+        "key": "DiscordChatChannelServerStartupMessage",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.DiscordChatChannelServerShutdownMessage",
+      "$put": {
+        "path": "$",
+        "key": "DiscordChatChannelServerShutdownMessage",
         "value": ""
       }
     }
