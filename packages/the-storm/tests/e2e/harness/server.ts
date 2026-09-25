@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { mkdir, readdir, rm } from "node:fs/promises";
+import { cp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { docker } from "./docker.ts";
@@ -47,7 +47,7 @@ export type StartServerOptions = {
   cacheDir: string;
   bootTimeoutMs: number;
   /**
-   * Seed the pinned Paper jar and share Paperclip's patched Mojang jar and
+   * Seed the pinned Paper jar and share Paperclip's and LuckPerms' downloaded
    * libraries across runs, so boot needs no network after the first run.
    */
   warmCache: boolean;
@@ -167,6 +167,7 @@ async function waitForLog(
     if (pattern.test(stdout) || pattern.test(stderr)) {
       return;
     }
+    const tail = `${stdout.slice(-4000)}\n${stderr.slice(-4000)}`;
     const { stdout: state } = await docker([
       "inspect",
       "-f",
@@ -174,12 +175,10 @@ async function waitForLog(
       containerId,
     ]);
     if (state.trim() !== "true") {
-      throw new Error(`Server exited before ready:\n${stdout.slice(-4000)}`);
+      throw new Error(`Server exited before ready:\n${tail}`);
     }
     if (Date.now() > deadline) {
-      throw new Error(
-        `Server not ready before deadline:\n${stdout.slice(-4000)}`,
-      );
+      throw new Error(`Server not ready before deadline:\n${tail}`);
     }
     await Bun.sleep(500);
   }
@@ -192,7 +191,7 @@ async function waitForLog(
 async function stagePlugins(
   cacheDir: string,
   stagingDir: string,
-  options: Pick<StartServerOptions, "stormJar" | "stormConfig">,
+  options: Pick<StartServerOptions, "stormJar" | "stormConfig" | "warmCache">,
 ): Promise<string> {
   const downloads = path.join(cacheDir, "plugins");
   const pluginsDir = path.join(stagingDir, "plugins");
@@ -214,10 +213,29 @@ async function stagePlugins(
     path.join(pluginsDir, "TheStorm", "config.yml"),
     options.stormConfig,
   );
+  if (options.warmCache) {
+    const cachedLibs = path.join(cacheDir, luckPermsLibs);
+    await mkdir(cachedLibs, { recursive: true });
+    await cp(cachedLibs, path.join(pluginsDir, luckPermsLibs), {
+      recursive: true,
+    });
+  }
   return pluginsDir;
 }
 
-const paperclipDirs = ["cache", "libraries", "versions"] as const;
+// Warm-cache mounts, host dir under the cache -> container path, for
+// Paperclip's patched Mojang jar and libraries.
+const warmMounts = [
+  ["paperclip/cache", "/data/cache"],
+  ["paperclip/libraries", "/data/libraries"],
+  ["paperclip/versions", "/data/versions"],
+] as const;
+
+// LuckPerms downloads its libraries (including the H2 driver) from Maven
+// Central on first enable. They cannot be bind-mounted: Docker would create
+// /data/plugins as root and the image's unprivileged plugin sync would fail.
+// Instead they ride in through /plugins and are copied back out after boot.
+const luckPermsLibs = path.join("LuckPerms", "libs");
 
 function serverEnv(rconPassword: string): Record<string, string> {
   return {
@@ -288,8 +306,8 @@ export async function startServer(
     stagePlugins(cacheDir, stagingDir, options),
     ...(options.warmCache ? [ensureArtifact(paperJar, paper)] : []),
     ...(options.warmCache
-      ? paperclipDirs.map(async (dir) =>
-          mkdir(path.join(cacheDir, "paperclip", dir), { recursive: true }),
+      ? warmMounts.map(async ([dir]) =>
+          mkdir(path.join(cacheDir, dir), { recursive: true }),
         )
       : []),
   ]);
@@ -313,9 +331,9 @@ export async function startServer(
     "-v",
     `${pluginsDir}:/plugins:ro`,
     ...(options.warmCache
-      ? paperclipDirs.flatMap((dir) => [
+      ? warmMounts.flatMap(([dir, target]) => [
           "-v",
-          `${path.join(cacheDir, "paperclip", dir)}:/data/${dir}`,
+          `${path.join(cacheDir, dir)}:${target}`,
         ])
       : []),
     ...Object.entries(serverEnv(rconPassword)).flatMap(([key, value]) => [
@@ -339,6 +357,13 @@ export async function startServer(
       rconPassword,
       started + options.bootTimeoutMs,
     );
+    if (options.warmCache) {
+      await docker([
+        "cp",
+        `${id}:/data/plugins/${luckPermsLibs}/.`,
+        path.join(cacheDir, luckPermsLibs),
+      ]);
+    }
     const info = ServerInfoSchema.parse({
       ...connection,
       bootMs: Date.now() - started,
