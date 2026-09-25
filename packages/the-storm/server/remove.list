@@ -1,0 +1,59 @@
+# Files, relative to /data, that storm-entrypoint deletes once when this list
+# changes (it records the list's sha256 in /data/.the-storm-remove.list.sha256),
+# then removes any directory left empty. One file path per line; no globs,
+# directories, absolute paths or "..".
+#
+# These are copies the old minecraft-tsmc config init container kept
+# overwriting and nothing now manages. Never list a file that holds world,
+# player or plugin database state.
+
+# Server configs: 26.2 defaults (PAPER_CONFIG_DEFAULTS_REPO) plus patches/
+# replace these frozen copies of older versions on the same boot.
+bukkit.yml
+spigot.yml
+config/paper-global.yml
+config/paper-world-defaults.yml
+
+# Pinned a world UUID; spawn is set in game with /setspawn.
+plugins/Essentials/spawn.yml
+
+# Chunky resumes these tasks (continue-on-restart); they re-queued a finished
+# 20000-block pregeneration on every boot.
+plugins/Chunky/tasks/world.properties
+plugins/Chunky/tasks/world_nether.properties
+plugins/Chunky/tasks/world_the_end.properties
+
+# LevelledMobs 4 fails to migrate this pre-4.0 copy on every boot; it writes
+# a current one (patched from the next boot on).
+plugins/LevelledMobs/messages.yml
+
+# Turned on ProtocolLib's update downloads, which fight the baked jar set.
+plugins/ProtocolLib/config.yml
+
+# Configs of plugins that are not installed.
+plugins/BetterSleeping4/buffs.yml
+plugins/BetterSleeping4/bypassing.yml
+plugins/BetterSleeping4/config.yml
+plugins/BetterSleeping4/hooks.yml
+plugins/BetterSleeping4/lang.yml
+plugins/BetterSleeping4/premium.yml
+plugins/BetterSleeping4/sleeping_settings.yml
+plugins/BlueSlimeCore/config.yml
+plugins/BlueSlimeCore/language.yml
+plugins/DisableVillagerTrade/config.yml
+plugins/LiteBans/config.yml
+plugins/LiteBans/h2.yml
+plugins/LiteBans/messages.yml
+plugins/LiteBans/server.yml
+plugins/LiteBans/templates.yml
+plugins/Multiverse-Core/config.yml
+plugins/Multiverse-Core/worlds.yml
+
+# CraftBook 3 configs; CraftBook5 keeps its own in plugins/CraftBook5.
+plugins/CraftBook/config.yml
+plugins/CraftBook/en_US.yml
+plugins/CraftBook/mechanisms.yml
+
+# Written for JEFF Media's ChestSort; the installed ChestSort has no config.
+plugins/ChestSort/config.yml
+plugins/ChestSort/gui.yml

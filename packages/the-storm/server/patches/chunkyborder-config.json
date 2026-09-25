@@ -2,8 +2,9 @@
   "file": "/data/plugins/ChunkyBorder/config.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.map-options.label",
+      "$put": {
+        "path": "$.map-options",
+        "key": "label",
         "value": "Edge of the World"
       }
     }
