@@ -11,9 +11,6 @@ public sealed interface ChatDenial {
   /** The message is longer than {@code max} characters. */
   record TooLong(int max) implements ChatDenial {}
 
-  /** More than {@code max} words are in capitals. */
-  record TooManyCaps(int max) implements ChatDenial {}
-
   /** The same message was sent too recently; it may be sent again after {@code retryAfter}. */
   record Repeated(Duration retryAfter) implements ChatDenial {}
 
@@ -29,4 +26,10 @@ public sealed interface ChatDenial {
       }
     }
   }
+
+  /** A private message the recipient does not accept. The sender is not told why. */
+  record Undeliverable() implements ChatDenial {}
+
+  /** A player tried to message themselves. */
+  record ToSelf() implements ChatDenial {}
 }

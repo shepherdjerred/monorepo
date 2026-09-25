@@ -45,6 +45,20 @@ final class GlobalChatHubTest {
   }
 
   @Test
+  void emotesAreNotPublished() {
+    var lines = new ArrayList<ChatLine>();
+    hub.subscribe(lines::add);
+
+    switch (service.prepareEmote(ALICE_SPEAKS, "waves")) {
+      case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> hub.published(line);
+      case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) ->
+          throw new AssertionError(denials.toString());
+    }
+
+    assertThat(lines).isEmpty();
+  }
+
+  @Test
   void cancelledSubscriptionsStopReceiving() {
     var lines = new ArrayList<ChatLine>();
     var subscription = hub.subscribe(lines::add);

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.chat.app;
 
+import com.shepherdjerred.thestorm.chat.domain.AcceptedMessage;
 import com.shepherdjerred.thestorm.chat.domain.ChannelAccess;
 import com.shepherdjerred.thestorm.chat.domain.ChannelKey;
 import com.shepherdjerred.thestorm.chat.domain.ChatAttempt;
@@ -42,10 +43,13 @@ public final class ChatService {
   private final ChatExtensions extensions;
   private final MessageValidator validator;
   private final Map<ChannelKey, LineTemplate> templates = new EnumMap<>(ChannelKey.class);
+  private final LineTemplate emoteTemplate;
+  private final LineTemplate privateTemplate;
   private final LineTemplate externalTemplate;
   private final Map<UUID, ChatProfile> profiles = new ConcurrentHashMap<>();
   private final Map<UUID, Mute> mutes = new ConcurrentHashMap<>();
   private final Map<UUID, RecentMessage> recent = new ConcurrentHashMap<>();
+  private final Map<UUID, Correspondent> lastCorrespondent = new ConcurrentHashMap<>();
 
   public ChatService(
       ChatConfig config, ChatStore store, InstantSource time, ChatExtensions extensions) {
@@ -57,10 +61,15 @@ public final class ChatService {
     for (var channel : ChannelKey.values()) {
       templates.put(channel, config.channels().template(channel));
     }
+    this.emoteTemplate = config.emoteTemplate();
+    this.privateTemplate = config.privateTemplate();
     this.externalTemplate = config.externalTemplate();
   }
 
-  /** Loads stored state. Anything changed before the load finishes wins over the stored value. */
+  /**
+   * Loads stored state. The module waits for this before it starts; anything changed before the
+   * load finished would still win over the stored value.
+   */
   public CompletableFuture<Void> load() {
     return store
         .loadAll(time.instant(), config.defaultChannelKey())
@@ -154,21 +163,73 @@ public final class ChatService {
   }
 
   /**
-   * Checks a message against the rules. On success it is remembered for the repeat limit and
-   * returned ready to deliver; otherwise every reason it was refused is returned.
+   * Checks a channel message against the rules. On success it is remembered for the repeat limit
+   * and returned ready to deliver; otherwise every reason it was refused is returned.
    */
   public Result<OutgoingLine, List<ChatDenial>> prepare(
       Speaker speaker, ChannelKey channel, String rawText) {
+    return prepareLine(speaker, channel, rawText, false);
+  }
+
+  /** Checks a {@code /me} action, which goes to the speaker's focused channel. */
+  public Result<OutgoingLine, List<ChatDenial>> prepareEmote(Speaker speaker, String rawAction) {
+    return prepareLine(speaker, profile(speaker.id()).focus(), rawAction, true);
+  }
+
+  /**
+   * Checks a private message. It follows the same rules as channel chat; a recipient who ignores
+   * the sender makes it {@link ChatDenial.Undeliverable}, without saying why. On success both
+   * players can {@code /r} each other.
+   */
+  public Result<PrivateLine, List<ChatDenial>> preparePrivate(
+      Speaker sender, Correspondent recipient, String rawText) {
+    if (recipient.id().equals(sender.id())) {
+      return Result.err(List.of(new ChatDenial.ToSelf()));
+    }
     var now = time.instant();
+    var checked =
+        validator.validate(
+            new ChatAttempt(sender, rawText, now),
+            new ChatFacts(mutes.get(sender.id()), recent.get(sender.id())));
+    return switch (checked) {
+      case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) -> Result.err(denials);
+      case Result.Ok<AcceptedMessage, List<ChatDenial>>(var message) -> {
+        if (profile(recipient.id()).ignores(sender.id())) {
+          yield Result.err(List.of(new ChatDenial.Undeliverable()));
+        }
+        recent.put(sender.id(), RecentMessage.of(message.text(), now));
+        lastCorrespondent.put(sender.id(), recipient);
+        lastCorrespondent.put(recipient.id(), new Correspondent(sender.id(), sender.name()));
+        yield Result.ok(new PrivateLine(sender, recipient, message));
+      }
+    };
+  }
+
+  /** Who {@code player} last messaged or was messaged by this session, for {@code /r}. */
+  public Optional<Correspondent> replyTarget(UUID player) {
+    return Optional.ofNullable(lastCorrespondent.get(player));
+  }
+
+  /** What to tell a player whose shouting was lowercased. */
+  public String capsNotice() {
+    return config.capsNotice();
+  }
+
+  private Result<OutgoingLine, List<ChatDenial>> prepareLine(
+      Speaker speaker, ChannelKey channel, String rawText, boolean emote) {
     var resolution = resolve(speaker, channel);
-    var facts =
-        new ChatFacts(resolution.access(), mutes.get(speaker.id()), recent.get(speaker.id()));
+    if (resolution.access() != ChannelAccess.GRANTED) {
+      return Result.err(List.of(new ChatDenial.NoAccess(channel, resolution.access())));
+    }
+    var now = time.instant();
     return validator
-        .validate(new ChatAttempt(speaker, channel, rawText, now), facts)
+        .validate(
+            new ChatAttempt(speaker, rawText, now),
+            new ChatFacts(mutes.get(speaker.id()), recent.get(speaker.id())))
         .map(
-            text -> {
-              recent.put(speaker.id(), RecentMessage.of(text, now));
-              return new OutgoingLine(channel, speaker, text, now, resolution.members());
+            message -> {
+              recent.put(speaker.id(), RecentMessage.of(message.text(), now));
+              return new OutgoingLine(channel, speaker, message, resolution.members(), emote);
             });
   }
 
@@ -186,13 +247,23 @@ public final class ChatService {
     return Routing.receivesExternal(new Routing.Viewer(viewer, viewerIsStaff, profile(viewer)));
   }
 
-  /** {@code line} as MiniMessage in its channel's format. */
+  /** {@code line} as MiniMessage in its channel's format, or the emote format for {@code /me}. */
   public String render(OutgoingLine line) {
+    var prefix = extensions.prefix(line.speaker().id());
+    if (line.emote()) {
+      return ChatFormat.emoteLine(
+          emoteTemplate,
+          line.channel(),
+          new ChatFormat.Speech(prefix, line.speaker().name(), line.text()));
+    }
     return ChatFormat.channelLine(
-        template(line.channel()),
-        extensions.prefix(line.speaker().id()),
-        line.speaker().name(),
-        line.text());
+        template(line.channel()), prefix, line.speaker().name(), line.text());
+  }
+
+  /** {@code line} as MiniMessage in the private message format. */
+  public String renderPrivate(PrivateLine line) {
+    return ChatFormat.privateLine(
+        privateTemplate, line.sender().name(), line.recipient().name(), line.message().text());
   }
 
   /** A relayed line as MiniMessage; every value is cleaned and escaped. */

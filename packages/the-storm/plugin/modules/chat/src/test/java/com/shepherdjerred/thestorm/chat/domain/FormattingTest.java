@@ -88,4 +88,28 @@ final class FormattingTest {
 
     assertThat(line).isEqualTo("[\\<D>] \\<rainbow>bob: \\<hover:show_text:x>hi");
   }
+
+  @Test
+  void emotesCarryTheChannelTagAndEscapeTheAction() {
+    var template = ChatFormat.emoteTemplate("[<channel>] * <prefix><player> <message>");
+
+    assertThat(
+            ChatFormat.emoteLine(
+                template,
+                ChannelKey.WAR,
+                new ChatFormat.Speech("<red>Mage</red>", "Jerred", "waves <b>hard</b>")))
+        .isEqualTo("[W] * <red>Mage</red> Jerred waves \\<b>hard\\</b>");
+    assertThatThrownBy(() -> ChatFormat.emoteTemplate("* <player> <message>"))
+        .hasMessageContaining("<channel>");
+  }
+
+  @Test
+  void privateLinesEscapeEveryValue() {
+    var template = ChatFormat.privateTemplate("[<from> -> <to>]: <message>");
+
+    assertThat(ChatFormat.privateLine(template, "Alice", "Bob", "<red>psst"))
+        .isEqualTo("[Alice -> Bob]: \\<red>psst");
+    assertThatThrownBy(() -> ChatFormat.privateTemplate("<from>: <message>"))
+        .hasMessageContaining("<to>");
+  }
 }

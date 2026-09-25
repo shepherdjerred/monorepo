@@ -80,6 +80,24 @@ final class RenderingTest {
   @Test
   void channelCommandsAreDistinct() {
     assertThat(Arrays.stream(ChannelKey.values()).map(ChatCommands::label))
-        .containsExactly("g", "w", "sc", "tc", "nc");
+        .containsExactly("g", "war", "sc", "tc", "nc");
+    assertThat(ChatCommands.labels(ChannelKey.WAR)).containsExactly("war", "wc");
+  }
+
+  @Test
+  void whisperOwnsSlashW() {
+    var channelLabels =
+        Arrays.stream(ChannelKey.values()).flatMap(key -> ChatCommands.labels(key).stream());
+
+    assertThat(PrivateCommands.MESSAGE_LABELS).containsExactly("msg", "tell", "whisper", "w");
+    assertThat(channelLabels).doesNotContainAnyElementsOf(PrivateCommands.MESSAGE_LABELS);
+  }
+
+  @Test
+  void privateDenialsDoNotRevealIgnores() {
+    assertThat(Feedback.describe(new ChatDenial.Undeliverable()))
+        .isEqualTo("Message not delivered.");
+    assertThat(Feedback.describe(new ChatDenial.ToSelf()))
+        .isEqualTo("You cannot message yourself.");
   }
 }

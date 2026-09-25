@@ -44,6 +44,7 @@ public final class ChatListener implements Listener {
                         && !service.receives(line, other.getUniqueId(), Speakers.isStaff(other)));
         event.renderer(
             new ChannelRenderer(line, MiniMessage.miniMessage().deserialize(service.render(line))));
+        Feedback.noticeCalmed(player, line.message(), service.capsNotice());
       }
       case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) -> {
         event.setCancelled(true);

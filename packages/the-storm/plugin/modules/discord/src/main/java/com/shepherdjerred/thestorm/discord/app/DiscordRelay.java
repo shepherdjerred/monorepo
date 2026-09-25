@@ -23,6 +23,7 @@ public final class DiscordRelay {
   private final DiscordConfig config;
   private final DiscordGateway gateway;
   private final Game game;
+  private volatile boolean stopping;
 
   public DiscordRelay(DiscordConfig config, DiscordGateway gateway, Game game) {
     this.config = config;
@@ -50,15 +51,29 @@ public final class DiscordRelay {
     }
   }
 
-  /** Relays a Discord message into Global chat. Called on a JDA thread. */
+  /**
+   * Stops relaying Discord into the game. Called first on disable, so a message JDA delivers while
+   * the module shuts down never reaches chat or the scheduler of a disabled plugin.
+   */
+  public void stopRelaying() {
+    stopping = true;
+  }
+
+  /** Relays a Discord message into Global chat. Called on a JDA thread; dropped once stopping. */
   public void onDiscordMessage(InboundMessage message) {
+    if (stopping) {
+      return;
+    }
     switch (InboundFilter.accept(message, config.maxInboundLength())) {
       case Result.Ok<InboundFilter.Relayed, InboundFilter.Skip>(var relayed) ->
           game.scheduler()
               .runOnMainThread(
-                  () ->
+                  () -> {
+                    if (!stopping) {
                       game.chat()
-                          .broadcastExternal(config.source(), relayed.author(), relayed.text()));
+                          .broadcastExternal(config.source(), relayed.author(), relayed.text());
+                    }
+                  });
       case Result.Err<InboundFilter.Relayed, InboundFilter.Skip> _ -> {
         // Bots (including this bridge), empty and nameless messages stay in Discord.
       }
@@ -128,6 +143,10 @@ public final class DiscordRelay {
    * thread (JDA's request queue is).
    */
   public void listPlayers(Consumer<String> reply) {
+    if (stopping) {
+      reply.accept(config.messages().stop());
+      return;
+    }
     game.scheduler()
         .runOnMainThread(
             () ->

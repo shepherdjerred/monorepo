@@ -51,9 +51,9 @@ public final class GlobalChatHub implements GlobalChat {
             cleaned));
   }
 
-  /** Tells listeners about a delivered player line, if it was in Global. */
+  /** Tells listeners about a delivered player message, if it was in Global. Emotes stay in game. */
   public void published(OutgoingLine line) {
-    if (line.channel() != ChannelKey.GLOBAL) {
+    if (line.channel() != ChannelKey.GLOBAL || line.emote()) {
       return;
     }
     notify(

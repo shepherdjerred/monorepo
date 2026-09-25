@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.chat.adapter.paper;
 
+import com.shepherdjerred.thestorm.chat.domain.AcceptedMessage;
 import com.shepherdjerred.thestorm.chat.domain.ChannelAccess;
 import com.shepherdjerred.thestorm.chat.domain.ChannelKey;
 import com.shepherdjerred.thestorm.chat.domain.ChatDenial;
@@ -8,6 +9,7 @@ import com.shepherdjerred.thestorm.chat.domain.ProfileError;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import java.util.List;
 import java.util.Locale;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 
@@ -30,6 +32,13 @@ final class Feedback {
     return HouseStyle.error(LABEL, Component.text(message));
   }
 
+  /** Tells {@code player} their shouting was lowercased, if it was. */
+  static void noticeCalmed(Audience player, AcceptedMessage message, String notice) {
+    if (message.calmed()) {
+      player.sendMessage(info(notice));
+    }
+  }
+
   static Component denials(List<ChatDenial> denials) {
     return Component.join(
         JoinConfiguration.newlines(),
@@ -40,8 +49,8 @@ final class Feedback {
     return switch (denial) {
       case ChatDenial.Blank() -> "Say something first.";
       case ChatDenial.TooLong(var max) -> "That message is longer than " + max + " characters.";
-      case ChatDenial.TooManyCaps(var max) ->
-          "Easy on the caps: at most " + max + " words in capitals.";
+      case ChatDenial.Undeliverable() -> "Message not delivered.";
+      case ChatDenial.ToSelf() -> "You cannot message yourself.";
       case ChatDenial.Repeated(var retryAfter) ->
           "You just said that. Wait " + Durations.format(retryAfter) + " to say it again.";
       case ChatDenial.Muted(var remaining, var reason) ->

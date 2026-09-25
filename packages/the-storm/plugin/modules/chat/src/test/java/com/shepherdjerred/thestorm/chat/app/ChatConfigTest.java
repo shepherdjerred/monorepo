@@ -58,6 +58,22 @@ final class ChatConfigTest {
   }
 
   @Test
+  void rejectsAPrivateFormatWithoutTheRecipient() throws Exception {
+    var yaml = Files.readString(SHIPPED).replace("<gray><to></gray>", "someone");
+
+    assertThat(problems(parse(yaml))).contains("<to>");
+  }
+
+  @Test
+  void rejectsABlankCapsNotice() throws Exception {
+    var yaml =
+        Files.readString(SHIPPED)
+            .replace("capsNotice: \"Calm down, we can hear you.\"", "capsNotice: \" \"");
+
+    assertThat(problems(parse(yaml))).contains("capsNotice");
+  }
+
+  @Test
   void rejectsUnknownKeys() throws Exception {
     assertThat(parse(Files.readString(SHIPPED) + "colour: teal\n").isOk()).isFalse();
   }

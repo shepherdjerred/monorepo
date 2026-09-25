@@ -6,7 +6,7 @@ import java.time.Duration;
  * The 2017 chat rules, from {@code chat.yml}.
  *
  * @param maxLength the longest message, in characters, after cleaning
- * @param maxCapsWords how many all-capital words a message may have
+ * @param maxCapsWords how many all-capital words a message may have before they are lowercased
  * @param repeatCooldownSeconds how long before the same message may be sent again
  */
 public record FilterSettings(int maxLength, int maxCapsWords, long repeatCooldownSeconds) {

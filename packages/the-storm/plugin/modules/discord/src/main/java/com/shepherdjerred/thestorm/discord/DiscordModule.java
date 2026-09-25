@@ -67,6 +67,8 @@ public final class DiscordModule implements StormModule {
     var current = running;
     running = null;
     if (current != null) {
+      // Discord stops reaching the game first; then the goodbye; then the connection closes.
+      current.relay().stopRelaying();
       current.subscription().cancel();
       current.bridge().stop(current.relay().stopMessage());
     }
