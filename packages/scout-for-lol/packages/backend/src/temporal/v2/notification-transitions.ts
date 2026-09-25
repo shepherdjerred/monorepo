@@ -23,6 +23,7 @@ import {
   policyHeldCommit,
   resolveNotificationGateV2,
 } from "#src/temporal/v2/notification/notification-policy.ts";
+import { retireIfAudienceGoneV2 } from "#src/temporal/v2/notification/intent-audience.ts";
 import {
   notificationTransitionV2,
   requireIntentRecordV2,
@@ -72,6 +73,13 @@ export async function markNotificationReadyV2(
  * nonce is minted, the attempt count does not move, and the row is exactly as
  * it was. The Workflow already stops on a hold at its opening read; this is
  * the write boundary, and it does not rely on the caller having asked.
+ *
+ * The audience is asked next, for an unattempted intent only: one whose
+ * subscription, channel or guild was deleted since the mint is retired
+ * (`retireIfAudienceGoneV2`) instead of begun. That is the point of
+ * discovery, and it is before the nonce on purpose — an intent that is
+ * `sending` is never retired, so the only moment the send path can retire
+ * one is the moment before it would start sending.
  */
 export async function beginNotificationSendV2(
   input: ScoutIntentAttemptRefV2,
@@ -84,6 +92,14 @@ export async function beginNotificationSendV2(
       state: record.intent.state,
       attemptCount: record.intent.attemptCount,
     };
+  }
+  const retired = await retireIfAudienceGoneV2(prisma, record);
+  if (retired !== undefined) {
+    // No attempt is minted and the count does not move: the intent is
+    // `suppressed` with the reason its audience went, which the Workflow
+    // reads as the machine having said its piece, exactly as it reads a
+    // freshness refusal here.
+    return await notificationTransitionV2(input.intentKey, retired);
   }
   const startedAt = toIsoInstant(new Date());
   return await notificationTransitionV2(

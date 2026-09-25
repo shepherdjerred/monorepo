@@ -234,6 +234,29 @@ export const scoutDurableWorkflowStartAcceptances = new Counter({
   registers: [registry],
 });
 
+/**
+ * Notification intents retired because their audience was deleted, by what
+ * went and by who noticed.
+ *
+ * A retired intent lands in `suppressed`, so the intent gauge above already
+ * holds it — but beside `stale` and every other suppression, which is not the
+ * question. This answers how often an audience disappears between the mint
+ * and the send, and whether the send (`source="send"`) or the scheduled sweep
+ * (`source="sweep"`) found it first. Incremented only when the retirement
+ * itself applied, so a replay or a racing writer is never counted twice.
+ *
+ * Both labels are closed: `reason` is the domain's three-member
+ * `NotificationRetirementReason`, and `source` is the two callers of
+ * `retireNotificationIntent`. Not alertable: a retirement is the system
+ * handling a deletion correctly, and there is nothing for an operator to do.
+ */
+export const scoutDurableNotificationIntentsRetired = new Counter({
+  name: "scout_durable_notification_intents_retired_total",
+  help: "Notification intents retired because their audience was deleted, by reason and by whether the send or the sweep found it.",
+  labelNames: ["reason", "source"] as const,
+  registers: [registry],
+});
+
 function ageSeconds(oldest: Date | null, now: number): number {
   return oldest === null ? 0 : Math.max(0, (now - oldest.getTime()) / 1000);
 }

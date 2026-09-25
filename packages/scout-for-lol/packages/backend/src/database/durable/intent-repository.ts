@@ -136,6 +136,36 @@ export async function listOverdueIntentKeys(
   return rows.map((row) => NotificationIntentKeySchema.parse(row.intentKey));
 }
 
+/**
+ * Unattempted, still-fresh channel intents of `kinds`, oldest first.
+ *
+ * The candidates for the retirement sweep. The same unattempted states as
+ * expiry, and for the same reason: an attempted intent is never retired, so
+ * selecting one would spend the batch on a row the domain must refuse.
+ * Overdue intents are left to expiry, which runs first, so the two sweeps
+ * never contend for one row. Rides the `(state, freshnessDeadline)` index.
+ */
+export async function listRetirableIntents(
+  db: Db,
+  args: {
+    now: Date;
+    kinds: readonly NotificationIntent["kind"][];
+    limit: number;
+  },
+): Promise<MatchNotificationIntentRecord[]> {
+  const rows = await db.matchNotificationIntent.findMany({
+    where: {
+      state: { in: [...EXPIRABLE_INTENT_STATES] },
+      freshnessDeadline: { gte: args.now },
+      kind: { in: [...args.kinds] },
+      targetKind: "channel",
+    },
+    orderBy: [{ createdAt: "asc" }, { intentKey: "asc" }],
+    take: args.limit,
+  });
+  return rows.map((row) => matchNotificationIntentRowToRecord(row));
+}
+
 function observedAttemptNonce(intent: NotificationIntent): string | null {
   const state = intent.state;
   return state.kind === "sending" || state.kind === "unknown-delivery"

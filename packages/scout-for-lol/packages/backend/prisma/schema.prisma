@@ -2869,7 +2869,7 @@ model MatchNotificationIntent {
   sendStartedAt             DateTime? // sending only
   deliveredAt               DateTime? // delivered only
   messageId                 String? // delivered only (optional there)
-  suppressedReason          String? // suppressed only: stale | feature-disabled | recipient-preference
+  suppressedReason          String? // suppressed only: stale | feature-disabled | recipient-preference | subscription-deleted | channel-deleted | guild-left
   unknownObservedAt         DateTime? // unknown-delivery only
   lastFailureClassification String? // NotificationFailure: retryable | terminal
   lastFailureReason         String? // reason vocabulary of its classification

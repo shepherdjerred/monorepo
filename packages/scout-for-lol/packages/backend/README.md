@@ -860,6 +860,37 @@ already expired records `conflict` on `intent-delivered`, which is the adoption
 path's existing rule that a terminal state contradicting a proven send is worth
 seeing rather than overwriting.
 
+### Intents whose audience was deleted are retired, not re-targeted
+
+An intent names one audience, and when that audience is deleted before
+delivery the intent is retired into `suppressed` with a
+`NotificationRetirementReason` — `subscription-deleted`, `channel-deleted` or
+`guild-left` — through the domain's `retireOrphaned`. It is never re-targeted:
+nothing re-derives a channel or subscription for it. `retireOrphaned` moves
+only `pending` and `ready`; `sending` and `unknown-delivery` conflict, so a
+retirement always loses to a send in flight.
+
+The send path discovers it. `beginNotificationSendV2`, for an unattempted
+intent and before any nonce is minted, asks Discord for the target channel
+(Unknown Channel is `channel-deleted`; a channel whose guild Scout is confirmed
+not to be in is `guild-left`) and then, for the subscription-backed kinds
+(`postmatch`, `prematch`), whether any subscription in the channel still
+follows a tracked account in the match — or, before the match has tracked
+accounts, any subscription at all (`subscription-deleted`). An unreachable or
+refusing Discord is no evidence, and the send goes ahead. A guild removal
+usually arrives as `subscription-deleted`, because the removal cleanup deletes
+the guild's subscriptions and Discord then refuses the channel read. The
+retired intent answers the Workflow with its `suppressed` state, which it
+already treats as the end of the run, so no Workflow command changed.
+
+The `notification-intent-expiry` job also retires, from the database alone,
+the fresh `pending`/`ready` subscription-backed intents whose subscriptions are
+gone (`durable/match/intent-retirement.ts`), after expiry and at the same
+instant, so the two never select one row. Both paths count each applied
+retirement on `scout_durable_notification_intents_retired_total{reason,source}`
+and log it; the ready-backlog family reads `state = 'ready'` only, so a retired
+intent leaves it.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client
