@@ -8,6 +8,7 @@ import {
   operatorResolveUnknown,
   recordFailure,
   recordUnknownDelivery,
+  retireOrphaned,
   suppressStale,
   type NotificationTransitionResult,
 } from "#src/notifications/intent-transitions.ts";
@@ -599,6 +600,83 @@ describe("expire", () => {
   );
 });
 
+describe("retireOrphaned", () => {
+  const reasons = [
+    "subscription-deleted",
+    "channel-deleted",
+    "guild-left",
+  ] as const;
+
+  test.each(
+    (["pending", "ready"] as const).flatMap((kind) =>
+      reasons.map((reason) => [kind, reason] as const),
+    ),
+  )("%s retires as suppressed for %s", (kind, reason) => {
+    const next = expectApplied(
+      retireOrphaned(makeIntent({ kind }), { reason }),
+    );
+    expect(next.state).toEqual({ kind: "suppressed", reason });
+    expect(next.attemptCount).toBe(0);
+  });
+
+  test("an in-flight send is never retired", () => {
+    expectConflict(
+      retireOrphaned(makeIntent(sendingState()), {
+        reason: "subscription-deleted",
+      }),
+      "send-in-flight",
+    );
+  });
+
+  test("unknown-delivery is never retired", () => {
+    expectConflict(
+      retireOrphaned(makeIntent(unknownDeliveryState()), {
+        reason: "channel-deleted",
+      }),
+      "unknown-delivery-requires-operator",
+    );
+  });
+
+  test("replaying a retirement for the same reason is idempotent", () => {
+    expect(
+      retireOrphaned(makeIntent({ kind: "suppressed", reason: "guild-left" }), {
+        reason: "guild-left",
+      }),
+    ).toEqual({ outcome: "already-applied" });
+  });
+
+  test("a later observer cannot rewrite the recorded reason", () => {
+    expectConflict(
+      retireOrphaned(
+        makeIntent({ kind: "suppressed", reason: "subscription-deleted" }),
+        { reason: "channel-deleted" },
+      ),
+      "terminal-state",
+    );
+  });
+
+  test("a stale suppression is not relabelled as a retirement", () => {
+    expectConflict(
+      retireOrphaned(makeIntent({ kind: "suppressed", reason: "stale" }), {
+        reason: "subscription-deleted",
+      }),
+      "terminal-state",
+    );
+  });
+
+  test.each(["delivered", "expired", "permission-denied"] as const)(
+    "%s conflicts as terminal",
+    (kind) => {
+      expectConflict(
+        retireOrphaned(makeIntent(statesByKind()[kind]), {
+          reason: "subscription-deleted",
+        }),
+        "terminal-state",
+      );
+    },
+  );
+});
+
 describe("operatorResolveUnknown", () => {
   test("resolving as delivered records the found message", () => {
     const next = expectApplied(
@@ -794,6 +872,10 @@ describe("state-machine invariants", () => {
       (intent) => suppressStale(intent, { at: afterDeadline }),
     ],
     ["expire", (intent) => expire(intent)],
+    [
+      "retireOrphaned",
+      (intent) => retireOrphaned(intent, { reason: "subscription-deleted" }),
+    ],
   ];
 
   test.each(nonOperatorAttempts)(

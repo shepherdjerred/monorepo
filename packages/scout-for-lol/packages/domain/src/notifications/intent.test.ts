@@ -65,12 +65,16 @@ describe("NotificationAttemptNonceSchema", () => {
 });
 
 describe("NotificationSuppressionReasonSchema", () => {
-  test.each(["stale", "feature-disabled", "recipient-preference"])(
-    "accepts %s",
-    (reason) => {
-      expect(NotificationSuppressionReasonSchema.parse(reason)).toBe(reason);
-    },
-  );
+  test.each([
+    "stale",
+    "feature-disabled",
+    "recipient-preference",
+    "subscription-deleted",
+    "channel-deleted",
+    "guild-left",
+  ])("accepts %s", (reason) => {
+    expect(NotificationSuppressionReasonSchema.parse(reason)).toBe(reason);
+  });
 
   test("rejects reasons outside the closed enum", () => {
     expect(() =>

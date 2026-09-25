@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import {
   DiscordMessageIdSchema,
   IsoInstantSchema,
@@ -20,7 +20,8 @@ import type {
   ScoutIntentRefV2,
 } from "@scout-for-lol/temporal/contracts-v2";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { testChannelId } from "#src/testing/test-ids.ts";
+import { testChannelId, testPuuid } from "#src/testing/test-ids.ts";
+import { seedSubscription } from "#src/durable/match/intent-retirement.test-fixtures.ts";
 import {
   getIntent,
   upsertIntent,
@@ -47,12 +48,33 @@ const testDatabase = createTestDatabase("temporal-v2-notification-transitions");
 Bun.env["DATABASE_URL"] = testDatabase.dbUrl;
 const { prisma } = testDatabase;
 
+// `beginNotificationSendV2` asks Discord whether the target channel still
+// exists before it mints an attempt; these suites are about the machine, so
+// Discord answers that it does. Retirement has its own suite
+// (`notification/intent-audience.integration.test.ts`).
+vi.mock("#src/lib/discord/bot-rest.ts", () => ({
+  botRest: () => ({
+    channel: () =>
+      Promise.resolve({ id: "0", name: "reports", type: 0, guild_id: null }),
+  }),
+}));
+
 const { prisma: activityPrisma } = await import("#src/database/index.ts");
 const {
   beginNotificationSendV2,
   markNotificationReadyV2,
   recordNotificationOutcomeV2,
 } = await import("#src/temporal/v2/notification-transitions.ts");
+
+// The intents' audience: one subscription in their channel, so the send path
+// finds it standing and begins every send these suites drive.
+beforeAll(async () => {
+  await seedSubscription(prisma, {
+    channelId: testChannelId("8200"),
+    puuid: testPuuid("8200"),
+    alias: "transitions",
+  });
+});
 
 afterAll(async () => {
   await prisma.$disconnect();
