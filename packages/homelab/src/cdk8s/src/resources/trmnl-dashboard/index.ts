@@ -7,6 +7,7 @@ import {
   Probe,
   Secret,
   Service,
+  ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
 import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
@@ -40,6 +41,15 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
     podMetadata: {
       labels: { app: "trmnl-dashboard" },
     },
+    // The pod no longer reads the Kubernetes API (#3093), so it runs as the
+    // namespace default account. Naming it explicitly matters: omitting the
+    // field leaves the API server's deprecated `serviceAccount` mirror in
+    // place, which restores the retired trmnl-dashboard account on apply.
+    serviceAccount: ServiceAccount.fromServiceAccountName(
+      chart,
+      "trmnl-dashboard-default-sa",
+      "default",
+    ),
   });
 
   const container = deployment.addContainer(

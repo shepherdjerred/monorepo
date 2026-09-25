@@ -23,6 +23,17 @@ describe("trmnl-dashboard configuration", () => {
     expect(yaml).not.toContain("name: trmnl-dashboard-reader");
   });
 
+  it("runs as the namespace default account so the retired one can be pruned", () => {
+    const app = new App({ outdir: ".test-synth-trmnl-dashboard-sa" });
+    createTrmnlDashboardChart(app);
+    const yaml = app.synthYaml();
+
+    // Leaving the field unset lets the API server's deprecated
+    // `serviceAccount` mirror restore the retired trmnl-dashboard account.
+    expect(yaml).toContain("serviceAccountName: default");
+    expect(yaml).not.toContain("kind: ServiceAccount");
+  });
+
   it("allows Bugsink internal service hostnames", async () => {
     const yaml = await synthesizeApp();
 
