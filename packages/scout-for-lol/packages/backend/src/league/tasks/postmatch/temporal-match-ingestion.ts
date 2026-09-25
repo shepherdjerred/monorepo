@@ -6,7 +6,6 @@ import {
   type RawMatch,
 } from "@scout-for-lol/data/index.ts";
 import { getAccountsWithState, prisma } from "#src/database/index.ts";
-import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { processMatchAndUpdatePlayers } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import type { DiscoveredMatchIntent } from "#src/league/tasks/postmatch/match-intents.ts";
@@ -27,7 +26,13 @@ export async function ingestDiscoveredMatch(
   const matchId = MatchIdSchema.parse(input.matchId);
   const sourcePuuid = LeaguePuuidSchema.parse(input.sourcePuuid);
   const region = RegionSchema.parse(input.region);
-  const allAccounts = await getAccountsWithState(prisma, getActiveServerIds());
+  // No live-guild filter. This roster is the match's tracked-account snapshot
+  // (`recordTrackedAccounts`, which the V2 observed-roster resolver reads) and
+  // its settlement audience, not a polling workload. `getActiveServerIds()`
+  // fails open while the gateway is not ready but NARROWS once it is, so a guild
+  // removed mid-match would silently drop its players from the record, and the
+  // answer would depend on which process ran the Activity.
+  const allAccounts = await getAccountsWithState(prisma);
   const source = allAccounts.find(
     ({ config }) =>
       config.league.leagueAccount.puuid === sourcePuuid &&
