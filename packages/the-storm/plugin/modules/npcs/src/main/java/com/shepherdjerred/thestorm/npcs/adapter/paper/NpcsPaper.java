@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.npcs.app.ActionRegistry;
 import com.shepherdjerred.thestorm.npcs.app.ContentSource;
 import com.shepherdjerred.thestorm.npcs.app.DialogPresenter;
@@ -46,16 +47,16 @@ public final class NpcsPaper {
   /**
    * The Paper services that are swapped out in tests, where MockBukkit does not implement them.
    *
-   * @param tickets chunk tickets
+   * @param tickets the NPC chunk holds, on core's shared chunk tickets
    * @param presenter the dialog renderer
    */
-  public record Hooks(ChunkTickets tickets, DialogPresenter presenter) {
+  public record Hooks(HeldChunks tickets, DialogPresenter presenter) {
 
     /** The real ones. */
     public static Hooks paper(ModuleContext context, NpcsConfig config) {
       var server = context.plugin().getServer();
       return new Hooks(
-          ChunkTickets.paper(server, context.plugin()),
+          HeldChunks.paper(server, context.services().require(ChunkTickets.class)),
           new PaperDialogPresenter(
               server, context.scheduler(), Duration.ofMinutes(config.dialog().lifetimeMinutes())));
     }
@@ -96,8 +97,11 @@ public final class NpcsPaper {
                 parts.actions(),
                 hooks.presenter(),
                 config.dialog().continueLabel(),
+                context.time(),
+                Duration.ofSeconds(config.dialog().holdSeconds()),
                 context.logger()),
             parts.trainer());
+    world.attachListeners(talk::listeners);
     context.logger().info("NPCs: {}", world.reconcile());
     server
         .getPluginManager()

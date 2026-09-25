@@ -90,10 +90,13 @@ final class ShippedContentTest {
   }
 
   @Test
-  void theBankerHasARoleAndNothingElse() {
-    var braxton = shipped().npc("braxton").orElseThrow();
+  void theBankerSaysTheBankOpensSoon() {
+    var content = shipped();
+    var braxton = content.npc("braxton").orElseThrow();
     assertThat(braxton.roles()).containsExactly("banker");
-    assertThat(braxton.dialogue()).isEmpty();
+    var greet = content.dialogue(braxton).orElseThrow().nodes().get("greet");
+    assertThat(java.util.Objects.requireNonNull(greet).text())
+        .isEqualTo("The Storm Bank opens soon. Keep your crystals close.");
     assertThat(braxton.trainer()).isEmpty();
   }
 
@@ -146,7 +149,11 @@ final class ShippedContentTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new NpcsConfig.Markers("", "?", 2.3))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new NpcsConfig.Dialog("Continue", 0))
+    assertThatThrownBy(() -> new NpcsConfig.Dialog("Continue", 0, 30, 8))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new NpcsConfig.Dialog("Continue", 10, 0, 8))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new NpcsConfig.Dialog("Continue", 10, 30, 1))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

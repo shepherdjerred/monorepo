@@ -1,7 +1,9 @@
 package com.shepherdjerred.thestorm.npcs.domain.dialogue;
 
 import com.shepherdjerred.thestorm.npcs.domain.dialogue.Screen.Choice;
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,16 +21,16 @@ public final class Conversations {
   private final Map<UUID, Open> open = new HashMap<>();
   private long lastToken;
 
-  /** A screen a player has open. */
-  public record Open(long token, String npc, Screen screen) {}
+  /** A screen a player has open, and when it was shown. */
+  public record Open(long token, String npc, Screen screen, Instant shownAt) {}
 
   /** A click that counted: which NPC it was for and what the button asked for. */
   public record Clicked(String npc, Choice choice) {}
 
   /** Records that {@code player} now sees {@code screen} from {@code npc}; returns its token. */
-  public long show(UUID player, String npc, Screen screen) {
+  public long show(UUID player, String npc, Screen screen, Instant now) {
     lastToken++;
-    open.put(player, new Open(lastToken, npc, screen));
+    open.put(player, new Open(lastToken, npc, screen, now));
     return lastToken;
   }
 
@@ -48,6 +50,20 @@ public final class Conversations {
   /** The screen {@code player} has open, if any. */
   public Optional<Open> current(UUID player) {
     return Optional.ofNullable(open.get(player));
+  }
+
+  /**
+   * The players who have a screen from {@code npc} open that was shown at or after {@code since}.
+   * The server is not told when a player closes a dialog with Escape, so an old screen is presumed
+   * closed.
+   */
+  public List<UUID> listeners(String npc, Instant since) {
+    return open.entrySet().stream()
+        .filter(entry -> entry.getValue().npc().equals(npc))
+        .filter(entry -> !entry.getValue().shownAt().isBefore(since))
+        .map(Map.Entry::getKey)
+        .sorted()
+        .toList();
   }
 
   /** Forgets {@code player}'s open screen (they quit or closed it). */

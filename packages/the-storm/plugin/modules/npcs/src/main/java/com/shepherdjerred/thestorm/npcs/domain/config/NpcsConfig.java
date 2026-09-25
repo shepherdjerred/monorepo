@@ -93,8 +93,12 @@ public record NpcsConfig(
    *
    * @param continueLabel the button on a node that continues with {@code next}
    * @param lifetimeMinutes how long a shown dialog's buttons keep working
+   * @param holdSeconds how long an NPC stands still, facing the player, for a dialog of theirs that
+   *     nobody answers; the server is not told when a dialog is closed with Escape
+   * @param holdRadius how far the player may walk away before the NPC stops waiting
    */
-  public record Dialog(String continueLabel, int lifetimeMinutes) {
+  public record Dialog(
+      String continueLabel, int lifetimeMinutes, int holdSeconds, double holdRadius) {
 
     public Dialog {
       if (continueLabel.isBlank() || continueLabel.length() > 32) {
@@ -102,6 +106,12 @@ public record NpcsConfig(
       }
       if (lifetimeMinutes < 1 || lifetimeMinutes > 60) {
         throw new IllegalArgumentException("lifetimeMinutes must be 1..60: " + lifetimeMinutes);
+      }
+      if (holdSeconds < 1 || holdSeconds > 300) {
+        throw new IllegalArgumentException("holdSeconds must be 1..300: " + holdSeconds);
+      }
+      if (!(holdRadius >= 2 && holdRadius <= 32)) {
+        throw new IllegalArgumentException("holdRadius must be 2..32: " + holdRadius);
       }
     }
   }

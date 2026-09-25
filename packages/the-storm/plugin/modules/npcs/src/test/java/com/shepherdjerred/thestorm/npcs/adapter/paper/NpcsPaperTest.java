@@ -341,6 +341,26 @@ final class NpcsPaperTest {
   }
 
   @Test
+  void anNpcFacesAPlayerTalkingToItFromFurtherAway() throws IOException {
+    writeContent(npc("nat", "Nat", 0.5, "hello"));
+    enable();
+    var player = server.addPlayer("Alice");
+    // Seven blocks west: too far to be glanced at, close enough to be talking.
+    player.teleport(new Location(world, -6.5, 64, 0.5));
+    server.getScheduler().performTicks(3);
+    assertThat(mannequin("nat").getYaw()).isZero();
+    server
+        .getPluginManager()
+        .callEvent(new PlayerInteractEntityEvent(player, mannequin("nat"), EquipmentSlot.HAND));
+    server.getScheduler().performTicks(2);
+    assertThat(mannequin("nat").getYaw()).isCloseTo(90f, org.assertj.core.data.Offset.offset(1f));
+    // Bye closes the dialog; Nat turns back to face along his home.
+    plugin().shown.getFirst().onClick().accept(0);
+    server.getScheduler().performTicks(2);
+    assertThat(mannequin("nat").getYaw()).isZero();
+  }
+
+  @Test
   void npcsWithoutPlayersNearbyStayPut() throws IOException {
     writeContent(npc("nat", "Nat", 0.5, "hello"));
     enable();

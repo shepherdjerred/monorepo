@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.tracks.app.Purchase;
 import com.shepherdjerred.thestorm.tracks.app.PurchaseProblem;
 import com.shepherdjerred.thestorm.tracks.app.Quote;
 import com.shepherdjerred.thestorm.tracks.app.Track;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
@@ -86,6 +87,8 @@ final class NpcTalkTest {
   private Fakes.Purchases purchases;
   private Fakes.Levels levels;
   private NpcTalk talk;
+  private Instant now = Instant.parse("2026-09-25T12:00:00Z");
+  private final InstantSource clock = () -> now;
 
   @BeforeEach
   void start() {
@@ -110,7 +113,14 @@ final class NpcTalkTest {
     talk =
         new NpcTalk(
             new NpcTalk.Wiring(
-                catalog, dialogues, actions, presenter, "Continue", ComponentLogger.logger("test")),
+                catalog,
+                dialogues,
+                actions,
+                presenter,
+                "Continue",
+                clock,
+                Duration.ofSeconds(30),
+                ComponentLogger.logger("test")),
             new Trainer(purchases, levels, wording, Runnable::run));
   }
 
@@ -306,6 +316,28 @@ final class NpcTalkTest {
     presenter.last().press("Train");
     assertThat(presenter.closed).containsExactly(player);
     assertThat(purchases.quoted).isEmpty();
+  }
+
+  @Test
+  void anOpenDialogHoldsItsNpcUntilClickedOrTimedOut() {
+    talk.talk(player, STAN);
+    assertThat(talk.listeners("stan")).containsExactly(player.getUniqueId());
+    assertThat(talk.listeners("darren")).isEmpty();
+    // A new screen restarts the wait.
+    now = now.plusSeconds(20);
+    presenter.last().press("To about");
+    now = now.plusSeconds(20);
+    assertThat(talk.listeners("stan")).containsExactly(player.getUniqueId());
+    // Unanswered (the player may have pressed Escape): the NPC moves on.
+    now = now.plusSeconds(11);
+    assertThat(talk.listeners("stan")).isEmpty();
+  }
+
+  @Test
+  void closingTheDialogReleasesTheNpc() {
+    talk.talk(player, STAN);
+    presenter.last().press("Bye");
+    assertThat(talk.listeners("stan")).isEmpty();
   }
 
   @Test
