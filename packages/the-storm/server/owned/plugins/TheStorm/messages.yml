@@ -1,0 +1,274 @@
+# Server messages: death jokes, the server-list MOTD, tips, ads, the tab list
+# and the command blocklist. Owned by the repository; the plugin never writes
+# it. Every key is required and unknown keys stop the module.
+#
+# Death messages are plain text. {player} is the player who died, {killer} the
+# mob or player that killed them, and {weapon} what the killing player held.
+# The plugin colors the names; everything else is MiniMessage.
+
+deaths:
+  # After maxDeaths deaths inside the window, a player's deaths stop being
+  # broadcast until they stay alive for a full window.
+  spam:
+    maxDeaths: 3
+    window: PT5M
+  # {weapon} for a player killed by an empty hand.
+  unarmed: "their bare hands"
+
+  # One list per death cause. Only {player} is available here.
+  causes:
+    melee:
+      - "{player} was killed by something that didn't stick around to take credit"
+      - "{player} was beaten to death. Nobody saw a thing"
+    projectile:
+      - "{player} was shot by an arrow"
+      - "{player} caught something sharp. With their face"
+    explosion:
+      - "{player} blew up"
+      - "{player} was blown up"
+      - "{player} was blown to tiny bits"
+    magic:
+      - "{player} died to a potion"
+      - "{player} drank something they shouldn't have. Or it drank them"
+    bad_respawn_point:
+      - "{player} tried to sleep in the wrong dimension. Beds don't work like that here"
+      - "{player} was killed by Intentional Game Design"
+    cactus:
+      - "{player} died from a cactus. We know, that's lame"
+      - "{player} poked a cactus, but the cactus poked back"
+      - "{player} was pricked to death"
+      - "{player} walked into a cactus"
+      - "{player} was stabbed to death.. by a cactus"
+    sweet_berry_bush:
+      - "{player} was poked to death by a berry bush. The berries were not worth it"
+      - "{player} went berry picking. The bush picked back"
+    drowning:
+      - "{player} drowned"
+      - "{player} is swimming with the fishes"
+      - "{player} took a long walk off a short pier"
+    fall:
+      - "{player} fell to their ultimate demise"
+      - "{player} hit the ground too hard"
+      - "{player} perished from a brutal fall"
+      - "{player} succumbed to gravity"
+      - "{player} finally experienced terminal velocity"
+      - "{player} went skydiving, forgot the parachute"
+      - "We'll hold a moment of silence while we laugh at your falling death, {player}"
+      - "Attempting a high-wire stunt yet again, {player} slipped, and died"
+      - "Somehow tree tops are immune to gravity. {player} is not"
+      - "Nice going {player}, you've fallen. You're in a group that includes sand, and gravel - the losers of three"
+      - "We're here today to mourn the loss of {player}. They are survived by their Nyan Cat and Creeper statues"
+      - "Like everything in life, {player} chose the most average, unexciting, unadventurous death - falling. Whoopie"
+      - "Oh man that was a hard fall {player}! You ok? {player}? How many fingers dude? Um, dude? Oh sh."
+      - "{player} had a whoopsie-daisy!"
+      - "{player} was testing gravity. Yup, still works"
+      - "Although {player}'s body lies on the ground somewhere, the question stands. Will it blend?"
+    fly_into_wall:
+      - "{player} experienced kinetic energy"
+      - "{player} found the wall. The wall found {player} first"
+      - "{player} flew into a wall. Elytra don't come with brakes"
+    fire:
+      - "{player} burned to death"
+      - "{player} forgot how to stop, drop and roll"
+      - "{player} spontaneously combusted, or possibly walked into fire"
+      - "{player} became a human torch. Not a very long-lasting one either"
+      - "Not only did you burn up {player}, but you may have started a forest fire. Nice going"
+      - "You are not a replacement for coal, {player}. I'm not sure that even death can teach you that lesson"
+      - "Taking themselves out of the gene pool for us, {player} burned to death. Good job!"
+    lava:
+      - "{player} was killed by lava"
+      - "{player} became obsidian"
+      - "{player} took a bath in a lake of fire"
+      - "{player} lost an entire inventory to lava. They died too, but man, losing your stuff's a bummer!"
+      - "I told you not to dig straight down {player}. Now look what happened"
+      - "Look {player}, I'm sorry I boiled you to death. I just wanted a friend. No one likes me. - Your Best Buddy, Lava"
+      - "Then {player} said 'Take my picture in front of this pit of boiling, killer lava.'"
+    hot_floor:
+      - "{player} discovered the floor was lava. Well, magma. Close enough"
+      - "{player} forgot to sneak across the magma blocks"
+    lightning:
+      - "{player} was struck with a bolt of inspiration. Wait, never mind. Lightning"
+      - "Why is it always raining? Ask {player}. Oh wait, the lightning got them"
+    starvation:
+      - "{player} starved to death"
+      - "{player} starved to death. Because food is *so* hard to find"
+    suffocation:
+      - "{player} suffocated"
+      - "{player} tried to become one with the wall"
+    cramming:
+      - "{player} was squished too much. Personal space is a thing"
+      - "{player} got hugged to death by a crowd"
+    void:
+      - "{player} ceased to exist. Thanks void!"
+      - "{player} passed the event horizon"
+    world_border:
+      - "{player} went where no player should go: past the world border"
+      - "{player} tried to leave The Storm. The Storm said no"
+    kill:
+      - "{player} killed themselves"
+      - "{player} ended it all. Goodbye cruel world!"
+    wither:
+      - "{player} died to a wither"
+      - "{player} withered away. Should have brought milk"
+    thorns:
+      - "{player} died to thorns"
+      - "{player} hit something that hit back. Harder"
+    falling_block:
+      - "{player} died to a falling block"
+      - "{player} looked up just in time to see an anvil. Classic"
+      - "{player} was flattened. Someone call the cartoon physics department"
+    stalactite:
+      - "{player} was skewered by a falling stalactite. Look up, not just down"
+      - "The cave ceiling had one job, and {player} was it"
+    stalagmite:
+      - "{player} landed on a stalagmite. Pointy side up, as always"
+      - "{player} was impaled on a stalagmite. The cave remains undefeated"
+    freeze:
+      - "{player} froze to death. Powder snow looks soft, doesn't it?"
+      - "{player} became a popsicle. Leather boots, next time"
+      - "{player} chilled out. Permanently"
+    sonic_boom:
+      - "{player} was obliterated by a sonic boom. The Warden heard that"
+      - "{player} made a noise. Once"
+      - "The Warden would like {player} to keep it down. Forever"
+    mace_smash:
+      - "{player} was smashed flat by a mace"
+      - "{player} learned what a mace does with a long enough fall"
+    wind_charge:
+      - "{player} was blown away by a Breeze. Literally"
+      - "{player} got caught in the wind. The Breeze thinks it's hilarious"
+      - "Gone with the wind: {player}"
+    dragon_breath:
+      - "{player} breathed in the Ender Dragon's breath. Mints won't help"
+      - "{player} was roasted by dragon's breath"
+    ender_pearl:
+      - "{player} threw an ender pearl and landed on their own funeral"
+      - "{player} teleported. Most of {player} arrived"
+    fireworks:
+      - "{player} went off with a bang"
+      - "{player} was the finale of the fireworks show"
+    generic:
+      - "{player} died to the unknown"
+      - "{player} died. We're honestly not sure how"
+
+  # Deaths to mobs. {player} and {killer} are available.
+  mobs:
+    any:
+      - "{player} was ravaged by a {killer}"
+      - "{player} died after encountering a fierce {killer}"
+      - "{player} was killed by an angry {killer}"
+      - "It was a horrible death for {player} - ravaged by a {killer}"
+      - "Dinner time for {killer}. Cooked pork for the main course, {player} for dessert"
+      - "{player} went off into the woods alone and shall never return. Until they respawn"
+      - "While hunting, {player} was unaware that a {killer} was hunting them. Rest in pieces"
+      - "We have unconfirmed reports that {player} was attacked by an {killer}"
+      - "Look {player}, I'm sorry I killed you. I just wanted a friend. No one likes me. - Your Best Buddy, {killer}"
+      - "Dear {player}, good luck finding your stuff. - {killer}"
+      - "A {killer} killed {player}!"
+    groups:
+      - types: [creeper]
+        messages:
+          - "{player} was creeper bombed"
+          - "{player} hugged a creeper"
+          - "Sorry you died {player}, a creeper's gonna creep!"
+          - "{player} was testing a new creeper-proof suit. It didn't work"
+          - "{player} was not involved in any explosion, nor are we able to confirm the existence of the 'creeper'. Move along"
+          - "Due to the laws of physics, the sound of a creeper explosion only reached {player} after they died from it"
+          - "Hell hath no fury like a creeper scorned. We drink to thy untimely end, lord {player}"
+          - "I'm sorry {player}, that's the only birthday gift Creepers know how to give. :("
+      - types: [zombie, zombie_villager, husk, drowned]
+        messages:
+          - "Having not seen the plethora of zombie movies, {player} was amazingly unaware of how to escape"
+          - "Poor {player} - that zombie only wanted a hug! That's why his arms were stretched out"
+      - types: [rabbit]
+        messages:
+          - "{player} was slain by the Rabbit of Caerbannog. Should have brought the Holy Hand Grenade"
+          - "{player} said it was just a harmless little bunny. It was not"
+      - types: [enderman]
+        messages:
+          - "{player} looked a {killer} in the eye. Rookie mistake"
+          - "Somewhere, a {killer} is holding a grass block and {player}'s stuff"
+      - types: [warden]
+        messages:
+          - "{player} woke the {killer}. It was not a morning person"
+          - "{player} tiptoed through the Deep Dark. Not quietly enough"
+      - types: [phantom]
+        messages:
+          - "{player} was carried off by a {killer}. Should have slept"
+          - "Three nights without sleep and {player} is phantom food. Beds exist for a reason"
+      - types: [bee]
+        messages:
+          - "{player} was stung to death. Leave the hives alone"
+          - "{player} took the honey. The bees took everything else"
+
+  # Deaths to other players. {player}, {killer} and {weapon} are available.
+  players:
+    any:
+      - "{player} was just murdered by {killer}, using {weapon}"
+      - "{player} died, by {killer}'s {weapon}"
+      - "{killer} killed {player} wielding {weapon}"
+      - "You think it was {killer} who killed {player}? Nope, Chuck Testa"
+      - "It was a bitter end for {player}, but {killer} won victoriously"
+      - "Embarrassingly, {player} died of fright before {killer} could even raise their weapon"
+      - "{killer} struck the mighty blow and ended {player}"
+      - "{player} never saw {killer} coming"
+      - "{killer} delivered the fatal blow on {player}"
+      - "{player}'s inventory now belongs to {killer}"
+      - "{killer} taught {player} the true meaning of PVP"
+      - "What is this, like death number ten for {player}? Ask {killer}"
+    # Lists that replace "any" for particular causes.
+    byCause:
+      projectile:
+        - "{player} was shot by {killer}"
+        - "{killer} put an arrow in {player}. Nice shot"
+        - "{player} took {killer}'s {weapon} to the knee. And the rest of the body"
+      mace_smash:
+        - "{killer} dropped out of the sky and flattened {player} with a {weapon}"
+        - "{player} was smashed into next week by {killer}'s {weapon}"
+        - "{killer} fell with style. {player} just fell over"
+
+# The server list, two lines each, shown in rotation.
+motd:
+  - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
+    bottom: "<gray>Why is it always raining? Because it's The Storm.</gray>"
+  - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
+    bottom: "<gray>Towns, crystals and Storm Shards. Since 2014.</gray>"
+  - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
+    bottom: "<gray>The windmill is waiting. So is the rain.</gray>"
+  - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
+    bottom: "<gray>Found a town. Earn crystals. Don't dig straight down.</gray>"
+
+announcements:
+  tips:
+    interval: PT10M
+    messages:
+      - "Why is it always raining? Because it's <#4DCCC4>The Storm</#4DCCC4>."
+      - "Crystals are the currency here. Check yours with <#4DCCC4>/bal</#4DCCC4>."
+      - "Pay a friend with <#4DCCC4>/pay</#4DCCC4>. Crystals are better spent than hoarded."
+      - "See who's richest with <#4DCCC4>/baltop</#4DCCC4>. Then go outsell them."
+      - "Towns are the only way to protect your land. Find some friends and claim it together."
+      - "Storm Shards drop from mobs and ores. Bosses and rarer ores drop more of them."
+      - "To use a Storm Shard, stand on the emerald block inside the windmill at spawn. It only works while it's raining. Don't worry, it usually is."
+      - "A Storm Shard makes a weapon hit harder or armor hold up better, all the way up to Storm V."
+      - "Lost in the rain? Head back to the windmill at spawn and start again from there."
+      - "Your stuff drops where you die. Keep your coordinates handy, and maybe don't dig straight down."
+      - "Respect other players and staff. Everyone came here to have fun."
+      - "No griefing: if someone built it, leave it be. Mobs are fair game."
+      - "Died a few times in a row? We stop announcing it after a while. You're welcome."
+      - "Tired of tips? <#4DCCC4>/toggle-tips</#4DCCC4> turns them off. We won't take it personally."
+      - "Towns grow as they gain residents, from a Settlement all the way to a Metropolis."
+  ads:
+    interval: PT20M
+    messages: []
+
+tab:
+  header: "<#4DCCC4><bold>The Storm</bold></#4DCCC4><newline><dark_gray>//</dark_gray> <gray>Survival</gray> <dark_gray>//</dark_gray>"
+  footer: "<gray>Why is it always raining?</gray><newline><#4DCCC4>ts-mc.net</#4DCCC4>"
+
+commands:
+  # Labels refused for players without the bypass permission. Namespaced
+  # forms such as /bukkit:plugins are blocked too, and those players' command
+  # lists show no namespaced commands at all.
+  blocked: [pl, plugins, ver, version, about, icanhasbukkit, help, "?"]
+  staffBypassPermission: thestorm.messages.bypass-blocklist
+  blockedMessage: "You don't have permission to do that!"
