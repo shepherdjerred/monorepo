@@ -19,18 +19,16 @@ import com.shepherdjerred.thestorm.tracks.domain.Wording;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 
 /**
  * {@code /perks admin set <player> <track> <level>} and {@code /perks admin reset <player>} (run
- * twice to confirm). Both work on offline players Paper has seen, charge nothing and refund
- * nothing.
+ * twice to confirm). Both work on anyone who has ever joined, online or not, charge nothing and
+ * refund nothing.
  */
 final class PerksAdminCommands {
 
@@ -102,23 +100,22 @@ final class PerksAdminCommands {
   }
 
   private int set(CommandSender admin, String name, String trackId, int level) {
-    var target = target(admin, name);
-    var track = PerksCommands.track(admin, trackId);
-    if (target.isEmpty() || track.isEmpty()) {
-      return Command.SINGLE_SUCCESS;
-    }
-    var who = target.get();
-    var chosen = track.get();
+    PerksCommands.track(admin, trackId)
+        .ifPresent(track -> withTarget(admin, name, target -> set(admin, target, track, level)));
+    return Command.SINGLE_SUCCESS;
+  }
+
+  private void set(CommandSender admin, Target who, Track track, int level) {
     paper
         .replies()
         .whenDone(
-            useCases.admin().set(who.uuid(), chosen, level),
+            useCases.admin().set(who.uuid(), track, level),
             admin,
             result -> {
               switch (result) {
                 case Result.Ok<TrackProgress, AdminProblem>(var _) -> {
                   var described = level == 0 ? "untrained" : Wording.numeral(level);
-                  var trackName = presenter.explanations().name(chosen);
+                  var trackName = presenter.explanations().name(track);
                   admin.sendMessage(
                       Replies.success(
                           "Set " + who.name() + "'s " + trackName + " to " + described + "."));
@@ -130,11 +127,10 @@ final class PerksAdminCommands {
                     admin.sendMessage(Replies.error(presenter.explanations().explain(problem)));
               }
             });
-    return Command.SINGLE_SUCCESS;
   }
 
   private int reset(CommandSender admin, String name) {
-    target(admin, name).ifPresent(target -> reset(admin, target));
+    withTarget(admin, name, target -> reset(admin, target));
     return Command.SINGLE_SUCCESS;
   }
 
@@ -169,20 +165,27 @@ final class PerksAdminCommands {
   }
 
   /**
-   * The player called {@code name}, online or seen before, or tells {@code admin} there is none.
+   * Runs {@code action} on the player called {@code name}: an online player at once, otherwise
+   * anyone who has ever joined, looked up in the player directory off the main thread. Tells {@code
+   * admin} when nobody by that name has played.
    */
-  private Optional<Target> target(CommandSender admin, String name) {
+  private void withTarget(CommandSender admin, String name, Consumer<Target> action) {
     var online = paper.server().getPlayerExact(name);
     if (online != null) {
-      return Optional.of(new Target(online.getUniqueId(), online.getName()));
+      action.accept(new Target(online.getUniqueId(), online.getName()));
+      return;
     }
-    OfflinePlayer seen = paper.server().getOfflinePlayerIfCached(name);
-    if (seen != null) {
-      return Optional.of(
-          new Target(seen.getUniqueId(), Objects.requireNonNullElse(seen.getName(), name)));
-    }
-    admin.sendMessage(Replies.error("Nobody named " + name + " has played on The Storm."));
-    return Optional.empty();
+    paper
+        .replies()
+        .whenDone(
+            paper.players().byName(name),
+            admin,
+            found ->
+                found.ifPresentOrElse(
+                    known -> action.accept(new Target(known.uuid(), known.lastName())),
+                    () ->
+                        admin.sendMessage(
+                            Replies.error("Nobody named " + name + " has played on The Storm."))));
   }
 
   private void tell(Target target, Component message) {

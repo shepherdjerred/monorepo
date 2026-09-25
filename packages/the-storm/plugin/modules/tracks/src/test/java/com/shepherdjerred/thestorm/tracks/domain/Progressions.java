@@ -24,6 +24,12 @@ public final class Progressions {
 
   private Progressions() {}
 
+  /** Crystal amounts the way the economy writes them in sentences. */
+  public static String crystals(long amount) {
+    return String.format(
+        java.util.Locale.ROOT, "%,d %s", amount, amount == 1 ? "crystal" : "crystals");
+  }
+
   /**
    * Progress owning tracks in the order given, alternating track and level, for example {@code
    * owning(MECHANIC, 3, ENGINEER, 1)}. No purchase cooldown.

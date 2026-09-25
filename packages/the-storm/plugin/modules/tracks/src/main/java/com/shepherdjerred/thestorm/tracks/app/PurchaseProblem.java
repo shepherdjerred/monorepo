@@ -27,6 +27,12 @@ public sealed interface PurchaseProblem {
   /** The player's levels have not loaded since they joined. */
   record StillLoading() implements PurchaseProblem {}
 
+  /** Loading the player's levels failed; it is being retried. */
+  record LoadFailed() implements PurchaseProblem {}
+
+  /** The server is stopping and takes no new purchases. */
+  record ShuttingDown() implements PurchaseProblem {}
+
   /** Another purchase for this player has not finished. */
   record AlreadyBuying() implements PurchaseProblem {}
 

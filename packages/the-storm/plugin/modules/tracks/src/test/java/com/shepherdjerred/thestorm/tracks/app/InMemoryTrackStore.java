@@ -21,6 +21,17 @@ public final class InMemoryTrackStore implements TrackStore {
   private boolean failUpdates;
   private Runnable beforeUpdate = () -> {};
   private int updates;
+  private int loads;
+  private int failingLoads;
+
+  /** The next {@code count} loads fail. */
+  public synchronized void failLoads(int count) {
+    failingLoads = count;
+  }
+
+  public synchronized int loads() {
+    return loads;
+  }
 
   public synchronized void put(UUID player, TrackProgress progress) {
     stored.put(player, progress);
@@ -51,6 +62,11 @@ public final class InMemoryTrackStore implements TrackStore {
 
   @Override
   public synchronized CompletableFuture<TrackProgress> load(UUID player) {
+    loads++;
+    if (failingLoads > 0) {
+      failingLoads--;
+      return CompletableFuture.failedFuture(new IllegalStateException("database is locked"));
+    }
     return loadGate.thenApply(ignored -> get(player));
   }
 

@@ -22,8 +22,8 @@ final class TrackAdminTest {
 
   private void online(TrackProgress progress) {
     test.store.put(ALICE, progress);
-    test.cache.joined(ALICE);
-    test.cache.loaded(ALICE, progress);
+    var token = test.cache.joined(ALICE);
+    test.cache.loaded(ALICE, token, progress);
   }
 
   @Test

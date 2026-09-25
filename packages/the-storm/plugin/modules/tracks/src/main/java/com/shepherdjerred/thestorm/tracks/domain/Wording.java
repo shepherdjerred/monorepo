@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.tracks.domain;
 import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.time.Duration;
 import java.util.List;
-import java.util.Locale;
 
 /** Small formatting helpers shared by the tracks' messages. */
 public final class Wording {
@@ -18,11 +17,6 @@ public final class Wording {
       throw new IllegalArgumentException("level must be 1.." + Track.MAX_LEVEL + ": " + level);
     }
     return NUMERALS.get(level - 1);
-  }
-
-  /** {@code amount} crystals with thousands separators, for example "1,500 crystals". */
-  public static String crystals(long amount) {
-    return String.format(Locale.ROOT, "%,d %s", amount, amount == 1 ? "crystal" : "crystals");
   }
 
   /**

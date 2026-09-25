@@ -14,7 +14,8 @@ import org.junit.jupiter.api.Test;
 final class ExplanationsTest {
 
   private final Explanations explanations =
-      new Explanations(ConfigFiles.load(TracksConfigTest.SHIPPED, TracksConfig.class));
+      new Explanations(
+          ConfigFiles.load(TracksConfigTest.SHIPPED, TracksConfig.class), Progressions::crystals);
 
   private String explain(PurchaseProblem problem) {
     return explanations.explain(problem, NOW);
@@ -51,6 +52,10 @@ final class ExplanationsTest {
                 + " crystals; check again.");
     assertThat(explain(new PurchaseProblem.StillLoading()))
         .isEqualTo("Your tracks are still loading; try again in a moment.");
+    assertThat(explain(new PurchaseProblem.LoadFailed()))
+        .isEqualTo("Your tracks could not be loaded; try again shortly.");
+    assertThat(explain(new PurchaseProblem.ShuttingDown()))
+        .isEqualTo("The server is stopping; train again once it is back.");
     assertThat(explain(new PurchaseProblem.AlreadyBuying()))
         .isEqualTo("You are already buying a level; wait for it to finish.");
     assertThat(explain(new PurchaseProblem.NotRecorded(quote)))

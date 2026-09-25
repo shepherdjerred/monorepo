@@ -16,13 +16,20 @@ import com.shepherdjerred.thestorm.tracks.app.TrackRuntime;
 import com.shepherdjerred.thestorm.tracks.app.TrackSessions;
 import com.shepherdjerred.thestorm.tracks.domain.TracksConfig;
 import com.shepherdjerred.thestorm.tracks.domain.purchase.PurchaseRules;
+import java.time.Duration;
 import net.luckperms.api.LuckPermsProvider;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Progression tracks: players buy levels in five tracks with crystals, levels are stored in SQLite
  * and granted as LuckPerms groups. Publishes {@link TrackLevels} and {@link TrackPurchases}.
  */
 public final class TracksModule implements StormModule {
+
+  /** How long a stop waits for purchases that have started to be paid and stored or refunded. */
+  static final Duration SHUTDOWN_GRACE = Duration.ofSeconds(10);
+
+  private @Nullable PurchaseService purchases;
 
   @Override
   public String id() {
@@ -34,21 +41,18 @@ public final class TracksModule implements StormModule {
     var config = context.loadConfig("tracks.yml", TracksConfig.class);
     context.database().migrate(id(), TracksModule.class.getClassLoader());
     var wallets = context.services().require(Wallets.class);
-    var permissions = new LuckPermsSync(LuckPermsProvider.get());
+    var store = new JooqTrackStore(context.database());
+    var permissions = new LuckPermsSync(LuckPermsProvider.get(), store);
     var cache = new LevelCache();
     var runtime =
         new TrackRuntime(
-            new JooqTrackStore(context.database()),
-            permissions,
-            cache,
-            context.scheduler().mainThread(),
-            context.time(),
-            context.logger());
-    var purchases =
+            store, permissions, cache, context.scheduler(), context.time(), context.logger());
+    var service =
         new PurchaseService(
             runtime, wallets, PurchaseRules.standard(config.pricing(), config.purchaseCooldown()));
+    purchases = service;
     context.services().provide(TrackLevels.class, cache);
-    context.services().provide(TrackPurchases.class, purchases);
+    context.services().provide(TrackPurchases.class, service);
     var _ =
         permissions
             .declareGroups()
@@ -63,9 +67,18 @@ public final class TracksModule implements StormModule {
                             failure);
                   }
                 });
+    var sessions =
+        new TrackSessions(runtime, TracksPaper.loadFailedNotice(context.plugin().getServer()));
     TracksPaper.install(
-        context,
-        config,
-        new UseCases(purchases, new TrackAdmin(runtime), new TrackSessions(runtime), cache));
+        context, config, new UseCases(service, new TrackAdmin(runtime), sessions, cache));
+  }
+
+  /** Refuses new purchases and lets running ones finish before the database closes. */
+  @Override
+  public void disable() {
+    if (purchases != null) {
+      purchases.shutdown(SHUTDOWN_GRACE);
+      purchases = null;
+    }
   }
 }

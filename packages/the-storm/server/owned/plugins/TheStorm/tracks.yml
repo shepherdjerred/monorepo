@@ -2,6 +2,13 @@
 # Progression tracks: players buy levels I-V in each track with crystals.
 # The first track a player buys is their primary; no other track may pass its
 # level. Changing the primary takes an admin reset (/perks admin reset).
+#
+# The LuckPerms groups storm-<track>-<level> are managed by the plugin: it
+# creates them and sets every player's membership from its own records. Do not
+# assign them in LuckPerms; use /perks admin set <player> <track> <level>.
+# If the server dies between charging a purchase and saving its level, the
+# ledger shows a track:<track>:<level> payment with no level; grant it with
+# /perks admin set.
 
 pricing:
   # The price of levels I to V before the multiplier.
