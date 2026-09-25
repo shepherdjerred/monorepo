@@ -37,7 +37,7 @@ const BUILDER = "ci";
 const SdkEntry = z.strictObject({
   xcode: z.string(),
   xcodeBuild: z.string(),
-  swiftImage: z.string().regex(/^swift:[0-9.]+-noble$/),
+  swiftImage: z.string().regex(/^swift:[0-9.]+-noble(@sha256:[0-9a-f]{64})?$/),
   sha256: z.string().regex(/^[0-9a-f]{64}$/),
   latest: z.boolean().optional(),
 });

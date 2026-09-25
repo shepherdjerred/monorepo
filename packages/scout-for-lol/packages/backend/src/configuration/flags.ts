@@ -373,7 +373,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // it is on.
   feature_tips_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   // Settlement messages are a separate rollout from the betting economy: the
   // economy must keep paying or refunding open positions even while Discord
@@ -389,12 +391,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   },
   debug: {
     default: false,
-    overrides: [
-      {
-        value: true,
-        attributes: { user: ME },
-      },
-    ],
+    overrides: [{ value: true, attributes: { user: ME } }],
   },
   /**
    * Confirming an Explore-prepared report, subscription or competition.

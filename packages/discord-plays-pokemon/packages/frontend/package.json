@@ -46,7 +46,7 @@
     "@typescript-eslint/parser": "^8.70.1",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitejs/plugin-react-swc": "^4.0.0",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-plugin-react-refresh": "^0.5.0",
     "jiti": "^2.7.0",

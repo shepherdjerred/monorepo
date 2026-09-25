@@ -5,8 +5,8 @@
   "description": "Docker images that build macOS, iOS, and Mac Catalyst software on Linux (Swift, SwiftUI, C, C++, Objective-C, Rust).",
   "scripts": {
     "stage": "./scripts/stage-xcode.sh",
-    "image:smoke": "docker build --target smoke --build-arg SDK=27 --build-arg SWIFT_IMAGE=swift:6.4.0-noble .",
-    "image:build": "docker build --target image --build-arg SDK=27 --build-arg SWIFT_IMAGE=swift:6.4.0-noble -t macos-cross-compiler:27 .",
+    "image:smoke": "docker build --target smoke --build-arg SDK=27 .",
+    "image:build": "docker build --target image --build-arg SDK=27 -t macos-cross-compiler:27 .",
     "macros:check": "./macros/check-against-xcode.sh"
   }
 }
