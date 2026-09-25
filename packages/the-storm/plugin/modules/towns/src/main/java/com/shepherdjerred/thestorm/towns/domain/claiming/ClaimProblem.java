@@ -35,4 +35,7 @@ public sealed interface ClaimProblem {
 
   /** Another town holds the chunk. */
   record OwnedByOtherTown(UUID townId) implements ClaimProblem {}
+
+  /** A change to this town or chunk is still being saved. */
+  record Busy() implements ClaimProblem {}
 }

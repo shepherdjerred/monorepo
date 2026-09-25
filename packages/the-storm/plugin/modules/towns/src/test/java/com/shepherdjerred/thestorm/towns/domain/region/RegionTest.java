@@ -114,6 +114,20 @@ final class RegionTest {
   }
 
   @Test
+  void theAllocationFreeLookupAgreesWithTheOptionalOne() {
+    var shop = region("shop", SHOP);
+    var index = new RegionIndex(List.of(shop, region("spawn", SPAWN_CHUNKS)));
+
+    assertThat(index.regionAt("world", 2, 65, 2)).isEqualTo(shop);
+    assertThat(index.regionAt("world", 400, 65, 2)).isNull();
+    assertThat(index.regionAt("world_nether", 2, 65, 2)).isNull();
+    assertThat(SHOP.footprintContains(new ChunkPos("world", 0, 0))).isTrue();
+    assertThat(SHOP.footprintContains(new ChunkPos("world", 1, 0))).isFalse();
+    assertThat(SPAWN_CHUNKS.footprintContains(new ChunkPos("world", -2, 1))).isTrue();
+    assertThat(SPAWN_CHUNKS.footprintContains(new ChunkPos("world", -3, 1))).isFalse();
+  }
+
+  @Test
   void theIndexReportsRegionsOverlappingAChunk() {
     var index = new RegionIndex(List.of(region("shop", SHOP)));
 

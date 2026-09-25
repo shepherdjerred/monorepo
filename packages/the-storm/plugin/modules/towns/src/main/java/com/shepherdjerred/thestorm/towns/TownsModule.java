@@ -52,7 +52,17 @@ public final class TownsModule implements StormModule {
             state,
             store,
             new Claiming(config.claims()),
-            new Clocks(context.time(), context.random(), context.scheduler().mainThread()));
+            new Clocks(
+                context.time(),
+                context.random(),
+                context.scheduler().mainThread(),
+                failure ->
+                    context
+                        .logger()
+                        .error(
+                            "Towns could not be reloaded after a failed save; changes are"
+                                + " refused until the server restarts",
+                            failure)));
     var protection = TownsPaper.install(context, state, towns, config);
     context.services().provide(Protection.class, protection);
     context

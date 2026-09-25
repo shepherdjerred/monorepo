@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 /** Where towns and claims are stored. Every method runs off the main thread. */
 public interface TownsStore {
 
+  /** Everything stored, ordered after every write already queued. */
   CompletableFuture<TownsSnapshot> loadAll();
 
   /** Stores a new town and its members. */
