@@ -30,7 +30,7 @@ final class ShopsConfigTest {
     assertThat(config.chestShops().containers()).contains("CHEST", "BARREL", "COPPER_CHEST");
     assertThat(config.chestShops().containers()).doesNotContain("SHULKER_BOX");
     assertThat(config.chestShops().limits().allowed(1)).isEqualTo(5);
-    assertThat(config.catalogs().zone()).isEqualTo(ZoneId.of("UTC"));
+    assertThat(config.catalogs().zone()).isEqualTo(ZoneId.of("America/Los_Angeles"));
   }
 
   @Test

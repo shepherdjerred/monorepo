@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.shops.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.papermc.paper.event.entity.ItemTransportingEntityValidateTargetEvent;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,9 @@ import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
 
@@ -123,22 +126,79 @@ final class ShopGuardListenerTest extends ShopsFixture {
     assertThat(messages(root)).contains("[Shop]: Shops removed.");
   }
 
+  /**
+   * A shop chest at the world spawn. MockBukkit reports every block inventory's location as the
+   * spawn, so machine moves resolve to this block whichever inventory they name; on a real server
+   * each inventory reports its own block. Either way a move touching this chest is a shop move.
+   */
+  private Block shopChestAtSpawn(Player owner) {
+    var chest = world.getSpawnLocation().getBlock();
+    chest.setType(Material.CHEST);
+    shop(owner, chest, "", "16", "B 50:S 40", "coal");
+    return chest;
+  }
+
+  private InventoryMoveItemEvent move(Inventory from, Inventory to) {
+    var event = new InventoryMoveItemEvent(from, ItemStack.of(Material.COAL), to, true);
+    server.getPluginManager().callEvent(event);
+    return event;
+  }
+
   @Test
-  void othersCannotHangAHopperUnderAShopOrJoinItsChest() {
+  void noMachineMovesItemsOutOfOrIntoAShopEvenForItsOwner() {
+    var alice = player("Alice", 1);
+    var chest = shopChestAtSpawn(alice);
+    var shopStock = inventoryOf(chest);
+    // Alice's own hopper, dropper and crafter, on her own land.
+    var hopper = inventoryOf(container(40, Material.HOPPER));
+    var dropper = inventoryOf(container(42, Material.DROPPER));
+    var crafter = inventoryOf(container(44, Material.CRAFTER));
+    plugin.protection.sameLand = true;
+
+    assertThat(move(shopStock, hopper).isCancelled()).isTrue();
+    assertThat(move(hopper, shopStock).isCancelled()).isTrue();
+    assertThat(move(dropper, shopStock).isCancelled()).isTrue();
+    assertThat(move(crafter, shopStock).isCancelled()).isTrue();
+  }
+
+  @Test
+  void machinesAwayFromShopsWorkAsUsual() {
+    var alice = player("Alice", 1);
+    // A shop elsewhere, and an ordinary chest where machine moves resolve.
+    shop(alice, chest(0), "", "16", "B 50", "coal");
+    var ordinary = world.getSpawnLocation().getBlock();
+    ordinary.setType(Material.CHEST);
+    var hopper = inventoryOf(container(40, Material.HOPPER));
+
+    assertThat(move(inventoryOf(ordinary), hopper).isCancelled()).isFalse();
+    assertThat(move(hopper, inventoryOf(ordinary)).isCancelled()).isFalse();
+  }
+
+  @Test
+  void copperGolemsNeverTargetAShopContainer() {
+    var alice = player("Alice", 1);
+    var chest = chest(0);
+    shop(alice, chest, "", "16", "B 50", "coal");
+    var golem = world.spawn(world.getSpawnLocation(), org.bukkit.entity.Zombie.class);
+
+    var shopTarget = new ItemTransportingEntityValidateTargetEvent(golem, chest);
+    var plainTarget = new ItemTransportingEntityValidateTargetEvent(golem, chest(20));
+    server.getPluginManager().callEvent(shopTarget);
+    server.getPluginManager().callEvent(plainTarget);
+
+    assertThat(shopTarget.isAllowed()).isFalse();
+    assertThat(plainTarget.isAllowed()).isTrue();
+  }
+
+  @Test
+  void hoppersMayStandNextToAShopButDoNothing() {
     var alice = player("Alice", 1);
     var bob = player("Bob", 0);
     var chest = chest(0);
     shop(alice, chest, "", "16", "B 50", "coal");
-    messages(bob);
 
-    var hopper = place(bob, chest.getRelative(BlockFace.DOWN), Material.HOPPER);
-    var ownHopper = place(alice, chest.getRelative(BlockFace.DOWN), Material.HOPPER);
-    var elsewhere = place(bob, world.getBlockAt(50, 64, 0), Material.HOPPER);
-
-    assertThat(hopper.isCancelled()).isTrue();
-    assertThat(ownHopper.isCancelled()).isFalse();
-    assertThat(elsewhere.isCancelled()).isFalse();
-    assertThat(messages(bob)).containsExactly("[Shop]: That would reach into Alice.");
+    assertThat(place(bob, chest.getRelative(BlockFace.DOWN), Material.HOPPER).isCancelled())
+        .isFalse();
   }
 
   @Test
