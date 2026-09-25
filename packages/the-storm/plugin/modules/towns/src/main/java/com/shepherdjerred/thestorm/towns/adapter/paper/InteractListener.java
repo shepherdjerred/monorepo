@@ -66,14 +66,25 @@ final class InteractListener implements Listener {
     }
   }
 
-  /** A double chest opens only if the player may open both halves. */
+  /**
+   * A double chest opens only if the player may open both halves, and a shelf only if they may open
+   * every shelf it swaps items with.
+   */
   private boolean mayUse(PlayerInteractEvent event, Block block, Act use) {
     var player = event.getPlayer();
     if (!guard.permits(player, use, guard.land(block))) {
       return false;
     }
     var partner = Chests.partner(block);
-    return partner.isEmpty() || guard.permits(player, use, guard.land(partner.get()));
+    if (partner.isPresent() && !guard.permits(player, use, guard.land(partner.get()))) {
+      return false;
+    }
+    for (var shelf : Chests.shelfChain(block)) {
+      if (!guard.permits(player, use, guard.land(shelf))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private void step(PlayerInteractEvent event, Block block) {

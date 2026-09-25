@@ -9,12 +9,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 /**
  * Projectiles hitting blocks (targets, buttons, plates, bells, pots, chorus, dripstone, campfires,
- * candles), arrivals by ender pearl and chorus fruit, and forgetting players who leave.
+ * candles), arrivals by ender pearl, chorus fruit, portal and end gateway, and forgetting players
+ * who leave.
  */
 final class MovementListener implements Listener {
 
@@ -48,7 +50,7 @@ final class MovementListener implements Listener {
     }
     var projectile = event.getEntity();
     var land = guard.land(block);
-    var culprit = Culprits.behind(projectile);
+    var culprit = guard.culprit(projectile);
     var allowed =
         culprit.isPresent()
             ? guard.permits(culprit.get(), act.get(), land)
@@ -64,12 +66,22 @@ final class MovementListener implements Listener {
         switch (event.getCause()) {
           case ENDER_PEARL -> Subject.ENDER_PEARL;
           case CONSUMABLE_EFFECT -> Subject.CHORUS_FRUIT;
+          case NETHER_PORTAL, END_PORTAL, END_GATEWAY -> Subject.LOCATION;
           default -> null;
         };
     if (subject == null) {
       return;
     }
     var act = new Act(Action.TELEPORT_INTO, subject);
+    if (!guard.permits(event.getPlayer(), act, guard.land(event.getTo()))) {
+      event.setCancelled(true);
+    }
+  }
+
+  /** Travelling by portal arrives like any teleport; a portal out cannot land in a town. */
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onPortal(PlayerPortalEvent event) {
+    var act = new Act(Action.TELEPORT_INTO, Subject.LOCATION);
     if (!guard.permits(event.getPlayer(), act, guard.land(event.getTo()))) {
       event.setCancelled(true);
     }

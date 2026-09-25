@@ -1,10 +1,12 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
+import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Entity;
@@ -89,16 +91,51 @@ final class EntityListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onVehicleEnter(VehicleEnterEvent event) {
-    if (event.getEntered() instanceof Player player) {
+    var entered = event.getEntered();
+    if (entered instanceof Player player) {
       interactWith(event, player, event.getVehicle());
+    } else if (!mayCarry(event.getVehicle(), entered)) {
+      event.setCancelled(true);
     }
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onMount(EntityMountEvent event) {
-    if (event.getEntity() instanceof Player player && !(event.getMount() instanceof Vehicle)) {
-      interactWith(event, player, event.getMount());
+    var rider = event.getEntity();
+    if (rider instanceof Player player) {
+      if (!(event.getMount() instanceof Vehicle)) {
+        interactWith(event, player, event.getMount());
+      }
+    } else if (!mayCarry(event.getMount(), rider)) {
+      event.setCancelled(true);
     }
+  }
+
+  /**
+   * A boat or minecart may pick up a protected animal or villager on someone's land only when it
+   * sits on the same owner's land and no outsider rides it or holds the animal or the vehicle on a
+   * lead: otherwise a boat pushed into a pen carries the animals off.
+   */
+  private boolean mayCarry(Entity vehicle, Entity passenger) {
+    var subject = EntityKinds.subject(passenger);
+    if (subject.isEmpty()) {
+      return true;
+    }
+    var land = guard.land(passenger);
+    if (land instanceof Land.Wilderness) {
+      return true;
+    }
+    if (!land.sameOwnerAs(guard.land(vehicle))) {
+      return false;
+    }
+    var use = new Act(Action.INTERACT_ENTITY, subject.get());
+    for (var handler : List.of(vehicle, passenger)) {
+      var culprit = guard.presser(handler);
+      if (culprit.isPresent() && !guard.permitsQuietly(culprit.get(), use, land)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -153,7 +190,7 @@ final class EntityListener implements Listener {
     var land = guard.land(hanging);
     if (event instanceof HangingBreakByEntityEvent byEntity && byEntity.getRemover() != null) {
       var remover = byEntity.getRemover();
-      var culprit = Culprits.behind(remover);
+      var culprit = guard.culprit(remover);
       if (culprit.isPresent()) {
         var act = new Act(Action.BREAK, EntityKinds.subject(hanging).orElse(Subject.ENTITY));
         event.setCancelled(!guard.permits(culprit.get(), act, land));
@@ -197,7 +234,7 @@ final class EntityListener implements Listener {
    * allows explosions; mobs and other causes may.
    */
   private void breakVehicle(Cancellable event, Entity vehicle, DamageSource source) {
-    var culprit = Culprits.behind(source);
+    var culprit = guard.culprit(source);
     if (culprit.isPresent()) {
       if (!guard.permitsHarm(culprit.get(), vehicle, true)) {
         event.setCancelled(true);
