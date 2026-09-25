@@ -57,4 +57,18 @@ final class StormDatabaseTest {
       assertThat(applied).isEqualTo(1);
     }
   }
+
+  @Test
+  void aSecondModuleMigratesIntoADatabaseThatAlreadyHasTables(@TempDir Path directory)
+      throws Exception {
+    try (var database = StormDatabase.open(directory.resolve("test.db"))) {
+      database.migrate("sample", StormDatabaseTest.class.getClassLoader());
+      database.migrate("second", StormDatabaseTest.class.getClassLoader());
+
+      var tables =
+          database.read(dsl -> dsl.fetchCount(table("second_things"))).get(5, TimeUnit.SECONDS);
+
+      assertThat(tables).isZero();
+    }
+  }
 }

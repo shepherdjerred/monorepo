@@ -57,6 +57,10 @@ public final class StormDatabase implements AutoCloseable {
         .dataSource(dataSource)
         .locations("classpath:db/migration/" + module)
         .table("flyway_" + module + "_history")
+        // Modules share one database, so a module's first migration always finds other
+        // modules' tables. Baselining an empty history at version 0 lets its V1 still run.
+        .baselineOnMigrate(true)
+        .baselineVersion("0")
         .failOnMissingLocations(true)
         .load()
         .migrate();
