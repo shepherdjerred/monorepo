@@ -1,0 +1,149 @@
+# Essentials: spawn, teleports, homes, kits, the rules book and AFK.
+# Owned by the repository; the plugin never writes it. Every key is required,
+# unknown keys are errors, and durations are ISO-8601 (PT3S, PT10M, PT1H).
+
+# Where /spawn leads, where new players arrive, and where players without a bed
+# or respawn anchor respawn. Placeholder: set to the windmill spawn.
+spawn:
+  world: world
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+
+teleports:
+  # Stand still this long before a teleport; moving a block or taking damage
+  # cancels it.
+  warmup: PT3S
+  # How long a /tpa or /tpahere request stays open.
+  tpaTimeout: PT1M
+  # How many places /back remembers (teleports and deaths).
+  backHistorySize: 5
+  # As in 2017's stTeleports: every use raises that kind's multiplier by
+  # multiplierGrowth, and every decayEvery without a use lowers it by
+  # multiplierDecay, between x1 and maxMultiplier. Cost and cooldown are the
+  # base values times the multiplier. Elytra, happy ghasts and lodestones are
+  # the free way to travel; teleports stay a paid convenience.
+  pricing:
+    multiplierGrowth: 0.5
+    multiplierDecay: 0.5
+    decayEvery: PT10M
+    maxMultiplier: 4.0
+    prices:
+      spawn:
+        cost: 10
+        cooldown: PT30S
+      home:
+        cost: 25
+        cooldown: PT1M
+      tpa:
+        cost: 25
+        cooldown: PT1M
+      back:
+        cost: 25
+        cooldown: PT1M
+      warp:
+        cost: 15
+        cooldown: PT30S
+
+# How many homes each player may set.
+homeLimit: 3
+
+# Idle time before a player is marked AFK.
+afkTimeout: PT5M
+
+kits:
+  # Given once to every new player on their first join.
+  starter: starter
+  kits:
+    starter:
+      once: true
+      cooldown: PT0S
+      items:
+        - material: IRON_SWORD
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: STONE_PICKAXE
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: STONE_AXE
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: STONE_SHOVEL
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: BREAD
+          amount: 16
+          name: null
+          enchantments: {}
+      books:
+        - title: Welcome to The Storm
+          author: The Storm
+          pages:
+            - |-
+              <dark_aqua><b>Welcome to The Storm</b></dark_aqua>
+
+              A survival economy server, running since 2014.
+
+              The money here is <dark_aqua>crystals</dark_aqua> (CR). Earn them from quests, the Mob Arena and trading with other players.
+            - |-
+              <dark_aqua><b>Getting around</b></dark_aqua>
+
+              /spawn returns you to the windmill.
+              /sethome and /home save a place to come back to.
+              /tpa asks to visit a friend.
+
+              Teleports cost crystals, and more if you use them often. Elytra and happy ghasts are free.
+            - |-
+              <dark_aqua><b>Before you build</b></dark_aqua>
+
+              Read /rules. Leave 100 blocks between you and other players' builds unless they say yes.
+
+              Need help? Ask in chat or on our Discord.
+
+# The book /rules opens. MiniMessage; at most 100 pages.
+rules:
+  title: The Storm Rules
+  author: The Storm Staff
+  pages:
+    - |-
+      <dark_aqua><b>The Storm Rules</b></dark_aqua>
+
+      Play fair, build big and keep the peace. Staff decide how a rule applies.
+
+      Breaking a rule earns a warning, then a kick or a ban.
+    - |-
+      <dark_aqua>1. No griefing or raiding.</dark_aqua>
+      Don't break, take or change what other players built.
+
+      <dark_aqua>2. Give others room.</dark_aqua>
+      Don't build within 100 blocks of someone else's build without their permission.
+    - |-
+      <dark_aqua>3. No PvP killing.</dark_aqua>
+      No killing players outside the arena, no traps, and no taking another player's death pile.
+
+      <dark_aqua>4. No hacks.</dark_aqua>
+      No hacked clients, x-ray or other unfair mods.
+    - |-
+      <dark_aqua>5. No bug or glitch abuse.</dark_aqua>
+      Report exploits and duplication bugs to staff instead of using them.
+
+      <dark_aqua>6. Respect players and staff.</dark_aqua>
+      No racist, sexist or hateful remarks, and no harassment.
+    - |-
+      <dark_aqua>7. Keep chat friendly.</dark_aqua>
+      No spam, no excessive swearing, no advertising other servers, and no begging for ranks or items.
+
+      <dark_aqua>8. Argue in War chat.</dark_aqua>
+      Take arguments out of global chat and into War chat (see /channels).
+    - |-
+      <dark_aqua><b>Talking to NPCs</b></dark_aqua>
+
+      When you type to an NPC, your message may be sent to an AI provider to write the NPC's reply. Don't share personal information with NPCs.
+
+      Questions? Ask staff in game or on Discord.
