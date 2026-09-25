@@ -50,8 +50,6 @@ const EXCLUDED_FILES = [
   // Intentional: TanStack Router's Register declaration merging requires
   // `interface`; a type alias cannot merge across modules.
   "packages/better-skill-capped/src/router.tsx",
-  // Intentional: discord-player-youtubei types incompatible without --preserveSymlinks
-  "packages/birmel/src/music/extractors.ts",
   // Intentional: Zod-validated discord.js Channel stub (60+ properties impractical to mock)
   "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
@@ -86,8 +84,6 @@ const EXCLUDED_FILES = [
   // Agent prompts are prose that PROHIBITS the banned patterns by name
   // (e.g. refine-release-please.md tells the agent never to `git add -A`).
   "scripts/prompts/",
-  "packages/dotfiles/AGENTS.md",
-  "packages/dotfiles/CLAUDE.md",
   // Uses || true for grep exit code
   "scripts/tools/quality-ratchet.ts",
   // Prometheus exporter shell script: `2>/dev/null` falls back to a 0 metric
@@ -108,9 +104,6 @@ const EXCLUDED_FILES = [
   // git username for the bare blobless clone the ci/merge-conflict checker uses
   // to fetch refs/heads/main + refs/pull/*/head before running merge-tree.
   "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts",
-  // Intentional: Sentry ErrorBoundary class types incompatible with React 19
-  // (same pattern as discord-plays-pokemon/packages/frontend/src/main.tsx)
-  "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
 ];
 
 type Finding = {
@@ -118,6 +111,37 @@ type Finding = {
   lineNumber: number;
   line: string;
 };
+
+function isExcluded(path: string): boolean {
+  return EXCLUDED_FILES.some(
+    (entry) => path.endsWith(entry) || path.startsWith(entry),
+  );
+}
+
+/**
+ * Exclusions that no tracked path matches. A deleted or renamed file leaves its
+ * entry behind, and a stale entry silently exempts whatever later reuses the
+ * name, so an unmatched entry fails the check.
+ */
+export function staleExclusions(trackedPaths: readonly string[]): string[] {
+  return EXCLUDED_FILES.filter(
+    (entry) =>
+      !trackedPaths.some(
+        (path) => path.endsWith(entry) || path.startsWith(entry),
+      ),
+  );
+}
+
+async function checkExclusionsAreLive(): Promise<void> {
+  const listing = await $`git ls-files`.quiet();
+  const tracked = listing.text().split("\n");
+  const stale = staleExclusions(tracked);
+  if (stale.length > 0) {
+    throw new Error(
+      `Suppression exclusions match no tracked file; remove them: ${stale.join(", ")}`,
+    );
+  }
+}
 
 export function hasSuppressionPattern(line: string): boolean {
   return SUPPRESSION_PATTERNS.some((pattern) => pattern.test(line));
@@ -158,11 +182,12 @@ async function checkPostalBoundary(): Promise<void> {
 async function main(): Promise<void> {
   console.log("Checking for new code quality suppressions...\n");
   await checkPostalBoundary();
+  await checkExclusionsAreLive();
 
   // In CI mode, skip staged-diff check (quality-ratchet enforces total counts)
   if (process.argv.includes("--ci")) {
     console.log(
-      "Postal boundary passed; staged suppression diff is covered elsewhere in CI",
+      "Postal boundary and exclusions passed; staged suppression diff is covered elsewhere in CI",
     );
     return;
   }
@@ -189,11 +214,7 @@ async function main(): Promise<void> {
       if (match?.[1] !== undefined) {
         currentFile = match[1];
         // Skip checking excluded files
-        if (
-          EXCLUDED_FILES.some(
-            (f) => currentFile.endsWith(f) || currentFile.startsWith(f),
-          )
-        ) {
+        if (isExcluded(currentFile)) {
           currentFile = "";
         }
       }

@@ -1113,7 +1113,7 @@
       "source": "karma-dynamic",
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
-      "default": "\u2b50",
+      "default": "⭐",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1698,6 +1698,14 @@
         },
         {
           "key": "pet-dashboard-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "ops-digest-email-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

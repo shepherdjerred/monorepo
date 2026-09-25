@@ -404,10 +404,6 @@
       "clones": 1,
       "tokens": 115
     },
-    "packages/eslint-config/src/rules/prefer-date-fns.ts|packages/eslint-config/src/rules/prefer-date-fns.ts": {
-      "clones": 1,
-      "tokens": 89
-    },
     "packages/home-assistant/src/codegen/introspect.ts|packages/home-assistant/src/codegen/introspect.ts": {
       "clones": 1,
       "tokens": 118
@@ -1419,14 +1415,6 @@
     "packages/voice-assistant/src/local-models.ts|packages/voice-assistant/src/local-models.ts": {
       "clones": 2,
       "tokens": 175
-    },
-    "scripts/lib/ci/ci-io-fixed-corpus.test.ts|scripts/lib/ci/ci-io-fixed-corpus.test.ts": {
-      "clones": 2,
-      "tokens": 156
-    },
-    "scripts/lib/ci/ci-io-report.test.ts|scripts/lib/ci/ci-io-report.test.ts": {
-      "clones": 1,
-      "tokens": 87
     },
     "scripts/lib/scout/scout-legacy-site-storage.ts|scripts/lib/scout/scout-site-storage.ts": {
       "clones": 1,

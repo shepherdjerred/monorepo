@@ -18,11 +18,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update structured homelab version catalog and legacy TypeScript version files",
-      "managerFilePatterns": [
-        "packages/version-catalog/src/catalog.json",
-        "**/lib-versions.ts"
-      ],
+      "description": "Update the structured homelab version catalog",
+      "managerFilePatterns": ["packages/version-catalog/src/catalog.json"],
       "matchStrings": [
         "\"name\":\\s*\"(?<depName>[^\"]+)\",[\\s\\S]{0,240}?\"management\":\\s*\\{\\s*\"managed\":\\s*true,\\s*\"datasource\":\\s*\"(?<datasource>[^\"]+)\"(?:,\\s*\"registryUrl\":\\s*\"(?<registryUrl>[^\"]+)\")?,\\s*\"versioning\":\\s*\"(?<versioning>[^\"]+)\"(?:,\\s*\"packageName\":\\s*\"(?<packageName>[^\"]+)\")?\\s*\\},\\s*\"value\":\\s*\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
       ]

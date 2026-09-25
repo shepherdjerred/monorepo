@@ -33,7 +33,6 @@ export {
   preferBunApis,
   noReExports,
   noUseEffect,
-  preferDateFns,
   noFunctionOverloads,
   noParentImports,
   noTypeGuards,

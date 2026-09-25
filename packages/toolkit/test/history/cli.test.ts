@@ -188,7 +188,7 @@ describe("history JSON interfaces", () => {
     });
 
     const recent = await runHistory(["recent", "--since", "7d", "--json"]);
-    expect(recent.exitCode).toBe(0);
+    expect(recent.exitCode, recent.stderr).toBe(0);
     const recentBody = z
       .object({ results: z.array(z.unknown()), warnings: z.array(z.unknown()) })
       .parse(JSON.parse(recent.stdout));
@@ -200,6 +200,7 @@ describe("history JSON interfaces", () => {
       ["search", "synthetic", "--since", "7d", "--json"],
       "current-session",
     );
+    expect(hidden.exitCode, hidden.stderr).toBe(0);
     const hiddenBody = z
       .object({ results: z.array(z.unknown()) })
       .parse(JSON.parse(hidden.stdout));
@@ -209,6 +210,7 @@ describe("history JSON interfaces", () => {
       ["search", "synthetic", "--since", "7d", "--include-current", "--json"],
       "current-session",
     );
+    expect(included.exitCode, included.stderr).toBe(0);
     const includedBody = z
       .object({ results: z.array(z.unknown()) })
       .parse(JSON.parse(included.stdout));

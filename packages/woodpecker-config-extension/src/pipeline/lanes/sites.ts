@@ -203,25 +203,7 @@ export function siteSteps(images: CiImages): CiStep[] {
         "  bun --no-install run --cwd packages/astro-opengraph-images publish:npm",
         "  bun --no-install run --cwd packages/webring publish:npm",
         "  bun --no-install run --cwd packages/homelab/src/helm-types publish:npm",
-        // Home Assistant cannot publish `latest` before its first release tag
-        // exists. Exit status 2 from ls-remote means "no matching ref", which
-        // is the expected pre-release state; anything else is a real failure
-        // and must not be mistaken for it.
-        "  home_assistant_release_state=published",
-        "  set +e",
-        "  git ls-remote --exit-code --refs origin 'refs/tags/home-assistant-v*'",
-        "  home_assistant_lookup_status=$?",
-        "  set -e",
-        '  if [ "$home_assistant_lookup_status" -eq 2 ]; then',
-        "    home_assistant_release_state=pending",
-        '    echo "Home Assistant has no release tag; deferring latest publish until its initial release is merged"',
-        '  elif [ "$home_assistant_lookup_status" -ne 0 ]; then',
-        '    echo "failed to inspect Home Assistant release tags (status $home_assistant_lookup_status)" >&2',
-        '    exit "$home_assistant_lookup_status"',
-        "  fi",
-        '  if [ "$home_assistant_release_state" = "published" ]; then',
-        "    bun --no-install run --cwd packages/home-assistant publish:npm",
-        "  fi",
+        "  bun --no-install run --cwd packages/home-assistant publish:npm",
         "fi",
         'if [ "$cooklang_changed" = "true" ]; then',
         "  bun --no-install run --cwd packages/cooklang-for-obsidian publish:npm",

@@ -27,14 +27,6 @@ set -euo pipefail
 # the owner and his bots (see `src/authorization.ts` in that package), so the
 # gate is only ever measuring a change that one of them pushed.
 #
-# During the one-time Qodo-to-Codex rollout, `main` may not yet know that
-# `REVIEW_PROVIDER=codex` is valid. In that case the Codex invocation applies a
-# reviewed, provider-selection-only patch to the fetched `main` worktree. The
-# poll loop, parser, and provider adapters still execute from `main`, and the
-# patch must apply cleanly to the exact fetched source. Once `main` accepts
-# Codex, this compatibility path is unreachable and the normal main-sourced
-# gate resumes automatically.
-#
 # REVIEW_GATE_REF exists so a change to the gate itself can be exercised before
 # it lands, since once this is in place the gate no longer runs a PR's own
 # version of it. Set it when creating the build, the way CI_IO_FIXED_CORPUS is
@@ -68,36 +60,10 @@ cd "$GATE_DIR"
 BUN_INSTALL_LOCK_MODE=shared "$GATE_DIR/ci/scripts/bun-install.sh" --frozen-lockfile \
   --filter '@shepherdjerred/root-scripts' --production
 
-# This runs main's copy of the wait script, so the path has to match whatever
-# layout main is on — not this branch's. While the scripts/ sub-domain split is
-# in flight the two differ, so resolve both and fail loudly if neither exists
-# rather than letting a missing file fall through as a failed grep.
 WAIT_SCRIPT="$GATE_DIR/scripts/review/wait-for-review.ts"
-if [[ ! -f "$WAIT_SCRIPT" ]]; then
-  WAIT_SCRIPT="$GATE_DIR/scripts/wait-for-review.ts"
-fi
 if [[ ! -f "$WAIT_SCRIPT" ]]; then
   echo "review gate: wait-for-review.ts is absent from the fetched main source" >&2
   exit 1
-fi
-if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
-  ! grep -Fq 'ciProviders = new Set(["codex"])' "$WAIT_SCRIPT" && \
-  ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$WAIT_SCRIPT"; then
-  BOOTSTRAP_PATCH="${CI_WORKSPACE:-$PWD}/ci/scripts/review-gate-codex-bootstrap.patch"
-  # The patch's own headers hard-code the pre-split scripts/wait-for-review.ts
-  # path; rewrite them to whichever layout $WAIT_SCRIPT actually resolved to
-  # above, so the patch still applies once main adopts the new location.
-  WAIT_SCRIPT_REL="${WAIT_SCRIPT#"$GATE_DIR/"}"
-  RESOLVED_BOOTSTRAP_PATCH="$(mktemp)"
-  sed "s#scripts/wait-for-review.ts#$WAIT_SCRIPT_REL#g" "$BOOTSTRAP_PATCH" \
-    > "$RESOLVED_BOOTSTRAP_PATCH"
-  if [[ ! -f "$BOOTSTRAP_PATCH" ]] || \
-    ! git apply --check "$RESOLVED_BOOTSTRAP_PATCH"; then
-    echo "Codex gate bootstrap patch does not apply to the fetched main source" >&2
-    exit 1
-  fi
-  echo "Codex gate bootstrap: applying the provider-selection patch to the main parser"
-  git apply "$RESOLVED_BOOTSTRAP_PATCH"
 fi
 
 # Exit status 42 is the gate's "the provider declared it cannot review at all"
