@@ -1,11 +1,11 @@
-import type { BranchStatus } from "@shepherdjerred/ops-clients/buildkite.ts";
+import type { BranchStatus } from "@shepherdjerred/ops-clients/woodpecker.ts";
 import type { SignalInput } from "@shepherdjerred/ops-model/snapshot.ts";
 import { MONOREPO_URL } from "./ops-links.ts";
 import { truncate, type OpsCollection, type OpsContext } from "./ops-types.ts";
 
 /**
- * The CI verdict of `main`: the newest build that passed or failed. A red
- * verdict is an error; the newest in-flight build is carried as context.
+ * The CI verdict of `main`: the newest push pipeline that passed or failed. A
+ * red verdict is an error; the newest in-flight pipeline is carried as context.
  */
 export function mapCi(
   status: BranchStatus,
@@ -13,9 +13,9 @@ export function mapCi(
 ): OpsCollection {
   const { verdict, latest } = status;
   if (verdict === undefined) {
-    throw new Error("Buildkite has no passed or failed build of main");
+    throw new Error("Woodpecker has no finished push pipeline of main");
   }
-  const failed = verdict.state === "failed";
+  const failed = verdict.status !== "success";
   const signal: SignalInput = {
     id: "ci:main",
     source: "ci",
@@ -25,8 +25,8 @@ export function mapCi(
     severity: failed ? "error" : "ok",
     needsMe: false,
     title: failed
-      ? `main is red: build #${String(verdict.number)} failed`
-      : `main is green: build #${String(verdict.number)} passed`,
+      ? `main is red: pipeline #${String(verdict.number)} ${verdict.status}`
+      : `main is green: pipeline #${String(verdict.number)} passed`,
     detail: truncate(verdict.message, 200),
     since: new Date(
       Date.parse(verdict.finishedAt ?? verdict.createdAt),
@@ -36,12 +36,12 @@ export function mapCi(
       commit: verdict.commit.slice(0, 12),
       ...(latest === undefined || latest.number === verdict.number
         ? {}
-        : { latestBuild: latest.number, latestState: latest.state }),
+        : { latestBuild: latest.number, latestState: latest.status }),
     },
     links: [
       {
-        kind: "buildkite",
-        label: `Build #${String(verdict.number)}`,
+        kind: "woodpecker",
+        label: `Pipeline #${String(verdict.number)}`,
         url: verdict.url,
       },
       {

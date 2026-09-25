@@ -143,8 +143,8 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
       latest: undefined,
       verdict: {
         number: 5,
-        state: "failed",
-        url: "https://buildkite.com/sjerred/monorepo/builds/5",
+        status: "failure",
+        url: "https://woodpecker.sjer.red/repos/1/pipeline/5",
         commit: SHA,
         message: "broken",
         createdAt: ago(1),
