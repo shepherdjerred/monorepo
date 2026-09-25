@@ -1558,6 +1558,14 @@
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
+        },
+        {
+          "key": "scout_v2_prematch_ownership_enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     },
