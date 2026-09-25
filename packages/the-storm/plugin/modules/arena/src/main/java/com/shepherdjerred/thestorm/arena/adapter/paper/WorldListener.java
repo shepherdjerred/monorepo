@@ -24,6 +24,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityCombustByBlockEvent;
@@ -34,6 +35,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 
@@ -56,19 +58,20 @@ final class WorldListener implements Listener {
 
   /** The running arena containing {@code location}. */
   private Optional<GameRunner> running(Location location) {
-    return arenas.at(location).filter(runner -> runner.game().phase().running());
+    return arenas.runningAt(location);
   }
 
-  /** The arena containing {@code location}, if a game runs there or {@code player} is inside. */
-  private Optional<GameRunner> guarded(Location location, UUID player) {
-    return arenas
-        .at(location)
-        .filter(runner -> runner.game().phase().running() || runner.member(player).isPresent());
+  /**
+   * Whether {@code player} may not change the block at {@code location}: members never change
+   * blocks anywhere, and nobody changes blocks in an arena while a game runs there.
+   */
+  private boolean guarded(Location location, UUID player) {
+    return arenas.of(player).isPresent() || running(location).isPresent();
   }
 
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onBreak(BlockBreakEvent event) {
-    if (guarded(event.getBlock().getLocation(), event.getPlayer().getUniqueId()).isPresent()) {
+    if (guarded(event.getBlock().getLocation(), event.getPlayer().getUniqueId())) {
       event.setCancelled(true);
     }
   }
@@ -77,14 +80,17 @@ final class WorldListener implements Listener {
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onPlace(BlockPlaceEvent event) {
     var player = event.getPlayer();
-    var runner = guarded(event.getBlock().getLocation(), player.getUniqueId());
-    if (runner.isEmpty()) {
+    var location = event.getBlock().getLocation();
+    if (!guarded(location, player.getUniqueId())) {
       return;
     }
     event.setCancelled(true);
+    var runner = arenas.arrived(player.getUniqueId());
     if (event.getBlock().getType() == Material.TNT
-        && runner.orElseThrow().isFighter(player.getUniqueId())) {
-      var at = event.getBlock().getLocation().toCenterLocation();
+        && runner.isPresent()
+        && runner.orElseThrow().isFighter(player.getUniqueId())
+        && runner.orElseThrow().world().contains(location)) {
+      var at = location.toCenterLocation();
       at.getWorld()
           .spawn(
               at,
@@ -117,9 +123,32 @@ final class WorldListener implements Listener {
     }
   }
 
+  /**
+   * Explosions never break arena blocks; an explosion from an arena mob, arena TNT, or anything a
+   * member caused breaks no blocks at all.
+   */
   @EventHandler(ignoreCancelled = true)
   void onExplode(EntityExplodeEvent event) {
-    keepBlocks(event.blockList());
+    if (fromArena(event.getEntity())) {
+      event.blockList().clear();
+    } else {
+      keepBlocks(event.blockList());
+    }
+  }
+
+  private boolean fromArena(Entity entity) {
+    if (keys.arenaOf(entity).isPresent()) {
+      return true;
+    }
+    var source =
+        switch (entity) {
+          case TNTPrimed tnt -> tnt.getSource();
+          case Projectile projectile ->
+              projectile.getShooter() instanceof Entity shooter ? shooter : null;
+          default -> null;
+        };
+    return source != null
+        && (keys.arenaOf(source).isPresent() || arenas.of(source.getUniqueId()).isPresent());
   }
 
   @EventHandler(ignoreCancelled = true)
@@ -131,10 +160,40 @@ final class WorldListener implements Listener {
     blocks.removeIf(block -> arenas.at(block.getLocation()).isPresent());
   }
 
+  /** Members light nothing anywhere; nothing burns in a running arena. */
   @EventHandler(ignoreCancelled = true)
   void onIgnite(BlockIgniteEvent event) {
-    if (running(event.getBlock().getLocation()).isPresent()) {
+    var player = event.getPlayer();
+    if (running(event.getBlock().getLocation()).isPresent()
+        || (player != null && arenas.of(player.getUniqueId()).isPresent())) {
       event.setCancelled(true);
+    }
+  }
+
+  /**
+   * Arena mobs never change into other mobs (a drowned husk, a frozen stray, a zombified piglin),
+   * which would leave the wave; slimes and magma cubes still split, and the pieces are adopted.
+   */
+  @EventHandler(ignoreCancelled = true)
+  void onTransform(EntityTransformEvent event) {
+    if (keys.arenaOf(event.getEntity()).isPresent()
+        && event.getTransformReason() != EntityTransformEvent.TransformReason.SPLIT) {
+      event.setCancelled(true);
+    }
+  }
+
+  /**
+   * Mobs born inside a running arena from its own mobs (slime splits, an evoker's vexes, zombie
+   * reinforcements) belong to the wave: counted, contained and cleaned up.
+   */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+  void onOffspring(CreatureSpawnEvent event) {
+    switch (event.getSpawnReason()) {
+      case SLIME_SPLIT, SPELL, REINFORCEMENTS ->
+          running(event.getLocation()).ifPresent(runner -> runner.world().adopt(event.getEntity()));
+      default -> {
+        // Only offspring are adopted; the arena tags its own spawns itself.
+      }
     }
   }
 

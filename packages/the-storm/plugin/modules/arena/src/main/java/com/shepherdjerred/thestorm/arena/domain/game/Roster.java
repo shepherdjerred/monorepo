@@ -55,7 +55,8 @@ final class Roster {
   static void stored(Draft draft, UUID player) {
     var member = draft.member(player);
     if (member.isEmpty()) {
-      // They left while the snapshot was being written; nothing of theirs was touched.
+      // They left while the snapshot was being written and were restored from memory; the row
+      // written since must go too.
       draft.effect(new GameEffect.ForgetSnapshot(player));
       return;
     }
@@ -76,7 +77,7 @@ final class Roster {
   private static void arriveAsPlayer(Draft draft, Pending pending) {
     if (draft.phase.running()) {
       draft.remove(pending.id());
-      draft.effect(new GameEffect.ForgetSnapshot(pending.id()));
+      draft.effect(new GameEffect.Restore(pending.id()));
       draft.tell(pending.id(), Notice.of(NoticeKind.STARTED_WITHOUT_YOU));
       return;
     }
@@ -87,6 +88,10 @@ final class Roster {
             NoticeKind.JOINED, Map.of("player", pending.name(), "arena", draft.setup.arenaName())));
   }
 
+  /**
+   * The snapshot could not be stored; the adapter has already put the player back from memory, so
+   * they only leave the arena.
+   */
   static void failed(Draft draft, UUID player) {
     draft.member(player).filter(Pending.class::isInstance).ifPresent(m -> draft.remove(player));
   }
@@ -142,10 +147,16 @@ final class Roster {
         : new Lookup.Refused(GameError.NOT_IN_LOBBY);
   }
 
-  /** A member leaves or disconnects: restored now, wherever they were in the flow. */
+  /**
+   * A member leaves or disconnects: restored now, wherever they were in the flow. A player still
+   * joining was already emptied when their snapshot was taken, so they are restored too.
+   */
   static void leave(Draft draft, Member member) {
     switch (member) {
-      case Pending pending -> draft.remove(pending.id());
+      case Pending pending -> {
+        draft.remove(pending.id());
+        draft.effect(new GameEffect.Restore(pending.id()));
+      }
       case InLobby lobby -> {
         draft.announce(Notice.of(NoticeKind.LEFT, "player", lobby.name()));
         draft.remove(lobby.id());
@@ -168,7 +179,10 @@ final class Roster {
   /** A member died: restored once they respawn. */
   static void died(Draft draft, Member member) {
     switch (member) {
-      case Pending pending -> draft.remove(pending.id());
+      case Pending pending -> {
+        draft.remove(pending.id());
+        draft.effect(new GameEffect.RestoreAfterRespawn(pending.id()));
+      }
       case InLobby lobby -> {
         draft.announce(Notice.of(NoticeKind.LEFT, "player", lobby.name()));
         draft.remove(lobby.id());
@@ -195,9 +209,7 @@ final class Roster {
   static void stop(Draft draft) {
     for (var member : draft.members()) {
       switch (member) {
-        case Pending _ -> {
-          // Their snapshot is forgotten when it arrives.
-        }
+        case Pending pending -> draft.effect(new GameEffect.Restore(pending.id()));
         case InLobby lobby -> draft.effect(new GameEffect.Restore(lobby.id()));
         case Fighter fighter -> {
           record(draft, fighter);

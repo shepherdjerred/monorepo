@@ -122,22 +122,30 @@ final class ArenaWorld {
     parts.chests().fill(parts.context().random());
   }
 
-  void spawn(List<SpawnUnit> units) {
+  /** Spawns the units; false if any spawn was refused (the rest are still tracked). */
+  boolean spawn(List<SpawnUnit> units) {
+    var allSpawned = true;
     for (var unit : units) {
-      track(
-          unit.mob(),
+      var spawned =
           parts
               .factory()
               .spawn(
                   randomSpawnLocation(),
                   unit.mob(),
                   MobFactory.Tuning.relative(unit.health(), unit.damage()),
-                  definition.id()));
+                  definition.id());
+      if (spawned.isEmpty()) {
+        allSpawned = false;
+      } else {
+        track(unit.mob(), spawned.orElseThrow());
+      }
     }
+    return allSpawned;
   }
 
-  void spawnBoss(BossOrder order, Instant now) {
-    var spawned =
+  /** Spawns the boss; false if its spawn was refused. */
+  boolean spawnBoss(BossOrder order, Instant now) {
+    var result =
         parts
             .factory()
             .spawn(
@@ -145,12 +153,17 @@ final class ArenaWorld {
                 order.boss().mob(),
                 MobFactory.Tuning.boss(order.maxHealth(), order.damage()),
                 definition.id());
+    if (result.isEmpty()) {
+      return false;
+    }
+    var spawned = result.orElseThrow();
     track(order.boss().mob(), spawned);
     var entity = spawned.getFirst();
     entity.customName(Component.text(order.boss().name()));
     entity.setCustomNameVisible(true);
     endBoss();
     boss = new BossFight(entity, order, this, now);
+    return true;
   }
 
   /** Adds summoned by a boss, as many as fit under the entity cap. */
@@ -158,12 +171,21 @@ final class ArenaWorld {
     var entities = parts.table().entities(mob);
     var health = parts.table().mob(mob).health() * parts.tier().health();
     for (var i = 0; i < count && alive() + entities <= parts.entityCap(); i++) {
-      track(
-          mob,
-          parts
-              .factory()
-              .spawn(near, mob, MobFactory.Tuning.relative(health, damage), definition.id()));
+      parts
+          .factory()
+          .spawn(near, mob, MobFactory.Tuning.relative(health, damage), definition.id())
+          .ifPresent(spawned -> track(mob, spawned));
     }
+  }
+
+  /**
+   * Adopts a mob born inside the running arena from one of its own (a slime split, an evoker's
+   * vexes, zombie reinforcements): tagged, counted towards the wave and kept inside.
+   */
+  void adopt(LivingEntity offspring) {
+    parts.keys().tag(offspring, definition.id());
+    offspring.setPersistent(false);
+    mobs.add(offspring);
   }
 
   private void track(String mob, List<LivingEntity> spawned) {

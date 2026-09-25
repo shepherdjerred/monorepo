@@ -87,8 +87,12 @@ final class ArenaPaperTest {
     return harness().services.require(ArenaPresence.class);
   }
 
+  /** In the lobby: their snapshot is stored and they stand at the colosseum's lobby. */
   private boolean inLobby(PlayerMock player) {
-    return presence().arenaOf(player.getUniqueId()).isPresent() && player.getInventory().isEmpty();
+    var at = player.getLocation();
+    return presence().arenaOf(player.getUniqueId()).isPresent()
+        && at.getX() == 1010.5
+        && at.getZ() == 1010.5;
   }
 
   /**

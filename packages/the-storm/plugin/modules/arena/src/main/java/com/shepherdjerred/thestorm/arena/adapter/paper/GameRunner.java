@@ -134,6 +134,9 @@ final class GameRunner {
       world.tickBoss(services.context().time().instant(), fighters, online(audience()));
     }
     keepInside();
+    if (game.phase().running()) {
+      keepOutsidersOut();
+    }
     handle(new GameEvent.Tick(services.context().time().instant(), alive));
   }
 
@@ -145,6 +148,18 @@ final class GameRunner {
         continue;
       }
       anchor(member).ifPresent(player::teleport);
+    }
+  }
+
+  /** Players not in this game who got into its region while it runs are sent to the exit. */
+  private void keepOutsidersOut() {
+    for (var player : services.context().server().getOnlinePlayers()) {
+      if (game.member(player.getUniqueId()).isEmpty()
+          && !player.isDead()
+          && world.contains(Places.at(player))) {
+        player.teleport(exit());
+        Texts.error(player, "A game is under way in that arena. Use /arena spec to watch.");
+      }
     }
   }
 
@@ -230,9 +245,16 @@ final class GameRunner {
           online(announce.to())
               .forEach(player -> services.texts().notice(player, announce.notice()));
       case GameEffect.PrepareArena _ -> world.prepare();
-      case GameEffect.SpawnBoss spawn ->
-          world.spawnBoss(spawn.boss(), services.context().time().instant());
-      case GameEffect.Spawn spawn -> world.spawn(spawn.units());
+      case GameEffect.SpawnBoss spawn -> {
+        if (!world.spawnBoss(spawn.boss(), services.context().time().instant())) {
+          spawnRefused();
+        }
+      }
+      case GameEffect.Spawn spawn -> {
+        if (!world.spawn(spawn.units())) {
+          spawnRefused();
+        }
+      }
       case GameEffect.PayReward pay -> pay(pay);
       case GameEffect.ClaimVault claim -> claimVault(claim.player(), claim.wave());
       case GameEffect.RecordBestWave record ->
@@ -258,6 +280,24 @@ final class GameRunner {
     if (player != null) {
       action.accept(player);
     }
+  }
+
+  /**
+   * Another plugin or a protection refused an arena mob's spawn. A wave with missing mobs would
+   * look cleared, so the game stops (everyone is restored) and the failure is logged loudly.
+   */
+  private void spawnRefused() {
+    services
+        .context()
+        .logger()
+        .error(
+            "Arena {} could not spawn its mobs (a spawn was cancelled or the mob removed at once);"
+                + " stopping the game. Check that land protection allows CUSTOM spawns there.",
+            id());
+    online(audience())
+        .forEach(
+            player -> Texts.error(player, "The arena's mobs could not spawn; the game stopped."));
+    handle(new GameEvent.Stop());
   }
 
   private void capture(UUID id) {
@@ -324,10 +364,11 @@ final class GameRunner {
     world.removeWolves(id);
     awaitingRespawn.remove(id);
     var player = services.context().server().getPlayer(id);
-    if (player == null || player.isDead()) {
-      // Their snapshot stays stored and is restored when they are next alive and online.
+    if (player == null) {
+      // Their snapshot stays held and stored, and is restored when they next join.
       return;
     }
+    // A dead player is restored once they respawn.
     services.snapshots().restore(player);
   }
 

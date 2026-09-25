@@ -16,11 +16,14 @@ public interface RewardStore {
    */
   CompletableFuture<Claim> claimVault(VaultClaim claim);
 
-  /** Loot waiting for {@code player}, oldest first. */
-  CompletableFuture<List<PendingReward>> pending(UUID player);
+  /**
+   * Claims all the loot waiting for {@code player}, oldest first: returns it and removes it in one
+   * transaction, so the same loot can never be handed out twice. Hand out only what this returns.
+   */
+  CompletableFuture<List<PendingReward>> claimAll(UUID player);
 
-  /** Marks a pending reward handed out. */
-  CompletableFuture<Void> delivered(long id);
+  /** Puts claimed loot back (the player went offline or into an arena before it was handed out). */
+  CompletableFuture<Void> requeue(UUID player, List<PendingReward> rewards, Instant at);
 
   /** Whether a vault opened. */
   enum Claim {
@@ -42,7 +45,7 @@ public interface RewardStore {
   /**
    * Loot waiting to be handed out.
    *
-   * @param id the row id, for {@link #delivered}
+   * @param id the row id it was stored under
    * @param reason why it was earned, such as {@code vault:wave20}
    * @param items the items, serialized
    */

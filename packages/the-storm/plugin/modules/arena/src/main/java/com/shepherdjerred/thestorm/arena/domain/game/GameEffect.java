@@ -9,15 +9,18 @@ import java.util.UUID;
 public sealed interface GameEffect {
 
   /**
-   * Take and store a snapshot of the player; answer with {@link GameEvent.SnapshotStored} or {@link
-   * GameEvent.SnapshotFailed}. Nothing may be cleared before it is stored.
+   * Take a snapshot of the player and empty them in the same tick, keeping the snapshot in memory,
+   * then store it; answer with {@link GameEvent.SnapshotStored}, or restore them from memory and
+   * answer {@link GameEvent.SnapshotFailed}. Until then the player is frozen: nothing they do can
+   * add to or take from what the snapshot will give back.
    *
    * @param player the player
    */
   record CaptureSnapshot(UUID player) implements GameEffect {}
 
   /**
-   * Delete a stored snapshot without restoring it: the player left before anything was cleared.
+   * Delete a stored snapshot without restoring it: the player left while it was being written and
+   * was already restored from memory.
    *
    * @param player the player
    */

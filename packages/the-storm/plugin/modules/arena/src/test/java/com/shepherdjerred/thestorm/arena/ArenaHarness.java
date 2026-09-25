@@ -1,6 +1,9 @@
 package com.shepherdjerred.thestorm.arena;
 
+import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
+import com.shepherdjerred.thestorm.arena.adapter.paper.PlayerSaver;
+import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.arena.domain.geometry.ChunkPos;
 import com.shepherdjerred.thestorm.arena.testing.FakeClock;
 import com.shepherdjerred.thestorm.arena.testing.FakeWallets;
@@ -24,6 +27,7 @@ import java.util.random.RandomGenerator;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.mockbukkit.mockbukkit.MockBukkit;
@@ -69,12 +73,37 @@ public final class ArenaHarness implements AutoCloseable {
     }
   }
 
+  /**
+   * MockBukkit cannot save player data; record each save and whether the player's stored snapshot
+   * still existed at that moment (it must: the snapshot is deleted only after the save).
+   */
+  final class RecordingSaver implements PlayerSaver {
+    final List<String> saves = new ArrayList<>();
+
+    @Override
+    public void save(Player player) {
+      var stored =
+          new JooqSnapshotStore(database)
+              .loadAll()
+              .handle(
+                  (all, failure) ->
+                      failure != null
+                          ? " (snapshots unreadable)"
+                          : all.stream().anyMatch(s -> s.player().equals(player.getUniqueId()))
+                              ? " (snapshot stored)"
+                              : " (snapshot gone)")
+              .join();
+      saves.add(player.getName() + stored);
+    }
+  }
+
   final ServerMock server;
   final World world;
   final StormDatabase database;
   final FakeClock clock = new FakeClock(Samples.T0);
   final FakeWallets wallets = new FakeWallets();
   final CountingChunks chunks = new CountingChunks();
+  final RecordingSaver saver = new RecordingSaver();
   final Services services = new Services();
 
   private ArenaHarness(ServerMock server, World world, StormDatabase database) {
@@ -104,7 +133,7 @@ public final class ArenaHarness implements AutoCloseable {
     services.provide(CrystalFormatter.class, wallets);
     enabling =
         plugin ->
-            new ArenaModule(context -> chunks)
+            new ArenaModule(context -> new ServerHooks(chunks, saver))
                 .enable(
                     new ModuleContext(
                         plugin,
