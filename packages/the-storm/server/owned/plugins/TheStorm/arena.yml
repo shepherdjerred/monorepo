@@ -39,7 +39,8 @@ scaling:
   bossHealthPerExtraPlayer: 0.35
 
 # The ominous-trial ladder. An arena names its tier by number (1 is Ominous I).
-# Higher tiers pay more per boss, but the per-game cap below still holds.
+# reward multiplies both the crystals per boss wave and the per-game cap, so a
+# full clear of a harder tier earns more (see rewards below).
 tiers:
   - name: Ominous I
     health: 1.0
@@ -60,7 +61,7 @@ tiers:
     health: 1.5
     damage: 1.35
     count: 1.3
-    reward: 1.7
+    reward: 1.6
   - name: Ominous V
     health: 1.75
     damage: 1.5
@@ -69,17 +70,22 @@ tiers:
 
 rewards:
   # As in 2015: crystals from wave 30 on, at each cleared boss wave, at most
-  # 750 per player per game. Boss waves 30, 40, 50, 60, 70 and 72 at 125 each
-  # make exactly 750 on Ominous I, so a solo player who clears every wave
-  # earns the full cap.
+  # 750 per player per game on Ominous I. Both perBossWave and the cap are
+  # multiplied by the arena tier's reward multiplier:
+  #   per boss wave = perBossWave x reward
+  #   cap per game  = baseCapPerGame x reward
+  # Boss waves 30, 40, 50, 60, 70 and 72 make six payouts, so a full clear
+  # earns exactly the tier's cap, solo or not: Ominous I 750, II 900, III
+  # 1,050, IV 1,200, V 1,500.
   firstWave: 30
   perBossWave: 125
-  capPerGame: 750
+  baseCapPerGame: 750
   # Vault-style bonus: clearing a milestone wave opens a vault for each fighter
   # still standing, once per player per milestone per day (across every
-  # arena). The loot is handed out after they leave the arena.
+  # arena). The loot is handed out after they leave the arena. A new day
+  # starts at midnight in zone.
   vault:
-    zone: UTC
+    zone: America/Los_Angeles
     milestones:
       - wave: 10
         loot:

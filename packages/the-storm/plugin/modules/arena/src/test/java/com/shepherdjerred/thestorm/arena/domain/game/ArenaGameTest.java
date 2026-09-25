@@ -45,6 +45,7 @@ import com.shepherdjerred.thestorm.arena.domain.game.Phase.Countdown;
 import com.shepherdjerred.thestorm.arena.domain.game.Phase.Fighting;
 import com.shepherdjerred.thestorm.arena.domain.game.Phase.Intermission;
 import com.shepherdjerred.thestorm.arena.domain.game.Phase.Lobby;
+import com.shepherdjerred.thestorm.arena.domain.wave.Tier;
 import com.shepherdjerred.thestorm.arena.testing.Samples;
 import java.util.ArrayList;
 import java.util.List;
@@ -580,6 +581,25 @@ final class ArenaGameTest {
       var effects = play.tick(1, 0);
 
       assertThat(only(effects, PayReward.class)).containsExactly(new PayReward(ALICE, 50, 4));
+    }
+
+    @Test
+    void aHarderTierPaysMoreUpToAHigherCap() {
+      var doubled = new Tier("Ominous V", 1, 1, 1, 2);
+      var hard = new Play(Samples.setup(1, Samples.table(), doubled), T0);
+      hard.start(ALICE);
+      hard.tick(5, 0);
+      hard.tick(1, 0);
+      hard.tick(5, 0);
+      assertThat(only(hard.tick(1, 0), PayReward.class))
+          .containsExactly(new PayReward(ALICE, 200, 2));
+      hard.tick(5, 0);
+      hard.tick(1, 0);
+      hard.tick(5, 0);
+
+      var effects = hard.tick(1, 0);
+
+      assertThat(only(effects, PayReward.class)).containsExactly(new PayReward(ALICE, 100, 4));
     }
 
     @Test

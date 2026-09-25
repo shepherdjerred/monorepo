@@ -43,11 +43,19 @@ final class RewardRulesTest {
   }
 
   @Test
+  void theCapScalesWithTheTiersRewardMultiplier() {
+    assertThat(REWARDS.capPerGame(FLAT)).isEqualTo(750);
+    assertThat(REWARDS.capPerGame(new Tier("Ominous III", 1.3, 1.2, 1.2, 1.4))).isEqualTo(1050);
+    assertThat(REWARDS.capPerGame(new Tier("Ominous V", 1.75, 1.5, 1.4, 2.0))).isEqualTo(1500);
+  }
+
+  @Test
   void settingsAreChecked() {
     var vault = new VaultSettings("UTC", List.of());
     assertThatThrownBy(() -> new RewardSettings(0, 1, 1, vault)).hasMessageContaining("firstWave");
     assertThatThrownBy(() -> new RewardSettings(1, -1, 1, vault)).hasMessageContaining("negative");
-    assertThatThrownBy(() -> new RewardSettings(1, 800, 750, vault)).hasMessageContaining("cap");
+    assertThatThrownBy(() -> new RewardSettings(1, 800, 750, vault))
+        .hasMessageContaining("baseCapPerGame");
   }
 
   @Test

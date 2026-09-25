@@ -70,11 +70,12 @@ its zombie, or `getTargetBlockExact`), so these cases need the real server in
 ## Rewards
 
 22. Clearing boss waves 30-72 on Ominous I pays 125 crystals each through the
-    economy with reasons `arena:colosseum:waveN`, and never more than 750 in
-    one game (Ominous V reaches the cap by wave 50).
-23. Clearing wave 10 opens its vault once per player per UTC day; the loot is
-    handed over after leaving the arena (overflow drops at their feet), and a
-    second clear that day says the vault is already open.
+    economy with reasons `arena:colosseum:waveN`, and 750 in total; the same
+    clear on Ominous V pays 250 each, 1,500 in total.
+23. Clearing wave 10 opens its vault once per player per day (the day turns
+    over at midnight America/Los_Angeles); the loot is handed over after
+    leaving the arena (overflow drops at their feet), and a second clear that
+    day says the vault is already open.
 24. `/arena top colosseum` lists the best waves after games end.
 
 ## Commands and signs

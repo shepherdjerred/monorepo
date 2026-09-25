@@ -186,7 +186,7 @@ final class Waves {
     var amount = rewards.waveReward(wave, setup.table().kind(wave), setup.tier());
     var milestone = rewards.vault().at(wave);
     for (var fighter : draft.fighters()) {
-      var grant = draft.ledger.grant(fighter.id(), amount, rewards.capPerGame());
+      var grant = draft.ledger.grant(fighter.id(), amount, rewards.capPerGame(setup.tier()));
       draft.ledger = grant.ledger();
       if (grant.amount() > 0) {
         draft.effect(new GameEffect.PayReward(fighter.id(), grant.amount(), wave));
