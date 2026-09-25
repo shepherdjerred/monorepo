@@ -2,8 +2,9 @@
   "file": "/data/plugins/DecentHolograms/lang.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.prefix",
+      "$put": {
+        "path": "$",
+        "key": "prefix",
         "value": "&8[&3DecentHolograms&8]: &7"
       }
     }

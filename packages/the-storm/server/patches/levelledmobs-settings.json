@@ -2,14 +2,16 @@
   "file": "/data/plugins/LevelledMobs/settings.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.async-task-update-period",
+      "$put": {
+        "path": "$",
+        "key": "async-task-update-period",
         "value": 6
       }
     },
     {
-      "$set": {
-        "path": "$.async-task-max-blocks-from-player",
+      "$put": {
+        "path": "$",
+        "key": "async-task-max-blocks-from-player",
         "value": 100
       }
     }

@@ -2,32 +2,37 @@
   "file": "/data/plugins/DiscordSRV/config.yml",
   "ops": [
     {
-      "$set": {
-        "path": "$.BotToken",
+      "$put": {
+        "path": "$",
+        "key": "BotToken",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.Channels.global",
+      "$put": {
+        "path": "$.Channels",
+        "key": "global",
         "value": "${CFG_DISCORD_CHANNEL_ID}"
       }
     },
     {
-      "$set": {
-        "path": "$.DiscordConsoleChannelId",
+      "$put": {
+        "path": "$",
+        "key": "DiscordConsoleChannelId",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.DiscordInviteLink",
+      "$put": {
+        "path": "$",
+        "key": "DiscordInviteLink",
         "value": ""
       }
     },
     {
-      "$set": {
-        "path": "$.DiscordConsoleChannelBlacklistedCommands",
+      "$put": {
+        "path": "$",
+        "key": "DiscordConsoleChannelBlacklistedCommands",
         "value": ["?", "op", "deop", "ban", "pardon", "ban-ip", "pardon-ip"]
       }
     }
