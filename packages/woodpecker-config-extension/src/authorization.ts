@@ -5,7 +5,8 @@
  * mount production credentials: Cloudflare and Tailscale tokens, an ArgoCD
  * token, OpenTofu state keys, an npm token, a GitHub App private key. There is
  * no audience for whom running it is worth that exposure except the owner and
- * the bots acting on his behalf, so everyone else is refused here.
+ * the accounts acting on his behalf -- his agent account and his bots -- so
+ * everyone else is refused here.
  *
  * This is the layer that can be reviewed in a pull request. Woodpecker's own
  * `require_approval` / `approval_allowed_users` settings are the authoritative
@@ -28,6 +29,9 @@ import type { Pipeline } from "#src/schemas.ts";
  */
 export const TRUSTED_ACTORS: readonly string[] = [
   "shepherdjerred",
+  // The owner's agent account: coding-agent sessions push branches and open
+  // pull requests as this user, so their changes build like his own.
+  "derrej",
   // The repository's own GitHub App: release commits, version pin commit-back,
   // and the CI image refresh lanes all push under this identity.
   "long-summer-intern[bot]",

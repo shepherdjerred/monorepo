@@ -36,7 +36,7 @@ Three consequences are worth stating plainly:
   ed25519 signature — and recomputes the body digest rather than trusting the
   `Content-Digest` header it covers — before reading anything.
 
-## CI runs only for the owner and his bots
+## CI runs only for the owner's own accounts
 
 Steps in this pipeline mount production credentials — Cloudflare and Tailscale
 tokens, an ArgoCD token, OpenTofu state keys, an npm token, a GitHub App private
@@ -52,7 +52,8 @@ Two independent gates say so, and they fail in different directions on purpose:
   gate, but it lives in the server's database, where nothing in this repository
   can assert it.
 - **The extension's own allowlist** refuses to emit any workflow unless the
-  account that owns the change is the owner or one of his bots — and, where
+  account that owns the change is the owner, his agent account (`derrej`,
+  which coding-agent sessions push as), or one of his bots — and, where
   Woodpecker reports one, the account whose action triggered this event too, so
   that nobody else can drive commits into a trusted account's pull request. The
   change must also not come from a fork. This gate is weaker, because it runs

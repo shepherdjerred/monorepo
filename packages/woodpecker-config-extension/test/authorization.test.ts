@@ -25,8 +25,12 @@ describe("pipeline authorization", () => {
     expect(authorizePipeline(pipeline({}))).toEqual({ allowed: true });
   });
 
-  test("admits the repository's bots", () => {
-    for (const login of ["long-summer-intern[bot]", "renovate[bot]"]) {
+  test("admits the owner's agent account and the repository's bots", () => {
+    for (const login of [
+      "derrej",
+      "long-summer-intern[bot]",
+      "renovate[bot]",
+    ]) {
       const result = authorizePipeline(
         pipeline({ author: login, sender: login }),
       );
@@ -138,9 +142,17 @@ describe("pipeline authorization", () => {
     });
   });
 
-  test("allowlists no account that is not the owner or a bot", () => {
-    for (const login of TRUSTED_ACTORS) {
-      expect(login === "shepherdjerred" || login.endsWith("[bot]")).toBe(true);
-    }
+  /**
+   * Closed-world: every account that can run CI -- and so reach production
+   * credentials -- is named here. Adding one means editing this list on
+   * purpose, in a reviewed change.
+   */
+  test("allowlists exactly the owner's accounts", () => {
+    expect([...TRUSTED_ACTORS].sort()).toEqual([
+      "derrej",
+      "long-summer-intern[bot]",
+      "renovate[bot]",
+      "shepherdjerred",
+    ]);
   });
 });
