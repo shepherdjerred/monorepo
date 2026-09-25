@@ -54,7 +54,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.1",
     "@types/sanitize-html": "^2.16.1",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "express": "^5.2.1",
     "globals": "^17.5.0",
     "jiti": "^2.7.0",

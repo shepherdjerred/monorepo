@@ -4,11 +4,11 @@
 # directory, which must hold .stage/<SDK>/ from scripts/stage-xcode.sh — CI
 # downloads it from the private apple-sdks bucket by the sha256 in sdks.json.
 #
-#   docker build --build-arg SDK=27 --build-arg SWIFT_IMAGE=swift:6.4.0-noble .
+#   docker build --build-arg SDK=27 .
 #
 # Stages: `cctools` (Apple's ld64 + libtapi, the slow part, cached across
 # tags), `image` (the published toolchain), `smoke` (builds every sample).
-ARG SWIFT_IMAGE=swift:6.4.0-noble
+ARG SWIFT_IMAGE=swift:6.4.0-noble@sha256:64bab762bc73a3fda6d9ebc559258bd6d7660c10a705bb25ecacad2f99d066f9
 ARG LLVM_VERSION=22
 
 # ── Apple's open-source ld64 and cctools, with Apple's libtapi so ld64 reads
@@ -46,8 +46,10 @@ FROM ${SWIFT_IMAGE} AS image
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG LLVM_VERSION
 ARG SDK=27
+# Must match the rust pin in the repo's .mise.toml.
 ARG RUST_VERSION=1.98.1
 # Not RCODESIGN_*: rcodesign reads every RCODESIGN_ variable as configuration.
+# renovate: datasource=github-releases depName=indygreg/apple-platform-rs
 ARG APPLE_CODESIGN_VERSION=0.29.0
 
 # LLVM matching rustc's (1.98.1 → LLVM 22.1): the Rust static archive carries

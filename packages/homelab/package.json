@@ -16,7 +16,7 @@
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "1.4.2",
     "@typescript-eslint/utils": "^8.70.1",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "eslint-plugin-unicorn": "^76.0.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",

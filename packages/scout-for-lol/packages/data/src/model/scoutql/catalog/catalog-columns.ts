@@ -1,4 +1,5 @@
 import {
+  ITEM_SLOT_COLUMNS,
   MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
@@ -76,8 +77,15 @@ const DURATION_COLUMNS = new Set([
   "time_ccing_others",
 ]);
 
-/** Internal plumbing excluded from every catalog (partitioning / dedupe). */
-const INTERNAL_COLUMNS = new Set(["month", "dedupe_key"]);
+/**
+ * Excluded from every catalog: partitioning and dedupe plumbing, and the raw
+ * inventory slots, which no ScoutQL source reads yet.
+ */
+const INTERNAL_COLUMNS = new Set<string>([
+  "month",
+  "dedupe_key",
+  ...ITEM_SLOT_COLUMNS,
+]);
 
 function rawDisplayKind(
   name: string,

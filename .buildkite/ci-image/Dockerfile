@@ -69,7 +69,9 @@ RUN mise trust .mise.toml && mise install && mise reshim \
     && gh --version
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+# renovate: datasource=pypi depName=uv
+ARG UV_VERSION=0.12.18
+RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
 # The bun download cache is NOT baked into this image anymore. The old
 # bun-cache-warm stage added ~1 GiB compressed that re-pushed/re-pulled on

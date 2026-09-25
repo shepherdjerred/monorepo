@@ -23,8 +23,8 @@
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
     "bun-types": "1.4.2",
-    "eslint": "^10.3.0",
-    "prettier": "3.9.9",
+    "eslint": "^10.7.0",
+    "prettier": "^3.9.9",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "5.0.1",

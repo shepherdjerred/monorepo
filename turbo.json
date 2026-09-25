@@ -552,6 +552,15 @@
         "!**/node_modules/**"
       ]
     },
+    "//#toolchain-version-sync": {
+      "inputs": [
+        "scripts/checks/deps/check-toolchain-version-sync.ts",
+        ".mise.toml",
+        "global.json",
+        "packages/macos-cross-compiler/Dockerfile",
+        "packages/windows-cross-compiler/Dockerfile"
+      ]
+    },
     "//#large-files-scout": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
@@ -639,7 +648,13 @@
       ]
     },
     "//#ruff": {
-      "inputs": ["ruff.toml", "**/*.py", "!**/node_modules/**", "!**/.venv/**"]
+      "inputs": [
+        "ruff.toml",
+        "scripts/tools/ruff-check.ts",
+        "**/*.py",
+        "!**/node_modules/**",
+        "!**/.venv/**"
+      ]
     },
     "//#pyright": {
       "inputs": [
