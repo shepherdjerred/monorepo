@@ -465,7 +465,7 @@ describe("checkActiveGames — workload and audience", () => {
       game: mkGameInfo(G1, P1, [P2]),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     // Workload: only the live-guild account spent a Spectator call.
     expect(spectatorCalls).toEqual([P1]);
@@ -491,7 +491,7 @@ describe("checkActiveGames — workload and audience", () => {
       dropped.map((puuid) => [puuid, REMOVED_GUILD]),
     );
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     expect(spectatorCalls).toHaveLength(MAX_PLAYERS_PER_RUN);
     expect(spectatorCalls.some((puuid) => dropped.includes(puuid))).toBe(false);
