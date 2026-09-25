@@ -158,7 +158,7 @@ describe("Alloy gateway Phoenix branches", () => {
       'endpoint = "http://tempo.tempo.svc.cluster.local:4318"',
     );
     const filters = ALLOY_GATEWAY_CONFIG.match(
-      /otelcol\.processor\.filter "px_\w+" \{[\s\S]*?span = \[([\s\S]*?)\]/g,
+      /otelcol\.processor\.filter "px_\w+" \{[\s\S]*?span = \[[\s\S]*?\]/g,
     );
     expect(filters).toHaveLength(PROJECTS.length);
     for (const filter of filters ?? []) {
