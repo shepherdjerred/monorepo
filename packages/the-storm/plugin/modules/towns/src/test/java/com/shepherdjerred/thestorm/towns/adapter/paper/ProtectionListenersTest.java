@@ -22,6 +22,7 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -145,6 +146,39 @@ final class ProtectionListenersTest extends AegisServer {
                   case "getLocation" -> location.clone();
                   default -> throw new UnsupportedOperationException(method.getName());
                 });
+  }
+
+  /** A double chest whose left half is at column {@code left} and right half at {@code right}. */
+  private Inventory doubleChest(int left, int right) {
+    var leftHalf = container(left);
+    var rightHalf = container(right);
+    return (Inventory)
+        Proxy.newProxyInstance(
+            DoubleChestInventory.class.getClassLoader(),
+            new Class<?>[] {DoubleChestInventory.class},
+            (proxy, method, arguments) ->
+                switch (method.getName()) {
+                  case "getLeftSide" -> leftHalf;
+                  case "getRightSide" -> rightHalf;
+                  case "getLocation" -> new Location(world, left, Y, Z);
+                  default -> throw new UnsupportedOperationException(method.getName());
+                });
+  }
+
+  @Test
+  void aHopperUnderTheWildHalfOfAStraddlingChestCannotDrainIt() {
+    var straddling = doubleChest(WILD_X, CLAIM_X);
+    var wildHopper = container(WILD_X);
+    var claimHopper = container(CLAIM_X);
+    var wildChest = doubleChest(WILD_X - 1, WILD_X);
+    var item = new ItemStack(Material.DIAMOND);
+
+    assertThat(call(new InventoryMoveItemEvent(straddling, item, wildHopper, true)).isCancelled())
+        .isTrue();
+    assertThat(call(new InventoryMoveItemEvent(straddling, item, claimHopper, true)).isCancelled())
+        .isTrue();
+    assertThat(call(new InventoryMoveItemEvent(wildChest, item, wildHopper, true)).isCancelled())
+        .isFalse();
   }
 
   @Test

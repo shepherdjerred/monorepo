@@ -1,6 +1,5 @@
 package com.shepherdjerred.thestorm.towns.domain.region;
 
-import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,14 +24,23 @@ public record Cuboid(String world, BlockCorner from, BlockCorner to) implements 
   }
 
   @Override
-  public boolean contains(BlockPos block) {
-    return world.equals(block.world())
-        && block.x() >= from.x()
-        && block.x() <= to.x()
-        && block.y() >= from.y()
-        && block.y() <= to.y()
-        && block.z() >= from.z()
-        && block.z() <= to.z();
+  public boolean contains(String world, int x, int y, int z) {
+    return this.world.equals(world)
+        && x >= from.x()
+        && x <= to.x()
+        && y >= from.y()
+        && y <= to.y()
+        && z >= from.z()
+        && z <= to.z();
+  }
+
+  @Override
+  public boolean footprintContains(ChunkPos chunk) {
+    return world.equals(chunk.world())
+        && chunk.x() >= from.x() >> 4
+        && chunk.x() <= to.x() >> 4
+        && chunk.z() >= from.z() >> 4
+        && chunk.z() <= to.z() >> 4;
   }
 
   @Override

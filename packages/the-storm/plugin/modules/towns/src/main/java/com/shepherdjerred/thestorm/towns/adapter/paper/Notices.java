@@ -42,12 +42,13 @@ final class Notices {
 
   /**
    * Tells {@code player} why they were stopped, unless they were just told the same thing. The
-   * message goes out on the next tick, so the listener has already cancelled the event whatever
-   * happens while rendering it.
+   * message is rendered now, while the town it names certainly exists, and sent on the next tick,
+   * after the listener has cancelled the event.
    */
   void denied(Player player, Denial denial) {
     if (throttle.shouldTell(player.getUniqueId(), denial, time.millis())) {
-      scheduler.runOnMainThread(() -> player.sendMessage(render(denial)));
+      var message = render(denial);
+      scheduler.runOnMainThread(() -> player.sendMessage(message));
     }
   }
 

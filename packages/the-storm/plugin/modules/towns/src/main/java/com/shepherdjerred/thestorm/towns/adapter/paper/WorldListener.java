@@ -27,6 +27,8 @@ import org.bukkit.event.block.SpongeAbsorbEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.inventory.DoubleChestInventory;
+import org.bukkit.inventory.Inventory;
 
 /**
  * Things the world does across claim borders: pistons, fluids, hoppers and other item moves, copper
@@ -58,15 +60,34 @@ final class WorldListener implements Listener {
    */
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onItemMove(InventoryMoveItemEvent event) {
-    // An inventory with no place in the world, such as a plugin's menu, has no land and no halves.
-    for (var from : Chests.locations(event.getSource())) {
-      for (var to : Chests.locations(event.getDestination())) {
+    var source = event.getSource();
+    var destination = event.getDestination();
+    if (source instanceof DoubleChestInventory || destination instanceof DoubleChestInventory) {
+      if (!halvesMayTrade(source, destination)) {
+        event.setCancelled(true);
+      }
+      return;
+    }
+    // The common case, a hopper and a single container: two land lookups, no collections.
+    var from = source.getLocation();
+    var to = destination.getLocation();
+    // An inventory with no place in the world, such as a plugin's menu, has no land.
+    if (from != null
+        && to != null
+        && !Guard.flows(WorldEffect.ITEM_TRANSFER, guard.land(from), guard.land(to))) {
+      event.setCancelled(true);
+    }
+  }
+
+  private boolean halvesMayTrade(Inventory source, Inventory destination) {
+    for (var from : Chests.locations(source)) {
+      for (var to : Chests.locations(destination)) {
         if (!Guard.flows(WorldEffect.ITEM_TRANSFER, guard.land(from), guard.land(to))) {
-          event.setCancelled(true);
-          return;
+          return false;
         }
       }
     }
+    return true;
   }
 
   @EventHandler(priority = EventPriority.LOW)

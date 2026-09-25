@@ -19,7 +19,12 @@ public final class Claiming {
   private final List<ClaimRule> claimRules;
   private final List<ClaimRule> manageRules;
 
+  /** Claiming with {@code policy}'s flat per-town cap. */
   public Claiming(ClaimPolicy policy) {
+    this(policy, ClaimLimits.flat(policy.maxClaimsPerTown()));
+  }
+
+  public Claiming(ClaimPolicy policy, ClaimLimits limits) {
     this.policy = policy;
     this.claimRules =
         List.of(
@@ -29,7 +34,7 @@ public final class Claiming {
             new UnclaimedRule(),
             new AdjacentRule(),
             new BufferRule(policy.buffer()),
-            new LimitRule(policy.maxClaimsPerTown()));
+            new LimitRule(limits));
     this.manageRules = List.of(new ManagerRule(), new OwnClaimRule());
   }
 
