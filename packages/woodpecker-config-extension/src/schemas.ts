@@ -39,10 +39,11 @@ export const PipelineSchema = z.looseObject({
    */
   from_fork: z.boolean().default(false),
   /**
-   * Forge URL for the commit being built. Stamped onto each step pod so the
-   * I/O reporter can link a measured pod back to the change that caused it.
+   * Forge URL for the change being built (the pull request, or the commit on
+   * a push). Stamped onto each step pod so a measured pod links back to the
+   * change that caused it. Woodpecker v3 names it `forge_url`.
    */
-  link_url: z.string(),
+  forge_url: z.string(),
   /**
    * Files touched by this push or pull request. This is what replaces
    * Buildkite's `if_changed` inputs: lane selection reads it directly instead

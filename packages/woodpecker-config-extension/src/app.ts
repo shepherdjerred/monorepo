@@ -92,7 +92,7 @@ export function createApp(options: AppOptions): Hono {
       configs: emitWorkflows(selected, {
         commit: pipeline.commit,
         branch: pipeline.branch,
-        linkUrl: pipeline.link_url,
+        linkUrl: pipeline.forge_url,
       }),
     });
   });
