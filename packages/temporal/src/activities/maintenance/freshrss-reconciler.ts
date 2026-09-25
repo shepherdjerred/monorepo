@@ -329,18 +329,26 @@ async function waitForExactFilters(
   delay: (milliseconds: number) => Promise<void>,
 ): Promise<void> {
   const attempts = 12;
+  let mismatches: string[] = [];
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const filtersByUrl = parseExportedFeedFilters(await client.exportOpml());
-    const mismatches = feeds.filter(
-      (feed) =>
-        !filtersByUrl.has(feed.url) ||
-        filtersByUrl.get(feed.url) !== feed.filtersActionRead,
-    );
+    mismatches = feeds
+      .filter(
+        (feed) =>
+          !filtersByUrl.has(feed.url) ||
+          filtersByUrl.get(feed.url) !== feed.filtersActionRead,
+      )
+      .map((feed) => {
+        const exported = filtersByUrl.has(feed.url)
+          ? JSON.stringify(filtersByUrl.get(feed.url) ?? null)
+          : "no outline";
+        return `${feed.url} wants ${JSON.stringify(feed.filtersActionRead ?? null)}, export has ${exported}`;
+      });
     if (mismatches.length === 0) return;
     if (attempt < attempts) await delay(5000);
   }
   throw new Error(
-    "FreshRSS managed feed filters did not converge to the desired OPML settings",
+    `FreshRSS managed feed filters did not converge to the desired OPML settings: ${mismatches.join("; ")}`,
   );
 }
 

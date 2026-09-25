@@ -26,7 +26,47 @@ describe("FreshRSS OPML", () => {
     expect(
       manifest.feeds.find((feed) => feed.title === "Vercel News — AI SDK")
         ?.filtersActionRead,
-    ).toBe(String.raw`!intitle:/\bAI SDK\b/i`);
+    ).toBe(String.raw`-intitle:/\bAI SDK\b/i`);
+  });
+
+  test("rejects a read filter negated with the non-canonical bang form", () => {
+    // FreshRSS 1.29 and 1.30 store and export `!intitle:` as `-intitle:`, so a
+    // declared bang filter never matches the live filter and the hourly sync
+    // fails to converge forever.
+    expect(() =>
+      parseFreshRssOpml(
+        feedsOpml.replace(
+          String.raw`frss:filtersActionRead="-intitle:/\bAI SDK\b/i"`,
+          String.raw`frss:filtersActionRead="!intitle:/\bAI SDK\b/i"`,
+        ),
+      ),
+    ).toThrow('negates with "!", which FreshRSS stores as "-"');
+    expect(() =>
+      parseFreshRssOpml(
+        feedsOpml.replace(
+          String.raw`frss:filtersActionRead="-intitle:/\bAI SDK\b/i"`,
+          'frss:filtersActionRead="intitle:beta (!intitle:rc)"',
+        ),
+      ),
+    ).toThrow('negates with "!"');
+  });
+
+  test("accepts a bang inside a quoted or regex search literal", () => {
+    for (const filter of [
+      'intitle:"breaking !change"',
+      String.raw`-intitle:/ !beta\b/i`,
+    ]) {
+      const manifest = parseFreshRssOpml(
+        feedsOpml.replace(
+          String.raw`-intitle:/\bAI SDK\b/i`,
+          filter.replaceAll('"', "&quot;"),
+        ),
+      );
+      expect(
+        manifest.feeds.find((feed) => feed.title === "Vercel News — AI SDK")
+          ?.filtersActionRead,
+      ).toBe(filter);
+    }
   });
 
   test("builds a managed-only OPML document that round-trips", () => {
