@@ -17,6 +17,7 @@ import {
   type CiImageDefinition,
 } from "./build-ci-image-core.ts";
 import {
+  checkedOutSourceCommand,
   ciImagePromotionFiles,
   classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
@@ -270,8 +271,8 @@ async function sourceFingerprintAtRevision(
     definition,
     async (path) => {
       const source = await run(
-        ["git", "-C", cloneDir, "show", `${revision}:${path}`],
-        { env, capture: true },
+        [...checkedOutSourceCommand(cloneDir, revision, path)],
+        { env, capture: true, echoCapturedStdout: false },
       );
       return new TextEncoder().encode(source.stdout);
     },
