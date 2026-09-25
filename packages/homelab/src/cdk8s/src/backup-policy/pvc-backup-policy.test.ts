@@ -7,6 +7,7 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
+import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   getPvcBackupLabels,
   getPvcBackupPolicy,
@@ -201,6 +202,75 @@ describe("PVC backup policy", () => {
       {
         name: "not-terminating",
         expression: "!has(object.metadata.deletionTimestamp)",
+      },
+    ]);
+  });
+
+  /**
+   * Woodpecker names each workspace claim after its workflow, so no inventory
+   * can list them; they are classified by class and namespace instead. Scoped
+   * that tightly so the rule cannot excuse any other unlisted claim.
+   */
+  it("excludes CI workspace claims by class, only in the CI namespace", () => {
+    const app = new App();
+    const chart = new Chart(app, "pvc-backup-admission");
+    createPvcBackupAdmissionPolicies(chart);
+    const variables = parseAllDocuments(app.synthYaml())
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("ValidatingAdmissionPolicy"),
+            spec: z.object({
+              variables: z.array(
+                z.object({ name: z.string(), expression: z.string() }),
+              ),
+            }),
+          })
+          .safeParse(document.toJS()),
+      )
+      .find((result) => result.success)?.data?.spec.variables;
+    const expression = (name: string): string => {
+      const found = variables?.find((variable) => variable.name === name);
+      if (found === undefined) throw new Error(`no ${name} variable`);
+      return found.expression;
+    };
+
+    const workspace =
+      "object.metadata.namespace == 'woodpecker-ci' && has(object.spec.storageClassName) && object.spec.storageClassName == 'ci-workspace'";
+    expect(expression("excluded")).toContain(`|| (${workspace})`);
+    expect(expression("included")).not.toContain("ci-workspace");
+  });
+
+  /**
+   * The class a workspace claim is excluded by must actually delete its
+   * volume and only provision on the CI node, or the exclusion would excuse
+   * data that accumulates on the production node.
+   */
+  it("deletes CI workspace volumes and provisions them only on liskov", () => {
+    const app = new App();
+    createStorageClasses(new Chart(app, "storage"));
+    const storageClass = parseAllDocuments(app.synthYaml())
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("StorageClass"),
+            metadata: z.object({ name: z.literal("ci-workspace") }),
+            reclaimPolicy: z.string(),
+            allowedTopologies: z.array(z.unknown()),
+          })
+          .loose()
+          .safeParse(document.toJS()),
+      )
+      .find((result) => result.success);
+    if (storageClass?.success !== true) {
+      throw new Error("ci-workspace StorageClass not synthesized");
+    }
+    expect(storageClass.data.reclaimPolicy).toBe("Delete");
+    expect(storageClass.data.allowedTopologies).toEqual([
+      {
+        matchLabelExpressions: [
+          { key: "kubernetes.io/hostname", values: ["liskov"] },
+        ],
       },
     ]);
   });
