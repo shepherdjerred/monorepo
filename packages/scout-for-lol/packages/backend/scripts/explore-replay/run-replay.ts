@@ -56,6 +56,7 @@ import {
 } from "#src/explore/replay/chips.ts";
 import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
 import {
+  queryFactsFromTrace,
   runReplayCases,
   type ReplayCaseInput,
   type ReplayObservation,
@@ -238,8 +239,10 @@ function observationSide(observation: ReplayObservation): ReplaySide {
     queryText: observation.answer?.queryText ?? null,
     caveats: observation.answer?.caveats ?? [],
     followUps: observation.answer?.followUps ?? [],
-    rowsReturned: observation.preview?.rowsReturned ?? null,
-    rowsScanned: observation.preview?.rowsScanned ?? null,
+    // From the trace, not the preview: the preview is present only when the
+    // answer rendered a visualization, so reading it there recorded null for
+    // most successful queries.
+    ...queryFactsFromTrace(observation.trace),
     toolNames: observation.trace.map((entry) => entry.toolName),
     matchCardIds: observation.matchCards.map((card) => card.match.matchId),
     visualizationKind: observation.visualization?.kind ?? null,
@@ -821,18 +824,19 @@ async function runGuild(input: {
     // `passed: true` and exits clean, which is the decorative-eval failure
     // this harness is built to avoid. An already-completed case is a different
     // thing and stays a valid no-op.
-    if (options.onlyCaseId !== null && !caseKinds.has(options.onlyCaseId)) {
+    const unknownOnly = (options.onlyCaseIds ?? []).filter(
+      (caseId) => !caseKinds.has(caseId),
+    );
+    if (unknownOnly.length > 0) {
       throw new Error(
-        `--only names ${options.onlyCaseId}, which is not in the ${pin.stage} corpus for ${config.label}. Check the case id, or add --conversations if it is a conversation turn.`,
+        `--only names ${unknownOnly.join(", ")}, not in the ${pin.stage} corpus for ${config.label}. Check the case ids, or add --conversations for conversation turns.`,
       );
     }
+    const onlySet =
+      options.onlyCaseIds === null ? null : new Set(options.onlyCaseIds);
 
     const all = selectable
-      .filter((entry) =>
-        options.onlyCaseId === null
-          ? true
-          : entry.caseId === options.onlyCaseId,
-      )
+      .filter((entry) => (onlySet === null ? true : onlySet.has(entry.caseId)))
       .filter((entry) => !alreadyDone.has(entry.caseId));
     const cases = options.limit === null ? all : all.slice(0, options.limit);
 
@@ -871,6 +875,7 @@ async function runGuild(input: {
             ? { currentTime: "pinned" }
             : null,
           clash: config.capabilities.clash,
+          hallOfFame: config.capabilities.hallOfFame,
           surface,
         }),
       ),

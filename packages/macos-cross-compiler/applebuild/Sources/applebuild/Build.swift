@@ -9,6 +9,12 @@ struct AppTarget {
   let configuration: String
   let settings: BuildSettings
   let swiftSources: [URL]
+  /// C, C++, Objective-C, and Objective-C++ sources, compiled by clang as
+  /// Xcode's C build rule does.
+  let cFamilySources: [URL]
+  /// Directories holding the target's headers. Xcode's header maps make
+  /// every one of them reachable by `#include "Name.h"`.
+  let headerDirectories: [URL]
   /// Files and directories copied into the bundle's resources, by bundle-relative name.
   let resources: [(source: URL, name: String)]
   /// `.xcassets` / `.icon` inputs, which only Xcode's `actool` can compile.
@@ -73,8 +79,12 @@ struct AppTarget {
       "PRODUCT_MODULE_NAME": "$(PRODUCT_NAME:c99extidentifier)",
       "WRAPPER_NAME": "$(PRODUCT_NAME).app",
       "DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER": "YES",
+      "SRCROOT": spec.root.path,
+      "PROJECT_DIR": spec.root.path,
     ]
-    var layers = [derived, platform.defaultSettings, configurationPresets(configuration), presets]
+    var layers = [
+      derived, platform.defaultSettings, xcodeCompilerDefaults(), configurationPresets(configuration), presets,
+    ]
     layers += try settingLayers(spec.raw["settings"], configuration: configuration)
     layers += try settingLayers(raw["settings"], configuration: configuration)
     if platform == .macCatalyst,
@@ -88,6 +98,8 @@ struct AppTarget {
 
     // Sources.
     var swiftSources: [URL] = []
+    var cFamilySources: [URL] = []
+    var headerDirectories: [URL] = []
     var resources: [(URL, String)] = []
     var assetCatalogs: [URL] = []
     for entry in raw["sources"] as? [Any] ?? [] {
@@ -110,7 +122,13 @@ struct AppTarget {
           assetCatalogs.append(file)
         } else if phase == nil && ext == "swift" {
           swiftSources.append(file)
-        } else if phase == nil && ["m", "mm", "c", "cpp", "metal", "storyboard", "xib", "intentdefinition", "xcstrings"].contains(ext) {
+        } else if phase == nil && clangLanguages[ext] != nil {
+          cFamilySources.append(file)
+        } else if phase == nil && ["h", "hh", "hpp", "hxx"].contains(ext) {
+          // An application's headers are neither compiled nor copied.
+          let directory = file.deletingLastPathComponent()
+          if !headerDirectories.contains(directory) { headerDirectories.append(directory) }
+        } else if phase == nil && ["metal", "storyboard", "xib", "intentdefinition", "xcstrings"].contains(ext) {
           throw BuildError("target \(name): \(file.lastPathComponent) needs a build rule applebuild does not implement")
         } else if phase == nil || phase == "resources" {
           resources.append((file, file.lastPathComponent))
@@ -120,6 +138,8 @@ struct AppTarget {
       }
     }
     self.swiftSources = swiftSources.sorted { $0.path < $1.path }
+    self.cFamilySources = cFamilySources.sorted { $0.path < $1.path }
+    self.headerDirectories = headerDirectories
     self.resources = resources
     self.assetCatalogs = assetCatalogs
 
@@ -383,7 +403,13 @@ func compileApp(_ target: AppTarget, arch: String, packages: PackageBuild, work:
   let moduleName = settings["PRODUCT_MODULE_NAME"] ?? target.name
   let objects = work.appendingPathComponent("objects")
   try manager.recreateDirectory(objects)
-  let common = toolchain.swiftcArguments(sdk: sdk, platform: target.platform) + ["-target", try target.platform.triple(arch: arch, settings: settings)]
+  let triple = try target.platform.triple(arch: arch, settings: settings)
+  let common = toolchain.swiftcArguments(sdk: sdk, platform: target.platform) + ["-target", triple]
+  // Where Xcode puts generated sources: here, the Swift module's
+  // Objective-C interface header, which the target's Objective-C imports.
+  let derived = work.appendingPathComponent("DerivedSources")
+  try manager.recreateDirectory(derived)
+  let headerSearch = try headerSearchArguments(target, derived: derived)
 
   // Kept with the build, like Swift Build's, so a rebuild does not recompile
   // every SDK module from its .swiftinterface.
@@ -395,6 +421,14 @@ func compileApp(_ target: AppTarget, arch: String, packages: PackageBuild, work:
   }
   if let products = packages.products { compile += ["-I", products.path] }
   for map in packages.moduleMaps { compile += ["-Xcc", "-fmodule-map-file=\(map.path)"] }
+  if let bridgingHeader = settings["SWIFT_OBJC_BRIDGING_HEADER"], !bridgingHeader.isEmpty {
+    compile += ["-import-objc-header", target.spec.root.appendingPathComponent(bridgingHeader).standardizedFileURL.path]
+  }
+  if !target.cFamilySources.isEmpty {
+    compile += headerSearch.flatMap { ["-Xcc", $0] }
+    let interface = settings["SWIFT_OBJC_INTERFACE_HEADER_NAME"] ?? "\(moduleName)-Swift.h"
+    compile += ["-emit-objc-header-path", derived.appendingPathComponent(interface).path]
+  }
   if settings["SWIFT_COMPILATION_MODE"] == "wholemodule" {
     compile += ["-o", objects.appendingPathComponent("\(moduleName).o").path]
   } else {
@@ -403,18 +437,124 @@ func compileApp(_ target: AppTarget, arch: String, packages: PackageBuild, work:
   compile += target.swiftSources.map(\.path)
   try run("swiftc", compile)
 
+  // The C-family sources, after Swift: Objective-C may import the interface
+  // header the Swift compile just wrote. clang's per-triple configuration
+  // supplies the SDK, as Xcode's -isysroot does.
+  let swiftObjects = try manager.contentsOfDirectory(at: objects, includingPropertiesForKeys: nil)
+    .filter { $0.pathExtension == "o" }.sorted { $0.path < $1.path }
+  var objectNames = Set(swiftObjects.map(\.lastPathComponent))
+  var cFamilyObjects: [URL] = []
+  for source in target.cFamilySources {
+    let object = source.deletingPathExtension().lastPathComponent + ".o"
+    guard objectNames.insert(object).inserted else {
+      throw BuildError("target \(target.name): two sources compile to \(object); rename one")
+    }
+    let language = clangLanguages[source.pathExtension]!
+    // For Mac Catalyst, clang's macabi configuration adds the iOSSupport paths.
+    var arguments = ["-x", language, "-target", triple]
+    arguments += try clangFlags(settings, language: language)
+    arguments += headerSearch
+    let output = objects.appendingPathComponent(object)
+    arguments += ["-fmodules-cache-path=\(moduleCache.path)", "-c", source.path, "-o", output.path]
+    try run("clang", arguments)
+    cFamilyObjects.append(output)
+  }
+
   let output = work.appendingPathComponent(settings["EXECUTABLE_NAME"] ?? target.name)
   var link = common + ["-emit-executable", "-o", output.path]
-  link += try manager.contentsOfDirectory(at: objects, includingPropertiesForKeys: nil)
-    .filter { $0.pathExtension == "o" }.map(\.path).sorted()
+  // Xcode's link file list: the C-family objects in source order, then Swift's.
+  link += (cFamilyObjects + swiftObjects).map(\.path)
   link += packages.objects.map(\.path)
   link += packages.frameworks.map(\.binary.path)
   var runpaths: [String] = []
   for path in settings.list("LD_RUNPATH_SEARCH_PATHS") where !runpaths.contains(path) { runpaths.append(path) }
   for path in runpaths { link += ["-Xlinker", "-rpath", "-Xlinker", path] }
   if settings.bool("DEAD_CODE_STRIPPING") { link += ["-Xlinker", "-dead_strip"] }
+  // Testability links with -rdynamic, which clang passes to ld64 as this.
+  if settings.bool("ENABLE_TESTABILITY") { link += ["-Xlinker", "-export_dynamic"] }
+  // Xcode links with clang++ `-stdlib=libc++` once a target has C++ sources.
+  if target.cFamilySources.contains(where: { clangLanguages[$0.pathExtension]!.hasSuffix("c++") }) {
+    link.append("-lc++")
+  }
   try run("swiftc", link)
   return output
+}
+
+/// Source extension → clang language, for the sources Xcode's C build rule compiles.
+let clangLanguages = [
+  "c": "c", "m": "objective-c", "cc": "c++", "cpp": "c++", "cxx": "c++", "mm": "objective-c++",
+]
+
+/// Header search arguments shared by the C-family compiles and Swift's clang
+/// importer: Xcode's header maps (every target header by its quoted name),
+/// then `HEADER_SEARCH_PATHS`, then the derived sources.
+func headerSearchArguments(_ target: AppTarget, derived: URL) throws -> [String] {
+  var arguments: [String] = []
+  for directory in target.headerDirectories { arguments += ["-iquote", directory.path] }
+  for path in target.settings.list("USER_HEADER_SEARCH_PATHS") {
+    arguments += ["-iquote", target.spec.root.appendingPathComponent(path).standardizedFileURL.path]
+  }
+  for path in target.settings.list("HEADER_SEARCH_PATHS") {
+    arguments.append("-I" + target.spec.root.appendingPathComponent(path).standardizedFileURL.path)
+  }
+  arguments.append("-I" + derived.path)
+  return arguments
+}
+
+/// clang flags from Xcode build settings for one language, in the order
+/// Xcode's C build rule passes them. Warning flags are left out: they change
+/// diagnostics, not the object code.
+func clangFlags(_ settings: BuildSettings, language: String) throws -> [String] {
+  let isCPlusPlus = language.hasSuffix("c++")
+  let isObjC = language.hasPrefix("objective-c")
+  var flags: [String] = []
+  if isCPlusPlus {
+    if let standard = settings["CLANG_CXX_LANGUAGE_STANDARD"], !standard.isEmpty { flags.append("-std=\(standard)") }
+    if let library = settings["CLANG_CXX_LIBRARY"], !library.isEmpty { flags.append("-stdlib=\(library)") }
+  } else if let standard = settings["GCC_C_LANGUAGE_STANDARD"], !standard.isEmpty {
+    flags.append("-std=\(standard)")
+  }
+  if isObjC && settings.bool("CLANG_ENABLE_OBJC_ARC") {
+    flags.append("-fobjc-arc")
+    if settings.bool("CLANG_ENABLE_OBJC_WEAK") { flags.append("-fobjc-weak") }
+  }
+  if settings.bool("CLANG_ENABLE_MODULES") {
+    flags.append("-fmodules")
+    if isCPlusPlus { flags.append("-fno-cxx-modules") }
+    if settings.bool("CLANG_ENABLE_MODULE_DEBUGGING") { flags.append("-gmodules") }
+  }
+  if isCPlusPlus, let mode = libraryHardening(settings) {
+    flags.append("-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_\(mode.uppercased())")
+  }
+  if settings.bool("GCC_ENABLE_PASCAL_STRINGS") { flags.append("-fpascal-strings") }
+  guard let level = settings["GCC_OPTIMIZATION_LEVEL"], !level.isEmpty else {
+    throw BuildError("GCC_OPTIMIZATION_LEVEL is not set")
+  }
+  flags.append("-O\(level)")
+  if settings.bool("GCC_NO_COMMON_BLOCKS") { flags.append("-fno-common") }
+  flags += settings.list("GCC_PREPROCESSOR_DEFINITIONS").map { "-D\($0)" }
+  if isObjC {
+    if settings["ENABLE_NS_ASSERTIONS"] == "NO" { flags.append("-DNS_BLOCK_ASSERTIONS=1") }
+    if settings.bool("ENABLE_STRICT_OBJC_MSGSEND") { flags.append("-DOBJC_OLD_DISPATCH_PROTOTYPES=0") }
+  }
+  flags.append("-g")
+  // Testability exports every symbol, so it overrides hidden visibility.
+  if settings.bool("GCC_SYMBOLS_PRIVATE_EXTERN") && !settings.bool("ENABLE_TESTABILITY") {
+    flags.append("-fvisibility=hidden")
+  }
+  if isCPlusPlus && settings.bool("GCC_INLINES_ARE_PRIVATE_EXTERN") { flags.append("-fvisibility-inlines-hidden") }
+  flags += settings.list(isCPlusPlus ? "OTHER_CPLUSPLUSFLAGS" : "OTHER_CFLAGS")
+  return flags
+}
+
+/// libc++'s hardening mode (`CLANG_CXX_STANDARD_LIBRARY_HARDENING`), or nil
+/// for none. Unset, Clang.xcspec derives it: `debug` at -O0, and `fast` when
+/// optimizing with enhanced security or C++ bounds-safe buffers on.
+func libraryHardening(_ settings: BuildSettings) -> String? {
+  if let mode = settings["CLANG_CXX_STANDARD_LIBRARY_HARDENING"], !mode.isEmpty { return mode }
+  if settings["GCC_OPTIMIZATION_LEVEL"] == "0" { return "debug" }
+  if settings.bool("ENABLE_ENHANCED_SECURITY") || settings.bool("ENABLE_CPLUSPLUS_BOUNDS_SAFE_BUFFERS") { return "fast" }
+  return nil
 }
 
 /// Swift compiler flags from Xcode build settings, as Xcode's Swift build rule derives them.

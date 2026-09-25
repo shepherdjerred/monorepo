@@ -40,6 +40,13 @@ export const SuggestionConditionSchema = z.enum([
   "mvp_votes",
   "dares",
   "competitions",
+  /**
+   * Asking Explore to set a competition up. Shown under the same rule as
+   * `competitions`, but kept distinct so the eval can grade the two apart:
+   * reading a competition needs no flag, preparing one needs Explore's
+   * creation capability.
+   */
+  "competition_creation",
   "hall_of_fame",
   "customs",
   "challenges",
@@ -87,6 +94,7 @@ export function isSuggestionEligible(
     case "dares":
       return context.daresEnabled ?? false;
     case "competitions":
+    case "competition_creation":
       return context.competitionsEnabled ?? false;
     case "reports":
       return context.reportsEnabled ?? false;

@@ -12,7 +12,7 @@ const matchHistoryApi = vi.hoisted(() => ({
   getRecentMatchIds: vi.fn(),
 }));
 
-vi.mock("#src/database/index.ts", () => database);
+vi.mock("#src/database/account-cursors.ts", () => database);
 vi.mock("#src/league/api/match-history.ts", () => ({
   getRecentMatchIds: matchHistoryApi.getRecentMatchIds,
   filterNewMatches: vi.fn(),

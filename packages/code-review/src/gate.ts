@@ -217,6 +217,7 @@ export function evaluateGate(input: {
         message:
           `${name}'s review of ${head} is blocked (${blocked}): ` +
           `${strategy.remediation}, then re-run this step.`,
+        blockedReason: blocked,
       };
     }
     const unrecognised = blocked === null ? "" : ` (block reason: ${blocked})`;
@@ -225,6 +226,7 @@ export function evaluateGate(input: {
       message:
         `${name}'s review of ${head} did not complete successfully${unrecognised}. ` +
         `Re-trigger ${name}, then re-run this step.`,
+      blockedReason: null,
     };
   }
 
@@ -272,5 +274,35 @@ export function evaluateGate(input: {
     message:
       `${String(blocking.length)} unresolved ${name} comment(s) on ${head}:\n${list}${accompanied}\n` +
       `Resolve each thread (or push a fix and let ${name} re-review), then re-run this step.`,
+    blockedReason: null,
   };
+}
+
+/** The gate's exit status for every failure other than a provider block. */
+export const REVIEW_GATE_FAILURE_EXIT_CODE = 1;
+
+/**
+ * The gate's exit status when the provider declared it could not review at all
+ * (quota exhaustion). The CI gate script, `ci/scripts/review-gate.sh`, passes
+ * with a warning on exactly this status, so an out-of-quota provider stops
+ * failing the rest of CI, while findings, unresolved threads, timeouts, and
+ * every other error still fail hard. That script pins the same number.
+ */
+export const REVIEW_GATE_BLOCKED_EXIT_CODE = 42;
+
+/** Map a terminal gate decision to the gate's process exit status. */
+export function gateExitCode(decision: GateDecision): number {
+  switch (decision.state) {
+    case "passed": {
+      return 0;
+    }
+    case "failed": {
+      return decision.blockedReason === null
+        ? REVIEW_GATE_FAILURE_EXIT_CODE
+        : REVIEW_GATE_BLOCKED_EXIT_CODE;
+    }
+    case "waiting": {
+      throw new Error("a waiting gate decision has no exit status");
+    }
+  }
 }

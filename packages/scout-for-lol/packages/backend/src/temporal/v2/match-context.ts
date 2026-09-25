@@ -7,11 +7,11 @@ import {
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import { prisma } from "#src/database/index.ts";
 import {
   getAccountConfigsByPuuids,
   getAccountsWithState,
-  prisma,
-} from "#src/database/index.ts";
+} from "#src/database/player-accounts.ts";
 import { getObservation } from "#src/database/durable/observation-repository.ts";
 import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";

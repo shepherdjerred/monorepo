@@ -19,6 +19,13 @@ import { prisma } from "#src/database/index.ts";
 import type { CreationCapability } from "#src/explore/creation/capability.ts";
 import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
 import { createGatedExploreTools } from "#src/explore/gated-tools.ts";
+import { ScopeRefusedError } from "#src/reports/duckdb/plan-source.ts";
+import {
+  QueryServersSchema,
+  createListMyServersTool,
+  resolveTurnScope,
+} from "#src/explore/tools/server-scope.ts";
+import type { HallExploreCapability } from "#src/explore/tools/hall-tools.ts";
 import {
   enabledExploreSkills,
   type ExploreSkillOptions,
@@ -43,7 +50,6 @@ import {
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
-import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 
@@ -107,6 +113,7 @@ type ExploreToolsOptions = {
   creationCapability: CreationCapability | null;
   riotHistoryEnabled: boolean;
   clashEnabled: boolean;
+  hallCapability: HallExploreCapability | null;
 };
 
 export function createExploreTools(options: ExploreToolsOptions) {
@@ -121,6 +128,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
     creationCapability,
     riotHistoryEnabled,
     clashEnabled,
+    hallCapability,
   } = options;
   const track: ToolTracker = async (toolName, work) => {
     state.toolCalls++;
@@ -156,8 +164,13 @@ export function createExploreTools(options: ExploreToolsOptions) {
    */
   const resolvePlayer = tool({
     description:
-      "Find out who a name refers to before querying: accepts a Scout alias, a Riot ID, or a game name, and returns each matching person with every account and past Riot ID they have used. Use the returned displayName inside player('…').",
-    inputSchema: z.object({ query: z.string().min(1).max(100) }).strict(),
+      "Find out who a name refers to before querying: accepts a Scout alias, a Riot ID, or a game name, and returns each matching person with every account and past Riot ID they have used. Use the returned displayName inside player('…'). Pass the same servers the query will use, so a server nickname resolves where it will run.",
+    inputSchema: z
+      .object({
+        query: z.string().min(1).max(100),
+        servers: QueryServersSchema,
+      })
+      .strict(),
     outputSchema: z
       .object({
         candidates: z.array(
@@ -176,9 +189,13 @@ export function createExploreTools(options: ExploreToolsOptions) {
       .strict(),
     execute: (inputData) =>
       track("resolve_player", async () => {
+        const turn = resolveTurnScope(inputData.servers, params.guildIds);
+        if (!turn.ok) {
+          return { candidates: [], message: turn.message };
+        }
         const found = await resolvePlayerIdentities({
           query: inputData.query,
-          guildIds: params.guildIds,
+          guildIds: turn.guildIds,
         });
         return {
           candidates: found.map((identity) => ({
@@ -202,8 +219,10 @@ export function createExploreTools(options: ExploreToolsOptions) {
 
   const runReportQuery = tool({
     description:
-      "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool. Load the scoutql skill first if you have not this turn.",
-    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
+      "Run a valid ScoutQL query and return the resulting rows: over all ingested match data, or, with servers, over those servers' tracked players. Every statistic you state must come from a result of this tool.",
+    inputSchema: z
+      .object({ queryText: ReportQueryTextSchema, servers: QueryServersSchema })
+      .strict(),
     outputSchema: QueryResultToolOutputSchema,
     execute: (inputData) =>
       track("run_report_query", async () => {
@@ -220,6 +239,15 @@ export function createExploreTools(options: ExploreToolsOptions) {
             preview: null,
           };
         }
+        const turn = resolveTurnScope(inputData.servers, params.guildIds);
+        if (!turn.ok) {
+          return {
+            ok: false,
+            message: turn.message,
+            formattedQueryText: null,
+            preview: null,
+          };
+        }
 
         let source: ScoutQlSource | null = null;
         // Held on an object rather than a bare `let`: the assignment happens
@@ -228,14 +256,32 @@ export function createExploreTools(options: ExploreToolsOptions) {
         const planFacts: { emptyReason: string | null } = { emptyReason: null };
         const result = await executeReportQuery({
           prisma,
-          scope: GLOBAL_SCOPE,
-          askerGuildIds: params.guildIds,
+          scope: turn.scope,
+          askerGuildIds: turn.guildIds,
           queryText: validation.formattedQueryText,
           onPlan: (plan) => {
             source = plan.source;
             planFacts.emptyReason = emptyResultReason(plan);
           },
+        }).catch((error: unknown) => {
+          // A scope the model chose that the source cannot serve is its
+          // mistake to correct, not a failure: say how. A bare error made it
+          // retry the same call until the turn gave up.
+          if (error instanceof ScopeRefusedError) {
+            return {
+              refused: `${error.message} Run it again with servers null.`,
+            };
+          }
+          throw error;
         });
+        if ("refused" in result) {
+          return {
+            ok: false,
+            message: result.refused,
+            formattedQueryText: validation.formattedQueryText,
+            preview: null,
+          };
+        }
         const preview = reportQueryPreviewSummary(result);
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
@@ -284,9 +330,8 @@ export function createExploreTools(options: ExploreToolsOptions) {
       }),
   });
 
-  // The scoutql skill carries the full language reference, so the
-  // `get_report_language` reference tool is not registered here — one load
-  // path keeps the model from splitting its budget between two.
+  // The system prompt carries the full language reference, so the
+  // `get_report_language` reference tool is not registered here.
   return {
     load_skill: createLoadSkillTool({
       skills: enabledExploreSkills(skillOptions),
@@ -299,6 +344,11 @@ export function createExploreTools(options: ExploreToolsOptions) {
       onLoaded: (name) => state.loadedSkills.add(name),
     }),
     resolve_player: resolvePlayer,
+    list_my_servers: createListMyServersTool({
+      db: prisma,
+      guildIds: params.guildIds,
+      track,
+    }),
     validate_report_query: createValidateTool(track),
     run_report_query: runReportQuery,
     format_report_query: createFormatTool(track),
@@ -315,7 +365,9 @@ export function createExploreTools(options: ExploreToolsOptions) {
       daresEnabled,
       challengesEnabled,
       creationCapability,
+      hallCapability,
       requesterId: params.requesterId,
+      guildIds: params.guildIds,
       conversationId: params.conversationId,
       originChannelId: params.originChannelId,
       track,

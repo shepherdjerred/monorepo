@@ -29,7 +29,7 @@ import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
-import { assertNoPendingVersionBump } from "../admission/temporal-candidate-admission.ts";
+import { readLiveVersionCatalogSource } from "./live-version-catalog.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import {
   writeFallbackReport,
@@ -445,14 +445,10 @@ async function main(): Promise<void> {
 
   const selection = await selectedTargets(options, commit);
   const bakeTargets = expandTargets(selection.targets);
-  // Refresh after selecting targets so convergence admission only blocks a
-  // release that would publish a Temporal Workflow candidate. Every push still
-  // uses the live catalog for Helm and the no-target metadata path.
+  // Every push records the live catalog for Helm and the no-target metadata
+  // path, and derives Temporal Workflow candidate pins from it.
   const liveVersionCatalog = options.push
-    ? await assertNoPendingVersionBump(
-        execute,
-        bakeTargets.includes("temporal-worker"),
-      )
+    ? await readLiveVersionCatalogSource(execute)
     : undefined;
   if (bakeTargets.length === 0) {
     console.log("no image-owning packages affected — nothing to build");

@@ -4,8 +4,12 @@ import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import {
+  getAccountConfigsByPuuids,
+  getAccountsWithState,
+} from "#src/database/player-accounts.ts";
 import {
   isLikelyPreStartLobby,
   rosterIsAsCompleteAsItWillGet,
@@ -230,18 +234,34 @@ function shouldSkipCheck(): boolean {
 }
 
 /**
+ * Whether the V2 prematch path already took one game, asked before v1
+ * announces a game it has not tracked. V2 writes no `ActiveGame` row, so
+ * without this a flip from V2 back to v1 mid-game would announce the game a
+ * second time and open its markets after the fact.
+ */
+export type PrematchV2CaptureCheck = (game: {
+  platformId: string;
+  gameId: number;
+  puuid: LeaguePuuid;
+}) => Promise<boolean>;
+
+/**
  * Main function to check for active games across all tracked players.
  *
  * Detects when tracked players enter a game and sends a single notification
  * per game, listing all tracked players in that game.
  *
- * @param lobbyRetryDelayMs - Override the retry delay for pre-start lobby
- *   refetch attempts. Defaults to LOBBY_RETRY_DELAY_MS (2000ms).
+ * @param options.capturedByV2 - Asked for each game this pass has not
+ *   tracked; a game V2 already took is skipped.
+ * @param options.lobbyRetryDelayMs - Override the retry delay for pre-start
+ *   lobby refetch attempts. Defaults to LOBBY_RETRY_DELAY_MS (2000ms).
  *   Pass 0 in tests to skip the real-time sleep.
  */
-export async function checkActiveGames(
-  lobbyRetryDelayMs: number = LOBBY_RETRY_DELAY_MS,
-): Promise<void> {
+export async function checkActiveGames(options: {
+  capturedByV2: PrematchV2CaptureCheck;
+  lobbyRetryDelayMs?: number;
+}): Promise<void> {
+  const lobbyRetryDelayMs = options.lobbyRetryDelayMs ?? LOBBY_RETRY_DELAY_MS;
   if (shouldSkipCheck()) {
     return;
   }
@@ -252,6 +272,9 @@ export async function checkActiveGames(
   logger.info("🔍 Starting pre-match active game check");
 
   try {
+    // The live-guild filter decides WORKLOAD only: which accounts this tick
+    // spends Spectator calls on. It must never decide who a detected game's
+    // notification is about — see `trackedPlayersInGame` below.
     const accountsWithState = await getAccountsWithState(
       prisma,
       getActiveServerIds(),
@@ -304,12 +327,6 @@ export async function checkActiveGames(
     logger.info(
       `📊 ${activeGames.length.toString()} active game(s) currently tracked across ${priorGameIdByPuuid.size.toString()} player(s)`,
     );
-
-    // Build lookup of all tracked puuids for cross-referencing with game participants
-    const allTrackedPuuids = new Set(
-      accountsWithState.map((a) => a.config.league.leagueAccount.puuid),
-    );
-    const allPlayerConfigs = accountsWithState.map((a) => a.config);
 
     const currentTime = new Date();
 
@@ -390,17 +407,37 @@ export async function checkActiveGames(
           continue;
         }
 
-        // Find ALL tracked players in this game's participants.
+        if (
+          await options.capturedByV2({
+            platformId: gameInfo.platformId,
+            gameId: gameInfo.gameId,
+            puuid,
+          })
+        ) {
+          logger.info(
+            `[${player.alias}] ⏭️  Skipping ${matchId} — the V2 prematch path already captured it`,
+          );
+          prematchDetectionsTotal.inc({ status: "owned_by_v2" });
+          trackedMatchIds.add(matchId);
+          continue;
+        }
+
+        // Find ALL tracked players in this game's participants — the AUDIENCE:
+        // whose channels are notified, whose Classic participation is awarded,
+        // and which PUUIDs the ActiveGame row records. Read unfiltered, not from
+        // the workload roster above: `getActiveServerIds()` fails open while the
+        // gateway is not ready but NARROWS once it is, so a guild removed
+        // mid-match would otherwise silently drop its players from a game the
+        // rest of the roster is still being told about.
         // KNOWN LIMITATION: matched by puuid only, so privacy-scrubbed players
         // (null puuid in Spectator-V5) are not matched here and are dropped from
         // the pre-match notification/image. This is accepted data loss.
         const trackedPlayersInGame: PlayerConfigEntry[] =
-          allPlayerConfigs.filter((p) =>
-            gameInfo.participants.some(
-              (participant) =>
-                participant.puuid === p.league.leagueAccount.puuid &&
-                allTrackedPuuids.has(p.league.leagueAccount.puuid),
-            ),
+          await getAccountConfigsByPuuids(
+            gameInfo.participants.flatMap((participant) => {
+              const parsed = LeaguePuuidSchema.safeParse(participant.puuid);
+              return parsed.success ? [parsed.data] : [];
+            }),
           );
 
         const trackedPuuidsInGame = trackedPlayersInGame.map(

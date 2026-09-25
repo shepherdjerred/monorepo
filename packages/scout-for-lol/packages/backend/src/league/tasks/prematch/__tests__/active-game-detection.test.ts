@@ -11,14 +11,22 @@ import {
   MatchIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import type { ActiveGameRecord } from "#src/league/tasks/prematch/active-game-queries.ts";
-import type { PlayerAccountWithState } from "#src/database/index.ts";
+import type { PlayerAccountWithState } from "#src/database/player-accounts.ts";
 import type { SpectatorResult } from "#src/league/api/spectator.ts";
+import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 
 // LeaguePuuid is a 78-char branded string. Pad two short labels to that length
 // so Schema.parse() succeeds (the value is opaque to checkActiveGames).
 const P1: LeaguePuuid = LeaguePuuidSchema.parse(
   "puuid-player-one".padEnd(78, "x"),
 );
+const P2: LeaguePuuid = LeaguePuuidSchema.parse(
+  "puuid-player-two".padEnd(78, "w"),
+);
+// The guild the gateway cache lists, and one it has dropped (a removal
+// mid-match). Accounts default to the live guild.
+const LIVE_GUILD = "guild-live";
+const REMOVED_GUILD = "guild-removed";
 const G1 = 1_000_000_001;
 const G2 = 1_000_000_002;
 
@@ -51,11 +59,18 @@ function mkParticipant(puuid: string, teamId: number, championId: number) {
   };
 }
 
-function mkGameInfo(gameId: number, puuid: LeaguePuuid): RawCurrentGameInfo {
-  // A started game reports a full 10-player roster. Build the tracked player
-  // plus 9 fillers so the pre-start/partial-roster defer guard
+function mkGameInfo(
+  gameId: number,
+  puuid: LeaguePuuid,
+  otherTracked: readonly LeaguePuuid[] = [],
+): RawCurrentGameInfo {
+  // A started game reports a full 10-player roster. Build the tracked players
+  // plus fillers so the pre-start/partial-roster defer guard
   // (participants < 10) does NOT fire for these "already in progress" fixtures.
-  const fillers = Array.from({ length: 9 }, (_, i) =>
+  const others = otherTracked.map((other, i) =>
+    mkParticipant(other, i < 4 ? 100 : 200, 30 + i),
+  );
+  const fillers = Array.from({ length: 9 - others.length }, (_, i) =>
     mkParticipant(
       `filler-${i.toString()}`.padEnd(78, "z"),
       i < 4 ? 100 : 200,
@@ -73,7 +88,7 @@ function mkGameInfo(gameId: number, puuid: LeaguePuuid): RawCurrentGameInfo {
     bannedChampions: [],
     gameQueueConfigId: 420,
     observers: { encryptionKey: "" },
-    participants: [mkParticipant(puuid, 100, 9), ...fillers],
+    participants: [mkParticipant(puuid, 100, 9), ...others, ...fillers],
   });
 }
 
@@ -98,6 +113,15 @@ function trackedActiveGame(
 // Module-level mutable state captured by the mocks
 let mockActiveGames: ActiveGameRecord[] = [];
 let mockAccounts: PlayerAccountWithState[] = [];
+let mockServerIdByPuuid = new Map<LeaguePuuid, string>();
+const spectatorCalls: LeaguePuuid[] = [];
+
+function accountServerId(account: PlayerAccountWithState): string {
+  return (
+    mockServerIdByPuuid.get(account.config.league.leagueAccount.puuid) ??
+    LIVE_GUILD
+  );
+}
 let mockSpectatorResponses = new Map<LeaguePuuid, SpectatorResult>();
 const upsertCalls: { gameId: number; puuids: LeaguePuuid[] }[] = [];
 const notificationCalls: {
@@ -114,13 +138,35 @@ const reportStoreCalls: { gameId: number }[] = [];
 // isolation we need.
 //
 // Sibling files in this directory (e.g. prematch-notification.integration.test.ts)
-// also call `vi.doMock("#src/database/index.ts", ...)`. Bun mocks are
+// also call `vi.doMock` on the `#src/database/` modules. Bun mocks are
 // process-global, so we have to provide every database export any sibling
 // test file mocks — otherwise sibling tests that ran first leave a partial
 // mock in place that hides exports our SUT needs.
+//
+// Both roster reads model the real contract: `getAccountsWithState` narrows by
+// the guild set it is handed, `getAccountConfigsByPuuids` never does.
 await vi.doMock("#src/database/index.ts", () => ({
   prisma: {},
-  getAccountsWithState: () => Promise.resolve(mockAccounts),
+}));
+await vi.doMock("#src/database/player-accounts.ts", () => ({
+  getAccountsWithState: (_client: unknown, activeServerIds?: Set<string>) =>
+    Promise.resolve(
+      activeServerIds === undefined
+        ? mockAccounts
+        : mockAccounts.filter((account) =>
+            activeServerIds.has(accountServerId(account)),
+          ),
+    ),
+  getAccountConfigsByPuuids: (puuids: readonly LeaguePuuid[]) =>
+    Promise.resolve(
+      mockAccounts
+        .filter((account) =>
+          puuids.includes(account.config.league.leagueAccount.puuid),
+        )
+        .map((account) => account.config),
+    ),
+}));
+await vi.doMock("#src/database/subscribed-channels.ts", () => ({
   getChannelsSubscribedToPlayers: () => Promise.resolve([]),
 }));
 
@@ -142,6 +188,7 @@ await vi.doMock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
 
 await vi.doMock("#src/league/api/spectator.ts", () => ({
   getActiveGame: (puuid: LeaguePuuid) => {
+    spectatorCalls.push(puuid);
     const response = mockSpectatorResponses.get(puuid);
     return response === undefined
       ? Promise.resolve({ kind: "not-in-game" as const })
@@ -161,10 +208,11 @@ await vi.doMock("#src/league/tasks/prematch/prematch-notification.ts", () => ({
 
 // `active-game-detection.ts` imports getActiveServerIds, which pulls in the
 // Discord client singleton (and its whole command tree). Mock it so the client
-// module is never loaded under the partial database mock above. The return value
-// is irrelevant here since getAccountsWithState is mocked to ignore its filter.
+// module is never loaded under the partial database mock above. It answers as a
+// READY client does: the full set of guilds it still lists, which omits a guild
+// removed mid-match.
 await vi.doMock("#src/discord/utils/guild-membership.ts", () => ({
-  getActiveServerIds: () => new Set<string>(),
+  getActiveServerIds: () => new Set<string>([LIVE_GUILD]),
 }));
 
 await vi.doMock("#src/report-store/live-ingest.ts", () => ({
@@ -182,14 +230,27 @@ await vi.doMock("#src/league/clash/sighting.ts", () => ({
   recordClashPrematchSightings: () => Promise.resolve(),
 }));
 
+/** The ordinary v1 pass: no game has been taken by the V2 prematch path. */
+const notCapturedByV2 = () => Promise.resolve(false);
+
 // Import AFTER mocks so the function under test wires up to the mocked deps
 const { checkActiveGames } =
   await import("#src/league/tasks/prematch/active-game-detection.ts");
+
+/** An ordinary v1 pass that skips the real 2x2s sleep in the lobby retry loop. */
+async function checkWithoutRetrySleep(): Promise<void> {
+  await checkActiveGames({
+    capturedByV2: notCapturedByV2,
+    lobbyRetryDelayMs: 0,
+  });
+}
 
 describe("checkActiveGames — subsequent-match polling", () => {
   beforeEach(() => {
     mockActiveGames = [];
     mockAccounts = [];
+    mockServerIdByPuuid = new Map();
+    spectatorCalls.length = 0;
     mockSpectatorResponses = new Map();
     upsertCalls.length = 0;
     notificationCalls.length = 0;
@@ -217,7 +278,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
       game: mkGameInfo(G2, P1),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     // Pre-fix: P1 was filtered out by the per-PUUID skip-list → no upsert,
     // no notification. Post-fix: P1 is polled, G2 is detected, both fire.
@@ -265,7 +326,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     });
 
     // Pass retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
-    await checkActiveGames(0);
+    await checkWithoutRetrySleep();
 
     // Pre-start custom lobby must NOT be committed: the next 30s cron
     // tick gets a clean shot once the other players load in.
@@ -314,7 +375,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     });
 
     // retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
-    await checkActiveGames(0);
+    await checkWithoutRetrySleep();
 
     // Matched event lobby caught mid-countdown must NOT be committed; the next
     // 30s cron tick re-evaluates once the full roster has loaded in.
@@ -332,7 +393,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
       game: mkGameInfo(G1, P1),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     // gameId-based dedup at line 181 must prevent a duplicate notification
     expect(upsertCalls).toHaveLength(0);
@@ -350,9 +411,89 @@ describe("checkActiveGames — subsequent-match polling", () => {
       game: mkGameInfo(G1, P1),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     expect(upsertCalls).toHaveLength(1);
     expect(notificationCalls).toHaveLength(1);
+  });
+
+  test("skips a game the V2 prematch path already captured, and asks about it once", async () => {
+    // After a flip from V2 back to v1 mid-game, V2 has captured the game and
+    // minted its intents but written no ActiveGame row. Announcing it here
+    // would tell the channel twice and open its markets after the fact.
+    mockAccounts = [mkAccount(P1)];
+    mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
+      game: mkGameInfo(G1, P1),
+    });
+    const asked: { platformId: string; gameId: number; puuid: string }[] = [];
+
+    await checkActiveGames({
+      capturedByV2: (game) => {
+        asked.push(game);
+        return Promise.resolve(true);
+      },
+    });
+
+    expect(asked).toEqual([{ platformId: "NA1", gameId: G1, puuid: P1 }]);
+    expect(upsertCalls).toHaveLength(0);
+    expect(reportStoreCalls).toHaveLength(0);
+    expect(notificationCalls).toHaveLength(0);
+  });
+});
+
+describe("checkActiveGames — workload and audience", () => {
+  beforeEach(() => {
+    mockActiveGames = [];
+    mockAccounts = [];
+    mockServerIdByPuuid = new Map();
+    spectatorCalls.length = 0;
+    mockSpectatorResponses = new Map();
+    upsertCalls.length = 0;
+    notificationCalls.length = 0;
+    reportStoreCalls.length = 0;
+  });
+
+  test("notifies a tracked player whose guild the gateway cache no longer lists", async () => {
+    // P2 is registered only in a guild the ready client has dropped. The live
+    // guild filter must stop Scout polling P2, and must NOT stop a game P1 is
+    // playing with P2 from being about both of them.
+    mockAccounts = [mkAccount(P1), mkAccount(P2)];
+    mockServerIdByPuuid = new Map([[P2, REMOVED_GUILD]]);
+    mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
+      game: mkGameInfo(G1, P1, [P2]),
+    });
+
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
+
+    // Workload: only the live-guild account spent a Spectator call.
+    expect(spectatorCalls).toEqual([P1]);
+    // Audience: both tracked players are in the notification and the row.
+    expect(notificationCalls).toHaveLength(1);
+    expect(
+      notificationCalls[0]?.trackedPlayers.map(
+        (player) => player.league.leagueAccount.puuid,
+      ),
+    ).toEqual([P1, P2]);
+    expect(upsertCalls).toEqual([{ gameId: G1, puuids: [P1, P2] }]);
+  });
+
+  test("caps the Spectator workload per run and never polls a dropped guild", async () => {
+    const live = Array.from({ length: MAX_PLAYERS_PER_RUN + 5 }, (_, i) =>
+      LeaguePuuidSchema.parse(`live-${i.toString()}`.padEnd(78, "l")),
+    );
+    const dropped = Array.from({ length: 3 }, (_, i) =>
+      LeaguePuuidSchema.parse(`dropped-${i.toString()}`.padEnd(78, "d")),
+    );
+    mockAccounts = [...dropped, ...live].map((puuid) => mkAccount(puuid));
+    mockServerIdByPuuid = new Map(
+      dropped.map((puuid) => [puuid, REMOVED_GUILD]),
+    );
+
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
+
+    expect(spectatorCalls).toHaveLength(MAX_PLAYERS_PER_RUN);
+    expect(spectatorCalls.some((puuid) => dropped.includes(puuid))).toBe(false);
   });
 });

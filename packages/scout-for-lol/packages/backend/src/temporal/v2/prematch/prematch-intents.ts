@@ -4,11 +4,8 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import {
-  prisma,
-  getChannelsSubscribedToPlayers,
-  type Db,
-} from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
+import { getChannelsSubscribedToPlayers } from "#src/database/subscribed-channels.ts";
 import {
   getIntent,
   upsertIntent,

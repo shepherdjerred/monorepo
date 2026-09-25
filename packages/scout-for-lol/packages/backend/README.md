@@ -160,7 +160,7 @@ twice.
 
 ## Durable pipeline observability
 
-The dual-write counters above say what the pipeline _did_. Five more families in
+The dual-write counters above say what the pipeline _did_. Seven more families in
 `src/metrics/durable-pipeline.ts` — likewise a single definition site — say what
 it is still _holding_, which is the half the V2 acceptance checklist asks about:
 
@@ -170,11 +170,24 @@ it is still _holding_, which is the half the V2 acceptance checklist asks about:
 - `scout_durable_recovery_batches{state}` — batches per state, zero-filled
   across all six.
 - `scout_durable_backlog_oldest_age_seconds{family}` — age of the oldest row in
-  `stalled-match-processing`, `live-recovery-batches`, and
-  `unaccepted-workflow-starts`. Only backlogs whose ordering column is a true
-  age are here; stalled notifications sort by freshness deadline, so their head
-  is the intent closest to expiring rather than the one waiting longest, and
-  their depth lives on the intent gauge instead.
+  `stalled-match-processing`, `live-recovery-batches`,
+  `unaccepted-workflow-starts`, and `ready-notification-intents`. Only backlogs
+  whose ordering column is a true age are here; stalled notifications sort by
+  freshness deadline, so their head is the intent closest to expiring rather
+  than the one waiting longest, and their depth lives on the intent gauge
+  instead. The ready family is one state read by `createdAt`, excluding intents
+  a recovery batch policy holds, so its head is the longest-waiting send.
+- `scout_durable_observation_lag_seconds{statistic}` — `p90` and `max` of
+  observation time minus game START for live FULL matches observed in the last
+  two hours. The observation row stores no game end, so this includes the
+  game's own length (healthy p90 is about 40–45 minutes). An empty window reads
+  0, so it does not detect discovery that has stopped outright.
+- `scout_durable_postmatch_mint_gaps` — live V2 matches observed in the last six
+  hours whose cursors all advanced at least 15 minutes ago, with an unmuted,
+  unfiltered subscription owed a report, but no postmatch intent and no
+  postmatch render receipt. It under-counts on purpose: queue-filtered
+  subscriptions need the match's queue type, which only the raw match JSON
+  holds. The silent post-match backfill's render receipts clear it.
 - `scout_durable_lake_staging_lag_seconds{artifact_kind}` — how long the
   longest-unprojected archived artifact has waited for its staging receipt, per
   artifact kind because the three fail independently.
@@ -187,12 +200,13 @@ exhaustive classification tables in `database/durable/pipeline-scan.ts`, so a
 state added to a domain union fails to compile until the sweep covers it. No
 match id, guild id, or intent key is ever a label.
 
-The first four are swept from the database at scrape time and so belong to the
-one role with `databaseMetricSweeps` (see the runtime roles section). The lake
-lag is swept by `report-lake/` instead, because its receipt-kind vocabulary
-lives there and `architecture.config.ts` forbids `metrics/` from importing that
-layer; it registers through `metrics/sweep-registry.ts`, which exists for
-exactly that inversion. `metrics/sweeps.ts` is the list of everything a
+The gauges are swept from the database at scrape time and so belong to the one
+role with `databaseMetricSweeps` (see the runtime roles section). The lake lag
+is swept by `report-lake/`, and the mint gap by
+`temporal/v2/notification/postmatch-mint-gap.ts`, because their receipt-kind
+vocabularies live there and `architecture.config.ts` forbids `metrics/` from
+importing those layers; each registers through `metrics/sweep-registry.ts`,
+which exists for exactly that inversion. `metrics/sweeps.ts` is the list of everything a
 sweep-owning scrape runs.
 
 Every metric also carries a `role` default label, from the runtime-role enum.
@@ -296,7 +310,7 @@ awaiting a child.
 
 The `postmatch-discovery` Schedule always starts
 `scoutPostMatchDiscoveryV2Workflow`. That Workflow's first Activity,
-`resolvePostMatchDiscoveryOwnerV2` (`src/temporal/v2/postmatch-ownership.ts`),
+`resolvePostMatchDiscoveryOwnerV2` (`src/temporal/v2/ownership/postmatch-ownership.ts`),
 reads the `scout_v2_postmatch_ownership_enabled` Flipt flag for the stage. The
 flag is on by default, and V2 then discovers as described above. When an
 operator turns it off, the run starts v1's `scoutPostMatchDiscoveryWorkflow`
@@ -357,6 +371,83 @@ door (below), the lake projection's inside `archivePrematchSnapshotV2`. There
 are also no V2 stage receipts here: those exist so a resumed run can gate a
 phase whose evidence it cannot reconstruct, and the two evidence-bearing
 receipts this path writes already answer exactly the question it asks.
+
+### Which pipeline owns prematch detection
+
+The `prematch-poll` Schedule always starts `scoutRealtimePollWorkflow`, every
+30 seconds, in every stage. Schedules deploy separately from each stage's
+image, so the cutover never changes the Schedule's Workflow Type. The prematch
+arm of that Workflow, behind the `scout-v2-prematch-ownership` patch, first
+runs `resolvePrematchPassOwnerV2`
+(`src/temporal/v2/ownership/prematch-ownership.ts`). It reads the
+`scout_v2_prematch_ownership_enabled` Flipt flag for the stage and claims the
+pass. The flag is off by default. With it off, the run calls v1's
+`pollRealtime` with its own input, unchanged. With it on, the run starts
+`scoutPrematchDiscoveryV2Workflow` as a child under the stage's singleton ID
+and waits for it. It then calls `pollRealtime` with
+`activeGameDetectionOwner: "v2"`, so v1's prematch maintenance still runs
+(betting and parlay windows, Dare expiry, parlay activation, `ActiveGame`
+expiry) without v1 detecting games. Tournament-lobby polls are not routed and
+record no marker. A poll recorded before the patch replays straight into
+`pollRealtime`.
+
+Only one pipeline detects at a time, because every pass takes the same durable
+claim on `BotState` (`prematchPassHolder`, `prematchPassClaimedAt`,
+`prematchPassRenewedAt`) before it does anything. The holder is the router's
+Temporal run ID. The claim is one guarded statement, so of two overlapping
+passes (the scheduled run and an operator's, or the last v1 pass and the
+first V2 pass after a flip), one proceeds and the other returns `no-op`. The
+router renews the claim every minute while the pass runs and releases it when
+the pass ends, whether it succeeded or failed. A claim whose start and last
+renewal are both older than 5 minutes may be taken over, so a terminated
+router blocks detection for at most that long.
+
+The two pipelines also refuse each other's games, because their dedup records
+differ. v1 deduplicates on its `ActiveGame` row. V2 deduplicates on the
+per-game Workflow ID `scout-<stage>-prematch-game-v2-<platform>_<gameId>`.
+
+- Before v1 announces a game it has not tracked, it describes that V2
+  Workflow ID. A running or completed capture means V2 took the game, and v1
+  skips it (`prematch_detections_total{status="owned_by_v2"}`). A failed,
+  cancelled, terminated or timed-out capture does not count. Those are the
+  statuses V2 itself would replace.
+- V2 discovery drops any game with a live `ActiveGame` row, because v1 writes
+  that row before it announces. The game stays v1's for the rest of its life.
+
+Notification intents share one key, `prematch-discord:<matchId>:<channelId>`,
+in both pipelines, and a delivered or `unknown-delivery` intent is never
+redriven. Betting pools are unique per match and guild, so a second open is a
+no-op. Neither pipeline therefore announces a game twice or opens its markets
+twice across a flip.
+
+Before ramping, know what V2 prematch does not yet do:
+
+- `scoutPrematchGameV2Workflow` mints notification intents but starts no
+  notification children (SJ-205). Only the pipeline reconciliation sweep
+  drives them, and no Schedule starts that sweep. With the flag on and nothing
+  driving intents, game-start announcements are not sent.
+- The V2 prematch send opens no Bryan Bucks markets. This matters in beta
+  only, because production hard-disables betting.
+
+The ramp procedure:
+
+1. Confirm that something delivers V2 prematch intents in the stage: the
+   SJ-205 start loop, or a scheduled `scoutPipelineReconciliationV2Workflow`.
+2. Switch `scout_v2_prematch_ownership_enabled` on for `beta` in Flipt. It
+   takes effect on the next 30-second pass. Commit a matching `beta`
+   `default: true` override in `managed-flag-inventory.json`, or the inventory
+   check reports drift.
+3. Soak in beta for at least a day of real games. Check that
+   `scout-beta-prematch-discovery-v2` runs each pass. Check that
+   `scout-beta-prematch-game-v2-*` captures complete. Check that one
+   announcement arrives per game and channel. Check that `prematch-poll` runs
+   return `completed`, not a steady `no-op`.
+4. Repeat steps 2 and 3 for `prod`.
+
+A rollback is the same two changes with the value `false`. The next pass runs
+v1 again, and v1 skips every game V2 already captured, even one whose
+announcement V2 has not delivered yet. The choice is deliberate: a game
+announced late or not at all is better than a game announced twice.
 
 ### Durable state before live state
 
@@ -728,6 +819,26 @@ refuses too; and the reconciliation sweep's stalled-intent read excludes it in
 SQL so it is not re-driven every minute until the batch is released. Nothing
 mints recovery-born intents yet — recovery commits `ARCHIVE_ONLY`
 observations — so the gate is the contract a later recovery lane delivers into.
+
+### Overdue intents are expired, not left drivable
+
+`beginSend` refuses any start strictly after an intent's `freshnessDeadline`,
+so a `pending` or `ready` intent past it can never be sent, and nothing in the
+send path moves it. The `notification-intent-expiry` background job — a Scout
+Schedule every five minutes on both stages — selects those intents, the most
+overdue first and at most 200 a run (`durable/match/intent-expiry.ts`), and
+applies the domain's `expire` to each through `transitionIntent`. It never
+selects `sending` or `unknown-delivery`: both name an attempt whose outcome is
+unknown, and only the unobserved-send recovery or an operator may settle them.
+A `beginSend` that commits between the sweep's read and its write makes the
+repository's state guard miss, and the re-read answers `send-in-flight`, so the
+attempt wins. Each run logs its counts; the result is visible on
+`scout_durable_notification_intents{state="expired"}`.
+
+A v1 stale-path adoption that later proves a send for an intent the sweep
+already expired records `conflict` on `intent-delivered`, which is the adoption
+path's existing rule that a terminal state contradicting a proven send is worth
+seeing rather than overwriting.
 
 ## Beta Customs operations
 

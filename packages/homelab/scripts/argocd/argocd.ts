@@ -71,6 +71,7 @@ import { TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS } from "../../src/cdk8s/src/tempora
 import {
   appliedVerifiedReleaseResult,
   HOMELAB_RELEASE_RESULT_FILE,
+  supersededReleaseResult,
 } from "./argocd-release-result.ts";
 import { latestPublishedVersion } from "#scripts/helm/helm-release-core.ts";
 import {
@@ -1575,6 +1576,27 @@ function latestSuccessfulRevision(
   ).revision;
 }
 
+/**
+ * A newer build published its apps chart after this build was admitted, so
+ * that build owns the release. Superseded is a success for this build, not a
+ * failure: it applies nothing and the newer build releases everything.
+ */
+class SupersededReleaseError extends Error {
+  constructor(
+    readonly revision: string,
+    readonly supersededBy: string,
+  ) {
+    super(
+      `Apps release ${revision} is superseded by ${supersededBy}; the newer build owns this release`,
+    );
+    this.name = "SupersededReleaseError";
+  }
+}
+
+function buildNumberOf(revision: string): number {
+  return Number.parseInt(BuildRevisionSchema.parse(revision).slice(6), 10);
+}
+
 async function assertExpectedAppsRevisionIsLatest(
   expectedRevision: string,
   timeoutSeconds: number,
@@ -1585,11 +1607,15 @@ async function assertExpectedAppsRevisionIsLatest(
   if (latest === undefined) {
     throw new Error("ChartMuseum has no published apps release");
   }
-  if (latest.version !== expectedRevision) {
-    throw new Error(
-      `Refusing stale Argo release ${expectedRevision}: newest published apps revision is ${latest.version}`,
-    );
+  if (latest.version === expectedRevision) {
+    return;
   }
+  if (buildNumberOf(latest.version) > buildNumberOf(expectedRevision)) {
+    throw new SupersededReleaseError(expectedRevision, latest.version);
+  }
+  throw new Error(
+    `Apps release ${expectedRevision} is not published; newest published apps revision is ${latest.version}`,
+  );
 }
 
 async function fetchChartMuseumInventory(
@@ -3030,8 +3056,18 @@ async function releaseHealthWait(
   dryRun: boolean,
 ): Promise<void> {
   const expected = await readExpectedApplications(expectedPath);
+  // Block only on charts this build published. Charts retained at an earlier
+  // revision were verified by the release that published them; an unrelated
+  // app that is Progressing or degraded now must not fail this release.
+  const releaseRevision = expectedAppsRelease(expected).revision;
+  const published = expected.filter(
+    (application) => application.revision === releaseRevision,
+  );
+  const retained = expected.filter(
+    (application) => application.revision !== releaseRevision,
+  );
   console.log(
-    `--- argocd release-health-wait: ${expected.length.toString()} expected Application(s)`,
+    `--- argocd release-health-wait: ${published.length.toString()} Application(s) published at ${releaseRevision}; ${retained.length.toString()} retained at earlier revisions (reported, not blocking)`,
   );
   if (dryRun) {
     return;
@@ -3040,12 +3076,14 @@ async function releaseHealthWait(
   const deadline = Date.now() + timeoutSeconds * 1000;
   let latestFailures: readonly string[] = [];
   while (Date.now() < deadline) {
-    const readiness = releaseTreeReadiness(
-      await getApplications(token),
-      expected,
-    );
+    const applications = await getApplications(token);
+    const readiness = releaseTreeReadiness(applications, published);
     if (readiness.ready) {
-      console.log("release tree is Synced/Healthy on expected revisions");
+      console.log("published Applications are Synced/Healthy on this release");
+      for (const failure of releaseTreeReadiness(applications, retained)
+        .failures) {
+        console.log(`warning (retained, not blocking): ${failure}`);
+      }
       return;
     }
     latestFailures = readiness.failures;
@@ -3161,6 +3199,37 @@ async function assertLiveAutoSyncMatchesRelease(
 }
 
 async function releaseRoot(
+  rootAppName: string,
+  expectedPath: string,
+  revision: string,
+  requestId: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  try {
+    await releaseRootPhases(
+      rootAppName,
+      expectedPath,
+      revision,
+      requestId,
+      timeoutSeconds,
+      dryRun,
+    );
+  } catch (error: unknown) {
+    if (!(error instanceof SupersededReleaseError)) {
+      throw error;
+    }
+    const result = supersededReleaseResult({
+      requestId: SyncRequestIdSchema.parse(requestId),
+      revision: error.revision,
+      supersededBy: error.supersededBy,
+    });
+    await Bun.write(HOMELAB_RELEASE_RESULT_FILE, `${JSON.stringify(result)}\n`);
+    console.log(`release receipt: ${result.outcome} by ${result.supersededBy}`);
+  }
+}
+
+async function releaseRootPhases(
   rootAppName: string,
   expectedPath: string,
   revision: string,
@@ -3779,4 +3848,14 @@ async function main(): Promise<void> {
   }
 }
 
-await runMain(main);
+await runMain(async () => {
+  try {
+    await main();
+  } catch (error: unknown) {
+    if (error instanceof SupersededReleaseError) {
+      console.log(error.message);
+      return;
+    }
+    throw error;
+  }
+});

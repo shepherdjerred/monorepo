@@ -97,4 +97,19 @@ expect apps/ios/HelloiOS.app/HelloiOS ios 18.0 arm64
 applebuild "$samples/ios-app/project.yml" --target HelloiOS --platform maccatalyst --output apps/maccatalyst --work work/maccatalyst
 expect apps/maccatalyst/HelloiOS.app/Contents/MacOS/HelloiOS maccatalyst 18.0 arm64 x86_64
 
+# Swift, Objective-C, C, and C++ in one app target: the C++ pulls in libc++,
+# every language's code is linked in, and headers stay out of the bundle.
+applebuild "$samples/mixed-app/project.yml" --target MixedApp --output apps --work work/mixed
+mixed=apps/MixedApp.app/Contents/MacOS/MixedApp
+expect "$mixed" macos 15.0 arm64 x86_64
+libraries=$(otool -L "$mixed")
+grep -qF '/usr/lib/libc++.1.dylib' <<<"$libraries" || { echo "FAIL $mixed: does not link libc++"; exit 1; }
+symbols=$(/usr/lib/llvm-apple/bin/llvm-nm "$mixed")
+for want in '_OBJC_CLASS_$_Greeter' '_mixed_add' '_mixed_word_count' '_OBJC_CLASS_$__TtC8MixedApp5Tally'; do
+  grep -qF -- "$want" <<<"$symbols" || { echo "FAIL $mixed: lacks $want"; exit 1; }
+done
+headers=$(find apps/MixedApp.app -name '*.h')
+[ -z "$headers" ] || { echo "FAIL apps/MixedApp.app: headers copied into the bundle: $headers"; exit 1; }
+echo "ok   apps/MixedApp.app: Swift, Objective-C, C, and C++ linked together"
+
 echo "smoke: every sample built for every platform"

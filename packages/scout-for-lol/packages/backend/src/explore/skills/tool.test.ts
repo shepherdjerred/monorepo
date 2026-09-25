@@ -26,11 +26,11 @@ function harness(options?: { bucks?: boolean }) {
 describe("load_skill executor", () => {
   test("returns an enabled skill's rendered instructions", async () => {
     const { execute, tracked, loaded } = harness();
-    const result = await execute("scoutql");
+    const result = await execute("visualization");
     expect(result.ok).toBe(true);
-    expect(result.instructions).toContain("## ScoutQL reference");
+    expect(result.instructions?.length).toBeGreaterThan(0);
     expect(tracked).toEqual(["load_skill"]);
-    expect(loaded).toEqual(["scoutql"]);
+    expect(loaded).toEqual(["visualization"]);
   });
 
   test("a capability-gated skill is refused with the available list", async () => {
@@ -39,7 +39,7 @@ describe("load_skill executor", () => {
     expect(result.ok).toBe(false);
     expect(result.instructions).toBeNull();
     expect(result.message).toContain("Available skills:");
-    expect(result.message).toContain("scoutql");
+    expect(result.message).toContain("visualization");
     expect(loaded).toEqual([]);
   });
 

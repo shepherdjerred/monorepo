@@ -5,6 +5,7 @@ import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
 import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
 import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
 import { clashExploreEnabled } from "#src/league/clash/access.ts";
+import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
 
@@ -28,7 +29,7 @@ export async function resolveReplayCapabilities(input: {
 }): Promise<ExploreCapabilitySet> {
   const guildIds = [...input.guildIds];
   const bucks = await resolveBucksCapability(guildIds);
-  const [dares, challenges, creation, riotHistory, mvpVotes, clash] =
+  const [dares, challenges, creation, riotHistory, mvpVotes, clash, hall] =
     await Promise.all([
       dareExploreEnabled(bucks),
       challengeExploreEnabled(guildIds),
@@ -36,6 +37,7 @@ export async function resolveReplayCapabilities(input: {
       riotHistoryExploreEnabled(guildIds),
       resolveMvpVotesCapability(guildIds),
       clashExploreEnabled(guildIds),
+      resolveHallCapability(guildIds),
     ]);
   return {
     bucks: bucks !== null,
@@ -45,5 +47,6 @@ export async function resolveReplayCapabilities(input: {
     riotHistory,
     mvpVotes: mvpVotes !== null,
     clash,
+    hallOfFame: hall !== null,
   };
 }

@@ -22,6 +22,12 @@ Never add a URL containing credentials.
 Release feeds use `frss:filtersActionRead` to mark prerelease entries as read.
 Preserve that attribute when changing a release feed.
 
+Write each filter in the form FreshRSS stores, because reconciliation compares
+the exported filter to the declared string exactly. Negate a term with `-`, not
+`!`: FreshRSS accepts both but stores `!intitle:` as `-intitle:`, so the OPML
+parser rejects `!`. The local settings reconciler also refuses any other filter
+that FreshRSS would rewrite, and logs the form to declare instead.
+
 Validate the OPML and rendered workloads from the CDK8s workspace:
 
 ```bash
@@ -93,6 +99,7 @@ kubectl logs \
 | Authentication failed          | `freshrss-sync` Secret population and the local settings reconciler logs   |
 | API or malformed response      | FreshRSS availability and the response named in the workflow history       |
 | Final managed set is not exact | duplicate live URLs, renamed feeds, stale entries, and local settings logs |
+| Filters did not converge       | the named feed's declared and exported filter, and local settings logs     |
 | Unmanaged subscription change  | concurrent manual edits outside `Repo Stack`; rerun after they finish      |
 | Workflow cannot connect        | FreshRSS and Temporal NetworkPolicies, service endpoints, and worker logs  |
 

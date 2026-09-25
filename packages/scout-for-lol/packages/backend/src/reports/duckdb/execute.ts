@@ -16,6 +16,7 @@ import {
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
 import { resolveLakeFiles, type BoundParam } from "#src/reports/duckdb/lake.ts";
+import { loadServerPeople } from "#src/reports/server-people.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import type {
   CompiledOutputColumn,
@@ -83,10 +84,16 @@ function bindParams(
 
 async function queryInput(input: PlanExecutionInput): Promise<PlanQueryInput> {
   const files = await resolveLakeFiles(input.lakeDir ?? resolveLakeDir());
+  // Merged before compiling: the merge is transitive, so it runs in code.
+  const serverPeople =
+    input.scope.kind === "servers"
+      ? await loadServerPeople(files.accountsParquet, input.scope.serverIds)
+      : undefined;
   return {
     plan: input.plan,
     scope: input.scope,
     files,
+    serverPeople,
     range: input.range,
     limit: input.limit,
     playerPuuids: input.playerPuuids,

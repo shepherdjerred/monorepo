@@ -17,12 +17,14 @@ import {
   SCOUT_V2_PAGE_MAX,
   type ScoutPrematchGameRef,
 } from "@scout-for-lol/temporal/contracts-v2";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { prematchDeliveryKeyPrefix } from "#src/durable/match/delivery-intents.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
+import { listLiveActiveGameMatchIds } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { createLogger } from "#src/logger.ts";
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
@@ -131,6 +133,35 @@ function compareByLastCheckedAt(
 }
 
 /**
+ * Leave to v1 every game v1 is already announcing.
+ *
+ * v1 writes a live `ActiveGame` row before it announces a game, and V2's own
+ * dedup — the per-game Workflow ID — cannot see it. Without this, the first V2
+ * pass after the prematch ownership flag flips on would start a capture for a
+ * game v1 announced a minute earlier, and that capture would mint intents for
+ * any channel whose v1 delivery record never landed (v1 records fail-open).
+ * The game stays v1's for the rest of its life; only games v1 never saw are
+ * V2's.
+ */
+export async function withoutV1AnnouncedGames(
+  games: ScoutPrematchGameRef[],
+  now: Date,
+): Promise<ScoutPrematchGameRef[]> {
+  const identity = (ref: ScoutPrematchGameRef): string =>
+    `${ref.platform}_${ref.gameId}`;
+  const announcedByV1 = await listLiveActiveGameMatchIds(
+    games.map((ref) => identity(ref)),
+    now,
+  );
+  if (announcedByV1.size > 0) {
+    logger.info(
+      `⏭️  Prematch discovery left ${announcedByV1.size.toString()} live game(s) to v1, which is already announcing them`,
+    );
+  }
+  return games.filter((ref) => !announcedByV1.has(identity(ref)));
+}
+
+/**
  * Discover the live games tracked accounts are in, as a bounded page of game
  * REFERENCES.
  *
@@ -142,7 +173,9 @@ function compareByLastCheckedAt(
  * runs inline and has no other way to avoid announcing one game twice; here
  * the per-game Workflow ID is the dedup, and it is a better one — it survives
  * a process restart, it collapses the same game surfaced through several
- * tracked accounts, and it cannot expire while the game is still live. The
+ * tracked accounts, and it cannot expire while the game is still live. V2
+ * only READS the table, to leave v1's in-flight games to v1 across an
+ * ownership flip (see `withoutV1AnnouncedGames`). The
  * games are deduplicated by that same identity before they are returned, so a
  * page counts distinct games rather than account sightings.
  *
@@ -181,7 +214,7 @@ export async function discoverPrematchGamesV2(): Promise<ScoutPrematchScanV2Resu
     if (!games.has(identity)) games.set(identity, probe.ref);
   }
 
-  const discovered = [...games.values()];
+  const discovered = await withoutV1AnnouncedGames([...games.values()], now);
   logger.info(
     `🔍 Prematch discovery polled ${polled.length.toString()}/${eligible.length.toString()} eligible account(s) and found ${discovered.length.toString()} live game(s)`,
   );

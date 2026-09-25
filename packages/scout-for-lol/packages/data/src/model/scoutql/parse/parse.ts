@@ -17,6 +17,7 @@ import {
   RParen,
   UnterminatedQuotedIdentifier,
   UnterminatedStringLiteral,
+  With,
   tokenSpan,
   tokenizeScoutQl,
 } from "#src/model/scoutql/parse/tokens.ts";
@@ -154,13 +155,21 @@ function recognitionDiagnostics(
   return diagnostics;
 }
 
-function missingClauseDiagnostics(ast: ScoutQlQueryAst): ScoutQlDiagnostic[] {
+function missingClauseDiagnostics(
+  ast: ScoutQlQueryAst,
+  first: IToken | undefined,
+): ScoutQlDiagnostic[] {
   const diagnostics: ScoutQlDiagnostic[] = [];
   if (ast.select === undefined) {
+    // A leading WITH is a CTE, which "Expected a SELECT clause" does not
+    // explain: say what ScoutQL offers instead.
+    const cte = first?.tokenType === With;
     diagnostics.push({
       code: "parse-error",
       severity: "error",
-      message: "Expected a SELECT clause.",
+      message: cte
+        ? "ScoutQL has no WITH, subqueries or joins: a query is one SELECT over one source. Use GROUP BY, HAVING and FILTER (WHERE …) instead, or answer with two queries."
+        : "Expected a SELECT clause.",
       span: collapsedSpan(ast.span.start),
     });
   }
@@ -232,7 +241,11 @@ export function parseScoutQl(text: string): ScoutQlParseResult {
   );
   const visited = scoutQlCstToAst(cst, text);
   diagnostics.push(...visited.diagnostics);
-  diagnostics.push(...missingClauseDiagnostics(visited.ast));
+  // CASE cannot parse, and recovery can lose the clauses after it. A missing
+  // FROM reported then is an artifact that would sort ahead of the real cause.
+  if (caseSpans.length === 0) {
+    diagnostics.push(...missingClauseDiagnostics(visited.ast, lex.tokens[0]));
+  }
   return {
     ast: visited.ast,
     tokens: lex.tokens,

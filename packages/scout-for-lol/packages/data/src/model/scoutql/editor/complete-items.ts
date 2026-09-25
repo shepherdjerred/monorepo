@@ -16,9 +16,9 @@ import type { ScoutQlAnalysis } from "#src/model/scoutql/analyze/analyze.ts";
 import { isChartRenderKind } from "#src/model/scoutql/analyze/analyze-render.ts";
 import {
   scoutQlSourceCatalogs,
-  type ScoutQlColumnInfo,
   type SourceCatalog,
 } from "#src/model/scoutql/catalog/catalog-columns.ts";
+import type { ScoutQlColumnInfo } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 import {
   SCOUTQL_FUNCTIONS,
   type ScoutQlFunctionInfo,

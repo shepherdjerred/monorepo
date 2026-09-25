@@ -1,9 +1,36 @@
 import {
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "#src/model/reports/lake-columns.ts";
 import type { ReportDisplayKind } from "#src/model/reports/report.ts";
+import {
+  ALL_CONTEXTS,
+  virtualColumn,
+  type ScoutQlColumnInfo,
+  type ScoutQlColumnType,
+} from "#src/model/scoutql/catalog/catalog-column-types.ts";
+import {
+  MATCH_TEAM_BAN_VIRTUALS,
+  MATCH_TEAM_VIRTUALS,
+  MATCH_VIRTUALS,
+  PREMATCH_VIRTUALS,
+  TIMELINE_EVENT_VIRTUALS,
+  TIMELINE_FRAME_VIRTUALS,
+} from "#src/model/scoutql/catalog/catalog-virtuals.ts";
+import {
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+} from "#src/model/reports/timeline-lake-columns.ts";
+import {
+  TIMELINE_EVENT_DESCRIPTIONS,
+  TIMELINE_FRAME_DESCRIPTIONS,
+  MATCH_TEAM_BAN_DESCRIPTIONS,
+  MATCH_TEAM_DESCRIPTIONS,
+  describe,
+} from "#src/model/scoutql/catalog/catalog-descriptions.ts";
 import {
   ScoutQlSourceSchema,
   type ScoutQlSource,
@@ -16,29 +43,6 @@ import {
 // schema maps in lake-columns.ts (a drift test pins that); virtual dimension
 // columns mirror EXACTLY what the engine's grouping/expression compiler can
 // compute (backend reports/duckdb/expr-sql.ts + group-sql.ts).
-
-export type ScoutQlColumnType =
-  "varchar" | "integer" | "bigint" | "double" | "boolean" | "timestamp";
-
-export type ScoutQlColumnContexts = {
-  /** Usable inside SELECT expressions (aggregate arguments, echoes). */
-  select: boolean;
-  /** Usable in WHERE / FILTER predicates. */
-  where: boolean;
-  /** Usable as a GROUP BY dimension. */
-  groupBy: boolean;
-};
-
-export type ScoutQlColumnInfo = {
-  name: string;
-  type: ScoutQlColumnType;
-  description: string;
-  /** Display kind of the RAW column (aggregates over it may inherit it). */
-  displayKind: ReportDisplayKind;
-  /** Computed by the engine (dimension), not a physical lake column. */
-  virtual: boolean;
-  contexts: ScoutQlColumnContexts;
-};
 
 export type SourceCatalog = {
   id: ScoutQlSource;
@@ -75,104 +79,6 @@ const DURATION_COLUMNS = new Set([
 /** Internal plumbing excluded from every catalog (partitioning / dedupe). */
 const INTERNAL_COLUMNS = new Set(["month", "dedupe_key"]);
 
-const DESCRIPTIONS: Record<string, string> = {
-  match_id: "Riot match id (region-qualified).",
-  game_id: "Riot numeric game id.",
-  platform_id: "Riot platform shard (e.g. NA1).",
-  game_creation_at: "When the lobby was created (UTC).",
-  game_start_at: "When the game started (UTC).",
-  game_end_at: "When the game ended (UTC).",
-  game_duration_seconds: "Game length in seconds.",
-  queue_id: "Riot numeric queue id.",
-  queue: "Queue name (solo, flex, aram, …); NULL for unmapped queues.",
-  game_mode: "Riot game mode (CLASSIC, ARAM, …).",
-  game_type: "Riot game type (MATCHED_GAME, …).",
-  game_version: "Full game version string (see the patch dimension).",
-  end_of_game_result: "End-of-game result (GameComplete, or an abort state).",
-  map_id: "Riot numeric map id.",
-  puuid: "Riot player UUID for this participant.",
-  participant_id: "Participant slot within the match (1–10).",
-  team_id: "Team id (100 blue, 200 red).",
-  riot_id_game_name: "Riot ID game name at match time.",
-  riot_id_tagline: "Riot ID tagline at match time.",
-  summoner_name: "Legacy summoner name.",
-  champion_id: "Numeric champion id (compare with champion('Name')).",
-  champion_name: "Champion Data-Dragon key name.",
-  team_position: "Riot-assigned team position (TOP, JUNGLE, …).",
-  individual_position: "Riot-computed most-likely position.",
-  lane: "Reported lane.",
-  role: "Reported role.",
-  win: "Whether this participant won.",
-  surrendered: "Whether this participant's team surrendered.",
-  early_surrendered: "Whether the team surrendered early (remake window).",
-  game_ended_in_surrender: "Whether the game ended in any surrender.",
-  game_ended_in_early_surrender:
-    "Whether the game ended in an early surrender.",
-  team_early_surrendered: "Whether this participant's team early-surrendered.",
-  kills: "Champion kills.",
-  deaths: "Deaths.",
-  assists: "Assists.",
-  kda: "KDA for this game: (kills + assists) / max(deaths, 1).",
-  creep_score: "Total creep score (lane + neutral minions).",
-  total_minions_killed: "Lane minions killed.",
-  neutral_minions_killed: "Neutral (jungle) minions killed.",
-  gold_earned: "Gold earned.",
-  gold_spent: "Gold spent.",
-  total_damage_dealt: "Total damage dealt.",
-  total_damage_dealt_to_champions: "Damage dealt to champions.",
-  magic_damage_dealt_to_champions: "Magic damage dealt to champions.",
-  physical_damage_dealt_to_champions: "Physical damage dealt to champions.",
-  true_damage_dealt_to_champions: "True damage dealt to champions.",
-  total_damage_taken: "Damage taken.",
-  damage_self_mitigated: "Damage self-mitigated.",
-  damage_dealt_to_objectives: "Damage dealt to objectives.",
-  damage_dealt_to_turrets: "Damage dealt to turrets.",
-  total_heal: "Total healing done.",
-  total_heals_on_teammates: "Healing done to teammates.",
-  vision_score: "Vision score.",
-  wards_placed: "Wards placed.",
-  wards_killed: "Wards killed.",
-  vision_wards_bought_in_game: "Control wards bought.",
-  detector_wards_placed: "Control wards placed.",
-  all_in_pings: "All-in pings sent.",
-  assist_me_pings: "Assist-me pings sent.",
-  basic_pings: "Basic pings sent.",
-  command_pings: "Command pings sent.",
-  danger_pings: "Danger pings sent.",
-  enemy_missing_pings: "Enemy-missing pings sent.",
-  enemy_vision_pings: "Enemy-vision pings sent.",
-  get_back_pings: "Get-back pings sent.",
-  hold_pings: "Hold pings sent.",
-  need_vision_pings: "Need-vision pings sent.",
-  on_my_way_pings: "On-my-way pings sent.",
-  push_pings: "Push pings sent.",
-  vision_cleared_pings: "Vision-cleared pings sent.",
-  double_kills: "Double kills.",
-  triple_kills: "Triple kills.",
-  quadra_kills: "Quadra kills.",
-  penta_kills: "Penta kills.",
-  largest_multi_kill: "Largest multikill.",
-  killing_sprees: "Killing sprees.",
-  first_blood_kill: "Whether this participant took first blood.",
-  champ_level: "Final champion level.",
-  champ_experience: "Final champion experience.",
-  time_played: "Seconds played.",
-  total_time_spent_dead: "Seconds spent dead.",
-  longest_time_spent_living: "Longest time alive, in seconds.",
-  time_ccing_others: "Seconds spent crowd-controlling others.",
-  turret_kills: "Turrets destroyed.",
-  inhibitor_kills: "Inhibitors destroyed.",
-  baron_kills: "Barons killed.",
-  dragon_kills: "Dragons killed.",
-  placement: "Arena placement (NULL outside Arena).",
-  subteam_placement: "Arena subteam placement (NULL outside Arena).",
-  player_subteam_id: "Arena subteam id (NULL outside Arena).",
-  observed_at: "When Scout observed the lobby (UTC).",
-  riot_id: "Riot ID as observed in champion select.",
-  selected_skin_index: "Selected skin index.",
-  bot: "Whether the participant is a bot.",
-};
-
 function rawDisplayKind(
   name: string,
   type: ScoutQlColumnType,
@@ -197,96 +103,21 @@ function rawDisplayKind(
   }
 }
 
-function describe(name: string): string {
-  const description = DESCRIPTIONS[name];
-  if (description === undefined) {
-    throw new Error(`Missing ScoutQL column description for "${name}".`);
-  }
-  return description;
-}
-
-const ALL_CONTEXTS: ScoutQlColumnContexts = {
-  select: true,
-  where: true,
-  groupBy: true,
-};
-
 function physicalColumns(
   lake: Record<string, DuckDbColumnType>,
+  overrides?: Record<string, string>,
 ): ScoutQlColumnInfo[] {
   return Object.entries(lake)
     .filter(([name]) => !INTERNAL_COLUMNS.has(name))
     .map(([name, type]) => ({
       name,
       type: LAKE_TYPE[type],
-      description: describe(name),
+      description: describe(name, overrides),
       displayKind: rawDisplayKind(name, LAKE_TYPE[type]),
       virtual: false,
       contexts: ALL_CONTEXTS,
     }));
 }
-
-function virtualColumn(
-  name: string,
-  type: ScoutQlColumnType,
-  description: string,
-  contexts: ScoutQlColumnContexts = ALL_CONTEXTS,
-): ScoutQlColumnInfo {
-  return {
-    name,
-    type,
-    description,
-    displayKind: "text",
-    virtual: true,
-    contexts,
-  };
-}
-
-// Virtual dimensions mirror backend expr-sql.ts MATCH_VIRTUAL_COLUMNS /
-// PREMATCH_VIRTUAL_COLUMNS exactly — expose only what those arms can compute.
-const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
-  virtualColumn(
-    "player",
-    "varchar",
-    "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
-  ),
-  virtualColumn(
-    "champion",
-    "varchar",
-    "Champion display dimension (champion_name).",
-  ),
-  virtualColumn(
-    "patch",
-    "varchar",
-    "Game patch (major.minor of game_version).",
-  ),
-  virtualColumn("outcome", "varchar", "'Win' or 'Loss' (from win)."),
-  virtualColumn(
-    "surrender_state",
-    "varchar",
-    "'Early surrender', 'Surrender', or 'Played out'.",
-  ),
-  virtualColumn(
-    "arena_placement",
-    "varchar",
-    "Arena placement label ('Not Arena' outside Arena).",
-  ),
-  virtualColumn("map", "integer", "Map dimension (map_id)."),
-];
-
-const PREMATCH_VIRTUALS: ScoutQlColumnInfo[] = [
-  virtualColumn(
-    "player",
-    "varchar",
-    "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
-  ),
-  virtualColumn(
-    "champion",
-    "varchar",
-    "Champion dimension (numeric id shown — prematch rows carry no name).",
-  ),
-  virtualColumn("map", "integer", "Map dimension (map_id)."),
-];
 
 const COMPETITION_ID_COLUMN = virtualColumn(
   "competition_id",
@@ -417,6 +248,69 @@ const CATALOG_LIST: SourceCatalog[] = [
       ...PREMATCH_VIRTUALS,
     ]),
     timeColumn: "observed_at",
+    requiresCompetitionId: false,
+    playerRefAllowed: true,
+    groupCall: false,
+  },
+  {
+    id: "match_teams",
+    description:
+      "Team-level objective counts and first-objective flags, two rows per match; no player identity, so global scope only.",
+    columns: toMap([
+      ...physicalColumns(MATCH_TEAM_LAKE_COLUMNS, MATCH_TEAM_DESCRIPTIONS),
+      ...MATCH_TEAM_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
+    // No puuid exists on a team row, so there is nothing for player('…') to
+    // resolve against and no accounts join to scope a server by.
+    playerRefAllowed: false,
+    groupCall: false,
+  },
+  {
+    id: "match_team_bans",
+    description:
+      "Champion bans, one row per ban slot per team per match; no player identity, so global scope only. Ban rate is bans of a champion divided by matches in the same scope — run COUNT(DISTINCT match_id) with the same filters for the denominator.",
+    columns: toMap([
+      ...physicalColumns(
+        MATCH_TEAM_BAN_LAKE_COLUMNS,
+        MATCH_TEAM_BAN_DESCRIPTIONS,
+      ),
+      ...MATCH_TEAM_BAN_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
+    playerRefAllowed: false,
+    groupCall: false,
+  },
+  {
+    id: "timeline_frames",
+    description:
+      "Per-minute snapshots of each player — gold, CS, XP, level, stats — one row per player per minute, for matches whose timeline Scout has. Not every match has one; say an answer covers games with timeline data.",
+    columns: toMap([
+      ...physicalColumns(
+        TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+        TIMELINE_FRAME_DESCRIPTIONS,
+      ),
+      ...TIMELINE_FRAME_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
+    requiresCompetitionId: false,
+    playerRefAllowed: true,
+    groupCall: false,
+  },
+  {
+    id: "timeline_events",
+    description:
+      "Everything that happened in a game, one row per event — kills, objectives, buildings, purchases, level-ups, wards — for matches whose timeline Scout has. Not every match has one; say an answer covers games with timeline data.",
+    columns: toMap([
+      ...physicalColumns(
+        TIMELINE_EVENT_LAKE_COLUMNS,
+        TIMELINE_EVENT_DESCRIPTIONS,
+      ),
+      ...TIMELINE_EVENT_VIRTUALS,
+    ]),
+    timeColumn: "game_creation_at",
     requiresCompetitionId: false,
     playerRefAllowed: true,
     groupCall: false,

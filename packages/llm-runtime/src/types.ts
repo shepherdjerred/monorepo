@@ -88,6 +88,14 @@ export type RuntimeTraceContext = {
 export type CallOptionsInput = {
   workload: string;
   sessionId?: string | undefined;
+  /**
+   * The provider prompt-cache partition. Requests share cached prefixes only
+   * within one key, and without it the per-call session id partitions the
+   * cache — so calls with a long common prefix but distinct sessions (one
+   * per conversation turn) never reuse each other's cache. Set it to one
+   * stable value per workload and prompt version.
+   */
+  promptCacheKey?: string | undefined;
   traceContext?: RuntimeTraceContext | undefined;
   observationId?: string | undefined;
 };

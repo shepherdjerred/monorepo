@@ -92,10 +92,10 @@ describe("explore tool activity", () => {
   test("names a known skill from the registry, never from model text", () => {
     const known = toolCallActivity(
       "load_skill",
-      { skill: "scoutql" },
+      { skill: "visualization" },
       "Reading skill instructions.",
     );
-    expect(known).toBe("Reading the scoutql skill");
+    expect(known).toBe("Reading the visualization skill");
 
     const unknown = toolCallActivity(
       "load_skill",

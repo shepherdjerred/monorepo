@@ -5,9 +5,11 @@ sidebar:
   order: 9
 ---
 
-By default, only Discord administrators and the server owner can manage Scout.
-Granting Scout access lets you hand out configuration rights **without** handing
-out Discord Administrator.
+Every member of your server is already a **Player**: without any grant, they
+can see its tracked players, competitions, reports, and custom games. Only
+Discord administrators and the server owner can manage Scout. Granting Scout
+access adds to Player, handing out management rights **without** handing out
+Discord Administrator.
 
 You need the **Roles & access** grant permission to do this — Discord admins
 have it inherently.
@@ -17,7 +19,8 @@ have it inherently.
 1. Open **Access**.
 2. Search for the member, or paste their user ID.
 3. Choose a role:
-   - **Viewer** — read-only across the dashboard.
+   - **Dashboard viewer** — read-only across the management dashboard, adding
+     subscriptions and channels to what every Player sees.
    - **Manager** — full day-to-day management, but cannot change who has access.
    - **Admin** — everything, including granting and revoking access.
 4. Save.
@@ -56,11 +59,12 @@ delegate to.
 
 ## Check who currently has access
 
-**Access** lists everyone with a grant and what they hold. Review it when
+**Access** lists everyone with a grant beyond Player and what they hold. Review it when
 someone changes role in the server, and when a project ends.
 
 :::caution
-**Access lists explicit Scout grants only.** Discord administrators and the
+**Access lists explicit Scout grants only.** Every member holds Player without
+being listed. Discord administrators and the
 server owner already have full access without a grant, and they are deliberately
 _not_ shown on this page. Treating it as a complete list of who can change
 things will miss them — check the server's Discord roles as well.
@@ -72,7 +76,11 @@ permissions, not their Scout grant.
 ## Revoke access
 
 1. Open **Access**.
-2. Find the person and revoke the role or the individual permissions.
+2. Find the person and choose **Reset to Player**, or change their role or
+   individual permissions.
+
+They keep Player: every member of the server can still see its players,
+competitions, reports, and custom games.
 
 Revocation takes effect on their next request. Anything they created — players,
 reports, competitions — stays.

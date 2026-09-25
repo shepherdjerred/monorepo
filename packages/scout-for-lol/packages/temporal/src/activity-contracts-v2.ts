@@ -469,6 +469,73 @@ export type ScoutPostMatchPollReleaseV2Input = z.infer<
 >;
 
 /**
+ * Who holds the prematch pass claim: the Temporal run ID of the
+ * `scoutRealtimePollWorkflow` execution that took it.
+ *
+ * A run ID is stable across every attempt of the run's Activities and unique
+ * across runs, which is exactly the identity a retried claim needs to
+ * re-acquire what its own earlier attempt took, and nothing else.
+ */
+export const ScoutPrematchPassHolderSchema = z.string().min(1).max(128);
+
+/**
+ * Which pipeline owns this prematch pass.
+ *
+ * `run-v1` and `run-v2` are only returned once the router's run holds the
+ * durable prematch pass claim, and `holder` names that claim for the renewal
+ * and the release. `run-v2` means `scout_v2_prematch_ownership_enabled` is on
+ * for the stage: V2 prematch discovery detects live games and v1 runs only
+ * its maintenance. `run-v1` is v1's whole pass, exactly as before the
+ * router existed. `defer` means another run holds the claim; the pass does
+ * nothing and the next tick decides again.
+ */
+export const ScoutPrematchPassOwnerV2ResultSchema = z.discriminatedUnion(
+  "decision",
+  [
+    z.strictObject({
+      decision: z.literal("run-v1"),
+      holder: ScoutPrematchPassHolderSchema,
+      claimedAt: IsoInstantSchema,
+    }),
+    z.strictObject({
+      decision: z.literal("run-v2"),
+      holder: ScoutPrematchPassHolderSchema,
+      claimedAt: IsoInstantSchema,
+    }),
+    z.strictObject({
+      decision: z.literal("defer"),
+      /** When the claim that still holds the pass was taken, if the row says. */
+      heldSince: IsoInstantSchema.nullable(),
+    }),
+  ],
+);
+export type ScoutPrematchPassOwnerV2Result = z.infer<
+  typeof ScoutPrematchPassOwnerV2ResultSchema
+>;
+
+/** The prematch pass claim a router renews while its pass runs, and releases. */
+export const ScoutPrematchPassClaimV2InputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  holder: ScoutPrematchPassHolderSchema,
+});
+export type ScoutPrematchPassClaimV2Input = z.infer<
+  typeof ScoutPrematchPassClaimV2InputSchema
+>;
+
+/**
+ * What renewing or releasing the prematch pass claim did.
+ *
+ * `not-held` is an answer, not a fault: the claim went stale and another run
+ * took it over, so there is nothing of this run's left to renew or release.
+ */
+export const ScoutPrematchPassClaimV2ResultSchema = z.strictObject({
+  outcome: z.enum(["renewed", "released", "not-held"]),
+});
+export type ScoutPrematchPassClaimV2Result = z.infer<
+  typeof ScoutPrematchPassClaimV2ResultSchema
+>;
+
+/**
  * Whether one intent may be sent right now, and why.
  *
  * `policy` is the recovery policy the intent is delivered under — `normal`

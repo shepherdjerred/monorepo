@@ -244,8 +244,12 @@ export async function emitExploreStreamChunk(
       // whole turn's stream. It is also persisted into the message trace and
       // rendered verbatim, including to anonymous holders of a share link, so
       // it would leak internals to people who never ran the query.
+      // It does go to the log, which is neither emitted nor persisted, because
+      // without it a tool failure is undiagnosable anywhere: a replay sweep
+      // recorded fifty failed turns and no recoverable reason for any of them.
       logger.warn("Explore tool failed", {
         toolName: chunk.toolName,
+        cause: chunk.message,
       });
       await emit({
         type: "tool_result",

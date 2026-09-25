@@ -7,8 +7,6 @@ import {
   renderExploreSkillBody,
   type ExploreSkillContext,
 } from "#src/explore/skills/registry.ts";
-import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
-import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
 
 const WEB_CONTEXT: ExploreSkillContext = { bucks: null, surface: "web" };
 
@@ -25,7 +23,8 @@ describe("enabledExploreSkills", () => {
     const names = enabledExploreSkills({ bucks: null, surface: "web" }).map(
       (candidate) => candidate.name,
     );
-    expect(names).toContain("scoutql");
+    // ScoutQL is in the system prompt, not a skill.
+    expect(names).not.toContain("scoutql");
     expect(names).toContain("visualization");
     expect(names).toContain("match-cards");
     expect(names).not.toContain("dares");
@@ -63,7 +62,7 @@ describe("enabledExploreSkills", () => {
     expect(names).not.toContain("match-cards");
     // Creation is web-only structurally; the skill file must agree.
     expect(names).not.toContain("creation");
-    expect(names).toContain("scoutql");
+    expect(names).toContain("visualization");
   });
 });
 
@@ -78,15 +77,6 @@ describe("skill bodies", () => {
       expect(body).not.toMatch(/\{\{[a-z][a-z0-9]*\}\}/i);
       expect(body.length).toBeGreaterThan(0);
     }
-  });
-
-  test("scoutql carries the shared field guide verbatim and the reference", () => {
-    // The same anti-fork guarantee prompt.test.ts used to assert on the
-    // system prompt: the field guide is shared with the report-query agent,
-    // so Explore must serve it byte-identically, just from a skill now.
-    const body = renderExploreSkillBody(skill("scoutql"), WEB_CONTEXT);
-    expect(body).toContain(scoutQlFieldGuideSection());
-    expect(body).toContain(JSON.stringify(scoutQlLanguageReference()));
   });
 
   test("mvp-votes interpolates the turn timestamp and keeps the ScoutQL tripwire", () => {

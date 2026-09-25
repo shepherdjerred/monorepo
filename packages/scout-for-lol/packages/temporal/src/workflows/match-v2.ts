@@ -50,7 +50,7 @@ import {
   installMatchDispatchCompletionHandler,
   processDiscoveredMatchesThroughDispatcher,
 } from "./shared-match-dispatch-v2.ts";
-import { delegateWhenV1OwnsDiscovery } from "./postmatch-ownership-v2.ts";
+import { delegateWhenV1OwnsDiscovery } from "./ownership/postmatch-ownership-v2.ts";
 
 /**
  * One discovered match as the loop consumes it: the id always, and the fields
@@ -228,7 +228,7 @@ export async function scoutPostMatchDiscoveryV2Workflow(
 ): Promise<ScoutPostMatchDiscoveryV2ResultEnvelope> {
   const input = scoutPostMatchDiscoveryV2InputCodec.parse(rawInput);
   // Ownership is decided before anything else this run does, and a run v1
-  // owns ends here. See `postmatch-ownership-v2.ts` for why only one pipeline
+  // owns ends here. See `ownership/postmatch-ownership-v2.ts` for why only one pipeline
   // can discover at a time.
   const delegated = await delegateWhenV1OwnsDiscovery(input);
   if (delegated !== null) return delegated;

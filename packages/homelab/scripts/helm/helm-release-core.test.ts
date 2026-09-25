@@ -25,6 +25,7 @@ test("release pruning is limited to charts with intentional resource removal", (
       "scout-beta",
       "service-probes",
       "temporal",
+      "trmnl-dashboard",
       "turbo-cache",
     ].filter(releasePrunesChart),
   ).toEqual([
@@ -34,6 +35,7 @@ test("release pruning is limited to charts with intentional resource removal", (
     "scout-beta",
     "service-probes",
     "temporal",
+    "trmnl-dashboard",
     "turbo-cache",
   ]);
   expect(releasePrunesChart("apps")).toBe(false);

@@ -3,7 +3,10 @@ import {
   blockingPolicyForThreshold,
   evaluateGate,
   firstReviewFindingCount,
+  gateExitCode,
   isBlocking,
+  REVIEW_GATE_BLOCKED_EXIT_CODE,
+  REVIEW_GATE_FAILURE_EXIT_CODE,
   type LowSeverityPolicy,
   reviewGateSkipReasonForAuthor,
 } from "./gate.ts";
@@ -300,6 +303,58 @@ describe("evaluateGate", () => {
     // The operator's next action is adding credits, not re-triggering.
     expect(d.message).toContain("credits");
     expect(d.message).not.toContain("Re-trigger");
+  });
+
+  test("a usage-limit block exits with the soft-fail quota status", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "usage-limited",
+    });
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_BLOCKED_EXIT_CODE);
+    expect(REVIEW_GATE_BLOCKED_EXIT_CODE).toBe(42);
+  });
+
+  test("findings, generic errors, and undeclared blocks exit with the hard failure status", () => {
+    const findings = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [thread({ priority: 0 })],
+    });
+    const errored = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+    });
+    const undeclared = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "something-else",
+    });
+    for (const d of [findings, errored, undeclared]) {
+      expect(d.state).toBe("failed");
+      expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+    }
+    expect(REVIEW_GATE_FAILURE_EXIT_CODE).not.toBe(
+      REVIEW_GATE_BLOCKED_EXIT_CODE,
+    );
+  });
+
+  test("a passing decision exits zero and a waiting one has no exit status", () => {
+    const passed = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [],
+    });
+    expect(gateExitCode(passed)).toBe(0);
+    const waiting = evaluateGate({
+      ...base,
+      reviewState: "reviewing",
+      threads: [],
+    });
+    expect(() => gateExitCode(waiting)).toThrow("no exit status");
   });
 
   test("keeps the generic errored message for an undeclared block reason", () => {

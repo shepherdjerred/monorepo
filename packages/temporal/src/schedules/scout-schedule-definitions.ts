@@ -15,7 +15,12 @@ const INITIAL_PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
 
 type ScoutInterval =
-  "20 seconds" | "30 seconds" | "1 minute" | "15 minutes" | "1 hour";
+  | "20 seconds"
+  | "30 seconds"
+  | "1 minute"
+  | "5 minutes"
+  | "15 minutes"
+  | "1 hour";
 
 type ScoutSchedule = {
   readonly name: string;
@@ -121,6 +126,13 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
           }),
         ]
       : []),
+    intervalSchedule(stage, {
+      name: "notification-intent-expiry",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "notification-intent-expiry" }],
+      every: "5 minutes",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
     intervalSchedule(stage, {
       name: "competition-refresh",
       workflowType: "scoutBackgroundJobWorkflow",

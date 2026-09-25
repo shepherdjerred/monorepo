@@ -45,6 +45,9 @@ let subscribedChannels: typeof SUBSCRIBED = SUBSCRIBED;
 vi.doMock("#src/database/index.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   prisma,
+}));
+vi.doMock("#src/database/subscribed-channels.ts", async (importOriginal) => ({
+  ...(await importOriginal()),
   getChannelsSubscribedToPlayers: () => Promise.resolve(subscribedChannels),
 }));
 

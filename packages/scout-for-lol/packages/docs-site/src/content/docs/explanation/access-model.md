@@ -26,10 +26,21 @@ not a loophole so much as an acknowledgement that whoever controls the server
 controls the bot in it — they can remove Scout entirely — so pretending Scout
 could restrict them would be theatre.
 
+## Every member is a Player
+
+Being in the server is enough to see what Scout already posts there. Its match
+results, standings and reports land in channels every member reads, so hiding
+the same players, competitions, reports and custom games behind a grant on the
+web protected nothing — it only left members with an empty dashboard.
+
+So every member holds the **Player** role implicitly, and grants only ever add
+to it. What stays behind a grant is management: which channels notify whom, the
+channel list, the audit log, and every change.
+
 ## Roles are presets, not containers
 
-Scout ships three roles — Viewer, Manager, Admin — but they are not stored on
-anyone. A grant writes one row per permission, and a role is just a named bundle
+Scout ships three grantable roles — Dashboard viewer, Manager, Admin — but they
+are not stored on anyone. A grant writes one row per permission, and a role is just a named bundle
 expanded at grant time. A set that happens to match a bundle exactly is
 _displayed_ as that role; anything else is displayed as custom.
 

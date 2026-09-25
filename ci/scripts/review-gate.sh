@@ -100,6 +100,25 @@ if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
   git apply "$RESOLVED_BOOTSTRAP_PATCH"
 fi
 
-GH_TOKEN="$GITHUB_REVIEW_TOKEN" \
+# Exit status 42 is the gate's "the provider declared it cannot review at all"
+# (quota exhaustion) status, REVIEW_GATE_BLOCKED_EXIT_CODE in
+# @shepherdjerred/code-review. No review happened, so it is not a review
+# failure, and blocking every merge on a billing state would stop the rest of
+# CI from counting. Woodpecker cannot soft-fail a step on one exit status, so
+# the gate does it here: 42 passes with a warning in the log, and every other
+# non-zero status (findings, unresolved threads, timeouts, errors) fails.
+QUOTA_EXIT_STATUS=42
+if GH_TOKEN="$GITHUB_REVIEW_TOKEN" \
   REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" \
-  bun --no-install "$WAIT_SCRIPT"
+  bun --no-install "$WAIT_SCRIPT"; then
+  exit 0
+else
+  GATE_STATUS=$?
+fi
+
+if [[ "$GATE_STATUS" -eq "$QUOTA_EXIT_STATUS" ]]; then
+  PROVIDER_NAME="${REVIEW_PROVIDER:-codex}"
+  echo "WARNING: ${PROVIDER_NAME} review skipped: out of quota. The review gate passed without a review because ${PROVIDER_NAME} reported its usage limit for this head. Rely on Greptile's review for this PR, or add ${PROVIDER_NAME} credits and restart this workflow to get a ${PROVIDER_NAME} review." >&2
+  exit 0
+fi
+exit "$GATE_STATUS"

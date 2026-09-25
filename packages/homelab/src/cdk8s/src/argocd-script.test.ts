@@ -349,7 +349,11 @@ test("release-root owns the complete dry-run lifecycle", async () => {
     expect(stdout).toContain(
       "argocd verify-auto-sync: apps at 2.0.0-42 (dry run)",
     );
-    expect(stdout).toContain("argocd release-health-wait: 1 expected");
+    // The wait blocks only on charts this build published (#3126); a chart
+    // retained at an earlier revision is reported, not waited on.
+    expect(stdout).toContain(
+      "argocd release-health-wait: 1 Application(s) published at 2.0.0-42; 0 retained at earlier revisions",
+    );
     // Ordering, not just presence: the auto-sync invariant has to run after the
     // finalizer restores the declared policy and before the health wait, so a
     // divergence is reported instead of the release spending its timeout on a
@@ -1251,73 +1255,91 @@ describe("Argo CD stale release protection", () => {
   });
 });
 
-describe("Argo CD stale release rejection", () => {
-  test("rejects an Argo reconcile after a newer apps chart is published", async () => {
-    let argoRequests = 0;
-    const server = Bun.serve({
-      hostname: "127.0.0.1",
-      port: 0,
-      fetch(request) {
-        const url = new URL(request.url);
-        if (url.pathname === "/api/charts/apps") {
-          return Response.json([
-            {
-              version: "2.0.0-43",
-              urls: ["charts/apps-2.0.0-43.tgz"],
-              digest: "a".repeat(64),
-            },
-          ]);
-        }
-        argoRequests++;
-        return new Response("unexpected Argo request", { status: 500 });
-      },
-    });
-    const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
-    const expectedPath = path.join(directory, "expected.json");
-    await Bun.write(
-      expectedPath,
-      JSON.stringify([
-        { name: "apps", revision: "2.0.0-42" },
-        { name: "worker", revision: "2.0.0-42" },
-      ]),
-    );
-
-    try {
-      const process = Bun.spawn(
-        [
-          "bun",
-          "--no-install",
-          "scripts/argocd/argocd.ts",
-          "reconcile-release",
-          expectedPath,
-          "--timeout",
-          "1",
-        ],
-        {
-          cwd: path.resolve(import.meta.dir, "../../.."),
-          env: {
-            ...Bun.env,
-            ARGOCD_SERVER_URL: server.url.origin,
-            ARGOCD_TOKEN: "test-token",
-            CHARTMUSEUM_ORIGIN: server.url.origin,
-          },
-          stderr: "pipe",
-          stdout: "pipe",
+describe("Argo CD release freshness", () => {
+  test.each([
+    {
+      published: "2.0.0-43",
+      succeeds: true,
+      message:
+        "Apps release 2.0.0-42 is superseded by 2.0.0-43; the newer build owns this release",
+    },
+    {
+      published: "2.0.0-41",
+      succeeds: false,
+      message:
+        "Apps release 2.0.0-42 is not published; newest published apps revision is 2.0.0-41",
+    },
+  ])(
+    "reconciles against a published $published",
+    async ({ published, succeeds, message }) => {
+      let argoRequests = 0;
+      const server = Bun.serve({
+        hostname: "127.0.0.1",
+        port: 0,
+        fetch(request) {
+          const url = new URL(request.url);
+          if (url.pathname === "/api/charts/apps") {
+            return Response.json([
+              {
+                version: published,
+                urls: [`charts/apps-${published}.tgz`],
+                digest: "a".repeat(64),
+              },
+            ]);
+          }
+          argoRequests++;
+          return new Response("unexpected Argo request", { status: 500 });
         },
+      });
+      const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
+      const expectedPath = path.join(directory, "expected.json");
+      await Bun.write(
+        expectedPath,
+        JSON.stringify([
+          { name: "apps", revision: "2.0.0-42" },
+          { name: "worker", revision: "2.0.0-42" },
+        ]),
       );
-      const [exitCode, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stderr).text(),
-      ]);
 
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toContain("Refusing stale Argo release 2.0.0-42");
-      expect(argoRequests).toBe(0);
-    } finally {
-      await server.stop(true);
-      await rm(directory, { recursive: true, force: true });
-    }
-  });
+      try {
+        const process = Bun.spawn(
+          [
+            "bun",
+            "--no-install",
+            "scripts/argocd/argocd.ts",
+            "reconcile-release",
+            expectedPath,
+            "--timeout",
+            "1",
+          ],
+          {
+            cwd: path.resolve(import.meta.dir, "../../.."),
+            env: {
+              ...Bun.env,
+              ARGOCD_SERVER_URL: server.url.origin,
+              ARGOCD_TOKEN: "test-token",
+              CHARTMUSEUM_ORIGIN: server.url.origin,
+            },
+            stderr: "pipe",
+            stdout: "pipe",
+          },
+        );
+        const [exitCode, ...streams] = await Promise.all([
+          process.exited,
+          ...[process.stdout, process.stderr].map(async (s) =>
+            new Response(s).text(),
+          ),
+        ]);
+
+        expect(exitCode === 0).toBe(succeeds);
+        expect(streams.join("\n")).toContain(message);
+        expect(argoRequests).toBe(0);
+      } finally {
+        await server.stop(true);
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
 });
 
 describe("Argo CD operator script", () => {

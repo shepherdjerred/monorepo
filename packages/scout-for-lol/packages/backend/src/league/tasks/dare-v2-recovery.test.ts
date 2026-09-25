@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   ),
   closeExpiredBettingWindows: vi.fn(async () => []),
   closeExpiredParlayWindows: vi.fn(async () => []),
+  deleteExpiredActiveGames: vi.fn(async () => 0),
   deliverDareSummaries: vi.fn(() => Promise.resolve()),
   deliverPendingDareNotifications: vi.fn(() => Promise.resolve()),
   expireDareAcceptWindows: vi.fn(async () => []),
@@ -91,6 +92,7 @@ vi.mock("#src/betting/settlement/void-stale.ts", () => ({
   voidStaleBettingPools: mocks.voidStaleBettingPools,
 }));
 vi.mock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
+  deleteExpiredActiveGames: mocks.deleteExpiredActiveGames,
   getPostmatchMessageIdsForMatchIdOrEmpty: mocks.getPostmatchMessageIds,
 }));
 vi.mock("#src/league/tasks/recovery/app-state.ts", () => ({
@@ -114,13 +116,32 @@ describe("Dare v2 recovery", () => {
   });
 
   test("expires funded acceptance windows while betting is hard-disabled", async () => {
-    await expect(checkPreMatch()).resolves.toEqual({ dareSummaries: [] });
+    await expect(
+      checkPreMatch({
+        activeGameDetection: "v1",
+        capturedByV2: () => Promise.resolve(false),
+      }),
+    ).resolves.toEqual({ dareSummaries: [] });
 
     expect(mocks.checkActiveGames).toHaveBeenCalledOnce();
+    expect(mocks.deleteExpiredActiveGames).not.toHaveBeenCalled();
     expect(mocks.expireDareV2AcceptWindows).toHaveBeenCalledOnce();
     expect(mocks.refreshPendingDareV2Callouts).toHaveBeenCalledOnce();
     expect(mocks.abandonExpiredDareProposals).not.toHaveBeenCalled();
     expect(mocks.closeExpiredBettingWindows).not.toHaveBeenCalled();
+  });
+
+  test("keeps prematch maintenance, and skips v1 detection, when V2 detected the pass", async () => {
+    // The prematch ownership router hands v1 only its maintenance once V2
+    // discovery has detected the pass's games. Dare recovery must still run.
+    await expect(checkPreMatch({ activeGameDetection: "v2" })).resolves.toEqual(
+      { dareSummaries: [] },
+    );
+
+    expect(mocks.checkActiveGames).not.toHaveBeenCalled();
+    expect(mocks.deleteExpiredActiveGames).toHaveBeenCalledOnce();
+    expect(mocks.expireDareV2AcceptWindows).toHaveBeenCalledOnce();
+    expect(mocks.refreshPendingDareV2Callouts).toHaveBeenCalledOnce();
   });
 
   test("settles funded contracts while betting is hard-disabled", async () => {

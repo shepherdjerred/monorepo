@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { REPORT_QUERY_MAX_LENGTH } from "#src/model/reports/report.ts";
 import {
   SCOUTQL_DIAGNOSTIC_CODES,
+  firstScoutQlError,
   ScoutQlError,
   type ScoutQlDiagnosticCode,
 } from "#src/model/scoutql/editor/diagnostics.ts";
@@ -391,6 +392,29 @@ describe("negative corpus: one case per diagnostic code", () => {
       expect(codes).toContain(negative.code);
     });
   }
+
+  test("a leading WITH is explained, not reported as a missing SELECT", () => {
+    const analysis = analyzeScoutQl(
+      "WITH elder_games AS (SELECT match_id FROM timeline_events GROUP BY match_id) SELECT COUNT(*) AS games FROM elder_games",
+    );
+    expect(firstScoutQlError(analysis.diagnostics)?.message).toContain(
+      "no WITH, subqueries or joins",
+    );
+  });
+
+  test("a CASE output is reported as CASE, not as a missing output", () => {
+    // Callers show the first error only. The parser drops the CASE item while
+    // recovering, and the empty SELECT it leaves behind must not outrank it.
+    for (const query of [
+      "SELECT CASE WHEN win THEN 'a' ELSE 'b' END AS r, COUNT(*) AS g FROM match_participants GROUP BY CASE WHEN win THEN 'a' ELSE 'b' END",
+      // Recovery here also loses FROM, which must not be reported instead.
+      "SELECT CASE WHEN first_tower THEN 'First tower' ELSE 'No first tower' END AS tower_result, COUNT(DISTINCT match_id) AS games, COUNT(*) FILTER (WHERE win) AS wins, AVG(win::INT) AS win_rate\nFROM match_teams\nGROUP BY CASE WHEN first_tower THEN 'First tower' ELSE 'No first tower' END\nORDER BY tower_result DESC\nRENDER table",
+    ]) {
+      expect(firstScoutQlError(analyzeScoutQl(query).diagnostics)?.code).toBe(
+        "case-unsupported",
+      );
+    }
+  });
 });
 
 /**

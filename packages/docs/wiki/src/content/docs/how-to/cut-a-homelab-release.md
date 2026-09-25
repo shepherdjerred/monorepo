@@ -215,9 +215,15 @@ release process deliberately terminates its aggregate wait. This leaves an
 ArgoCD terminal message that does not describe release failure.
 
 Use the `homelab-release-result.json` handoff object and the CI
-`homelab-release-result` annotation as the receipt. `applied-verified` means
-the request ID, revision, selected resource results, and final child health
-all passed. No receipt means the release did not complete.
+`homelab-release-result` annotation as the receipt:
+
+- `applied-verified` means the request ID, revision, selected resource results,
+  and final health of the charts this build published all passed. Charts
+  retained at an earlier revision are reported as warnings, not waited on.
+- `superseded` means a newer build published its apps chart first. This build
+  applied nothing and succeeded; the newer build's receipt is the record.
+
+No receipt means the release did not complete.
 
 ## If you start a global sync manually
 

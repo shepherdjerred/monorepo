@@ -73,7 +73,7 @@
       <outline text="PostHog Blog" type="rss" xmlUrl="https://posthog.com/rss.xml" htmlUrl="https://posthog.com/blog" description="PostHog engineering blog and product updates"/>
       <outline text="Buildkite Changelog" type="rss" xmlUrl="https://buildkite.com/changelog.atom" htmlUrl="https://buildkite.com/changelog"/>
       <outline text="FreshRSS Releases" type="rss" xmlUrl="https://github.com/FreshRSS/FreshRSS/releases.atom" htmlUrl="https://github.com/FreshRSS/FreshRSS/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
-      <outline text="Vercel News — AI SDK" type="rss" xmlUrl="https://vercel.com/atom" htmlUrl="https://vercel.com/ai-sdk" description="Official Vercel News filtered to AI SDK announcements" frss:filtersActionRead="!intitle:/\bAI SDK\b/i"/>
+      <outline text="Vercel News — AI SDK" type="rss" xmlUrl="https://vercel.com/atom" htmlUrl="https://vercel.com/ai-sdk" description="Official Vercel News filtered to AI SDK announcements" frss:filtersActionRead="-intitle:/\bAI SDK\b/i"/>
       <outline text="OpenAI News" type="rss" xmlUrl="https://openai.com/news/rss.xml" htmlUrl="https://openai.com/news/" description="Official OpenAI news feed, including Engineering posts"/>
     </outline>
   </body>

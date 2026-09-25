@@ -541,7 +541,7 @@
       "steps": [
         {
           "runner": "vitest",
-          "args": ["src", "--exclude", "src/workflows/*.test.ts"]
+          "args": ["src", "--exclude", "src/workflows/**/*.test.ts"]
         },
         {
           "runner": "vitest",

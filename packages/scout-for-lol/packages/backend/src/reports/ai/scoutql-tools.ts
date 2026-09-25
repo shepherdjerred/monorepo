@@ -10,10 +10,8 @@ import {
   queueTypeToDisplayString,
 } from "@scout-for-lol/data/model/core/state.ts";
 import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
-import {
-  scoutQlSourceCatalogs,
-  type ScoutQlColumnInfo,
-} from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
+import { scoutQlSourceCatalogs } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
+import type { ScoutQlColumnInfo } from "@scout-for-lol/data/model/scoutql/catalog/catalog-column-types.ts";
 import {
   SCOUTQL_FUNCTIONS,
   type ScoutQlFunctionInfo,

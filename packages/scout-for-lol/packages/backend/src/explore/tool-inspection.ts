@@ -18,6 +18,21 @@ import {
   ValidationToolOutputSchema,
 } from "#src/reports/ai/scoutql-tools.ts";
 import {
+  HallToolInputSchema,
+  HallToolResultSchema,
+} from "#src/explore/tools/hall-tools.ts";
+import {
+  ChallengeCatalogInputSchema,
+  ChallengeLeaderboardInputSchema,
+  ChallengeReadResultSchema,
+} from "#src/explore/tools/challenge-read-tools.ts";
+import {
+  CompetitionReadResultSchema,
+  CompetitionStandingsInputSchema,
+  ListCompetitionsInputSchema,
+} from "#src/explore/tools/competition-read-tools.ts";
+import { QueryServersSchema } from "#src/explore/tools/server-scope.ts";
+import {
   DareActionToolInputSchema,
   DareDefinitionToolInputSchema,
   DareDeleteToolInputSchema,
@@ -162,6 +177,90 @@ const CREATION_TOOL_SCHEMAS = new Map<
   ],
 ]);
 
+/**
+ * Explore's feature read tools: Hall of Fame, challenge runs, competitions.
+ *
+ * Registered so their input and output reach the trace like every other
+ * feature tool's. Unregistered, the trace recorded nothing for them — which
+ * hid what the model had actually been told, and left the replay judge with
+ * no evidence for any figure they supplied. They throw on failure and answer
+ * refusals as results, as the Bucks tools do, so they share that branch.
+ */
+const FEATURE_READ_TOOL_SCHEMAS = new Map<
+  string,
+  { input: z.ZodType; output: z.ZodType }
+>([
+  [
+    "get_hall_of_fame",
+    { input: HallToolInputSchema, output: HallToolResultSchema },
+  ],
+  [
+    "list_my_challenge_runs",
+    { input: EmptyToolInputSchema, output: ChallengeReadResultSchema },
+  ],
+  [
+    "list_challenge_catalog",
+    { input: ChallengeCatalogInputSchema, output: ChallengeReadResultSchema },
+  ],
+  [
+    "challenge_leaderboard",
+    {
+      input: ChallengeLeaderboardInputSchema,
+      output: ChallengeReadResultSchema,
+    },
+  ],
+  [
+    "list_competitions",
+    {
+      input: ListCompetitionsInputSchema,
+      output: CompetitionReadResultSchema,
+    },
+  ],
+  [
+    "get_competition_standings",
+    {
+      input: CompetitionStandingsInputSchema,
+      output: CompetitionReadResultSchema,
+    },
+  ],
+]);
+
+/**
+ * Explore's run_report_query input: the shared query input plus the servers
+ * it reads. The servers are accepted but never recorded: traces are served
+ * to share-link holders, and which servers a user is in stays private, as
+ * the turn's own server list does.
+ */
+const ExploreRunQueryInputSchema = ScoutQlQueryToolInputSchema.extend({
+  // Optional here, though the tool requires it: traces recorded before the
+  // field existed must still inspect.
+  servers: QueryServersSchema.optional(),
+});
+
+/**
+ * What a trace records of a query: its text, and which kind of scope it
+ * read — never which servers. The kind is what grading and debugging need:
+ * whether an answer covered every match or only a server's tracked players.
+ */
+function recordedQueryInput(input: unknown): {
+  queryText: string;
+  scope: "global" | "one server" | "several servers" | "all servers";
+} {
+  const parsed = ExploreRunQueryInputSchema.parse(input);
+  const servers = parsed.servers;
+  return {
+    queryText: parsed.queryText,
+    scope:
+      servers === null || servers === undefined
+        ? "global"
+        : servers === "all_my_servers"
+          ? "all servers"
+          : servers.length === 1
+            ? "one server"
+            : "several servers",
+  };
+}
+
 const JsonValueSchema = z.json();
 type JsonValue = z.infer<typeof JsonValueSchema>;
 
@@ -217,7 +316,7 @@ export function inspectExploreToolCall(
     };
   }
   if (toolName === "run_report_query") {
-    const parsed = ScoutQlQueryToolInputSchema.parse(input);
+    const parsed = recordedQueryInput(input);
     return {
       rawInput: JsonValueSchema.parse(parsed),
       details: {
@@ -230,7 +329,8 @@ export function inspectExploreToolCall(
       },
     };
   }
-  const bucks = BUCKS_TOOL_SCHEMAS.get(toolName);
+  const bucks =
+    BUCKS_TOOL_SCHEMAS.get(toolName) ?? FEATURE_READ_TOOL_SCHEMAS.get(toolName);
   if (bucks !== undefined) {
     return {
       rawInput: JsonValueSchema.parse(bucks.input.parse(input)),
@@ -298,7 +398,7 @@ export function inspectExploreToolResult(
     };
   }
   if (toolName === "run_report_query") {
-    const parsedInput = ScoutQlQueryToolInputSchema.parse(input);
+    const parsedInput = recordedQueryInput(input);
     const parsedOutput = QueryResultToolOutputSchema.parse(output);
     return {
       succeeded: parsedOutput.ok,
@@ -313,7 +413,8 @@ export function inspectExploreToolResult(
       },
     };
   }
-  const bucks = BUCKS_TOOL_SCHEMAS.get(toolName);
+  const bucks =
+    BUCKS_TOOL_SCHEMAS.get(toolName) ?? FEATURE_READ_TOOL_SCHEMAS.get(toolName);
   if (bucks !== undefined) {
     bucks.input.parse(input);
     // These tools throw on failure, so a delivered result is a success.

@@ -44,7 +44,20 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
       await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
         const { checkPreMatch } =
           await import("#src/league/tasks/prematch/index.ts");
-        await checkPreMatch();
+        // The prematch ownership router sets this only when V2 discovery
+        // already detected this pass's games; v1 then runs its maintenance
+        // alone.
+        if (input.activeGameDetectionOwner === "v2") {
+          await checkPreMatch({ activeGameDetection: "v2" });
+          return;
+        }
+        const { isPrematchGameCapturedByV2 } =
+          await import("#src/temporal/v2/ownership/prematch-ownership.ts");
+        await checkPreMatch({
+          activeGameDetection: "v1",
+          capturedByV2: async (game) =>
+            await isPrematchGameCapturedByV2(input.stage, game),
+        });
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
     },
@@ -62,7 +75,7 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
           // over it. A pass that could not run throws instead of returning
           // `skipped`, so v1's maintenance never closes a claim nothing used.
           const { discoverDelegatedPostMatchIntents } =
-            await import("#src/temporal/v2/postmatch-ownership.ts");
+            await import("#src/temporal/v2/ownership/postmatch-ownership.ts");
           return await discoverDelegatedPostMatchIntents({
             pollOwner: new Date(input.pollOwner),
           });

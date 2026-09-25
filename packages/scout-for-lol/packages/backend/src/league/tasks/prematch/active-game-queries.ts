@@ -307,6 +307,31 @@ export async function getPostmatchMessageIdsForMatchIdOrEmpty(
 }
 
 /**
+ * The match ids among `matchIds` that v1 tracks as live right now.
+ *
+ * Only v1 writes `ActiveGame` rows, and it writes one before it announces a
+ * game (and deletes it again if the announcement never became durable), so a
+ * live row is v1's claim on that game's announcement. The V2 prematch
+ * discovery reads this to leave such a game to v1 after a flip mid-game.
+ */
+export async function listLiveActiveGameMatchIds(
+  matchIds: readonly string[],
+  now: Date,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Set<string>> {
+  if (matchIds.length === 0) return new Set();
+  const rows = await prismaClient.activeGame.findMany({
+    where: { prematchMatchId: { in: [...matchIds] }, expiresAt: { gt: now } },
+    select: { prematchMatchId: true },
+  });
+  return new Set(
+    rows.flatMap((row) =>
+      row.prematchMatchId === null ? [] : [row.prematchMatchId],
+    ),
+  );
+}
+
+/**
  * Delete expired active game records (where expiresAt < now).
  *
  * @returns Number of records deleted

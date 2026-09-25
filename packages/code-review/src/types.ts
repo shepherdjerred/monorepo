@@ -27,7 +27,16 @@ export type ReviewState = "reviewing" | "reviewed" | "errored";
 export type GateDecision =
   | { state: "waiting"; message: string }
   | { state: "passed"; message: string }
-  | { state: "failed"; message: string };
+  | {
+      state: "failed";
+      message: string;
+      /**
+       * The provider's declared block slug when it could not review at all
+       * (quota exhaustion), else null. A blocked failure exits with
+       * `REVIEW_GATE_BLOCKED_EXIT_CODE` so CI can soft-fail on it alone.
+       */
+      blockedReason: string | null;
+    };
 
 /** GitHub's validated author identity for a pull request. */
 export type PullRequestAuthor = {

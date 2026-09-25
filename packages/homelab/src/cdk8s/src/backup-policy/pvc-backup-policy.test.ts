@@ -7,6 +7,7 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
+import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   getPvcBackupLabels,
   getPvcBackupPolicy,
@@ -239,6 +240,40 @@ describe("PVC backup policy", () => {
       "object.metadata.namespace == 'woodpecker-ci' && has(object.spec.storageClassName) && object.spec.storageClassName == 'ci-workspace'";
     expect(expression("excluded")).toContain(`|| (${workspace})`);
     expect(expression("included")).not.toContain("ci-workspace");
+  });
+
+  /**
+   * The class a workspace claim is excluded by must actually delete its
+   * volume and only provision on the CI node, or the exclusion would excuse
+   * data that accumulates on the production node.
+   */
+  it("deletes CI workspace volumes and provisions them only on liskov", () => {
+    const app = new App();
+    createStorageClasses(new Chart(app, "storage"));
+    const storageClass = parseAllDocuments(app.synthYaml())
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("StorageClass"),
+            metadata: z.object({ name: z.literal("ci-workspace") }),
+            reclaimPolicy: z.string(),
+            allowedTopologies: z.array(z.unknown()),
+          })
+          .loose()
+          .safeParse(document.toJS()),
+      )
+      .find((result) => result.success);
+    if (storageClass?.success !== true) {
+      throw new Error("ci-workspace StorageClass not synthesized");
+    }
+    expect(storageClass.data.reclaimPolicy).toBe("Delete");
+    expect(storageClass.data.allowedTopologies).toEqual([
+      {
+        matchLabelExpressions: [
+          { key: "kubernetes.io/hostname", values: ["liskov"] },
+        ],
+      },
+    ]);
   });
 
   it("fails synthesis for an unclassified ZFS PVC", () => {

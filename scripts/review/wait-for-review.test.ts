@@ -16,7 +16,11 @@ import {
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
 } from "./wait-for-review.ts";
-import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
+import {
+  codexProvider,
+  qodoProvider,
+  REVIEW_GATE_BLOCKED_EXIT_CODE,
+} from "@shepherdjerred/code-review";
 
 describe("resolveReviewGateProvider", () => {
   test("defaults direct invocations to Codex", () => {
@@ -284,5 +288,16 @@ describe("review gate source", () => {
     // The commit actually used has to reach the signal event, or a count still
     // cannot be attributed to the parser that produced it.
     expect(script).toContain("REVIEW_GATE_PARSER_COMMIT");
+    // Only the blocked-by-quota status passes, with a warning; Woodpecker has
+    // no per-status soft-fail, so the script is the only place it can live.
+    expect(script).toContain(
+      `QUOTA_EXIT_STATUS=${String(REVIEW_GATE_BLOCKED_EXIT_CODE)}`,
+    );
+    const quotaBranch = script.slice(
+      script.indexOf('if [[ "$GATE_STATUS" -eq "$QUOTA_EXIT_STATUS" ]]; then'),
+    );
+    expect(quotaBranch).toMatch(
+      /out of quota[\s\S]*exit 0\nfi\nexit "\$GATE_STATUS"/u,
+    );
   });
 });

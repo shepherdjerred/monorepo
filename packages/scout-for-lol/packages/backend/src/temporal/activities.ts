@@ -277,6 +277,12 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await expireCustomNights();
             break;
           }
+          case "notification-intent-expiry": {
+            const { runNotificationIntentExpiry } =
+              await import("#src/durable/match/intent-expiry.ts");
+            await runNotificationIntentExpiry();
+            break;
+          }
           case "progression-outbox": {
             const [
               { deliverHallRecordBreakOutbox },

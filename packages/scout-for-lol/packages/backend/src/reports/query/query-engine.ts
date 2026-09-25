@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import { CompetitionIdSchema, parseCompetition } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
@@ -73,10 +74,11 @@ async function resolvePlanPlayerRefs(
   plan: ScoutQlPlan,
 ): Promise<Map<number, string[]> | undefined> {
   if (plan.playerRefs.length === 0) return undefined;
-  const guildIds =
-    params.scope.kind === "guild"
-      ? [params.scope.serverId]
-      : (params.askerGuildIds ?? []);
+  const guildIds = match(params.scope)
+    .with({ kind: "guild" }, (scope) => [scope.serverId])
+    .with({ kind: "servers" }, (scope) => [...scope.serverIds])
+    .with({ kind: "global" }, () => params.askerGuildIds ?? [])
+    .exhaustive();
   return await resolvePlayerRefPuuids({
     playerRefs: plan.playerRefs,
     guildIds,
