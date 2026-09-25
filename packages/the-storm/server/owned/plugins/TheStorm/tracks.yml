@@ -128,17 +128,13 @@ tracks:
           - Found a town.
       - title: Mayor
         unlocks:
-          - A larger town plot bank.
-          - A higher town level cap.
+          - More chunks your town can claim.
       - title: Governor
         unlocks:
-          - A larger town plot bank.
-          - A higher town level cap.
+          - More chunks your town can claim.
       - title: Chancellor
         unlocks:
-          - A larger town plot bank.
-          - A higher town level cap.
+          - More chunks your town can claim.
       - title: Sovereign
         unlocks:
-          - The largest town plot bank and the highest town level cap.
-          - Nations, when they arrive.
+          - The most chunks a town can claim.
