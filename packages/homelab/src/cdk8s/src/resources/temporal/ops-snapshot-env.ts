@@ -4,7 +4,7 @@ import { EnvValue, type ISecret } from "cdk8s-plus-31";
  * Environment for the ops-snapshot collector and digest trigger on the infra
  * worker. The URLs are in-cluster bootstrap addresses; the three credentials
  * are required fields of the Temporal worker 1Password item. Prometheus,
- * Bugsink, Buildkite, GitHub App, and talosconfig access come from the
+ * Bugsink, Woodpecker, GitHub App, and talosconfig access come from the
  * homelab-audit environment the infra worker already carries.
  */
 export function opsSnapshotEnv(secret: ISecret): Record<string, EnvValue> {
