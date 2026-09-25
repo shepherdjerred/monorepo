@@ -17,8 +17,8 @@ export const OPS_POLICY = {
   quotaWarningRatio: 0.8,
   quotaErrorRatio: 0.95,
   /**
-   * Month-to-date pay-as-you-go API spend budget across Anthropic, OpenAI,
-   * and OpenRouter, excluding fixed subscriptions.
+   * Month-to-date pay-as-you-go API spend budget across OpenAI, Anthropic,
+   * and Google, excluding fixed subscriptions.
    */
   monthlyApiBudgetUsd: 100,
   /** Warn once the month-end projection exceeds this share of budget. */

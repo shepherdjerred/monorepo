@@ -310,16 +310,16 @@ export async function collectAi(
   const queries = aiQueries(monthToDateWindow(context.now));
   const run = (key: keyof typeof queries) => prometheus.query(queries[key]);
   const [
-    billedMtd,
-    openAiToday,
+    clusterMtd,
+    billedToday,
     macCostMtd,
     macTokens24h,
     clusterTokens24h,
     quotas,
     quotaResets,
   ] = await Promise.all([
-    run("billedMtd"),
-    run("openAiToday"),
+    run("clusterMtd"),
+    run("billedToday"),
     run("macCostMtd"),
     run("macTokens24h"),
     run("clusterTokens24h"),
@@ -328,8 +328,8 @@ export async function collectAi(
   ]);
   return mapAi(
     {
-      billedMtd,
-      openAiToday,
+      clusterMtd,
+      billedToday,
       macCostMtd,
       macTokens24h,
       clusterTokens24h,

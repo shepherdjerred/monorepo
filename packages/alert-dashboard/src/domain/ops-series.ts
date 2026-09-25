@@ -21,8 +21,9 @@ export type SeriesPreset = {
   }[];
 };
 
-const BILLED_LLM_COST =
-  'max by (service, workload, model) (sum by (service, workload, model, type) (increase(llm_cost_usd_total{type=~"actual|upstream"}[{window}])))';
+// Live catalog-priced spend; the providers' own figure is the billed preset.
+const LIVE_LLM_COST =
+  'sum by (service, workload, model) (increase(llm_cost_usd_total{type="catalog"}[{window}]))';
 
 export const SERIES_PRESETS: Record<SeriesPresetId, SeriesPreset> = {
   "ai-cost-by-source": {
@@ -64,16 +65,22 @@ export const SERIES_PRESETS: Record<SeriesPresetId, SeriesPreset> = {
     unit: "usd",
     queries: [
       {
-        promql: `sum by (service) (${BILLED_LLM_COST})`,
+        promql: `sum by (service) (${LIVE_LLM_COST})`,
         legendLabel: "service",
         name: "llm",
       },
     ],
   },
-  "openai-project-cost": {
-    title: "OpenAI project cost today",
+  "provider-billed-cost": {
+    title: "Provider-billed LLM cost today",
     unit: "usd",
-    queries: [{ promql: "max(openai_project_cost_usd)", name: "OpenAI" }],
+    queries: [
+      {
+        promql: 'sum by (provider) (llm_billed_cost_usd{window="today"})',
+        legendLabel: "provider",
+        name: "billed",
+      },
+    ],
   },
   "prs-open": {
     title: "Open pull requests",
@@ -205,6 +212,6 @@ export function planSeries(
 export const REVIEW_QUERIES = {
   aiSpend7d: "sum(increase(ai_usage_cost_usd_total[7d]))",
   aiSpendPrevious7d: "sum(increase(ai_usage_cost_usd_total[7d] offset 7d))",
-  llmSpend7d: `sum(${BILLED_LLM_COST.replaceAll("[{window}]", "[7d]")})`,
-  llmSpendPrevious7d: `sum(${BILLED_LLM_COST.replaceAll("[{window}]", "[7d] offset 7d")})`,
+  llmSpend7d: `sum(${LIVE_LLM_COST.replaceAll("[{window}]", "[7d]")})`,
+  llmSpendPrevious7d: `sum(${LIVE_LLM_COST.replaceAll("[{window}]", "[7d] offset 7d")})`,
 } as const;

@@ -144,8 +144,8 @@ function SpendPanel({
       </div>
       <p className="panel-summary">
         Projected month end {formatValue(projected, "usd")}
-        {overBudget ? ", over budget" : ", within budget"}. Cluster-billed LLM
-        spend for the UTC month; subscriptions are fixed.
+        {overBudget ? ", over budget" : ", within budget"}. Cluster LLM spend
+        for the UTC month, priced from the catalog; subscriptions are fixed.
       </p>
     </section>
   );
@@ -213,7 +213,7 @@ function AiBody({
         <SeriesChart preset="ai-tokens-by-tool" range={range} />
         <SeriesChart preset="cluster-llm-cost" range={range} />
         <SeriesChart preset="ai-quota" range={range} />
-        <SeriesChart preset="openai-project-cost" range={range} />
+        <SeriesChart preset="provider-billed-cost" range={range} />
       </div>
     </>
   );

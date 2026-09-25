@@ -7,19 +7,21 @@ import { metricsLink } from "./ops-links.ts";
 import { metric, type OpsCollection } from "./ops-types.ts";
 
 /**
- * Billed cluster LLM spend, matching the `llm.ts` alert rule: the larger of
- * OpenRouter's `actual` charge and the BYOK `upstream` cost per model, summed
- * per accounting type first so pod restarts are not undercounted.
+ * Live cluster LLM spend, matching the `llm.ts` live-cost alert rules: the
+ * catalog price applied to provider-reported tokens. Summing collapses pod
+ * lifetimes, so a restart inside the window is not undercounted. It excludes
+ * uninstrumented traffic and counts OpenAI complimentary tokens as paid; the
+ * provider-billed gauge below is the authority for what was charged.
  */
-export function billedClusterCostQuery(window: string): string {
-  return `sum(max by (service, workload, model) (sum by (service, workload, model, type) (increase(llm_cost_usd_total{type=~"actual|upstream"}[${window}]))))`;
+export function clusterCostQuery(window: string): string {
+  return `sum(increase(llm_cost_usd_total{type="catalog"}[${window}]))`;
 }
 
 export function aiQueries(window: string) {
   return {
-    billedMtd: billedClusterCostQuery(window),
-    /** Current-day official OpenAI project cost (a daily-reset gauge). */
-    openAiToday: "sum(openai_project_cost_usd)",
+    clusterMtd: clusterCostQuery(window),
+    /** Current UTC-day cost the providers report billing (a daily-reset gauge). */
+    billedToday: 'sum(llm_billed_cost_usd{window="today"})',
     /** Mac-side usage priced at API rates, by tool; mostly subscription use. */
     macCostMtd: `sum by (source) (increase(ai_usage_cost_usd_total[${window}]))`,
     macTokens24h: "sum(increase(ai_usage_tokens_total[24h]))",
@@ -32,8 +34,8 @@ export function aiQueries(window: string) {
 }
 
 export type AiSamples = {
-  billedMtd: readonly PrometheusSample[];
-  openAiToday: readonly PrometheusSample[];
+  clusterMtd: readonly PrometheusSample[];
+  billedToday: readonly PrometheusSample[];
   macCostMtd: readonly PrometheusSample[];
   macTokens24h: readonly PrometheusSample[];
   clusterTokens24h: readonly PrometheusSample[];
@@ -149,11 +151,7 @@ function budgetSignal(mtd: number, projected: number): SignalInput[] {
         budgetUsd: budget,
       },
       links: [
-        metricsLink(
-          "Billed LLM spend",
-          billedClusterCostQuery("1d"),
-          "now-30d",
-        ),
+        metricsLink("Cluster LLM spend", clusterCostQuery("1d"), "now-30d"),
       ],
     },
   ];
@@ -161,18 +159,22 @@ function budgetSignal(mtd: number, projected: number): SignalInput[] {
 
 function providerCostSignals(samples: AiSamples): SignalInput[] {
   const signals: SignalInput[] = [];
-  const openAiToday = total(samples.openAiToday);
-  if (openAiToday !== null && openAiToday > 0) {
+  const billedToday = total(samples.billedToday);
+  if (billedToday !== null && billedToday > 0) {
     signals.push({
-      id: "ai:openai-project-today",
+      id: "ai:provider-billed-today",
       source: "ai",
       section: "ai",
       kind: "provider-cost",
       severity: "info",
       needsMe: false,
-      title: `OpenAI project cost today: $${openAiToday.toFixed(2)}`,
+      title: `Provider-billed LLM cost today: $${billedToday.toFixed(2)}`,
       links: [
-        metricsLink("OpenAI project cost", "openai_project_cost_usd", "now-7d"),
+        metricsLink(
+          "Provider-billed cost",
+          'sum by (provider, account) (llm_billed_cost_usd{window="today"})',
+          "now-7d",
+        ),
       ],
     });
   }
@@ -196,7 +198,7 @@ function providerCostSignals(samples: AiSamples): SignalInput[] {
 }
 
 export function mapAi(samples: AiSamples, now: Date): OpsCollection {
-  const mtd = total(samples.billedMtd) ?? 0;
+  const mtd = total(samples.clusterMtd) ?? 0;
   const { elapsed } = monthProgress(now);
   const projected = elapsed > 0 ? mtd / elapsed : mtd;
   const budget = OPS_POLICY.monthlyApiBudgetUsd;
