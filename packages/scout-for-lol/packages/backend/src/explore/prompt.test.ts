@@ -35,6 +35,14 @@ describe("exploreAgentInstructions", () => {
 
   test("keeps the answer-shaping rules that apply to every turn", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
+    // Claims the judge found wider than their query: an unstated 10-game
+    // floor, an alphabetical "top", player-games reported as games.
+    expect(instructions).toContain("must ORDER BY that measure");
+    expect(instructions).toContain("among players with at least 10 games");
+    expect(instructions).toContain("COUNT(DISTINCT match_id)");
+    expect(
+      exploreAgentInstructions({ bucks: null, challenges: true }),
+    ).toContain("Scout challenges carry no reward");
 
     expect(instructions).toContain(
       "NEVER state a statistic you did not read from a tool result",

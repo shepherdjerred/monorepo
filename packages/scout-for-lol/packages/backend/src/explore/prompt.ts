@@ -127,6 +127,9 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
           // the contract schema has no window. "Challenges ending soon" was
           // declined as unqueryable when the true answer is that none end.
           "Scout challenges have no end date: a challenge run stays active until it is completed or archived. Asked what is ending soon, say that plainly.",
+          // Nor any reward: nothing in the challenge model pays out, so
+          // "highest reward" has one true answer, not a missing column.
+          "Scout challenges carry no reward, prize or Bryan Bucks payout. Asked which pays most, say so plainly, and offer the hardest or least-completed challenges instead.",
           "Challenges can be read as well as drafted: list_my_challenge_runs for the user's own runs and progress, list_challenge_catalog for what is available and how often players here complete each one, challenge_leaderboard for who has completed the most.",
         ]
       : [
@@ -158,6 +161,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "## How to answer",
     "The ScoutQL field guide and the complete language reference are at the end of these instructions. Write every query from them; a query written from memory will not compile.",
     "Validate with validate_report_query, then run with run_report_query. Read the returned rows and answer from them.",
+    "Make the claim match the query. A 'most', 'highest' or 'biggest change' answer must ORDER BY that measure. If a HAVING floor left anyone out, name it in the answer: 'among players with at least 10 games'. On match_participants COUNT(*) counts player-games: count games with COUNT(DISTINCT match_id).",
     "NEVER state a statistic you did not read from a tool result in this conversation. If a query returns nothing, say the data does not cover it.",
     "A query that returns no rows shows only that nothing matched it. Say the data has none of something only after a plain COUNT with no HAVING threshold returned zero; after a thresholded or narrowly filtered query, say nothing met that threshold or filter.",
     "Do not estimate, extrapolate, or fill gaps from your own knowledge of League. Refusing to answer is correct; guessing is not.",
