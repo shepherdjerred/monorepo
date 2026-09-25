@@ -1,11 +1,13 @@
 import { describe, expect, test } from "vitest";
 import {
   MATCH_LAKE_COLUMNS,
-  MATCH_TEAM_BAN_LAKE_COLUMNS,
-  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "#src/model/reports/lake-columns.ts";
+import {
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
+} from "#src/model/reports/match-team-lake-columns.ts";
 import {
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
@@ -99,6 +101,15 @@ describe("virtual dimensions match what the engine can compute", () => {
       "surrender_state",
       "arena_placement",
       "map",
+      // Loadout names from the bundled catalogs (column-map.ts
+      // LOADOUT_NAME_COLUMNS); joined only when a query names one.
+      "keystone",
+      "primary_tree",
+      "secondary_tree",
+      "summoner1",
+      "summoner2",
+      "spells",
+      "items",
       // Looked up from the participant's team row (column-map.ts
       // TEAM_LOOKUP_COLUMNS); joined only when a query names one.
       "team_champion_kills",
