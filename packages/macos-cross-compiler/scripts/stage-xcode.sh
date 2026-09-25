@@ -9,8 +9,9 @@
 #
 # The stage holds the macOS and iOS SDKs, the Swift runtime pieces that live
 # in Xcode's toolchain rather than the SDK, the clang builtins archives every
-# Darwin link needs, and the platform and Xcode version records Swift Build
-# resolves.
+# Darwin link needs, the platform and Xcode version records Swift Build
+# resolves, and each platform's testing libraries (XCTest, Swift Testing),
+# which live beside the SDK rather than in it.
 set -euo pipefail
 
 developer=$(xcode-select -p)
@@ -35,6 +36,10 @@ for platform in MacOSX iPhoneOS; do
   tar -C "$platforms/$platform.platform/Developer/SDKs" -cf - "$platform.sdk" | tar -C "$stage/sdks" -xf -
   mkdir -p "$stage/platforms/$platform.platform"
   cp "$platforms/$platform.platform/Info.plist" "$platforms/$platform.platform/version.plist" "$stage/platforms/$platform.platform/"
+  # PrivateFrameworks: XCTest re-exports XCTestCore from there, so linking
+  # against XCTest needs it.
+  tar -C "$platforms/$platform.platform" -cf - Developer/Library/Frameworks Developer/Library/PrivateFrameworks Developer/usr/lib |
+    tar -C "$stage/platforms/$platform.platform" -xf -
 done
 
 # Swift's per-platform static runtime pieces (compatibility shims, C++

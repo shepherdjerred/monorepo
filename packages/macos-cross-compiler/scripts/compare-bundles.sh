@@ -5,7 +5,7 @@
 #
 # Checks what distinguishes a faithful build rather than what merely differs
 # by construction: the file tree, every Info.plist, each Mach-O's
-# architectures, linked libraries, and LC_BUILD_VERSION, and that the Linux
+# architectures, linked libraries, rpaths, and LC_BUILD_VERSION, and that the Linux
 # bundle's signature is valid. Keys that name the build host
 # (`BuildMachineOSBuild`) and the code signature itself are excluded: the
 # reference is built unsigned on a Mac.
@@ -48,6 +48,7 @@ while IFS= read -r binary; do
   for arch in $(comm -12 "$work/a" "$work/b"); do
     dylibs() { otool -arch "$arch" -L "$1" | grep -v ':$' | sed 's/^[[:space:]]*//'; }
     version() { otool -arch "$arch" -l "$1" | grep -A4 LC_BUILD_VERSION | grep -E 'platform|minos|sdk' | tr -s ' '; }
+    rpaths() { otool -arch "$arch" -l "$1" | grep -A2 LC_RPATH | awk '$1 == "path" { print $2 }'; }
     dylibs "$reference/$binary" > "$work/ordered-a"; dylibs "$candidate/$binary" > "$work/ordered-b"
     sort "$work/ordered-a" > "$work/a"; sort "$work/ordered-b" > "$work/b"
     same_set=false; cmp -s "$work/a" "$work/b" && same_set=true
@@ -56,6 +57,7 @@ while IFS= read -r binary; do
       echo "note: $binary ($arch) lists the same libraries in a different order"
     fi
     version "$reference/$binary" > "$work/a"; version "$candidate/$binary" > "$work/b"; report "$binary ($arch) LC_BUILD_VERSION"
+    rpaths "$reference/$binary" > "$work/a"; rpaths "$candidate/$binary" > "$work/b"; report "$binary ($arch) rpaths"
   done
 done < <(cd "$reference" && find . -type f -perm -u+x -not -path '*/_CodeSignature*' -exec sh -c 'file -b "$1" | grep -q Mach-O && echo "$1"' _ {} \; | sort)
 

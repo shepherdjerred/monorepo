@@ -10,6 +10,8 @@
  *
  * The SDK tarballs (scripts/stage-xcode.sh) live in the private `apple-sdks`
  * SeaweedFS bucket and are pinned by sha256 in sdks.json; a mismatch fails.
+ * Objects are named by that sha256, so a re-staged tarball never replaces the
+ * one an older commit pins.
  *
  * Unlike the service images (bake-images.ts), these are a public product, not
  * cluster workloads: they publish the moving tags users pull — `:<sdk>`,
@@ -63,7 +65,12 @@ async function loadSdks(): Promise<Sdk[]> {
 }
 
 function objectKey(sdk: Sdk): string {
-  return `sdk-${sdk.sdk}.tar.zst`;
+  return `sdk-${sdk.sdk}-${sdk.sha256.slice(0, 16)}.tar.zst`;
+}
+
+/** Where scripts/stage-xcode.sh leaves a staged tarball. */
+function stagedTarball(sdk: Sdk): string {
+  return `${PACKAGE_DIR}/.stage/sdk-${sdk.sdk}.tar.zst`;
 }
 
 async function sha256(path: string): Promise<string> {
@@ -77,7 +84,7 @@ async function upload(sdkName: string): Promise<void> {
   const sdks = await loadSdks();
   const sdk = sdks.find((entry) => entry.sdk === sdkName);
   if (sdk === undefined) throw new Error(`sdks.json has no SDK ${sdkName}`);
-  const tarball = `${PACKAGE_DIR}/.stage/${objectKey(sdk)}`;
+  const tarball = stagedTarball(sdk);
   const digest = await sha256(tarball);
   if (digest !== sdk.sha256) {
     throw new Error(`${tarball} is ${digest}; sdks.json pins ${sdk.sha256}`);
@@ -101,7 +108,7 @@ async function upload(sdkName: string): Promise<void> {
 async function fetchStage(sdk: Sdk): Promise<void> {
   const stage = `${PACKAGE_DIR}/.stage`;
   await mkdir(stage, { recursive: true });
-  const tarball = `${stage}/${objectKey(sdk)}`;
+  const tarball = stagedTarball(sdk);
   await run(
     [
       "aws",

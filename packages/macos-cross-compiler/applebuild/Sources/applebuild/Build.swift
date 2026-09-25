@@ -1,10 +1,41 @@
 import Foundation
 
-/// One application target, resolved for a platform and configuration.
+/// The XcodeGen target types applebuild builds.
+enum ProductType {
+  case application
+  /// `bundle.unit-test`: an `.xctest` bundle, hosted by an application or
+  /// standalone.
+  case unitTest
+
+  /// Settings the product type itself supplies (ProductTypes.xcspec), then
+  /// XcodeGen's per-product presets for the platform.
+  func defaultSettings(_ platform: Platform) -> [[String: String]] {
+    switch self {
+    case .application:
+      return [["WRAPPER_EXTENSION": "app"]]
+    case .unitTest:
+      // iOS test bundles are shallow; macOS ones keep Contents/.
+      let frameworks = platform.isMacBundle ? "../Frameworks" : "Frameworks"
+      return [
+        [
+          "WRAPPER_EXTENSION": "xctest",
+          "PRODUCT_BUNDLE_PACKAGE_TYPE": "BNDL",
+          "LD_RUNPATH_SEARCH_PATHS": "@loader_path/\(frameworks)",
+        ],
+        ["LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/\(frameworks) @loader_path/\(frameworks)"],
+      ]
+    }
+  }
+}
+
+/// One application or unit-test target, resolved for a platform and configuration.
 struct AppTarget {
   let spec: ProjectSpec
   let name: String
   let raw: [String: Any]
+  let productType: ProductType
+  /// For a hosted unit-test bundle: the application target that loads it.
+  let host: String?
   let platform: Platform
   let configuration: String
   let settings: BuildSettings
@@ -30,8 +61,13 @@ struct AppTarget {
     self.configuration = configuration
     raw = try spec.target(name)
 
-    guard raw["type"] as? String == "application" else {
-      throw BuildError("target \(name) is not an application")
+    switch raw["type"] as? String {
+    case "application": productType = .application
+    case "bundle.unit-test": productType = .unitTest
+    case "bundle.ui-testing":
+      throw BuildError("target \(name): UI-test bundles need Xcode's test runner app, which applebuild does not build")
+    case let type:
+      throw BuildError("target \(name) is a \(type ?? "untyped") target; applebuild builds application and bundle.unit-test targets")
     }
     let declared = raw["platform"] as? String
     let destinations = raw["supportedDestinations"] as? [String] ?? []
@@ -77,14 +113,20 @@ struct AppTarget {
       "TARGET_NAME": name,
       "EXECUTABLE_NAME": "$(PRODUCT_NAME)",
       "PRODUCT_MODULE_NAME": "$(PRODUCT_NAME:c99extidentifier)",
-      "WRAPPER_NAME": "$(PRODUCT_NAME).app",
+      "WRAPPER_NAME": "$(PRODUCT_NAME).$(WRAPPER_EXTENSION)",
       "DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER": "YES",
       "SRCROOT": spec.root.path,
       "PROJECT_DIR": spec.root.path,
     ]
-    var layers = [
-      derived, platform.defaultSettings, xcodeCompilerDefaults(), configurationPresets(configuration), presets,
-    ]
+    var layers = [derived, platform.defaultSettings]
+    let productLayers = productType.defaultSettings(platform)
+    // Xcode's product-type defaults sit on the platform's; a test bundle's
+    // rpaths replace the application ones rather than inheriting them.
+    if productType == .unitTest { layers[1]["LD_RUNPATH_SEARCH_PATHS"] = nil }
+    layers.append(productLayers[0])
+    layers += [xcodeCompilerDefaults(), configurationPresets(configuration)]
+    layers += productLayers.dropFirst()
+    layers.append(presets)
     layers += try settingLayers(spec.raw["settings"], configuration: configuration)
     layers += try settingLayers(raw["settings"], configuration: configuration)
     if platform == .macCatalyst,
@@ -145,8 +187,15 @@ struct AppTarget {
 
     let packages = try spec.localPackages()
     var products: [(URL, String)] = []
+    var host: String?
     for dependency in raw["dependencies"] as? [[String: Any]] ?? [] {
-      if let package = dependency["package"] as? String {
+      if let target = dependency["target"] as? String, productType == .unitTest {
+        // A test bundle's application dependency hosts it, as XcodeGen's TEST_HOST does.
+        guard host == nil, try spec.target(target)["type"] as? String == "application" else {
+          throw BuildError("target \(name): a unit-test bundle may depend on one application target, its host")
+        }
+        host = target
+      } else if let package = dependency["package"] as? String {
         guard let url = packages[package], let product = dependency["product"] as? String else {
           throw BuildError("target \(name): package dependency \(package) needs a local package and a product")
         }
@@ -156,6 +205,7 @@ struct AppTarget {
       }
     }
     productDependencies = products
+    self.host = host
   }
 
   var architectures: [String] {
@@ -392,11 +442,21 @@ private func maxVersion(_ a: String?, _ b: String) -> String {
   return parse(a).lexicographicallyPrecedes(parse(b)) ? b : a
 }
 
-/// Compile and link the application target for one architecture.
+/// One architecture of a built application, as a test bundle it hosts needs it.
+struct HostBuild {
+  let executable: URL
+  /// Holds the application's `.swiftmodule`, for `@testable import`.
+  let modules: URL
+}
+
+/// Compile and link the target for one architecture: an application's
+/// executable, or a unit-test bundle's binary (loaded by `host` when given).
 ///
 /// Two steps, as Xcode does, so the objects outlive the link: the executable's
 /// debug map points at them, and `dsymutil` reads them to build the dSYM.
-func compileApp(_ target: AppTarget, arch: String, packages: PackageBuild, work: URL, toolchain: Toolchain) throws -> URL {
+func compileApp(
+  _ target: AppTarget, arch: String, packages: PackageBuild, work: URL, toolchain: Toolchain, host: HostBuild? = nil
+) throws -> URL {
   let settings = target.settings
   let manager = FileManager.default
   let sdk = toolchain.sdk(target.platform.sdkName)
@@ -416,8 +476,21 @@ func compileApp(_ target: AppTarget, arch: String, packages: PackageBuild, work:
   let moduleCache = work.deletingLastPathComponent().appendingPathComponent("ModuleCache.noindex")
   var compile = common + ["-module-name", moduleName, "-c", "-g", "-module-cache-path", moduleCache.path]
   compile += try swiftFlags(settings)
-  if !target.swiftSources.contains(where: { $0.lastPathComponent == "main.swift" }) {
+  if target.productType == .unitTest || !target.swiftSources.contains(where: { $0.lastPathComponent == "main.swift" }) {
     compile.append("-parse-as-library")
+  }
+  let testing = toolchain.platformDeveloper(target.platform)
+  switch target.productType {
+  case .application:
+    // Xcode always emits the module; a test bundle's `@testable import` reads it.
+    let modules = work.appendingPathComponent("Modules")
+    try manager.createDirectory(at: modules, withIntermediateDirectories: true)
+    compile += ["-emit-module-path", modules.appendingPathComponent("\(moduleName).swiftmodule").path]
+  case .unitTest:
+    // XCTest and Swift Testing live in the platform, beside the SDK.
+    compile += ["-Isystem", testing.appendingPathComponent("usr/lib").path]
+    compile += ["-F", testing.appendingPathComponent("Library/Frameworks").path]
+    if let host { compile += ["-I", host.modules.path] }
   }
   if let products = packages.products { compile += ["-I", products.path] }
   for map in packages.moduleMaps { compile += ["-Xcc", "-fmodule-map-file=\(map.path)"] }
@@ -472,6 +545,17 @@ func compileApp(_ target: AppTarget, arch: String, packages: PackageBuild, work:
   if settings.bool("DEAD_CODE_STRIPPING") { link += ["-Xlinker", "-dead_strip"] }
   // Testability links with -rdynamic, which clang passes to ld64 as this.
   if settings.bool("ENABLE_TESTABILITY") { link += ["-Xlinker", "-export_dynamic"] }
+  if target.productType == .unitTest {
+    link += ["-Xclang-linker", "-bundle"]
+    if let host { link += ["-Xclang-linker", "-bundle_loader", "-Xclang-linker", host.executable.path] }
+    link += ["-F", testing.appendingPathComponent("Library/Frameworks").path, "-L", testing.appendingPathComponent("usr/lib").path]
+    // The unit-test product type's PRODUCT_SPECIFIC_LDFLAGS.
+    link += ["-Xlinker", "-needed_framework", "-Xlinker", "XCTest", "-framework", "XCTest"]
+    link += ["-Xlinker", "-needed-lXCTestSwiftSupport", "-lXCTestSwiftSupport"]
+  }
+  // Xcode links every Swift or Objective-C target with `-fobjc-link-runtime`,
+  // which clang turns into this.
+  link.append("-lobjc")
   // Xcode links with clang++ `-stdlib=libc++` once a target has C++ sources.
   if target.cFamilySources.contains(where: { clangLanguages[$0.pathExtension]!.hasSuffix("c++") }) {
     link.append("-lc++")

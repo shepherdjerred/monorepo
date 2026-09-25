@@ -60,6 +60,12 @@ applebuild project.yml --target MyApp [--platform macos|ios|maccatalyst] \
   [--configuration Release] [--setting KEY=VALUE] --output out
 ```
 
+A `bundle.unit-test` target builds the same way, as `--target MyAppTests`.
+The result is an `.xctest` bundle against XCTest and Swift Testing, embedded in
+its host app's `PlugIns` when it depends on one. Linux cannot run Darwin tests,
+so run them on a Mac: `xcodebuild test-without-building` with an `.xctestrun`,
+or `xcrun xctest` for a bundle without a host.
+
 App targets can mix Swift with C, C++, Objective-C, and Objective-C++. Clang
 compiles them with the flags Xcode derives from the same build settings. A
 `SWIFT_OBJC_BRIDGING_HEADER` exposes them to Swift, and Objective-C imports
@@ -149,6 +155,10 @@ These differences from `xcodebuild` output are known:
   object. ld64 lists autolinked libraries after the command line's.
   [`compare-bundles.sh`](scripts/compare-bundles.sh) reports the order
   without failing on it.
+- **x86_64 stack probes:** Xcode's Swift compiler calls `___chkstk_darwin`,
+  weakly imported from libSystem. When that is an app's only libSystem symbol,
+  Xcode's linker loads libSystem weak. The swift.org compiler emits no such
+  call, so here libSystem loads normally. Both run the same on macOS 15.
 - **Package deployment targets:** Swift Build compiles every package in the
   graph for the app's deployment target, while Xcode compiles each package for
   its own declared minimum. A package that declares an older minimum therefore
@@ -160,5 +170,7 @@ These differences from `xcodebuild` output are known:
   version 1.0.0 where Xcode writes 0.0.0. They also record the real SDK in
   `LC_BUILD_VERSION`, where Xcode records the package's deployment target.
 - **Not supported yet:** `.xcodeproj` projects, Metal sources, storyboards,
-  simulator SDKs, and running tests.
+  simulator SDKs, UI-test bundles, and Xcode's Debug "debug dylib" app layout.
+  Applebuild links a Debug app into one executable, as Xcode does with
+  `ENABLE_DEBUG_DYLIB=NO`.
   Each one fails with an error rather than being skipped.
