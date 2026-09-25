@@ -3,7 +3,9 @@
 # unknown keys are errors, and durations are ISO-8601 (PT3S, PT10M, PT1H).
 
 # Where /spawn leads, where new players arrive, and where players without a bed
-# or respawn anchor respawn. Placeholder: set to the windmill spawn.
+# or respawn anchor respawn. Placeholder: set to the windmill spawn. The module
+# refuses to start unless this is a safe spot (solid block underfoot, two open
+# blocks above, no hazards) in a loaded world.
 spawn:
   world: world
   x: 0.5
@@ -18,6 +20,8 @@ teleports:
   warmup: PT3S
   # How long a /tpa or /tpahere request stays open.
   tpaTimeout: PT1M
+  # The least time between two requests from one player.
+  tpaInterval: PT10S
   # How many places /back remembers (teleports and deaths).
   backHistorySize: 5
   # As in 2017's stTeleports: every use raises that kind's multiplier by
@@ -140,7 +144,7 @@ rules:
       No spam, no excessive swearing, no advertising other servers, and no begging for ranks or items.
 
       <dark_aqua>8. Argue in War chat.</dark_aqua>
-      Take arguments out of global chat and into War chat (see /channels).
+      Take arguments out of global chat and into War chat with <click:run_command:'/war'><u>/war</u></click>. <click:run_command:'/channels'><u>/channels</u></click> lists every channel.
     - |-
       <dark_aqua><b>Talking to NPCs</b></dark_aqua>
 

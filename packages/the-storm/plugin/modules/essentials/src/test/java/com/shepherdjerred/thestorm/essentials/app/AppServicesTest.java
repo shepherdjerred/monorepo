@@ -15,6 +15,8 @@ import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import com.shepherdjerred.thestorm.essentials.domain.place.Warp;
 import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaError;
 import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaRequest;
+import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaRequests;
+import com.shepherdjerred.thestorm.essentials.domain.tpa.TpaSelector;
 import com.shepherdjerred.thestorm.essentials.testing.FakeClock;
 import java.time.Duration;
 import java.time.Instant;
@@ -25,6 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.junit.jupiter.api.Test;
 
 final class AppServicesTest {
@@ -231,41 +235,57 @@ final class AppServicesTest {
   }
 
   @Test
-  void guardsRefuseWithTheFirstReason() {
+  void guardsRefuseWithTheFirstReasonAndSeeTheDestination() {
     var guards = new GuardRegistry();
-    assertThat(guards.check(ALICE)).isEmpty();
+    var arena = new Location(null, 100, 64, 100);
+    var home = new Location(null, 0, 64, 0);
+    assertThat(guards.check(ALICE, home)).isEmpty();
 
-    guards.add(player -> Optional.empty());
+    guards.add((mover, destination) -> Optional.empty());
     guards.add(
-        player -> player.equals(ALICE) ? Optional.of("You are in combat.") : Optional.empty());
-    guards.add(player -> Optional.of("never reached for Alice"));
+        (mover, destination) ->
+            mover.equals(ALICE)
+                ? Optional.of(Component.text("You are in combat."))
+                : Optional.empty());
+    guards.add(
+        (mover, destination) ->
+            destination.getX() > 50
+                ? Optional.of(Component.text("No teleports into the arena."))
+                : Optional.empty());
 
-    assertThat(guards.check(ALICE)).contains("You are in combat.");
-    assertThat(guards.check(BOB)).contains("never reached for Alice");
+    assertThat(guards.check(ALICE, home)).contains(Component.text("You are in combat."));
+    assertThat(guards.check(BOB, arena)).contains(Component.text("No teleports into the arena."));
+    assertThat(guards.check(BOB, home)).isEmpty();
   }
 
   @Test
-  void theTpaDeskSendsTakesAndExpires() {
-    var desk = new TpaDesk(clock, Duration.ofMinutes(1));
+  void theTpaDeskSendsPeeksTakesExpiresAndToggles() {
+    var desk = new TpaDesk(clock, new TpaRequests.Rules(Duration.ofMinutes(1), Duration.ZERO));
 
     assertThat(desk.send(ALICE, ALICE, TpaRequest.Direction.TO_TARGET))
         .isEqualTo(Result.err(new TpaError.SelfRequest()));
     var sent = desk.send(ALICE, BOB, TpaRequest.Direction.TO_REQUESTER);
     assertThat(sent.map(TpaRequest::mover)).isEqualTo(Result.ok(BOB));
-    assertThat(desk.take(BOB, Optional.empty()).map(TpaRequest::requester))
+    assertThat(desk.peek(BOB, new TpaSelector.Newest())).isEqualTo(sent);
+    assertThat(desk.take(BOB, new TpaSelector.Newest()).map(TpaRequest::requester))
         .isEqualTo(Result.ok(ALICE));
-    assertThat(desk.take(BOB, Optional.empty()))
+    assertThat(desk.take(BOB, new TpaSelector.Newest()))
         .isEqualTo(Result.err(new TpaError.NoPendingRequest()));
 
-    desk.send(ALICE, BOB, TpaRequest.Direction.TO_TARGET);
+    var _ = desk.send(ALICE, BOB, TpaRequest.Direction.TO_TARGET);
     clock.advance(Duration.ofMinutes(1));
     assertThat(desk.expire()).extracting(TpaRequest::requester).containsExactly(ALICE);
     assertThat(desk.expire()).isEmpty();
 
-    desk.send(ALICE, BOB, TpaRequest.Direction.TO_TARGET);
+    var _ = desk.send(ALICE, BOB, TpaRequest.Direction.TO_TARGET);
     desk.forget(BOB);
-    assertThat(desk.take(BOB, Optional.of(ALICE)))
+    assertThat(desk.take(BOB, new TpaSelector.From(ALICE)))
         .isEqualTo(Result.err(new TpaError.NoRequestFrom(ALICE)));
+
+    assertThat(desk.toggle(BOB)).isFalse();
+    assertThat(desk.send(ALICE, BOB, TpaRequest.Direction.TO_TARGET))
+        .isEqualTo(Result.err(new TpaError.NotAccepting()));
+    assertThat(desk.toggle(BOB)).isTrue();
   }
 
   @Test

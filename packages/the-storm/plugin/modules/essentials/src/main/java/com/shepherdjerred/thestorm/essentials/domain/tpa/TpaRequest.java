@@ -6,14 +6,17 @@ import java.util.UUID;
 
 /**
  * A request from {@code requester} to {@code target}. The requester always pays; who moves depends
- * on the direction.
+ * on the direction. The id lets an accept name exactly the request the target was shown, so a
+ * requester cannot swap a {@code /tpa} for a {@code /tpahere} under the target's click.
  *
+ * @param id unique among the requests of this server run
  * @param requester the player who asked
  * @param target the player who may accept or deny
  * @param direction {@code /tpa} or {@code /tpahere}
  * @param sentAt when it was sent
  */
-public record TpaRequest(UUID requester, UUID target, Direction direction, Instant sentAt) {
+public record TpaRequest(
+    long id, UUID requester, UUID target, Direction direction, Instant sentAt) {
 
   public TpaRequest {
     if (requester.equals(target)) {

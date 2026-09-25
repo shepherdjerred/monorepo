@@ -5,7 +5,11 @@ import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
+import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.essentials.app.WarpDirectory;
 import com.shepherdjerred.thestorm.essentials.app.store.BackStore;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
@@ -25,6 +29,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 /** {@code /spawn}, homes, {@code /back} and warps. */
@@ -41,8 +46,9 @@ final class TeleportCommands {
    * @param homes players' homes
    * @param warps server warps
    * @param back {@code /back} history
+   * @param protection land protection, asked before a home is set
    */
-  record Places(HomeStore homes, WarpDirectory warps, BackStore back) {}
+  record Places(HomeStore homes, WarpDirectory warps, BackStore back, Protection protection) {}
 
   TeleportCommands(
       PaperRuntime runtime, TeleportFlow flow, Places places, EssentialsConfig config) {
@@ -207,6 +213,16 @@ final class TeleportCommands {
   }
 
   private void setHome(Player player, PlaceName name) {
+    var decision =
+        places
+            .protection()
+            .check(player.getUniqueId(), ProtectedAction.SET_HOME, Positions.current(player));
+    if (decision instanceof Decision.Denied(var reason)) {
+      player.sendMessage(
+          HouseStyle.error(
+              Say.HOMES, Component.text("You can't set a home here: ").append(reason)));
+      return;
+    }
     var home = new Home(name, Positions.of(player));
     runtime.onMain(
         places.homes().set(player.getUniqueId(), home, config.homeLimit()),
@@ -354,7 +370,7 @@ final class TeleportCommands {
   private static void withName(Player player, String input, Consumer<PlaceName> action) {
     switch (PlaceName.parse(input)) {
       case Result.Ok<PlaceName, String>(var name) -> action.accept(name);
-      case Result.Err<PlaceName, String>(var error) -> Say.error(player, Say.HOMES, error);
+      case Result.Err<PlaceName, String>(var error) -> Say.error(player, Say.TELEPORT, error);
     }
   }
 

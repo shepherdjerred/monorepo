@@ -36,8 +36,9 @@ final class SessionListener implements Listener {
    * @param afk away status
    * @param tpa teleport requests
    * @param flow pending teleports
+   * @param safe last safe spots
    */
-  record Presence(AfkTracker afk, TpaDesk tpa, TeleportFlow flow) {}
+  record Presence(AfkTracker afk, TpaDesk tpa, TeleportFlow flow, SafeTracker safe) {}
 
   /**
    * How new players are welcomed.
@@ -77,6 +78,7 @@ final class SessionListener implements Listener {
     presence.afk().left(id);
     presence.tpa().forget(id);
     presence.flow().left(id);
+    presence.safe().forget(id);
   }
 
   private void welcome(Player player) {
