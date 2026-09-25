@@ -335,9 +335,9 @@ export function createScoutDeployment(
     ),
     LLM_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
     LLM_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
-    // Text inference and image generation, from this stage's own OpenAI and
-    // Gemini projects. Voice has separate names (VOICE_OPENAI_API_KEY*) and a
-    // separate project, so the two cannot shadow each other.
+    // Text inference from this stage's own OpenAI project. Voice has separate
+    // names (VOICE_OPENAI_API_KEY*) and a separate project, so the two cannot
+    // shadow each other.
     OPENAI_API_KEY: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
@@ -346,14 +346,20 @@ export function createScoutDeployment(
       ),
       key: "OPENAI_API_KEY",
     }),
-    GEMINI_API_KEY: EnvValue.fromSecretValue({
-      secret: Secret.fromSecretName(
-        chart,
-        "gemini-api-key-secret",
-        onePasswordItem.name,
-      ),
-      key: "GEMINI_API_KEY",
-    }),
+    // Gemini image generation runs only on beta; production has no Gemini
+    // project and must not carry a key it never uses.
+    ...(stage === "beta"
+      ? {
+          GEMINI_API_KEY: EnvValue.fromSecretValue({
+            secret: Secret.fromSecretName(
+              chart,
+              "gemini-api-key-secret",
+              onePasswordItem.name,
+            ),
+            key: "GEMINI_API_KEY",
+          }),
+        }
+      : {}),
   };
 
   // Beta keeps its operator-managed Explore preview allowlist. Production

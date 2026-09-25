@@ -27,18 +27,6 @@
           "vault_field": "GEMINI_API_KEY"
         }
       ]
-    },
-    "scout-prod": {
-      "project_id": "sjerred-llm-scout-prod",
-      "display_name": "LLM scout prod",
-      "monthly_budget_usd": 20,
-      "ai_studio_spend_cap_usd": 20,
-      "onepassword_targets": [
-        {
-          "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
-          "vault_field": "GEMINI_API_KEY"
-        }
-      ]
     }
   }
 }

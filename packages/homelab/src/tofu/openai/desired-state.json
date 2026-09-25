@@ -46,6 +46,15 @@
     },
     "buildkite": {
       "name": "Buildkite CI"
+    },
+    "birmel-active-2026-09": {
+      "name": "Birmel"
+    },
+    "scout-prod-active-2026-09": {
+      "name": "Scout for LoL (prod)"
+    },
+    "temporal-active-2026-09": {
+      "name": "Temporal"
     }
   },
   "openai_service_accounts": {
@@ -81,7 +90,7 @@
       ]
     },
     "birmel-prod-2026-09": {
-      "project_key": "birmel",
+      "project_key": "birmel-active-2026-09",
       "name": "birmel prod 2026-09",
       "onepassword_targets": [
         {
@@ -91,7 +100,7 @@
       ]
     },
     "scout-prod-2026-09": {
-      "project_key": "scout",
+      "project_key": "scout-prod-active-2026-09",
       "name": "scout prod 2026-09",
       "onepassword_targets": [
         {
@@ -111,7 +120,7 @@
       ]
     },
     "temporal-prod-2026-09": {
-      "project_key": "temporal",
+      "project_key": "temporal-active-2026-09",
       "name": "temporal prod 2026-09",
       "onepassword_targets": [
         {
@@ -149,7 +158,7 @@
       "notification_channel_subject_prefix": "scout-openai"
     },
     "birmel-monthly": {
-      "project_key": "birmel",
+      "project_key": "birmel-active-2026-09",
       "threshold_amount": 5,
       "currency": "USD",
       "interval": "month",
@@ -158,7 +167,7 @@
       "notification_channel_subject_prefix": "birmel-openai"
     },
     "scout-prod-monthly": {
-      "project_key": "scout",
+      "project_key": "scout-prod-active-2026-09",
       "threshold_amount": 15,
       "currency": "USD",
       "interval": "month",
@@ -176,7 +185,7 @@
       "notification_channel_subject_prefix": "scout-beta-openai"
     },
     "temporal-monthly": {
-      "project_key": "temporal",
+      "project_key": "temporal-active-2026-09",
       "threshold_amount": 20,
       "currency": "USD",
       "interval": "month",
@@ -207,7 +216,7 @@
   "openai_project_data_retention": {},
   "openai_project_model_permissions": {
     "birmel": {
-      "project_key": "birmel",
+      "project_key": "birmel-active-2026-09",
       "mode": "allow_list",
       "model_ids": [
         "gpt-5.4-mini",
@@ -219,7 +228,7 @@
       ]
     },
     "scout-prod": {
-      "project_key": "scout",
+      "project_key": "scout-prod-active-2026-09",
       "mode": "allow_list",
       "model_ids": [
         "gpt-5.4-mini",
@@ -243,7 +252,7 @@
       ]
     },
     "temporal": {
-      "project_key": "temporal",
+      "project_key": "temporal-active-2026-09",
       "mode": "allow_list",
       "model_ids": [
         "gpt-5.4-mini",
@@ -282,7 +291,7 @@
       "interval": "month"
     },
     "birmel-monthly": {
-      "project_key": "birmel",
+      "project_key": "birmel-active-2026-09",
       "threshold_amount": 1000,
       "currency": "USD",
       "interval": "month"
@@ -294,7 +303,7 @@
       "interval": "month"
     },
     "temporal-monthly": {
-      "project_key": "temporal",
+      "project_key": "temporal-active-2026-09",
       "threshold_amount": 4000,
       "currency": "USD",
       "interval": "month"
@@ -302,6 +311,12 @@
     "buildkite-monthly": {
       "project_key": "buildkite",
       "threshold_amount": 1000,
+      "currency": "USD",
+      "interval": "month"
+    },
+    "scout-prod-monthly": {
+      "project_key": "scout-prod-active-2026-09",
+      "threshold_amount": 2500,
       "currency": "USD",
       "interval": "month"
     }
