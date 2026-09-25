@@ -4,7 +4,9 @@ import com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,8 @@ final class FakeStore implements ShopStore {
   final List<Logged> trades = new ArrayList<>();
   final List<RefundFailure> refundFailures = new ArrayList<>();
   boolean failSaves;
+  long lastShopId;
+  int usageReads;
 
   @Override
   public CompletableFuture<List<SignShop>> loadShops() {
@@ -68,21 +72,26 @@ final class FakeStore implements ShopStore {
   }
 
   @Override
-  public CompletableFuture<Integer> catalogUsage(CatalogUsageQuery query) {
-    var used =
-        trades.stream()
-            .map(Logged::trade)
-            .filter(
-                trade ->
-                    trade.site() instanceof TradeSite.Catalog(var catalog)
-                        && catalog.equals(query.catalogId())
-                        && trade.customer().equals(query.customer())
-                        && trade.material().equals(query.itemKey())
-                        && trade.direction() == query.direction()
-                        && !trade.at().isBefore(query.since()))
-            .mapToInt(TradeRecord::quantity)
-            .sum();
-    return CompletableFuture.completedFuture(used);
+  public CompletableFuture<Map<UsageKey, Integer>> catalogUsageSince(UUID customer, Instant since) {
+    usageReads++;
+    var used = new HashMap<UsageKey, Integer>();
+    for (var logged : trades) {
+      var trade = logged.trade();
+      if (trade.site() instanceof TradeSite.Catalog(var catalog)
+          && trade.customer().equals(customer)
+          && !trade.at().isBefore(since)) {
+        used.merge(
+            new UsageKey(catalog, trade.material(), trade.direction()),
+            trade.quantity(),
+            Integer::sum);
+      }
+    }
+    return CompletableFuture.completedFuture(Map.copyOf(used));
+  }
+
+  @Override
+  public CompletableFuture<Long> lastShopId() {
+    return CompletableFuture.completedFuture(lastShopId);
   }
 
   @Override

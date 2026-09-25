@@ -21,7 +21,6 @@ import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
 import java.time.InstantSource;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import org.slf4j.Logger;
@@ -37,7 +36,8 @@ public final class ChestShops {
   private final ShopLocks locks;
   private final TradeEngine engine;
   private final CreationRules rules;
-  private final OwnerNotices notices;
+  private final ShopEffects effects;
+  private final ServerOffers offers;
   private final Executor mainThread;
   private final InstantSource time;
   private final Logger logger;
@@ -45,9 +45,10 @@ public final class ChestShops {
   /**
    * @param wiring the shared collaborators
    * @param rules the creation rules with the configured limits
-   * @param notices tells online owners about trades
+   * @param effects tells online owners about trades and closes containers while they trade
+   * @param offers the server's own prices, which admin shops may not loop with
    */
-  public ChestShops(Wiring wiring, CreationRules rules, OwnerNotices notices) {
+  public ChestShops(Wiring wiring, CreationRules rules, ShopEffects effects, ServerOffers offers) {
     this.registry = wiring.registry();
     this.store = wiring.store();
     this.locks = wiring.locks();
@@ -56,7 +57,8 @@ public final class ChestShops {
     this.time = wiring.time();
     this.logger = wiring.logger();
     this.rules = rules;
-    this.notices = notices;
+    this.effects = effects;
+    this.offers = offers;
   }
 
   /**
@@ -66,7 +68,7 @@ public final class ChestShops {
    * @param store storage
    * @param locks trades in flight
    * @param engine settles trades
-   * @param mainThread completes futures on the main thread
+   * @param mainThread completes futures on the main thread; trades settle through it
    * @param time the clock
    * @param logger for storage failures
    */
@@ -140,6 +142,10 @@ public final class ChestShops {
             request.draft().prices(),
             request.item(),
             time.instant());
+    var loop = offers.check(shop);
+    if (loop.isPresent()) {
+      return Result.err(List.of(loop.orElseThrow()));
+    }
     registry.add(shop);
     var _ =
         store
@@ -171,16 +177,23 @@ public final class ChestShops {
     return mine ? CreationAttempt.Container.FREE : CreationAttempt.Container.TAKEN;
   }
 
-  /** Sets the item of a {@code ?} shop. */
-  public SignShop setItem(SignShop shop, ItemFingerprint item) {
+  /**
+   * Sets the item of a {@code ?} shop, unless it is an admin shop whose prices would loop with the
+   * server's for that item.
+   */
+  public Result<SignShop, CreationProblem> setItem(SignShop shop, ItemFingerprint item) {
     if (shop.item().isPresent()) {
       throw new IllegalStateException("shop " + shop.id() + " already has an item");
     }
     var updated = shop.withItem(item);
+    var loop = offers.check(updated);
+    if (loop.isPresent()) {
+      return Result.err(loop.orElseThrow());
+    }
     registry.replace(updated);
     Background.logFailure(
         store.setItem(shop.id(), item), logger, "save the item of shop " + shop.id());
-    return updated;
+    return Result.ok(updated);
   }
 
   /** Removes a shop whose sign or container was broken. */
@@ -197,13 +210,20 @@ public final class ChestShops {
    * @param customer who clicked
    * @param customerItems the customer's inventory
    * @param shopItems the shop's container, or {@link Holdings#UNLIMITED} for an admin shop
+   * @param containerBlocks every block of the shop's container (both halves of a double chest),
+   *     locked while the trade settles; empty for an admin shop
    */
   public record Visit(
       SignShop shop,
       Direction direction,
       Customer customer,
       Holdings customerItems,
-      Holdings shopItems) {}
+      Holdings shopItems,
+      List<BlockPos> containerBlocks) {
+    public Visit {
+      containerBlocks = List.copyOf(containerBlocks);
+    }
+  }
 
   /** Trades one lot at a shop sign. */
   public CompletableFuture<TradeOutcome> trade(Visit visit) {
@@ -214,10 +234,6 @@ public final class ChestShops {
     if (refusal.isPresent()) {
       return completedFuture(new TradeOutcome.Refused(refusal.orElseThrow()));
     }
-    var lease = locks.acquire(OptionalLong.of(shop.id()), customer.id());
-    if (lease.isEmpty()) {
-      return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
-    }
     var price = shop.prices().forDirection(direction).orElseThrow();
     var deal =
         new Deal(
@@ -227,16 +243,18 @@ public final class ChestShops {
             new Deal.Party(customer.account(), visit.customerItems()),
             new Deal.Party(accountOf(shop.owner()), visit.shopItems()),
             "shop:" + shop.id() + ":" + direction.id());
-    return engine
-        .execute(deal)
-        .whenComplete((outcome, error) -> lease.orElseThrow().release())
-        .thenApply(
-            outcome -> {
-              if (outcome instanceof TradeOutcome.Completed) {
-                journal(shop, direction, customer, price.crystals());
-              }
-              return outcome;
-            });
+    // Every sign on this container, and both halves of a double chest, share one lock.
+    var lease = locks.acquire(visit.containerBlocks(), customer.id(), deal);
+    if (lease.isEmpty()) {
+      return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
+    }
+    effects.closeViewers(visit.containerBlocks());
+    return lease
+        .orElseThrow()
+        .releaseAfter(
+            engine.execute(deal),
+            completed -> journal(shop, direction, customer, price.crystals()),
+            mainThread);
   }
 
   private Optional<TradeProblem> refusal(SignShop shop, Direction direction, Customer customer) {
@@ -270,7 +288,7 @@ public final class ChestShops {
             time.instant());
     var told =
         switch (site) {
-          case TradeSite.Chest(_, var owner) -> notices.tellIfOnline(owner, trade);
+          case TradeSite.Chest(_, var owner) -> effects.tellOwnerIfOnline(owner, trade);
           case TradeSite.Admin(_), TradeSite.Catalog(_) -> true;
         };
     Background.logFailure(

@@ -1,16 +1,19 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.shops.app.ChestShops;
 import com.shepherdjerred.thestorm.shops.app.Customer;
 import com.shepherdjerred.thestorm.shops.app.Holdings;
 import com.shepherdjerred.thestorm.shops.app.ShopTexts;
 import com.shepherdjerred.thestorm.shops.domain.config.ChestShopSettings;
+import com.shepherdjerred.thestorm.shops.domain.shop.CreationProblem;
 import com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint;
 import com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import com.shepherdjerred.thestorm.shops.domain.sign.ItemNames;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
+import java.util.List;
 import java.util.Optional;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -88,10 +91,15 @@ final class ShopClickListener implements Listener {
         player.sendMessage(Replies.info("Right-click the sign holding the item this shop trades."));
         return;
       }
-      var updated = shops.setItem(shop, templates.fingerprint(hand));
-      blocks.rewrite(block, updated, updated.lines(settings.adminShopLabel()));
-      player.sendMessage(
-          Replies.success("This shop now trades " + name(updated.item().orElseThrow()) + "."));
+      switch (shops.setItem(shop, templates.fingerprint(hand))) {
+        case Result.Ok<SignShop, CreationProblem>(var updated) -> {
+          blocks.rewrite(block, updated, updated.lines(settings.adminShopLabel()));
+          player.sendMessage(
+              Replies.success("This shop now trades " + name(updated.item().orElseThrow()) + "."));
+        }
+        case Result.Err<SignShop, CreationProblem>(var problem) ->
+            player.sendMessage(Replies.error(problem.describe()));
+      }
       return;
     }
     var item = shop.item().orElseThrow();
@@ -119,8 +127,16 @@ final class ShopClickListener implements Listener {
             shop,
             direction,
             new Customer(player.getUniqueId(), player.getName()),
-            InventoryHoldings.of(player, templates.template(item)),
-            shop.isAdmin() ? Holdings.UNLIMITED : containerHoldings(shop, item));
+            InventoryHoldings.ofPlayer(
+                player.getServer(),
+                player.getUniqueId(),
+                templates.template(item),
+                ShopBlocks.locationOf(player)),
+            shop.isAdmin() ? Holdings.UNLIMITED : containerHoldings(shop, item),
+            shop.container()
+                .flatMap(blocks::block)
+                .map(ShopBlocks::containerBlocks)
+                .orElseGet(List::of));
     var goods = ShopTexts.goods(shop.quantity(), item.material());
     replies.whenDone(
         shops.trade(visit),

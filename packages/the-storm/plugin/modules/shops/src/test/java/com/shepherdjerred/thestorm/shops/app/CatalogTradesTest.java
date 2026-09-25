@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
+import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.shops.domain.catalog.Catalog;
 import com.shepherdjerred.thestorm.shops.domain.catalog.CatalogEntry;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
@@ -16,7 +17,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.OptionalLong;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.slf4j.helpers.NOPLogger;
@@ -35,6 +35,7 @@ final class CatalogTradesTest {
   private final FakeWallets wallets = new FakeWallets();
   private final FakeStore store = new FakeStore();
   private final ShopLocks locks = new ShopLocks();
+  private final DailyUsage usage;
   private final CatalogTrades trades;
 
   CatalogTradesTest() {
@@ -44,14 +45,15 @@ final class CatalogTradesTest {
             wallets, Runnable::run, new RefundJournal(store, time, NOPLogger.NOP_LOGGER));
     var wiring =
         new ChestShops.Wiring(
-            new ShopRegistry(List.of()),
+            new ShopRegistry(List.of(), 0),
             store,
             locks,
             engine,
             Runnable::run,
             time,
             NOPLogger.NOP_LOGGER);
-    trades = new CatalogTrades(List.of(CATALOG), wiring, ZoneId.of("UTC"), 16);
+    usage = new DailyUsage(store, time, ZoneId.of("UTC"), Runnable::run);
+    trades = new CatalogTrades(List.of(CATALOG), wiring, usage, 16);
   }
 
   private TradeOutcome trade(CatalogEntry entry, Direction direction, int lots, Holdings items)
@@ -157,7 +159,7 @@ final class CatalogTradesTest {
 
   @Test
   void aCustomerWithATradeInFlightIsBusy() throws Exception {
-    var lease = locks.acquire(OptionalLong.empty(), ALICE.id()).orElseThrow();
+    var lease = locks.acquire(List.of(), ALICE.id(), dummyDeal()).orElseThrow();
 
     assertThat(trade(COAL, Direction.SELL, 1, new FakeHoldings(16, 64)))
         .isEqualTo(new TradeOutcome.Refused(new TradeProblem.Busy()));
@@ -171,7 +173,7 @@ final class CatalogTradesTest {
   void theLockIsReleasedAfterARefusal() throws Exception {
     trade(COAL, Direction.BUY, 1, new FakeHoldings(0, 64));
 
-    assertThat(locks.acquire(OptionalLong.empty(), ALICE.id())).isPresent();
+    assertThat(locks.idle()).isTrue();
   }
 
   @Test
@@ -186,7 +188,7 @@ final class CatalogTradesTest {
   void catalogIdsMustBeUnique() {
     var wiring =
         new ChestShops.Wiring(
-            new ShopRegistry(List.of()),
+            new ShopRegistry(List.of(), 0),
             store,
             locks,
             new TradeEngine(
@@ -197,8 +199,64 @@ final class CatalogTradesTest {
             InstantSource.fixed(NOW),
             NOPLogger.NOP_LOGGER);
 
-    assertThatThrownBy(
-            () -> new CatalogTrades(List.of(CATALOG, CATALOG), wiring, ZoneId.of("UTC"), 1))
+    assertThatThrownBy(() -> new CatalogTrades(List.of(CATALOG, CATALOG), wiring, usage, 1))
         .hasMessageContaining("exchange");
+  }
+
+  private static Deal dummyDeal() {
+    return new Deal(
+        Direction.BUY,
+        1,
+        Crystals.of(1),
+        new Deal.Party(ALICE.account(), new FakeHoldings(0, 1)),
+        new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
+        "test");
+  }
+
+  @Test
+  void theDailyLimitIsCountedInMemoryNotReadBackFromTheLog() throws Exception {
+    var inventory = new FakeHoldings(10, 64);
+    trade(EMERALD, Direction.SELL, 3, inventory);
+    // The log write for that trade has not landed yet.
+    store.trades.clear();
+
+    var outcome = trade(EMERALD, Direction.SELL, 2, inventory);
+
+    assertThat(outcome)
+        .isEqualTo(new TradeOutcome.Refused(new TradeProblem.DailyLimitReached(1, 2)));
+    assertThat(store.usageReads).isEqualTo(1);
+  }
+
+  @Test
+  void usageIsReadOncePerPlayerPerDayAndPreloadIsEnough() throws Exception {
+    store.trades.add(
+        new FakeStore.Logged(
+            new TradeRecord(
+                new TradeSite.Catalog("exchange"),
+                ALICE.id(),
+                "Alice",
+                Direction.SELL,
+                "emerald",
+                4,
+                48,
+                NOW.minusSeconds(60)),
+            true));
+
+    usage.preload(ALICE.id()).get();
+
+    assertThat(trades.remainingToday(CATALOG, EMERALD, Direction.SELL, ALICE).get()).hasValue(0);
+    assertThat(trades.remainingToday(CATALOG, EMERALD, Direction.BUY, ALICE).get()).hasValue(4);
+    assertThat(store.usageReads).isEqualTo(1);
+  }
+
+  @Test
+  void entriesWithoutALimitAreCountedToo() throws Exception {
+    wallets.set(ALICE.account(), 200);
+
+    trade(COAL, Direction.BUY, 2, new FakeHoldings(0, 2304));
+
+    assertThat(
+            usage.used(ALICE.id(), new ShopStore.UsageKey("exchange", "coal", Direction.BUY)).get())
+        .isEqualTo(32);
   }
 }

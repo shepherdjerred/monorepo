@@ -44,3 +44,6 @@ catalogs:
   dailyResetZone: America/Los_Angeles
   # The most trades of one item a single menu purchase may bundle.
   maxLots: 16
+  # How far, in blocks, a player may stand from the shopkeeper (or where an
+  # admin opened the shop) and still use its buttons.
+  maxDistance: 8

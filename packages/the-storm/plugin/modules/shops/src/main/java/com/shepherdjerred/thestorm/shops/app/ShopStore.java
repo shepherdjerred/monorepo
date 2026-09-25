@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -35,21 +36,24 @@ public interface ShopStore {
    */
   CompletableFuture<List<TradeRecord>> takeUnnotified(UUID owner);
 
-  /** How many items a customer has traded with a catalog today, for its daily limit. */
-  CompletableFuture<Integer> catalogUsage(CatalogUsageQuery query);
+  /**
+   * How many items {@code customer} has traded with the catalogs since {@code since}, per catalog,
+   * item and direction, for the daily limits.
+   */
+  CompletableFuture<Map<UsageKey, Integer>> catalogUsageSince(UUID customer, Instant since);
+
+  /** The highest shop id ever issued, deleted shops included; 0 if none. */
+  CompletableFuture<Long> lastShopId();
 
   /** Logs a refund the ledger refused, for staff to settle; completes with its id. */
   CompletableFuture<Long> recordRefundFailure(RefundFailure failure);
 
   /**
-   * One daily-limit lookup.
+   * What a daily limit counts.
    *
-   * @param customer the player
    * @param catalogId the catalog
    * @param itemKey the item key
    * @param direction buying or selling, counted separately
-   * @param since the start of the current day
    */
-  record CatalogUsageQuery(
-      UUID customer, String catalogId, String itemKey, Direction direction, Instant since) {}
+  record UsageKey(String catalogId, String itemKey, Direction direction) {}
 }

@@ -11,6 +11,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
+import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 /** Item fingerprints and inventory holdings on real (mock) item stacks. */
 final class ItemsAndHoldingsTest extends ShopsFixture {
@@ -99,7 +100,7 @@ final class ItemsAndHoldingsTest extends ShopsFixture {
     inventory.setItem(5, ItemStack.of(Material.STONE, 64));
     inventory.setItem(20, ItemStack.of(Material.ENDER_PEARL, 16));
     inventory.setItemInOffHand(ItemStack.of(Material.ENDER_PEARL, 16));
-    var pearls = InventoryHoldings.of(bob, ItemStack.of(Material.ENDER_PEARL));
+    var pearls = holdings(bob, ItemStack.of(Material.ENDER_PEARL));
 
     // 34 slots are free of other things; pearls stack to 16.
     assertThat(pearls.stockpile()).isEqualTo(new Stockpile(26, 6 + 33 * 16));
@@ -116,10 +117,34 @@ final class ItemsAndHoldingsTest extends ShopsFixture {
     assertThat(inventory.getItem(5)).isEqualTo(ItemStack.of(Material.STONE, 64));
   }
 
+  private InventoryHoldings holdings(PlayerMock player, ItemStack template) {
+    return InventoryHoldings.ofPlayer(
+        server, player.getUniqueId(), template, ShopBlocks.locationOf(player));
+  }
+
+  @Test
+  void aPlayerWhoLeftHasNoStockOrRoomAndReturnsDropWhereTheyTraded() {
+    var bob = player("Bob", 0);
+    bob.getInventory().setItem(0, ItemStack.of(Material.ENDER_PEARL, 10));
+    var tradingAt = ShopBlocks.locationOf(bob).clone();
+    var pearls = holdings(bob, ItemStack.of(Material.ENDER_PEARL));
+
+    bob.disconnect();
+
+    assertThat(pearls.stockpile()).isEqualTo(new Stockpile(0, 0));
+    pearls.addOrDrop(5);
+    assertThat(bob.getInventory().getItem(0)).isEqualTo(ItemStack.of(Material.ENDER_PEARL, 10));
+    assertThat(
+            tradingAt.getWorld().getEntitiesByClass(Item.class).stream()
+                .mapToInt(item -> item.getItemStack().getAmount())
+                .sum())
+        .isEqualTo(5);
+  }
+
   @Test
   void holdingsRefuseToOverdraw() {
     var bob = player("Bob", 0);
-    var pearls = InventoryHoldings.of(bob, ItemStack.of(Material.ENDER_PEARL));
+    var pearls = holdings(bob, ItemStack.of(Material.ENDER_PEARL));
 
     assertThatThrownBy(() -> pearls.remove(1)).isInstanceOf(IllegalStateException.class);
   }
@@ -131,7 +156,7 @@ final class ItemsAndHoldingsTest extends ShopsFixture {
       bob.getInventory().setItem(slot, ItemStack.of(Material.STONE, 64));
     }
     bob.getInventory().setItem(3, ItemStack.of(Material.ENDER_PEARL, 10));
-    var pearls = InventoryHoldings.of(bob, ItemStack.of(Material.ENDER_PEARL));
+    var pearls = holdings(bob, ItemStack.of(Material.ENDER_PEARL));
 
     pearls.addOrDrop(30);
 
