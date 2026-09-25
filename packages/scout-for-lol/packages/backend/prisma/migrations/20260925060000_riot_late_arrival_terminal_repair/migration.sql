@@ -17,8 +17,13 @@
 --
 -- - kind `v2-client-match-terminal`;
 -- - recorded at or after 2026-09-25T05:53Z, when the prod dispatcher first
---   started. Every terminal ack in its history is `ClientMatchLateArrival`, and
---   no environment holds a terminal receipt from before then;
+--   started, and before 2026-09-28T00:00Z. Every terminal ack in the prod
+--   dispatcher's history is `ClientMatchLateArrival`, and no environment holds
+--   a terminal receipt from before then. The fixed upper bound confines the
+--   repair to this incident: once this change deploys, Riot discoveries are no
+--   longer refused, so any later terminal is a genuine native-client refusal
+--   and must stand. This change is expected to deploy well before the cutoff;
+--   a refusal recorded after it would need its own repair;
 -- - no `MatchObservation` for the match. A terminal that followed a match
 --   Workflow's own failure after the observation commit keeps its receipt.
 --
@@ -31,6 +36,7 @@
 DELETE FROM "MatchProcessingReceipt" r
 WHERE r."kind" = 'v2-client-match-terminal'
   AND r."recordedAt" >= TIMESTAMP '2026-09-25 05:53:00'
+  AND r."recordedAt" < TIMESTAMP '2026-09-28 00:00:00'
   AND NOT EXISTS (
     SELECT 1
     FROM "MatchObservation" o

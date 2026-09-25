@@ -218,6 +218,7 @@ describe("the Riot late-arrival terminal repair migration", () => {
   const MIGRATION = `${import.meta.dir}/../../../prisma/migrations/20260925060000_riot_late_arrival_terminal_repair/migration.sql`;
   const IN_WINDOW = IsoInstantSchema.parse("2026-09-25T05:54:13.076Z");
   const BEFORE_WINDOW = IsoInstantSchema.parse("2026-09-25T05:52:59.999Z");
+  const AFTER_WINDOW = IsoInstantSchema.parse("2026-09-28T00:00:00.000Z");
 
   async function seedTerminal(
     matchId: RiotMatchId,
@@ -255,11 +256,18 @@ describe("the Riot late-arrival terminal repair migration", () => {
     await seedObservation(observedTerminal);
     await seedTerminal(observedTerminal, IN_WINDOW);
     await seedTerminal(olderTerminal, BEFORE_WINDOW);
+    // A refusal recorded after the incident window is a genuine native-client
+    // late arrival and must stand.
+    const laterTerminal = RiotMatchIdSchema.parse("NA1_8213");
+    await seedTerminal(laterTerminal, AFTER_WINDOW);
     await expect(
       readMatchPipelineStateV2({ riotMatchId: refused }),
     ).resolves.toEqual({ kind: "terminal" });
 
-    expect(await applyRepair()).toBe(1);
+    // The suite shares one database, so other files' receipts may also be in
+    // the window; assert on the rows this test seeded rather than on the
+    // global delete count.
+    await applyRepair();
 
     // The resume read no longer blocks the next discovery.
     await expect(
@@ -271,10 +279,24 @@ describe("the Riot late-arrival terminal repair migration", () => {
     expect(await kindsOf(observedTerminal)).toContain(
       SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
     );
-    await expect(
-      readMatchPipelineStateV2({ riotMatchId: olderTerminal }),
-    ).resolves.toEqual({ kind: "terminal" });
+    for (const kept of [olderTerminal, laterTerminal]) {
+      await expect(
+        readMatchPipelineStateV2({ riotMatchId: kept }),
+      ).resolves.toEqual({ kind: "terminal" });
+    }
 
-    expect(await applyRepair()).toBe(0);
+    // Idempotent: a re-run leaves every seeded row exactly as the first run did.
+    await applyRepair();
+    expect(await kindsOf(refused)).toEqual([
+      SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
+    ]);
+    expect(await kindsOf(observedTerminal)).toContain(
+      SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+    );
+    for (const kept of [olderTerminal, laterTerminal]) {
+      await expect(
+        readMatchPipelineStateV2({ riotMatchId: kept }),
+      ).resolves.toEqual({ kind: "terminal" });
+    }
   });
 });
