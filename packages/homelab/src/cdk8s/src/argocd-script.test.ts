@@ -349,7 +349,9 @@ test("release-root owns the complete dry-run lifecycle", async () => {
     expect(stdout).toContain(
       "argocd verify-auto-sync: apps at 2.0.0-42 (dry run)",
     );
-    expect(stdout).toContain("argocd release-health-wait: 1 expected");
+    expect(stdout).toContain(
+      "argocd release-health-wait: 1 Application(s) published at 2.0.0-42; 0 retained",
+    );
     // Ordering, not just presence: the auto-sync invariant has to run after the
     // finalizer restores the declared policy and before the health wait, so a
     // divergence is reported instead of the release spending its timeout on a
@@ -1251,8 +1253,8 @@ describe("Argo CD stale release protection", () => {
   });
 });
 
-describe("Argo CD stale release rejection", () => {
-  test("rejects an Argo reconcile after a newer apps chart is published", async () => {
+describe("Argo CD superseded release", () => {
+  test("yields an Argo reconcile to a newer published apps chart without touching Argo", async () => {
     let argoRequests = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -1305,13 +1307,16 @@ describe("Argo CD stale release rejection", () => {
           stdout: "pipe",
         },
       );
-      const [exitCode, stderr] = await Promise.all([
+      const [exitCode, stdout] = await Promise.all([
         process.exited,
-        new Response(process.stderr).text(),
+        new Response(process.stdout).text(),
       ]);
 
-      expect(exitCode).not.toBe(0);
-      expect(stderr).toContain("Refusing stale Argo release 2.0.0-42");
+      // The newer build owns the release, so this one succeeds without acting.
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain(
+        "Apps release 2.0.0-42 is superseded by 2.0.0-43",
+      );
       expect(argoRequests).toBe(0);
     } finally {
       await server.stop(true);
