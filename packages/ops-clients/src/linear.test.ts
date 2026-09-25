@@ -75,6 +75,20 @@ describe("LinearClient", () => {
     expect(requests[0]?.url).toBe("https://api.linear.app/graphql");
   });
 
+  test("accepts Linear's duplicate state type and excludes it from open issues", async () => {
+    const { fetch, requests } = sequence({
+      data: {
+        issues: {
+          pageInfo: { hasNextPage: false, endCursor: null },
+          nodes: [issue("SJ-2", "SJ", "duplicate")],
+        },
+      },
+    });
+    const client = new LinearClient({ apiKey: "k", fetch });
+    await expect(client.openIssues()).resolves.toBeDefined();
+    expect(JSON.stringify(requests)).toContain("duplicate");
+  });
+
   test("an unknown state type fails loudly", async () => {
     const { fetch } = sequence({
       data: {
