@@ -3,6 +3,7 @@ import {
   continueAsNew,
   getExternalWorkflowHandle,
   isCancellation,
+  patched,
   setHandler,
   sleep,
   workflowInfo,
@@ -74,6 +75,63 @@ function clientDispatchIsBehindWatermark(
   return (
     match.riotMatchId !== watermark.riotMatchId &&
     compareClientDispatchItemToOrderKey(match, watermark) < 0
+  );
+}
+
+/**
+ * Replay gate for exempting Riot discoveries from the late-arrival watermark.
+ *
+ * Histories recorded before this patch routed every item behind the watermark
+ * to review, Riot discoveries included, and replaying them without a marker
+ * keeps that decision. The long-running dispatcher reaches its first live
+ * Workflow Task after deploy with `patched` answering true, so it adopts the
+ * new routing without a restart. Retire with `deprecatePatch` once no
+ * execution predating it can still replay.
+ */
+export const SCOUT_V2_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH =
+  "scout-v2-dispatch-riot-bypasses-watermark";
+
+/**
+ * Whether Riot discovery vouches for this item.
+ *
+ * A discovery run always names itself as a completion target because it waits
+ * for the acknowledgement; native ingress never does, because its HTTP outbox
+ * retries instead. A merged item carrying any target was therefore discovered
+ * by Riot too.
+ */
+function clientDispatchIsRiotDiscovery(
+  match: ScoutClientMatchDispatchItemV2,
+): boolean {
+  return match.completionTargets.length > 0;
+}
+
+/**
+ * Whether an item must go to late-arrival review instead of being processed.
+ *
+ * The watermark is a native-client guard: an offline-history sighting that
+ * sorts behind work already started cannot be proven to be in order. Riot
+ * discovery is ordered per account by that account's cursor and polls a
+ * rotating subset of accounts, so it routinely hands over one account's older
+ * match after another account's newer one. That crossing is the order v1
+ * always settled in, and refusing it lost the match. Riot items therefore take
+ * the ordinary in-order path. They still advance the watermark, which keeps
+ * the client guard at least as strict as it was.
+ */
+function clientDispatchNeedsLateReview(
+  match: ScoutClientMatchDispatchItemV2,
+  watermark: ScoutClientMatchDispatchOrderKeyV2 | null,
+): boolean {
+  if (
+    watermark === null ||
+    !clientDispatchIsBehindWatermark(match, watermark)
+  ) {
+    return false;
+  }
+  // Evaluated only on the decision it gates, so a history that never met a
+  // late Riot item records no marker.
+  return !(
+    clientDispatchIsRiotDiscovery(match) &&
+    patched(SCOUT_V2_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH)
   );
 }
 
@@ -334,6 +392,32 @@ async function routeLateClientDispatchToReview(
   });
 }
 
+/**
+ * Take the earliest queued late arrival off the queue, if there is one.
+ *
+ * A Riot discovery there was queued before the patch, or is a client-only
+ * arrival that Riot has since discovered too. Riot vouches for it, so it is
+ * processed in order like any other discovery instead of refused.
+ */
+async function settleFirstLateArrival(
+  stage: ScoutStage,
+  pending: Map<RiotMatchId, ScoutClientMatchDispatchItemV2>,
+  lateArrivals: Map<RiotMatchId, ScoutClientMatchDispatchItemV2>,
+): Promise<boolean> {
+  const late = firstClientDispatchItem(lateArrivals);
+  if (late === undefined) return false;
+  if (
+    clientDispatchIsRiotDiscovery(late) &&
+    patched(SCOUT_V2_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH)
+  ) {
+    lateArrivals.delete(late.riotMatchId);
+    mergeClientDispatchItem(pending, late);
+    return true;
+  }
+  await routeLateClientDispatchToReview(stage, lateArrivals, late);
+  return true;
+}
+
 function mergeSignaledClientDispatchItem(
   pending: Map<RiotMatchId, ScoutClientMatchDispatchItemV2>,
   lateArrivals: Map<RiotMatchId, ScoutClientMatchDispatchItemV2>,
@@ -347,8 +431,7 @@ function mergeSignaledClientDispatchItem(
     const merged = pending.get(match.riotMatchId);
     if (
       merged !== undefined &&
-      orderingWatermark !== null &&
-      clientDispatchIsBehindWatermark(merged, orderingWatermark)
+      clientDispatchNeedsLateReview(merged, orderingWatermark)
     ) {
       pending.delete(match.riotMatchId);
       mergeClientDispatchItem(lateArrivals, merged);
@@ -359,10 +442,7 @@ function mergeSignaledClientDispatchItem(
     mergeClientDispatchItem(lateArrivals, match);
     return;
   }
-  if (
-    orderingWatermark !== null &&
-    clientDispatchIsBehindWatermark(match, orderingWatermark)
-  ) {
+  if (clientDispatchNeedsLateReview(match, orderingWatermark)) {
     mergeClientDispatchItem(lateArrivals, match);
     return;
   }
@@ -393,12 +473,7 @@ function firstProcessableClientDispatch(
 ): ScoutClientMatchDispatchItemV2 | undefined {
   const next = firstClientDispatchItem(pending);
   if (next === undefined) return undefined;
-  if (
-    orderingWatermark === null ||
-    !clientDispatchIsBehindWatermark(next, orderingWatermark)
-  ) {
-    return next;
-  }
+  if (!clientDispatchNeedsLateReview(next, orderingWatermark)) return next;
   pending.delete(next.riotMatchId);
   mergeClientDispatchItem(lateArrivals, next);
   return undefined;
@@ -420,10 +495,12 @@ function advanceClientDispatchWatermark(
  *
  * Signals from every discovery source land on one execution per environment.
  * Accepted work is deduplicated and ordered by match completion time, and a
- * child is awaited before the next match may start. Evidence arriving behind
- * the durable ordering frontier is routed to review instead of settling out
- * of order. This protects bounded Dare settlement from a later match
- * overtaking an earlier one.
+ * child is awaited before the next match may start. Native-client evidence
+ * arriving behind the durable ordering frontier is routed to review instead
+ * of settling out of order. This protects bounded Dare settlement from a
+ * later match overtaking an earlier one. Riot discoveries are exempt: each
+ * account's cursor is what orders that player's matches, and one frontier
+ * across accounts polled in rotation refuses legitimate backlog.
  */
 export async function scoutClientMatchDispatchV2Workflow(
   rawInput: ScoutClientMatchDispatchV2InputEnvelope,
@@ -460,9 +537,7 @@ export async function scoutClientMatchDispatchV2Workflow(
       );
     }
 
-    const late = firstClientDispatchItem(lateArrivals);
-    if (late !== undefined) {
-      await routeLateClientDispatchToReview(input.stage, lateArrivals, late);
+    if (await settleFirstLateArrival(input.stage, pending, lateArrivals)) {
       continue;
     }
 

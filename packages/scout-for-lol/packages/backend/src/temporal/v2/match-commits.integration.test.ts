@@ -213,3 +213,84 @@ describe("recordClientMatchTerminalV2", () => {
     );
   });
 });
+
+describe("the Riot late-arrival terminal repair migration", () => {
+  const MIGRATION = `${import.meta.dir}/../../../prisma/migrations/20260925060000_riot_late_arrival_terminal_repair/migration.sql`;
+  const IN_WINDOW = IsoInstantSchema.parse("2026-09-25T05:54:13.076Z");
+  const BEFORE_WINDOW = IsoInstantSchema.parse("2026-09-25T05:52:59.999Z");
+  const AFTER_WINDOW = IsoInstantSchema.parse("2026-09-28T00:00:00.000Z");
+
+  async function seedTerminal(
+    matchId: RiotMatchId,
+    recordedAt: typeof IN_WINDOW,
+  ): Promise<void> {
+    expect(
+      await recordReceipt(
+        prisma,
+        buildMatchReceipt({
+          matchId,
+          kind: SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+          scope: { kind: "global" },
+          recordedAt,
+          evidence: scoutV2ClientMatchTerminalEvidenceCodec.serialize({
+            riotMatchId: matchId,
+          }),
+        }),
+      ),
+    ).toEqual({ outcome: "applied" });
+  }
+
+  async function applyRepair(): Promise<number> {
+    return await prisma.$executeRawUnsafe(await Bun.file(MIGRATION).text());
+  }
+
+  test("releases exactly the refused Riot matches and is idempotent", async () => {
+    const refused = RiotMatchIdSchema.parse("BR1_3285962389");
+    const observedTerminal = RiotMatchIdSchema.parse("NA1_8211");
+    const olderTerminal = RiotMatchIdSchema.parse("NA1_8212");
+    await seedTerminal(refused, IN_WINDOW);
+    // An unrelated receipt family on the refused match stays standing.
+    await seedForeignStageReceipt(refused);
+    // A terminal behind a committed observation came from a match Workflow's
+    // own failure, not from the pre-effect refusal.
+    await seedObservation(observedTerminal);
+    await seedTerminal(observedTerminal, IN_WINDOW);
+    await seedTerminal(olderTerminal, BEFORE_WINDOW);
+    // A refusal recorded after the incident window is a genuine native-client
+    // late arrival and must stand.
+    const laterTerminal = RiotMatchIdSchema.parse("NA1_8213");
+    await seedTerminal(laterTerminal, AFTER_WINDOW);
+    await expect(
+      readMatchPipelineStateV2({ riotMatchId: refused }),
+    ).resolves.toEqual({ kind: "terminal" });
+
+    // The suite shares one database, so other files' receipts may also be in
+    // the window; assert on the rows this test seeded rather than on the
+    // global delete count.
+    await applyRepair();
+
+    // The resume read no longer blocks the next discovery, and nothing else
+    // this test seeded moved.
+    async function expectRepaired(): Promise<void> {
+      await expect(
+        readMatchPipelineStateV2({ riotMatchId: refused }),
+      ).resolves.toEqual({ kind: "absent" });
+      expect(await kindsOf(refused)).toEqual([
+        SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
+      ]);
+      expect(await kindsOf(observedTerminal)).toContain(
+        SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+      );
+      for (const kept of [olderTerminal, laterTerminal]) {
+        await expect(
+          readMatchPipelineStateV2({ riotMatchId: kept }),
+        ).resolves.toEqual({ kind: "terminal" });
+      }
+    }
+    await expectRepaired();
+
+    // Idempotent: a re-run leaves every seeded row exactly as the first run did.
+    await applyRepair();
+    await expectRepaired();
+  });
+});
