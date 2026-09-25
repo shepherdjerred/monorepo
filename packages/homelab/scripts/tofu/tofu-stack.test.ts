@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { buildTofuEnvironment, validationInitArguments } from "./tofu-stack.ts";
+import {
+  buildTofuEnvironment,
+  desiredStateVariableValue,
+  validationInitArguments,
+} from "./tofu-stack.ts";
 import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
 import {
   collectOnePasswordTargets,
@@ -305,5 +309,19 @@ describe("committed platform desired state", () => {
         },
       }),
     ).toEqual([{ vault_item_id: "birmel-item" }]);
+  });
+});
+
+describe("desired-state variables", () => {
+  test("passes strings literally and encodes every other type", () => {
+    // A string variable reads its environment value verbatim, so encoding it
+    // would deliver the quotes too and fail the variable's own validation.
+    expect(desiredStateVariableValue("012345-6789AB-CDEF01")).toBe(
+      "012345-6789AB-CDEF01",
+    );
+    expect(desiredStateVariableValue(null)).toBe("null");
+    expect(desiredStateVariableValue({ birmel: { budget: 10 } })).toBe(
+      '{"birmel":{"budget":10}}',
+    );
   });
 });

@@ -1,8 +1,8 @@
 {
   "$schema": "../platform-desired-state.schema.json",
   "platform": "google",
-  "google_billing_account_id": null,
-  "google_quota_project_id": null,
+  "google_billing_account_id": "01D511-F70137-084AF1",
+  "google_quota_project_id": "sjerred-llm-admin",
   "google_workloads": {
     "birmel-prod": {
       "project_id": "sjerred-llm-birmel-prod",
