@@ -1,6 +1,6 @@
 ---
 title: Upgrade the Temporal server
-description: Stage a schema-first Temporal server upgrade, prove the database backup and TLS gates, and roll back the binary safely.
+description: Stage a schema-first Temporal server upgrade, prove the schema and TLS gates, and roll back the binary safely.
 sidebar:
   order: 6
 ---
@@ -47,21 +47,13 @@ Confirm the pull request pins `temporalio/server` and
 exactly one release from the version currently running. Do not merge it until
 the running release has recorded runtime acceptance.
 
-Argo runs two ordered gates before touching the server Deployment:
-
-1. `temporal-backup-preflight`, a PreSync hook, requires the newest
-   `6hourly-backup` to be less than seven hours old, completed without errors,
-   and to have completed every attempted volume snapshot. It then proves that
-   backup covered the PostgreSQL volume specifically, by reading the
-   `ZFSBackup` object openebs zfs-localpv writes for the PVC's bound PV under
-   that backup's name and requiring status `Done`.
-2. `temporal-schema-migration`, a Sync hook at wave -1, runs the matching
-   admin-tools image and updates both the core and visibility PostgreSQL
-   schemas over verified TLS.
+Before touching the server Deployment, Argo runs `temporal-schema-migration`,
+a Sync hook at wave -1. It runs the matching admin-tools image and updates both
+the core and visibility PostgreSQL schemas over verified TLS.
 
 A failed hook fails the Argo sync, so the old server stays running. Do not skip
-or delete a failed hook to force the rollout. Repair the backup, certificate,
-database, or schema problem and retry the same release.
+or delete a failed hook to force the rollout. Repair the certificate, database,
+or schema problem and retry the same release.
 
 The temporal child sync waits up to 20 minutes because the migration hook may
 run up to 15 minutes: DDL that rewrites a hot table runs under live server
@@ -85,11 +77,10 @@ kubectl --namespace temporal exec temporal-postgresql-0 -- \
 release resumes a partially applied migration instead of restarting it: the
 landed statements are skipped as duplicates and only the pending work remains.
 
-Watch the gates and the Deployment:
+Watch the migration and the Deployment:
 
 ```sh
 kubectl --namespace temporal get jobs,pods --watch
-kubectl --namespace temporal logs job/temporal-backup-preflight
 kubectl --namespace temporal logs job/temporal-schema-migration
 kubectl --namespace temporal rollout status deployment/temporal-temporal-server
 ```
@@ -131,19 +122,18 @@ Do not roll a database schema backward. Temporal supports deploying the older
 server binary against the already-upgraded schema during rollback.
 
 Revert only the server image pin to the last accepted release, keep the newer
-schema in place, and run the same backup and schema hooks. The schema update is
+schema in place, and run the same schema hook. The schema update is
 idempotent and should report no pending migrations. After the old Deployment
 is healthy, repeat the runtime acceptance checks above.
 
 If the database or its certificate is unhealthy, stop. A server-image rollback
-does not repair persistence and must not be used to bypass a failed backup or
-TLS gate.
+does not repair persistence and must not be used to bypass a failed TLS gate.
 
 ## Advance to the next release
 
 Prepare the next release only after the current one has passed runtime
-acceptance. Update the server and admin-tools pins together, obtain another
-current successful Velero backup, and repeat the complete procedure. Never
+acceptance. Update the server and admin-tools pins together and repeat the
+complete procedure. Never
 stack an unverified second upgrade on the first release branch.
 
 ## Related
