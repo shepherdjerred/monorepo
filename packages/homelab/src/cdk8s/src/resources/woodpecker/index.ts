@@ -120,6 +120,15 @@ export function createWoodpeckerServer(chart: Chart) {
           secret: serverSecretRef,
           key: "WOODPECKER_AGENT_SECRET",
         }),
+        // Signs the JWTs agents are issued after authenticating with the agent
+        // secret. Left unset, the server invents a new one on every start, so
+        // each restart invalidates every agent's token and forces them all to
+        // reconnect -- which is exactly when a running workflow is most likely
+        // to lose its agent.
+        WOODPECKER_GRPC_SECRET: EnvValue.fromSecretValue({
+          secret: serverSecretRef,
+          key: "WOODPECKER_GRPC_SECRET",
+        }),
         // The pipeline graph is generated per build by the configuration
         // extension rather than read from committed YAML. Extensions may only
         // be called on hosts named here; the default forbids private
