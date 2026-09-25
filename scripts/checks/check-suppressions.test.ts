@@ -17,6 +17,13 @@ describe("hasSuppressionPattern", () => {
     expect(hasSuppressionPattern('"no-abusive-eslint-disable",')).toBe(false);
   });
 
+  test("detects Java suppressions", () => {
+    expect(hasSuppressionPattern('@SuppressWarnings("NullAway")')).toBe(true);
+    expect(hasSuppressionPattern("int x = 1; // NOPMD")).toBe(true);
+    expect(hasSuppressionPattern("// CHECKSTYLE:OFF")).toBe(true);
+    expect(hasSuppressionPattern("SuppressWarnings are banned")).toBe(false);
+  });
+
   test("continues to detect non-ESLint suppressions", () => {
     expect(hasSuppressionPattern("// @ts-expect-error")).toBe(true);
     expect(hasSuppressionPattern("command || true")).toBe(true);

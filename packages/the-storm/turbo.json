@@ -1,0 +1,116 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle, both
+    // outside turbo's concern; no task declares outputs. Turbo's win is the
+    // cached log/exit replay keyed on source hash. MISE_DATA_DIR and JAVA_HOME
+    // must pass through or strict env mode hides the mise-managed JDK/Gradle.
+    "build": {
+      "inputs": [
+        "plugin/**/*.java",
+        "plugin/**/*.kts",
+        "plugin/**/*.kt",
+        "plugin/**/*.toml",
+        "plugin/**/*.properties",
+        "plugin/**/*.lockfile",
+        "plugin/**/*.xml",
+        "plugin/**/*.yml",
+        "plugin/**/*.sql",
+        "!plugin/**/build/**",
+        "!plugin/.gradle/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "JAVA_HOME",
+        "GRADLE_USER_HOME",
+        "GRADLE_OPTS"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "plugin/**/*.java",
+        "plugin/**/*.kts",
+        "plugin/**/*.kt",
+        "plugin/**/*.toml",
+        "plugin/**/*.properties",
+        "plugin/**/*.lockfile",
+        "plugin/**/*.xml",
+        "plugin/**/*.yml",
+        "plugin/**/*.sql",
+        "!plugin/**/build/**",
+        "!plugin/.gradle/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "JAVA_HOME",
+        "GRADLE_USER_HOME",
+        "GRADLE_OPTS"
+      ]
+    },
+    "test:ci": {
+      "inputs": [
+        "plugin/**/*.java",
+        "plugin/**/*.kts",
+        "plugin/**/*.kt",
+        "plugin/**/*.toml",
+        "plugin/**/*.properties",
+        "plugin/**/*.lockfile",
+        "plugin/**/*.xml",
+        "plugin/**/*.yml",
+        "plugin/**/*.sql",
+        "!plugin/**/build/**",
+        "!plugin/.gradle/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "JAVA_HOME",
+        "GRADLE_USER_HOME",
+        "GRADLE_OPTS"
+      ]
+    },
+    "lint": {
+      "inputs": [
+        "plugin/**/*.java",
+        "plugin/**/*.kts",
+        "plugin/**/*.kt",
+        "plugin/**/*.toml",
+        "plugin/**/*.properties",
+        "plugin/config/**",
+        "!plugin/**/build/**",
+        "!plugin/.gradle/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "JAVA_HOME",
+        "GRADLE_USER_HOME",
+        "GRADLE_OPTS"
+      ]
+    },
+    "typecheck": {
+      "inputs": [
+        "plugin/**/*.java",
+        "plugin/**/*.kts",
+        "plugin/**/*.kt",
+        "plugin/**/*.toml",
+        "plugin/**/*.properties",
+        "plugin/**/*.lockfile",
+        "plugin/**/*.xml",
+        "plugin/**/*.sql",
+        "!plugin/**/build/**",
+        "!plugin/.gradle/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "JAVA_HOME",
+        "GRADLE_USER_HOME",
+        "GRADLE_OPTS"
+      ]
+    }
+  }
+}

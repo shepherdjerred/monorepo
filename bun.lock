@@ -2090,6 +2090,9 @@
     "packages/terraform-provider-asuswrt": {
       "name": "@shepherdjerred/terraform-provider-asuswrt",
     },
+    "packages/the-storm": {
+      "name": "@shepherdjerred/the-storm",
+    },
     "packages/toolkit": {
       "name": "@shepherdjerred/toolkit",
       "version": "0.1.0",
@@ -4070,6 +4073,8 @@
     "@shepherdjerred/temporal-observability": ["@shepherdjerred/temporal-observability@workspace:packages/temporal-observability"],
 
     "@shepherdjerred/terraform-provider-asuswrt": ["@shepherdjerred/terraform-provider-asuswrt@workspace:packages/terraform-provider-asuswrt"],
+
+    "@shepherdjerred/the-storm": ["@shepherdjerred/the-storm@workspace:packages/the-storm"],
 
     "@shepherdjerred/toolkit": ["@shepherdjerred/toolkit@workspace:packages/toolkit"],
 
