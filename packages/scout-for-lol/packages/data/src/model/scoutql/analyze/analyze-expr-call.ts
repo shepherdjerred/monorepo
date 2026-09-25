@@ -22,6 +22,10 @@ import {
   type ExprTypingContext,
   type ScoutQlExprType,
 } from "#src/model/scoutql/analyze/analyze-expr-shared.ts";
+import {
+  filterRefusal,
+  typeStreakCall,
+} from "#src/model/scoutql/analyze/analyze-expr-streak.ts";
 
 // ── Call typing ──────────────────────────────────────────────────────────────
 // Arity, DISTINCT/*/FILTER acceptance, and result types for every registry
@@ -92,7 +96,7 @@ function checkCallFlags(
   if (node.filter !== undefined && !info.acceptsFilter) {
     emitDiagnostic(ctx.diagnostics, {
       code: "type-mismatch",
-      message: "FILTER (WHERE …) only applies to aggregate functions.",
+      message: filterRefusal(node.name),
       span: node.span,
     });
   }
@@ -253,6 +257,10 @@ function typeAggregateCall(
       return "double";
     })
     .with("min", "max", (): ScoutQlExprType => argType)
+    .with("longest_streak", "current_streak", (): ScoutQlExprType => {
+      typeStreakCall(node, arg, argType, ctx);
+      return "integer";
+    })
     .otherwise((): ScoutQlExprType => "unknown");
 }
 

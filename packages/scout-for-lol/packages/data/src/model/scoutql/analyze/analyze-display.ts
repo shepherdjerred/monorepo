@@ -102,7 +102,11 @@ export function inferDisplayKind(
   if (call.name === "kda" || call.name === "per_minute") {
     return "ratio";
   }
-  if (call.name === "count") {
+  if (
+    call.name === "count" ||
+    call.name === "longest_streak" ||
+    call.name === "current_streak"
+  ) {
     return "count";
   }
   const [arg] = call.args;
@@ -314,6 +318,7 @@ export function containsOutputRef(expr: ScoutQlAggregateExpr): boolean {
     case "count-star":
     case "aggregate":
     case "quantile":
+    case "streak":
     case "literal":
       return false;
   }

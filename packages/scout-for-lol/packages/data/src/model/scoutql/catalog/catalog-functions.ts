@@ -180,6 +180,40 @@ export const SCOUTQL_FUNCTIONS: readonly ScoutQlFunctionInfo[] = [
     acceptsFilter: true,
   }),
   fn({
+    name: "longest_streak",
+    kind: "aggregate",
+    signatures: [
+      {
+        label: "LONGEST_STREAK(condition)",
+        params: [
+          param("condition", "Boolean per game, e.g. `win` or `kills >= 10`."),
+        ],
+      },
+    ],
+    resultType: "BIGINT",
+    docMarkdown:
+      "Longest run of consecutive games where the condition holds, per player, in game order. `LONGEST_STREAK(win)` is the longest win streak; `LONGEST_STREAK(NOT win)` the longest losing one. Only games the WHERE keeps count: a game it removes is skipped, not a break. Runs are cut at the edges of the time window.",
+    minArgs: 1,
+    maxArgs: 1,
+  }),
+  fn({
+    name: "current_streak",
+    kind: "aggregate",
+    signatures: [
+      {
+        label: "CURRENT_STREAK(condition)",
+        params: [
+          param("condition", "Boolean per game, e.g. `win` or `NOT win`."),
+        ],
+      },
+    ],
+    resultType: "BIGINT",
+    docMarkdown:
+      "The run of consecutive games ending at a player's latest game where the condition holds; 0 if their latest game fails it. Only games the WHERE keeps count, in game order.",
+    minArgs: 1,
+    maxArgs: 1,
+  }),
+  fn({
     name: "round",
     kind: "scalar",
     signatures: [

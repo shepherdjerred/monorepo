@@ -26,6 +26,7 @@ function ctx(overrides: Partial<AggregateContext> = {}): AggregateContext {
     resolveOutputRef: (name) => {
       throw new Error(`unexpected output-ref ${name}`);
     },
+    resolveStreak: (node) => frag(`streak_${node.mode}`),
     ...overrides,
   };
 }
@@ -166,6 +167,21 @@ describe("aggregate compilation", () => {
       ctx({ resolveOutputRef: () => frag("expr_2") }),
     );
     expect(compiled.sql).toBe("expr_2");
+  });
+
+  test("streaks go through the caller's streak resolver", () => {
+    const longest: ScoutQlAggregateExpr = {
+      kind: "streak",
+      mode: "longest",
+      arg: col("win"),
+    };
+    expect(compileAggregateExpr(longest, ctx()).sql).toBe("streak_longest");
+    const referenced = new Set<string>();
+    collectAggregateColumnNames(
+      { kind: "streak", mode: "current", arg: col("kills") },
+      referenced,
+    );
+    expect([...referenced]).toEqual(["kills"]);
   });
 });
 

@@ -4,8 +4,9 @@
  * Every lake table is now a ScoutQL source — team rows, bans, per-minute
  * frames and timeline events each left this list when they became one. What
  * remains is not a table but a shape: questions that compare two rows of the
- * same game, or read games in order. The data for them is in the lake; a
- * query reads one row at a time and aggregates without order (AI-18).
+ * same game. The data for them is in the lake; a query reads one row at a
+ * time (AI-18). Streaks, which read games in order, left when LONGEST_STREAK
+ * and CURRENT_STREAK did.
  *
  * The gap matters because of what the agent does with it. Reading a catalog
  * with no bans in it, the agent correctly concluded it could not query them,
@@ -22,7 +23,6 @@ export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
   // Teammates left this list when player_groups became queryable in server
   // scope; opponents are a different join and stay (AI-18).
   "head-to-head — how a champion or player did against a specific other one in the same game (champion vs champion, one player against another)",
-  "streaks — runs of consecutive wins or losses, which need games read in order",
 ] as const;
 
 /**

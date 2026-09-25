@@ -153,6 +153,22 @@ export const NEGATIVE_CASES: NegativeCase[] = [
     code: "distinct-unsupported",
   },
   {
+    name: "streak of a non-boolean",
+    query: `SELECT LONGEST_STREAK(kills) AS s FROM match_participants WHERE ${BOUND} GROUP BY player`,
+    code: "type-mismatch",
+  },
+  {
+    name: "streak with FILTER",
+    query: `SELECT LONGEST_STREAK(win) FILTER (WHERE queue = 'solo') AS s FROM match_participants WHERE ${BOUND} GROUP BY player`,
+    code: "type-mismatch",
+  },
+  {
+    // Only participant rows carry a player and a game end to order by.
+    name: "streak on a source without games in order",
+    query: `SELECT LONGEST_STREAK(win) AS s FROM match_teams WHERE ${BOUND}`,
+    code: "source-column-context",
+  },
+  {
     name: "casting an aggregate result",
     query: `SELECT SUM(kills)::DOUBLE AS x FROM match_participants WHERE ${BOUND} GROUP BY player`,
     code: "cast-around-aggregate",

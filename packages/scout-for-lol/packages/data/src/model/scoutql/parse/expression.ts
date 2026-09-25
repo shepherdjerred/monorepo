@@ -76,6 +76,10 @@ export const ScoutQlAggregateFunctionSchema = z.enum([
   "stddev",
 ]);
 
+/** LONGEST_STREAK is the longest run; CURRENT_STREAK the run ending last. */
+export const ScoutQlStreakModeSchema = z.enum(["longest", "current"]);
+export type ScoutQlStreakMode = z.infer<typeof ScoutQlStreakModeSchema>;
+
 /** Output/grouping name: the stable key render encodings reference. */
 export const ScoutQlOutputNameSchema = z
   .string()
@@ -263,6 +267,14 @@ export type ScoutQlAggregateExpr =
       func: ScoutQlScalarFunction;
       args: ScoutQlAggregateExpr[];
     }
+  // A run of consecutive games where `arg` holds, per player in game order.
+  // Its own kind, not an `aggregate` func: it needs an ordered window step
+  // before GROUP BY, which every consumer must handle deliberately.
+  | {
+      kind: "streak";
+      mode: ScoutQlStreakMode;
+      arg: ScoutQlScalarExpr;
+    }
   // A reference to another output by alias — legal in HAVING and ORDER BY
   // (DuckDB semantics), never inside an output's own expression.
   | { kind: "output-ref"; name: string };
@@ -298,6 +310,11 @@ export const ScoutQlAggregateExprSchema: z.ZodType<ScoutQlAggregateExpr> =
         kind: z.literal("scalar-call"),
         func: ScoutQlScalarFunctionSchema,
         args: z.array(ScoutQlAggregateExprSchema).min(1).max(8),
+      }),
+      z.object({
+        kind: z.literal("streak"),
+        mode: ScoutQlStreakModeSchema,
+        arg: ScoutQlScalarExprSchema,
       }),
       z.object({
         kind: z.literal("output-ref"),

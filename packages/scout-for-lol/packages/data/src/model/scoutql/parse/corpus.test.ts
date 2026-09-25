@@ -111,6 +111,17 @@ export const CORPUS: Expectation[] = [
     groupings: ["column/champion"],
   },
   {
+    name: "win and loss streaks per player",
+    query: `SELECT player, LONGEST_STREAK(win) AS best_run, CURRENT_STREAK(NOT win) AS losing_run FROM match_participants WHERE ${BOUND} GROUP BY player`,
+    timeWindow: "relative",
+    outputs: [
+      "player:text:sample",
+      "best_run:count:sample",
+      "losing_run:count:sample",
+    ],
+    groupings: ["column/player"],
+  },
+  {
     name: "histogram over a FLOOR bucket",
     query: `SELECT FLOOR(game_duration_seconds / 300) * 300 AS bucket, COUNT(*) AS games FROM match_participants WHERE ${BOUND} GROUP BY FLOOR(game_duration_seconds / 300) * 300 RENDER histogram`,
     timeWindow: "relative",

@@ -273,9 +273,11 @@ type ColumnPool = {
   dims: readonly string[];
   timeColumn: string;
   playerRef: boolean;
+  /** Whether the source orders games, so streak aggregates apply. */
+  streaks: boolean;
 };
 
-const MATCH_POOL: Omit<ColumnPool, "playerRef"> = {
+const MATCH_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
   numeric: ["kills", "deaths", "assists", "gold_earned", "vision_score"],
   text: ["queue", "game_mode", "champion_name"],
   dims: [
@@ -290,7 +292,7 @@ const MATCH_POOL: Omit<ColumnPool, "playerRef"> = {
   timeColumn: "game_creation_at",
 };
 
-const PREMATCH_POOL: Omit<ColumnPool, "playerRef"> = {
+const PREMATCH_POOL: Omit<ColumnPool, "playerRef" | "streaks"> = {
   numeric: ["champion_id", "map_id", "team_id"],
   text: ["queue", "game_mode"],
   dims: ["player", "champion", "queue", "map"],
@@ -397,6 +399,16 @@ function randomAggregate(rnd: Rnd, pool: ColumnPool): ScoutQlAggregateExpr {
       filter,
     };
   }
+  if (pool.streaks && roll < 0.78) {
+    return {
+      kind: "streak",
+      mode: pick(rnd, ["longest", "current"]),
+      arg: {
+        kind: "predicate",
+        predicate: randomPredicate(rnd, pool, 1),
+      },
+    };
+  }
   if (roll < 0.85) {
     return {
       kind: "quantile",
@@ -472,6 +484,7 @@ function randomPlanInput(rnd: Rnd): PlanQueryInput {
   const pool: ColumnPool = {
     ...(prematch ? PREMATCH_POOL : MATCH_POOL),
     playerRef: usePlayerRef,
+    streaks: !prematch,
   };
 
   const outputCount = 1 + Math.floor(rnd() * 3);
@@ -661,6 +674,17 @@ const IDENTIFIER_ALLOWLIST = new Set([
   "a",
   "facts",
   "filtered",
+  "streak_rows",
+  "streak_base",
+  "streak_runs",
+  "streaks",
+  "__dup",
+  "ROWS",
+  "UNBOUNDED",
+  "PRECEDING",
+  "CURRENT",
+  "ROW",
+  "TRUE",
   "accounts",
   "deduped",
   "label",
@@ -673,7 +697,8 @@ const IDENTIFIER_ALLOWLIST = new Set([
   ...Object.keys(PREMATCH_LAKE_COLUMNS),
 ]);
 
-const ALIAS_PATTERN = /^(?:expr|__key|__succ|__n|__num|__den)_\d+$/u;
+const ALIAS_PATTERN =
+  /^(?:expr|__key|__succ|__n|__num|__den|__sk|__h|__m|__lrun|__crun)_\d+$/u;
 
 function assertClosedVocabulary(sql: string): void {
   expect(sql).not.toContain(";");

@@ -15,6 +15,7 @@ import {
   scalarFunction,
   type PlayerRefCollector,
 } from "#src/model/scoutql/analyze/analyze-lower.ts";
+import { streakMode } from "#src/model/scoutql/analyze/analyze-expr-streak.ts";
 
 // ── Aggregate lowering (with macro expansion) ────────────────────────────────
 // The two aggregate macros expand HERE, so the engine only ever sees core
@@ -59,6 +60,9 @@ function withFilter(
     .with(
       { kind: "literal" },
       { kind: "output-ref" },
+      // A streak takes no FILTER (the analyzer refuses one): WHERE decides
+      // which games count, and a filtered-out game is skipped, not a miss.
+      { kind: "streak" },
       (node): ScoutQlAggregateExpr => node,
     )
     .exhaustive();
@@ -142,6 +146,11 @@ function lowerAggregateCall(
   const arg = lowerScalar(argAst);
   if (arg === undefined) {
     return undefined;
+  }
+  const mode = streakMode(node.name);
+  if (mode !== undefined) {
+    // Analysis refuses a streak FILTER; there is nothing to lower it to.
+    return filter === undefined ? { kind: "streak", mode, arg } : undefined;
   }
   if (node.name === "quantile_cont") {
     const fraction = node.args[1];

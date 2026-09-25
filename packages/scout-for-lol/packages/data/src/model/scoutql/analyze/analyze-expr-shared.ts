@@ -141,6 +141,8 @@ export const SCOUTQL_AGGREGATE_NAMES: ReadonlySet<string> = new Set([
   "median",
   "quantile_cont",
   "stddev",
+  "longest_streak",
+  "current_streak",
   "kda",
   "per_minute",
 ]);
