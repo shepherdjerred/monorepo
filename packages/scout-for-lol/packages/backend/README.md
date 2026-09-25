@@ -729,6 +729,26 @@ SQL so it is not re-driven every minute until the batch is released. Nothing
 mints recovery-born intents yet — recovery commits `ARCHIVE_ONLY`
 observations — so the gate is the contract a later recovery lane delivers into.
 
+### Overdue intents are expired, not left drivable
+
+`beginSend` refuses any start strictly after an intent's `freshnessDeadline`,
+so a `pending` or `ready` intent past it can never be sent, and nothing in the
+send path moves it. The `notification-intent-expiry` background job — a Scout
+Schedule every five minutes on both stages — selects those intents, the most
+overdue first and at most 200 a run (`durable/match/intent-expiry.ts`), and
+applies the domain's `expire` to each through `transitionIntent`. It never
+selects `sending` or `unknown-delivery`: both name an attempt whose outcome is
+unknown, and only the unobserved-send recovery or an operator may settle them.
+A `beginSend` that commits between the sweep's read and its write makes the
+repository's state guard miss, and the re-read answers `send-in-flight`, so the
+attempt wins. Each run logs its counts; the result is visible on
+`scout_durable_notification_intents{state="expired"}`.
+
+A v1 stale-path adoption that later proves a send for an intent the sweep
+already expired records `conflict` on `intent-delivered`, which is the adoption
+path's existing rule that a terminal state contradicting a proven send is worth
+seeing rather than overwriting.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client
