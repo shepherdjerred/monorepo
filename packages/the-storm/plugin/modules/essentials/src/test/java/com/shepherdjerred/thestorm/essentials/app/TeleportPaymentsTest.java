@@ -63,8 +63,50 @@ final class TeleportPaymentsTest {
         4);
   }
 
+  Result<Quote, TeleportRefusal> charge(TeleportKind kind, Exemptions exemptions) {
+    return payments.charge(PLAYER, kind, exemptions).join();
+  }
+
+  /** A teleport that went through: charged, then confirmed on arrival. */
   Result<Quote, TeleportRefusal> pay(TeleportKind kind, Exemptions exemptions) {
-    return payments.pay(PLAYER, kind, exemptions).join();
+    var charged = charge(kind, exemptions);
+    if (charged instanceof Result.Ok<Quote, TeleportRefusal>(var quote)) {
+      payments.confirm(PLAYER, quote).join();
+    }
+    return charged;
+  }
+
+  static Quote ok(Result<Quote, TeleportRefusal> result) {
+    return result.fold(
+        quote -> quote,
+        error -> {
+          throw new AssertionError(error);
+        });
+  }
+
+  @Test
+  void chargingRecordsNoUsageUntilConfirmed() {
+    wallets.deposit(WALLET, 100);
+
+    var quote = ok(charge(TeleportKind.HOME, Exemptions.NONE));
+
+    assertThat(wallets.balanceOf(WALLET)).isEqualTo(75);
+    assertThat(usage.usage).isEmpty();
+    payments.confirm(PLAYER, quote).join();
+    assertThat(usage.usage).containsKey(TeleportKind.HOME);
+  }
+
+  @Test
+  void aRefundedTeleportCostsNothingAndDoesNotEscalate() {
+    wallets.deposit(WALLET, 100);
+
+    var failed = ok(charge(TeleportKind.HOME, Exemptions.NONE));
+    payments.refund(PLAYER, failed).join();
+    var retry = ok(charge(TeleportKind.HOME, Exemptions.NONE));
+
+    assertThat(retry.cost()).isEqualTo(25);
+    assertThat(retry.multiplier()).isEqualTo(Multiplier.ONE);
+    assertThat(wallets.balanceOf(WALLET)).isEqualTo(75);
   }
 
   @Test

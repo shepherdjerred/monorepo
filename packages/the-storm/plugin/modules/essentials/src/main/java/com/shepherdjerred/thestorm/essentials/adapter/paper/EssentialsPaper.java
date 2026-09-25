@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
@@ -50,6 +51,7 @@ public final class EssentialsPaper {
    * @param players last-known player names
    * @param warps server warps
    * @param stores storage the commands read and write directly
+   * @param protection land protection from the towns module
    */
   public record App(
       TeleportPayments payments,
@@ -58,7 +60,8 @@ public final class EssentialsPaper {
       ModerationService moderation,
       PlayerDirectory players,
       WarpDirectory warps,
-      Stores stores) {}
+      Stores stores,
+      Protection protection) {}
 
   /**
    * Storage used directly by commands and listeners.
@@ -71,35 +74,34 @@ public final class EssentialsPaper {
 
   /**
    * Registers everything. Throws if the configured kits name unknown items or enchantments, or the
-   * spawn world is not loaded.
+   * spawn is not a safe place to stand in a loaded world.
    */
   public static EssentialsPaper start(ModuleContext context, EssentialsConfig config, App app) {
     var server = context.plugin().getServer();
     var runtime = new PaperRuntime(server, context.scheduler(), context.time(), context.logger());
-    if (Positions.toLocation(server, config.spawn()).isEmpty()) {
-      throw new IllegalStateException(
-          "essentials.yml spawn names world '" + config.spawn().world() + "', which is not loaded");
-    }
+    requireSafeSpawn(runtime, config);
     var kits =
         new PlayerCommands.Kits(
             config.kits(), KitItems.build(config.kits()), app.stores().kitClaims());
     var permissions = new EssentialsPermissions(server.getPluginManager());
-    permissions.register(config.kits().kits().keySet());
+    permissions.register(config.kits().kits().keySet(), config.kits().starter());
 
     var teleports = config.teleports();
     var back = new BackRecorder(runtime, app.stores().back(), teleports.backHistorySize());
     var flow =
         new TeleportFlow(
             runtime,
-            new TeleportFlow.Services(app.payments(), app.guards(), back),
+            new TeleportFlow.Services(app.payments(), app.guards(), app.protection(), back),
             teleports.warmup());
-    var tpa = new TpaDesk(context.time(), teleports.tpaTimeout());
+    var tpa = new TpaDesk(context.time(), teleports.tpaRules());
+    var safe = new SafeTracker();
 
     var teleportCommands =
         new TeleportCommands(
             runtime,
             flow,
-            new TeleportCommands.Places(app.stores().homes(), app.warps(), app.stores().back()),
+            new TeleportCommands.Places(
+                app.stores().homes(), app.warps(), app.stores().back(), app.protection()),
             config);
     var tpaCommands = new TpaCommands(runtime, flow, tpa, teleports.tpaTimeout());
     var playerCommands =
@@ -120,12 +122,13 @@ public final class EssentialsPaper {
     var afkListener = new AfkListener(runtime, app.afk(), playerCommands);
     List<Listener> listeners =
         List.of(
-            new TeleportListener(runtime, flow, back, config.spawn()),
+            new TeleportListener(
+                runtime, flow, new TeleportListener.Places(back, safe, config.spawn())),
             new BanListener(runtime, app.moderation()),
             new SessionListener(
                 runtime,
                 app.players(),
-                new SessionListener.Presence(app.afk(), tpa, flow),
+                new SessionListener.Presence(app.afk(), tpa, flow, safe),
                 new SessionListener.Arrival(config.spawn(), kits)),
             afkListener);
     listeners.forEach(
@@ -136,6 +139,26 @@ public final class EssentialsPaper {
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, afkListener::sweep),
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, tpaCommands::expire));
     return new EssentialsPaper(listeners, tasks, flow, permissions);
+  }
+
+  /**
+   * The spawn is where new players arrive, so a bad one would drop them into a wall, lava or the
+   * void. Checked on the main thread at enable; loads the spawn chunk if needed.
+   */
+  private static void requireSafeSpawn(PaperRuntime runtime, EssentialsConfig config) {
+    var spawn = config.spawn();
+    var location = Positions.toLocation(runtime.server(), spawn);
+    if (location.isEmpty()) {
+      throw new IllegalStateException(
+          "essentials.yml spawn names world '" + spawn.world() + "', which is not loaded");
+    }
+    if (!SafeLocations.isSafe(location.orElseThrow())) {
+      throw new IllegalStateException(
+          "essentials.yml spawn at "
+              + spawn.describe()
+              + " is not safe: it needs a solid block underfoot and two open blocks above it,"
+              + " with no lava, fire or other hazards");
+    }
   }
 
   /** Stops everything started here except commands, which Paper keeps until shutdown. */
